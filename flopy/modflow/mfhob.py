@@ -1,6 +1,7 @@
 import numpy as np
 
 from ..pakbase import Package
+from ..utils.flopy_io import line_strip
 from ..utils.recarray_utils import create_empty_recarray
 
 
@@ -330,7 +331,7 @@ class ModflowHob(Package):
                 break
 
         # read dataset 1
-        t = line.strip().split()
+        t = line_strip(line).split()
         nh = int(t[0])
         iuhobsv = None
         hobdry = 0
@@ -340,7 +341,7 @@ class ModflowHob(Package):
 
         # read dataset 2
         line = f.readline()
-        t = line.strip().split()
+        t = line_strip(line).split()
         tomulth = float(t[0])
 
         # read observation data
@@ -356,7 +357,7 @@ class ModflowHob(Package):
         while True:
             # read dataset 3
             line = f.readline()
-            t = line.strip().split()
+            t = line_strip(line).split()
             obsnam = t[0]
             layer = int(t[1])
             row = int(t[2]) - 1
@@ -373,7 +374,7 @@ class ModflowHob(Package):
                 mlay = {layer: 1.0}
             else:
                 line = f.readline()
-                t = line.strip().split()
+                t = line_strip(line).split()
                 mlay = {}
                 if len(t) >= abs(layer) * 2:
                     for j in range(0, abs(layer) * 2, 2):
@@ -397,7 +398,7 @@ class ModflowHob(Package):
 
                         if j != abs(layer) - 1:
                             line = f.readline()
-                            t = line.strip().split()
+                            t = line_strip(line).split()
                 # reset layer
                 layer = -len(list(mlay.keys()))
 
@@ -416,12 +417,12 @@ class ModflowHob(Package):
                 tsd = []
                 # read data set 5
                 line = f.readline()
-                t = line.strip().split()
+                t = line_strip(line).split()
                 itt = int(t[0])
                 # dataset 6
                 for j in range(abs(irefsp0)):
                     line = f.readline()
-                    t = line.strip().split()
+                    t = line_strip(line).split()
                     names.append(t[0])
                     irefsp = int(t[1]) - 1
                     toffset = float(t[2])

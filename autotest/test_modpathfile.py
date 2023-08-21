@@ -5,7 +5,7 @@ from shutil import copytree
 
 import numpy as np
 import pytest
-from autotest.conftest import requires_exe
+from modflow_devtools.markers import requires_exe
 
 from flopy.mf6 import (
     MFSimulation,
@@ -66,7 +66,7 @@ def __create_simulation(
     )
 
     # Create the Flopy groundwater flow (gwf) model object
-    model_nam_file = "{}.nam".format(name)
+    model_nam_file = f"{name}.nam"
     gwf = ModflowGwf(
         sim, modelname=name, model_nam_file=model_nam_file, save_flows=True
     )
@@ -113,9 +113,9 @@ def __create_simulation(
     ModflowGwfriv(gwf, stress_period_data={0: rd})
 
     # Create the output control package
-    headfile = "{}.hds".format(name)
+    headfile = f"{name}.hds"
     head_record = [headfile]
-    budgetfile = "{}.cbb".format(name)
+    budgetfile = f"{name}.cbb"
     budget_record = [budgetfile]
     saverecord = [("HEAD", "ALL"), ("BUDGET", "ALL")]
     oc = ModflowGwfoc(
@@ -182,7 +182,7 @@ def __create_simulation(
 @pytest.fixture(scope="module")
 def mp7_small(module_tmpdir):
     return __create_simulation(
-        ws=str(module_tmpdir / "mp7_small"),
+        ws=module_tmpdir / "mp7_small",
         name="mp7_small",
         nper=1,
         nstp=1,
@@ -210,7 +210,7 @@ def mp7_small(module_tmpdir):
 @pytest.fixture(scope="module")
 def mp7_large(module_tmpdir):
     return __create_simulation(
-        ws=str(module_tmpdir / "mp7_large"),
+        ws=module_tmpdir / "mp7_large",
         name="mp7_large",
         nper=1,
         nstp=1,
@@ -236,17 +236,19 @@ def mp7_large(module_tmpdir):
 
 
 @requires_exe("mf6")
-def test_pathline_file_sorts_in_ctor(tmpdir, module_tmpdir, mp7_small):
+def test_pathline_file_sorts_in_ctor(
+    function_tmpdir, module_tmpdir, mp7_small
+):
     sim, forward_model_name, backward_model_name, nodew, nodesr = mp7_small
-    ws = tmpdir / "ws"
+    ws = function_tmpdir / "ws"
 
     # copytree(sim.simulation_data.mfpath.get_sim_path(), ws)
-    copytree(str(module_tmpdir / "mp7_small"), ws)
+    copytree(module_tmpdir / "mp7_small", ws)
 
     forward_path = ws / f"{forward_model_name}.mppth"
     assert forward_path.is_file()
 
-    pathline_file = PathlineFile(str(forward_path))
+    pathline_file = PathlineFile(forward_path)
     assert np.all(
         pathline_file._data[:-1]["particleid"]
         <= pathline_file._data[1:]["particleid"]
@@ -258,10 +260,10 @@ def test_pathline_file_sorts_in_ctor(tmpdir, module_tmpdir, mp7_small):
 @pytest.mark.parametrize("direction", ["forward", "backward"])
 @pytest.mark.parametrize("locations", ["well", "river"])
 def test_get_destination_pathline_data(
-    tmpdir, mp7_large, direction, locations, benchmark
+    function_tmpdir, mp7_large, direction, locations, benchmark
 ):
     sim, forward_model_name, backward_model_name, nodew, nodesr = mp7_large
-    ws = tmpdir / "ws"
+    ws = function_tmpdir / "ws"
 
     copytree(sim.simulation_data.mfpath.get_sim_path(), ws)
 
@@ -271,7 +273,7 @@ def test_get_destination_pathline_data(
     assert backward_path.is_file()
 
     pathline_file = PathlineFile(
-        str(backward_path) if direction == "backward" else str(forward_path)
+        backward_path if direction == "backward" else forward_path
     )
     benchmark(
         lambda: pathline_file.get_destination_pathline_data(
@@ -285,10 +287,10 @@ def test_get_destination_pathline_data(
 @pytest.mark.parametrize("direction", ["forward", "backward"])
 @pytest.mark.parametrize("locations", ["well", "river"])
 def test_get_destination_endpoint_data(
-    tmpdir, mp7_large, direction, locations, benchmark
+    function_tmpdir, mp7_large, direction, locations, benchmark
 ):
     sim, forward_model_name, backward_model_name, nodew, nodesr = mp7_large
-    ws = tmpdir / "ws"
+    ws = function_tmpdir / "ws"
 
     copytree(sim.simulation_data.mfpath.get_sim_path(), ws)
 
@@ -298,7 +300,7 @@ def test_get_destination_endpoint_data(
     assert backward_end.is_file()
 
     endpoint_file = EndpointFile(
-        str(backward_end) if direction == "backward" else str(forward_end)
+        backward_end if direction == "backward" else forward_end
     )
     benchmark(
         lambda: endpoint_file.get_destination_endpoint_data(

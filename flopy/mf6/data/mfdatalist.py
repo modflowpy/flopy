@@ -7,14 +7,14 @@ import numpy as np
 
 from ...datbase import DataListInterface, DataType
 from ...mbase import ModelInterface
-from ...utils import datautil
+from ...utils.datautil import DatumUtil
 from ..data import mfdata, mfstructure
 from ..mfbase import ExtFileAction, MFDataException, VerbosityLevel
 from ..utils.mfenums import DiscretizationType
 from .mfdatastorage import DataStorage, DataStorageType, DataStructureType
 from .mfdatautil import to_string
 from .mffileaccess import MFFileAccessList
-from .mfstructure import DatumType
+from .mfstructure import DatumType, MFDataStructure
 
 
 class MFList(mfdata.MFMultiDimVar, DataListInterface):
@@ -505,6 +505,36 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                             idomain_val = idomain
                             # cellid should be within the model grid
                             for idx, cellid_part in enumerate(record[index]):
+                                if cellid_part == -1:
+                                    # cellid not defined, all values should
+                                    # be -1
+                                    match = all(
+                                        elem == record[index][0]
+                                        for elem in record[index]
+                                    )
+                                    if not match:
+                                        message = (
+                                            f"Invalid cellid {record[index]}"
+                                        )
+                                        (
+                                            type_,
+                                            value_,
+                                            traceback_,
+                                        ) = sys.exc_info()
+                                        raise MFDataException(
+                                            self.structure.get_model(),
+                                            self.structure.get_package(),
+                                            self.structure.path,
+                                            "storing data",
+                                            self.structure.name,
+                                            inspect.stack()[0][3],
+                                            type_,
+                                            value_,
+                                            traceback_,
+                                            message,
+                                            self._simulation_data.debug,
+                                        )
+                                    continue
                                 if (
                                     model_shape[idx] <= cellid_part
                                     or cellid_part < 0
@@ -530,7 +560,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                     )
                                 idomain_val = idomain_val[cellid_part]
                             # cellid should be at an active cell
-                            if idomain_val < 1:
+                            if record[index][0] != -1 and idomain_val < 1:
                                 message = (
                                     "Cellid {} is outside of the "
                                     "active model grid"
@@ -1043,14 +1073,21 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                         data_val = data_line[index]
                         if data_item.is_cellid or (
                             data_item.possible_cellid
-                            and storage._validate_cellid([data_val], 0)
+                            and storage._validate_cellid(
+                                [data_val], 0, data_item
+                            )
                         ):
                             if (
                                 data_item.shape is not None
                                 and len(data_item.shape) > 0
                                 and data_item.shape[0] == "ncelldim"
                             ):
-                                model_grid = data_dim.get_model_grid()
+                                model_num = DatumUtil.cellid_model_num(
+                                    data_item,
+                                    self.structure.model_data,
+                                    self._data_dimensions.package_dim.model_dim,
+                                )
+                                model_grid = data_dim.get_model_grid(model_num)
                                 cellid_size = (
                                     model_grid.get_num_spatial_coordinates()
                                 )
@@ -1058,9 +1095,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                     resolved_shape, cellid_size
                                 )
                         data_size = 1
-                        if len(
-                            resolved_shape
-                        ) == 1 and datautil.DatumUtil.is_int(
+                        if len(resolved_shape) == 1 and DatumUtil.is_int(
                             resolved_shape[0]
                         ):
                             data_size = int(resolved_shape[0])
@@ -1104,9 +1139,64 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                 # everything else is part of the keystring data
                                 data_key = data_val.lower()
                                 if data_key not in data_item.keystring_dict:
-                                    keystr_struct = data_item.keystring_dict[
-                                        f"{data_key}record"
-                                    ]
+                                    key_record = f"{data_key}record"
+                                    if key_record in data_item.keystring_dict:
+                                        keystr_struct = (
+                                            data_item.keystring_dict[
+                                                key_record
+                                            ]
+                                        )
+                                    else:
+                                        # look for data key in child records
+                                        found = False
+                                        for (
+                                            record
+                                        ) in data_item.keystring_dict.values():
+                                            if (
+                                                isinstance(
+                                                    record, MFDataStructure
+                                                )
+                                                and len(
+                                                    record.data_item_structures
+                                                )
+                                                > 0
+                                                and record.data_item_structures[
+                                                    0
+                                                ].name
+                                                == data_key
+                                            ):
+                                                keystr_struct = record
+                                                found = True
+                                                break
+                                        if not found:
+                                            message = (
+                                                "An error occurred "
+                                                "while attempting to resolve "
+                                                f"key {data_key}. This "
+                                                "error occurred while "
+                                                "processing "
+                                                f'"{data_item.name}" line '
+                                                f"{self._crnt_line_num} data "
+                                                f"(data path: {self._path})"
+                                            )
+                                            (
+                                                type_,
+                                                value_,
+                                                traceback_,
+                                            ) = sys.exc_info()
+                                            raise MFDataException(
+                                                self.structure.get_model(),
+                                                self.structure.get_package(),
+                                                self._path,
+                                                "resolving key",
+                                                self.structure.name,
+                                                inspect.stack()[0][3],
+                                                type_,
+                                                value_,
+                                                traceback_,
+                                                message,
+                                                self._simulation_data.debug,
+                                            )
                                 else:
                                     keystr_struct = data_item.keystring_dict[
                                         data_key
@@ -1329,19 +1419,21 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             first_line, file_handle, block_header, pre_data_comments=None
         )
         self._resync()
-        file_access = MFFileAccessList(
-            self.structure,
-            self._data_dimensions,
-            self._simulation_data,
-            self._path,
-            self._current_key,
-        )
         storage = self._get_storage_obj()
-        result = file_access.load_from_package(
-            first_line, file_handle, storage, pre_data_comments
-        )
         if external_file_info is not None:
             storage.point_to_existing_external_file(external_file_info, 0)
+            result = [False, None]
+        else:
+            file_access = MFFileAccessList(
+                self.structure,
+                self._data_dimensions,
+                self._simulation_data,
+                self._path,
+                self._current_key,
+            )
+            result = file_access.load_from_package(
+                first_line, file_handle, storage, pre_data_comments
+            )
         return result
 
     def _new_storage(self, stress_period=0):
@@ -1473,7 +1565,9 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         package=None,
         block=None,
     ):
-        super().__init__(
+        mfdata.MFTransient.__init__(self)
+        MFList.__init__(
+            self,
             sim_data=sim_data,
             model_or_sim=model_or_sim,
             structure=structure,
@@ -1486,7 +1580,6 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         )
         self._transient_setup(self._data_storage)
         self.repeating = True
-        self.empty_keys = {}
 
     @property
     def data_type(self):
@@ -1664,7 +1757,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                 or replace_existing_external
             ):
                 fname, ext = os.path.splitext(external_file_path)
-                if datautil.DatumUtil.is_int(sp):
+                if DatumUtil.is_int(sp):
                     full_name = f"{fname}_{sp + 1}{ext}"
                 else:
                     full_name = f"{fname}_{sp}{ext}"

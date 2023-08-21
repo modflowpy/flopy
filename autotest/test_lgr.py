@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
-from autotest.conftest import requires_exe
 from flaky import flaky
+from modflow_devtools.markers import requires_exe
 
 import flopy
 
@@ -33,14 +33,13 @@ def singleModel(
     steady,
     xul,
     yul,
-    proj4_str,
+    crs,
     mfExe,
     rundir=".",
     welInfo=[],
     startingHead=0.0,
     lRunSingle=False,
 ):
-
     if iChild > 0:
         print(f"child model {modelname}")
         iLUoffset = 100 * int(iChild)
@@ -78,7 +77,7 @@ def singleModel(
         unitnumber=11 + iLUoffset,
         xul=xul,
         yul=yul,
-        proj4_str=proj4_str,
+        crs=crs,
         start_datetime="28/2/2019",
     )
 
@@ -165,7 +164,7 @@ def singleModel(
 # https://github.com/w-bonelli/flopy/runs/7744805897?check_suite_focus=true#step:8:1832
 @flaky
 @requires_exe("mflgr")
-def test_simple_lgrmodel_from_scratch(tmpdir):
+def test_simple_lgrmodel_from_scratch(function_tmpdir):
     # coordinates and extend Mother
     Lx_m = 1500.0
     Ly_m = 2500.0
@@ -193,7 +192,7 @@ def test_simple_lgrmodel_from_scratch(tmpdir):
     laytyp = 0
     xul_c = 50985.00
     yul_c = 416791.06
-    proj4_str = "EPSG:28992"
+    crs = "EPSG:28992"
     nper = 1
     at = 42
     perlen = [at]
@@ -236,9 +235,9 @@ def test_simple_lgrmodel_from_scratch(tmpdir):
         steady,
         xul_c,
         yul_c,
-        proj4_str,
+        crs,
         "mflgr",
-        rundir=str(tmpdir),
+        rundir=function_tmpdir,
         welInfo=welInfo,
         startingHead=-2.0,
     )
@@ -266,9 +265,9 @@ def test_simple_lgrmodel_from_scratch(tmpdir):
         steady,
         xul_m,
         yul_m,
-        proj4_str,
+        crs,
         "mflgr",
-        rundir=str(tmpdir),
+        rundir=function_tmpdir,
         welInfo=welInfo,
         startingHead=-2.0,
     )
@@ -310,7 +309,7 @@ def test_simple_lgrmodel_from_scratch(tmpdir):
         parent=mother,
         children=[child],
         children_data=childData,
-        model_ws=str(tmpdir),
+        model_ws=function_tmpdir,
         external_path=None,
         verbose=False,
     )

@@ -1,10 +1,20 @@
 import copy
 import os
+import re
+import warnings
+from collections import defaultdict
 
 import numpy as np
 
-from ..plot.plotutil import UnstructuredPlotUtilities
+try:
+    import pyproj
+
+    HAS_PYPROJ = True
+except ImportError:
+    HAS_PYPROJ = False
+
 from ..utils import geometry
+from ..utils.crs import get_crs
 from ..utils.gridutil import get_lni
 
 
@@ -26,6 +36,18 @@ class CachedData:
         self.out_of_date = False
 
 
+def _get_epsg_from_crs_or_proj4(crs, proj4=None):
+    """Try to get EPSG identifier from a crs object."""
+    if isinstance(crs, int):
+        return crs
+    if isinstance(crs, str):
+        if match := re.findall(r"epsg:([\d]+)", crs, re.IGNORECASE):
+            return int(match[0])
+    if proj4 and isinstance(proj4, str):
+        if match := re.findall(r"epsg:([\d]+)", proj4, re.IGNORECASE):
+            return int(match[0])
+
+
 class Grid:
     """
     Base class for a structured or unstructured model grid
@@ -34,20 +56,23 @@ class Grid:
     ----------
     grid_type : enumeration
         type of model grid ('structured', 'vertex', 'unstructured')
-    top : ndarray(float)
+    top : float or ndarray
         top elevations of cells in topmost layer
-    botm : ndarray(float)
+    botm : float or ndarray
         bottom elevations of all cells
-    idomain : ndarray(int)
+    idomain : int or ndarray
         ibound/idomain value for each cell
-    lenuni : ndarray(int)
+    lenuni : int or ndarray
         model length units
-    espg : str, int
-        optional espg projection code
-    proj4 : str
-        optional proj4 projection string code
-    prj : str
-        optional projection file name path
+    crs : pyproj.CRS, int, str, optional if `prjfile` is specified
+        Coordinate reference system (CRS) for the model grid
+        (must be projected; geographic CRS are not supported).
+        The value can be anything accepted by
+        :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+        such as an authority string (eg "EPSG:26916") or a WKT string.
+    prjfile : str or pathlike, optional if `crs` is specified
+        ESRI-style projection file with well-known text defining the CRS
+        for the model grid (must be projected; geographic CRS are not supported).
     xoff : float
         x coordinate of the origin point (lower left corner of model grid)
         in the spatial reference coordinate system
@@ -56,21 +81,26 @@ class Grid:
         in the spatial reference coordinate system
     angrot : float
         rotation angle of model grid, as it is rotated around the origin point
+    **kwargs : dict, optional
+        Support deprecated keyword options.
+
+        .. deprecated:: 3.5
+           The following keyword options will be removed for FloPy 3.6:
+
+             - ``prj`` (str or pathlike): use ``prjfile`` instead.
+             - ``epsg`` (int): use ``crs`` instead.
+             - ``proj4`` (str): use ``crs`` instead.
 
     Attributes
     ----------
     grid_type : enumeration
         type of model grid ('structured', 'vertex', 'unstructured')
-    top : ndarray(float)
+    top : float or ndarray
         top elevations of cells in topmost layer
-    botm : ndarray(float)
+    botm : float or ndarray
         bottom elevations of all cells
-    idomain : ndarray(int)
+    idomain : int or ndarray
         ibound/idomain value for each cell
-    proj4 : proj4 SpatialReference
-        spatial reference locates the grid in a coordinate system
-    epsg : epsg SpatialReference
-        spatial reference locates the grid in a coordinate system
     lenuni : int
         modflow lenuni parameter
     xoffset : float
@@ -124,8 +154,6 @@ class Grid:
         1D array of x and y coordinates of cell vertices for whole grid
         (single layer) in C-style (row-major) order
         (same as np.ravel())
-    intersect(x, y, local)
-        returns the row and column of the grid that the x, y point is in
 
     See Also
     --------
@@ -144,12 +172,12 @@ class Grid:
         botm=None,
         idomain=None,
         lenuni=None,
-        epsg=None,
-        proj4=None,
-        prj=None,
+        crs=None,
+        prjfile=None,
         xoff=0.0,
         yoff=0.0,
         angrot=0.0,
+        **kwargs,
     ):
         lenunits = {0: "undefined", 1: "feet", 2: "meters", 3: "centimeters"}
         LENUNI = {"u": 0, "f": 1, "m": 2, "c": 3}
@@ -170,9 +198,29 @@ class Grid:
         self._lenuni = lenuni
 
         self._units = lenunits[self._lenuni]
-        self._epsg = epsg
-        self._proj4 = proj4
-        self._prj = prj
+        # Handle deprecated projection kwargs; warnings are raised in crs.py
+        self._crs = None
+        get_crs_args = {"crs": crs, "prjfile": prjfile}
+        if "epsg" in kwargs:
+            self.epsg = get_crs_args["epsg"] = kwargs.pop("epsg")
+        if "proj4" in kwargs:
+            self.proj4 = get_crs_args["proj4"] = kwargs.pop("proj4")
+        if "prj" in kwargs:
+            self.prjfile = get_crs_args["prj"] = kwargs.pop("prj")
+        if kwargs:
+            raise TypeError(f"unhandled keywords: {kwargs}")
+        if prjfile is not None:
+            self.prjfile = prjfile
+        if HAS_PYPROJ:
+            self._crs = get_crs(**get_crs_args)
+        elif crs is not None:
+            # provide some support without pyproj
+            if isinstance(crs, str) and self.proj4 is None:
+                self._proj4 = crs
+            if self.epsg is None:
+                if epsg := _get_epsg_from_crs_or_proj4(crs, self.proj4):
+                    self._epsg = epsg
+        self._prjfile = prjfile
         self._xoff = xoff
         self._yoff = yoff
         if angrot is None:
@@ -186,6 +234,7 @@ class Grid:
         self._verts = None
         self._laycbd = None
         self._neighbors = None
+        self._edge_set = None
 
     ###################################
     # access to basic grid properties
@@ -202,7 +251,11 @@ class Grid:
                 f"yll:{self.yoffset!s}",
                 f"rotation:{self.angrot!s}",
             ]
-        if self.proj4 is not None:
+        if self.crs is not None:
+            items.append(f"crs:{self.crs.srs}")
+        elif self.epsg is not None:
+            items.append(f"crs:EPSG:{self.epsg}")
+        elif self.proj4 is not None:
             items.append(f"proj4_str:{self.proj4}")
         if self.units is not None:
             items.append(f"units:{self.units}")
@@ -245,39 +298,116 @@ class Grid:
         return self._angrot * np.pi / 180.0
 
     @property
+    def crs(self):
+        """Coordinate reference system (CRS) for the model grid.
+
+        If pyproj is not installed this property is always None;
+        see :py:attr:`epsg` for an alternative CRS definition.
+        """
+        return self._crs
+
+    @crs.setter
+    def crs(self, crs):
+        if crs is None:
+            self._crs = None
+            return
+        if HAS_PYPROJ:
+            self._crs = get_crs(crs=crs)
+        else:
+            warnings.warn(
+                "cannot set 'crs' property without pyproj; "
+                "try setting 'epsg' or 'proj4' instead",
+                UserWarning,
+            )
+            self._crs = None
+
+    @property
     def epsg(self):
-        return self._epsg
+        """EPSG integer code registered to a coordinate reference system.
+
+        This property is derived from :py:attr:`crs` if pyproj is installed,
+        otherwise it preserved from the constructor.
+        """
+        epsg = None
+        if hasattr(self, "_epsg"):
+            epsg = self._epsg
+        elif self._crs is not None:
+            epsg = self._crs.to_epsg()
+            if epsg is not None:
+                self._epsg = epsg
+        return epsg
 
     @epsg.setter
     def epsg(self, epsg):
+        if not (isinstance(epsg, int) or epsg is None):
+            raise ValueError("epsg property must be an int or None")
         self._epsg = epsg
+        # If crs was previously unset, use EPSG code
+        if HAS_PYPROJ and self._crs is None and epsg is not None:
+            self._crs = get_crs(crs=epsg)
 
     @property
     def proj4(self):
+        """PROJ string for a coordinate reference system.
+
+        This property is derived from :py:attr:`crs` if pyproj is installed,
+        otherwise it preserved from the constructor.
+        """
         proj4 = None
-        if self._proj4 is not None:
-            if "epsg" in self._proj4.lower():
-                proj4 = self._proj4
-                # set the epsg if proj4 specifies it
-                tmp = [i for i in self._proj4.split() if "epsg" in i.lower()]
-                self._epsg = int(tmp[0].split(":")[1])
-            else:
-                proj4 = self._proj4
-        elif self.epsg is not None:
-            proj4 = f"epsg:{self.epsg}"
+        if hasattr(self, "_proj4"):
+            proj4 = self._proj4
+        elif self._crs is not None:
+            proj4 = self._crs.to_proj4()
+            if proj4 is not None:
+                self._proj4 = proj4
         return proj4
 
     @proj4.setter
     def proj4(self, proj4):
+        if not (isinstance(proj4, str) or proj4 is None):
+            raise ValueError("proj4 property must be a str or None")
         self._proj4 = proj4
+        # If crs was previously unset, use lossy PROJ string
+        if HAS_PYPROJ and self._crs is None and proj4 is not None:
+            self._crs = get_crs(crs=proj4)
 
     @property
     def prj(self):
-        return self._prj
+        warnings.warn(
+            "prj property is deprecated, use prjfile instead",
+            PendingDeprecationWarning,
+        )
+        return self.prjfile
 
     @prj.setter
     def prj(self, prj):
-        self._proj4 = prj
+        warnings.warn(
+            "prj property is deprecated, use prjfile instead",
+            PendingDeprecationWarning,
+        )
+        self.prjfile = prj
+
+    @property
+    def prjfile(self):
+        """
+        Path to a .prj file containing WKT for a coordinate reference system.
+        """
+        return getattr(self, "_prjfile", None)
+
+    @prjfile.setter
+    def prjfile(self, prjfile):
+        if prjfile is None:
+            self._prjfile = None
+            return
+        if not isinstance(prjfile, (str, os.PathLike)):
+            raise ValueError("prjfile property must be str, PathLike or None")
+        self._prjfile = prjfile
+        # If crs was previously unset, use .prj file input
+        if HAS_PYPROJ and self._crs is None:
+            try:
+                self._crs = get_crs(prjfile=prjfile)
+            except FileNotFoundError:
+                pass
 
     @property
     def top(self):
@@ -299,7 +429,7 @@ class Grid:
             return self._laycbd
 
     @property
-    def thick(self):
+    def cell_thickness(self):
         """
         Get the cell thickness for a structured, vertex, or unstructured grid.
 
@@ -309,7 +439,15 @@ class Grid:
         """
         return -np.diff(self.top_botm, axis=0).reshape(self._botm.shape)
 
-    def saturated_thick(self, array, mask=None):
+    @property
+    def thick(self):
+        """Raises AttributeError, use :meth:`cell_thickness`."""
+        # DEPRECATED since version 3.4.0
+        raise AttributeError(
+            "'thick' has been removed; use 'cell_thickness()'"
+        )
+
+    def saturated_thickness(self, array, mask=None):
         """
         Get the saturated thickness for a structured, vertex, or unstructured
         grid. If the optional array is passed then thickness is returned
@@ -325,26 +463,33 @@ class Grid:
 
         Returns
         -------
-            thick : calculated saturated thickness
+            thickness : calculated saturated thickness
         """
-        thick = self.thick
-        top = self.top_botm[:-1].reshape(thick.shape)
-        bot = self.top_botm[1:].reshape(thick.shape)
-        thick = self.remove_confining_beds(thick)
+        thickness = self.cell_thickness
+        top = self.top_botm[:-1].reshape(thickness.shape)
+        bot = self.top_botm[1:].reshape(thickness.shape)
+        thickness = self.remove_confining_beds(thickness)
         top = self.remove_confining_beds(top)
         bot = self.remove_confining_beds(bot)
         array = self.remove_confining_beds(array)
 
         idx = np.where((array < top) & (array > bot))
-        thick[idx] = array[idx] - bot[idx]
+        thickness[idx] = array[idx] - bot[idx]
         idx = np.where(array <= bot)
-        thick[idx] = 0.0
+        thickness[idx] = 0.0
         if mask is not None:
             if isinstance(mask, (float, int)):
                 mask = [float(mask)]
             for mask_value in mask:
-                thick[np.where(array == mask_value)] = np.nan
-        return thick
+                thickness[np.where(array == mask_value)] = np.nan
+        return thickness
+
+    def saturated_thick(self, array, mask=None):
+        """Raises AttributeError, use :meth:`saturated_thickness`."""
+        # DEPRECATED since version 3.4.0
+        raise AttributeError(
+            "'saturated_thick' has been removed; use 'saturated_thickness()'"
+        )
 
     @property
     def units(self):
@@ -389,6 +534,10 @@ class Grid:
     @property
     def shape(self):
         raise NotImplementedError("must define shape in child class")
+
+    @property
+    def size(self):
+        return np.prod(self.shape)
 
     @property
     def extent(self):
@@ -469,7 +618,68 @@ class Grid:
     def cross_section_vertices(self):
         return self.xyzvertices[0], self.xyzvertices[1]
 
-    def neighbors(self, node, **kwargs):
+    def _set_neighbors(self, reset=False, method="rook"):
+        """
+        Method to calculate neighbors via shared edges or shared vertices
+
+        Parameters
+        ----------
+        reset : bool
+            flag to recalculate neighbors
+        method: str
+            "rook" for shared edges and "queen" for shared vertex
+
+        Returns
+        -------
+            None
+        """
+        if self._neighbors is None or reset:
+            node_num = 0
+            neighbors = {i: list() for i in range(len(self.iverts))}
+            edge_set = {i: list() for i in range(len(self.iverts))}
+            geoms = []
+            node_nums = []
+            if method == "rook":
+                for poly in self.iverts:
+                    if poly[0] == poly[-1]:
+                        poly = poly[:-1]
+                    for v in range(len(poly)):
+                        geoms.append(tuple(sorted([poly[v - 1], poly[v]])))
+                    node_nums += [node_num] * len(poly)
+                    node_num += 1
+            else:
+                # queen neighbors
+                for poly in self.iverts:
+                    if poly[0] == poly[-1]:
+                        poly = poly[:-1]
+                    for vert in poly:
+                        geoms.append(vert)
+                    node_nums += [node_num] * len(poly)
+                    node_num += 1
+
+            edge_nodes = defaultdict(set)
+            for i, item in enumerate(geoms):
+                edge_nodes[item].add(node_nums[i])
+
+            shared_vertices = []
+            for edge, nodes in edge_nodes.items():
+                if len(nodes) > 1:
+                    shared_vertices.append(nodes)
+                    for n in nodes:
+                        edge_set[n].append(edge)
+                        neighbors[n] += list(nodes)
+                        try:
+                            neighbors[n].remove(n)
+                        except:
+                            pass
+
+            # convert use dict to create a set that preserves insertion order
+            self._neighbors = {
+                i: list(dict.fromkeys(v)) for i, v in neighbors.items()
+            }
+            self._edge_set = edge_set
+
+    def neighbors(self, node=None, **kwargs):
         """
         Method to get nearest neighbors of a cell
 
@@ -478,50 +688,41 @@ class Grid:
         node : int
             model grid node number
 
+        ** kwargs:
+            method : str
+                "rook" for shared edge neighbors and "queen" for shared vertex
+                neighbors
+            reset : bool
+                flag to reset the neighbor calculation
+
         Returns
         -------
-            list : list of cell node numbers
+            list or dict : list of cell node numbers or dict of all cells and
+                neighbors
         """
-        ncpl = self.ncpl
-        if isinstance(ncpl, list):
-            ncpl = self.nnodes
+        method = kwargs.pop("method", None)
+        reset = kwargs.pop("reset", False)
+        if method is None:
+            self._set_neighbors(reset=reset)
+        else:
+            self._set_neighbors(reset=reset, method=method)
 
-        lay = 0
-        while node >= ncpl:
-            node -= ncpl
-            lay += 1
+        if node is not None:
+            lay = 0
+            if not isinstance(self.ncpl, (list, np.ndarray)):
+                while node >= self.ncpl:
+                    node -= self.ncpl
+                    lay += 1
 
-        if self._neighbors is None:
-            neigh = {}
-            xverts, yverts = self.cross_section_vertices
-            xverts, yverts = UnstructuredPlotUtilities.irregular_shape_patch(
-                xverts, yverts
-            )
-            for nn in range(ncpl):
-                conn = []
-                verts = self.get_cell_vertices(nn)
-                for ix in range(0, len(verts)):
-                    xv0, yv0 = verts[ix - 1]
-                    xv1, yv1 = verts[ix]
-                    idx0 = np.unique(
-                        np.where((xverts == xv0) & (yverts == yv0))[0]
-                    )
-                    idx1 = np.unique(
-                        np.where((xverts == xv1) & (yverts == yv1))[0]
-                    )
-                    mask = np.isin(idx0, idx1)
-                    conn += [i for i in idx0[mask]]
+                neighbors = self._neighbors[node]
+                if lay > 0:
+                    neighbors = [i + (self.ncpl * lay) for i in neighbors]
+            else:
+                neighbors = self._neighbors[node]
 
-                conn = list(set(conn))
-                conn.pop(conn.index(nn))
-                neigh[nn] = conn
-            self._neighbors = neigh
+            return neighbors
 
-        neighbors = self._neighbors[node]
-        if lay > 0:
-            neighbors = [i + (ncpl * lay) for i in neighbors]
-
-        return neighbors
+        return self._neighbors
 
     def remove_confining_beds(self, array):
         """
@@ -755,47 +956,73 @@ class Grid:
         else:
             return x, y
 
-    def _warn_intersect(self, module, lineno):
-        """
-        Warning for modelgrid intersect() interface change.
-
-        Should be be removed after a couple of releases. Added in 3.3.5
-
-        Updated in 3.3.6 to raise an error and exit if intersect interface
-        is called incorrectly.
-
-        Should be removed in flopy 3.3.7
-
-        Parameters
-        ----------
-        module : str
-            module name path
-        lineno : int
-            line number where warning is called from
-
-        Returns
-        -------
-            None
-        """
-        module = os.path.split(module)[-1]
-        warning = (
-            "The interface 'intersect(self, x, y, local=False, "
-            "forgive=False)' has been deprecated. Use the "
-            "intersect(self, x, y, z=None, local=False, "
-            "forgive=False) interface instead."
-        )
-
-        raise UserWarning(warning)
-
     def set_coord_info(
         self,
         xoff=None,
         yoff=None,
         angrot=None,
-        epsg=None,
-        proj4=None,
+        crs=None,
+        prjfile=None,
         merge_coord_info=True,
+        **kwargs,
     ):
+        """Set coordinate information for a grid.
+
+        Parameters
+        ----------
+        xoff, yoff : float, optional
+            X and Y coordinate of the origin point in the spatial reference
+            coordinate system.
+        angrot : float, optional
+            Rotation angle of model grid, as it is rotated around the origin
+            point.
+        crs : pyproj.CRS, int, str, optional
+            Coordinate reference system (CRS) for the model grid
+            (must be projected; geographic CRS are not supported).
+            The value can be anything accepted by
+            :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+            such as an authority string (eg "EPSG:26916") or a WKT string.
+        prjfile : str or pathlike, optional
+            ESRI-style projection file with well-known text defining the CRS
+            for the model grid (must be projected; geographic CRS are not
+            supported).
+        merge_coord_info : bool, default True
+            If True, retaining previous properties.
+            If False, overwrite properties with defaults, unless specified.
+        **kwargs : dict, optional
+            Support deprecated keyword options.
+
+            .. deprecated:: 3.5
+               The following keyword options will be removed for FloPy 3.6:
+
+                 - ``epsg`` (int): use ``crs`` instead.
+                 - ``proj4`` (str): use ``crs`` instead.
+
+        """
+        if crs is not None:
+            # Force these to be re-evaluated, if/when needed
+            if hasattr(self, "_epsg"):
+                delattr(self, "_epsg")
+            if hasattr(self, "_proj4"):
+                delattr(self, "_proj4")
+        # Handle deprecated projection kwargs; warnings are raised in crs.py
+        get_crs_args = {"crs": crs, "prjfile": prjfile}
+        if "epsg" in kwargs:
+            self.epsg = get_crs_args["epsg"] = kwargs.pop("epsg")
+        if "proj4" in kwargs:
+            self.proj4 = get_crs_args["proj4"] = kwargs.pop("proj4")
+        if kwargs:
+            raise TypeError(f"unhandled keywords: {kwargs}")
+        if HAS_PYPROJ:
+            new_crs = get_crs(**get_crs_args)
+        else:
+            new_crs = None
+            # provide some support without pyproj by retaining 'epsg' integer
+            if getattr(self, "_epsg", None) is None:
+                epsg = _get_epsg_from_crs_or_proj4(crs, self.proj4)
+                if epsg is not None:
+                    self.epsg = epsg
+
         if merge_coord_info:
             if xoff is None:
                 xoff = self._xoff
@@ -803,10 +1030,8 @@ class Grid:
                 yoff = self._yoff
             if angrot is None:
                 angrot = self._angrot
-            if epsg is None:
-                epsg = self._epsg
-            if proj4 is None:
-                proj4 = self._proj4
+            if new_crs is None:
+                new_crs = self._crs
 
         if xoff is None:
             xoff = 0.0
@@ -818,8 +1043,8 @@ class Grid:
         self._xoff = xoff
         self._yoff = yoff
         self._angrot = angrot
-        self._epsg = epsg
-        self._proj4 = proj4
+        self._prjfile = prjfile
+        self._crs = new_crs
         self._require_cache_updates()
 
     def load_coord_info(self, namefile=None, reffile="usgs.model.reference"):
@@ -842,8 +1067,9 @@ class Grid:
         if namefile is None:
             return False
         xul, yul = None, None
+        set_coord_info_args = {}
         header = []
-        with open(namefile, "r") as f:
+        with open(namefile) as f:
             for line in f:
                 if not line.startswith("#"):
                     break
@@ -877,11 +1103,18 @@ class Grid:
                     self._angrot = float(item.split(":")[1])
                 except:
                     pass
+            elif "crs" in item.lower():
+                try:
+                    crs = ":".join(item.split(":")[1:]).strip()
+                    if crs.lower() != "none":
+                        set_coord_info_args["crs"] = crs
+                except:
+                    pass
             elif "proj4_str" in item.lower():
                 try:
-                    self._proj4 = ":".join(item.split(":")[1:]).strip()
-                    if self._proj4.lower() == "none":
-                        self._proj4 = None
+                    proj4 = ":".join(item.split(":")[1:]).strip()
+                    if proj4.lower() != "none":
+                        set_coord_info_args["proj4"] = crs
                 except:
                     pass
             elif "start" in item.lower():
@@ -893,11 +1126,12 @@ class Grid:
         # we need to rotate the modelgrid first, then we can
         # calculate the xll and yll from xul and yul
         if (xul, yul) != (None, None):
-            self.set_coord_info(
-                xoff=self._xul_to_xll(xul),
-                yoff=self._yul_to_yll(yul),
-                angrot=self._angrot,
-            )
+            set_coord_info_args["xoff"] = self._xul_to_xll(xul)
+            set_coord_info_args["yoff"] = self._yul_to_yll(yul)
+            set_coord_info_args["angrot"] = self._angrot
+
+        if set_coord_info_args:
+            self.set_coord_info(**set_coord_info_args)
 
         return True
 
@@ -913,7 +1147,7 @@ class Grid:
                         if line.strip()[0] != "#":
                             info = line.strip().split("#")[0].split()
                             if len(info) > 1:
-                                data = " ".join(info[1:])
+                                data = " ".join(info[1:]).strip("'").strip('"')
                                 if info[0] == "xll":
                                     self._xoff = float(data)
                                 elif info[0] == "yll":
@@ -925,9 +1159,9 @@ class Grid:
                                 elif info[0] == "rotation":
                                     self._angrot = float(data)
                                 elif info[0] == "epsg":
-                                    self._epsg = int(data)
+                                    self.epsg = int(data)
                                 elif info[0] == "proj4":
-                                    self._proj4 = data
+                                    self.crs = data
                                 elif info[0] == "start_date":
                                     start_datetime = data
 
@@ -959,14 +1193,6 @@ class Grid:
         else:
             return yul - (np.cos(self.angrot_radians) * yext)
 
-    def _set_sr_coord_info(self, sr):
-        self._xoff = sr.xll
-        self._yoff = sr.yll
-        self._angrot = sr.rotation
-        self._epsg = sr.epsg
-        self._proj4 = sr.proj4_str
-        self._require_cache_updates()
-
     def _require_cache_updates(self):
         for cache_data in self._cache_dict.values():
             cache_data.out_of_date = True
@@ -994,17 +1220,32 @@ class Grid:
         return zbdryelevs, zcenters
 
     # Exporting
-    def write_shapefile(self, filename="grid.shp", epsg=None, prj=None):
+    def write_shapefile(
+        self, filename="grid.shp", crs=None, prjfile=None, **kwargs
+    ):
         """
         Write a shapefile of the grid with just the row and column attributes.
 
         """
         from ..export.shapefile_utils import write_grid_shapefile
 
-        if epsg is None and prj is None:
-            epsg = self.epsg
+        # Handle deprecated projection kwargs; warnings are raised in crs.py
+        write_grid_shapefile_args = {}
+        if "epsg" in kwargs:
+            write_grid_shapefile_args["epsg"] = kwargs.pop("epsg")
+        if "prj" in kwargs:
+            write_grid_shapefile_args["prj"] = kwargs.pop("prj")
+        if kwargs:
+            raise TypeError(f"unhandled keywords: {kwargs}")
+        if crs is None:
+            crs = self.crs
         write_grid_shapefile(
-            filename, self, array_dict={}, nan_val=-1.0e9, epsg=epsg, prj=prj
+            filename,
+            self,
+            array_dict={},
+            nan_val=-1.0e9,
+            crs=crs,
+            **write_grid_shapefile_args,
         )
         return
 

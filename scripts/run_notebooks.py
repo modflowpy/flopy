@@ -2,11 +2,7 @@ import os
 import sys
 
 # path to notebooks
-src_pths = (
-    os.path.join("..", "examples", "Notebooks"),
-    os.path.join("..", "examples", "groundwater_paper", "Notebooks"),
-    os.path.join("..", "examples", "FAQ"),
-)
+src_pths = (os.path.join("..", ".docs", "Notebooks"),)
 
 # parse command line arguments for notebook to create
 nb_files = None

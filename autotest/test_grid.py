@@ -1,22 +1,69 @@
 import os
+import re
+import warnings
+from contextlib import nullcontext
 from warnings import warn
 
 import matplotlib
 import numpy as np
 import pytest
-from autotest.conftest import requires_pkg, requires_exe
 from autotest.test_dis_cases import case_dis, case_disv
 from autotest.test_grid_cases import GridCases
 from flaky import flaky
 from matplotlib import pyplot as plt
+from modflow_devtools.markers import requires_exe, requires_pkg
+from modflow_devtools.misc import has_pkg
 from pytest_cases import parametrize_with_cases
 
 from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
 from flopy.mf6 import MFSimulation
 from flopy.modflow import Modflow, ModflowDis
+from flopy.utils.crs import get_authority_crs
 from flopy.utils.cvfdutil import gridlist_to_disv_gridprops, to_cvfd
 from flopy.utils.triangle import Triangle
 from flopy.utils.voronoi import VoronoiGrid
+
+HAS_PYPROJ = has_pkg("pyproj", strict=True)
+if HAS_PYPROJ:
+    import pyproj
+
+
+@pytest.fixture
+def minimal_unstructured_grid_info():
+    d = {
+        # pass in simple 2 cell minimal grid to make grid valid
+        "vertices": [
+            [0, 0.0, 1.0],
+            [1, 1.0, 1.0],
+            [2, 2.0, 1.0],
+            [3, 0.0, 0.0],
+            [4, 1.0, 0.0],
+            [5, 2.0, 0.0],
+        ],
+        "iverts": [[0, 1, 4, 3], [1, 2, 5, 4]],
+        "xcenters": [0.5, 1.5],
+        "ycenters": [0.5, 0.5],
+    }
+    return d
+
+
+@pytest.fixture
+def minimal_vertex_grid_info(minimal_unstructured_grid_info):
+    usg_info = minimal_unstructured_grid_info
+    d = {}
+    d["vertices"] = minimal_unstructured_grid_info["vertices"]
+    cell2d = []
+    for n in range(len(usg_info["iverts"])):
+        cell2d_n = [
+            n,
+            usg_info["xcenters"][n],
+            usg_info["ycenters"][n],
+        ] + usg_info["iverts"][n]
+        cell2d.append(cell2d_n)
+    d["cell2d"] = cell2d
+    d["ncpl"] = len(cell2d)
+    d["nlay"] = 1
+    return d
 
 
 def test_rotation():
@@ -100,27 +147,36 @@ def test_get_vertices():
 
 def test_get_lrc_get_node():
     nlay, nrow, ncol = 3, 4, 5
+    nnodes = nlay * nrow * ncol
     ml = Modflow()
     dis = ModflowDis(
         ml, nlay=nlay, nrow=nrow, ncol=ncol, top=50, botm=[0, -1, -2]
     )
-    nodes = list(range(nlay * nrow * ncol))
+    nodes = list(range(nnodes))
     indices = np.indices((nlay, nrow, ncol))
     layers = indices[0].flatten()
     rows = indices[1].flatten()
     cols = indices[2].flatten()
     for node, (l, r, c) in enumerate(zip(layers, rows, cols)):
         # ensure get_lrc returns zero-based layer row col
-        lrc = dis.get_lrc(node)[0]
-        assert lrc == (
-            l,
-            r,
-            c,
-        ), f"get_lrc() returned {lrc}, expecting {l, r, c}"
+        assert dis.get_lrc(node)[0] == (l, r, c)
         # ensure get_node returns zero-based node number
-        n = dis.get_node((l, r, c))[0]
-        assert node == n, f"get_node() returned {n}, expecting {node}"
-    return
+        assert dis.get_node((l, r, c))[0] == node
+
+    # check full list
+    lrc_list = list(zip(layers, rows, cols))
+    assert dis.get_lrc(nodes) == lrc_list
+    assert dis.get_node(lrc_list) == nodes
+
+    # check array-like input
+    assert dis.get_lrc(np.arange(nnodes)) == lrc_list
+    # dis.get_node does not accept array-like inputs, just tuple or list
+
+    # check out of bounds errors
+    with pytest.raises(ValueError, match="index 60 is out of bounds for"):
+        dis.get_lrc(nnodes)
+    with pytest.raises(ValueError, match="invalid entry in coordinates array"):
+        dis.get_node((4, 4, 4))
 
 
 def test_get_rc_from_node_coordinates():
@@ -247,9 +303,12 @@ def test_intersection(dis_model, disv_model):
 def test_structured_xyz_intersect(example_data_path):
     ml = Modflow.load(
         "freyberg.nam",
-        model_ws=str(example_data_path / "freyberg_multilayer_transient"),
+        model_ws=example_data_path / "freyberg_multilayer_transient",
     )
     mg = ml.modelgrid
+
+    assert mg.size == np.prod((mg.nlay, mg.nrow, mg.ncol))
+
     top_botm = ml.modelgrid.top_botm
     xc, yc, zc = mg.xyzcellcenters
 
@@ -267,10 +326,12 @@ def test_structured_xyz_intersect(example_data_path):
 
 def test_vertex_xyz_intersect(example_data_path):
     sim = MFSimulation.load(
-        sim_ws=str(example_data_path / "mf6" / "test003_gwfs_disv")
+        sim_ws=example_data_path / "mf6" / "test003_gwfs_disv"
     )
     ml = sim.get_model(list(sim.model_names)[0])
     mg = ml.modelgrid
+
+    assert mg.size == np.prod((mg.nlay, mg.ncpl))
 
     xc, yc, zc = mg.xyzcellcenters
     for _ in range(10):
@@ -286,11 +347,11 @@ def test_vertex_xyz_intersect(example_data_path):
 
 
 def test_unstructured_xyz_intersect(example_data_path):
-    ws = str(example_data_path / "unstructured")
-    name = os.path.join(ws, "ugrid_verts.dat")
+    ws = example_data_path / "unstructured"
+    name = ws / "ugrid_verts.dat"
     verts = load_verts(name)
 
-    name = os.path.join(ws, "ugrid_iverts.dat")
+    name = ws / "ugrid_iverts.dat"
     iverts, xc, yc = load_iverts(name)
 
     # create a 3 layer model grid
@@ -325,6 +386,8 @@ def test_unstructured_xyz_intersect(example_data_path):
         ncpl=ncpl,
     )
 
+    assert mg.size == mg.nnodes
+
     xc, yc, zc = mg.xyzcellcenters
     zc = zc[0].reshape(mg.nlay, mg.ncpl[0])
     for _ in range(10):
@@ -339,56 +402,9 @@ def test_unstructured_xyz_intersect(example_data_path):
             raise AssertionError("Unstructured grid intersection failed")
 
 
-def test_structured_neighbors(example_data_path):
-    ws = str(example_data_path / "freyberg")
-    ml = Modflow.load("freyberg.nam", model_ws=ws)
-    modelgrid = ml.modelgrid
-    k, i, j = 0, 5, 5
-    neighbors = modelgrid.neighbors(k, i, j)
-    for neighbor in neighbors:
-        if (
-                neighbor != (k, i + 1, j)
-                and neighbor != (k, i - 1, j)
-                and neighbor != (k, i, j + 1)
-                and neighbor != (k, i, j - 1)
-        ):
-            raise AssertionError(
-                "modelgid.neighbors not returning proper values"
-            )
-
-def test_vertex_neighbors(example_data_path):
-    ws = str(example_data_path / "mf6" / "test003_gwfs_disv")
-    sim = MFSimulation.load(sim_ws=ws)
-    gwf = sim.get_model("gwf_1")
-    modelgrid = gwf.modelgrid
-    node = 63
-    neighbors = modelgrid.neighbors(node)
-    for neighbor in neighbors:
-        if (
-                neighbor != node + 1
-                and neighbor != node - 1
-                and neighbor != node + 10
-                and neighbor != node - 10
-        ):
-            raise AssertionError(
-                "modelgid.neighbors not returning proper values"
-            )
-
-
-def test_unstructured_neighbors(example_data_path):
-    ws = str(example_data_path / "mf6" / "test006_gwf3")
-    sim = MFSimulation.load(sim_ws=ws)
-    gwf = sim.get_model("gwf_1")
-    modelgrid = gwf.modelgrid
-    truth = [3, 5, 11]
-    neighbors = modelgrid.neighbors(4)
-    if not truth == neighbors:
-        raise AssertionError("modelgid.neighbors not returning proper values")
-
-
 @pytest.mark.parametrize("spc_file", ["grd.spc", "grdrot.spc"])
 def test_structured_from_gridspec(example_data_path, spc_file):
-    fn = str(example_data_path / "specfile" / spc_file)
+    fn = example_data_path / "specfile" / spc_file
     modelgrid = StructuredGrid.from_gridspec(fn)
     assert isinstance(modelgrid, StructuredGrid)
 
@@ -400,7 +416,7 @@ def test_structured_from_gridspec(example_data_path, spc_file):
 
     extents = modelgrid.extent
     theta = modelgrid.angrot_radians
-    if "rot" in fn:
+    if fn.name == "grdrot.spc":
         assert theta != 0, "rotation missing"
     rotated_extents = (
         0,  # xmin
@@ -433,17 +449,19 @@ def test_structured_from_gridspec(example_data_path, spc_file):
 
 @requires_pkg("shapely")
 def test_unstructured_from_argus_mesh(example_data_path):
-    datapth = str(example_data_path / "unstructured")
+    datapth = example_data_path / "unstructured"
     fnames = [fname for fname in os.listdir(datapth) if fname.endswith(".exp")]
     for fname in fnames:
-        fname = os.path.join(datapth, fname)
+        fname = datapth / fname
         print(f"Loading Argus mesh ({fname}) into UnstructuredGrid")
         g = UnstructuredGrid.from_argus_export(fname)
         print(f"  Number of nodes: {g.nnodes}")
 
 
-def test_unstructured_from_verts_and_iverts(tmpdir, example_data_path):
-    datapth = str(example_data_path / "unstructured")
+def test_unstructured_from_verts_and_iverts(
+    function_tmpdir, example_data_path
+):
+    datapth = example_data_path / "unstructured"
 
     # simple functions to load vertices and incidence lists
     def load_verts(fname):
@@ -468,11 +486,11 @@ def test_unstructured_from_verts_and_iverts(tmpdir, example_data_path):
         return iverts, np.array(xc), np.array(yc)
 
     # load vertices
-    fname = os.path.join(datapth, "ugrid_verts.dat")
+    fname = datapth / "ugrid_verts.dat"
     verts = load_verts(fname)
 
     # load the incidence list into iverts
-    fname = os.path.join(datapth, "ugrid_iverts.dat")
+    fname = datapth / "ugrid_iverts.dat"
     iverts, xc, yc = load_iverts(fname)
 
     ncpl = np.array(5 * [len(iverts)])
@@ -486,10 +504,10 @@ def test_unstructured_from_verts_and_iverts(tmpdir, example_data_path):
 
 def test_unstructured_from_gridspec(example_data_path):
     model_path = example_data_path / "freyberg_usg"
-    spec_path = str(model_path / "freyberg.usg.gsf")
+    spec_path = model_path / "freyberg.usg.gsf"
     grid = UnstructuredGrid.from_gridspec(spec_path)
 
-    with open(spec_path, "r") as file:
+    with open(spec_path) as file:
         lines = file.readlines()
         split = [line.strip().split() for line in lines]
 
@@ -537,38 +555,301 @@ def test_unstructured_from_gridspec(example_data_path):
         assert min(grid.botm) == min([xyz[2] for xyz in expected_verts])
 
 
-def test_epsgs():
-    import flopy.export.shapefile_utils as shp
+@pytest.mark.parametrize(
+    "crs,expected_srs",
+    (
+        (None, None),
+        (26916, "EPSG:26916"),
+        ("epsg:5070", "EPSG:5070"),
+        (
+            "+proj=tmerc +lat_0=0 +lon_0=-90 +k=0.9996 +x_0=520000 +y_0=-4480000 +datum=NAD83 +units=m +no_defs ",
+            "EPSG:3070",
+        ),
+        pytest.param(4269, None, marks=pytest.mark.xfail),
+    ),
+)
+def test_grid_crs(
+    minimal_unstructured_grid_info, crs, expected_srs, function_tmpdir
+):
+    expected_epsg = None
+    if match := re.findall(r"epsg:([\d]+)", expected_srs or "", re.IGNORECASE):
+        expected_epsg = int(match[0])
+    if not HAS_PYPROJ and isinstance(crs, str) and "epsg" not in crs.lower():
+        # pyproj needed to derive 'epsg' from PROJ string
+        expected_epsg = None
 
-    # test setting a geographic (lat/lon) coordinate reference
-    # (also tests shapefile_utils.CRS parsing of geographic crs info)
+    d = minimal_unstructured_grid_info
     delr = np.ones(10)
     delc = np.ones(10)
-    mg = StructuredGrid(delr=delr, delc=delc)
 
-    mg.epsg = 102733
-    assert mg.epsg == 102733, f"mg.epsg is not 102733 ({mg.epsg})"
+    def do_checks(g):
+        if HAS_PYPROJ and crs is not None:
+            assert isinstance(g.crs, pyproj.CRS)
+            assert g.crs.srs == expected_srs
+        else:
+            assert g.crs is None
+        assert g.epsg == expected_epsg
 
-    t_value = mg.__repr__()
-    if not "proj4_str:epsg:102733" in t_value:
-        raise AssertionError(
-            f"proj4_str:epsg:102733 not in mg.__repr__(): ({t_value})"
-        )
+    # test each grid type (class)
+    do_checks(StructuredGrid(delr=delr, delc=delc, crs=crs))
+    do_checks(UnstructuredGrid(**d, crs=crs))
+    do_checks(VertexGrid(vertices=d["vertices"], crs=crs))
 
-    mg.epsg = 4326  # WGS 84
-    crs = shp.CRS(epsg=4326)
-    if crs.grid_mapping_attribs is not None:
-        assert crs.crs["proj"] == "longlat"
-        t_value = crs.grid_mapping_attribs["grid_mapping_name"]
-        assert (
-            t_value == "latitude_longitude"
-        ), f"grid_mapping_name is not latitude_longitude: {t_value}"
+    # only check deprecations if pyproj is available
+    pyproj_avail_context = (
+        pytest.deprecated_call() if HAS_PYPROJ else nullcontext()
+    )
 
-    t_value = mg.__repr__()
-    if not "proj4_str:epsg:4326" in t_value:
-        raise AssertionError(
-            f"proj4_str:epsg:4326 not in sr.__repr__(): ({t_value})"
-        )
+    # test deprecated 'epsg' parameter
+    if isinstance(crs, int):
+        with pyproj_avail_context:
+            do_checks(StructuredGrid(delr=delr, delc=delc, epsg=crs))
+
+    if HAS_PYPROJ and crs == 26916:
+        crs_obj = get_authority_crs(crs)
+
+        # test input of pyproj.CRS object
+        do_checks(StructuredGrid(delr=delr, delc=delc, crs=crs_obj))
+
+        # test input of projection file
+        prjfile = function_tmpdir / "grid_crs.prj"
+        prjfile.write_text(crs_obj.to_wkt(), encoding="utf-8")
+
+        do_checks(StructuredGrid(delr=delr, delc=delc, prjfile=prjfile))
+
+        # test deprecated 'prj' parameter
+        with pyproj_avail_context:
+            do_checks(StructuredGrid(delr=delr, delc=delc, prj=prjfile))
+
+        # test deprecated 'proj4' parameter
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")  # pyproj warning about conversion
+            proj4 = crs_obj.to_proj4()
+        with pyproj_avail_context:
+            do_checks(StructuredGrid(delr=delr, delc=delc, proj4=proj4))
+
+
+@pytest.mark.parametrize(
+    "crs,expected_srs",
+    (
+        (None, None),
+        (26916, "EPSG:26916"),
+        ("epsg:5070", "EPSG:5070"),
+        (
+            "+proj=tmerc +lat_0=0 +lon_0=-90 +k=0.9996 +x_0=520000 +y_0=-4480000 +datum=NAD83 +units=m +no_defs ",
+            "EPSG:3070",
+        ),
+        ("ESRI:102733", "ESRI:102733"),
+        pytest.param(4269, None, marks=pytest.mark.xfail),
+    ),
+)
+def test_grid_set_crs(crs, expected_srs, function_tmpdir):
+    expected_epsg = None
+    if match := re.findall(r"epsg:([\d]+)", expected_srs or "", re.IGNORECASE):
+        expected_epsg = int(match[0])
+    if not HAS_PYPROJ and isinstance(crs, str) and "epsg" not in crs.lower():
+        # pyproj needed to derive 'epsg' from PROJ string
+        expected_epsg = None
+    elif HAS_PYPROJ and crs is not None and expected_epsg is None:
+        expected_epsg = pyproj.CRS.from_user_input(crs).to_epsg()
+
+    delr = np.ones(10)
+    delc = np.ones(10)
+
+    def do_checks(g, *, exp_srs=expected_srs, exp_epsg=expected_epsg):
+        if HAS_PYPROJ:
+            if crs is not None:
+                assert isinstance(g.crs, pyproj.CRS)
+            assert getattr(g.crs, "srs", None) == exp_srs
+        else:
+            assert g.crs is None
+        assert g.epsg == exp_epsg
+
+    # test set_coord_info with a grid object
+    sg = StructuredGrid(delr=delr, delc=delc, crs=crs)
+    do_checks(sg)
+
+    # no change
+    sg.set_coord_info()
+    do_checks(sg)
+
+    # use 'crs' arg
+    sg.set_coord_info(crs=crs)
+    do_checks(sg)
+
+    # use different 'crs'
+    sg.set_coord_info(crs=26915, merge_coord_info=False)
+    do_checks(sg, exp_srs="EPSG:26915", exp_epsg=26915)
+
+    # only check deprecations if pyproj is available
+    pyproj_avail_context = (
+        pytest.deprecated_call() if HAS_PYPROJ else nullcontext()
+    )
+
+    # test deprecated 'epsg' parameter
+    if isinstance(crs, int):
+        with pyproj_avail_context:
+            sg.set_coord_info(epsg=crs)
+        do_checks(sg)
+
+    # use 'crs' setter
+    sg = StructuredGrid(delr=delr, delc=delc)
+    if HAS_PYPROJ:
+        sg.crs = crs
+        do_checks(sg)
+    else:
+        if crs is None:
+            sg.crs = crs
+        else:
+            with pytest.warns():
+                # cannot set 'crs' property without pyproj
+                sg.crs = crs
+        do_checks(sg, exp_epsg=None)
+
+    # unset 'crs', and check that 'epsg' is also none (sometimes)
+    sg = StructuredGrid(delr=delr, delc=delc, crs=crs)
+    sg.crs = None
+    assert sg.crs is None
+    if HAS_PYPROJ:
+        # with pyproj, '_epsg' was never populated by getter
+        assert sg.epsg is None
+    else:
+        # without pyproj, '_epsg' is populated from specific 'crs' inputs
+        assert sg.epsg == expected_epsg
+
+    # unset 'crs', but check that 'epsg' is retained
+    sg = StructuredGrid(delr=delr, delc=delc, crs=crs)
+    assert sg.epsg == expected_epsg  # populate '_epsg' via getter
+    sg.crs = None
+    assert sg.crs is None
+    assert sg.epsg == expected_epsg
+
+    # unset 'epsg'
+    sg.epsg = None
+    assert sg.epsg is None
+
+    # unset 'proj4'
+    sg.proj4 = None
+    assert sg.proj4 is None
+
+    # set and unset 'prjfile' with a non-existing file
+    prjfile = "test"
+    assert sg.prjfile is None
+    sg.prjfile = prjfile
+    assert sg.prjfile == prjfile
+    sg.prjfile = None
+    assert sg.prjfile is None
+
+    if HAS_PYPROJ and crs is not None:
+        crs_obj = get_authority_crs(crs)
+
+        # test input of projection file
+        prjfile = function_tmpdir / "grid_crs.prj"
+        prjfile.write_text(crs_obj.to_wkt(), encoding="utf-8")
+
+        def do_prjfile_checks(g):
+            assert isinstance(g.crs, pyproj.CRS)
+            assert g.crs.srs == expected_srs
+            assert g.epsg == expected_epsg
+            assert g.prjfile == prjfile
+
+        # test with 'prjfile' setter and parameter
+        sg = StructuredGrid(delr=delr, delc=delc)
+        sg.prjfile = prjfile
+        do_prjfile_checks(sg)
+        sg.set_coord_info(prjfile=prjfile)
+        do_prjfile_checks(sg)
+
+        # test with deprecated 'prj' getter/setter
+        with pytest.deprecated_call():
+            assert sg.prj == prjfile
+        with pytest.deprecated_call():
+            sg.prj = prjfile
+        do_prjfile_checks(sg)
+
+        # test deprecated 'proj4' parameter
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")  # pyproj warning about conversion
+            proj4 = crs_obj.to_proj4()
+        with pytest.deprecated_call():
+            sg.set_coord_info(proj4=proj4)
+        do_checks(sg)
+
+    if HAS_PYPROJ:
+        # copy previous non-None epsg
+        prev_epsg = sg.epsg
+        # test setting another crs
+        sg.crs = 26915
+        assert sg.crs == get_authority_crs(26915)
+        # note that 'epsg' is not updated by setting 'crs', unless it was None
+        assert sg.epsg == prev_epsg or 26915
+
+    if HAS_PYPROJ and crs is not None:
+        if epsg := crs_obj.to_epsg():
+            sg = StructuredGrid(delr=delr, delc=delc, crs=crs)
+            sg.epsg = epsg
+            do_checks(sg, exp_epsg=epsg)
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")  # pyproj warning about conversion
+            proj4 = crs_obj.to_proj4()
+        sg = StructuredGrid(delr=delr, delc=delc)
+        sg.proj4 = proj4
+        do_checks(sg)
+        assert sg.proj4 == proj4
+
+        sg = StructuredGrid(delr=delr, delc=delc)
+        with pytest.deprecated_call():
+            sg.prj = prjfile
+        do_checks(sg)
+        with pytest.deprecated_call():
+            assert sg.prj == prjfile
+
+
+def test_grid_crs_exceptions():
+    delr = np.ones(10)
+    delc = np.ones(10)
+    sg = StructuredGrid(delr=delr, delc=delc, crs="EPSG:26915")
+
+    # test bad 'epsg' parameter
+    bad_epsg = "EPSG:26915"
+    with pytest.raises(ValueError):
+        StructuredGrid(delr=delr, delc=delc, epsg=bad_epsg)
+    with pytest.raises(ValueError):
+        sg.epsg = bad_epsg
+    with pytest.raises(ValueError):
+        sg.set_coord_info(epsg=bad_epsg)
+
+    # test bad 'proj4' parameter
+    bad_proj4 = 26915
+    with pytest.raises(ValueError):
+        StructuredGrid(delr=delr, delc=delc, proj4=bad_proj4)
+    with pytest.raises(ValueError):
+        sg.proj4 = bad_proj4
+    with pytest.raises(ValueError):
+        sg.set_coord_info(proj4=bad_proj4)
+
+    # test bad 'prjfile' parameter
+    bad_prjfile = 0
+    with pytest.raises(ValueError):
+        StructuredGrid(delr=delr, delc=delc, prjfile=bad_prjfile)
+    with pytest.raises(ValueError):
+        sg.prjfile = bad_prjfile
+
+    # test non-existing file
+    not_a_file = "not-a-file"
+    if HAS_PYPROJ:
+        with pytest.raises(FileNotFoundError):
+            StructuredGrid(delr=delr, delc=delc, prjfile=not_a_file)
+    # note "sg.prjfile = not_a_file" intentionally does not raise anything
+
+    # test unhandled keyword
+    with pytest.raises(TypeError):
+        StructuredGrid(delr=delr, delc=delc, unused_param=None)
+
+    # set_coord_info never had a 'prj' parameter; test it as unhandled keyword
+    with pytest.raises(TypeError):
+        sg.set_coord_info(prj=not_a_file)
 
 
 def test_tocvfd1():
@@ -663,32 +944,20 @@ def test_unstructured_grid_dimensions():
     assert not g.grid_varies_by_layer
 
 
-def test_unstructured_minimal_grid_ctor():
+def test_unstructured_minimal_grid_ctor(minimal_unstructured_grid_info):
     # pass in simple 2 cell minimal grid to make grid valid
-    vertices = [
-        [0, 0.0, 1.0],
-        [1, 1.0, 1.0],
-        [2, 2.0, 1.0],
-        [3, 0.0, 0.0],
-        [4, 1.0, 0.0],
-        [5, 2.0, 0.0],
-    ]
-    iverts = [[0, 1, 4, 3], [1, 2, 5, 4]]
-    xcenters = [0.5, 1.5]
-    ycenters = [0.5, 0.5]
-    g = UnstructuredGrid(
-        vertices=vertices, iverts=iverts, xcenters=xcenters, ycenters=ycenters
-    )
+    d = minimal_unstructured_grid_info
+    g = UnstructuredGrid(**d)
     assert np.allclose(g.ncpl, np.array([2], dtype=int))
     assert g.nlay == 1
     assert g.nnodes == 2
     assert g.is_valid
     assert not g.is_complete
     assert not g.grid_varies_by_layer
-    assert g._vertices == vertices
-    assert g._iverts == iverts
-    assert g._xc == xcenters
-    assert g._yc == ycenters
+    assert g._vertices == d["vertices"]
+    assert g._iverts == d["iverts"]
+    assert g._xc == d["xcenters"]
+    assert g._yc == d["ycenters"]
     grid_lines = [
         [(0.0, 0), (0.0, 1.0)],
         [(0.0, 1), (1.0, 1.0)],
@@ -709,33 +978,17 @@ def test_unstructured_minimal_grid_ctor():
     assert zv is None
 
 
-def test_unstructured_complete_grid_ctor():
+def test_unstructured_complete_grid_ctor(minimal_unstructured_grid_info):
     # pass in simple 2 cell complete grid to make grid valid, and put each
     # cell in a different layer
-    vertices = [
-        [0, 0.0, 1.0],
-        [1, 1.0, 1.0],
-        [2, 2.0, 1.0],
-        [3, 0.0, 0.0],
-        [4, 1.0, 0.0],
-        [5, 2.0, 0.0],
-    ]
-    iverts = [[0, 1, 4, 3], [1, 2, 5, 4]]
-    xcenters = [0.5, 1.5]
-    ycenters = [0.5, 0.5]
+    d = minimal_unstructured_grid_info
     ncpl = [1, 1]
     top = [1, 0]
     top = np.array(top)
     botm = [0, -1]
     botm = np.array(botm)
     g = UnstructuredGrid(
-        vertices=vertices,
-        iverts=iverts,
-        xcenters=xcenters,
-        ycenters=ycenters,
-        ncpl=ncpl,
-        top=top,
-        botm=botm,
+        ncpl=ncpl, top=top, botm=botm, **minimal_unstructured_grid_info
     )
     assert np.allclose(g.ncpl, np.array([1, 1], dtype=int))
     assert g.nlay == 2
@@ -743,10 +996,10 @@ def test_unstructured_complete_grid_ctor():
     assert g.is_valid
     assert not g.is_complete
     assert g.grid_varies_by_layer
-    assert g._vertices == vertices
-    assert g._iverts == iverts
-    assert g._xc == xcenters
-    assert g._yc == ycenters
+    assert g._vertices == d["vertices"]
+    assert g._iverts == d["iverts"]
+    assert g._xc == d["xcenters"]
+    assert g._yc == d["ycenters"]
     grid_lines = {
         0: [
             [(0.0, 0.0), (0.0, 1.0)],
@@ -774,7 +1027,7 @@ def test_unstructured_complete_grid_ctor():
 
 @requires_pkg("shapely")
 @requires_exe("triangle")
-def test_triangle_unstructured_grid(tmpdir):
+def test_triangle_unstructured_grid(function_tmpdir):
     maximum_area = 30000.0
     extent = (214270.0, 221720.0, 4366610.0, 4373510.0)
     domainpoly = [
@@ -786,7 +1039,7 @@ def test_triangle_unstructured_grid(tmpdir):
     tri = Triangle(
         maximum_area=maximum_area,
         angle=30,
-        model_ws=str(tmpdir),
+        model_ws=function_tmpdir,
     )
     tri.add_polygon(domainpoly)
     tri.build(verbose=False)
@@ -807,13 +1060,13 @@ def test_triangle_unstructured_grid(tmpdir):
 
 @requires_pkg("shapely", "scipy")
 @requires_exe("triangle")
-def test_voronoi_vertex_grid(tmpdir):
+def test_voronoi_vertex_grid(function_tmpdir):
     xmin = 0.0
     xmax = 2.0
     ymin = 0.0
     ymax = 1.0
     area_max = 0.05
-    tri = Triangle(maximum_area=area_max, angle=30, model_ws=str(tmpdir))
+    tri = Triangle(maximum_area=area_max, angle=30, model_ws=function_tmpdir)
     poly = np.array(((xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax)))
     tri.add_polygon(poly)
     tri.build(verbose=False)
@@ -837,7 +1090,7 @@ def test_voronoi_vertex_grid(tmpdir):
 @requires_exe("triangle")
 @requires_pkg("shapely", "scipy")
 @parametrize_with_cases("grid_info", cases=GridCases, prefix="voronoi")
-def test_voronoi_grid(request, tmpdir, grid_info):
+def test_voronoi_grid(request, function_tmpdir, grid_info):
     name = (
         request.node.name.replace("/", "_")
         .replace("\\", "_")
@@ -867,7 +1120,7 @@ def test_voronoi_grid(request, tmpdir, grid_info):
         grid.ycellcenters[invalid_cells],
         "ro",
     )
-    plt.savefig(os.path.join(str(tmpdir), f"{name}.png"))
+    plt.savefig(function_tmpdir / f"{name}.png")
 
     assert ncpl == gridprops["ncpl"] or almost_right
     assert (
@@ -890,84 +1143,120 @@ def unstructured_grid():
     return GridCases().unstructured_small()
 
 
-def test_structured_thick(structured_grid):
-    thick = structured_grid.thick
-    assert np.allclose(thick, 5.0), "thicknesses != 5."
+def test_structured_thickness(structured_grid):
+    thickness = structured_grid.cell_thickness
+    assert np.allclose(thickness, 5.0), "thicknesses != 5."
 
-    sat_thick = structured_grid.saturated_thick(structured_grid.botm + 10.0)
-    assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
+    sat_thick = structured_grid.saturated_thickness(
+        structured_grid.botm + 10.0
+    )
+    assert np.allclose(sat_thick, thickness), "saturated thicknesses != 5."
 
-    sat_thick = structured_grid.saturated_thick(structured_grid.botm + 5.0)
-    assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
+    sat_thick = structured_grid.saturated_thickness(structured_grid.botm + 5.0)
+    assert np.allclose(sat_thick, thickness), "saturated thicknesses != 5."
 
-    sat_thick = structured_grid.saturated_thick(structured_grid.botm + 2.5)
+    sat_thick = structured_grid.saturated_thickness(structured_grid.botm + 2.5)
     assert np.allclose(sat_thick, 2.5), "saturated thicknesses != 2.5"
 
-    sat_thick = structured_grid.saturated_thick(structured_grid.botm)
+    sat_thick = structured_grid.saturated_thickness(structured_grid.botm)
     assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
 
-    sat_thick = structured_grid.saturated_thick(structured_grid.botm - 100.0)
+    sat_thick = structured_grid.saturated_thickness(
+        structured_grid.botm - 100.0
+    )
     assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
 
 
-def test_vertices_thick(vertex_grid):
-    thick = vertex_grid.thick
-    assert np.allclose(thick, 5.0), "thicknesses != 5."
+def test_vertices_thickness(vertex_grid):
+    thickness = vertex_grid.cell_thickness
+    assert np.allclose(thickness, 5.0), "thicknesses != 5."
 
-    sat_thick = vertex_grid.saturated_thick(vertex_grid.botm + 10.0)
-    assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
+    sat_thick = vertex_grid.saturated_thickness(vertex_grid.botm + 10.0)
+    assert np.allclose(sat_thick, thickness), "saturated thicknesses != 5."
 
-    sat_thick = vertex_grid.saturated_thick(vertex_grid.botm + 5.0)
-    assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
+    sat_thick = vertex_grid.saturated_thickness(vertex_grid.botm + 5.0)
+    assert np.allclose(sat_thick, thickness), "saturated thicknesses != 5."
 
-    sat_thick = vertex_grid.saturated_thick(vertex_grid.botm + 2.5)
+    sat_thick = vertex_grid.saturated_thickness(vertex_grid.botm + 2.5)
     assert np.allclose(sat_thick, 2.5), "saturated thicknesses != 2.5"
 
-    sat_thick = vertex_grid.saturated_thick(vertex_grid.botm)
+    sat_thick = vertex_grid.saturated_thickness(vertex_grid.botm)
     assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
 
-    sat_thick = vertex_grid.saturated_thick(vertex_grid.botm - 100.0)
+    sat_thick = vertex_grid.saturated_thickness(vertex_grid.botm - 100.0)
     assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
 
 
-def test_unstructured_thick(unstructured_grid):
-    thick = unstructured_grid.thick
-    assert np.allclose(thick, 5.0), "thicknesses != 5."
+def test_unstructured_thickness(unstructured_grid):
+    thickness = unstructured_grid.cell_thickness
+    assert np.allclose(thickness, 5.0), "thicknesses != 5."
 
-    sat_thick = unstructured_grid.saturated_thick(
+    sat_thick = unstructured_grid.saturated_thickness(
         unstructured_grid.botm + 10.0
     )
-    assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
+    assert np.allclose(sat_thick, thickness), "saturated thicknesses != 5."
 
-    sat_thick = unstructured_grid.saturated_thick(unstructured_grid.botm + 5.0)
-    assert np.allclose(sat_thick, thick), "saturated thicknesses != 5."
+    sat_thick = unstructured_grid.saturated_thickness(
+        unstructured_grid.botm + 5.0
+    )
+    assert np.allclose(sat_thick, thickness), "saturated thicknesses != 5."
 
-    sat_thick = unstructured_grid.saturated_thick(unstructured_grid.botm + 2.5)
+    sat_thick = unstructured_grid.saturated_thickness(
+        unstructured_grid.botm + 2.5
+    )
     assert np.allclose(sat_thick, 2.5), "saturated thicknesses != 2.5"
 
-    sat_thick = unstructured_grid.saturated_thick(unstructured_grid.botm)
+    sat_thick = unstructured_grid.saturated_thickness(unstructured_grid.botm)
     assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
 
-    sat_thick = unstructured_grid.saturated_thick(
+    sat_thick = unstructured_grid.saturated_thickness(
         unstructured_grid.botm - 100.0
     )
     assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
 
 
+def test_structured_neighbors(structured_grid):
+    rook_neighbors = structured_grid.neighbors(1)
+    assert np.allclose(rook_neighbors, [0, 2, 4])
+
+    queen_neighbors = structured_grid.neighbors(1, method="queen", reset=True)
+    assert np.allclose(queen_neighbors, [0, 3, 4, 2, 5])
+
+
+def test_vertex_neighbors(vertex_grid):
+    rook_neighbors = vertex_grid.neighbors(2)
+    assert np.allclose(rook_neighbors, [0, 3, 4])
+
+    queen_neighbors = vertex_grid.neighbors(2, method="queen", reset=True)
+    assert np.allclose(queen_neighbors, [0, 1, 3, 4])
+
+
+def test_unstructured_neighbors(unstructured_grid):
+    rook_neighbors = unstructured_grid.neighbors(5)
+    assert np.allclose(rook_neighbors, [0, 10, 1, 2, 3, 7, 12])
+
+    queen_neighbors = unstructured_grid.neighbors(
+        5, method="queen", reset=True
+    )
+    assert np.allclose(
+        queen_neighbors, [0, 10, 1, 6, 11, 2, 3, 4, 7, 8, 12, 13]
+    )
+
+
 @parametrize_with_cases("grid", cases=GridCases, prefix="structured_cbd")
-def test_structured_ncb_thick(grid):
-    thick = grid.thick
+def test_structured_ncb_thickness(grid):
+    thickness = grid.cell_thickness
 
-    assert thick.shape[0] == grid.nlay + np.count_nonzero(
+    assert thickness.shape[0] == grid.nlay + np.count_nonzero(
         grid.laycbd
-    ), "grid thick attribute returns incorrect shape"
+    ), "grid cell_thickness attribute returns incorrect shape"
 
-    thick = grid.remove_confining_beds(grid.thick)
+    thickness = grid.remove_confining_beds(grid.cell_thickness)
     assert (
-        thick.shape == grid.shape
+        thickness.shape == grid.shape
     ), "quasi3d confining beds not properly removed"
 
-    sat_thick = grid.saturated_thick(grid.thick)
+    sat_thick = grid.saturated_thickness(grid.cell_thickness)
     assert (
         sat_thick.shape == grid.shape
     ), "saturated_thickness confining beds not removed"
@@ -1005,11 +1294,9 @@ def test_get_lni_unstructured(grid):
         layer, i = grid.get_lni([nn])[0]
         csum = [0] + list(
             np.cumsum(
-                (
-                    list(grid.ncpl)
-                    if not isinstance(grid.ncpl, int)
-                    else [grid.ncpl for _ in range(grid.nlay)]
-        )
+                list(grid.ncpl)
+                if not isinstance(grid.ncpl, int)
+                else [grid.ncpl for _ in range(grid.nlay)]
             )
         )
         assert csum[layer] + i == nn

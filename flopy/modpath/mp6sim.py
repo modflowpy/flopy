@@ -8,15 +8,10 @@ MODFLOW Guide
 
 """
 import numpy as np
+import pandas as pd
 
 from ..pakbase import Package
 from ..utils import Util3d, import_optional_dependency
-
-pd = import_optional_dependency(
-    "pandas",
-    error_message="writing particles is more effcient with pandas",
-    errors="ignore",
-)
 
 
 class Modpath6Sim(Package):
@@ -88,7 +83,6 @@ class Modpath6Sim(Package):
         strt_file=None,
         extension="mpsim",
     ):
-
         # call base package constructor
         super().__init__(model, extension, "MPSIM", 32)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
@@ -278,7 +272,7 @@ class Modpath6Sim(Package):
                     CHeadOption,
                 ) = self.group_placement[i]
                 f_sim.write(
-                    "{0:d} {1:d} {2:d} {3:f} {4:d} {5:d}\n".format(
+                    "{:d} {:d} {:d} {:f} {:d} {:d}\n".format(
                         Grid,
                         GridCellRegionOption,
                         PlacementOption,
@@ -307,7 +301,7 @@ class Modpath6Sim(Package):
                         MaxColumn,
                     ) = self.group_region[i]
                     f_sim.write(
-                        "{0:d} {1:d} {2:d} {3:d} {4:d} {5:d}\n".format(
+                        "{:d} {:d} {:d} {:d} {:d} {:d}\n".format(
                             MinLayer + 1,
                             MinRow + 1,
                             MinColumn + 1,
@@ -345,7 +339,7 @@ class Modpath6Sim(Package):
                         ParticleColumnCount,
                     ) = self.particle_cell_cnt[i]
                     f_sim.write(
-                        "{0:d} {1:d} {2:d} \n".format(
+                        "{:d} {:d} {:d} \n".format(
                             ParticleLayerCount,
                             ParticleRowCount,
                             ParticleColumnCount,
@@ -418,8 +412,8 @@ class StartingLocationsFile(Package):
         Input style described in MODPATH6 manual (currently only input style 1 is supported)
     extension : string
         Filename extension (default is 'loc')
-
-    use_pandas: bool, if True and pandas is available use pandas to write the particle locations >2x speed
+    use_pandas: bool, default True
+        If True use pandas to write the particle locations >2x speed
     """
 
     def __init__(
@@ -430,7 +424,6 @@ class StartingLocationsFile(Package):
         verbose=False,
         use_pandas=True,
     ):
-
         super().__init__(model, extension, "LOC", 33)
 
         self.model = model
@@ -495,7 +488,6 @@ class StartingLocationsFile(Package):
         return d
 
     def write_file(self, data=None, float_format="{:.8f}"):
-
         if data is None:
             data = self.data
         if len(data) == 0:
@@ -505,7 +497,7 @@ class StartingLocationsFile(Package):
         data["k0"] += 1
         data["i0"] += 1
         data["j0"] += 1
-        if pd is not None and self.use_pandas and len(data) > 0:
+        if self.use_pandas and len(data) > 0:
             self._write_particle_data_with_pandas(data, float_format)
         else:
             self._write_wo_pandas(data, float_format)
@@ -556,15 +548,15 @@ class StartingLocationsFile(Package):
             groups[["groupname", "count"]].astype(str).values.flatten()
         )
         with open(loc_path, "w") as f:
-            f.write("{}\n".format(self.heading))
-            f.write("{:d}\n".format(self.input_style))
-            f.write("{}\n".format(group_count))
+            f.write(f"{self.heading}\n")
+            f.write(f"{self.input_style:d}\n")
+            f.write(f"{group_count}\n")
 
         groups.to_csv(loc_path, sep=" ", index=False, header=False, mode="a")
 
         # write particle data
         print("writing loc particle data")
-        data.drop("groupname", 1, inplace=True)
+        data.drop(labels="groupname", axis=1, inplace=True)
         data.to_csv(
             loc_path,
             sep=" ",

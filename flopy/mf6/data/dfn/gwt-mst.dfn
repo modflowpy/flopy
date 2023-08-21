@@ -42,7 +42,7 @@ shape (nodes)
 reader readarray
 layered true
 longname porosity
-description is the aquifer porosity.
+description is the mobile domain porosity, defined as the mobile domain pore volume per mobile domain volume.  Additional information on porosity within the context of mobile and immobile domain transport simulations is included in the MODFLOW 6 Supplemental Technical Information document. 
 
 block griddata
 name decay
@@ -72,7 +72,7 @@ reader readarray
 optional true
 layered true
 longname bulk density
-description is the bulk density of the aquifer in mass per length cubed.  bulk\_density is not required unless the SORPTION keyword is specified.
+description is the bulk density of the aquifer in mass per length cubed.  bulk\_density is not required unless the SORPTION keyword is specified.  Bulk density is defined as the mobile domain solid mass per mobile domain volume.  Additional information on bulk density is included in the MODFLOW 6 Supplemental Technical Information document.
 
 block griddata
 name distcoef

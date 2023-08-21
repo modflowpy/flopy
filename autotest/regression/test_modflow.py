@@ -4,9 +4,11 @@ from pathlib import Path
 from shutil import copytree
 
 import pytest
-from autotest.conftest import get_example_data_path, requires_exe, requires_pkg
+from autotest.conftest import get_example_data_path
+from modflow_devtools.markers import requires_exe, requires_pkg
 
 from flopy.modflow import Modflow, ModflowOc
+from flopy.utils.compare import compare_budget, compare_heads
 
 
 @pytest.fixture
@@ -20,14 +22,11 @@ def uzf_example_path(example_data_path):
 
 
 @requires_exe("mf2005")
-@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
-def test_uzf_unit_numbers(tmpdir, uzf_example_path):
-    import pymake
-
+def test_uzf_unit_numbers(function_tmpdir, uzf_example_path):
     mfnam = "UZFtest2.nam"
-    ws = str(tmpdir / "ws")
+    ws = function_tmpdir / "ws"
     copytree(uzf_example_path, ws)
 
     m = Modflow.load(
@@ -74,22 +73,19 @@ def test_uzf_unit_numbers(tmpdir, uzf_example_path):
     fn1 = join(model_ws2, mfnam)
 
     # compare budget terms
-    fsum = join(str(tmpdir), f"{splitext(mfnam)[0]}.budget.out")
-    success = pymake.compare_budget(
+    fsum = join(function_tmpdir, f"{splitext(mfnam)[0]}.budget.out")
+    success = compare_budget(
         fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
     )
     assert success, "budget comparison failure"
 
 
 @requires_exe("mf2005")
-@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
-def test_unitnums(tmpdir, mf2005_test_path):
-    import pymake
-
+def test_unitnums(function_tmpdir, mf2005_test_path):
     mfnam = "testsfr2_tab.nam"
-    ws = str(tmpdir / "ws")
+    ws = function_tmpdir / "ws"
     copytree(mf2005_test_path, ws)
 
     m = Modflow.load(mfnam, verbose=True, model_ws=ws, exe_name="mf2005")
@@ -116,25 +112,22 @@ def test_unitnums(tmpdir, mf2005_test_path):
     fn1 = join(model_ws2, mfnam)
 
     fsum = join(ws, f"{splitext(mfnam)[0]}.budget.out")
-    success = pymake.compare_budget(
+    success = compare_budget(
         fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
     )
     assert success, "budget comparison failure"
 
 
 @requires_exe("mf2005")
-@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
-def test_gage(tmpdir, example_data_path):
+def test_gage(function_tmpdir, example_data_path):
     """
     test043 load and write of MODFLOW-2005 GAGE example problem
     """
-    import pymake
-
-    pth = str(example_data_path / "mf2005_test")
+    pth = example_data_path / "mf2005_test"
     fpth = join(pth, "testsfr2_tab.nam")
-    ws = str(tmpdir / "ws")
+    ws = function_tmpdir / "ws"
     copytree(pth, ws)
 
     # load the modflow model
@@ -167,30 +160,27 @@ def test_gage(tmpdir, example_data_path):
         ), f'new and original gage file "{f}" are not binary equal.'
 
 
-__example_data_path = get_example_data_path(Path(__file__))
+__example_data_path = get_example_data_path()
 
 
 @requires_exe("mf2005")
-@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 @pytest.mark.parametrize(
     "namfile",
     [
-        str(__example_data_path / "pcgn_test" / nf)
+        __example_data_path / "pcgn_test" / nf
         for nf in ["twri.nam", "MNW2.nam"]
     ],
 )
-def test_mf2005pcgn(tmpdir, namfile):
-    import pymake
-
-    ws = tmpdir / "ws"
+def test_mf2005pcgn(function_tmpdir, namfile):
+    ws = function_tmpdir / "ws"
     copytree(Path(namfile).parent, ws)
     nf = Path(namfile).name
 
     m = Modflow.load(
         nf,
-        model_ws=str(ws),
+        model_ws=ws,
         verbose=True,
         exe_name="mf2005",
     )
@@ -202,45 +192,42 @@ def test_mf2005pcgn(tmpdir, namfile):
 
     success, buff = m.run_model(silent=False)
     assert success, "base model run did not terminate successfully"
-    fn0 = str(ws / nf)
+    fn0 = ws / nf
 
     # rewrite files
-    ws2 = tmpdir / "ws2"
-    m.change_model_ws(str(ws2))
+    ws2 = function_tmpdir / "ws2"
+    m.change_model_ws(ws2)
     m.write_input()
 
     success, buff = m.run_model(silent=False)
     assert success, "new model run did not terminate successfully"
-    fn1 = str(ws2 / nf)
+    fn1 = ws2 / nf
 
-    fsum = str(tmpdir / f"{Path(namfile).stem}.head.out")
-    success = pymake.compare_heads(fn0, fn1, outfile=fsum, htol=0.005)
+    fsum = function_tmpdir / f"{Path(namfile).stem}.head.out"
+    success = compare_heads(fn0, fn1, outfile=fsum, htol=0.005)
     assert success, "head comparison failure"
 
-    fsum = str(tmpdir / f"{Path(namfile).stem}.budget.out")
-    success = pymake.compare_budget(
+    fsum = function_tmpdir / f"{Path(namfile).stem}.budget.out"
+    success = compare_budget(
         fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
     )
     assert success, "budget comparison failure"
 
 
 @requires_exe("mf2005")
-@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 @pytest.mark.parametrize(
-    "namfile", [str(__example_data_path / "secp" / nf) for nf in ["secp.nam"]]
+    "namfile", [__example_data_path / "secp" / nf for nf in ["secp.nam"]]
 )
-def test_mf2005gmg(tmpdir, namfile):
-    import pymake
-
-    ws = tmpdir / "ws"
+def test_mf2005gmg(function_tmpdir, namfile):
+    ws = function_tmpdir / "ws"
     copytree(Path(namfile).parent, ws)
     nf = Path(namfile).name
 
     m = Modflow.load(
         namfile,
-        model_ws=str(ws),
+        model_ws=ws,
         verbose=True,
         exe_name="mf2005",
     )
@@ -248,47 +235,44 @@ def test_mf2005gmg(tmpdir, namfile):
 
     success, buff = m.run_model(silent=False)
     assert success, "base model run did not terminate successfully"
-    fn0 = str(ws / nf)
+    fn0 = ws / nf
 
     # rewrite files
-    m.change_model_ws(str(tmpdir))
+    m.change_model_ws(function_tmpdir)
     m.write_input()
 
     success, buff = m.run_model(silent=False)
     assert success, "new model run did not terminate successfully"
-    fn1 = str(tmpdir / nf)
+    fn1 = function_tmpdir / nf
 
-    fsum = str(tmpdir / f"{Path(namfile).stem}.head.out")
-    success = pymake.compare_heads(fn0, fn1, outfile=fsum)
+    fsum = function_tmpdir / f"{Path(namfile).stem}.head.out"
+    success = compare_heads(fn0, fn1, outfile=fsum)
     assert success, "head comparison failure"
 
-    fsum = str(tmpdir / f"{Path(namfile).stem}.budget.out")
-    success = pymake.compare_budget(
+    fsum = function_tmpdir / f"{Path(namfile).stem}.budget.out"
+    success = compare_budget(
         fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
     )
     assert success, "budget comparison failure"
 
 
 @requires_exe("mf2005")
-@requires_pkg("pymake")
 @pytest.mark.regression
 @pytest.mark.parametrize(
     "namfile",
-    [str(__example_data_path / "freyberg" / nf) for nf in ["freyberg.nam"]],
+    [__example_data_path / "freyberg" / nf for nf in ["freyberg.nam"]],
 )
-def test_mf2005(tmpdir, namfile):
+def test_mf2005(function_tmpdir, namfile):
     """
     test045 load and write of MODFLOW-2005 GMG example problem
     """
-    import pymake
-
-    compth = tmpdir / "flopy"
-    ws = tmpdir / "ws"
-    copytree(Path(namfile).parent, str(ws))
+    compth = function_tmpdir / "flopy"
+    ws = function_tmpdir / "ws"
+    copytree(Path(namfile).parent, ws)
 
     m = Modflow.load(
         Path(namfile).name,
-        model_ws=str(ws),
+        model_ws=ws,
         verbose=True,
         exe_name="mf2005",
     )
@@ -296,7 +280,7 @@ def test_mf2005(tmpdir, namfile):
 
     success, buff = m.run_model(silent=False)
     assert success, "base model run did not terminate successfully"
-    fn0 = str(ws / Path(namfile).name)
+    fn0 = ws / Path(namfile).name
 
     # change model workspace
     m.change_model_ws(compth)
@@ -320,28 +304,28 @@ def test_mf2005(tmpdir, namfile):
 
     success, buff = m.run_model()
     assert success, "new model run did not terminate successfully"
-    fn1 = str(compth / Path(namfile).name)
+    fn1 = compth / Path(namfile).name
 
     # compare heads
-    fsum = str(ws / f"{Path(namfile).stem}.head.out")
-    success = pymake.compare_heads(fn0, fn1, outfile=fsum)
+    fsum = ws / f"{Path(namfile).stem}.head.out"
+    success = compare_heads(fn0, fn1, outfile=fsum)
     assert success, "head comparison failure"
 
     # compare heads
-    fsum = str(ws / f"{Path(namfile).stem}.ddn.out")
-    success = pymake.compare_heads(fn0, fn1, outfile=fsum, text="drawdown")
+    fsum = ws / f"{Path(namfile).stem}.ddn.out"
+    success = compare_heads(fn0, fn1, outfile=fsum, text="drawdown")
     assert success, "head comparison failure"
 
     # compare budgets
-    fsum = str(ws / f"{Path(namfile).stem}.budget.out")
-    success = pymake.compare_budget(
+    fsum = ws / f"{Path(namfile).stem}.budget.out"
+    success = compare_budget(
         fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
     )
     assert success, "budget comparison failure"
 
 
 mf2005_namfiles = [
-    str(__example_data_path / "mf2005_test" / nf)
+    __example_data_path / "mf2005_test" / nf
     for nf in [
         "fhb.nam",
         "l1a2k.nam",
@@ -353,14 +337,11 @@ mf2005_namfiles = [
 
 
 @requires_exe("mf2005")
-@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 @pytest.mark.parametrize("namfile", mf2005_namfiles)
-def test_mf2005fhb(tmpdir, namfile):
-    import pymake
-
-    ws = str(tmpdir / "ws")
+def test_mf2005fhb(function_tmpdir, namfile):
+    ws = function_tmpdir / "ws"
     copytree(Path(namfile).parent, ws)
 
     m = Modflow.load(
@@ -373,38 +354,35 @@ def test_mf2005fhb(tmpdir, namfile):
     fn0 = join(ws, Path(namfile).name)
 
     # rewrite files
-    m.change_model_ws(str(tmpdir), reset_external=True)
+    m.change_model_ws(function_tmpdir, reset_external=True)
     m.write_input()
 
     success, buff = m.run_model()
     assert success, "new model run did not terminate successfully"
-    fn1 = join(str(tmpdir), Path(namfile).name)
+    fn1 = join(function_tmpdir, Path(namfile).name)
 
     fsum = join(ws, f"{Path(namfile).stem}.head.out")
-    success = pymake.compare_heads(fn0, fn1, outfile=fsum)
+    success = compare_heads(fn0, fn1, outfile=fsum)
     assert success, "head comparison failure"
 
     fsum = join(ws, f"{Path(namfile).stem}.budget.out")
-    success = pymake.compare_budget(
+    success = compare_budget(
         fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
     )
     assert success, "budget comparison failure"
 
 
 @requires_exe("mf2005")
-@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 @pytest.mark.parametrize("namfile", mf2005_namfiles)
-def test_mf2005_lake(tmpdir, namfile, mf2005_test_path):
-    import pymake
-
-    ws = str(tmpdir / "ws")
+def test_mf2005_lake(function_tmpdir, namfile, mf2005_test_path):
+    ws = function_tmpdir / "ws"
 
     copytree(mf2005_test_path, ws)
     m = Modflow.load(
         Path(namfile).name,
-        model_ws=str(ws),
+        model_ws=ws,
         verbose=True,
         forgive=False,
         exe_name="mf2005",
@@ -432,7 +410,7 @@ def test_mf2005_lake(tmpdir, namfile, mf2005_test_path):
 
     fsum = join(ws, f"{Path(namfile).stem}.budget.out")
 
-    success = pymake.compare_budget(
+    success = compare_budget(
         fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
     )
     assert success, "budget comparison failure"

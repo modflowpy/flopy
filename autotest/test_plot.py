@@ -1,8 +1,8 @@
 import os
 
 import numpy as np
+import pandas as pd
 import pytest
-from autotest.conftest import requires_pkg, requires_exe
 from flaky import flaky
 from matplotlib import pyplot as plt
 from matplotlib import rcParams
@@ -12,6 +12,7 @@ from matplotlib.collections import (
     PathCollection,
     QuadMesh,
 )
+from modflow_devtools.markers import requires_exe, requires_pkg
 
 import flopy
 from flopy.discretization import StructuredGrid
@@ -27,9 +28,10 @@ from flopy.modflow import (
 )
 from flopy.modpath import Modpath6, Modpath6Bas
 from flopy.plot import PlotCrossSection, PlotMapView
-from flopy.utils import CellBudgetFile, HeadFile, PathlineFile
+from flopy.utils import CellBudgetFile, EndpointFile, HeadFile, PathlineFile
 
 
+@requires_pkg("shapely")
 def test_map_view():
     m = flopy.modflow.Modflow(rotation=20.0)
     dis = flopy.modflow.ModflowDis(
@@ -77,7 +79,7 @@ def test_map_view():
 @pytest.mark.xfail(reason="sometimes get wrong collection type")
 def test_map_view_bc_gwfs_disv(example_data_path):
     mpath = example_data_path / "mf6" / "test003_gwfs_disv"
-    sim = MFSimulation.load(sim_ws=str(mpath))
+    sim = MFSimulation.load(sim_ws=mpath)
     ml6 = sim.get_model("gwf_1")
     ml6.modelgrid.set_coord_info(angrot=-14)
     mapview = flopy.plot.PlotMapView(model=ml6)
@@ -97,7 +99,7 @@ def test_map_view_bc_gwfs_disv(example_data_path):
 @pytest.mark.xfail(reason="sometimes get wrong collection type")
 def test_map_view_bc_lake2tr(example_data_path):
     mpath = example_data_path / "mf6" / "test045_lake2tr"
-    sim = MFSimulation.load(sim_ws=str(mpath))
+    sim = MFSimulation.load(sim_ws=mpath)
     ml6 = sim.get_model("lakeex2a")
     mapview = flopy.plot.PlotMapView(model=ml6)
     mapview.plot_bc("LAK")
@@ -117,7 +119,7 @@ def test_map_view_bc_lake2tr(example_data_path):
 @pytest.mark.xfail(reason="sometimes get wrong collection type")
 def test_map_view_bc_2models_mvr(example_data_path):
     mpath = example_data_path / "mf6" / "test006_2models_mvr"
-    sim = MFSimulation.load(sim_ws=str(mpath))
+    sim = MFSimulation.load(sim_ws=mpath)
     ml6 = sim.get_model("parent")
     ml6c = sim.get_model("child")
     ml6c.modelgrid.set_coord_info(xoff=700, yoff=0, angrot=0)
@@ -144,7 +146,7 @@ def test_map_view_bc_2models_mvr(example_data_path):
 @pytest.mark.xfail(reason="sometimes get wrong collection type")
 def test_map_view_bc_UZF_3lay(example_data_path):
     mpath = example_data_path / "mf6" / "test001e_UZF_3lay"
-    sim = MFSimulation.load(sim_ws=str(mpath))
+    sim = MFSimulation.load(sim_ws=mpath)
     ml6 = sim.get_model("gwf_1")
 
     mapview = flopy.plot.PlotMapView(model=ml6)
@@ -166,7 +168,7 @@ def test_map_view_bc_UZF_3lay(example_data_path):
 )
 def test_cross_section_bc_gwfs_disv(example_data_path):
     mpath = example_data_path / "mf6" / "test003_gwfs_disv"
-    sim = MFSimulation.load(sim_ws=str(mpath))
+    sim = MFSimulation.load(sim_ws=mpath)
     ml6 = sim.get_model("gwf_1")
     xc = flopy.plot.PlotCrossSection(ml6, line={"line": ([0, 5.5], [10, 5.5])})
     xc.plot_bc("CHD")
@@ -186,7 +188,7 @@ def test_cross_section_bc_gwfs_disv(example_data_path):
 )
 def test_cross_section_bc_lake2tr(example_data_path):
     mpath = example_data_path / "mf6" / "test045_lake2tr"
-    sim = MFSimulation.load(sim_ws=str(mpath))
+    sim = MFSimulation.load(sim_ws=mpath)
     ml6 = sim.get_model("lakeex2a")
     xc = flopy.plot.PlotCrossSection(ml6, line={"row": 10})
     xc.plot_bc("LAK")
@@ -207,7 +209,7 @@ def test_cross_section_bc_lake2tr(example_data_path):
 )
 def test_cross_section_bc_2models_mvr(example_data_path):
     mpath = example_data_path / "mf6" / "test006_2models_mvr"
-    sim = MFSimulation.load(sim_ws=str(mpath))
+    sim = MFSimulation.load(sim_ws=mpath)
     ml6 = sim.get_model("parent")
     xc = flopy.plot.PlotCrossSection(ml6, line={"column": 1})
     xc.plot_bc("MAW")
@@ -227,7 +229,7 @@ def test_cross_section_bc_2models_mvr(example_data_path):
 )
 def test_cross_section_bc_UZF_3lay(example_data_path):
     mpath = example_data_path / "mf6" / "test001e_UZF_3lay"
-    sim = MFSimulation.load(sim_ws=str(mpath))
+    sim = MFSimulation.load(sim_ws=mpath)
     ml6 = sim.get_model("gwf_1")
 
     xc = flopy.plot.PlotCrossSection(ml6, line={"row": 0})
@@ -242,7 +244,7 @@ def test_cross_section_bc_UZF_3lay(example_data_path):
         ), f"Unexpected collection type: {type(col)}"
 
 
-def test_map_view_tricontour_nan():
+def test_map_view_contour(function_tmpdir):
     arr = np.random.rand(10, 10) * 100
     arr[-1, :] = np.nan
     delc = np.array([10] * 10, dtype=float)
@@ -272,10 +274,12 @@ def test_map_view_tricontour_nan():
 
     pmv = PlotMapView(modelgrid=grid, layer=0)
     contours = pmv.contour_array(a=arr)
+    plt.savefig(function_tmpdir / "map_view_contour.png")
 
-    for ix, lev in enumerate(contours.levels):
-        if not np.allclose(lev, levels[ix]):
-            raise AssertionError("TriContour NaN catch Failed")
+    # if we ever revert from standard contours to tricontours, restore this nan check
+    # for ix, lev in enumerate(contours.levels):
+    #     if not np.allclose(lev, levels[ix]):
+    #         raise AssertionError("TriContour NaN catch Failed")
 
 
 @pytest.mark.mf6
@@ -284,7 +288,7 @@ def test_vertex_model_dot_plot(example_data_path):
 
     # load up the vertex example problem
     sim = MFSimulation.load(
-        sim_ws=str(example_data_path / "mf6" / "test003_gwftri_disv")
+        sim_ws=example_data_path / "mf6" / "test003_gwftri_disv"
     )
     disv_ml = sim.get_model("gwf_1")
     ax = disv_ml.plot()
@@ -295,20 +299,20 @@ def test_vertex_model_dot_plot(example_data_path):
 # occasional _tkinter.TclError: Can't find a usable tk.tcl (or init.tcl)
 # similar: https://github.com/microsoft/azure-pipelines-tasks/issues/16426
 @flaky
-def test_model_dot_plot(tmpdir, example_data_path):
+def test_model_dot_plot(function_tmpdir, example_data_path):
     loadpth = example_data_path / "mf2005_test"
     ml = flopy.modflow.Modflow.load(
-        "ibs2k.nam", "mf2k", model_ws=str(loadpth), check=False
+        "ibs2k.nam", "mf2k", model_ws=loadpth, check=False
     )
     ax = ml.plot()
     assert isinstance(ax, list), "ml.plot() ax is is not a list"
     assert len(ax) == 18, f"number of axes ({len(ax)}) is not equal to 18"
 
 
-def test_dataset_dot_plot(tmpdir, example_data_path):
+def test_dataset_dot_plot(function_tmpdir, example_data_path):
     loadpth = example_data_path / "mf2005_test"
     ml = flopy.modflow.Modflow.load(
-        "ibs2k.nam", "mf2k", model_ws=str(loadpth), check=False
+        "ibs2k.nam", "mf2k", model_ws=loadpth, check=False
     )
 
     # plot specific dataset
@@ -317,12 +321,14 @@ def test_dataset_dot_plot(tmpdir, example_data_path):
     assert len(ax) == 2, f"number of hy axes ({len(ax)}) is not equal to 2"
 
 
-def test_dataset_dot_plot_nlay_ne_plottable(tmpdir, example_data_path):
+def test_dataset_dot_plot_nlay_ne_plottable(
+    function_tmpdir, example_data_path
+):
     import matplotlib.pyplot as plt
 
     loadpth = example_data_path / "mf2005_test"
     ml = flopy.modflow.Modflow.load(
-        "ibs2k.nam", "mf2k", model_ws=str(loadpth), check=False
+        "ibs2k.nam", "mf2k", model_ws=loadpth, check=False
     )
     # special case where nlay != plottable
     ax = ml.bcf6.vcont.plot()
@@ -331,15 +337,15 @@ def test_dataset_dot_plot_nlay_ne_plottable(tmpdir, example_data_path):
     ), "ml.bcf6.vcont.plot() ax is is not of type plt.Axes"
 
 
-def test_model_dot_plot_export(tmpdir, example_data_path):
+def test_model_dot_plot_export(function_tmpdir, example_data_path):
     loadpth = example_data_path / "mf2005_test"
     ml = flopy.modflow.Modflow.load(
-        "ibs2k.nam", "mf2k", model_ws=str(loadpth), check=False
+        "ibs2k.nam", "mf2k", model_ws=loadpth, check=False
     )
 
-    fh = os.path.join(tmpdir, "ibs2k")
+    fh = os.path.join(function_tmpdir, "ibs2k")
     ml.plot(mflay=0, filename_base=fh, file_extension="png")
-    files = [f for f in os.listdir(tmpdir) if f.endswith(".png")]
+    files = [f for f in os.listdir(function_tmpdir) if f.endswith(".png")]
     if len(files) < 10:
         raise AssertionError(
             "ml.plot did not properly export all supported data types"
@@ -351,14 +357,13 @@ def test_model_dot_plot_export(tmpdir, example_data_path):
             raise AssertionError("Plot filenames not written correctly")
 
 
-@requires_pkg("pandas")
-@requires_exe("mf2005")
-def test_pathline_plot_xc(tmpdir, example_data_path):
+@pytest.fixture
+def modpath_model(function_tmpdir, example_data_path):
     # test with multi-layer example
     load_ws = example_data_path / "mp6"
 
-    ml = Modflow.load("EXAMPLE.nam", model_ws=str(load_ws), exe_name="mf2005")
-    ml.change_model_ws(str(tmpdir))
+    ml = Modflow.load("EXAMPLE.nam", model_ws=load_ws, exe_name="mf2005")
+    ml.change_model_ws(function_tmpdir)
     ml.write_input()
     ml.run_model()
 
@@ -366,7 +371,7 @@ def test_pathline_plot_xc(tmpdir, example_data_path):
         modelname="ex6",
         exe_name="mp6",
         modflowmodel=ml,
-        model_ws=str(tmpdir),
+        model_ws=function_tmpdir,
     )
 
     mpb = Modpath6Bas(
@@ -379,29 +384,143 @@ def test_pathline_plot_xc(tmpdir, example_data_path):
         packages="RCH",
         start_time=(2, 0, 1.0),
     )
-    mp.write_input()
+    return ml, mp, sim
 
+
+@requires_exe("mf2005", "mp6")
+def test_plot_map_view_mp6_plot_pathline(modpath_model):
+    ml, mp, sim = modpath_model
+    mp.write_input()
     mp.run_model(silent=False)
 
-    pthobj = PathlineFile(os.path.join(str(tmpdir), "ex6.mppth"))
+    pthobj = PathlineFile(os.path.join(mp.model_ws, "ex6.mppth"))
     well_pathlines = pthobj.get_destination_pathline_data(
         dest_cells=[(4, 12, 12)]
     )
 
-    mx = PlotCrossSection(model=ml, line={"row": 4})
-    mx.plot_bc("WEL", kper=2, color="blue")
-    pth = mx.plot_pathline(well_pathlines, method="cell", colors="red")
+    def test_plot(pl):
+        mx = PlotMapView(model=ml)
+        mx.plot_grid()
+        mx.plot_bc("WEL", kper=2, color="blue")
+        pth = mx.plot_pathline(pl, colors="red")
+        # plt.show()
+        assert isinstance(pth, LineCollection)
+        assert len(pth._paths) == 114
 
-    if not isinstance(pth, LineCollection):
-        raise AssertionError()
+    # support pathlines as list of recarrays
+    test_plot(well_pathlines)
 
-    if len(pth._paths) != 6:
-        raise AssertionError()
+    # support pathlines as list of dataframes
+    test_plot([pd.DataFrame(pl) for pl in well_pathlines])
+
+    # support pathlines as single recarray
+    test_plot(np.concatenate(well_pathlines))
+
+    # support pathlines as single dataframe
+    test_plot(pd.DataFrame(np.concatenate(well_pathlines)))
+
+
+@requires_exe("mf2005", "mp6")
+def test_plot_cross_section_mp6_plot_pathline(modpath_model):
+    ml, mp, sim = modpath_model
+    mp.write_input()
+    mp.run_model(silent=False)
+
+    pthobj = PathlineFile(os.path.join(mp.model_ws, "ex6.mppth"))
+    well_pathlines = pthobj.get_destination_pathline_data(
+        dest_cells=[(4, 12, 12)]
+    )
+
+    def test_plot(pl):
+        mx = PlotCrossSection(model=ml, line={"row": 4})
+        mx.plot_bc("WEL", kper=2, color="blue")
+        pth = mx.plot_pathline(pl, method="cell", colors="red")
+        assert isinstance(pth, LineCollection)
+        assert len(pth._paths) == 6
+
+    # support pathlines as list of recarrays
+    test_plot(well_pathlines)
+
+    # support pathlines as list of dataframes
+    test_plot([pd.DataFrame(pl) for pl in well_pathlines])
+
+    # support pathlines as single recarray
+    test_plot(np.concatenate(well_pathlines))
+
+    # support pathlines as single dataframe
+    test_plot(pd.DataFrame(np.concatenate(well_pathlines)))
+
+
+@requires_exe("mf2005", "mp6")
+def test_plot_map_view_mp6_endpoint(modpath_model):
+    ml, mp, sim = modpath_model
+    mp.write_input()
+    mp.run_model(silent=False)
+
+    pthobj = EndpointFile(os.path.join(mp.model_ws, "ex6.mpend"))
+    endpts = pthobj.get_alldata()
+
+    # support endpoints as recarray
+    assert isinstance(endpts, np.recarray)
+    mv = PlotMapView(model=ml)
+    mv.plot_bc("WEL", kper=2, color="blue")
+    ep = mv.plot_endpoint(endpts, direction="ending")
+    # plt.show()
+    assert isinstance(ep, PathCollection)
+
+    # support endpoints as dataframe
+    mv = PlotMapView(model=ml)
+    mv.plot_bc("WEL", kper=2, color="blue")
+    ep = mv.plot_endpoint(pd.DataFrame(endpts), direction="ending")
+    # plt.show()
+    assert isinstance(ep, PathCollection)
+
+    # test various possibilities for endpoint color configuration.
+    # first, color kwarg as scalar
+    mv = PlotMapView(model=ml)
+    mv.plot_bc("WEL", kper=2, color="blue")
+    ep = mv.plot_endpoint(endpts, direction="ending", color="red")
+    # plt.show()
+    assert isinstance(ep, PathCollection)
+
+    # c kwarg as array
+    mv = PlotMapView(model=ml)
+    mv.plot_bc("WEL", kper=2, color="blue")
+    ep = mv.plot_endpoint(
+        endpts,
+        direction="ending",
+        c=np.random.rand(625) * -1000,
+        cmap="viridis",
+    )
+    # plt.show()
+    assert isinstance(ep, PathCollection)
+
+    # colorbar: color by time to termination
+    mv = PlotMapView(model=ml)
+    mv.plot_bc("WEL", kper=2, color="blue")
+    ep = mv.plot_endpoint(
+        endpts, direction="ending", shrink=0.5, colorbar=True
+    )
+    # plt.show()
+    assert isinstance(ep, PathCollection)
+
+    # if both color and c are provided, c takes precedence
+    mv = PlotMapView(model=ml)
+    mv.plot_bc("WEL", kper=2, color="blue")
+    ep = mv.plot_endpoint(
+        endpts,
+        direction="ending",
+        color="red",
+        c=np.random.rand(625) * -1000,
+        cmap="viridis",
+    )
+    # plt.show()
+    assert isinstance(ep, PathCollection)
 
 
 @pytest.fixture
-def quasi3d_model(tmpdir):
-    mf = Modflow("model_mf", model_ws=str(tmpdir), exe_name="mf2005")
+def quasi3d_model(function_tmpdir):
+    mf = Modflow("model_mf", model_ws=function_tmpdir, exe_name="mf2005")
 
     # Model domain and grid definition
     Lx = 1000.0
@@ -489,7 +608,7 @@ def test_map_plot_with_quasi3d_layers(quasi3d_model):
     mv.plot_ibound()
     mv.plot_bc("wel")
     mv.plot_vector(frf, fff)
-    plt.savefig(os.path.join(str(quasi3d_model.model_ws), "plt01.png"))
+    plt.savefig(os.path.join(quasi3d_model.model_ws, "plt01.png"))
 
 
 @requires_exe("mf2005")
@@ -518,7 +637,7 @@ def test_cross_section_with_quasi3d_layers(quasi3d_model):
     cs.plot_ibound()
     cs.plot_bc("wel")
     cs.plot_vector(frf, fff, flf, head=head)
-    plt.savefig(os.path.join(str(quasi3d_model.model_ws), "plt02.png"))
+    plt.savefig(os.path.join(quasi3d_model.model_ws, "plt02.png"))
     plt.close()
 
 
@@ -543,6 +662,7 @@ def structured_square_grid(side: int = 10, thick: int = 10):
     return StructuredGrid(delr=delr, delc=delc, top=top, botm=botm)
 
 
+@requires_pkg("shapely")
 @pytest.mark.parametrize(
     "line",
     [(), [], (()), [[]], (0, 0), [0, 0], [[0, 0]]],

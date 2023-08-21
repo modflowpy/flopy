@@ -1569,25 +1569,35 @@ class DataStorage:
             self._verify_list(new_data)
         return new_data
 
+    def _get_cellid_size(self, data_item_name):
+        model_num = DatumUtil.cellid_model_num(
+            data_item_name,
+            self.data_dimensions.structure.model_data,
+            self.data_dimensions.package_dim.model_dim,
+        )
+        model_grid = self.data_dimensions.get_model_grid(model_num=model_num)
+        return model_grid.get_num_spatial_coordinates()
+
     def make_tuple_cellids(self, data):
         # convert cellids from individual layer, row, column fields into
         # tuples (layer, row, column)
-        data_dim = self.data_dimensions
-        model_grid = data_dim.get_model_grid()
-        cellid_size = model_grid.get_num_spatial_coordinates()
-
         new_data = []
         current_cellid = ()
         for line in data:
+            data_idx = 0
             new_line = []
             for item, is_cellid in zip(line, self.recarray_cellid_list_ex):
                 if is_cellid:
+                    cellid_size = self._get_cellid_size(
+                        self._recarray_type_list[data_idx][0],
+                    )
                     current_cellid += (item,)
                     if len(current_cellid) == cellid_size:
                         new_line.append(current_cellid)
                         current_cellid = ()
                 else:
                     new_line.append(item)
+                    data_idx += 1
             new_data.append(tuple(new_line))
         return new_data
 
@@ -1631,6 +1641,10 @@ class DataStorage:
                     and (
                         not isinstance(data_val, int)
                         or self._recarray_type_list[index][1] != float
+                    )
+                    and (
+                        self._recarray_type_list[index][1] != float
+                        or not isinstance(data_val, np.floating)
                     )
                 ):
                     # for inconsistent types use generic object type
@@ -1986,7 +2000,7 @@ class DataStorage:
                 )
                 data_out = self._build_recarray(data, layer, False)
             else:
-                with open(read_file, "r") as fd_read_file:
+                with open(read_file) as fd_read_file:
                     data_out = file_access.read_list_data_from_file(
                         fd_read_file,
                         self,
@@ -2088,14 +2102,14 @@ class DataStorage:
                 return False, True
         return False, False
 
-    def _validate_cellid(self, arr_line, data_index):
+    def _validate_cellid(self, arr_line, data_index, data_item):
         if not self.data_dimensions.structure.model_data:
             # not model data so this is not a cell id
             return False
         if arr_line is None:
             return False
+        cellid_size = self._get_cellid_size(data_item.name)
         model_grid = self.data_dimensions.get_model_grid()
-        cellid_size = model_grid.get_num_spatial_coordinates()
         if cellid_size + data_index > len(arr_line):
             return False
         for index, dim_size in zip(
@@ -2349,9 +2363,8 @@ class DataStorage:
                         # this is a cell id.  verify that it contains the
                         # correct number of integers
                         if cellid_size is None:
-                            model_grid = datadim.get_model_grid()
-                            cellid_size = (
-                                model_grid.get_num_spatial_coordinates()
+                            cellid_size = self._get_cellid_size(
+                                self._recarray_type_list[index][0]
                             )
                         if (
                             cellid_size != 1
@@ -2433,11 +2446,16 @@ class DataStorage:
             dimensions = [self.layer_storage.get_total_size()]
         all_none = True
         np_data_type = self.data_dimensions.structure.get_datum_type()
-        full_data = np.full(
-            dimensions,
-            np.nan,
-            self.data_dimensions.structure.get_datum_type(True),
-        )
+        np_full_data_type = self.data_dimensions.structure.get_datum_type(True)
+        if np.issubdtype(np_full_data_type, np.floating):
+            fill_value = np.nan
+        elif np.issubdtype(np_full_data_type, np.integer):
+            fill_value = 0
+        elif np.issubdtype(np_full_data_type, np.bool_):
+            fill_value = False
+        else:
+            fill_value = None
+        full_data = np.full(dimensions, fill_value, np_full_data_type)
         is_aux = self.data_dimensions.structure.name == "aux"
         if is_aux:
             aux_data = []
@@ -2839,6 +2857,7 @@ class DataStorage:
                     if (
                         data_item.type != DatumType.keyword
                         or data_set.block_variable
+                        or data_item.optional
                     ):
                         initial_keyword = False
                         shape_rule = None
@@ -2925,9 +2944,7 @@ class DataStorage:
                             ):
                                 # A cellid is a single entry (tuple) in the
                                 # recarray.  Adjust dimensions accordingly.
-                                data_dim = self.data_dimensions
-                                grid = data_dim.get_model_grid()
-                                size = grid.get_num_spatial_coordinates()
+                                size = self._get_cellid_size(data_item.name)
                                 data_item.remove_cellid(resolved_shape, size)
                         if not data_item.optional or not min_size:
                             for index in range(0, resolved_shape[0]):
@@ -2964,8 +2981,7 @@ class DataStorage:
         if iscellid and self._model_or_sim.model_type is not None:
             # write each part of the cellid out as a separate entry
             # to _recarray_list_list_ex
-            model_grid = self.data_dimensions.get_model_grid()
-            cellid_size = model_grid.get_num_spatial_coordinates()
+            cellid_size = self._get_cellid_size(name)
             # determine header for different grid types
             if cellid_size == 1:
                 self._do_ex_list_append(name, int, iscellid)

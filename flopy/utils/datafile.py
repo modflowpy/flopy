@@ -3,6 +3,10 @@ Module to read MODFLOW output files.  The module contains shared
 abstract classes that should not be directly accessed.
 
 """
+import os
+from pathlib import Path
+from typing import Union
+
 import numpy as np
 
 
@@ -77,9 +81,9 @@ class Header:
                         ("pertim", floattype),
                         ("totim", floattype),
                         ("text", "a16"),
-                        ("ncol", "i4"),
-                        ("nrow", "i4"),
-                        ("ilay", "i4"),
+                        ("m1", "i4"),
+                        ("m2", "i4"),
+                        ("m3", "i4"),
                     ]
                 )
             elif self.header_type == "vardisv":
@@ -90,8 +94,8 @@ class Header:
                         ("pertim", floattype),
                         ("totim", floattype),
                         ("text", "a16"),
-                        ("ncpl", "i4"),
-                        ("ilay", "i4"),
+                        ("m1", "i4"),
+                        ("m2", "i4"),
                         ("m3", "i4"),
                     ]
                 )
@@ -103,7 +107,7 @@ class Header:
                         ("pertim", floattype),
                         ("totim", floattype),
                         ("text", "a16"),
-                        ("nodes", "i4"),
+                        ("m1", "i4"),
                         ("m2", "i4"),
                         ("m3", "i4"),
                     ]
@@ -151,10 +155,12 @@ class LayerFile:
 
     """
 
-    def __init__(self, filename, precision, verbose, kwargs):
+    def __init__(
+        self, filename: Union[str, os.PathLike], precision, verbose, kwargs
+    ):
         from ..discretization.structuredgrid import StructuredGrid
 
-        self.filename = filename
+        self.filename = Path(filename).expanduser().absolute()
         self.precision = precision
         self.verbose = verbose
         self.file = open(self.filename, "rb")
@@ -190,6 +196,8 @@ class LayerFile:
         if "dis" in kwargs.keys():
             self.dis = kwargs.pop("dis")
             self.mg = self.dis.parent.modelgrid
+        if "tdis" in kwargs.keys():
+            self.tdis = kwargs.pop("tdis")
         if "modelgrid" in kwargs.keys():
             self.mg = kwargs.pop("modelgrid")
         if len(kwargs.keys()) > 0:
@@ -212,15 +220,15 @@ class LayerFile:
                 yoff=0.0,
                 angrot=0.0,
             )
-        return
 
     def to_shapefile(
         self,
-        filename,
+        filename: Union[str, os.PathLike],
         kstpkper=None,
         totim=None,
         mflay=None,
         attrib_name="lf_data",
+        verbose=False,
     ):
         """
         Export model output data to a shapefile at a specific location
@@ -228,8 +236,8 @@ class LayerFile:
 
         Parameters
         ----------
-        filename : str
-            Shapefile name to write
+        filename : str or PathLike
+            Shapefile path to write
         kstpkper : tuple of ints
             A tuple containing the time step and stress period (kstp, kper).
             These are zero-based kstp and kper values.
@@ -240,6 +248,8 @@ class LayerFile:
            will be written
         attrib_name : str
             Base name of attribute columns. (default is 'lf_data')
+        verbose : bool
+            Whether to print verbose output
 
         Returns
         ----------
@@ -274,7 +284,7 @@ class LayerFile:
 
         from ..export.shapefile_utils import write_grid_shapefile
 
-        write_grid_shapefile(filename, self.mg, attrib_dict)
+        write_grid_shapefile(filename, self.mg, attrib_dict, verbose)
 
     def plot(
         self,
@@ -414,6 +424,11 @@ class LayerFile:
             print(header)
         return
 
+    def get_nrecords(self):
+        if isinstance(self.recordarray, np.recarray):
+            return self.recordarray.shape[0]
+        return 0
+
     def _get_data_array(self, totim=0):
         """
         Get the three dimensional data array for the
@@ -422,7 +437,7 @@ class LayerFile:
         """
 
         if totim >= 0.0:
-            keyindices = np.where((self.recordarray["totim"] == totim))[0]
+            keyindices = np.where(self.recordarray["totim"] == totim)[0]
             if len(keyindices) == 0:
                 msg = f"totim value ({totim}) not found in file..."
                 raise Exception(msg)
@@ -627,4 +642,3 @@ class LayerFile:
 
         """
         self.file.close()
-        return

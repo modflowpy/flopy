@@ -10,6 +10,7 @@ import os
 import re
 
 import numpy as np
+import pandas as pd
 
 from ..utils import import_optional_dependency
 from ..utils.flopy_io import get_ts_sp
@@ -44,7 +45,6 @@ class ListBudget:
     """
 
     def __init__(self, file_name, budgetkey=None, timeunit="days"):
-
         # Set up file reading
         assert os.path.exists(file_name), f"file_name {file_name} not found"
         self.file_name = file_name
@@ -307,11 +307,10 @@ class ListBudget:
             and not units == "minutes"
             and not units == "hours"
         ):
-            err = (
+            raise AssertionError(
                 '"units" input variable must be "minutes", "hours", '
-                'or "seconds": {0} was specified'.format(units)
+                f'or "seconds": {units} was specified'
             )
-            raise AssertionError(err)
         try:
             seekpoint = self._seek_to_string("Elapsed run time:")
         except:
@@ -496,20 +495,18 @@ class ListBudget:
 
         """
 
-        pd = import_optional_dependency(
-            "pandas",
-            error_message="ListBudget.get_dataframes() requires pandas.",
-        )
-
         if not self._isvalid:
             return None
         totim = self.get_times()
         if start_datetime is not None:
-            totim = totim_to_datetime(
-                totim,
-                start=pd.to_datetime(start_datetime),
-                timeunit=self.timeunit,
-            )
+            try:
+                totim = totim_to_datetime(
+                    totim,
+                    start=pd.to_datetime(start_datetime),
+                    timeunit=self.timeunit,
+                )
+            except:
+                pass  # if totim can't be cast to pd.datetime return in native units
 
         df_flux = pd.DataFrame(self.inc, index=totim).loc[:, self.entries]
         df_vol = pd.DataFrame(self.cum, index=totim).loc[:, self.entries]
@@ -791,7 +788,6 @@ class ListBudget:
         cumdict = {}
         entrydict = {}
         while True:
-
             if line == "":
                 print(
                     "end of file found while seeking budget "
@@ -851,7 +847,6 @@ class ListBudget:
         return incdict, cumdict
 
     def _parse_budget_line(self, line):
-
         # get the budget item name
         entry = line.strip().split("=")[0].strip()
 

@@ -4,6 +4,7 @@ import warnings
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from matplotlib.patches import Polygon
 
 from ..utils import geometry, import_optional_dependency
@@ -51,7 +52,6 @@ class PlotCrossSection:
         extent=None,
         geographic_coords=False,
     ):
-
         self.ax = ax
         self.geographic_coords = geographic_coords
         self.model = model
@@ -257,6 +257,11 @@ class PlotCrossSection:
 
         self._polygons = {}
 
+        if model is None:
+            self._masked_values = [1e30, -1e30]
+        else:
+            self._masked_values = [model.hnoflo, model.hdry]
+
         # Set axis limits
         self.ax.set_xlim(self.extent[0], self.extent[1])
         self.ax.set_ylim(self.extent[2], self.extent[3])
@@ -380,9 +385,12 @@ class PlotCrossSection:
         if a.ndim > 1:
             a = np.ravel(a)
 
+        a = a.astype(float)
+
         if masked_values is not None:
-            for mval in masked_values:
-                a = np.ma.masked_values(a, mval)
+            self._masked_values.extend(list(masked_values))
+        for mval in self._masked_values:
+            a = np.ma.masked_values(a, mval)
 
         if isinstance(head, np.ndarray):
             projpts = self.set_zpts(np.ravel(head))
@@ -425,12 +433,15 @@ class PlotCrossSection:
         if a.ndim > 1:
             a = np.ravel(a)
 
+        a = a.astype(float)
+
         if a.size % self._ncpl != 0:
             raise AssertionError("Array size must be a multiple of ncpl")
 
         if masked_values is not None:
-            for mval in masked_values:
-                a = np.ma.masked_values(a, mval)
+            self._masked_values.extend(list(masked_values))
+        for mval in self._masked_values:
+            a = np.ma.masked_values(a, mval)
 
         d = {
             i: (np.min(np.array(v).T[0]), np.max(np.array(v).T[0]))
@@ -493,11 +504,12 @@ class PlotCrossSection:
         if not isinstance(a, np.ndarray):
             a = np.array(a)
 
-        a = np.ravel(a)
+        a = np.ravel(a).astype(float)
 
         if masked_values is not None:
-            for mval in masked_values:
-                a = np.ma.masked_values(a, mval)
+            self._masked_values.extend(list(masked_values))
+        for mval in self._masked_values:
+            a = np.ma.masked_values(a, mval)
 
         if isinstance(head, np.ndarray):
             projpts = self.set_zpts(head)
@@ -588,12 +600,14 @@ class PlotCrossSection:
 
         ismasked = None
         if masked_values is not None:
-            for mval in masked_values:
-                if ismasked is None:
-                    ismasked = np.isclose(plotarray, mval)
-                else:
-                    t = np.isclose(plotarray, mval)
-                    ismasked += t
+            self._masked_values.extend(list(masked_values))
+
+        for mval in self._masked_values:
+            if ismasked is None:
+                ismasked = np.isclose(plotarray, mval)
+            else:
+                t = np.isclose(plotarray, mval)
+                ismasked += t
 
         filled = kwargs.pop("filled", False)
         plot_triplot = kwargs.pop("plot_triplot", False)
@@ -1055,7 +1069,7 @@ class PlotCrossSection:
             less than or equal to the passed time are plotted. If a
             string is passed a variety logical constraints can be added
             in front of a time value to select pathlines for a select
-            period of time. Valid logical constraints are <=, <, >=, and
+            period of time. Valid logical constraints are <=, <, ==, >=, and
             >. For example, to select all pathlines less than 10000 days
             travel_time='< 10000' would be passed to plot_pathline.
             (default is None)
@@ -1084,6 +1098,12 @@ class PlotCrossSection:
                 pl = [pl[pl["particleid"] == pid] for pid in pids]
             else:
                 pl = [pl]
+
+        # make sure each element in pl is a recarray
+        pl = [
+            p.to_records(index=False) if isinstance(p, pd.DataFrame) else p
+            for p in pl
+        ]
 
         marker = kwargs.pop("marker", None)
         markersize = kwargs.pop("markersize", None)
@@ -1171,7 +1191,7 @@ class PlotCrossSection:
             less than or equal to the passed time are plotted. If a
             string is passed a variety logical constraints can be added
             in front of a time value to select pathlines for a select
-            period of time. Valid logical constraints are <=, <, >=, and
+            period of time. Valid logical constraints are <=, <, ==, >=, and
             >. For example, to select all pathlines less than 10000 days
             travel_time='< 10000' would be passed to plot_pathline.
             (default is None)
@@ -1351,7 +1371,6 @@ class PlotCrossSection:
 
         cbcnt = 0
         for k in range(1, nlay + 1):
-
             if not self.active[k - 1]:
                 cbcnt += 1
                 continue
@@ -1525,7 +1544,6 @@ class PlotCrossSection:
                     rectcol.append(polygon)
 
                 elif fill_between:
-
                     x = list(set(np.array(polygon).T[0]))
                     y1 = np.max(np.array(polygon).T[1])
                     y = np.min(np.array(polygon).T[1])

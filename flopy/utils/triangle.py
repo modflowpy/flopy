@@ -4,7 +4,7 @@ import subprocess
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ..mbase import which
+from ..mbase import resolve_exe
 from ..utils.cvfdutil import centroid_of_polygon
 from ..utils.geospatial_utils import GeoSpatialUtil
 
@@ -51,10 +51,7 @@ class Triangle:
         additional_args=None,
     ):
         self.model_ws = model_ws
-        exe_name = which(exe_name)
-        if exe_name is None:
-            raise Exception("Cannot find triangle binary executable")
-        self.exe_name = os.path.abspath(exe_name)
+        self.exe_name = resolve_exe(exe_name)
         self.angle = angle
         self.maximum_area = maximum_area
         self._nodes = nodes
@@ -619,7 +616,6 @@ class Triangle:
         return
 
     def _load_results(self):
-
         # node file
         ext = "node"
         dt = [("ivert", int), ("x", float), ("y", float)]
@@ -731,7 +727,7 @@ class Triangle:
         f = open(fname, "w")
 
         # vertices, write zero to indicate read from node file
-        s = "{} {} {} {}\n".format(0, 0, 0, 0)
+        s = "0 0 0 0\n"
         f.write(s)
 
         # segments

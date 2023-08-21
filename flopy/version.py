@@ -1,7 +1,3 @@
-# flopy version file automatically created using...make-release.py
-# created on...March 08, 2022 21:12:29
+# flopy version file automatically created using update_version.py on July 13, 2023 18:32:27
 
-major = 3
-minor = 3
-micro = 6
-__version__ = f"{major}.{minor}.{micro}"
+__version__ = "3.5.0.dev0"

@@ -13,6 +13,7 @@ import numpy as np
 
 from ..pakbase import Package
 from ..utils import Util2d, Util3d
+from ..utils.crs import get_crs
 from ..utils.flopy_io import line_parse
 from ..utils.reference import TemporalReference
 
@@ -87,12 +88,22 @@ class ModflowDis(Package):
     rotation : float
         counter-clockwise rotation (in degrees) of the grid about the lower-
         left corner. default is 0.0
-    proj4_str : str
-        PROJ4 string that defines the projected coordinate system
-        (e.g. '+proj=utm +zone=14 +datum=WGS84 +units=m +no_defs ').
-        Can be an EPSG code (e.g. 'EPSG:32614'). Default is None.
+    crs : pyproj.CRS, int, str, optional if `prjfile` is specified
+        Coordinate reference system (CRS) for the model grid
+        (must be projected; geographic CRS are not supported).
+        The value can be anything accepted by
+        :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+        such as an authority string (eg "EPSG:26916") or a WKT string.
+    prjfile : str or pathlike, optional if `crs` is specified
+        ESRI-style projection file with well-known text defining the CRS
+        for the model grid (must be projected; geographic CRS are not supported).
     start_datetime : str
         starting datetime of the simulation. default is '1/1/1970'
+    **kwargs : dict, optional
+        Support deprecated keyword options.
+
+        .. deprecated:: 3.5
+           ``proj4_str`` will be removed for FloPy 3.6, use ``crs`` instead.
 
     Attributes
     ----------
@@ -141,10 +152,11 @@ class ModflowDis(Package):
         xul=None,
         yul=None,
         rotation=None,
-        proj4_str=None,
+        crs=None,
+        prjfile=None,
         start_datetime=None,
+        **kwargs,
     ):
-
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowDis._defaultunit()
@@ -235,29 +247,37 @@ class ModflowDis(Package):
             5: "years",
         }
 
-        if xul is None:
-            xul = model._xul
-        if yul is None:
-            yul = model._yul
+        # set the model grid coordinate info
+        mg = model.modelgrid
         if rotation is None:
             rotation = model._rotation
-        if proj4_str is None:
-            proj4_str = model._proj4_str
+        if rotation is not None:
+            # set rotation before anything else
+            mg.set_coord_info(angrot=rotation)
+        set_coord_info_args = {"crs": crs, "prjfile": prjfile}
+        if "proj4_str" in kwargs:
+            warnings.warn(
+                "the proj4_str argument will be deprecated and will be "
+                "removed in version 3.6. Use crs instead.",
+                PendingDeprecationWarning,
+            )
+            proj4_str = kwargs.pop("proj4_str")
+            if crs is None:
+                set_coord_info_args["crs"] = proj4_str
+        if xul is None:
+            xul = model._xul
+        if xul is not None:
+            set_coord_info_args["xoff"] = mg._xul_to_xll(xul)
+        if yul is None:
+            yul = model._yul
+        if yul is not None:
+            set_coord_info_args["yoff"] = mg._yul_to_yll(yul)
+
+        # set all other relevant coordinate properties
+        model._modelgrid.set_coord_info(**set_coord_info_args)
+
         if start_datetime is None:
             start_datetime = model._start_datetime
-
-        # set the model grid coordinate info
-        xll = None
-        yll = None
-        mg = model.modelgrid
-        if rotation is not None:
-            mg.set_coord_info(xoff=None, yoff=None, angrot=rotation)
-        if xul is not None:
-            xll = mg._xul_to_xll(xul)
-        if yul is not None:
-            yll = mg._yul_to_yll(yul)
-        mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation, proj4=proj4_str)
-
         self.tr = TemporalReference(
             itmuni=self.itmuni, start_datetime=start_datetime
         )
@@ -270,7 +290,7 @@ class ModflowDis(Package):
         Check layer thickness.
 
         """
-        return (self.parent.modelgrid.thick > 0).all()
+        return (self.parent.modelgrid.cell_thickness > 0).all()
 
     def get_totim(self, use_cached=False):
         """
@@ -435,7 +455,7 @@ class ModflowDis(Package):
         """
         vol = np.empty((self.nlay, self.nrow, self.ncol))
         for l in range(self.nlay):
-            vol[l, :, :] = self.parent.modelgrid.thick[l]
+            vol[l, :, :] = self.parent.modelgrid.cell_thickness[l]
         for r in range(self.nrow):
             vol[:, r, :] *= self.delc[r]
         for c in range(self.ncol):
@@ -605,7 +625,7 @@ class ModflowDis(Package):
         f_dis.write(f"{self.heading}\n")
         # Item 1: NLAY, NROW, NCOL, NPER, ITMUNI, LENUNI
         f_dis.write(
-            "{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}{5:10d}\n".format(
+            "{:10d}{:10d}{:10d}{:10d}{:10d}{:10d}\n".format(
                 self.nlay,
                 self.nrow,
                 self.ncol,
@@ -633,9 +653,9 @@ class ModflowDis(Package):
                 f"{self.perlen[t]:14f}{self.nstp[t]:14d}{self.tsmult[t]:10f} "
             )
             if self.steady[t]:
-                f_dis.write(" {0:3s}\n".format("SS"))
+                f_dis.write(" SS\n")
             else:
-                f_dis.write(" {0:3s}\n".format("TR"))
+                f_dis.write(" TR\n")
         f_dis.close()
 
     def check(self, f=None, verbose=True, level=1, checktype=None):
@@ -673,7 +693,7 @@ class ModflowDis(Package):
         active = chk.get_active(include_cbd=True)
 
         # Use either a numpy array or masked array
-        thickness = self.parent.modelgrid.thick
+        thickness = self.parent.modelgrid.cell_thickness
         non_finite = ~(np.isfinite(thickness))
         if non_finite.any():
             thickness[non_finite] = 0
@@ -753,62 +773,11 @@ class ModflowDis(Package):
             f = open(filename, "r")
 
         # dataset 0 -- header
-        header = ""
         while True:
             line = f.readline()
             if line[0] != "#":
                 break
-            header += line.strip()
 
-        header = header.replace("#", "")
-        xul, yul = None, None
-        rotation = None
-        proj4_str = None
-        start_datetime = "1/1/1970"
-        dep = False
-        for item in header.split(","):
-            if "xul" in item.lower():
-                try:
-                    xul = float(item.split(":")[1])
-                except:
-                    if model.verbose:
-                        print(f"   could not parse xul in {filename}")
-                dep = True
-            elif "yul" in item.lower():
-                try:
-                    yul = float(item.split(":")[1])
-                except:
-                    if model.verbose:
-                        print(f"   could not parse yul in {filename}")
-                dep = True
-            elif "rotation" in item.lower():
-                try:
-                    rotation = float(item.split(":")[1])
-                except:
-                    if model.verbose:
-                        print(f"   could not parse rotation in {filename}")
-                dep = True
-            elif "proj4_str" in item.lower():
-                try:
-                    proj4_str = ":".join(item.split(":")[1:]).strip()
-                except:
-                    if model.verbose:
-                        print(f"   could not parse proj4_str in {filename}")
-                dep = True
-            elif "start" in item.lower():
-                try:
-                    start_datetime = item.split(":")[1].strip()
-                except:
-                    if model.verbose:
-                        print(f"   could not parse start in {filename}")
-                dep = True
-        if dep:
-            warnings.warn(
-                "SpatialReference information found in DIS header,"
-                "this information is being ignored.  "
-                "SpatialReference info is now stored in the namfile"
-                "header"
-            )
         # dataset 1
         nlay, nrow, ncol, nper, itmuni, lenuni = line.strip().split()[0:6]
         nlay = int(nlay)
@@ -925,11 +894,6 @@ class ModflowDis(Package):
             steady=steady,
             itmuni=itmuni,
             lenuni=lenuni,
-            xul=xul,
-            yul=yul,
-            rotation=rotation,
-            proj4_str=proj4_str,
-            start_datetime=start_datetime,
             unitnumber=unitnumber,
             filenames=filenames,
         )

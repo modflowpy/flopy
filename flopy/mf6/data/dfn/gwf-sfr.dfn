@@ -283,7 +283,7 @@ type integer
 reader urword
 optional true
 longname SFR picard iterations
-description value that defines the maximum number of Streamflow Routing picard iterations allowed when solving for reach stages and flows as part of the GWF formulate step. Picard iterations are used to minimize differences in SFR package results between subsequent GWF picard (non-linear) iterations as a result of non-optimal reach numbering. If reaches are numbered in order, from upstream to downstream, MAXIMUM\_PICARD\_ITERATIONS can be set to 1 to reduce model run time. By default, MAXIMUM\_PICARD\_ITERATIONS is equal to 100.
+description integer value that defines the maximum number of Streamflow Routing picard iterations allowed when solving for reach stages and flows as part of the GWF formulate step. Picard iterations are used to minimize differences in SFR package results between subsequent GWF picard (non-linear) iterations as a result of non-optimal reach numbering. If reaches are numbered in order, from upstream to downstream, MAXIMUM\_PICARD\_ITERATIONS can be set to 1 to reduce model run time. By default, MAXIMUM\_PICARD\_ITERATIONS is equal to 100.
 
 block options
 name maximum_iterations
@@ -291,7 +291,7 @@ type integer
 reader urword
 optional true
 longname SFR Newton-Raphson iterations
-description value that defines the maximum number of Streamflow Routing Newton-Raphson iterations allowed for a reach. By default, MAXIMUM\_ITERATIONS is equal to 100.
+description integer value that defines the maximum number of Streamflow Routing Newton-Raphson iterations allowed for a reach. By default, MAXIMUM\_ITERATIONS is equal to 100. MAXIMUM\_ITERATIONS would only need to be increased from the default value if one or more reach in a simulation has a large water budget error.
 
 block options
 name maximum_depth_change
@@ -299,15 +299,32 @@ type double precision
 reader urword
 optional true
 longname depth closure tolerance
-description value that defines the depth closure tolerance. By default, DMAXCHG is equal to $1 \times 10^{-5}$.
+description real value that defines the depth closure tolerance. By default, MAXIMUM\_DEPTH\_CHANGE is equal to $1 \times 10^{-5}$. The MAXIMUM\_STAGE\_CHANGE would only need to be increased or decreased from the default value if the water budget error for one or more reach is too small or too large, respectively.
 
 block options
 name unit_conversion
 type double precision
 reader urword
 optional true
+deprecated 6.4.2
 longname conversion factor
-description value (or conversion factor) that is used in calculating stream depth for stream reach. A constant of 1.486 is used for flow units of cubic feet per second, and a constant of 1.0 is used for units of cubic meters per second. The constant must be multiplied by 86,400 when using time units of days in the simulation.
+description real value that is used to convert user-specified Manning's roughness coefficients from seconds per meters$^{1/3}$ to model length and time units. A constant of 1.486 is used for flow units of cubic feet per second, and a constant of 1.0 is used for units of cubic meters per second. The constant must be multiplied by 86,400 when using time units of days in the simulation.
+
+block options
+name length_conversion
+type double precision
+reader urword
+optional true
+longname length conversion factor
+description real value that is used to convert user-specified Manning's roughness coefficients from meters to model length units. LENGTH\_CONVERSION should be set to 3.28081, 1.0, and 100.0 when using length units (LENGTH\_UNITS) of feet, meters, or centimeters in the simulation, respectively. LENGTH\_CONVERSION does not need to be specified if LENGTH\_UNITS are meters.
+
+block options
+name time_conversion
+type double precision
+reader urword
+optional true
+longname time conversion factor
+description real value that is used to convert user-specified Manning's roughness coefficients from seconds to model time units. TIME\_CONVERSION should be set to 1.0, 60.0, 3,600.0, 86,400.0, and 31,557,600.0 when using time units (TIME\_UNITS) of seconds, minutes, hours, days, or years in the simulation, respectively. TIME\_CONVERSION does not need to be specified if TIME\_UNITS are seconds.
 
 
 # --------------------- gwf sfr dimensions ---------------------
@@ -799,7 +816,7 @@ name cross_sectionrecord
 type record cross_section tab6 filein tab6_filename
 shape
 tagged
-in_record false
+in_record true
 reader urword
 longname
 description

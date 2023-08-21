@@ -112,7 +112,6 @@ class ModflowChd(Package):
         filenames=None,
         **kwargs,
     ):
-
         # set default unit number if one is not specified
         if unitnumber is None:
             unitnumber = ModflowChd._defaultunit()
@@ -168,7 +167,7 @@ class ModflowChd(Package):
         f_chd.write(f"{self.heading}\n")
         f_chd.write(f" {self.stress_period_data.mxact:9d}")
         for option in self.options:
-            f_chd.write("  {}".format(option))
+            f_chd.write(f"  {option}")
         f_chd.write("\n")
         self.stress_period_data.write_transient(f_chd)
         f_chd.close()

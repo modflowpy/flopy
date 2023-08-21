@@ -3,11 +3,11 @@ This is a class for reading the mass budget from a (multi-component)
 mt3d(usgs) run. Also includes support for SFT budget.
 
 """
+import re
 import warnings
 
 import numpy as np
-
-from ..utils import import_optional_dependency
+import pandas as pd
 
 
 class MtListBudget:
@@ -23,7 +23,6 @@ class MtListBudget:
     Examples
     --------
     >>> mt_list = MtListBudget("my_mt3d.list")
-    >>> incremental, cumulative = mt_list.get_budget()
     >>> gw_df, sw_df = mt_list.parse(start_datetime="10-21-2015")
 
     """
@@ -47,6 +46,7 @@ class MtListBudget:
         self.time_key = line.lower()
         line = "TRANSPORT TIME STEP"
         self.tkstp_key = line.lower()
+        self.particles_key = "TOTAL PARTICLES USED IN THE CURRENT STEP"
 
         return
 
@@ -76,11 +76,6 @@ class MtListBudget:
             (optionally) surface-water mass budget.
             If the SFT process is not used, df_sw is None.
         """
-        pd = import_optional_dependency(
-            "pandas",
-            error_message="MtListBudget.parse() requires pandas.",
-        )
-
         self.gw_data = {}
         self.sw_data = {}
         self.lcount = 0
@@ -96,9 +91,7 @@ class MtListBudget:
                         except Exception as e:
                             warnings.warn(
                                 "error parsing GW mass budget "
-                                "starting on line {0}: {1} ".format(
-                                    self.lcount, str(e)
-                                )
+                                f"starting on line {self.lcount}: {e!s}"
                             )
                             break
                     else:
@@ -109,16 +102,25 @@ class MtListBudget:
                             self._parse_sw(f, line)
                         except Exception as e:
                             warnings.warn(
-                                "error parsing SW mass budget"
-                                " starting on line {0}: {1} ".format(
-                                    self.lcount, str(e)
-                                )
+                                "error parsing SW mass budget "
+                                f"starting on line {self.lcount}: {e!s}"
                             )
                             break
                     else:
                         self._parse_sw(f, line)
                 elif self.tkstp_key in line:
-                    self.tkstp_overflow = int(line[51:58])
+                    try:
+                        self.tkstp_overflow = (
+                            self._extract_number_between_strings(
+                                line, self.tkstp_key, "in"
+                            )
+                        )
+                    except Exception as e:
+                        warnings.warn(
+                            "error parsing TKSTP key "
+                            f"starting on line {self.lcount}: {e!s}"
+                        )
+                        break
 
         if len(self.gw_data) == 0:
             raise Exception("no groundwater budget info found...")
@@ -186,11 +188,6 @@ class MtListBudget:
         return df_gw, df_sw
 
     def _diff(self, df):
-        pd = import_optional_dependency(
-            "pandas",
-            error_message="MtListBudget._diff() requires pandas.",
-        )
-
         out_cols = [
             c for c in df.columns if "_out" in c and not c.startswith("net_")
         ]
@@ -270,6 +267,15 @@ class MtListBudget:
             line = self._readline(f)
             if line is None:
                 raise Exception("EOF while reading from totim to time step")
+
+        if self.particles_key.lower() in line:
+            for _ in range(4):
+                line = self._readline(f)
+                if line is None:
+                    raise Exception(
+                        "EOF while reading from time step to particles"
+                    )
+
         try:
             kper = int(line[-6:-1])
             kstp = int(line[-26:-21])
@@ -474,7 +480,7 @@ class MtListBudget:
 
     def _add_to_sw_data(self, inout, item, cval, fval, comp):
         item += f"_{comp}"
-        if inout.lower() in set(["in", "out"]):
+        if inout.lower() in {"in", "out"}:
             item += f"_{inout}"
         if fval is None:
             lab_val = zip([""], [cval])
@@ -485,3 +491,20 @@ class MtListBudget:
             if iitem not in self.sw_data.keys():
                 self.sw_data[iitem] = []
             self.sw_data[iitem].append(val)
+
+    @staticmethod
+    def _extract_number_between_strings(
+        input_string, start_string, end_string
+    ):
+        pattern = (
+            rf"{re.escape(start_string)}\s*(\d+)\s*{re.escape(end_string)}"
+        )
+        match = re.search(pattern, input_string)
+
+        if match:
+            extracted_number = int(match.group(1))
+            return extracted_number
+        else:
+            raise Exception(
+                f"Error extracting number between {start_string} and {end_string} in {input_string}"
+            )

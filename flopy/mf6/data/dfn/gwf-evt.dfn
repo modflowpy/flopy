@@ -160,7 +160,7 @@ type integer
 reader urword
 optional false
 longname number of ET segments
-description number of ET segments.  Default is one.  When NSEG is greater than 1, PXDP and PETM arrays must be specified NSEG - 1 times each, in order from the uppermost segment down. PXDP defines the extinction-depth proportion at the bottom of a segment. PETM defines the proportion of the maximum ET flux rate at the bottom of a segment.
+description number of ET segments.  Default is one.  When NSEG is greater than 1, the PXDP and PETM arrays must be of size NSEG - 1 and be listed in order from the uppermost segment down. Values for PXDP must be listed first followed by the values for PETM.  PXDP defines the extinction-depth proportion at the bottom of a segment. PETM defines the proportion of the maximum ET flux rate at the bottom of a segment.
 
 # --------------------- gwf evt period ---------------------
 
@@ -237,7 +237,7 @@ in_record true
 reader urword
 time_series true
 longname proportion of ET extinction depth
-description is the proportion of the ET extinction depth at the bottom of a segment (dimensionless). If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description is the proportion of the ET extinction depth at the bottom of a segment (dimensionless). pxdp is an array of size (nseg - 1).  Values in pxdp must be greater than 0.0 and less than 1.0.  pxdp values for a cell must increase monotonically.  If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block period
 name petm
@@ -248,7 +248,7 @@ in_record true
 reader urword
 time_series true
 longname proportion of maximum ET rate
-description is the proportion of the maximum ET flux rate at the bottom of a segment (dimensionless). If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description is the proportion of the maximum ET flux rate at the bottom of a segment (dimensionless). petm is an array of size (nseg - 1).  If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block period
 name petm0

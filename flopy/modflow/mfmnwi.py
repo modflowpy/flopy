@@ -176,7 +176,6 @@ class ModflowMnwi(Package):
 
     @classmethod
     def load(cls, f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
-
         if model.verbose:
             print("loading mnw2 package file...")
 

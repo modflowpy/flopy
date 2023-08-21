@@ -3,13 +3,14 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from autotest.conftest import get_example_data_path, requires_exe
+from autotest.conftest import get_example_data_path
+from modflow_devtools.markers import requires_exe
 
 from flopy.mf6 import MFSimulation, ModflowGwfoc
 from flopy.modflow import Modflow
 from flopy.utils import CellBudgetFile
 
-example_data_path = get_example_data_path(Path(__file__))
+example_data_path = get_example_data_path()
 mf2005_paths = [
     str(example_data_path / "freyberg"),
 ]
@@ -24,7 +25,7 @@ def load_mf2005(path, ws_out):
     name_file = f"{Path(path).name}.nam"
     ml = Modflow.load(
         name_file,
-        model_ws=str(path),
+        model_ws=path,
         exe_name="mf2005",
         check=False,
     )
@@ -46,7 +47,7 @@ def load_mf6(path, ws_out):
     sim = MFSimulation.load(
         sim_name=Path(path).name,
         exe_name="mf6",
-        sim_ws=str(path),
+        sim_ws=path,
     )
 
     # change work space
@@ -122,8 +123,8 @@ def cbc_eval(cbcobj, nnodes, shape3d, modelgrid):
 @requires_exe("mf6")
 @pytest.mark.mf6
 @pytest.mark.parametrize("path", mf6_paths)
-def test_cbc_full3D_mf6(tmpdir, path):
-    sim = load_mf6(path, str(tmpdir))
+def test_cbc_full3D_mf6(function_tmpdir, path):
+    sim = load_mf6(path, function_tmpdir)
 
     # write the simulation
     sim.write_simulation()
@@ -145,8 +146,8 @@ def test_cbc_full3D_mf6(tmpdir, path):
 
 @requires_exe("mf2005")
 @pytest.mark.parametrize("path", mf2005_paths)
-def test_cbc_full3D_mf2005(tmpdir, path):
-    ml = load_mf2005(path, str(tmpdir))
+def test_cbc_full3D_mf2005(function_tmpdir, path):
+    ml = load_mf2005(path, function_tmpdir)
 
     # write the model
     ml.write_input()
@@ -158,7 +159,7 @@ def test_cbc_full3D_mf2005(tmpdir, path):
     nnodes, shape3d = ml.modelgrid.nnodes, ml.modelgrid.shape
 
     # get the cell by cell object
-    fpth = os.path.join(str(tmpdir), f"{Path(path).name}.cbc")
+    fpth = function_tmpdir / f"{Path(path).name}.cbc"
     cbc = CellBudgetFile(fpth)
 
     # evaluate the full3D option

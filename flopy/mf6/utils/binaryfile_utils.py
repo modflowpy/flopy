@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import pandas as pd
 
 from ...utils import binaryfile as bf
 from ...utils import import_optional_dependency
@@ -230,11 +231,6 @@ class MFOutputRequester:
         botmv: (n x nlayers) dimensional Pandas object of cell bottom
         elevations corresponding to a row column location
         """
-
-        pd = import_optional_dependency(
-            "pandas",
-            error_message="MFOutputRequester._get_vertices() requires pandas.",
-        )
 
         mname = key[0]
         cellid = mfdict[(mname, "DISV8", "CELL2D", "cell2d_num")]

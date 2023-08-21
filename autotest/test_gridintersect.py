@@ -3,8 +3,10 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from autotest.conftest import has_pkg, requires_pkg
+from modflow_devtools.markers import requires_pkg
+from modflow_devtools.misc import has_pkg
 
+import flopy
 import flopy.discretization as fgrid
 import flopy.plot as fplot
 from flopy.modflow import Modflow
@@ -12,7 +14,7 @@ from flopy.utils import Raster
 from flopy.utils.gridintersect import GridIntersect
 from flopy.utils.triangle import Triangle
 
-if has_pkg("shapely"):
+if has_pkg("shapely", strict=True):
     from shapely.geometry import (
         LineString,
         MultiLineString,
@@ -117,42 +119,6 @@ def get_rect_vertex_grid(angrot=0.0, xyoffset=0.0):
         angrot=angrot,
     )
     return tgr
-
-
-def plot_structured_grid(sgr):
-    _, ax = plt.subplots(1, 1, figsize=(8, 8))
-    sgr.plot(ax=ax)
-    return ax
-
-
-def plot_vertex_grid(tgr):
-    _, ax = plt.subplots(1, 1, figsize=(8, 8))
-    pmv = fplot.PlotMapView(modelgrid=tgr)
-    pmv.plot_grid(ax=ax)
-    return ax
-
-
-def plot_ix_polygon_result(rec, ax):
-    from descartes import PolygonPatch
-
-    for i, ishp in enumerate(rec.ixshapes):
-        ppi = PolygonPatch(ishp, facecolor=f"C{i % 10}")
-        ax.add_patch(ppi)
-
-
-def plot_ix_linestring_result(rec, ax):
-    for i, ishp in enumerate(rec.ixshapes):
-        if ishp.type == "MultiLineString":
-            for part in ishp:
-                ax.plot(part.xy[0], part.xy[1], ls="-", c=f"C{i % 10}")
-        else:
-            ax.plot(ishp.xy[0], ishp.xy[1], ls="-", c=f"C{i % 10}")
-
-
-def plot_ix_point_result(rec, ax):
-    x = [ip.x for ip in rec.ixshapes]
-    y = [ip.y for ip in rec.ixshapes]
-    ax.scatter(x, y)
 
 
 # %% test point structured
@@ -598,6 +564,26 @@ def test_rect_grid_linestrings_on_boundaries_return_all_ix_shapely(rtree):
 
 @requires_pkg("shapely")
 @rtree_toggle
+def test_rect_grid_linestring_cell_boundary_shapely(rtree):
+    gr = get_rect_grid()
+    ix = GridIntersect(gr, method="vertex", rtree=rtree)
+    ls = LineString(ix._rect_grid_to_geoms_cellids()[0][0].exterior.coords)
+    r = ix.intersect(ls, return_all_intersections=False)
+    assert len(r) == 1
+
+
+@requires_pkg("shapely")
+@rtree_toggle
+def test_rect_grid_linestring_cell_boundary_return_all_ix_shapely(rtree):
+    gr = get_rect_grid()
+    ix = GridIntersect(gr, method="vertex", rtree=rtree)
+    ls = LineString(ix._rect_grid_to_geoms_cellids()[0][0].exterior.coords)
+    r = ix.intersect(ls, return_all_intersections=True)
+    assert len(r) == 3
+
+
+@requires_pkg("shapely")
+@rtree_toggle
 def test_tri_grid_linestring_outside(rtree):
     gr = get_tri_grid()
     if gr == -1:
@@ -680,7 +666,26 @@ def test_tri_grid_linestrings_on_boundaries_return_all_ix(rtree):
         ls = LineString([(x[i], y[i]), (x[i + 1], y[i + 1])])
         r = ix.intersect(ls, return_all_intersections=True)
         assert len(r) == n_intersections[i]
-    return
+
+
+@requires_pkg("shapely")
+@rtree_toggle
+def test_tri_grid_linestring_cell_boundary_shapely(rtree):
+    tgr = get_tri_grid()
+    ix = GridIntersect(tgr, method="vertex", rtree=rtree)
+    ls = LineString(ix._vtx_grid_to_geoms_cellids()[0][0].exterior.coords)
+    r = ix.intersect(ls, return_all_intersections=False)
+    assert len(r) == 1
+
+
+@requires_pkg("shapely")
+@rtree_toggle
+def test_tri_grid_linestring_cell_boundary_return_all_ix_shapely(rtree):
+    tgr = get_tri_grid()
+    ix = GridIntersect(tgr, method="vertex", rtree=rtree)
+    ls = LineString(ix._vtx_grid_to_geoms_cellids()[0][0].exterior.coords)
+    r = ix.intersect(ls, return_all_intersections=True)
+    assert len(r) == 3
 
 
 # %% test polygon structured
@@ -742,6 +747,90 @@ def test_rect_grid_polygon_on_inner_boundary():
     )
     assert len(result) == 2
     assert result.areas.sum() == 50.0
+
+    fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+    gr.plot(ax=ax)
+    ix.plot_polygon(result, ax=ax)
+    # plt.show()
+
+
+@requires_pkg("shapely")
+def test_rect_grid_polygon_multiple_polygons():
+    gr = get_rect_grid()
+    p = Polygon(
+        [
+            (0, 0),
+            (0, 10),
+            (4, 10),
+            (4, 0),
+            (6, 0),
+            (6, 10),
+            (9, 10),
+            (9, -1),
+            (0, -1),
+            (0, 0),
+        ]
+    )
+
+    ix = GridIntersect(gr, method="structured")
+    result = ix.intersect(p)
+
+    fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+    gr.plot(ax=ax)
+    ix.plot_polygon(result, ax=ax)
+    # plt.show()
+
+
+@requires_pkg("shapely")
+def test_rect_grid_multiple_disjoint_polygons_on_inner_boundaries():
+    gr = get_rect_grid()
+    ix = GridIntersect(gr, method="structured")
+    p1 = Polygon([(5.0, 10.0), (15.0, 10.0), (15.0, 5.0), (5.0, 5.0)])
+    p2 = Polygon([(5.0, 17.5), (15.0, 17.5), (15.0, 12.5), (5.0, 12.5)])
+    result = ix.intersect(MultiPolygon([p1, p2]))
+
+    assert len(result) == 4
+    assert result.areas.sum() == 100.0
+
+    fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+    gr.plot(ax=ax)
+    ix.plot_polygon(result, ax=ax)
+    # plt.show()
+
+
+@requires_pkg("shapely")
+@pytest.mark.parametrize("transform", [True, False])
+def test_rect_grid_polygon_reintersects_cell(transform):
+    gr = get_rect_grid()
+    if transform:
+        gr.set_coord_info(xoff=1, yoff=1, angrot=10.5)
+
+    ix = GridIntersect(gr, method="structured")
+    p1 = Polygon(
+        [
+            (x, y + 3)
+            for x, y in [
+                (2.5, 2.5),
+                (2.5, 10.0),
+                (10.0, 10.0),
+                (10.0, 2.5),
+                (7.5, 2.5),
+                (7.5, 7.5),
+                (5.0, 7.5),
+                (5.0, 2.5),
+            ]
+        ]
+    )
+    p2 = Polygon([(1, 1), (1, 2), (2, 2), (2, 1)])
+    result = ix.intersect(MultiPolygon([p1, p2]))
+
+    assert len(result) == 4 if transform else 2
+    assert np.isclose(result.areas.sum(), 44.65733 if transform else 44.75)
+
+    fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+    gr.plot(ax=ax)
+    ix.plot_polygon(result, ax=ax)
+    # plt.show()
 
 
 @requires_pkg("shapely")
@@ -1063,7 +1152,7 @@ def test_point_offset_rot_structured_grid():
     p = Point(10.0, 10 + np.sqrt(200.0))
     ix = GridIntersect(sgr, method="structured")
     result = ix.intersect(p)
-    # assert len(result) == 1.
+    assert len(result) == 1
 
 
 @requires_pkg("shapely")
@@ -1072,7 +1161,8 @@ def test_linestring_offset_rot_structured_grid():
     ls = LineString([(5, 10.0 + np.sqrt(200.0)), (15, 10.0 + np.sqrt(200.0))])
     ix = GridIntersect(sgr, method="structured")
     result = ix.intersect(ls)
-    # assert len(result) == 2.
+    # NOTE: in shapely 2.0, this returns a Linestring with length 10^-15 in cell (0, 1)
+    assert len(result) == 2 or len(result) == 3
 
 
 @requires_pkg("shapely")
@@ -1088,7 +1178,7 @@ def test_polygon_offset_rot_structured_grid():
     )
     ix = GridIntersect(sgr, method="structured")
     result = ix.intersect(p)
-    # assert len(result) == 3.
+    assert len(result) == 3
 
 
 @requires_pkg("shapely")
@@ -1098,7 +1188,7 @@ def test_point_offset_rot_structured_grid_shapely(rtree):
     p = Point(10.0, 10 + np.sqrt(200.0))
     ix = GridIntersect(sgr, method="vertex", rtree=rtree)
     result = ix.intersect(p)
-    # assert len(result) == 1.
+    assert len(result) == 1
 
 
 @requires_pkg("shapely")
@@ -1108,7 +1198,7 @@ def test_linestring_offset_rot_structured_grid_shapely(rtree):
     ls = LineString([(5, 10.0 + np.sqrt(200.0)), (15, 10.0 + np.sqrt(200.0))])
     ix = GridIntersect(sgr, method="vertex", rtree=rtree)
     result = ix.intersect(ls)
-    # assert len(result) == 2.
+    assert len(result) == 2
 
 
 @requires_pkg("shapely")
@@ -1125,79 +1215,18 @@ def test_polygon_offset_rot_structured_grid_shapely(rtree):
     )
     ix = GridIntersect(sgr, method="vertex", rtree=rtree)
     result = ix.intersect(p)
-    # assert len(result) == 3.
-
-
-# %% test non strtree shapely intersect
-
-
-@requires_pkg("shapely")
-def test_all_intersections_shapely_no_strtree():
-    """avoid adding separate tests for rtree=False"""
-    # Points
-    # regular grid
-    test_rect_grid_point_on_inner_boundary_shapely(rtree=False)
-    test_rect_grid_point_on_outer_boundary_shapely(rtree=False)
-    test_rect_grid_point_outside_shapely(rtree=False)
-    test_rect_grid_multipoint_in_one_cell_shapely(rtree=False)
-    test_rect_grid_multipoint_in_multiple_cells_shapely(rtree=False)
-    # vertex grid
-    test_tri_grid_point_on_inner_boundary(rtree=False)
-    test_tri_grid_point_on_outer_boundary(rtree=False)
-    test_tri_grid_point_outside(rtree=False)
-    test_tri_grid_multipoint_in_multiple_cells(rtree=False)
-    test_tri_grid_multipoint_in_one_cell(rtree=False)
-
-    # LineStrings
-    # regular grid
-    test_rect_grid_linestring_on_inner_boundary_shapely(rtree=False)
-    test_rect_grid_linestring_on_outer_boundary_shapely(rtree=False)
-    test_rect_grid_linestring_outside_shapely(rtree=False)
-    test_rect_grid_linestring_in_2cells_shapely(rtree=False)
-    test_rect_grid_linestring_in_and_out_of_cell_shapely(rtree=False)
-    test_rect_grid_multilinestring_in_one_cell_shapely(rtree=False)
-    # vertex grid
-    test_tri_grid_linestring_on_inner_boundary(rtree=False)
-    test_tri_grid_linestring_on_outer_boundary(rtree=False)
-    test_tri_grid_linestring_outside(rtree=False)
-    test_tri_grid_linestring_in_2cells(rtree=False)
-    test_tri_grid_multilinestring_in_one_cell(rtree=False)
-
-    # Polygons
-    # regular grid
-    test_rect_grid_polygon_on_inner_boundary_shapely(rtree=False)
-    test_rect_grid_polygon_on_outer_boundary_shapely(rtree=False)
-    test_rect_grid_polygon_outside_shapely(rtree=False)
-    test_rect_grid_polygon_in_2cells_shapely(rtree=False)
-    test_rect_grid_polygon_with_hole_shapely(rtree=False)
-    test_rect_grid_multipolygon_in_one_cell_shapely(rtree=False)
-    test_rect_grid_multipolygon_in_multiple_cells_shapely(rtree=False)
-    # vertex grid
-    test_tri_grid_polygon_on_inner_boundary(rtree=False)
-    test_tri_grid_polygon_on_outer_boundary(rtree=False)
-    test_tri_grid_polygon_outside(rtree=False)
-    test_tri_grid_polygon_in_2cells(rtree=False)
-    test_tri_grid_polygon_with_hole(rtree=False)
-    test_tri_grid_multipolygon_in_multiple_cells(rtree=False)
-    test_tri_grid_multipolygon_in_one_cell(rtree=False)
-
-    # offset and rotated grids
-    test_point_offset_rot_structured_grid_shapely(rtree=False)
-    test_linestring_offset_rot_structured_grid_shapely(rtree=False)
-    test_polygon_offset_rot_structured_grid_shapely(rtree=False)
+    assert len(result) == 3
 
 
 # %% test rasters
 
 
+@requires_pkg("rasterstats", "scipy", "shapely")
 def test_rasters(example_data_path):
-    ws = str(example_data_path / "options")
+    ws = example_data_path / "options"
     raster_name = "dem.img"
 
-    try:
-        rio = Raster.load(os.path.join(ws, "dem", raster_name))
-    except:
-        return
+    rio = Raster.load(ws / "dem" / raster_name)
 
     ml = Modflow.load(
         "sagehen.nam", version="mfnwt", model_ws=os.path.join(ws, "sagehen")
@@ -1252,19 +1281,16 @@ def test_rasters(example_data_path):
 
 # %% test raster sampling methods
 
+
 @pytest.mark.slow
+@requires_pkg("rasterstats")
 def test_raster_sampling_methods(example_data_path):
-    ws = str(example_data_path / "options")
+    ws = example_data_path / "options"
     raster_name = "dem.img"
 
-    try:
-        rio = Raster.load(os.path.join(ws, "dem", raster_name))
-    except:
-        return
+    rio = Raster.load(ws / "dem" / raster_name)
 
-    ml = Modflow.load(
-        "sagehen.nam", version="mfnwt", model_ws=os.path.join(ws, "sagehen")
-    )
+    ml = Modflow.load("sagehen.nam", version="mfnwt", model_ws=ws / "sagehen")
     xoff = 214110
     yoff = 4366620
     ml.modelgrid.set_coord_info(xoff, yoff)
@@ -1300,8 +1326,3 @@ def test_raster_sampling_methods(example_data_path):
             raise AssertionError(
                 f"{method} resampling returning incorrect values"
             )
-
-
-if __name__ == "__main__":
-
-    test_all_intersections_shapely_no_strtree()

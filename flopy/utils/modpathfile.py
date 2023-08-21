@@ -8,6 +8,9 @@ important classes that can be accessed by the user.
 """
 
 import itertools
+import os
+from pathlib import Path
+from typing import Union
 
 import numpy as np
 from numpy.lib.recfunctions import append_fields, stack_arrays
@@ -16,7 +19,7 @@ from ..utils.flopy_io import loadtxt
 from ..utils.recarray_utils import ra_slice
 
 
-class _ModpathSeries(object):
+class _ModpathSeries:
     """
     Base class for PathlineFile and TimeseriesFile objects.
 
@@ -25,8 +28,8 @@ class _ModpathSeries(object):
 
     Parameters
     ----------
-    filename : str
-        name of pathline or modpath file
+    filename : str or PathLike
+        Path of pathline or modpath file
     verbose : bool
         Write information to the screen. Default is False
     output_type : str
@@ -35,7 +38,7 @@ class _ModpathSeries(object):
     """
 
     def __init__(self, filename, verbose=False, output_type="pathline"):
-        self.fname = filename
+        self.fname = Path(filename).expanduser().absolute()
         self.verbose = verbose
         self.output_type = output_type.upper()
 
@@ -72,9 +75,7 @@ class _ModpathSeries(object):
                 else:
                     self.version = None
                 if self.version is None:
-                    errmsg = "{} is not a valid {} file".format(
-                        self.fname, self.output_type.lower()
-                    )
+                    errmsg = f"{self.fname} is not a valid {self.output_type.lower()} file"
                     raise Exception(errmsg)
             self.skiprows += 1
             if self.version == 6 or self.version == 7:
@@ -256,7 +257,6 @@ class _ModpathSeries(object):
             series.sort(order=["particleid", "time"])
             series = series.view(np.recarray)
         else:
-
             # get list of unique particleids in selection
             partids = np.unique(epdest["particleid"])
 
@@ -272,7 +272,7 @@ class _ModpathSeries(object):
         direction="ending",
         shpname="endpoints.shp",
         mg=None,
-        epsg=None,
+        crs=None,
         **kwargs,
     ):
         """
@@ -295,11 +295,18 @@ class _ModpathSeries(object):
             File path for shapefile
         mg : flopy.discretization.grid instance
             Used to scale and rotate Global x,y,z values.
-        epsg : int
-            EPSG code for writing projection (.prj) file. If this is not
-            supplied, the proj4 string or epgs code associated with mg will be
-            used.
+        crs : pyproj.CRS, int, str, optional
+            Coordinate reference system (CRS) for the model grid
+            (must be projected; geographic CRS are not supported).
+            The value can be anything accepted by
+            :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+            such as an authority string (eg "EPSG:26916") or a WKT string.
         kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
+
+          .. deprecated:: 3.5
+             The following keyword options will be removed for FloPy 3.6:
+
+               - ``epsg`` (int): use ``crs`` instead.
 
         """
         from ..discretization import StructuredGrid
@@ -325,9 +332,6 @@ class _ModpathSeries(object):
         if mg is None:
             raise ValueError("A modelgrid object was not provided.")
 
-        if epsg is None:
-            epsg = mg.epsg
-
         particles = np.unique(series.particleid)
         geoms = []
 
@@ -348,7 +352,6 @@ class _ModpathSeries(object):
 
         # 1 geometry for each path
         if one_per_particle:
-
             loc_inds = 0
             if direction == "ending":
                 loc_inds = -1
@@ -386,12 +389,12 @@ class _ModpathSeries(object):
             sdata = []
             for pid in particles:
                 ra = series[series.particleid == pid]
-                if isinstance(mg, StructuredGrid):
+                if mg is not None:
                     x, y = geometry.transform(
                         ra.x, ra.y, mg.xoffset, mg.yoffset, mg.angrot_radians
                     )
                 else:
-                    x, y = mg.transform(ra.x, ra.y)
+                    x, y = geometry.transform(ra.x, ra.y, 0, 0, 0)
                 z = ra.z
                 geoms += [
                     LineString(
@@ -407,7 +410,7 @@ class _ModpathSeries(object):
             sdata[n] += 1
 
         # write the final recarray to a shapefile
-        recarray2shp(sdata, geoms, shpname=shpname, epsg=epsg, **kwargs)
+        recarray2shp(sdata, geoms, shpname=shpname, crs=crs, **kwargs)
 
 
 class PathlineFile(_ModpathSeries):
@@ -416,8 +419,8 @@ class PathlineFile(_ModpathSeries):
 
     Parameters
     ----------
-    filename : string
-        Name of the pathline file
+    filename : str or PathLike
+        Path of the pathline file
     verbose : bool
         Write information to the screen.  Default is False.
 
@@ -442,7 +445,7 @@ class PathlineFile(_ModpathSeries):
         "sequencenumber",
     ]
 
-    def __init__(self, filename, verbose=False):
+    def __init__(self, filename: Union[str, os.PathLike], verbose=False):
         """
         Class constructor.
 
@@ -745,7 +748,7 @@ class PathlineFile(_ModpathSeries):
         direction="ending",
         shpname="pathlines.shp",
         mg=None,
-        epsg=None,
+        crs=None,
         **kwargs,
     ):
         """
@@ -770,11 +773,18 @@ class PathlineFile(_ModpathSeries):
         mg : flopy.discretization.grid instance
             Used to scale and rotate Global x,y,z values in MODPATH Pathline
             file.
-        epsg : int
-            EPSG code for writing projection (.prj) file. If this is not
-            supplied, the proj4 string or epgs code associated with mg will be
-            used.
+        crs : pyproj.CRS, int, str, optional
+            Coordinate reference system (CRS) for the model grid
+            (must be projected; geographic CRS are not supported).
+            The value can be anything accepted by
+            :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+            such as an authority string (eg "EPSG:26916") or a WKT string.
         kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
+
+          .. deprecated:: 3.5
+             The following keyword options will be removed for FloPy 3.6:
+
+               - ``epsg`` (int): use ``crs`` instead.
 
         """
         super().write_shapefile(
@@ -783,7 +793,7 @@ class PathlineFile(_ModpathSeries):
             direction=direction,
             shpname=shpname,
             mg=mg,
-            epsg=epsg,
+            crs=crs,
             **kwargs,
         )
 
@@ -1000,7 +1010,6 @@ class EndpointFile:
         return np.dtype(dtype)
 
     def _add_particleid(self):
-
         # add particle ids for earlier version of MODPATH
         if self.version < 6:
             # create particle ids
@@ -1193,7 +1202,7 @@ class EndpointFile:
         shpname="endpoints.shp",
         direction="ending",
         mg=None,
-        epsg=None,
+        crs=None,
         **kwargs,
     ):
         """
@@ -1210,11 +1219,18 @@ class EndpointFile:
         mg : flopy.discretization.grid instance
             Used to scale and rotate Global x,y,z values in MODPATH Endpoint
             file.
-        epsg : int
-            EPSG code for writing projection (.prj) file. If this is not
-            supplied, the proj4 string or epgs code associated with mg will be
-            used.
+        crs : pyproj.CRS, int, str, optional
+            Coordinate reference system (CRS) for the model grid
+            (must be projected; geographic CRS are not supported).
+            The value can be anything accepted by
+            :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+            such as an authority string (eg "EPSG:26916") or a WKT string.
         kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
+
+          .. deprecated:: 3.5
+             The following keyword options will be removed for FloPy 3.6:
+
+               - ``epsg`` (int): use ``crs`` instead.
 
         """
         from ..discretization import StructuredGrid
@@ -1237,8 +1253,6 @@ class EndpointFile:
             )
         if mg is None:
             raise ValueError("A modelgrid object was not provided.")
-        if epsg is None:
-            epsg = mg.epsg
 
         if isinstance(mg, StructuredGrid):
             x, y = geometry.transform(
@@ -1257,7 +1271,7 @@ class EndpointFile:
         for n in self.kijnames:
             if n in epd.dtype.names:
                 epd[n] += 1
-        recarray2shp(epd, geoms, shpname=shpname, epsg=epsg, **kwargs)
+        recarray2shp(epd, geoms, shpname=shpname, crs=crs, **kwargs)
 
 
 class TimeseriesFile(_ModpathSeries):
@@ -1585,7 +1599,7 @@ class TimeseriesFile(_ModpathSeries):
         direction="ending",
         shpname="pathlines.shp",
         mg=None,
-        epsg=None,
+        crs=None,
         **kwargs,
     ):
         """
@@ -1610,11 +1624,18 @@ class TimeseriesFile(_ModpathSeries):
         mg : flopy.discretization.grid instance
             Used to scale and rotate Global x,y,z values in MODPATH Timeseries
             file.
-        epsg : int
-            EPSG code for writing projection (.prj) file. If this is not
-            supplied, the proj4 string or epgs code associated with mg will be
-            used.
+        crs : pyproj.CRS, int, str, optional
+            Coordinate reference system (CRS) for the model grid
+            (must be projected; geographic CRS are not supported).
+            The value can be anything accepted by
+            :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+            such as an authority string (eg "EPSG:26916") or a WKT string.
         kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
+
+          .. deprecated:: 3.5
+             The following keyword options will be removed for FloPy 3.6:
+
+               - ``epsg`` (int): use ``crs`` instead.
 
         """
         super().write_shapefile(
@@ -1623,6 +1644,6 @@ class TimeseriesFile(_ModpathSeries):
             direction=direction,
             shpname=shpname,
             mg=mg,
-            epsg=epsg,
+            crs=crs,
             **kwargs,
         )

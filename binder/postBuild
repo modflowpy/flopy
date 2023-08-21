@@ -1,6 +1,8 @@
 #!/bin/bash
 
-curl -L -o linux.zip https://github.com/MODFLOW-USGS/executables/releases/download/3.0/linux.zip?raw=true
-mkdir binaries
-unzip linux.zip -d binaries
-rm linux.zip
+# install modflow & related executables to the Python bindir
+get-modflow :python
+
+# required for jupytext
+# https://jupytext.readthedocs.io/en/latest/faq.html#can-i-use-jupytext-with-jupyterhub-binder-nteract-colab-saturn-or-azure
+jupyter lab build  

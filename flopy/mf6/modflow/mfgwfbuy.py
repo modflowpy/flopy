@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on April 11, 2022 18:22:41 UTC
+# FILE created on June 29, 2023 14:20:38 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -38,9 +38,8 @@ class ModflowGwfbuy(mfpackage.MFPackage):
           aquifer conditions and should generally not be used.
     nrhospecies : integer
         * nrhospecies (integer) number of species used in density equation of
-          state. This value must be one or greater. The value must be one if
-          concentrations are specified using the CONCENTRATION keyword in the
-          PERIOD block below.
+          state. This value must be one or greater if the BUY package is
+          activated.
     packagedata : [irhospec, drhodc, crhoref, modelname, auxspeciesname]
         * irhospec (integer) integer value that defines the species number
           associated with the specified PACKAGEDATA data on the line.
@@ -109,7 +108,7 @@ class ModflowGwfbuy(mfpackage.MFPackage):
         [
             "block options",
             "name denseref",
-            "type double",
+            "type double precision",
             "reader urword",
             "optional true",
             "default_value 1000.",

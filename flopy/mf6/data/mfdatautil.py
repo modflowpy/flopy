@@ -186,7 +186,12 @@ def to_string(
             and is_cellid
             and data_dim.get_model_dim(None).model_name is not None
         ):
-            model_grid = data_dim.get_model_grid()
+            model_num = DatumUtil.cellid_model_num(
+                data_item.name,
+                data_dim.structure.model_data,
+                data_dim.package_dim.model_dim,
+            )
+            model_grid = data_dim.get_model_grid(model_num=model_num)
             cellid_size = model_grid.get_num_spatial_coordinates()
             if len(val) != cellid_size:
                 message = (
@@ -892,7 +897,7 @@ class MFDocString:
             if model_parameter:
                 self.model_parameters.append(param_descr)
 
-    def get_doc_string(self, model_doc_string=False):
+    def get_doc_string(self, model_doc_string=False, sim_doc_string=False):
         doc_string = '{}"""\n{}{}\n\n{}\n'.format(
             self.indent, self.indent, self.description, self.parameter_header
         )
@@ -912,7 +917,17 @@ class MFDocString:
         else:
             param_list = self.parameters
         for parameter in param_list:
+            if sim_doc_string:
+                pclean = parameter.strip()
+                if (
+                    pclean.startswith("simulation")
+                    or pclean.startswith("loading_package")
+                    or pclean.startswith("filename")
+                    or pclean.startswith("pname")
+                    or pclean.startswith("parent_file")
+                ):
+                    continue
             doc_string += f"{parameter}\n"
-        if not model_doc_string:
+        if not (model_doc_string or sim_doc_string):
             doc_string += f'\n{self.indent}"""'
         return doc_string

@@ -131,17 +131,6 @@ longname cim keyword
 description keyword to specify that record corresponds to immobile concentration.
 
 block options
-name fileout
-type keyword
-shape
-in_record true
-reader urword
-tagged true
-optional false
-longname file keyword
-description keyword to specify that an output filename is expected next.
-
-block options
 name cimfile
 type string
 preserve_case true
@@ -231,23 +220,22 @@ description write format can be EXPONENTIAL, FIXED, GENERAL, or SCIENTIFIC.
 # --------------------- gwt ist griddata ---------------------
 
 block griddata
-name cim
-type double precision
-shape (nodes)
-reader readarray
-optional true
-layered true
-longname initial concentration of the immobile domain
-description initial concentration of the immobile domain in mass per length cubed.  If CIM is not specified, then it is assumed to be zero.
-
-block griddata
-name thetaim
+name porosity
 type double precision
 shape (nodes)
 reader readarray
 layered true
 longname porosity of the immobile domain
-description porosity of the immobile domain specified as the volume of immobile pore space per total volume (dimensionless).
+description porosity of the immobile domain specified as the immobile domain pore volume per immobile domain volume.
+
+block griddata
+name volfrac
+type double precision
+shape (nodes)
+reader readarray
+layered true
+longname volume fraction of this immobile domain
+description fraction of the cell volume that consists of this immobile domain.  The sum of all immobile domain volume fractions must be less than one.
 
 block griddata
 name zetaim
@@ -257,6 +245,16 @@ reader readarray
 layered true
 longname mass transfer rate coefficient between the mobile and immobile domains
 description mass transfer rate coefficient between the mobile and immobile domains, in dimensions of per time.
+
+block griddata
+name cim
+type double precision
+shape (nodes)
+reader readarray
+optional true
+layered true
+longname initial concentration of the immobile domain
+description initial concentration of the immobile domain in mass per length cubed.  If CIM is not specified, then it is assumed to be zero.
 
 block griddata
 name decay
@@ -283,16 +281,18 @@ name bulk_density
 type double precision
 shape (nodes)
 reader readarray
+optional true
 layered true
 longname bulk density
-description is the bulk density of the aquifer in mass per length cubed.  bulk\_density will have no effect on simulation results unless the SORPTION keyword is specified in the options block.
+description is the bulk density of this immobile domain in mass per length cubed.  Bulk density is defined as the immobile domain solid mass per volume of the immobile domain.  bulk\_density is not required unless the SORPTION keyword is specified in the options block.  If the SORPTION keyword is not specified in the options block, bulk\_density will have no effect on simulation results.  
 
 block griddata
 name distcoef
 type double precision
 shape (nodes)
 reader readarray
+optional true
 layered true
 longname distribution coefficient
-description is the distribution coefficient for the equilibrium-controlled linear sorption isotherm in dimensions of length cubed per mass.  distcoef will have no effect on simulation results unless the SORPTION keyword is specified in the options block.
+description is the distribution coefficient for the equilibrium-controlled linear sorption isotherm in dimensions of length cubed per mass.  distcoef is not required unless the SORPTION keyword is specified in the options block.  If the SORPTION keyword is not specified in the options block, distcoef will have no effect on simulation results. 
 

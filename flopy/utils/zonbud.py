@@ -1,8 +1,10 @@
 import copy
 import os
 from itertools import groupby
+from typing import Union
 
 import numpy as np
+import pandas as pd
 
 from . import import_optional_dependency
 from .utils_def import totim_to_datetime
@@ -59,7 +61,9 @@ class ZoneBudget:
 
         if isinstance(cbc_file, CellBudgetFile):
             self.cbc = cbc_file
-        elif isinstance(cbc_file, str) and os.path.isfile(cbc_file):
+        elif isinstance(cbc_file, (str, os.PathLike)) and os.path.isfile(
+            cbc_file
+        ):
             self.cbc = CellBudgetFile(cbc_file)
         else:
             raise Exception(f"Cannot load cell budget file: {cbc_file}.")
@@ -544,7 +548,6 @@ class ZoneBudget:
 
         """
         try:
-
             if kstpkper is not None:
                 for rn, cn, flux in zip(rownames, colnames, fluxes):
                     rowidx = np.where(
@@ -998,7 +1001,6 @@ class ZoneBudget:
         return
 
     def _accumulate_flow_ssst(self, recname, kstpkper, totim):
-
         # NOT AN INTERNAL FLOW TERM, SO MUST BE A SOURCE TERM OR STORAGE
         # ACCUMULATE THE FLOW BY ZONE
 
@@ -1456,7 +1458,7 @@ class ZoneBudget:
         zones : np.array
 
         """
-        with open(fname, "r") as f:
+        with open(fname) as f:
             lines = f.readlines()
 
         # Initialize layer
@@ -1468,7 +1470,7 @@ class ZoneBudget:
 
         # First line contains array dimensions
         dimstring = lines.pop(0).strip().split()
-        nlay, nrow, ncol = [int(v) for v in dimstring]
+        nlay, nrow, ncol = (int(v) for v in dimstring)
         zones = np.zeros((nlay, nrow, ncol), dtype=np.int32)
 
         # The number of values to read before placing
@@ -1499,7 +1501,7 @@ class ZoneBudget:
                     iconst = int(rowitems[1])
                 else:
                     fmt = rowitems[1].strip("()")
-                    fmtin, iprn = [int(v) for v in fmt.split("I")]
+                    fmtin, iprn = (int(v) for v in fmt.split("I"))
 
             # ZONE DATA
             else:
@@ -1519,7 +1521,7 @@ class ZoneBudget:
                     if not os.path.isfile(fname):
                         errmsg = f'Could not find external file "{fname}"'
                         raise Exception(errmsg)
-                    with open(fname, "r") as ext_f:
+                    with open(fname) as ext_f:
                         ext_flines = ext_f.readlines()
                     for ext_frow in ext_flines:
                         ext_frowitems = ext_frow.strip().split()
@@ -2092,7 +2094,7 @@ class ZoneBudget6:
             foo.write("END ZONEBUDGET\n")
 
     @staticmethod
-    def load(nam_file, model_ws="."):
+    def load(nam_file, model_ws: Union[str, os.PathLike] = os.curdir):
         """
         Method to load a zonebudget model from namefile
 
@@ -2100,7 +2102,7 @@ class ZoneBudget6:
         ----------
         nam_file : str
             zonebudget name file
-        model_ws : str
+        model_ws : str or PathLike, default "."
             model workspace path
 
         Returns
@@ -2130,7 +2132,8 @@ class ZoneBudget6:
 
         Parameters
         ----------
-        f : str or flopy.export.netcdf.NetCdf object
+        f : str, PathLike, or flopy.export.netcdf.NetCdf object
+            The file to export to
         ml : flopy.modflow.Modflow or flopy.mf6.ModflowGwf object
         **kwargs :
             logger : flopy.export.netcdf.Logger instance
@@ -2144,7 +2147,8 @@ class ZoneBudget6:
         """
         from ..export.utils import output_helper
 
-        if isinstance(f, str):
+        if isinstance(f, (str, os.PathLike)):
+            f = str(f)
             if not f.endswith(".nc"):
                 raise AssertionError(
                     "File extension must end with .nc to "
@@ -2250,14 +2254,14 @@ class ZoneFile6:
             foo.write("\nEND GRIDDATA\n")
 
     @staticmethod
-    def load(f, model):
+    def load(f: Union[str, os.PathLike], model):
         """
         Method to load a Zone file for zonebudget 6.
 
         Parameter
         ---------
-        f : str
-            zone file name
+        f : str or PathLike
+            zone file path
         model : ZoneBudget6 object
             zonebudget 6 model object
 
@@ -2375,10 +2379,6 @@ def _recarray_to_dataframe(
 
     pd.DataFrame
     """
-    pd = import_optional_dependency(
-        "pandas",
-        error_message="ZoneBudget.get_dataframes() requires pandas.",
-    )
 
     valid_index_keys = ["totim", "kstpkper"]
     s = f'index_key "{index_key}" is not valid.'
@@ -2464,7 +2464,7 @@ def _get_budget(recarray, zonenamedict, names=None, zones=None, net=False):
     if "totim" in recarray.dtype.names:
         standard_fields.insert(0, "totim")
     select_fields = standard_fields + list(zonenamedict.values())
-    select_records = np.where((recarray["name"] == recarray["name"]))
+    select_records = np.where(recarray["name"] == recarray["name"])
     if zones is not None:
         for idx, z in enumerate(zones):
             if isinstance(z, int):
@@ -2613,7 +2613,6 @@ def _read_zb_zblst(fname):
         np.recarray
     """
     with open(fname) as foo:
-
         data = {}
         read_data = False
         flow_budget = False
@@ -2757,7 +2756,6 @@ def _read_zb_csv(fname):
                 read_data = True
 
             elif read_data:
-
                 t = line.split(",")
                 if "IN" in t[1]:
                     prefix = "FROM_"
@@ -2999,10 +2997,6 @@ def _volumetric_flux(recarray, modeltime, extrapolate_kper=False):
         pd.DataFrame
 
     """
-    pd = import_optional_dependency(
-        "pandas",
-        error_message="ZoneBudget._volumetric_flux() requires pandas.",
-    )
 
     nper = len(modeltime.nstp)
     volumetric_data = {}

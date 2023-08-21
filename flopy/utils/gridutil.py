@@ -56,3 +56,180 @@ def get_lni(ncpl, nodes) -> List[Tuple[int, int]]:
         tuples.append((layer + 1, 0) if correct else (layer, nidx))
 
     return tuples
+
+
+def get_disu_kwargs(
+    nlay,
+    nrow,
+    ncol,
+    delr,
+    delc,
+    tp,
+    botm,
+):
+    """
+    Create args needed to construct a DISU package.
+
+    Parameters
+    ----------
+    nlay : int
+        Number of layers
+    nrow : int
+        Number of rows
+    ncol : int
+        Number of columns
+    delr : numpy.ndarray
+        Column spacing along a row
+    delc : numpy.ndarray
+        Row spacing along a column
+    tp : int or numpy.ndarray
+        Top elevation(s) of cells in the model's top layer
+    botm : numpy.ndarray
+        Bottom elevation(s) of all cells in the model
+    """
+
+    def get_nn(k, i, j):
+        return k * nrow * ncol + i * ncol + j
+
+    nodes = nlay * nrow * ncol
+    iac = np.zeros((nodes), dtype=int)
+    ja = []
+    area = np.zeros((nodes), dtype=float)
+    top = np.zeros((nodes), dtype=float)
+    bot = np.zeros((nodes), dtype=float)
+    ihc = []
+    cl12 = []
+    hwva = []
+    for k in range(nlay):
+        for i in range(nrow):
+            for j in range(ncol):
+                # diagonal
+                n = get_nn(k, i, j)
+                ja.append(n)
+                iac[n] += 1
+                area[n] = delr[i] * delc[j]
+                ihc.append(n + 1)
+                cl12.append(n + 1)
+                hwva.append(n + 1)
+                if k == 0:
+                    top[n] = tp.item() if isinstance(tp, np.ndarray) else tp
+                else:
+                    top[n] = botm[k - 1]
+                bot[n] = botm[k]
+                # up
+                if k > 0:
+                    ja.append(get_nn(k - 1, i, j))
+                    iac[n] += 1
+                    ihc.append(0)
+                    dz = botm[k - 1] - botm[k]
+                    cl12.append(0.5 * dz)
+                    hwva.append(delr[i] * delc[j])
+                # back
+                if i > 0:
+                    ja.append(get_nn(k, i - 1, j))
+                    iac[n] += 1
+                    ihc.append(1)
+                    cl12.append(0.5 * delc[i])
+                    hwva.append(delr[j])
+                # left
+                if j > 0:
+                    ja.append(get_nn(k, i, j - 1))
+                    iac[n] += 1
+                    ihc.append(1)
+                    cl12.append(0.5 * delr[j])
+                    hwva.append(delc[i])
+                # right
+                if j < ncol - 1:
+                    ja.append(get_nn(k, i, j + 1))
+                    iac[n] += 1
+                    ihc.append(1)
+                    cl12.append(0.5 * delr[j])
+                    hwva.append(delc[i])
+                # front
+                if i < nrow - 1:
+                    ja.append(get_nn(k, i + 1, j))
+                    iac[n] += 1
+                    ihc.append(1)
+                    cl12.append(0.5 * delc[i])
+                    hwva.append(delr[j])
+                # bottom
+                if k < nlay - 1:
+                    ja.append(get_nn(k + 1, i, j))
+                    iac[n] += 1
+                    ihc.append(0)
+                    if k == 0:
+                        dz = tp - botm[k]
+                    else:
+                        dz = botm[k - 1] - botm[k]
+                    cl12.append(0.5 * dz)
+                    hwva.append(delr[i] * delc[j])
+    ja = np.array(ja, dtype=int)
+    nja = ja.shape[0]
+    hwva = np.array(hwva, dtype=float)
+    kw = {}
+    kw["nodes"] = nodes
+    kw["nja"] = nja
+    kw["nvert"] = None
+    kw["top"] = top
+    kw["bot"] = bot
+    kw["area"] = area
+    kw["iac"] = iac
+    kw["ja"] = ja
+    kw["ihc"] = ihc
+    kw["cl12"] = cl12
+    kw["hwva"] = hwva
+    return kw
+
+
+def uniform_flow_field(qx, qy, qz, shape, delr=None, delc=None, delv=None):
+    nlay, nrow, ncol = shape
+
+    # create spdis array for the uniform flow field
+    dt = np.dtype(
+        [
+            ("ID1", np.int32),
+            ("ID2", np.int32),
+            ("FLOW", np.float64),
+            ("QX", np.float64),
+            ("QY", np.float64),
+            ("QZ", np.float64),
+        ]
+    )
+    spdis = np.array(
+        [(id1, id1, 0.0, qx, qy, qz) for id1 in range(nlay * nrow * ncol)],
+        dtype=dt,
+    )
+
+    # create the flowja array for the uniform flow field (assume top-bot = 1)
+    flowja = []
+    if delr is None:
+        delr = 1.0
+    if delc is None:
+        delc = 1.0
+    if delv is None:
+        delv = 1.0
+    for k in range(nlay):
+        for i in range(nrow):
+            for j in range(ncol):
+                # diagonal
+                flowja.append(0.0)
+                # up
+                if k > 0:
+                    flowja.append(-qz * delr * delc)
+                # back
+                if i > 0:
+                    flowja.append(-qy * delr * delv)
+                # left
+                if j > 0:
+                    flowja.append(qx * delc * delv)
+                # right
+                if j < ncol - 1:
+                    flowja.append(-qx * delc * delv)
+                # front
+                if i < nrow - 1:
+                    flowja.append(qy * delr * delv)
+                # bottom
+                if k < nlay - 1:
+                    flowja.append(qz * delr * delc)
+    flowja = np.array(flowja, dtype=np.float64)
+    return spdis, flowja

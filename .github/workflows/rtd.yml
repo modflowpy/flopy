@@ -5,25 +5,31 @@ on:
     branches:
       - master
       - develop
-      - 'release*'
-      - 'ci-pytest'
+      - release*
+      - ci-diagnose*
+      - notebooks*
   pull_request:
-    branches: [master, develop]
+    branches:
+      - master
+      - develop
 
 jobs:
 
   rtd_build:
-    name: Read the Docs build
-    runs-on: ubuntu-latest
+    name: Prepare and test notebooks
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash
 
     steps:
       - name: Checkout flopy repo
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v3
 
       - name: Output repo information
         run: |
@@ -33,43 +39,54 @@ jobs:
           echo $GITHUB_EVENT_NAME
 
       - name: Setup Python
-        uses: actions/setup-python@v2.2.2
+        uses: actions/setup-python@v4
         with:
           python-version: 3.8
+          cache: 'pip'
+          cache-dependency-path: pyproject.toml
 
       - name: Upgrade pip
-        run: |
-          python -m pip install --upgrade pip
-
-      - name: Install prerequisites
-        run: |
-          pip install jupyter jupytext
+        run: python -m pip install --upgrade pip
 
       - name: Install flopy and dependencies
+        run: pip install ".[test, doc, optional]"
+      
+      - name: Workaround OpenGL issue on Linux
+        if: runner.os == 'Linux'
         run: |
-          pip install .[doc]
-
-      - name: Install executables and add to PATH
+          # referenced from https://github.com/pyvista/pyvista/blob/main/.github/workflows/vtk-pre-test.yml#L53
+          pip uninstall -y vtk
+          pip install --extra-index-url https://wheels.vtk.org trame vtk-osmesa
+      
+      - name: Install fonts on Linux
+        if: runner.os == 'Linux'
         run: |
-          mkdir -p $HOME/.local/bin
-          get-modflow $HOME/.local/bin
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Run jupytext on tutorials
-        working-directory: ./.docs
+          echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true | sudo debconf-set-selections
+          sudo apt-get install ttf-mscorefonts-installer fonts-liberation
+          sudo rm -rf ~/.cache/matplotlib
+      
+      - name: Install OpenGL on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
         run: |
-          python create_tutorials.py
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = "Stop"
+          $PSDefaultParameterValues['*:ErrorAction']='Stop'
+          powershell .github/install_opengl.ps1
 
-      - name: Upload completed jupyter notebooks as an artifact for ReadtheDocs
-        if:
-          github.repository_owner == 'modflowpy' && github.event_name == 'push'
-        uses: actions/upload-artifact@v2
+      - name: Install MODFLOW executables
+        uses: modflowpy/install-modflow-action@v1
+
+      - name: Run tutorial and example notebooks
+        working-directory: autotest
+        run: pytest -v -n auto test_notebooks.py
+
+      - name: Upload notebooks artifact for ReadtheDocs
+        if: github.repository_owner == 'modflowpy' && github.event_name == 'push' && runner.os == 'Linux'
+        uses: actions/upload-artifact@v3
         with:
           name: notebooks-for-${{ github.sha }}
-          path: |
-            .docs/_notebooks
+          path: .docs/Notebooks/*.ipynb
 
   # trigger rtd if previous job was successful
   rtd:
@@ -81,7 +98,7 @@ jobs:
       github.repository_owner == 'modflowpy' && github.event_name == 'push'
     steps:
       - name: Trigger RTDs build on master and develop branches
-        uses: dfm/rtds-action@v1.0.2
+        uses: dfm/rtds-action@v1
         with:
           webhook_url: ${{ secrets.RTDS_WEBHOOK_URL }}
           webhook_token: ${{ secrets.RTDS_WEBHOOK_TOKEN }}

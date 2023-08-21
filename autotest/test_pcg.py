@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This simple script tests that the pcg load function works for both free-
 and fixed-format pcg files for mf2005 models.
@@ -11,7 +10,7 @@ from flopy.modflow import Modflow, ModflowPcg
 
 
 def test_pcg_fmt(example_data_path):
-    pcg_fname = str(example_data_path / "pcg_fmt_test" / "fixfmt.pcg")
+    pcg_fname = example_data_path / "pcg_fmt_test" / "fixfmt.pcg"
     # mf2k container - this will pass
     m2k = Modflow(version="mf2k")
     m2k.pcg = ModflowPcg.load(model=m2k, f=pcg_fname)

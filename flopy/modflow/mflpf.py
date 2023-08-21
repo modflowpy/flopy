@@ -213,7 +213,6 @@ class ModflowLpf(Package):
         filenames=None,
         add_package=True,
     ):
-
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowLpf._defaultunit()
@@ -380,7 +379,7 @@ class ModflowLpf(Package):
         # Item 1: IBCFCB, HDRY, NPLPF, <IKCFLAG>, OPTIONS
         if self.parent.version == "mfusg" and self.parent.structured == False:
             f.write(
-                "{0:10d}{1:10.6G}{2:10d}{3:10d} {4:s}\n".format(
+                "{:10d}{:10.6G}{:10d}{:10d} {:s}\n".format(
                     self.ipakcb,
                     self.hdry,
                     self.nplpf,
@@ -567,7 +566,6 @@ class ModflowLpf(Package):
 
         # load by layer
         for k in range(nlay):
-
             # allow for unstructured changing nodes per layer
             if nr is None:
                 nrow = 1
@@ -632,7 +630,6 @@ class ModflowLpf(Package):
 
             # storage properties
             if transient:
-
                 # ss
                 if model.verbose:
                     print(f"   loading ss layer {k + 1:3d}...")

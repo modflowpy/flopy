@@ -1,5 +1,3 @@
-from os.path import join
-
 import numpy as np
 
 from flopy.mf6 import (
@@ -76,12 +74,12 @@ class Mp7Cases:
     particlegroups = [pg0, pg1]
 
     @staticmethod
-    def mf6(tmpdir):
+    def mf6(function_tmpdir):
         """
         MODPATH 7 example 1 for MODFLOW 6
         """
 
-        ws = join(str(tmpdir), "mf6")
+        ws = function_tmpdir / "mf6"
         nm = "ex01_mf6"
 
         # Create the Flopy simulation object
@@ -110,9 +108,9 @@ class Mp7Cases:
             sim,
             pname="ims",
             complexity="SIMPLE",
-            inner_hclose=1e-6,
             rcloserecord=1e-3,
-            outer_hclose=1e-6,
+            inner_dvclose=1e-6,
+            outer_dvclose=1e-6,
             outer_maximum=50,
             inner_maximum=100,
         )
@@ -173,16 +171,21 @@ class Mp7Cases:
             budget_filerecord=budget_record,
         )
 
-        # Write the datasets
-        sim.write_simulation()
+        return sim
 
-        # Run the simulation
+    @staticmethod
+    def mp7_mf6(function_tmpdir):
+        sim = Mp7Cases.mf6(function_tmpdir)
+        sim.write_simulation()
         success, buff = sim.run_simulation()
         assert success, "mf6 model did not run"
 
         # create modpath files
         mp = Modpath7(
-            modelname=f"{nm}_mp", flowmodel=gwf, exe_name="mp7", model_ws=ws
+            modelname=f"{sim.name}_mp",
+            flowmodel=sim.get_model(sim.name),
+            exe_name="mp7",
+            model_ws=sim.sim_path,
         )
         defaultiface6 = {"RCH": 6, "EVT": 6}
         mpbas = Modpath7Bas(mp, porosity=0.1, defaultiface=defaultiface6)
@@ -203,22 +206,15 @@ class Mp7Cases:
             particlegroups=Mp7Cases.particlegroups,
         )
 
-        # write modpath datasets
-        mp.write_input()
-
-        # run modpath
-        success, buff = mp.run_model()
-        assert success, f"mp7 model ({mp.name}) did not run"
-
         return mp
 
     @staticmethod
-    def mf2005(tmpdir):
+    def mf2005(function_tmpdir):
         """
         MODPATH 7 example 1 for MODFLOW-2005
         """
 
-        ws = join(str(tmpdir), "mf2005")
+        ws = function_tmpdir / "mf2005"
         nm = "ex01_mf2005"
         iu_cbc = 130
         m = Modflow(nm, model_ws=ws, exe_name="mf2005")
@@ -275,14 +271,21 @@ class Mp7Cases:
         )
         ModflowPcg(m, hclose=1e-6, rclose=1e-3, iter1=100, mxiter=50)
 
-        m.write_input()
+        return m
 
+    @staticmethod
+    def mp7_mf2005(function_tmpdir):
+        m = Mp7Cases.mf2005(function_tmpdir)
+        m.write_input()
         success, buff = m.run_model()
         assert success, "mf2005 model did not run"
 
         # create modpath files
         mp = Modpath7(
-            modelname=f"{nm}_mp", flowmodel=m, exe_name="mp7", model_ws=ws
+            modelname=f"{m.name}_mp",
+            flowmodel=m,
+            exe_name="mp7",
+            model_ws=m.model_ws,
         )
         defaultiface = {"RECHARGE": 6, "ET": 6}
         mpbas = Modpath7Bas(mp, porosity=0.1, defaultiface=defaultiface)
@@ -303,12 +306,10 @@ class Mp7Cases:
             particlegroups=Mp7Cases.particlegroups,
         )
 
-        # write modpath datasets
-        mp.write_input()
         return mp
 
-    def case_mf6(self, tmpdir):
-        return Mp7Cases.mf6(tmpdir)
+    def case_mp7_mf6(self, function_tmpdir):
+        return Mp7Cases.mp7_mf6(function_tmpdir)
 
-    def case_mf2005(self, tmpdir):
-        return Mp7Cases.mf2005(tmpdir)
+    def case_mp7_mf2005(self, function_tmpdir):
+        return Mp7Cases.mp7_mf2005(function_tmpdir)

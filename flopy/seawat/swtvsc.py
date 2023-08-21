@@ -147,7 +147,6 @@ class SeawatVsc(Package):
         filenames=None,
         **kwargs,
     ):
-
         if len(list(kwargs.keys())) > 0:
             raise Exception(
                 "VSC error: unrecognized kwargs: "
@@ -246,15 +245,13 @@ class SeawatVsc(Package):
             if self.mutempopt > 0:
                 s = f"{self.mtmutempspec} "
                 for a in tuple(self.amucoeff):
-                    s += "{} ".format(a)
+                    s += f"{a} "
                 f_vsc.write(s + "\n")
 
         # items 4 and 5, transient visc array
         if self.mt3dmuflg == 0:
-
             nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
             for kper in range(nper):
-
                 itmp, file_entry_visc = self.visc.get_kper_entry(kper)
 
                 # item 4 (and possibly 5)
@@ -429,12 +426,10 @@ class SeawatVsc(Package):
         invisc = None
         visc = None
         if mt3dmuflg == 0:
-
             # Create visc as a Transient3D record
             visc = {}
 
             for iper in range(nper):
-
                 if model.verbose:
                     print(f"   loading INVISC for stress period {iper + 1}...")
                 line = f.readline()

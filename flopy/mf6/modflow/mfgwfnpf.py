@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on April 11, 2022 18:22:41 UTC
+# FILE created on June 29, 2023 14:20:38 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -21,6 +21,15 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         * save_flows (boolean) keyword to indicate that budget flow terms will
           be written to the file specified with "BUDGET SAVE FILE" in Output
           Control.
+    print_flows : boolean
+        * print_flows (boolean) keyword to indicate that calculated flows
+          between cells will be printed to the listing file for every stress
+          period time step in which "BUDGET PRINT" is specified in Output
+          Control. If there is no Output Control option and "PRINT_FLOWS" is
+          specified, then flow rates are printed for the last time step of each
+          stress period. This option can produce extremely large list files
+          because all cell-by-cell flows are printed. It should only be used
+          with the NPF Package for models that have a small number of cells.
     alternative_cell_averaging : string
         * alternative_cell_averaging (string) is a text keyword to indicate
           that an alternative method will be used for calculating the
@@ -36,7 +45,9 @@ class ModflowGwfnpf(mfpackage.MFPackage):
     thickstrt : boolean
         * thickstrt (boolean) indicates that cells having a negative ICELLTYPE
           are confined, and their cell thickness for conductance calculations
-          will be computed as STRT-BOT rather than TOP-BOT.
+          will be computed as STRT-BOT rather than TOP-BOT. This option should
+          be used with caution as it only affects conductance calculations in
+          the NPF Package.
     cvoptions : [dewatered]
         * dewatered (string) If the DEWATERED keyword is specified, then the
           vertical conductance is calculated using only the saturated thickness
@@ -97,14 +108,31 @@ class ModflowGwfnpf(mfpackage.MFPackage):
           containing data for the tvk package with variable names as keys and
           package data as values. Data just for the perioddata variable is also
           acceptable. See tvk package documentation for more information.
+    dev_no_newton : boolean
+        * dev_no_newton (boolean) turn off Newton for unconfined cells
+    dev_modflowusg_upstream_weighted_saturation : boolean
+        * dev_modflowusg_upstream_weighted_saturation (boolean) use MODFLOW-USG
+          upstream-weighted saturation approach
+    dev_modflownwt_upstream_weighting : boolean
+        * dev_modflownwt_upstream_weighting (boolean) use MODFLOW-NWT approach
+          for upstream weighting
+    dev_minimum_saturated_thickness : double
+        * dev_minimum_saturated_thickness (double) set minimum allowed
+          saturated thickness
+    dev_omega : double
+        * dev_omega (double) set saturation omega value
     icelltype : [integer]
         * icelltype (integer) flag for each cell that specifies how saturated
           thickness is treated. 0 means saturated thickness is held constant;
           >0 means saturated thickness varies with computed head when head is
           below the cell top; <0 means saturated thickness varies with computed
           head unless the THICKSTRT option is in effect. When THICKSTRT is in
-          effect, a negative value of icelltype indicates that saturated
-          thickness will be computed as STRT-BOT and held constant.
+          effect, a negative value for ICELLTYPE indicates that the saturated
+          thickness value used in conductance calculations in the NPF Package
+          will be computed as STRT-BOT and held constant. If the THICKSTRT
+          option is not in effect, then negative values provided by the user
+          for ICELLTYPE are automatically reassigned by the program to a value
+          of one.
     k : [double]
         * k (double) is the hydraulic conductivity. For the common case in
           which the user would like to specify the horizontal hydraulic
@@ -228,6 +256,15 @@ class ModflowGwfnpf(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal ipakcb",
+        ],
+        [
+            "block options",
+            "name print_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal iprflow",
         ],
         [
             "block options",
@@ -236,6 +273,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
             "valid logarithmic amt-lmk amt-hmk",
             "reader urword",
             "optional true",
+            "mf6internal cellavg",
         ],
         [
             "block options",
@@ -243,6 +281,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal ithickstrt",
         ],
         [
             "block options",
@@ -257,6 +296,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
             "in_record true",
             "type keyword",
             "reader urword",
+            "mf6internal ivarcv",
         ],
         [
             "block options",
@@ -265,6 +305,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal idewatcv",
         ],
         [
             "block options",
@@ -272,6 +313,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iperched",
         ],
         [
             "block options",
@@ -287,6 +329,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
             "in_record true",
             "reader urword",
             "optional false",
+            "mf6internal irewet",
         ],
         [
             "block options",
@@ -325,6 +368,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
             "in_record true",
             "type keyword",
             "reader urword",
+            "mf6internal ixt3d",
         ],
         [
             "block options",
@@ -333,6 +377,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal ixt3drhs",
         ],
         [
             "block options",
@@ -340,6 +385,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal isavspdis",
         ],
         [
             "block options",
@@ -347,6 +393,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal isavsat",
         ],
         [
             "block options",
@@ -354,6 +401,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal ik22overk",
         ],
         [
             "block options",
@@ -361,11 +409,12 @@ class ModflowGwfnpf(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal ik33overk",
         ],
         [
             "block options",
             "name tvk_filerecord",
-            "type record tvk6 filein tvk_filename",
+            "type record tvk6 filein tvk6_filename",
             "shape",
             "reader urword",
             "tagged true",
@@ -396,13 +445,53 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         ],
         [
             "block options",
-            "name tvk_filename",
+            "name tvk6_filename",
             "type string",
             "preserve_case true",
             "in_record true",
             "reader urword",
             "optional false",
             "tagged false",
+        ],
+        [
+            "block options",
+            "name dev_no_newton",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal inewton",
+        ],
+        [
+            "block options",
+            "name dev_modflowusg_upstream_weighted_saturation",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal iusgnrhc",
+        ],
+        [
+            "block options",
+            "name dev_modflownwt_upstream_weighting",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal inwtupw",
+        ],
+        [
+            "block options",
+            "name dev_minimum_saturated_thickness",
+            "type double precision",
+            "reader urword",
+            "optional true",
+            "mf6internal satmin",
+        ],
+        [
+            "block options",
+            "name dev_omega",
+            "type double precision",
+            "reader urword",
+            "optional true",
+            "mf6internal satomega",
         ],
         [
             "block griddata",
@@ -493,6 +582,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         model,
         loading_package=False,
         save_flows=None,
+        print_flows=None,
         alternative_cell_averaging=None,
         thickstrt=None,
         cvoptions=None,
@@ -504,6 +594,11 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         k22overk=None,
         k33overk=None,
         perioddata=None,
+        dev_no_newton=None,
+        dev_modflowusg_upstream_weighted_saturation=None,
+        dev_modflownwt_upstream_weighting=None,
+        dev_minimum_saturated_thickness=None,
+        dev_omega=None,
         icelltype=0,
         k=1.0,
         k22=None,
@@ -522,6 +617,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
 
         # set up variables
         self.save_flows = self.build_mfdata("save_flows", save_flows)
+        self.print_flows = self.build_mfdata("print_flows", print_flows)
         self.alternative_cell_averaging = self.build_mfdata(
             "alternative_cell_averaging", alternative_cell_averaging
         )
@@ -542,6 +638,19 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         self._tvk_package = self.build_child_package(
             "tvk", perioddata, "tvk_perioddata", self._tvk_filerecord
         )
+        self.dev_no_newton = self.build_mfdata("dev_no_newton", dev_no_newton)
+        self.dev_modflowusg_upstream_weighted_saturation = self.build_mfdata(
+            "dev_modflowusg_upstream_weighted_saturation",
+            dev_modflowusg_upstream_weighted_saturation,
+        )
+        self.dev_modflownwt_upstream_weighting = self.build_mfdata(
+            "dev_modflownwt_upstream_weighting",
+            dev_modflownwt_upstream_weighting,
+        )
+        self.dev_minimum_saturated_thickness = self.build_mfdata(
+            "dev_minimum_saturated_thickness", dev_minimum_saturated_thickness
+        )
+        self.dev_omega = self.build_mfdata("dev_omega", dev_omega)
         self.icelltype = self.build_mfdata("icelltype", icelltype)
         self.k = self.build_mfdata("k", k)
         self.k22 = self.build_mfdata("k22", k22)

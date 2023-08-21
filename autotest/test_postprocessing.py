@@ -2,8 +2,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from modflow_devtools.markers import requires_exe
 
-from autotest.conftest import requires_exe
 from flopy.mf6 import (
     MFSimulation,
     ModflowGwf,
@@ -33,15 +33,15 @@ def mf6_freyberg_path(example_data_path):
 
 @pytest.mark.mf6
 @requires_exe("mf6")
-def test_faceflows(tmpdir, mf6_freyberg_path):
+def test_faceflows(function_tmpdir, mf6_freyberg_path):
     sim = MFSimulation.load(
         sim_name="freyberg",
         exe_name="mf6",
-        sim_ws=str(mf6_freyberg_path),
+        sim_ws=mf6_freyberg_path,
     )
 
     # change the simulation workspace
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(function_tmpdir)
 
     # write the model simulation files
     sim.write_simulation()
@@ -59,7 +59,7 @@ def test_faceflows(tmpdir, mf6_freyberg_path):
 
     frf, fff, flf = get_structured_faceflows(
         flowja,
-        grb_file=str(tmpdir / "freyberg.dis.grb"),
+        grb_file=function_tmpdir / "freyberg.dis.grb",
     )
     Qx, Qy, Qz = get_specific_discharge(
         (frf, fff, flf),
@@ -101,15 +101,15 @@ def test_faceflows(tmpdir, mf6_freyberg_path):
 
 @pytest.mark.mf6
 @requires_exe("mf6")
-def test_flowja_residuals(tmpdir, mf6_freyberg_path):
+def test_flowja_residuals(function_tmpdir, mf6_freyberg_path):
     sim = MFSimulation.load(
         sim_name="freyberg",
         exe_name="mf6",
-        sim_ws=str(mf6_freyberg_path),
+        sim_ws=mf6_freyberg_path,
     )
 
     # change the simulation workspace
-    sim.set_sim_path(str(tmpdir))
+    sim.set_sim_path(function_tmpdir)
 
     # write the model simulation files
     sim.write_simulation()
@@ -119,7 +119,7 @@ def test_flowja_residuals(tmpdir, mf6_freyberg_path):
 
     # get output
     gwf = sim.get_model("freyberg")
-    grb_file = str(tmpdir / "freyberg.dis.grb")
+    grb_file = function_tmpdir / "freyberg.dis.grb"
     cbc = gwf.output.budget()
 
     spdis = cbc.get_data(text="DATA-SPDIS")[0]
@@ -149,9 +149,9 @@ def test_flowja_residuals(tmpdir, mf6_freyberg_path):
 
 @pytest.mark.mf6
 @requires_exe("mf6")
-def test_structured_faceflows_3d(tmpdir):
+def test_structured_faceflows_3d(function_tmpdir):
     name = "mymodel"
-    sim = MFSimulation(sim_name=name, sim_ws=str(tmpdir), exe_name="mf6")
+    sim = MFSimulation(sim_name=name, sim_ws=function_tmpdir, exe_name="mf6")
     tdis = ModflowTdis(sim)
     ims = ModflowIms(sim)
     gwf = ModflowGwf(sim, modelname=name, save_flows=True)
@@ -179,7 +179,7 @@ def test_structured_faceflows_3d(tmpdir):
     flowja = bud.get_data(text="FLOW-JA-FACE")[0]
     frf, fff, flf = get_structured_faceflows(
         flowja,
-        grb_file=str(tmpdir / "mymodel.dis.grb"),
+        grb_file=function_tmpdir / "mymodel.dis.grb",
     )
     assert (
         frf.shape == head.shape
@@ -192,7 +192,7 @@ def test_structured_faceflows_3d(tmpdir):
     ), f"frf.shape {frf.shape} != head.shape {head.shape}"
 
 
-def test_get_transmissivities(tmpdir):
+def test_get_transmissivities(function_tmpdir):
     sctop = [-0.25, 0.5, 1.7, 1.5, 3.0, 2.5, 3.0, -10.0]
     scbot = [-1.0, -0.5, 1.2, 0.5, 1.5, -0.2, 2.5, -11.0]
     heads = np.array(
@@ -210,7 +210,7 @@ def test_get_transmissivities(tmpdir):
     for i in range(nl):
         botm[nl - i - 1, :, :] = i
 
-    m = Modflow("junk", version="mfnwt", model_ws=str(tmpdir))
+    m = Modflow("junk", version="mfnwt", model_ws=function_tmpdir)
     dis = ModflowDis(m, nlay=nl, nrow=nr, ncol=nc, botm=botm, top=top)
     upw = ModflowUpw(m, hk=hk)
 
@@ -243,28 +243,34 @@ def test_get_transmissivities(tmpdir):
 
 
 def test_get_water_table():
-    nodata = -9999.0
-    hds = np.ones((3, 3, 3), dtype=float) * nodata
+    hdry = -1e30
+    hds = np.ones((3, 3, 3), dtype=float) * hdry
     hds[-1, :, :] = 2.0
     hds[1, 1, 1] = 1.0
-    wt = get_water_table(hds, nodata=nodata)
+    hds[0, -1, -1] = 1e30
+    wt = get_water_table(hds)
+    assert wt.shape == (3, 3)
+    assert wt[1, 1] == 1.0
+    assert np.sum(wt) == 17.0
+
+    hdry = -9999
+    hds = np.ones((3, 3, 3), dtype=float) * hdry
+    hds[-1, :, :] = 2.0
+    hds[1, 1, 1] = 1.0
+    hds[0, -1, -1] = 9999
+    wt = get_water_table(hds, hdry=-9999, hnoflo=9999)
     assert wt.shape == (3, 3)
     assert wt[1, 1] == 1.0
     assert np.sum(wt) == 17.0
 
     hds2 = np.array([hds, hds])
-    wt = get_water_table(hds2, nodata=nodata)
+    wt = get_water_table(hds2, hdry=-9999, hnoflo=9999)
     assert wt.shape == (2, 3, 3)
     assert np.sum(wt[:, 1, 1]) == 2.0
     assert np.sum(wt) == 34.0
 
-    wt = get_water_table(hds2, nodata=nodata, per_idx=0)
-    assert wt.shape == (3, 3)
-    assert wt[1, 1] == 1.0
-    assert np.sum(wt) == 17.0
 
-
-def test_get_sat_thickness_gradients(tmpdir):
+def test_get_sat_thickness_gradients(function_tmpdir):
     nodata = -9999.0
     hds = np.ones((3, 3, 3), dtype=float) * nodata
     hds[1, :, :] = 2.4
@@ -279,7 +285,7 @@ def test_get_sat_thickness_gradients(tmpdir):
     botm[0, :, :] = 3.0
     botm[1, :, :] = 2.0
 
-    m = Modflow("junk", version="mfnwt", model_ws=str(tmpdir))
+    m = Modflow("junk", version="mfnwt", model_ws=function_tmpdir)
     dis = ModflowDis(m, nlay=nl, nrow=nr, ncol=nc, botm=botm, top=top)
     lpf = ModflowLpf(m, laytyp=np.ones(nl))
 
@@ -291,7 +297,7 @@ def test_get_sat_thickness_gradients(tmpdir):
     dz = np.array([np.nan, -0.9])
     assert np.nansum(np.abs(dh / dz - grad[:, 1, 0])) < 1e-6
 
-    sat_thick = m.modelgrid.saturated_thick(hds, mask=nodata)
+    sat_thick = m.modelgrid.saturated_thickness(hds, mask=nodata)
     assert (
         np.abs(np.sum(sat_thick[:, 1, 1] - np.array([0.2, 1.0, 1.0]))) < 1e-6
     ), "failed saturated thickness comparison (grid.thick())"

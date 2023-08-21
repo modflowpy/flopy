@@ -1,15 +1,17 @@
 import os
 
 import pytest
-from autotest.conftest import get_example_data_path, requires_exe, requires_pkg
+from autotest.conftest import get_example_data_path
+from modflow_devtools.markers import requires_exe
 
 from flopy.modflow import Modflow, ModflowNwt, ModflowUpw
 from flopy.utils import parsenamefile
+from flopy.utils.compare import compare_budget, compare_heads
 
 
 def get_nfnwt_namfiles():
     # build list of name files to try and load
-    nwtpth = get_example_data_path(__file__) / "mf2005_test"
+    nwtpth = get_example_data_path() / "mf2005_test"
     namfiles = []
     m = Modflow("test", version="mfnwt")
     for namfile in nwtpth.rglob("*.nam"):
@@ -22,18 +24,15 @@ def get_nfnwt_namfiles():
             if "WEL" in value.filetype:
                 wel = True
         if lpf and wel:
-            namfiles.append(str(namfile))
+            namfiles.append(namfile)
     return namfiles
 
 
 @requires_exe("mfnwt")
-@requires_pkg("pymake")
 @pytest.mark.slow
 @pytest.mark.regression
 @pytest.mark.parametrize("namfile", get_nfnwt_namfiles())
-def test_run_mfnwt_model(tmpdir, namfile):
-    import pymake
-
+def test_run_mfnwt_model(function_tmpdir, namfile):
     # load a MODFLOW-2005 model, convert to a MFNWT model,
     # write it back out, run the MFNWT model, load the MFNWT model,
     # and compare the results.
@@ -108,16 +107,16 @@ def test_run_mfnwt_model(tmpdir, namfile):
     wel.iunitramp = 2
 
     # change workspace and write MODFLOW-NWT model
-    m.change_model_ws(str(tmpdir))
+    m.change_model_ws(function_tmpdir)
     m.write_input()
     success, buff = m.run_model(silent=False)
     assert success, "base model run did not terminate successfully"
-    fn0 = str(tmpdir / namfile)
+    fn0 = function_tmpdir / namfile
 
     # reload the model just written
     m = Modflow.load(
         namfile,
-        model_ws=str(tmpdir),
+        model_ws=function_tmpdir,
         version="mfnwt",
         verbose=True,
         check=False,
@@ -127,19 +126,17 @@ def test_run_mfnwt_model(tmpdir, namfile):
     assert m.load_fail is False
 
     # change workspace and write MODFLOW-NWT model
-    pthf = str(tmpdir / "flopy")
+    pthf = function_tmpdir / "flopy"
     m.change_model_ws(pthf)
     m.write_input()
     success, buff = m.run_model(silent=False)
     assert success, "base model run did not terminate successfully"
     fn1 = os.path.join(pthf, namfile)
 
-    fsum = str(tmpdir / f"{base_name}.head.out")
-    assert pymake.compare_heads(
-        fn0, fn1, outfile=fsum
-    ), "head comparison failure"
+    fsum = function_tmpdir / f"{base_name}.head.out"
+    assert compare_heads(fn0, fn1, outfile=fsum), "head comparison failure"
 
-    fsum = str(tmpdir / f"{base_name}.budget.out")
-    assert pymake.compare_budget(
+    fsum = function_tmpdir / f"{base_name}.budget.out"
+    assert compare_budget(
         fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
     ), "budget comparison failure"

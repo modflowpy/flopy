@@ -309,10 +309,10 @@ class SwrFile(FlopyBinaryData):
         """
 
         if irec + 1 > self.nrecord:
-            err = "Error: specified irec ({}) ".format(
-                irec
-            ) + "exceeds the total number of records ()".format(self.nrecord)
-            raise Exception(err)
+            raise Exception(
+                f"specified irec ({irec}) exceeds the "
+                f"total number of records ({self.nrecord})"
+            )
 
         gage_record = None
         if self.type == "stage" or self.type == "budget":
@@ -423,7 +423,6 @@ class SwrFile(FlopyBinaryData):
             return 0.0, 0.0, 0, 0, 0, False
 
     def _get_ts(self, irec=0):
-
         # create array
         gage_record = np.zeros(self._ntimes, dtype=self.out_dtype)
 
@@ -442,7 +441,6 @@ class SwrFile(FlopyBinaryData):
         return gage_record.view(dtype=self.out_dtype)
 
     def _get_ts_qm(self, irec=0, iconn=0):
-
         # create array
         gage_record = np.zeros(self._ntimes, dtype=self.out_dtype)
 
@@ -468,7 +466,6 @@ class SwrFile(FlopyBinaryData):
         return gage_record.view(dtype=self.out_dtype)
 
     def _get_ts_qaq(self, irec=0, klay=0):
-
         # create array
         gage_record = np.zeros(self._ntimes, dtype=self.out_dtype)
 
@@ -497,7 +494,6 @@ class SwrFile(FlopyBinaryData):
         return gage_record.view(dtype=self.out_dtype)
 
     def _get_ts_structure(self, irec=0, istr=0):
-
         # create array
         gage_record = np.zeros(self._ntimes, dtype=self.out_dtype)
 
@@ -534,7 +530,6 @@ class SwrFile(FlopyBinaryData):
             return self.read_record(count=self.nrecord)
 
     def _read_qaq(self):
-
         # read qaq data using standard record reader
         bd = self.read_record(count=self.nitems)
         bd["layer"] -= 1
@@ -561,7 +556,6 @@ class SwrFile(FlopyBinaryData):
         return r
 
     def _read_structure(self):
-
         # read qaq data using standard record reader
         bd = self.read_record(count=self.nitems)
 

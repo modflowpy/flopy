@@ -1,6 +1,7 @@
 # Test SWR binary read functionality
+import pandas as pd
 import pytest
-from autotest.conftest import has_pkg
+from modflow_devtools.misc import has_pkg
 
 from flopy.utils import (
     SwrBudget,
@@ -29,7 +30,7 @@ files = (
 
 @pytest.mark.parametrize("ipos", [0])
 def test_swr_binary_stage(swr_test_path, ipos):
-    fswr_test_path = str(swr_test_path / files[ipos])
+    fswr_test_path = swr_test_path / files[ipos]
     sobj = SwrStage(fswr_test_path)
     assert isinstance(sobj, SwrStage), "SwrStage object not created"
 
@@ -98,7 +99,7 @@ def test_swr_binary_stage(swr_test_path, ipos):
 
 @pytest.mark.parametrize("ipos", [1])
 def test_swr_binary_budget(swr_test_path, ipos):
-    fswr_test_path = str(swr_test_path / files[ipos])
+    fswr_test_path = swr_test_path / files[ipos]
     sobj = SwrBudget(fswr_test_path)
     assert isinstance(sobj, SwrBudget), "SwrBudget object not created"
 
@@ -170,7 +171,7 @@ def test_swr_binary_budget(swr_test_path, ipos):
 
 @pytest.mark.parametrize("ipos", [2])
 def test_swr_binary_qm(swr_test_path, ipos):
-    fswr_test_path = str(swr_test_path / files[ipos])
+    fswr_test_path = swr_test_path / files[ipos]
     sobj = SwrFlow(fswr_test_path)
     assert isinstance(sobj, SwrFlow), "SwrFlow object not created"
 
@@ -249,7 +250,7 @@ def test_swr_binary_qm(swr_test_path, ipos):
 
 @pytest.mark.parametrize("ipos", [3])
 def test_swr_binary_qaq(swr_test_path, ipos):
-    fswr_test_path = str(swr_test_path / files[ipos])
+    fswr_test_path = swr_test_path / files[ipos]
     sobj = SwrExchange(fswr_test_path, verbose=True)
     assert isinstance(sobj, SwrExchange), "SwrExchange object not created"
 
@@ -321,7 +322,7 @@ def test_swr_binary_qaq(swr_test_path, ipos):
 
 @pytest.mark.parametrize("ipos", [4])
 def test_swr_binary_structure(swr_test_path, ipos):
-    fswr_test_path = str(swr_test_path / files[ipos])
+    fswr_test_path = swr_test_path / files[ipos]
     sobj = SwrStructure(fswr_test_path, verbose=True)
     assert isinstance(sobj, SwrStructure), "SwrStructure object not created"
 
@@ -392,7 +393,7 @@ def test_swr_binary_structure(swr_test_path, ipos):
 
 @pytest.mark.parametrize("ipos", [5])
 def test_swr_binary_obs(swr_test_path, ipos):
-    fswr_test_path = str(swr_test_path / files[ipos])
+    fswr_test_path = swr_test_path / files[ipos]
     sobj = SwrObs(fswr_test_path)
     assert isinstance(sobj, SwrObs), "SwrObs object not created"
 
@@ -446,21 +447,16 @@ def test_swr_binary_obs(swr_test_path, ipos):
         ), "SwrObs data does not have nobs + 1"
 
     # test get_dataframes()
-    if has_pkg("pandas"):
-        import pandas as pd
-
-        for idx in range(ntimes):
-            df = sobj.get_dataframe(idx=idx, timeunit="S")
-            assert isinstance(df, pd.DataFrame), "A DataFrame was not returned"
-            assert df.shape == (1, nobs + 1), "data shape is not (1, 10)"
-
-        for time in times:
-            df = sobj.get_dataframe(totim=time, timeunit="S")
-            assert isinstance(df, pd.DataFrame), "A DataFrame was not returned"
-            assert df.shape == (1, nobs + 1), "data shape is not (1, 10)"
-
-        df = sobj.get_dataframe(timeunit="S")
+    for idx in range(ntimes):
+        df = sobj.get_dataframe(idx=idx, timeunit="S")
         assert isinstance(df, pd.DataFrame), "A DataFrame was not returned"
-        assert df.shape == (336, nobs + 1), "data shape is not (336, 10)"
-    else:
-        print("pandas not available...")
+        assert df.shape == (1, nobs + 1), "data shape is not (1, 10)"
+
+    for time in times:
+        df = sobj.get_dataframe(totim=time, timeunit="S")
+        assert isinstance(df, pd.DataFrame), "A DataFrame was not returned"
+        assert df.shape == (1, nobs + 1), "data shape is not (1, 10)"
+
+    df = sobj.get_dataframe(timeunit="S")
+    assert isinstance(df, pd.DataFrame), "A DataFrame was not returned"
+    assert df.shape == (336, nobs + 1), "data shape is not (336, 10)"

@@ -5,6 +5,7 @@ name list
 type string
 reader urword
 optional true
+preserve_case true
 longname name of listing file
 description is name of the listing file to create for this GWF model.  If not specified, then the name of the list file will be the basename of the GWF model name file and the '.lst' extension.  For example, if the GWF name file is called ``my.model.nam'' then the list file will be called ``my.model.lst''.
 
