@@ -1,5 +1,6 @@
 import inspect
 import json
+import warnings
 
 import numpy as np
 
@@ -366,6 +367,7 @@ class Mf6Splitter(object):
         adv_pkg_weights = np.zeros((ncpl,), dtype=int)
         lak_array = np.zeros((ncpl,), dtype=int)
         laks = []
+        hfbs = []
         for _, package in self._model.package_dict.items():
             if isinstance(
                 package,
@@ -373,8 +375,13 @@ class Mf6Splitter(object):
                     modflow.ModflowGwfsfr,
                     modflow.ModflowGwfuzf,
                     modflow.ModflowGwflak,
+                    modflow.ModflowGwfhfb,
                 ),
             ):
+                if isinstance(package, modflow.ModflowGwfhfb):
+                    hfbs.append(package)
+                    continue
+
                 if isinstance(package, modflow.ModflowGwflak):
                     cellids = package.connectiondata.array.cellid
                 else:
@@ -409,6 +416,23 @@ class Mf6Splitter(object):
                 idx = np.where(lak_array == lak)[0]
                 mnum = np.unique(membership[idx])[0]
                 membership[idx] = mnum
+
+        if hfbs:
+            for hfb in hfbs:
+                for recarray in hfb.stress_period_data.data.values():
+                    cellids1 = recarray.cellid1
+                    cellids2 = recarray.cellid2
+                    _, nodes1 = self._cellid_to_layer_node(cellids1)
+                    _, nodes2 = self._cellid_to_layer_node(cellids2)
+                    mnums1 = membership[nodes1]
+                    mnums2 = membership[nodes2]
+                    ev = np.equal(mnums1, mnums2)
+                    if np.alltrue(ev):
+                        continue
+                    idx = np.where(~ev)[0]
+                    mnum_to = mnums1[idx]
+                    adj_nodes = nodes2[idx]
+                    membership[adj_nodes] = mnum_to
 
         return membership.reshape(shape)
 
@@ -615,6 +639,24 @@ class Mf6Splitter(object):
 
         """
         array = np.ravel(array)
+
+        idomain = self._modelgrid.idomain.reshape((-1, self._ncpl))
+        mkeys = np.unique(array)
+        bad_keys = []
+        for mkey in mkeys:
+            count = 0
+            mask = np.where(array == mkey)
+            for arr in idomain:
+                check = arr[mask]
+                count += np.count_nonzero(check)
+            if count == 0:
+                bad_keys.append(mkey)
+
+        if bad_keys:
+            raise KeyError(
+                f"{bad_keys} are not in the active model extent; "
+                f"please adjust the model splitting array"
+            )
 
         if self._modelgrid.iverts is None:
             self._map_iac_ja_connections()
@@ -1012,7 +1054,49 @@ class Mf6Splitter(object):
 
         return mapped_data
 
-    def _remap_array(self, item, mfarray, mapped_data):
+    def _remap_transient_array(self, item, mftransient, mapped_data):
+        """
+        Method to split and remap transient arrays to new models
+
+        Parameters
+        ----------
+        item : str
+            variable name
+        mftransient : mfdataarray.MFTransientArray
+            transient array object
+        mapped_data : dict
+            dictionary of remapped package data
+
+        Returns
+        -------
+            dict
+        """
+        if mftransient.array is None:
+            return mapped_data
+
+        d0 = {mkey: {} for mkey in self._model_dict.keys()}
+        for per, array in enumerate(mftransient.array):
+            storage = mftransient._data_storage[per]
+            how = [
+                i.data_storage_type.value
+                for i in storage.layer_storage.multi_dim_list
+            ]
+            binary = [i.binary for i in storage.layer_storage.multi_dim_list]
+            fnames = [i.fname for i in storage.layer_storage.multi_dim_list]
+
+            d = self._remap_array(
+                item, array, mapped_data, how=how, binary=binary, fnames=fnames
+            )
+
+            for mkey in d.keys():
+                d0[mkey][per] = d[mkey][item]
+
+        for mkey, values in d0.items():
+            mapped_data[mkey][item] = values
+
+        return mapped_data
+
+    def _remap_array(self, item, mfarray, mapped_data, **kwargs):
         """
         Method to remap array nodes to each model
 
@@ -1029,10 +1113,25 @@ class Mf6Splitter(object):
         -------
             dict
         """
-        if mfarray.array is None:
-            return mapped_data
-
+        how = kwargs.pop("how", [])
+        binary = kwargs.pop("binary", [])
+        fnames = kwargs.pop("fnames", None)
         if not hasattr(mfarray, "size"):
+            if mfarray.array is None:
+                return mapped_data
+
+            how = [
+                i.data_storage_type.value
+                for i in mfarray._data_storage.layer_storage.multi_dim_list
+            ]
+            binary = [
+                i.binary
+                for i in mfarray._data_storage.layer_storage.multi_dim_list
+            ]
+            fnames = [
+                i.fname
+                for i in mfarray._data_storage.layer_storage.multi_dim_list
+            ]
             mfarray = mfarray.array
 
         nlay = 1
@@ -1068,11 +1167,46 @@ class Mf6Splitter(object):
 
             new_array[new_nodes] = original_arr[old_nodes]
 
+            if how and item != "idomain":
+                new_input = []
+                i0 = 0
+                i1 = new_ncpl
+                lay = 0
+                for h in how:
+                    if h == 1:
+                        # internal array
+                        new_input.append(new_array[i0:i1])
+                    elif h == 2:
+                        # constant, parse the original array data
+                        new_input.append(original_arr[ncpl * lay])
+                    else:
+                        # external array
+                        tmp = fnames[lay].split(".")
+                        filename = f"{'.'.join(tmp[:-1])}.{mkey}.{tmp[-1]}"
+
+                        cr = {
+                            "filename": filename,
+                            "factor": 1,
+                            "iprn": 1,
+                            "data": new_array[i0:i1],
+                            "binary": binary[lay],
+                        }
+
+                        new_input.append(cr)
+
+                    i0 += new_ncpl
+                    i1 += new_ncpl
+                    lay += 1
+
+                new_array = new_input
+
             mapped_data[mkey][item] = new_array
 
         return mapped_data
 
-    def _remap_mflist(self, item, mflist, mapped_data, transient=False):
+    def _remap_mflist(
+        self, item, mflist, mapped_data, transient=False, **kwargs
+    ):
         """
         Method to remap mflist data to each model
 
@@ -1087,15 +1221,23 @@ class Mf6Splitter(object):
         transient : bool
             flag to indicate this is transient stress period data
             flag is needed to trap for remapping mover data.
+
         Returns
         -------
             dict
         """
         mvr_remap = {}
+        how = kwargs.pop("how", 1)
+        binary = kwargs.pop("binary", False)
+        fname = kwargs.pop("fname", None)
         if hasattr(mflist, "array"):
             if mflist.array is None:
                 return mapped_data
             recarray = mflist.array
+            how = mflist._data_storage._data_storage_type.value
+            binary = mflist._data_storage.layer_storage.multi_dim_list[
+                0
+            ].binary
         else:
             recarray = mflist
 
@@ -1122,6 +1264,16 @@ class Mf6Splitter(object):
                     )
                     new_recarray = recarray[idx]
                     new_recarray["cellid"] = new_cellids
+
+                if how == 3 and new_recarray is not None:
+                    tmp = fname.split(".")
+                    filename = f"{'.'.join(tmp[:-1])}.{mkey}.{tmp[-1]}"
+
+                    new_recarray = {
+                        "data": new_recarray,
+                        "binary": binary,
+                        "filename": filename,
+                    }
 
                 mapped_data[mkey][item] = new_recarray
 
@@ -2539,9 +2691,28 @@ class Mf6Splitter(object):
                 mapped_data[mkey][item] = None
             return mapped_data
 
+        how = {
+            p: i.layer_storage.multi_dim_list[0].data_storage_type.value
+            for p, i in mftransientlist._data_storage.items()
+        }
+        binary = {
+            p: i.layer_storage.multi_dim_list[0].binary
+            for p, i in mftransientlist._data_storage.items()
+        }
+        fnames = {
+            p: i.layer_storage.multi_dim_list[0].fname
+            for p, i in mftransientlist._data_storage.items()
+        }
+
         for per, recarray in mftransientlist.data.items():
             d, mvr_remaps = self._remap_mflist(
-                item, recarray, mapped_data, transient=True
+                item,
+                recarray,
+                mapped_data,
+                transient=True,
+                how=how[per],
+                binary=binary[per],
+                fname=fnames[per],
             )
             for mkey in self._model_dict.keys():
                 if mapped_data[mkey][item] is None:
@@ -2713,6 +2884,11 @@ class Mf6Splitter(object):
                     for mkey in self._model_dict.keys():
                         for k, v in self._offsets[mkey].items():
                             mapped_data[mkey][k] = v
+
+                elif isinstance(value, mfdataarray.MFTransientArray):
+                    mapped_data = self._remap_transient_array(
+                        item, value, mapped_data
+                    )
 
                 elif isinstance(value, mfdataarray.MFArray):
                     mapped_data = self._remap_array(item, value, mapped_data)
