@@ -426,6 +426,22 @@ def test_rect_grid_multilinestring_in_one_cell():
 
 
 @requires_pkg("shapely")
+def test_rect_grid_multilinestring_in_multiple_cells():
+    gr = get_rect_grid()
+    ix = GridIntersect(gr, method="structured")
+    result = ix.intersect(
+        MultiLineString(
+            [
+                LineString([(20.0, 0.0), (7.5, 12.0), (2.5, 7.0), (0.0, 4.5)]),
+                LineString([(5.0, 19.0), (2.5, 7.0)]),
+            ]
+        )
+    )
+    assert len(result) == 3
+    assert np.allclose(sum(result.lengths), 40.19197584109293)
+
+
+@requires_pkg("shapely")
 def test_rect_grid_linestring_in_and_out_of_cell():
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
@@ -535,6 +551,23 @@ def test_rect_grid_multilinestring_in_one_cell_shapely(rtree):
     assert len(result) == 1
     assert result.lengths == 16.0
     assert result.cellids[0] == (1, 0)
+
+
+@requires_pkg("shapely")
+@rtree_toggle
+def test_rect_grid_multilinestring_in_multiple_cells_shapely(rtree):
+    gr = get_rect_grid()
+    ix = GridIntersect(gr, method="vertex", rtree=rtree)
+    result = ix.intersect(
+        MultiLineString(
+            [
+                LineString([(20.0, 0.0), (7.5, 12.0), (2.5, 7.0), (0.0, 4.5)]),
+                LineString([(5.0, 19.0), (2.5, 7.0)]),
+            ]
+        )
+    )
+    assert len(result) == 3
+    assert np.allclose(sum(result.lengths), 40.19197584109293)
 
 
 @requires_pkg("shapely")
@@ -653,6 +686,25 @@ def test_tri_grid_multilinestring_in_one_cell(rtree):
     assert len(result) == 1
     assert result.lengths == 15.0
     assert result.cellids[0] == 4
+
+
+@requires_pkg("shapely")
+@rtree_toggle
+def test_tri_grid_multilinestring_in_multiple_cells(rtree):
+    gr = get_tri_grid()
+    if gr == -1:
+        return
+    ix = GridIntersect(gr, rtree=rtree)
+    result = ix.intersect(
+        MultiLineString(
+            [
+                LineString([(20.0, 0.0), (7.5, 12.0), (2.5, 7.0), (0.0, 4.5)]),
+                LineString([(5.0, 19.0), (2.5, 7.0)]),
+            ]
+        )
+    )
+    assert len(result) == 5
+    assert np.allclose(sum(result.lengths), 40.19197584109293)
 
 
 @requires_pkg("shapely")
