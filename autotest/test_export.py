@@ -51,7 +51,6 @@ from flopy.utils import postprocessing as pp
 from flopy.utils.crs import get_authority_crs
 from flopy.utils.geometry import Polygon
 
-
 HAS_PYPROJ = has_pkg("pyproj", strict=True)
 if HAS_PYPROJ:
     import pyproj

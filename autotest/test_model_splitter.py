@@ -1,9 +1,9 @@
 import numpy as np
-import flopy
 import pytest
 from autotest.conftest import get_example_data_path
 from modflow_devtools.markers import requires_exe, requires_pkg
 
+import flopy
 from flopy.mf6 import MFSimulation
 from flopy.mf6.utils import Mf6Splitter
 
@@ -260,11 +260,7 @@ def test_control_records(function_tmpdir):
     tdis = flopy.mf6.ModflowTdis(
         sim,
         nper=nper,
-        perioddata=(
-            (1., 1, 1.),
-            (1., 1, 1.),
-            (1., 1, 1.)
-        )
+        perioddata=((1.0, 1, 1.0), (1.0, 1, 1.0), (1.0, 1, 1.0)),
     )
 
     gwf = flopy.mf6.ModflowGwf(sim, save_flows=True)
@@ -279,20 +275,20 @@ def test_control_records(function_tmpdir):
         delc=1,
         top=35,
         botm=[30, botm2],
-        idomain=1
+        idomain=1,
     )
 
     ic = flopy.mf6.ModflowGwfic(gwf, strt=32)
     npf = flopy.mf6.ModflowGwfnpf(
         gwf,
         k=[
-            1.,
+            1.0,
             {
                 "data": np.ones((10, 10)) * 0.75,
                 "filename": "k.l2.txt",
                 "iprn": 1,
-                "factor": 1
-            }
+                "factor": 1,
+            },
         ],
         k33=[
             np.ones((nrow, ncol)),
@@ -301,41 +297,29 @@ def test_control_records(function_tmpdir):
                 "filename": "k33.l2.bin",
                 "iprn": 1,
                 "factor": 1,
-                "binary": True
-            }
-        ]
-
+                "binary": True,
+            },
+        ],
     )
 
-    wel_rec = [((0, 4, 5), -10), ]
+    wel_rec = [
+        ((0, 4, 5), -10),
+    ]
 
     spd = {
         0: wel_rec,
-        1: {
-            "data": wel_rec,
-            "filename": "wel.1.txt"
-        },
-        2: {
-            "data": wel_rec,
-            "filename": "wel.2.bin",
-            "binary": True
-        }
+        1: {"data": wel_rec, "filename": "wel.1.txt"},
+        2: {"data": wel_rec, "filename": "wel.2.bin", "binary": True},
     }
 
-    wel = flopy.mf6.ModflowGwfwel(
-        gwf,
-        stress_period_data=spd
-    )
+    wel = flopy.mf6.ModflowGwfwel(gwf, stress_period_data=spd)
 
     chd_rec = []
     for cond, j in ((30, 0), (22, 9)):
         for i in range(10):
             chd_rec.append(((0, i, j), cond))
 
-    chd = flopy.mf6.ModflowGwfchd(
-        gwf,
-        stress_period_data={0: chd_rec}
-    )
+    chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data={0: chd_rec})
 
     arr = np.zeros((10, 10), dtype=int)
     arr[0:5, :] = 1
@@ -354,14 +338,18 @@ def test_control_records(function_tmpdir):
             "External ascii files not being preserved for MFArray"
         )
 
-    k33ls =  ml1.npf.k33._data_storage.layer_storage.multi_dim_list
+    k33ls = ml1.npf.k33._data_storage.layer_storage.multi_dim_list
     if k33ls[1].data_storage_type.value != 3 or not k33ls[1].binary:
         raise AssertionError(
             "Binary file input not being preserved for MFArray"
         )
 
-    spd_ls1 = ml1.wel.stress_period_data._data_storage[1].layer_storage.multi_dim_list[0]
-    spd_ls2 = ml1.wel.stress_period_data._data_storage[2].layer_storage.multi_dim_list[0]
+    spd_ls1 = ml1.wel.stress_period_data._data_storage[
+        1
+    ].layer_storage.multi_dim_list[0]
+    spd_ls2 = ml1.wel.stress_period_data._data_storage[
+        2
+    ].layer_storage.multi_dim_list[0]
 
     if spd_ls1.data_storage_type.value != 3 or spd_ls1.binary:
         raise AssertionError(
@@ -372,5 +360,3 @@ def test_control_records(function_tmpdir):
         raise AssertionError(
             "External binary file input not being preseved for MFList"
         )
-
-
