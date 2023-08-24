@@ -238,7 +238,6 @@ class MFFileAccessArray(MFFileAccess):
                 text,
                 fname,
             )
-        data.tofile(fd)
         fd.close()
 
     def _write_layer(
