@@ -11,7 +11,6 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
-import subprocess
 import sys
 from pathlib import Path
 
@@ -142,7 +141,6 @@ extensions = [
     "IPython.sphinxext.ipython_console_highlighting",  # lowercase didn't work
     "sphinx.ext.autosectionlabel",
     "nbsphinx",
-    "nbsphinx_link",
     "recommonmark",
 ]
 
@@ -223,9 +221,9 @@ html_context = {
     "doc_path": "doc",
 }
 
-html_css_files = [
-    "css/custom.css",
-]
+# html_css_files = [
+#     "css/custom.css",
+# ]
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 html_short_title = "flopy"

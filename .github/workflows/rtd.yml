@@ -94,8 +94,7 @@ jobs:
     needs: rtd_build
     runs-on: ubuntu-latest
 
-    if:
-      github.repository_owner == 'modflowpy' && github.event_name == 'push'
+    # if: github.repository_owner == 'modflowpy' && github.event_name == 'push'
     steps:
       - name: Trigger RTDs build on master and develop branches
         uses: dfm/rtds-action@v1

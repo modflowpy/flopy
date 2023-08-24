@@ -83,7 +83,6 @@ doc = [
     "ipython[kernel]",
     "jupytext",
     "nbsphinx",
-    "nbsphinx-link",
     "pydata-sphinx-theme",
     "PyYAML",
     "recommonmark",
