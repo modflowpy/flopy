@@ -26,4 +26,4 @@ You can get a list of the directories in your system path using:
 
     os.getenv("PATH")
 
-There is a `get-modflow` command line utility that can be used to download MODFLOW executables. See the `get-modflow documentation <https://github.com/modflowpy/flopy/blob/develop/docs/get_modflow.md#using-the-get-modflow-command>`_ for more information.
+There is a `get-modflow` command line utility that can be used to download MODFLOW executables. See the `get-modflow documentation <md/get_modflow>`_ for more information.

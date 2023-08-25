@@ -1,7 +1,9 @@
-Additional dependencies to use optional FloPy helper methods are listed below.
+# Optional dependencies
+
+Additional dependencies to use optional FloPy helper methods are listed below. These may be installed with `pip install flopy[optional]`.
 
 | Method                                                                               | Python Package                                                           |
-| ------------------------------------------------------------------------------------ |--------------------------------------------------------------------------|
+|:-------------------------------------------------------------------------------------|:-------------------------------------------------------------------------|
 | `.plot_shapefile()`                                                                  | **Pyshp** >= 2.0.0                                                       |
 | `.to_shapefile()`                                                                    | **Pyshp** >= 2.0.0                                                       |
 | `.export(*.shp)`                                                                     | **Pyshp** >= 2.0.0                                                       |

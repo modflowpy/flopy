@@ -15,8 +15,11 @@ Contents:
    :maxdepth: 2
 
    introduction
+   md/version_changes
+   md/optional_dependencies
    tutorials
    examples
+   utilities
    faq
    code 
 
