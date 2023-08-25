@@ -8,6 +8,8 @@ import warnings
 
 import numpy as np
 
+from ..utils import import_optional_dependency
+
 
 class MtListBudget:
     """
