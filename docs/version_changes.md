@@ -1,3 +1,26 @@
+### Version 3.4.2
+
+#### Bug fixes
+
+* [fix(binaryfile/gridutil)](https://github.com/modflowpy/flopy/commit/b1e6b77af34448fee388efed5bbfa8d902fe93dc): Avoid numpy deprecation warnings (#1868). Committed by w-bonelli on 2023-07-12.
+* [fix(binary)](https://github.com/modflowpy/flopy/commit/aa74356708137223ffed501f01d759832c336457): Fix binary header information (#1877). Committed by jdhughes-usgs on 2023-07-16.
+* [fix(time series)](https://github.com/modflowpy/flopy/commit/021159bed614e80b0676a0e4c1dd61ac68c531de): Fix for multiple time series attached to single package (#1867) (#1873). Committed by spaulins-usgs on 2023-07-20.
+* [fix(check)](https://github.com/modflowpy/flopy/commit/7e8a0cba122707ab1a87b0d1f13e05afbce29e94): Check now works properly with confined conditions (#1880) (#1882). Committed by spaulins-usgs on 2023-07-27.
+* [fix(mtlistfile)](https://github.com/modflowpy/flopy/commit/2222245a1fbc4c9955f99a0f98c319843f4eb18a): Fix reading MT3D budget (#1899). Committed by Ralf Junghanns on 2023-08-03.
+* [fix(check)](https://github.com/modflowpy/flopy/commit/5d21410cbe0c36d998fb3e6bcc4f8e443fcd7448): Updated flopy's check to work with cellid -1 values (#1885). Committed by spaulins-usgs on 2023-08-06.
+* [fix(BaseModel)](https://github.com/modflowpy/flopy/commit/82bc3f1100eec3167f546e71a8c4d4520b7c0a3d): Don't suppress error if exe not found (#1901). Committed by w-bonelli on 2023-08-07.
+* [fix(keyword data)](https://github.com/modflowpy/flopy/commit/4e00489f8d2a7626786338942210b5764995dd8a): Optional keywords (#1920). Committed by spaulins-usgs on 2023-08-16.
+* [fix(GridIntersect)](https://github.com/modflowpy/flopy/commit/22205f446bdd1e72ee204e5802af30dd501eece9): Combine list of geometries using unary_union (#1923). Committed by Mike Taves on 2023-08-21.
+* [fix(gridintersect)](https://github.com/modflowpy/flopy/commit/672d6be6b07e1bf3b8cb6b0c3b6ce54be669399f): Add multilinestring tests (#1924). Committed by Davíd Brakenhoff on 2023-08-21.
+* [fix(binary file)](https://github.com/modflowpy/flopy/commit/d1c60717b1d04922a718bea134cd28e6e050c660): Was writing binary file information twice to external files (#1925) (#1928). Committed by scottrp on 2023-08-25.
+* [fix(ParticleData)](https://github.com/modflowpy/flopy/commit/00e99c1e07a07225829c5f2bd8e8992eeb50aeb9): Fix docstring, structured default is False (#1935). Committed by w-bonelli on 2023-08-25.
+
+#### Refactoring
+
+* [refactor(_set_neighbors)](https://github.com/modflowpy/flopy/commit/89fa273e8fd3ab7788ba4a65e62455d7d65c504d): Check for closed iverts and remove closing ivert (#1876). Committed by Joshua Larsen on 2023-07-14.
+* [refactor(dependencies)](https://github.com/modflowpy/flopy/commit/364b4d17da421b15e69918a67b4d1c0b159fbf77): Constrain sphinx >=4 (#1898). Committed by w-bonelli on 2023-08-02.
+* [refactor(dependencies)](https://github.com/modflowpy/flopy/commit/ee92091b096ad16a14cd8dd1f142abbb944bf91f): Constrain sphinx-rtd-theme >=1 (#1900). Committed by w-bonelli on 2023-08-03.
+
 ### Version 3.4.1
 
 #### Bug fixes
