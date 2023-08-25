@@ -83,11 +83,10 @@ doc = [
     "ipython[kernel]",
     "jupytext",
     "nbsphinx",
-    "pydata-sphinx-theme",
     "PyYAML",
     "recommonmark",
     "rtds-action",
-    "sphinx >=4",
+    "sphinx ==7.1.2",
     "sphinx-rtd-theme >=1",
 ]
 
