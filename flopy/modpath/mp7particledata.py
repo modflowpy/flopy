@@ -24,7 +24,7 @@ class ParticleData:
         locations or nodes.
     structured : bool
         Boolean defining if a structured (True) or unstructured
-        particle recarray will be created (default is True).
+        particle recarray will be created (default is False).
     particleids : list, tuple, or np.ndarray
         Particle ids for the defined particle locations. If particleids
         is None, MODPATH 7 will define the particle ids to each particle
