@@ -3,6 +3,7 @@ This is a class for reading the mass budget from a (multi-component)
 mt3d(usgs) run. Also includes support for SFT budget.
 
 """
+import re
 import warnings
 
 import numpy as np
@@ -23,7 +24,6 @@ class MtListBudget:
     Examples
     --------
     >>> mt_list = MtListBudget("my_mt3d.list")
-    >>> incremental, cumulative = mt_list.get_budget()
     >>> gw_df, sw_df = mt_list.parse(start_datetime="10-21-2015")
 
     """
@@ -47,6 +47,7 @@ class MtListBudget:
         self.time_key = line.lower()
         line = "TRANSPORT TIME STEP"
         self.tkstp_key = line.lower()
+        self.particles_key = "TOTAL PARTICLES USED IN THE CURRENT STEP"
 
         return
 
@@ -114,7 +115,18 @@ class MtListBudget:
                     else:
                         self._parse_sw(f, line)
                 elif self.tkstp_key in line:
-                    self.tkstp_overflow = int(line[51:58])
+                    try:
+                        self.tkstp_overflow = (
+                            self._extract_number_between_strings(
+                                line, self.tkstp_key, "in"
+                            )
+                        )
+                    except Exception as e:
+                        warnings.warn(
+                            "error parsing TKSTP key "
+                            f"starting on line {self.lcount}: {e!s}"
+                        )
+                        break
 
         if len(self.gw_data) == 0:
             raise Exception("no groundwater budget info found...")
@@ -266,6 +278,15 @@ class MtListBudget:
             line = self._readline(f)
             if line is None:
                 raise Exception("EOF while reading from totim to time step")
+
+        if self.particles_key.lower() in line:
+            for _ in range(4):
+                line = self._readline(f)
+                if line is None:
+                    raise Exception(
+                        "EOF while reading from time step to particles"
+                    )
+
         try:
             kper = int(line[-6:-1])
             kstp = int(line[-26:-21])
@@ -481,3 +502,20 @@ class MtListBudget:
             if iitem not in self.sw_data.keys():
                 self.sw_data[iitem] = []
             self.sw_data[iitem].append(val)
+
+    @staticmethod
+    def _extract_number_between_strings(
+        input_string, start_string, end_string
+    ):
+        pattern = (
+            rf"{re.escape(start_string)}\s*(\d+)\s*{re.escape(end_string)}"
+        )
+        match = re.search(pattern, input_string)
+
+        if match:
+            extracted_number = int(match.group(1))
+            return extracted_number
+        else:
+            raise Exception(
+                f"Error extracting number between {start_string} and {end_string} in {input_string}"
+            )

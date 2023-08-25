@@ -560,6 +560,8 @@ class Grid:
             node_nums = []
             if method == "rook":
                 for poly in self.iverts:
+                    if poly[0] == poly[-1]:
+                        poly = poly[:-1]
                     for v in range(len(poly)):
                         geoms.append(tuple(sorted([poly[v - 1], poly[v]])))
                     node_nums += [node_num] * len(poly)
@@ -567,6 +569,8 @@ class Grid:
             else:
                 # queen neighbors
                 for poly in self.iverts:
+                    if poly[0] == poly[-1]:
+                        poly = poly[:-1]
                     for vert in poly:
                         geoms.append(vert)
                     node_nums += [node_num] * len(poly)

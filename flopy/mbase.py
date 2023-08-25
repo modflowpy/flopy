@@ -41,15 +41,21 @@ iconst = 1
 iprn = -1
 
 
-def resolve_exe(exe_name: Union[str, os.PathLike]) -> str:
+def resolve_exe(
+    exe_name: Union[str, os.PathLike], forgive: bool = False
+) -> str:
     """
-    Resolves the absolute path of the executable.
+    Resolves the absolute path of the executable, raising FileNotFoundError if the executable
+    cannot be found (set forgive to True to return None and warn instead of raising an error).
 
     Parameters
     ----------
     exe_name : str or PathLike
         The executable's name or path. If only the name is provided,
         the executable must be on the system path.
+    forgive : bool
+        If True and executable cannot be found, return None and warn
+        rather than raising a FileNotFoundError. Defaults to False.
 
     Returns
     -------
@@ -75,6 +81,12 @@ def resolve_exe(exe_name: Union[str, os.PathLike]) -> str:
             # try tilde-expanded abspath without .exe suffix
             exe = which(Path(exe_name[:-4]).expanduser().absolute())
     if exe is None:
+        if forgive:
+            warn(
+                f"The program {exe_name} does not exist or is not executable."
+            )
+            return None
+
         raise FileNotFoundError(
             f"The program {exe_name} does not exist or is not executable."
         )
@@ -376,10 +388,11 @@ class BaseModel(ModelInterface):
         self._namefile = self.__name + "." + self.namefile_ext
         self._packagelist = []
         self.heading = ""
-        try:
-            self.exe_name = resolve_exe(exe_name)
-        except:
-            self.exe_name = "mf2005"
+        self.exe_name = (
+            "mf2005"
+            if exe_name is None
+            else resolve_exe(exe_name, forgive=True)
+        )
         self._verbose = verbose
         self.external_path = None
         self.external_extension = "ref"

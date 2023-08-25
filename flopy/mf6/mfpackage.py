@@ -1739,7 +1739,7 @@ class MFPackage(PackageContainer, PackageInterface):
         ):
             # initialize as part of the parent's child package group
             chld_pkg_grp = self.parent_file._child_package_groups[package_type]
-            chld_pkg_grp.init_package(self, self._filename)
+            chld_pkg_grp.init_package(self, self._filename, False)
 
         # remove any remaining valid kwargs
         key_list = list(kwargs.keys())
@@ -3264,15 +3264,26 @@ class MFChildPackages:
             suffix += 1
         return possible_path
 
-    def init_package(self, package, fname):
-        # clear out existing packages
-        self._remove_packages()
+    def init_package(self, package, fname, remove_packages=True):
+        if remove_packages:
+            # clear out existing packages
+            self._remove_packages()
+        elif fname is not None:
+            self._remove_packages(fname)
         if fname is None:
             # build a file name
             fname = self._next_default_file_path()
             package._filename = fname
-        # set file record variable
-        self._filerecord.set_data(fname, autofill=True)
+        # check file record variable
+        found = False
+        fr_data = self._filerecord.get_data()
+        if fr_data is not None:
+            for line in fr_data:
+                if line[0] == fname:
+                    found = True
+        if not found:
+            # append file record variable
+            self._filerecord.append_data([(fname,)])
         # add the package to the list
         self._packages.append(package)
 
@@ -3319,7 +3330,11 @@ class MFChildPackages:
         # add the package to the list
         self._packages.append(package)
 
-    def _remove_packages(self):
-        for package in self._packages:
-            self._model_or_sim.remove_package(package)
-        self._packages = []
+    def _remove_packages(self, fname=None):
+        rp_list = []
+        for idx, package in enumerate(self._packages):
+            if fname is None or package.filename == fname:
+                self._model_or_sim.remove_package(package)
+                rp_list.append(idx)
+        for idx in reversed(rp_list):
+            self._packages.pop(idx)
