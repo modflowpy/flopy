@@ -1,7 +1,16 @@
-FloPy Model Checks
------------------------------------------------
+# FloPy Model Checks
 
-## List of available FloPy model checks  
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+- [FloPy Model Checks](#flopy-model-checks)
+- [List of available FloPy model checks](#list-of-available-flopy-model-checks)
+- [Visualizations](#visualizations)
+- [Additional model checks and visualizations](#additional-model-checks-and-visualizations)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Available model checks  
 
 |Package  | Check | Implemented | Type |
 | :-----------| :------------| :------------------ | :-------------|  
@@ -50,7 +59,7 @@ FloPy Model Checks
 | SFR | gaps in segment and reach routing | Not supported | Warning |
 | SFR | outlets in interior of model domain | Not supported | Warning |
 | WEL | PHIRAMP is < 1 and should be close to recommended value of 0.001 | Not supported | Warning |
-| MPSIM | invalid stop times | Supported | 
+| MPSIM | invalid stop times | Supported |  |
 
 
 ## Visualizations

@@ -34,7 +34,7 @@ Documentation
 Installation
 -----------------------------------------------
 
-FloPy requires **Python** 3.8 (or higher), **NumPy** 1.15.0 (or higher), and **matplotlib** 1.4.0 (or higher).  Dependencies for optional FloPy methods are summarized [here](docs/flopy_method_dependencies.md).
+FloPy requires **Python** 3.8 (or higher), **NumPy** 1.15.0 (or higher), and **matplotlib** 1.4.0 (or higher).  Dependencies for optional FloPy methods are summarized [here](.docs/optional_dependencies.md).
 
 To install FloPy type:
 
@@ -51,7 +51,7 @@ After FloPy is installed, MODFLOW and related programs can be installed using th
 
     get-modflow :flopy
 
-See documentation [get_modflow.md](https://github.com/modflowpy/flopy/blob/develop/docs/get_modflow.md) for more information.
+See [documentation](.docs/md/get_modflow.md) for more information.
 
 
 Getting Started
