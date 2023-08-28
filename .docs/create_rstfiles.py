@@ -88,7 +88,7 @@ def create_examples_rst():
 
     print(f"Creating {rst_path}")
     with open(rst_path, "w") as rst_file:
-        rst_file.write("Examples Gallery\n================\n\n")
+        rst_file.write("Examples gallery\n================\n\n")
         rst_file.write(
             "The following examples illustrate the functionality of Flopy. After the `tutorials <https://flopy.readthedocs.io/en/latest/tutorials.html>`_, the examples are the best resource for learning the underlying capabilities of FloPy.\n\n"
         )

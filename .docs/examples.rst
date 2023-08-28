@@ -1,4 +1,4 @@
-Examples Gallery
+Examples gallery
 ================
 
 The following examples illustrate the functionality of Flopy. After the `tutorials <https://flopy.readthedocs.io/en/latest/tutorials.html>`_, the examples are the best resource for learning the underlying capabilities of FloPy.

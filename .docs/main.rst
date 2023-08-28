@@ -15,12 +15,13 @@ Contents:
    :maxdepth: 2
 
    introduction
-   md/version_changes
-   md/optional_dependencies
    tutorials
    examples
    utilities
    faq
+   md/model_checks
+   md/optional_dependencies
+   md/version_changes
    code 
 
 Indices and tables
