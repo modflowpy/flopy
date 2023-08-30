@@ -34,13 +34,7 @@ import numpy as np
 
 proj_root = Path.cwd().parent.parent
 
-# run installed version of flopy or add local path
-try:
-    import flopy
-except:
-    sys.path.append(proj_root)
-    import flopy
-
+import flopy
 
 temp_dir = TemporaryDirectory()
 workspace = Path(temp_dir.name)
@@ -442,9 +436,9 @@ plt.show()
 sim.set_sim_path(workspace)
 sim.write_simulation()
 success, buff = sim.run_simulation(silent=True, report=True)
-assert success, f"Failed to run MF6 simulation."
 for line in buff:
     print(line)
+assert success, f"Failed to run MF6 simulation."
 
 # ## Particle tracking
 
@@ -544,9 +538,9 @@ mpsim = flopy.modpath.Modpath7Sim(
 
 mp.write_input()
 success, buff = mp.run_model(silent=True, report=True)
-assert success, "Failed to run particle-tracking model."
 for line in buff:
     print(line)
+assert success, "Failed to run particle-tracking model."
 # -
 
 # Load pathline data from the model's pathline output file.

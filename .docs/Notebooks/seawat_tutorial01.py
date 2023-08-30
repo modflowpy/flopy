@@ -148,6 +148,8 @@ swt.write_input()
 # ## Run the model
 
 success, buff = swt.run_model(silent=True, report=True)
+for line in buff:
+    print(line)
 assert success, "SEAWAT did not terminate normally."
 
 # ## Post-process the results

@@ -244,7 +244,10 @@ pcg = flopy.modflow.ModflowPcg(
 # Write the simulation 1 MODFLOW input files and run the model
 
 ml.write_input()
-ml.run_model(silent=True)
+success, buff = ml.run_model(silent=True, report=True)
+for line in buff:
+    print(buff)
+assert success
 
 # Create the model with the saltwater well (Simulation 2)
 
@@ -301,7 +304,10 @@ pcg = flopy.modflow.ModflowPcg(
 # Write the simulation 2 MODFLOW input files and run the model
 
 ml2.write_input()
-ml2.run_model(silent=True)
+success, buff = ml2.run_model(silent=True, report=True)
+for line in buff:
+    print(buff)
+assert success
 
 # Load the simulation 1 `ZETA` data and `ZETA` observations.
 

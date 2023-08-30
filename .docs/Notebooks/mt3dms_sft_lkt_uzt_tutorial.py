@@ -39,12 +39,7 @@ import numpy as np
 import pandas as pd
 
 # run installed version of flopy or add local path
-try:
-    import flopy
-except:
-    fpth = os.path.abspath(os.path.join("..", ".."))
-    sys.path.append(fpth)
-    import flopy
+import flopy
 
 print(sys.version)
 print(f"numpy version: {np.__version__}")
@@ -67,11 +62,7 @@ modelname = "no3"
 mfexe = "mfnwt"
 mtexe = "mt3dusgs"
 
-# Make sure modelpth directory exists
-if not os.path.isdir(modelpth):
-    os.makedirs(modelpth, exist_ok=True)
-
-# Instantiate MODFLOW object in flopy
+# Instantiate MODFLOW object
 mf = flopy.modflow.Modflow(
     modelname=modelname, exe_name=mfexe, model_ws=modelpth, version="mfnwt"
 )

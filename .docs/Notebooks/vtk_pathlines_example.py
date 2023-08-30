@@ -41,7 +41,7 @@ from flopy.mf6 import MFSimulation
 
 mdl_name = "freyberg"
 sim_name = f"mf6-{mdl_name}-vtk-pathlines"
-sim_path = Path.cwd().parent / "../examples/data" / f"mf6-{mdl_name}"
+sim_path = Path.cwd().parent.parent / "examples" / "data" / f"mf6-{mdl_name}"
 
 sim = MFSimulation.load(sim_name=sim_name, sim_ws=sim_path)
 # -
@@ -63,9 +63,9 @@ sim.write_simulation()
 # Run the groundwater flow simulation.
 
 success, buff = sim.run_simulation(silent=True, report=True)
-assert success, "MODFLOW 6 simulation failed"
 for line in buff:
     print(line)
+assert success, "MODFLOW 6 simulation failed"
 
 # Define particle release locations. In this example we will release 16 particles, with each particle released at the center of a unique grid cell. Cells containing particle release points are clustered into four 2x2 square regions.
 
@@ -150,9 +150,9 @@ mpsim = flopy.modpath.Modpath7Sim(
 
 mp.write_input()
 success, buff = mp.run_model(silent=True, report=True)
-assert success, "MODPATH 7 simulation failed"
 for line in buff:
     print(line)
+assert success, "MODPATH 7 simulation failed"
 
 # Open the pathline output file and read pathline data.
 

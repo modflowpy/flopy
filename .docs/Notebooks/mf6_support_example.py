@@ -57,12 +57,7 @@ from tempfile import TemporaryDirectory
 
 proj_root = Path.cwd().parent.parent
 
-# run installed version of flopy or add local path
-try:
-    import flopy
-except:
-    sys.path.append(proj_root)
-    import flopy
+import flopy
 
 # temporary directory
 temp_dir = TemporaryDirectory()
@@ -481,9 +476,9 @@ sim.write_simulation()
 
 # run simulation
 success, buff = sim.run_simulation(silent=True, report=True)
-assert success, "Failed to run"
 for line in buff:
     print(line)
+assert success, "Failed to run"
 # -
 
 # ## Exporting a MF6 Model
@@ -616,9 +611,9 @@ sim.write_simulation()
 
 # run simulation from new folder
 success, buff = sim.run_simulation(silent=True, report=True)
-assert success, "Failed to run"
 for line in buff:
     print(line)
+assert success, "Failed to run"
 # -
 
 # ## Post-Processing the Results

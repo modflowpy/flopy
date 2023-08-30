@@ -32,13 +32,7 @@ import numpy as np
 # +
 from IPython.display import Image
 
-# run installed version of flopy or add local path
-try:
-    import flopy
-except:
-    fpth = os.path.abspath(os.path.join("..", ".."))
-    sys.path.append(fpth)
-    import flopy
+import flopy
 
 print(sys.version)
 print(f"numpy version: {np.__version__}")
@@ -58,10 +52,6 @@ loadpth = os.path.join("..", "..", "examples", "data", "secp")
 temp_dir = TemporaryDirectory()
 modelpth = temp_dir.name
 
-# make sure modelpth directory exists
-if not os.path.isdir(modelpth):
-    os.makedirs(modelpth, exist_ok=True)
-
 files = ["secp.hds"]
 # -
 
@@ -75,9 +65,10 @@ ml = flopy.modflow.Modflow.load(
 ml.change_model_ws(new_pth=modelpth)
 ml.write_input()
 
-success, buff = ml.run_model(silent=True)
-if not success:
-    print("Something bad happened.")
+success, buff = ml.run_model(silent=True, report=True)
+for line in buff:
+    print(buff)
+assert success, "Model failed"
 
 # confirm that the model files have been created
 for f in files:

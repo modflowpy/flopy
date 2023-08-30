@@ -29,7 +29,9 @@ from pathlib import Path
 import flopy
 
 root_name = "freyberg.usg"
-model_ws = Path.cwd().parent / "../examples/data" / root_name.replace(".", "_")
+model_ws = (
+    Path.cwd().parent.parent / "examples/data" / root_name.replace(".", "_")
+)
 # -
 
 # Now construct an `UnstructuredGrid` from a grid specification file.
@@ -102,11 +104,9 @@ gwf.change_model_ws(str(work_dir))
 gwf.write_name_file()
 gwf.write_input()
 success, buff = gwf.run_model(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+for line in buff:
+    print(line)
+assert success, "Failed to run."
 # -
 
 # Load head data from the output files:

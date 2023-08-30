@@ -36,12 +36,7 @@ import numpy as np
 
 proj_root = Path.cwd().parent.parent
 
-# run installed version of flopy or add local path
-try:
-    import flopy
-except:
-    sys.path.append(proj_root)
-    import flopy
+import flopy
 
 print(sys.version)
 print(f"numpy version: {np.__version__}")
@@ -292,9 +287,9 @@ sim.write_simulation()
 # ## Part IV. Run the MODFLOW 6 Model
 
 success, buff = sim.run_simulation(silent=True, report=True)
-assert success, "mf6 failed to run"
 for line in buff:
     print(line)
+assert success, "mf6 failed to run"
 
 # ## Part V. Import and Plot the Results
 
@@ -472,9 +467,9 @@ mp.write_input()
 
 # run modpath
 success, buff = mp.run_model(silent=True, report=True)
-assert success, "mp7 failed to run"
 for line in buff:
     print(line)
+assert success, "mp7 failed to run"
 # -
 
 # Load the pathline and timeseries data.
@@ -530,9 +525,9 @@ mp.write_input()
 
 # run modpath
 success, buff = mp.run_model(silent=True, report=True)
-assert success, "mp7 failed to run"
 for line in buff:
     print(line)
+assert success, "mp7 failed to run"
 # -
 
 # Load the endpoint data.

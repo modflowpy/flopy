@@ -28,12 +28,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.ndimage
 
-try:
-    import flopy
-except:
-    fpth = os.path.abspath(os.path.join("..", "..", ".."))
-    sys.path.append(fpth)
-    import flopy
+import flopy
 
 print(sys.version)
 print(f"numpy version: {np.__version__}")

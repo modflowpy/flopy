@@ -34,13 +34,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-# run installed version of flopy or add local path
-try:
-    import flopy
-except:
-    fpth = os.path.abspath(os.path.join("..", ".."))
-    sys.path.append(fpth)
-    import flopy
+import flopy
 
 print(sys.version)
 print(f"numpy version: {np.__version__}")
@@ -123,11 +117,9 @@ mp.change_model_ws(model_ws)
 mp.write_name_file()
 mp.write_input()
 success, buff = mp.run_model(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+for line in buff:
+    print(line)
+assert success, "Failed to run."
 # -
 
 # Read in the endpoint file and plot particles that terminated in the well.
@@ -271,11 +263,9 @@ m2.change_model_ws(model_ws)
 m2.write_name_file()
 m2.write_input()
 success, buff = m2.run_model(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+for line in buff:
+    print(line)
+assert success, "Failed to run."
 
 # Create a new `Modpath6` object.
 
@@ -296,11 +286,9 @@ mp.change_model_ws(model_ws)
 mp.write_name_file()
 mp.write_input()
 success, buff = mp.run_model(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+for line in buff:
+    print(line)
+assert success, "Failed to run."
 # -
 
 # Read in results and plot.

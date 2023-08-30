@@ -43,13 +43,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
-# run installed version of flopy or add local path
-try:
-    import flopy
-except:
-    fpth = os.path.abspath(os.path.join("..", ".."))
-    sys.path.append(fpth)
-    import flopy
+import flopy
 
 from flopy.utils.util_array import read1d
 
@@ -126,11 +120,9 @@ def p01(dirname, al, retardation, lambda1, mixelm):
     lmt = flopy.modflow.ModflowLmt(mf)
     mf.write_input()
     success, buff = mf.run_model(silent=True, report=True)
-    if success:
-        for line in buff:
-            print(line)
-    else:
-        raise ValueError("Failed to run.")
+    for line in buff:
+        print(line)
+    assert success, "Model failed to run"
 
     modelname_mt = f"{dirname}_mt"
     mt = flopy.mt3d.Mt3dms(
@@ -183,7 +175,10 @@ def p01(dirname, al, retardation, lambda1, mixelm):
     fname = os.path.join(model_ws, "MT3D001.UCN")
     if os.path.isfile(fname):
         os.remove(fname)
-    mt.run_model(silent=True)
+    mt.run_model(silent=True, report=True)
+    for line in buff:
+        print(line)
+    assert success
 
     fname = os.path.join(model_ws, "MT3D001.UCN")
     ucnobj = flopy.utils.UcnFile(fname)

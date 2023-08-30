@@ -24,12 +24,7 @@ from tempfile import TemporaryDirectory
 
 import numpy as np
 
-try:
-    import flopy
-except:
-    fpth = os.path.abspath(os.path.join("..", ".."))
-    sys.path.append(fpth)
-    import flopy
+import flopy
 
 # init paths
 exe_name = "mf6"
@@ -37,9 +32,7 @@ exe_name = "mf6"
 # temporary directory
 temp_dir = TemporaryDirectory()
 sim_path = os.path.join(temp_dir.name, "obs_ts_tas_ex")
-# make the directory if it does not exist
-if not os.path.isdir(sim_path):
-    os.makedirs(sim_path, exist_ok=True)
+os.makedirs(sim_path, exist_ok=True)
 
 # init paths
 test_ex_name = "child_pkgs_test"
@@ -178,11 +171,9 @@ ghb.obs.print_input = True
 
 sim.write_simulation()
 success, buff = sim.run_simulation(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+for line in buff:
+    print(line)
+assert success, "Failed to run."
 
 # clean up for next example
 model.remove_package("ghb")
@@ -233,11 +224,9 @@ ghb.obs.initialize(
 
 sim.write_simulation()
 success, buff = sim.run_simulation(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+for line in buff:
+    print(line)
+assert success, "Failed to run."
 
 # clean up for next example
 model.remove_package("ghb")
@@ -285,11 +274,9 @@ ghb_package = flopy.mf6.modflow.mfgwfghb.ModflowGwfghb(
 
 sim.write_simulation()
 success, buff = sim.run_simulation(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+for line in buff:
+    print(line)
+assert success, "Failed to run."
 
 # clean up for next example
 model.remove_package("ghb")
@@ -373,11 +360,9 @@ ghb.ts.interpolation_methodrecord = "stepwise"
 
 sim.write_simulation()
 success, buff = sim.run_simulation(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+for line in buff:
+    print(line)
+assert success, "Failed to run."
 
 # clean up for next example
 model.remove_package("ghb")
@@ -432,11 +417,9 @@ ghb.ts.initialize(
 
 sim.write_simulation()
 success, buff = sim.run_simulation(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+for line in buff:
+    print(line)
+assert success, "Failed to run."
 
 # clean up for next example
 model.remove_package("ghb")
@@ -489,11 +472,9 @@ ghb = flopy.mf6.modflow.mfgwfghb.ModflowGwfghb(
 
 sim.write_simulation()
 success, buff = sim.run_simulation(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+for line in buff:
+    print(line)
+assert success, "Failed to run."
 
 # clean up for next example
 model.remove_package("ghb")
@@ -594,11 +575,9 @@ print(
 
 sim.write_simulation()
 success, buff = sim.run_simulation(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+for line in buff:
+    print(line)
+assert success, "Failed to run."
 # -
 
 # ## Time Array Series
@@ -642,11 +621,9 @@ rcha.tas.interpolation_methodrecord = "LINEAR"
 
 sim.write_simulation()
 success, buff = sim.run_simulation(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+for line in buff:
+    print(line)
+assert success, "Failed to run."
 
 # clean up for next example
 model.remove_package("rcha")
@@ -674,11 +651,9 @@ rcha.tas.initialize(
 
 sim.write_simulation()
 success, buff = sim.run_simulation(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+for line in buff:
+    print(line)
+assert success, "Failed to run."
 
 # clean up for next example
 model.remove_package("rcha")
@@ -702,11 +677,9 @@ rcha = flopy.mf6.modflow.mfgwfrcha.ModflowGwfrcha(
 
 sim.write_simulation()
 success, buff = sim.run_simulation(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+for line in buff:
+    print(line)
+assert success, "Failed to run."
 
 # clean up for next example
 model.remove_package("rcha")

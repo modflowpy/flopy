@@ -46,8 +46,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-proj_root = Path.cwd().parent.parent
-
 import flopy
 from flopy.utils import flopy_io
 
@@ -68,6 +66,7 @@ exe_name = "mf2005"
 temp_dir = TemporaryDirectory()
 path = Path(temp_dir.name)
 
+proj_root = Path.cwd().parent.parent
 gpth = proj_root / "examples" / "data" / "mf2005_test" / "UZFtest2.*"
 for f in glob.glob(str(gpth)):
     shutil.copy(f, path)
@@ -227,7 +226,9 @@ m.write_input()
 
 # Run the model.
 
-success, buff = m.run_model()
+success, buff = m.run_model(silent=True, report=True)
+for line in buff:
+    print(line)
 assert success, f"{m.name} failed to run"
 
 # ## Inspecting results

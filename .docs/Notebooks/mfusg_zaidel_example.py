@@ -147,9 +147,9 @@ except:
 
 # run the model
 success, buff = mf.run_model(silent=True, report=True)
-assert success, "Failed to run"
 for line in buff:
     print(line)
+assert success, "Failed to run"
 # -
 
 # ### Read the simulated MODFLOW-USG model results
