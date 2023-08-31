@@ -93,15 +93,17 @@ def test_generate_classes_from_github_refs(
     mod_file_times = [Path(mod_file).stat().st_mtime for mod_file in mod_files]
     pprint(mod_files)
 
-    # generate classes
+    # split ref into owner, repo, ref name
     spl = ref.split("/")
     owner = spl[0]
     repo = spl[1]
     ref = spl[2]
+
+    # generate classes
     pprint(
         virtualenv.run(
             "python -m flopy.mf6.utils.generate_classes "
-            f"--owner {owner} --repo {repo} ref {ref} --no-backup"
+            f"--owner {owner} --repo {repo} --ref {ref} --no-backup"
         )
     )
 

@@ -159,18 +159,17 @@ def generate_classes(
     # download the dfn files and put them in flopy.mf6.data or update using
     # user provided dfnpath
     if dfnpath is None:
-        print(
-            f"  Updating the MODFLOW 6 classes using {owner}/{repo}/{branch}"
-        )
         timestr = time.strftime("%Y%m%d-%H%M%S")
         new_dfn_pth = os.path.join(flopypth, "mf6", "data", f"dfn_{timestr}")
 
         # branch deprecated 3.5.0
-        if not ref:
-            if not branch:
-                raise ValueError("branch or ref must be provided")
+        if not ref and not branch:
+            raise ValueError("branch or ref must be provided")
+        if branch:
             warn("branch is deprecated, use ref instead", DeprecationWarning)
             ref = branch
+
+        print(f"  Updating the MODFLOW 6 classes using {owner}/{repo}/{ref}")
 
         download_dfn(owner, ref, new_dfn_pth)
     else:
