@@ -51,7 +51,7 @@ def list_files(pth, exts=["py"]):
             print(f"    {idx:5d} - {fn}")
 
 
-def download_dfn(owner, branch, new_dfn_pth):
+def download_dfn(owner, repo, ref, new_dfn_pth):
     try:
         from modflow_devtools.download import download_and_unzip
     except ImportError:
@@ -61,8 +61,7 @@ def download_dfn(owner, branch, new_dfn_pth):
             "     pip install modflow-devtools"
         )
 
-    mf6url = "https://github.com/{}/modflow6/archive/{}.zip"
-    mf6url = mf6url.format(owner, branch)
+    mf6url = f"https://github.com/{owner}/{repo}/archive/{ref}.zip"
     print(f"  Downloading MODFLOW 6 repository from {mf6url}")
     with tempfile.TemporaryDirectory() as tmpdirname:
         dl_path = download_and_unzip(mf6url, tmpdirname, verbose=True)
@@ -159,20 +158,19 @@ def generate_classes(
     # download the dfn files and put them in flopy.mf6.data or update using
     # user provided dfnpath
     if dfnpath is None:
-        print(
-            f"  Updating the MODFLOW 6 classes using {owner}/{repo}/{branch}"
-        )
         timestr = time.strftime("%Y%m%d-%H%M%S")
         new_dfn_pth = os.path.join(flopypth, "mf6", "data", f"dfn_{timestr}")
 
         # branch deprecated 3.5.0
-        if not ref:
-            if not branch:
-                raise ValueError("branch or ref must be provided")
+        if not ref and not branch:
+            raise ValueError("branch or ref must be provided")
+        if branch:
             warn("branch is deprecated, use ref instead", DeprecationWarning)
             ref = branch
 
-        download_dfn(owner, ref, new_dfn_pth)
+        print(f"  Updating the MODFLOW 6 classes using {owner}/{repo}/{ref}")
+
+        download_dfn(owner, repo, ref, new_dfn_pth)
     else:
         print(f"  Updating the MODFLOW 6 classes using {dfnpath}")
         assert os.path.isdir(dfnpath)
