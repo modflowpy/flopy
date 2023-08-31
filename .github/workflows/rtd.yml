@@ -30,6 +30,11 @@ jobs:
     steps:
       - name: Checkout flopy repo
         uses: actions/checkout@v3
+        with:
+          repository: w-bonelli/flopy
+          ref: prt-utils
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
       - name: Output repo information
         run: |
@@ -49,7 +54,9 @@ jobs:
         run: python -m pip install --upgrade pip
 
       - name: Install flopy and dependencies
-        run: pip install ".[test, doc, optional]"
+        run: |
+          pip install -e .
+          pip install ".[test, optional]"
       
       - name: Workaround OpenGL issue on Linux
         if: runner.os == 'Linux'
@@ -76,6 +83,16 @@ jobs:
 
       - name: Install MODFLOW executables
         uses: modflowpy/install-modflow-action@v1
+
+      - name: Update FloPy classes
+        run: |
+          import flopy
+          flopy.mf6.utils.generate_classes(owner="aprovost-usgs", ref="PRT", backup=False)
+        shell: python
+
+      # todo remove before merging
+      - name: Checkout notebooks
+        run: git checkout origin/prt-notebooks -- .docs/Notebooks
 
       - name: Run tutorial and example notebooks
         working-directory: autotest

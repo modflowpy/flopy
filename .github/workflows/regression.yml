@@ -37,8 +37,8 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           pip install --upgrade pip
-          pip install .
-          pip install ".[test, optional]"
+          pip install https://github.com/w-bonelli/flopy/archive/prt-utils.zip
+          pip install "flopy[test, optional]"
 
       - name: Setup Micromamba
         if: runner.os == 'Windows'
@@ -58,7 +58,8 @@ jobs:
         shell: bash -l {0}
         run: |
           pip install xmipy
-          pip install .
+          pip install https://github.com/w-bonelli/flopy/archive/prt-utils.zip
+          pip install "flopy[test, optional]"
 
       - name: Install Modflow-related executables
         uses: modflowpy/install-modflow-action@v1
@@ -70,12 +71,12 @@ jobs:
 
       - name: Update FloPy packages
         if: runner.os != 'Windows'
-        run: python -m flopy.mf6.utils.generate_classes --ref develop --no-backup
+        run: python -m flopy.mf6.utils.generate_classes --owner aprovost-usgs --ref PRT --no-backup
 
       - name: Update FloPy packages
         if: runner.os == 'Windows'
         shell: bash -l {0}
-        run: python -m flopy.mf6.utils.generate_classes --ref develop --no-backup
+        run: python -m flopy.mf6.utils.generate_classes --owner aprovost-usgs --ref PRT --no-backup
 
       - name: Run regression tests
         if: runner.os != 'Windows'
