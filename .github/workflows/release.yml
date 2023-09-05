@@ -20,7 +20,7 @@ jobs:
     steps:
 
       - name: Checkout release branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -144,7 +144,7 @@ jobs:
     steps:
 
       - name: Checkout release branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.ref_name }}
 
@@ -173,7 +173,7 @@ jobs:
     steps:
 
       - name: Checkout master branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: master
 
@@ -210,7 +210,7 @@ jobs:
     steps:
 
       - name: Checkout master branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: master
 

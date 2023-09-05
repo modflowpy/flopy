@@ -27,7 +27,7 @@ jobs:
     steps:
 
     - name: Checkout flopy repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Setup Python
       uses: actions/setup-python@v4
@@ -48,7 +48,7 @@ jobs:
       uses: modflowpy/install-gfortran-action@v1
 
     - name: Checkout MODFLOW 6
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: MODFLOW-USGS/modflow6
         path: modflow6

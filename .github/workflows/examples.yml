@@ -23,7 +23,7 @@ jobs:
     timeout-minutes: 90
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Python
         if: runner.os != 'Windows'
