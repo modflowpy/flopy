@@ -171,8 +171,9 @@ def get_partdata(grid):
     )
 
 
-# We can now build the PRT simulation, using FloPy's `ParticleData.to_coords()` method to ease
-# the conversion from MODPATH 7 to MODFLOW 6 PRT release points.
+# We can now build the PRT simulation, using FloPy's `ParticleData.to_prp()` method to 
+# convert from MODPATH 7 release point format to MODFLOW 6 particle release point (PRP)
+# package data.
 
 
 def build_prt_sim(ws, mf6):
@@ -210,8 +211,7 @@ def build_prt_sim(ws, mf6):
 
     # convert mp7 particledata to prt release points
     partdata = get_partdata(prt.modelgrid)
-    coords = partdata.to_coords(prt.modelgrid)
-    releasepts = [(i, 0, 0, 0, c[0], c[1], c[2]) for i, c in enumerate(coords)]
+    releasepts = list(partdata.to_prp(prt.modelgrid))
 
     # create prp package
     flopy.mf6.ModflowPrtprp(
@@ -659,11 +659,7 @@ def build_prt_sim(ws, mf6):
 
     # convert mp7 particledata to prt release points
     partdata = get_partdata(prt.modelgrid, releasepts_mp7)
-    coords = partdata.to_coords(prt.modelgrid)
-    releasepts = [
-        (i, (0, r[0]), c[0], c[1], c[2])
-        for i, (r, c) in enumerate(zip(releasepts_mp7, coords))
-    ]
+    releasepts = list(partdata.to_prp(prt.modelgrid))
 
     # create prp package
     prp_track_file = f"{prtname}.prp.trk"
