@@ -2183,11 +2183,36 @@ class MFSimulationBase(PackageContainer):
                 Model name to remove from simulation
 
         """
-        # Remove model
+        # remove model
         del self._models[model_name]
 
-        # TODO: Fully implement this
-        # Update simulation name file
+        # remove from solution group block
+        self._remove_from_all_solution_groups(model_name)
+
+        # remove from models block
+        models_recarray = self.name_file.models.get_data()
+        if models_recarray is not None:
+            new_records = []
+            for record in models_recarray:
+                if len(record) <= 2 or record[2] != model_name:
+                    new_records.append(tuple(record))
+            self.name_file.models.set_data(new_records)
+
+        # remove from exchanges block
+        exch_recarray = self.name_file.exchanges.get_data()
+        if exch_recarray is not None:
+            new_records = []
+            for record in exch_recarray:
+                model_in_record = False
+                if len(record) > 2:
+                    for item in list(record)[2:]:
+                        if item == model_name:
+                            model_in_record = True
+                if not model_in_record:
+                    new_records.append(tuple(record))
+            if len(new_records) == 0:
+                new_records = None
+            self.name_file.exchanges.set_data(new_records)
 
     def is_valid(self):
         """

@@ -3085,7 +3085,7 @@ def test028_create_tests_sfr(function_tmpdir, example_data_path):
         delc=5000.0,
         top=top,
         botm=botm,
-        #idomain=idomain,
+        idomain=idomain,
         filename=f"{model_name}.dis",
     )
     strt = testutils.read_std_array(os.path.join(pth, "strt.txt"), "float")
@@ -3988,6 +3988,17 @@ def test006_2models_different_dis(function_tmpdir, example_data_path):
     assert gnc_data[0][0] == (0, 2, 1)
     assert gnc_data[0][1] == (0, 0)
     assert gnc_data[0][2] == (0, 1, 1)
+
+    # test remove_model
+    sim2.remove_model(model_name_2)
+    sim2.write_simulation()
+    success, buff = sim2.run_simulation()
+    assert success
+    sim3 = MFSimulation.load(sim_ws=sim.sim_path)
+    assert sim3.get_model(model_name_1) is not None
+    assert sim3.get_model(model_name_2) is None
+    assert len(sim3.name_file.models.get_data()) == 1
+    assert sim3.name_file.exchanges.get_data() is None
 
     sim.delete_output_files()
 
