@@ -2244,14 +2244,14 @@ def test_multi_model(function_tmpdir):
 
 
 @requires_exe("mf6")
-def test_namefile_creation(tmpdir):
+def test_namefile_creation(function_tmpdir):
     test_ex_name = "test_namefile"
     # build MODFLOW 6 files
     sim = MFSimulation(
         sim_name=test_ex_name,
         version="mf6",
         exe_name="mf6",
-        sim_ws=str(tmpdir),
+        sim_ws=str(function_tmpdir),
     )
 
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0), (6.0, 3, 1.0), (6.0, 3, 1.0)]
@@ -2293,3 +2293,46 @@ def test_namefile_creation(tmpdir):
     except flopy.mf6.mfbase.FlopyException:
         ex_happened = True
     assert ex_happened
+
+
+def test_remove_model(function_tmpdir, example_data_path):
+    # load a multi-model simulation
+    sim_ws = str(example_data_path / "mf6" / "test006_2models_mvr")
+    sim = MFSimulation.load(sim_ws=sim_ws, exe_name="mf6")
+
+    # original simulation should contain models:
+    # - 'parent', with files named 'model1.ext'
+    # - 'child', with files named 'model2.ext'
+    assert len(sim.model_names) == 2
+    assert "parent" in sim.model_names
+    assert "child" in sim.model_names
+
+    # remove the child model
+    sim.remove_model("child")
+
+    # simulation should now only contain the parent model
+    assert len(sim.model_names) == 1
+    assert "parent" in sim.model_names
+
+    # write simulation input files
+    sim.set_sim_path(function_tmpdir)
+    sim.write_simulation()
+
+    # there should be no input files for the child model
+    files = list(function_tmpdir.glob("*"))
+    assert not any("model2" in f.name for f in files)
+
+    # there should be no model or solver entry for the child model in the simulation namefile
+    lines = open(function_tmpdir / "mfsim.nam").readlines()
+    lines = [l.lower().strip() for l in lines]
+    assert not any("model2" in l for l in lines)
+    assert not any("child" in l for l in lines)
+
+    # there should be no exchanges either
+    exg_index = 0
+    for i, l in enumerate(lines):
+        if "begin exchanges" in l:
+            exg_index = i
+        elif exg_index > 0:
+            assert "end exchanges" in l
+            break
