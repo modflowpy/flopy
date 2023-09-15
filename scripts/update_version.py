@@ -190,12 +190,6 @@ def update_readme_markdown(
                 "(https://coveralls.io/github/modflowpy/"
                 "flopy?branch=develop)"
             )
-        elif "[Binder]" in line:
-            # [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/modflowpy/flopy.git/develop)
-            line = (
-                "[![Binder](https://mybinder.org/badge_logo.svg)]"
-                "(https://mybinder.org/v2/gh/modflowpy/flopy.git/develop)"
-            )
         elif "doi.org/10.5066/F7BK19FH" in line:
             line = get_software_citation(timestamp, version, approved)
         elif "Disclaimer" in line:

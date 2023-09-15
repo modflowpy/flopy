@@ -17,8 +17,6 @@
 [![PyPI Status](https://img.shields.io/pypi/status/flopy.png)](https://pypi.python.org/pypi/flopy)
 [![PyPI Versions](https://img.shields.io/pypi/pyversions/flopy.png)](https://pypi.python.org/pypi/flopy)
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/modflowpy/flopy.git/develop)
-
 Introduction
 -----------------------------------------------
 
