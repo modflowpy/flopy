@@ -5,6 +5,7 @@ from math import floor
 from typing import Collection, Iterable, List, Sequence, Tuple, Union
 
 import numpy as np
+
 from .cvfdutil import get_disv_gridprops
 
 
