@@ -3,7 +3,12 @@ from itertools import product
 import numpy as np
 import pytest
 
-from flopy.utils.gridutil import get_disu_kwargs, get_lni, uniform_flow_field
+from flopy.utils.gridutil import (
+    get_disu_kwargs,
+    get_disv_kwargs,
+    get_lni,
+    uniform_flow_field,
+)
 
 
 @pytest.mark.parametrize(
@@ -100,6 +105,43 @@ def test_get_disu_kwargs(nlay, nrow, ncol, delr, delc, tp, botm):
     # print(kwargs["ihc"])
     # print(kwargs["ja"])
     # print(kwargs["nja"])
+
+
+@pytest.mark.parametrize(
+    "nlay, nrow, ncol, delr, delc, tp, botm",
+    [
+        (
+            1,
+            61,
+            61,
+            np.array(61 * [50.0]),
+            np.array(61 * [50.0]),
+            -10.0,
+            -50.0,
+        ),
+        (
+            2,
+            61,
+            61,
+            np.array(61 * [50.0]),
+            np.array(61 * [50.0]),
+            -10.0,
+            [-30.0, -50.0],
+        ),
+    ],
+)
+def test_get_disv_kwargs(nlay, nrow, ncol, delr, delc, tp, botm):
+    kwargs = get_disv_kwargs(
+        nlay=nlay, nrow=nrow, ncol=ncol, delr=delr, delc=delc, tp=tp, botm=botm
+    )
+
+    assert kwargs["nlay"] == nlay
+    assert kwargs["ncpl"] == nrow * ncol
+    assert kwargs["nvert"] == (nrow + 1) * (ncol + 1)
+
+    # TODO: test other properties
+    # print(kwargs["vertices"])
+    # print(kwargs["cell2d"])
 
 
 @pytest.mark.parametrize(

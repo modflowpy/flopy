@@ -6,6 +6,8 @@ from typing import Collection, Iterable, List, Sequence, Tuple, Union
 
 import numpy as np
 
+from .cvfdutil import get_disv_gridprops
+
 
 def get_lni(ncpl, nodes) -> List[Tuple[int, int]]:
     """
@@ -68,7 +70,8 @@ def get_disu_kwargs(
     botm,
 ):
     """
-    Create args needed to construct a DISU package.
+    Create args needed to construct a DISU package for a regular
+    MODFLOW grid.
 
     Parameters
     ----------
@@ -85,7 +88,7 @@ def get_disu_kwargs(
     tp : int or numpy.ndarray
         Top elevation(s) of cells in the model's top layer
     botm : numpy.ndarray
-        Bottom elevation(s) of all cells in the model
+        Bottom elevation(s) for each layer
     """
 
     def get_nn(k, i, j):
@@ -178,6 +181,114 @@ def get_disu_kwargs(
     kw["ihc"] = ihc
     kw["cl12"] = cl12
     kw["hwva"] = hwva
+    return kw
+
+
+def get_disv_kwargs(
+    nlay,
+    nrow,
+    ncol,
+    delr,
+    delc,
+    tp,
+    botm,
+    xoff=0.0,
+    yoff=0.0,
+):
+    """
+    Create args needed to construct a DISV package.
+
+    Parameters
+    ----------
+    nlay : int
+        Number of layers
+    nrow : int
+        Number of rows
+    ncol : int
+        Number of columns
+    delr : float or numpy.ndarray
+        Column spacing along a row with shape (ncol)
+    delc : float or numpy.ndarray
+        Row spacing along a column with shape (nrow)
+    tp : float or numpy.ndarray
+        Top elevation(s) of cells in the model's top layer with shape (nrow, ncol)
+    botm : list of floats or numpy.ndarray
+        Bottom elevation(s) of all cells in the model with shape (nlay, nrow, ncol)
+    xoff : float
+        Value to add to all x coordinates.  Optional (default = 0.)
+    yoff : float
+        Value to add to all y coordinates.  Optional (default = 0.)
+    """
+
+    # validate input
+    ncpl = nrow * ncol
+
+    # delr check
+    if np.isscalar(delr):
+        delr = delr * np.ones(ncol, dtype=float)
+    else:
+        assert delr.shape == (ncol,), "delr must be array with shape (ncol,)"
+
+    # delc check
+    if np.isscalar(delc):
+        delc = delc * np.ones(nrow, dtype=float)
+    else:
+        assert delc.shape == (nrow,), "delc must be array with shape (nrow,)"
+
+    # tp check
+    if np.isscalar(tp):
+        tp = tp * np.ones((nrow, ncol), dtype=float)
+    else:
+        assert tp.shape == (
+            nrow,
+            ncol,
+        ), "tp must be scalar or array with shape (nrow, ncol)"
+
+    # botm check
+    if np.isscalar(botm):
+        botm = botm * np.ones((nlay, nrow, ncol), dtype=float)
+    elif isinstance(botm, List):
+        assert (
+            len(botm) == nlay
+        ), "if botm provided as a list it must have length nlay"
+        b = np.empty((nlay, nrow, ncol), dtype=float)
+        for k in range(nlay):
+            b[k] = botm[k]
+        botm = b
+    else:
+        assert botm.shape == (
+            nlay,
+            nrow,
+            ncol,
+        ), "botm must be array with shape (nlay, nrow, ncol)"
+
+    # build vertices
+    xv = np.cumsum(delr)
+    xv = np.array([0] + list(xv))
+    ymax = delc.sum()
+    yv = np.cumsum(delc)
+    yv = ymax - np.array([0] + list(yv))
+    xmg, ymg = np.meshgrid(xv, yv)
+    verts = np.array(list(zip(xmg.flatten(), ymg.flatten())))
+    verts[:, 0] += xoff
+    verts[:, 1] += yoff
+
+    # build iverts (list of vertices for each cell)
+    iverts = []
+    for i in range(nrow):
+        for j in range(ncol):
+            # number vertices in clockwise order
+            iv0 = j + i * (ncol + 1)  # upper left vertex
+            iv1 = iv0 + 1  # upper right vertex
+            iv3 = iv0 + ncol + 1  # lower left vertex
+            iv2 = iv3 + 1  # lower right vertex
+            iverts.append([iv0, iv1, iv2, iv3])
+    kw = get_disv_gridprops(verts, iverts)
+
+    # reshape and add top and bottom
+    kw["top"] = tp.reshape(ncpl)
+    kw["botm"] = botm.reshape(nlay, ncpl)
+    kw["nlay"] = nlay
     return kw
 
 
