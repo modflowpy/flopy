@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Union
 
 import numpy as np
+from packaging.version import Version
 
 from ..datbase import DataInterface, DataListInterface, DataType
 from ..mbase import BaseModel, ModelInterface
@@ -1726,12 +1727,12 @@ def export_contours(
     # (possibly disconnected) components. Before
     # 3.8, iterating over ContourSet.collections
     # and enumerating from get_paths() suffices,
-    # but post-3.8 we have to walk the segmments
+    # but post-3.8, we have to walk the segments
     # to distinguish disconnected components.
-    mpl_ver = version("matplotlib")
+    mpl_ver = Version(version("matplotlib"))
 
     for ctr in contours:
-        if mpl_ver < "3.8.0":
+        if mpl_ver < Version("3.8.0"):
             levels = ctr.levels
             for i, c in enumerate(ctr.collections):
                 paths = c.get_paths()
@@ -1831,12 +1832,12 @@ def export_contourf(
     # (possibly disconnected) components. Before
     # 3.8, iterating over ContourSet.collections
     # and enumerating from get_paths() suffices,
-    # but post-3.8 we have to walk the segmments
+    # but post-3.8, we have to walk the segments
     # to distinguish disconnected components.
-    mpl_ver = version("matplotlib")
+    mpl_ver = Version(version("matplotlib"))
 
     for ctr in contours:
-        if mpl_ver < "3.8.0":
+        if mpl_ver < Version("3.8.0"):
             levels = ctr.levels
             for idx, col in enumerate(ctr.collections):
                 for contour_path in col.get_paths():
