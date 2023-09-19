@@ -737,7 +737,6 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
             path=path,
             dimensions=dimensions,
         )
-        self._transient_setup(self._data_storage)
         self.repeating = True
 
     @property

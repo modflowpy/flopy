@@ -1,5 +1,6 @@
 # --------------------- gwf uzf options ---------------------
 # flopy multi-package
+# package-type advanced-stress-package
 
 block options
 name auxiliary

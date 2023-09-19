@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on June 29, 2023 14:20:38 UTC
+# FILE created on August 29, 2023 20:06:54 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -141,10 +141,7 @@ class ModflowGwfwel(mfpackage.MFPackage):
     dfn_file_name = "gwf-wel.dfn"
 
     dfn = [
-        [
-            "header",
-            "multi-package",
-        ],
+        ["header", "multi-package", "package-type stress-package"],
         [
             "block options",
             "name auxiliary",

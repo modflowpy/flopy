@@ -257,6 +257,7 @@ class MFSimulationData:
         self.verbosity_level = VerbosityLevel.normal
         self.max_columns_user_set = False
         self.max_columns_auto_set = False
+        self.use_pandas = True
 
         self._update_str_format()
 
@@ -430,6 +431,8 @@ class MFSimulationBase(PackageContainer):
         and only writes external data if the data has changed.  This option
         automatically overrides the verify_data and auto_set_sizes, turning
         both off.
+    use_pandas: bool
+        Load/save data using pandas dataframes (for supported data)
     Examples
     --------
     >>> s = MFSimulationBase.load('my simulation', 'simulation.nam')
@@ -455,12 +458,14 @@ class MFSimulationBase(PackageContainer):
         memory_print_option=None,
         write_headers=True,
         lazy_io=False,
+        use_pandas=True,
     ):
         super().__init__(MFSimulationData(sim_ws, self), sim_name)
         self.simulation_data.verbosity_level = self._resolve_verbosity_level(
             verbosity_level
         )
         self.simulation_data.write_headers = write_headers
+        self.simulation_data.use_pandas = use_pandas
         if lazy_io:
             self.simulation_data.lazy_io = True
 
@@ -686,6 +691,7 @@ class MFSimulationBase(PackageContainer):
         verify_data=False,
         write_headers=True,
         lazy_io=False,
+        use_pandas=True,
     ):
         """
         Load an existing model. Do not call this method directly.  Should only
@@ -729,6 +735,9 @@ class MFSimulationBase(PackageContainer):
             and only writes external data if the data has changed.  This option
             automatically overrides the verify_data and auto_set_sizes, turning
             both off.
+        use_pandas: bool
+            Load/save data using pandas dataframes (for supported data)
+
         Returns
         -------
         sim : MFSimulation object
@@ -746,6 +755,7 @@ class MFSimulationBase(PackageContainer):
             sim_ws,
             verbosity_level,
             write_headers=write_headers,
+            use_pandas=use_pandas,
         )
         verbosity_level = instance.simulation_data.verbosity_level
 

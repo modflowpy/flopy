@@ -6,15 +6,25 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.5
+#       jupytext_version: 1.14.4
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
+#   language_info:
+#     codemirror_mode:
+#       name: ipython
+#       version: 3
+#     file_extension: .py
+#     mimetype: text/x-python
+#     name: python
+#     nbconvert_exporter: python
+#     pygments_lexer: ipython3
+#     version: 3.9.12
 #   metadata:
-#     section: modpath
 #     authors:
-#       - name: Wes Bonelli
+#     - name: Wes Bonelli
+#     section: modpath
 # ---
 
 # # Using MODPATH 7 with structured grids (transient example)
@@ -228,7 +238,7 @@ dd = [
     [drain[0], drain[1], i + drain[2][0], 322.5, 100000.0, 6]
     for i in range(drain[2][1] - drain[2][0])
 ]
-drn = flopy.mf6.modflow.mfgwfdrn.ModflowGwfdrn(gwf, stress_period_data={0: dd})
+drn = flopy.mf6.modflow.mfgwfdrn.ModflowGwfdrn(gwf, auxiliary=["IFACE"], stress_period_data={0: dd})
 
 # output control
 headfile = f"{sim_name}.hds"
@@ -400,3 +410,5 @@ try:
     temp_dir.cleanup()
 except:
     pass
+
+
