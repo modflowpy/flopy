@@ -1,8 +1,10 @@
 import os
+from itertools import repeat
 from pathlib import Path
-from typing import Optional, Union
+from typing import Union
 
 import numpy as np
+from packaging.version import Version
 
 from ..datbase import DataInterface, DataListInterface, DataType
 from ..mbase import BaseModel, ModelInterface
@@ -1680,6 +1682,7 @@ def export_contours(
     filename: Union[str, os.PathLike],
     contours,
     fieldname="level",
+    verbose=False,
     **kwargs,
 ):
     """
@@ -1693,6 +1696,8 @@ def export_contours(
         (object returned by matplotlib.pyplot.contour)
     fieldname : str
         gis attribute table field name
+    verbose : bool, optional, default False
+        whether to show verbose output
     **kwargs : key-word arguments to flopy.export.shapefile_utils.recarray2shp
 
     Returns
@@ -1700,26 +1705,76 @@ def export_contours(
     df : dataframe of shapefile contents
 
     """
+    from importlib.metadata import version
+
+    from matplotlib.path import Path
+
     from ..utils.geometry import LineString
     from .shapefile_utils import recarray2shp
 
     if not isinstance(contours, list):
         contours = [contours]
 
+    # Export a linestring for each contour component.
+    # Levels may have multiple disconnected components.
     geoms = []
     level = []
-    for ctr in contours:
-        levels = ctr.levels
-        for i, c in enumerate(ctr.collections):
-            paths = c.get_paths()
-            geoms += [LineString(p.vertices) for p in paths]
-            level += list(np.ones(len(paths)) * levels[i])
 
-    # convert the dictionary to a recarray
+    # ContourSet.collections was deprecated with
+    # matplotlib 3.8. ContourSet is a collection
+    # of Paths, where each Path corresponds to a
+    # contour level, and may contain one or more
+    # (possibly disconnected) components. Before
+    # 3.8, iterating over ContourSet.collections
+    # and enumerating from get_paths() suffices,
+    # but post-3.8, we have to walk the segments
+    # to distinguish disconnected components.
+    mpl_ver = Version(version("matplotlib"))
+
+    for ctr in contours:
+        if mpl_ver < Version("3.8.0"):
+            levels = ctr.levels
+            for i, c in enumerate(ctr.collections):
+                paths = c.get_paths()
+                geoms += [LineString(p.vertices) for p in paths]
+                level += list(np.ones(len(paths)) * levels[i])
+        else:
+            paths = ctr.get_paths()
+            for pi, path in enumerate(paths):
+                # skip empty paths
+                if path.vertices.shape[0] == 0:
+                    continue
+
+                # Each Path may contain multiple components
+                # so we unpack them as separate geometries.
+                lines = []
+                segs = []
+                for seg in path.iter_segments():
+                    pts, code = seg
+                    if code == Path.MOVETO:
+                        if len(segs) > 0:
+                            lines.append(LineString(segs))
+                            segs = []
+                        segs.append(pts)
+                    elif code == Path.LINETO:
+                        segs.append(pts)
+                    elif code == Path.CLOSEPOLY:
+                        segs.append(pts)
+                        segs.append(segs[0])  # add closing segment
+                        lines.append(LineString(segs))
+                        segs = []
+                if len(segs) > 0:
+                    lines.append(LineString(segs))
+
+                level += list(np.ones(len(lines)) * ctr.levels[pi])
+                geoms += lines
+
+    if verbose:
+        print(f"Writing {len(level)} contour lines")
+
     ra = np.array(level, dtype=[(fieldname, float)]).view(np.recarray)
 
     recarray2shp(ra, geoms, filename, **kwargs)
-    return
 
 
 def export_contourf(
@@ -1756,57 +1811,99 @@ def export_contourf(
     >>> export_contourf('myfilledcontours.shp', cs)
 
     """
+    from importlib.metadata import version
+
+    from matplotlib.path import Path
+
     from ..utils.geometry import Polygon, is_clockwise
     from .shapefile_utils import recarray2shp
-
-    geoms = []
-    level = []
 
     if not isinstance(contours, list):
         contours = [contours]
 
-    for c in contours:
-        levels = c.levels
-        for idx, col in enumerate(c.collections):
-            # Loop through all polygons that have the same intensity level
-            for contour_path in col.get_paths():
-                # Create the polygon(s) for this intensity level
-                poly = None
-                for ncp, cp in enumerate(contour_path.to_polygons()):
-                    x = cp[:, 0]
-                    y = cp[:, 1]
-                    verts = [(i[0], i[1]) for i in zip(x, y)]
-                    new_shape = Polygon(verts)
+    # export a polygon for each filled contour
+    geoms = []
+    level = []
 
-                    if ncp == 0:
-                        poly = new_shape
-                    else:
-                        # check if this is a multipolygon by checking vertex
-                        # order.
-                        if is_clockwise(verts):
-                            # Clockwise is a hole, set to interiors
-                            if not poly.interiors:
-                                poly.interiors = [new_shape.exterior]
-                            else:
-                                poly.interiors.append(new_shape.exterior)
-                        else:
-                            geoms.append(poly)
-                            level.append(levels[idx])
+    # ContourSet.collections was deprecated with
+    # matplotlib 3.8. ContourSet is a collection
+    # of Paths, where each Path corresponds to a
+    # contour level, and may contain one or more
+    # (possibly disconnected) components. Before
+    # 3.8, iterating over ContourSet.collections
+    # and enumerating from get_paths() suffices,
+    # but post-3.8, we have to walk the segments
+    # to distinguish disconnected components.
+    mpl_ver = Version(version("matplotlib"))
+
+    for ctr in contours:
+        if mpl_ver < Version("3.8.0"):
+            levels = ctr.levels
+            for idx, col in enumerate(ctr.collections):
+                for contour_path in col.get_paths():
+                    # Create the polygon(s) for this intensity level
+                    poly = None
+                    for ncp, cp in enumerate(contour_path.to_polygons()):
+                        x = cp[:, 0]
+                        y = cp[:, 1]
+                        verts = [(i[0], i[1]) for i in zip(x, y)]
+                        new_shape = Polygon(verts)
+
+                        if ncp == 0:
                             poly = new_shape
+                        else:
+                            # check if this is a multipolygon by checking vertex
+                            # order.
+                            if is_clockwise(verts):
+                                # Clockwise is a hole, set to interiors
+                                if not poly.interiors:
+                                    poly.interiors = [new_shape.exterior]
+                                else:
+                                    poly.interiors.append(new_shape.exterior)
+                            else:
+                                geoms.append(poly)
+                                level.append(levels[idx])
+                                poly = new_shape
 
-                if poly is not None:
-                    # store geometry object
-                    geoms.append(poly)
+                    if poly is not None:
+                        # store geometry object
+                        geoms.append(poly)
                     level.append(levels[idx])
+        else:
+            paths = ctr.get_paths()
+            for pi, path in enumerate(paths):
+                # skip empty paths
+                if path.vertices.shape[0] == 0:
+                    continue
+
+                polys = []
+                segs = []
+                for seg in path.iter_segments():
+                    pts, code = seg
+                    if code == Path.MOVETO:
+                        if len(segs) > 0:
+                            polys.append(Polygon(segs))
+                            segs = []
+                        segs.append(pts)
+                    elif code == Path.LINETO:
+                        segs.append(pts)
+                    elif code == Path.CLOSEPOLY:
+                        segs.append(pts)
+                        segs.append(segs[0])  # add closing segment
+                        polys.append(Polygon(segs))
+                        segs = []
+                if len(segs) > 0:
+                    polys.append(Polygon(segs))
+
+                geoms.extend(polys)
+                level.extend(repeat(ctr.levels[pi], len(polys)))
 
     if verbose:
         print(f"Writing {len(level)} polygons")
 
-    # Create recarray
     ra = np.array(level, dtype=[(fieldname, float)]).view(np.recarray)
 
     recarray2shp(ra, geoms, filename, **kwargs)
-    return
 
 
 def export_array_contours(
