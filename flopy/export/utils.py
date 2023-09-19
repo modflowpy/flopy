@@ -1875,29 +1875,13 @@ def export_contourf(
                 if path.vertices.shape[0] == 0:
                     continue
 
-                poly = None
                 polys = []
-
-                def append_poly(segs):
-                    # TODO: handle holes?
-                    # check if this is a multipolygon by checking vertex
-                    # order.
-                    # if is_clockwise(segs):
-                    #     # Clockwise is a hole, set to interiors
-                    #     if not poly.interiors:
-                    #         poly.interiors = [segs]
-                    #     else:
-                    #         poly.interiors.append(segs)
-                    # else:
-                    poly = Polygon(segs)
-                    polys.append(poly)
-
                 segs = []
                 for seg in path.iter_segments():
                     pts, code = seg
                     if code == Path.MOVETO:
                         if len(segs) > 0:
-                            append_poly(segs)
+                            polys.append(Polygon(segs))
                             segs = []
                         segs.append(pts)
                     elif code == Path.LINETO:
@@ -1905,10 +1889,10 @@ def export_contourf(
                     elif code == Path.CLOSEPOLY:
                         segs.append(pts)
                         segs.append(segs[0])  # add closing segment
-                        append_poly(segs)
+                        polys.append(Polygon(segs))
                         segs = []
                 if len(segs) > 0:
-                    append_poly(segs)
+                    polys.append(Polygon(segs))
 
                 geoms.extend(polys)
                 level.extend(repeat(ctr.levels[pi], len(polys)))
