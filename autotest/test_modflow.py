@@ -7,8 +7,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 from autotest.conftest import get_example_data_path
-from modflow_devtools.misc import has_pkg
 from modflow_devtools.markers import excludes_platform, requires_exe
+from modflow_devtools.misc import has_pkg
 
 from flopy.discretization import StructuredGrid
 from flopy.mf6 import MFSimulation
@@ -268,10 +268,10 @@ def test_exe_selection(example_data_path, function_tmpdir):
 
     # no selection defaults to mf2005
     exe_name = "mf2005"
-    assert Path(Modflow().exe_name).name == exe_name
-    assert Path(Modflow(exe_name=None).exe_name).name == exe_name
+    assert Path(Modflow().exe_name).stem == exe_name
+    assert Path(Modflow(exe_name=None).exe_name).stem == exe_name
     assert (
-        Path(Modflow.load(namfile_path, model_ws=model_path).exe_name).name
+        Path(Modflow.load(namfile_path, model_ws=model_path).exe_name).stem
         == exe_name
     )
     assert (
@@ -279,20 +279,20 @@ def test_exe_selection(example_data_path, function_tmpdir):
             Modflow.load(
                 namfile_path, exe_name=None, model_ws=model_path
             ).exe_name
-        ).name
+        ).stem
         == exe_name
     )
 
     # user-specified (just for testing - there is no legitimate reason
     # to use mp7 with Modflow but Modpath7 derives from BaseModel too)
     exe_name = "mp7"
-    assert Path(Modflow(exe_name=exe_name).exe_name).name == exe_name
+    assert Path(Modflow(exe_name=exe_name).exe_name).stem == exe_name
     assert (
         Path(
             Modflow.load(
                 namfile_path, exe_name=exe_name, model_ws=model_path
             ).exe_name
-        ).name
+        ).stem
         == exe_name
     )
 

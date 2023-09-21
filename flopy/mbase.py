@@ -26,8 +26,10 @@ from .discretization.grid import Grid
 from .utils import flopy_io
 from .version import __version__
 
+on_windows = sys.platform.startswith("win")
+
 # Prepend flopy appdir bin directory to PATH to work with "get-modflow :flopy"
-if sys.platform.startswith("win"):
+if on_windows:
     flopy_bin = os.path.expandvars(r"%LOCALAPPDATA%\flopy\bin")
 else:
     flopy_bin = os.path.join(os.path.expanduser("~"), ".local/share/flopy/bin")
@@ -62,25 +64,34 @@ def resolve_exe(
         str: absolute path to the executable
     """
 
-    exe_name = str(exe_name)
-    exe = which(exe_name)
-    if exe is not None:
-        # in case which() returned a relative path, resolve it
-        exe = which(str(Path(exe).resolve()))
-    else:
-        if exe_name.lower().endswith(".exe"):
-            # try removing .exe suffix
-            exe = which(exe_name[:-4])
+    def _resolve(exe_name):
+        exe = which(exe_name)
         if exe is not None:
-            # in case which() returned a relative path, resolve it
+            # if which() returned a relative path, resolve it
             exe = which(str(Path(exe).resolve()))
         else:
-            # try tilde-expanded abspath
-            exe = which(Path(exe_name).expanduser().absolute())
-        if exe is None and exe_name.lower().endswith(".exe"):
-            # try tilde-expanded abspath without .exe suffix
-            exe = which(Path(exe_name[:-4]).expanduser().absolute())
-    if exe is None:
+            if exe_name.lower().endswith(".exe"):
+                # try removing .exe suffix
+                exe = which(exe_name[:-4])
+            if exe is not None:
+                # in case which() returned a relative path, resolve it
+                exe = which(str(Path(exe).resolve()))
+            else:
+                # try tilde-expanded abspath
+                exe = which(Path(exe_name).expanduser().absolute())
+            if exe is None and exe_name.lower().endswith(".exe"):
+                # try tilde-expanded abspath without .exe suffix
+                exe = which(Path(exe_name[:-4]).expanduser().absolute())
+        return exe
+
+    name = str(exe_name)
+    exe_path = _resolve(name)
+    if exe_path is None and on_windows and Path(name).suffix == "":
+        # try adding .exe suffix on windows (for portability from other OS)
+        exe_path = _resolve(f"{name}.exe")
+
+    # raise if we are unforgiving, otherwise return None
+    if exe_path is None:
         if forgive:
             warn(
                 f"The program {exe_name} does not exist or is not executable."
@@ -90,7 +101,8 @@ def resolve_exe(
         raise FileNotFoundError(
             f"The program {exe_name} does not exist or is not executable."
         )
-    return exe
+
+    return exe_path
 
 
 # external exceptions for users
