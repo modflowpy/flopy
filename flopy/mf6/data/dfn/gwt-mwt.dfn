@@ -259,21 +259,21 @@ description REPLACE obs6_filename {'{#1}': 'MWT'}
 
 block packagedata
 name packagedata
-type recarray mawno strt aux boundname
+type recarray ifno strt aux boundname
 shape (maxbound)
 reader urword
 longname
 description
 
 block packagedata
-name mawno
+name ifno
 type integer
 shape
 tagged false
 in_record true
 reader urword
 longname well number for this entry
-description integer value that defines the well number associated with the specified PACKAGEDATA data on the line. MAWNO must be greater than zero and less than or equal to NMAWWELLS. Well information must be specified for every well or the program will terminate with an error.  The program will also terminate with an error if information for a well is specified more than once.
+description integer value that defines the feature (well) number associated with the specified PACKAGEDATA data on the line. IFNO must be greater than zero and less than or equal to NMAWWELLS. Well information must be specified for every well or the program will terminate with an error.  The program will also terminate with an error if information for a well is specified more than once.
 numeric_index true
 
 block packagedata
@@ -327,21 +327,21 @@ description REPLACE iper {}
 
 block period
 name mwtperioddata
-type recarray mawno mwtsetting
+type recarray ifno mwtsetting
 shape
 reader urword
 longname
 description
 
 block period
-name mawno
+name ifno
 type integer
 shape
 tagged false
 in_record true
 reader urword
 longname well number for this entry
-description integer value that defines the well number associated with the specified PERIOD data on the line. MAWNO must be greater than zero and less than or equal to NMAWWELLS.
+description integer value that defines the feature (well) number associated with the specified PERIOD data on the line. IFNO must be greater than zero and less than or equal to NMAWWELLS.
 numeric_index true
 
 block period
