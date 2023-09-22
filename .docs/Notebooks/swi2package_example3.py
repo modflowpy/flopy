@@ -58,7 +58,7 @@ print(f"flopy version: {flopy.__version__}")
 
 # Modify default matplotlib settings
 updates = {
-    "font.family": ["Univers 57 Condensed", "Arial"],
+    "font.family": ["Arial"],
     "mathtext.default": "regular",
     "pdf.compression": 0,
     "pdf.fonttype": 42,
@@ -184,8 +184,6 @@ ml.write_input()
 # Run the model.
 
 success, buff = ml.run_model(silent=True, report=True)
-for line in buff:
-    print(line)
 assert success, "Failed to run."
 
 # Load results.
@@ -354,10 +352,6 @@ ax.set_ylim(-50, -9)
 ax.set_xlabel("Horizontal distance, in meters")
 ax.set_ylabel("Elevation, in meters")
 ax.set_xlim(-250.0, 2500.0)
-
-outfig = os.path.join(workspace, f"Figure08_swi2ex3.png")
-fig.savefig(outfig, dpi=300)
-print("created...", outfig)
 # -
 
 # Clean up the temporary workspace.

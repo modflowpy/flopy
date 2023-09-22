@@ -55,7 +55,7 @@ print(f"flopy version: {flopy.__version__}")
 
 # Modify default matplotlib settings.
 updates = {
-    "font.family": ["Univers 57 Condensed", "Arial"],
+    "font.family": ["Arial"],
     "mathtext.default": "regular",
     "pdf.compression": 0,
     "pdf.fonttype": 42,
@@ -153,8 +153,6 @@ pcg = flopy.modflow.ModflowPcg(ml)
 
 ml.write_input()
 success, buff = ml.run_model(silent=True, report=True)
-for line in buff:
-    print(line)
 assert success, "Failed to run."
 
 # Load results from the stratified model.
@@ -207,8 +205,6 @@ pcg = flopy.modflow.ModflowPcg(ml)
 
 ml.write_input()
 success, buff = ml.run_model(silent=True, report=True)
-for line in buff:
-    print(line)
 assert success, "Failed to run."
 
 # Load VD model results.
@@ -357,8 +353,6 @@ vdf = flopy.seawat.SeawatVdf(
 
 m.write_input()
 success, buff = m.run_model(silent=True, report=True)
-for line in buff:
-    print(line)
 assert success, "Failed to run."
 
 # Load SEAWAT model results.
@@ -495,10 +489,6 @@ ax.set_ylim(-40, 0)
 ax.set_yticks(np.arange(-40, 1, 10))
 ax.set_xlabel("Horizontal distance, in meters")
 ax.set_ylabel("Elevation, in meters")
-
-outfig = os.path.join(workspace, f"Figure07_swi2ex2.png")
-xsf.savefig(outfig, dpi=300)
-print("created...", outfig)
 # -
 
 # Clean up the temporary workspace.

@@ -61,7 +61,7 @@ print(f"flopy version: {flopy.__version__}")
 
 # Modify default matplotlib settings.
 updates = {
-    "font.family": ["Univers 57 Condensed", "Arial"],
+    "font.family": ["Arial"],
     "mathtext.default": "regular",
     "pdf.compression": 0,
     "pdf.fonttype": 42,
@@ -257,8 +257,6 @@ pcg = flopy.modflow.ModflowPcg(
 
 ml.write_input()
 success, buff = ml.run_model(silent=True, report=True)
-for line in buff:
-    print(line)
 assert success, "Failed to run."
 
 # Load model results.
@@ -441,8 +439,6 @@ m.write_input()
 # Run the SEAWAT model.
 
 success, buff = m.run_model(silent=True, report=True)
-for line in buff:
-    print(line)
 assert success, "Failed to run."
 
 # Load SEAWAT model results.
@@ -483,6 +479,7 @@ X, Z = np.meshgrid(x, swt_tb)
 
 # Plot results.
 
+# +
 fwid, fhgt = 6.5, 6.5
 flft, frgt, fbot, ftop = 0.125, 0.95, 0.125, 0.925
 
@@ -654,9 +651,8 @@ for itime in range(0, nswi_times):
         size="8",
     )
 
-outfig = os.path.join(workspace, f"Figure11_swi2ex5.png")
-xsf.savefig(outfig, dpi=300)
-print("created...", outfig)
+plt.show()
+# -
 
 # Clean up the temporary workspace.
 
