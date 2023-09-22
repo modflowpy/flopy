@@ -182,6 +182,16 @@ class ModflowSfr2(Package):
         Numpy record array of length equal to nss, with columns for each
         variable entered in items 6a, 6b and 6c (see SFR package input
         instructions). Segment numbers are one-based.
+    channel_geometry_data : dict of dicts containing lists
+        Optional. Outer dictionary keyed by stress period (0-based); inner
+        dictionaries keyed by segment number (1-based), for which 8-point channel
+        cross section geometries are desired. Inner dict values are lists of shape
+        (2,8) - with the first dimension referring to two lists: one of 8 XCPT
+        values, and the other of 8 ZCPT values.
+        Example structure: {kper: {segment: [[xcpt1...xcpt8],[zcpt1...zcpt8]]}}.
+        Note that for these to be applied, the user must also specify an icalc
+        value of 2 for each corresponding segment in segment_data for the
+        relevant stress periods.
     dataset_5 : dict of lists
         Optional; will be built automatically from segment_data unless
         specified. Dict of lists, with key for each stress period. Each list
