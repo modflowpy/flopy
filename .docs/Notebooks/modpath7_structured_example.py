@@ -31,9 +31,15 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
-import flopy
+# run installed version of flopy or add local path
+try:
+    import flopy
+except:
+    fpth = os.path.abspath(os.path.join("..", ".."))
+    sys.path.append(fpth)
+    import flopy
 
-print(sys.version)
+    print(sys.version)
 print(f"numpy version: {np.__version__}")
 print(f"matplotlib version: {mpl.__version__}")
 print(f"flopy version: {flopy.__version__}")
@@ -159,9 +165,9 @@ flopy.modflow.ModflowPcg(m, hclose=1e-6, rclose=1e-6)
 
 m.write_input()
 success, buff = m.run_model(silent=True, report=True)
+assert success, "mf2005 model did not run"
 for line in buff:
     print(line)
-assert success, "mf2005 model did not run"
 # -
 
 # #### Create and run MODPATH 7
@@ -195,9 +201,9 @@ mp.write_input()
 
 # run modpath
 success, buff = mp.run_model(silent=True, report=True)
+assert success, "mp7 failed to run"
 for line in buff:
     print(line)
-assert success, "mp7 failed to run"
 # -
 
 # #### Load MODPATH 7 output
@@ -331,9 +337,9 @@ oc = flopy.mf6.modflow.mfgwfoc.ModflowGwfoc(
 sim.write_simulation()
 # Run the simulation
 success, buff = sim.run_simulation(silent=True, report=True)
+assert success, "mf6 model did not run"
 for line in buff:
     print(line)
-assert success, "mf6 model did not run"
 # -
 
 # #### Create and run MODPATH 7
@@ -367,9 +373,9 @@ mp.write_input()
 
 # run modpath
 success, buff = mp.run_model(silent=True, report=True)
+assert success, "mp7 failed to run"
 for line in buff:
     print(line)
-assert success, "mp7 failed to run"
 # -
 
 # #### Load MODPATH 7 output

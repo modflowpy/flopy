@@ -210,8 +210,6 @@ sim.write_simulation()
 # This would be done by specifying exe_name with the full path.
 
 success, buff = sim.run_simulation()
-for line in buff:
-    print(line)
 assert success, "MODFLOW 6 did not terminate normally."
 
 # ## Post-Process Head Results

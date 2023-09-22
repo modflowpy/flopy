@@ -23,13 +23,26 @@ import sys
 from tempfile import TemporaryDirectory
 
 import numpy as np
-import pandas as pd
 
-import flopy
+try:
+    import pandas as pd
+except:
+    pass
+
+# run installed version of flopy or add local path
+try:
+    import flopy
+except:
+    fpth = os.path.abspath(os.path.join("..", ".."))
+    sys.path.append(fpth)
+    import flopy
 
 print(sys.version)
 print(f"numpy version: {np.__version__}")
-print(f"pandas version: {pd.__version__}")
+try:
+    print(f"pandas version: {pd.__version__}")
+except:
+    pass
 print(f"flopy version: {flopy.__version__}")
 # -
 

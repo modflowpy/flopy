@@ -28,7 +28,12 @@ import os
 import sys
 from tempfile import TemporaryDirectory
 
-import flopy
+try:
+    import flopy
+except:
+    fpth = os.path.abspath(os.path.join("..", ".."))
+    sys.path.append(fpth)
+    import flopy
 
 from flopy.utils import OptionBlock
 

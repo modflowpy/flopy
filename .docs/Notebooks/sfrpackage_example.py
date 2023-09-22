@@ -197,9 +197,11 @@ m.external_fnames
 m.write_input()
 
 success, buff = m.run_model(silent=True, report=True)
-for line in buff:
-    print(line)
-assert success, "Failed to run."
+if success:
+    for line in buff:
+        print(line)
+else:
+    raise ValueError("Failed to run.")
 
 # ### Load SFR formated water balance output into pandas dataframe using the `SfrFile` class
 

@@ -37,7 +37,9 @@ from flopy.utils.lgrutil import Lgr
 # temporary directory
 temp_dir = TemporaryDirectory()
 workspace = os.path.join(temp_dir.name, "mf6lgr")
-os.makedirs(workspace, exist_ok=True)
+# make sure workspace directory exists
+if not os.path.isdir(workspace):
+    os.makedirs(workspace, exist_ok=True)
 
 print(sys.version)
 print(f"numpy version: {np.__version__}")
@@ -275,9 +277,11 @@ oc = flopy.mf6.ModflowGwfoc(
 
 sim.write_simulation()
 success, buff = sim.run_simulation(silent=True, report=True)
-for line in buff:
-    print(line)
-assert success, "Failed to run."
+if success:
+    for line in buff:
+        print(line)
+else:
+    raise ValueError("Failed to run.")
 
 # +
 # load and store the head arrays from the parent and child models

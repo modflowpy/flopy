@@ -36,7 +36,13 @@ import numpy as np
 sys.path.append(os.path.join("..", "common"))
 import notebook_utils
 
-import flopy
+# run installed version of flopy or add local path
+try:
+    import flopy
+except:
+    fpth = os.path.abspath(os.path.join("..", ".."))
+    sys.path.append(fpth)
+    import flopy
 
 print(sys.version)
 print(f"numpy version: {np.__version__}")
@@ -68,9 +74,11 @@ ml = flopy.modflow.Modflow.load(
 ml.change_model_ws(new_pth=str(modelpth))
 ml.write_input()
 success, buff = ml.run_model(silent=True, report=True)
-for line in buff:
-    print(line)
-assert success, "Model failed to run"
+if success:
+    for line in buff:
+        print(line)
+else:
+    raise ValueError("Something bad happened.")
 
 files = ["freyberg.hds", "freyberg.cbc"]
 for f in files:
@@ -422,9 +430,11 @@ sim = flopy.mf6.MFSimulation.load(
 sim.set_sim_path(modelpth)
 sim.write_simulation()
 success, buff = sim.run_simulation(silent=True, report=True)
-for line in buff:
-    print(line)
-assert success, "Model failed to run."
+if success:
+    for line in buff:
+        print(line)
+else:
+    raise ValueError("Something bad happened.")
 files = ["freyberg.hds", "freyberg.cbc"]
 for f in files:
     if os.path.isfile(os.path.join(str(modelpth), f)):

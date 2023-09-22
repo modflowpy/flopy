@@ -31,7 +31,13 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
-import flopy
+# run installed version of flopy or add local path
+try:
+    import flopy
+except:
+    fpth = os.path.abspath(os.path.join("..", ".."))
+    sys.path.append(fpth)
+    import flopy
 
 print(sys.version)
 print(f"numpy version: {np.__version__}")
@@ -159,9 +165,9 @@ oc = flopy.mf6.modflow.mfgwfoc.ModflowGwfoc(
 sim.write_simulation()
 # Run the simulation
 success, buff = sim.run_simulation(silent=True, report=True)
+assert success, "mf6 model did not run"
 for line in buff:
     print(line)
-assert success, "mf6 model did not run"
 # -
 
 # Get locations to extract data
@@ -195,9 +201,9 @@ mp.write_input()
 
 # run modpath
 succes, buff = mp.run_model(silent=True, report=True)
+assert success, "mp7 forward tracking failed to run"
 for line in buff:
     print(line)
-assert success, "mp7 forward tracking failed to run"
 # -
 
 # Backward tracking from well and river locations
@@ -224,9 +230,9 @@ mp.write_input()
 
 # run modpath
 success, buff = mp.run_model(silent=True, report=True)
+assert success, "mp7 backward tracking failed to run"
 for line in buff:
     print(line)
-assert success, "mp7 backward tracking failed to run"
 # -
 
 # #### Load and Plot MODPATH 7 output

@@ -39,7 +39,13 @@ from tempfile import TemporaryDirectory
 
 import numpy as np
 
-import flopy
+# run installed version of flopy or add local path
+try:
+    import flopy
+except:
+    fpth = os.path.abspath(os.path.join("..", ".."))
+    sys.path.append(fpth)
+    import flopy
 
 # temporary directory
 temp_dir = TemporaryDirectory()

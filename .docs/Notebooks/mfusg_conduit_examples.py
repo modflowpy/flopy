@@ -73,9 +73,11 @@ mf.model_ws = model_ws
 
 mf.write_input()
 success, buff = mf.run_model(silent=True, report=True)
-for line in buff:
-    print(line)
-assert success, "Failed to run."
+if success:
+    for line in buff:
+        print(line)
+else:
+    raise ValueError("Failed to run.")
 
 head_file = os.path.join(mf.model_ws, "ex3.clnhds")
 headobj = flopy.utils.HeadFile(head_file)
@@ -265,9 +267,11 @@ wel.cln_stress_period_data.data
 
 mf.write_input()
 success, buff = mf.run_model(silent=True, report=True)
-for line in buff:
-    print(line)
-assert success, "Failed to run."
+if success:
+    for line in buff:
+        print(line)
+else:
+    raise ValueError("Failed to run.")
 
 # +
 head_file = os.path.join(mf.model_ws, f"{modelname}.clnhd")
@@ -360,9 +364,11 @@ wel = flopy.mfusg.MfUsgWel(
 
 mf.write_input()
 success, buff = mf.run_model(silent=True, report=True)
-for line in buff:
-    print(line)
-assert success, "Failed to run."
+if success:
+    for line in buff:
+        print(line)
+else:
+    raise ValueError("Failed to run.")
 
 # +
 head_file = os.path.join(mf.model_ws, f"{modelname}.clnhd")
@@ -454,9 +460,11 @@ wel = flopy.mfusg.MfUsgWel(
 
 mf.write_input()
 success, buff = mf.run_model(silent=True, report=True)
-for line in buff:
-    print(line)
-assert success, "Failed to run."
+if success:
+    for line in buff:
+        print(line)
+else:
+    raise ValueError("Failed to run.")
 
 # +
 head_file = os.path.join(mf.model_ws, f"{modelname}.clnhd")
@@ -547,9 +555,11 @@ wel = flopy.mfusg.MfUsgWel(
 
 mf.write_input()
 success, buff = mf.run_model(silent=True, report=True)
-for line in buff:
-    print(line)
-assert success, "Failed to run."
+if success:
+    for line in buff:
+        print(line)
+else:
+    raise ValueError("Failed to run.")
 
 # +
 head_file = os.path.join(mf.model_ws, f"{modelname}.clnhd")

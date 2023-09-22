@@ -45,7 +45,12 @@ import numpy as np
 
 proj_root = Path.cwd().parent.parent
 
-import flopy
+# run installed version of flopy or add local path
+try:
+    import flopy
+except:
+    sys.path.append(proj_root)
+    import flopy
 
 print(sys.version)
 print(f"numpy version: {np.__version__}")
@@ -286,9 +291,9 @@ plt.show()
 
 sim.write_simulation()
 success, buff = sim.run_simulation(silent=True, report=True)
+assert success, "Failed to run simulation."
 for line in buff:
     print(line)
-assert success, "Failed to run simulation."
 
 # Create and run MODPATH 7 particle tracking model in `combined` mode, which includes both pathline and timeseries.
 
@@ -317,9 +322,9 @@ mpsim = flopy.modpath.Modpath7Sim(
 
 mp.write_input()
 success, buff = mp.run_model(silent=True, report=True)
+assert success
 for line in buff:
     print(line)
-assert success
 # -
 
 # ## Inspecting results

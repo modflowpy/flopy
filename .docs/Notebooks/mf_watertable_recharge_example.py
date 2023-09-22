@@ -175,9 +175,9 @@ except:
     pass
 # run existing model
 success, buff = mf.run_model(silent=True, report=True)
+assert success, "Failed to run"
 for line in buff:
     print(line)
-assert success, "Failed to run"
 # -
 
 # Read the simulation's results.

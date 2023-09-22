@@ -45,15 +45,15 @@ print(f"matplotlib version: {mpl.__version__}")
 print(f"flopy version: {flopy.__version__}")
 # -
 
-# Define model name and the location of the MODFLOW executable. All MODFLOW files and output will be stored in the temporary workspace. Create a model named `ml` and specify that this is a MODFLOW-2005 model.
+# Define model name of your model and the location of MODFLOW executable. All MODFLOW files and output will be stored in the subdirectory defined by the workspace. Create a model named `ml` and specify that this is a MODFLOW-2005 model.
 
 # +
 modelname = "swiex1"
 
-# Set name of MODFLOW exe (assumed available on the path).
+# Set name of MODFLOW exe
+#  assumes executable is in users path statement
 exe_name = "mf2005"
 
-# Create a temporary workspace.
 temp_dir = TemporaryDirectory()
 workspace = temp_dir.name
 
@@ -138,9 +138,11 @@ swi = flopy.modflow.ModflowSwi2(
 
 ml.write_input()
 success, buff = ml.run_model(silent=True, report=True)
-for line in buff:
-    print(line)
-assert success, "Failed to run."
+if success:
+    for line in buff:
+        print(line)
+else:
+    raise ValueError("Failed to run.")
 
 # Load the head and zeta data from the file
 

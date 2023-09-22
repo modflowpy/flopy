@@ -23,7 +23,12 @@
 import os
 import sys
 
-import flopy
+try:
+    import flopy
+except:
+    fpth = os.path.abspath(os.path.join("..", ".."))
+    sys.path.append(fpth)
+    import flopy
 
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -54,9 +59,7 @@ workspace = Path(temp_dir.name)
 
 sim.set_sim_path(workspace)
 sim.write_simulation()
-success, buff = sim.run_simulation(silent=True, report=True)
-for line in buff:
-    print(line)
+success, buff = sim.run_simulation(silent=True)
 assert success
 
 # Visualize the head results and boundary conditions from this model.
@@ -121,9 +124,7 @@ new_sim = mfsplit.split_model(array)
 # now to write and run the simulation
 new_sim.set_sim_path(workspace / "split_model")
 new_sim.write_simulation()
-success, buff = new_sim.run_simulation(silent=True, report=True)
-for line in buff:
-    print(line)
+success, buff = new_sim.run_simulation(silent=True)
 assert success
 
 # ### Visualize and reassemble model output

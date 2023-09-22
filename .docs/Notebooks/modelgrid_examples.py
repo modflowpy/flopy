@@ -852,9 +852,11 @@ pmv.plot_bc(package=wel)
 sim.set_sim_path(gridgen_ws)
 sim.write_simulation()
 success, buff = sim.run_simulation(silent=True, report=True)
-for line in buff:
-    print(line)
-assert success, "Failed to run."
+if success:
+    for line in buff:
+        print(line)
+else:
+    raise ValueError("Failed to run.")
 
 # load the binary head file from the model
 ml = sim.freyberg

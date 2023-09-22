@@ -38,7 +38,13 @@ import shapefile
 sys.path.append(os.path.join("..", "common"))
 import notebook_utils
 
-import flopy
+# run installed version of flopy or add local path
+try:
+    import flopy
+except:
+    fpth = os.path.abspath(os.path.join("..", ".."))
+    sys.path.append(fpth)
+    import flopy
 
 print(sys.version)
 print(f"numpy version: {np.__version__}")
@@ -71,9 +77,11 @@ ml = flopy.modflow.Modflow.load(
 ml.change_model_ws(new_pth=modelpth)
 ml.write_input()
 success, buff = ml.run_model(silent=True, report=True)
-for line in buff:
-    print(line)
-assert success, "Failed to run."
+if success:
+    for line in buff:
+        print(line)
+else:
+    raise ValueError("Failed to run.")
 
 files = ["freyberg.hds", "freyberg.cbc"]
 for f in files:
@@ -104,9 +112,11 @@ mpbas = flopy.modpath.Modpath6Bas(
 sim = mp.create_mpsim(trackdir="forward", simtype="endpoint", packages="RCH")
 mp.write_input()
 success, buff = mp.run_model(silent=True, report=True)
-for line in buff:
-    print(line)
-assert success, "Failed to run."
+if success:
+    for line in buff:
+        print(line)
+else:
+    raise ValueError("Failed to run.")
 
 mpp = flopy.modpath.Modpath6(
     "freybergmpp", exe_name=exe_mp, modflowmodel=ml, model_ws=modelpth

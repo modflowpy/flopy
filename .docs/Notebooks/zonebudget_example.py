@@ -32,7 +32,15 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import flopy
+
+proj_root = Path.cwd().parent.parent
+
+# run installed version of flopy or add local path
+try:
+    import flopy
+except:
+    sys.path.append(proj_root)
+    import flopy
 
 print(sys.version)
 print(f"numpy version: {np.__version__}")
@@ -46,7 +54,6 @@ temp_dir = TemporaryDirectory()
 workspace = Path(temp_dir.name)
 
 # Set path to example datafiles
-proj_root = Path.cwd().parent.parent
 loadpth = proj_root / "examples" / "data" / "zonbud_examples"
 cbc_f = loadpth / "freyberg.gitcbc"
 # -
@@ -351,9 +358,9 @@ sim = flopy.mf6.MFSimulation.load(sim_ws=sim_ws, exe_name=mf6_exe)
 sim.simulation_data.mfpath.set_sim_path(cpth)
 sim.write_simulation()
 success, buff = sim.run_simulation(silent=True, report=True)
+assert success, "Failed to run"
 for line in buff:
     print(line)
-assert success, "Failed to run"
 # -
 
 # ### Use the the `.output` model attribute to create a zonebudget model
@@ -375,9 +382,6 @@ zonbud = ml.output.zonebudget(zones)
 zonbud.change_model_ws(cpth)
 zonbud.write_input()
 success, buff = zonbud.run_model(exe_name=zb6_exe, silent=True)
-for line in buff:
-    print(line)
-assert success
 
 # ### Getting the zonebudget output
 #

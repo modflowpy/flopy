@@ -64,9 +64,11 @@ ml = flopy.modflow.Modflow.load(
 ml.model_ws = modelpth
 ml.write_input()
 success, buff = ml.run_model(silent=True, report=True)
-for line in buff:
-    print(line)
-assert success, "Failed to run."
+if success:
+    for line in buff:
+        print(line)
+else:
+    raise ValueError("Failed to run.")
 
 files = ["freyberg.hds", "freyberg.cbc"]
 for f in files:
@@ -107,9 +109,11 @@ print(ml.dis.botm[0].format)
 
 ml.write_input()
 success, buff = ml.run_model(silent=True, report=True)
-for line in buff:
-    print(line)
-assert success, "Failed to run."
+if success:
+    for line in buff:
+        print(line)
+else:
+    raise ValueError("Failed to run.")
 
 # + [markdown] pycharm={"name": "#%% md\n"}
 # Let's load the model we just wrote and check that the desired ```botm[0].format``` was used:
@@ -136,9 +140,11 @@ print(ml1.dis.botm[0].format)
 
 ml.write_input()
 success, buff = ml.run_model(silent=True, report=True)
-for line in buff:
-    print(line)
-assert success, "Failed to run."
+if success:
+    for line in buff:
+        print(line)
+else:
+    raise ValueError("Failed to run.")
 
 # + pycharm={"name": "#%%\n"}
 ml1 = flopy.modflow.Modflow.load("freyberg.nam", model_ws=modelpth)

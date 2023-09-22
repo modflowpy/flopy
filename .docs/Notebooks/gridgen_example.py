@@ -33,7 +33,13 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
-import flopy
+# run installed version of flopy or add local path
+try:
+    import flopy
+except:
+    fpth = os.path.abspath(os.path.join("..", ".."))
+    sys.path.append(fpth)
+    import flopy
 
 from flopy.utils import flopy_io
 from flopy.utils.gridgen import Gridgen
@@ -437,9 +443,11 @@ sms = flopy.mfusg.MfUsgSms(m)
 oc = flopy.modflow.ModflowOc(m)
 m.write_input()
 success, buff = m.run_model(silent=True, report=True)
-for line in buff:
-    print(line)
-assert success, "Failed to run."
+if success:
+    for line in buff:
+        print(line)
+else:
+    raise ValueError("Failed to run.")
 
 # head is returned as a list of head arrays for each layer
 head_file = os.path.join(ws, f"{name}.hds")

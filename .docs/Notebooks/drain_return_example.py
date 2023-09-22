@@ -71,9 +71,11 @@ d = flopy.modflow.ModflowDrt(m, stress_period_data={0: spd})
 # run the drt model
 m.write_input()
 success, buff = m.run_model(silent=True, report=True)
-for line in buff:
-    print(line)
-assert success, "Failed to run."
+if success:
+    for line in buff:
+        print(line)
+else:
+    raise ValueError("Failed to run.")
 
 # plot heads for the drt model
 hds = flopy.utils.HeadFile(os.path.join(m.model_ws, f"{m.name}.hds"))
@@ -89,9 +91,11 @@ d = flopy.modflow.ModflowDrn(m, stress_period_data={0: spd})
 # run the drain model
 m.write_input()
 success, buff = m.run_model(silent=True, report=True)
-for line in buff:
-    print(line)
-assert success, "Failed to run."
+if success:
+    for line in buff:
+        print(line)
+else:
+    raise ValueError("Failed to run.")
 
 # plot the heads for the model with the drain
 hds = flopy.utils.HeadFile(os.path.join(m.model_ws, f"{m.name}.hds"))
