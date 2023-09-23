@@ -1,4 +1,4 @@
-Examples Gallery
+Examples gallery
 ================
 
 The following examples illustrate the functionality of Flopy. After the `tutorials <https://flopy.readthedocs.io/en/latest/tutorials.html>`_, the examples are the best resource for learning the underlying capabilities of FloPy.
@@ -85,7 +85,10 @@ MODFLOW-2005/MODFLOW-NWT examples
    Notebooks/modflow_postprocessing_example
    Notebooks/sfrpackage_example
    Notebooks/swi2package_example1
+   Notebooks/swi2package_example2
+   Notebooks/swi2package_example3
    Notebooks/swi2package_example4
+   Notebooks/swi2package_example5
    Notebooks/uzf_example
 
 
