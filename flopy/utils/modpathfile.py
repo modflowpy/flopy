@@ -13,10 +13,9 @@ from pathlib import Path
 from typing import Union
 
 import numpy as np
-from numpy.lib.recfunctions import append_fields, stack_arrays
+from numpy.lib.recfunctions import append_fields, repack_fields, stack_arrays
 
 from ..utils.flopy_io import loadtxt
-from ..utils.recarray_utils import ra_slice
 
 
 class _ModpathSeries:
@@ -1161,7 +1160,7 @@ class EndpointFile:
             else:
                 keys = ["k", "i", "j"]
             try:
-                raslice = ra_slice(ra, keys)
+                raslice = repack_fields(ra[keys])
             except (KeyError, ValueError):
                 raise KeyError(
                     "could not extract "
@@ -1174,7 +1173,7 @@ class EndpointFile:
             else:
                 keys = ["node"]
             try:
-                raslice = ra_slice(ra, keys)
+                raslice = repack_fields(ra[keys])
             except (KeyError, ValueError):
                 msg = f"could not extract '{keys[0]}' key from endpoint data"
                 raise KeyError(msg)

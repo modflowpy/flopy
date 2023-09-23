@@ -3,11 +3,11 @@ import shutil
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import pytest
 from autotest.conftest import get_example_data_path
 from autotest.test_mp6_cases import Mp6Cases1, Mp6Cases2
-from modflow_devtools.markers import has_pkg, requires_exe, requires_pkg
+from modflow_devtools.markers import requires_exe, requires_pkg
+from numpy.lib.recfunctions import repack_fields
 from pytest_cases import parametrize_with_cases
 
 import flopy
@@ -19,7 +19,6 @@ from flopy.modpath.mp6sim import Modpath6Sim, StartingLocationsFile
 from flopy.plot import PlotMapView
 from flopy.utils import EndpointFile, PathlineFile, TimeseriesFile
 from flopy.utils.flopy_io import loadtxt
-from flopy.utils.recarray_utils import ra_slice
 
 pytestmark = pytest.mark.mf6
 
@@ -171,7 +170,7 @@ def test_get_destination_data(function_tmpdir, mp6_test_path):
 
     # check that all starting locations are included in the pathline data
     # (pathline data slice not just endpoints)
-    starting_locs = ra_slice(well_epd, ["k0", "i0", "j0"])
+    starting_locs = repack_fields(well_epd[["k0", "i0", "j0"]])
     pathline_locs = np.array(
         np.array(well_pthld)[["k", "i", "j"]].tolist(),
         dtype=starting_locs.dtype,
