@@ -131,7 +131,7 @@ jobs:
       
       - name: Smoke test
         working-directory: autotest
-        run: pytest -v -n=auto --smoke --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
+        run: pytest -v -n=auto --smoke --color=yes --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -226,7 +226,7 @@ jobs:
         if: runner.os != 'Windows'
         working-directory: ./autotest
         run: |
-          pytest -v -m="not example and not regression" -n=auto --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed --dist loadfile
+          pytest -v -m="not example and not regression" -n=auto --color=yes --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed --dist loadfile
           coverage report
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -236,7 +236,7 @@ jobs:
         shell: bash -l {0}
         working-directory: ./autotest
         run: |
-          pytest -v -m="not example and not regression" -n=auto --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed --dist loadfile
+          pytest -v -m="not example and not regression" -n=auto --color=yes --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed --dist loadfile
           coverage report
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
