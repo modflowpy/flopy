@@ -184,8 +184,7 @@ Contents:
 MODFLOW 6 Utility Functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-MODFLOW 6 has several utility functions that can be used to process MODFLOW 6
-results.
+MODFLOW 6 has a number of utilities useful for pre- or postprocessing.
 
 Contents:
 
@@ -199,6 +198,7 @@ Contents:
    ./source/flopy.mf6.utils.postprocessing.rst
    ./source/flopy.mf6.utils.reference.rst
    ./source/flopy.mf6.utils.lakpak_utils.rst
+   ./source/flopy.mf6.utils.model_splitter.rst
 
 
 MODFLOW 6 Data
