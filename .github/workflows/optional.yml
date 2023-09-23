@@ -62,7 +62,7 @@ jobs:
       
       - name: Smoke test (${{ matrix.optdeps }})
         working-directory: autotest
-        run: pytest -v -n=auto --smoke --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
+        run: pytest -v -n=auto --smoke --color=yes --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
