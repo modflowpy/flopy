@@ -57,37 +57,37 @@ OBS_ID1_LUT = {
     "riv": "cellid",
     "wel": "cellid",
     "lak": {
-        "stage": "lakeno",
-        "ext-inflow": "lakeno",
-        "outlet-inflow": "lakeno",
-        "inflow": "lakeno",
-        "from-mvr": "lakeno",
-        "rainfall": "lakeno",
-        "runoff": "lakeno",
-        "lak": "lakeno",
-        "withdrawal": "lakeno",
-        "evaporation": "lakeno",
-        "ext-outflow": "lakeno",
+        "stage": "ifno",
+        "ext-inflow": "ifno",
+        "outlet-inflow": "ifno",
+        "inflow": "ifno",
+        "from-mvr": "ifno",
+        "rainfall": "ifno",
+        "runoff": "ifno",
+        "lak": "ifno",
+        "withdrawal": "ifno",
+        "evaporation": "ifno",
+        "ext-outflow": "ifno",
         "to-mvr": "outletno",
-        "storage": "lakeno",
-        "constant": "lakeno",
+        "storage": "ifno",
+        "constant": "ifno",
         "outlet": "outletno",
-        "volume": "lakeno",
-        "surface-area": "lakeno",
-        "wetted-area": "lakeno",
-        "conductance": "lakeno",
+        "volume": "ifno",
+        "surface-area": "ifno",
+        "wetted-area": "ifno",
+        "conductance": "ifno",
     },
-    "maw": "wellno",
-    "sfr": "rno",
-    "uzf": "iuzno",
+    "maw": "ifno",
+    "sfr": "ifno",
+    "uzf": "ifno",
     # transport
     "gwt": "cellid",
     "cnc": "cellid",
     "src": "cellid",
-    "sft": "rno",
-    "lkt": "lakeno",
+    "sft": "ifno",
+    "lkt": "ifno",
     "mwt": "mawno",
-    "uzt": "uztno",
+    "uzt": "ifno",
 }
 
 OBS_ID2_LUT = {
@@ -107,13 +107,13 @@ OBS_ID2_LUT = {
     "gwt": "cellid",
     "cnc": None,
     "src": None,
-    "sft": "rno",
+    "sft": "ifno",
     "lkt": {
-        "flow-ja-face": "lakeno",
+        "flow-ja-face": "ifno",
         "lkt": None,
     },
     "mwt": None,
-    "uzt": "uztno",
+    "uzt": "ifno",
 }
 
 
@@ -395,7 +395,7 @@ class Mf6Splitter(object):
                     nodes = [i[0] for i in cellids]
 
                 if isinstance(package, modflow.ModflowGwflak):
-                    lakenos = package.connectiondata.array.lakeno + 1
+                    lakenos = package.connectiondata.array.ifno + 1
                     lak_array[nodes] = lakenos
                     laks += [i for i in np.unique(lakenos)]
                 else:
@@ -1338,7 +1338,7 @@ class Mf6Splitter(object):
         -------
             dict
         """
-        obs_map = {"iuzno": {}}
+        obs_map = {"ifno": {}}
         if isinstance(package, modflow.ModflowGwfuzf):
             packagedata = package.packagedata.array
             perioddata = package.perioddata.data
@@ -1358,7 +1358,7 @@ class Mf6Splitter(object):
 
                 if new_recarray is not None:
                     uzf_remap = {
-                        i: ix for ix, i in enumerate(new_recarray.iuzno)
+                        i: ix for ix, i in enumerate(new_recarray.ifno)
                     }
                     if "boundname" in new_recarray.dtype.names:
                         for bname in new_recarray.boundname:
@@ -1369,14 +1369,14 @@ class Mf6Splitter(object):
                     for oid, nid in uzf_remap.items():
                         mvr_remap[oid] = (model.name, nid)
                         self._uzf_remaps[name][oid] = (mkey, nid)
-                        obs_map["iuzno"][oid] = (mkey, nid)
+                        obs_map["ifno"][oid] = (mkey, nid)
 
                     new_cellids = self._new_node_to_cellid(
                         model, new_node, layers, idx
                     )
                     new_recarray["cellid"] = new_cellids
-                    new_recarray["iuzno"] = [
-                        uzf_remap[i] for i in new_recarray["iuzno"]
+                    new_recarray["ifno"] = [
+                        uzf_remap[i] for i in new_recarray["ifno"]
                     ]
                     new_recarray["ivertcon"] = [
                         uzf_remap[i] for i in new_recarray["ivertcon"]
@@ -1388,10 +1388,10 @@ class Mf6Splitter(object):
 
                     spd = {}
                     for per, recarray in perioddata.items():
-                        idx = np.where(np.isin(recarray.iuzno, uzf_nodes))
+                        idx = np.where(np.isin(recarray.ifno, uzf_nodes))
                         new_period = recarray[idx]
-                        new_period["iuzno"] = [
-                            uzf_remap[i] for i in new_period["iuzno"]
+                        new_period["ifno"] = [
+                            uzf_remap[i] for i in new_period["ifno"]
                         ]
                         spd[per] = new_period
 
@@ -1413,14 +1413,14 @@ class Mf6Splitter(object):
             name = package.flow_package_name.array
             uzf_remap = self._uzf_remaps[name]
             mapped_data = self._remap_adv_transport(
-                package, "iuzno", uzf_remap, mapped_data
+                package, "ifno", uzf_remap, mapped_data
             )
 
         for obspak in package.obs._packages:
             mapped_data = self._remap_obs(
                 obspak,
                 mapped_data,
-                obs_map["iuzno"],
+                obs_map["ifno"],
                 pkg_type=package.package_type,
             )
 
@@ -1519,7 +1519,7 @@ class Mf6Splitter(object):
         packagedata = package.packagedata.array
         perioddata = package.perioddata.data
 
-        obs_map = {"lakeno": {}, "outletno": {}}
+        obs_map = {"ifno": {}, "outletno": {}}
         if isinstance(package, modflow.ModflowGwflak):
             connectiondata = package.connectiondata.array
             tables = package.tables.array
@@ -1547,23 +1547,23 @@ class Mf6Splitter(object):
                     new_recarray["cellid"] = new_cellids
 
                     for nlak, lak in enumerate(
-                        sorted(np.unique(new_recarray.lakeno))
+                        sorted(np.unique(new_recarray.ifno))
                     ):
                         lak_remaps[lak] = (mkey, nlak)
                         self._lak_remaps[name][lak] = (mkey, nlak)
-                        obs_map["lakeno"][lak] = (mkey, nlak)
+                        obs_map["ifno"][lak] = (mkey, nlak)
 
-                    new_lak = [lak_remaps[i][-1] for i in new_recarray.lakeno]
-                    new_recarray["lakeno"] = new_lak
+                    new_lak = [lak_remaps[i][-1] for i in new_recarray.ifno]
+                    new_recarray["ifno"] = new_lak
 
                     new_packagedata = self._remap_adv_tag(
-                        mkey, packagedata, "lakeno", lak_remaps
+                        mkey, packagedata, "ifno", lak_remaps
                     )
 
                     new_tables = None
                     if tables is not None:
                         new_tables = self._remap_adv_tag(
-                            mkey, tables, "lakeno", lak_remaps
+                            mkey, tables, "ifno", lak_remaps
                         )
 
                     new_outlets = None
@@ -1613,9 +1613,7 @@ class Mf6Splitter(object):
                         mapped_data[mkey]["tables"] = new_tables
                         mapped_data[mkey]["outlets"] = new_outlets
                         mapped_data[mkey]["perioddata"] = spd
-                        mapped_data[mkey]["nlakes"] = len(
-                            new_packagedata.lakeno
-                        )
+                        mapped_data[mkey]["nlakes"] = len(new_packagedata.ifno)
                         if new_outlets is not None:
                             mapped_data[mkey]["noutlets"] = len(new_outlets)
                         if new_tables is not None:
@@ -1651,7 +1649,7 @@ class Mf6Splitter(object):
         -------
             dict
         """
-        obs_map = {"rno": {}}
+        obs_map = {"ifno": {}}
         if isinstance(package, modflow.ModflowGwfsfr):
             packagedata = package.packagedata.array
             crosssections = package.crosssections.array
@@ -1684,21 +1682,21 @@ class Mf6Splitter(object):
 
                     new_rno = []
                     old_rno = []
-                    for ix, rno in enumerate(new_recarray.rno):
+                    for ix, ifno in enumerate(new_recarray.ifno):
                         new_rno.append(ix)
-                        old_rno.append(rno)
-                        sfr_remaps[rno] = (mkey, ix)
-                        sfr_remaps[-1 * rno] = (mkey, -1 * ix)
-                        self._sfr_remaps[name][rno] = (mkey, ix)
-                        obs_map["rno"][rno] = (mkey, ix)
+                        old_rno.append(ifno)
+                        sfr_remaps[ifno] = (mkey, ix)
+                        sfr_remaps[-1 * ifno] = (mkey, -1 * ix)
+                        self._sfr_remaps[name][ifno] = (mkey, ix)
+                        obs_map["ifno"][ifno] = (mkey, ix)
 
-                    new_recarray["rno"] = new_rno
+                    new_recarray["ifno"] = new_rno
                     obs_map = self._set_boundname_remaps(
-                        new_recarray, obs_map, ["rno"], mkey
+                        new_recarray, obs_map, ["ifno"], mkey
                     )
 
                     # now let's remap connection data and tag external exchanges
-                    idx = np.where(np.isin(connectiondata.rno, old_rno))[0]
+                    idx = np.where(np.isin(connectiondata.ifno, old_rno))[0]
                     new_connectiondata = connectiondata[idx]
                     ncons = []
                     for ix, rec in enumerate(new_connectiondata):
@@ -1720,11 +1718,11 @@ class Mf6Splitter(object):
                                 if rec[item] < 0:
                                     # downstream connection
                                     sfr_mvr_conn.append(
-                                        (rec["rno"], int(abs(rec[item])))
+                                        (rec["ifno"], int(abs(rec[item])))
                                     )
                                 else:
                                     sfr_mvr_conn.append(
-                                        (int(rec[item]), rec["rno"])
+                                        (int(rec[item]), rec["ifno"])
                                     )
                         # sort the new_rec so nan is last
                         ncons.append(len(new_rec) - 1)
@@ -1740,7 +1738,7 @@ class Mf6Splitter(object):
                     new_crosssections = None
                     if crosssections is not None:
                         new_crosssections = self._remap_adv_tag(
-                            mkey, crosssections, "rno", sfr_remaps
+                            mkey, crosssections, "ifno", sfr_remaps
                         )
 
                     new_diversions = None
@@ -1748,40 +1746,42 @@ class Mf6Splitter(object):
                     if diversions is not None:
                         # first check if diversion outlet is outside the model
                         for ix, rec in enumerate(diversions):
-                            rno = rec.rno
+                            ifno = rec.ifno
                             iconr = rec.iconr
                             if (
-                                rno not in sfr_remaps
+                                ifno not in sfr_remaps
                                 and iconr not in sfr_remaps
                             ):
                                 continue
-                            elif rno in sfr_remaps and iconr not in sfr_remaps:
+                            elif (
+                                ifno in sfr_remaps and iconr not in sfr_remaps
+                            ):
                                 div_mover_ix.append(ix)
                             else:
-                                m0 = sfr_remaps[rno][0]
+                                m0 = sfr_remaps[ifno][0]
                                 m1 = sfr_remaps[iconr][0]
                                 if m0 != m1:
                                     div_mover_ix.append(ix)
 
-                        idx = np.where(np.isin(diversions.rno, old_rno))[0]
+                        idx = np.where(np.isin(diversions.ifno, old_rno))[0]
                         idx = np.where(~np.isin(idx, div_mover_ix))[0]
 
                         new_diversions = diversions[idx]
                         new_rno = [
-                            sfr_remaps[i][-1] for i in new_diversions.rno
+                            sfr_remaps[i][-1] for i in new_diversions.ifno
                         ]
                         new_iconr = [
                             sfr_remaps[i][-1] for i in new_diversions.iconr
                         ]
                         new_idv = list(range(len(new_diversions)))
-                        new_diversions["rno"] = new_rno
+                        new_diversions["ifno"] = new_rno
                         new_diversions["iconr"] = new_iconr
                         new_diversions["idv"] = new_idv
 
                         externals = diversions[div_mover_ix]
                         for rec in externals:
                             div_mvr_conn[rec["idv"]] = [
-                                rec["rno"],
+                                rec["ifno"],
                                 rec["iconr"],
                                 rec["cprior"],
                             ]
@@ -1789,7 +1789,7 @@ class Mf6Splitter(object):
                     # now we can do the stress period data
                     spd = {}
                     for kper, recarray in perioddata.items():
-                        idx = np.where(np.isin(recarray.rno, old_rno))[0]
+                        idx = np.where(np.isin(recarray.ifno, old_rno))[0]
                         new_spd = recarray[idx]
                         if diversions is not None:
                             external_divs = np.where(
@@ -1810,8 +1810,8 @@ class Mf6Splitter(object):
                             new_spd = new_spd[idx]
 
                         # now to renamp the rnos...
-                        new_rno = [sfr_remaps[i][-1] for i in new_spd.rno]
-                        new_spd["rno"] = new_rno
+                        new_rno = [sfr_remaps[i][-1] for i in new_spd.ifno]
+                        new_spd["ifno"] = new_rno
                         spd[kper] = new_spd
 
                     mapped_data[mkey]["packagedata"] = new_recarray
@@ -1874,14 +1874,14 @@ class Mf6Splitter(object):
             flow_package_name = package.flow_package_name.array
             sfr_remap = self._sfr_remaps[flow_package_name]
             mapped_data = self._remap_adv_transport(
-                package, "rno", sfr_remap, mapped_data
+                package, "ifno", sfr_remap, mapped_data
             )
 
         for obspak in package.obs._packages:
             mapped_data = self._remap_obs(
                 obspak,
                 mapped_data,
-                obs_map["rno"],
+                obs_map["ifno"],
                 pkg_type=package.package_type,
             )
 
@@ -1901,7 +1901,7 @@ class Mf6Splitter(object):
         -------
             dict
         """
-        obs_map = {"wellno": {}}
+        obs_map = {"ifno": {}}
         if isinstance(package, modflow.ModflowGwfmaw):
             connectiondata = package.connectiondata.array
             packagedata = package.packagedata.array
@@ -1926,39 +1926,36 @@ class Mf6Splitter(object):
 
                     maw_wellnos = []
                     for nmaw, maw in enumerate(
-                        sorted(np.unique(new_connectiondata.wellno))
+                        sorted(np.unique(new_connectiondata.ifno))
                     ):
                         maw_wellnos.append(maw)
                         maw_remaps[maw] = (mkey, nmaw)
                         self._maw_remaps[maw] = (mkey, nmaw)
-                        obs_map["wellno"][maw] = (mkey, nmaw)
+                        obs_map["ifno"][maw] = (mkey, nmaw)
 
                     new_wellno = [
-                        maw_remaps[wl][-1] for wl in new_connectiondata.wellno
+                        maw_remaps[wl][-1] for wl in new_connectiondata.ifno
                     ]
                     new_connectiondata["cellid"] = new_cellids
-                    new_connectiondata["wellno"] = new_wellno
+                    new_connectiondata["ifno"] = new_wellno
 
                     obs_map = self._set_boundname_remaps(
-                        new_connectiondata, obs_map, ["wellno"], mkey
+                        new_connectiondata, obs_map, ["ifno"], mkey
                     )
 
                     new_packagedata = self._remap_adv_tag(
-                        mkey, packagedata, "wellno", maw_remaps
+                        mkey, packagedata, "ifno", maw_remaps
                     )
 
                     spd = {}
                     for per, recarray in perioddata.items():
-                        idx = np.where(np.isin(recarray.wellno, maw_wellnos))[
-                            0
-                        ]
+                        idx = np.where(np.isin(recarray.ifno, maw_wellnos))[0]
                         if len(idx) > 0:
                             new_recarray = recarray[idx]
                             new_wellno = [
-                                maw_remaps[wl][-1]
-                                for wl in new_recarray.wellno
+                                maw_remaps[wl][-1] for wl in new_recarray.ifno
                             ]
-                            new_recarray["wellno"] = new_wellno
+                            new_recarray["ifno"] = new_wellno
                             spd[per] = new_recarray
 
                     mapped_data[mkey]["nmawwells"] = len(new_packagedata)
@@ -1979,7 +1976,7 @@ class Mf6Splitter(object):
             mapped_data = self._remap_obs(
                 obspak,
                 mapped_data,
-                obs_map["wellno"],
+                obs_map["ifno"],
                 pkg_type=package.package_type,
             )
 
@@ -2640,7 +2637,7 @@ class Mf6Splitter(object):
 
     def _remap_adv_tag(self, mkey, recarray, item, mapper):
         """
-        Method to remap advanced package ids such as SFR's rno varaible
+        Method to remap advanced package ids such as SFR's ifno varaible
 
         Parameters
         ----------
