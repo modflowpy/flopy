@@ -1613,9 +1613,7 @@ class Mf6Splitter(object):
                         mapped_data[mkey]["tables"] = new_tables
                         mapped_data[mkey]["outlets"] = new_outlets
                         mapped_data[mkey]["perioddata"] = spd
-                        mapped_data[mkey]["nlakes"] = len(
-                            new_packagedata.ifno
-                        )
+                        mapped_data[mkey]["nlakes"] = len(new_packagedata.ifno)
                         if new_outlets is not None:
                             mapped_data[mkey]["noutlets"] = len(new_outlets)
                         if new_tables is not None:
@@ -1755,7 +1753,9 @@ class Mf6Splitter(object):
                                 and iconr not in sfr_remaps
                             ):
                                 continue
-                            elif ifno in sfr_remaps and iconr not in sfr_remaps:
+                            elif (
+                                ifno in sfr_remaps and iconr not in sfr_remaps
+                            ):
                                 div_mover_ix.append(ix)
                             else:
                                 m0 = sfr_remaps[ifno][0]
@@ -1949,14 +1949,11 @@ class Mf6Splitter(object):
 
                     spd = {}
                     for per, recarray in perioddata.items():
-                        idx = np.where(np.isin(recarray.ifno, maw_wellnos))[
-                            0
-                        ]
+                        idx = np.where(np.isin(recarray.ifno, maw_wellnos))[0]
                         if len(idx) > 0:
                             new_recarray = recarray[idx]
                             new_wellno = [
-                                maw_remaps[wl][-1]
-                                for wl in new_recarray.ifno
+                                maw_remaps[wl][-1] for wl in new_recarray.ifno
                             ]
                             new_recarray["ifno"] = new_wellno
                             spd[per] = new_recarray
