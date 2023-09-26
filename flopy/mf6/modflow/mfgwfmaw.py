@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on June 29, 2023 14:20:38 UTC
+# FILE created on September 26, 2023 15:51:55 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -125,11 +125,11 @@ class ModflowGwfmaw(mfpackage.MFPackage):
     nmawwells : integer
         * nmawwells (integer) integer value specifying the number of multi-
           aquifer wells that will be simulated for all stress periods.
-    packagedata : [wellno, radius, bottom, strt, condeqn, ngwfnodes, aux,
+    packagedata : [ifno, radius, bottom, strt, condeqn, ngwfnodes, aux,
       boundname]
-        * wellno (integer) integer value that defines the well number
-          associated with the specified PACKAGEDATA data on the line. WELLNO
-          must be greater than zero and less than or equal to NMAWWELLS. Multi-
+        * ifno (integer) integer value that defines the feature (well) number
+          associated with the specified PACKAGEDATA data on the line. IFNO must
+          be greater than zero and less than or equal to NMAWWELLS. Multi-
           aquifer well information must be specified for every multi-aquifer
           well or the program will terminate with an error. The program will
           also terminate with an error if information for a multi-aquifer well
@@ -176,8 +176,8 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           error condition occurs, it is suggested that the THEIM or MEAN
           conductance equations be used for these multi-aquifer wells.
         * ngwfnodes (integer) integer value that defines the number of GWF
-          nodes connected to this (WELLNO) multi-aquifer well. NGWFNODES must
-          be greater than zero.
+          nodes connected to this (IFNO) multi-aquifer well. NGWFNODES must be
+          greater than zero.
         * aux (double) represents the values of the auxiliary variables for
           each multi-aquifer well. The values of auxiliary variables must be
           present for each multi-aquifer well. The values must be specified in
@@ -190,10 +190,10 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           an ASCII character variable that can contain as many as 40
           characters. If BOUNDNAME contains spaces in it, then the entire name
           must be enclosed within single quotes.
-    connectiondata : [wellno, icon, cellid, scrn_top, scrn_bot, hk_skin,
+    connectiondata : [ifno, icon, cellid, scrn_top, scrn_bot, hk_skin,
       radius_skin]
-        * wellno (integer) integer value that defines the well number
-          associated with the specified CONNECTIONDATA data on the line. WELLNO
+        * ifno (integer) integer value that defines the feature (well) number
+          associated with the specified CONNECTIONDATA data on the line. IFNO
           must be greater than zero and less than or equal to NMAWWELLS. Multi-
           aquifer well connection information must be specified for every
           multi-aquifer well connection to the GWF model (NGWFNODES) or the
@@ -207,10 +207,10 @@ class ModflowGwfmaw(mfpackage.MFPackage):
         * icon (integer) integer value that defines the GWF connection number
           for this multi-aquifer well connection entry. ICONN must be greater
           than zero and less than or equal to NGWFNODES for multi-aquifer well
-          WELLNO. This argument is an index variable, which means that it
-          should be treated as zero-based when working with FloPy and Python.
-          Flopy will automatically subtract one when loading index variables
-          and add one when writing index variables.
+          IFNO. This argument is an index variable, which means that it should
+          be treated as zero-based when working with FloPy and Python. Flopy
+          will automatically subtract one when loading index variables and add
+          one when writing index variables.
         * cellid ((integer, ...)) is the cell identifier, and depends on the
           type of grid that is used for the simulation. For a structured grid
           that uses the DIS input file, CELLID is the layer, row, and column.
@@ -259,14 +259,14 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           if CONDEQN is SPECIFIED or THIEM. If CONDEQN is SKIN, CUMULATIVE, or
           MEAN, the program will terminate with an error if RADIUS_SKIN is less
           than or equal to the RADIUS for the multi-aquifer well.
-    perioddata : [wellno, mawsetting]
-        * wellno (integer) integer value that defines the well number
-          associated with the specified PERIOD data on the line. WELLNO must be
-          greater than zero and less than or equal to NMAWWELLS. This argument
-          is an index variable, which means that it should be treated as zero-
-          based when working with FloPy and Python. Flopy will automatically
-          subtract one when loading index variables and add one when writing
-          index variables.
+    perioddata : [ifno, mawsetting]
+        * ifno (integer) integer value that defines the well number associated
+          with the specified PERIOD data on the line. IFNO must be greater than
+          zero and less than or equal to NMAWWELLS. This argument is an index
+          variable, which means that it should be treated as zero-based when
+          working with FloPy and Python. Flopy will automatically subtract one
+          when loading index variables and add one when writing index
+          variables.
         * mawsetting (keystring) line of information that is parsed into a
           keyword and values. Keyword values that can be used to start the
           MAWSETTING string include: STATUS, FLOWING_WELL, RATE, WELL_HEAD,
@@ -291,12 +291,12 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                 * rate (double) is the volumetric pumping rate for the multi-
                   aquifer well. A positive value indicates recharge and a
                   negative value indicates discharge (pumping). RATE only
-                  applies to active (IBOUND > 0) multi-aquifer wells. If the
-                  Options block includes a TIMESERIESFILE entry (see the "Time-
-                  Variable Input" section), values can be obtained from a time
-                  series by entering the time-series name in place of a numeric
-                  value. By default, the RATE for each multi-aquifer well is
-                  zero.
+                  applies to active (STATUS is ACTIVE) multi-aquifer wells. If
+                  the Options block includes a TIMESERIESFILE entry (see the
+                  "Time-Variable Input" section), values can be obtained from a
+                  time series by entering the time-series name in place of a
+                  numeric value. By default, the RATE for each multi-aquifer
+                  well is zero.
             well_head : [double]
                 * well_head (double) is the head in the multi-aquifer well.
                   WELL_HEAD is only applied to constant head (STATUS is
@@ -700,14 +700,14 @@ class ModflowGwfmaw(mfpackage.MFPackage):
         [
             "block packagedata",
             "name packagedata",
-            "type recarray wellno radius bottom strt condeqn ngwfnodes aux "
+            "type recarray ifno radius bottom strt condeqn ngwfnodes aux "
             "boundname",
             "shape (nmawwells)",
             "reader urword",
         ],
         [
             "block packagedata",
-            "name wellno",
+            "name ifno",
             "type integer",
             "shape",
             "tagged false",
@@ -784,13 +784,13 @@ class ModflowGwfmaw(mfpackage.MFPackage):
         [
             "block connectiondata",
             "name connectiondata",
-            "type recarray wellno icon cellid scrn_top scrn_bot hk_skin "
+            "type recarray ifno icon cellid scrn_top scrn_bot hk_skin "
             "radius_skin",
             "reader urword",
         ],
         [
             "block connectiondata",
-            "name wellno",
+            "name ifno",
             "type integer",
             "shape",
             "tagged false",
@@ -868,13 +868,13 @@ class ModflowGwfmaw(mfpackage.MFPackage):
         [
             "block period",
             "name perioddata",
-            "type recarray wellno mawsetting",
+            "type recarray ifno mawsetting",
             "shape",
             "reader urword",
         ],
         [
             "block period",
-            "name wellno",
+            "name ifno",
             "type integer",
             "shape",
             "tagged false",

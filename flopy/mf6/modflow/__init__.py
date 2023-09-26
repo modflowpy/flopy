@@ -1,4 +1,5 @@
 from .mfsimulation import MFSimulation  # isort:skip
+from .mfsimulation import MFSimulation
 from .mfems import ModflowEms
 from .mfgnc import ModflowGnc
 from .mfgwf import ModflowGwf

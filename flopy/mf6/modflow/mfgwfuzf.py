@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on June 29, 2023 14:20:38 UTC
+# FILE created on September 26, 2023 15:51:55 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -125,13 +125,13 @@ class ModflowGwfuzf(mfpackage.MFPackage):
           of 40 can be used for NWAVESETS. This value can be increased if more
           waves are required to resolve variations in water content within the
           unsaturated zone.
-    packagedata : [iuzno, cellid, landflag, ivertcon, surfdep, vks, thtr, thts,
+    packagedata : [ifno, cellid, landflag, ivertcon, surfdep, vks, thtr, thts,
       thti, eps, boundname]
-        * iuzno (integer) integer value that defines the UZF cell number
-          associated with the specified PACKAGEDATA data on the line. IUZNO
-          must be greater than zero and less than or equal to NUZFCELLS. UZF
-          information must be specified for every UZF cell or the program will
-          terminate with an error. The program will also terminate with an
+        * ifno (integer) integer value that defines the feature (UZF object)
+          number associated with the specified PACKAGEDATA data on the line.
+          IFNO must be greater than zero and less than or equal to NUZFCELLS.
+          UZF information must be specified for every UZF cell or the program
+          will terminate with an error. The program will also terminate with an
           error if information for a UZF cell is specified more than once. This
           argument is an index variable, which means that it should be treated
           as zero-based when working with FloPy and Python. Flopy will
@@ -185,13 +185,13 @@ class ModflowGwfuzf(mfpackage.MFPackage):
           character variable that can contain as many as 40 characters. If
           BOUNDNAME contains spaces in it, then the entire name must be
           enclosed within single quotes.
-    perioddata : [iuzno, finf, pet, extdp, extwc, ha, hroot, rootact, aux]
-        * iuzno (integer) integer value that defines the UZF cell number
-          associated with the specified PERIOD data on the line. This argument
-          is an index variable, which means that it should be treated as zero-
-          based when working with FloPy and Python. Flopy will automatically
-          subtract one when loading index variables and add one when writing
-          index variables.
+    perioddata : [ifno, finf, pet, extdp, extwc, ha, hroot, rootact, aux]
+        * ifno (integer) integer value that defines the feature (UZF object)
+          number associated with the specified PERIOD data on the line. This
+          argument is an index variable, which means that it should be treated
+          as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
         * finf (string) real or character value that defines the applied
           infiltration rate of the UZF cell (:math:`LT^{-1}`). If the Options
           block includes a TIMESERIESFILE entry (see the "Time-Variable Input"
@@ -632,14 +632,14 @@ class ModflowGwfuzf(mfpackage.MFPackage):
         [
             "block packagedata",
             "name packagedata",
-            "type recarray iuzno cellid landflag ivertcon surfdep vks thtr "
+            "type recarray ifno cellid landflag ivertcon surfdep vks thtr "
             "thts thti eps boundname",
             "shape (nuzfcells)",
             "reader urword",
         ],
         [
             "block packagedata",
-            "name iuzno",
+            "name ifno",
             "type integer",
             "shape",
             "tagged false",
@@ -754,13 +754,13 @@ class ModflowGwfuzf(mfpackage.MFPackage):
         [
             "block period",
             "name perioddata",
-            "type recarray iuzno finf pet extdp extwc ha hroot rootact aux",
+            "type recarray ifno finf pet extdp extwc ha hroot rootact aux",
             "shape",
             "reader urword",
         ],
         [
             "block period",
-            "name iuzno",
+            "name ifno",
             "type integer",
             "shape",
             "tagged false",
