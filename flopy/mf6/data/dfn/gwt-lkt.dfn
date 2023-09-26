@@ -259,21 +259,21 @@ description REPLACE obs6_filename {'{#1}': 'LKT'}
 
 block packagedata
 name packagedata
-type recarray lakeno strt aux boundname
+type recarray ifno strt aux boundname
 shape (maxbound)
 reader urword
 longname
 description
 
 block packagedata
-name lakeno
+name ifno
 type integer
 shape
 tagged false
 in_record true
 reader urword
 longname lake number for this entry
-description integer value that defines the lake number associated with the specified PACKAGEDATA data on the line. LAKENO must be greater than zero and less than or equal to NLAKES. Lake information must be specified for every lake or the program will terminate with an error.  The program will also terminate with an error if information for a lake is specified more than once.
+description integer value that defines the feature (lake) number associated with the specified PACKAGEDATA data on the line. IFNO must be greater than zero and less than or equal to NLAKES. Lake information must be specified for every lake or the program will terminate with an error.  The program will also terminate with an error if information for a lake is specified more than once.
 numeric_index true
 
 block packagedata
@@ -327,21 +327,21 @@ description REPLACE iper {}
 
 block period
 name lakeperioddata
-type recarray lakeno laksetting
+type recarray ifno laksetting
 shape
 reader urword
 longname
 description
 
 block period
-name lakeno
+name ifno
 type integer
 shape
 tagged false
 in_record true
 reader urword
 longname lake number for this entry
-description integer value that defines the lake number associated with the specified PERIOD data on the line. LAKENO must be greater than zero and less than or equal to NLAKES.
+description integer value that defines the feature (lake) number associated with the specified PERIOD data on the line. IFNO must be greater than zero and less than or equal to NLAKES.
 numeric_index true
 
 block period

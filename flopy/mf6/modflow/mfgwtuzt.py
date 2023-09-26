@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on June 29, 2023 14:20:38 UTC
+# FILE created on September 26, 2023 15:51:55 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -88,10 +88,10 @@ class ModflowGwtuzt(mfpackage.MFPackage):
           containing data for the obs package with variable names as keys and
           package data as values. Data just for the observations variable is
           also acceptable. See obs package documentation for more information.
-    packagedata : [uzfno, strt, aux, boundname]
-        * uzfno (integer) integer value that defines the UZF cell number
-          associated with the specified PACKAGEDATA data on the line. UZFNO
-          must be greater than zero and less than or equal to NUZFCELLS.
+    packagedata : [ifno, strt, aux, boundname]
+        * ifno (integer) integer value that defines the feature (UZF object)
+          number associated with the specified PACKAGEDATA data on the line.
+          IFNO must be greater than zero and less than or equal to NUZFCELLS.
           Unsaturated zone flow information must be specified for every UZF
           cell or the program will terminate with an error. The program will
           also terminate with an error if information for a UZF cell is
@@ -113,14 +113,14 @@ class ModflowGwtuzt(mfpackage.MFPackage):
           is an ASCII character variable that can contain as many as 40
           characters. If BOUNDNAME contains spaces in it, then the entire name
           must be enclosed within single quotes.
-    uztperioddata : [uzfno, uztsetting]
-        * uzfno (integer) integer value that defines the UZF cell number
-          associated with the specified PERIOD data on the line. UZFNO must be
-          greater than zero and less than or equal to NUZFCELLS. This argument
-          is an index variable, which means that it should be treated as zero-
-          based when working with FloPy and Python. Flopy will automatically
-          subtract one when loading index variables and add one when writing
-          index variables.
+    uztperioddata : [ifno, uztsetting]
+        * ifno (integer) integer value that defines the feature (UZF object)
+          number associated with the specified PERIOD data on the line. IFNO
+          must be greater than zero and less than or equal to NUZFCELLS. This
+          argument is an index variable, which means that it should be treated
+          as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
         * uztsetting (keystring) line of information that is parsed into a
           keyword and values. Keyword values that can be used to start the
           UZTSETTING string include: STATUS, CONCENTRATION, INFILTRATION, UZET,
@@ -453,13 +453,13 @@ class ModflowGwtuzt(mfpackage.MFPackage):
         [
             "block packagedata",
             "name packagedata",
-            "type recarray uzfno strt aux boundname",
+            "type recarray ifno strt aux boundname",
             "shape (maxbound)",
             "reader urword",
         ],
         [
             "block packagedata",
-            "name uzfno",
+            "name ifno",
             "type integer",
             "shape",
             "tagged false",
@@ -512,13 +512,13 @@ class ModflowGwtuzt(mfpackage.MFPackage):
         [
             "block period",
             "name uztperioddata",
-            "type recarray uzfno uztsetting",
+            "type recarray ifno uztsetting",
             "shape",
             "reader urword",
         ],
         [
             "block period",
-            "name uzfno",
+            "name ifno",
             "type integer",
             "shape",
             "tagged false",

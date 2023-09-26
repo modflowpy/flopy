@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on June 29, 2023 14:20:38 UTC
+# FILE created on September 26, 2023 15:51:55 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -128,10 +128,10 @@ class ModflowGwflak(mfpackage.MFPackage):
         * ntables (integer) value specifying the number of lakes tables that
           will be used to define the lake stage, volume relation, and surface
           area. If NTABLES is not specified, a default value of zero is used.
-    packagedata : [lakeno, strt, nlakeconn, aux, boundname]
-        * lakeno (integer) integer value that defines the lake number
-          associated with the specified PACKAGEDATA data on the line. LAKENO
-          must be greater than zero and less than or equal to NLAKES. Lake
+    packagedata : [ifno, strt, nlakeconn, aux, boundname]
+        * ifno (integer) integer value that defines the feature (lake) number
+          associated with the specified PACKAGEDATA data on the line. IFNO must
+          be greater than zero and less than or equal to NLAKES. Lake
           information must be specified for every lake or the program will
           terminate with an error. The program will also terminate with an
           error if information for a lake is specified more than once. This
@@ -142,7 +142,7 @@ class ModflowGwflak(mfpackage.MFPackage):
         * strt (double) real value that defines the starting stage for the
           lake.
         * nlakeconn (integer) integer value that defines the number of GWF
-          cells connected to this (LAKENO) lake. There can only be one vertical
+          cells connected to this (IFNO) lake. There can only be one vertical
           lake connection to each GWF cell. NLAKECONN must be greater than
           zero.
         * aux (double) represents the values of the auxiliary variables for
@@ -157,10 +157,10 @@ class ModflowGwflak(mfpackage.MFPackage):
           character variable that can contain as many as 40 characters. If
           BOUNDNAME contains spaces in it, then the entire name must be
           enclosed within single quotes.
-    connectiondata : [lakeno, iconn, cellid, claktype, bedleak, belev, telev,
+    connectiondata : [ifno, iconn, cellid, claktype, bedleak, belev, telev,
       connlen, connwidth]
-        * lakeno (integer) integer value that defines the lake number
-          associated with the specified CONNECTIONDATA data on the line. LAKENO
+        * ifno (integer) integer value that defines the feature (lake) number
+          associated with the specified CONNECTIONDATA data on the line. IFNO
           must be greater than zero and less than or equal to NLAKES. Lake
           connection information must be specified for every lake connection to
           the GWF model (NLAKECONN) or the program will terminate with an
@@ -172,7 +172,7 @@ class ModflowGwflak(mfpackage.MFPackage):
           and add one when writing index variables.
         * iconn (integer) integer value that defines the GWF connection number
           for this lake connection entry. ICONN must be greater than zero and
-          less than or equal to NLAKECONN for lake LAKENO. This argument is an
+          less than or equal to NLAKECONN for lake IFNO. This argument is an
           index variable, which means that it should be treated as zero-based
           when working with FloPy and Python. Flopy will automatically subtract
           one when loading index variables and add one when writing index
@@ -207,12 +207,15 @@ class ModflowGwflak(mfpackage.MFPackage):
           CELLID in the NPF package. Embedded lakes can only be connected to a
           single cell (NLAKECONN = 1) and there must be a lake table associated
           with each embedded lake.
-        * bedleak (string) character string or real value that defines the bed
+        * bedleak (string) real value or character string that defines the bed
           leakance for the lake-GWF connection. BEDLEAK must be greater than or
-          equal to zero or specified to be NONE. If BEDLEAK is specified to be
-          NONE, the lake-GWF connection conductance is solely a function of
-          aquifer properties in the connected GWF cell and lakebed sediments
-          are assumed to be absent.
+          equal to zero, equal to the DNODATA value (3.0E+30), or specified to
+          be NONE. If DNODATA or NONE is specified for BEDLEAK, the lake-GWF
+          connection conductance is solely a function of aquifer properties in
+          the connected GWF cell and lakebed sediments are assumed to be
+          absent. Warning messages will be issued if NONE is specified.
+          Eventually the ability to specify NONE will be deprecated and cause
+          MODFLOW 6 to terminate with an error.
         * belev (double) real value that defines the bottom elevation for a
           HORIZONTAL lake-GWF connection. Any value can be specified if
           CLAKTYPE is VERTICAL, EMBEDDEDH, or EMBEDDEDV. If CLAKTYPE is
@@ -234,9 +237,9 @@ class ModflowGwflak(mfpackage.MFPackage):
           for a HORIZONTAL lake-GWF connection. CONNWIDTH must be greater than
           zero for a HORIZONTAL lake-GWF connection. Any value can be specified
           if CLAKTYPE is VERTICAL, EMBEDDEDH, or EMBEDDEDV.
-    tables : [lakeno, tab6_filename]
-        * lakeno (integer) integer value that defines the lake number
-          associated with the specified TABLES data on the line. LAKENO must be
+    tables : [ifno, tab6_filename]
+        * ifno (integer) integer value that defines the feature (lake) number
+          associated with the specified TABLES data on the line. IFNO must be
           greater than zero and less than or equal to NLAKES. The program will
           terminate with an error if table information for a lake is specified
           more than once or the number of specified tables is less than
@@ -373,13 +376,13 @@ class ModflowGwflak(mfpackage.MFPackage):
                 * rate (string) real or character value that defines the
                   extraction rate for the lake outflow. A positive value
                   indicates inflow and a negative value indicates outflow from
-                  the lake. RATE only applies to active (IBOUND > 0) lakes. A
-                  specified RATE is only applied if COUTTYPE for the OUTLETNO
-                  is SPECIFIED. If the Options block includes a TIMESERIESFILE
-                  entry (see the "Time-Variable Input" section), values can be
-                  obtained from a time series by entering the time-series name
-                  in place of a numeric value. By default, the RATE for each
-                  SPECIFIED lake outlet is zero.
+                  the lake. RATE only applies to outlets associated with active
+                  lakes (STATUS is ACTIVE). A specified RATE is only applied if
+                  COUTTYPE for the OUTLETNO is SPECIFIED. If the Options block
+                  includes a TIMESERIESFILE entry (see the "Time-Variable
+                  Input" section), values can be obtained from a time series by
+                  entering the time-series name in place of a numeric value. By
+                  default, the RATE for each SPECIFIED lake outlet is zero.
             invert : [string]
                 * invert (string) real or character value that defines the
                   invert elevation for the lake outlet. A specified INVERT
@@ -785,13 +788,13 @@ class ModflowGwflak(mfpackage.MFPackage):
         [
             "block packagedata",
             "name packagedata",
-            "type recarray lakeno strt nlakeconn aux boundname",
+            "type recarray ifno strt nlakeconn aux boundname",
             "shape (maxbound)",
             "reader urword",
         ],
         [
             "block packagedata",
-            "name lakeno",
+            "name ifno",
             "type integer",
             "shape",
             "tagged false",
@@ -841,14 +844,14 @@ class ModflowGwflak(mfpackage.MFPackage):
         [
             "block connectiondata",
             "name connectiondata",
-            "type recarray lakeno iconn cellid claktype bedleak belev telev "
+            "type recarray ifno iconn cellid claktype bedleak belev telev "
             "connlen connwidth",
             "shape (sum(nlakeconn))",
             "reader urword",
         ],
         [
             "block connectiondata",
-            "name lakeno",
+            "name ifno",
             "type integer",
             "shape",
             "tagged false",
@@ -932,13 +935,13 @@ class ModflowGwflak(mfpackage.MFPackage):
         [
             "block tables",
             "name tables",
-            "type recarray lakeno tab6 filein tab6_filename",
+            "type recarray ifno tab6 filein tab6_filename",
             "shape (ntables)",
             "reader urword",
         ],
         [
             "block tables",
-            "name lakeno",
+            "name ifno",
             "type integer",
             "shape",
             "tagged false",

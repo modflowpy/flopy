@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on June 29, 2023 14:20:38 UTC
+# FILE created on September 26, 2023 15:51:55 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -88,17 +88,17 @@ class ModflowGwtsft(mfpackage.MFPackage):
           containing data for the obs package with variable names as keys and
           package data as values. Data just for the observations variable is
           also acceptable. See obs package documentation for more information.
-    packagedata : [rno, strt, aux, boundname]
-        * rno (integer) integer value that defines the reach number associated
-          with the specified PACKAGEDATA data on the line. RNO must be greater
-          than zero and less than or equal to NREACHES. Reach information must
-          be specified for every reach or the program will terminate with an
-          error. The program will also terminate with an error if information
-          for a reach is specified more than once. This argument is an index
-          variable, which means that it should be treated as zero-based when
-          working with FloPy and Python. Flopy will automatically subtract one
-          when loading index variables and add one when writing index
-          variables.
+    packagedata : [ifno, strt, aux, boundname]
+        * ifno (integer) integer value that defines the feature (reach) number
+          associated with the specified PACKAGEDATA data on the line. IFNO must
+          be greater than zero and less than or equal to NREACHES. Reach
+          information must be specified for every reach or the program will
+          terminate with an error. The program will also terminate with an
+          error if information for a reach is specified more than once. This
+          argument is an index variable, which means that it should be treated
+          as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
         * strt (double) real value that defines the starting concentration for
           the reach.
         * aux (double) represents the values of the auxiliary variables for
@@ -113,14 +113,14 @@ class ModflowGwtsft(mfpackage.MFPackage):
           character variable that can contain as many as 40 characters. If
           BOUNDNAME contains spaces in it, then the entire name must be
           enclosed within single quotes.
-    reachperioddata : [rno, reachsetting]
-        * rno (integer) integer value that defines the reach number associated
-          with the specified PERIOD data on the line. RNO must be greater than
-          zero and less than or equal to NREACHES. This argument is an index
-          variable, which means that it should be treated as zero-based when
-          working with FloPy and Python. Flopy will automatically subtract one
-          when loading index variables and add one when writing index
-          variables.
+    reachperioddata : [ifno, reachsetting]
+        * ifno (integer) integer value that defines the feature (reach) number
+          associated with the specified PERIOD data on the line. IFNO must be
+          greater than zero and less than or equal to NREACHES. This argument
+          is an index variable, which means that it should be treated as zero-
+          based when working with FloPy and Python. Flopy will automatically
+          subtract one when loading index variables and add one when writing
+          index variables.
         * reachsetting (keystring) line of information that is parsed into a
           keyword and values. Keyword values that can be used to start the
           REACHSETTING string include: STATUS, CONCENTRATION, RAINFALL,
@@ -467,13 +467,13 @@ class ModflowGwtsft(mfpackage.MFPackage):
         [
             "block packagedata",
             "name packagedata",
-            "type recarray rno strt aux boundname",
+            "type recarray ifno strt aux boundname",
             "shape (maxbound)",
             "reader urword",
         ],
         [
             "block packagedata",
-            "name rno",
+            "name ifno",
             "type integer",
             "shape",
             "tagged false",
@@ -526,13 +526,13 @@ class ModflowGwtsft(mfpackage.MFPackage):
         [
             "block period",
             "name reachperioddata",
-            "type recarray rno reachsetting",
+            "type recarray ifno reachsetting",
             "shape",
             "reader urword",
         ],
         [
             "block period",
-            "name rno",
+            "name ifno",
             "type integer",
             "shape",
             "tagged false",

@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on June 22, 2023 21:13:41 UTC
+# FILE created on September 26, 2023 15:51:55 UTC
 import os
 from typing import Union
 
@@ -34,6 +34,12 @@ class MFSimulation(mfsimbase.MFSimulationBase):
     maxerrors : integer
         * maxerrors (integer) maximum number of errors that will be stored and
           printed.
+    print_input : boolean
+        * print_input (boolean) keyword to activate printing of simulation
+          input summaries to the simulation list file (mfsim.lst). With this
+          keyword, input summaries will be written for those packages that
+          support newer input data model routines. Not all packages are
+          supported yet by the newer input data model routines.
     tdis6 : string
         * tdis6 (string) is the name of the Temporal Discretization (TDIS)
           Input File.
@@ -85,6 +91,7 @@ class MFSimulation(mfsimbase.MFSimulationBase):
         nocheck=None,
         memory_print_option=None,
         maxerrors=None,
+        print_input=None,
     ):
         super().__init__(
             sim_name=sim_name,
@@ -100,11 +107,13 @@ class MFSimulation(mfsimbase.MFSimulationBase):
         self.name_file.nocheck.set_data(nocheck)
         self.name_file.memory_print_option.set_data(memory_print_option)
         self.name_file.maxerrors.set_data(maxerrors)
+        self.name_file.print_input.set_data(print_input)
 
         self.continue_ = self.name_file.continue_
         self.nocheck = self.name_file.nocheck
         self.memory_print_option = self.name_file.memory_print_option
         self.maxerrors = self.name_file.maxerrors
+        self.print_input = self.name_file.print_input
 
     @classmethod
     def load(
