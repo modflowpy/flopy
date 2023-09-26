@@ -1014,6 +1014,7 @@ class CellBudgetFile:
         self.imethlist = []
         self.paknamlist = []
         self.nrecords = 0
+        self.compact = True  # compact budget file flag
 
         self.dis = None
         self.modelgrid = None
@@ -1190,7 +1191,9 @@ class CellBudgetFile:
             header = self._get_header()
             self.nrecords += 1
             totim = header["totim"]
-            if totim == 0:
+            # if old-style (non-compact) file,
+            # compute totim from kstp and kper
+            if not self.compact:
                 totim = self._totim_from_kstpkper(
                     (header["kstp"] - 1, header["kper"] - 1)
                 )
@@ -1343,7 +1346,8 @@ class CellBudgetFile:
         """
         header1 = binaryread(self.file, self.header1_dtype, (1,))
         nlay = header1["nlay"]
-        if nlay < 0:
+        self.compact = bool(nlay < 0)
+        if self.compact:
             # fill header2 by first reading imeth, delt, pertim and totim
             # and then adding modelnames and paknames if imeth = 6
             temp = binaryread(self.file, self.header2_dtype0, (1,))

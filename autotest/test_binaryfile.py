@@ -1,13 +1,14 @@
 import os
+from itertools import repeat
 
 import numpy as np
 import pytest
 from autotest.conftest import get_example_data_path
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
+from modflow_devtools.markers import requires_exe
 
-from flopy.mf6.modflow import MFSimulation
-from flopy.modflow import Modflow
+import flopy
 from flopy.utils import (
     BinaryHeader,
     CellBudgetFile,
@@ -41,7 +42,9 @@ def zonbud_model_path(example_data_path):
 
 def test_binaryfile_writeread(function_tmpdir, nwt_model_path):
     model = "Pr3_MFNWT_lower.nam"
-    ml = Modflow.load(model, version="mfnwt", model_ws=nwt_model_path)
+    ml = flopy.modflow.Modflow.load(
+        model, version="mfnwt", model_ws=nwt_model_path
+    )
     # change the model work space
     ml.change_model_ws(function_tmpdir)
     #
@@ -199,9 +202,6 @@ def test_headufile_get_ts(example_data_path):
         heads.get_ts([i, i + 1, i + 2])
 
 
-# precision
-
-
 def test_get_headfile_precision(example_data_path):
     precision = get_headfile_precision(
         example_data_path / "freyberg" / "freyberg.githds"
@@ -254,9 +254,6 @@ def test_budgetfile_detect_precision_double(path):
     assert file.realtype == np.float64
 
 
-# write
-
-
 def test_write_head(function_tmpdir):
     file_path = function_tmpdir / "headfile"
     head_data = np.random.random((10, 10))
@@ -292,9 +289,6 @@ def test_write_budget(function_tmpdir):
 
     # TODO: why are these the same?
     assert np.array_equal(content1, content2)
-
-
-# read
 
 
 def test_binaryfile_read(function_tmpdir, freyberg_model_path):
@@ -347,13 +341,10 @@ def test_binaryfile_read_context(freyberg_model_path):
     assert str(e.value) == "seek of closed file", str(e.value)
 
 
-# reverse
-
-
 def test_headfile_reverse_mf6(example_data_path, function_tmpdir):
     # load simulation and extract tdis
     sim_name = "test006_gwf3"
-    sim = MFSimulation.load(
+    sim = flopy.mf6.MFSimulation.load(
         sim_name=sim_name, sim_ws=example_data_path / "mf6" / sim_name
     )
     tdis = sim.get_package("tdis")
@@ -403,3 +394,170 @@ def test_headfile_reverse_mf6(example_data_path, function_tmpdir):
                 assert f_datum == rf_datum
         else:
             assert np.array_equal(f_data[0][0], rf_data[0][0])
+
+
+@pytest.fixture
+@pytest.mark.mf6
+@requires_exe("mf6")
+def mf6_gwf_2sp_st_tr(function_tmpdir):
+    """
+    A basic flow model with 2 stress periods,
+    first steady-state, the second transient.
+    """
+
+    name = "mf6_gwf_2sp"
+    sim = flopy.mf6.MFSimulation(
+        sim_name=name,
+        version="mf6",
+        exe_name="mf6",
+        sim_ws=function_tmpdir,
+    )
+
+    tdis = flopy.mf6.ModflowTdis(
+        simulation=sim,
+        nper=2,
+        perioddata=[(0, 1, 1), (10, 10, 1)],
+    )
+
+    ims = flopy.mf6.ModflowIms(
+        simulation=sim,
+        complexity="SIMPLE",
+    )
+
+    gwf = flopy.mf6.ModflowGwf(
+        simulation=sim,
+        modelname=name,
+        save_flows=True,
+    )
+
+    dis = flopy.mf6.ModflowGwfdis(
+        model=gwf, nlay=1, nrow=1, ncol=10, delr=1, delc=10, top=10, botm=0
+    )
+
+    npf = flopy.mf6.ModflowGwfnpf(
+        model=gwf,
+        icelltype=[0],
+        k=10,
+    )
+
+    ic = flopy.mf6.ModflowGwfic(
+        model=gwf,
+        strt=0,
+    )
+
+    wel = flopy.mf6.ModflowGwfwel(
+        model=gwf,
+        stress_period_data={0: 0, 1: [[(0, 0, 0), -1]]},
+    )
+
+    sto = flopy.mf6.ModflowGwfsto(
+        model=gwf,
+        ss=1e-4,
+        steady_state={0: True},
+        transient={1: True},
+    )
+
+    chd = flopy.mf6.ModflowGwfchd(
+        model=gwf,
+        stress_period_data={0: [[(0, 0, 9), 0]]},
+    )
+
+    oc = flopy.mf6.ModflowGwfoc(
+        model=gwf,
+        budget_filerecord=f"{name}.cbc",
+        head_filerecord=f"{name}.hds",
+        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    )
+
+    return sim
+
+
+def test_read_mf6_2sp(mf6_gwf_2sp_st_tr):
+    sim = mf6_gwf_2sp_st_tr
+    gwf = sim.get_model()
+    sim.write_simulation(silent=False)
+    success, _ = sim.run_simulation(silent=False)
+    assert success
+
+    # load heads and flows
+    hds = gwf.output.head()
+    cbb = gwf.output.budget()
+
+    # check times
+    exp_times = [float(t) for t in range(11)]
+    assert hds.get_times() == exp_times
+    assert cbb.get_times() == exp_times
+
+    # check stress periods and time steps
+    exp_kstpkper = [(0, 0)] + [(i, 1) for i in range(10)]
+    assert hds.get_kstpkper() == exp_kstpkper
+    assert cbb.get_kstpkper() == exp_kstpkper
+
+    # check head data access by time
+    exp_hds_data = np.array([[list(repeat(0.0, 10))]])
+    hds_data = hds.get_data(totim=0)
+    assert np.array_equal(hds_data, exp_hds_data)
+
+    # check budget file data by time
+    cbb_data = cbb.get_data(totim=0)
+    assert len(cbb_data) > 0
+
+    # check head data access by kstp and kper
+    hds_data = hds.get_data(kstpkper=(0, 0))
+    assert np.array_equal(hds_data, exp_hds_data)
+
+    # check budget file data by kstp and kper
+    cbb_data_kstpkper = cbb.get_data(kstpkper=(0, 0))
+    assert len(cbb_data) == len(cbb_data_kstpkper)
+    for i in range(len(cbb_data)):
+        assert np.array_equal(cbb_data[i], cbb_data_kstpkper[i])
+
+
+@pytest.mark.parametrize("compact", [True, False])
+def test_read_mf2005_freyberg(example_data_path, function_tmpdir, compact):
+    m = flopy.modflow.Modflow.load(
+        example_data_path / "freyberg" / "freyberg.nam",
+    )
+    m.change_model_ws(function_tmpdir)
+    oc = m.get_package("OC")
+    oc.compact = compact
+
+    m.write_input()
+    success, buff = m.run_model(silent=False)
+    assert success
+
+    # load heads and flows
+    hds_file = function_tmpdir / "freyberg.hds"
+    cbb_file = function_tmpdir / "freyberg.cbc"
+    assert hds_file.is_file()
+    assert cbb_file.is_file()
+    hds = HeadFile(hds_file)
+    cbb = CellBudgetFile(cbb_file, model=m)  # failing to specify a model...
+
+    # check times
+    exp_times = [10.0]
+    assert hds.get_times() == exp_times
+    assert cbb.get_times() == exp_times  # ...causes get_times() to be empty
+
+    # check stress periods and time steps
+    exp_kstpkper = [(0, 0)]
+    assert hds.get_kstpkper() == exp_kstpkper
+    assert cbb.get_kstpkper() == exp_kstpkper
+
+    # check head data access by time
+    hds_data_totim = hds.get_data(totim=exp_times[0])
+    assert hds_data_totim.shape == (1, 40, 20)
+
+    # check budget file data by time
+    cbb_data = cbb.get_data(totim=exp_times[0])
+    assert len(cbb_data) > 0
+
+    # check head data access by kstp and kper
+    hds_data_kstpkper = hds.get_data(kstpkper=(0, 0))
+    assert np.array_equal(hds_data_kstpkper, hds_data_totim)
+
+    # check budget file data by kstp and kper
+    cbb_data_kstpkper = cbb.get_data(kstpkper=(0, 0))
+    assert len(cbb_data) == len(cbb_data_kstpkper)
+    for i in range(len(cbb_data)):
+        assert np.array_equal(cbb_data[i], cbb_data_kstpkper[i])
