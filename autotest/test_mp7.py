@@ -896,8 +896,7 @@ def test_pathline_plotting(function_tmpdir):
 
 
 @requires_exe("mf6", "mp7")
-@pytest.mark.parametrize("verbose", [True, False])
-def test_mp7sim_replacement(function_tmpdir, capfd, verbose):
+def test_mp7sim_replacement(function_tmpdir, capfd):
     mf6sim = Mp7Cases.mf6(function_tmpdir)
     mf6sim.write_simulation()
     mf6sim.run_simulation()
@@ -908,7 +907,6 @@ def test_mp7sim_replacement(function_tmpdir, capfd, verbose):
         flowmodel=mf6sim.get_model(mf6sim.name),
         exe_name="mp7",
         model_ws=mf6sim.sim_path,
-        verbose=verbose,
     )
     defaultiface6 = {"RCH": 6, "EVT": 6}
     mpbas = Modpath7Bas(mp, porosity=0.1, defaultiface=defaultiface6)
@@ -928,27 +926,25 @@ def test_mp7sim_replacement(function_tmpdir, capfd, verbose):
         zones=Mp7Cases.zones,
         particlegroups=Mp7Cases.particlegroups,
     )
-    # add a duplicate mp7sim package
-    mpsim = Modpath7Sim(
-        mp,
-        simulationtype="combined",
-        trackingdirection="forward",
-        weaksinkoption="pass_through",
-        weaksourceoption="pass_through",
-        budgetoutputoption="summary",
-        budgetcellnumbers=[1049, 1259],
-        traceparticledata=[1, 1000],
-        referencetime=[0, 0, 0.0],
-        stoptimeoption="extend",
-        timepointdata=[500, 1000.0],
-        zonedataoption="on",
-        zones=Mp7Cases.zones,
-        particlegroups=Mp7Cases.particlegroups,
-    )
 
-    cap = capfd.readouterr()
-    msg = "Two packages of the same type"
-    assert verbose == (msg in cap.out)
+    # add a duplicate mp7sim package
+    with pytest.warns(UserWarning, match="Two packages of the same type"):
+        mpsim = Modpath7Sim(
+            mp,
+            simulationtype="combined",
+            trackingdirection="forward",
+            weaksinkoption="pass_through",
+            weaksourceoption="pass_through",
+            budgetoutputoption="summary",
+            budgetcellnumbers=[1049, 1259],
+            traceparticledata=[1, 1000],
+            referencetime=[0, 0, 0.0],
+            stoptimeoption="extend",
+            timepointdata=[500, 1000.0],
+            zonedataoption="on",
+            zones=Mp7Cases.zones,
+            particlegroups=Mp7Cases.particlegroups,
+        )
 
     mp.write_input()
     success, buff = mp.run_model()

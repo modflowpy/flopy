@@ -94,7 +94,8 @@ def resolve_exe(
     if exe_path is None:
         if forgive:
             warn(
-                f"The program {exe_name} does not exist or is not executable."
+                f"The program {exe_name} does not exist or is not executable.",
+                category=UserWarning,
             )
             return None
 
@@ -416,7 +417,8 @@ class BaseModel(ModelInterface):
         except:
             warn(
                 f"\n{model_ws} not valid, "
-                f"workspace-folder was changed to {os.getcwd()}\n"
+                f"workspace-folder was changed to {os.getcwd()}\n",
+                category=UserWarning,
             )
             model_ws = os.getcwd()
         self._model_ws = str(model_ws)
@@ -436,7 +438,7 @@ class BaseModel(ModelInterface):
         self._start_datetime = kwargs.pop("start_datetime", "1-1-1970")
 
         if kwargs:
-            warnings.warn(
+            warn(
                 f"unhandled keywords: {kwargs}",
                 category=UserWarning,
             )
@@ -653,20 +655,20 @@ class BaseModel(ModelInterface):
                         pn = p.name[idx]
                     except:
                         pn = p.name
-                    if self.verbose:
-                        print(
-                            f"\nWARNING:\n    unit {u} of package {pn} already in use."
-                        )
+                    warn(
+                        f"Unit {u} of package {pn} already in use.",
+                        category=UserWarning,
+                    )
             self.package_units.append(u)
         for i, pp in enumerate(self.packagelist):
             if pp.allowDuplicates:
                 continue
             elif isinstance(p, type(pp)):
-                if self.verbose:
-                    print(
-                        "\nWARNING:\n    Two packages of the same type, "
-                        f"Replacing existing '{p.name[0]}' package."
-                    )
+                warn(
+                    "Two packages of the same type, "
+                    f"Replacing existing '{p.name[0]}' package.",
+                    category=UserWarning,
+                )
                 self.packagelist[i] = p
                 return
         if self.verbose:
