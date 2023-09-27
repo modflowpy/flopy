@@ -30,6 +30,7 @@ from tempfile import TemporaryDirectory
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy.lib.recfunctions import repack_fields
 
 # run installed version of flopy or add local path
 try:
@@ -211,7 +212,7 @@ for line in buff:
 # Get locations to extract pathline data
 
 nodew = m.dis.get_node([wel_loc])
-riv_locs = flopy.utils.ra_slice(m.riv.stress_period_data[0], ["k", "i", "j"])
+riv_locs = repack_fields(m.riv.stress_period_data[0][["k", "i", "j"]])
 nodesr = m.dis.get_node(riv_locs.tolist())
 
 # Pathline data
