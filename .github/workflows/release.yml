@@ -71,7 +71,7 @@ jobs:
 
       - name: Run tests
         working-directory: autotest
-        run: pytest -v -m="not example and not regression" -n=auto --color=yes --durations=0 --keep-failed=.failed --dist loadfile
+        run: pytest -v -m="not example and not regression" -n=auto --durations=0 --keep-failed=.failed --dist loadfile
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

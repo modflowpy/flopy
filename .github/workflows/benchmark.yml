@@ -69,7 +69,7 @@ jobs:
         working-directory: ./autotest
         run: |
           mkdir -p .benchmarks
-          pytest -v --color=yes --durations=0 --benchmark-only --benchmark-json .benchmarks/${{ matrix.os }}_python${{ matrix.python-version }}.json --keep-failed=.failed
+          pytest -v --durations=0 --benchmark-only --benchmark-json .benchmarks/${{ matrix.os }}_python${{ matrix.python-version }}.json --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -79,7 +79,7 @@ jobs:
         working-directory: ./autotest
         run: |
           mkdir -p .benchmarks
-          pytest -v --color=yes --durations=0 --benchmark-only --benchmark-json .benchmarks/${{ matrix.os }}_python${{ matrix.python-version }}.json --keep-failed=.failed
+          pytest -v --durations=0 --benchmark-only --benchmark-json .benchmarks/${{ matrix.os }}_python${{ matrix.python-version }}.json --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

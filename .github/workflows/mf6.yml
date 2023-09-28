@@ -82,12 +82,12 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ github.token }}
       run: |
-        pytest -v --color=yes --durations=0 get_exes.py
+        pytest -v --durations=0 get_exes.py
 
     - name: Run tests
       working-directory: modflow6/autotest
       run: |
-        pytest -v --color=yes --cov=flopy --cov-report=xml --durations=0 -k "test_gw" -n auto
+        pytest -v --cov=flopy --cov-report=xml --durations=0 -k "test_gw" -n auto
 
     - name: Print coverage report before upload
       working-directory: ./modflow6/autotest

@@ -80,7 +80,7 @@ jobs:
       - name: Run regression tests
         if: runner.os != 'Windows'
         working-directory: ./autotest
-        run: pytest -v -m="regression" -n=auto --color=yes --durations=0 --keep-failed=.failed
+        run: pytest -v -m="regression" -n=auto --durations=0 --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -88,7 +88,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash -l {0}
         working-directory: ./autotest
-        run: pytest -v -m="regression" -n=auto --color=yes --durations=0 --keep-failed=.failed
+        run: pytest -v -m="regression" -n=auto --durations=0 --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
