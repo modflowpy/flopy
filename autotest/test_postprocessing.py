@@ -181,7 +181,7 @@ def test_get_structured_faceflows_freyberg(
         grb_file=mf6_ws / "freyberg.dis.grb",
     )
     assert mf6_frf.shape == mf6_fff.shape == mf6_flf.shape == mf6_head.shape
-    assert not np.any(mf6_flf)
+    assert not np.any(mf6_flf)  # only 1 layer
 
     # run freyberg mf2005
     model = Modflow.load("freyberg", model_ws=mf2005_freyberg_path)
