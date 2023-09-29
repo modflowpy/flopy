@@ -55,7 +55,7 @@ def mf6_freyberg_path(example_data_path):
 @pytest.mark.mf6
 @requires_exe("mf6")
 def test_get_structured_faceflows(function_tmpdir, nlay, nrow, ncol):
-    name = "gsff_1d_2d"
+    name = "gsff"
     sim = flopy.mf6.MFSimulation(
         sim_name=name, exe_name="mf6", version="mf6", sim_ws=function_tmpdir
     )
