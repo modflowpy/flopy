@@ -39,8 +39,11 @@ def get_face(m, n, nlay, nrow, ncol):
             return 2
         elif nlay == 1 and ncol == 1:
             return 1
-        else:
+        elif nlay == 1 and nrow == 1:
             return 0
+        else:
+            # handle 2D layers/rows case
+            return 1 if ncol == 1 else 0
     elif m - n == nrow * ncol:
         return 2
     else:
@@ -110,8 +113,9 @@ def get_structured_faceflows(
             or ncol is None
         ):
             raise ValueError(
-                "ia, ja, nlay, nrow, and ncol must be specified if the MODFLOW 6"
-                "binary grid file name is not specified."
+                "ia, ja, nlay, nrow, and ncol must be"
+                "specified if a MODFLOW 6 binary grid"
+                "file name is not specified."
             )
 
     # flatten flowja, if necessary
