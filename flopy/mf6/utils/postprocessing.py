@@ -3,53 +3,6 @@ import numpy as np
 from .binarygrid_util import MfGrdFile
 
 
-def get_face(m, n, nlay, nrow, ncol):
-    """
-    Determine the connection direction at m, n
-    in the connection or intercell flow matrix
-
-    Notes
-    -----
-    For visual intuition in 2 dimensions
-    https://stackoverflow.com/a/16330162/6514033
-    is helpful
-
-    Parameters
-    ----------
-    m : int
-        row index
-    n : int
-        column index
-    nlay : int
-        number of layers in the grid
-    nrow : int
-        number of rows in the grid
-    ncol : int
-        number of columns in the grid
-
-    Returns
-    -------
-    face : int
-        0: right, 1: front, 2: lower
-    """
-
-    if m - n == 1:
-        # handle 1D cases
-        if nrow == 1 and ncol == 1:
-            return 2
-        elif nlay == 1 and ncol == 1:
-            return 1
-        elif nlay == 1 and nrow == 1:
-            return 0
-        else:
-            # handle 2D layers/rows case
-            return 1 if ncol == 1 else 0
-    elif m - n == nrow * ncol:
-        return 2
-    else:
-        return 1
-
-
 def get_structured_faceflows(
     flowja,
     grb_file=None,
@@ -130,6 +83,53 @@ def get_structured_faceflows(
     frf = np.zeros(shape, dtype=float).flatten()  # right
     fff = np.zeros(shape, dtype=float).flatten()  # front
     flf = np.zeros(shape, dtype=float).flatten()  # lower
+
+    def get_face(m, n, nlay, nrow, ncol):
+        """
+        Determine connection direction at (m, n)
+        in a connection or intercell flow matrix.
+
+        Notes
+        -----
+        For visual intuition in 2 dimensions
+        https://stackoverflow.com/a/16330162/6514033
+        helps. MODFLOW uses the top left scheme in 3D.
+
+        Parameters
+        ----------
+        m : int
+            row index
+        n : int
+            column index
+        nlay : int
+            number of layers in the grid
+        nrow : int
+            number of rows in the grid
+        ncol : int
+            number of columns in the grid
+
+        Returns
+        -------
+        face : int
+            0: right, 1: front, 2: lower
+        """
+
+        d = m - n
+        if d == 1:
+            # handle 1D cases
+            if nrow == 1 and ncol == 1:
+                return 2
+            elif nlay == 1 and ncol == 1:
+                return 1
+            elif nlay == 1 and nrow == 1:
+                return 0
+            else:
+                # handle 2D layers/rows case
+                return 1 if ncol == 1 else 0
+        elif d == nrow * ncol:
+            return 2
+        else:
+            return 1
 
     # fill right, front and lower face flows
     # (below main diagonal)
