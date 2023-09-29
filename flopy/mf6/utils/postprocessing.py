@@ -10,8 +10,9 @@ def get_face(m, n, nlay, nrow, ncol):
 
     Notes
     -----
-    For visual intuition see
+    For visual intuition in 2 dimensions
     https://stackoverflow.com/a/16330162/6514033
+    is helpful
 
     Parameters
     ----------
@@ -31,8 +32,15 @@ def get_face(m, n, nlay, nrow, ncol):
     face : int
         0: right, 1: front, 2: lower
     """
-    if m - 1 == n:
-        return 0
+
+    if m - n == 1:
+        # handle 1D cases
+        if nrow == 1 and ncol == 1:
+            return 2
+        elif nlay == 1 and ncol == 1:
+            return 1
+        else:
+            return 0
     elif m - n == nrow * ncol:
         return 2
     else:
@@ -47,7 +55,7 @@ def get_structured_faceflows(
     nlay=None,
     nrow=None,
     ncol=None,
-    verbose=False
+    verbose=False,
 ):
     """
     Get the face flows for the flow right face, flow front face, and
@@ -94,7 +102,13 @@ def get_structured_faceflows(
         ia, ja = grb.ia, grb.ja
         nlay, nrow, ncol = grb.nlay, grb.nrow, grb.ncol
     else:
-        if ia is None or ja is None or nlay is None or nrow is None or ncol is None:
+        if (
+            ia is None
+            or ja is None
+            or nlay is None
+            or nrow is None
+            or ncol is None
+        ):
             raise ValueError(
                 "ia, ja, nlay, nrow, and ncol must be specified if the MODFLOW 6"
                 "binary grid file name is not specified."
