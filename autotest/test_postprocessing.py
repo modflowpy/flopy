@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 from modflow_devtools.markers import requires_exe
 
+import flopy
 from flopy.mf6 import (
     MFSimulation,
     ModflowGwf,
@@ -26,51 +27,190 @@ from flopy.utils.postprocessing import (
 )
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
+def mf2005_freyberg_path(example_data_path):
+    return example_data_path / "freyberg"
+
+
+@pytest.fixture
 def mf6_freyberg_path(example_data_path):
     return example_data_path / "mf6-freyberg"
 
 
+@pytest.mark.parametrize(
+    "nlay, nrow, ncol",
+    [
+        # extended in 1 dimension
+        [3, 1, 1],
+        [1, 3, 1],
+        [1, 1, 3],
+        # 2D
+        [3, 3, 1],
+        [1, 3, 3],
+        [3, 1, 3],
+        # 3D
+        [3, 3, 3],
+    ],
+)
 @pytest.mark.mf6
 @requires_exe("mf6")
-def test_faceflows(function_tmpdir, mf6_freyberg_path):
+def test_get_structured_faceflows(function_tmpdir, nlay, nrow, ncol):
+    name = "gsff"
+    sim = flopy.mf6.MFSimulation(
+        sim_name=name, exe_name="mf6", version="mf6", sim_ws=function_tmpdir
+    )
+
+    # tdis
+    tdis = flopy.mf6.ModflowTdis(
+        sim,
+        nper=1,
+        perioddata=[(1.0, 1, 1.0)],
+    )
+
+    # gwf
+    gwf = flopy.mf6.ModflowGwf(
+        sim,
+        modelname=name,
+        model_nam_file="{}.nam".format(name),
+        save_flows=True,
+    )
+
+    # dis
+    botm = (
+        np.ones((nlay, nrow, ncol))
+        * np.arange(nlay - 1, -1, -1)[:, np.newaxis, np.newaxis]
+    )
+    dis = flopy.mf6.ModflowGwfdis(
+        gwf,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        top=nlay,
+        botm=botm,
+    )
+
+    # initial conditions
+    h0 = nlay * 2
+    start = h0 * np.ones((nlay, nrow, ncol))
+    ic = flopy.mf6.ModflowGwfic(gwf, pname="ic", strt=start)
+
+    # constant head
+    chd_rec = []
+    max_dim = max(nlay, nrow, ncol)
+    h = np.linspace(11, 13, max_dim)
+    iface = 6  # top
+    for i in range(0, max_dim):
+        # ((layer,row,col),head,iface)
+        cell_id = (
+            (0, 0, i) if ncol > 1 else (0, i, 0) if nrow > 1 else (i, 0, 0)
+        )
+        chd_rec.append((cell_id, h[i], iface))
+    chd = flopy.mf6.ModflowGwfchd(
+        gwf,
+        auxiliary=[("iface",)],
+        stress_period_data=chd_rec,
+        print_input=True,
+        print_flows=True,
+        save_flows=True,
+    )
+
+    # node property flow
+    npf = flopy.mf6.ModflowGwfnpf(gwf, save_specific_discharge=True)
+
+    # output control
+    budgetfile = "{}.cbb".format(name)
+    budget_filerecord = [budgetfile]
+    saverecord = [("BUDGET", "ALL")]
+    oc = flopy.mf6.ModflowGwfoc(
+        gwf,
+        saverecord=saverecord,
+        budget_filerecord=budget_filerecord,
+    )
+
+    # solver
+    ims = flopy.mf6.ModflowIms(sim)
+
+    # write and run the model
+    sim.write_simulation()
+    sim.check()
+    success, buff = sim.run_simulation()
+    assert success
+
+    # load budget output
+    budget = gwf.output.budget()
+    flow_ja_face = budget.get_data(text="FLOW-JA-FACE")[0]
+    frf, fff, flf = get_structured_faceflows(
+        flow_ja_face,
+        grb_file=function_tmpdir / f"{gwf.name}.dis.grb",
+        verbose=True,
+    )
+
+    # expect nonzero flows only in extended (>1 cell) dimensions
+    assert np.any(frf) == (ncol > 1)
+    assert np.any(fff) == (nrow > 1)
+    assert np.any(flf) == (nlay > 1)
+
+
+@pytest.mark.mf6
+@requires_exe("mf6")
+def test_get_structured_faceflows_freyberg(
+    function_tmpdir, mf2005_freyberg_path, mf6_freyberg_path
+):
+    # create workspaces
+    mf6_ws = function_tmpdir / "mf6"
+    mf2005_ws = function_tmpdir / "mf2005"
+
+    # run freyberg mf6
     sim = MFSimulation.load(
         sim_name="freyberg",
         exe_name="mf6",
         sim_ws=mf6_freyberg_path,
     )
-
-    # change the simulation workspace
-    sim.set_sim_path(function_tmpdir)
-
-    # write the model simulation files
+    sim.set_sim_path(mf6_ws)
     sim.write_simulation()
-
-    # run the simulation
     sim.run_simulation()
 
-    # get output
+    # get freyberg mf6 output and compute structured faceflows
     gwf = sim.get_model("freyberg")
-    head = gwf.output.head().get_data()
-    cbc = gwf.output.budget()
-
-    spdis = cbc.get_data(text="DATA-SPDIS")[0]
-    flowja = cbc.get_data(text="FLOW-JA-FACE")[0]
-
-    frf, fff, flf = get_structured_faceflows(
-        flowja,
-        grb_file=function_tmpdir / "freyberg.dis.grb",
+    mf6_head = gwf.output.head().get_data()
+    mf6_cbc = gwf.output.budget()
+    mf6_spdis = mf6_cbc.get_data(text="DATA-SPDIS")[0]
+    mf6_flowja = mf6_cbc.get_data(text="FLOW-JA-FACE")[0]
+    mf6_frf, mf6_fff, mf6_flf = get_structured_faceflows(
+        mf6_flowja,
+        grb_file=mf6_ws / "freyberg.dis.grb",
     )
+    assert mf6_frf.shape == mf6_fff.shape == mf6_flf.shape == mf6_head.shape
+    assert not np.any(mf6_flf)  # only 1 layer
+
+    # run freyberg mf2005
+    model = Modflow.load("freyberg", model_ws=mf2005_freyberg_path)
+    model.change_model_ws(mf2005_ws)
+    model.write_input()
+    model.run_model()
+
+    # get freyberg mf2005 output
+    mf2005_cbc = flopy.utils.CellBudgetFile(mf2005_ws / "freyberg.cbc")
+    mf2005_frf, mf2005_fff = (
+        mf2005_cbc.get_data(text="FLOW RIGHT FACE", full3D=True)[0],
+        mf2005_cbc.get_data(text="FLOW FRONT FACE", full3D=True)[0],
+    )
+
+    # compare mf2005 faceflows with converted mf6 faceflows
+    assert mf2005_frf.shape == mf2005_fff.shape == mf6_head.shape
+    assert np.allclose(mf6_frf, np.flip(mf2005_frf, 0), atol=1e-3)
+    assert np.allclose(mf6_fff, np.flip(mf2005_fff, 0), atol=1e-3)
+
     Qx, Qy, Qz = get_specific_discharge(
-        (frf, fff, flf),
+        (mf6_frf, mf6_fff, mf6_flf),
         gwf,
     )
     sqx, sqy, sqz = get_specific_discharge(
-        (frf, fff, flf),
+        (mf6_frf, mf6_fff, mf6_flf),
         gwf,
-        head=head,
+        head=mf6_head,
     )
-    qx, qy, qz = get_specific_discharge(spdis, gwf)
+    qx, qy, qz = get_specific_discharge(mf6_spdis, gwf)
 
     fig = plt.figure(figsize=(12, 6), constrained_layout=True)
     ax = fig.add_subplot(1, 3, 1, aspect="equal")
@@ -88,6 +228,7 @@ def test_faceflows(function_tmpdir, mf6_freyberg_path):
     q1 = mm.plot_vector(qx, qy)
     assert isinstance(q1, matplotlib.quiver.Quiver)
 
+    # plt.show()
     plt.close("all")
 
     # uv0 = np.column_stack((q0.U, q0.V))
@@ -96,7 +237,6 @@ def test_faceflows(function_tmpdir, mf6_freyberg_path):
     # assert (
     #     np.allclose(uv0, uv1)
     # ), "get_faceflows quivers are not equal to specific discharge vectors"
-    return
 
 
 @pytest.mark.mf6
@@ -149,7 +289,7 @@ def test_flowja_residuals(function_tmpdir, mf6_freyberg_path):
 
 @pytest.mark.mf6
 @requires_exe("mf6")
-def test_structured_faceflows_3d(function_tmpdir):
+def test_structured_faceflows_3d_shape(function_tmpdir):
     name = "mymodel"
     sim = MFSimulation(sim_name=name, sim_ws=function_tmpdir, exe_name="mf6")
     tdis = ModflowTdis(sim)
