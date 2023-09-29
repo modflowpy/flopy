@@ -93,7 +93,7 @@ def get_structured_faceflows(
         -----
         For visual intuition in 2 dimensions
         https://stackoverflow.com/a/16330162/6514033
-        helps. MODFLOW uses the top left scheme in 3D.
+        helps. MODFLOW uses the left-side scheme in 3D.
 
         Parameters
         ----------
