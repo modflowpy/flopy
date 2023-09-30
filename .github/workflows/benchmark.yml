@@ -64,6 +64,11 @@ jobs:
       - name: Install Modflow executables
         uses: modflowpy/install-modflow-action@v1
 
+      - name: Install Modflow dev build executables
+        uses: modflowpy/install-modflow-action@v1
+        with:
+          repo: modflow6-nightly-build
+
       - name: Run benchmarks
         if: runner.os != 'Windows'
         working-directory: ./autotest
@@ -88,15 +93,13 @@ jobs:
         if: failure()
         with:
           name: failed-benchmark-${{ matrix.os }}-${{ matrix.python-version }}-${{ github.run_id }}
-          path: |
-            ./autotest/.failed/**
+          path: ./autotest/.failed/**
 
       - name: Upload benchmark result artifact
         uses: actions/upload-artifact@v3
         with:
           name: benchmarks-${{ matrix.os }}-${{ matrix.python-version }}-${{ github.run_id }}
-          path: |
-            ./autotest/.benchmarks/**/*.json
+          path: ./autotest/.benchmarks/**/*.json
 
   post_benchmark:
     needs:

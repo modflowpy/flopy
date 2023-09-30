@@ -60,6 +60,11 @@ jobs:
       - name: Install Modflow executables
         uses: modflowpy/install-modflow-action@v1
       
+      - name: Install Modflow dev build executables
+        uses: modflowpy/install-modflow-action@v1
+        with:
+          repo: modflow6-nightly-build
+      
       - name: Smoke test (${{ matrix.optdeps }})
         working-directory: autotest
         run: pytest -v -n=auto --smoke --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed

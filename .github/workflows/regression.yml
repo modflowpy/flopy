@@ -68,15 +68,6 @@ jobs:
         with:
           repo: modflow6-nightly-build
 
-      - name: Update FloPy packages
-        if: runner.os != 'Windows'
-        run: python -m flopy.mf6.utils.generate_classes --ref develop --no-backup
-
-      - name: Update FloPy packages
-        if: runner.os == 'Windows'
-        shell: bash -l {0}
-        run: python -m flopy.mf6.utils.generate_classes --ref develop --no-backup
-
       - name: Run regression tests
         if: runner.os != 'Windows'
         working-directory: ./autotest
@@ -97,5 +88,4 @@ jobs:
         if: failure()
         with:
           name: failed-regression-${{ matrix.os }}-${{ matrix.python-version }}
-          path: |
-            ./autotest/.failed/**
+          path: ./autotest/.failed/**

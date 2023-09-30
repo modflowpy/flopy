@@ -77,6 +77,11 @@ jobs:
       - name: Install MODFLOW executables
         uses: modflowpy/install-modflow-action@v1
 
+      - name: Install Modflow dev build executables
+        uses: modflowpy/install-modflow-action@v1
+        with:
+          repo: modflow6-nightly-build
+
       - name: Run tutorial and example notebooks
         working-directory: autotest
         run: pytest -v -n auto test_notebooks.py

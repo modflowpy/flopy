@@ -84,20 +84,10 @@ jobs:
         with:
           repo: modflow6-nightly-build
 
-      - name: Update FloPy packages
-        if: runner.os != 'Windows'
-        run: python -m flopy.mf6.utils.generate_classes --ref develop --no-backup
-
-      - name: Update FloPy packages
-        if: runner.os == 'Windows'
-        shell: bash -l {0}
-        run: python -m flopy.mf6.utils.generate_classes --ref develop --no-backup
-
       - name: Run example tests
         if: runner.os != 'Windows'
         working-directory: ./autotest
-        run: |
-          pytest -v -m="example" -n=auto -s --durations=0 --keep-failed=.failed
+        run: pytest -v -m="example" -n=auto -s --durations=0 --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -105,8 +95,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash -l {0}
         working-directory: ./autotest
-        run: |
-          pytest -v -m="example" -n=auto -s --durations=0 --keep-failed=.failed
+        run: pytest -v -m="example" -n=auto -s --durations=0 --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -115,5 +104,4 @@ jobs:
         if: failure()
         with:
           name: failed-example-${{ matrix.os }}-${{ matrix.python-version }}
-          path: |
-            ./autotest/.failed/**
+          path: ./autotest/.failed/**
