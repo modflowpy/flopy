@@ -10,6 +10,8 @@ from flopy import run_model
 from flopy.mbase import resolve_exe
 from flopy.utils.flopy_io import relpath_safe
 
+_system = system()
+
 
 @pytest.fixture
 def mf6_model_path(example_data_path):
@@ -18,10 +20,7 @@ def mf6_model_path(example_data_path):
 
 @requires_exe("mf6")
 @pytest.mark.parametrize("use_ext", [True, False])
-def test_resolve_exe_by_name(function_tmpdir, use_ext):
-    if use_ext and system() != "Windows":
-        pytest.skip(".exe extensions are Windows-only")
-
+def test_resolve_exe_by_name(use_ext):
     ext = ".exe" if use_ext else ""
     expected = which("mf6").lower()
     actual = resolve_exe(f"mf6{ext}")
@@ -31,13 +30,14 @@ def test_resolve_exe_by_name(function_tmpdir, use_ext):
 
 @requires_exe("mf6")
 @pytest.mark.parametrize("use_ext", [True, False])
-def test_resolve_exe_by_abs_path(function_tmpdir, use_ext):
-    if use_ext and system() != "Windows":
-        pytest.skip(".exe extensions are Windows-only")
-
-    ext = ".exe" if use_ext else ""
+def test_resolve_exe_by_abs_path(use_ext):
+    abs_path = which("mf6")
+    if _system == "Windows" and not use_ext:
+        abs_path = abs_path[:-4]
+    elif _system != "Windows" and use_ext:
+        abs_path = f"{abs_path}.exe"
     expected = which("mf6").lower()
-    actual = resolve_exe(which(f"mf6{ext}"))
+    actual = resolve_exe(abs_path)
     assert actual.lower() == expected
     assert which(actual)
 
@@ -46,9 +46,6 @@ def test_resolve_exe_by_abs_path(function_tmpdir, use_ext):
 @pytest.mark.parametrize("use_ext", [True, False])
 @pytest.mark.parametrize("forgive", [True, False])
 def test_resolve_exe_by_rel_path(function_tmpdir, use_ext, forgive):
-    if use_ext and system() != "Windows":
-        pytest.skip(".exe extensions are Windows-only")
-
     ext = ".exe" if use_ext else ""
     expected = which("mf6").lower()
 
@@ -59,10 +56,11 @@ def test_resolve_exe_by_rel_path(function_tmpdir, use_ext, forgive):
 
     with set_dir(inner_dir):
         # copy exe to relative dir
-        copy(expected, bin_dir / "mf6")
-        assert (bin_dir / "mf6").is_file()
+        new_exe_path = bin_dir / Path(expected).name
+        copy(expected, new_exe_path)
+        assert new_exe_path.is_file()
 
-        expected = which(str(Path(bin_dir / "mf6").absolute())).lower()
+        expected = which(str(new_exe_path.absolute())).lower()
         actual = resolve_exe(f"../bin/mf6{ext}")
         assert actual.lower() == expected
         assert which(actual)
@@ -77,7 +75,7 @@ def test_resolve_exe_by_rel_path(function_tmpdir, use_ext, forgive):
 
 
 def test_run_model_when_namefile_not_in_model_ws(
-    mf6_model_path, example_data_path, function_tmpdir
+    mf6_model_path, function_tmpdir
 ):
     # copy input files to temp workspace
     ws = function_tmpdir / "ws"

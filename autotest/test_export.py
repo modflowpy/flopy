@@ -51,6 +51,10 @@ from flopy.utils import postprocessing as pp
 from flopy.utils.crs import get_authority_crs
 from flopy.utils.geometry import Polygon
 
+HAS_PYPROJ = has_pkg("pyproj", strict=True)
+if HAS_PYPROJ:
+    import pyproj
+
 
 def namfiles() -> List[Path]:
     mf2005_path = get_example_data_path() / "mf2005_test"
@@ -677,6 +681,13 @@ def test_export_contourf(function_tmpdir, example_data_path):
             len(shapes) >= 65
         ), "multipolygons were skipped in contourf routine"
 
+        # debugging
+        # for s in shapes:
+        #     x = [i[0] for i in s.points[:]]
+        #     y = [i[1] for i in s.points[:]]
+        #     plt.plot(x, y)
+        # plt.show()
+
 
 @pytest.mark.mf6
 @requires_pkg("shapefile", "shapely")
@@ -705,6 +716,13 @@ def test_export_contours(function_tmpdir, example_data_path):
         shapes = r.shapes()
         # expect 65 with standard mpl contours (structured grids), 86 with tricontours
         assert len(shapes) >= 65
+
+        # debugging
+        # for s in shapes:
+        #     x = [i[0] for i in s.points[:]]
+        #     y = [i[1] for i in s.points[:]]
+        #     plt.plot(x, y)
+        # plt.show()
 
 
 @pytest.mark.mf6

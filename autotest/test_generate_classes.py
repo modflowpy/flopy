@@ -3,10 +3,29 @@ from pathlib import Path
 from pprint import pprint
 
 import pytest
+from modflow_devtools.misc import get_current_branch
+
+branch = get_current_branch()
 
 
 @pytest.mark.mf6
-def test_generate_classes_from_dfn(virtualenv, project_root_path):
+@pytest.mark.slow
+@pytest.mark.regression
+@pytest.mark.skipif(
+    branch == "master" or branch.startswith("v"),
+    reason="skip on master and release branches",
+)
+def test_generate_classes_from_github_refs(
+    request, virtualenv, project_root_path, ref, worker_id
+):
+    argv = (
+        request.config.workerinput["mainargv"]
+        if hasattr(request.config, "workerinput")
+        else []
+    )
+    if worker_id != "master" and "loadfile" not in argv:
+        pytest.skip("can't run in parallel")
+
     python = virtualenv.python
     venv = Path(python).parent
     print(f"Using temp venv at {venv} with python {python}")

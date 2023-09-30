@@ -219,7 +219,7 @@ class MfUsgBcf(ModflowBcf):
             locat=self.unit_number[0],
         )
         if not structured:
-            self.ksat = Util3d(
+            self.ksat = Util2d(
                 model,
                 (njag,),
                 np.float32,
