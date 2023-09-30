@@ -1,3 +1,13 @@
+### Version 3.4.3
+
+#### Bug fixes
+
+* [fix(export_contours/f)](https://github.com/modflowpy/flopy/commit/30209f2ca2e69289227203e4afd2f33bfceed097): Support matplotlib 3.8+ (#1951). Committed by wpbonelli on 2023-09-19.
+* [fix(resolve_exe)](https://github.com/modflowpy/flopy/commit/3522dced8a49dc93fb0140d9ac360a88f31b11bb): Support extensionless abs/rel paths on windows (#1957). Committed by wpbonelli on 2023-09-24.
+* [fix(mbase)](https://github.com/modflowpy/flopy/commit/b848f968af4179d8618b811cd4fe6f8de66d09cb): Warn if duplicate pkgs or units (#1964). Committed by wpbonelli on 2023-09-26.
+* [fix(get_structured_faceflows)](https://github.com/modflowpy/flopy/commit/92632d26be2ecb21b6d9d56717faadaa13e08369): Cover edge cases, expand tests (#1968). Committed by wpbonelli on 2023-09-29.
+* [fix(CellBudgetFile)](https://github.com/modflowpy/flopy/commit/015d6399baa48819f9f0f78bf2f34f60bdd8ef18): Detect compact fmt by negative nlay (#1966). Committed by wpbonelli on 2023-09-30.
+
 ### Version 3.4.2
 
 #### Bug fixes
