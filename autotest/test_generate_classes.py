@@ -7,6 +7,9 @@ from typing import Iterable
 from warnings import warn
 
 import pytest
+from modflow_devtools.misc import get_current_branch
+
+branch = get_current_branch()
 
 
 def nonempty(itr: Iterable):
@@ -56,6 +59,10 @@ def pytest_generate_tests(metafunc):
 @pytest.mark.mf6
 @pytest.mark.slow
 @pytest.mark.regression
+@pytest.mark.skipif(
+    branch == "master" or branch.startswith("v"),
+    reason="skip on master and release branches",
+)
 def test_generate_classes_from_github_refs(
     request, virtualenv, project_root_path, ref, worker_id
 ):
