@@ -54,6 +54,8 @@ Before you submit your Pull Request (PR) consider the following guidelines:
      git checkout -b my-fix-branch develop
      ```
 
+    **Note**: it's advised not to begin bugfix or feature branch names with the letter "v". This condition is used in Github Actions CI to determine whether a branch is a release candidate. Branches intended for release are tested against the latest official release of MODFLOW 6, while the FloPy `develop` branch tests against the `develop` branch of MODFLOW 6.
+
 4. Create your patch, **including appropriate test cases**. See [DEVELOPER,md](DEVELOPER.md#running-tests) for guidelines for constructing autotests.
 5. Run the [isort import sorter](https://github.com/PyCQA/isort) and [black formatter](https://github.com/psf/black). There is a utility script to do this in the `scripts` directory:
 

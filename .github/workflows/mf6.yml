@@ -52,6 +52,7 @@ jobs:
       with:
         repository: MODFLOW-USGS/modflow6
         path: modflow6
+        ref: ${{ (github.ref_name == 'master' || startsWith(github.ref_name, 'v')) && 'master' || 'develop' }}
 
     - name: Update flopy MODFLOW 6 classes
       working-directory: modflow6/autotest
