@@ -31,6 +31,12 @@ from flopy.plot import PlotCrossSection, PlotMapView
 from flopy.utils import CellBudgetFile, EndpointFile, HeadFile, PathlineFile
 
 
+@pytest.fixture
+def rng():
+    # set seed so parametrized plot tests are comparable
+    return np.random.default_rng(0)
+
+
 @requires_pkg("shapely")
 def test_map_view():
     m = flopy.modflow.Modflow(rotation=20.0)
@@ -162,21 +168,19 @@ def test_map_view_bc_UZF_3lay(example_data_path):
         ), f"Unexpected collection type: {type(col)}"
 
 
-def test_map_view_contour(function_tmpdir):
-    arr = np.random.rand(10, 10) * 100
-    arr[-1, :] = np.nan
-    delc = np.array([10] * 10, dtype=float)
-    delr = np.array([8] * 10, dtype=float)
-    top = np.ones((10, 10), dtype=float)
-    botm = np.ones((3, 10, 10), dtype=float)
+@pytest.mark.parametrize("ndim", [1, 2, 3])
+def test_map_view_contour_array_structured(function_tmpdir, ndim, rng):
+    nlay, nrow, ncol = 3, 10, 10
+    ncpl = nrow * ncol
+    delc = np.array([10] * nrow, dtype=float)
+    delr = np.array([8] * ncol, dtype=float)
+    top = np.ones((nrow, ncol), dtype=float)
+    botm = np.ones((nlay, nrow, ncol), dtype=float)
     botm[0] = 0.75
     botm[1] = 0.5
     botm[2] = 0.25
-    idomain = np.ones((3, 10, 10))
+    idomain = np.ones((nlay, nrow, ncol))
     idomain[0, 0, :] = 0
-    vmin = np.nanmin(arr)
-    vmax = np.nanmax(arr)
-    levels = np.linspace(vmin, vmax, 7)
 
     grid = StructuredGrid(
         delc=delc,
@@ -185,16 +189,49 @@ def test_map_view_contour(function_tmpdir):
         botm=botm,
         idomain=idomain,
         lenuni=1,
-        nlay=3,
-        nrow=10,
-        ncol=10,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
     )
 
-    pmv = PlotMapView(modelgrid=grid, layer=0)
-    contours = pmv.contour_array(a=arr)
-    plt.savefig(function_tmpdir / "map_view_contour.png")
+    # define full grid 1D array to contour
+    arr = rng.random(nlay * nrow * ncol) * 100
+
+    for l in range(nlay):
+        if ndim == 1:
+            # full grid 1D array
+            pmv = PlotMapView(modelgrid=grid, layer=l)
+            contours = pmv.contour_array(a=arr)
+            fname = f"map_view_contour_{ndim}d_l{l}_full.png"
+            plt.savefig(function_tmpdir / fname)
+            plt.clf()
+
+            # 1 layer slice
+            pmv = PlotMapView(modelgrid=grid, layer=l)
+            contours = pmv.contour_array(a=arr[(l * ncpl) : ((l + 1) * ncpl)])
+            fname = f"map_view_contour_{ndim}d_l{l}_1lay.png"
+            plt.savefig(function_tmpdir / fname)
+            plt.clf()
+        elif ndim == 2:
+            # 1 layer as 2D
+            # arr[-1, :] = np.nan  # add nan to test nan handling
+            pmv = PlotMapView(modelgrid=grid, layer=l)
+            contours = pmv.contour_array(
+                a=arr.reshape(nlay, nrow, ncol)[l, :, :]
+            )
+            plt.savefig(function_tmpdir / f"map_view_contour_{ndim}d_l{l}.png")
+            plt.clf()
+        elif ndim == 3:
+            # full grid as 3D
+            pmv = PlotMapView(modelgrid=grid, layer=l)
+            contours = pmv.contour_array(a=arr.reshape(nlay, nrow, ncol))
+            plt.savefig(function_tmpdir / f"map_view_contour_{ndim}d_l{l}.png")
+            plt.clf()
 
     # if we ever revert from standard contours to tricontours, restore this nan check
+    # vmin = np.nanmin(arr)
+    # vmax = np.nanmax(arr)
+    # levels = np.linspace(vmin, vmax, 7)
     # for ix, lev in enumerate(contours.levels):
     #     if not np.allclose(lev, levels[ix]):
     #         raise AssertionError("TriContour NaN catch Failed")

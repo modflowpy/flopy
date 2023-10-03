@@ -164,13 +164,11 @@ def test_mf6disv(function_tmpdir):
     plt.close("all")
 
 
-@pytest.mark.slow
-@requires_exe("mf6", "gridgen")
-@requires_pkg("shapely", "shapefile")
-def test_mf6disu(function_tmpdir):
+@pytest.fixture
+def sim_disu_diff_layers(function_tmpdir):
     from shapely.geometry import Polygon
 
-    name = "dummy"
+    name = "disu_diff_layers"
     nlay = 3
     nrow = 10
     ncol = 10
@@ -232,6 +230,17 @@ def test_mf6disu(function_tmpdir):
         head_filerecord=head_file,
         saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
     )
+
+    return sim
+
+
+@pytest.mark.slow
+@requires_exe("mf6", "gridgen")
+@requires_pkg("shapely", "shapefile")
+def test_mf6disu(sim_disu_diff_layers):
+    sim = sim_disu_diff_layers
+    ws = sim.sim_path
+    gwf = sim.get_model()
     sim.write_simulation()
 
     gwf.modelgrid.set_coord_info(angrot=15)
@@ -243,9 +252,9 @@ def test_mf6disu(function_tmpdir):
     assert np.allclose(gwf.modelgrid.ncpl, np.array([436, 184, 112]))
 
     # write grid and model shapefiles
-    fname = function_tmpdir / "grid.shp"
+    fname = ws / "grid.shp"
     gwf.modelgrid.write_shapefile(fname)
-    fname = function_tmpdir / "model.shp"
+    fname = ws / "model.shp"
     gwf.export(fname)
 
     sim.run_simulation(silent=True)
@@ -272,7 +281,7 @@ def test_mf6disu(function_tmpdir):
         ax.set_title(f"Layer {ilay + 1}")
         pmv.plot_vector(spdis["qx"], spdis["qy"], color="white")
     fname = "results.png"
-    fname = function_tmpdir / fname
+    fname = ws / fname
     plt.savefig(fname)
     plt.close("all")
 
@@ -307,7 +316,7 @@ def test_mf6disu(function_tmpdir):
         sim_name=name,
         version="mf6",
         exe_name="mf6",
-        sim_ws=function_tmpdir,
+        sim_ws=ws,
     )
     gwf = sim.get_model(name)
 

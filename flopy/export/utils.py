@@ -1948,14 +1948,15 @@ def export_array_contours(
         assert nlevels < maxlevels, msg
         levels = np.arange(imin, imax, interval)
     ax = plt.subplots()[-1]
-    ctr = contour_array(modelgrid, ax, a, levels=levels)
+    layer = kwargs.pop("layer", 0)
+    ctr = contour_array(modelgrid, ax, a, layer, levels=levels)
 
     kwargs["mg"] = modelgrid
     export_contours(filename, ctr, fieldname, **kwargs)
     plt.close()
 
 
-def contour_array(modelgrid, ax, a, **kwargs):
+def contour_array(modelgrid, ax, a, layer=0, **kwargs):
     """
     Create a QuadMesh plot of the specified array using pcolormesh
 
@@ -1967,6 +1968,8 @@ def contour_array(modelgrid, ax, a, **kwargs):
         ax to add the contours
     a : np.ndarray
         array to contour
+    layer : int, optional
+        layer to contour
 
     Returns
     -------
@@ -1976,7 +1979,7 @@ def contour_array(modelgrid, ax, a, **kwargs):
     from ..plot import PlotMapView
 
     kwargs["ax"] = ax
-    pmv = PlotMapView(modelgrid=modelgrid)
+    pmv = PlotMapView(modelgrid=modelgrid, layer=layer)
     contour_set = pmv.contour_array(a=a, **kwargs)
 
     return contour_set
