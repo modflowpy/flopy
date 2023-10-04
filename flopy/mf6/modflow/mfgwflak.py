@@ -469,10 +469,7 @@ class ModflowGwflak(mfpackage.MFPackage):
     dfn_file_name = "gwf-lak.dfn"
 
     dfn = [
-        [
-            "header",
-            "multi-package",
-        ],
+        ["header", "multi-package", "package-type advanced-stress-package"],
         [
             "block options",
             "name auxiliary",

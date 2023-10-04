@@ -344,19 +344,15 @@ def test_control_records(function_tmpdir):
             "Binary file input not being preserved for MFArray"
         )
 
-    spd_ls1 = ml1.wel.stress_period_data._data_storage[
-        1
-    ].layer_storage.multi_dim_list[0]
-    spd_ls2 = ml1.wel.stress_period_data._data_storage[
-        2
-    ].layer_storage.multi_dim_list[0]
-
-    if spd_ls1.data_storage_type.value != 3 or spd_ls1.binary:
+    spd_ls1 = ml1.wel.stress_period_data.get_record(1)
+    spd_ls2 = ml1.wel.stress_period_data.get_record(2)
+ 
+    if spd_ls1["filename"] is None or spd_ls1["binary"]:
         raise AssertionError(
             "External ascii files not being preserved for MFList"
         )
 
-    if spd_ls2.data_storage_type.value != 3 or not spd_ls2.binary:
+    if spd_ls2["filename"] is None or not spd_ls2["binary"]:
         raise AssertionError(
             "External binary file input not being preseved for MFList"
         )

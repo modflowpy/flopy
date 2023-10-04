@@ -1091,7 +1091,7 @@ def test_np002(function_tmpdir, example_data_path):
     md2 = sim2.get_model()
     ghb2 = md2.get_package("ghb")
     spd2 = ghb2.stress_period_data.get_data(1)
-    assert spd2 == []
+    assert len(spd2) == 0
 
     # test paths
     sim_path_test = Path(ws) / "sim_path"

@@ -7,7 +7,7 @@ import numpy as np
 from ...mf6 import modflow
 from ...plot import plotutil
 from ...utils import import_optional_dependency
-from ..data import mfdataarray, mfdatalist, mfdatascalar
+from ..data import mfdataarray, mfdatalist, mfdataplist, mfdatascalar
 from ..mfbase import PackageContainer
 
 OBS_ID1_LUT = {
@@ -2890,12 +2890,47 @@ class Mf6Splitter(object):
                 elif isinstance(value, mfdataarray.MFArray):
                     mapped_data = self._remap_array(item, value, mapped_data)
 
-                elif isinstance(value, mfdatalist.MFTransientList):
+                elif isinstance(
+                    value,
+                    (
+                        mfdatalist.MFTransientList,
+                        mfdataplist.MFPandasTransientList,
+                    ),
+                ):
+                    if isinstance(value, mfdataplist.MFPandasTransientList):
+                        list_data = mfdatalist.MFTransientList(
+                            value._simulation_data,
+                            value._model_or_sim,
+                            value.structure,
+                            True,
+                            value.path,
+                            value._data_dimensions.package_dim,
+                            value._package,
+                            value._block,
+                        )
+                        list_data.set_record(value.get_record())
+                        value = list_data
                     mapped_data = self._remap_transient_list(
                         item, value, mapped_data
                     )
 
-                elif isinstance(value, mfdatalist.MFList):
+                elif isinstance(
+                    value, (mfdatalist.MFList, mfdataplist.MFPandasList)
+                ):
+                    if isinstance(value, mfdataplist.MFPandasList):
+                        list_data = mfdatalist.MFList(
+                            value._simulation_data,
+                            value._model_or_sim,
+                            value.structure,
+                            None,
+                            True,
+                            value.path,
+                            value._data_dimensions.package_dim,
+                            value._package,
+                            value._block,
+                        )
+                        list_data.set_record(value.get_record())
+                        value = list_data
                     mapped_data = self._remap_mflist(item, value, mapped_data)
 
                 elif isinstance(value, mfdatascalar.MFScalar):

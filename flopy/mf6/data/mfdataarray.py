@@ -1619,7 +1619,6 @@ class MFTransientArray(MFArray, MFTransient):
             dimensions=dimensions,
             block=block,
         )
-        self._transient_setup(self._data_storage)
         self.repeating = True
 
     @property

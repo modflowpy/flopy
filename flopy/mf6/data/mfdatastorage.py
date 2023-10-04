@@ -2168,136 +2168,28 @@ class DataStorage:
         return multiplier, print_format
 
     def process_open_close_line(self, arr_line, layer, store=True):
-        # process open/close line
-        index = 2
-        if self._data_type == DatumType.integer:
-            multiplier = 1
-        else:
-            multiplier = 1.0
-        print_format = None
-        binary = False
-        data_file = None
-        data = None
-
         data_dim = self.data_dimensions
-        if isinstance(arr_line, list):
-            if len(arr_line) < 2 and store:
-                message = (
-                    'Data array "{}" contains a OPEN/CLOSE '
-                    "that is not followed by a file. {}".format(
-                        data_dim.structure.name, data_dim.structure.path
-                    )
-                )
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(
-                    self.data_dimensions.structure.get_model(),
-                    self.data_dimensions.structure.get_package(),
-                    self.data_dimensions.structure.path,
-                    "processing open/close line",
-                    data_dim.structure.name,
-                    inspect.stack()[0][3],
-                    type_,
-                    value_,
-                    traceback_,
-                    message,
-                    self._simulation_data.debug,
-                )
-            while index < len(arr_line):
-                if isinstance(arr_line[index], str):
-                    word = arr_line[index].lower()
-                    if word == "factor" and index + 1 < len(arr_line):
-                        try:
-                            multiplier = convert_data(
-                                arr_line[index + 1],
-                                self.data_dimensions,
-                                self._data_type,
-                            )
-                        except Exception as ex:
-                            message = (
-                                "Data array {} contains an OPEN/CLOSE "
-                                "with an invalid multiplier following "
-                                'the "factor" keyword.'
-                                ".".format(data_dim.structure.name)
-                            )
-                            type_, value_, traceback_ = sys.exc_info()
-                            raise MFDataException(
-                                self.data_dimensions.structure.get_model(),
-                                self.data_dimensions.structure.get_package(),
-                                self.data_dimensions.structure.path,
-                                "processing open/close line",
-                                data_dim.structure.name,
-                                inspect.stack()[0][3],
-                                type_,
-                                value_,
-                                traceback_,
-                                message,
-                                self._simulation_data.debug,
-                                ex,
-                            )
-                        index += 2
-                    elif word == "iprn" and index + 1 < len(arr_line):
-                        print_format = arr_line[index + 1]
-                        index += 2
-                    elif word == "data" and index + 1 < len(arr_line):
-                        data = arr_line[index + 1]
-                        index += 2
-                    elif word == "binary" or word == "(binary)":
-                        binary = True
-                        index += 1
-                    else:
-                        break
-                else:
-                    break
-                # save comments
-            if index < len(arr_line):
-                self.layer_storage[layer].comments = MFComment(
-                    " ".join(arr_line[index:]),
-                    self.data_dimensions.structure.path,
-                    self._simulation_data,
-                    layer,
-                )
-            if arr_line[0].lower() == "open/close":
-                data_file = clean_filename(arr_line[1])
-            else:
-                data_file = clean_filename(arr_line[0])
-        elif isinstance(arr_line, dict):
-            for key, value in arr_line.items():
-                if key.lower() == "factor":
-                    try:
-                        multiplier = convert_data(
-                            value, self.data_dimensions, self._data_type
-                        )
-                    except Exception as ex:
-                        message = (
-                            "Data array {} contains an OPEN/CLOSE "
-                            "with an invalid factor following the "
-                            '"factor" keyword.'
-                            ".".format(data_dim.structure.name)
-                        )
-                        type_, value_, traceback_ = sys.exc_info()
-                        raise MFDataException(
-                            self.data_dimensions.structure.get_model(),
-                            self.data_dimensions.structure.get_package(),
-                            self.data_dimensions.structure.path,
-                            "processing open/close line",
-                            data_dim.structure.name,
-                            inspect.stack()[0][3],
-                            type_,
-                            value_,
-                            traceback_,
-                            message,
-                            self._simulation_data.debug,
-                            ex,
-                        )
-                if key.lower() == "iprn":
-                    print_format = value
-                if key.lower() == "binary":
-                    binary = bool(value)
-                if key.lower() == "data":
-                    data = value
-            if "filename" in arr_line:
-                data_file = clean_filename(arr_line["filename"])
-
+        (
+            multiplier,
+            print_format,
+            binary,
+            data_file,
+            data,
+            comment,
+        ) = mfdatautil.process_open_close_line(
+            arr_line,
+            data_dim,
+            self._data_type,
+            self._simulation_data.debug,
+            store,
+        )
+        if comment is not None:
+            self.layer_storage[layer].comments = MFComment(
+                comment,
+                self.data_dimensions.structure.path,
+                self._simulation_data,
+                layer,
+            )
         if data_file is None:
             message = (
                 "Data array {} contains an OPEN/CLOSE without a "

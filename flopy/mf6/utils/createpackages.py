@@ -152,6 +152,11 @@ def build_dfn_string(dfn_list, header, package_abbr, flopy_dict):
     for key, value in header.items():
         if key == "multi-package":
             dfn_string = f'{dfn_string}\n{leading_spaces} "multi-package", '
+        if key == "package-type":
+            dfn_string = (
+                f'{dfn_string}\n{leading_spaces} "package-type ' f'{value}"'
+            )
+
     # process solution packages
     if package_abbr in flopy_dict["solution_packages"]:
         model_types = '", "'.join(
@@ -425,7 +430,8 @@ def build_sim_load():
         "string,\n        exe_name : str or PathLike, "
         "sim_ws : str or PathLike, strict : bool,\n        verbosity_level : "
         "int, load_only : list, verify_data : bool,\n        "
-        "write_headers : bool, lazy_io : bool) : MFSimulation\n"
+        "write_headers : bool, lazy_io : bool, use_pandas : bool,\n        "
+        ") : MFSimulation\n"
         "        a class method that loads a simulation from files"
         '\n    """'
     )
@@ -437,14 +443,14 @@ def build_sim_load():
         "sim_ws: Union[str, os.PathLike] = os.curdir,\n             "
         "strict=True, verbosity_level=1, load_only=None,\n             "
         "verify_data=False, write_headers=True,\n             "
-        "lazy_io=False,):\n        "
+        "lazy_io=False, use_pandas=True):\n        "
         "return mfsimbase.MFSimulationBase.load(cls, sim_name, version, "
         "\n                                               "
         "exe_name, sim_ws, strict,\n"
-        "                                                 verbosity_level, "
+        "                                               verbosity_level, "
         "load_only,\n                                               "
         "verify_data, write_headers, "
-        "\n                                               lazy_io)"
+        "\n                                               lazy_io, use_pandas)"
         "\n"
     )
     return sim_load, sim_load_c
@@ -996,6 +1002,7 @@ def create_packages():
             init_vars = build_model_init_vars(options_param_list)
 
             options_param_list.insert(0, "lazy_io=False")
+            options_param_list.insert(0, "use_pandas=True")
             options_param_list.insert(0, "write_headers=True")
             options_param_list.insert(0, "verbosity_level=1")
             options_param_list.insert(
@@ -1033,8 +1040,10 @@ def create_packages():
                 "verbosity_level=verbosity_level,\n{}"
                 "write_headers=write_headers,\n{}"
                 "lazy_io=lazy_io,\n{}"
+                "use_pandas=use_pandas,\n{}"
                 ")\n".format(
                     sparent_init_string,
+                    spaces,
                     spaces,
                     spaces,
                     spaces,

@@ -74,7 +74,8 @@ class MFSimulation(mfsimbase.MFSimulationBase):
     load : (sim_name : str, version : string,
         exe_name : str or PathLike, sim_ws : str or PathLike, strict : bool,
         verbosity_level : int, load_only : list, verify_data : bool,
-        write_headers : bool, lazy_io : bool) : MFSimulation
+        write_headers : bool, lazy_io : bool, use_pandas : bool,
+        ) : MFSimulation
         a class method that loads a simulation from files
     """
 
@@ -86,6 +87,7 @@ class MFSimulation(mfsimbase.MFSimulationBase):
         sim_ws: Union[str, os.PathLike] = os.curdir,
         verbosity_level=1,
         write_headers=True,
+        use_pandas=True,
         lazy_io=False,
         continue_=None,
         nocheck=None,
@@ -101,6 +103,7 @@ class MFSimulation(mfsimbase.MFSimulationBase):
             verbosity_level=verbosity_level,
             write_headers=write_headers,
             lazy_io=lazy_io,
+            use_pandas=use_pandas,
         )
 
         self.name_file.continue_.set_data(continue_)
@@ -128,6 +131,7 @@ class MFSimulation(mfsimbase.MFSimulationBase):
         verify_data=False,
         write_headers=True,
         lazy_io=False,
+        use_pandas=True,
     ):
         return mfsimbase.MFSimulationBase.load(
             cls,
@@ -141,4 +145,5 @@ class MFSimulation(mfsimbase.MFSimulationBase):
             verify_data,
             write_headers,
             lazy_io,
+            use_pandas,
         )

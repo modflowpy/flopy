@@ -1817,7 +1817,7 @@ def test_array(function_tmpdir):
     drn_gd_1 = drn.stress_period_data.get_data(1)
     assert drn_gd_1 is None
     drn_gd_2 = drn.stress_period_data.get_data(2)
-    assert drn_gd_2 == []
+    assert len(drn_gd_2) == 0
     drn_gd_3 = drn.stress_period_data.get_data(3)
     assert drn_gd_3[0][1] == 55.0
 
@@ -1964,7 +1964,7 @@ def test_array(function_tmpdir):
     drn_gd_1 = drn.stress_period_data.get_data(1)
     assert drn_gd_1 is None
     drn_gd_2 = drn.stress_period_data.get_data(2)
-    assert drn_gd_2 == []
+    assert len(drn_gd_2) == 0
     drn_gd_3 = drn.stress_period_data.get_data(3)
     assert drn_gd_3[0][1] == 55.0
 

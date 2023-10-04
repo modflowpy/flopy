@@ -6,7 +6,7 @@ from copy import deepcopy
 
 import numpy as np
 
-from ...utils.datautil import DatumUtil, PyListUtil
+from ...utils.datautil import DatumUtil, PyListUtil, clean_filename
 from ..mfbase import FlopyException, MFDataException
 from .mfstructure import DatumType
 
@@ -135,6 +135,214 @@ def convert_data(data, data_dimensions, data_type, data_item=None, sub_amt=1):
             # keep strings lower case
             return data.lower()
     return data
+
+
+def list_to_array(sarr, model_grid, kper=0, mask=False):
+    """Convert stress period boundary condition (MFDataList) data for a
+    specified stress period to a 3-D numpy array.
+
+    Parameters
+    ----------
+    sarr : recarray or list
+        list data to convert to array
+    model_grid : ModelGrid
+        model grid object for data
+    kper : int
+        MODFLOW zero-based stress period number to return. (default is
+        zero)
+    mask : bool
+        return array with np.NaN instead of zero
+
+    Returns
+    ----------
+    out : dict of numpy.ndarrays
+        Dictionary of 3-D numpy arrays containing the stress period data
+        for a selected stress period. The dictionary keys are the
+        MFDataList dtype names for the stress period data."""
+    i0 = 1
+    if not isinstance(sarr, list):
+        sarr = [sarr]
+    if len(sarr) == 0 or sarr[0] is None:
+        return None
+    if "inode" in sarr[0].dtype.names:
+        raise NotImplementedError()
+    arrays = {}
+
+    if model_grid._grid_type.value == 1:
+        shape = (
+            model_grid.num_layers(),
+            model_grid.num_rows(),
+            model_grid.num_columns(),
+        )
+    elif model_grid._grid_type.value == 2:
+        shape = (
+            model_grid.num_layers(),
+            model_grid.num_cells_per_layer(),
+        )
+    else:
+        shape = (model_grid.num_cells_per_layer(),)
+
+    for name in sarr[0].dtype.names[i0:]:
+        if not sarr[0].dtype.fields[name][0] == object:
+            arr = np.zeros(shape)
+            arrays[name] = arr.copy()
+
+    if np.isscalar(sarr[0]):
+        # if there are no entries for this kper
+        if sarr[0] == 0:
+            if mask:
+                for name, arr in arrays.items():
+                    arrays[name][:] = np.NaN
+            return arrays
+        else:
+            raise Exception("MfList: something bad happened")
+
+    for name, arr in arrays.items():
+        cnt = np.zeros(shape, dtype=np.float64)
+        for sp_rec in sarr:
+            if sp_rec is not None:
+                for rec in sp_rec:
+                    arr[rec["cellid"]] += rec[name]
+                    cnt[rec["cellid"]] += 1.0
+        # average keys that should not be added
+        if name != "cond" and name != "flux":
+            idx = cnt > 0.0
+            arr[idx] /= cnt[idx]
+        if mask:
+            arr = np.ma.masked_where(cnt == 0.0, arr)
+            arr[cnt == 0.0] = np.NaN
+
+        arrays[name] = arr.copy()
+    return arrays
+
+
+def process_open_close_line(
+    arr_line, data_dim, data_type, sim_data, store=True
+):
+    # process open/close line
+    index = 2
+    if data_type == DatumType.integer:
+        multiplier = 1
+    else:
+        multiplier = 1.0
+    print_format = None
+    binary = False
+    data_file = None
+    data = None
+    comment = None
+
+    if isinstance(arr_line, list):
+        if len(arr_line) < 2 and store:
+            message = (
+                'Data array "{}" contains a OPEN/CLOSE '
+                "that is not followed by a file. {}".format(
+                    data_dim.structure.name, data_dim.structure.path
+                )
+            )
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                data_dim.structure.get_model(),
+                data_dim.structure.get_package(),
+                data_dim.structure.path,
+                "processing open/close line",
+                data_dim.structure.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                message,
+                debug,
+            )
+        while index < len(arr_line):
+            if isinstance(arr_line[index], str):
+                word = arr_line[index].lower()
+                if word == "factor" and index + 1 < len(arr_line):
+                    try:
+                        multiplier = convert_data(
+                            arr_line[index + 1],
+                            data_dim,
+                            data_type,
+                        )
+                    except Exception as ex:
+                        message = (
+                            "Data array {} contains an OPEN/CLOSE "
+                            "with an invalid multiplier following "
+                            'the "factor" keyword.'
+                            ".".format(data_dim.structure.name)
+                        )
+                        type_, value_, traceback_ = sys.exc_info()
+                        raise MFDataException(
+                            data_dim.structure.get_model(),
+                            data_dim.structure.get_package(),
+                            data_dim.structure.path,
+                            "processing open/close line",
+                            data_dim.structure.name,
+                            inspect.stack()[0][3],
+                            type_,
+                            value_,
+                            traceback_,
+                            message,
+                            sim_data.debug,
+                            ex,
+                        )
+                    index += 2
+                elif word == "iprn" and index + 1 < len(arr_line):
+                    print_format = arr_line[index + 1]
+                    index += 2
+                elif word == "data" and index + 1 < len(arr_line):
+                    data = arr_line[index + 1]
+                    index += 2
+                elif word == "binary" or word == "(binary)":
+                    binary = True
+                    index += 1
+                else:
+                    break
+            else:
+                break
+            # save comments
+        if index < len(arr_line):
+            comment = " ".join(arr_line[index:])
+        if arr_line[0].lower() == "open/close":
+            data_file = clean_filename(arr_line[1])
+        else:
+            data_file = clean_filename(arr_line[0])
+    elif isinstance(arr_line, dict):
+        for key, value in arr_line.items():
+            if key.lower() == "factor":
+                try:
+                    multiplier = convert_data(value, data_dim, data_type)
+                except Exception as ex:
+                    message = (
+                        "Data array {} contains an OPEN/CLOSE "
+                        "with an invalid factor following the "
+                        '"factor" keyword.'
+                        ".".format(data_dim.structure.name)
+                    )
+                    type_, value_, traceback_ = sys.exc_info()
+                    raise MFDataException(
+                        data_dim.structure.get_model(),
+                        data_dim.structure.get_package(),
+                        data_dim.structure.path,
+                        "processing open/close line",
+                        data_dim.structure.name,
+                        inspect.stack()[0][3],
+                        type_,
+                        value_,
+                        traceback_,
+                        message,
+                        sim_data.debug,
+                        ex,
+                    )
+            if key.lower() == "iprn":
+                print_format = value
+            if key.lower() == "binary":
+                binary = bool(value)
+            if key.lower() == "data":
+                data = value
+        if "filename" in arr_line:
+            data_file = clean_filename(arr_line["filename"])
+
+    return multiplier, print_format, binary, data_file, data, comment
 
 
 def to_string(
