@@ -36,6 +36,7 @@ reader urword
 optional true
 longname print input to listing file
 description REPLACE print_input {'{#1}': 'well'}
+mf6internal iprpak
 
 block options
 name print_flows
@@ -44,6 +45,7 @@ reader urword
 optional true
 longname print calculated flows to listing file
 description REPLACE print_flows {'{#1}': 'well'}
+mf6internal iprflow
 
 block options
 name save_flows
@@ -52,6 +54,7 @@ reader urword
 optional true
 longname save well flows to budget file
 description REPLACE save_flows {'{#1}': 'well'}
+mf6internal ipakcb
 
 block options
 name auto_flow_reduce
@@ -60,6 +63,7 @@ reader urword
 optional true
 longname cell fractional thickness for reduced pumping
 description keyword and real value that defines the fraction of the cell thickness used as an interval for smoothly adjusting negative pumping rates to 0 in cells with head values less than or equal to the bottom of the cell. Negative pumping rates are adjusted to 0 or a smaller negative value when the head in the cell is equal to or less than the calculated interval above the cell bottom. AUTO\_FLOW\_REDUCE is set to 0.1 if the specified value is less than or equal to zero. By default, negative pumping rates are not reduced during a simulation.
+mf6internal flowred
 
 block options
 name afrcsv_filerecord
@@ -70,6 +74,7 @@ tagged true
 optional true
 longname
 description
+mf6internal afrcsv_rec
 
 block options
 name auto_flow_reduce_csv
@@ -81,6 +86,7 @@ tagged true
 optional false
 longname budget keyword
 description keyword to specify that record corresponds to the AUTO\_FLOW\_REDUCE output option in which a new record is written for each well and for each time step in which the user-requested extraction rate is reduced by the program.
+mf6internal afrcsv
 
 block options
 name fileout
@@ -222,6 +228,7 @@ shape (maxbound)
 reader urword
 longname
 description
+mf6internal spd
 
 block period
 name cellid
@@ -255,6 +262,7 @@ optional true
 time_series true
 longname auxiliary variables
 description REPLACE aux {'{#1}': 'well'}
+mf6internal auxvar
 
 block period
 name boundname

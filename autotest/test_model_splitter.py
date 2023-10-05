@@ -346,7 +346,7 @@ def test_control_records(function_tmpdir):
 
     spd_ls1 = ml1.wel.stress_period_data.get_record(1)
     spd_ls2 = ml1.wel.stress_period_data.get_record(2)
- 
+
     if spd_ls1["filename"] is None or spd_ls1["binary"]:
         raise AssertionError(
             "External ascii files not being preserved for MFList"
