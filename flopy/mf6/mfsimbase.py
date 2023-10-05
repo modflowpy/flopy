@@ -257,7 +257,7 @@ class MFSimulationData:
         self.verbosity_level = VerbosityLevel.normal
         self.max_columns_user_set = False
         self.max_columns_auto_set = False
-        self.use_pandas = True
+        self.use_pandas = False
 
         self._update_str_format()
 
@@ -458,7 +458,7 @@ class MFSimulationBase(PackageContainer):
         memory_print_option=None,
         write_headers=True,
         lazy_io=False,
-        use_pandas=True,
+        use_pandas=False,
     ):
         super().__init__(MFSimulationData(sim_ws, self), sim_name)
         self.simulation_data.verbosity_level = self._resolve_verbosity_level(
@@ -691,7 +691,7 @@ class MFSimulationBase(PackageContainer):
         verify_data=False,
         write_headers=True,
         lazy_io=False,
-        use_pandas=True,
+        use_pandas=False,
     ):
         """
         Load an existing model. Do not call this method directly.  Should only

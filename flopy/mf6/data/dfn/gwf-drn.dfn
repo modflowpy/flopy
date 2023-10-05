@@ -45,6 +45,7 @@ reader urword
 optional true
 longname print input to listing file
 description REPLACE print_input {'{#1}': 'drain'}
+mf6internal iprpak
 
 block options
 name print_flows
@@ -53,6 +54,7 @@ reader urword
 optional true
 longname print calculated flows to listing file
 description REPLACE print_flows {'{#1}': 'drain'}
+mf6internal iprflow
 
 block options
 name save_flows
@@ -61,6 +63,7 @@ reader urword
 optional true
 longname save CHD flows to budget file
 description REPLACE save_flows {'{#1}': 'drain'}
+mf6internal ipakcb
 
 block options
 name ts_filerecord
@@ -146,6 +149,16 @@ optional true
 longname
 description REPLACE mover {'{#1}': 'Drain'}
 
+# dev options
+block options
+name dev_cubic_scaling
+type keyword
+reader urword
+optional true
+longname cubic-scaling
+description cubic-scaling is used to scale the drain conductance
+mf6internal icubicsfac
+
 # --------------------- gwf drn dimensions ---------------------
 
 block dimensions
@@ -179,6 +192,7 @@ shape (maxbound)
 reader urword
 longname
 description
+mf6internal spd
 
 block period
 name cellid
@@ -223,6 +237,7 @@ optional true
 time_series true
 longname auxiliary variables
 description REPLACE aux {'{#1}': 'drain'}
+mf6internal auxvar
 
 block period
 name boundname

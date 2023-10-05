@@ -443,7 +443,7 @@ def build_sim_load():
         "sim_ws: Union[str, os.PathLike] = os.curdir,\n             "
         "strict=True, verbosity_level=1, load_only=None,\n             "
         "verify_data=False, write_headers=True,\n             "
-        "lazy_io=False, use_pandas=True):\n        "
+        "lazy_io=False, use_pandas=False):\n        "
         "return mfsimbase.MFSimulationBase.load(cls, sim_name, version, "
         "\n                                               "
         "exe_name, sim_ws, strict,\n"
@@ -1002,7 +1002,7 @@ def create_packages():
             init_vars = build_model_init_vars(options_param_list)
 
             options_param_list.insert(0, "lazy_io=False")
-            options_param_list.insert(0, "use_pandas=True")
+            options_param_list.insert(0, "use_pandas=False")
             options_param_list.insert(0, "write_headers=True")
             options_param_list.insert(0, "verbosity_level=1")
             options_param_list.insert(

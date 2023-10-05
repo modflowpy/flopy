@@ -87,7 +87,7 @@ class MFSimulation(mfsimbase.MFSimulationBase):
         sim_ws: Union[str, os.PathLike] = os.curdir,
         verbosity_level=1,
         write_headers=True,
-        use_pandas=True,
+        use_pandas=False,
         lazy_io=False,
         continue_=None,
         nocheck=None,
@@ -131,7 +131,7 @@ class MFSimulation(mfsimbase.MFSimulationBase):
         verify_data=False,
         write_headers=True,
         lazy_io=False,
-        use_pandas=True,
+        use_pandas=False,
     ):
         return mfsimbase.MFSimulationBase.load(
             cls,
