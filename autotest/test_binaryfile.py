@@ -447,7 +447,7 @@ def mf6_gwf_2sp_st_tr(function_tmpdir):
 
     wel = flopy.mf6.ModflowGwfwel(
         model=gwf,
-        stress_period_data={0: 0, 1: [[(0, 0, 0), -1]]},
+        stress_period_data={0: None, 1: [[(0, 0, 0), -1]]},
     )
 
     sto = flopy.mf6.ModflowGwfsto(
