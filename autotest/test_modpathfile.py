@@ -1,11 +1,13 @@
 import inspect
 import io
 import pstats
+from itertools import repeat
 from shutil import copytree
 
 import numpy as np
+import numpy.lib.recfunctions as rfn
 import pytest
-from modflow_devtools.markers import requires_exe
+from modflow_devtools.markers import requires_exe, requires_pkg
 
 from flopy.mf6 import (
     MFSimulation,
@@ -26,7 +28,7 @@ from flopy.utils import EndpointFile, PathlineFile
 pytestmark = pytest.mark.mf6
 
 
-def __create_simulation(
+def __create_and_run_simulation(
     ws,
     name,
     nrow,
@@ -181,7 +183,7 @@ def __create_simulation(
 
 @pytest.fixture(scope="module")
 def mp7_small(module_tmpdir):
-    return __create_simulation(
+    return __create_and_run_simulation(
         ws=module_tmpdir / "mp7_small",
         name="mp7_small",
         nper=1,
@@ -209,7 +211,7 @@ def mp7_small(module_tmpdir):
 
 @pytest.fixture(scope="module")
 def mp7_large(module_tmpdir):
-    return __create_simulation(
+    return __create_and_run_simulation(
         ws=module_tmpdir / "mp7_large",
         name="mp7_large",
         nper=1,
@@ -307,3 +309,56 @@ def test_get_destination_endpoint_data(
             dest_cells=nodew if locations == "well" else nodesr
         )
     )
+
+
+@pytest.mark.parametrize("longfieldname", [True, False])
+@requires_exe("mf6", "mp7")
+@requires_pkg("shapefile", "shapely")
+def test_write_shapefile(function_tmpdir, mp7_small, longfieldname):
+    from shapefile import Reader
+
+    # setup and run model, then copy outputs to function_tmpdir
+    sim, forward_model_name, _, _, _ = mp7_small
+    gwf = sim.get_model()
+    grid = gwf.modelgrid
+    ws = function_tmpdir / "ws"
+    copytree(sim.simulation_data.mfpath.get_sim_path(), ws)
+
+    # make sure forward model output exists
+    forward_path = ws / f"{forward_model_name}.mppth"
+    assert forward_path.is_file()
+
+    # load pathlines from file
+    pathline_file = PathlineFile(forward_path)
+    pathlines = pathline_file.get_alldata()
+
+    # define shapefile path
+    shp_file = ws / "pathlines.shp"
+
+    # add a column to the pathline recarray
+    fieldname = "newfield" + ("longname" if longfieldname else "")
+    fieldval = "x"
+    pathlines = [
+        rfn.append_fields(
+            pl, fieldname, list(repeat(fieldval, len(pl))), dtypes="|S1"
+        )
+        for pl in pathlines
+    ]
+
+    # write the pathline recarray to shapefile
+    pathline_file.write_shapefile(
+        pathline_data=pathlines,
+        shpname=shp_file,
+        one_per_particle=False,
+        mg=grid,
+    )
+
+    # make sure shapefile exists
+    assert shp_file.is_file()
+
+    # load shapefile
+    with Reader(shp_file) as reader:
+        fieldnames = [f[0] for f in reader.fields[1:]]
+        fieldname = "newfiname_" if longfieldname else fieldname
+        assert fieldname in fieldnames
+        assert all(r[fieldname] == fieldval for r in reader.iterRecords())
