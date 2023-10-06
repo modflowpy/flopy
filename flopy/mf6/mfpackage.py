@@ -2276,7 +2276,7 @@ class MFPackage(PackageContainer, PackageInterface):
                                 new_size = len(dataset.get_data())
 
                         if size_def.get_data() is None:
-                            current_size = 0
+                            current_size = -1
                         else:
                             current_size = size_def.get_data()
 
