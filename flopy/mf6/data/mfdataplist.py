@@ -550,6 +550,12 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
             return self._data_item_names, True
 
         if (
+            len(data[0]) == len(self._header_names) - 1
+            and self._header_names[-1] == "boundname"
+        ):
+            return self._header_names[:-1], True
+
+        if (
             len(data[0]) == len(self._data_item_names) - 1
             and self._data_item_names[-1] == "boundname"
         ):
