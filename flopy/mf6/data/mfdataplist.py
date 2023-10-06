@@ -391,6 +391,29 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
             idx += 1
         return col_name
 
+    @staticmethod
+    def _untuple_manually(pdata, loc, new_column_name, column_name, index):
+        """
+        Loop through pandas DataFrame removing tuples from cellid columns.
+        Used when pandas "insert" method to perform the same task fails.
+        """
+        # build new column list
+        new_column = []
+        for idx, row in pdata.iterrows():
+            if isinstance(row[column_name], tuple) or isinstance(
+                row[column_name], list
+            ):
+                new_column.append(row[column_name][index])
+            else:
+                new_column.append(row[column_name])
+
+        # insert list as new column
+        pdata.insert(
+            loc=loc,
+            column=new_column_name,
+            value=new_column,
+        )
+
     def _untuple_cellids(self, pdata):
         """
         For all cellids in "pdata", convert them to layer, row, column fields and
@@ -421,43 +444,97 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
         for field_idx, column_name in fields_to_correct:
             # add individual layer/row/column/cell/node columns
             if isinstance(self._mg, StructuredGrid):
-                pdata.insert(
-                    loc=field_idx,
-                    column=self._unique_column_name(pdata, "layer"),
-                    value=pdata.apply(lambda x: x[column_name][0], axis=1),
-                )
-                pdata.insert(
-                    loc=field_idx + 1,
-                    column=self._unique_column_name(pdata, "row"),
-                    value=pdata.apply(lambda x: x[column_name][1], axis=1),
-                )
-                pdata.insert(
-                    loc=field_idx + 2,
-                    column=self._unique_column_name(pdata, "column"),
-                    value=pdata.apply(lambda x: x[column_name][2], axis=1),
-                )
+                try:
+                    pdata.insert(
+                        loc=field_idx,
+                        column=self._unique_column_name(pdata, "layer"),
+                        value=pdata.apply(lambda x: x[column_name][0], axis=1),
+                    )
+                except (ValueError, TypeError):
+                    self._untuple_manually(
+                        pdata,
+                        field_idx,
+                        self._unique_column_name(pdata, "layer"),
+                        column_name,
+                        0,
+                    )
+                try:
+                    pdata.insert(
+                        loc=field_idx + 1,
+                        column=self._unique_column_name(pdata, "row"),
+                        value=pdata.apply(lambda x: x[column_name][1], axis=1),
+                    )
+                except (ValueError, TypeError):
+                    self._untuple_manually(
+                        pdata,
+                        field_idx + 1,
+                        self._unique_column_name(pdata, "row"),
+                        column_name,
+                        1,
+                    )
+                try:
+                    pdata.insert(
+                        loc=field_idx + 2,
+                        column=self._unique_column_name(pdata, "column"),
+                        value=pdata.apply(lambda x: x[column_name][2], axis=1),
+                    )
+                except (ValueError, TypeError):
+                    self._untuple_manually(
+                        pdata,
+                        field_idx + 2,
+                        self._unique_column_name(pdata, "column"),
+                        column_name,
+                        2,
+                    )
             elif isinstance(self._mg, VertexGrid):
-                pdata.insert(
-                    loc=field_idx,
-                    column=self._unique_column_name(pdata, "layer"),
-                    value=pdata.apply(lambda x: x[column_name][0], axis=1),
-                )
-                pdata.insert(
-                    loc=field_idx + 1,
-                    column=self._unique_column_name(pdata, "cell"),
-                    value=pdata.apply(lambda x: x[column_name][1], axis=1),
-                )
+                try:
+                    pdata.insert(
+                        loc=field_idx,
+                        column=self._unique_column_name(pdata, "layer"),
+                        value=pdata.apply(lambda x: x[column_name][0], axis=1),
+                    )
+                except (ValueError, TypeError):
+                    self._untuple_manually(
+                        pdata,
+                        field_idx,
+                        self._unique_column_name(pdata, "layer"),
+                        column_name,
+                        0,
+                    )
+                try:
+                    pdata.insert(
+                        loc=field_idx + 1,
+                        column=self._unique_column_name(pdata, "cell"),
+                        value=pdata.apply(lambda x: x[column_name][1], axis=1),
+                    )
+                except (ValueError, TypeError):
+                    self._untuple_manually(
+                        pdata,
+                        field_idx + 1,
+                        self._unique_column_name(pdata, "cell"),
+                        column_name,
+                        1,
+                    )
             elif isinstance(self._mg, UnstructuredGrid):
                 if column_name == "node":
                     # fixing a problem where node was specified as a tuple
                     # make sure new column is named properly
                     column_name = "node_2"
                     pdata = pdata.rename(columns={"node": column_name})
-                pdata.insert(
-                    loc=field_idx,
-                    column=self._unique_column_name(pdata, "node"),
-                    value=pdata.apply(lambda x: x[column_name][0], axis=1),
-                )
+                try:
+                    pdata.insert(
+                        loc=field_idx,
+                        column=self._unique_column_name(pdata, "node"),
+                        value=pdata.apply(lambda x: x[column_name][0], axis=1),
+                    )
+                except (ValueError, TypeError):
+                    self._untuple_manually(
+                        pdata,
+                        field_idx,
+                        self._unique_column_name(pdata, "node"),
+                        column_name,
+                        0,
+                    )
             # remove cellid tuple
             pdata = pdata.drop(column_name, axis=1)
         return pdata, len(fields_to_correct)
