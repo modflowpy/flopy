@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from autotest.conftest import get_example_data_path
 from modflow_devtools.markers import requires_exe, requires_pkg
+from modflow_devtools.misc import set_dir
 
 import flopy
 from flopy.mf6 import MFSimulation
@@ -254,78 +255,87 @@ def test_control_records(function_tmpdir):
     ncol = 10
     nper = 3
 
-    sim = flopy.mf6.MFSimulation()
-    ims = flopy.mf6.ModflowIms(sim, complexity="SIMPLE")
+    # create base simulation
+    full_ws = function_tmpdir / "full"
+    full_ws.mkdir()
+    with set_dir(full_ws):
+        sim = flopy.mf6.MFSimulation(full_ws)
+        ims = flopy.mf6.ModflowIms(sim, complexity="SIMPLE")
 
-    tdis = flopy.mf6.ModflowTdis(
-        sim,
-        nper=nper,
-        perioddata=((1.0, 1, 1.0), (1.0, 1, 1.0), (1.0, 1, 1.0)),
-    )
+        tdis = flopy.mf6.ModflowTdis(
+            sim,
+            nper=nper,
+            perioddata=((1.0, 1, 1.0), (1.0, 1, 1.0), (1.0, 1, 1.0)),
+        )
 
-    gwf = flopy.mf6.ModflowGwf(sim, save_flows=True)
+        gwf = flopy.mf6.ModflowGwf(sim, save_flows=True)
 
-    botm2 = np.ones((nrow, ncol)) * 20
-    dis = flopy.mf6.ModflowGwfdis(
-        gwf,
-        nlay=2,
-        nrow=nrow,
-        ncol=ncol,
-        delr=1,
-        delc=1,
-        top=35,
-        botm=[30, botm2],
-        idomain=1,
-    )
+        botm2 = np.ones((nrow, ncol)) * 20
+        dis = flopy.mf6.ModflowGwfdis(
+            gwf,
+            nlay=2,
+            nrow=nrow,
+            ncol=ncol,
+            delr=1,
+            delc=1,
+            top=35,
+            botm=[30, botm2],
+            idomain=1,
+        )
 
-    ic = flopy.mf6.ModflowGwfic(gwf, strt=32)
-    npf = flopy.mf6.ModflowGwfnpf(
-        gwf,
-        k=[
-            1.0,
-            {
-                "data": np.ones((10, 10)) * 0.75,
-                "filename": "k.l2.txt",
-                "iprn": 1,
-                "factor": 1,
-            },
-        ],
-        k33=[
-            np.ones((nrow, ncol)),
-            {
-                "data": np.ones((nrow, ncol)) * 0.5,
-                "filename": "k33.l2.bin",
-                "iprn": 1,
-                "factor": 1,
-                "binary": True,
-            },
-        ],
-    )
+        ic = flopy.mf6.ModflowGwfic(gwf, strt=32)
+        npf = flopy.mf6.ModflowGwfnpf(
+            gwf,
+            k=[
+                1.0,
+                {
+                    "data": np.ones((10, 10)) * 0.75,
+                    "filename": "k.l2.txt",
+                    "iprn": 1,
+                    "factor": 1,
+                },
+            ],
+            k33=[
+                np.ones((nrow, ncol)),
+                {
+                    "data": np.ones((nrow, ncol)) * 0.5,
+                    "filename": "k33.l2.bin",
+                    "iprn": 1,
+                    "factor": 1,
+                    "binary": True,
+                },
+            ],
+        )
 
-    wel_rec = [
-        ((0, 4, 5), -10),
-    ]
+        wel_rec = [
+            ((0, 4, 5), -10),
+        ]
 
-    spd = {
-        0: wel_rec,
-        1: {"data": wel_rec, "filename": "wel.1.txt"},
-        2: {"data": wel_rec, "filename": "wel.2.bin", "binary": True},
-    }
+        spd = {
+            0: wel_rec,
+            1: {"data": wel_rec, "filename": "wel.1.txt"},
+            2: {"data": wel_rec, "filename": "wel.2.bin", "binary": True},
+        }
 
-    wel = flopy.mf6.ModflowGwfwel(gwf, stress_period_data=spd)
+        wel = flopy.mf6.ModflowGwfwel(gwf, stress_period_data=spd)
 
-    chd_rec = []
-    for cond, j in ((30, 0), (22, 9)):
-        for i in range(10):
-            chd_rec.append(((0, i, j), cond))
+        chd_rec = []
+        for cond, j in ((30, 0), (22, 9)):
+            for i in range(10):
+                chd_rec.append(((0, i, j), cond))
 
-    chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data={0: chd_rec})
+        chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data={0: chd_rec})
 
+    # define splitting array
     arr = np.zeros((10, 10), dtype=int)
     arr[0:5, :] = 1
 
-    mfsplit = flopy.mf6.utils.Mf6Splitter(sim)
-    new_sim = mfsplit.split_model(arr)
+    # split
+    split_ws = function_tmpdir / "split"
+    split_ws.mkdir()
+    with set_dir(split_ws):
+        mfsplit = flopy.mf6.utils.Mf6Splitter(sim)
+        new_sim = mfsplit.split_model(arr)
 
     ml1 = new_sim.get_model("model_1")
 
