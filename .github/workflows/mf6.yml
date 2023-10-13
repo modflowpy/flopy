@@ -44,8 +44,11 @@ jobs:
         pip install https://github.com/MODFLOW-USGS/modflowapi/zipball/develop
         pip install .[test,optional]
 
-    - name: Install gfortran
-      uses: modflowpy/install-gfortran-action@v1
+    - name: Setup GNU Fortran
+      uses: awvwgk/setup-fortran@v1
+      with:
+        compiler: gcc
+        version: 13
 
     - name: Checkout MODFLOW 6
       uses: actions/checkout@v4
