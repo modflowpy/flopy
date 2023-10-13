@@ -45,7 +45,7 @@ jobs:
         pip install .[test,optional]
 
     - name: Setup GNU Fortran
-      uses: awvwgk/setup-fortran@v1
+      uses: fortran-lang/setup-fortran@v1
       with:
         compiler: gcc
         version: 13
