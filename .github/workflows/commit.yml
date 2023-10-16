@@ -1,11 +1,6 @@
 name: FloPy continuous integration
 on:
   push:
-    branches:
-      - master
-      - develop
-      - ci-diagnose*
-      - notebooks
   pull_request:
     branches:
       - master
