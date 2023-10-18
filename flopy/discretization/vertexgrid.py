@@ -528,7 +528,7 @@ class VertexGrid(Grid):
                 a = np.squeeze(a, axis=1)
                 plotarray = a[layer, :]
             else:
-                raise Exception(
+                raise ValueError(
                     "Array has 3 dimensions so one of them must be of size 1 "
                     "for a VertexGrid."
                 )
@@ -540,7 +540,7 @@ class VertexGrid(Grid):
                 plotarray = plotarray.reshape(self.nlay, self.ncpl)
                 plotarray = plotarray[layer, :]
         else:
-            raise Exception("Array to plot must be of dimension 1 or 2")
+            raise ValueError("Array to plot must be of dimension 1 or 2")
         msg = f"{plotarray.shape[0]} /= {required_shape}"
         assert plotarray.shape == required_shape, msg
         return plotarray

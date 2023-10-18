@@ -156,12 +156,16 @@ class PlotMapView:
 
     def contour_array(self, a, masked_values=None, **kwargs):
         """
-        Contour an array.  If the array is three-dimensional, then the method
-        will contour the layer tied to this class (self.layer).
+        Contour an array on the grid. By default the top layer
+        is contoured. To select a different layer, specify the
+        layer in the class constructor.
+
+        For structured and vertex grids, the array may be 1D, 2D or 3D.
+        For unstructured grids, the array must be 1D or 2D.
 
         Parameters
         ----------
-        a : numpy.ndarray
+        a : 1D, 2D or 3D array-like
             Array to plot.
         masked_values : iterable of floats, ints
             Values to mask.

@@ -1637,7 +1637,7 @@ class StructuredGrid(Grid):
                 plotarray = plotarray.reshape(self.shape)
                 plotarray = plotarray[layer, :, :]
         else:
-            raise Exception("Array to plot must be of dimension 1, 2, or 3")
+            raise ValueError("Array to plot must be of dimension 1, 2, or 3")
         msg = f"{plotarray.shape} /= {required_shape}"
         assert plotarray.shape == required_shape, msg
         return plotarray

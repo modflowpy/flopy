@@ -139,6 +139,44 @@ def disu_sim(name, tmpdir, missing_arrays=False):
     return sim
 
 
+@pytest.fixture
+def unstructured_grid(example_data_path):
+    ws = example_data_path / "unstructured"
+
+    # load vertices
+    verts = load_verts(ws / "ugrid_verts.dat")
+
+    # load the index list into iverts, xc, and yc
+    iverts, xc, yc = load_iverts(ws / "ugrid_iverts.dat", closed=True)
+
+    # create a 3 layer model grid
+    ncpl = np.array(3 * [len(iverts)])
+    nnodes = np.sum(ncpl)
+
+    top = np.ones(nnodes)
+    botm = np.ones(nnodes)
+
+    # set top and botm elevations
+    i0 = 0
+    i1 = ncpl[0]
+    elevs = [100, 0, -100, -200]
+    for ix, cpl in enumerate(ncpl):
+        top[i0:i1] *= elevs[ix]
+        botm[i0:i1] *= elevs[ix + 1]
+        i0 += cpl
+        i1 += cpl
+
+    return UnstructuredGrid(
+        vertices=verts,
+        iverts=iverts,
+        xcenters=xc,
+        ycenters=yc,
+        top=top,
+        botm=botm,
+        ncpl=ncpl,
+    )
+
+
 @requires_pkg("shapefile")
 @pytest.mark.parametrize("pathlike", (True, False))
 def test_output_helper_shapefile_export(
@@ -613,7 +651,7 @@ def test_export_array2(function_tmpdir):
 
 
 @requires_pkg("shapefile", "shapely")
-def test_export_array_contours(function_tmpdir):
+def test_export_array_contours_structured(function_tmpdir):
     nrow = 7
     ncol = 11
     crs = 4431
@@ -646,6 +684,61 @@ def test_export_array_contours(function_tmpdir):
     a = np.arange(nrow * ncol).reshape((nrow, ncol))
     export_array_contours(modelgrid, filename, a, crs=crs)
     assert os.path.isfile(filename), "did not create contour shapefile"
+
+
+@requires_pkg("shapefile", "shapely")
+def test_export_array_contours_unstructured(
+    function_tmpdir, unstructured_grid
+):
+    from shapefile import Reader
+
+    grid = unstructured_grid
+    fname = function_tmpdir / "myarraycontours1.shp"
+    export_array_contours(grid, fname, np.arange(grid.nnodes))
+    assert fname.is_file(), "did not create contour shapefile"
+
+    # visual debugging
+    grid.plot(alpha=0.2)
+    with Reader(fname) as r:
+        shapes = r.shapes()
+        for s in shapes:
+            x = [i[0] for i in s.points[:]]
+            y = [i[1] for i in s.points[:]]
+            plt.plot(x, y)
+
+    # plt.show()
+
+
+from autotest.test_gridgen import sim_disu_diff_layers
+
+
+@requires_pkg("shapefile", "shapely")
+def test_export_array_contours_unstructured_diff_layers(
+    function_tmpdir, sim_disu_diff_layers
+):
+    from shapefile import Reader
+
+    gwf = sim_disu_diff_layers.get_model()
+    grid = gwf.modelgrid
+    a = np.arange(grid.nnodes)
+    for layer in range(3):
+        fname = function_tmpdir / f"contours.{layer}.shp"
+        export_array_contours(grid, fname, a, layer=layer)
+        assert fname.is_file(), "did not create contour shapefile"
+
+    # visual debugging
+    fig, axes = plt.subplots(1, 3, subplot_kw={"aspect": "equal"})
+    for layer, ax in enumerate(axes):
+        fname = function_tmpdir / f"contours.{layer}.shp"
+        with Reader(fname) as r:
+            shapes = r.shapes()
+            for s in shapes:
+                x = [i[0] for i in s.points[:]]
+                y = [i[1] for i in s.points[:]]
+                ax.plot(x, y)
+            grid.plot(ax=ax, alpha=0.2, layer=layer)
+
+    # plt.show()
 
 
 @requires_pkg("shapefile", "shapely")
@@ -1331,52 +1424,18 @@ def test_vtk_vector(function_tmpdir, example_data_path):
 
 
 @requires_pkg("vtk")
-def test_vtk_unstructured(function_tmpdir, example_data_path):
+def test_vtk_unstructured(function_tmpdir, unstructured_grid):
     from vtkmodules.util.numpy_support import vtk_to_numpy
     from vtkmodules.vtkIOLegacy import vtkUnstructuredGridReader
 
-    u_data_ws = example_data_path / "unstructured"
-
-    # load vertices
-    verts = load_verts(u_data_ws / "ugrid_verts.dat")
-
-    # load the index list into iverts, xc, and yc
-    iverts, xc, yc = load_iverts(u_data_ws / "ugrid_iverts.dat", closed=True)
-
-    # create a 3 layer model grid
-    ncpl = np.array(3 * [len(iverts)])
-    nnodes = np.sum(ncpl)
-
-    top = np.ones(nnodes)
-    botm = np.ones(nnodes)
-
-    # set top and botm elevations
-    i0 = 0
-    i1 = ncpl[0]
-    elevs = [100, 0, -100, -200]
-    for ix, cpl in enumerate(ncpl):
-        top[i0:i1] *= elevs[ix]
-        botm[i0:i1] *= elevs[ix + 1]
-        i0 += cpl
-        i1 += cpl
-
-    # create the modelgrid
-    modelgrid = UnstructuredGrid(
-        vertices=verts,
-        iverts=iverts,
-        xcenters=xc,
-        ycenters=yc,
-        top=top,
-        botm=botm,
-        ncpl=ncpl,
-    )
+    grid = unstructured_grid
 
     outfile = function_tmpdir / "disu_grid.vtu"
     vtkobj = Vtk(
-        modelgrid=modelgrid, vertical_exageration=2, binary=True, smooth=False
+        modelgrid=grid, vertical_exageration=2, binary=True, smooth=False
     )
-    vtkobj.add_array(modelgrid.top, "top")
-    vtkobj.add_array(modelgrid.botm, "botm")
+    vtkobj.add_array(grid.top, "top")
+    vtkobj.add_array(grid.botm, "botm")
     vtkobj.write(outfile)
 
     assert is_binary_file(outfile)
@@ -1390,7 +1449,9 @@ def test_vtk_unstructured(function_tmpdir, example_data_path):
 
     top2 = vtk_to_numpy(data.GetCellData().GetArray("top"))
 
-    assert np.allclose(np.ravel(top), top2), "Field data not properly written"
+    assert np.allclose(
+        np.ravel(grid.top), top2
+    ), "Field data not properly written"
 
 
 @requires_pkg("vtk", "pyvista")
