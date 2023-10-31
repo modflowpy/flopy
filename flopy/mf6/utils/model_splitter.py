@@ -1823,9 +1823,11 @@ class Mf6Splitter(object):
 
             # connect model network through movers between models
             mvr_recs = []
+            mvr_mdl_set = set()
             for rec in sfr_mvr_conn:
                 m0, n0 = sfr_remaps[rec[0]]
                 m1, n1 = sfr_remaps[rec[1]]
+                mvr_mdl_set = mvr_mdl_set | {m0, m1}
                 mvr_recs.append(
                     (
                         self._model_dict[m0].name,
@@ -1842,6 +1844,7 @@ class Mf6Splitter(object):
             for idv, rec in div_mvr_conn.items():
                 m0, n0 = sfr_remaps[rec[0]]
                 m1, n1 = sfr_remaps[rec[1]]
+                mvr_mdl_set = mvr_mdl_set | {m0, m1}
                 mvr_recs.append(
                     (
                         self._model_dict[m0].name,
@@ -1856,7 +1859,7 @@ class Mf6Splitter(object):
                 )
 
             if mvr_recs:
-                for mkey in self._model_dict.keys():
+                for mkey in mvr_mdl_set:
                     if not mapped_data[mkey]:
                         continue
                     mapped_data[mkey]["mover"] = True
@@ -2953,8 +2956,11 @@ class Mf6Splitter(object):
                     continue
 
                 for mkey in mapped_data.keys():
+
                     if mapped_data[mkey]:
-                        if isinstance(value, mfdatascalar.MFScalar):
+                        if item in mapped_data[mkey]:
+                            continue
+                        elif isinstance(value, mfdatascalar.MFScalar):
                             mapped_data[mkey][item] = value.data
                         elif isinstance(value, mfdatalist.MFList):
                             mapped_data[mkey][item] = value.array
@@ -2964,7 +2970,11 @@ class Mf6Splitter(object):
         )
         paks = {}
         for mdl, data in mapped_data.items():
+            _ = mapped_data.pop("maxbound", None)
             if mapped_data[mdl]:
+                if "stress_period_data" in mapped_data[mdl]:
+                    if not mapped_data[mdl]["stress_period_data"]:
+                        continue
                 paks[mdl] = pak_cls(
                     self._model_dict[mdl], pname=package.name[0], **data
                 )

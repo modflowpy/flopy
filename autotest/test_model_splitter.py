@@ -366,3 +366,109 @@ def test_control_records(function_tmpdir):
         raise AssertionError(
             "External binary file input not being preseved for MFList"
         )
+
+
+@requires_exe("mf6")
+def test_empty_packages(function_tmpdir):
+    new_sim_path = function_tmpdir / "split_model"
+
+    sim = flopy.mf6.MFSimulation(sim_ws=new_sim_path)
+    ims = flopy.mf6.ModflowIms(sim, print_option="all", complexity="simple")
+    tdis = flopy.mf6.ModflowTdis(sim)
+
+    nrow, ncol = 1, 14
+    base_name = "sfr01gwfgwf"
+    gwf = flopy.mf6.ModflowGwf(sim, modelname=base_name, save_flows=True)
+    dis = flopy.mf6.ModflowGwfdis(gwf, nrow=1, ncol=14, top=0., botm=-1.)
+    npf = flopy.mf6.ModflowGwfnpf(
+        gwf,
+        save_flows=True,
+        save_specific_discharge=True,
+        icelltype=0,
+        k=20.,
+        k33=20.
+    )
+    ic = flopy.mf6.ModflowGwfic(gwf, strt=0.)
+    chd = flopy.mf6.ModflowGwfchd(
+        gwf,
+        stress_period_data={0: [((0, 0, 13), 0.0),]}
+    )
+    wel = flopy.mf6.ModflowGwfwel(
+        gwf,
+        stress_period_data={0: [((0, 0, 0), 1.),]}
+    )
+
+    # Build SFR records
+    packagedata = [
+        (0, (0, 0, 0), 1., 1., 1., 0., 0.1, 0., 1., 1, 1., 0),
+        (1, (0, 0, 1), 1., 1., 1., 0., 0.1, 0., 1., 2, 1., 0),
+        (2, (0, 0, 2), 1., 1., 1., 0., 0.1, 0., 1., 2, 1., 0),
+        (3, (0, 0, 3), 1., 1., 1., 0., 0.1, 0., 1., 2, 1., 0),
+        (4, (0, 0, 4), 1., 1., 1., 0., 0.1, 0., 1., 2, 1., 0),
+        (5, (0, 0, 5), 1., 1., 1., 0., 0.1, 0., 1., 2, 1., 0),
+        (6, (0, 0, 6), 1., 1., 1., 0., 0.1, 0., 1., 2, 1., 0),
+        (7, (0, 0, 7), 1., 1., 1., 0., 0.1, 0., 1., 2, 1., 0),
+        (8, (0, 0, 8), 1., 1., 1., 0., 0.1, 0., 1., 2, 1., 0),
+        (9, (0, 0, 9), 1., 1., 1., 0., 0.1, 0., 1., 2, 1., 0),
+        (10, (0, 0, 10), 1., 1., 1., 0., 0.1, 0., 1., 2, 1., 0),
+        (11, (0, 0, 11), 1., 1., 1., 0., 0.1, 0., 1., 2, 1., 0),
+        (12, (0, 0, 12), 1., 1., 1., 0., 0.1, 0., 1., 2, 1., 0),
+        (13, (0, 0, 13), 1., 1., 1., 0., 0.1, 0., 1., 1, 1., 0),
+    ]
+
+    connectiondata = [
+        (0, -1),
+        (1, 0, -2),
+        (2, 1, -3),
+        (3, 2, -4),
+        (4, 3, -5),
+        (5, 4, -6),
+        (6, 5, -7),
+        (7, 6, -8),
+        (8, 7, -9),
+        (9, 8, -10),
+        (10, 9, -11),
+        (11, 10, -12),
+        (12, 11, -13),
+        (13, 12)
+    ]
+
+    sfr = flopy.mf6.ModflowGwfsfr(
+        gwf,
+        print_input=True,
+        print_stage=True,
+        print_flows=True,
+        save_flows=True,
+        stage_filerecord=f"{base_name}.sfr.stg",
+        budget_filerecord=f"{base_name}.sfr.bud",
+        nreaches=14,
+        packagedata=packagedata,
+        connectiondata=connectiondata,
+        perioddata={0: [(0, "INFLOW", 1.),]}
+    )
+
+    array = np.zeros((nrow, ncol), dtype=int)
+    array[0, 7:] = 1
+    mfsplit = Mf6Splitter(sim)
+    new_sim = mfsplit.split_model(array)
+
+    m0 = new_sim.get_model(f"{base_name}_0")
+    m1 = new_sim.get_model(f"{base_name}_1")
+
+    if "chd_0" in m0.package_dict:
+        raise AssertionError(
+            f"Empty CHD file written to {base_name}_0 model"
+        )
+
+    if "wel_0" in m1.package_dict:
+        raise AssertionError(
+            f"Empty WEL file written to {base_name}_1 model"
+        )
+
+    mvr_status0 = m0.sfr.mover.array
+    mvr_status1 = m0.sfr.mover.array
+
+    if not mvr_status0 or not mvr_status1:
+        raise AssertionError(
+            "Mover status being overwritten in options splitting"
+        )
