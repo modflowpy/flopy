@@ -2956,7 +2956,6 @@ class Mf6Splitter(object):
                     continue
 
                 for mkey in mapped_data.keys():
-
                     if mapped_data[mkey]:
                         if item in mapped_data[mkey]:
                             continue
