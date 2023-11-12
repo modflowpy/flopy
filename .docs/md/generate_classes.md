@@ -97,7 +97,3 @@ $ python -m flopy.mf6.utils.generate_classes --dfnpath ../your/dfn/path
 Branch names, commit hashes, or tags may be provided to `ref`.
 
 By default, a backup is made of FloPy's package classes before rewriting them. To disable backups, use `--no-backup` from command-line, or `backup=False` with the Python function.
-
-## Testing class generation
-
-Tests for the `generate_classes()` utility are located in `test_generate_classes.py`. The tests depend on [`pytest-virtualenv`](https://pypi.org/project/pytest-virtualenv/) and will be skipped if run in parallel without the `--dist loadfile` option for `pytest-xdist`.

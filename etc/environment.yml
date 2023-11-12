@@ -27,7 +27,6 @@ dependencies:
   - pytest-cases
   - pytest-cov
   - pytest-dotenv
-  - pytest-virtualenv
   - pytest-xdist
   - virtualenv
 
@@ -52,4 +51,4 @@ dependencies:
   - pymetis
 
   # MODFLOW API dependencies
-  - bmipy
+  - xmipy

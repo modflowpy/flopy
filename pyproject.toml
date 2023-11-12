@@ -55,7 +55,6 @@ test = [
     "pytest-cases",
     "pytest-cov",
     "pytest-dotenv",
-    "pytest-virtualenv",
     "pytest-xdist",
     "virtualenv"
 ]
