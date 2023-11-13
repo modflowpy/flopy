@@ -69,7 +69,7 @@ The `flopy` package has a number of [optional dependencies](.docs/optional_depen
 
 Alternatively, with Anaconda or Miniconda:
 
-    conda env create -n flopy python>=3.8 -f requirements.txt -f requirements-test.txt ...
+    conda env create -f etc/environment.yml
     conda activate flopy
 
 #### Python IDEs

@@ -66,7 +66,7 @@ def pytest_generate_tests(metafunc):
 def test_generate_classes_from_github_refs(
     request, project_root_path, ref, worker_id, function_tmpdir
 ):
-    # skip if run in parallel with pytest-xdist
+    # skip if run in parallel with pytest-xdist without --dist loadfile
     argv = (
         request.config.workerinput["mainargv"]
         if hasattr(request.config, "workerinput")
