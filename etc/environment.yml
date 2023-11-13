@@ -9,6 +9,7 @@ dependencies:
 
   # lint
   - black
+  - cffconvert
   - flake8
   - isort
   - pylint
@@ -19,9 +20,7 @@ dependencies:
   - filelock
   - jupyter
   - jupytext
-  - pip
-  - pip:
-      - modflow-devtools
+  - modflow-devtools
   - pytest
   - pytest-benchmark
   - pytest-cases
@@ -49,6 +48,4 @@ dependencies:
   - pyvista
   - imageio
   - pymetis
-
-  # MODFLOW API dependencies
   - xmipy
