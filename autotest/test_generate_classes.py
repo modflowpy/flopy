@@ -1,5 +1,4 @@
 import sys
-from datetime import datetime
 from os import environ
 from pathlib import Path
 from pprint import pprint
@@ -7,7 +6,8 @@ from typing import Iterable
 from warnings import warn
 
 import pytest
-from modflow_devtools.misc import get_current_branch
+from modflow_devtools.misc import get_current_branch, run_cmd
+from virtualenv import cli_run
 
 branch = get_current_branch()
 
@@ -19,7 +19,20 @@ def nonempty(itr: Iterable):
 
 
 def pytest_generate_tests(metafunc):
-    # defaults
+    """
+    Test mf6 module code generation on a small, hopefully
+    fairly representative set of MODFLOW 6 input & output
+    specification versions, including the develop branch,
+    the latest official release, and a few older releases
+    and commits.
+
+    TODO: May make sense to run the full battery of tests
+    against all of the versions of mf6io flopy guarantees
+    support for- maybe develop and latest release? Though
+    some backwards compatibility seems ideal if possible.
+    This would need changes in GH Actions CI test matrix.
+    """
+
     owner = "MODFLOW-USGS"
     repo = "modflow6"
     ref = [
@@ -56,16 +69,13 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize(key, ref, scope="session")
 
 
+@pytest.mark.generation
 @pytest.mark.mf6
 @pytest.mark.slow
-@pytest.mark.regression
-@pytest.mark.skipif(
-    branch == "master" or branch.startswith("v"),
-    reason="skip on master and release branches",
-)
 def test_generate_classes_from_github_refs(
-    request, virtualenv, project_root_path, ref, worker_id
+    request, project_root_path, ref, worker_id, function_tmpdir
 ):
+    # skip if run in parallel with pytest-xdist without --dist loadfile
     argv = (
         request.config.workerinput["mainargv"]
         if hasattr(request.config, "workerinput")
@@ -74,20 +84,22 @@ def test_generate_classes_from_github_refs(
     if worker_id != "master" and "loadfile" not in argv:
         pytest.skip("can't run in parallel")
 
-    python = virtualenv.python
-    venv = Path(python).parent
-    print(
-        f"Using temp venv at {venv} with python {python} to test class generation from {ref}"
-    )
+    # create virtual environment
+    venv = function_tmpdir / "venv"
+    python = venv / "bin" / "python"
+    pip = venv / "bin" / "pip"
+    cli_run([str(venv)])
+    print(f"Using temp venv at {venv} to test class generation from {ref}")
 
-    # install flopy/dependencies
-    pprint(virtualenv.run(f"pip install {project_root_path}"))
-    for dependency in ["modflow-devtools"]:
-        pprint(virtualenv.run(f"pip install {dependency}"))
+    # install flopy and dependencies
+    deps = [str(project_root_path), "modflow-devtools"]
+    for dep in deps:
+        out, err, ret = run_cmd(str(pip), "install", dep, verbose=True)
+        assert not ret, out + err
 
     # get creation time of files
     flopy_path = (
-        venv.parent
+        venv
         / "lib"
         / f"python{sys.version_info.major}.{sys.version_info.minor}"
         / "site-packages"
@@ -107,12 +119,20 @@ def test_generate_classes_from_github_refs(
     ref = spl[2]
 
     # generate classes
-    pprint(
-        virtualenv.run(
-            "python -m flopy.mf6.utils.generate_classes "
-            f"--owner {owner} --repo {repo} --ref {ref} --no-backup"
-        )
+    out, err, ret = run_cmd(
+        str(python),
+        "-m",
+        "flopy.mf6.utils.generate_classes",
+        "--owner",
+        owner,
+        "--repo",
+        repo,
+        "--ref",
+        ref,
+        "--no-backup",
+        verbose=True,
     )
+    assert not ret, out + err
 
     def get_mtime(f):
         try:

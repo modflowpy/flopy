@@ -63,14 +63,14 @@ Then install `flopy` and core dependencies from the project root:
 
     pip install .
 
+The `flopy` package has a number of [optional dependencies](.docs/optional_dependencies.md), as well as extra dependencies required for linting, testing, and building documentation. Extra dependencies are listed in the `test`, `lint`, `optional`, and `doc` groups under the `[project.optional-dependencies]` section in `pyproject.toml`. Core, linting, testing and optional dependencies are included in the Conda environment in `etc/environment.yml`. Only core dependencies are included in the PyPI package &mdash; to install extra dependency groups with pip, use `pip install ".[<group>]"`. For instance, to install all extra dependency groups:
+
+    pip install ".[test, lint, optional, doc]"
+
 Alternatively, with Anaconda or Miniconda:
 
     conda env create -f etc/environment.yml
     conda activate flopy
-
-The `flopy` package has a number of [optional dependencies](.docs/optional_dependencies.md), as well as extra dependencies required for linting, testing, and building documentation. Extra dependencies are listed in the `test`, `lint`, `optional`, and `doc` groups under the `[project.optional-dependencies]` section in `pyproject.toml`. Core, linting, testing and optional dependencies are included in the Conda environment in `etc/environment.yml`. Only core dependencies are included in the PyPI package &mdash; to install extra dependency groups with pip, use `pip install ".[<group>]"`. For instance, to install all extra dependency groups:
-
-    pip install ".[test, lint, optional, doc]"
 
 #### Python IDEs
 
@@ -80,7 +80,7 @@ VSCode users on Windows may need to run `conda init`, then open a fresh terminal
 
 ```json
 {
-    "python.defaultInterpreterPath": "/path/to/your/virtual/environment",
+    "python.defaultInterpreterPath": "/path/to/environment",
     "python.terminal.activateEnvironment": true
 }
 ```
@@ -110,9 +110,9 @@ wget https://github.com/MODFLOW-USGS/executables/releases/download/8.0/linux.zip
 unzip linux.zip -d /path/to/your/install/location
 ```
 
-Then add the install location to your `PATH`
+Then add the install location to the `PATH`
 
-    export PATH="/path/to/your/install/location:$PATH"
+    export PATH="/path/to/install/location:$PATH"
 
 ##### Mac
 

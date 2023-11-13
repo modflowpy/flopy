@@ -1,18 +1,8 @@
-import importlib
-import os
 import re
-import socket
-import sys
 from importlib import metadata
-from os import environ
-from os.path import basename, normpath
 from pathlib import Path
 from platform import system
-from shutil import copytree, which
-from subprocess import PIPE, Popen
-from typing import List, Optional
-from urllib import request
-from warnings import warn
+from typing import List
 
 import matplotlib.pyplot as plt
 import pytest
@@ -28,7 +18,7 @@ pytest_plugins = ["modflow_devtools.fixtures"]
 SHAPEFILE_EXTENSIONS = ["prj", "shx", "dbf"]
 
 
-# misc utilities
+# path utilities
 
 
 def get_project_root_path() -> Path:
@@ -43,7 +33,7 @@ def get_flopy_data_path() -> Path:
     return get_project_root_path() / "flopy" / "data"
 
 
-# path fixtures
+# fixtures
 
 
 @pytest.fixture(scope="session")
@@ -66,11 +56,9 @@ def example_shapefiles(example_data_path) -> List[Path]:
     return [f.resolve() for f in (example_data_path / "prj_test").glob("*")]
 
 
-# fixture to automatically close any plots (or optionally show them)
-
-
 @pytest.fixture(autouse=True)
 def close_plot(request):
+    # fixture to automatically close any plots (or optionally show them)
     yield
 
     # plots only shown if requested via CLI flag,

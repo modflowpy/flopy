@@ -2,6 +2,8 @@ name: flopy
 channels:
   - conda-forge
 dependencies:
+  - pip
+
   # required
   - python>=3.8
   - numpy>=1.15.0
@@ -9,6 +11,7 @@ dependencies:
 
   # lint
   - black
+  - cffconvert
   - flake8
   - isort
   - pylint
@@ -19,15 +22,12 @@ dependencies:
   - filelock
   - jupyter
   - jupytext
-  - pip
-  - pip:
-      - modflow-devtools
+  - modflow-devtools
   - pytest
   - pytest-benchmark
   - pytest-cases
   - pytest-cov
   - pytest-dotenv
-  - pytest-virtualenv
   - pytest-xdist
   - virtualenv
 
@@ -50,6 +50,4 @@ dependencies:
   - pyvista
   - imageio
   - pymetis
-
-  # MODFLOW API dependencies
-  - bmipy
+  - xmipy

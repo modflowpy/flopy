@@ -100,4 +100,4 @@ By default, a backup is made of FloPy's package classes before rewriting them. T
 
 ## Testing class generation
 
-Tests for the `generate_classes()` utility are located in `test_generate_classes.py`. The tests depend on [`pytest-virtualenv`](https://pypi.org/project/pytest-virtualenv/) and will be skipped if run in parallel without the `--dist loadfile` option for `pytest-xdist`.
+Tests for the `generate_classes()` utility are located in `test_generate_classes.py`. The tests depend on [`virtualenv`](https://pypi.org/project/virtualenv/) and will be skipped if run in parallel without the `--dist loadfile` option for `pytest-xdist`.
