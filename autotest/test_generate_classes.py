@@ -19,7 +19,20 @@ def nonempty(itr: Iterable):
 
 
 def pytest_generate_tests(metafunc):
-    # defaults
+    """
+    Test mf6 module code generation on a small, hopefully
+    fairly representative set of MODFLOW 6 input & output
+    specification versions, including the develop branch,
+    the latest official release, and a few older releases
+    and commits.
+
+    TODO: May make sense to run the full battery of tests
+    against all of the versions of mf6io flopy guarantees
+    support for- maybe develop and latest release? Though
+    some backwards compatibility seems ideal if possible.
+    This would need changes in GH Actions CI test matrix.
+    """
+
     owner = "MODFLOW-USGS"
     repo = "modflow6"
     ref = [
@@ -59,10 +72,6 @@ def pytest_generate_tests(metafunc):
 @pytest.mark.generation
 @pytest.mark.mf6
 @pytest.mark.slow
-@pytest.mark.skipif(
-    branch == "master" or branch.startswith("v"),
-    reason="skip on master and release branches",
-)
 def test_generate_classes_from_github_refs(
     request, project_root_path, ref, worker_id, function_tmpdir
 ):
