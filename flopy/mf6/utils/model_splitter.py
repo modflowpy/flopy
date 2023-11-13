@@ -2946,6 +2946,9 @@ class Mf6Splitter(object):
                         value = list_data
                     mapped_data = self._remap_mflist(item, value, mapped_data)
 
+                elif isinstance(value, mfdatascalar.MFScalarTransient):
+                    for mkey in self._model_dict.keys():
+                        mapped_data[mkey][item] = value._data_storage
                 elif isinstance(value, mfdatascalar.MFScalar):
                     for mkey in self._model_dict.keys():
                         mapped_data[mkey][item] = value.data
