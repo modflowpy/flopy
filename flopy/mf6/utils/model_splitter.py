@@ -1076,20 +1076,30 @@ class Mf6Splitter(object):
 
         d0 = {mkey: {} for mkey in self._model_dict.keys()}
         for per, array in enumerate(mftransient.array):
-            storage = mftransient._data_storage[per]
-            how = [
-                i.data_storage_type.value
-                for i in storage.layer_storage.multi_dim_list
-            ]
-            binary = [i.binary for i in storage.layer_storage.multi_dim_list]
-            fnames = [i.fname for i in storage.layer_storage.multi_dim_list]
+            if per in mftransient._data_storage.keys():
+                storage = mftransient._data_storage[per]
+                how = [
+                    i.data_storage_type.value
+                    for i in storage.layer_storage.multi_dim_list
+                ]
+                binary = [
+                    i.binary for i in storage.layer_storage.multi_dim_list
+                ]
+                fnames = [
+                    i.fname for i in storage.layer_storage.multi_dim_list
+                ]
 
-            d = self._remap_array(
-                item, array, mapped_data, how=how, binary=binary, fnames=fnames
-            )
+                d = self._remap_array(
+                    item,
+                    array,
+                    mapped_data,
+                    how=how,
+                    binary=binary,
+                    fnames=fnames,
+                )
 
-            for mkey in d.keys():
-                d0[mkey][per] = d[mkey][item]
+                for mkey in d.keys():
+                    d0[mkey][per] = d[mkey][item]
 
         for mkey, values in d0.items():
             mapped_data[mkey][item] = values
@@ -2936,6 +2946,9 @@ class Mf6Splitter(object):
                         value = list_data
                     mapped_data = self._remap_mflist(item, value, mapped_data)
 
+                elif isinstance(value, mfdatascalar.MFScalarTransient):
+                    for mkey in self._model_dict.keys():
+                        mapped_data[mkey][item] = value._data_storage
                 elif isinstance(value, mfdatascalar.MFScalar):
                     for mkey in self._model_dict.keys():
                         mapped_data[mkey][item] = value.data
