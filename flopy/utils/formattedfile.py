@@ -117,7 +117,7 @@ class FormattedLayerFile(LayerFile):
         Build the recordarray and iposarray, which maps the header information
         to the position in the formatted file.
         """
-        self.kstpkper  # array of time step/stress periods with data available
+        self.kstpkper  # 0-based array of time step/stress periods
         self.recordarray  # array of data headers
         self.iposarray  # array of seek positions for each record
         self.nlay  # Number of model layers
@@ -167,7 +167,7 @@ class FormattedLayerFile(LayerFile):
         totim = header["totim"]
         if totim > 0 and totim not in self.times:
             self.times.append(totim)
-        kstpkper = (header["kstp"], header["kper"])
+        kstpkper = (header["kstp"] - 1, header["kper"] - 1)
         if kstpkper not in self.kstpkper:
             self.kstpkper.append(kstpkper)
 
@@ -356,9 +356,8 @@ class FormattedHeadFile(FormattedLayerFile):
     >>> import flopy.utils.formattedfile as ff
     >>> hdobj = ff.FormattedHeadFile('model.fhd', precision='single')
     >>> hdobj.list_records()
-    >>> rec = hdobj.get_data(kstpkper=(1, 50))
+    >>> rec = hdobj.get_data(kstpkper=(0, 50))
     >>> rec2 = ddnobj.get_data(totim=100.)
-
 
     """
 
