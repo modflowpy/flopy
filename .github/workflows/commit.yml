@@ -118,7 +118,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install .
-          pip install ".[test,optional]"
+          pip install ".[test, optional]"
       
       - name: Install Modflow executables
         uses: modflowpy/install-modflow-action@v1
@@ -164,18 +164,20 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - name: Setup Micromamba
+        uses: mamba-org/setup-micromamba@v1
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-          cache-dependency-path: pyproject.toml
-      
-      - name: Install Python dependencies
-        run: |
-          pip install --upgrade pip
-          pip install .
-          pip install ".[test,optional]"
+          environment-file: etc/environment.yml
+          cache-environment: true
+          cache-downloads: true
+          create-args: >-
+            python=${{ matrix.python-version }}
+          init-shell: >-
+            bash
+            powershell
+
+      - name: Install FloPy
+        run: pip install .
 
       - name: Install Modflow-related executables
         uses: modflowpy/install-modflow-action@v1
@@ -191,11 +193,7 @@ jobs:
       - name: Run tests
         working-directory: autotest
         run: |
-          m="not example and not regression"
-          if [[ "${{ matrix.python-version}}" == "3.12" ]]; then
-            m="$m and not generation"
-          fi
-          pytest -v -m="$m" -n=auto --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed --dist loadfile
+          pytest -v -m="not example and not regression" -n=auto --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed --dist loadfile
           coverage report
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

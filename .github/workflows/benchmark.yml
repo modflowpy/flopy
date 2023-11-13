@@ -26,18 +26,20 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - name: Setup Micromamba
+        uses: mamba-org/setup-micromamba@v1
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-          cache-dependency-path: pyproject.toml
+          environment-file: etc/environment.yml
+          cache-environment: true
+          cache-downloads: true
+          create-args: >-
+            python=${{ matrix.python-version }}
+          init-shell: >-
+            bash
+            powershell
 
-      - name: Install Python dependencies
-        run: |
-          pip install --upgrade pip
-          pip install .
-          pip install ".[test, optional]"
+      - name: Install FloPy
+        run: pip install .
 
       - name: Install Modflow executables
         uses: modflowpy/install-modflow-action@v1

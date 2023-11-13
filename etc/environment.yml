@@ -2,6 +2,8 @@ name: flopy
 channels:
   - conda-forge
 dependencies:
+  - pip
+
   # required
   - python>=3.8
   - numpy>=1.15.0
