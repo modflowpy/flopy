@@ -63,13 +63,11 @@ jobs:
           python -c "import flopy; print(f'FloPy version: {flopy.__version__}')"
           echo "version=${ver#"v"}" >> $GITHUB_OUTPUT
 
-      - name: Update FloPy package classes
+      - name: Update FloPy packages
         run: python -m flopy.mf6.utils.generate_classes --ref master --no-backup
 
-      - name: Format Python files
-        run: |
-          black -v flopy
-          isort -v flopy
+      - name: Lint Python files
+        run: python scripts/pull_request_prepare.py
 
       - name: Run tests
         working-directory: autotest
@@ -82,7 +80,8 @@ jobs:
         if: failure()
         with:
           name: failed-${{ matrix.os }}-${{ matrix.python-version }}
-          path: autotest/.failed/**
+          path: |
+            ./autotest/.failed/**
 
       - name: Run notebooks
         working-directory: scripts
