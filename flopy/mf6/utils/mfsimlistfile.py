@@ -15,6 +15,7 @@ class MfSimulationList:
         self.file_name = file_name
         self.f = open(file_name, "r", encoding="ascii", errors="replace")
 
+    @property
     def is_normal_termination(self) -> bool:
         """
         Determine if the simulation terminated normally
@@ -37,15 +38,20 @@ class MfSimulationList:
             success = True
         return success
 
-    def get_model_runtime(self, units: str = "seconds") -> float:
+    def get_runtime(
+        self, units: str = "seconds", simulation_timer: str = "elapsed"
+    ) -> float:
         """
         Get the elapsed runtime of the model from the list file.
 
         Parameters
         ----------
         units : str
-            Units in which to return the runtime. Acceptable values are
+            Units in which to return the timer. Acceptable values are
             'seconds', 'minutes', 'hours' (default is 'seconds')
+        simulation_timer : str
+            Timer to return. Acceptable values are 'elapsed', 'formulate',
+            'solution' (default is 'elapsed')
 
         Returns
         -------
@@ -54,21 +60,44 @@ class MfSimulationList:
             NaN if runtime not found in list file
 
         """
+        UNITS = (
+            "seconds",
+            "minutes",
+            "hours",
+        )
+        TIMERS = (
+            "elapsed",
+            "formulate",
+            "solution",
+        )
+        TIMERS_DICT = {
+            "elapsed": "Elapsed run time:",
+            "formulate": "Total formulate time:",
+            "solution": "Total solution time:",
+        }
+
+        simulation_timer = simulation_timer.lower()
+        if simulation_timer not in TIMERS:
+            msg = (
+                "simulation_timers input variable must be "
+                + " ,".join(TIMERS)
+                + f": {simulation_timer} was specified."
+            )
+            raise ValueError(msg)
+
+        units = units.lower()
+        if units not in UNITS:
+            msg = (
+                "units input variable must be "
+                + " ,".join(UNITS)
+                + f": {units} was specified."
+            )
+            raise ValueError(msg)
+
         # rewind the file
         self._rewind_file()
 
-        units = units.lower()
-        if (
-            not units == "seconds"
-            and not units == "minutes"
-            and not units == "hours"
-        ):
-            raise AssertionError(
-                '"units" input variable must be "minutes", "hours", '
-                f'or "seconds": {units} was specified'
-            )
-
-        seekpoint = self._seek_to_string("Elapsed run time:")
+        seekpoint = self._seek_to_string(TIMERS_DICT[simulation_timer])
         self.f.seek(seekpoint)
         line = self.f.readline()
         if line == "":
@@ -89,56 +118,6 @@ class MfSimulationList:
             return times_sec / 60.0
         elif units == "hours":
             return times_sec / 60.0 / 60.0
-
-    def get_formulate_time(self) -> float:
-        """
-        Get the formulate time for the solution from the list file.
-
-        Returns
-        -------
-        out : float
-            Floating point value with the formulate time,
-
-        """
-        # rewind the file
-        self._rewind_file()
-
-        try:
-            seekpoint = self._seek_to_string("Total formulate time:")
-        except:
-            print(
-                "'Total formulate time' not included in list file. "
-                + "Returning NaN"
-            )
-            return np.nan
-
-        self.f.seek(seekpoint)
-        return float(self.f.readline().split()[3])
-
-    def get_solution_time(self) -> float:
-        """
-        Get the solution time for the solution from the list file.
-
-        Returns
-        -------
-        out : float
-            Floating point value with the solution time,
-
-        """
-        # rewind the file
-        self._rewind_file()
-
-        try:
-            seekpoint = self._seek_to_string("Total solution time:")
-        except:
-            print(
-                "'Total solution time' not included in list file. "
-                + "Returning NaN"
-            )
-            return np.nan
-
-        self.f.seek(seekpoint)
-        return float(self.f.readline().split()[3])
 
     def get_outer_iterations(self) -> int:
         """
@@ -204,6 +183,8 @@ class MfSimulationList:
 
         Parameters
         ----------
+        virtual : bool
+            Return total or virtual memory usage (default is total)
 
         Returns
         -------
@@ -298,5 +279,3 @@ class MfSimulationList:
 
         """
         self.f.seek(0)
-
-
