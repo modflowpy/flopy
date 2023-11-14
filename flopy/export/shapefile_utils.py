@@ -9,7 +9,7 @@ import shutil
 import sys
 import warnings
 from pathlib import Path
-from typing import Optional, Union
+from typing import List, Optional, Union
 from warnings import warn
 
 import numpy as np
@@ -471,20 +471,28 @@ def shape_attr_name(name, length=6, keep_layer=False):
     return n
 
 
-def enforce_10ch_limit(names):
+def enforce_10ch_limit(names: List[str], warnings: bool = True) -> List[str]:
     """Enforce 10 character limit for fieldnames.
     Add suffix for duplicate names starting at 0.
 
     Parameters
     ----------
     names : list of strings
+    warnings : whether to warn if names are truncated
 
     Returns
     -------
     list
         list of unique strings of len <= 10.
     """
-    names = [n[:5] + n[-4:] + "_" if len(n) > 10 else n for n in names]
+
+    def truncate(s):
+        name = s[:5] + s[-4:] + "_"
+        if warnings:
+            warn(f"Truncating shapefile fieldname {s} to {name}")
+        return name
+
+    names = [truncate(n) if len(n) > 10 else n for n in names]
     dups = {x: names.count(x) for x in names}
     suffix = {n: list(range(cnt)) for n, cnt in dups.items() if cnt > 1}
     for i, n in enumerate(names):
