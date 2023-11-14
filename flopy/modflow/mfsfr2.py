@@ -9,7 +9,7 @@ import pandas as pd
 from numpy.lib import recfunctions
 
 from ..pakbase import Package
-from ..utils import MfList, import_optional_dependency
+from ..utils import MfList
 from ..utils.flopy_io import line_parse
 from ..utils.optionblock import OptionBlock
 from ..utils.recarray_utils import create_empty_recarray
@@ -1175,7 +1175,7 @@ class ModflowSfr2(Package):
                 )
             header += "\n"
 
-            with open(logfile, "w") as log:
+            with open(os.path.join(self.parent.model_ws, logfile), "w") as log:
                 log.write(header)
                 a = np.array(l).transpose()
                 for line in a:
