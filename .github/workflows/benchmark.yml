@@ -57,15 +57,13 @@ jobs:
         if: failure()
         with:
           name: failed-benchmark-${{ matrix.os }}-${{ matrix.python-version }}-${{ github.run_id }}
-          path: |
-            ./autotest/.failed/**
+          path: autotest/.failed/**
 
       - name: Upload benchmark result artifact
         uses: actions/upload-artifact@v3
         with:
           name: benchmarks-${{ matrix.os }}-${{ matrix.python-version }}-${{ github.run_id }}
-          path: |
-            ./autotest/.benchmarks/**/*.json
+          path: autotest/.benchmarks/**/*.json
 
   post_benchmark:
     needs:
@@ -96,11 +94,17 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v3
         with:
-          path: ./autotest/.benchmarks
+          path: autotest/.benchmarks
 
       - name: Process benchmark results
         run: |
-          artifact_json=$(gh api -X GET -H "Accept: application/vnd.github+json" /repos/modflowpy/flopy/actions/artifacts)
+          repo="${{ github.repository }}"
+          path="autotest/.benchmarks"
+
+          # list benchmark artifacts
+          artifact_json=$(gh api -X GET -H "Accept: application/vnd.github+json" /repos/$repo/actions/artifacts)
+
+          # get artifact ids and download artifacts
           get_artifact_ids="
           import json
           import sys
@@ -113,12 +117,16 @@ jobs:
           "
           echo $artifact_json \
             | python -c "$get_artifact_ids" \
-            | xargs -I@ bash -c "gh api -H 'Accept: application/vnd.github+json' /repos/modflowpy/flopy/actions/artifacts/@/zip >> ./autotest/.benchmarks/@.zip"
-          zipfiles=( ./autotest/.benchmarks/*.zip )
+            | xargs -I@ bash -c "gh api -H 'Accept: application/vnd.github+json' /repos/$repo/actions/artifacts/@/zip >> $path/@.zip"
+          
+          # unzip artifacts
+          zipfiles=( $path/*.zip )
           if (( ${#zipfiles[@]} )); then
-            unzip -o './autotest/.benchmarks/*.zip' -d ./autotest/.benchmarks
+            unzip -o "$path/*.zip" -d $path
           fi
-          python ./scripts/process_benchmarks.py ./autotest/.benchmarks ./autotest/.benchmarks
+
+          # process benchmarks
+          python scripts/process_benchmarks.py $path $path
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -127,5 +135,5 @@ jobs:
         with:
           name: benchmarks-${{ github.run_id }}
           path: |
-            ./autotest/.benchmarks/*.csv
-            ./autotest/.benchmarks/*.png
+            autotest/.benchmarks/*.csv
+            autotest/.benchmarks/*.png
