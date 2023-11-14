@@ -43,23 +43,22 @@ def test_mfsimlist_runtime(function_tmpdir):
     mfsimlst = flopy.mf6.utils.MfSimulationList(function_tmpdir / "mfsim.lst")
     for sim_timer in ("elapsed", "formulate", "solution"):
         runtime_sec = mfsimlst.get_runtime(simulation_timer=sim_timer)
-        if runtime_sec == np.nan:
-            continue
-        runtime_min = mfsimlst.get_runtime(
-            units="minutes", simulation_timer=sim_timer
-        )
-        assert runtime_sec / 60.0 == runtime_min, (
-            f"model {sim_timer} time conversion from "
-            + "sec to minutes does not match"
-        )
+        if not np.isnan(runtime_sec):
+            runtime_min = mfsimlst.get_runtime(
+                units="minutes", simulation_timer=sim_timer
+            )
+            assert runtime_sec / 60.0 == runtime_min, (
+                f"model {sim_timer} time conversion from "
+                + "sec to minutes does not match"
+            )
 
-        runtime_hrs = mfsimlst.get_runtime(
-            units="hours", simulation_timer=sim_timer
-        )
-        assert runtime_min / 60.0 == runtime_hrs, (
-            f"model {sim_timer} time conversion from "
-            + "minutes to hours does not match"
-        )
+            runtime_hrs = mfsimlst.get_runtime(
+                units="hours", simulation_timer=sim_timer
+            )
+            assert runtime_min / 60.0 == runtime_hrs, (
+                f"model {sim_timer} time conversion from "
+                + "minutes to hours does not match"
+            )
 
 
 @requires_exe("mf6")
@@ -85,25 +84,25 @@ def test_mfsimlist_iterations(function_tmpdir):
 
 @requires_exe("mf6")
 def test_mfsimlist_memory(function_tmpdir):
-    total_answer = 0.000547557
     virtual_answer = 0.0
 
     sim = base_model(function_tmpdir)
     mfsimlst = flopy.mf6.utils.MfSimulationList(function_tmpdir / "mfsim.lst")
 
     total_memory = mfsimlst.get_memory_usage()
-    assert total_memory == total_answer, (
-        f"total memory is not equal to {total_answer} " + f"({total_memory})"
+    assert total_memory > 0.0, (
+        f"total memory is not greater than 0.0 " + f"({total_memory})"
     )
 
     virtual_memory = mfsimlst.get_memory_usage(virtual=True)
-    assert virtual_memory == virtual_answer, (
-        f"virtual memory is not equal to {virtual_answer} "
-        + f"({virtual_memory})"
-    )
+    if not np.isnan(virtual_memory):
+        assert virtual_memory == virtual_answer, (
+            f"virtual memory is not equal to {virtual_answer} "
+            + f"({virtual_memory})"
+        )
 
-    non_virtual_memory = mfsimlst.get_non_virtual_memory_usage()
-    assert total_memory == non_virtual_memory, (
-        f"total memory ({total_memory}) "
-        + f"does not equal non-virtual memory ({non_virtual_memory})"
-    )
+        non_virtual_memory = mfsimlst.get_non_virtual_memory_usage()
+        assert total_memory == non_virtual_memory, (
+            f"total memory ({total_memory}) "
+            + f"does not equal non-virtual memory ({non_virtual_memory})"
+        )

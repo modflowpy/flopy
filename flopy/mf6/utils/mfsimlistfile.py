@@ -97,20 +97,27 @@ class MfSimulationList:
         # rewind the file
         self._rewind_file()
 
-        seekpoint = self._seek_to_string(TIMERS_DICT[simulation_timer])
-        self.f.seek(seekpoint)
-        line = self.f.readline()
-        if line == "":
-            return np.nan
+        if simulation_timer == "elapsed":
+            seekpoint = self._seek_to_string(TIMERS_DICT[simulation_timer])
+            self.f.seek(seekpoint)
+            line = self.f.readline()
+            if line == "":
+                return np.nan
 
-        # yank out the floating point values from the Elapsed run time string
-        times = list(map(float, re.findall(r"[+-]?[0-9.]+", line)))
-        # pad an array with zeros and times with
-        # [days, hours, minutes, seconds]
-        times = np.array([0 for _ in range(4 - len(times))] + times)
-        # convert all to seconds
-        time2sec = np.array([24 * 60 * 60, 60 * 60, 60, 1])
-        times_sec = np.sum(times * time2sec)
+            # yank out the floating point values from the Elapsed run time string
+            times = list(map(float, re.findall(r"[+-]?[0-9.]+", line)))
+            # pad an array with zeros and times with
+            # [days, hours, minutes, seconds]
+            times = np.array([0 for _ in range(4 - len(times))] + times)
+            # convert all to seconds
+            time2sec = np.array([24 * 60 * 60, 60 * 60, 60, 1])
+            times_sec = np.sum(times * time2sec)
+        else:
+            seekpoint = self._seek_to_string(TIMERS_DICT[simulation_timer])
+            line = self.f.readline()
+            if line == "":
+                return np.nan
+            times_sec = float(line.split()[3])
         # return in the requested units
         if units == "seconds":
             return times_sec
