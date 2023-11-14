@@ -238,7 +238,9 @@ dd = [
     [drain[0], drain[1], i + drain[2][0], 322.5, 100000.0, 6]
     for i in range(drain[2][1] - drain[2][0])
 ]
-drn = flopy.mf6.modflow.mfgwfdrn.ModflowGwfdrn(gwf, auxiliary=["IFACE"], stress_period_data={0: dd})
+drn = flopy.mf6.modflow.mfgwfdrn.ModflowGwfdrn(
+    gwf, auxiliary=["IFACE"], stress_period_data={0: dd}
+)
 
 # output control
 headfile = f"{sim_name}.hds"
@@ -410,5 +412,3 @@ try:
     temp_dir.cleanup()
 except:
     pass
-
-

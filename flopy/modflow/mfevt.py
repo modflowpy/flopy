@@ -104,13 +104,8 @@ class ModflowEvt(Package):
         # set filenames
         filenames = self._prepare_filenames(filenames, 2)
 
-        # update external file information with cbc output, if necessary
-        if ipakcb is not None:
-            model.add_output_file(
-                ipakcb, fname=filenames[1], package=self._ftype()
-            )
-        else:
-            ipakcb = 0
+        # cbc output file
+        self.set_cbc_output_file(ipakcb, model, filenames[1])
 
         # call base package constructor
         super().__init__(
@@ -125,7 +120,6 @@ class ModflowEvt(Package):
         self._generate_heading()
         self.url = "evt.html"
         self.nevtop = nevtop
-        self.ipakcb = ipakcb
         self.external = external
         if self.external is False:
             load = True

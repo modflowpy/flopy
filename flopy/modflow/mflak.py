@@ -28,13 +28,9 @@ class ModflowLak(Package):
         Sublakes of multiple-lake systems are considered separate lakes for
         input purposes. The variable NLAKES is used, with certain internal
         assumptions and approximations, to dimension arrays for the simulation.
-    ipakcb : int
-        (ILKCB in MODFLOW documentation)
-        Whether or not to write cell-by-cell flows (yes if ILKCB> 0, no
-        otherwise). If ILKCB< 0 and "Save Budget" is specified in the Output
-        Control or ICBCFL is not equal to 0, the cell-by-cell flows will be
-        printed in the standard output file. ICBCFL is specified in the input
-        to the Output Control Option of MODFLOW.
+    ipakcb : int, optional
+        Toggles whether cell-by-cell budget data should be saved. If None or zero,
+        budget data will not be saved (default is None).
     lwrt : int or list of ints (one per SP)
         lwrt > 0, suppresses printout from the lake package. Default is 0 (to
         print budget information)
@@ -228,9 +224,9 @@ class ModflowLak(Package):
         filenames=None the package name will be created using the model name
         and package extension and the cbc output name will be created using
         the model name and .cbc extension (for example, modflowtest.cbc),
-        if ipakcbc is a number greater than zero. If a single string is passed
+        if ipakcb is a number greater than zero. If a single string is passed
         the package will be set to the string and cbc output names will be
-        created using the model name and .cbc extension, if ipakcbc is a
+        created using the model name and .cbc extension, if ipakcb is a
         number greater than zero. To define the names for all package files
         (input and output) the length of the list of strings should be 2.
         Default is None.
@@ -296,13 +292,8 @@ class ModflowLak(Package):
                     break
         filenames = self._prepare_filenames(filenames, nlen)
 
-        # update external file information with cbc output, if necessary
-        if ipakcb is not None:
-            model.add_output_file(
-                ipakcb, fname=filenames[1], package=self._ftype()
-            )
-        else:
-            ipakcb = 0
+        # cbc output file
+        self.set_cbc_output_file(ipakcb, model, filenames[1])
 
         # table input files
         if tabdata:
@@ -351,7 +342,6 @@ class ModflowLak(Package):
             options = []
         self.options = options
         self.nlakes = nlakes
-        self.ipakcb = ipakcb
         self.theta = theta
         self.nssitr = nssitr
         self.sscncr = sscncr
