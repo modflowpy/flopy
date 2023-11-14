@@ -42,7 +42,7 @@ class MfSimulationList:
         self, units: str = "seconds", simulation_timer: str = "elapsed"
     ) -> float:
         """
-        Get the elapsed runtime of the model from the list file.
+        Get model runtimes from the simulation list file.
 
         Parameters
         ----------
@@ -100,7 +100,7 @@ class MfSimulationList:
         if simulation_timer == "elapsed":
             seekpoint = self._seek_to_string(TIMERS_DICT[simulation_timer])
             self.f.seek(seekpoint)
-            line = self.f.readline()
+            line = self.f.readline().strip()
             if line == "":
                 return np.nan
 
@@ -114,7 +114,7 @@ class MfSimulationList:
             times_sec = np.sum(times * time2sec)
         else:
             seekpoint = self._seek_to_string(TIMERS_DICT[simulation_timer])
-            line = self.f.readline()
+            line = self.f.readline().strip()
             if line == "":
                 return np.nan
             times_sec = float(line.split()[3])
@@ -128,7 +128,7 @@ class MfSimulationList:
 
     def get_outer_iterations(self) -> int:
         """
-        Get the total outer iterations from the list file.
+        Get the total outer iterations from the simulation list file.
 
         Parameters
         ----------
@@ -157,7 +157,7 @@ class MfSimulationList:
 
     def get_total_iterations(self) -> int:
         """
-        Get the total number of iterations from the list file.
+        Get the total number of iterations from the simulation list file.
 
         Parameters
         ----------
@@ -279,7 +279,7 @@ class MfSimulationList:
 
     def _rewind_file(self):
         """
-        Rewind the mfsim.lst file
+        Rewind the simulation list file
 
         Returns
         -------
