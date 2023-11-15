@@ -43,22 +43,24 @@ def test_mfsimlist_runtime(function_tmpdir):
     mfsimlst = flopy.mf6.utils.MfSimulationList(function_tmpdir / "mfsim.lst")
     for sim_timer in ("elapsed", "formulate", "solution"):
         runtime_sec = mfsimlst.get_runtime(simulation_timer=sim_timer)
-        if not np.isnan(runtime_sec):
-            runtime_min = mfsimlst.get_runtime(
-                units="minutes", simulation_timer=sim_timer
-            )
-            assert runtime_sec / 60.0 == runtime_min, (
-                f"model {sim_timer} time conversion from "
-                + "sec to minutes does not match"
-            )
 
-            runtime_hrs = mfsimlst.get_runtime(
-                units="hours", simulation_timer=sim_timer
-            )
-            assert runtime_min / 60.0 == runtime_hrs, (
-                f"model {sim_timer} time conversion from "
-                + "minutes to hours does not match"
-            )
+        assert not np.isnan(runtime_sec)
+
+        runtime_min = mfsimlst.get_runtime(
+            units="minutes", simulation_timer=sim_timer
+        )
+        assert runtime_sec / 60.0 == runtime_min, (
+            f"model {sim_timer} time conversion from "
+            + "sec to minutes does not match"
+        )
+
+        runtime_hrs = mfsimlst.get_runtime(
+            units="hours", simulation_timer=sim_timer
+        )
+        assert runtime_min / 60.0 == runtime_hrs, (
+            f"model {sim_timer} time conversion from "
+            + "minutes to hours does not match"
+        )
 
 
 @requires_exe("mf6")
