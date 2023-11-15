@@ -43,6 +43,7 @@ def test_mfsimlist_runtime(function_tmpdir):
     mfsimlst = flopy.mf6.utils.MfSimulationList(function_tmpdir / "mfsim.lst")
     for sim_timer in ("elapsed", "formulate", "solution"):
         runtime_sec = mfsimlst.get_runtime(simulation_timer=sim_timer)
+
         if not np.isnan(runtime_sec):
             runtime_min = mfsimlst.get_runtime(
                 units="minutes", simulation_timer=sim_timer

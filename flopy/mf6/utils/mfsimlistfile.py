@@ -114,6 +114,7 @@ class MfSimulationList:
             times_sec = np.sum(times * time2sec)
         else:
             seekpoint = self._seek_to_string(TIMERS_DICT[simulation_timer])
+            self.f.seek(seekpoint)
             line = self.f.readline().strip()
             if line == "":
                 return np.nan
