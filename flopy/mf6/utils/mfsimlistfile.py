@@ -31,7 +31,7 @@ class MfSimulationList:
 
         seekpoint = self._seek_to_string("Normal termination of simulation.")
         self.f.seek(seekpoint)
-        line = self.f.readline()
+        line = self.f.readline().strip()
         if line == "":
             success = False
         else:
@@ -185,7 +185,11 @@ class MfSimulationList:
 
         return total_iterations
 
-    def get_memory_usage(self, virtual=False) -> float:
+    def get_memory_usage(
+        self,
+        virtual: bool = False,
+        units: str = "gigabytes",
+    ) -> float:
         """
         Get the simulation memory usage from the simulation list file.
 
@@ -193,6 +197,9 @@ class MfSimulationList:
         ----------
         virtual : bool
             Return total or virtual memory usage (default is total)
+        units : str
+            Memory units for return results. Valid values are 'gigabytes',
+            'megabytes', 'kilobytes', and 'bytes' (default is 'gigabytes').
 
         Returns
         -------
@@ -200,7 +207,7 @@ class MfSimulationList:
             Total memory usage for a simulation (in Gigabytes)
 
         """
-        # initialize total_iterations
+        # initialize memory_usage
         memory_usage = 0.0
 
         # rewind the file
@@ -214,21 +221,26 @@ class MfSimulationList:
 
         while True:
             seekpoint = self._seek_to_string(tags[0])
+
             self.f.seek(seekpoint)
-            line = self.f.readline()
+            line = self.f.readline().strip()
             if line == "":
                 break
-            units = line.split()[-1]
-            if units == "GIGABYTES":
-                conversion = 1.0
-            elif units == "MEGABYTES":
-                conversion = 1e-3
-            elif units == "KILOBYTES":
-                conversion = 1e-6
-            elif units == "BYTES":
-                conversion = 1e-9
-            else:
-                raise ValueError(f"Unknown memory unit '{units}'")
+            sim_units = line.split()[-1]
+            unit_conversion = self._get_memory_unit_conversion(
+                sim_units,
+                return_units_str=units.upper(),
+            )
+            # if sim_units == "GIGABYTES":
+            #     unit_conversion = 1.0
+            # elif sim_units == "MEGABYTES":
+            #     unit_conversion = 1e-3
+            # elif sim_units == "KILOBYTES":
+            #     unit_conversion = 1e-6
+            # elif sim_units == "BYTES":
+            #     unit_conversion = 1e-9
+            # else:
+            #     raise ValueError(f"Unknown memory unit '{sim_units}'")
 
             if virtual:
                 tag = tags[2]
@@ -239,7 +251,7 @@ class MfSimulationList:
             line = self.f.readline()
             if line == "":
                 break
-            memory_usage = float(line.split()[-1]) * conversion
+            memory_usage = float(line.split()[-1]) * unit_conversion
 
         return memory_usage
 
@@ -254,6 +266,58 @@ class MfSimulationList:
 
         """
         return self.get_memory_usage() - self.get_memory_usage(virtual=True)
+
+    def get_memory_summary(self, units: str = "gigabytes") -> dict:
+        """
+        Get the summary memory information if it is available in the
+        simulation list file. Summary memory information is only available
+        if the memory_print_option is set to 'summary' in the simulation
+        name file options block.
+
+        Parameters
+        ----------
+        units : str
+            Memory units for return results. Valid values are 'gigabytes',
+            'megabytes', 'kilobytes', and 'bytes' (default is 'gigabytes').
+
+        Returns
+        -------
+        memory_summary : dict
+            dictionary with the total memory for each simulation component.
+            None is return of summary memory data is not present in the
+            simulation listing file.
+
+
+        """
+        # initialize the memory summary dictionary
+        memory_summary = None
+
+        # rewind the file
+        self._rewind_file()
+
+        tag = "SUMMARY INFORMATION ON VARIABLES STORED IN THE MEMORY MANAGER"
+        seekpoint = self._seek_to_string(tag)
+        self.f.seek(seekpoint)
+        line = self.f.readline().strip()
+        if line != "":
+            sim_units = line.split()[-1]
+            unit_conversion = self._get_memory_unit_conversion(
+                sim_units,
+                return_units_str=units.upper(),
+            )
+            # read the header
+            for k in range(3):
+                _ = self.f.readline()
+            terminator = 100 * "-"
+            memory_summary = {}
+            while True:
+                line = self.f.readline().strip()
+                if line == terminator:
+                    break
+                data = line.split()
+                memory_summary[data[0]] = float(data[-1]) * unit_conversion
+
+        return memory_summary
 
     def _seek_to_string(self, s):
         """
@@ -287,3 +351,44 @@ class MfSimulationList:
 
         """
         self.f.seek(0)
+
+    def _get_memory_unit_conversion(
+        self,
+        sim_units_str: str,
+        return_units_str,
+    ) -> float:
+        """
+        Calculate memory unit conversion factor that converts from reported
+        units to gigabytes
+
+        Parameters
+        ----------
+        sim_units_str : str
+            Memory Units in the simulation listing file. Valid values are
+            'GIGABYTES', 'MEGABYTES', 'KILOBYTES', or 'BYTES'.
+
+        Returns
+        -------
+        unit_conversion : float
+            Unit conversion factor
+
+        """
+        valid_units = (
+            "GIGABYTES",
+            "MEGABYTES",
+            "KILOBYTES",
+            "BYTES",
+        )
+        if sim_units_str not in valid_units:
+            raise ValueError(f"Unknown memory unit '{sim_units_str}'")
+
+        factor = [1.0, 1e-3, 1e-6, 1e-9]
+        if return_units_str == "MEGABYTES":
+            factor = [v * 1e3 for v in factor]
+        elif return_units_str == "KILOBYTES":
+            factor = [v * 1e6 for v in factor]
+        elif return_units_str == "BYTES":
+            factor = [v * 1e9 for v in factor]
+        factor_dict = {tag: factor[idx] for idx, tag in enumerate(valid_units)}
+
+        return factor_dict[sim_units_str]
