@@ -103,7 +103,7 @@ def test_get_disu_kwargs(nlay, nrow, ncol, delr, delc, tp, botm):
     pprint(kwargs["area"])
 
     assert kwargs["nodes"] == nlay * nrow * ncol
-    assert kwargs["nvert"] == None
+    assert kwargs["nvert"] == (nrow + 1) * (ncol + 1)
 
     area = np.array([dr * dc for (dr, dc) in product(delr, delc)], dtype=float)
     area = np.array(nlay * [area]).flatten()
