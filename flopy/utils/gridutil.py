@@ -6,7 +6,7 @@ from typing import Collection, Iterable, List, Sequence, Tuple, Union
 
 import numpy as np
 
-from .cvfdutil import get_disv_gridprops, centroid_of_polygon
+from .cvfdutil import centroid_of_polygon, get_disv_gridprops
 
 
 def get_lni(ncpl, nodes) -> List[Tuple[int, int]]:
