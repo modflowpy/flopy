@@ -110,7 +110,7 @@ def get_disu_kwargs(
                 n = get_nn(k, i, j)
                 ja.append(n)
                 iac[n] += 1
-                area[n] = delr[i] * delc[j]
+                area[n] = delr[j] * delc[i]
                 ihc.append(n + 1)
                 cl12.append(n + 1)
                 hwva.append(n + 1)
@@ -126,7 +126,7 @@ def get_disu_kwargs(
                     ihc.append(0)
                     dz = botm[k - 1] - botm[k]
                     cl12.append(0.5 * dz)
-                    hwva.append(delr[i] * delc[j])
+                    hwva.append(delr[j] * delc[i])
                 # back
                 if i > 0:
                     ja.append(get_nn(k, i - 1, j))
@@ -165,7 +165,7 @@ def get_disu_kwargs(
                     else:
                         dz = botm[k - 1] - botm[k]
                     cl12.append(0.5 * dz)
-                    hwva.append(delr[i] * delc[j])
+                    hwva.append(delr[j] * delc[i])
     ja = np.array(ja, dtype=int)
     nja = ja.shape[0]
     hwva = np.array(hwva, dtype=float)
