@@ -27,8 +27,7 @@ class ModflowGhb(Package):
         A flag that is used to determine if cell-by-cell budget data should be
         saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
         (default is 0).
-    stress_period_data : list of boundaries, recarray of boundaries or,
-        dictionary of boundaries.
+    stress_period_data : list, recarray, dataframe or dictionary of boundaries.
 
         Each ghb cell is defined through definition of
         layer(int), row(int), column(int), stage(float), conductance(float)

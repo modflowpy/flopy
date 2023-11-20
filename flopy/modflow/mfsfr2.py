@@ -172,13 +172,13 @@ class ModflowSfr2(Package):
         simulations (and would need to be converted to whatever units are being
         used in the particular simulation). (default is 0.0001; for
         MODFLOW-2005 simulations only when irtflg > 0)
-    reach_data : recarray
+    reach_data : recarray or dataframe
         Numpy record array of length equal to nstrm, with columns for each
         variable entered in item 2 (see SFR package input instructions). In
         following flopy convention, layer, row, column and node number
         (for unstructured grids) are zero-based; segment and reach are
         one-based.
-    segment_data : recarray
+    segment_data : recarray or dataframe
         Numpy record array of length equal to nss, with columns for each
         variable entered in items 6a, 6b and 6c (see SFR package input
         instructions). Segment numbers are one-based.
@@ -431,6 +431,8 @@ class ModflowSfr2(Package):
         )
         if segment_data is not None:
             # segment_data is a zero-d array
+            if isinstance(segment_data, pd.DataFrame):
+                segment_data = segment_data.to_records(index=False)
             if not isinstance(segment_data, dict):
                 if len(segment_data.shape) == 0:
                     segment_data = np.atleast_1d(segment_data)
@@ -479,6 +481,8 @@ class ModflowSfr2(Package):
         # Dataset 2.
         self.reach_data = self.get_empty_reach_data(np.abs(self._nstrm))
         if reach_data is not None:
+            if isinstance(reach_data, pd.DataFrame):
+                reach_data = reach_data.to_records(index=False)
             for n in reach_data.dtype.names:
                 self.reach_data[n] = reach_data[n]
 

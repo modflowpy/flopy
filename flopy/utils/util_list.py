@@ -14,7 +14,6 @@ import numpy as np
 import pandas as pd
 
 from ..datbase import DataInterface, DataListInterface, DataType
-from ..utils import import_optional_dependency
 from ..utils.recarray_utils import create_empty_recarray
 
 
@@ -361,6 +360,9 @@ class MfList(DataInterface, DataListInterface):
         # A single ndarray
         elif isinstance(data, np.ndarray):
             self.__cast_ndarray(0, data)
+        # A single dataframe
+        elif isinstance(data, pd.DataFrame):
+            self.__cast_dataframe(0, data)
         # A single filename
         elif isinstance(data, str):
             self.__cast_str(0, data)
@@ -408,8 +410,6 @@ class MfList(DataInterface, DataListInterface):
                 f"MfList error: ndarray shape {d.shape} doesn't match "
                 f"dtype len: {len(self.dtype)}"
             )
-            # warnings.warn("MfList: ndarray dtype does not match self " +\
-            #               "dtype, trying to cast")
         try:
             self.__data[kper] = np.core.records.fromarrays(
                 d.transpose(), dtype=self.dtype
@@ -419,6 +419,9 @@ class MfList(DataInterface, DataListInterface):
                 f"MfList error: casting ndarray to recarray: {e!s}"
             )
         self.__vtype[kper] = np.recarray
+
+    def __cast_dataframe(self, kper, d):
+        self.__cast_recarray(kper, d.to_records(index=False))
 
     def get_dataframe(self, squeeze=False):
         """

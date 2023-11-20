@@ -12,7 +12,6 @@ import re
 import numpy as np
 import pandas as pd
 
-from ..utils import import_optional_dependency
 from ..utils.flopy_io import get_ts_sp
 from ..utils.utils_def import totim_to_datetime
 

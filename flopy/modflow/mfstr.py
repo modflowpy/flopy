@@ -8,6 +8,7 @@ MODFLOW Guide
 
 """
 import numpy as np
+import pandas as pd
 
 from ..pakbase import Package
 from ..utils import MfList, read_fixed_var, write_fixed_var
@@ -81,8 +82,8 @@ class ModflowStr(Package):
         datasets 6 and 8.
 
         The value for stress period data for a stress period can be an integer
-        (-1 or 0), a list of lists, a numpy array, or a numpy recarray. If
-        stress period data for a stress period contains an integer, a -1
+        (-1 or 0), a list of lists, a numpy array or recarray, or a pandas
+        dataframe. If data for a stress period contains an integer, a -1
         denotes data from the previous stress period will be reused and a 0
         indicates there are no str reaches for this stress period.
 
@@ -367,6 +368,8 @@ class ModflowStr(Package):
             for key, d in stress_period_data.items():
                 if isinstance(d, list):
                     d = np.array(d)
+                if isinstance(d, pd.DataFrame):
+                    d = d.to_records(index=False)
                 if isinstance(d, np.recarray):
                     e = (
                         "ModflowStr error: recarray dtype: {} does not match "

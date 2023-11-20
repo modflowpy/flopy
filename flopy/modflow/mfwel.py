@@ -28,8 +28,7 @@ class ModflowWel(Package):
         A flag that is used to determine if cell-by-cell budget data should be
         saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
         (default is 0).
-    stress_period_data : list of boundaries, or recarray of boundaries, or
-        dictionary of boundaries
+    stress_period_data : list, recarray, dataframe or dictionary of boundaries.
         Each well is defined through definition of
         layer (int), row (int), column (int), flux (float).
         The simplest form is a dictionary with a lists of boundaries for each
