@@ -94,6 +94,13 @@ def get_disu_kwargs(
     def get_nn(k, i, j):
         return k * nrow * ncol + i * ncol + j
 
+    if not isinstance(delr, np.ndarray):
+        delr = np.array(delr)
+    if not isinstance(delc, np.ndarray):
+        delc = np.array(delc)
+    assert delr.shape == (ncol,)
+    assert delc.shape == (nrow,)
+
     nodes = nlay * nrow * ncol
     iac = np.zeros((nodes), dtype=int)
     ja = []
