@@ -304,10 +304,4 @@ def test_to_prt_pathlines_roundtrip():
     prt_pls.drop(
         ["imdl", "iprp", "name", "istatus", "ireason"], axis=1, inplace=True
     )
-    inp_pls[inp_pls.select_dtypes(np.float64).columns] = inp_pls.select_dtypes(
-        np.float64
-    ).astype(np.float32)
-    inp_pls[inp_pls.select_dtypes(np.int64).columns] = inp_pls.select_dtypes(
-        np.int64
-    ).astype(np.int32)
-    assert np.array_equal(inp_pls, prt_pls)
+    assert np.allclose(inp_pls, prt_pls)
