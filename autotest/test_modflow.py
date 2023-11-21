@@ -3,6 +3,7 @@ import inspect
 import os
 import shutil
 from pathlib import Path
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -262,7 +263,7 @@ def test_mt_modelgrid(function_tmpdir):
     assert np.array_equal(swt.modelgrid.idomain, ml.modelgrid.idomain)
 
 
-@requires_exe("mp7")
+@requires_exe("mp7", "mf2005")
 def test_exe_selection(example_data_path, function_tmpdir):
     model_path = example_data_path / "freyberg"
     namfile_path = model_path / "freyberg.nam"
@@ -1288,13 +1289,14 @@ def test_load_with_list_reader(function_tmpdir):
     assert np.array_equal(originalwelra, m2.wel.stress_period_data[0])
 
 
+@requires_exe("mf2005")
 @pytest.mark.parametrize(
     "container",
     [
         str(np.recarray),
         str(pd.DataFrame),
-        str(dict[int, np.recarray]),
-        str(dict[int, pd.DataFrame]),
+        str(Dict[int, np.recarray]),
+        str(Dict[int, pd.DataFrame]),
     ],
 )
 def test_pkg_data_containers(function_tmpdir, container):
@@ -1306,7 +1308,6 @@ def test_pkg_data_containers(function_tmpdir, container):
     size = 100
     nlay = 10
     nper = 1
-    nsfr = int((size**2) / 5)
 
     # grid discretization
     dis = ModflowDis(
@@ -1349,23 +1350,27 @@ def test_pkg_data_containers(function_tmpdir, container):
         well_spd = ra_per
     elif "'pandas.core.frame.DataFrame'" in container:
         well_spd = df_per
-    elif "dict[int, numpy.recarray]" in container:
+    elif "Dict[int, numpy.recarray]" in container:
         well_spd = {}
         well_spd[0] = ra_per
-    elif "dict[int, pandas.core.frame.DataFrame]" in container:
+    elif "Dict[int, pandas.core.frame.DataFrame]" in container:
         well_spd = {}
         well_spd[0] = df_per
     wel = ModflowWel(m, stress_period_data=well_spd)
 
-    # streamflow routing pkg
-    rd = ModflowSfr2.get_empty_reach_data(nsfr)
-    rd["iseg"] = range(len(rd))
-    rd["ireach"] = 1
-    sd = ModflowSfr2.get_empty_segment_data(nsfr)
-    sd["nseg"] = range(len(sd))
-    sfr = ModflowSfr2(reach_data=rd, segment_data=sd, model=m)
+    # basic pkg
+    bas = ModflowBas(m)
 
-    return m
+    # solver
+    pcg = ModflowPcg(m)
+
+    # output control pkg
+    oc = ModflowOc(m)
+
+    # write and run the model
+    m.write_input()
+    success, _ = m.run_model(silent=False)
+    assert success
 
 
 def get_perftest_model(ws, name):
