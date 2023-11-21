@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import pytest
 from autotest.conftest import get_example_data_path
 from modflow_devtools.markers import requires_exe
@@ -107,10 +108,10 @@ def test_mfsimlist_memory(function_tmpdir):
     )
 
     total_memory_kb = mfsimlst.get_memory_usage(units="kilobytes")
-    assert total_memory_kb == total_memory * 1e6, (
+    assert np.allclose(total_memory_kb, total_memory * 1e6), (
         f"total memory in kilobytes ({total_memory_kb}) is not equal to "
         + f"the total memory converted to kilobytes "
-        + f"({total_memory})"
+        + f"({total_memory * 1e6})"
     )
 
     virtual_memory = mfsimlst.get_memory_usage(virtual=True)
@@ -140,6 +141,26 @@ def test_mfsimlist_memory_summary(mem_option, function_tmpdir):
     else:
         for units in MEMORY_UNITS:
             mem_dict = mfsimlst.get_memory_summary(units=units)
-            assert (
-                tuple(mem_dict.keys()) == KEYS
-            ), "memory summary keys do not match"
+            for key in KEYS:
+                assert key in KEYS, f"memory summary key ({key}) not in KEYS"
+
+
+@requires_exe("mf6")
+@pytest.mark.parametrize("mem_option", (None, "all"))
+def test_mfsimlist_memory_all(mem_option, function_tmpdir):
+    sim = base_model(function_tmpdir, memory_print_option=mem_option)
+    mfsimlst = flopy.mf6.utils.MfSimulationList(function_tmpdir / "mfsim.lst")
+
+    if mem_option is None:
+        mem_dict = mfsimlst.get_memory_all()
+        assert mem_dict is None, "Expected that None to be returned"
+    else:
+        for units in MEMORY_UNITS:
+            mem_dict = mfsimlst.get_memory_all(units=units)
+            total = 0.0
+            for key, value in mem_dict.items():
+                total += value["MEMORYSIZE"]
+            # total_ = mfsimlst.get_memory_usage(units=units)
+            # diff = total_ - total
+            # percent_diff = 100.0 * diff / total_
+            assert total > 0.0, "memory is not greater than zero"

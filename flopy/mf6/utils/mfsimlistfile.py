@@ -231,16 +231,6 @@ class MfSimulationList:
                 sim_units,
                 return_units_str=units.upper(),
             )
-            # if sim_units == "GIGABYTES":
-            #     unit_conversion = 1.0
-            # elif sim_units == "MEGABYTES":
-            #     unit_conversion = 1e-3
-            # elif sim_units == "KILOBYTES":
-            #     unit_conversion = 1e-6
-            # elif sim_units == "BYTES":
-            #     unit_conversion = 1e-9
-            # else:
-            #     raise ValueError(f"Unknown memory unit '{sim_units}'")
 
             if virtual:
                 tag = tags[2]
@@ -284,12 +274,12 @@ class MfSimulationList:
         -------
         memory_summary : dict
             dictionary with the total memory for each simulation component.
-            None is return of summary memory data is not present in the
+            None is returned if summary memory data is not present in the
             simulation listing file.
 
 
         """
-        # initialize the memory summary dictionary
+        # initialize the return variable
         memory_summary = None
 
         # rewind the file
@@ -318,6 +308,97 @@ class MfSimulationList:
                 memory_summary[data[0]] = float(data[-1]) * unit_conversion
 
         return memory_summary
+
+    def get_memory_all(self, units: str = "gigabytes") -> dict:
+        """
+        Get a dictionary of the memory table written if it is available in the
+        simulation list file. The memory table is only available
+        if the memory_print_option is set to 'all' in the simulation
+        name file options block.
+
+        Parameters
+        ----------
+        units : str
+            Memory units for return results. Valid values are 'gigabytes',
+            'megabytes', 'kilobytes', and 'bytes' (default is 'gigabytes').
+
+        Returns
+        -------
+        memory_all : dict
+            dictionary with the memory information for each variable in the
+            MODFLOW 6 memory manager. The dictionary keys are the full memory
+            path for a variable (the memory path and variable name). The
+            dictionary entry for each key includes the memory path, the
+            variable name, data type, size, and memory used for each variable.
+            None is returned if the memory table is not present in the
+            simulation listing file.
+
+
+        """
+        # initialize the return variable
+        memory_all = None
+
+        TYPE_SIZE = {
+            "INTEGER": 4.0,
+            "DOUBLE": 8.0,
+            "LOGICAL": 4.0,
+            "STRING": 1.0,
+        }
+
+        # rewind the file
+        self._rewind_file()
+
+        tag = "DETAILED INFORMATION ON VARIABLES STORED IN THE MEMORY MANAGER"
+        seekpoint = self._seek_to_string(tag)
+        self.f.seek(seekpoint)
+        line = self.f.readline().strip()
+        if line != "":
+            sim_units = "BYTES"
+            unit_conversion = self._get_memory_unit_conversion(
+                sim_units,
+                return_units_str=units.upper(),
+            )
+            # read the header
+            for k in range(3):
+                _ = self.f.readline()
+            terminator = 173 * "-"
+            memory_all = {}
+            # read the data
+            while True:
+                line = self.f.readline().strip()
+                if line == terminator:
+                    break
+                if "STRING LEN=" in line:
+                    mempath = line[0:50].strip()
+                    varname = line[51:67].strip()
+                    data_type = line[68:84].strip()
+                    no_items = float(line[84:105].strip())
+                    assoc_var = line[106:].strip()
+                    variable_bytes = (
+                        TYPE_SIZE["STRING"]
+                        * float(data_type.replace("STRING LEN=", ""))
+                        * no_items
+                    )
+                else:
+                    data = line.split()
+                    mempath = data[0]
+                    varname = data[1]
+                    data_type = data[2]
+                    no_items = float(data[3])
+                    assoc_var = data[4]
+                    variable_bytes = TYPE_SIZE[data_type] * no_items
+
+                if assoc_var == "--":
+                    size_bytes = variable_bytes * unit_conversion
+                    memory_all[f"{mempath}/{varname}"] = {
+                        "MEMPATH": mempath,
+                        "VARIABLE": varname,
+                        "DATATYPE": data_type,
+                        "SIZE": no_items,
+                        "MEMORYSIZE": size_bytes,
+                    }
+
+        return memory_all
 
     def _seek_to_string(self, s):
         """
