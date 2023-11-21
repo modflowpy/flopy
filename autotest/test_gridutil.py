@@ -82,11 +82,20 @@ def test_get_lni_infers_layer_count_when_int_ncpl(ncpl, nodes, expected):
             np.array([-10]),
             np.array([-30.0, -50.0]),
         ),
+        (
+            1,  # nlay
+            3,  # nrow
+            4,  # ncol
+            np.array(4 * [4.]),  # delr
+            np.array(3 * [3.]),  # delc
+            np.array([-10]),  # top
+            np.array([-30.0]),  # botm
+        ),
     ],
 )
 def test_get_disu_kwargs(nlay, nrow, ncol, delr, delc, tp, botm):
     kwargs = get_disu_kwargs(
-        nlay=nlay, nrow=nrow, ncol=ncol, delr=delr, delc=delc, tp=tp, botm=botm
+        nlay=nlay, nrow=nrow, ncol=ncol, delr=delr, delc=delc, tp=tp, botm=botm, return_vertices=True
     )
 
     from pprint import pprint
@@ -94,7 +103,7 @@ def test_get_disu_kwargs(nlay, nrow, ncol, delr, delc, tp, botm):
     pprint(kwargs["area"])
 
     assert kwargs["nodes"] == nlay * nrow * ncol
-    assert kwargs["nvert"] == None
+    assert kwargs["nvert"] == (nrow + 1) * (ncol + 1)
 
     area = np.array([dr * dc for (dr, dc) in product(delr, delc)], dtype=float)
     area = np.array(nlay * [area]).flatten()
