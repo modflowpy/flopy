@@ -95,7 +95,7 @@ def test_get_lni_infers_layer_count_when_int_ncpl(ncpl, nodes, expected):
 )
 def test_get_disu_kwargs(nlay, nrow, ncol, delr, delc, tp, botm):
     kwargs = get_disu_kwargs(
-        nlay=nlay, nrow=nrow, ncol=ncol, delr=delr, delc=delc, tp=tp, botm=botm
+        nlay=nlay, nrow=nrow, ncol=ncol, delr=delr, delc=delc, tp=tp, botm=botm, return_vertices=True
     )
 
     from pprint import pprint

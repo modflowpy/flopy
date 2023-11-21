@@ -68,6 +68,7 @@ def get_disu_kwargs(
     delc,
     tp,
     botm,
+    return_vertices=False,
 ):
     """
     Create args needed to construct a DISU package for a regular
@@ -89,6 +90,8 @@ def get_disu_kwargs(
         Top elevation(s) of cells in the model's top layer
     botm : numpy.ndarray
         Bottom elevation(s) for each layer
+    return_vertices: bool
+        If true, then include vertices and cell2d in kwargs
     """
 
     def get_nn(k, i, j):
@@ -178,37 +181,39 @@ def get_disu_kwargs(
     hwva = np.array(hwva, dtype=float)
 
     # build vertices
-    xv = np.cumsum(delr)
-    xv = np.array([0] + list(xv))
-    ymax = delc.sum()
-    yv = np.cumsum(delc)
-    yv = ymax - np.array([0] + list(yv))
-    xmg, ymg = np.meshgrid(xv, yv)
-    nvert = xv.shape[0] * yv.shape[0]
-    verts = np.array(list(zip(xmg.flatten(), ymg.flatten())))
-    vertices = []
-    for i in range(nvert):
-        vertices.append((i, verts[i, 0], verts[i, 1]))
+    nvert = None
+    if return_vertices:
+        xv = np.cumsum(delr)
+        xv = np.array([0] + list(xv))
+        ymax = delc.sum()
+        yv = np.cumsum(delc)
+        yv = ymax - np.array([0] + list(yv))
+        xmg, ymg = np.meshgrid(xv, yv)
+        nvert = xv.shape[0] * yv.shape[0]
+        verts = np.array(list(zip(xmg.flatten(), ymg.flatten())))
+        vertices = []
+        for i in range(nvert):
+            vertices.append((i, verts[i, 0], verts[i, 1]))
 
-    cell2d = []
-    icell = 0
-    for k in range(nlay):
-        for i in range(nrow):
-            for j in range(ncol):
-                iv0 = j + i * (ncol + 1)  # upper left vertex
-                iv1 = iv0 + 1  # upper right vertex
-                iv3 = iv0 + ncol + 1  # lower left vertex
-                iv2 = iv3 + 1  # lower right vertex
-                iverts = [iv0, iv1, iv2, iv3]
-                vlist = [(verts[iv, 0], verts[iv, 1]) for iv in iverts]
-                xc, yc = centroid_of_polygon(vlist)
-                cell2d.append([icell, xc, yc, len(iverts)] + iverts)
-                icell += 1
+        cell2d = []
+        icell = 0
+        for k in range(nlay):
+            for i in range(nrow):
+                for j in range(ncol):
+                    iv0 = j + i * (ncol + 1)  # upper left vertex
+                    iv1 = iv0 + 1  # upper right vertex
+                    iv3 = iv0 + ncol + 1  # lower left vertex
+                    iv2 = iv3 + 1  # lower right vertex
+                    iverts = [iv0, iv1, iv2, iv3]
+                    vlist = [(verts[iv, 0], verts[iv, 1]) for iv in iverts]
+                    xc, yc = centroid_of_polygon(vlist)
+                    cell2d.append([icell, xc, yc, len(iverts)] + iverts)
+                    icell += 1
 
     kw = {}
     kw["nodes"] = nodes
     kw["nja"] = nja
-    kw["nvert"] = None
+    kw["nvert"] = nvert
     kw["top"] = top
     kw["bot"] = bot
     kw["area"] = area
@@ -217,9 +222,9 @@ def get_disu_kwargs(
     kw["ihc"] = ihc
     kw["cl12"] = cl12
     kw["hwva"] = hwva
-    kw["nvert"] = nvert
-    kw["vertices"] = vertices
-    kw["cell2d"] = cell2d
+    if return_vertices:
+        kw["vertices"] = vertices
+        kw["cell2d"] = cell2d
     return kw
 
 
