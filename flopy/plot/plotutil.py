@@ -6,6 +6,7 @@ shapefiles are also included.
 """
 import os
 import warnings
+from itertools import repeat
 from typing import Union
 
 import matplotlib.pyplot as plt
@@ -2690,7 +2691,8 @@ def to_mp7_pathlines(
     # build mp7 format recarray
     ret = np.core.records.fromarrays(
         [
-            data[seqn_key],
+            data["irpt"],
+            # data[seqn_key],
             data["iprp"],
             data[seqn_key],
             data["irpt"],
@@ -2911,6 +2913,7 @@ def to_prt_pathlines(
             ("x", np.float32),
             ("y", np.float32),
             ("z", np.float32),
+            ("name", str),
         ]
     )
 
@@ -2920,17 +2923,19 @@ def to_prt_pathlines(
             data["stressperiod"],
             data["timestep"],
             np.zeros(data.shape[0]),
-            np.zeros(data.shape[0]),
             data["particlegroup"],
             data["particleid"],
             data["k"],
             data["node"],
-            np.zeros(data.shape[0]),  # todo k
+            np.zeros(data.shape[0]),  # todo izone?
+            np.zeros(data.shape[0]),  # todo istatus?
+            np.zeros(data.shape[0]),  # todo ireason?
             np.zeros(data.shape[0]),  # todo trelease?
-            data["t"],
+            data["time"],
             data["x"],
             data["y"],
             data["z"],
+            np.zeros(data.shape[0]),
         ],
         dtype=prt_dtypes,
     )

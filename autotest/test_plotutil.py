@@ -2,12 +2,15 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from flopy.plot.plotutil import to_mp7_endpoints, to_mp7_pathlines
+from flopy.plot.plotutil import (
+    to_mp7_endpoints,
+    to_mp7_pathlines,
+    to_prt_pathlines,
+)
 
 # test PRT-MP7 pathline conversion functions
 # todo: define fields in a single location and reference from here
 # todo: support optional grid parameter to conversion functions
-# todo: test to_prt_pathlines() conversion and round-trip
 
 
 prt_pl_cols = []
@@ -289,3 +292,22 @@ def test_to_mp7_endpoints(dataframe):
     assert set(
         dict(mp7_eps.dtypes).keys() if dataframe else mp7_eps.dtype.names
     ) == set(mp7_ep_cols)
+
+
+def test_to_prt_pathlines_roundtrip():
+    inp_pls = pls
+    mp7_pls = to_mp7_pathlines(inp_pls)
+    prt_pls = to_prt_pathlines(mp7_pls)
+    inp_pls.drop(
+        ["imdl", "iprp", "name", "istatus", "ireason"], axis=1, inplace=True
+    )
+    prt_pls.drop(
+        ["imdl", "iprp", "name", "istatus", "ireason"], axis=1, inplace=True
+    )
+    inp_pls[inp_pls.select_dtypes(np.float64).columns] = inp_pls.select_dtypes(
+        np.float64
+    ).astype(np.float32)
+    inp_pls[inp_pls.select_dtypes(np.int64).columns] = inp_pls.select_dtypes(
+        np.int64
+    ).astype(np.int32)
+    assert np.array_equal(inp_pls, prt_pls)
