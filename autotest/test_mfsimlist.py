@@ -137,7 +137,7 @@ def test_mfsimlist_memory_summary(mem_option, function_tmpdir):
 
     if mem_option is None:
         mem_dict = mfsimlst.get_memory_summary()
-        assert mem_dict is None, "Expected that None to be returned"
+        assert mem_dict is None, "Expected None to be returned"
     else:
         for units in MEMORY_UNITS:
             mem_dict = mfsimlst.get_memory_summary(units=units)
@@ -153,7 +153,7 @@ def test_mfsimlist_memory_all(mem_option, function_tmpdir):
 
     if mem_option is None:
         mem_dict = mfsimlst.get_memory_all()
-        assert mem_dict is None, "Expected that None to be returned"
+        assert mem_dict is None, "Expected None to be returned"
     else:
         for units in MEMORY_UNITS:
             mem_dict = mfsimlst.get_memory_all(units=units)
