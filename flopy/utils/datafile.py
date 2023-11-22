@@ -477,7 +477,8 @@ class LayerFile:
 
     def get_kstpkper(self):
         """
-        Get stress period and time step tuples.
+        Get a list of unique tuples (stress period, time step) in the file.
+        Indices are 0-based, use `kstpkper` attribute for 1-based.
 
         Returns
         -------
@@ -485,7 +486,7 @@ class LayerFile:
             List of unique combinations of stress period &
             time step indices (0-based) in the binary file
         """
-        return self.kstpkper
+        return [(kstp - 1, kper - 1) for kstp, kper in self.kstpkper]
 
     def get_data(self, kstpkper=None, idx=None, totim=None, mflay=None):
         """

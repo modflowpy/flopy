@@ -475,14 +475,12 @@ class BinaryLayerFile(LayerFile):
                 continue
             if ipos == 0:
                 self.times.append(header["totim"])
-                self.kstpkper.append((header["kstp"] - 1, header["kper"] - 1))
+                self.kstpkper.append((header["kstp"], header["kper"]))
             else:
                 totim = header["totim"]
                 if totim != self.times[-1]:
                     self.times.append(totim)
-                    self.kstpkper.append(
-                        (header["kstp"] - 1, header["kper"] - 1)
-                    )
+                    self.kstpkper.append((header["kstp"], header["kper"]))
             ipos = self.file.tell()
             self.iposarray.append(ipos)
             databytes = self.get_databytes(header)
@@ -611,7 +609,7 @@ class HeadFile(BinaryLayerFile):
     >>> import flopy.utils.binaryfile as bf
     >>> hdobj = bf.HeadFile('model.hds', precision='single')
     >>> hdobj.list_records()
-    >>> rec = hdobj.get_data(kstpkper=(0, 50))
+    >>> rec = hdobj.get_data(kstpkper=(0, 49))
 
     >>> ddnobj = bf.HeadFile('model.ddn', text='drawdown', precision='single')
     >>> ddnobj.list_records()
@@ -1202,7 +1200,7 @@ class CellBudgetFile:
                 header["totim"] = totim
             if totim >= 0 and totim not in self.times:
                 self.times.append(totim)
-            kstpkper = (header["kstp"] - 1, header["kper"] - 1)
+            kstpkper = (header["kstp"], header["kper"])
             if kstpkper not in self.kstpkper:
                 self.kstpkper.append(kstpkper)
             if header["text"] not in self.textlist:
@@ -1507,7 +1505,8 @@ class CellBudgetFile:
 
     def get_kstpkper(self):
         """
-        Get stress period and time step tuples.
+        Get a list of unique tuples (stress period, time step) in the file.
+        Indices are 0-based, use the `kstpkper` attribute for 1-based.
 
         Returns
         -------
@@ -1515,7 +1514,7 @@ class CellBudgetFile:
             List of unique combinations of stress period &
             time step indices (0-based) in the binary file
         """
-        return self.kstpkper
+        return [(kstp - 1, kper - 1) for kstp, kper in self.kstpkper]
 
     def get_indices(self, text=None):
         """
@@ -1763,23 +1762,24 @@ class CellBudgetFile:
         result = self._init_result(nstation)
 
         timesint = self.get_times()
+        kstpkper = self.get_kstpkper()
+        nsteps = len(kstpkper)
         if len(timesint) < 1:
             if times is None:
-                timesint = [x + 1 for x in range(len(self.kstpkper))]
+                timesint = [x + 1 for x in range(nsteps)]
             else:
                 if isinstance(times, np.ndarray):
                     times = times.tolist()
-                if len(times) != len(self.kstpkper):
-                    raise Exception(
-                        "times passed to CellBudgetFile get_ts() "
-                        "method must be equal to {} "
-                        "not {}".format(len(self.kstpkper), len(times))
+                if len(times) != nsteps:
+                    raise ValueError(
+                        f"number of times provided ({len(times)}) must equal "
+                        f"number of time steps in cell budget file ({nsteps})"
                     )
                 timesint = times
         for idx, t in enumerate(timesint):
             result[idx, 0] = t
 
-        for itim, k in enumerate(self.kstpkper):
+        for itim, k in enumerate(kstpkper):
             try:
                 v = self.get_data(kstpkper=k, text=text, full3D=True)
                 # skip missing data - required for storage
