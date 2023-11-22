@@ -149,9 +149,8 @@ class Header:
 
 class LayerFile:
     """
-    The LayerFile class is the abstract base class from which specific derived
-    classes are formed.  LayerFile This class should not be instantiated
-    directly.
+    Base class for layered output files.
+    Do not instantiate directly.
 
     """
 
@@ -477,19 +476,16 @@ class LayerFile:
 
     def get_kstpkper(self):
         """
-        Get a list of unique stress periods and time steps in the file
+        Get a list of unique tuples (stress period, time step) in the file.
+        Indices are 0-based, use the `kstpkper` attribute for 1-based.
 
         Returns
-        ----------
-        out : list of (kstp, kper) tuples
-            List of unique kstp, kper combinations in binary file.  kstp and
-            kper values are presently zero-based.
-
+        -------
+        list of (kstp, kper) tuples
+            List of unique combinations of stress period &
+            time step indices (0-based) in the binary file
         """
-        kstpkper = []
-        for kstp, kper in self.kstpkper:
-            kstpkper.append((kstp - 1, kper - 1))
-        return kstpkper
+        return [(kstp - 1, kper - 1) for kstp, kper in self.kstpkper]
 
     def get_data(self, kstpkper=None, idx=None, totim=None, mflay=None):
         """
@@ -498,10 +494,9 @@ class LayerFile:
         Parameters
         ----------
         idx : int
-            The zero-based record number.  The first record is record 0.
+            The zero-based record number. The first record is record 0.
         kstpkper : tuple of ints
-            A tuple containing the time step and stress period (kstp, kper).
-            These are zero-based kstp and kper values.
+            A tuple (kstep, kper) of zero-based time step and stress period.
         totim : float
             The simulation time.
         mflay : integer
@@ -514,14 +509,9 @@ class LayerFile:
             Array has size (nlay, nrow, ncol) if mflay is None or it has size
             (nrow, ncol) if mlay is specified.
 
-        See Also
-        --------
-
         Notes
         -----
-        if both kstpkper and totim are None, will return the last entry
-        Examples
-        --------
+        If both kstpkper and totim are None, the last entry will be returned.
 
         """
         # One-based kstp and kper for pulling out of recarray

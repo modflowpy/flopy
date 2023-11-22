@@ -458,10 +458,12 @@ class BinaryLayerFile(LayerFile):
 
         if self.nrow < 0 or self.ncol < 0:
             raise Exception("negative nrow, ncol")
-        if self.nrow > 1 and self.nrow * self.ncol > 10000000:
-            s = "Possible error. ncol ({}) * nrow ({}) > 10,000,000 "
-            s = s.format(self.ncol, self.nrow)
-            warnings.warn(s)
+
+        warn_threshold = 10000000
+        if self.nrow > 1 and self.nrow * self.ncol > warn_threshold:
+            warnings.warn(
+                f"Very large grid, ncol ({self.ncol}) * nrow ({self.nrow}) > {warn_threshold}"
+            )
         self.file.seek(0, 2)
         self.totalbytes = self.file.tell()
         self.file.seek(0, 0)
@@ -473,14 +475,12 @@ class BinaryLayerFile(LayerFile):
                 continue
             if ipos == 0:
                 self.times.append(header["totim"])
-                kstpkper = (header["kstp"], header["kper"])
-                self.kstpkper.append(kstpkper)
+                self.kstpkper.append((header["kstp"], header["kper"]))
             else:
                 totim = header["totim"]
                 if totim != self.times[-1]:
                     self.times.append(totim)
-                    kstpkper = (header["kstp"], header["kper"])
-                    self.kstpkper.append(kstpkper)
+                    self.kstpkper.append((header["kstp"], header["kper"]))
             ipos = self.file.tell()
             self.iposarray.append(ipos)
             databytes = self.get_databytes(header)
@@ -609,7 +609,7 @@ class HeadFile(BinaryLayerFile):
     >>> import flopy.utils.binaryfile as bf
     >>> hdobj = bf.HeadFile('model.hds', precision='single')
     >>> hdobj.list_records()
-    >>> rec = hdobj.get_data(kstpkper=(1, 50))
+    >>> rec = hdobj.get_data(kstpkper=(0, 49))
 
     >>> ddnobj = bf.HeadFile('model.ddn', text='drawdown', precision='single')
     >>> ddnobj.list_records()
@@ -762,7 +762,7 @@ class UcnFile(BinaryLayerFile):
     >>> import flopy.utils.binaryfile as bf
     >>> ucnobj = bf.UcnFile('MT3D001.UCN', precision='single')
     >>> ucnobj.list_records()
-    >>> rec = ucnobj.get_data(kstpkper=(1,1))
+    >>> rec = ucnobj.get_data(kstpkper=(0, 0))
 
     """
 
@@ -829,7 +829,7 @@ class HeadUFile(BinaryLayerFile):
     >>> import flopy.utils.binaryfile as bf
     >>> hdobj = bf.HeadUFile('model.hds')
     >>> hdobj.list_records()
-    >>> usgheads = hdobj.get_data(kstpkper=(1, 50))
+    >>> usgheads = hdobj.get_data(kstpkper=(0, 49))
 
     """
 
@@ -1505,19 +1505,16 @@ class CellBudgetFile:
 
     def get_kstpkper(self):
         """
-        Get a list of unique stress periods and time steps in the file
+        Get a list of unique tuples (stress period, time step) in the file.
+        Indices are 0-based, use the `kstpkper` attribute for 1-based.
 
         Returns
-        ----------
-        out : list of (kstp, kper) tuples
-            List of unique kstp, kper combinations in binary file.  kstp and
-            kper values are zero-based.
-
+        -------
+        list of (kstp, kper) tuples
+            List of unique combinations of stress period &
+            time step indices (0-based) in the binary file
         """
-        kstpkper = []
-        for kstp, kper in self.kstpkper:
-            kstpkper.append((kstp - 1, kper - 1))
-        return kstpkper
+        return [(kstp - 1, kper - 1) for kstp, kper in self.kstpkper]
 
     def get_indices(self, text=None):
         """
@@ -1764,25 +1761,25 @@ class CellBudgetFile:
         # Initialize result array and put times in first column
         result = self._init_result(nstation)
 
-        kk = self.get_kstpkper()
         timesint = self.get_times()
+        kstpkper = self.get_kstpkper()
+        nsteps = len(kstpkper)
         if len(timesint) < 1:
             if times is None:
-                timesint = [x + 1 for x in range(len(kk))]
+                timesint = [x + 1 for x in range(nsteps)]
             else:
                 if isinstance(times, np.ndarray):
                     times = times.tolist()
-                if len(times) != len(kk):
-                    raise Exception(
-                        "times passed to CellBudgetFile get_ts() "
-                        "method must be equal to {} "
-                        "not {}".format(len(kk), len(times))
+                if len(times) != nsteps:
+                    raise ValueError(
+                        f"number of times provided ({len(times)}) must equal "
+                        f"number of time steps in cell budget file ({nsteps})"
                     )
                 timesint = times
         for idx, t in enumerate(timesint):
             result[idx, 0] = t
 
-        for itim, k in enumerate(kk):
+        for itim, k in enumerate(kstpkper):
             try:
                 v = self.get_data(kstpkper=k, text=text, full3D=True)
                 # skip missing data - required for storage

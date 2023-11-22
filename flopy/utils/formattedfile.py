@@ -117,7 +117,7 @@ class FormattedLayerFile(LayerFile):
         Build the recordarray and iposarray, which maps the header information
         to the position in the formatted file.
         """
-        self.kstpkper  # array of time step/stress periods with data available
+        self.kstpkper  # 1-based array of time step/stress periods
         self.recordarray  # array of data headers
         self.iposarray  # array of seek positions for each record
         self.nlay  # Number of model layers
@@ -155,7 +155,6 @@ class FormattedLayerFile(LayerFile):
         self.recordarray = np.array(self.recordarray, self.header.get_dtype())
         self.iposarray = np.array(self.iposarray)
         self.nlay = np.max(self.recordarray["ilay"])
-        return
 
     def _store_record(self, header, ipos):
         """
@@ -356,9 +355,8 @@ class FormattedHeadFile(FormattedLayerFile):
     >>> import flopy.utils.formattedfile as ff
     >>> hdobj = ff.FormattedHeadFile('model.fhd', precision='single')
     >>> hdobj.list_records()
-    >>> rec = hdobj.get_data(kstpkper=(1, 50))
+    >>> rec = hdobj.get_data(kstpkper=(0, 49))
     >>> rec2 = ddnobj.get_data(totim=100.)
-
 
     """
 
@@ -372,7 +370,6 @@ class FormattedHeadFile(FormattedLayerFile):
     ):
         self.text = text
         super().__init__(filename, precision, verbose, kwargs)
-        return
 
     def _get_text_header(self):
         """
