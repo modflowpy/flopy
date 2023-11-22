@@ -39,7 +39,7 @@ def test_mfsimlist_nofile(function_tmpdir):
 def test_mfsimlist_normal(function_tmpdir):
     sim = base_model(function_tmpdir)
     mfsimlst = flopy.mf6.utils.MfSimulationList(function_tmpdir / "mfsim.lst")
-    assert mfsimlst.is_normal_termination, "model did not terminate normally"
+    assert mfsimlst.normal_termination, "model did not terminate normally"
 
 
 @pytest.mark.xfail

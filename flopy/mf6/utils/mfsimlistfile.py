@@ -15,10 +15,13 @@ class MfSimulationList:
         self.file_name = file_name
         self.f = open(file_name, "r", encoding="ascii", errors="replace")
 
+        self.normal_termination = self._get_termination_message()
+        self.memory_print_option = self._memory_print_option()
+
     @property
     def is_normal_termination(self) -> bool:
         """
-        Determine if the simulation terminated normally
+        Return boolean indicating if the simulation terminated normally
 
         Returns
         -------
@@ -26,17 +29,7 @@ class MfSimulationList:
             Boolean indicating if the simulation terminated normally
 
         """
-        # rewind the file
-        self._rewind_file()
-
-        seekpoint = self._seek_to_string("Normal termination of simulation.")
-        self.f.seek(seekpoint)
-        line = self.f.readline().strip()
-        if line == "":
-            success = False
-        else:
-            success = True
-        return success
+        return self.normal_termination
 
     def get_runtime(
         self, units: str = "seconds", simulation_timer: str = "elapsed"
@@ -282,30 +275,34 @@ class MfSimulationList:
         # initialize the return variable
         memory_summary = None
 
-        # rewind the file
-        self._rewind_file()
+        if self.memory_print_option == "summary":
+            # rewind the file
+            self._rewind_file()
 
-        tag = "SUMMARY INFORMATION ON VARIABLES STORED IN THE MEMORY MANAGER"
-        seekpoint = self._seek_to_string(tag)
-        self.f.seek(seekpoint)
-        line = self.f.readline().strip()
-        if line != "":
-            sim_units = line.split()[-1]
-            unit_conversion = self._get_memory_unit_conversion(
-                sim_units,
-                return_units_str=units.upper(),
+            seekpoint = self._seek_to_string(
+                "SUMMARY INFORMATION ON VARIABLES "
+                + "STORED IN THE MEMORY MANAGER"
             )
-            # read the header
-            for k in range(3):
-                _ = self.f.readline()
-            terminator = 100 * "-"
-            memory_summary = {}
-            while True:
-                line = self.f.readline().strip()
-                if line == terminator:
-                    break
-                data = line.split()
-                memory_summary[data[0]] = float(data[-1]) * unit_conversion
+            self.f.seek(seekpoint)
+            line = self.f.readline().strip()
+
+            if line != "":
+                sim_units = line.split()[-1]
+                unit_conversion = self._get_memory_unit_conversion(
+                    sim_units,
+                    return_units_str=units.upper(),
+                )
+                # read the header
+                for k in range(3):
+                    _ = self.f.readline()
+                terminator = 100 * "-"
+                memory_summary = {}
+                while True:
+                    line = self.f.readline().strip()
+                    if line == terminator:
+                        break
+                    data = line.split()
+                    memory_summary[data[0]] = float(data[-1]) * unit_conversion
 
         return memory_summary
 
@@ -344,59 +341,62 @@ class MfSimulationList:
             "LOGICAL": 4.0,
             "STRING": 1.0,
         }
+        if self.memory_print_option == "all":
+            # rewind the file
+            self._rewind_file()
 
-        # rewind the file
-        self._rewind_file()
-
-        tag = "DETAILED INFORMATION ON VARIABLES STORED IN THE MEMORY MANAGER"
-        seekpoint = self._seek_to_string(tag)
-        self.f.seek(seekpoint)
-        line = self.f.readline().strip()
-        if line != "":
-            sim_units = "BYTES"
-            unit_conversion = self._get_memory_unit_conversion(
-                sim_units,
-                return_units_str=units.upper(),
+            seekpoint = self._seek_to_string(
+                "DETAILED INFORMATION ON VARIABLES "
+                + "STORED IN THE MEMORY MANAGER"
             )
-            # read the header
-            for k in range(3):
-                _ = self.f.readline()
-            terminator = 173 * "-"
-            memory_all = {}
-            # read the data
-            while True:
-                line = self.f.readline().strip()
-                if line == terminator:
-                    break
-                if "STRING LEN=" in line:
-                    mempath = line[0:50].strip()
-                    varname = line[51:67].strip()
-                    data_type = line[68:84].strip()
-                    no_items = float(line[84:105].strip())
-                    assoc_var = line[106:].strip()
-                    variable_bytes = (
-                        TYPE_SIZE["STRING"]
-                        * float(data_type.replace("STRING LEN=", ""))
-                        * no_items
-                    )
-                else:
-                    data = line.split()
-                    mempath = data[0]
-                    varname = data[1]
-                    data_type = data[2]
-                    no_items = float(data[3])
-                    assoc_var = data[4]
-                    variable_bytes = TYPE_SIZE[data_type] * no_items
+            self.f.seek(seekpoint)
+            line = self.f.readline().strip()
 
-                if assoc_var == "--":
-                    size_bytes = variable_bytes * unit_conversion
-                    memory_all[f"{mempath}/{varname}"] = {
-                        "MEMPATH": mempath,
-                        "VARIABLE": varname,
-                        "DATATYPE": data_type,
-                        "SIZE": no_items,
-                        "MEMORYSIZE": size_bytes,
-                    }
+            if line != "":
+                sim_units = "BYTES"
+                unit_conversion = self._get_memory_unit_conversion(
+                    sim_units,
+                    return_units_str=units.upper(),
+                )
+                # read the header
+                for k in range(3):
+                    _ = self.f.readline()
+                terminator = 173 * "-"
+                memory_all = {}
+                # read the data
+                while True:
+                    line = self.f.readline().strip()
+                    if line == terminator:
+                        break
+                    if "STRING LEN=" in line:
+                        mempath = line[0:50].strip()
+                        varname = line[51:67].strip()
+                        data_type = line[68:84].strip()
+                        no_items = float(line[84:105].strip())
+                        assoc_var = line[106:].strip()
+                        variable_bytes = (
+                            TYPE_SIZE["STRING"]
+                            * float(data_type.replace("STRING LEN=", ""))
+                            * no_items
+                        )
+                    else:
+                        data = line.split()
+                        mempath = data[0]
+                        varname = data[1]
+                        data_type = data[2]
+                        no_items = float(data[3])
+                        assoc_var = data[4]
+                        variable_bytes = TYPE_SIZE[data_type] * no_items
+
+                    if assoc_var == "--":
+                        size_bytes = variable_bytes * unit_conversion
+                        memory_all[f"{mempath}/{varname}"] = {
+                            "MEMPATH": mempath,
+                            "VARIABLE": varname,
+                            "DATATYPE": data_type,
+                            "SIZE": no_items,
+                            "MEMORYSIZE": size_bytes,
+                        }
 
         return memory_all
 
@@ -432,6 +432,28 @@ class MfSimulationList:
 
         """
         self.f.seek(0)
+
+    def _get_termination_message(self) -> bool:
+        """
+        Determine if the simulation terminated normally
+
+        Returns
+        -------
+        success: bool
+            Boolean indicating if the simulation terminated normally
+
+        """
+        # rewind the file
+        self._rewind_file()
+
+        seekpoint = self._seek_to_string("Normal termination of simulation.")
+        self.f.seek(seekpoint)
+        line = self.f.readline().strip()
+        if line == "":
+            success = False
+        else:
+            success = True
+        return success
 
     def _get_memory_unit_conversion(
         self,
@@ -473,3 +495,32 @@ class MfSimulationList:
         factor_dict = {tag: factor[idx] for idx, tag in enumerate(valid_units)}
 
         return factor_dict[sim_units_str]
+
+    def _memory_print_option(self) -> str:
+        """
+        Determine the memory print option selected
+
+        Returns
+        -------
+        option: str
+            memory_print_option ('summary', 'all', or None)
+
+        """
+        # rewind the file
+        self._rewind_file()
+
+        seekpoint = self._seek_to_string("MEMORY_PRINT_OPTION SET TO")
+        self.f.seek(seekpoint)
+        line = self.f.readline().strip()
+        if line == "":
+            option = None
+        else:
+            option_list = re.findall(r'"([^"]*)"', line)
+            if len(option_list) < 1:
+                raise LookupError(
+                    "could not parse memory_print_option from" + f"'{line}'"
+                )
+            option = option_list[-1].lower()
+            if option not in ("all", "summary"):
+                raise ValueError(f"unknown memory print option {option}")
+        return option
