@@ -8,6 +8,7 @@ MODFLOW Guide
 
 """
 import numpy as np
+import pandas as pd
 
 from ..pakbase import Package
 from ..utils import read1d
@@ -64,7 +65,7 @@ class ModflowFhb(Package):
         (default is 0.0)
     cnstm5 : float
         A constant multiplier for data list flwrat. (default is 1.0)
-    ds5 : list or numpy array or recarray
+    ds5 : list or numpy array or recarray or pandas dataframe
         Each FHB flwrat cell (dataset 5) is defined through definition of
         layer(int), row(int), column(int), iaux(int), flwrat[nbdtime](float).
         There should be nflw entries. (default is None)
@@ -81,7 +82,7 @@ class ModflowFhb(Package):
 
     cnstm7 : float
         A constant multiplier for data list sbhedt. (default is 1.0)
-    ds7 : list or numpy array or recarray
+    ds7 : list or numpy array or recarray or pandas dataframe
         Each FHB sbhed cell (dataset 7) is defined through definition of
         layer(int), row(int), column(int), iaux(int), sbhed[nbdtime](float).
         There should be nhed entries. (default is None)
@@ -211,6 +212,8 @@ class ModflowFhb(Package):
                 raise TypeError(msg)
             elif isinstance(ds5, list):
                 ds5 = np.array(ds5)
+            elif isinstance(ds5, pd.DataFrame):
+                ds5 = ds5.to_records(index=False)
             # convert numpy array to a recarray
             if ds5.dtype != dtype:
                 ds5 = np.core.records.fromarrays(ds5.transpose(), dtype=dtype)
@@ -228,6 +231,8 @@ class ModflowFhb(Package):
                 raise TypeError(msg)
             elif isinstance(ds7, list):
                 ds7 = np.array(ds7)
+            elif isinstance(ds7, pd.DataFrame):
+                ds7 = ds7.to_records(index=False)
             # convert numpy array to a recarray
             if ds7.dtype != dtype:
                 ds7 = np.core.records.fromarrays(ds7.transpose(), dtype=dtype)

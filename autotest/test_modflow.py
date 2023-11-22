@@ -3,8 +3,10 @@ import inspect
 import os
 import shutil
 from pathlib import Path
+from typing import Dict
 
 import numpy as np
+import pandas as pd
 import pytest
 from autotest.conftest import get_example_data_path
 from modflow_devtools.markers import excludes_platform, requires_exe
@@ -261,7 +263,7 @@ def test_mt_modelgrid(function_tmpdir):
     assert np.array_equal(swt.modelgrid.idomain, ml.modelgrid.idomain)
 
 
-@requires_exe("mp7")
+@requires_exe("mp7", "mf2005")
 def test_exe_selection(example_data_path, function_tmpdir):
     model_path = example_data_path / "freyberg"
     namfile_path = model_path / "freyberg.nam"
@@ -1287,7 +1289,91 @@ def test_load_with_list_reader(function_tmpdir):
     assert np.array_equal(originalwelra, m2.wel.stress_period_data[0])
 
 
-def get_basic_modflow_model(ws, name):
+@requires_exe("mf2005")
+@pytest.mark.parametrize(
+    "container",
+    [
+        str(np.recarray),
+        str(pd.DataFrame),
+        str(Dict[int, np.recarray]),
+        str(Dict[int, pd.DataFrame]),
+    ],
+)
+def test_pkg_data_containers(function_tmpdir, container):
+    """Test various containers for package data (list, ndarray, recarray, dataframe, dict of such)"""
+
+    name = "pkg_data"
+    ws = function_tmpdir
+    m = Modflow(name, model_ws=ws)
+    size = 100
+    nlay = 10
+    nper = 1
+
+    # grid discretization
+    dis = ModflowDis(
+        m,
+        nper=nper,
+        nlay=nlay,
+        nrow=size,
+        ncol=size,
+        top=nlay,
+        botm=list(range(nlay)),
+    )
+
+    # recharge pkg
+    rch = ModflowRch(
+        m, rech={k: 0.001 - np.cos(k) * 0.001 for k in range(nper)}
+    )
+
+    # well pkg, setup data per 'container' parameter
+    # to test support for various container types
+    ra = ModflowWel.get_empty(size**2)
+    ra_per = ra.copy()
+    ra_per["k"] = 1
+    ra_per["i"] = (
+        (np.ones((size, size)) * np.arange(size))
+        .transpose()
+        .ravel()
+        .astype(int)
+    )
+    ra_per["j"] = list(range(size)) * size
+    wel_dtype = np.dtype(
+        [
+            ("k", int),
+            ("i", int),
+            ("j", int),
+            ("flux", np.float32),
+        ]
+    )
+    df_per = pd.DataFrame(ra_per)
+    if "'numpy.recarray'" in container:
+        well_spd = ra_per
+    elif "'pandas.core.frame.DataFrame'" in container:
+        well_spd = df_per
+    elif "Dict[int, numpy.recarray]" in container:
+        well_spd = {}
+        well_spd[0] = ra_per
+    elif "Dict[int, pandas.core.frame.DataFrame]" in container:
+        well_spd = {}
+        well_spd[0] = df_per
+    wel = ModflowWel(m, stress_period_data=well_spd)
+
+    # basic pkg
+    bas = ModflowBas(m)
+
+    # solver
+    pcg = ModflowPcg(m)
+
+    # output control pkg
+    oc = ModflowOc(m)
+
+    # write and run the model
+    m.write_input()
+    success, _ = m.run_model(silent=False)
+    assert success
+
+
+def get_perftest_model(ws, name):
     m = Modflow(name, model_ws=ws)
 
     size = 100
@@ -1338,20 +1424,20 @@ def get_basic_modflow_model(ws, name):
 @pytest.mark.slow
 def test_model_init_time(function_tmpdir, benchmark):
     name = inspect.getframeinfo(inspect.currentframe()).function
-    benchmark(lambda: get_basic_modflow_model(ws=function_tmpdir, name=name))
+    benchmark(lambda: get_perftest_model(ws=function_tmpdir, name=name))
 
 
 @pytest.mark.slow
 def test_model_write_time(function_tmpdir, benchmark):
     name = inspect.getframeinfo(inspect.currentframe()).function
-    model = get_basic_modflow_model(ws=function_tmpdir, name=name)
+    model = get_perftest_model(ws=function_tmpdir, name=name)
     benchmark(lambda: model.write_input())
 
 
 @pytest.mark.slow
 def test_model_load_time(function_tmpdir, benchmark):
     name = inspect.getframeinfo(inspect.currentframe()).function
-    model = get_basic_modflow_model(ws=function_tmpdir, name=name)
+    model = get_perftest_model(ws=function_tmpdir, name=name)
     model.write_input()
     benchmark(
         lambda: Modflow.load(

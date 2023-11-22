@@ -14,7 +14,6 @@ import numpy as np
 import pandas as pd
 
 from ..datbase import DataInterface, DataListInterface, DataType
-from ..utils import import_optional_dependency
 from ..utils.recarray_utils import create_empty_recarray
 
 
@@ -94,7 +93,6 @@ class MfList(DataInterface, DataListInterface):
             if package.parent.version == "mf2k":
                 list_free_format = False
         self.list_free_format = list_free_format
-        return
 
     @property
     def name(self):
@@ -307,41 +305,37 @@ class MfList(DataInterface, DataListInterface):
             try:
                 data = np.array(data)
             except Exception as e:
-                raise Exception(
+                raise ValueError(
                     f"MfList error: casting list to ndarray: {e!s}"
                 )
 
         # If data is a dict, the we have to assume it is keyed on kper
         if isinstance(data, dict):
             if not list(data.keys()):
-                raise Exception("MfList error: data dict is empty")
+                raise ValueError("MfList error: data dict is empty")
             for kper, d in data.items():
                 try:
                     kper = int(kper)
                 except Exception as e:
-                    raise Exception(
+                    raise ValueError(
                         f"MfList error: data dict key {kper} not integer: "
                         f"{type(kper)}\n{e!s}"
                     )
                 # Same as before, just try...
                 if isinstance(d, list):
-                    # warnings.warn("MfList: casting list to array at " +\
-                    #               "kper {0:d}".format(kper))
                     try:
                         d = np.array(d)
                     except Exception as e:
-                        raise Exception(
+                        raise ValueError(
                             f"MfList error: casting list to ndarray: {e}"
                         )
-
-                # super hack - sick of recarrays already
-                # if (isinstance(d,np.ndarray) and len(d.dtype.fields) > 1):
-                #    d = d.view(np.recarray)
 
                 if isinstance(d, np.recarray):
                     self.__cast_recarray(kper, d)
                 elif isinstance(d, np.ndarray):
                     self.__cast_ndarray(kper, d)
+                elif isinstance(d, pd.DataFrame):
+                    self.__cast_dataframe(kper, d)
                 elif isinstance(d, int):
                     self.__cast_int(kper, d)
                 elif isinstance(d, str):
@@ -350,7 +344,7 @@ class MfList(DataInterface, DataListInterface):
                     self.__data[kper] = -1
                     self.__vtype[kper] = None
                 else:
-                    raise Exception(
+                    raise ValueError(
                         "MfList error: unsupported data type: "
                         f"{type(d)} at kper {kper}"
                     )
@@ -361,11 +355,14 @@ class MfList(DataInterface, DataListInterface):
         # A single ndarray
         elif isinstance(data, np.ndarray):
             self.__cast_ndarray(0, data)
+        # A single dataframe
+        elif isinstance(data, pd.DataFrame):
+            self.__cast_dataframe(0, data)
         # A single filename
         elif isinstance(data, str):
             self.__cast_str(0, data)
         else:
-            raise Exception(
+            raise ValueError(
                 f"MfList error: unsupported data type: {type(data)}"
             )
 
@@ -381,7 +378,7 @@ class MfList(DataInterface, DataListInterface):
     def __cast_int(self, kper, d):
         # If d is an integer, then it must be 0 or -1
         if d > 0:
-            raise Exception(
+            raise ValueError(
                 "MfList error: dict integer value for "
                 "kper {:10d} must be 0 or -1, "
                 "not {:10d}".format(kper, d)
@@ -408,17 +405,18 @@ class MfList(DataInterface, DataListInterface):
                 f"MfList error: ndarray shape {d.shape} doesn't match "
                 f"dtype len: {len(self.dtype)}"
             )
-            # warnings.warn("MfList: ndarray dtype does not match self " +\
-            #               "dtype, trying to cast")
         try:
             self.__data[kper] = np.core.records.fromarrays(
                 d.transpose(), dtype=self.dtype
             )
         except Exception as e:
-            raise Exception(
+            raise ValueError(
                 f"MfList error: casting ndarray to recarray: {e!s}"
             )
         self.__vtype[kper] = np.recarray
+
+    def __cast_dataframe(self, kper, d):
+        self.__cast_recarray(kper, d.to_records(index=False))
 
     def get_dataframe(self, squeeze=False):
         """
@@ -534,7 +532,7 @@ class MfList(DataInterface, DataListInterface):
         try:
             self.__data[kper][-1] = tuple(rec)
         except Exception as e:
-            raise Exception(
+            raise ValueError(
                 f"MfList.add_record() error: adding record to recarray: {e}"
             )
 
@@ -548,7 +546,7 @@ class MfList(DataInterface, DataListInterface):
         try:
             kper = int(kper)
         except Exception as e:
-            raise Exception(
+            raise ValueError(
                 f"MfList error: _getitem__() passed invalid kper index: {kper}"
             )
         if kper not in list(self.data.keys()):
@@ -578,7 +576,7 @@ class MfList(DataInterface, DataListInterface):
             try:
                 data = np.array(data)
             except Exception as e:
-                raise Exception(
+                raise ValueError(
                     f"MfList error: casting list to ndarray: {e!s}"
                 )
         # cast data
@@ -593,7 +591,7 @@ class MfList(DataInterface, DataListInterface):
         elif isinstance(data, str):
             self.__cast_str(kper, data)
         else:
-            raise Exception(
+            raise ValueError(
                 f"MfList error: unsupported data type: {type(data)}"
             )
 
@@ -604,7 +602,7 @@ class MfList(DataInterface, DataListInterface):
         try:
             d = np.genfromtxt(f, dtype=self.dtype)
         except Exception as e:
-            raise Exception(
+            raise ValueError(
                 f"MfList.__fromfile() error reading recarray from file {e!s}"
             )
         return d
@@ -1097,8 +1095,9 @@ class MfList(DataInterface, DataListInterface):
                     for name, arr in arrays.items():
                         arrays[name][:] = np.NaN
                 return arrays
-            else:
-                raise Exception("MfList: something bad happened")
+            raise ValueError(
+                f"MfList: expected no entries for period {kper} but found {sarr}"
+            )
 
         for name, arr in arrays.items():
             if unstructured:
@@ -1225,7 +1224,7 @@ class MfList(DataInterface, DataListInterface):
             for i2, key2 in enumerate(keys[i1:]):
                 a2 = np.isnan(m4ds[key2])
                 if not np.array_equal(a1, a2):
-                    raise Exception(
+                    raise ValueError(
                         f"Transient2d error: masking not equal for {key1} and {key2}"
                     )
 

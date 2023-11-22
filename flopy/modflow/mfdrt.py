@@ -27,8 +27,7 @@ class ModflowDrt(Package):
         A flag that is used to determine if cell-by-cell budget data should be
         saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
         (default is None).
-    stress_period_data : list of boundaries, recarrays, or dictionary of
-        boundaries.
+    stress_period_data : list, recarray, dataframe or dictionary of boundaries.
         Each drain return cell is defined through definition of
         layer(int), row(int), column(int), elevation(float),
         conductance(float), layerR (int) , rowR (int), colR (int) and rfprop (float).

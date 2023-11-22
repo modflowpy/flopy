@@ -2,6 +2,7 @@ import os
 import warnings
 
 import numpy as np
+import pandas as pd
 
 from ..pakbase import Package
 from ..utils import MfList, check
@@ -451,6 +452,8 @@ class Mnw:
         # does this need to be Mflist?
         self.stress_period_data = self.get_empty_stress_period_data(nper)
         if stress_period_data is not None:
+            if isinstance(stress_period_data, pd.DataFrame):
+                stress_period_data = stress_period_data.to_records(index=False)
             for n in stress_period_data.dtype.names:
                 self.stress_period_data[n] = stress_period_data[n]
 
@@ -459,6 +462,8 @@ class Mnw:
             np.abs(nnodes), aux_names=self.aux
         )
         if node_data is not None:
+            if isinstance(node_data, pd.DataFrame):
+                node_data = node_data.to_records(index=False)
             for n in node_data.dtype.names:
                 self.node_data[n] = node_data[n]
                 # convert strings to lower case
@@ -1054,6 +1059,8 @@ class ModflowMnw2(Package):
         self.node_data = self.get_empty_node_data(0, aux_names=aux)
 
         if node_data is not None:
+            if isinstance(node_data, pd.DataFrame):
+                node_data = node_data.to_records(index=False)
             self.node_data = self.get_empty_node_data(
                 len(node_data), aux_names=aux
             )

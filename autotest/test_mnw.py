@@ -23,7 +23,7 @@ def mnw1_path(example_data_path):
     return example_data_path / "mf2005_test"
 
 
-def test_load(function_tmpdir, example_data_path, mnw2_examples_path):
+def test_load(function_tmpdir, mnw2_examples_path):
     """t027 test load of MNW2 Package"""
     # load in the test problem (1 well, 3 stress periods)
     m = Modflow.load(
@@ -94,7 +94,8 @@ def test_mnw1_load_write(function_tmpdir, mnw1_path):
         assert np.array_equal(v, m2.mnw1.stress_period_data[k])
 
 
-def test_make_package(function_tmpdir):
+@pytest.mark.parametrize("dataframe", [True, False])
+def test_make_package(function_tmpdir, dataframe):
     """t027 test make MNW2 Package"""
     ws = function_tmpdir
     m4 = Modflow("mnw2example", model_ws=ws)
@@ -195,6 +196,9 @@ def test_make_package(function_tmpdir):
         ).view(np.recarray),
     }
 
+    if dataframe:
+        node_data = pd.DataFrame(node_data)
+
     mnw2_4 = ModflowMnw2(
         model=m4,
         mnwmax=2,
@@ -257,6 +261,9 @@ def test_make_package(function_tmpdir):
         ).view(np.recarray),
     }
 
+    if dataframe:
+        node_data = pd.DataFrame(node_data)
+
     mnw2_4 = ModflowMnw2(
         model=m4,
         mnwmax=2,
@@ -294,7 +301,8 @@ def test_make_package(function_tmpdir):
     )
 
 
-def test_mnw2_create_file(function_tmpdir):
+@pytest.mark.parametrize("dataframe", [True, False])
+def test_mnw2_create_file(function_tmpdir, dataframe):
     """
     Test for issue #556, Mnw2 crashed if wells have
     multiple node lengths
@@ -341,8 +349,12 @@ def test_mnw2_create_file(function_tmpdir):
             wellids[i],
             nnodes=nlayers[i],
             nper=len(stress_period_data.index),
-            node_data=node_data.to_records(index=False),
-            stress_period_data=stress_period_data.to_records(index=False),
+            node_data=node_data.to_records(index=False)
+            if not dataframe
+            else node_data,
+            stress_period_data=stress_period_data.to_records(index=False)
+            if not dataframe
+            else stress_period_data,
         )
 
         wells.append(wl)
