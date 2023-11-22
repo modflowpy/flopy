@@ -1514,9 +1514,6 @@ class CellBudgetFile:
         list of (kstp, kper) tuples
             List of unique combinations of stress period &
             time step indices (0-based) in the binary file
-
-        .. deprecated:: 3.5
-            Use kstpkper property instead
         """
         return self.kstpkper
 
