@@ -68,14 +68,9 @@ class ModflowSfr2(Package):
         computing leakage between each stream reach and active model cell.
         Value is in units of length. Usually a value of 0.0001 is sufficient
         when units of feet or meters are used in model.
-    ipakcb : integer
-        An integer value used as a flag for writing stream-aquifer leakage
-        values. If ipakcb > 0, unformatted leakage between each stream reach
-        and corresponding model cell will be saved to the main cell-by-cell
-        budget file whenever when a cell-by-cell budget has been specified in
-        Output Control (see Harbaugh and others, 2000, pages 52-55). If
-        ipakcb = 0, leakage values will not be printed or saved. Printing to
-        the listing file (ipakcb < 0) is not supported.
+    ipakcb : int, optional
+        Toggles whether cell-by-cell budget data should be saved. If None or zero,
+        budget data will not be saved (default is None).
     istcb2 : integer
         An integer value used as a flag for writing to a separate formatted
         file all information on inflows and outflows from each reach; on
@@ -228,7 +223,7 @@ class ModflowSfr2(Package):
         filenames=None the package name will be created using the model name
         and package extension and the cbc output and sfr output name will be
         created using the model name and .cbc the .sfr.bin/.sfr.out extensions
-        (for example, modflowtest.cbc, and modflowtest.sfr.bin), if ipakcbc and
+        (for example, modflowtest.cbc, and modflowtest.sfr.bin), if ipakcb and
         istcb2 are numbers greater than zero. If a single string is passed the
         package name will be set to the string and other uzf output files will
         be set to the model name with the appropriate output file extensions.
@@ -358,13 +353,8 @@ class ModflowSfr2(Package):
         # set filenames
         filenames = self._prepare_filenames(filenames, 3)
 
-        # update external file information with cbc output, if necessary
-        if ipakcb is not None:
-            model.add_output_file(
-                ipakcb, fname=filenames[1], package=self._ftype()
-            )
-        else:
-            ipakcb = 0
+        # cbc output file
+        self.set_cbc_output_file(ipakcb, model, filenames[1])
 
         # add sfr flow output file
         if istcb2 is not None:
@@ -451,7 +441,6 @@ class ModflowSfr2(Package):
             dleak  # tolerance level of stream depth used in computing leakage
         )
 
-        self.ipakcb = ipakcb
         # flag; unit number for writing table of SFR output to text file
         self.istcb2 = istcb2
 

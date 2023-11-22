@@ -48,7 +48,6 @@ from flopy.mf6 import (
 )
 from flopy.mf6.data.mfdataplist import MFPandasList
 
-
 pytestmark = pytest.mark.mf6
 
 

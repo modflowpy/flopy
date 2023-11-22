@@ -7,7 +7,6 @@ MODFLOW Guide
 <https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/uzf_-_unsaturated_zone_flow_pa_3.html>`_.
 
 """
-import warnings
 
 import numpy as np
 
@@ -58,14 +57,9 @@ class ModflowUzf1(Package):
         specifies whether or not evapotranspiration (ET) will be simulated.
         ET will not be simulated if IETFLG is zero, otherwise it will be
         simulated. (default is 0)
-    ipakcb : integer
-        flag for writing ground-water recharge, ET, and ground-water
-        discharge to land surface rates to a separate unformatted file using
-        subroutine UBUDSV. If ipakcb>0, it is the unit number to which the
-        cell-by-cell rates will be written when 'SAVE BUDGET' or a non-zero
-        value for ICBCFL is specified in Output Control. If ipakcb less than
-        or equal to 0, cell-by-cell rates will not be written to a file.
-        (default is 57)
+    ipakcb : int, optional
+        Toggles whether cell-by-cell budget data should be saved. If None or zero,
+        budget data will not be saved (default is None).
     iuzfcb2 : integer
         flag for writing ground-water recharge, ET, and ground-water
         discharge to land surface rates to a separate unformatted file using
@@ -266,7 +260,7 @@ class ModflowUzf1(Package):
         and package extension and the cbc output, uzf output, and uzf
         observation names will be created using the model name and .cbc,
         uzfcb2.bin, and  .uzf#.out extensions (for example, modflowtest.cbc,
-        and modflowtest.uzfcd2.bin), if ipakcbc, iuzfcb2, and len(uzgag) are
+        and modflowtest.uzfcd2.bin), if ipakcb, iuzfcb2, and len(uzgag) are
         numbers greater than zero. For uzf observations the file extension is
         created using the uzf observation file unit number (for example, for
         uzf observations written to unit 123 the file extension would be
@@ -397,13 +391,8 @@ class ModflowUzf1(Package):
             nlen += len(uzgag)
         filenames = self._prepare_filenames(filenames, nlen)
 
-        # update external file information with cbc output, if necessary
-        if ipakcb is not None:
-            model.add_output_file(
-                abs(ipakcb), fname=filenames[1], package=self._ftype()
-            )
-        else:
-            ipakcb = 0
+        # cbc output file
+        self.set_cbc_output_file(ipakcb, model, filenames[1])
 
         if iuzfcb2 is not None:
             model.add_output_file(
@@ -524,7 +513,6 @@ class ModflowUzf1(Package):
         # must be active if IRUNFLG is not zero.
         self.irunflg = irunflg
         self.ietflg = ietflg
-        self.ipakcb = ipakcb
         self.iuzfcb2 = iuzfcb2
         if iuzfopt > 0:
             self.ntrail2 = ntrail2

@@ -26,10 +26,9 @@ class ModflowSwi2(Package):
         flag indicating the density distribution. (default is 1).
     iswizt : int
         unit number for zeta output. (default is None).
-    ipakcb : int
-        A flag that is used to determine if cell-by-cell budget data should be
-        saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
-        (default is None).
+    ipakcb : int, optional
+        Toggles whether cell-by-cell budget data should be saved. If None or zero,
+        budget data will not be saved (default is None).
     iswiobs : int
         flag and unit number SWI2 observation output. (default is 0).
     options : list of strings
@@ -242,13 +241,8 @@ class ModflowSwi2(Package):
         else:
             iswizt = 0
 
-        # update external file information with swi2 cell-by-cell output,
-        # if necessary
-        if ipakcb is not None:
-            fname = filenames[2]
-            model.add_output_file(ipakcb, fname=fname, package=self._ftype())
-        else:
-            ipakcb = 0
+        # cbc output file
+        self.set_cbc_output_file(ipakcb, model, filenames[2])
 
         # Process observations
         if nobs != 0:
@@ -338,8 +332,6 @@ class ModflowSwi2(Package):
         self.nobs = nobs
         self.iswizt = iswizt
         self.iswiobs = iswiobs
-        # set cbc unit
-        self.ipakcb = ipakcb
 
         # set solver flags
         self.nsolver = nsolver

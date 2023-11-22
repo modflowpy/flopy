@@ -10,7 +10,6 @@ from flopy import run_model
 from flopy.mbase import resolve_exe
 from flopy.utils.flopy_io import relpath_safe
 
-
 _system = system()
 
 

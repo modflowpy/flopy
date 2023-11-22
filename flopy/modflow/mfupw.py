@@ -25,10 +25,9 @@ class ModflowUpw(Package):
     model : model object
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
-    ipakcb : int
-        A flag that is used to determine if cell-by-cell budget data should be
-        saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
-        (default is 0).
+    ipakcb : int, optional
+        Toggles whether cell-by-cell budget data should be saved. If None or zero,
+        budget data will not be saved (default is None).
     hdry : float
         Is the head that is assigned to cells that are converted to dry during
         a simulation. Although this value plays no role in the model
@@ -108,9 +107,9 @@ class ModflowUpw(Package):
         filenames=None the package name will be created using the model name
         and package extension and the cbc output name will be created using
         the model name and .cbc extension (for example, modflowtest.cbc),
-        if ipakcbc is a number greater than zero. If a single string is passed
+        if ipakcb is a number greater than zero. If a single string is passed
         the package will be set to the string and cbc output name will be
-        created using the model name and .cbc extension, if ipakcbc is a
+        created using the model name and .cbc extension, if ipakcb is a
         number greater than zero. To define the names for all package files
         (input and output) the length of the list of strings should be 2.
         Default is None.
@@ -172,13 +171,8 @@ class ModflowUpw(Package):
         # set filenames
         filenames = self._prepare_filenames(filenames, 2)
 
-        # update external file information with cbc output, if necessary
-        if ipakcb is not None:
-            model.add_output_file(
-                ipakcb, fname=filenames[1], package=self._ftype()
-            )
-        else:
-            ipakcb = 0
+        # cbc output file
+        self.set_cbc_output_file(ipakcb, model, filenames[1])
 
         # call base package constructor
         super().__init__(
@@ -193,8 +187,6 @@ class ModflowUpw(Package):
         self.url = "upw_upstream_weighting_package.html"
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
-        # item 1
-        self.ipakcb = ipakcb
         # Head in cells that are converted to dry during a simulation
         self.hdry = hdry
         # number of UPW parameters
