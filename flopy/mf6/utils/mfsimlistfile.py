@@ -1,6 +1,7 @@
 import os
 import pathlib as pl
 import re
+import warnings
 
 import numpy as np
 
@@ -97,11 +98,13 @@ class MfSimulationList:
             if line == "":
                 return np.nan
 
-            # yank out the floating point values from the Elapsed run time string
+            # parse floating point values from the Elapsed run time string
             times = list(map(float, re.findall(r"[+-]?[0-9.]+", line)))
+
             # pad an array with zeros and times with
             # [days, hours, minutes, seconds]
             times = np.array([0 for _ in range(4 - len(times))] + times)
+
             # convert all to seconds
             time2sec = np.array([24 * 60 * 60, 60 * 60, 60, 1])
             times_sec = np.sum(times * time2sec)
@@ -112,7 +115,8 @@ class MfSimulationList:
             if line == "":
                 return np.nan
             times_sec = float(line.split()[3])
-        # return in the requested units
+
+        # return time in the requested units
         if units == "seconds":
             return times_sec
         elif units == "minutes":
@@ -275,7 +279,15 @@ class MfSimulationList:
         # initialize the return variable
         memory_summary = None
 
-        if self.memory_print_option == "summary":
+        if self.memory_print_option != "summary":
+            msg = (
+                "Cannot retrieve memory data using get_memory_summary() "
+                + "since memory_print_option is not set to 'SUMMARY'. "
+                + "Returning None."
+            )
+            warnings.warn(msg, category=Warning)
+
+        else:
             # rewind the file
             self._rewind_file()
 
@@ -341,7 +353,13 @@ class MfSimulationList:
             "LOGICAL": 4.0,
             "STRING": 1.0,
         }
-        if self.memory_print_option == "all":
+        if self.memory_print_option != "all":
+            msg = (
+                "Cannot retrieve memory data using get_memory_all() since "
+                + "memory_print_option is not set to 'ALL'. Returning None."
+            )
+            warnings.warn(msg, category=Warning)
+        else:
             # rewind the file
             self._rewind_file()
 
