@@ -829,7 +829,7 @@ class HeadUFile(BinaryLayerFile):
     >>> import flopy.utils.binaryfile as bf
     >>> hdobj = bf.HeadUFile('model.hds')
     >>> hdobj.list_records()
-    >>> usgheads = hdobj.get_data(kstpkper=(1, 50))
+    >>> usgheads = hdobj.get_data(kstpkper=(0, 49))
 
     """
 
