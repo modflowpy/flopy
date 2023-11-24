@@ -102,14 +102,13 @@ jobs:
           sed -i 's/#### Refactor/#### Refactoring/' CHANGELOG.md
           sed -i 's/#### Test/#### Testing/' CHANGELOG.md
           
-          # prepend changelog to .docs/md/version_changes.md
-          file=".docs/md/version_changes.md"
+          # prepend release changelog to cumulative changelog
+          clog=".docs/md/version_changes.md"
           temp="version_changes.md"
-          clog=$(cat CHANGELOG.md)
-          echo "$(tail -n +2 $file)" > $file
-          cat $clog > $temp
-          sudo mv $temp $file
-          sed -i '1i # Changelog' $file
+          echo "$(tail -n +2 $clog)" > $clog
+          cat CHANGELOG.md $clog > $temp
+          sudo mv $temp $clog
+          sed -i '1i # Changelog' $clog
 
       - name: Upload changelog
         uses: actions/upload-artifact@v3
