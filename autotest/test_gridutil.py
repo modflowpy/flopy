@@ -86,8 +86,8 @@ def test_get_lni_infers_layer_count_when_int_ncpl(ncpl, nodes, expected):
             1,  # nlay
             3,  # nrow
             4,  # ncol
-            np.array(4 * [4.]),  # delr
-            np.array(3 * [3.]),  # delc
+            np.array(4 * [4.0]),  # delr
+            np.array(3 * [3.0]),  # delc
             np.array([-10]),  # top
             np.array([-30.0]),  # botm
         ),
@@ -95,7 +95,14 @@ def test_get_lni_infers_layer_count_when_int_ncpl(ncpl, nodes, expected):
 )
 def test_get_disu_kwargs(nlay, nrow, ncol, delr, delc, tp, botm):
     kwargs = get_disu_kwargs(
-        nlay=nlay, nrow=nrow, ncol=ncol, delr=delr, delc=delc, tp=tp, botm=botm, return_vertices=True
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=delr,
+        delc=delc,
+        tp=tp,
+        botm=botm,
+        return_vertices=True,
     )
 
     from pprint import pprint
