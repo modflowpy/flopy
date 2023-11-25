@@ -16,27 +16,10 @@
 #### Bug fixes
 
 * [fix(exchange and gnc package cellids)](https://github.com/modflowpy/flopy/commit/a84d88596f8b8e8f9f8fa074ad8fce626a84ebd0): #1866 (#1871). Committed by spaulins-usgs on 2023-07-11.
-* [fix(binaryfile/gridutil)](https://github.com/modflowpy/flopy/commit/90f87f2932e17955dee68ec53347c9d06178f94a): Avoid numpy deprecation warnings (#1868). Committed by w-bonelli on 2023-07-12.
-* [fix(binary)](https://github.com/modflowpy/flopy/commit/ed549798333cf2186516d55ffb1e9d9a537a4a0f): Fix binary header information (#1877). Committed by jdhughes-usgs on 2023-07-16.
-* [fix(time series)](https://github.com/modflowpy/flopy/commit/8b03916b55fb7a923d13648237147124d77f09f5): Fix for multiple time series attached to single package (#1867) (#1873). Committed by spaulins-usgs on 2023-07-20.
-* [fix(check)](https://github.com/modflowpy/flopy/commit/8c330a7890fe732c5489ce6a2d5184a7b2fb70ee): Check now works properly with confined conditions (#1880) (#1882). Committed by spaulins-usgs on 2023-07-27.
-* [fix(mtlistfile)](https://github.com/modflowpy/flopy/commit/9a22f639865b9d81716f7fcecdfe33b3e5a352a2): Fix reading MT3D budget (#1899). Committed by Ralf Junghanns on 2023-08-03.
-* [fix(check)](https://github.com/modflowpy/flopy/commit/68f0c3bafcd2c806f22b0f75e8d18cc5c4428aa2): Updated flopy's check to work with cellid -1 values (#1885). Committed by spaulins-usgs on 2023-08-06.
-* [fix(BaseModel)](https://github.com/modflowpy/flopy/commit/c25c0b34a173fa9788ccd7a0de16da2d02f96e6c): Don't suppress error if exe not found (#1901). Committed by w-bonelli on 2023-08-07.
 * [fix(modelgrid)](https://github.com/modflowpy/flopy/commit/99f680feb39cb9450e1ce052024bb3da45e264d8): Retain crs data from classic nam files (#1904). Committed by Mike Taves on 2023-08-10.
-* [fix(keyword data)](https://github.com/modflowpy/flopy/commit/3cef778bdf979ac249d84d106ae7db01d5d8e391): Optional keywords (#1920). Committed by spaulins-usgs on 2023-08-16.
-* [fix(GridIntersect)](https://github.com/modflowpy/flopy/commit/f2064d8ce5d8bca6340c86b4947070031104104a): Combine list of geometries using unary_union (#1923). Committed by Mike Taves on 2023-08-21.
-* [fix(gridintersect)](https://github.com/modflowpy/flopy/commit/021ffaa8c406cda742f239673c4d1a802021b8b9): Add multilinestring tests (#1924). Committed by Davíd Brakenhoff on 2023-08-21.
-* [fix(binary file)](https://github.com/modflowpy/flopy/commit/66b0903f4812b6cef3020e7cdfd6e2c2d26f6d52): Was writing binary file information twice to external files (#1925) (#1928). Committed by scottrp on 2023-08-25.
-* [fix(ParticleData)](https://github.com/modflowpy/flopy/commit/5d57fb78b27238ea69adbdb3438c8e17db55ddad): Fix docstring, structured default is False (#1935). Committed by w-bonelli on 2023-08-25.
 * [fix(generate_classes)](https://github.com/modflowpy/flopy/commit/4f6cd47411b96460495b1f7d6582860a4d655060): Use branch arg if provided (#1938). Committed by w-bonelli on 2023-08-31.
 * [fix(remove_model)](https://github.com/modflowpy/flopy/commit/71855bdfcd37e95194b6e5928ae909a6f7ef15fa): Remove_model method fix and tests (#1945). Committed by scottrp on 2023-09-14.
-* [fix(export_contours/f)](https://github.com/modflowpy/flopy/commit/9e9d7302cd771ed305c96fbeb406e210c0d9aea7): Support matplotlib 3.8+ (#1951). Committed by wpbonelli on 2023-09-19.
-* [fix(resolve_exe)](https://github.com/modflowpy/flopy/commit/d7d7f6649118a84d869522b52b20a4af8a397ebe): Support extensionless abs/rel paths on windows (#1957). Committed by wpbonelli on 2023-09-24.
 * [fix(model_splitter.py)](https://github.com/modflowpy/flopy/commit/5b5eb4ec20c833df4117415d433513bf3a1b4aa5): Standardizing naming of iuzno, rno, lakeno, & wellno to ifno (#1963). Committed by Eric Morway on 2023-09-25.
-* [fix(mbase)](https://github.com/modflowpy/flopy/commit/637632cfa3ddbd2629dfc257759d36b851ee0063): Warn if duplicate pkgs or units (#1964). Committed by wpbonelli on 2023-09-26.
-* [fix(get_structured_faceflows)](https://github.com/modflowpy/flopy/commit/158d2d69fdfdd2cefbcdaa1a403f9103f51d2d70): Cover edge cases, expand tests (#1968). Committed by wpbonelli on 2023-09-29.
-* [fix(CellBudgetFile)](https://github.com/modflowpy/flopy/commit/4b105e866e4c58380415a25d131e9d96fc82a4ba): Detect compact fmt by negative nlay (#1966). Committed by wpbonelli on 2023-09-30.
 * [fix(pandas list)](https://github.com/modflowpy/flopy/commit/f77989d33955baa76032d9341226385215e45821): Deal with cellids with inconsistent types (#1980). Committed by scottrp on 2023-10-06.
 * [fix(model_splitter)](https://github.com/modflowpy/flopy/commit/5ebc216822a86f32c7a2ab9a3735f021475dc0f4): Check keys in mftransient array (#1998). Committed by jdhughes-usgs on 2023-11-13.
 * [fix(benchmarks)](https://github.com/modflowpy/flopy/commit/16183c3059f4a9bb10d74423500b566eb41d3d6e): Fix benchmark post-processing (#2004). Committed by wpbonelli on 2023-11-14.
@@ -80,6 +63,7 @@
 #### Bug fixes
 
 * [fix(export_contours/f)](https://github.com/modflowpy/flopy/commit/30209f2ca2e69289227203e4afd2f33bfceed097): Support matplotlib 3.8+ (#1951). Committed by wpbonelli on 2023-09-19.
+* [fix(usg bcf)](https://github.com/modflowpy/flopy/commit/d2dbacb65d2579e42bbd7965c1321a89ccce7d56): ksat util3d call --> util2d call (#1959). Committed by @cnicol-gwlogic on 2023-09-22.
 * [fix(resolve_exe)](https://github.com/modflowpy/flopy/commit/3522dced8a49dc93fb0140d9ac360a88f31b11bb): Support extensionless abs/rel paths on windows (#1957). Committed by wpbonelli on 2023-09-24.
 * [fix(mbase)](https://github.com/modflowpy/flopy/commit/b848f968af4179d8618b811cd4fe6f8de66d09cb): Warn if duplicate pkgs or units (#1964). Committed by wpbonelli on 2023-09-26.
 * [fix(get_structured_faceflows)](https://github.com/modflowpy/flopy/commit/92632d26be2ecb21b6d9d56717faadaa13e08369): Cover edge cases, expand tests (#1968). Committed by wpbonelli on 2023-09-29.
