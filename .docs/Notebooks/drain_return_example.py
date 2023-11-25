@@ -29,9 +29,9 @@ import numpy as np
 import flopy
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 
 # +
 # temporary directory
@@ -78,7 +78,7 @@ else:
     raise ValueError("Failed to run.")
 
 # plot heads for the drt model
-hds = flopy.utils.HeadFile(os.path.join(m.model_ws, m.name + ".hds"))
+hds = flopy.utils.HeadFile(os.path.join(m.model_ws, f"{m.name}.hds"))
 hds.plot(colorbar=True)
 
 # remove the drt package and create a standard drain file
@@ -98,7 +98,7 @@ else:
     raise ValueError("Failed to run.")
 
 # plot the heads for the model with the drain
-hds = flopy.utils.HeadFile(os.path.join(m.model_ws, m.name + ".hds"))
+hds = flopy.utils.HeadFile(os.path.join(m.model_ws, f"{m.name}.hds"))
 hds.plot(colorbar=True)
 
 try:

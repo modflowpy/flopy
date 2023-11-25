@@ -8,6 +8,7 @@ MODFLOW Guide
 
 """
 import numpy as np
+import pandas as pd
 
 from ..pakbase import Package
 from ..utils.recarray_utils import create_empty_recarray
@@ -31,7 +32,7 @@ class ModflowHyd(Package):
         is a user-specified value that is output if a value cannot be computed
         at a hydrograph location. For example, the cell in which the hydrograph
         is located may be a no-flow cell. (default is -999.)
-    obsdata : list of lists, numpy array, or numpy recarray (nhyd, 7)
+    obsdata : list of lists, numpy array or recarray, or pandas dataframe (nhyd, 7)
         Each row of obsdata includes data defining pckg (3 character string),
         arr (2 character string), intyp (1 character string) klay (int),
         xl (float), yl (float), hydlbl (14 character string) for each
@@ -158,6 +159,8 @@ class ModflowHyd(Package):
 
         dtype = ModflowHyd.get_default_dtype()
         obs = ModflowHyd.get_empty(nhyd)
+        if isinstance(obsdata, pd.DataFrame):
+            obsdata = obsdata.to_records(index=False)
         if isinstance(obsdata, list):
             if len(obsdata) != nhyd:
                 raise RuntimeError(

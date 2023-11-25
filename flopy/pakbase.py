@@ -655,8 +655,6 @@ class Package(PackageInterface):
         # return [data_object, data_object, ...]
         dl = []
         attrs = dir(self)
-        if "sr" in attrs:
-            attrs.remove("sr")
         if "start_datetime" in attrs:
             attrs.remove("start_datetime")
         for attr in attrs:
@@ -1260,3 +1258,12 @@ class Package(PackageInterface):
                 level=0,
             )
         return pak
+
+    def set_cbc_output_file(self, ipakcb, model, fname):
+        if ipakcb is None:
+            ipakcb = 0
+        else:
+            if ipakcb == "default":
+                ipakcb = 53
+            model.add_output_file(ipakcb, fname=fname, package=self._ftype())
+        self.ipakcb = ipakcb

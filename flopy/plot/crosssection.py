@@ -4,6 +4,7 @@ import warnings
 import matplotlib.colors
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from matplotlib.patches import Polygon
 
 from ..utils import geometry, import_optional_dependency
@@ -876,14 +877,18 @@ class PlotCrossSection:
                 else:
                     idx = mflist["node"]
 
-        if len(self.mg.shape) != 3:
-            plotarray = np.zeros((self._nlay, self._ncpl), dtype=int)
-            plotarray[tuple(idx)] = 1
-        else:
+        if len(self.mg.shape) == 3:
             plotarray = np.zeros(
                 (self.mg.nlay, self.mg.nrow, self.mg.ncol), dtype=int
             )
             plotarray[idx[0], idx[1], idx[2]] = 1
+        elif len(self.mg.shape) == 2:
+            plotarray = np.zeros((self._nlay, self._ncpl), dtype=int)
+            plotarray[tuple(idx)] = 1
+        else:
+            plotarray = np.zeros(self._ncpl, dtype=int)
+            idx = idx.flatten()
+            plotarray[idx] = 1
 
         plotarray = np.ma.masked_equal(plotarray, 0)
         if color is None:
@@ -1097,6 +1102,12 @@ class PlotCrossSection:
                 pl = [pl[pl["particleid"] == pid] for pid in pids]
             else:
                 pl = [pl]
+
+        # make sure each element in pl is a recarray
+        pl = [
+            p.to_records(index=False) if isinstance(p, pd.DataFrame) else p
+            for p in pl
+        ]
 
         marker = kwargs.pop("marker", None)
         markersize = kwargs.pop("markersize", None)

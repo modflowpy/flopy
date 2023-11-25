@@ -259,21 +259,21 @@ description REPLACE obs6_filename {'{#1}': 'SFT'}
 
 block packagedata
 name packagedata
-type recarray rno strt aux boundname
+type recarray ifno strt aux boundname
 shape (maxbound)
 reader urword
 longname
 description
 
 block packagedata
-name rno
+name ifno
 type integer
 shape
 tagged false
 in_record true
 reader urword
 longname reach number for this entry
-description integer value that defines the reach number associated with the specified PACKAGEDATA data on the line. RNO must be greater than zero and less than or equal to NREACHES. Reach information must be specified for every reach or the program will terminate with an error.  The program will also terminate with an error if information for a reach is specified more than once.
+description integer value that defines the feature (reach) number associated with the specified PACKAGEDATA data on the line. IFNO must be greater than zero and less than or equal to NREACHES. Reach information must be specified for every reach or the program will terminate with an error.  The program will also terminate with an error if information for a reach is specified more than once.
 numeric_index true
 
 block packagedata
@@ -327,21 +327,21 @@ description REPLACE iper {}
 
 block period
 name reachperioddata
-type recarray rno reachsetting
+type recarray ifno reachsetting
 shape
 reader urword
 longname
 description
 
 block period
-name rno
+name ifno
 type integer
 shape
 tagged false
 in_record true
 reader urword
 longname reach number for this entry
-description integer value that defines the reach number associated with the specified PERIOD data on the line. RNO must be greater than zero and less than or equal to NREACHES.
+description integer value that defines the feature (reach) number associated with the specified PERIOD data on the line. IFNO must be greater than zero and less than or equal to NREACHES.
 numeric_index true
 
 block period

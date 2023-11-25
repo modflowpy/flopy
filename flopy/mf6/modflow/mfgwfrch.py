@@ -123,10 +123,7 @@ class ModflowGwfrch(mfpackage.MFPackage):
     dfn_file_name = "gwf-rch.dfn"
 
     dfn = [
-        [
-            "header",
-            "multi-package",
-        ],
+        ["header", "multi-package", "package-type stress-package"],
         [
             "block options",
             "name fixed_cell",

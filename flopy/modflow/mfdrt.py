@@ -23,12 +23,10 @@ class ModflowDrt(Package):
     model : model object
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
-    ipakcb : int
-        A flag that is used to determine if cell-by-cell budget data should be
-        saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
-        (default is None).
-    stress_period_data : list of boundaries, recarrays, or dictionary of
-        boundaries.
+    ipakcb : int, optional
+        Toggles whether cell-by-cell budget data should be saved. If None or zero,
+        budget data will not be saved (default is None).
+    stress_period_data : list, recarray, dataframe or dictionary of boundaries.
         Each drain return cell is defined through definition of
         layer(int), row(int), column(int), elevation(float),
         conductance(float), layerR (int) , rowR (int), colR (int) and rfprop (float).
@@ -74,9 +72,9 @@ class ModflowDrt(Package):
         filenames=None the package name will be created using the model name
         and package extension and the cbc output name will be created using
         the model name and .cbc extension (for example, modflowtest.cbc),
-        if ipakcbc is a number greater than zero. If a single string is passed
+        if ipakcb is a number greater than zero. If a single string is passed
         the package will be set to the string and cbc output names will be
-        created using the model name and .cbc extension, if ipakcbc is a
+        created using the model name and .cbc extension, if ipakcb is a
         number greater than zero. To define the names for all package files
         (input and output) the length of the list of strings should be 2.
         Default is None.
@@ -124,13 +122,8 @@ class ModflowDrt(Package):
         # set filenames
         filenames = self._prepare_filenames(filenames, 2)
 
-        # update external file information with cbc output, if necessary
-        if ipakcb is not None:
-            model.add_output_file(
-                ipakcb, fname=filenames[1], package=self._ftype()
-            )
-        else:
-            ipakcb = 0
+        # cbc output file
+        self.set_cbc_output_file(ipakcb, model, filenames[1])
 
         if options is None:
             options = []
@@ -153,9 +146,6 @@ class ModflowDrt(Package):
 
         self._generate_heading()
         self.url = "drt.html"
-
-        self.ipakcb = ipakcb
-
         self.np = 0
 
         self.options = options

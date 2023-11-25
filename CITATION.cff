@@ -1,10 +1,10 @@
 cff-version: 1.2.0
-message: If you use this software, please cite both the article from preferred-citation
-  and the software itself.
+message: If you use this software, please cite both the article from preferred-citation,
+  references, and the software itself.
 type: software
 title: FloPy
-version: 3.4.3
-date-released: '2023-09-30'
+version: 3.5.0
+date-released: '2023-11-25'
 doi: 10.5066/F7BK19FH
 abstract: A Python package to create, run, and post-process MODFLOW-based models.
 repository-artifact: https://pypi.org/project/flopy
@@ -59,6 +59,28 @@ authors:
 preferred-citation:
   type: article
   authors:
+  - family-names: Hughes
+    given-names: Joseph D.
+    orcid: https://orcid.org/0000-0003-1311-2354
+  - family-names: Langevin
+    given-names: Christian D.
+    orcid: https://orcid.org/0000-0001-5610-9759
+  - family-names: Paulinski
+    given-names: Scott R.
+    orcid: https://orcid.org/0000-0001-6548-8164
+  - family-names: Larsen
+    given-names: Joshua D.
+    orcid: https://orcid.org/0000-0002-1218-800X
+  - family-names: Brakenhoff
+    given-names: David
+    orcid: https://orcid.org/0000-0002-2993-2202
+  title: FloPy Workflows for Creating Structured and Unstructured MODFLOW Models
+  doi: 10.1111/gwat.13327
+  journal: Groundwater
+  year: 2023
+  month: 5
+references:
+- authors:
   - family-names: Bakker
     given-names: Mark
     orcid: https://orcid.org/0000-0002-5629-2861
@@ -80,6 +102,7 @@ preferred-citation:
   - family-names: Fienen
     given-names: Michael N.
     orcid: https://orcid.org/0000-0002-7756-4651
+  type: article
   title: Scripting MODFLOW Model Development Using Python and FloPy
   doi: 10.1111/gwat.12413
   journal: Groundwater

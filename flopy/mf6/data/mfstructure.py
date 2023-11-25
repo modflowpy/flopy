@@ -209,8 +209,11 @@ class DfnPackage(Dfn):
         # get header dict
         header_dict = {}
         for item in self.dfn_list[0]:
-            if item == "multi-package":
-                header_dict["multi-package"] = True
+            if isinstance(item, str):
+                if item == "multi-package":
+                    header_dict["multi-package"] = True
+                if item.startswith("package-type"):
+                    header_dict["package-type"] = item.split(" ")[1]
         for dfn_entry in self.dfn_list[1:]:
             # load next data item
             new_data_item_struct = MFDataItemStructure()
@@ -508,6 +511,8 @@ class DfnFile(Dfn):
                         line_lst[3],
                         line_lst[4],
                     ]
+            elif len(line_lst) > 2 and line_lst[1] == "package-type":
+                header_dict["package-type"] = line_lst[2]
         # load file definitions
         for line in dfn_fp:
             if self._valid_line(line):
@@ -1455,6 +1460,29 @@ class MFDataStructure:
             )
 
     @property
+    def basic_item(self):
+        if not self.parent_block.parent_package.stress_package:
+            return False
+        for item in self.data_item_structures:
+            if (
+                (
+                    (item.repeating or item.optional)
+                    and not (
+                        item.is_cellid or item.is_aux or item.is_boundname
+                    )
+                )
+                or item.jagged_array is not None
+                or item.type == DatumType.keystring
+                or item.type == DatumType.keyword
+                or (
+                    item.description is not None
+                    and "keyword `NONE'" in item.description
+                )
+            ):
+                return False
+        return True
+
+    @property
     def is_mname(self):
         for item in self.data_item_structures:
             if item.is_mname:
@@ -2109,6 +2137,14 @@ class MFInputFileStructure:
         self.has_packagedata = "packagedata" in self.blocks
         self.has_perioddata = "period" in self.blocks
         self.multi_package_support = "multi-package" in self.header
+        self.stress_package = (
+            "package-type" in self.header
+            and self.header["package-type"] == "stress-package"
+        )
+        self.advanced_stress_package = (
+            "package-type" in self.header
+            and self.header["package-type"] == "advanced-stress-package"
+        )
         self.dfn_list = dfn_file.dfn_list
         self.sub_package = self._sub_package()
 

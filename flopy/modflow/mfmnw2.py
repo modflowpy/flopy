@@ -2,6 +2,7 @@ import os
 import warnings
 
 import numpy as np
+import pandas as pd
 
 from ..pakbase import Package
 from ..utils import MfList, check
@@ -451,6 +452,8 @@ class Mnw:
         # does this need to be Mflist?
         self.stress_period_data = self.get_empty_stress_period_data(nper)
         if stress_period_data is not None:
+            if isinstance(stress_period_data, pd.DataFrame):
+                stress_period_data = stress_period_data.to_records(index=False)
             for n in stress_period_data.dtype.names:
                 self.stress_period_data[n] = stress_period_data[n]
 
@@ -459,6 +462,8 @@ class Mnw:
             np.abs(nnodes), aux_names=self.aux
         )
         if node_data is not None:
+            if isinstance(node_data, pd.DataFrame):
+                node_data = node_data.to_records(index=False)
             for n in node_data.dtype.names:
                 self.node_data[n] = node_data[n]
                 # convert strings to lower case
@@ -896,19 +901,9 @@ class ModflowMnw2(Package):
         value of "NODTOT". The model will then reset "MNWMAX" to its absolute
         value. The value of "ipakcb" will become the third value on that
         line, etc.
-    ipakcb : int
-        is a flag and a unit number:
-            if ipakcb > 0, then it is the unit number to which MNW cell-by-cell
-            flow terms will be recorded whenever cell-by-cell budget data are
-            written to a file (as determined by the outputcontrol options of
-            MODFLOW).
-            if ipakcb = 0, then MNW cell-by-cell flow terms will not be printed
-                or recorded.
-            if ipakcb < 0, then well injection or withdrawal rates and water
-                levels in the well and its multiple cells will be printed in
-                the main MODFLOW listing (output) file whenever cell-by-cell
-                budget data are written to a file (as determined by the output
-                control options of MODFLOW).
+    ipakcb : int, optional
+        Toggles whether cell-by-cell budget data should be saved. If None or zero,
+        budget data will not be saved (default is None).
     mnwprnt : integer
         Flag controlling the level of detail of information about multi-node
         wells to be written to the main MODFLOW listing (output) file.
@@ -961,9 +956,9 @@ class ModflowMnw2(Package):
         filenames=None the package name will be created using the model name
         and package extension and the cbc output name will be created using
         the model name and .cbc extension (for example, modflowtest.cbc),
-        if ipakcbc is a number greater than zero. If a single string is passed
+        if ipakcb is a number greater than zero. If a single string is passed
         the package will be set to the string and cbc output names will be
-        created using the model name and .cbc extension, if ipakcbc is a
+        created using the model name and .cbc extension, if ipakcb is a
         number greater than zero. To define the names for all package files
         (input and output) the length of the list of strings should be 2.
         Default is None.
@@ -996,7 +991,7 @@ class ModflowMnw2(Package):
         model,
         mnwmax=0,
         nodtot=None,
-        ipakcb=0,
+        ipakcb=None,
         mnwprnt=0,
         aux=[],
         node_data=None,
@@ -1015,13 +1010,8 @@ class ModflowMnw2(Package):
         # set filenames
         filenames = self._prepare_filenames(filenames, 2)
 
-        # update external file information with cbc output, if necessary
-        if ipakcb is not None:
-            model.add_output_file(
-                ipakcb, fname=filenames[1], package=self._ftype()
-            )
-        else:
-            ipakcb = 0
+        # cbc output file
+        self.set_cbc_output_file(ipakcb, model, filenames[1])
 
         # call base package constructor
         super().__init__(
@@ -1045,7 +1035,6 @@ class ModflowMnw2(Package):
         # maximum number of multi-node wells to be simulated
         self.mnwmax = int(mnwmax)
         self.nodtot = nodtot  # user-specified maximum number of nodes
-        self.ipakcb = ipakcb
         self.mnwprnt = int(mnwprnt)  # -verbosity flag
         self.aux = aux  # -list of optional auxiliary parameters
 
@@ -1054,6 +1043,8 @@ class ModflowMnw2(Package):
         self.node_data = self.get_empty_node_data(0, aux_names=aux)
 
         if node_data is not None:
+            if isinstance(node_data, pd.DataFrame):
+                node_data = node_data.to_records(index=False)
             self.node_data = self.get_empty_node_data(
                 len(node_data), aux_names=aux
             )

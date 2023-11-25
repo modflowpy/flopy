@@ -1,0 +1,75 @@
+name: FloPy optional dependency testing
+on:
+  schedule:
+    - cron: '0 8 * * *' # run at 8 AM UTC (12 am PST)
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    timeout-minutes: 10
+    env:
+      PYTHON_VERSION: 3.8
+    strategy:
+      fail-fast: false
+      matrix:
+        optdeps:
+          # - "all optional dependencies"
+          - "no optional dependencies"
+          - "some optional dependencies"
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: pyproject.toml
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install .
+          pip install ".[test]"
+
+          # Install optional dependencies according to matrix.optdeps.
+          # If matrix.optdeps is "some" remove 3 optional dependencies
+          # selected randomly using the current date as the seed.
+          if [[ ! "${{ matrix.optdeps }}" == *"no"* ]]; then
+            pip install ".[optional]"
+          fi
+          if [[ "${{ matrix.optdeps }}" == *"some"* ]]; then
+            deps=$(sed '/optional =/,/]/!d' pyproject.toml | sed -e '1d;$d' -e 's/\"//g' -e 's/,//g' | tr -d ' ' | cut -f 1 -d ';')
+            rmvd=$(echo $deps | tr ' ' '\n' | shuf --random-source <(yes date +%d.%m.%y) | head -n 3)
+            echo "Removing optional dependencies: $rmvd" >> removed_dependencies.txt
+            cat removed_dependencies.txt
+            pip uninstall --yes $rmvd
+          fi
+      
+      - name: Upload removed dependencies log
+        uses: actions/upload-artifact@v3
+        with:
+          name: smoke-test-removed-dependencies
+          path: ./removed_dependencies.txt
+
+      - name: Install Modflow executables
+        uses: modflowpy/install-modflow-action@v1
+      
+      - name: Smoke test (${{ matrix.optdeps }})
+        working-directory: autotest
+        run: pytest -v -n=auto --smoke --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload failed test outputs
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: failed-smoke-${{ runner.os }}-${{ env.PYTHON_VERSION }}
+          path: ./autotest/.failed/**
+      

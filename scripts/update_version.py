@@ -80,7 +80,7 @@ def update_version_py(timestamp: datetime, version: Version):
             f"# {_project_name} version file automatically created using "
             f"{Path(__file__).name} on {timestamp:%B %d, %Y %H:%M:%S}\n\n"
         )
-        f.write(f"__version__ = '{version}'\n")
+        f.write(f'__version__ = "{version}"\n')
         f.close()
     print(f"Updated {_version_py_path} to version {version}")
 
@@ -189,12 +189,6 @@ def update_readme_markdown(
                 "modflowpy/flopy/badge.svg?branch=develop)]"
                 "(https://coveralls.io/github/modflowpy/"
                 "flopy?branch=develop)"
-            )
-        elif "[Binder]" in line:
-            # [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/modflowpy/flopy.git/develop)
-            line = (
-                "[![Binder](https://mybinder.org/badge_logo.svg)]"
-                "(https://mybinder.org/v2/gh/modflowpy/flopy.git/develop)"
             )
         elif "doi.org/10.5066/F7BK19FH" in line:
             line = get_software_citation(timestamp, version, approved)

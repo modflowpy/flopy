@@ -7,12 +7,12 @@ import numpy as np
 
 from ...datbase import DataListInterface, DataType
 from ...mbase import ModelInterface
-from ...utils import datautil
+from ...utils.datautil import DatumUtil
 from ..data import mfdata, mfstructure
 from ..mfbase import ExtFileAction, MFDataException, VerbosityLevel
 from ..utils.mfenums import DiscretizationType
 from .mfdatastorage import DataStorage, DataStorageType, DataStructureType
-from .mfdatautil import to_string
+from .mfdatautil import list_to_array, to_string
 from .mffileaccess import MFFileAccessList
 from .mfstructure import DatumType, MFDataStructure
 
@@ -30,7 +30,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         data contained in the simulation
     structure : MFDataStructure
         describes the structure of the data
-    data : list or ndarray
+    data : list or ndarray or None
         actual data
     enable : bool
         enable/disable the array
@@ -141,66 +141,9 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             Dictionary of 3-D numpy arrays containing the stress period data
             for a selected stress period. The dictionary keys are the
             MFDataList dtype names for the stress period data."""
-        i0 = 1
         sarr = self.get_data(key=kper)
-        if not isinstance(sarr, list):
-            sarr = [sarr]
-        if len(sarr) == 0 or sarr[0] is None:
-            return None
-        if "inode" in sarr[0].dtype.names:
-            raise NotImplementedError()
-        arrays = {}
         model_grid = self._data_dimensions.get_model_grid()
-
-        if model_grid._grid_type.value == 1:
-            shape = (
-                model_grid.num_layers(),
-                model_grid.num_rows(),
-                model_grid.num_columns(),
-            )
-        elif model_grid._grid_type.value == 2:
-            shape = (
-                model_grid.num_layers(),
-                model_grid.num_cells_per_layer(),
-            )
-        else:
-            shape = (model_grid.num_cells_per_layer(),)
-
-        for name in sarr[0].dtype.names[i0:]:
-            if not sarr[0].dtype.fields[name][0] == object:
-                arr = np.zeros(shape)
-                arrays[name] = arr.copy()
-
-        if np.isscalar(sarr[0]):
-            # if there are no entries for this kper
-            if sarr[0] == 0:
-                if mask:
-                    for name, arr in arrays.items():
-                        arrays[name][:] = np.NaN
-                return arrays
-            else:
-                raise Exception("MfList: something bad happened")
-
-        for name, arr in arrays.items():
-            cnt = np.zeros(shape, dtype=np.float64)
-            for sp_rec in sarr:
-                if sp_rec is not None:
-                    for rec in sp_rec:
-                        arr[rec["cellid"]] += rec[name]
-                        cnt[rec["cellid"]] += 1.0
-            # average keys that should not be added
-            if name != "cond" and name != "flux":
-                idx = cnt > 0.0
-                arr[idx] /= cnt[idx]
-            if mask:
-                arr = np.ma.masked_where(cnt == 0.0, arr)
-                arr[cnt == 0.0] = np.NaN
-
-            arrays[name] = arr.copy()
-        # elif mask:
-        #     for name, arr in arrays.items():
-        #         arrays[name][:] = np.NaN
-        return arrays
+        return list_to_array(sarr, model_grid, kper, mask)
 
     def new_simulation(self, sim_data):
         """Initialize MFList object for a new simulation.
@@ -1073,14 +1016,21 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                         data_val = data_line[index]
                         if data_item.is_cellid or (
                             data_item.possible_cellid
-                            and storage._validate_cellid([data_val], 0)
+                            and storage._validate_cellid(
+                                [data_val], 0, data_item
+                            )
                         ):
                             if (
                                 data_item.shape is not None
                                 and len(data_item.shape) > 0
                                 and data_item.shape[0] == "ncelldim"
                             ):
-                                model_grid = data_dim.get_model_grid()
+                                model_num = DatumUtil.cellid_model_num(
+                                    data_item,
+                                    self.structure.model_data,
+                                    self._data_dimensions.package_dim.model_dim,
+                                )
+                                model_grid = data_dim.get_model_grid(model_num)
                                 cellid_size = (
                                     model_grid.get_num_spatial_coordinates()
                                 )
@@ -1088,9 +1038,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                     resolved_shape, cellid_size
                                 )
                         data_size = 1
-                        if len(
-                            resolved_shape
-                        ) == 1 and datautil.DatumUtil.is_int(
+                        if len(resolved_shape) == 1 and DatumUtil.is_int(
                             resolved_shape[0]
                         ):
                             data_size = int(resolved_shape[0])
@@ -1391,7 +1339,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
 
         Parameters
         ----------
-            first_line : str
+            first_line : str, None
                 A string containing the first line of data in this list.
             file_handle : file descriptor
                 A file handle for the data file which points to the second
@@ -1573,7 +1521,6 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             package=package,
             block=block,
         )
-        self._transient_setup(self._data_storage)
         self.repeating = True
 
     @property
@@ -1752,7 +1699,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                 or replace_existing_external
             ):
                 fname, ext = os.path.splitext(external_file_path)
-                if datautil.DatumUtil.is_int(sp):
+                if DatumUtil.is_int(sp):
                     full_name = f"{fname}_{sp + 1}{ext}"
                 else:
                     full_name = f"{fname}_{sp}{ext}"

@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import pandas as pd
 import pytest
 from modflow_devtools.markers import requires_pkg
 from modflow_devtools.misc import has_pkg
@@ -118,31 +119,22 @@ def test_hydmodfile_read(hydmod_model_path):
         len(data.dtype.names) == nitems + 1
     ), f"data column length is not {len(nitems + 1)}"
 
-    if has_pkg("pandas"):
-        import pandas as pd
-
-        for idx in range(ntimes):
-            df = h.get_dataframe(idx=idx, timeunit="S")
-            assert isinstance(df, pd.DataFrame), "A DataFrame was not returned"
-            assert df.shape == (1, 9), "data shape is not (1, 9)"
-
-        for time in times:
-            df = h.get_dataframe(totim=time, timeunit="S")
-            assert isinstance(df, pd.DataFrame), "A DataFrame was not returned"
-            assert df.shape == (1, 9), "data shape is not (1, 9)"
-
-        df = h.get_dataframe(timeunit="S")
+    for idx in range(ntimes):
+        df = h.get_dataframe(idx=idx, timeunit="S")
         assert isinstance(df, pd.DataFrame), "A DataFrame was not returned"
-        assert df.shape == (101, 9), "data shape is not (101, 9)"
-    else:
-        print("pandas not available...")
-        pass
+        assert df.shape == (1, 9), "data shape is not (1, 9)"
+
+    for time in times:
+        df = h.get_dataframe(totim=time, timeunit="S")
+        assert isinstance(df, pd.DataFrame), "A DataFrame was not returned"
+        assert df.shape == (1, 9), "data shape is not (1, 9)"
+
+    df = h.get_dataframe(timeunit="S")
+    assert isinstance(df, pd.DataFrame), "A DataFrame was not returned"
+    assert df.shape == (101, 9), "data shape is not (101, 9)"
 
 
-@requires_pkg("pandas")
 def test_mf6obsfile_read(mf6_obs_model_path):
-    import pandas as pd
-
     txt = "binary mf6 obs"
     files = ["maw_obs.gitbin", "maw_obs.gitcsv"]
     binfile = [True, False]

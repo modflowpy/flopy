@@ -5,7 +5,7 @@
 
 .. image:: _images/flopylogo.png
 
-**Documentation for version 3.3.7 --- release candidate**
+**Documentation for version 3.5.0.dev0**
 
 Documentation is generated with Sphinx from the `FloPy repository <https://github.com/modflowpy/flopy>`_.
 
@@ -17,7 +17,11 @@ Contents:
    introduction
    tutorials
    examples
+   utilities
    faq
+   md/model_checks
+   md/optional_dependencies
+   md/version_changes
    code 
 
 Indices and tables

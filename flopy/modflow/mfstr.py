@@ -8,6 +8,7 @@ MODFLOW Guide
 
 """
 import numpy as np
+import pandas as pd
 
 from ..pakbase import Package
 from ..utils import MfList, read_fixed_var, write_fixed_var
@@ -46,10 +47,9 @@ class ModflowStr(Package):
         The constant must be multiplied by 86,400 when using time units of
         days in the simulation. If ICALC is 0, const can be any real value.
         (default is 86400.)
-    ipakcb : int
-        A flag that is used to determine if cell-by-cell budget data should be
-        saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
-        (default is 0).
+    ipakcb : int, optional
+        Toggles whether cell-by-cell budget data should be saved. If None or zero,
+        budget data will not be saved (default is None).
     istcb2 : int
         A flag that is used flag and a unit number for the option to store
         streamflow out of each reach in an unformatted (binary) file.
@@ -81,8 +81,8 @@ class ModflowStr(Package):
         datasets 6 and 8.
 
         The value for stress period data for a stress period can be an integer
-        (-1 or 0), a list of lists, a numpy array, or a numpy recarray. If
-        stress period data for a stress period contains an integer, a -1
+        (-1 or 0), a list of lists, a numpy array or recarray, or a pandas
+        dataframe. If data for a stress period contains an integer, a -1
         denotes data from the previous stress period will be reused and a 0
         indicates there are no str reaches for this stress period.
 
@@ -190,11 +190,11 @@ class ModflowStr(Package):
         filenames=None the package name will be created using the model name
         and package extension and the cbc output and str output name will be
         created using the model name and .cbc the .sfr.bin/.sfr.out extensions
-        (for example, modflowtest.cbc, and modflowtest.str.bin), if ipakcbc and
+        (for example, modflowtest.cbc, and modflowtest.str.bin), if ipakcb and
         istcb2 are numbers greater than zero. If a single string is passed
         the package will be set to the string and cbc and sf routput names
         will be created using the model name and .cbc and .str.bin/.str.out
-        extensions, if ipakcbc and istcb2 are numbers greater than zero. To
+        extensions, if ipakcb and istcb2 are numbers greater than zero. To
         define the names for all package files (input and output) the length
         of the list of strings should be 3. Default is None.
 
@@ -249,13 +249,8 @@ class ModflowStr(Package):
         # set filenames
         filenames = self._prepare_filenames(filenames, 3)
 
-        # update external file information with cbc output, if necessary
-        if ipakcb is not None:
-            model.add_output_file(
-                ipakcb, fname=filenames[1], package=self._ftype()
-            )
-        else:
-            ipakcb = 0
+        # cbc output file
+        self.set_cbc_output_file(ipakcb, model, filenames[1])
 
         if istcb2 is not None:
             model.add_output_file(
@@ -281,7 +276,6 @@ class ModflowStr(Package):
         self.ntrib = ntrib
         self.ndiv = ndiv
         self.const = const
-        self.ipakcb = ipakcb
         self.istcb2 = istcb2
 
         # issue exception if ntrib is greater than 10
@@ -367,6 +361,8 @@ class ModflowStr(Package):
             for key, d in stress_period_data.items():
                 if isinstance(d, list):
                     d = np.array(d)
+                if isinstance(d, pd.DataFrame):
+                    d = d.to_records(index=False)
                 if isinstance(d, np.recarray):
                     e = (
                         "ModflowStr error: recarray dtype: {} does not match "

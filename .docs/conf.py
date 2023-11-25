@@ -11,7 +11,6 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
-import subprocess
 import sys
 from pathlib import Path
 
@@ -24,15 +23,8 @@ from flopy import __author__, __version__
 # -- determine if running on readthedocs ------------------------------------
 on_rtd = os.environ.get("READTHEDOCS") == "True"
 
-# -- determine if this version is a release candidate
-with open("../README.md") as f:
-    lines = f.readlines()
-rc_text = ""
-for line in lines:
-    if line.startswith("### Version"):
-        if "release candidate" in line:
-            rc_text = "release candidate"
-        break
+# -- determine if this is a development or release version ------------------
+branch_or_version = __version__ if "dev" not in __version__ else "develop"
 
 # -- get authors
 with open("../CITATION.cff") as f:
@@ -46,8 +38,6 @@ with open(rst_name, "w") as f:
     for line in lines:
         if line.startswith("**Documentation for version"):
             line = f"**Documentation for version {__version__}"
-            if rc_text != "":
-                line += f" --- {rc_text}"
             line += "**\n"
         f.write(line)
 
@@ -104,12 +94,13 @@ os.system(" ".join(cmd))
 
 # -- convert tutorial scripts and run example notebooks ----------------------
 if not on_rtd:
-    nbs = Path("Notebooks").glob("*.py")
-    for nb in nbs:
-        if nb.with_suffix(".ipynb").exists():
-            print(f"{nb} already exists, skipping")
+    nbs_py = Path("Notebooks").glob("*.py")
+    for py in nbs_py:
+        ipynb = py.with_suffix(".ipynb")
+        if ipynb.exists():
+            print(f"{ipynb} already exists, skipping")
             continue
-        cmd = ("jupytext", "--to", "ipynb", "--execute", str(nb))
+        cmd = ("jupytext", "--to", "ipynb", "--execute", str(py))
         print(" ".join(cmd))
         os.system(" ".join(cmd))
 
@@ -142,9 +133,7 @@ extensions = [
     "IPython.sphinxext.ipython_console_highlighting",  # lowercase didn't work
     "sphinx.ext.autosectionlabel",
     "nbsphinx",
-    "nbsphinx_link",
-    "recommonmark",
-    "sphinxcontrib.jquery",  # https://github.com/readthedocs/sphinx_rtd_theme/issues/1452
+    "myst_parser",
 ]
 
 # Settings for GitHub actions integration
@@ -166,7 +155,7 @@ templates_path = ["_templates"]
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "**.ipynb_checkpoints"]
-source_suffix = ".rst"
+source_suffix = {".rst": "restructuredtext", ".md": "markdown"}
 
 # The encoding of source files.
 source_encoding = "utf-8"
@@ -224,10 +213,6 @@ html_context = {
     "doc_path": "doc",
 }
 
-html_css_files = [
-    "css/custom.css",
-]
-
 # A shorter title for the navigation bar.  Default is the same as html_title.
 html_short_title = "flopy"
 html_favicon = "_images/flopylogo_sm.png"
@@ -278,6 +263,35 @@ nbsphinx_execute = "never"
 nbsphinx_prolog = (
     r"""
 {% set docname = env.doc2path(env.docname, base=None) %}
+
+.. raw:: html
+
+    <div class="admonition note">
+      This page was generated from
+      <a class="reference external" href="https://github.com/modflowpy/flopy/blob/"""
+    + branch_or_version
+    + r"""/.docs/Notebooks/{{ env.docname.split('/')|last|e + '.py' }}">{{ env.docname.split('/')|last|e + '.py' }}</a>.
+      It's also available as a <a href="{{ env.docname.split('/')|last|e + '.ipynb' }}" class="reference download internal" download>notebook</a>.
+      <script>
+        if (document.location.host) {
+          let nbviewer_link = document.createElement('a');
+          nbviewer_link.setAttribute('href',
+            'https://nbviewer.org/url' +
+            (window.location.protocol == 'https:' ? 's/' : '/') +
+            window.location.host +
+            window.location.pathname.slice(0, -4) +
+            'ipynb');
+          nbviewer_link.innerHTML = 'View in <em>nbviewer</em>';
+          nbviewer_link.innerHTML = 'Or view it on <em>nbviewer</em>';
+          nbviewer_link.classList.add('reference');
+          nbviewer_link.classList.add('external');
+          document.currentScript.replaceWith(nbviewer_link, '.');
+        }
+      </script>
+    </div>
 """
-    + Path("prolog.rst").read_text()
 )
+
+# Import Matplotlib to avoid this message in notebooks:
+# "Matplotlib is building the font cache; this may take a moment."
+import matplotlib.pyplot

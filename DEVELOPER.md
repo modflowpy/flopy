@@ -17,11 +17,11 @@ This document describes how to set up a FloPy development environment, run the e
     - [Manually installing executables](#manually-installing-executables)
       - [Linux](#linux)
       - [Mac](#mac)
+  - [Updating FloPy packages](#updating-flopy-packages)
 - [Examples](#examples)
   - [Scripts](#scripts)
   - [Notebooks](#notebooks)
-  - [Developing example Notebooks](#developing-example-notebooks)
-    - [Adding a new notebook to the documentation](#adding-a-new-notebook-to-the-documentation)
+    - [Developing new notebooks](#developing-new-notebooks)
       - [Adding a tutorial notebook](#adding-a-tutorial-notebook)
       - [Adding an example notebook](#adding-an-example-notebook)
 - [Tests](#tests)
@@ -33,6 +33,10 @@ This document describes how to set up a FloPy development environment, run the e
   - [Performance testing](#performance-testing)
     - [Benchmarking](#benchmarking)
     - [Profiling](#profiling)
+- [Branching model](#branching-model)
+- [Deprecation policy](#deprecation-policy)
+- [Miscellaneous](#miscellaneous)
+  - [Locating the root](#locating-the-root)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -59,14 +63,14 @@ Then install `flopy` and core dependencies from the project root:
 
     pip install .
 
+The `flopy` package has a number of [optional dependencies](.docs/optional_dependencies.md), as well as extra dependencies required for linting, testing, and building documentation. Extra dependencies are listed in the `test`, `lint`, `optional`, and `doc` groups under the `[project.optional-dependencies]` section in `pyproject.toml`. Core, linting, testing and optional dependencies are included in the Conda environment in `etc/environment.yml`. Only core dependencies are included in the PyPI package &mdash; to install extra dependency groups with pip, use `pip install ".[<group>]"`. For instance, to install all extra dependency groups:
+
+    pip install ".[test, lint, optional, doc]"
+
 Alternatively, with Anaconda or Miniconda:
 
     conda env create -f etc/environment.yml
     conda activate flopy
-
-The `flopy` package has a number of [optional dependencies](docs/flopy_method_dependencies.md), as well as extra dependencies required for linting, testing, and building documentation. Extra dependencies are listed in the `test`, `lint`, `optional`, and `doc` groups under the `[project.optional-dependencies]` section in `pyproject.toml`. Core, linting, testing and optional dependencies are included in the Conda environment in `etc/environment.yml`. Only core dependencies are included in the PyPI package &mdash; to install extra dependency groups with pip, use `pip install ".[<group>]"`. For instance, to install all extra dependency groups:
-
-    pip install ".[test, lint, optional, doc]"
 
 #### Python IDEs
 
@@ -76,7 +80,7 @@ VSCode users on Windows may need to run `conda init`, then open a fresh terminal
 
 ```json
 {
-    "python.defaultInterpreterPath": "/path/to/your/virtual/environment",
+    "python.defaultInterpreterPath": "/path/to/environment",
     "python.terminal.activateEnvironment": true
 }
 ```
@@ -93,7 +97,7 @@ To develop `flopy` you will need a number of MODFLOW executables installed.
 
 #### Scripted installation
 
-A utility script is provided to easily download and install executables: after installing `flopy`, just run `get-modflow` (see the script's [documentation](docs/get_modflow.md) for more info).
+A utility script is provided to easily download and install executables: after installing `flopy`, just run `get-modflow` (see the script's [documentation](.docs/md/get_modflow.md) for more info).
 
 #### Manually installing executables
 
@@ -106,9 +110,9 @@ wget https://github.com/MODFLOW-USGS/executables/releases/download/8.0/linux.zip
 unzip linux.zip -d /path/to/your/install/location
 ```
 
-Then add the install location to your `PATH`
+Then add the install location to the `PATH`
 
-    export PATH="/path/to/your/install/location:$PATH"
+    export PATH="/path/to/install/location:$PATH"
 
 ##### Mac
 
@@ -137,7 +141,7 @@ This can be fixed by running `Install Certificates.command` in your Python insta
 
 ### Updating FloPy packages
 
-FloPy must be up-to-date with the version of MODFLOW 6 and other executables it is being used with. Synchronization is achieved via "definition" (DFN) files, which define the format of MODFLOW6 inputs and outputs. FloPy contains Python source code automatically generated from DFN files. This is done with the `generate_classes` function in `flopy.mf6.utils`. See [this document](./docs/generate_classes.md) for usage examples.
+FloPy must be up-to-date with the version of MODFLOW 6 and other executables it is being used with. Synchronization is achieved via "definition" (DFN) files, which define the format of MODFLOW6 inputs and outputs. FloPy contains Python source code automatically generated from DFN files. This is done with the `generate_classes` function in `flopy.mf6.utils`. See [this document](./.docs/generate_classes.md) for usage examples.
 
 ## Examples
 
@@ -149,7 +153,7 @@ Tutorial scripts are located in `examples/scripts` and `examples/Tutorials`. The
 
 Each script be invoked by name with Python per usual. The scripts can also be converted to notebooks with `jupytext`. By default, all scripts create and attempt to clean up temporary working directories. (On Windows, Python's `TemporaryDirectory` can raise permissions errors, so cleanup is trapped with `try/except`.) Some scripts also accept a `--quiet` flag, curtailing verbose output, and a `--keep` option to specify a working directory of the user's choice.
 
-Some of the scripts use [optional dependencies](docs/flopy_method_dependencies.md). If you're using `pip`, make sure these have been installed with `pip install ".[optional]"`. The conda environment provided in `etc/environment.yml` already includes all optional dependencies.
+Some of the scripts use [optional dependencies](.docs/optional_dependencies.md). If you're using `pip`, make sure these have been installed with `pip install ".[optional]"`. The conda environment provided in `etc/environment.yml` already includes all optional dependencies.
 
 ### Notebooks
 
@@ -163,7 +167,7 @@ To convert a paired Python script to an `.ipynb` notebook, run:
 jupytext --from py --to ipynb path/to/notebook
 ```
 
-Notebook scripts can be run like any other Python script. To run `.ipynb` notebooks, you will need `jupyter` installed (`jupyter` is included with the `test` optional dependency group in `pyproject.toml`). Some of the notebooks use [optional dependencies](docs/flopy_method_dependencies.md) as well.
+Notebook scripts can be run like any other Python script. To run `.ipynb` notebooks, you will need `jupyter` installed (`jupyter` is included with the `test` optional dependency group in `pyproject.toml`). Some of the notebooks use [optional dependencies](.docs/optional_dependencies.md) as well.
 
 To install jupyter and optional dependencies at once:
 
@@ -229,7 +233,7 @@ Some tests require environment variables. Currently the following variables are 
 
 - `GITHUB_TOKEN`
 
-The `GITHUB_TOKEN` variable is needed because the [`get-modflow`](docs/get_modflow.md) utility invokes the GitHub API &mdash; to avoid rate-limiting, requests to the GitHub API should bear an [authentication token](https://github.com/settings/tokens). A token is automatically provided to GitHub Actions CI jobs via the [`github` context's](https://docs.github.com/en/actions/learn-github-actions/contexts#github-context) `token` attribute, however a personal access token is needed to run the tests locally. To create a personal access token, go to [GitHub -> Settings -> Developer settings -> Personal access tokens -> Tokens (classic)](https://github.com/settings/tokens). The `get-modflow` utility automatically detects and uses the `GITHUB_TOKEN` environment variable if available.
+The `GITHUB_TOKEN` variable is needed because the [`get-modflow`](.docs/md/get_modflow.md) utility invokes the GitHub API &mdash; to avoid rate-limiting, requests to the GitHub API should bear an [authentication token](https://github.com/settings/tokens). A token is automatically provided to GitHub Actions CI jobs via the [`github` context's](https://docs.github.com/en/actions/learn-github-actions/contexts#github-context) `token` attribute, however a personal access token is needed to run the tests locally. To create a personal access token, go to [GitHub -> Settings -> Developer settings -> Personal access tokens -> Tokens (classic)](https://github.com/settings/tokens). The `get-modflow` utility automatically detects and uses the `GITHUB_TOKEN` environment variable if available.
 
 Environment variables can be set as usual, but a more convenient way to store variables for all future sessions is to create a text file called `.env` in the `autotest` directory, containing variables in `NAME=VALUE` format, one on each line. [`pytest-dotenv`](https://github.com/quiqua/pytest-dotenv) will detect and add these to the environment provided to the test process. All `.env` files in the project are ignored in `.gitignore` so there is no danger of checking in secrets unless the file is misnamed.
 
@@ -357,6 +361,17 @@ By default, `pytest-benchmark` will only print profiling results to `stdout`. If
 ## Branching model
 
 This project follows the [git flow](https://nvie.com/posts/a-successful-git-branching-model/): development occurs on the `develop` branch, while `main` is reserved for the state of the latest release. Development PRs are typically squashed to `develop`, to avoid merge commits. At release time, release branches are merged to `main`, and then `main` is merged back into `develop`.
+
+## Deprecation policy
+
+This project loosely follows [NEP 23](https://numpy.org/neps/nep-0023-backwards-compatibility.html). Basic deprecation policy includes:
+
+- Deprecated features should be removed after at least 1 year or 2 non-patch releases.
+- `DeprecationWarning` should be used for features scheduled for removal.
+- `FutureWarning` should be used for features whose behavior will change in backwards-incompatible ways.
+- Deprecation warning messages should include the deprecation version number (the release in which the deprecation message first appears) to permit timely follow-through later.
+
+See the linked article for more detail.
 
 ## Miscellaneous
 

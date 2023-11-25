@@ -33,7 +33,7 @@ def singleModel(
     steady,
     xul,
     yul,
-    proj4_str,
+    crs,
     mfExe,
     rundir=".",
     welInfo=[],
@@ -77,7 +77,7 @@ def singleModel(
         unitnumber=11 + iLUoffset,
         xul=xul,
         yul=yul,
-        proj4_str=proj4_str,
+        crs=crs,
         start_datetime="28/2/2019",
     )
 
@@ -192,7 +192,7 @@ def test_simple_lgrmodel_from_scratch(function_tmpdir):
     laytyp = 0
     xul_c = 50985.00
     yul_c = 416791.06
-    proj4_str = "EPSG:28992"
+    crs = "EPSG:28992"
     nper = 1
     at = 42
     perlen = [at]
@@ -235,7 +235,7 @@ def test_simple_lgrmodel_from_scratch(function_tmpdir):
         steady,
         xul_c,
         yul_c,
-        proj4_str,
+        crs,
         "mflgr",
         rundir=function_tmpdir,
         welInfo=welInfo,
@@ -265,7 +265,7 @@ def test_simple_lgrmodel_from_scratch(function_tmpdir):
         steady,
         xul_m,
         yul_m,
-        proj4_str,
+        crs,
         "mflgr",
         rundir=function_tmpdir,
         welInfo=welInfo,

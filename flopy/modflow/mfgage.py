@@ -10,6 +10,7 @@ MODFLOW Guide
 import os
 
 import numpy as np
+import pandas as pd
 
 from ..pakbase import Package
 from ..utils import read_fixed_var, write_fixed_var
@@ -27,7 +28,7 @@ class ModflowGage(Package):
         this package will be added.
     numgage : int
         The total number of gages included in the gage file (default is 0).
-    gage_data : list or numpy array
+    gage_data : list or numpy array or recarray or pandas dataframe
         data for dataset 2a and 2b in the gage package. If a list is provided
         then the list includes 2 to 3 entries (LAKE UNIT [OUTTYPE]) for each
         LAK Package entry and 4 entries (GAGESEG GAGERCH UNIT OUTTYPE) for
@@ -132,6 +133,8 @@ class ModflowGage(Package):
                     gage_data = np.core.records.fromarrays(
                         gage_data.transpose(), dtype=dtype
                     )
+            elif isinstance(gage_data, pd.DataFrame):
+                gage_data = gage_data.to_records(index=False)
             elif isinstance(gage_data, list):
                 d = ModflowGage.get_empty(ncells=numgage)
                 for n in range(len(gage_data)):

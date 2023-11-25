@@ -9,17 +9,15 @@ import shutil
 import sys
 import warnings
 from pathlib import Path
-from typing import Optional, Union
+from typing import List, Optional, Union
 from warnings import warn
 
 import numpy as np
 
 from ..datbase import DataInterface, DataType
+from ..discretization.grid import Grid
 from ..utils import Util3d, flopy_io, import_optional_dependency
 from ..utils.crs import get_crs
-
-# web address of spatial reference dot org
-srefhttp = "https://spatialreference.org"
 
 
 def write_gridlines_shapefile(filename: Union[str, os.PathLike], mg):
@@ -31,7 +29,8 @@ def write_gridlines_shapefile(filename: Union[str, os.PathLike], mg):
     ----------
     filename : str or PathLike
         path of the shapefile to write
-    mg : model grid
+    mg : flopy.discretization.grid.Grid object
+        flopy model grid
 
     Returns
     -------
@@ -39,23 +38,22 @@ def write_gridlines_shapefile(filename: Union[str, os.PathLike], mg):
 
     """
     shapefile = import_optional_dependency("shapefile")
+    if not isinstance(mg, Grid):
+        raise ValueError(
+            f"'mg' must be a flopy Grid subclass instance; found '{type(mg)}'"
+        )
     wr = shapefile.Writer(str(filename), shapeType=shapefile.POLYLINE)
     wr.field("number", "N", 18, 0)
-    if mg.__class__.__name__ == "SpatialReference":
-        grid_lines = mg.get_grid_lines()
-        warnings.warn(
-            "SpatialReference has been deprecated. Use StructuredGrid"
-            " instead.",
-            category=DeprecationWarning,
-        )
-    else:
-        grid_lines = mg.grid_lines
+    grid_lines = mg.grid_lines
     for i, line in enumerate(grid_lines):
         wr.line([line])
         wr.record(i)
 
     wr.close()
-    write_prj(filename, modelgrid=mg)
+    try:
+        write_prj(filename, modelgrid=mg)
+    except ImportError:
+        pass
     return
 
 
@@ -65,10 +63,9 @@ def write_grid_shapefile(
     array_dict,
     nan_val=np.nan,
     crs=None,
-    prjfile=None,
-    epsg=None,
-    prj: Optional[Union[str, os.PathLike]] = None,
+    prjfile: Optional[Union[str, os.PathLike]] = None,
     verbose=False,
+    **kwargs,
 ):
     """
     Method to write a shapefile of gridded input data
@@ -77,13 +74,13 @@ def write_grid_shapefile(
     ----------
     path : str or PathLike
         shapefile file path
-    mg : flopy.discretization.Grid object
+    mg : flopy.discretization.grid.Grid object
         flopy model grid
     array_dict : dict
         dictionary of model input arrays
     nan_val : float
         value to fill nans
-    crs : pyproj.CRS, optional if `prjfile` is specified
+    crs : pyproj.CRS, int, str, optional if `prjfile` is specified
         Coordinate reference system (CRS) for the model grid
         (must be projected; geographic CRS are not supported).
         The value can be anything accepted by
@@ -92,6 +89,14 @@ def write_grid_shapefile(
     prjfile : str or pathlike, optional if `crs` is specified
         ESRI-style projection file with well-known text defining the CRS
         for the model grid (must be projected; geographic CRS are not supported).
+    **kwargs : dict, optional
+        Support deprecated keyword options.
+
+        .. deprecated:: 3.5
+           The following keyword options will be removed for FloPy 3.6:
+
+             - ``epsg`` (int): use ``crs`` instead.
+             - ``prj`` (str or PathLike): use ``prjfile`` instead.
 
     Returns
     -------
@@ -102,14 +107,10 @@ def write_grid_shapefile(
     w = shapefile.Writer(str(path), shapeType=shapefile.POLYGON)
     w.autoBalance = 1
 
-    if mg.__class__.__name__ == "SpatialReference":
-        verts = copy.deepcopy(mg.vertices)
-        warnings.warn(
-            "SpatialReference has been deprecated. Use StructuredGrid"
-            " instead.",
-            category=DeprecationWarning,
+    if not isinstance(mg, Grid):
+        raise ValueError(
+            f"'mg' must be a flopy Grid subclass instance; found '{type(mg)}'"
         )
-        mg.grid_type = "structured"
     elif mg.grid_type == "structured":
         verts = [
             mg.get_cell_vertices(i, j)
@@ -121,7 +122,7 @@ def write_grid_shapefile(
     elif mg.grid_type == "unstructured":
         verts = [mg.get_cell_vertices(cellid) for cellid in range(mg.nnodes)]
     else:
-        raise Exception(f"Grid type {mg.grid_type} not supported.")
+        raise NotImplementedError(f"Grid type {mg.grid_type} not supported.")
 
     # set up the attribute fields and arrays of attributes
     if mg.grid_type == "structured":
@@ -213,8 +214,20 @@ def write_grid_shapefile(
     if verbose:
         print(f"wrote {flopy_io.relpath_safe(path)}")
 
+    # handle deprecated projection kwargs; warnings are raised in crs.py
+    write_prj_args = {}
+    if "epsg" in kwargs:
+        write_prj_args["epsg"] = kwargs.pop("epsg")
+    if "prj" in kwargs:
+        write_prj_args["prj"] = kwargs.pop("prj")
+    if kwargs:
+        raise TypeError(f"unhandled keywords: {kwargs}")
     # write the projection file
-    write_prj(path, mg, crs=crs, epsg=epsg, prj=prj, prjfile=prjfile)
+    try:
+        write_prj(path, mg, crs=crs, prjfile=prjfile, **write_prj_args)
+    except ImportError:
+        if verbose:
+            print("projection file not written")
     return
 
 
@@ -248,7 +261,7 @@ def model_attributes_to_shapefile(
         modelgrid : fp.modflow.Grid object
             if modelgrid is supplied, user supplied modelgrid is used in lieu
             of the modelgrid attached to the modflow model object
-        crs : pyproj.CRS, optional if `prjfile` is specified
+        crs : pyproj.CRS, int, str, optional if `prjfile` is specified
             Coordinate reference system (CRS) for the model grid
             (must be projected; geographic CRS are not supported).
             The value can be anything accepted by
@@ -290,8 +303,6 @@ def model_attributes_to_shapefile(
         pak = ml.get_package(pname)
         attrs = dir(pak)
         if pak is not None:
-            if "sr" in attrs:
-                attrs.remove("sr")
             if "start_datetime" in attrs:
                 attrs.remove("start_datetime")
             for attr in attrs:
@@ -403,7 +414,10 @@ def model_attributes_to_shapefile(
     write_grid_shapefile(path, grid, array_dict)
     crs = kwargs.get("crs", None)
     prjfile = kwargs.get("prjfile", None)
-    write_prj(path, grid, crs=crs, prjfile=prjfile)
+    try:
+        write_prj(path, grid, crs=crs, prjfile=prjfile)
+    except ImportError:
+        pass
 
 
 def shape_attr_name(name, length=6, keep_layer=False):
@@ -457,20 +471,28 @@ def shape_attr_name(name, length=6, keep_layer=False):
     return n
 
 
-def enforce_10ch_limit(names):
+def enforce_10ch_limit(names: List[str], warnings: bool = True) -> List[str]:
     """Enforce 10 character limit for fieldnames.
     Add suffix for duplicate names starting at 0.
 
     Parameters
     ----------
     names : list of strings
+    warnings : whether to warn if names are truncated
 
     Returns
     -------
     list
         list of unique strings of len <= 10.
     """
-    names = [n[:5] + n[-4:] + "_" if len(n) > 10 else n for n in names]
+
+    def truncate(s):
+        name = s[:5] + s[-4:] + "_"
+        if warnings:
+            warn(f"Truncating shapefile fieldname {s} to {name}")
+        return name
+
+    names = [truncate(n) if len(n) > 10 else n for n in names]
     dups = {x: names.count(x) for x in names}
     suffix = {n: list(range(cnt)) for n, cnt in dups.items() if cnt > 1}
     for i, n in enumerate(names):
@@ -547,9 +569,7 @@ def recarray2shp(
     shpname: Union[str, os.PathLike] = "recarray.shp",
     mg=None,
     crs=None,
-    prjfile=None,
-    epsg=None,
-    prj: Optional[Union[str, os.PathLike]] = None,
+    prjfile: Optional[Union[str, os.PathLike]] = None,
     verbose=False,
     **kwargs,
 ):
@@ -571,7 +591,9 @@ def recarray2shp(
         recarray.
     shpname : str or PathLike, default "recarray.shp"
         Path for the output shapefile
-    crs : pyproj.CRS, optional if `prjfile` is specified
+    mg : flopy.discretization.Grid object
+        flopy model grid
+    crs : pyproj.CRS, int, str, optional if `prjfile` is specified
         Coordinate reference system (CRS) for the model grid
         (must be projected; geographic CRS are not supported).
         The value can be anything accepted by
@@ -580,10 +602,18 @@ def recarray2shp(
     prjfile : str or pathlike, optional if `crs` is specified
         ESRI-style projection file with well-known text defining the CRS
         for the model grid (must be projected; geographic CRS are not supported).
+    **kwargs : dict, optional
+        Support deprecated keyword options.
+
+        .. deprecated:: 3.5
+           The following keyword options will be removed for FloPy 3.6:
+
+             - ``epsg`` (int): use ``crs`` instead.
+             - ``prj`` (str or PathLike): use ``prjfile`` instead.
 
     Notes
     -----
-    Uses pyshp.
+    Uses pyshp and optionally pyproj.
     """
     from ..utils.geospatial_utils import GeoSpatialCollection
 
@@ -637,8 +667,23 @@ def recarray2shp(
             w.record(*r)
 
     w.close()
-    write_prj(shpname, mg, crs=crs, epsg=epsg, prj=prj, prjfile=prjfile)
-    print(f"wrote {flopy_io.relpath_safe(os.getcwd(), shpname)}")
+    if verbose:
+        print(f"wrote {flopy_io.relpath_safe(os.getcwd(), shpname)}")
+
+    # handle deprecated projection kwargs; warnings are raised in crs.py
+    write_prj_args = {}
+    if "epsg" in kwargs:
+        write_prj_args["epsg"] = kwargs.pop("epsg")
+    if "prj" in kwargs:
+        write_prj_args["prj"] = kwargs.pop("prj")
+    if kwargs:
+        raise TypeError(f"unhandled keywords: {kwargs}")
+    # write the projection file
+    try:
+        write_prj(shpname, mg, crs=crs, prjfile=prjfile, **write_prj_args)
+    except ImportError:
+        if verbose:
+            print("projection file not written")
     return
 
 
@@ -646,26 +691,30 @@ def write_prj(
     shpname,
     modelgrid=None,
     crs=None,
-    epsg=None,
-    prj=None,
     prjfile=None,
-    wkt_string=None,
+    **kwargs,
 ):
     # projection file name
     output_projection_file = Path(shpname).with_suffix(".prj")
 
-    crs = get_crs(
-        prjfile=prjfile, prj=prj, epsg=epsg, crs=crs, wkt_string=wkt_string
-    )
+    # handle deprecated projection kwargs; warnings are raised in crs.py
+    get_crs_args = {}
+    if "epsg" in kwargs:
+        get_crs_args["epsg"] = kwargs.pop("epsg")
+    if "prj" in kwargs:
+        get_crs_args["prj"] = kwargs.pop("prj")
+    if "wkt_string" in kwargs:
+        get_crs_args["wkt_string"] = kwargs.pop("wkt_string")
+    if kwargs:
+        raise TypeError(f"unhandled keywords: {kwargs}")
+    crs = get_crs(prjfile=prjfile, crs=crs, **get_crs_args)
     if crs is None and modelgrid is not None:
         crs = modelgrid.crs
     if crs is not None:
-        with open(output_projection_file, "w", encoding="utf-8") as dest:
-            write_text = crs.to_wkt()
-            dest.write(write_text)
+        output_projection_file.write_text(crs.to_wkt(), encoding="utf-8")
     else:
         print(
             "No CRS information for writing a .prj file.\n"
-            "Supply an valid coordinate system reference to the attached modelgrid object "
-            "or .export() method."
+            "Supply an valid coordinate system reference to the attached "
+            "modelgrid object or .export() method."
         )

@@ -116,10 +116,7 @@ class ModflowGwfrcha(mfpackage.MFPackage):
     dfn_file_name = "gwf-rcha.dfn"
 
     dfn = [
-        [
-            "header",
-            "multi-package",
-        ],
+        ["header", "multi-package", "package-type stress-package"],
         [
             "block options",
             "name readasarrays",

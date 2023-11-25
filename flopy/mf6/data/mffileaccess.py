@@ -1035,13 +1035,15 @@ class MFFileAccessList(MFFileAccess):
         self.simple_line = False
 
     def read_binary_data_from_file(
-        self, read_file, modelgrid, precision="double"
+        self, read_file, modelgrid, precision="double", build_cellid=True
     ):
         # read from file
         header, int_cellid_indexes, ext_cellid_indexes = self._get_header(
             modelgrid, precision
         )
         file_array = np.fromfile(read_file, dtype=header, count=-1)
+        if not build_cellid:
+            return file_array
         # build data list for recarray
         cellid_size = len(self._get_cell_header(modelgrid))
         data_list = []
@@ -1133,6 +1135,9 @@ class MFFileAccessList(MFFileAccess):
         self._data_dimensions.lock()
         self._last_line_info = []
         self._data_line = None
+
+        if first_line is None:
+            first_line = file_handle.readline()
 
         # read in any pre data comments
         current_line = self._read_pre_data_comments(
@@ -2095,7 +2100,7 @@ class MFFileAccessList(MFFileAccess):
             self._last_line_info.append([])
         if data_item.is_cellid or (
             data_item.possible_cellid
-            and storage._validate_cellid(arr_line, data_index)
+            and storage._validate_cellid(arr_line, data_index, data_item)
         ):
             if self._data_dimensions is None:
                 comment = (
@@ -2120,8 +2125,16 @@ class MFFileAccessList(MFFileAccess):
                     comment,
                     self._simulation_data.debug,
                 )
+            # in case of multiple model grids, determine which one to use
+            model_num = DatumUtil.cellid_model_num(
+                data_item.name,
+                struct.model_data,
+                self._data_dimensions.package_dim.model_dim,
+            )
+            model_grid = self._data_dimensions.get_model_grid(
+                model_num=model_num
+            )
             # read in the entire cellid
-            model_grid = self._data_dimensions.get_model_grid()
             cellid_size = model_grid.get_num_spatial_coordinates()
             cellid_tuple = ()
             if (

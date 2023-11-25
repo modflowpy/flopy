@@ -14,7 +14,7 @@ from ..mbase import ModelInterface
 from ..utils import datautil
 from ..utils.check import mf6check
 from .coordinates import modeldimensions
-from .data import mfstructure
+from .data import mfdata, mfdatalist, mfstructure
 from .data.mfdatautil import DataSearchOutput, iterable
 from .mfbase import (
     ExtFileAction,
@@ -181,6 +181,24 @@ class MFModel(PackageContainer, ModelInterface):
         if package is not None:
             return package
         raise AttributeError(item)
+
+    def __setattr__(self, name, value):
+        if hasattr(self, name) and getattr(self, name) is not None:
+            attribute = object.__getattribute__(self, name)
+            if attribute is not None and isinstance(attribute, mfdata.MFData):
+                try:
+                    if isinstance(attribute, mfdatalist.MFList):
+                        attribute.set_data(value, autofill=True)
+                    else:
+                        attribute.set_data(value)
+                except MFDataException as mfde:
+                    raise MFDataException(
+                        mfdata_except=mfde,
+                        model=self.name,
+                        package="",
+                    )
+                return
+        super().__setattr__(name, value)
 
     def __repr__(self):
         return self._get_data_str(True)
@@ -637,11 +655,7 @@ class MFModel(PackageContainer, ModelInterface):
             modelgrid: flopy.discretization.Grid
                 User supplied modelgrid object which will supercede the built
                 in modelgrid object
-            epsg : int
-                EPSG projection code
-            prj : str
-                The prj file name
-            if fmt is set to 'vtk', parameters of vtk.export_model
+            if fmt is set to 'vtk', parameters of Vtk initializer
 
         """
         from ..export import utils
@@ -692,9 +706,9 @@ class MFModel(PackageContainer, ModelInterface):
 
         return self._check(chk, level)
 
-    @classmethod
+    @staticmethod
     def load_base(
-        cls,
+        cls_child,
         simulation,
         structure,
         modelname="NewModel",
@@ -744,9 +758,8 @@ class MFModel(PackageContainer, ModelInterface):
         Examples
         --------
         """
-        instance = cls(
+        instance = cls_child(
             simulation,
-            mtype,
             modelname,
             model_nam_file=model_nam_file,
             version=version,
@@ -878,7 +891,7 @@ class MFModel(PackageContainer, ModelInterface):
         --------
 
         >>> import flopy
-        >>> sim = flopy.mf6.MFSimulation.load("name", "mf6", "mf6", ".")
+        >>> sim = flopy.mf6.MFSimulationBase.load("name", "mf6", "mf6", ".")
         >>> model = sim.get_model()
         >>> inspect_list = [(2, 3, 2), (0, 4, 2), (0, 2, 4)]
         >>> out_file = os.path.join("temp", "inspect_AdvGW_tidal.csv")
@@ -1209,7 +1222,7 @@ class MFModel(PackageContainer, ModelInterface):
         for record in solution_group:
             for model_name in record[2:]:
                 if model_name == self.name:
-                    return self.simulation.get_ims_package(record[1])
+                    return self.simulation.get_solution_package(record[1])
         return None
 
     def get_steadystate_list(self):

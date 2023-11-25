@@ -8,6 +8,7 @@ MODFLOW Guide
 
 """
 import numpy as np
+import pandas as pd
 
 from ..pakbase import Package
 from ..utils import read1d
@@ -39,10 +40,9 @@ class ModflowFhb(Package):
         If the simulation includes only steady-state stress periods, the flag
         controls how flow, head, and auxiliary-variable values will be
         computed for each steady-state solution. (default is 0)
-    ipakcb : int
-        A flag that is used to determine if cell-by-cell budget data should be
-        saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
-        (default is None).
+    ipakcb : int, optional
+        Toggles whether cell-by-cell budget data should be saved. If None or zero,
+        budget data will not be saved (default is None).
     nfhbx1 : int
         Number of auxiliary variables whose values will be computed for each
         time step for each specified-flow cell. Auxiliary variables are
@@ -64,7 +64,7 @@ class ModflowFhb(Package):
         (default is 0.0)
     cnstm5 : float
         A constant multiplier for data list flwrat. (default is 1.0)
-    ds5 : list or numpy array or recarray
+    ds5 : list or numpy array or recarray or pandas dataframe
         Each FHB flwrat cell (dataset 5) is defined through definition of
         layer(int), row(int), column(int), iaux(int), flwrat[nbdtime](float).
         There should be nflw entries. (default is None)
@@ -81,7 +81,7 @@ class ModflowFhb(Package):
 
     cnstm7 : float
         A constant multiplier for data list sbhedt. (default is 1.0)
-    ds7 : list or numpy array or recarray
+    ds7 : list or numpy array or recarray or pandas dataframe
         Each FHB sbhed cell (dataset 7) is defined through definition of
         layer(int), row(int), column(int), iaux(int), sbhed[nbdtime](float).
         There should be nhed entries. (default is None)
@@ -105,9 +105,9 @@ class ModflowFhb(Package):
         filenames=None the package name will be created using the model name
         and package extension and the cbc output name will be created using
         the model name and .cbc extension (for example, modflowtest.cbc),
-        if ipakcbc is a number greater than zero. If a single string is passed
+        if ipakcb is a number greater than zero. If a single string is passed
         the package will be set to the string and cbc output names will be
-        created using the model name and .cbc extension, if ipakcbc is a
+        created using the model name and .cbc extension, if ipakcb is a
         number greater than zero. To define the names for all package files
         (input and output) the length of the list of strings should be 2.
         Default is None.
@@ -162,13 +162,8 @@ class ModflowFhb(Package):
         # set filenames
         filenames = self._prepare_filenames(filenames, 2)
 
-        # update external file information with cbc output, if necessary
-        if ipakcb is not None:
-            model.add_output_file(
-                ipakcb, fname=filenames[1], package=self._ftype()
-            )
-        else:
-            ipakcb = 0
+        # cbc output file
+        self.set_cbc_output_file(ipakcb, model, filenames[1])
 
         # call base package constructor
         super().__init__(
@@ -186,7 +181,6 @@ class ModflowFhb(Package):
         self.nflw = nflw
         self.nhed = nhed
         self.ifhbss = ifhbss
-        self.ipakcb = ipakcb
         if nfhbx1 != 0:
             nfhbx1 = 0
         self.nfhbx1 = nfhbx1
@@ -211,6 +205,8 @@ class ModflowFhb(Package):
                 raise TypeError(msg)
             elif isinstance(ds5, list):
                 ds5 = np.array(ds5)
+            elif isinstance(ds5, pd.DataFrame):
+                ds5 = ds5.to_records(index=False)
             # convert numpy array to a recarray
             if ds5.dtype != dtype:
                 ds5 = np.core.records.fromarrays(ds5.transpose(), dtype=dtype)
@@ -228,6 +224,8 @@ class ModflowFhb(Package):
                 raise TypeError(msg)
             elif isinstance(ds7, list):
                 ds7 = np.array(ds7)
+            elif isinstance(ds7, pd.DataFrame):
+                ds7 = ds7.to_records(index=False)
             # convert numpy array to a recarray
             if ds7.dtype != dtype:
                 ds7 = np.core.records.fromarrays(ds7.transpose(), dtype=dtype)

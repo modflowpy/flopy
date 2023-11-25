@@ -11,7 +11,7 @@ end dimensions
 
 BEGIN GRIDDATA
   IDOMAIN
-  INTERNAL  FACTOR  1 IPRN
+  INTERNAL  FACTOR  1 IPRN 0
  1  1  1  1  1  1  1
  1  1  1  1  1  1  1
  1  1  0  0  0  1  1

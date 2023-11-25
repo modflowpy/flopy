@@ -8,16 +8,10 @@ Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
 <https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/wel.html>`_.
 """
-from copy import deepcopy
 
-import numpy as np
-from numpy.lib.recfunctions import stack_arrays
 
-from ..modflow.mfparbc import ModflowParBc as mfparbc
 from ..modflow.mfwel import ModflowWel
 from ..utils import MfList
-from ..utils.flopy_io import ulstrd
-from ..utils.utils_def import get_open_file_object
 from .mfusg import MfUsg
 
 
@@ -29,10 +23,9 @@ class MfUsgWel(ModflowWel):
     model : model object
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
-    ipakcb : int
-        A flag that is used to determine if cell-by-cell budget data should be
-        saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
-        (default is 0).
+    ipakcb : int, optional
+        Toggles whether cell-by-cell budget data should be saved. If None or zero,
+        budget data will not be saved (default is None).
     stress_period_data : list of boundaries, or recarray of boundaries, or
         dictionary of boundaries
         For structured grid, each well is defined through definition of
@@ -127,9 +120,9 @@ class MfUsgWel(ModflowWel):
         filenames=None the package name will be created using the model name
         and package extension and the cbc output name will be created using
         the model name and .cbc extension (for example, modflowtest.cbc),
-        if ipakcbc is a number greater than zero. If a single string is passed
+        if ipakcb is a number greater than zero. If a single string is passed
         the package will be set to the string and cbc output names will be
-        created using the model name and .cbc extension, if ipakcbc is a
+        created using the model name and .cbc extension, if ipakcb is a
         number greater than zero. To define the names for all package files
         (input and output) the length of the list of strings should be 2.
         Default is None.

@@ -1,4 +1,7 @@
 import os
+import re
+import warnings
+from contextlib import nullcontext
 from warnings import warn
 
 import matplotlib
@@ -9,10 +12,9 @@ from autotest.test_grid_cases import GridCases
 from flaky import flaky
 from matplotlib import pyplot as plt
 from modflow_devtools.markers import requires_exe, requires_pkg
-from packaging import version
+from modflow_devtools.misc import has_pkg
 from pytest_cases import parametrize_with_cases
 
-import flopy
 from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
 from flopy.mf6 import MFSimulation
 from flopy.modflow import Modflow, ModflowDis
@@ -20,6 +22,10 @@ from flopy.utils.crs import get_authority_crs
 from flopy.utils.cvfdutil import gridlist_to_disv_gridprops, to_cvfd
 from flopy.utils.triangle import Triangle
 from flopy.utils.voronoi import VoronoiGrid
+
+HAS_PYPROJ = has_pkg("pyproj", strict=True)
+if HAS_PYPROJ:
+    import pyproj
 
 
 @pytest.fixture
@@ -549,7 +555,6 @@ def test_unstructured_from_gridspec(example_data_path):
         assert min(grid.botm) == min([xyz[2] for xyz in expected_verts])
 
 
-@requires_pkg("pyproj")
 @pytest.mark.parametrize(
     "crs,expected_srs",
     (
@@ -566,43 +571,64 @@ def test_unstructured_from_gridspec(example_data_path):
 def test_grid_crs(
     minimal_unstructured_grid_info, crs, expected_srs, function_tmpdir
 ):
-    import pyproj
+    expected_epsg = None
+    if match := re.findall(r"epsg:([\d]+)", expected_srs or "", re.IGNORECASE):
+        expected_epsg = int(match[0])
+    if not HAS_PYPROJ and isinstance(crs, str) and "epsg" not in crs.lower():
+        # pyproj needed to derive 'epsg' from PROJ string
+        expected_epsg = None
 
     d = minimal_unstructured_grid_info
     delr = np.ones(10)
     delc = np.ones(10)
-    sg = StructuredGrid(delr=delr, delc=delc, crs=crs)
-    if crs is not None:
-        assert isinstance(sg.crs, pyproj.CRS)
-        assert sg.crs.srs == expected_srs
 
-    usg = UnstructuredGrid(**d, crs=crs)
-    assert getattr(sg.crs, "srs", None) == expected_srs
+    def do_checks(g):
+        if HAS_PYPROJ and crs is not None:
+            assert isinstance(g.crs, pyproj.CRS)
+            assert g.crs.srs == expected_srs
+        else:
+            assert g.crs is None
+        assert g.epsg == expected_epsg
 
-    vg = VertexGrid(vertices=d["vertices"], crs=crs)
-    assert getattr(sg.crs, "srs", None) == expected_srs
+    # test each grid type (class)
+    do_checks(StructuredGrid(delr=delr, delc=delc, crs=crs))
+    do_checks(UnstructuredGrid(**d, crs=crs))
+    do_checks(VertexGrid(vertices=d["vertices"], crs=crs))
 
-    # test input of pyproj.CRS object
-    if crs == 26916:
-        sg2 = StructuredGrid(delr=delr, delc=delc, crs=sg.crs)
+    # only check deprecations if pyproj is available
+    pyproj_avail_context = (
+        pytest.deprecated_call() if HAS_PYPROJ else nullcontext()
+    )
 
-        if crs is not None:
-            assert isinstance(sg2.crs, pyproj.CRS)
-        assert getattr(sg2.crs, "srs", None) == expected_srs
+    # test deprecated 'epsg' parameter
+    if isinstance(crs, int):
+        with pyproj_avail_context:
+            do_checks(StructuredGrid(delr=delr, delc=delc, epsg=crs))
+
+    if HAS_PYPROJ and crs == 26916:
+        crs_obj = get_authority_crs(crs)
+
+        # test input of pyproj.CRS object
+        do_checks(StructuredGrid(delr=delr, delc=delc, crs=crs_obj))
 
         # test input of projection file
         prjfile = function_tmpdir / "grid_crs.prj"
-        with open(prjfile, "w", encoding="utf-8") as dest:
-            write_text = sg.crs.to_wkt()
-            dest.write(write_text)
+        prjfile.write_text(crs_obj.to_wkt(), encoding="utf-8")
 
-        sg3 = StructuredGrid(delr=delr, delc=delc, prjfile=prjfile)
-        if crs is not None:
-            assert isinstance(sg3.crs, pyproj.CRS)
-        assert getattr(sg3.crs, "srs", None) == expected_srs
+        do_checks(StructuredGrid(delr=delr, delc=delc, prjfile=prjfile))
+
+        # test deprecated 'prj' parameter
+        with pyproj_avail_context:
+            do_checks(StructuredGrid(delr=delr, delc=delc, prj=prjfile))
+
+        # test deprecated 'proj4' parameter
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")  # pyproj warning about conversion
+            proj4 = crs_obj.to_proj4()
+        with pyproj_avail_context:
+            do_checks(StructuredGrid(delr=delr, delc=delc, proj4=proj4))
 
 
-@requires_pkg("pyproj")
 @pytest.mark.parametrize(
     "crs,expected_srs",
     (
@@ -618,80 +644,212 @@ def test_grid_crs(
     ),
 )
 def test_grid_set_crs(crs, expected_srs, function_tmpdir):
-    import pyproj
+    expected_epsg = None
+    if match := re.findall(r"epsg:([\d]+)", expected_srs or "", re.IGNORECASE):
+        expected_epsg = int(match[0])
+    if not HAS_PYPROJ and isinstance(crs, str) and "epsg" not in crs.lower():
+        # pyproj needed to derive 'epsg' from PROJ string
+        expected_epsg = None
+    elif HAS_PYPROJ and crs is not None and expected_epsg is None:
+        expected_epsg = pyproj.CRS.from_user_input(crs).to_epsg()
 
     delr = np.ones(10)
     delc = np.ones(10)
-    sg = StructuredGrid(delr=delr, delc=delc)
-    sg.crs = crs
-    if crs is not None:
-        assert isinstance(sg.crs, pyproj.CRS)
-    assert getattr(sg.crs, "srs", None) == expected_srs
 
-    # test setting the crs via set_coord_info
-    sg.set_coord_info()
-    if crs is not None:
-        assert isinstance(sg.crs, pyproj.CRS)
-    assert getattr(sg.crs, "srs", None) == expected_srs
-    sg.set_coord_info(crs=crs)
-    if crs is not None:
-        assert isinstance(sg.crs, pyproj.CRS)
-    assert getattr(sg.crs, "srs", None) == expected_srs
-    sg.set_coord_info(crs=26915, merge_coord_info=False)
-    assert getattr(sg.crs, "srs", None) == "EPSG:26915"
-    # reset back to test case crs
+    def do_checks(g, *, exp_srs=expected_srs, exp_epsg=expected_epsg):
+        if HAS_PYPROJ:
+            if crs is not None:
+                assert isinstance(g.crs, pyproj.CRS)
+            assert getattr(g.crs, "srs", None) == exp_srs
+        else:
+            assert g.crs is None
+        assert g.epsg == exp_epsg
+
+    # test set_coord_info with a grid object
     sg = StructuredGrid(delr=delr, delc=delc, crs=crs)
+    do_checks(sg)
 
-    # test input of projection file
-    if crs is not None:
+    # no change
+    sg.set_coord_info()
+    do_checks(sg)
+
+    # use 'crs' arg
+    sg.set_coord_info(crs=crs)
+    do_checks(sg)
+
+    # use different 'crs'
+    sg.set_coord_info(crs=26915, merge_coord_info=False)
+    do_checks(sg, exp_srs="EPSG:26915", exp_epsg=26915)
+
+    # only check deprecations if pyproj is available
+    pyproj_avail_context = (
+        pytest.deprecated_call() if HAS_PYPROJ else nullcontext()
+    )
+
+    # test deprecated 'epsg' parameter
+    if isinstance(crs, int):
+        with pyproj_avail_context:
+            sg.set_coord_info(epsg=crs)
+        do_checks(sg)
+
+    # use 'crs' setter
+    sg = StructuredGrid(delr=delr, delc=delc)
+    if HAS_PYPROJ:
+        sg.crs = crs
+        do_checks(sg)
+    else:
+        if crs is None:
+            sg.crs = crs
+        else:
+            with pytest.warns():
+                # cannot set 'crs' property without pyproj
+                sg.crs = crs
+        do_checks(sg, exp_epsg=None)
+
+    # unset 'crs', and check that 'epsg' is also none (sometimes)
+    sg = StructuredGrid(delr=delr, delc=delc, crs=crs)
+    sg.crs = None
+    assert sg.crs is None
+    if HAS_PYPROJ:
+        # with pyproj, '_epsg' was never populated by getter
+        assert sg.epsg is None
+    else:
+        # without pyproj, '_epsg' is populated from specific 'crs' inputs
+        assert sg.epsg == expected_epsg
+
+    # unset 'crs', but check that 'epsg' is retained
+    sg = StructuredGrid(delr=delr, delc=delc, crs=crs)
+    assert sg.epsg == expected_epsg  # populate '_epsg' via getter
+    sg.crs = None
+    assert sg.crs is None
+    assert sg.epsg == expected_epsg
+
+    # unset 'epsg'
+    sg.epsg = None
+    assert sg.epsg is None
+
+    # unset 'proj4'
+    sg.proj4 = None
+    assert sg.proj4 is None
+
+    # set and unset 'prjfile' with a non-existing file
+    prjfile = "test"
+    assert sg.prjfile is None
+    sg.prjfile = prjfile
+    assert sg.prjfile == prjfile
+    sg.prjfile = None
+    assert sg.prjfile is None
+
+    if HAS_PYPROJ and crs is not None:
+        crs_obj = get_authority_crs(crs)
+
+        # test input of projection file
         prjfile = function_tmpdir / "grid_crs.prj"
-        with open(prjfile, "w", encoding="utf-8") as dest:
-            write_text = sg.crs.to_wkt()
-            dest.write(write_text)
+        prjfile.write_text(crs_obj.to_wkt(), encoding="utf-8")
+
+        def do_prjfile_checks(g):
+            assert isinstance(g.crs, pyproj.CRS)
+            assert g.crs.srs == expected_srs
+            assert g.epsg == expected_epsg
+            assert g.prjfile == prjfile
+
+        # test with 'prjfile' setter and parameter
         sg = StructuredGrid(delr=delr, delc=delc)
         sg.prjfile = prjfile
-        if crs is not None:
-            assert isinstance(sg.crs, pyproj.CRS)
-        assert getattr(sg.crs, "srs", None) == expected_srs
-        assert sg.prjfile == prjfile
+        do_prjfile_checks(sg)
         sg.set_coord_info(prjfile=prjfile)
-        if crs is not None:
-            assert isinstance(sg.crs, pyproj.CRS)
-            assert getattr(sg.crs, "srs", None) == expected_srs
-        assert sg.prjfile == prjfile
+        do_prjfile_checks(sg)
 
-    # test setting another crs
-    sg.crs = 26915
-    assert sg.crs == get_authority_crs(26915)
+        # test with deprecated 'prj' getter/setter
+        with pytest.deprecated_call():
+            assert sg.prj == prjfile
+        with pytest.deprecated_call():
+            sg.prj = prjfile
+        do_prjfile_checks(sg)
 
-    if (
-        version.parse(flopy.__version__) < version.parse("3.4")
-        and crs is not None
-    ):
-        pyproj_crs = get_authority_crs(crs)
-        epsg = pyproj_crs.to_epsg()
-        if epsg is not None:
+        # test deprecated 'proj4' parameter
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")  # pyproj warning about conversion
+            proj4 = crs_obj.to_proj4()
+        with pytest.deprecated_call():
+            sg.set_coord_info(proj4=proj4)
+        do_checks(sg)
+
+    if HAS_PYPROJ:
+        # copy previous non-None epsg
+        prev_epsg = sg.epsg
+        # test setting another crs
+        sg.crs = 26915
+        assert sg.crs == get_authority_crs(26915)
+        # note that 'epsg' is not updated by setting 'crs', unless it was None
+        assert sg.epsg == prev_epsg or 26915
+
+    if HAS_PYPROJ and crs is not None:
+        if epsg := crs_obj.to_epsg():
             sg = StructuredGrid(delr=delr, delc=delc, crs=crs)
             sg.epsg = epsg
-            if crs is not None:
-                assert isinstance(sg.crs, pyproj.CRS)
-            assert getattr(sg.crs, "srs", None) == expected_srs
-            assert sg.epsg == epsg
+            do_checks(sg, exp_epsg=epsg)
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")  # pyproj warning about conversion
+            proj4 = crs_obj.to_proj4()
+        sg = StructuredGrid(delr=delr, delc=delc)
+        sg.proj4 = proj4
+        do_checks(sg)
+        assert sg.proj4 == proj4
 
         sg = StructuredGrid(delr=delr, delc=delc)
-        sg.proj4 = pyproj_crs.to_proj4()
-        if crs is not None:
-            assert isinstance(sg.crs, pyproj.CRS)
-        assert getattr(sg.crs, "srs", None) == expected_srs
-        assert sg.proj4 == pyproj_crs.to_proj4()
-
-        if crs is not None:
-            sg = StructuredGrid(delr=delr, delc=delc)
+        with pytest.deprecated_call():
             sg.prj = prjfile
-            if crs is not None:
-                assert isinstance(sg.crs, pyproj.CRS)
-            assert getattr(sg.crs, "srs", None) == expected_srs
+        do_checks(sg)
+        with pytest.deprecated_call():
             assert sg.prj == prjfile
+
+
+def test_grid_crs_exceptions():
+    delr = np.ones(10)
+    delc = np.ones(10)
+    sg = StructuredGrid(delr=delr, delc=delc, crs="EPSG:26915")
+
+    # test bad 'epsg' parameter
+    bad_epsg = "EPSG:26915"
+    with pytest.raises(ValueError):
+        StructuredGrid(delr=delr, delc=delc, epsg=bad_epsg)
+    with pytest.raises(ValueError):
+        sg.epsg = bad_epsg
+    with pytest.raises(ValueError):
+        sg.set_coord_info(epsg=bad_epsg)
+
+    # test bad 'proj4' parameter
+    bad_proj4 = 26915
+    with pytest.raises(ValueError):
+        StructuredGrid(delr=delr, delc=delc, proj4=bad_proj4)
+    with pytest.raises(ValueError):
+        sg.proj4 = bad_proj4
+    with pytest.raises(ValueError):
+        sg.set_coord_info(proj4=bad_proj4)
+
+    # test bad 'prjfile' parameter
+    bad_prjfile = 0
+    with pytest.raises(ValueError):
+        StructuredGrid(delr=delr, delc=delc, prjfile=bad_prjfile)
+    with pytest.raises(ValueError):
+        sg.prjfile = bad_prjfile
+
+    # test non-existing file
+    not_a_file = "not-a-file"
+    if HAS_PYPROJ:
+        with pytest.raises(FileNotFoundError):
+            StructuredGrid(delr=delr, delc=delc, prjfile=not_a_file)
+    # note "sg.prjfile = not_a_file" intentionally does not raise anything
+
+    # test unhandled keyword
+    with pytest.raises(TypeError):
+        StructuredGrid(delr=delr, delc=delc, unused_param=None)
+
+    # set_coord_info never had a 'prj' parameter; test it as unhandled keyword
+    with pytest.raises(TypeError):
+        sg.set_coord_info(prj=not_a_file)
 
 
 def test_tocvfd1():

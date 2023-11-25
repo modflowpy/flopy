@@ -45,9 +45,9 @@ except:
     import flopy
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 
 # + pycharm={"name": "#%%\n"}
 # Set names of the MODFLOW exes
@@ -83,10 +83,10 @@ else:
 files = ["freyberg.hds", "freyberg.cbc"]
 for f in files:
     if os.path.isfile(os.path.join(str(modelpth), f)):
-        msg = "Output file located: {}".format(f)
+        msg = f"Output file located: {f}"
         print(msg)
     else:
-        errmsg = "Error. Output file cannot be found: {}".format(f)
+        errmsg = f"Error. Output file cannot be found: {f}"
         print(errmsg)
 
 # + [markdown] pycharm={"name": "#%% md\n"}
@@ -438,10 +438,10 @@ else:
 files = ["freyberg.hds", "freyberg.cbc"]
 for f in files:
     if os.path.isfile(os.path.join(str(modelpth), f)):
-        msg = "Output file located: {}".format(f)
+        msg = f"Output file located: {f}"
         print(msg)
     else:
-        errmsg = "Error. Output file cannot be found: {}".format(f)
+        errmsg = f"Error. Output file cannot be found: {f}"
         print(errmsg)
 
 # + [markdown] pycharm={"name": "#%% md\n"}
@@ -537,10 +537,10 @@ modelpth = os.path.join(modelpth, "mp7_ex2", "mf6")
 files = ["mp7p2.hds", "mp7p2.cbb"]
 for f in files:
     if os.path.isfile(os.path.join(modelpth, f)):
-        msg = "Output file located: {}".format(f)
+        msg = f"Output file located: {f}"
         print(msg)
     else:
-        errmsg = "Error. Output file cannot be found: {}".format(f)
+        errmsg = f"Error. Output file cannot be found: {f}"
         print(errmsg)
 
 # + pycharm={"name": "#%%\n"}
@@ -754,7 +754,7 @@ xgrid, _, zgrid = gwf6.modelgrid.xyzcellcenters
 with styles.USGSPlot():
     fig, axes = plt.subplots(3, 1, figsize=(15, 9), tight_layout=True)
     for ix, totim in enumerate(plot_times):
-        heading = "Time = {}".format(totim)
+        heading = f"Time = {totim}"
         conc = cobj.get_data(totim=totim)
         ax = axes[ix]
         xsect = flopy.plot.PlotCrossSection(model=gwf6, ax=ax, line={"row": 0})

@@ -7,8 +7,7 @@ import re
 import warnings
 
 import numpy as np
-
-from ..utils import import_optional_dependency
+import pandas as pd
 
 
 class MtListBudget:
@@ -77,11 +76,6 @@ class MtListBudget:
             (optionally) surface-water mass budget.
             If the SFT process is not used, df_sw is None.
         """
-        pd = import_optional_dependency(
-            "pandas",
-            error_message="MtListBudget.parse() requires pandas.",
-        )
-
         self.gw_data = {}
         self.sw_data = {}
         self.lcount = 0
@@ -194,11 +188,6 @@ class MtListBudget:
         return df_gw, df_sw
 
     def _diff(self, df):
-        pd = import_optional_dependency(
-            "pandas",
-            error_message="MtListBudget._diff() requires pandas.",
-        )
-
         out_cols = [
             c for c in df.columns if "_out" in c and not c.startswith("net_")
         ]

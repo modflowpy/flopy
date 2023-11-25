@@ -12,37 +12,21 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-        python-version: [ 3.8, 3.9, "3.10", "3.11" ]
+        python-version: [ 3.8, 3.9, "3.10", "3.11", "3.12" ]
         exclude:
           # avoid shutil.copytree infinite recursion bug
           # https://github.com/python/cpython/pull/17098
           - python-version: '3.8.0'
     defaults:
       run:
-        shell: bash
+        shell: bash -l {0}
     timeout-minutes: 90
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
-
-      - name: Setup Python
-        if: runner.os != 'Windows'
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-          cache-dependency-path: pyproject.toml
-
-      - name: Install Python dependencies
-        if: runner.os != 'Windows'
-        run: |
-          pip install --upgrade pip
-          pip install .
-          pip install ".[test, optional]"
+        uses: actions/checkout@v4
 
       - name: Setup Micromamba
-        if: runner.os == 'Windows'
         uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: etc/environment.yml
@@ -54,29 +38,14 @@ jobs:
             bash
             powershell
 
-      - name: Install extra Python dependencies
-        if: runner.os == 'Windows'
-        shell: bash -l {0}
-        run: |
-          pip install xmipy
-          pip install .
+      - name: Install FloPy
+        run: pip install .
 
       - name: Install Modflow executables
         uses: modflowpy/install-modflow-action@v1
 
       - name: Run benchmarks
-        if: runner.os != 'Windows'
-        working-directory: ./autotest
-        run: |
-          mkdir -p .benchmarks
-          pytest -v --durations=0 --benchmark-only --benchmark-json .benchmarks/${{ matrix.os }}_python${{ matrix.python-version }}.json --keep-failed=.failed
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Run benchmarks
-        if: runner.os == 'Windows'
-        shell: bash -l {0}
-        working-directory: ./autotest
+        working-directory: autotest
         run: |
           mkdir -p .benchmarks
           pytest -v --durations=0 --benchmark-only --benchmark-json .benchmarks/${{ matrix.os }}_python${{ matrix.python-version }}.json --keep-failed=.failed
@@ -88,15 +57,13 @@ jobs:
         if: failure()
         with:
           name: failed-benchmark-${{ matrix.os }}-${{ matrix.python-version }}-${{ github.run_id }}
-          path: |
-            ./autotest/.failed/**
+          path: autotest/.failed/**
 
       - name: Upload benchmark result artifact
         uses: actions/upload-artifact@v3
         with:
           name: benchmarks-${{ matrix.os }}-${{ matrix.python-version }}-${{ github.run_id }}
-          path: |
-            ./autotest/.benchmarks/**/*.json
+          path: autotest/.benchmarks/**/*.json
 
   post_benchmark:
     needs:
@@ -110,12 +77,12 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.8
+          python-version: 3.12
           cache: 'pip'
           cache-dependency-path: pyproject.toml
 
@@ -127,11 +94,17 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v3
         with:
-          path: ./autotest/.benchmarks
+          path: autotest/.benchmarks
 
       - name: Process benchmark results
         run: |
-          artifact_json=$(gh api -X GET -H "Accept: application/vnd.github+json" /repos/modflowpy/flopy/actions/artifacts)
+          repo="${{ github.repository }}"
+          path="autotest/.benchmarks"
+
+          # list benchmark artifacts
+          artifact_json=$(gh api -X GET -H "Accept: application/vnd.github+json" /repos/$repo/actions/artifacts)
+
+          # get artifact ids and download artifacts
           get_artifact_ids="
           import json
           import sys
@@ -144,14 +117,17 @@ jobs:
           "
           echo $artifact_json \
             | python -c "$get_artifact_ids" \
-            | xargs -I@ bash -c "gh api -H 'Accept: application/vnd.github+json' /repos/modflowpy/flopy/actions/artifacts/@/zip >> ./autotest/.benchmarks/@.zip"
-          zipfiles=( ./autotest/.benchmarks/*.zip )
+            | xargs -I@ bash -c "gh api -H 'Accept: application/vnd.github+json' /repos/$repo/actions/artifacts/@/zip >> $path/@.zip"
+          
+          # unzip artifacts
+          zipfiles=( $path/*.zip )
           if (( ${#zipfiles[@]} )); then
-            unzip -o './autotest/.benchmarks/*.zip' -d ./autotest/.benchmarks
+            unzip -o "$path/*.zip" -d $path
           fi
-          python ./scripts/process_benchmarks.py ./autotest/.benchmarks ./autotest/.benchmarks
+
+          # process benchmarks
+          python scripts/process_benchmarks.py $path $path
         env:
-          ARTIFACTS: ${{steps.run_tests.outputs.artifact_ids}}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload benchmark results
@@ -159,5 +135,5 @@ jobs:
         with:
           name: benchmarks-${{ github.run_id }}
           path: |
-            ./autotest/.benchmarks/*.csv
-            ./autotest/.benchmarks/*.png
+            autotest/.benchmarks/*.csv
+            autotest/.benchmarks/*.png

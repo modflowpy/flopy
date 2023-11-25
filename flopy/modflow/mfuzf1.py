@@ -7,7 +7,6 @@ MODFLOW Guide
 <https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/uzf_-_unsaturated_zone_flow_pa_3.html>`_.
 
 """
-import warnings
 
 import numpy as np
 
@@ -58,14 +57,9 @@ class ModflowUzf1(Package):
         specifies whether or not evapotranspiration (ET) will be simulated.
         ET will not be simulated if IETFLG is zero, otherwise it will be
         simulated. (default is 0)
-    ipakcb : integer
-        flag for writing ground-water recharge, ET, and ground-water
-        discharge to land surface rates to a separate unformatted file using
-        subroutine UBUDSV. If ipakcb>0, it is the unit number to which the
-        cell-by-cell rates will be written when 'SAVE BUDGET' or a non-zero
-        value for ICBCFL is specified in Output Control. If ipakcb less than
-        or equal to 0, cell-by-cell rates will not be written to a file.
-        (default is 57)
+    ipakcb : int, optional
+        Toggles whether cell-by-cell budget data should be saved. If None or zero,
+        budget data will not be saved (default is None).
     iuzfcb2 : integer
         flag for writing ground-water recharge, ET, and ground-water
         discharge to land surface rates to a separate unformatted file using
@@ -139,15 +133,6 @@ class ModflowUzf1(Package):
             followed by a series of depths and water contents in the
             unsaturated zone.
 
-    nwt_11_fmt : boolean
-        flag indicating whether or not to utilize a newer (MODFLOW-NWT
-        version 1.1 or later) format style, i.e., uzf1 optional variables
-        appear line-by-line rather than in a specific order on a single
-        line. True means that optional variables (e.g., SPECIFYTHTR,
-        SPECIFYTHTI, NOSURFLEAK) appear on new lines. True also supports
-        a number of newer optional variables (e.g., SPECIFYSURFK,
-        REJECTSURFK, SEEPSURFK). False means that optional variables
-        appear on one line.  (default is False)
     specifythtr : boolean
         key word for specifying optional input variable THTR (default is 0)
     specifythti : boolean
@@ -275,7 +260,7 @@ class ModflowUzf1(Package):
         and package extension and the cbc output, uzf output, and uzf
         observation names will be created using the model name and .cbc,
         uzfcb2.bin, and  .uzf#.out extensions (for example, modflowtest.cbc,
-        and modflowtest.uzfcd2.bin), if ipakcbc, iuzfcb2, and len(uzgag) are
+        and modflowtest.uzfcd2.bin), if ipakcb, iuzfcb2, and len(uzgag) are
         numbers greater than zero. For uzf observations the file extension is
         created using the uzf observation file unit number (for example, for
         uzf observations written to unit 123 the file extension would be
@@ -382,7 +367,6 @@ class ModflowUzf1(Package):
         air_entry=0.0,
         hroot=0.0,
         rootact=0.0,
-        nwt_11_fmt=False,
         specifysurfk=False,
         rejectsurfk=False,
         seepsurfk=False,
@@ -407,13 +391,8 @@ class ModflowUzf1(Package):
             nlen += len(uzgag)
         filenames = self._prepare_filenames(filenames, nlen)
 
-        # update external file information with cbc output, if necessary
-        if ipakcb is not None:
-            model.add_output_file(
-                abs(ipakcb), fname=filenames[1], package=self._ftype()
-            )
-        else:
-            ipakcb = 0
+        # cbc output file
+        self.set_cbc_output_file(ipakcb, model, filenames[1])
 
         if iuzfcb2 is not None:
             model.add_output_file(
@@ -481,15 +460,6 @@ class ModflowUzf1(Package):
         self.url = "uzf_-_unsaturated_zone_flow_pa_3.html"
 
         # Data Set 1a
-        if nwt_11_fmt:
-            warnings.warn(
-                "nwt_11_fmt has been deprecated,"
-                " and will be removed in the next release"
-                " please provide a flopy.utils.OptionBlock object"
-                " to the options argument",
-                DeprecationWarning,
-            )
-        self.nwt_11_fmt = nwt_11_fmt
         self.specifythtr = bool(specifythtr)
         self.specifythti = bool(specifythti)
         self.nosurfleak = bool(nosurfleak)
@@ -543,7 +513,6 @@ class ModflowUzf1(Package):
         # must be active if IRUNFLG is not zero.
         self.irunflg = irunflg
         self.ietflg = ietflg
-        self.ipakcb = ipakcb
         self.iuzfcb2 = iuzfcb2
         if iuzfopt > 0:
             self.ntrail2 = ntrail2
@@ -695,37 +664,16 @@ class ModflowUzf1(Package):
         return nrow * ncol
 
     def _write_1a(self, f_uzf):
-        # the nwt_11_fmt code is slated for removal (deprecated!)
-        if not self.nwt_11_fmt:
-            specify_temp = ""
-            if self.specifythtr > 0:
-                specify_temp += "SPECIFYTHTR "
-            if self.specifythti > 0:
-                specify_temp += "SPECIFYTHTI "
-            if self.nosurfleak > 0:
-                specify_temp += "NOSURFLEAK"
-            if (self.specifythtr + self.specifythti + self.nosurfleak) > 0:
-                f_uzf.write(f"{specify_temp}\n")
-            del specify_temp
-        else:
-            txt = "options\n"
-            for var in [
-                "specifythtr",
-                "specifythti",
-                "nosurfleak",
-                "specifysurfk",
-                "rejectsurfk",
-                "seepsurfk",
-            ]:
-                value = self.__dict__[var]
-                if int(value) > 0:
-                    txt += f"{var}\n"
-            if self.etsquare:
-                txt += f"etsquare {self.smoothfact}\n"
-            if self.netflux:
-                txt += f"netflux {self.unitrech} {self.unitdis}\n"
-            txt += "end\n"
-            f_uzf.write(txt)
+        specify_temp = ""
+        if self.specifythtr > 0:
+            specify_temp += "SPECIFYTHTR "
+        if self.specifythti > 0:
+            specify_temp += "SPECIFYTHTI "
+        if self.nosurfleak > 0:
+            specify_temp += "NOSURFLEAK"
+        if (self.specifythtr + self.specifythti + self.nosurfleak) > 0:
+            f_uzf.write(f"{specify_temp}\n")
+        del specify_temp
 
     def write_file(self, f=None):
         """

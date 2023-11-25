@@ -28,6 +28,16 @@ The FloPy release procedure is mostly automated with GitHub Actions in [`release
 
 3. Update the authors in `CITATION.cff` for the Software/Code citation for FloPy, if required.
 
+4. If this is a minor or major release, review deprecation warnings (if this is a patch release, skip this step). Correct any deprecation version numbers if necessary &mdash; for instance, if the warning was added in the latest development cycle but incorrectly anticipated the forthcoming release number (e.g., if this release was expected to be minor but was promoted to major). If any deprecations are due this release, remove the corresponding features. FloPy loosely follows [NEP 23](https://numpy.org/neps/nep-0023-backwards-compatibility.html) deprecation guidelines: removal is recommended after at least 1 year or 2 non-patch releases.
+
+    To search for deprecation warnings with git: `git grep [-[A/B/C]N] <pattern>`, where N is the optional number of extra lines of context and A/B/C selects post-context/pre-context/both, respectively. Some terms to search for:
+
+    - deprecated
+    - .. deprecated::
+    - DEPRECATED
+    - DeprecationWarning
+    - FutureWarning
+
 
 ## Release procedure
 
@@ -86,7 +96,7 @@ As described above, making a release manually involves the following steps:
 
 - Run `python scripts/update_version.py -v <semver>` to update the version number stored in `version.txt` and `flopy/version.py`. For an approved release use the `--approve` flag.
 
-- Update MODFLOW 6 dfn files in the repository and MODFLOW 6 package classes by running `python -c 'import flopy; flopy.mf6.utils.generate_classes(branch="master", backup=False)'`
+- Update MODFLOW 6 dfn files in the repository and MODFLOW 6 package classes by running `python -m flopy.mf6.utils.generate_classes --ref master --no-backup`
 
 - Run `isort` and `black` on the `flopy` module. This can be achieved by running `python scripts/pull_request_prepare.py` from the project root. The commands `isort .` and `black .` can also be run individually instead.
 

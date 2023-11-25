@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.lib.recfunctions import repack_fields
 
 
 def create_empty_recarray(length, dtype, default_value=0):
@@ -22,10 +23,11 @@ def create_empty_recarray(length, dtype, default_value=0):
     Examples
     --------
     >>> import numpy as np
-    >>> import flopy
-    >>> dtype = np.dtype([('x', np.float32), ('y', np.float32)])
-    >>> ra = flopy.utils.create_empty_recarray(10, dtype)
-
+    >>> from flopy.utils import create_empty_recarray
+    >>> dt = np.dtype([('x', np.float32), ('y', np.float32)])
+    >>> create_empty_recarray(1, dt)
+    rec.array([(0., 0.)],
+              dtype=[('x', '<f4'), ('y', '<f4')])
     """
     r = np.zeros(length, dtype=dtype)
     msg = "dtype argument must be an instance of np.dtype, not list."
@@ -41,6 +43,9 @@ def ra_slice(ra, cols):
     """
     Create a slice of a recarray
 
+    .. deprecated:: 3.5
+        Use numpy.lib.recfunctions.repack_fields instead
+
     Parameters
     ----------
     ra : np.recarray
@@ -55,19 +60,22 @@ def ra_slice(ra, cols):
 
     Examples
     --------
-    >>> import flopy
-    >>> raslice = flopy.utils.ra_slice(ra, ['x', 'y'])
-
-
+    >>> import numpy as np
+    >>> from flopy.utils import ra_slice
+    >>> a = np.core.records.fromrecords([("a", 1, 1.1), ("b", 2, 2.1)])
+    >>> ra_slice(a, ['f0', 'f1'])
+    rec.array([('a', 1), ('b', 2)],
+              dtype=[('f0', '<U1'), ('f1', '<i4')])
     """
-    raslice = np.column_stack([ra[c] for c in cols])
-    dtype = [(str(d[0]), str(d[1])) for d in ra.dtype.descr if d[0] in cols]
-    return np.array([tuple(r) for r in raslice], dtype=dtype).view(np.recarray)
+    return repack_fields(ra[cols])
 
 
 def recarray(array, dtype):
     """
     Convert a list of lists or tuples to a recarray.
+
+    .. deprecated:: 3.5
+        Use numpy.core.records.fromrecords instead
 
     Parameters
     ----------
@@ -86,10 +94,11 @@ def recarray(array, dtype):
     --------
     >>> import numpy as np
     >>> import flopy
-    >>> dtype = np.dtype([('x', np.float32), ('y', np.float32)])
-    >>> arr = [(1., 2.), (10., 20.), (100., 200.)]
-    >>> ra = flopy.utils.recarray(arr, dtype)
-
+    >>> dt = np.dtype([('x', np.float32), ('y', np.float32)])
+    >>> a = [(1., 2.), (10., 20.), (100., 200.)]
+    >>> flopy.utils.recarray(a, dt)
+    rec.array([(  1.,   2.), ( 10.,  20.), (100., 200.)],
+              dtype=[('x', '<f4'), ('y', '<f4')])
     """
     array = np.atleast_2d(array)
 

@@ -6,15 +6,25 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.5
+#       jupytext_version: 1.14.4
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
+#   language_info:
+#     codemirror_mode:
+#       name: ipython
+#       version: 3
+#     file_extension: .py
+#     mimetype: text/x-python
+#     name: python
+#     nbconvert_exporter: python
+#     pygments_lexer: ipython3
+#     version: 3.9.12
 #   metadata:
-#     section: modpath
 #     authors:
-#       - name: Wes Bonelli
+#     - name: Wes Bonelli
+#     section: modpath
 # ---
 
 # # Using MODPATH 7 with structured grids (transient example)
@@ -53,9 +63,9 @@ except:
     import flopy
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 
 temp_dir = TemporaryDirectory()
 sim_name = "mp7_ex03a_mf6"
@@ -165,7 +175,7 @@ tdis = flopy.mf6.modflow.mftdis.ModflowTdis(
 )
 
 # groundwater flow (gwf) model
-model_nam_file = "{}.nam".format(sim_name)
+model_nam_file = f"{sim_name}.nam"
 gwf = flopy.mf6.ModflowGwf(
     sim, modelname=sim_name, model_nam_file=model_nam_file, save_flows=True
 )
@@ -228,12 +238,14 @@ dd = [
     [drain[0], drain[1], i + drain[2][0], 322.5, 100000.0, 6]
     for i in range(drain[2][1] - drain[2][0])
 ]
-drn = flopy.mf6.modflow.mfgwfdrn.ModflowGwfdrn(gwf, stress_period_data={0: dd})
+drn = flopy.mf6.modflow.mfgwfdrn.ModflowGwfdrn(
+    gwf, auxiliary=["IFACE"], stress_period_data={0: dd}
+)
 
 # output control
-headfile = "{}.hds".format(sim_name)
+headfile = f"{sim_name}.hds"
 head_record = [headfile]
-budgetfile = "{}.cbb".format(sim_name)
+budgetfile = f"{sim_name}.cbb"
 budget_record = [budgetfile]
 saverecord = [("HEAD", "ALL"), ("BUDGET", "ALL")]
 oc = flopy.mf6.modflow.mfgwfoc.ModflowGwfoc(

@@ -8,6 +8,7 @@ MODFLOW Guide
 
 """
 import numpy as np
+import pandas as pd
 
 from ..pakbase import Package
 from ..utils import Util3d, import_optional_dependency
@@ -411,8 +412,8 @@ class StartingLocationsFile(Package):
         Input style described in MODPATH6 manual (currently only input style 1 is supported)
     extension : string
         Filename extension (default is 'loc')
-    use_pandas: bool, default False
-        If True and pandas is available use pandas to write the particle locations >2x speed
+    use_pandas: bool, default True
+        If True use pandas to write the particle locations >2x speed
     """
 
     def __init__(
@@ -421,7 +422,7 @@ class StartingLocationsFile(Package):
         inputstyle=1,
         extension="loc",
         verbose=False,
-        use_pandas=False,
+        use_pandas=True,
     ):
         super().__init__(model, extension, "LOC", 33)
 
@@ -510,10 +511,6 @@ class StartingLocationsFile(Package):
         :param save_group_mapper bool, if true, save a groupnumber to group name mapper as well.
         :return:
         """
-        pd = import_optional_dependency(
-            "pandas",
-            error_message="specify `use_pandas=False` to use slower methods without pandas",
-        )
         # convert float format string to pandas float format
         float_format = (
             float_format.replace("{", "").replace("}", "").replace(":", "%")

@@ -32,8 +32,8 @@ import flopy
 from flopy.utils import flopy_io
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"flopy version: {flopy.__version__}")
 
 # +
 # make a model
@@ -57,7 +57,7 @@ hk = np.zeros((nlay, nrow, ncol)) + 5.0
 vka = np.zeros_like(hk)
 fnames = []
 for i, h in enumerate(hk):
-    fname = os.path.join(array_dir, "hk_{0}.ref".format(i + 1))
+    fname = os.path.join(array_dir, f"hk_{i + 1}.ref")
     fnames.append(fname)
     np.savetxt(fname, h)
     vka[i] = i + 1
@@ -84,7 +84,7 @@ pprint([flopy_io.scrub_login(p) for p in os.listdir(ml.model_ws)])
 
 # We see that a copy of the ``hk`` files as well as the important recharge file were made in the ```model_ws```.Let's looks at the ```lpf``` file
 
-open(os.path.join(ml.model_ws, ml.name + ".lpf"), "r").readlines()[:20]
+open(os.path.join(ml.model_ws, f"{ml.name}.lpf")).readlines()[:20]
 
 # We see that the ```open/close``` approach was used - this is because ``ml.array_free_format`` is ``True``.  Notice that ```vka``` is written internally
 
@@ -137,7 +137,7 @@ hk = np.zeros((nlay, nrow, ncol)) + 5.0
 vka = np.zeros_like(hk)
 fnames = []
 for i, h in enumerate(hk):
-    fname = os.path.join(array_dir, "hk_{0}.ref".format(i + 1))
+    fname = os.path.join(array_dir, f"hk_{i + 1}.ref")
     fnames.append(fname)
     np.savetxt(fname, h)
     vka[i] = i + 1
@@ -189,7 +189,7 @@ hk = np.zeros((nlay, nrow, ncol)) + 5.0
 vka = np.zeros_like(hk)
 fnames = []
 for i, h in enumerate(hk):
-    fname = os.path.join(array_dir, "hk_{0}.ref".format(i + 1))
+    fname = os.path.join(array_dir, f"hk_{i + 1}.ref")
     fnames.append(fname)
     np.savetxt(fname, h)
     vka[i] = i + 1
@@ -206,16 +206,16 @@ ml.write_input()
 
 # We see that now the external arrays are being handled through the name file.  Let's look at the name file
 
-open(os.path.join(ml.model_ws, ml.name + ".nam"), "r").readlines()
+open(os.path.join(ml.model_ws, f"{ml.name}.nam")).readlines()
 
 # ### Free and binary format
 
 ml.dis.botm[0].format.binary = True
 ml.write_input()
 
-open(os.path.join(ml.model_ws, ml.name + ".nam"), "r").readlines()
+open(os.path.join(ml.model_ws, f"{ml.name}.nam")).readlines()
 
-open(os.path.join(ml.model_ws, ml.name + ".dis"), "r").readlines()
+open(os.path.join(ml.model_ws, f"{ml.name}.dis")).readlines()
 
 # ### The ```.how``` attribute
 # ```Util2d``` includes a ```.how``` attribute that gives finer grained control of how arrays will written
@@ -240,11 +240,11 @@ ml.dis.top.how = "external"
 
 ml.write_input()
 
-open(os.path.join(ml.model_ws, ml.name + ".dis"), "r").readlines()
+open(os.path.join(ml.model_ws, f"{ml.name}.dis")).readlines()
 
-open(os.path.join(ml.model_ws, ml.name + ".lpf"), "r").readlines()
+open(os.path.join(ml.model_ws, f"{ml.name}.lpf")).readlines()
 
-open(os.path.join(ml.model_ws, ml.name + ".nam"), "r").readlines()
+open(os.path.join(ml.model_ws, f"{ml.name}.nam")).readlines()
 
 try:
     # ignore PermissionError on Windows

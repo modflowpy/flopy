@@ -1,11 +1,6 @@
 name: FloPy continuous integration
 on:
   push:
-    branches:
-      - master
-      - develop
-      - ci-diagnose*
-      - notebooks
   pull_request:
     branches:
       - master
@@ -20,7 +15,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -37,11 +32,10 @@ jobs:
           python -c "import flopy; print(f'{flopy.__version__}')"
 
       - name: Build package
-        run: |
-          python -m build
+        run: python -m build
+
       - name: Check package
-        run: |
-          twine check --strict dist/*
+        run: twine check --strict dist/*
 
   lint:
     name: Lint
@@ -53,7 +47,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -106,15 +100,17 @@ jobs:
       run:
         shell: bash
     timeout-minutes: 10
+    env:
+      PYTHON_VERSION: 3.8
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.8
+          python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
           cache-dependency-path: pyproject.toml
 
@@ -123,14 +119,13 @@ jobs:
           pip install --upgrade pip
           pip install .
           pip install ".[test, optional]"
-
+      
       - name: Install Modflow executables
         uses: modflowpy/install-modflow-action@v1
-
-      - name: Run smoke tests
-        working-directory: ./autotest
-        run: |
-          pytest -v -n=auto --smoke --durations=0 --keep-failed=.failed
+      
+      - name: Smoke test
+        working-directory: autotest
+        run: pytest -v -n=auto --smoke --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -138,9 +133,14 @@ jobs:
         uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: failed-smoke-${{ matrix.os }}-${{ matrix.python-version }}
-          path: |
-            ./autotest/.failed/**
+          name: failed-smoke-${{ runner.os }}-${{ env.PYTHON_VERSION }}
+          path: autotest/.failed/**
+      
+      - name: Upload coverage
+        if: github.repository_owner == 'modflowpy' && (github.event_name == 'push' || github.event_name == 'pull_request')
+        uses: codecov/codecov-action@v3
+        with:
+          files: autotest/coverage.xml
 
   test:
     name: Test
@@ -150,37 +150,21 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-        python-version: [ 3.8, 3.9, "3.10", "3.11" ]
+        python-version: [ 3.8, 3.9, "3.10", "3.11", "3.12" ]
         exclude:
           # avoid shutil.copytree infinite recursion bug
           # https://github.com/python/cpython/pull/17098
           - python-version: '3.8.0'
     defaults:
       run:
-        shell: bash
+        shell: bash -l {0}
     timeout-minutes: 45
     steps:
 
       - name: Checkout repo
-        uses: actions/checkout@v3
-
-      - name: Setup Python
-        if: runner.os != 'Windows'
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-          cache-dependency-path: pyproject.toml
-
-      - name: Install Python dependencies
-        if: runner.os != 'Windows'
-        run: |
-          pip install --upgrade pip
-          pip install .
-          pip install ".[test, optional]"
+        uses: actions/checkout@v4
 
       - name: Setup Micromamba
-        if: runner.os == 'Windows'
         uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: etc/environment.yml
@@ -192,12 +176,8 @@ jobs:
             bash
             powershell
 
-      - name: Install Python dependencies
-        shell: bash -l {0}
-        if: runner.os == 'Windows'
-        run: |
-          pip install xmipy
-          pip install .
+      - name: Install FloPy
+        run: pip install .
 
       - name: Install Modflow-related executables
         uses: modflowpy/install-modflow-action@v1
@@ -207,30 +187,13 @@ jobs:
         with:
           repo: modflow6-nightly-build
 
-      - name: Update FloPy packages
-        if: runner.os != 'Windows'
-        run: python -c 'import flopy; flopy.mf6.utils.generate_classes(branch="develop", backup=False)'
-
-      - name: Update FloPy packages
-        if: runner.os == 'Windows'
-        shell: bash -l {0}
-        run: python -c 'import flopy; flopy.mf6.utils.generate_classes(branch="develop", backup=False)'
+      - name: Update package classes
+        run: python -m flopy.mf6.utils.generate_classes --ref develop --no-backup
 
       - name: Run tests
-        if: runner.os != 'Windows'
-        working-directory: ./autotest
+        working-directory: autotest
         run: |
-          pytest -v -m="not example and not regression" -n=auto --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
-          coverage report
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Run tests
-        if: runner.os == 'Windows'
-        shell: bash -l {0}
-        working-directory: ./autotest
-        run: |
-          pytest -v -m="not example and not regression" -n=auto --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
+          pytest -v -m="not example and not regression" -n=auto --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed --dist loadfile
           coverage report
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -240,12 +203,10 @@ jobs:
         if: failure()
         with:
           name: failed-${{ matrix.os }}-${{ matrix.python-version }}
-          path: |
-            ./autotest/.failed/**
+          path: autotest/.failed/**
 
       - name: Upload coverage
-        if:
-          github.repository_owner == 'modflowpy' && (github.event_name == 'push' || github.event_name == 'pull_request')
+        if: github.repository_owner == 'modflowpy' && (github.event_name == 'push' || github.event_name == 'pull_request')
         uses: codecov/codecov-action@v3
         with:
-          files: ./autotest/coverage.xml
+          files: autotest/coverage.xml

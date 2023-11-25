@@ -14,7 +14,7 @@ from flopy.utils import Raster
 from flopy.utils.gridintersect import GridIntersect
 from flopy.utils.triangle import Triangle
 
-if has_pkg("shapely"):
+if has_pkg("shapely", strict=True):
     from shapely.geometry import (
         LineString,
         MultiLineString,
@@ -1273,7 +1273,7 @@ def test_polygon_offset_rot_structured_grid_shapely(rtree):
 # %% test rasters
 
 
-@requires_pkg("rasterstats", "scipy")
+@requires_pkg("rasterstats", "scipy", "shapely")
 def test_rasters(example_data_path):
     ws = example_data_path / "options"
     raster_name = "dem.img"

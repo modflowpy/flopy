@@ -52,9 +52,9 @@ except:
     import flopy
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 
 # +
 temp_dir = TemporaryDirectory()
@@ -302,15 +302,15 @@ for y in range(ncol):
 
     # remember that lay, row, col need to be zero-based and are adjusted accordingly by flopy
     #    layer +  row      +      col     +       iseg      +      irch      +     rchlen      +            strtop          +       slope       +     strthick    +     strmbed K
-    s1 += "0,{}".format(1)
-    s1 += ",{}".format(y)
-    s1 += ",{}".format(iseg)
-    s1 += ",{}".format(irch)
-    s1 += ",{}".format(delr)
-    s1 += ",{}".format(strmBed_Elev[y])
-    s1 += ",{}".format(0.0001)
-    s1 += ",{}".format(0.50)
-    s1 += ",{}\n".format(strhc1)
+    s1 += f"0,{1}"
+    s1 += f",{y}"
+    s1 += f",{iseg}"
+    s1 += f",{irch}"
+    s1 += f",{delr}"
+    s1 += f",{strmBed_Elev[y]}"
+    s1 += f",{0.0001}"
+    s1 += f",{0.50}"
+    s1 += f",{strhc1}\n"
 
 
 fpth = os.path.join(modelpth, "s1.csv")
@@ -331,10 +331,7 @@ dtype = [
     ("strhc1", "<f8"),
 ]
 
-if sys.version_info > (3, 0):
-    f = open(fpth, "rb")
-else:
-    f = open(fpth, "r")
+f = open(fpth, "rb")
 
 reach_data = np.genfromtxt(f, delimiter=",", names=True, dtype=dtype)
 f.close()
@@ -352,10 +349,7 @@ f = open(fpth, "w")
 f.write(s2)
 f.close()
 
-if sys.version_info > (3, 0):
-    f = open(fpth, "rb")
-else:
-    f = open(fpth, "r")
+f = open(fpth, "rb")
 
 segment_data = np.genfromtxt(f, delimiter=",", names=True)
 f.close()
@@ -557,7 +551,7 @@ mt.run_model(silent=True, report=True)
 # +
 # Define a function to read SFT output file
 def load_ts_from_SFT_output(fname, nd=1):
-    f = open(fname, "r")
+    f = open(fname)
     iline = 0
     lst = []
     for line in f:
@@ -576,7 +570,7 @@ def load_ts_from_SFT_output(fname, nd=1):
 
 # Also define a function to read OTIS output file
 def load_ts_from_otis(fname, iobs=1):
-    f = open(fname, "r")
+    f = open(fname)
     iline = 0
     lst = []
     for line in f:

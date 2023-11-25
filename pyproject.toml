@@ -24,12 +24,14 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Hydrology",
 ]
 requires-python = ">=3.8"
 dependencies = [
     "numpy >=1.15.0",
     "matplotlib >=1.4.0",
+    "pandas >=2.0.0"
 ]
 dynamic = ["version", "readme"]
 
@@ -54,7 +56,6 @@ test = [
     "pytest-cases",
     "pytest-cov",
     "pytest-dotenv",
-    "pytest-virtualenv",
     "pytest-xdist",
     "virtualenv"
 ]
@@ -65,7 +66,6 @@ optional = [
     "geojson",
     "imageio",
     "netcdf4",
-    "pandas",
     "pymetis ; platform_system != 'Windows'",
     "pyproj",
     "pyshp",
@@ -82,13 +82,11 @@ doc = [
     "flopy[optional]",
     "ipython[kernel]",
     "jupytext",
+    "myst-parser",
     "nbsphinx",
-    "nbsphinx-link",
-    "pydata-sphinx-theme",
     "PyYAML",
-    "recommonmark",
     "rtds-action",
-    "sphinx >=4",
+    "sphinx ==7.1.2",
     "sphinx-rtd-theme >=1",
 ]
 

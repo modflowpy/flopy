@@ -259,21 +259,21 @@ description REPLACE obs6_filename {'{#1}': 'UZT'}
 
 block packagedata
 name packagedata
-type recarray uzfno strt aux boundname
+type recarray ifno strt aux boundname
 shape (maxbound)
 reader urword
 longname
 description
 
 block packagedata
-name uzfno
+name ifno
 type integer
 shape
 tagged false
 in_record true
 reader urword
 longname UZF cell number for this entry
-description integer value that defines the UZF cell number associated with the specified PACKAGEDATA data on the line. UZFNO must be greater than zero and less than or equal to NUZFCELLS. Unsaturated zone flow information must be specified for every UZF cell or the program will terminate with an error.  The program will also terminate with an error if information for a UZF cell is specified more than once.
+description integer value that defines the feature (UZF object) number associated with the specified PACKAGEDATA data on the line. IFNO must be greater than zero and less than or equal to NUZFCELLS. Unsaturated zone flow information must be specified for every UZF cell or the program will terminate with an error.  The program will also terminate with an error if information for a UZF cell is specified more than once.
 numeric_index true
 
 block packagedata
@@ -327,21 +327,21 @@ description REPLACE iper {}
 
 block period
 name uztperioddata
-type recarray uzfno uztsetting
+type recarray ifno uztsetting
 shape
 reader urword
 longname
 description
 
 block period
-name uzfno
+name ifno
 type integer
 shape
 tagged false
 in_record true
 reader urword
 longname unsaturated zone flow cell number for this entry
-description integer value that defines the UZF cell number associated with the specified PERIOD data on the line. UZFNO must be greater than zero and less than or equal to NUZFCELLS.
+description integer value that defines the feature (UZF object) number associated with the specified PERIOD data on the line. IFNO must be greater than zero and less than or equal to NUZFCELLS.
 numeric_index true
 
 block period

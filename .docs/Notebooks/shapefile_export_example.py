@@ -38,9 +38,9 @@ import pandas as pd
 import flopy
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 
 # +
 # temporary directory
@@ -64,14 +64,14 @@ m.get_package_list()
 # the coordinate information where the grid is located in a projected coordinate system (e.g. UTM)
 
 grid = m.modelgrid
-grid.set_coord_info(xoff=273170, yoff=5088657, epsg=26916)
+grid.set_coord_info(xoff=273170, yoff=5088657, crs=26916)
 
 grid.extent
 
 # ## Declarative export using attached `.export()` methods
 # #### Export the whole model to a single shapefile
 
-fname = "{}/model.shp".format(outdir)
+fname = f"{outdir}/model.shp"
 m.export(fname)
 
 ax = plt.subplot(1, 1, 1, aspect="equal")
@@ -81,7 +81,7 @@ ax.set_xlim(extents[0], extents[1])
 ax.set_ylim(extents[2], extents[3])
 ax.set_title(fname)
 
-fname = "{}/wel.shp".format(outdir)
+fname = f"{outdir}/wel.shp"
 m.wel.export(fname)
 
 # ### Export a package to a shapefile
@@ -90,8 +90,8 @@ m.wel.export(fname)
 
 m.lpf.hk
 
-fname = "{}/hk.shp".format(outdir)
-m.lpf.hk.export("{}/hk.shp".format(outdir))
+fname = f"{outdir}/hk.shp"
+m.lpf.hk.export(f"{outdir}/hk.shp")
 
 ax = plt.subplot(1, 1, 1, aspect="equal")
 extents = grid.extent
@@ -103,14 +103,14 @@ ax.set_title(fname)
 
 m.riv.stress_period_data
 
-m.riv.stress_period_data.export("{}/riv_spd.shp".format(outdir))
+m.riv.stress_period_data.export(f"{outdir}/riv_spd.shp")
 
 # ### MfList.export() exports the whole grid by default, regardless of the locations of the boundary cells
 # `sparse=True` only exports the boundary cells in the MfList
 
-m.riv.stress_period_data.export("{}/riv_spd.shp".format(outdir), sparse=True)
+m.riv.stress_period_data.export(f"{outdir}/riv_spd.shp", sparse=True)
 
-m.wel.stress_period_data.export("{}/wel_spd.shp".format(outdir), sparse=True)
+m.wel.stress_period_data.export(f"{outdir}/wel_spd.shp", sparse=True)
 
 # ## Ad-hoc exporting using `recarray2shp`
 # * The main idea is to create a recarray with all of the attribute information, and a list of geometry features (one feature per row in the recarray)
@@ -142,8 +142,8 @@ polygons
 
 # ##### write the shapefile
 
-fname = "{}/bcs.shp".format(outdir)
-recarray2shp(spd.to_records(), geoms=polygons, shpname=fname, epsg=grid.epsg)
+fname = f"{outdir}/bcs.shp"
+recarray2shp(spd.to_records(), geoms=polygons, shpname=fname, crs=grid.epsg)
 
 ax = plt.subplot(1, 1, 1, aspect="equal")
 extents = grid.extent
@@ -172,8 +172,8 @@ from flopy.utils.geometry import Point
 
 geoms = [Point(x, y) for x, y in zip(welldata.x_utm, welldata.y_utm)]
 
-fname = "{}/wel_data.shp".format(outdir)
-recarray2shp(welldata.to_records(), geoms=geoms, shpname=fname, epsg=grid.epsg)
+fname = f"{outdir}/wel_data.shp"
+recarray2shp(welldata.to_records(), geoms=geoms, shpname=fname, crs=grid.epsg)
 # -
 
 ax = plt.subplot(1, 1, 1, aspect="equal")
@@ -202,12 +202,12 @@ lines = [LineString(l) for l in l0]
 
 rivdata = pd.DataFrame(m.riv.stress_period_data[0])
 rivdata["reach"] = np.arange(len(lines))
-lines_shapefile = "{}/riv_reaches.shp".format(outdir)
+lines_shapefile = f"{outdir}/riv_reaches.shp"
 recarray2shp(
     rivdata.to_records(index=False),
     geoms=lines,
     shpname=lines_shapefile,
-    epsg=grid.epsg,
+    crs=grid.epsg,
 )
 # -
 
@@ -242,7 +242,7 @@ recarray2shp(
     linesdata.drop("geometry", axis=1).to_records(),
     geoms=linesdata.geometry.values,
     shpname=lines_shapefile,
-    epsg=grid.epsg,
+    crs=grid.epsg,
 )
 
 ax = plt.subplot(1, 1, 1, aspect="equal")
@@ -271,12 +271,12 @@ modelgrid = flopy.discretization.StructuredGrid(
 )
 
 # exporting an entire model
-m.export("{}/freyberg.shp".format(outdir), modelgrid=modelgrid)
+m.export(f"{outdir}/freyberg.shp", modelgrid=modelgrid)
 # -
 
 # And for a specific parameter the method is the same
 
-fname = "{}/hk.shp".format(outdir)
+fname = f"{outdir}/hk.shp"
 m.lpf.hk.export(fname, modelgrid=modelgrid)
 
 ax = plt.subplot(1, 1, 1, aspect="equal")

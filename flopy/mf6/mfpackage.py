@@ -4,7 +4,6 @@ import errno
 import inspect
 import os
 import sys
-from re import S
 
 import numpy as np
 
@@ -14,7 +13,14 @@ from ..utils import datautil
 from ..utils.check import mf6check
 from ..version import __version__
 from .coordinates import modeldimensions
-from .data import mfdata, mfdataarray, mfdatalist, mfdatascalar, mfstructure
+from .data import (
+    mfdata,
+    mfdataarray,
+    mfdatalist,
+    mfdataplist,
+    mfdatascalar,
+    mfstructure,
+)
 from .data.mfdatautil import DataSearchOutput, MFComment, cellids_equal
 from .data.mfstructure import DatumType, MFDataItemStructure, MFStructure
 from .mfbase import (
@@ -466,28 +472,57 @@ class MFBlock:
                 trans_array.set_data(data, key=0)
             return trans_array
         elif data_type == mfstructure.DataType.list:
-            return mfdatalist.MFList(
-                sim_data,
-                model_or_sim,
-                structure,
-                data,
-                enable,
-                path,
-                dimensions,
-                package,
-                self,
-            )
+            if (
+                structure.basic_item
+                and self._container_package.package_type.lower() != "nam"
+                and self._simulation_data.use_pandas
+            ):
+                return mfdataplist.MFPandasList(
+                    sim_data,
+                    model_or_sim,
+                    structure,
+                    data,
+                    enable,
+                    path,
+                    dimensions,
+                    package,
+                    self,
+                )
+            else:
+                return mfdatalist.MFList(
+                    sim_data,
+                    model_or_sim,
+                    structure,
+                    data,
+                    enable,
+                    path,
+                    dimensions,
+                    package,
+                    self,
+                )
         elif data_type == mfstructure.DataType.list_transient:
-            trans_list = mfdatalist.MFTransientList(
-                sim_data,
-                model_or_sim,
-                structure,
-                enable,
-                path,
-                dimensions,
-                package,
-                self,
-            )
+            if structure.basic_item and self._simulation_data.use_pandas:
+                trans_list = mfdataplist.MFPandasTransientList(
+                    sim_data,
+                    model_or_sim,
+                    structure,
+                    enable,
+                    path,
+                    dimensions,
+                    package,
+                    self,
+                )
+            else:
+                trans_list = mfdatalist.MFTransientList(
+                    sim_data,
+                    model_or_sim,
+                    structure,
+                    enable,
+                    path,
+                    dimensions,
+                    package,
+                    self,
+                )
             if data is not None:
                 trans_list.set_data(data, key=0, autofill=True)
             return trans_list
@@ -1300,7 +1335,10 @@ class MFBlock:
             if (
                 isinstance(dataset, mfdataarray.MFArray)
                 or (
-                    isinstance(dataset, mfdatalist.MFList)
+                    (
+                        isinstance(dataset, mfdatalist.MFList)
+                        or isinstance(dataset, mfdataplist.MFPandasList)
+                    )
                     and dataset.structure.type == DatumType.recarray
                 )
                 and dataset.enabled
@@ -1347,7 +1385,10 @@ class MFBlock:
             if (
                 isinstance(dataset, mfdataarray.MFArray)
                 or (
-                    isinstance(dataset, mfdatalist.MFList)
+                    (
+                        isinstance(dataset, mfdatalist.MFList)
+                        or isinstance(dataset, mfdataplist.MFPandasList)
+                    )
                     and dataset.structure.type == DatumType.recarray
                 )
                 and dataset.enabled
@@ -1361,8 +1402,37 @@ class MFBlock:
                 repeating_datasets.append(dataset)
         return repeating_datasets
 
+    def _prepare_external(self, fd, file_name, binary=False):
+        fd_main = fd
+        fd_path = self._simulation_data.mfpath.get_model_path(self.path[0])
+        # resolve full file and folder path
+        fd_file_path = os.path.join(fd_path, file_name)
+        fd_folder_path = os.path.split(fd_file_path)[0]
+        if fd_folder_path != "":
+            if not os.path.exists(fd_folder_path):
+                # create new external data folder
+                os.makedirs(fd_folder_path)
+        return fd_main, fd_file_path
+
     def _write_block(self, fd, block_header, ext_file_action):
         transient_key = None
+        basic_list = False
+        dataset_one = list(self.datasets.values())[0]
+        if isinstance(
+            dataset_one,
+            (mfdataplist.MFPandasList, mfdataplist.MFPandasTransientList),
+        ):
+            basic_list = True
+            for dataset in self.datasets.values():
+                assert isinstance(
+                    dataset,
+                    (
+                        mfdataplist.MFPandasList,
+                        mfdataplist.MFPandasTransientList,
+                    ),
+                )
+            # write block header
+            block_header.write_header(fd)
         if len(block_header.data_items) > 0:
             transient_key = block_header.get_transient_key()
 
@@ -1379,9 +1449,25 @@ class MFBlock:
                         print(
                             f"        writing data {dataset.structure.name}..."
                         )
-                    data_set_output.append(
-                        dataset.get_file_entry(ext_file_action=ext_file_action)
-                    )
+                    if basic_list:
+                        ext_fname = dataset.external_file_name()
+                        if ext_fname is not None:
+                            # if dataset.has_modified_ext_data():
+                            binary = dataset.binary_ext_data()
+                            # write block contents to external file
+                            fd_main, fd = self._prepare_external(
+                                fd, ext_fname, binary
+                            )
+                            dataset.write_file_entry(fd, fd_main=fd_main)
+                            fd = fd_main
+                        else:
+                            dataset.write_file_entry(fd)
+                    else:
+                        data_set_output.append(
+                            dataset.get_file_entry(
+                                ext_file_action=ext_file_action
+                            )
+                        )
                     data_found = True
                 else:
                     if (
@@ -1392,20 +1478,43 @@ class MFBlock:
                             "        writing data {} ({}).."
                             ".".format(dataset.structure.name, transient_key)
                         )
-                    if dataset.repeating:
-                        output = dataset.get_file_entry(
-                            transient_key, ext_file_action=ext_file_action
-                        )
-                        if output is not None:
-                            data_set_output.append(output)
-                            data_found = True
-                    else:
-                        data_set_output.append(
-                            dataset.get_file_entry(
-                                ext_file_action=ext_file_action
+                    if basic_list:
+                        ext_fname = dataset.external_file_name(transient_key)
+                        if ext_fname is not None:
+                            # if dataset.has_modified_ext_data(transient_key):
+                            binary = dataset.binary_ext_data(transient_key)
+                            # write block contents to external file
+                            fd_main, fd = self._prepare_external(
+                                fd, ext_fname, binary
                             )
-                        )
-                        data_found = True
+                            dataset.write_file_entry(
+                                fd,
+                                transient_key,
+                                ext_file_action=ext_file_action,
+                                fd_main=fd_main,
+                            )
+                            fd = fd_main
+                        else:
+                            dataset.write_file_entry(
+                                fd,
+                                transient_key,
+                                ext_file_action=ext_file_action,
+                            )
+                    else:
+                        if dataset.repeating:
+                            output = dataset.get_file_entry(
+                                transient_key, ext_file_action=ext_file_action
+                            )
+                            if output is not None:
+                                data_set_output.append(output)
+                                data_found = True
+                        else:
+                            data_set_output.append(
+                                dataset.get_file_entry(
+                                    ext_file_action=ext_file_action
+                                )
+                            )
+                    data_found = True
             except MFDataException as mfde:
                 raise MFDataException(
                     mfdata_except=mfde,
@@ -1419,46 +1528,30 @@ class MFBlock:
                 )
         if not data_found:
             return
-        # write block header
-        block_header.write_header(fd)
+        if not basic_list:
+            # write block header
+            block_header.write_header(fd)
 
-        if self.external_file_name is not None:
-            # write block contents to external file
-            indent_string = self._simulation_data.indent_string
-            fd.write(f"{indent_string}open/close {self.external_file_name}\n")
-            fd_main = fd
-            fd_path = os.path.split(os.path.realpath(fd.name))[0]
-            try:
-                fd = open(os.path.join(fd_path, self.external_file_name), "w")
-            except:
-                type_, value_, traceback_ = sys.exc_info()
-                message = (
-                    f'Error reading external file "{self.external_file_name}"'
+            if self.external_file_name is not None:
+                indent_string = self._simulation_data.indent_string
+                fd.write(
+                    f"{indent_string}open/close "
+                    f'"{self.external_file_name}"\n'
                 )
-                raise MFDataException(
-                    self._container_package.model_name,
-                    self._container_package._get_pname(),
-                    self.path,
-                    "reading external file",
-                    self.structure.name,
-                    inspect.stack()[0][3],
-                    type_,
-                    value_,
-                    traceback_,
-                    message,
-                    self._simulation_data.debug,
+                # write block contents to external file
+                fd_main, fd = self._prepare_external(
+                    fd, self.external_file_name
                 )
-
-        # write data sets
-        for output in data_set_output:
-            fd.write(output)
+            # write data sets
+            for output in data_set_output:
+                fd.write(output)
 
         # write trailing comments
         pth = block_header.blk_trailing_comment_path
         if pth in self._simulation_data.mfdata:
             self._simulation_data.mfdata[pth].write(fd)
 
-        if self.external_file_name is not None:
+        if self.external_file_name is not None and not basic_list:
             # switch back writing to package file
             fd.close()
             fd = fd_main
@@ -1975,10 +2068,12 @@ class MFPackage(PackageContainer, PackageInterface):
                                 for row in data:
                                     row_size = len(row)
                                     aux_start_loc = (
-                                        row_size - num_aux_names - offset
+                                        row_size - num_aux_names - offset - 1
                                     )
                                     # loop through auxiliary variables
-                                    for idx, var in enumerate(aux_names):
+                                    for idx, var in enumerate(
+                                        list(aux_names[0])[1:]
+                                    ):
                                         # get index of current aux variable
                                         data_index = aux_start_loc + idx
                                         # verify auxiliary value is either
@@ -2181,7 +2276,7 @@ class MFPackage(PackageContainer, PackageInterface):
                                 new_size = len(dataset.get_data())
 
                         if size_def.get_data() is None:
-                            current_size = 0
+                            current_size = -1
                         else:
                             current_size = size_def.get_data()
 

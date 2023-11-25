@@ -188,7 +188,7 @@ for pkg in pkgs:
         pak = model.get_package(pkg)
         try:
             rarrays[ix + 1] = pak.stress_period_data.data[0]
-        except TypeError:
+        except (TypeError, AttributeError):
             pass
     recarray = mfsplit.reconstruct_recarray(rarrays)
     if pkg == "riv":

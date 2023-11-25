@@ -6,7 +6,8 @@ import numpy as np
 import pytest
 from autotest.conftest import get_example_data_path
 from autotest.test_mp6_cases import Mp6Cases1, Mp6Cases2
-from modflow_devtools.markers import has_pkg, requires_exe, requires_pkg
+from modflow_devtools.markers import requires_exe, requires_pkg
+from numpy.lib.recfunctions import repack_fields
 from pytest_cases import parametrize_with_cases
 
 import flopy
@@ -18,7 +19,6 @@ from flopy.modpath.mp6sim import Modpath6Sim, StartingLocationsFile
 from flopy.plot import PlotMapView
 from flopy.utils import EndpointFile, PathlineFile, TimeseriesFile
 from flopy.utils.flopy_io import loadtxt
-from flopy.utils.recarray_utils import ra_slice
 
 pytestmark = pytest.mark.mf6
 
@@ -110,12 +110,8 @@ def test_mpsim(function_tmpdir, mp6_test_path):
     )
     mp.write_input()
 
-    use_pandas_combs = [False]  # test StartingLocationsFile._write_wo_pandas
-    if has_pkg("pandas"):
-        # test StartingLocationsFile._write_particle_data_with_pandas
-        use_pandas_combs.append(True)
-
-    for use_pandas in use_pandas_combs:
+    # test StartingLocationsFile._write_wo_pandas
+    for use_pandas in [True, False]:
         sim = Modpath6Sim(model=mp)
         # starting locations file
         stl = StartingLocationsFile(model=mp, use_pandas=use_pandas)
@@ -135,7 +131,7 @@ def test_mpsim(function_tmpdir, mp6_test_path):
         assert stllines[6].strip().split()[-1] == "p2"
 
 
-@requires_pkg("pandas", "shapefile", "shapely")
+@requires_pkg("shapefile", "shapely")
 def test_get_destination_data(function_tmpdir, mp6_test_path):
     copy_modpath_files(mp6_test_path, function_tmpdir, "EXAMPLE.")
     copy_modpath_files(mp6_test_path, function_tmpdir, "EXAMPLE-3.")
@@ -174,7 +170,7 @@ def test_get_destination_data(function_tmpdir, mp6_test_path):
 
     # check that all starting locations are included in the pathline data
     # (pathline data slice not just endpoints)
-    starting_locs = ra_slice(well_epd, ["k0", "i0", "j0"])
+    starting_locs = repack_fields(well_epd[["k0", "i0", "j0"]])
     pathline_locs = np.array(
         np.array(well_pthld)[["k", "i", "j"]].tolist(),
         dtype=starting_locs.dtype,
@@ -257,8 +253,7 @@ def test_get_destination_data(function_tmpdir, mp6_test_path):
         xoff=mg.xoffset,
         yoff=mg.yoffset,
         angrot=mg.angrot,
-        epsg=mg.epsg,
-        proj4=mg.proj4,
+        crs=mg.epsg,
     )
     ra = shp2recarray(function_tmpdir / "pathlines_1per2.shp")
     p3_2 = ra.geometry[ra.particleid == 4][0]
@@ -298,8 +293,7 @@ def test_get_destination_data(function_tmpdir, mp6_test_path):
         xoff=mg4._xul_to_xll(xul, 0.0),
         yoff=mg4._yul_to_yll(yul, 0.0),
         angrot=0.0,
-        epsg=mg4.epsg,
-        proj4=mg4.proj4,
+        crs=mg4.epsg,
     )
 
     fpth = function_tmpdir / "dis2.shp"
@@ -309,7 +303,6 @@ def test_get_destination_data(function_tmpdir, mp6_test_path):
     pthobj.write_shapefile(shpname=fpth, direction="ending", mg=mg4)
 
 
-@requires_pkg("pandas")
 def test_loadtxt(function_tmpdir, mp6_test_path):
     copy_modpath_files(mp6_test_path, function_tmpdir, "EXAMPLE-3.")
 
@@ -326,7 +319,6 @@ def test_loadtxt(function_tmpdir, mp6_test_path):
 
 
 @requires_exe("mf2005")
-@requires_pkg("pandas")
 def test_modpath(function_tmpdir, example_data_path):
     pth = example_data_path / "freyberg"
     mfnam = "freyberg.nam"
@@ -482,7 +474,6 @@ def test_modpath(function_tmpdir, example_data_path):
         plt.close()
 
 
-@requires_pkg("pandas")
 def test_mp6_timeseries_load(example_data_path):
     pth = example_data_path / "mp5"
     files = [

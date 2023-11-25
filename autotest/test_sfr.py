@@ -373,7 +373,7 @@ def test_const(sfr_data):
     assert True
 
 
-@requires_pkg("pandas", "shapefile", "shapely")
+@requires_pkg("shapefile", "shapely")
 def test_export(function_tmpdir, sfr_data):
     m = Modflow()
     dis = ModflowDis(m, 1, 10, 10, lenuni=2, itmuni=4)
@@ -666,7 +666,6 @@ def test_assign_layers(function_tmpdir):
 
 
 @requires_exe("mf2005")
-@requires_pkg("pandas")
 def test_SfrFile(function_tmpdir, sfr_examples_path, mf2005_model_path):
     common_names = [
         "layer",
@@ -693,13 +692,12 @@ def test_SfrFile(function_tmpdir, sfr_examples_path, mf2005_model_path):
         "gw_head",
     ], sfrout.names
     assert sfrout.times == [(0, 0), (49, 1)], sfrout.times
-    # will be None if pandas is not installed
-    if sfrout.pd is not None:
-        df = sfrout.get_dataframe()
-        assert df.layer.values[0] == 1
-        assert df.column.values[0] == 169
-        assert df.Cond.values[0] == 74510.0
-        assert df.gw_head.values[3] == 1.288e03
+
+    df = sfrout.get_dataframe()
+    assert df.layer.values[0] == 1
+    assert df.column.values[0] == 169
+    assert df.Cond.values[0] == 74510.0
+    assert df.gw_head.values[3] == 1.288e03
 
     sfrout = SfrFile(sfr_examples_path / "test1tr.flw")
     assert sfrout.ncol == 16, sfrout.ncol
@@ -737,10 +735,9 @@ def test_SfrFile(function_tmpdir, sfr_examples_path, mf2005_model_path):
         (49, 1),
     ]
     assert sfrout.times == expected_times, sfrout.times
-    if sfrout.pd is not None:
-        df = sfrout.get_dataframe()
-        assert df.gradient.values[-1] == 5.502e-02
-        assert df.shape == (1080, 20)
+    df = sfrout.get_dataframe()
+    assert df.gradient.values[-1] == 5.502e-02
+    assert df.shape == (1080, 20)
 
     ml = Modflow.load(
         "test1tr.nam", model_ws=mf2005_model_path, exe_name="mf2005"

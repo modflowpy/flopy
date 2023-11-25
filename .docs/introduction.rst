@@ -23,13 +23,17 @@ functionality for MODFLOW 6, helper functions to use GIS shapefiles and
 raster files to create MODFLOW datasets, and common plotting and
 export functionality.
 
+FloPy provides separate APIs for interacting with MF6 and non-MF6 models.
+MODFLOW 6 class definitions are automatically generated from definition
+(DFN) files, text files describing the format of MF6 input files.
+
 FloPy is an open-source project and any assistance is welcomed. Please email
 the development team if you want to contribute.
 
 Return to the Github `FloPy <https://github.com/modflowpy/flopy>`_ website.
 
 Installation
-------------------
+------------
 
 FloPy can be installed using conda (from the conda-forge channel) or pip.
 

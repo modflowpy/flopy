@@ -43,10 +43,10 @@ except:
     import flopy
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("pandas version: {}".format(pd.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"pandas version: {pd.__version__}")
+print(f"flopy version: {flopy.__version__}")
 
 # +
 # temporary workspace
@@ -119,9 +119,9 @@ names = ["FROM_RECHARGE"]
 rowidx = np.in1d(cmdbud["name"], names)
 colidx = "ZONE_1"
 
-print("{:,.1f} cubic meters/day".format(cmdbud[rowidx][colidx][0]))
-print("{:,.1f} cubic feet/day".format(cfdbud[rowidx][colidx][0]))
-print("{:,.1f} inches/year".format(inyrbud[rowidx][colidx][0]))
+print(f"{cmdbud[rowidx][colidx][0]:,.1f} cubic meters/day")
+print(f"{cfdbud[rowidx][colidx][0]:,.1f} cubic feet/day")
+print(f"{inyrbud[rowidx][colidx][0]:,.1f} inches/year")
 # -
 
 cmd is cfd
@@ -205,7 +205,7 @@ try:
 
     print(pd.read_csv(f_out).to_string(index=False))
 except:
-    with open(f_out, "r") as f:
+    with open(f_out) as f:
         for line in f.readlines():
             print("\t".join(line.split(",")))
 # -
@@ -236,7 +236,7 @@ df.head(6)
 
 # +
 def tick_label_formatter_comma_sep(x, pos):
-    return "{:,.0f}".format(x)
+    return f"{x:,.0f}"
 
 
 def volumetric_budget_bar_plot(values_in, values_out, labels, **kwargs):
@@ -268,7 +268,7 @@ def volumetric_budget_bar_plot(values_in, values_out, labels, **kwargs):
     plt.ylim([ymin, ymax * 1.25])
 
     for i, rect in enumerate(rects_in):
-        label = "{:,.0f}".format(values_in[i])
+        label = f"{values_in[i]:,.0f}"
         height = values_in[i]
         x = rect.get_x() + rect.get_width() / 2
         y = height + (0.02 * ymax)
@@ -284,7 +284,7 @@ def volumetric_budget_bar_plot(values_in, values_out, labels, **kwargs):
         )
 
     for i, rect in enumerate(rects_out):
-        label = "{:,.0f}".format(values_out[i])
+        label = f"{values_out[i]:,.0f}"
         height = values_out[i]
         x = rect.get_x() + rect.get_width() / 2
         y = height + (0.02 * ymin)
@@ -325,10 +325,8 @@ for idx, t in enumerate(times):
     )
 
     recname = "STORAGE"
-    values_in = zb.get_dataframes(names="FROM_{}".format(recname)).T.squeeze()
-    values_out = (
-        zb.get_dataframes(names="TO_{}".format(recname)).T.squeeze() * -1
-    )
+    values_in = zb.get_dataframes(names=f"FROM_{recname}").T.squeeze()
+    values_out = zb.get_dataframes(names=f"TO_{recname}").T.squeeze() * -1
     labels = values_in.index.tolist()
 
     rects_in, rects_out = volumetric_budget_bar_plot(
@@ -336,7 +334,7 @@ for idx, t in enumerate(times):
     )
 
     plt.ylabel("Volumetric rate, in Mgal/d")
-    plt.title("{} @ totim = {}".format(recname, t))
+    plt.title(f"{recname} @ totim = {t}")
 
 plt.tight_layout()
 plt.show()

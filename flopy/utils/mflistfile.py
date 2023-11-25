@@ -10,8 +10,8 @@ import os
 import re
 
 import numpy as np
+import pandas as pd
 
-from ..utils import import_optional_dependency
 from ..utils.flopy_io import get_ts_sp
 from ..utils.utils_def import totim_to_datetime
 
@@ -493,11 +493,6 @@ class ListBudget:
         >>> incrementaldf, cumulativedf = mf_list.get_dataframes()
 
         """
-
-        pd = import_optional_dependency(
-            "pandas",
-            error_message="ListBudget.get_dataframes() requires pandas.",
-        )
 
         if not self._isvalid:
             return None

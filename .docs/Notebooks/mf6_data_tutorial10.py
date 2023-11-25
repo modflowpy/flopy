@@ -46,8 +46,8 @@ test_ex_name = "child_pkgs_test"
 model_name = "child_pkgs"
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"flopy version: {flopy.__version__}")
 
 # +
 # create simulation
@@ -60,7 +60,7 @@ tdis_package = flopy.mf6.modflow.mftdis.ModflowTdis(
     sim, time_units="DAYS", nper=4, perioddata=tdis_rc
 )
 model = flopy.mf6.ModflowGwf(
-    sim, modelname=model_name, model_nam_file="{}.nam".format(model_name)
+    sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
 )
 ims_package = flopy.mf6.modflow.mfims.ModflowIms(
     sim,
@@ -88,10 +88,10 @@ dis_package = flopy.mf6.modflow.mfgwfdis.ModflowGwfdis(
     delc=500.0,
     top=50.0,
     botm=[5.0, -10.0, {"factor": 1.0, "data": bot_data}],
-    filename="{}.dis".format(model_name),
+    filename=f"{model_name}.dis",
 )
 ic_package = flopy.mf6.modflow.mfgwfic.ModflowGwfic(
-    model, strt=50.0, filename="{}.ic".format(model_name)
+    model, strt=50.0, filename=f"{model_name}.ic"
 )
 npf_package = flopy.mf6.modflow.mfgwfnpf.ModflowGwfnpf(
     model,

@@ -1,8 +1,0 @@
-#!/bin/bash
-
-# install modflow & related executables to the Python bindir
-get-modflow :python
-
-# required for jupytext
-# https://jupytext.readthedocs.io/en/latest/faq.html#can-i-use-jupytext-with-jupyterhub-binder-nteract-colab-saturn-or-azure
-jupyter lab build  

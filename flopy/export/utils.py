@@ -598,7 +598,7 @@ def model_export(
         modelgrid: flopy.discretization.Grid
             user supplied modelgrid object which will supercede the built
             in modelgrid object
-        crs : pyproj.CRS, optional if `prjfile` is specified
+        crs : pyproj.CRS, int, str, optional if `prjfile` is specified
             Coordinate reference system (CRS) for the model grid
             (must be projected; geographic CRS are not supported).
             The value can be anything accepted by
@@ -607,7 +607,7 @@ def model_export(
         prjfile : str or pathlike, optional if `crs` is specified
             ESRI-style projection file with well-known text defining the CRS
             for the model grid (must be projected; geographic CRS are not supported).
-            if fmt is set to 'vtk', parameters of vtk.export_model
+        if fmt is set to 'vtk', parameters of Vtk initializer
 
     """
     assert isinstance(ml, ModelInterface)
@@ -691,7 +691,7 @@ def package_export(
         modelgrid: flopy.discretization.Grid
             user supplied modelgrid object which will supercede the built
             in modelgrid object
-        crs : pyproj.CRS, optional if `prjfile` is specified
+        crs : pyproj.CRS, int, str, optional if `prjfile` is specified
             Coordinate reference system (CRS) for the model grid
             (must be projected; geographic CRS are not supported).
             The value can be anything accepted by
@@ -700,7 +700,7 @@ def package_export(
         prjfile : str or pathlike, optional if `crs` is specified
             ESRI-style projection file with well-known text defining the CRS
             for the model grid (must be projected; geographic CRS are not supported).
-        if fmt is set to 'vtk', parameters of vtk.export_package
+        if fmt is set to 'vtk', parameters of Vtk initializer
 
     Returns
     -------
@@ -773,22 +773,6 @@ def package_export(
 
         vtkobj.add_package(pak, masked_values=masked_values)
         vtkobj.write(os.path.join(f, name), kper=kpers)
-
-        """
-        vtk.export_package(
-            pak.parent,
-            pak.name,
-            f,
-            nanval=nanval,
-            smooth=smooth,
-            point_scalars=point_scalars,
-            vtk_grid_type=vtk_grid_type,
-            true2d=true2d,
-            binary=binary,
-            kpers=kpers,
-        )
-        """
-
     else:
         raise NotImplementedError(f"unrecognized export argument:{f}")
 
@@ -890,7 +874,7 @@ def mflist_export(f: Union[str, os.PathLike, NetCdf], mfl, **kwargs):
     **kwargs : keyword arguments
         modelgrid : flopy.discretization.Grid
             model grid instance which will supercede the flopy.model.modelgrid
-        crs : pyproj.CRS, optional if `prjfile` is specified
+        crs : pyproj.CRS, int, str, optional if `prjfile` is specified
             Coordinate reference system (CRS) for the model grid
             (must be projected; geographic CRS are not supported).
             The value can be anything accepted by
@@ -1051,7 +1035,7 @@ def transient2d_export(f: Union[str, os.PathLike], t2d, fmt=None, **kwargs):
         max_valid : maximum valid value
         modelgrid : flopy.discretization.Grid
             model grid instance which will supercede the flopy.model.modelgrid
-        if fmt is set to 'vtk', parameters of vtk.export_transient
+        if fmt is set to 'vtk', parameters of Vtk initializer
 
     """
 
@@ -1211,7 +1195,7 @@ def array3d_export(f: Union[str, os.PathLike], u3d, fmt=None, **kwargs):
         max_valid : maximum valid value
         modelgrid : flopy.discretization.Grid
             model grid instance which will supercede the flopy.model.modelgrid
-        if fmt is set to 'vtk', parameters of vtk.export_array
+        if fmt is set to 'vtk', parameters of Vtk initializer
 
     """
 
@@ -1389,7 +1373,7 @@ def array2d_export(
         max_valid : maximum valid value
         modelgrid : flopy.discretization.Grid
             model grid instance which will supercede the flopy.model.modelgrid
-        if fmt is set to 'vtk', parameters of vtk.export_array
+        if fmt is set to 'vtk', parameters of Vtk initializer
 
     """
     assert isinstance(
@@ -1681,7 +1665,10 @@ def export_array(
     elif filename.lower().endswith(".shp"):
         from ..export.shapefile_utils import write_grid_shapefile
 
-        crs = get_crs(**kwargs)
+        try:
+            crs = get_crs(**kwargs)
+        except ImportError:
+            crs = None
         write_grid_shapefile(
             filename,
             modelgrid,
@@ -1961,14 +1948,15 @@ def export_array_contours(
         assert nlevels < maxlevels, msg
         levels = np.arange(imin, imax, interval)
     ax = plt.subplots()[-1]
-    ctr = contour_array(modelgrid, ax, a, levels=levels)
+    layer = kwargs.pop("layer", 0)
+    ctr = contour_array(modelgrid, ax, a, layer, levels=levels)
 
-    kwargs["modelgrid"] = modelgrid
+    kwargs["mg"] = modelgrid
     export_contours(filename, ctr, fieldname, **kwargs)
     plt.close()
 
 
-def contour_array(modelgrid, ax, a, **kwargs):
+def contour_array(modelgrid, ax, a, layer=0, **kwargs):
     """
     Create a QuadMesh plot of the specified array using pcolormesh
 
@@ -1980,6 +1968,8 @@ def contour_array(modelgrid, ax, a, **kwargs):
         ax to add the contours
     a : np.ndarray
         array to contour
+    layer : int, optional
+        layer to contour
 
     Returns
     -------
@@ -1989,7 +1979,7 @@ def contour_array(modelgrid, ax, a, **kwargs):
     from ..plot import PlotMapView
 
     kwargs["ax"] = ax
-    pmv = PlotMapView(modelgrid=modelgrid)
+    pmv = PlotMapView(modelgrid=modelgrid, layer=layer)
     contour_set = pmv.contour_array(a=a, **kwargs)
 
     return contour_set

@@ -4,11 +4,6 @@ on:
   schedule:
     - cron: '0 8 * * *' # run at 8 AM UTC (12 am PST)
   push:
-    branches:
-      - master
-      - develop
-      - release*
-      - ci-diagnose*
   pull_request:
     branches:
       - master
@@ -27,7 +22,7 @@ jobs:
     steps:
 
     - name: Checkout flopy repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Setup Python
       uses: actions/setup-python@v4
@@ -44,11 +39,14 @@ jobs:
         pip install https://github.com/MODFLOW-USGS/modflowapi/zipball/develop
         pip install .[test,optional]
 
-    - name: Install gfortran
-      uses: modflowpy/install-gfortran-action@v1
+    - name: Setup GNU Fortran
+      uses: fortran-lang/setup-fortran@v1
+      with:
+        compiler: gcc
+        version: 13
 
     - name: Checkout MODFLOW 6
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: MODFLOW-USGS/modflow6
         path: modflow6
@@ -87,7 +85,7 @@ jobs:
     - name: Run tests
       working-directory: modflow6/autotest
       run: |
-        pytest -v -n auto -k "test_gw" --durations=0 --cov=flopy --cov-report=xml
+        pytest -v --cov=flopy --cov-report=xml --durations=0 -n auto -m "not repo and not regression"
 
     - name: Print coverage report before upload
       working-directory: ./modflow6/autotest

@@ -9,6 +9,7 @@ from shutil import which
 from typing import Union
 
 import numpy as np
+import pandas as pd
 
 
 def _fmt_string(array, float_format="{}"):
@@ -326,7 +327,7 @@ def loadtxt(
     file, delimiter=" ", dtype=None, skiprows=0, use_pandas=True, **kwargs
 ):
     """
-    Use pandas if it is available to load a text file
+    Use pandas to load a text file
     (significantly faster than n.loadtxt or genfromtxt see
     https://stackoverflow.com/q/18259393/)
 
@@ -352,15 +353,12 @@ def loadtxt(
     """
     from ..utils import import_optional_dependency
 
-    # test if pandas should be used, if available
     if use_pandas:
-        pd = import_optional_dependency("pandas")
         if delimiter.isspace():
             kwargs["delim_whitespace"] = True
         if isinstance(dtype, np.dtype) and "names" not in kwargs:
             kwargs["names"] = dtype.names
 
-    # if use_pandas and pd then use pandas
     if use_pandas:
         df = pd.read_csv(file, dtype=dtype, skiprows=skiprows, **kwargs)
         return df.to_records(index=False)

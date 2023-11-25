@@ -205,7 +205,17 @@ def parsenamefile(namfilename, packages, verbose=True):
 
 
 def attribs_from_namfile_header(namefile):
-    # check for reference info in the nam file header
+    """Return spatial and temporal reference info from the nam header.
+
+    Parameters
+    ----------
+    namefile : str, PathLike or None
+        Path to NAM file to read.
+
+    Returns
+    -------
+    dict
+    """
     defaults = {
         "xll": None,
         "yll": None,
@@ -213,7 +223,6 @@ def attribs_from_namfile_header(namefile):
         "yul": None,
         "rotation": 0.0,
         "crs": None,
-        "proj4_str": None,
     }
     if namefile is None:
         return defaults
@@ -260,23 +269,26 @@ def attribs_from_namfile_header(namefile):
                 proj4 = ":".join(item.split(":")[1:]).strip()
                 if proj4.lower() == "none":
                     proj4 = None
-                defaults["crs"] = proj4
+                defaults["proj4_str"] = proj4
             except:
                 print(f"   could not parse proj4_str in {namefile}")
         elif "crs" in item.lower():
             try:
                 crs = ":".join(item.split(":")[1:]).strip()
                 if crs.lower() == "none":
-                    proj4 = None
+                    crs = None
                 defaults["crs"] = crs
             except:
-                print(f"   could not parse proj4_str in {namefile}")
+                print(f"   could not parse crs in {namefile}")
         elif "start" in item.lower():
             try:
                 start_datetime = item.split(":")[1].strip()
                 defaults["start_datetime"] = start_datetime
             except:
                 print(f"   could not parse start in {namefile}")
+    if "proj4_str" in defaults and defaults["crs"] is None:
+        # handle deprecated keyword, use "crs" instead
+        defaults["crs"] = defaults.pop("proj4_str")
     return defaults
 
 

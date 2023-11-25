@@ -50,10 +50,10 @@ from flopy.utils.sfroutputfile import SfrFile
 mpl.rcParams["figure.figsize"] = (11, 8.5)
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("pandas version: {}".format(pd.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"pandas version: {pd.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 # -
 
 # Set name of MODFLOW exe
@@ -204,7 +204,6 @@ else:
     raise ValueError("Failed to run.")
 
 # ### Load SFR formated water balance output into pandas dataframe using the `SfrFile` class
-# * requires the **pandas** library
 
 sfr_outfile = os.path.join(
     "..", "..", "examples", "data", "sfr_examples", "test1ss.flw"

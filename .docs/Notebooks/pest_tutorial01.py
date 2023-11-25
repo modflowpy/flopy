@@ -33,8 +33,8 @@ except:
     import flopy
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"flopy version: {flopy.__version__}")
 # -
 
 # This notebook will work with a simple model using the dimensions below
@@ -87,7 +87,7 @@ tw.write_template()
 
 # At this point, the lpf template file will have been created.  The following block will print the template file.
 
-lines = open(os.path.join(workspace, "mymodel.lpf.tpl"), "r").readlines()
+lines = open(os.path.join(workspace, "mymodel.lpf.tpl")).readlines()
 for l in lines:
     print(l.strip())
 
@@ -114,7 +114,7 @@ tw = flopy.pest.templatewriter.TemplateWriter(m, [p])
 tw.write_template()
 # -
 
-lines = open(os.path.join(workspace, "mymodel.lpf.tpl"), "r").readlines()
+lines = open(os.path.join(workspace, "mymodel.lpf.tpl")).readlines()
 for l in lines:
     print(l.strip())
 
@@ -160,7 +160,7 @@ tw = flopy.pest.templatewriter.TemplateWriter(m, plist)
 tw.write_template()
 
 # Print contents of template file
-lines = open(os.path.join(workspace, "mymodel.lpf.tpl"), "r").readlines()
+lines = open(os.path.join(workspace, "mymodel.lpf.tpl")).readlines()
 for l in lines:
     print(l.strip())
 
@@ -210,7 +210,7 @@ tw = flopy.pest.TemplateWriter(m, plist)
 tw.write_template()
 
 # Print the results
-lines = open(os.path.join(workspace, "mymodel.rch.tpl"), "r").readlines()
+lines = open(os.path.join(workspace, "mymodel.rch.tpl")).readlines()
 for l in lines:
     print(l.strip())
 
@@ -260,7 +260,7 @@ tw = flopy.pest.templatewriter.TemplateWriter(m, plist)
 tw.write_template()
 
 # Print the results
-lines = open(os.path.join(workspace, "mymodel.rch.tpl"), "r").readlines()
+lines = open(os.path.join(workspace, "mymodel.rch.tpl")).readlines()
 for l in lines:
     print(l.strip())
 # -

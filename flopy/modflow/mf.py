@@ -278,7 +278,18 @@ class Modflow(BaseModel):
             ibound = self.bas6.ibound.array
         else:
             ibound = None
-
+        # take the first non-None entry
+        crs = (
+            self._modelgrid.crs
+            or self._modelgrid.proj4
+            or self._modelgrid.epsg
+        )
+        common_kwargs = {
+            "crs": crs,
+            "xoff": self._modelgrid.xoffset,
+            "yoff": self._modelgrid.yoffset,
+            "angrot": self._modelgrid.angrot,
+        }
         if self.get_package("disu") is not None:
             # build unstructured grid
             self._modelgrid = UnstructuredGrid(
@@ -292,12 +303,9 @@ class Modflow(BaseModel):
                 botm=self.disu.bot.array,
                 idomain=ibound,
                 lenuni=self.disu.lenuni,
-                crs=self._modelgrid.crs,
-                xoff=self._modelgrid.xoffset,
-                yoff=self._modelgrid.yoffset,
-                angrot=self._modelgrid.angrot,
                 iac=self.disu.iac.array,
                 ja=self.disu.ja.array,
+                **common_kwargs,
             )
             print(
                 "WARNING: Model grid functionality limited for unstructured "
@@ -312,12 +320,9 @@ class Modflow(BaseModel):
                 self.dis.botm.array,
                 ibound,
                 self.dis.lenuni,
-                crs=self._modelgrid.crs,
-                xoff=self._modelgrid.xoffset,
-                yoff=self._modelgrid.yoffset,
-                angrot=self._modelgrid.angrot,
                 nlay=self.dis.nlay,
                 laycbd=self.dis.laycbd.array,
+                **common_kwargs,
             )
 
         # resolve offsets
@@ -337,7 +342,7 @@ class Modflow(BaseModel):
             xoff,
             yoff,
             self._modelgrid.angrot,
-            self._modelgrid.crs,
+            self._modelgrid.crs or self._modelgrid.epsg,
         )
         self._mg_resync = not self._modelgrid.is_complete
         return self._modelgrid
@@ -751,14 +756,10 @@ class Modflow(BaseModel):
         # update the modflow version
         ml.set_version(version)
 
-        # Impending deprecation warning to switch to using
-        # flopy.mfusg.MfUsg() instead of flopy.modflow.Modflow()
+        # DEPRECATED since version 3.3.4
         if ml.version == "mfusg":
-            warnings.warn(
-                "flopy.modflow.Modflow() for mfusg models has been deprecated, "
-                " and will be removed in the next release. Please switch to using"
-                " flopy.mfusg.MfUsg() instead.",
-                DeprecationWarning,
+            raise ValueError(
+                "flopy.modflow.Modflow no longer supports mfusg; use flopy.mfusg.MfUsg() instead"
             )
 
         # reset unit number for glo file

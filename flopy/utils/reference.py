@@ -1,9 +1,6 @@
-"""
-Module spatial referencing for flopy model objects
+"""Temporal referencing for flopy model objects."""
 
-"""
 __all__ = ["TemporalReference"]
-# all other classes and methods in this module are deprecated
 
 
 class TemporalReference:

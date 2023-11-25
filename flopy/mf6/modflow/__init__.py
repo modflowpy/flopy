@@ -58,6 +58,7 @@ from .mfims import ModflowIms
 from .mfmvr import ModflowMvr
 from .mfmvt import ModflowMvt
 from .mfnam import ModflowNam
+from .mfsimulation import MFSimulation
 from .mftdis import ModflowTdis
 from .mfutlats import ModflowUtlats
 from .mfutllaktab import ModflowUtllaktab

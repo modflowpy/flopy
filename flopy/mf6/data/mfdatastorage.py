@@ -1569,25 +1569,35 @@ class DataStorage:
             self._verify_list(new_data)
         return new_data
 
+    def _get_cellid_size(self, data_item_name):
+        model_num = DatumUtil.cellid_model_num(
+            data_item_name,
+            self.data_dimensions.structure.model_data,
+            self.data_dimensions.package_dim.model_dim,
+        )
+        model_grid = self.data_dimensions.get_model_grid(model_num=model_num)
+        return model_grid.get_num_spatial_coordinates()
+
     def make_tuple_cellids(self, data):
         # convert cellids from individual layer, row, column fields into
         # tuples (layer, row, column)
-        data_dim = self.data_dimensions
-        model_grid = data_dim.get_model_grid()
-        cellid_size = model_grid.get_num_spatial_coordinates()
-
         new_data = []
         current_cellid = ()
         for line in data:
+            data_idx = 0
             new_line = []
             for item, is_cellid in zip(line, self.recarray_cellid_list_ex):
                 if is_cellid:
+                    cellid_size = self._get_cellid_size(
+                        self._recarray_type_list[data_idx][0],
+                    )
                     current_cellid += (item,)
                     if len(current_cellid) == cellid_size:
                         new_line.append(current_cellid)
                         current_cellid = ()
                 else:
                     new_line.append(item)
+                    data_idx += 1
             new_data.append(tuple(new_line))
         return new_data
 
@@ -2092,14 +2102,14 @@ class DataStorage:
                 return False, True
         return False, False
 
-    def _validate_cellid(self, arr_line, data_index):
+    def _validate_cellid(self, arr_line, data_index, data_item):
         if not self.data_dimensions.structure.model_data:
             # not model data so this is not a cell id
             return False
         if arr_line is None:
             return False
+        cellid_size = self._get_cellid_size(data_item.name)
         model_grid = self.data_dimensions.get_model_grid()
-        cellid_size = model_grid.get_num_spatial_coordinates()
         if cellid_size + data_index > len(arr_line):
             return False
         for index, dim_size in zip(
@@ -2158,136 +2168,28 @@ class DataStorage:
         return multiplier, print_format
 
     def process_open_close_line(self, arr_line, layer, store=True):
-        # process open/close line
-        index = 2
-        if self._data_type == DatumType.integer:
-            multiplier = 1
-        else:
-            multiplier = 1.0
-        print_format = None
-        binary = False
-        data_file = None
-        data = None
-
         data_dim = self.data_dimensions
-        if isinstance(arr_line, list):
-            if len(arr_line) < 2 and store:
-                message = (
-                    'Data array "{}" contains a OPEN/CLOSE '
-                    "that is not followed by a file. {}".format(
-                        data_dim.structure.name, data_dim.structure.path
-                    )
-                )
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(
-                    self.data_dimensions.structure.get_model(),
-                    self.data_dimensions.structure.get_package(),
-                    self.data_dimensions.structure.path,
-                    "processing open/close line",
-                    data_dim.structure.name,
-                    inspect.stack()[0][3],
-                    type_,
-                    value_,
-                    traceback_,
-                    message,
-                    self._simulation_data.debug,
-                )
-            while index < len(arr_line):
-                if isinstance(arr_line[index], str):
-                    word = arr_line[index].lower()
-                    if word == "factor" and index + 1 < len(arr_line):
-                        try:
-                            multiplier = convert_data(
-                                arr_line[index + 1],
-                                self.data_dimensions,
-                                self._data_type,
-                            )
-                        except Exception as ex:
-                            message = (
-                                "Data array {} contains an OPEN/CLOSE "
-                                "with an invalid multiplier following "
-                                'the "factor" keyword.'
-                                ".".format(data_dim.structure.name)
-                            )
-                            type_, value_, traceback_ = sys.exc_info()
-                            raise MFDataException(
-                                self.data_dimensions.structure.get_model(),
-                                self.data_dimensions.structure.get_package(),
-                                self.data_dimensions.structure.path,
-                                "processing open/close line",
-                                data_dim.structure.name,
-                                inspect.stack()[0][3],
-                                type_,
-                                value_,
-                                traceback_,
-                                message,
-                                self._simulation_data.debug,
-                                ex,
-                            )
-                        index += 2
-                    elif word == "iprn" and index + 1 < len(arr_line):
-                        print_format = arr_line[index + 1]
-                        index += 2
-                    elif word == "data" and index + 1 < len(arr_line):
-                        data = arr_line[index + 1]
-                        index += 2
-                    elif word == "binary" or word == "(binary)":
-                        binary = True
-                        index += 1
-                    else:
-                        break
-                else:
-                    break
-                # save comments
-            if index < len(arr_line):
-                self.layer_storage[layer].comments = MFComment(
-                    " ".join(arr_line[index:]),
-                    self.data_dimensions.structure.path,
-                    self._simulation_data,
-                    layer,
-                )
-            if arr_line[0].lower() == "open/close":
-                data_file = clean_filename(arr_line[1])
-            else:
-                data_file = clean_filename(arr_line[0])
-        elif isinstance(arr_line, dict):
-            for key, value in arr_line.items():
-                if key.lower() == "factor":
-                    try:
-                        multiplier = convert_data(
-                            value, self.data_dimensions, self._data_type
-                        )
-                    except Exception as ex:
-                        message = (
-                            "Data array {} contains an OPEN/CLOSE "
-                            "with an invalid factor following the "
-                            '"factor" keyword.'
-                            ".".format(data_dim.structure.name)
-                        )
-                        type_, value_, traceback_ = sys.exc_info()
-                        raise MFDataException(
-                            self.data_dimensions.structure.get_model(),
-                            self.data_dimensions.structure.get_package(),
-                            self.data_dimensions.structure.path,
-                            "processing open/close line",
-                            data_dim.structure.name,
-                            inspect.stack()[0][3],
-                            type_,
-                            value_,
-                            traceback_,
-                            message,
-                            self._simulation_data.debug,
-                            ex,
-                        )
-                if key.lower() == "iprn":
-                    print_format = value
-                if key.lower() == "binary":
-                    binary = bool(value)
-                if key.lower() == "data":
-                    data = value
-            if "filename" in arr_line:
-                data_file = clean_filename(arr_line["filename"])
-
+        (
+            multiplier,
+            print_format,
+            binary,
+            data_file,
+            data,
+            comment,
+        ) = mfdatautil.process_open_close_line(
+            arr_line,
+            data_dim,
+            self._data_type,
+            self._simulation_data.debug,
+            store,
+        )
+        if comment is not None:
+            self.layer_storage[layer].comments = MFComment(
+                comment,
+                self.data_dimensions.structure.path,
+                self._simulation_data,
+                layer,
+            )
         if data_file is None:
             message = (
                 "Data array {} contains an OPEN/CLOSE without a "
@@ -2353,9 +2255,8 @@ class DataStorage:
                         # this is a cell id.  verify that it contains the
                         # correct number of integers
                         if cellid_size is None:
-                            model_grid = datadim.get_model_grid()
-                            cellid_size = (
-                                model_grid.get_num_spatial_coordinates()
+                            cellid_size = self._get_cellid_size(
+                                self._recarray_type_list[index][0]
                             )
                         if (
                             cellid_size != 1
@@ -2935,9 +2836,7 @@ class DataStorage:
                             ):
                                 # A cellid is a single entry (tuple) in the
                                 # recarray.  Adjust dimensions accordingly.
-                                data_dim = self.data_dimensions
-                                grid = data_dim.get_model_grid()
-                                size = grid.get_num_spatial_coordinates()
+                                size = self._get_cellid_size(data_item.name)
                                 data_item.remove_cellid(resolved_shape, size)
                         if not data_item.optional or not min_size:
                             for index in range(0, resolved_shape[0]):
@@ -2974,8 +2873,7 @@ class DataStorage:
         if iscellid and self._model_or_sim.model_type is not None:
             # write each part of the cellid out as a separate entry
             # to _recarray_list_list_ex
-            model_grid = self.data_dimensions.get_model_grid()
-            cellid_size = model_grid.get_num_spatial_coordinates()
+            cellid_size = self._get_cellid_size(name)
             # determine header for different grid types
             if cellid_size == 1:
                 self._do_ex_list_append(name, int, iscellid)

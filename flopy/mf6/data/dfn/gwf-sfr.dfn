@@ -1,5 +1,6 @@
 # --------------------- gwf sfr options ---------------------
 # flopy multi-package
+# package-type advanced-stress-package
 
 block options
 name auxiliary
@@ -342,21 +343,21 @@ description integer value specifying the number of stream reaches.  There must b
 
 block packagedata
 name packagedata
-type recarray rno cellid rlen rwid rgrd rtp rbth rhk man ncon ustrf ndv aux boundname
+type recarray ifno cellid rlen rwid rgrd rtp rbth rhk man ncon ustrf ndv aux boundname
 shape (maxbound)
 reader urword
 longname
 description
 
 block packagedata
-name rno
+name ifno
 type integer
 shape
 tagged false
 in_record true
 reader urword
 longname reach number for this entry
-description integer value that defines the reach number associated with the specified PACKAGEDATA data on the line. RNO must be greater than zero and less than or equal to NREACHES. Reach information must be specified for every reach or the program will terminate with an error.  The program will also terminate with an error if information for a reach is specified more than once.
+description integer value that defines the feature (reach) number associated with the specified PACKAGEDATA data on the line. IFNO must be greater than zero and less than or equal to NREACHES. Reach information must be specified for every reach or the program will terminate with an error.  The program will also terminate with an error if information for a reach is specified more than once.
 numeric_index true
 
 block packagedata
@@ -367,7 +368,7 @@ tagged false
 in_record true
 reader urword
 longname cell identifier
-description The keyword `NONE' must be specified for reaches that are not connected to an underlying GWF cell. The keyword `NONE' is used for reaches that are in cells that have IDOMAIN values less than one or are in areas not covered by the GWF model grid. Reach-aquifer flow is not calculated if the keyword `NONE' is specified.
+description is the cell identifier, and depends on the type of grid that is used for the simulation. For a structured grid that uses the DIS input file, CELLID is the layer, row, and column. For a grid that uses the DISV input file, CELLID is the layer and CELL2D number. If the model uses the unstructured discretization (DISU) input file, CELLID is the node number for the cell. For reaches that are not connected to an underlying GWF cell, a zero should be specified for each grid dimension. For example, for a DIS grid a CELLID of 0 0 0 should be specified. Reach-aquifer flow is not calculated for unconnected reaches. The keyword NONE can be still be specified to identify unconnected reaches for backward compatibility with previous versions of MODFLOW 6 but eventually NONE will be deprecated and will cause MODFLOW 6 to terminate with an error. 
 
 block packagedata
 name rlen
@@ -417,7 +418,7 @@ tagged false
 in_record true
 reader urword
 longname streambed thickness
-description real value that defines the thickness of the reach streambed. RBTH can be any value if CELLID is `NONE'. Otherwise, RBTH must be greater than zero.
+description real value that defines the thickness of the reach streambed. RBTH can be any value if the reach is not connected to an underlying GWF cell. Otherwise, RBTH must be greater than zero.
 
 block packagedata
 name rhk
@@ -427,7 +428,7 @@ tagged false
 in_record true
 reader urword
 longname
-description real value that defines the hydraulic conductivity of the reach streambed. RHK can be any positive value if CELLID is `NONE'. Otherwise, RHK must be greater than zero.
+description real value that defines the hydraulic conductivity of the reach streambed. RHK can be any positive value if the reach is not connected to an underlying GWF cell. Otherwise, RHK must be greater than zero.
 
 block packagedata
 name man
@@ -448,7 +449,7 @@ tagged false
 in_record true
 reader urword
 longname number of connected reaches
-description integer value that defines the number of reaches connected to the reach.  If a value of zero is specified for NCON an entry for RNO is still required in the subsequent CONNECTIONDATA block.
+description integer value that defines the number of reaches connected to the reach.  If a value of zero is specified for NCON an entry for IFNO is still required in the subsequent CONNECTIONDATA block.
 
 block packagedata
 name ustrf
@@ -498,7 +499,7 @@ description REPLACE boundname {'{#1}': 'stream reach'}
 
 block crosssections
 name crosssections
-type recarray rno tab6 filein tab6_filename
+type recarray ifno tab6 filein tab6_filename
 shape
 valid
 optional false
@@ -507,14 +508,14 @@ longname
 description
 
 block crosssections
-name rno
+name ifno
 type integer
 shape
 tagged false
 in_record true
 reader urword
 longname reach number for this entry
-description integer value that defines the reach number associated with the specified cross-section table file on the line. RNO must be greater than zero and less than or equal to NREACHES. The program will also terminate with an error if table information for a reach is specified more than once.
+description integer value that defines the feature (reach) number associated with the specified cross-section table file on the line. IFNO must be greater than zero and less than or equal to NREACHES. The program will also terminate with an error if table information for a reach is specified more than once.
 numeric_index true
 
 block crosssections
@@ -554,27 +555,27 @@ description character string that defines the path and filename for the file con
 
 block connectiondata
 name connectiondata
-type recarray rno ic
+type recarray ifno ic
 shape (maxbound)
 reader urword
 longname
 description
 
 block connectiondata
-name rno
+name ifno
 type integer
 shape
 tagged false
 in_record true
 reader urword
 longname reach number for this entry
-description integer value that defines the reach number associated with the specified CONNECTIONDATA data on the line. RNO must be greater than zero and less than or equal to NREACHES. Reach connection information must be specified for every reach or the program will terminate with an error.  The program will also terminate with an error if connection information for a reach is specified more than once.
+description integer value that defines the feature (reach) number associated with the specified CONNECTIONDATA data on the line. IFNO must be greater than zero and less than or equal to NREACHES. Reach connection information must be specified for every reach or the program will terminate with an error.  The program will also terminate with an error if connection information for a reach is specified more than once.
 numeric_index true
 
 block connectiondata
 name ic
 type integer
-shape (ncon(rno))
+shape (ncon(ifno))
 tagged false
 in_record true
 reader urword
@@ -590,21 +591,21 @@ support_negative_index true
 
 block diversions
 name diversions
-type recarray rno idv iconr cprior
+type recarray ifno idv iconr cprior
 shape (maxbound)
 reader urword
 longname
 description
 
 block diversions
-name rno
+name ifno
 type integer
 shape
 tagged false
 in_record true
 reader urword
 longname reach number for this entry
-description integer value that defines the reach number associated with the specified DIVERSIONS data on the line. RNO must be greater than zero and less than or equal to NREACHES.  Reach diversion information must be specified for every reach with a NDV value greater than 0 or the program will terminate with an error.  The program will also terminate with an error if diversion information for a given reach diversion is specified more than once.
+description integer value that defines the feature (reach) number associated with the specified DIVERSIONS data on the line. IFNO must be greater than zero and less than or equal to NREACHES.  Reach diversion information must be specified for every reach with a NDV value greater than 0 or the program will terminate with an error.  The program will also terminate with an error if diversion information for a given reach diversion is specified more than once.
 numeric_index true
 
 block diversions
@@ -615,7 +616,7 @@ tagged false
 in_record true
 reader urword
 longname downstream diversion number
-description integer value that defines the downstream diversion number for the diversion for reach RNO. IDV must be greater than zero and less than or equal to NDV for reach RNO.
+description integer value that defines the downstream diversion number for the diversion for reach IFNO. IDV must be greater than zero and less than or equal to NDV for reach IFNO.
 numeric_index true
 
 block diversions
@@ -626,7 +627,7 @@ tagged false
 in_record true
 reader urword
 longname downstream reach number for diversion
-description integer value that defines the downstream reach that will receive the diverted water. IDV must be greater than zero and less than or equal to NREACHES. Furthermore, reach  ICONR must be a downstream connection for reach RNO.
+description integer value that defines the downstream reach that will receive the diverted water. IDV must be greater than zero and less than or equal to NREACHES. Furthermore, reach  ICONR must be a downstream connection for reach IFNO.
 numeric_index true
 
 block diversions
@@ -637,7 +638,7 @@ tagged false
 in_record true
 reader urword
 longname iprior code
-description character string value that defines the the prioritization system for the diversion, such as when insufficient water is available to meet all diversion stipulations, and is used in conjunction with the value of FLOW value specified in the STRESS\_PERIOD\_DATA section. Available diversion options include:  (1) CPRIOR = `FRACTION', then the amount of the diversion is computed as a fraction of the streamflow leaving reach RNO ($Q_{DS}$); in this case, 0.0 $\le$ DIVFLOW $\le$ 1.0.  (2) CPRIOR = `EXCESS', a diversion is made only if $Q_{DS}$ for reach RNO exceeds the value of DIVFLOW. If this occurs, then the quantity of water diverted is the excess flow ($Q_{DS} -$ DIVFLOW) and $Q_{DS}$ from reach RNO is set equal to DIVFLOW. This represents a flood-control type of diversion, as described by Danskin and Hanson (2002). (3) CPRIOR = `THRESHOLD', then if $Q_{DS}$ in reach RNO is less than the specified diversion flow DIVFLOW, no water is diverted from reach RNO. If $Q_{DS}$ in reach RNO is greater than or equal to DIVFLOW, DIVFLOW is diverted and $Q_{DS}$ is set to the remainder ($Q_{DS} -$ DIVFLOW)). This approach assumes that once flow in the stream is sufficiently low, diversions from the stream cease, and is the `priority' algorithm that originally was programmed into the STR1 Package (Prudic, 1989).  (4) CPRIOR = `UPTO' -- if $Q_{DS}$ in reach RNO is greater than or equal to the specified diversion flow DIVFLOW, $Q_{DS}$ is reduced by DIVFLOW. If $Q_{DS}$ in reach RNO is less than DIVFLOW, DIVFLOW is set to $Q_{DS}$ and there will be no flow available for reaches connected to downstream end of reach RNO.
+description character string value that defines the the prioritization system for the diversion, such as when insufficient water is available to meet all diversion stipulations, and is used in conjunction with the value of FLOW value specified in the STRESS\_PERIOD\_DATA section. Available diversion options include:  (1) CPRIOR = `FRACTION', then the amount of the diversion is computed as a fraction of the streamflow leaving reach IFNO ($Q_{DS}$); in this case, 0.0 $\le$ DIVFLOW $\le$ 1.0.  (2) CPRIOR = `EXCESS', a diversion is made only if $Q_{DS}$ for reach IFNO exceeds the value of DIVFLOW. If this occurs, then the quantity of water diverted is the excess flow ($Q_{DS} -$ DIVFLOW) and $Q_{DS}$ from reach IFNO is set equal to DIVFLOW. This represents a flood-control type of diversion, as described by Danskin and Hanson (2002). (3) CPRIOR = `THRESHOLD', then if $Q_{DS}$ in reach IFNO is less than the specified diversion flow DIVFLOW, no water is diverted from reach IFNO. If $Q_{DS}$ in reach IFNO is greater than or equal to DIVFLOW, DIVFLOW is diverted and $Q_{DS}$ is set to the remainder ($Q_{DS} -$ DIVFLOW)). This approach assumes that once flow in the stream is sufficiently low, diversions from the stream cease, and is the `priority' algorithm that originally was programmed into the STR1 Package (Prudic, 1989).  (4) CPRIOR = `UPTO' -- if $Q_{DS}$ in reach IFNO is greater than or equal to the specified diversion flow DIVFLOW, $Q_{DS}$ is reduced by DIVFLOW. If $Q_{DS}$ in reach IFNO is less than DIVFLOW, DIVFLOW is set to $Q_{DS}$ and there will be no flow available for reaches connected to downstream end of reach IFNO.
 
 
 # --------------------- gwf sfr period ---------------------
@@ -657,21 +658,21 @@ description REPLACE iper {}
 
 block period
 name perioddata
-type recarray rno sfrsetting
+type recarray ifno sfrsetting
 shape
 reader urword
 longname
 description
 
 block period
-name rno
+name ifno
 type integer
 shape
 tagged false
 in_record true
 reader urword
 longname reach number for this entry
-description integer value that defines the reach number associated with the specified PERIOD data on the line. RNO must be greater than zero and less than or equal to NREACHES.
+description integer value that defines the feature (reach) number associated with the specified PERIOD data on the line. IFNO must be greater than zero and less than or equal to NREACHES.
 numeric_index true
 
 block period
@@ -787,7 +788,7 @@ tagged false
 in_record true
 reader urword
 longname diversion number
-description an integer value specifying which diversion of reach RNO that DIVFLOW is being specified for.  Must be less or equal to ndv for the current reach (RNO).
+description an integer value specifying which diversion of reach IFNO that DIVFLOW is being specified for.  Must be less or equal to ndv for the current reach (IFNO).
 numeric_index true
 
 block period

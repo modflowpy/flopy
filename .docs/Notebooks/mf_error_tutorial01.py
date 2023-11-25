@@ -30,7 +30,7 @@ except:
     import flopy
 
 print(sys.version)
-print("flopy version: {}".format(flopy.__version__))
+print(f"flopy version: {flopy.__version__}")
 # -
 
 # #### Set the working directory

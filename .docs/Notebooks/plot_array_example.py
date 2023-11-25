@@ -41,9 +41,9 @@ except:
     import flopy
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("matplotlib version: {}".format(mpl.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"matplotlib version: {mpl.__version__}")
+print(f"flopy version: {flopy.__version__}")
 
 # +
 # Set name of MODFLOW exe
@@ -82,10 +82,10 @@ if not success:
 # confirm that the model files have been created
 for f in files:
     if os.path.isfile(os.path.join(modelpth, f)):
-        msg = "Output file located: {}".format(f)
+        msg = f"Output file located: {f}"
         print(msg)
     else:
-        errmsg = "Error. Output file cannot be found: {}".format(f)
+        errmsg = f"Error. Output file cannot be found: {f}"
         print(errmsg)
 # -
 

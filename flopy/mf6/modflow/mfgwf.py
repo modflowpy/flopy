@@ -90,7 +90,6 @@ class ModflowGwf(mfmodel.MFModel):
         print_flows=None,
         save_flows=None,
         newtonoptions=None,
-        packages=None,
         **kwargs,
     ):
         super().__init__(
@@ -109,7 +108,12 @@ class ModflowGwf(mfmodel.MFModel):
         self.name_file.print_flows.set_data(print_flows)
         self.name_file.save_flows.set_data(save_flows)
         self.name_file.newtonoptions.set_data(newtonoptions)
-        self.name_file.packages.set_data(packages)
+
+        self.list = self.name_file.list
+        self.print_input = self.name_file.print_input
+        self.print_flows = self.name_file.print_flows
+        self.save_flows = self.name_file.save_flows
+        self.newtonoptions = self.name_file.newtonoptions
 
     @classmethod
     def load(
@@ -125,6 +129,7 @@ class ModflowGwf(mfmodel.MFModel):
         load_only=None,
     ):
         return mfmodel.MFModel.load_base(
+            cls,
             simulation,
             structure,
             modelname,

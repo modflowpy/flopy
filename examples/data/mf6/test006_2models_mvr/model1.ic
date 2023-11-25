@@ -4,7 +4,7 @@ end options
 
 BEGIN GRIDDATA
 strt
-INTERNAL  FACTOR         1.0           IPRN
+INTERNAL  FACTOR         1.0           IPRN 0
   1.0 1.0 1.0 1.0 1.0 1.0 0.0
   1.0 1.0 1.0 1.0 1.0 1.0 0.0
   1.0 1.0 1.0 1.0 1.0 1.0 0.0

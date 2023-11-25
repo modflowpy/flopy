@@ -3,11 +3,14 @@ import inspect
 import os
 import shutil
 from pathlib import Path
+from typing import Dict
 
 import numpy as np
+import pandas as pd
 import pytest
 from autotest.conftest import get_example_data_path
 from modflow_devtools.markers import excludes_platform, requires_exe
+from modflow_devtools.misc import has_pkg
 
 from flopy.discretization import StructuredGrid
 from flopy.mf6 import MFSimulation
@@ -28,6 +31,8 @@ from flopy.modflow import (
 from flopy.mt3d import Mt3dBtn, Mt3dms
 from flopy.seawat import Seawat
 from flopy.utils import Util2d
+
+_example_data_path = get_example_data_path()
 
 
 @pytest.fixture
@@ -74,6 +79,64 @@ def test_modflow_load(namfile, example_data_path):
     assert isinstance(model, Modflow)
     assert not model.load_fail
     assert model.model_ws == str(mpath)
+
+
+@pytest.mark.parametrize(
+    "path,expected",
+    [
+        pytest.param(
+            _example_data_path / "freyberg" / "freyberg.nam",
+            {
+                "crs": None,
+                "epsg": None,
+                "angrot": 0.0,
+                "xoffset": 0.0,
+                "yoffset": 0.0,
+            },
+            id="freyberg",
+        ),
+        pytest.param(
+            _example_data_path
+            / "freyberg_multilayer_transient"
+            / "freyberg.nam",
+            {
+                "proj4": "+proj=utm +zone=14 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
+                "angrot": 15.0,
+                "xoffset": 622241.1904510253,
+                "yoffset": 3343617.741737109,
+            },
+            id="freyberg_multilayer_transient",
+        ),
+        pytest.param(
+            _example_data_path
+            / "mt3d_test"
+            / "mfnwt_mt3dusgs"
+            / "sft_crnkNic"
+            / "CrnkNic.nam",
+            {
+                "epsg": 26916,
+                "angrot": 0.0,
+                "xoffset": 0.0,
+                "yoffset": 0.0,
+            },
+            id="CrnkNic",
+        ),
+    ],
+)
+def test_modflow_load_modelgrid(path, expected):
+    """Check modelgrid metadata from NAM file."""
+    model = Modflow.load(path.name, model_ws=path.parent, load_only=[])
+    modelgrid = model.modelgrid
+    for key, expected_value in expected.items():
+        if key == "proj4" and has_pkg("pyproj"):
+            # skip since pyproj will usually restructure proj4 attribute
+            # otherwise continue test without pyproj, as it should be preserved
+            continue
+        modelgrid_value = getattr(modelgrid, key)
+        if isinstance(modelgrid_value, float):
+            assert modelgrid_value == pytest.approx(expected_value), key
+        else:
+            assert modelgrid_value == expected_value, key
 
 
 def test_modflow_load_when_nam_dne():
@@ -200,7 +263,7 @@ def test_mt_modelgrid(function_tmpdir):
     assert np.array_equal(swt.modelgrid.idomain, ml.modelgrid.idomain)
 
 
-@requires_exe("mp7")
+@requires_exe("mp7", "mf2005")
 def test_exe_selection(example_data_path, function_tmpdir):
     model_path = example_data_path / "freyberg"
     namfile_path = model_path / "freyberg.nam"
@@ -311,8 +374,7 @@ def test_sr(function_tmpdir):
         raise AssertionError()
     if extents[3] != 12355:
         raise AssertionError()
-    if mm.modelgrid.crs.srs != "EPSG:26916":
-        raise AssertionError()
+    assert mm.modelgrid.epsg == 26916
 
     mm.dis.top = 5000
 
@@ -500,7 +562,7 @@ def test_namfile_readwrite(function_tmpdir, example_data_path):
         angrot=30,
     )
 
-    # test reading and writing of SR information to namfile
+    # test reading and writing of modelgrid information to namfile
     m.write_input()
     m2 = Modflow.load("junk.nam", model_ws=ws)
 
@@ -593,7 +655,7 @@ def test_read_usgs_model_reference(function_tmpdir, model_reference_path):
     m2 = Modflow.load("junk.nam", model_ws=ws)
     m2.modelgrid.read_usgs_model_reference_file(mrf_path)
 
-    assert m2.modelgrid.crs.to_epsg() == 26916
+    assert m2.modelgrid.epsg == 26916
     # have to delete this, otherwise it will mess up other tests
     to_del = glob.glob(f"{mrf_path}*")
     for f in to_del:
@@ -602,12 +664,12 @@ def test_read_usgs_model_reference(function_tmpdir, model_reference_path):
 
 
 def mf2005_model_namfiles():
-    path = get_example_data_path() / "mf2005_test"
+    path = _example_data_path / "mf2005_test"
     return [str(p) for p in path.glob("*.nam")]
 
 
 def parameters_model_namfiles():
-    path = get_example_data_path() / "parameters"
+    path = _example_data_path / "parameters"
     skip = ["twrip.nam", "twrip_upw.nam"]  # TODO: why do these fail?
     return [str(p) for p in path.glob("*.nam") if p.name not in skip]
 
@@ -795,15 +857,15 @@ def test_mflist_add_record():
     np.testing.assert_array_equal(wel.stress_period_data[1], check1)
 
 
-__mf2005_test_path = get_example_data_path() / "mf2005_test"
-__mf2005_namfiles = [
-    Path(__mf2005_test_path) / f
-    for f in __mf2005_test_path.rglob("*")
+_mf2005_test_path = _example_data_path / "mf2005_test"
+_mf2005_namfiles = [
+    Path(_mf2005_test_path) / f
+    for f in _mf2005_test_path.rglob("*")
     if f.suffix == ".nam"
 ]
 
 
-@pytest.mark.parametrize("namfile", __mf2005_namfiles)
+@pytest.mark.parametrize("namfile", _mf2005_namfiles)
 def test_checker_on_load(namfile):
     # load all of the models in the mf2005_test folder
     # model level checks are performed by default on load()
@@ -821,7 +883,7 @@ def test_checker_on_load(namfile):
 
 @pytest.mark.parametrize("str_path", [True, False])
 def test_manual_check(function_tmpdir, str_path):
-    namfile_path = __mf2005_namfiles[0]
+    namfile_path = _mf2005_namfiles[0]
     summary_path = function_tmpdir / "summary"
     model = Modflow.load(namfile_path, model_ws=namfile_path.parent)
     model.change_model_ws(function_tmpdir)
@@ -1227,7 +1289,91 @@ def test_load_with_list_reader(function_tmpdir):
     assert np.array_equal(originalwelra, m2.wel.stress_period_data[0])
 
 
-def get_basic_modflow_model(ws, name):
+@requires_exe("mf2005")
+@pytest.mark.parametrize(
+    "container",
+    [
+        str(np.recarray),
+        str(pd.DataFrame),
+        str(Dict[int, np.recarray]),
+        str(Dict[int, pd.DataFrame]),
+    ],
+)
+def test_pkg_data_containers(function_tmpdir, container):
+    """Test various containers for package data (list, ndarray, recarray, dataframe, dict of such)"""
+
+    name = "pkg_data"
+    ws = function_tmpdir
+    m = Modflow(name, model_ws=ws)
+    size = 100
+    nlay = 10
+    nper = 1
+
+    # grid discretization
+    dis = ModflowDis(
+        m,
+        nper=nper,
+        nlay=nlay,
+        nrow=size,
+        ncol=size,
+        top=nlay,
+        botm=list(range(nlay)),
+    )
+
+    # recharge pkg
+    rch = ModflowRch(
+        m, rech={k: 0.001 - np.cos(k) * 0.001 for k in range(nper)}
+    )
+
+    # well pkg, setup data per 'container' parameter
+    # to test support for various container types
+    ra = ModflowWel.get_empty(size**2)
+    ra_per = ra.copy()
+    ra_per["k"] = 1
+    ra_per["i"] = (
+        (np.ones((size, size)) * np.arange(size))
+        .transpose()
+        .ravel()
+        .astype(int)
+    )
+    ra_per["j"] = list(range(size)) * size
+    wel_dtype = np.dtype(
+        [
+            ("k", int),
+            ("i", int),
+            ("j", int),
+            ("flux", np.float32),
+        ]
+    )
+    df_per = pd.DataFrame(ra_per)
+    if "'numpy.recarray'" in container:
+        well_spd = ra_per
+    elif "'pandas.core.frame.DataFrame'" in container:
+        well_spd = df_per
+    elif "Dict[int, numpy.recarray]" in container:
+        well_spd = {}
+        well_spd[0] = ra_per
+    elif "Dict[int, pandas.core.frame.DataFrame]" in container:
+        well_spd = {}
+        well_spd[0] = df_per
+    wel = ModflowWel(m, stress_period_data=well_spd)
+
+    # basic pkg
+    bas = ModflowBas(m)
+
+    # solver
+    pcg = ModflowPcg(m)
+
+    # output control pkg
+    oc = ModflowOc(m)
+
+    # write and run the model
+    m.write_input()
+    success, _ = m.run_model(silent=False)
+    assert success
+
+
+def get_perftest_model(ws, name):
     m = Modflow(name, model_ws=ws)
 
     size = 100
@@ -1278,20 +1424,20 @@ def get_basic_modflow_model(ws, name):
 @pytest.mark.slow
 def test_model_init_time(function_tmpdir, benchmark):
     name = inspect.getframeinfo(inspect.currentframe()).function
-    benchmark(lambda: get_basic_modflow_model(ws=function_tmpdir, name=name))
+    benchmark(lambda: get_perftest_model(ws=function_tmpdir, name=name))
 
 
 @pytest.mark.slow
 def test_model_write_time(function_tmpdir, benchmark):
     name = inspect.getframeinfo(inspect.currentframe()).function
-    model = get_basic_modflow_model(ws=function_tmpdir, name=name)
+    model = get_perftest_model(ws=function_tmpdir, name=name)
     benchmark(lambda: model.write_input())
 
 
 @pytest.mark.slow
 def test_model_load_time(function_tmpdir, benchmark):
     name = inspect.getframeinfo(inspect.currentframe()).function
-    model = get_basic_modflow_model(ws=function_tmpdir, name=name)
+    model = get_perftest_model(ws=function_tmpdir, name=name)
     model.write_input()
     benchmark(
         lambda: Modflow.load(

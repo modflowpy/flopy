@@ -117,10 +117,7 @@ class ModflowGwfchd(mfpackage.MFPackage):
     dfn_file_name = "gwf-chd.dfn"
 
     dfn = [
-        [
-            "header",
-            "multi-package",
-        ],
+        ["header", "multi-package", "package-type stress-package"],
         [
             "block options",
             "name auxiliary",

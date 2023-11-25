@@ -37,8 +37,8 @@ except:
     import flopy
 
 print(sys.version)
-print("numpy version: {}".format(np.__version__))
-print("flopy version: {}".format(flopy.__version__))
+print(f"numpy version: {np.__version__}")
+print(f"flopy version: {flopy.__version__}")
 # -
 
 # First, we will create a simple model structure
@@ -156,8 +156,8 @@ swt.write_input()
 
 # And finally, modify the ```vdf``` package to fix ```indense```.
 
-fname = modelname + ".vdf"
-f = open(os.path.join(model_ws, fname), "r")
+fname = f"{modelname}.vdf"
+f = open(os.path.join(model_ws, fname))
 lines = f.readlines()
 f.close()
 f = open(os.path.join(model_ws, fname), "w")

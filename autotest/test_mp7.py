@@ -254,7 +254,6 @@ def test_default_modpath(ex01b_mf6_model):
 
 
 @requires_exe("mf6", "mp7")
-@requires_pkg("pandas")
 def test_faceparticles_is1(ex01b_mf6_model):
     sim, function_tmpdir = ex01b_mf6_model
 
@@ -441,7 +440,6 @@ def test_facenode_is2a(ex01b_mf6_model):
 
 
 @requires_exe("mf6", "mp7")
-@requires_pkg("pandas")
 def test_cellparticles_is1(ex01b_mf6_model):
     sim, function_tmpdir = ex01b_mf6_model
     grid = sim.get_model(ex01b_mf6_model_name).modelgrid
@@ -817,7 +815,6 @@ def test_pathline_output(function_tmpdir):
     assert maxid0 == maxid1, msg
 
 
-@requires_pkg("pandas")
 @requires_exe("mf2005", "mf6", "mp7")
 def test_endpoint_output(function_tmpdir):
     case_mf2005 = Mp7Cases.mp7_mf2005(function_tmpdir)

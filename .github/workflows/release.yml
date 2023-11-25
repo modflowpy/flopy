@@ -20,7 +20,7 @@ jobs:
     steps:
 
       - name: Checkout release branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -63,15 +63,12 @@ jobs:
           python -c "import flopy; print(f'FloPy version: {flopy.__version__}')"
           echo "version=${ver#"v"}" >> $GITHUB_OUTPUT
 
-      - name: Update FloPy packages
-        run: python -c 'import flopy; flopy.mf6.utils.generate_classes(branch="master", backup=False)'
-
       - name: Lint Python files
         run: python scripts/pull_request_prepare.py
 
       - name: Run tests
         working-directory: autotest
-        run: pytest -v -m="not example and not regression" -n=auto --durations=0 --keep-failed=.failed
+        run: pytest -v -m="not example and not regression" -n=auto --durations=0 --keep-failed=.failed --dist loadfile
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -105,9 +102,13 @@ jobs:
           sed -i 's/#### Refactor/#### Refactoring/' CHANGELOG.md
           sed -i 's/#### Test/#### Testing/' CHANGELOG.md
           
-          # prepend changelog to docs/version_changes.md
-          cat CHANGELOG.md docs/version_changes.md > version_changes.md
-          sudo mv version_changes.md docs/version_changes.md
+          # prepend release changelog to cumulative changelog
+          clog=".docs/md/version_changes.md"
+          temp="version_changes.md"
+          echo "$(tail -n +2 $clog)" > $clog
+          cat CHANGELOG.md $clog > $temp
+          sudo mv $temp $clog
+          sed -i '1i # Changelog' $clog
 
       - name: Upload changelog
         uses: actions/upload-artifact@v3
@@ -139,7 +140,7 @@ jobs:
     steps:
 
       - name: Checkout release branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.ref_name }}
 
@@ -168,7 +169,7 @@ jobs:
     steps:
 
       - name: Checkout master branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: master
 
@@ -205,7 +206,7 @@ jobs:
     steps:
 
       - name: Checkout master branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: master
 
@@ -236,4 +237,4 @@ jobs:
           path: dist
 
       - name: Publish to PyPI
-        run: python -m twine upload dist/*
+        uses: pypa/gh-action-pypi-publish@release/v1

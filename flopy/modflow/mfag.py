@@ -11,6 +11,7 @@ Additional information for this MODFLOW package can be found at
 import os
 
 import numpy as np
+import pandas as pd
 
 from ..pakbase import Package
 from ..utils.flopy_io import multi_line_strip
@@ -29,9 +30,9 @@ class ModflowAg(Package):
         model object
     options : flopy.utils.OptionBlock object
         option block object
-    time_series : np.recarray
+    time_series : np.recarray or pd.DataFrame
         numpy recarray for the time series block
-    well_list : np.recarray
+    well_list : np.recarray or pd.DataFrame
         recarray of the well_list block
     irrdiversion : dict {per: np.recarray}
         dictionary of the irrdiversion block
@@ -269,8 +270,16 @@ class ModflowAg(Package):
         else:
             self.options = OptionBlock("", ModflowAg)
 
-        self.time_series = time_series
-        self.well_list = well_list
+        self.time_series = (
+            time_series.to_records(index=False)
+            if isinstance(time_series, pd.DataFrame)
+            else time_series
+        )
+        self.well_list = (
+            well_list.to_records(index=False)
+            if isinstance(well_list, pd.DataFrame)
+            else well_list
+        )
         self.irrdiversion = irrdiversion
         self.irrwell = irrwell
         self.supwell = supwell

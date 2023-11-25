@@ -95,3 +95,6 @@ autotest/.noseids
 **.env
 venv
 app
+
+# IDE files
+.vscode
