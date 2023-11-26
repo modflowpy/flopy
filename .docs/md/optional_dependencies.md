@@ -1,6 +1,6 @@
 # Optional dependencies
 
-Additional dependencies to use optional FloPy helper methods are listed below. These may be installed with `pip install flopy[optional]`.
+Dependencies for optional features are listed below. These may be installed with `pip install flopy[optional]`.
 
 | Method                                                                               | Python Package                                                           |
 |:-------------------------------------------------------------------------------------|:-------------------------------------------------------------------------|
