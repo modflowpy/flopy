@@ -9,6 +9,7 @@ from matplotlib.axes import Axes
 from modflow_devtools.markers import requires_exe
 
 import flopy
+from flopy.modflow import Modflow
 from flopy.utils import (
     BinaryHeader,
     CellBudgetFile,
