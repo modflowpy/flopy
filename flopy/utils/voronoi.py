@@ -1,3 +1,6 @@
+from math import sqrt
+from typing import Iterator, Tuple
+
 import numpy as np
 
 from .cvfdutil import get_disv_gridprops
@@ -5,7 +8,9 @@ from .geometry import point_in_polygon
 from .utl_import import import_optional_dependency
 
 
-def get_sorted_vertices(icell_vertices, vertices):
+def get_sorted_vertices(
+    icell_vertices, vertices, verbose=False
+) -> Iterator[Tuple[float, int]]:
     centroid = vertices[icell_vertices].mean(axis=0)
     tlist = []
     for i, iv in enumerate(icell_vertices):
@@ -13,8 +18,39 @@ def get_sorted_vertices(icell_vertices, vertices):
         dx = x - centroid[0]
         dy = y - centroid[1]
         tlist.append((np.arctan2(-dy, dx), iv))
+
+    # convert to dictionary and back again to weed out duplicate angles,
+    # which it's assumed indicate vertices with duplicate coordinates
+    tlist = list(dict(tlist).items())
     tlist.sort()
-    return [iv for angl, iv in tlist]
+
+    # weed out (near-)180-degree-angle vertices, which presumably should
+    # occur only along the outer boundary of the domain
+    for i, (angl1, iv1) in enumerate(tlist):
+        (angl0, iv0) = tlist[(i - 1) % len(tlist)]
+        (angl2, iv2) = tlist[(i + 1) % len(tlist)]
+        x0, y0 = vertices[iv0]
+        x1, y1 = vertices[iv1]
+        x2, y2 = vertices[iv2]
+        s0x = x0 - x1
+        s0y = y0 - y1
+        s0mag = sqrt(s0x * s0x + s0y * s0y)
+        s2x = x2 - x1
+        s2y = y2 - y1
+        s2mag = sqrt(s2x * s2x + s2y * s2y)
+        sinang = (s0x * s2y - s0y * s2x) / (s0mag * s2mag)
+
+        # check for near-180 angle by checking for a small magnitude for
+        # sine of the angle and a negative dot product for the two edge vectors
+        # emanating from the vertex (to distinguish from a near-zero angle);
+        # might be a more efficient way; tolerance for |sin(angle)| is
+        # hardwired to arbitrary value of 0.00001
+        if abs(sinang) < 0.00001 and s0x * s2x + s0y * s2y < 0:
+            if verbose:
+                print("Omitting ", x1, y1, sinang)
+            continue
+
+        yield iv1
 
 
 def get_valid_faces(vor):
@@ -196,7 +232,9 @@ def tri2vor(tri, **kwargs):
         vor_verts = np.array(vor_verts)
         for icell in range(len(vor_iverts)):
             iverts_cell = vor_iverts[icell]
-            vor_iverts[icell] = get_sorted_vertices(iverts_cell, vor_verts)
+            vor_iverts[icell] = list(
+                get_sorted_vertices(iverts_cell, vor_verts)
+            )
 
     return vor_verts, vor_iverts
 
