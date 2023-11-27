@@ -2691,8 +2691,7 @@ def to_mp7_pathlines(
     # build mp7 format recarray
     ret = np.core.records.fromarrays(
         [
-            data["irpt"],
-            # data[seqn_key],
+            data[seqn_key],
             data["iprp"],
             data[seqn_key],
             data["irpt"],
@@ -2924,7 +2923,7 @@ def to_prt_pathlines(
             data["timestep"],
             np.zeros(data.shape[0]),
             data["particlegroup"],
-            data["particleid"],
+            data["sequencenumber"],
             data["k"],
             data["node"],
             np.zeros(data.shape[0]),  # todo izone?

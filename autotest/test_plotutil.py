@@ -299,9 +299,13 @@ def test_to_prt_pathlines_roundtrip():
     mp7_pls = to_mp7_pathlines(inp_pls)
     prt_pls = to_prt_pathlines(mp7_pls)
     inp_pls.drop(
-        ["imdl", "iprp", "name", "istatus", "ireason"], axis=1, inplace=True
+        ["imdl", "iprp", "irpt", "name", "istatus", "ireason"],
+        axis=1,
+        inplace=True,
     )
     prt_pls.drop(
-        ["imdl", "iprp", "name", "istatus", "ireason"], axis=1, inplace=True
+        ["imdl", "iprp", "irpt", "name", "istatus", "ireason"],
+        axis=1,
+        inplace=True,
     )
     assert np.allclose(inp_pls, prt_pls)
