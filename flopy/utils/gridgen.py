@@ -406,9 +406,9 @@ class Gridgen:
         """
         Parameters
         ----------
-        features : str, list, or collection object
+        features : str or array-like
             features can be
-                a string containing the name of a shapefile
+                a str, the name of a shapefile in the workspace
                 a list of points, lines, or polygons
                 flopy.utils.geometry.Collection object
                 a list of flopy.utils.geometry objects
@@ -435,15 +435,19 @@ class Gridgen:
 
         # Create shapefile or set shapefile to feature
         rfname = f"rf{len(self._rfdict)}"
-        if isinstance(features, list):
+        if isinstance(features, str):
+            shapefile = features
+        elif isinstance(features, (list, tuple, np.ndarray)):
             rfname_w_path = os.path.join(self.model_ws, rfname)
             features_to_shapefile(features, featuretype, rfname_w_path)
-            shapefile = rfname
+            shapefile = f"{rfname}.shp"
         else:
-            shapefile = features
+            raise ValueError(
+                f"Features must be str (shapefile name) or array-like (of geometries)"
+            )
 
         self._rfdict[rfname] = [shapefile, featuretype, level]
-        sn = os.path.join(self.model_ws, f"{shapefile}.shp")
+        sn = os.path.join(self.model_ws, shapefile)
         assert os.path.isfile(sn), f"Shapefile does not exist: {sn}"
 
         for k in layers:
