@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from shutil import which
+from shutil import copyfile, which
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,6 +11,7 @@ from modflow_devtools.markers import requires_exe, requires_pkg
 from modflow_devtools.misc import has_pkg
 
 import flopy
+from flopy.discretization.vertexgrid import VertexGrid
 from flopy.utils.gridgen import Gridgen
 
 
@@ -23,6 +24,67 @@ def test_ctor_accepts_path_or_string(function_tmpdir):
 
     g = Gridgen(grid, model_ws=str(function_tmpdir))
     assert g.model_ws == function_tmpdir
+
+
+def base_grid():
+    Lx = 100.0
+    Ly = 100.0
+    nlay = 2
+    nrow = 51
+    ncol = 51
+    delr = Lx / ncol
+    delc = Ly / nrow
+    h0 = 10
+    h1 = 5
+    top = h0
+    botm = np.zeros((nlay, nrow, ncol), dtype=np.float32)
+    botm[1, :, :] = -10.0
+    ms = flopy.modflow.Modflow(rotation=-20.0)
+    dis = flopy.modflow.ModflowDis(
+        ms,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=delr,
+        delc=delc,
+        top=top,
+        botm=botm,
+    )
+    return ms.modelgrid
+
+
+@requires_exe("gridgen")
+def test_add_refinement_feature_accepts_filename(function_tmpdir):
+    # same as 1st grid in .docs/Notebooks/gridgen_example.py
+    grid = base_grid()
+
+    # create initial refined grid (writing refinement
+    # feature shapefile to the workspace)
+    g1 = Gridgen(grid, model_ws=function_tmpdir)
+    g1.add_refinement_features(
+        [[[(0, 0), (0, 60), (40, 80), (60, 0), (0, 0)]]],
+        "polygon",
+        1,
+        range(grid.nlay),
+    )
+    g1.build()
+    g1 = VertexGrid(**g1.get_gridprops_vertexgrid())
+    # g1.plot()
+    # g1.show()
+
+    # recreate gridgen object, using shapefile from the
+    # first run
+    g2 = Gridgen(grid, model_ws=function_tmpdir)
+    g2.add_refinement_features("rf0.shp", "polygon", 1, range(grid.nlay))
+    g2.build()
+    g2 = VertexGrid(**g2.get_gridprops_vertexgrid())
+    # g2.plot()
+    # plt.show()
+
+    assert g1.nnodes > grid.nnodes
+    assert g1.ncpl != grid.ncpl
+    assert g1.ncpl == g2.ncpl
+    assert g1.nnodes == g2.nnodes
 
 
 @pytest.mark.slow
