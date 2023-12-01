@@ -6,6 +6,8 @@ from typing import Union
 
 import numpy as np
 
+from flopy.utils.flopy_io import relpath_safe
+
 from ..discretization import StructuredGrid
 from ..export.shapefile_utils import shp2recarray
 from ..mbase import resolve_exe
@@ -57,7 +59,7 @@ def features_to_shapefile(
     featuretype : str
         Must be 'point', 'line', 'linestring', or 'polygon'
     filename : str or PathLike
-        Path of the shapefile to write
+        The shapefile to write (extension is optional)
 
     Returns
     -------
@@ -359,19 +361,32 @@ class Gridgen:
                     "valid asciigrid file."
                 )
 
+    def resolve_shapefile_path(self, p):
+        def _resolve(p):
+            # try expanding absolute path
+            path = Path(p).expanduser().absolute()
+            # try looking in workspace
+            return path if path.is_file() else self.model_ws / p
+
+        path = _resolve(p)
+        path = (
+            path if path.is_file() else _resolve(Path(p).with_suffix(".shp"))
+        )
+        return path if path.is_file() else None
+
     def add_active_domain(self, feature, layers):
         """
         Parameters
         ----------
-        feature : str or list
+        feature : str, path-like or array-like
             feature can be:
-                 a string containing the name of a polygon
-                 a list of polygons
-                 flopy.utils.geometry.Collection object of Polygons
-                 shapely.geometry.Collection object of Polygons
-                 geojson.GeometryCollection object of Polygons
-                 list of shapefile.Shape objects
-                 shapefile.Shapes object
+                a shapefile name (str) or Pathlike
+                a list of polygons
+                a flopy.utils.geometry.Collection object of Polygons
+                a shapely.geometry.Collection object of Polygons
+                a geojson.GeometryCollection object of Polygons
+                a list of shapefile.Shape objects
+                a shapefile.Shapes object
         layers : list
             A list of layers (zero based) for which this active domain
             applies.
@@ -385,37 +400,41 @@ class Gridgen:
         self.nodes = 0
         self.nja = 0
 
-        # Create shapefile or set shapefile to feature
-        adname = f"ad{len(self._addict)}"
-        if isinstance(feature, list):
-            # Create a shapefile
-            adname_w_path = os.path.join(self.model_ws, adname)
-            features_to_shapefile(feature, "polygon", adname_w_path)
-            shapefile = adname
+        # expand shapefile path or create one from polygon feature
+        if isinstance(feature, (str, os.PathLike)):
+            shapefile_path = self.resolve_shapefile_path(feature)
+        elif isinstance(feature, list):
+            shapefile_path = self.model_ws / f"ad{len(self._addict)}.shp"
+            features_to_shapefile(feature, "polygon", shapefile_path)
         else:
-            shapefile = feature
+            raise ValueError(
+                f"Feature must be a pathlike (shapefile) or array-like of geometries"
+            )
 
-        self._addict[adname] = shapefile
-        sn = os.path.join(self.model_ws, f"{shapefile}.shp")
-        assert os.path.isfile(sn), f"Shapefile does not exist: {sn}"
+        # make sure shapefile exists
+        assert (
+            shapefile_path and shapefile_path.is_file()
+        ), f"Shapefile does not exist: {shapefile_path}"
 
+        # store shapefile info
+        self._addict[shapefile_path.stem] = shapefile_path
         for k in layers:
-            self._active_domain[k] = adname
+            self._active_domain[k] = shapefile_path.stem
 
     def add_refinement_features(self, features, featuretype, level, layers):
         """
         Parameters
         ----------
-        features : str or array-like
+        features : str, path-like or array-like
             features can be
-                a str, the name of a shapefile in the workspace
+                a shapefile name (str) or Pathlike
                 a list of points, lines, or polygons
-                flopy.utils.geometry.Collection object
+                a flopy.utils.geometry.Collection object
                 a list of flopy.utils.geometry objects
-                shapely.geometry.Collection object
-                geojson.GeometryCollection object
+                a shapely.geometry.Collection object
+                a geojson.GeometryCollection object
                 a list of shapefile.Shape objects
-                shapefile.Shapes object
+                a shapefile.Shapes object
         featuretype : str
             Must be either 'point', 'line', or 'polygon'
         level : int
@@ -434,24 +453,29 @@ class Gridgen:
         self.nja = 0
 
         # Create shapefile or set shapefile to feature
-        rfname = f"rf{len(self._rfdict)}"
-        if isinstance(features, str):
-            shapefile = features
+        if isinstance(features, (str, os.PathLike)):
+            shapefile_path = self.resolve_shapefile_path(features)
         elif isinstance(features, (list, tuple, np.ndarray)):
-            rfname_w_path = os.path.join(self.model_ws, rfname)
-            features_to_shapefile(features, featuretype, rfname_w_path)
-            shapefile = f"{rfname}.shp"
+            shapefile_path = self.model_ws / f"rf{len(self._rfdict)}.shp"
+            features_to_shapefile(features, featuretype, shapefile_path)
         else:
             raise ValueError(
-                f"Features must be str (shapefile name) or array-like (of geometries)"
+                f"Features must be a pathlike (shapefile) or array-like of geometries"
             )
 
-        self._rfdict[rfname] = [shapefile, featuretype, level]
-        sn = os.path.join(self.model_ws, shapefile)
-        assert os.path.isfile(sn), f"Shapefile does not exist: {sn}"
+        # make sure shapefile exists
+        assert (
+            shapefile_path and shapefile_path.is_file()
+        ), f"Shapefile does not exist: {shapefile_path}"
 
+        # store shapefile info
+        self._rfdict[shapefile_path.stem] = [
+            shapefile_path,
+            featuretype,
+            level,
+        ]
         for k in layers:
-            self._refinement_features[k].append(rfname)
+            self._refinement_features[k].append(shapefile_path.stem)
 
     def build(self, verbose=False):
         """

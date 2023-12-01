@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from shutil import copyfile, which
+from shutil import which
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,7 +16,7 @@ from flopy.utils.gridgen import Gridgen
 
 
 @requires_exe("gridgen")
-def test_ctor_accepts_path_or_string(function_tmpdir):
+def test_ctor_accepts_path_or_string_model_ws(function_tmpdir):
     grid = GridCases().structured_small()
 
     g = Gridgen(grid, model_ws=function_tmpdir)
@@ -27,11 +27,14 @@ def test_ctor_accepts_path_or_string(function_tmpdir):
 
 
 def base_grid():
+    """Get a small version of the first grid in:
+    .docs/Notebooks/gridgen_example.py"""
+
     Lx = 100.0
     Ly = 100.0
     nlay = 2
-    nrow = 51
-    ncol = 51
+    nrow = 11
+    ncol = 11
     delr = Lx / ncol
     delc = Ly / nrow
     h0 = 10
@@ -54,37 +57,64 @@ def base_grid():
 
 
 @requires_exe("gridgen")
-def test_add_refinement_feature_accepts_filename(function_tmpdir):
-    # same as 1st grid in .docs/Notebooks/gridgen_example.py
-    grid = base_grid()
+def test_add_active_domain(function_tmpdir):
+    bgrid = base_grid()
+    grids = []
 
-    # create initial refined grid (writing refinement
-    # feature shapefile to the workspace)
-    g1 = Gridgen(grid, model_ws=function_tmpdir)
-    g1.add_refinement_features(
+    # test providing active domain various ways
+    for feature in [
         [[[(0, 0), (0, 60), (40, 80), (60, 0), (0, 0)]]],
-        "polygon",
-        1,
-        range(grid.nlay),
-    )
-    g1.build()
-    g1 = VertexGrid(**g1.get_gridprops_vertexgrid())
-    # g1.plot()
-    # g1.show()
+        function_tmpdir / "ad0.shp",
+        function_tmpdir / "ad0",
+        "ad0.shp",
+        "ad0",
+    ]:
+        gridgen = Gridgen(bgrid, model_ws=function_tmpdir)
+        gridgen.add_active_domain(
+            feature,
+            range(bgrid.nlay),
+        )
+        gridgen.build()
+        grid = VertexGrid(**gridgen.get_gridprops_vertexgrid())
+        grid.plot()
+        grids.append(grid)
+        # plt.show()
 
-    # recreate gridgen object, using shapefile from the
-    # first run
-    g2 = Gridgen(grid, model_ws=function_tmpdir)
-    g2.add_refinement_features("rf0.shp", "polygon", 1, range(grid.nlay))
-    g2.build()
-    g2 = VertexGrid(**g2.get_gridprops_vertexgrid())
-    # g2.plot()
-    # plt.show()
+        assert grid.nnodes < bgrid.nnodes
+        assert grid.ncpl != bgrid.ncpl
+        assert all(grid.ncpl == g.ncpl for g in grids)
+        assert all(grid.nnodes == g.nnodes for g in grids)
 
-    assert g1.nnodes > grid.nnodes
-    assert g1.ncpl != grid.ncpl
-    assert g1.ncpl == g2.ncpl
-    assert g1.nnodes == g2.nnodes
+
+@requires_exe("gridgen")
+def test_add_refinement_feature(function_tmpdir):
+    bgrid = base_grid()
+    grids = []
+
+    # test providing refinement feature various ways
+    for features in [
+        [[[(0, 0), (0, 60), (40, 80), (60, 0), (0, 0)]]],
+        function_tmpdir / "rf0.shp",
+        function_tmpdir / "rf0",
+        "rf0.shp",
+        "rf0",
+    ]:
+        gridgen = Gridgen(bgrid, model_ws=function_tmpdir)
+        gridgen.add_refinement_features(
+            features,
+            "polygon",
+            1,
+            range(bgrid.nlay),
+        )
+        gridgen.build()
+        grid = VertexGrid(**gridgen.get_gridprops_vertexgrid())
+        grid.plot()
+        # plt.show()
+
+        assert grid.nnodes > bgrid.nnodes
+        assert grid.ncpl != bgrid.ncpl
+        assert all(grid.ncpl == g.ncpl for g in grids)
+        assert all(grid.nnodes == g.nnodes for g in grids)
 
 
 @pytest.mark.slow
