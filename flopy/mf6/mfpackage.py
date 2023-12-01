@@ -1225,7 +1225,6 @@ class MFBlock:
                         )
 
                     return package_info_list
-                return None
         return None
 
     def _add_to_info_list(

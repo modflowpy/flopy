@@ -49,6 +49,7 @@ from flopy.mf6 import (
     ModflowNam,
     ModflowTdis,
     ModflowUtllaktab,
+    ModflowUtlspca,
 )
 from flopy.mf6.coordinates.modeldimensions import (
     DataDimensions,
@@ -2229,6 +2230,37 @@ def test_multi_model(function_tmpdir):
     assert fi_out[2][1] == "gwt_model_1.rch3.spc"
     assert fi_out[1][2] is None
     assert fi_out[2][2] == "MIXED"
+
+    spca1 = ModflowUtlspca(
+        gwt2,
+        filename="gwt_model_1.rch1.spc",
+        print_input=True
+    )
+    spca2 = ModflowUtlspca(
+        gwt2,
+        filename="gwt_model_1.rch2.spc",
+        print_input=False
+    )
+    spca3 = ModflowUtlspca(
+        gwt2,
+        filename="gwt_model_1.rch3.spc",
+        print_input=True
+    )
+    spca4 = ModflowUtlspca(
+        gwt2,
+        filename="gwt_model_1.rch4.spc",
+        print_input=True
+    )
+
+    # test writing and loading spca packages
+    sim2.write_simulation()
+    sim3 = MFSimulation.load(sim_ws=sim2.sim_path)
+    gwt3 = sim3.get_model("gwt_model_1")
+    spc1 = gwt3.get_package("gwt_model_1.rch1.spc")
+    assert isinstance(spc1, ModflowUtlspca)
+    assert spc1.print_input.get_data() is True
+    spc2 = gwt3.get_package("gwt_model_1.rch2.spc")
+    assert spc2.print_input.get_data() is not True
 
     # create a new gwt model
     sourcerecarray = [("WEL-1", "AUX", "CONCENTRATION")]
