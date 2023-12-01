@@ -286,9 +286,7 @@ class Gridgen:
         # Set up a blank _refinement_features list with empty list for
         # each layer
         self._rfdict = {}
-        self._refinement_features = []
-        for k in range(self.nlay):
-            self._refinement_features.append([])
+        self._refinement_features = [[] for _ in range(self.nlay)]
 
         # Set up blank _elev and _elev_extent dictionaries
         self._asciigrid_dict = {}
@@ -403,7 +401,7 @@ class Gridgen:
         # expand shapefile path or create one from polygon feature
         if isinstance(feature, (str, os.PathLike)):
             shapefile_path = self.resolve_shapefile_path(feature)
-        elif isinstance(feature, list):
+        elif isinstance(feature, (list, tuple, np.ndarray)):
             shapefile_path = self.model_ws / f"ad{len(self._addict)}.shp"
             features_to_shapefile(feature, "polygon", shapefile_path)
         else:
