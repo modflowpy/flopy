@@ -6,8 +6,6 @@ from typing import Union
 
 import numpy as np
 
-from flopy.utils.flopy_io import relpath_safe
-
 from ..discretization import StructuredGrid
 from ..export.shapefile_utils import shp2recarray
 from ..mbase import resolve_exe
@@ -81,7 +79,7 @@ def features_to_shapefile(
         "linestring",
         "polygon",
     ]:
-        raise Exception(f"Unrecognized feature type: {featuretype}")
+        raise ValueError(f"Unrecognized feature type: {featuretype}")
 
     if featuretype.lower() in ("line", "linestring"):
         wr = shapefile.Writer(str(filename), shapeType=shapefile.POLYLINE)
@@ -257,10 +255,9 @@ class Gridgen:
         # Set default surface interpolation for all surfaces (nlay + 1)
         surface_interpolation = surface_interpolation.upper()
         if surface_interpolation not in ["INTERPOLATE", "REPLICATE"]:
-            raise Exception(
-                "Error.  Unknown surface interpolation method: "
-                "{}.  Must be INTERPOLATE or "
-                "REPLICATE".format(surface_interpolation)
+            raise ValueError(
+                f"Unknown surface interpolation method {surface_interpolation}, "
+                "expected 'INTERPOLATE' or 'REPLICATE'"
             )
         self.surface_interpolation = [
             surface_interpolation for k in range(self.nlay + 1)
@@ -317,10 +314,10 @@ class Gridgen:
         assert 0 <= isurf <= self.nlay + 1
         type = type.upper()
         if type not in ["INTERPOLATE", "REPLICATE", "ASCIIGRID"]:
-            raise Exception(
-                "Error.  Unknown surface interpolation type: "
-                "{}.  Must be INTERPOLATE or "
-                "REPLICATE".format(type)
+            raise ValueError(
+                "Unknown surface interpolation type "
+                f"{type}, expected 'INTERPOLATE',"
+                "'REPLICATE', or 'ASCIIGRID'"
             )
         else:
             self.surface_interpolation[isurf] = type
@@ -328,16 +325,14 @@ class Gridgen:
         if type == "ASCIIGRID":
             if isinstance(elev, np.ndarray):
                 if elev_extent is None:
-                    raise Exception(
-                        "Error.  ASCIIGRID was specified but "
-                        "elev_extent was not."
+                    raise ValueError(
+                        "ASCIIGRID was specified but elev_extent was not."
                     )
                 try:
                     xmin, xmax, ymin, ymax = elev_extent
                 except:
-                    raise Exception(
-                        "Cannot cast elev_extent into xmin, xmax, "
-                        "ymin, ymax: {}".format(elev_extent)
+                    raise ValueError(
+                        f"Cannot unpack elev_extent as tuple (xmin, xmax, ymin, ymax): {elev_extent}"
                     )
 
                 nm = f"_gridgen.lay{isurf}.asc"
@@ -347,16 +342,13 @@ class Gridgen:
 
             elif isinstance(elev, str):
                 if not os.path.isfile(os.path.join(self.model_ws, elev)):
-                    raise Exception(
-                        "Error.  elev is not a valid file: "
-                        "{}".format(os.path.join(self.model_ws, elev))
+                    raise ValueError(
+                        f"Elevation file not found: {os.path.join(self.model_ws, elev)}"
                     )
                 self._asciigrid_dict[isurf] = elev
             else:
-                raise Exception(
-                    "Error.  ASCIIGRID was specified but "
-                    "elev was not specified as a numpy ndarray or"
-                    "valid asciigrid file."
+                raise ValueError(
+                    "ASCIIGRID was specified but elevation was not provided as a numpy ndarray or asciigrid file."
                 )
 
     def resolve_shapefile_path(self, p):
@@ -685,8 +677,6 @@ class Gridgen:
                 "Error.  Failed to export shared vertex vtk file",
                 buff,
             )
-
-        return
 
     def plot(
         self,
