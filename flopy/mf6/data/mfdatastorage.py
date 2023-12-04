@@ -1277,6 +1277,10 @@ class DataStorage:
                     DataStorageType.internal_array
                 )
                 if data is None or isinstance(data, np.recarray):
+                    if not self.tuple_cellids(data):
+                        # fix data so cellid is a single tuple
+                        data = self.make_tuple_cellids(data.tolist())
+                if data is None or isinstance(data, np.recarray):
                     if self._simulation_data.verify_data and check_data:
                         self._verify_list(data)
                     self.layer_storage.first_item().internal_data = data
@@ -1604,7 +1608,11 @@ class DataStorage:
     def tuple_cellids(self, data):
         for data_entry, cellid in zip(data[0], self.recarray_cellid_list):
             if cellid:
-                if isinstance(data_entry, int):
+                if (
+                    isinstance(data_entry, int)
+                    or isinstance(data_entry, np.int32)
+                    or isinstance(data_entry, np.int64)
+                ):
                     # cellid is stored in separate columns in the recarray
                     # (eg: one column for layer one column for row and
                     # one columne for column)

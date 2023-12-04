@@ -615,10 +615,10 @@ class ModelDimensions:
                                 if data is None:
                                     if (
                                         self.simulation_data.verbosity_level.value
-                                        >= VerbosityLevel.normal.value
+                                        >= VerbosityLevel.verbose.value
                                     ):
                                         print(
-                                            "WARNING: Unable to resolve "
+                                            "INFORMATION: Unable to resolve "
                                             "dimension of {} based on shape "
                                             '"{}".'.format(
                                                 data_item_struct.path, item[0]
@@ -651,10 +651,10 @@ class ModelDimensions:
                             else:
                                 if (
                                     self.simulation_data.verbosity_level.value
-                                    >= VerbosityLevel.normal.value
+                                    >= VerbosityLevel.verbose.value
                                 ):
                                     print(
-                                        "WARNING: Unable to resolve "
+                                        "INFORMATION: Unable to resolve "
                                         "dimension of {} based on shape "
                                         '"{}".'.format(
                                             data_item_struct.path, item[0]
