@@ -14,6 +14,7 @@ from ..mfusg.mfusgdisu import MfUsgDisU
 from ..modflow import ModflowDis
 from ..utils import import_optional_dependency
 from .util_array import Util2d  # read1d,
+from ..utils.flopy_io import relpath_safe
 
 # todo
 # creation of line and polygon shapefiles from features (holes!)
@@ -407,7 +408,9 @@ class Gridgen:
         ), f"Shapefile does not exist: {shapefile_path}"
 
         # store shapefile info
-        self._addict[shapefile_path.stem] = shapefile_path
+        self._addict[shapefile_path.stem] = relpath_safe(
+            shapefile_path, self.model_ws
+        )
         for k in layers:
             self._active_domain[k] = shapefile_path.stem
 
@@ -460,7 +463,7 @@ class Gridgen:
 
         # store shapefile info
         self._rfdict[shapefile_path.stem] = [
-            shapefile_path,
+            relpath_safe(shapefile_path, self.model_ws),
             featuretype,
             level,
         ]
