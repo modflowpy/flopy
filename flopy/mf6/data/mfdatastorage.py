@@ -1606,7 +1606,7 @@ class DataStorage:
         return new_data
 
     def tuple_cellids(self, data):
-        if data is None:
+        if data is None or len(data) == 0:
             return True
         for data_entry, cellid in zip(data[0], self.recarray_cellid_list):
             if cellid:
