@@ -25,7 +25,6 @@
 
 # +
 import os
-import shutil
 import sys
 from tempfile import TemporaryDirectory
 
