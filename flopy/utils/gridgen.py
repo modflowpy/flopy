@@ -13,8 +13,8 @@ from ..mf6.modflow import ModflowGwfdis
 from ..mfusg.mfusgdisu import MfUsgDisU
 from ..modflow import ModflowDis
 from ..utils import import_optional_dependency
-from .util_array import Util2d  # read1d,
 from ..utils.flopy_io import relpath_safe
+from .util_array import Util2d  # read1d,
 
 # todo
 # creation of line and polygon shapefiles from features (holes!)
