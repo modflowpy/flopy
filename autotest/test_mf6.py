@@ -1685,12 +1685,41 @@ def test_sfr_connections(function_tmpdir, example_data_path):
 
         # reload simulation
         sim2 = MFSimulation.load(sim_ws=sim_ws)
-        sim.set_all_data_external()
-        sim.write_simulation()
-        success, buff = sim.run_simulation()
+        sim2.set_all_data_external()
+        sim2.write_simulation()
+        success, buff = sim2.run_simulation()
         assert (
             success
-        ), f"simulation {sim.name} did not run after being reloaded"
+        ), f"simulation {sim2.name} did not run after being reloaded"
+
+        # test sfr recarray data
+        model2 = sim2.get_model()
+        sfr2 = model2.get_package("sfr")
+        sfr_pd = sfr2.packagedata
+        rec_data = [
+            (0, 0, 0, 0, 1.0, 1.0, 0.01, 10.0, 1.0, 1.0, 1.0, 1, 1.0, 0),
+            (1, 0, 1, 0, 1.0, 1.0, 0.01, 10.0, 1.0, 1.0, 1.0, 2, 1.0, 0),
+        ]
+        rec_type = [
+            ("ifno", int),
+            ("layer", int),
+            ("row", int),
+            ("column", int),
+            ("rlen", float),
+            ("rwid", float),
+            ("rgrd", float),
+            ("rtp", float),
+            ("rbth", float),
+            ("rhk", float),
+            ("man", float),
+            ("nconn", int),
+            ("ustrf", float),
+            ("nvd", int),
+        ]
+        pkg_data = np.rec.array(rec_data, rec_type)
+        sfr_pd.set_record({"data": pkg_data})
+        data = sfr_pd.get_data()
+        assert data[0][1] == (0, 0, 0)
 
 
 @requires_exe("mf6")
@@ -2232,24 +2261,16 @@ def test_multi_model(function_tmpdir):
     assert fi_out[2][2] == "MIXED"
 
     spca1 = ModflowUtlspca(
-        gwt2,
-        filename="gwt_model_1.rch1.spc",
-        print_input=True
+        gwt2, filename="gwt_model_1.rch1.spc", print_input=True
     )
     spca2 = ModflowUtlspca(
-        gwt2,
-        filename="gwt_model_1.rch2.spc",
-        print_input=False
+        gwt2, filename="gwt_model_1.rch2.spc", print_input=False
     )
     spca3 = ModflowUtlspca(
-        gwt2,
-        filename="gwt_model_1.rch3.spc",
-        print_input=True
+        gwt2, filename="gwt_model_1.rch3.spc", print_input=True
     )
     spca4 = ModflowUtlspca(
-        gwt2,
-        filename="gwt_model_1.rch4.spc",
-        print_input=True
+        gwt2, filename="gwt_model_1.rch4.spc", print_input=True
     )
 
     # test writing and loading spca packages
