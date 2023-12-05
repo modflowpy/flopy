@@ -58,6 +58,7 @@ def get_structured_grid():
 
 
 @requires_exe("gridgen")
+@requires_pkg("shapefile")
 # GRIDGEN seems not to like paths containing "[" or "]", as
 # function_tmpdir does with parametrization, do it manually
 # @pytest.mark.parametrize("grid_type", ["vertex", "unstructured"])
@@ -104,6 +105,7 @@ def test_add_active_domain(function_tmpdir):  # , grid_type):
 
 
 @requires_exe("gridgen")
+@requires_pkg("shapefile")
 # GRIDGEN seems not to like paths containing "[" or "]", as
 # function_tmpdir does with parametrization, do it manually
 # @pytest.mark.parametrize("grid_type", ["vertex", "unstructured"])
