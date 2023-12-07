@@ -3262,7 +3262,9 @@ class Mf6Splitter(object):
         self._remap_nodes(array)
 
         if self._new_sim is None:
-            self._new_sim = modflow.MFSimulation()
+            self._new_sim = modflow.MFSimulation(
+                version=self._sim.version, exe_name=self._sim.exe_name
+            )
             self._create_sln_tdis()
 
         nam_options = {}
