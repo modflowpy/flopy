@@ -1128,7 +1128,10 @@ class Mf6Splitter(object):
         fnames = kwargs.pop("fnames", None)
         if not hasattr(mfarray, "size"):
             if mfarray.array is None:
-                return mapped_data
+                if item == "idomain":
+                    mfarray.set_data(1)
+                else:
+                    return mapped_data
 
             how = [
                 i.data_storage_type.value
