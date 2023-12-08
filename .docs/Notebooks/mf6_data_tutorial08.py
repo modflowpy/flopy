@@ -1,13 +1,14 @@
 # ---
 # jupyter:
 #   jupytext:
+#     notebook_metadata_filter: metadata
 #     text_representation:
 #       extension: .py
 #       format_name: light
-#       format_version: "1.5"
-#       jupytext_version: 1.5.1
+#       format_version: '1.5'
+#       jupytext_version: 1.14.4
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 #   metadata:
@@ -281,6 +282,10 @@ lak = flopy.mf6.ModflowGwflak(
     connectiondata=lakecn,
     perioddata=period,
 )
+
+# An alternative to individually setting each file to external is to call the set_all_files_external method.  While this requires less code, it does not give you the ability to set the names of each individual external file. By setting the binary attribute to True, flopy will store data to binary files wherever possible. 
+
+sim.set_all_data_external(binary=True)
 
 try:
     temp_dir.cleanup()

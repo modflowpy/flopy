@@ -4240,6 +4240,11 @@ def test045_lake1ss_table(function_tmpdir, example_data_path):
     save_folder = function_tmpdir / "save"
     save_folder.mkdir()
     sim.set_sim_path(save_folder)
+    sim.set_all_data_external(
+        external_data_folder="test_folder",
+        base_name="ext_file",
+        binary=True,
+    )
     sim.write_simulation()
 
     # run simulation

@@ -191,7 +191,7 @@ class MFScalar(mfdata.MFData):
             data_struct = self.structure.data_item_structures[0]
             try:
                 converted_data = convert_data(
-                    data, self._data_dimensions, self._data_type, data_struct
+                    data, self.data_dimensions, self._data_type, data_struct
                 )
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
@@ -479,7 +479,7 @@ class MFScalar(mfdata.MFData):
                                         current_data,
                                         self._data_type,
                                         self._simulation_data,
-                                        self._data_dimensions,
+                                        self.data_dimensions,
                                         data_item=data_item,
                                     )
                                 )
@@ -555,7 +555,7 @@ class MFScalar(mfdata.MFData):
                     data,
                     self._data_type,
                     self._simulation_data,
-                    self._data_dimensions,
+                    self.data_dimensions,
                     data_item=data_item,
                     verify_data=self._simulation_data.verify_data,
                 )
@@ -635,7 +635,7 @@ class MFScalar(mfdata.MFData):
         self._resync()
         file_access = MFFileAccessScalar(
             self.structure,
-            self._data_dimensions,
+            self.data_dimensions,
             self._simulation_data,
             self._path,
             self._current_key,
@@ -653,7 +653,7 @@ class MFScalar(mfdata.MFData):
         return DataStorage(
             self._simulation_data,
             self._model_or_sim,
-            self._data_dimensions,
+            self.data_dimensions,
             self.get_file_entry,
             DataStorageType.internal_array,
             DataStructureType.scalar,
