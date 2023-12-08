@@ -585,30 +585,31 @@ def test_transient_array(function_tmpdir):
 
 
 @requires_exe("mf6")
+@requires_pkg("pymetis")
 def test_idomain_none(function_tmpdir):
     name = "id_test"
     sim_path = function_tmpdir
     new_sim_path = function_tmpdir / f"{name}_split_model"
 
     tdis_data = [
-        (0., 1, 1.0),
-        (300000., 1, 1.0),
-        (36500., 10, 1.5),
+        (0.0, 1, 1.0),
+        (300000.0, 1, 1.0),
+        (36500.0, 10, 1.5),
         (300000, 1, 1.0),
     ]
 
     nper = len(tdis_data)
     nlay, nrow, ncol = 3, 21, 20
-    xlen, ylen = 10000., 10500.
+    xlen, ylen = 10000.0, 10500.0
     delc = ylen / nrow
     delr = xlen / ncol
 
-    top = 400.
-    botm = [220., 200., 0]
-    K11 = [50., 0.01, 200.]
-    K33 = [10., 0.01, 20.]
+    top = 400.0
+    botm = [220.0, 200.0, 0]
+    K11 = [50.0, 0.01, 200.0]
+    K33 = [10.0, 0.01, 20.0]
     Ss, Sy = 0.0001, 0.1
-    H_east = 320.
+    H_east = 320.0
     recharge = 0.005
     idomain = None
 
@@ -621,7 +622,7 @@ def test_idomain_none(function_tmpdir):
         complexity="simple",
         print_option="all",
         outer_dvclose=1e-6,
-        inner_dvclose=1e-6
+        inner_dvclose=1e-6,
     )
 
     gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
@@ -635,7 +636,7 @@ def test_idomain_none(function_tmpdir):
         top=top,
         botm=botm,
         length_units="meters",
-        idomain=idomain
+        idomain=idomain,
     )
     npf = flopy.mf6.ModflowGwfnpf(
         gwf, icelltype=1, save_specific_discharge=True, k=K11, k33=K33
@@ -646,14 +647,14 @@ def test_idomain_none(function_tmpdir):
         ss=Ss,
         sy=Sy,
         steady_state={0: True, 3: True},
-        transient={2: True}
+        transient={2: True},
     )
     ic = flopy.mf6.ModflowGwfic(gwf, strt=top)
     oc = flopy.mf6.ModflowGwfoc(
         gwf,
         head_filerecord=f"{name}.hds",
         budget_filerecord=f"{name}.cbc",
-        saverecord={0: [("head", "all"), ("budget", "all")]}
+        saverecord={0: [("head", "all"), ("budget", "all")]},
     )
     rch = flopy.mf6.ModflowGwfrcha(gwf, recharge=recharge)
 
@@ -661,11 +662,8 @@ def test_idomain_none(function_tmpdir):
     chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chd_spd)
 
     well_spd = {
-        1: [(0, 10, 9, -75000.)],
-        2: [
-            (0, 10, 9, -75000.),
-            (2, 12, 4, -100000.)
-        ],
+        1: [(0, 10, 9, -75000.0)],
+        2: [(0, 10, 9, -75000.0), (2, 12, 4, -100000.0)],
     }
     wel = flopy.mf6.ModflowGwfwel(gwf, stress_period_data=well_spd)
     sim.write_simulation()
@@ -683,11 +681,13 @@ def test_idomain_none(function_tmpdir):
     head_dict = {}
     for idx, modelname in enumerate(new_sim.model_names):
         mnum = int(modelname.split("_")[-1])
-        h = new_sim.get_model(modelname).output.head().get_data(
-            kstpkper=kstpkper)
+        h = (
+            new_sim.get_model(modelname)
+            .output.head()
+            .get_data(kstpkper=kstpkper)
+        )
         head_dict[mnum] = h
     new_head = ms.reconstruct_array(head_dict)
 
     err_msg = "Heads from original and split models do not match"
     np.testing.assert_allclose(new_head, head, atol=1e-07, err_msg=err_msg)
-
