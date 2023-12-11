@@ -283,7 +283,7 @@ lak = flopy.mf6.ModflowGwflak(
     perioddata=period,
 )
 
-# An alternative to individually setting each file to external is to call the set_all_files_external method.  While this requires less code, it does not give you the ability to set the names of each individual external file. By setting the binary attribute to True, flopy will store data to binary files wherever possible. 
+# An alternative to individually setting each file to external is to call the set_all_files_external method (there is also a set_all_files_internal method to do the opposite).  While this requires less code, it does not give you the ability to set the names of each individual external file. By setting the binary attribute to True, flopy will store data to binary files wherever possible.
 
 sim.set_all_data_external(binary=True)
 
