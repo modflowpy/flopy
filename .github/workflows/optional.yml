@@ -52,7 +52,7 @@ jobs:
           fi
       
       - name: Upload removed dependencies log
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: smoke-test-removed-dependencies
           path: ./removed_dependencies.txt
@@ -67,7 +67,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload failed test outputs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: failed-smoke-${{ runner.os }}-${{ env.PYTHON_VERSION }}
