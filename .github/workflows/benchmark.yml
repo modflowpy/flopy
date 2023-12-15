@@ -92,7 +92,7 @@ jobs:
           pip install numpy pandas matplotlib seaborn
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: autotest/.benchmarks
 
