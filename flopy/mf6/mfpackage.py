@@ -1314,7 +1314,11 @@ class MFBlock:
         return False
 
     def set_all_data_external(
-        self, base_name, check_data=True, external_data_folder=None
+        self,
+        base_name,
+        check_data=True,
+        external_data_folder=None,
+        binary=False,
     ):
         """Sets the block's list and array data to be stored externally,
         base_name is external file name's prefix, check_data determines
@@ -1328,21 +1332,31 @@ class MFBlock:
                 Whether to do data error checking.
             external_data_folder
                 Folder where external data will be stored
+            binary: bool
+                Whether file will be stored as binary
 
         """
         for key, dataset in self.datasets.items():
+            lst_data = isinstance(dataset, mfdatalist.MFList) or isinstance(
+                dataset, mfdataplist.MFPandasList
+            )
             if (
                 isinstance(dataset, mfdataarray.MFArray)
-                or (
-                    (
-                        isinstance(dataset, mfdatalist.MFList)
-                        or isinstance(dataset, mfdataplist.MFPandasList)
-                    )
-                    and dataset.structure.type == DatumType.recarray
-                )
+                or (lst_data and dataset.structure.type == DatumType.recarray)
                 and dataset.enabled
             ):
-                file_path = f"{base_name}_{dataset.structure.name}.txt"
+                if not binary or (
+                    lst_data
+                    and (
+                        dataset.data_dimensions.package_dim.boundnames()
+                        or not dataset.structure.basic_item
+                    )
+                ):
+                    ext = "txt"
+                    binary = False
+                else:
+                    ext = "bin"
+                file_path = f"{base_name}_{dataset.structure.name}.{ext}"
                 replace_existing_external = False
                 if external_data_folder is not None:
                     # get simulation root path
@@ -1367,6 +1381,7 @@ class MFBlock:
                     file_path,
                     replace_existing_external=replace_existing_external,
                     check_data=check_data,
+                    binary=binary,
                 )
 
     def set_all_data_internal(self, check_data=True):
@@ -2687,7 +2702,11 @@ class MFPackage(PackageContainer, PackageInterface):
             package.set_model_relative_path(model_ws)
 
     def set_all_data_external(
-        self, check_data=True, external_data_folder=None
+        self,
+        check_data=True,
+        external_data_folder=None,
+        base_name=None,
+        binary=False,
     ):
         """Sets the package's list and array data to be stored externally.
 
@@ -2697,16 +2716,30 @@ class MFPackage(PackageContainer, PackageInterface):
                 Determine if data error checking is enabled
             external_data_folder
                 Folder where external data will be stored
+            base_name: str
+                Base file name prefix for all files
+            binary: bool
+                Whether file will be stored as binary
         """
         # set blocks
         for key, block in self.blocks.items():
             file_name = os.path.split(self.filename)[1]
+            if base_name is not None:
+                file_name = f"{base_name}_{file_name}"
             block.set_all_data_external(
-                file_name, check_data, external_data_folder
+                file_name,
+                check_data,
+                external_data_folder,
+                binary,
             )
         # set sub-packages
         for package in self._packagelist:
-            package.set_all_data_external(check_data, external_data_folder)
+            package.set_all_data_external(
+                check_data,
+                external_data_folder,
+                base_name,
+                binary,
+            )
 
     def set_all_data_internal(self, check_data=True):
         """Sets the package's list and array data to be stored internally.

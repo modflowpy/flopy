@@ -2920,7 +2920,7 @@ class Mf6Splitter(object):
                             value.structure,
                             True,
                             value.path,
-                            value._data_dimensions.package_dim,
+                            value.data_dimensions.package_dim,
                             value._package,
                             value._block,
                         )
@@ -2941,7 +2941,7 @@ class Mf6Splitter(object):
                             None,
                             True,
                             value.path,
-                            value._data_dimensions.package_dim,
+                            value.data_dimensions.package_dim,
                             value._package,
                             value._block,
                         )

@@ -1601,7 +1601,11 @@ class MFModel(PackageContainer, ModelInterface):
                 )
 
     def set_all_data_external(
-        self, check_data=True, external_data_folder=None
+        self,
+        check_data=True,
+        external_data_folder=None,
+        base_name=None,
+        binary=False,
     ):
         """Sets the model's list and array data to be stored externally.
 
@@ -1614,10 +1618,19 @@ class MFModel(PackageContainer, ModelInterface):
                 Folder, relative to the simulation path or model relative path
                 (see use_model_relative_path parameter), where external data
                 will be stored
+            base_name: str
+                Base file name prefix for all files
+            binary: bool
+                Whether file will be stored as binary
 
         """
         for package in self.packagelist:
-            package.set_all_data_external(check_data, external_data_folder)
+            package.set_all_data_external(
+                check_data,
+                external_data_folder,
+                base_name,
+                binary,
+            )
 
     def set_all_data_internal(self, check_data=True):
         """Sets the model's list and array data to be stored externally.

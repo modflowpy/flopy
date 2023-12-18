@@ -1445,7 +1445,11 @@ class MFSimulationBase(PackageContainer):
             model.rename_all_packages(name)
 
     def set_all_data_external(
-        self, check_data=True, external_data_folder=None
+        self,
+        check_data=True,
+        external_data_folder=None,
+        base_name=None,
+        binary=False,
     ):
         """Sets the simulation's list and array data to be stored externally.
 
@@ -1458,20 +1462,44 @@ class MFSimulationBase(PackageContainer):
                 Path relative to the simulation path or model relative path
                 (see use_model_relative_path parameter), where external data
                 will be stored
+            base_name: str
+                Base file name prefix for all files
+            binary: bool
+                Whether file will be stored as binary
         """
         # copy any files whose paths have changed
         self.simulation_data.mfpath.copy_files()
         # set data external for all packages in all models
         for model in self._models.values():
-            model.set_all_data_external(check_data, external_data_folder)
+            model.set_all_data_external(
+                check_data,
+                external_data_folder,
+                base_name,
+                binary,
+            )
         # set data external for solution packages
         for package in self._solution_files.values():
-            package.set_all_data_external(check_data, external_data_folder)
+            package.set_all_data_external(
+                check_data,
+                external_data_folder,
+                base_name,
+                binary,
+            )
         # set data external for other packages
         for package in self._other_files.values():
-            package.set_all_data_external(check_data, external_data_folder)
+            package.set_all_data_external(
+                check_data,
+                external_data_folder,
+                base_name,
+                binary,
+            )
         for package in self._exchange_files.values():
-            package.set_all_data_external(check_data, external_data_folder)
+            package.set_all_data_external(
+                check_data,
+                external_data_folder,
+                base_name,
+                binary,
+            )
 
     def set_all_data_internal(self, check_data=True):
         # set data external for all packages in all models

@@ -1,20 +1,21 @@
 # ---
 # jupyter:
 #   jupytext:
+#     notebook_metadata_filter: metadata
 #     text_representation:
 #       extension: .py
 #       format_name: light
-#       format_version: "1.5"
-#       jupytext_version: 1.5.1
+#       format_version: '1.5'
+#       jupytext_version: 1.14.4
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 #   metadata:
 #     section: mf6
 # ---
 
-# # MODFLOW 6: Data Storage Information and Performance Optimization
+# # MODFLOW 6: External Files, Binary Data, and Performance Optimization
 #
 # This tutorial shows the different options for storing MODFLOW data in FloPy.
 # Interaction with a FloPy MODFLOW 6 model is different from other models,
@@ -36,7 +37,7 @@
 # This tutorial focuses on the different storage options for MODFLOW data and
 # how to optimize data storage read/write speed.
 
-# ## Introduction to Data Storage Information
+# ## Introduction to Data Storage Options
 # MODFLOW array and list data can either be stored internally or externally in
 # text or binary files. Additionally array data can have a factor applied to
 # them and can have a format flag/code to define how these data will be
@@ -214,6 +215,10 @@ spd_record = wel.stress_period_data.get_record()
 print(f"New filename for stress period 1:  {spd_record[0]['filename']}")
 print(f"New binary flag for stress period 1:  {spd_record[0]['binary']}")
 print(f"New filename for stress period 2:  {spd_record[1]['filename']}")
+
+# An alternative to individually setting each file to external is to call the set_all_files_external method (there is also a set_all_files_internal method to do the opposite). While this requires less code, it does not give you the ability to set the names of each individual external file. By setting the binary attribute to True, flopy will store data to binary files wherever possible.
+
+sim.set_all_data_external(binary=True)
 
 # ## Optimizing FloPy Performance
 #
