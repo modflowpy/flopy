@@ -4246,6 +4246,28 @@ def test045_lake1ss_table(function_tmpdir, example_data_path):
         binary=True,
     )
     sim.write_simulation()
+    # verify external files were written
+    ext_folder = os.path.join(save_folder, "test_folder")
+    files_to_check = [
+        "ext_file_lakeex1b.dis_botm_layer1.bin",
+        "ext_file_lakeex1b.dis_botm_layer2.bin",
+        "ext_file_lakeex1b.dis_botm_layer3.bin",
+        "ext_file_lakeex1b.dis_botm_layer4.bin",
+        "ext_file_lakeex1b.dis_botm_layer5.bin",
+        "ext_file_lakeex1b.npf_k_layer1.bin",
+        "ext_file_lakeex1b.npf_k_layer5.bin",
+        "ext_file_lakeex1b.chd_stress_period_data_1.bin",
+        "ext_file_lakeex1b.lak_connectiondata.txt",
+        "ext_file_lakeex1b.lak_packagedata.txt",
+        "ext_file_lakeex1b.lak_perioddata_1.txt",
+        "ext_file_lakeex1b_table.ref_table.txt",
+        "ext_file_lakeex1b.evt_depth_1.bin",
+        "ext_file_lakeex1b.evt_rate_1.bin",
+        "ext_file_lakeex1b.evt_surface_1.bin",
+    ]
+    for file in files_to_check:
+        data_file_path = os.path.join(ext_folder, file)
+        assert os.path.exists(data_file_path)
 
     # run simulation
     success, buff = sim.run_simulation()
