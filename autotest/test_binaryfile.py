@@ -1,4 +1,3 @@
-import os
 from itertools import repeat
 
 import numpy as np
@@ -15,7 +14,6 @@ from flopy.utils import (
     CellBudgetFile,
     HeadFile,
     HeadUFile,
-    UcnFile,
     Util2d,
 )
 from flopy.utils.binaryfile import (
