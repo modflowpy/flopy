@@ -20,14 +20,14 @@
 Introduction
 -----------------------------------------------
 
-FloPy includes support for [MODFLOW 6](docs/mf6.md), MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, and MODFLOW-2000. Other supported MODFLOW-based models include MODPATH (version 6 and 7), MT3DMS, MT3D-USGS, and SEAWAT.
+FloPy includes support for [MODFLOW 6](https://github.com/MODFLOW-USGS/modflow6), MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, and MODFLOW-2000. Other supported MODFLOW-based models include MODPATH (version 6 and 7), MT3DMS, MT3D-USGS, and SEAWAT.
 
 For general modeling issues, please consult a modeling forum, such as the [MODFLOW Users Group](https://groups.google.com/forum/#!forum/modflow).  Other MODFLOW resources are listed in the [MODFLOW Resources](https://github.com/modflowpy/flopy#modflow-resources) section.
 
 Documentation
 -----------------------------------------------
-* [Latest release](https://flopy.readthedocs.io)
-* [Current release candidate](https://flopy.readthedocs.io/en/latest/)
+* [Latest release](https://flopy.readthedocs.io/en/stable)
+* [Current release candidate](https://flopy.readthedocs.io/en/latest)
 
 Installation
 -----------------------------------------------
@@ -40,7 +40,7 @@ matplotlib >=1.4.0
 pandas >=2.0.0
 ```
 
-Dependencies for optional features are summarized [here](.docs/optional_dependencies.md).
+Dependencies for optional features are summarized [here](https://flopy.readthedocs.io/en/latest/md/optional_dependencies.html).
 
 To install type:
 
@@ -57,7 +57,7 @@ After FloPy is installed, MODFLOW and related programs can be installed using th
 
     get-modflow :
 
-See the [docs](.docs/md/get_modflow.md) for more information.
+See the [docs](https://flopy.readthedocs.io/en/latest/md/get_modflow.html) for more information.
 
 
 Getting Started
@@ -104,9 +104,9 @@ pmv.plot_vector(qx, qy, normalize=True, color="white")
 Additional FloPy Resources
 ------------------------------------------------
 
-- [FloPy tutorials](https://flopy.readthedocs.io/en/stable/tutorials.html) and scripts demonstrating the use of FloPy to run and post-process MODFLOW-based models.
+- [FloPy tutorials](https://flopy.readthedocs.io/en/latest/tutorials.html) and scripts demonstrating the use of FloPy to run and post-process MODFLOW-based models.
 
-- [FloPy example notebooks](https://flopy.readthedocs.io/en/stable/notebooks.html) demonstrating the use of FloPy pre- and post-processing capabilities with a variety of MODFLOW-based models.
+- [FloPy example notebooks](https://flopy.readthedocs.io/en/latest/notebooks.html) demonstrating the use of FloPy pre- and post-processing capabilities with a variety of MODFLOW-based models.
 
 - [MODFLOW 6 example problems](https://modflow6-examples.readthedocs.io/en/latest/) demonstrating FloPy use to create, run, and post-process MODFLOW 6 models.
 
@@ -114,7 +114,7 @@ Additional FloPy Resources
 
 - A table of the supported and proposed model checks implemented in  FloPy is available in [docs/model_checks.md](docs/model_checks.md) on the github repo.
 
-- A summary of changes in each FloPy version is available in [docs/version_changes.md](docs/version_changes.md) on the github repo.
+- A summary of changes in each FloPy version is available in [docs/version_changes.md](https://flopy.readthedocs.io/en/latest/md/version_changes.html) on the github repo.
 
 Questions
 ------------------------------------------------
