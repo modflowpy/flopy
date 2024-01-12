@@ -344,7 +344,7 @@ class ModflowDis(Package):
         """
         return self.get_totim()[-1]
     
-    def get_stp_per_perlen(self):
+    def get_per_stp_perlen(self):
         """
         Get lists for stress periods, time steps, and period lengths in the model. 
 
@@ -357,7 +357,7 @@ class ModflowDis(Package):
         perlen: list of ints
             Length of each timestep
         """
-        
+
         nstp = self.nstp.array
         nperlen = self.perlen.array
         per = []
