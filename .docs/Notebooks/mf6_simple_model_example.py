@@ -65,7 +65,7 @@ k = 1.0
 # One big difference between MODFLOW 6 and previous MODFLOW versions is that MODFLOW 6 is based on the concept of a simulation.  A simulation consists of the following:
 #
 # * Temporal discretization (TDIS)
-# * One or more models (GWF is the only model supported at present)
+# * One or more models (e.g. GWF, GWT)
 # * Zero or more exchanges (instructions for how models are coupled)
 # * Solutions
 #
