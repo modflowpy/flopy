@@ -2,7 +2,7 @@ import os
 import subprocess
 import warnings
 from pathlib import Path
-from typing import Union, List
+from typing import List, Union
 
 import numpy as np
 
@@ -1982,7 +1982,7 @@ class Gridgen:
             return read1d(f=f, a=np.empty((nodelay[lay]), dtype=np.float32))
 
     @staticmethod
-    def read_quadtreegrid_bot_dat(model_ws: Union[str, os.PathLike], nodelay: list[int], lay: int):
+    def read_quadtreegrid_bot_dat(model_ws: Union[str, os.PathLike], nodelay: List[int], lay: int):
         """Read quadtreegrid.bot_.dat file
 
         Parameters
