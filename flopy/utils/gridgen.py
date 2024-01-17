@@ -1010,9 +1010,8 @@ class Gridgen:
         istart = 0
         for k in range(nlay):
             istop = istart + nodelay[k]
-            btk = self.read_quadtreegrid_dat(
+            btk = self.read_quadtreegrid_bot_dat(
                 model_ws=self.model_ws,
-                top_or_bot="bot",
                 nodelay=nodelay,
                 lay=k,
             )
@@ -1915,9 +1914,9 @@ class Gridgen:
 
         """
 
-        fname = Path(model_ws) / "qtg.nod"
+        fname = os.path.join(model_ws, "qtg.nod")
 
-        with fname.open("r") as f:
+        with open(fname, "r") as f:
             if nodes_only:
                 line = f.readline()
                 ll = line.strip().split()
@@ -1975,8 +1974,8 @@ class Gridgen:
         -------
         np.ndarray
         """
-        fname = Path(model_ws) / "qtg.nodesperlay.dat"
-        with fname.open("r") as f:
+        fname = os.path.join(model_ws, "qtg.nodesperlay.dat")
+        with open(fname, "r") as f:
             return read1d(f=f, a=np.empty((nlay), dtype=int))
 
     @staticmethod
@@ -1998,8 +1997,8 @@ class Gridgen:
         -------
         np.ndarray
         """
-        fname = Path(model_ws) / f"quadtreegrid.top{lay + 1}.dat"
-        with fname.open("r") as f:
+        fname = os.path.join(model_ws, f"quadtreegrid.top{lay + 1}.dat")
+        with open(fname, "r") as f:
             return read1d(f=f, a=np.empty((nodelay[lay]), dtype=np.float32))
 
     @staticmethod
@@ -2021,8 +2020,8 @@ class Gridgen:
         -------
         np.ndarray
         """
-        fname = Path(model_ws) / f"quadtreegrid.bot{lay + 1}.dat"
-        with fname.open("r") as f:
+        fname = os.path.join(model_ws, f"quadtreegrid.bot{lay + 1}.dat")
+        with open(fname, "r") as f:
             return read1d(f=f, a=np.empty((nodelay[lay]), dtype=np.float32))
 
     @staticmethod
@@ -2040,8 +2039,8 @@ class Gridgen:
         -------
         np.ndarray
         """
-        fname = Path(model_ws) / "qtg.area.dat"
-        with fname.open("r") as f:
+        fname = os.path.join(model_ws, "qtg.area.dat")
+        with open(fname, "r") as f:
             return read1d(f=f, a=np.empty((nodes), dtype=np.float32))
 
     @staticmethod
@@ -2059,8 +2058,8 @@ class Gridgen:
         -------
         np.ndarray
         """
-        fname = Path(model_ws) / "qtg.iac.dat"
-        with fname.open("r") as f:
+        fname = os.path.join(model_ws, "qtg.iac.dat")
+        with open(fname, "r") as f:
             return read1d(f=f, a=np.empty((nodes), dtype=int))
 
     @staticmethod
@@ -2078,8 +2077,8 @@ class Gridgen:
         -------
         np.ndarray
         """
-        fname = Path(model_ws) / "qtg.ja.dat"
-        with fname.open("r") as f:
+        fname = os.path.join(model_ws, "qtg.ja.dat")
+        with open(fname, "r") as f:
             ja = read1d(f=f, a=np.empty((nja), dtype=int)) - 1
             return ja
 
@@ -2098,8 +2097,8 @@ class Gridgen:
         -------
         np.ndarray
         """
-        fname = Path(model_ws) / "qtg.fldr.dat"
-        with fname.open("r") as f:
+        fname = os.path.join(model_ws, "qtg.fldr.dat")
+        with open(fname, "r") as f:
             return read1d(f=f, a=np.empty((nja), dtype=int))
 
     @staticmethod
@@ -2117,8 +2116,8 @@ class Gridgen:
         -------
         np.ndarray
         """
-        fname = Path(model_ws) / "qtg.c1.dat"
-        with fname.open("r") as f:
+        fname = os.path.join(model_ws, "qtg.c1.dat")
+        with open(fname, "r") as f:
             return read1d(f=f, a=np.empty((nja), dtype=np.float32))
 
     @staticmethod
@@ -2136,6 +2135,6 @@ class Gridgen:
         -------
         np.ndarray
         """
-        fname = Path(model_ws) / "qtg.fahl.dat"
-        with fname.open("r") as f:
+        fname = os.path.join(model_ws, "qtg.fahl.dat")
+        with open(fname, "r") as f:
             return read1d(f=f, a=np.empty((nja), dtype=np.float32))
