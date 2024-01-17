@@ -263,9 +263,7 @@ class GeoSpatialCollection:
         self.__shapefile = import_optional_dependency(
             "shapefile", errors="silent"
         )
-        gpd = import_optional_dependency(
-            "geopandas", errors="silent"
-        )
+        gpd = import_optional_dependency("geopandas", errors="silent")
 
         shapely_geo = import_optional_dependency(
             "shapely.geometry", errors="silent"
