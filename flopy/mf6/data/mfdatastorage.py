@@ -1382,6 +1382,7 @@ class DataStorage:
                 self.layer_storage[
                     layer
                 ].data_storage_type = DataStorageType.internal_array
+                data_type = self.data_dimensions.structure.get_datum_type(True)
                 try:
                     self.layer_storage[layer].internal_data = np.reshape(
                         data, dimensions
@@ -1406,6 +1407,15 @@ class DataStorage:
                         traceback_,
                         message,
                         self._simulation_data.debug,
+                    )
+                dt = self.layer_storage[layer].internal_data.dtype
+                if dt != data_type:
+                    self.layer_storage[
+                        layer
+                    ].internal_data = self.layer_storage[
+                        layer
+                    ].internal_data.astype(
+                        data_type
                     )
             if not preserve_record:
                 self.layer_storage[layer].factor = multiplier
