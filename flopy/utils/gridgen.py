@@ -399,7 +399,7 @@ class Gridgen:
             features_to_shapefile(feature, "polygon", shapefile_path)
         else:
             raise ValueError(
-                f"Feature must be a pathlike (shapefile) or array-like of geometries"
+                "Feature must be a pathlike (shapefile) or array-like of geometries"
             )
 
         # make sure shapefile exists
@@ -453,7 +453,7 @@ class Gridgen:
             features_to_shapefile(features, featuretype, shapefile_path)
         else:
             raise ValueError(
-                f"Features must be a pathlike (shapefile) or array-like of geometries"
+                "Features must be a pathlike (shapefile) or array-like of geometries"
             )
 
         # make sure shapefile exists
@@ -883,7 +883,7 @@ class Gridgen:
 
         # ja -- this is being read is as one-based, which is also what is
         # expected by the ModflowDisu constructor
-        ja = self.read_qgt_ja_dat(model_ws=self.model_ws, nja=nja)
+        ja = self.read_qtg_ja_dat(model_ws=self.model_ws, nja=nja)
 
         # ivc
         fldr = self.read_qtg_fldr_dat(model_ws=self.model_ws, nja=nja)
@@ -892,10 +892,10 @@ class Gridgen:
         cl1 = None
         cl2 = None
         # cl12
-        cl12 = self.read_qgt_cl_dat(model_ws=self.model_ws, nja=nja)
+        cl12 = self.read_qtg_cl_dat(model_ws=self.model_ws, nja=nja)
 
         # fahl
-        fahl = self.read_gqt_fahl_dat(model_ws=self.model_ws, nja=nja)
+        fahl = self.read_qtg_fahl_dat(model_ws=self.model_ws, nja=nja)
 
         # create dis object instance
         disu = MfUsgDisU(
