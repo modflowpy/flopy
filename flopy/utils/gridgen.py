@@ -6,15 +6,15 @@ from typing import Union, List
 
 import numpy as np
 
-from flopy.discretization import StructuredGrid
-from flopy.export.shapefile_utils import shp2recarray
-from flopy.mbase import resolve_exe
-from flopy.mf6.modflow import ModflowGwfdis
-from flopy.mfusg.mfusgdisu import MfUsgDisU
-from flopy.modflow import ModflowDis
-from flopy.utils import import_optional_dependency
-from flopy.utils.flopy_io import relpath_safe
-from flopy.utils.util_array import Util2d  # read1d,
+from ..discretization import StructuredGrid
+from ..export.shapefile_utils import shp2recarray
+from ..mbase import resolve_exe
+from ..mf6.modflow import ModflowGwfdis
+from ..mfusg.mfusgdisu import MfUsgDisU
+from ..modflow import ModflowDis
+from ..utils import import_optional_dependency
+from ..utils.flopy_io import relpath_safe
+from .util_array import Util2d  # read1d,
 
 # todo
 # creation of line and polygon shapefiles from features (holes!)
