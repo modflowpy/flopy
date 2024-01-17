@@ -1407,6 +1407,16 @@ class DataStorage:
                         message,
                         self._simulation_data.debug,
                     )
+                data_type = self.data_dimensions.structure.get_datum_type(True)
+                dt = self.layer_storage[layer].internal_data.dtype
+                if dt != data_type:
+                    self.layer_storage[
+                        layer
+                    ].internal_data = self.layer_storage[
+                        layer
+                    ].internal_data.astype(
+                        data_type
+                    )
             if not preserve_record:
                 self.layer_storage[layer].factor = multiplier
                 self.layer_storage[layer].iprn = print_format
