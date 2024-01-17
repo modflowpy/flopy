@@ -526,7 +526,9 @@ class Gridgen:
         self._mkvertdict()
 
         # read and save nodelay array to self
-        self.nodelay = self.read_qtg_nodesperlay_dat(model_ws=self.model_ws, nlay=self.nlay)
+        self.nodelay = self.read_qtg_nodesperlay_dat(
+            model_ws=self.model_ws, nlay=self.nlay
+        )
 
         # Create a recarray of the grid polygon shapefile
         shapename = os.path.join(self.model_ws, "qtgrid")
@@ -758,7 +760,7 @@ class Gridgen:
             Recarray representation of the node file with zero-based indexing
 
         """
-        node_ra = self.read_gtq_nod(model_ws=self.model_ws, nodes_only=False)
+        node_ra = self.read_qtg_nod(model_ws=self.model_ws, nodes_only=False)
         return node_ra
 
     def get_disu(
@@ -803,7 +805,7 @@ class Gridgen:
         """
 
         # nodes, nlay, ivsd, itmuni, lenuni, idsymrd, laycbd
-        nodes = self.read_gtq_nod(model_ws=self.model_ws, nodes_only=True)
+        nodes = self.read_qtg_nod(model_ws=self.model_ws, nodes_only=True)
         nlay = self.nlay
         ivsd = 0
         idsymrd = 0
@@ -813,12 +815,16 @@ class Gridgen:
         self.nodes = nodes
 
         # nodelay
-        nodelay = self.read_qtg_nodesperlay_dat(model_ws=self.model_ws, nlay=nlay)
+        nodelay = self.read_qtg_nodesperlay_dat(
+            model_ws=self.model_ws, nlay=nlay
+        )
 
         # top
         top = [0] * nlay
         for k in range(nlay):
-            tpk = self.read_quadtreegrid_top_dat(model_ws=self.model_ws, nodelay=nodelay, lay=k)
+            tpk = self.read_quadtreegrid_top_dat(
+                model_ws=self.model_ws, nodelay=nodelay, lay=k
+            )
             if tpk.min() == tpk.max():
                 tpk = tpk.min()
             else:
@@ -834,7 +840,9 @@ class Gridgen:
         # bot
         bot = [0] * nlay
         for k in range(nlay):
-            btk = self.read_quadtreegrid_bot_dat(model_ws=self.model_ws, nodelay=nodelay, lay=k)
+            btk = self.read_quadtreegrid_bot_dat(
+                model_ws=self.model_ws, nodelay=nodelay, lay=k
+            )
             if btk.min() == btk.max():
                 btk = btk.min()
             else:
@@ -956,7 +964,9 @@ class Gridgen:
 
         """
         nlay = self.get_nlay()
-        nodelay = self.read_qtg_nodesperlay_dat(model_ws=self.model_ws, nlay=nlay)
+        nodelay = self.read_qtg_nodesperlay_dat(
+            model_ws=self.model_ws, nlay=nlay
+        )
         return nodelay
 
     def get_top(self):
@@ -976,7 +986,9 @@ class Gridgen:
         istart = 0
         for k in range(nlay):
             istop = istart + nodelay[k]
-            tpk = self.read_quadtreegrid_top_dat(model_ws=self.model_ws, nodelay=nodelay, lay=k)
+            tpk = self.read_quadtreegrid_top_dat(
+                model_ws=self.model_ws, nodelay=nodelay, lay=k
+            )
             top[istart:istop] = tpk
             istart = istop
         return top
@@ -998,7 +1010,12 @@ class Gridgen:
         istart = 0
         for k in range(nlay):
             istop = istart + nodelay[k]
-            btk = self.read_quadtreegrid_dat(model_ws=self.model_ws, top_or_bot='bot', nodelay=nodelay, lay=k)
+            btk = self.read_quadtreegrid_dat(
+                model_ws=self.model_ws,
+                top_or_bot="bot",
+                nodelay=nodelay,
+                lay=k,
+            )
             bot[istart:istop] = btk
             istart = istop
         return bot
@@ -1863,7 +1880,7 @@ class Gridgen:
 
         """
         # ensure there are active leaf cells from gridgen
-        nodes = self.read_gtq_nod(model_ws=self.model_ws, nodes_only=True)
+        nodes = self.read_qtg_nod(model_ws=self.model_ws, nodes_only=True)
         if nodes == 0:
             raise Exception("Gridgen resulted in no active cells.")
 
@@ -1879,7 +1896,9 @@ class Gridgen:
         return
 
     @staticmethod
-    def read_qtg_nod(model_ws: Union[str, os.PathLike], nodes_only:bool=False):
+    def read_qtg_nod(
+        model_ws: Union[str, os.PathLike], nodes_only: bool = False
+    ):
         """Read qtg.nod file
 
         Parameters
@@ -1942,7 +1961,7 @@ class Gridgen:
         return shapefile.Reader(fname)
 
     @staticmethod
-    def read_qtg_nodesperlay_dat(model_ws: Union[str, os.PathLike], nlay:int):
+    def read_qtg_nodesperlay_dat(model_ws: Union[str, os.PathLike], nlay: int):
         """Read qtgrid.shp file
 
         Parameters
@@ -1961,7 +1980,9 @@ class Gridgen:
             return read1d(f=f, a=np.empty((nlay), dtype=int))
 
     @staticmethod
-    def read_quadtreegrid_top_dat(model_ws: Union[str, os.PathLike], nodelay: List[int], lay: int):
+    def read_quadtreegrid_top_dat(
+        model_ws: Union[str, os.PathLike], nodelay: List[int], lay: int
+    ):
         """Read quadtreegrid.top_.dat file
 
         Parameters
@@ -1982,7 +2003,9 @@ class Gridgen:
             return read1d(f=f, a=np.empty((nodelay[lay]), dtype=np.float32))
 
     @staticmethod
-    def read_quadtreegrid_bot_dat(model_ws: Union[str, os.PathLike], nodelay: List[int], lay: int):
+    def read_quadtreegrid_bot_dat(
+        model_ws: Union[str, os.PathLike], nodelay: List[int], lay: int
+    ):
         """Read quadtreegrid.bot_.dat file
 
         Parameters
@@ -2001,7 +2024,6 @@ class Gridgen:
         fname = Path(model_ws) / f"quadtreegrid.bot{lay + 1}.dat"
         with fname.open("r") as f:
             return read1d(f=f, a=np.empty((nodelay[lay]), dtype=np.float32))
-
 
     @staticmethod
     def read_qtg_area_dat(model_ws: Union[str, os.PathLike], nodes: int):
@@ -2037,9 +2059,9 @@ class Gridgen:
         -------
         np.ndarray
         """
-        fname = Path(model_ws) /  "qtg.iac.dat"
+        fname = Path(model_ws) / "qtg.iac.dat"
         with fname.open("r") as f:
-            return read1d(f=f, a= np.empty((nodes), dtype=int))
+            return read1d(f=f, a=np.empty((nodes), dtype=int))
 
     @staticmethod
     def read_qtg_ja_dat(model_ws: Union[str, os.PathLike], nja: int):
@@ -2076,7 +2098,7 @@ class Gridgen:
         -------
         np.ndarray
         """
-        fname = Path(model_ws) /  "qtg.fldr.dat"
+        fname = Path(model_ws) / "qtg.fldr.dat"
         with fname.open("r") as f:
             return read1d(f=f, a=np.empty((nja), dtype=int))
 
