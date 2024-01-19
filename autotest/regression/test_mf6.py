@@ -3783,6 +3783,19 @@ def test005_advgw_tidal(function_tmpdir, example_data_path):
     names = ghb.ts.time_series_namerecord.get_data()
     assert names[0][0] == "tides"
 
+    # test obs blocks
+    obs_pkg = model.get_package("obs-1")
+    cont_mfl = obs_pkg.continuous
+    cont_data = cont_mfl.get_data()
+    assert len(cont_data) == 2
+    assert "head_hydrographs.csv" in cont_data
+    assert "gwf-advtidal.obs.flow.csv" in cont_data
+    flow = cont_data["gwf-advtidal.obs.flow.csv"]
+    assert flow[0][0] == "icf1"
+    assert flow[0][1] == "flow-ja-face"
+    assert flow[0][2] == (2, 4, 6)
+    assert flow[0][3] == (2, 4, 7)
+
     # add a stress period beyond nper
     spd = ghb.stress_period_data.get_data()
     spd[20] = copy.deepcopy(spd[0])
