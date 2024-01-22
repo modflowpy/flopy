@@ -580,7 +580,10 @@ class UnstructuredGrid(Grid):
         """
         if self.is_complete:
             return UnstructuredGrid(
-                vertices=[[i[0], i[1] * factor, i[2] * factor] for i in self._vertices],
+                vertices=[
+                    [i[0], i[1] * factor, i[2] * factor]
+                    for i in self._vertices
+                ],
                 iverts=self._iverts,
                 xcenters=self._xc * factor,
                 ycenters=self._yc * factor,

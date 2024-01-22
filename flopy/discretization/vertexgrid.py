@@ -316,16 +316,21 @@ class VertexGrid(Grid):
         """
         if self.is_complete:
             return VertexGrid(
-                vertices=[[i[0], i[1] * factor, i[2] * factor] for i in self._vertices],
-                cell2d=[[i[0], i[1] * factor, i[2] * factor] + i[3:] for i in self._cell2d],
+                vertices=[
+                    [i[0], i[1] * factor, i[2] * factor]
+                    for i in self._vertices
+                ],
+                cell2d=[
+                    [i[0], i[1] * factor, i[2] * factor] + i[3:]
+                    for i in self._cell2d
+                ],
                 top=self.top * factor,
-                botm=self.botm * factor
+                botm=self.botm * factor,
             )
         else:
             raise AssertionError(
                 "Grid is not complete and cannot be converted"
             )
-
 
     def intersect(self, x, y, z=None, local=False, forgive=False):
         """
