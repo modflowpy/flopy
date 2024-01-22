@@ -4,6 +4,7 @@ import warnings
 from contextlib import nullcontext
 from warnings import warn
 
+import geopandas
 import matplotlib
 import numpy as np
 import pytest
@@ -1233,13 +1234,13 @@ def test_vertex_neighbors(vertex_grid):
 
 def test_unstructured_neighbors(unstructured_grid):
     rook_neighbors = unstructured_grid.neighbors(5)
-    assert np.allclose(rook_neighbors, [0, 10, 1, 2, 3, 7, 12])
+    assert np.allclose(rook_neighbors, [0, 10, 1, 6, 11, 2, 7, 12])
 
     queen_neighbors = unstructured_grid.neighbors(
         5, method="queen", reset=True
     )
     assert np.allclose(
-        queen_neighbors, [0, 10, 1, 6, 11, 2, 3, 4, 7, 8, 12, 13]
+        queen_neighbors, [0, 10, 1, 6, 11, 2, 3, 7, 8, 12, 13]
     )
 
 
@@ -1300,3 +1301,66 @@ def test_get_lni_unstructured(grid):
             )
         )
         assert csum[layer] + i == nn
+
+
+def test_structured_convert(structured_grid):
+    factor = 3
+    new_grid = structured_grid.convert_grid(factor=factor)
+
+    xf = np.sum(new_grid.xvertices) / np.sum(structured_grid.xvertices)
+    yf = np.sum(new_grid.yvertices) / np.sum(structured_grid.yvertices)
+    zf = np.sum(new_grid.zvertices) / np.sum(structured_grid.zvertices)
+    if xf != factor or yf != factor or zf != factor:
+        raise AssertionError(
+            "structured grid conversion is not returning proper vertices"
+        )
+
+
+def test_vertex_convert(vertex_grid):
+    factor = 3
+    new_grid = vertex_grid.convert_grid(factor=factor)
+
+    xf = np.sum(new_grid.xvertices) / np.sum(vertex_grid.xvertices)
+    yf = np.sum(new_grid.yvertices) / np.sum(vertex_grid.yvertices)
+    zf = np.sum(new_grid.zvertices) / np.sum(vertex_grid.zvertices)
+    if xf != factor or yf != factor or zf != factor:
+        raise AssertionError(
+            "structured grid conversion is not returning proper vertices"
+        )
+
+
+def test_unstructured_convert(unstructured_grid):
+    factor = 3
+    new_grid = unstructured_grid.convert_grid(factor=factor)
+
+    xf = np.sum(new_grid.xvertices) / np.sum(unstructured_grid.xvertices)
+    yf = np.sum(new_grid.yvertices) / np.sum(unstructured_grid.yvertices)
+    zf = np.sum(new_grid.zvertices) / np.sum(unstructured_grid.zvertices)
+    if xf != factor or yf != factor or zf != factor:
+        raise AssertionError(
+            "structured grid conversion is not returning proper vertices"
+        )
+
+
+@requires_pkg("geopandas")
+def test_geo_dataframe(structured_grid, vertex_grid, unstructured_grid):
+    grids = (
+        structured_grid,
+        vertex_grid,
+        unstructured_grid
+    )
+
+    for grid in grids:
+        gdf = grid.geo_dataframe
+        if not isinstance(gdf, geopandas.GeoDataFrame):
+            raise TypeError("geo_dataframe not returning GeoDataFrame object")
+
+        geoms = gdf.geometry.values
+        for node, geom in enumerate(geoms):
+            coords = geom.exterior.coords
+            cv = grid.get_cell_vertices(node)
+            for coord in coords:
+                if coord not in cv:
+                    raise AssertionError(
+                        f"Cell vertices incorrect for node={node}"
+                    )
