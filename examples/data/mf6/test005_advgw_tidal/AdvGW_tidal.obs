@@ -7,3 +7,8 @@ BEGIN CONTINUOUS  FILEOUT  head_hydrographs.csv
   open/close AdvGW_tidal.head.cont.opncls
 END CONTINUOUS  FILEOUT  head_hydrographs.csv
 
+BEGIN continuous  FILEOUT  gwf-advtidal.obs.flow.csv
+  icf1  flow-ja-face  3 5 7  3 5 8
+END continuous  FILEOUT  gwf-advtidal.obs.flow.csv
+
+
