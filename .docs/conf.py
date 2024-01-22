@@ -105,8 +105,8 @@ if not on_rtd:
         os.system(" ".join(cmd))
 
 # -- Project information -----------------------------------------------------
-project = "FloPy Documentation"
-copyright = f"2022, {__author__}"
+project = "FloPy"
+copyright = f"2024, {__author__}"
 author = __author__
 
 # The version.
