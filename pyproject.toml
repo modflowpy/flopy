@@ -83,6 +83,7 @@ doc = [
     "ipython[kernel]",
     "jupytext",
     "myst-parser",
+    "nbconvert <7.14.0",
     "nbsphinx",
     "PyYAML",
     "rtds-action",
