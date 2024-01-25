@@ -229,9 +229,7 @@ def tri2vor(tri, **kwargs):
     vor_verts = np.array(vor_verts)
     for icell in range(len(vor_iverts)):
         iverts_cell = vor_iverts[icell]
-        vor_iverts[icell] = list(
-            get_sorted_vertices(iverts_cell, vor_verts)
-        )
+        vor_iverts[icell] = list(get_sorted_vertices(iverts_cell, vor_verts))
 
     # remove empty polygons/iverts, point, and line freatures
     # and their associated xy centers
