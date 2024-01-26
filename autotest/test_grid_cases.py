@@ -11,6 +11,7 @@ class GridCases:
         delc = 1.0 * np.ones(nrow, dtype=float)
         delr = 1.0 * np.ones(ncol, dtype=float)
         top = 10.0 * np.ones((nrow, ncol), dtype=float)
+        idomain = np.ones((nlay, nrow, ncol), dtype=int)
         botm = np.zeros((nlay, nrow, ncol), dtype=float)
         botm[0, :, :] = 5.0
         botm[1, :, :] = 0.0
@@ -23,6 +24,7 @@ class GridCases:
             delr=delr,
             top=top,
             botm=botm,
+            idomain=idomain
         )
 
     def structured_cbd_small(self):
@@ -81,6 +83,7 @@ class GridCases:
             [3, 1.5, 1.5, 4, 4, 5, 8, 7],
             [4, 0.5, 0.5, 4, 6, 7, 10, 9],
         ]
+        idomain = np.ones((nlay, ncpl), dtype=int)
         top = np.ones(ncpl, dtype=float) * 10.0
         botm = np.zeros((nlay, ncpl), dtype=float)
         botm[0, :] = 5.0
@@ -93,6 +96,7 @@ class GridCases:
             cell2d=cell2d,
             top=top,
             botm=botm,
+            idomain=idomain
         )
 
     def unstructured_small(self):
@@ -112,21 +116,21 @@ class GridCases:
             [10, 1.0, 0.0],
         ]
         iverts = [
-            [0, 0, 1, 4, 3],
-            [1, 1, 2, 5, 4],
-            [2, 3, 4, 7, 6],
-            [3, 4, 5, 8, 7],
-            [4, 6, 7, 10, 9],
-            [5, 0, 1, 4, 3],
-            [6, 1, 2, 5, 4],
-            [7, 3, 4, 7, 6],
-            [8, 4, 5, 8, 7],
-            [9, 6, 7, 10, 9],
-            [10, 0, 1, 4, 3],
-            [11, 1, 2, 5, 4],
-            [12, 3, 4, 7, 6],
-            [13, 4, 5, 8, 7],
-            [14, 6, 7, 10, 9],
+            [0, 1, 4, 3],
+            [1, 2, 5, 4],
+            [3, 4, 7, 6],
+            [4, 5, 8, 7],
+            [6, 7, 10, 9],
+            [0, 1, 4, 3],
+            [1, 2, 5, 4],
+            [3, 4, 7, 6],
+            [4, 5, 8, 7],
+            [6, 7, 10, 9],
+            [0, 1, 4, 3],
+            [1, 2, 5, 4],
+            [3, 4, 7, 6],
+            [4, 5, 8, 7],
+            [6, 7, 10, 9],
         ]
         xcenters = [
             0.5,
@@ -142,6 +146,7 @@ class GridCases:
             1.5,
             0.5,
         ]
+        idomain = np.ones((nlay, 5), dtype=int)
         top = np.ones((nlay, 5), dtype=float)
         top[0, :] = 10.0
         top[1, :] = 5.0
@@ -159,6 +164,7 @@ class GridCases:
             ncpl=ncpl,
             top=top.flatten(),
             botm=botm.flatten(),
+            idomain=idomain.flatten()
         )
 
     def unstructured_medium(self):

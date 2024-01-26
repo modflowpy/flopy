@@ -360,7 +360,7 @@ def test_multilinestring(multilinestring):
         assert gi1 == gi2, "GeoSpatialUtil multilinestring conversion error"
 
 
-@requires_pkg("shapely", "geojson")
+@requires_pkg("shapely", "geojson", "geopandas")
 def test_polygon_collection(polygon, poly_w_hole, multipolygon):
     col = [
         Shape.from_geojson(polygon),
@@ -377,8 +377,9 @@ def test_polygon_collection(polygon, poly_w_hole, multipolygon):
     points = gc1.points
     geojson = gc1.geojson
     fp_geo = gc1.flopy_geometry
+    gdf = gc1.geo_dataframe
 
-    collections = [shp, shply, points, geojson, fp_geo]
+    collections = [shp, shply, points, geojson, fp_geo, gdf]
     for col in collections:
         gc2 = GeoSpatialCollection(col, shapetype)
 
@@ -410,8 +411,9 @@ def test_point_collection(point, multipoint):
     points = gc1.points
     geojson = gc1.geojson
     fp_geo = gc1.flopy_geometry
+    gdf = gc1.geo_dataframe
 
-    collections = [shp, shply, points, geojson, fp_geo]
+    collections = [shp, shply, points, geojson, fp_geo, gdf]
     for col in collections:
         gc2 = GeoSpatialCollection(col, shapetype)
         gi2 = [i.flopy_geometry.__geo_interface__ for i in gc2]
@@ -439,8 +441,9 @@ def test_linestring_collection(linestring, multilinestring):
     points = gc1.points
     geojson = gc1.geojson
     fp_geo = gc1.flopy_geometry
+    gdf = gc1.geo_dataframe
 
-    collections = [shp, shply, points, geojson, fp_geo]
+    collections = [shp, shply, points, geojson, fp_geo, gdf]
     for col in collections:
         gc2 = GeoSpatialCollection(col, shapetype)
         gi2 = [i.flopy_geometry.__geo_interface__ for i in gc2]
@@ -485,8 +488,9 @@ def test_mixed_collection(
     points = gc1.points
     geojson = gc1.geojson
     fp_geo = gc1.flopy_geometry
+    gdf = gc1.geo_dataframe
 
-    collections = [shp, shply, lshply, points, geojson, fp_geo]
+    collections = [shp, shply, lshply, points, geojson, fp_geo, gdf]
     for col in collections:
         gc2 = GeoSpatialCollection(col, shapetype)
 

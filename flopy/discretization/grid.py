@@ -618,6 +618,41 @@ class Grid:
     def cross_section_vertices(self):
         return self.xyzvertices[0], self.xyzvertices[1]
 
+    def geo_dataframe(self, polys):
+        """
+        Method returns a geopandas GeoDataFrame of the Grid
+
+        Returns
+        -------
+            GeoDataFrame
+        """
+        from ..utils.geospatial_utils import GeoSpatialCollection
+
+        gc = GeoSpatialCollection(
+            polys, shapetype=["Polygon" for _ in range(len(polys))]
+        )
+        gdf = gc.geo_dataframe
+        if self.crs is not None:
+            gdf = gdf.set_crs(crs=self.crs)
+
+        return gdf
+
+    def convert_grid(self, factor):
+        """
+        Method to scale the model grid based on user supplied scale factors
+
+        Parameters
+        ----------
+        factor
+
+        Returns
+        -------
+            Grid object
+        """
+        raise NotImplementedError(
+            "convert_grid must be defined in the child class"
+        )
+
     def _set_neighbors(self, reset=False, method="rook"):
         """
         Method to calculate neighbors via shared edges or shared vertices
