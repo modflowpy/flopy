@@ -1356,7 +1356,7 @@ class MFFileAccessList(MFFileAccess):
                     if store_internal:
                         # store as rec array
                         storage.store_internal(
-                            data_loaded, None, False, current_key
+                            data_loaded, None, False, key=current_key
                         )
                         storage.data_dimensions.unlock()
                         return [False, line, data_line]

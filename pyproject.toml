@@ -36,6 +36,7 @@ dependencies = [
 dynamic = ["version", "readme"]
 
 [project.optional-dependencies]
+dev = ["flopy[lint,test,optional,doc]"]
 lint = [
     "black",
     "cffconvert",
@@ -84,6 +85,7 @@ doc = [
     "ipython[kernel]",
     "jupytext",
     "myst-parser",
+    "nbconvert <7.14.0",
     "nbsphinx",
     "PyYAML",
     "rtds-action",

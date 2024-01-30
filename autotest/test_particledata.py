@@ -59,6 +59,16 @@ structured_dtype = np.dtype(
         ("drape", "<i4"),
     ]
 )
+unstructured_dtype = np.dtype(
+    [
+        ("node", "<i4"),
+        ("localx", "<f4"),
+        ("localy", "<f4"),
+        ("localz", "<f4"),
+        ("timeoffset", "<f4"),
+        ("drape", "<i4"),
+    ]
+)
 
 
 def test_particledata_structured_ctor_with_partlocs_as_list_of_tuples():
@@ -95,6 +105,66 @@ def test_particledata_structured_ctor_with_partlocs_as_ndarray():
                 (0, 1, 2, 0.5, 0.5, 0.5, 0.0, 0),
             ],
             dtype=structured_dtype,
+        ),
+    )
+
+
+def test_particledata_unstructured_ctor_with_partlocs_as_ndarray():
+    locs = np.array([0, 1, 2])
+    data = ParticleData(partlocs=locs, structured=False)
+
+    assert data.particlecount == 3
+    assert data.dtype == unstructured_dtype
+    assert isinstance(data.particledata, pd.DataFrame)
+    assert np.array_equal(
+        data.particledata.to_records(index=False),
+        np.core.records.fromrecords(
+            [
+                (0, 0.5, 0.5, 0.5, 0.0, 0),
+                (1, 0.5, 0.5, 0.5, 0.0, 0),
+                (2, 0.5, 0.5, 0.5, 0.0, 0),
+            ],
+            dtype=unstructured_dtype,
+        ),
+    )
+
+
+def test_particledata_unstructured_ctor_with_partlocs_as_list():
+    locs = [0, 1, 2]
+    data = ParticleData(partlocs=locs, structured=False)
+
+    assert data.particlecount == 3
+    assert data.dtype == unstructured_dtype
+    assert isinstance(data.particledata, pd.DataFrame)
+    assert np.array_equal(
+        data.particledata.to_records(index=False),
+        np.core.records.fromrecords(
+            [
+                (0, 0.5, 0.5, 0.5, 0.0, 0),
+                (1, 0.5, 0.5, 0.5, 0.0, 0),
+                (2, 0.5, 0.5, 0.5, 0.0, 0),
+            ],
+            dtype=unstructured_dtype,
+        ),
+    )
+
+
+def test_particledata_unstructured_ctor_with_partlocs_as_ndarray():
+    locs = np.array([0, 1, 2])
+    data = ParticleData(partlocs=locs, structured=False)
+
+    assert data.particlecount == 3
+    assert data.dtype == unstructured_dtype
+    assert isinstance(data.particledata, pd.DataFrame)
+    assert np.array_equal(
+        data.particledata.to_records(index=False),
+        np.core.records.fromrecords(
+            [
+                (0, 0.5, 0.5, 0.5, 0.0, 0),
+                (1, 0.5, 0.5, 0.5, 0.0, 0),
+                (2, 0.5, 0.5, 0.5, 0.0, 0),
+            ],
+            dtype=unstructured_dtype,
         ),
     )
 

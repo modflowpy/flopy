@@ -63,9 +63,9 @@ Then install `flopy` and core dependencies from the project root:
 
     pip install .
 
-The `flopy` package has a number of [optional dependencies](.docs/optional_dependencies.md), as well as extra dependencies required for linting, testing, and building documentation. Extra dependencies are listed in the `test`, `lint`, `optional`, and `doc` groups under the `[project.optional-dependencies]` section in `pyproject.toml`. Core, linting, testing and optional dependencies are included in the Conda environment in `etc/environment.yml`. Only core dependencies are included in the PyPI package &mdash; to install extra dependency groups with pip, use `pip install ".[<group>]"`. For instance, to install all extra dependency groups:
+The `flopy` package has a number of [optional dependencies](.docs/optional_dependencies.md), as well as extra dependencies required for linting, testing, and building documentation. Extra dependencies are listed in the `test`, `lint`, `optional`, and `doc` groups under the `[project.optional-dependencies]` section in `pyproject.toml`. Core, linting, testing and optional dependencies are included in the Conda environment in `etc/environment.yml`. Only core dependencies are included in the PyPI package &mdash; to install extra dependency groups with pip, use `pip install ".[<group>]"`. For instance, to install all development dependencies:
 
-    pip install ".[test, lint, optional, doc]"
+    pip install ".[dev]"
 
 Alternatively, with Anaconda or Miniconda:
 
@@ -169,10 +169,10 @@ jupytext --from py --to ipynb path/to/notebook
 
 Notebook scripts can be run like any other Python script. To run `.ipynb` notebooks, you will need `jupyter` installed (`jupyter` is included with the `test` optional dependency group in `pyproject.toml`). Some of the notebooks use [optional dependencies](.docs/optional_dependencies.md) as well.
 
-To install jupyter and optional dependencies at once:
+To install all development dependencies at once, including jupyter and all optional packages:
 
 ```shell
-pip install ".[test, optional]"
+pip install ".[dev]"
 ```
 
 To start a local Jupyter notebook server, run:

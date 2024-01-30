@@ -171,72 +171,81 @@ def tri2vor(tri, **kwargs):
     # step 1 -- go through voronoi ridge vertices
     # and add valid vertices to vor_verts and to the
     # vor_iverts incidence list
-    if True:
-        for ips, irvs in zip(ridge_points, ridge_vertices):
-            ip0, ip1 = ips
-            irv0, irv1 = irvs
-            if irv0 >= 0:
-                point_in_domain = vor_vert_indomain[irv0]
-                if point_in_domain:
-                    ivert = idx_vertindex[irv0]
-                    if ivert not in vor_iverts[ip0]:
-                        vor_iverts[ip0].append(ivert)
-                    if ivert not in vor_iverts[ip1]:
-                        vor_iverts[ip1].append(ivert)
-            if irv1 >= 0:
-                point_in_domain = vor_vert_indomain[irv1]
-                if point_in_domain:
-                    ivert = idx_vertindex[irv1]
-                    if ivert not in vor_iverts[ip0]:
-                        vor_iverts[ip0].append(ivert)
-                    if ivert not in vor_iverts[ip1]:
-                        vor_iverts[ip1].append(ivert)
+    for ips, irvs in zip(ridge_points, ridge_vertices):
+        ip0, ip1 = ips
+        irv0, irv1 = irvs
+        if irv0 >= 0:
+            point_in_domain = vor_vert_indomain[irv0]
+            if point_in_domain:
+                ivert = idx_vertindex[irv0]
+                if ivert not in vor_iverts[ip0]:
+                    vor_iverts[ip0].append(ivert)
+                if ivert not in vor_iverts[ip1]:
+                    vor_iverts[ip1].append(ivert)
+        if irv1 >= 0:
+            point_in_domain = vor_vert_indomain[irv1]
+            if point_in_domain:
+                ivert = idx_vertindex[irv1]
+                if ivert not in vor_iverts[ip0]:
+                    vor_iverts[ip0].append(ivert)
+                if ivert not in vor_iverts[ip1]:
+                    vor_iverts[ip1].append(ivert)
 
     # step 2 -- along the edge, add points
-    if True:
-        # Count number of boundary markers that correspond to the outer
-        # polygon domain or to holes.  These segments will be used to add
-        # new vertices for edge cells.
-        nexterior_boundary_markers = len(tri._polygons[0])
-        for ihole in range(nholes):
-            polygon = tri._polygons[ihole + 1]
-            nexterior_boundary_markers += len(polygon)
-        idx = (tri_edge["boundary_marker"] > 0) & (
-            tri_edge["boundary_marker"] <= nexterior_boundary_markers
-        )
-        inewvert = len(vor_verts)
-        for _, ip0, ip1, _ in tri_edge[idx]:
-            midpoint = tri_verts[[ip0, ip1]].mean(axis=0)
-            px, py = midpoint
-            vor_verts.append((px, py))
+    # Count number of boundary markers that correspond to the outer
+    # polygon domain or to holes.  These segments will be used to add
+    # new vertices for edge cells.
+    nexterior_boundary_markers = len(tri._polygons[0])
+    for ihole in range(nholes):
+        polygon = tri._polygons[ihole + 1]
+        nexterior_boundary_markers += len(polygon)
+    idx = (tri_edge["boundary_marker"] > 0) & (
+        tri_edge["boundary_marker"] <= nexterior_boundary_markers
+    )
+    inewvert = len(vor_verts)
+    for _, ip0, ip1, _ in tri_edge[idx]:
+        midpoint = tri_verts[[ip0, ip1]].mean(axis=0)
+        px, py = midpoint
+        vor_verts.append((px, py))
 
-            # add midpoint to each voronoi cell
-            vor_iverts[ip0].append(inewvert)
-            vor_iverts[ip1].append(inewvert)
-            inewvert += 1
+        # add midpoint to each voronoi cell
+        vor_iverts[ip0].append(inewvert)
+        vor_iverts[ip1].append(inewvert)
+        inewvert += 1
 
-            # add ip0 triangle vertex to voronoi cell
-            px, py = tri_verts[ip0]
-            vor_verts.append((px, py))
-            vor_iverts[ip0].append(inewvert)
-            inewvert += 1
+        # add ip0 triangle vertex to voronoi cell
+        px, py = tri_verts[ip0]
+        vor_verts.append((px, py))
+        vor_iverts[ip0].append(inewvert)
+        inewvert += 1
 
-            # add ip1 triangle vertex to voronoi cell
-            px, py = tri_verts[ip1]
-            vor_verts.append((px, py))
-            vor_iverts[ip1].append(inewvert)
-            inewvert += 1
+        # add ip1 triangle vertex to voronoi cell
+        px, py = tri_verts[ip1]
+        vor_verts.append((px, py))
+        vor_iverts[ip1].append(inewvert)
+        inewvert += 1
 
     # Last step -- sort vertices in correct order
-    if True:
-        vor_verts = np.array(vor_verts)
-        for icell in range(len(vor_iverts)):
-            iverts_cell = vor_iverts[icell]
-            vor_iverts[icell] = list(
-                get_sorted_vertices(iverts_cell, vor_verts)
-            )
+    vor_verts = np.array(vor_verts)
+    for icell in range(len(vor_iverts)):
+        iverts_cell = vor_iverts[icell]
+        vor_iverts[icell] = list(get_sorted_vertices(iverts_cell, vor_verts))
 
-    return vor_verts, vor_iverts
+    # remove empty polygons/iverts, point, and line freatures
+    # and their associated xy centers
+    points = list(tri.verts)
+    pop_list = []
+    for icell, ivlist in enumerate(vor_iverts):
+        if len(ivlist) < 3:
+            pop_list.append(icell)
+
+    for icell in pop_list[::-1]:
+        vor_iverts.pop(icell)
+        points.pop(icell)
+
+    points = np.array(points)
+
+    return vor_verts, vor_iverts, points
 
 
 class VoronoiGrid:
@@ -270,8 +279,7 @@ class VoronoiGrid:
         from .triangle import Triangle
 
         if isinstance(tri, Triangle):
-            points = tri.verts
-            verts, iverts = tri2vor(tri, **kwargs)
+            verts, iverts, points = tri2vor(tri, **kwargs)
         else:
             raise TypeError(
                 "The tri argument must be of type flopy.utils.Triangle"
