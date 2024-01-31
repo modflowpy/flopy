@@ -29,12 +29,12 @@
 # + pycharm={"name": "#%%\n"}
 import os
 import sys
+from pprint import pformat
 from tempfile import TemporaryDirectory
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-
 import flopy
 
 # Set name of MODFLOW exe
@@ -64,11 +64,7 @@ ml = flopy.modflow.Modflow.load(
 ml.model_ws = modelpth
 ml.write_input()
 success, buff = ml.run_model(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+assert success, pformat(buff)
 
 files = ["freyberg.hds", "freyberg.cbc"]
 for f in files:

@@ -26,19 +26,12 @@ import sys
 from tempfile import TemporaryDirectory
 
 import matplotlib as mpl
-import matplotlib.pyplot as plt
 import numpy as np
 
 # +
 from IPython.display import Image
 
-# run installed version of flopy or add local path
-try:
-    import flopy
-except:
-    fpth = os.path.abspath(os.path.join("..", ".."))
-    sys.path.append(fpth)
-    import flopy
+import flopy
 
 print(sys.version)
 print(f"numpy version: {np.__version__}")

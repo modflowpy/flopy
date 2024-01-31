@@ -24,6 +24,7 @@
 # First we locate the model directory.
 
 # +
+from pprint import pformat
 from pathlib import Path
 
 import flopy
@@ -102,11 +103,7 @@ gwf.change_model_ws(str(work_dir))
 gwf.write_name_file()
 gwf.write_input()
 success, buff = gwf.run_model(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+assert success, pformat(buff)
 # -
 
 # Load head data from the output files:

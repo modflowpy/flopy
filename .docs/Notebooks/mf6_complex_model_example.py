@@ -24,19 +24,14 @@ import os
 
 # +
 import sys
+from pprint import pformat
 from tempfile import TemporaryDirectory
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
-# run installed version of flopy or add local path
-try:
-    import flopy
-except:
-    fpth = os.path.abspath(os.path.join("..", ".."))
-    sys.path.append(fpth)
-    import flopy
+import flopy
 
 print(sys.version)
 print(f"numpy version: {np.__version__}")
@@ -56,7 +51,6 @@ data_pth = os.path.join(
     "examples",
     "data",
     "mf6",
-    "create_tests",
     "test005_advgw_tidal",
 )
 assert os.path.isdir(data_pth)
@@ -586,11 +580,7 @@ print(os.listdir(workspace))
 
 # Run the simulation
 success, buff = sim.run_simulation(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+assert success, pformat(buff)
 
 # ### Post-Process Head Results
 #

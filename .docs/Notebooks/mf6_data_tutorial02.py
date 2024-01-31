@@ -32,8 +32,6 @@
 # The following code sets up a simulation used in the observation examples.
 
 # package import
-import os
-from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import numpy as np

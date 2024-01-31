@@ -38,7 +38,6 @@
 # Import packages
 
 # +
-import os
 import sys
 
 import matplotlib as mpl
@@ -49,7 +48,6 @@ from shapely.geometry import (
     LineString,
     MultiLineString,
     MultiPoint,
-    MultiPolygon,
     Point,
     Polygon,
 )

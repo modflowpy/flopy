@@ -21,19 +21,14 @@
 # +
 import os
 import sys
+from pprint import pformat
 from tempfile import TemporaryDirectory
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
-# run installed version of flopy or add local path
-try:
-    import flopy
-except:
-    fpth = os.path.abspath(os.path.join("..", ".."))
-    sys.path.append(fpth)
-    import flopy
+import flopy
 
 # temporary directory
 temp_dir = TemporaryDirectory()
@@ -101,11 +96,7 @@ pcg = flopy.modflow.ModflowPcg(ml)
 oc = flopy.modflow.ModflowOc(ml)
 ml.write_input()
 success, buff = ml.run_model(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+assert success, pformat(buff)
 
 # Once the model has terminated normally, we can read the heads file. First, a link to the heads file is created with `HeadFile`. The link can then be accessed with the `get_data` function, by specifying, in this case, the step number and period number for which we want to retrieve data. A three-dimensional array is returned of size `nlay, nrow, ncol`. Matplotlib contouring functions are used to make contours of the layers or a cross-section.
 

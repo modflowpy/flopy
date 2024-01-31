@@ -25,6 +25,7 @@
 import os
 import sys
 from pathlib import Path
+from pprint import pformat
 from tempfile import TemporaryDirectory
 
 import matplotlib as mpl
@@ -171,6 +172,7 @@ oc = flopy.mf6.ModflowGwfoc(
 )
 sim.write_simulation()
 success, buff = sim.run_simulation(report=True, silent=True)
+assert success, pformat(buff)
 
 head = gwf.output.head().get_data()
 bdobj = gwf.output.budget()
@@ -236,6 +238,7 @@ oc = flopy.mf6.ModflowGwtoc(
 
 sim.write_simulation()
 success, buff = sim.run_simulation(report=True, silent=True)
+assert success, pformat(buff)
 
 conc = gwt.output.concentration().get_data()
 
