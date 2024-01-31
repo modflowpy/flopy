@@ -397,7 +397,7 @@ def test_polygon_collection(polygon, poly_w_hole, multipolygon):
             assert is_equal, "GeoSpatialCollection Polygon conversion error"
 
 
-@requires_pkg("shapely", "geojson")
+@requires_pkg("shapely", "geojson", "geopandas")
 def test_point_collection(point, multipoint):
     col = [Shape.from_geojson(point), Shape.from_geojson(multipoint)]
 
@@ -427,7 +427,7 @@ def test_point_collection(point, multipoint):
                 )
 
 
-@requires_pkg("shapely", "geojson")
+@requires_pkg("shapely", "geojson", "geopandas")
 def test_linestring_collection(linestring, multilinestring):
     col = [Shape.from_geojson(linestring), Shape.from_geojson(multilinestring)]
 
@@ -457,7 +457,7 @@ def test_linestring_collection(linestring, multilinestring):
                 )
 
 
-@requires_pkg("shapely", "geojson")
+@requires_pkg("shapely", "geojson", "geopandas")
 def test_mixed_collection(
     polygon,
     poly_w_hole,

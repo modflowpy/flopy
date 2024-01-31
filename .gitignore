@@ -98,3 +98,6 @@ app
 
 # IDE files
 .vscode
+
+# mac files
+**.DS_Store

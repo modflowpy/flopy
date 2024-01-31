@@ -54,7 +54,6 @@ test = [
     "modflow-devtools",
     "pytest < 8.0.0",
     "pytest-benchmark",
-    "pytest-cases",
     "pytest-cov",
     "pytest-dotenv",
     "pytest-xdist",

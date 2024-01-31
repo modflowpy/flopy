@@ -79,6 +79,7 @@ m.check(f=os.path.join(workspace, "checksummary.csv"))
 
 try:
     import pandas as pd
+
     summary_pth = os.path.join(workspace, "checksummary.csv")
     df = pd.read_csv(summary_pth)
 except:

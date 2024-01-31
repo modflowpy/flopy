@@ -4,7 +4,6 @@ import warnings
 from contextlib import nullcontext
 from warnings import warn
 
-import geopandas
 import matplotlib
 import numpy as np
 import pytest
@@ -14,11 +13,11 @@ from flaky import flaky
 from matplotlib import pyplot as plt
 from modflow_devtools.markers import requires_exe, requires_pkg
 from modflow_devtools.misc import has_pkg
-from pytest_cases import parametrize_with_cases
 
 from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
 from flopy.mf6 import MFSimulation
 from flopy.modflow import Modflow, ModflowDis
+from flopy.utils import import_optional_dependency
 from flopy.utils.crs import get_authority_crs
 from flopy.utils.cvfdutil import gridlist_to_disv_gridprops, to_cvfd
 from flopy.utils.triangle import Triangle
@@ -1090,7 +1089,17 @@ def test_voronoi_vertex_grid(function_tmpdir):
 @flaky
 @requires_exe("triangle")
 @requires_pkg("shapely", "scipy")
-@parametrize_with_cases("grid_info", cases=GridCases, prefix="voronoi")
+@pytest.mark.parametrize(
+    "grid_info",
+    [
+        GridCases.voronoi_polygon(),
+        GridCases.voronoi_rectangle(),
+        GridCases.voronoi_circle(),
+        GridCases.voronoi_nested_circles(),
+        GridCases.voronoi_polygons(),
+        GridCases.voronoi_many_polygons(),
+    ],
+)
 def test_voronoi_grid(request, function_tmpdir, grid_info):
     name = (
         request.node.name.replace("/", "_")
@@ -1239,13 +1248,11 @@ def test_unstructured_neighbors(unstructured_grid):
     queen_neighbors = unstructured_grid.neighbors(
         5, method="queen", reset=True
     )
-    assert np.allclose(
-        queen_neighbors, [0, 10, 1, 6, 11, 2, 3, 7, 8, 12, 13]
-    )
+    assert np.allclose(queen_neighbors, [0, 10, 1, 6, 11, 2, 3, 7, 8, 12, 13])
 
 
-@parametrize_with_cases("grid", cases=GridCases, prefix="structured_cbd")
-def test_structured_ncb_thickness(grid):
+def test_structured_ncb_thickness():
+    grid = GridCases.structured_cbd_small()
     thickness = grid.cell_thickness
 
     assert thickness.shape[0] == grid.nlay + np.count_nonzero(
@@ -1267,7 +1274,9 @@ def test_structured_ncb_thickness(grid):
     ), "saturated_thickness is not properly indexing confining beds"
 
 
-@parametrize_with_cases("grid", cases=GridCases, prefix="unstructured")
+@pytest.mark.parametrize(
+    "grid", [GridCases.unstructured_small(), GridCases.unstructured_medium()]
+)
 def test_unstructured_iverts(grid):
     iverts = grid.iverts
     assert not any(
@@ -1275,21 +1284,30 @@ def test_unstructured_iverts(grid):
     ), "None type should not be returned in iverts list"
 
 
-@parametrize_with_cases("grid", cases=GridCases, prefix="structured")
+@pytest.mark.parametrize(
+    "grid", [GridCases.structured_small(), GridCases.structured_cbd_small()]
+)
 def test_get_lni_structured(grid):
     for nn in range(0, grid.nnodes):
         layer, i = grid.get_lni([nn])[0]
         assert layer * grid.ncpl + i == nn
 
 
-@parametrize_with_cases("grid", cases=GridCases, prefix="vertex")
+@pytest.mark.parametrize(
+    "grid",
+    [
+        GridCases.vertex_small(),
+    ],
+)
 def test_get_lni_vertex(grid):
     for nn in range(0, grid.nnodes):
         layer, i = grid.get_lni([nn])[0]
         assert layer * grid.ncpl + i == nn
 
 
-@parametrize_with_cases("grid", cases=GridCases, prefix="unstructured")
+@pytest.mark.parametrize(
+    "grid", [GridCases.unstructured_small(), GridCases.unstructured_medium()]
+)
 def test_get_lni_unstructured(grid):
     for nn in range(0, grid.nnodes):
         layer, i = grid.get_lni([nn])[0]
@@ -1344,11 +1362,8 @@ def test_unstructured_convert(unstructured_grid):
 
 @requires_pkg("geopandas")
 def test_geo_dataframe(structured_grid, vertex_grid, unstructured_grid):
-    grids = (
-        structured_grid,
-        vertex_grid,
-        unstructured_grid
-    )
+    geopandas = import_optional_dependency("geopandas")
+    grids = (structured_grid, vertex_grid, unstructured_grid)
 
     for grid in grids:
         gdf = grid.geo_dataframe

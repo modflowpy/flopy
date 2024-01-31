@@ -1,4 +1,5 @@
 """Test get-modflow utility."""
+
 import os
 import platform
 import sys
@@ -20,9 +21,11 @@ rate_limit_msg = "rate limit exceeded"
 flopy_dir = get_project_root_path()
 get_modflow_script = flopy_dir / "flopy" / "utils" / "get_modflow.py"
 bindir_options = {
-    "flopy": Path(expandvars(r"%LOCALAPPDATA%\flopy")) / "bin"
-    if system() == "Windows"
-    else Path.home() / ".local" / "share" / "flopy" / "bin",
+    "flopy": (
+        Path(expandvars(r"%LOCALAPPDATA%\flopy")) / "bin"
+        if system() == "Windows"
+        else Path.home() / ".local" / "share" / "flopy" / "bin"
+    ),
     "python": Path(sys.prefix)
     / ("Scripts" if system() == "Windows" else "bin"),
     "home": Path.home() / ".local" / "bin",
