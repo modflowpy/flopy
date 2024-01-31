@@ -1,4 +1,5 @@
 """Mfusg module."""
+
 import os
 from inspect import getfullargspec
 from typing import Union

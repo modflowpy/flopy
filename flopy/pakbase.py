@@ -4,6 +4,7 @@ pakbase module
   all of the other packages inherit from.
 
 """
+
 import abc
 import os
 import webbrowser as wb
@@ -383,9 +384,11 @@ class PackageInterface:
             if "laytyp" in self.__dict__:
                 inds = np.array(
                     [
-                        True
-                        if l > 0 or l < 0 and "THICKSTRT" in self.options
-                        else False
+                        (
+                            True
+                            if l > 0 or l < 0 and "THICKSTRT" in self.options
+                            else False
+                        )
                         for l in self.laytyp
                     ]
                 )

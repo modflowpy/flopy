@@ -1,4 +1,5 @@
 """Mfusg CLN dtype class."""
+
 import numpy as np
 
 

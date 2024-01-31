@@ -907,9 +907,9 @@ class MFModel(PackageContainer, ModelInterface):
             # call the package's "inspect_cells" method
             package_output = pp.inspect_cells(cell_list, stress_period)
             if len(package_output) > 0:
-                output_by_package[
-                    f"{pp.package_name} package"
-                ] = package_output
+                output_by_package[f"{pp.package_name} package"] = (
+                    package_output
+                )
         # get dependent variable
         if inspect_dependent_var:
             try:

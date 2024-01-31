@@ -1802,9 +1802,9 @@ class MFFileAccessList(MFFileAccess):
                                             keyword_data_item.type = (
                                                 DatumType.string
                                             )
-                                            self._temp_dict[
-                                                data_item.name
-                                            ] = keyword_data_item
+                                            self._temp_dict[data_item.name] = (
+                                                keyword_data_item
+                                            )
                                         (
                                             data_index,
                                             more_data_expected,

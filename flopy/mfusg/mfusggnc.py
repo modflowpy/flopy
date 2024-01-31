@@ -5,6 +5,7 @@ This is for the Ghost Node Correction (GNC) Package for MODFLOW-USG.
 Contains the MfUsgGnc class. Note that the user can access
 the MfUsgGnc class as `flopy.mfusg.MfUsgGnc`.
 """
+
 import numpy as np
 
 from ..modflow.mfparbc import ModflowParBc as mfparbc

@@ -3,6 +3,7 @@ This is a class for reading the mass budget from a (multi-component)
 mt3d(usgs) run. Also includes support for SFT budget.
 
 """
+
 import re
 import warnings
 

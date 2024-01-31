@@ -5,6 +5,7 @@ util_array module.  Contains the util_2d, util_3d and transient_2d classes.
  instantiate these classes directly.
 
 """
+
 # from future.utils import with_metaclass
 
 import copy
@@ -2646,11 +2647,13 @@ class Util2d(DataInterface):
         # write the array to a string
         len_data = data.size
         str_fmt_data = [
-            output_fmt.format(d) + "\n"
-            if (((i + 1) % column_length == 0.0) and (i != 0 or ncol == 1))
-            or ((i + 1 == ncol) and (ncol != 1))
-            or (i + 1 == len_data)
-            else output_fmt.format(d)
+            (
+                output_fmt.format(d) + "\n"
+                if (((i + 1) % column_length == 0.0) and (i != 0 or ncol == 1))
+                or ((i + 1 == ncol) and (ncol != 1))
+                or (i + 1 == len_data)
+                else output_fmt.format(d)
+            )
             for i, d in enumerate(data.flatten())
         ]
         s = "".join(str_fmt_data)

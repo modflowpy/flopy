@@ -8,6 +8,7 @@ Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
 <https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/lpf.html>`_.
 """
+
 import numpy as np
 
 from ..modflow.mflpf import ModflowLpf

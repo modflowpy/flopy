@@ -7,6 +7,7 @@ Additional information for this MODFLOW/MODPATH package can be found at the
 <https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/dis.html>`_.
 
 """
+
 from enum import Enum
 
 import numpy as np

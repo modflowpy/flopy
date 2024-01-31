@@ -1369,9 +1369,11 @@ class ModflowSfr2(Package):
         }
         slopes = np.array(
             [
-                (elev[i] - dnelev[i]) / dist[i]
-                if dnelev[i] != -9999
-                else default_slope
+                (
+                    (elev[i] - dnelev[i]) / dist[i]
+                    if dnelev[i] != -9999
+                    else default_slope
+                )
                 for i in rd.reachID
             ]
         )

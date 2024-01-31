@@ -2299,9 +2299,11 @@ class Mf6Splitter(object):
                                 remaps = remapper[idt]
                                 idx = np.where(idtype == idt)
                                 new_cellid1[idx] = [
-                                    remaps[i][-1] + 1
-                                    if isinstance(i, int)
-                                    else i
+                                    (
+                                        remaps[i][-1] + 1
+                                        if isinstance(i, int)
+                                        else i
+                                    )
                                     for i in obsid[idx]
                                 ]
                                 new_model1[idx] = [
@@ -2311,9 +2313,11 @@ class Mf6Splitter(object):
                         else:
                             new_cellid1 = np.array(
                                 [
-                                    remapper[i][-1] + 1
-                                    if isinstance(i, int)
-                                    else i
+                                    (
+                                        remapper[i][-1] + 1
+                                        if isinstance(i, int)
+                                        else i
+                                    )
                                     for i in obsid
                                 ],
                                 dtype=object,
@@ -2409,9 +2413,11 @@ class Mf6Splitter(object):
                             ]
                             if self._modelgrid.grid_type == "structured":
                                 cellid2 = [
-                                    (0, cid[1], cid[2])
-                                    if cid is not None
-                                    else None
+                                    (
+                                        (0, cid[1], cid[2])
+                                        if cid is not None
+                                        else None
+                                    )
                                     for cid in cellid2
                                 ]
                             else:
@@ -2497,17 +2503,21 @@ class Mf6Splitter(object):
                                     remaps = remapper[idt]
                                     idx = np.where(idtype == idt)
                                     new_cellid2[idx] = [
-                                        remaps[i][-1] + 1
-                                        if isinstance(i, int)
-                                        else i
+                                        (
+                                            remaps[i][-1] + 1
+                                            if isinstance(i, int)
+                                            else i
+                                        )
                                         for i in obsid[idx]
                                     ]
                             else:
                                 new_cellid2 = np.array(
                                     [
-                                        remapper[i][-1] + 1
-                                        if isinstance(i, int)
-                                        else i
+                                        (
+                                            remapper[i][-1] + 1
+                                            if isinstance(i, int)
+                                            else i
+                                        )
                                         for i in obsid
                                     ],
                                     dtype=object,
@@ -2886,9 +2896,9 @@ class Mf6Splitter(object):
                             )
                         else:
                             for mkey in self._model_dict.keys():
-                                mapped_data[mkey][
-                                    item
-                                ] = self._ivert_vert_remap[mkey][item]
+                                mapped_data[mkey][item] = (
+                                    self._ivert_vert_remap[mkey][item]
+                                )
                                 mapped_data[mkey]["nvert"] = len(
                                     self._ivert_vert_remap[mkey][item]
                                 )
