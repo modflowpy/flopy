@@ -156,7 +156,7 @@ class PlotMapView:
         ax.set_ylim(self.extent[2], self.extent[3])
         return collection
 
-    def contour_array(self, a, masked_values=None, **kwargs):
+    def contour_array(self, a, masked_values=None, tri_mask=False, **kwargs):
         """
         Contour an array on the grid. By default the top layer
         is contoured. To select a different layer, specify the
@@ -171,6 +171,10 @@ class PlotMapView:
             Array to plot.
         masked_values : iterable of floats, ints
             Values to mask.
+        tri_mask : bool
+            Boolean flag that masks triangulation and contouring
+            by nearest grid neighbors. This flag is useful for contouring
+            on unstructured model domains that have holes in the grid.
         **kwargs : dictionary
             keyword arguments passed to matplotlib.pyplot.pcolormesh
 
@@ -197,7 +201,6 @@ class PlotMapView:
         ax = kwargs.pop("ax", self.ax)
         filled = kwargs.pop("filled", False)
         plot_triplot = kwargs.pop("plot_triplot", False)
-        tri_mask = kwargs.pop("tri_mask", False)
 
         if "colors" in kwargs.keys():
             if "cmap" in kwargs.keys():
