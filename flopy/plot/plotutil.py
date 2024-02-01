@@ -203,7 +203,7 @@ class PlotUtilities:
                     mflay=defaults["mflay"],
                     key=defaults["key"],
                     model_name=defaults["model_name"],
-                    model_grid=model.modelgrid,
+                    modelgrid=model.modelgrid,
                 )
                 # unroll nested lists of axes into a single list of axes
                 if isinstance(caxs, list):
@@ -341,6 +341,7 @@ class PlotUtilities:
                                 model_name=model_name,
                                 colorbar=True,
                                 modelgrid=defaults["modelgrid"],
+                                **kwargs
                             )
                         )
 
@@ -433,6 +434,7 @@ class PlotUtilities:
                                 model_name=model_name,
                                 colorbar=True,
                                 modelgrid=defaults["modelgrid"],
+                                **kwargs
                             )
                         )
 
@@ -464,6 +466,7 @@ class PlotUtilities:
                                     model_name=model_name,
                                     colorbar=True,
                                     modelgrid=defaults["modelgrid"],
+                                    **kwargs
                                 )
                             )
 
@@ -494,6 +497,7 @@ class PlotUtilities:
                                 fignum=fignum,
                                 colorbar=True,
                                 modelgrid=defaults["modelgrid"],
+                                **kwargs
                             )
                         )
 
