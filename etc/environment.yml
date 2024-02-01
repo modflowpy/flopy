@@ -31,7 +31,6 @@ dependencies:
   - virtualenv
 
   # optional
-  - python-dateutil>=2.4.0
   - affine
   - scipy
   - pandas
