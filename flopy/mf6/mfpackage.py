@@ -109,9 +109,9 @@ class MFBlockHeader:
                 "blk_post_comment",
             )
             if self.blk_trailing_comment_path not in simulation_data.mfdata:
-                simulation_data.mfdata[
-                    self.blk_trailing_comment_path
-                ] = MFComment("", "", simulation_data, 0)
+                simulation_data.mfdata[self.blk_trailing_comment_path] = (
+                    MFComment("", "", simulation_data, 0)
+                )
             if self.blk_post_comment_path not in simulation_data.mfdata:
                 simulation_data.mfdata[self.blk_post_comment_path] = MFComment(
                     "\n", "", simulation_data, 0
@@ -856,9 +856,9 @@ class MFBlock:
             aux_vars = self._container_package.auxiliary.get_data()
             if aux_vars is not None:
                 for var_name in list(aux_vars[0])[1:]:
-                    self.datasets_keyword[
-                        (var_name,)
-                    ] = self._container_package.aux.structure
+                    self.datasets_keyword[(var_name,)] = (
+                        self._container_package.aux.structure
+                    )
 
         comments = []
 
@@ -2838,9 +2838,9 @@ class MFPackage(PackageContainer, PackageInterface):
 
     def _load_blocks(self, fd_input_file, strict=True, max_blocks=sys.maxsize):
         # init
-        self._simulation_data.mfdata[
-            self.path + ("pkg_hdr_comments",)
-        ] = MFComment("", self.path, self._simulation_data)
+        self._simulation_data.mfdata[self.path + ("pkg_hdr_comments",)] = (
+            MFComment("", self.path, self._simulation_data)
+        )
         self.post_block_comments = MFComment(
             "", self.path, self._simulation_data
         )

@@ -2,6 +2,7 @@
 mfdisu module.  Contains the MfUsgDisU class. Note that the user can access
 the MfUsgDisU class as `flopy.mfusg.MfUsgDisU`.
 """
+
 import numpy as np
 
 from ..discretization.unstructuredgrid import UnstructuredGrid

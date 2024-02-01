@@ -1,6 +1,7 @@
 """
 Container objects for working with geometric information
 """
+
 import numpy as np
 
 from ..utils import import_optional_dependency

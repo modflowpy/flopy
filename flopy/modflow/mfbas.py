@@ -193,9 +193,9 @@ class ModflowBas(Package):
 
         neighbors = chk.get_neighbors(self.ibound.array)
         if isinstance(neighbors, np.ndarray):
-            neighbors[
-                np.isnan(neighbors)
-            ] = 0  # set neighbors at edges to 0 (inactive)
+            neighbors[np.isnan(neighbors)] = (
+                0  # set neighbors at edges to 0 (inactive)
+            )
             chk.values(
                 self.ibound.array,
                 (self.ibound.array > 0) & np.all(neighbors < 1, axis=0),

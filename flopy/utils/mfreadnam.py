@@ -7,6 +7,7 @@ MODFLOW Guide
 <https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/name_file.html>`_.
 
 """
+
 import os
 from os import PathLike
 from pathlib import Path, PurePosixPath, PureWindowsPath

@@ -4,6 +4,7 @@ mbase module
   all of the other models inherit from.
 
 """
+
 import abc
 import copy
 import os

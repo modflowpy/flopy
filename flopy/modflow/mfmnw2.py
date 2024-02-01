@@ -1633,10 +1633,10 @@ class ModflowMnw2(Package):
         stress_period_data = {}
         for per, itmp in enumerate(self.itmp):
             if itmp > 0:
-                stress_period_data[
-                    per
-                ] = ModflowMnw2.get_empty_stress_period_data(
-                    itmp, aux_names=self.aux
+                stress_period_data[per] = (
+                    ModflowMnw2.get_empty_stress_period_data(
+                        itmp, aux_names=self.aux
+                    )
                 )
                 i = 0
                 for mnw in mnwobjs:
@@ -1651,9 +1651,9 @@ class ModflowMnw2(Package):
                         ]
                         stress_period_data[per]["wellid"][i - 1] = mnw.wellid
                         for n in names:
-                            stress_period_data[per][n][
-                                i - 1
-                            ] = mnw.stress_period_data[n][per]
+                            stress_period_data[per][n][i - 1] = (
+                                mnw.stress_period_data[n][per]
+                            )
                 stress_period_data[per].sort(order="wellid")
                 if i < itmp:
                     raise ItmpError(itmp, i)
@@ -1696,9 +1696,9 @@ class ModflowMnw2(Package):
                 for per in self.stress_period_data.data.keys():
                     for col in todrop:
                         inds = self.stress_period_data[per].wellid == wellid
-                        self.stress_period_data[per][col][
-                            inds
-                        ] = self.node_data[wellnd][col]
+                        self.stress_period_data[per][col][inds] = (
+                            self.node_data[wellnd][col]
+                        )
         self.node_data_MfList = self.node_data_MfList.drop(todrop)
         """
         todrop = {'qfrcmx', 'qfrcmn'}

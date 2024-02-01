@@ -7,6 +7,7 @@ MODFLOW Guide
 <https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/sub.html>`_.
 
 """
+
 import numpy as np
 
 from ..pakbase import Package

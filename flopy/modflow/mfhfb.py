@@ -7,6 +7,7 @@ MODFLOW Guide
 <https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/hfb6.html>`_.
 
 """
+
 import numpy as np
 from numpy.lib.recfunctions import stack_arrays
 
