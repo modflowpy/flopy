@@ -52,7 +52,7 @@ test = [
     "jupyter",
     "jupytext",
     "modflow-devtools",
-    "pytest < 8.0.0",
+    "pytest",
     "pytest-benchmark",
     "pytest-cov",
     "pytest-dotenv",
