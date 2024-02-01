@@ -1,6 +1,7 @@
 """
 Grid utilities
 """
+
 from math import floor
 from typing import Collection, Iterable, List, Sequence, Tuple, Union
 

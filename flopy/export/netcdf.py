@@ -249,9 +249,9 @@ class NetCdf:
         }
         for n, v in spatial_attribs.items():
             self.global_attributes["flopy_sr_" + n] = v
-        self.global_attributes[
-            "start_datetime"
-        ] = self.model_time.start_datetime
+        self.global_attributes["start_datetime"] = (
+            self.model_time.start_datetime
+        )
 
         self.fillvalue = FILLVALUE
 

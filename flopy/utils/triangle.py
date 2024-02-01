@@ -58,7 +58,7 @@ class Triangle:
         self.additional_args = additional_args
         self._initialize_vars()
 
-    def add_polygon(self, polygon):
+    def add_polygon(self, polygon, ignore_holes=False):
         """
         Add a polygon
 
@@ -72,6 +72,9 @@ class Triangle:
             shapely Polygon object
             shapefile Polygon shape
             flopy.utils.geometry.Polygon object
+        ignore_holes : bool
+            method to ignore holes in polygon and only use the exterior
+            coordinates
 
         Returns
         -------
@@ -86,9 +89,10 @@ class Triangle:
         if polygon[0][0] == polygon[0][-1]:
             polygon[0] = polygon[0][:-1]
         self._polygons.append(polygon[0])
-        if len(polygon) > 1:
-            for hole in polygon[1:]:
-                self.add_hole(hole)
+        if not ignore_holes:
+            if len(polygon) > 1:
+                for hole in polygon[1:]:
+                    self.add_hole(hole)
 
     def add_hole(self, hole):
         """

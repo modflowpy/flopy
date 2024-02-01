@@ -1372,16 +1372,16 @@ class DataStorage:
                     # convert numbers to be multiplied by the original factor
                     data = data * adjustment
             if const:
-                self.layer_storage[
-                    layer
-                ].data_storage_type = DataStorageType.internal_constant
+                self.layer_storage[layer].data_storage_type = (
+                    DataStorageType.internal_constant
+                )
                 self.layer_storage[layer].data_const_value = [
                     mfdatautil.get_first_val(data)
                 ]
             else:
-                self.layer_storage[
-                    layer
-                ].data_storage_type = DataStorageType.internal_array
+                self.layer_storage[layer].data_storage_type = (
+                    DataStorageType.internal_array
+                )
                 try:
                     self.layer_storage[layer].internal_data = np.reshape(
                         data, dimensions
@@ -1410,12 +1410,10 @@ class DataStorage:
                 data_type = self.data_dimensions.structure.get_datum_type(True)
                 dt = self.layer_storage[layer].internal_data.dtype
                 if dt != data_type:
-                    self.layer_storage[
-                        layer
-                    ].internal_data = self.layer_storage[
-                        layer
-                    ].internal_data.astype(
-                        data_type
+                    self.layer_storage[layer].internal_data = (
+                        self.layer_storage[layer].internal_data.astype(
+                            data_type
+                        )
                     )
             if not preserve_record:
                 self.layer_storage[layer].factor = multiplier
@@ -1804,9 +1802,9 @@ class DataStorage:
                 if self._calc_data_size(data, 2) == 1 and data_size > 1:
                     # constant data, need to expand
                     self.layer_storage[layer_new].data_const_value = data
-                    self.layer_storage[
-                        layer_new
-                    ].data_storage_type = DataStorageType.internal_constant
+                    self.layer_storage[layer_new].data_storage_type = (
+                        DataStorageType.internal_constant
+                    )
                     data = self._fill_const_layer(layer)
                 elif isinstance(data, list):
                     data = self._to_ndarray(data, layer)
@@ -1863,9 +1861,9 @@ class DataStorage:
         self.layer_storage[layer].fname = file_path
         self.layer_storage[layer].iprn = print_format
         self.layer_storage[layer].binary = binary
-        self.layer_storage[
-            layer
-        ].data_storage_type = DataStorageType.external_file
+        self.layer_storage[layer].data_storage_type = (
+            DataStorageType.external_file
+        )
 
     def point_to_existing_external_file(self, arr_line, layer):
         (

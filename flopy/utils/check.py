@@ -561,9 +561,11 @@ class check:
             packages = self.summary_array.package
             desc = self.summary_array.desc
             self.summary_array["desc"] = [
-                f"\r    {packages[i]} package: {d.strip()}"
-                if packages[i] != "model"
-                else d
+                (
+                    f"\r    {packages[i]} package: {d.strip()}"
+                    if packages[i] != "model"
+                    else d
+                )
                 for i, d in enumerate(desc)
             ]
 

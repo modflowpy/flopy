@@ -14,7 +14,6 @@ from ...utils.observationfile import CsvFile
 
 
 class MF6Output:
-
     """
     A class that uses meta programming to get output
 

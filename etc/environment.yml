@@ -25,14 +25,12 @@ dependencies:
   - modflow-devtools
   - pytest
   - pytest-benchmark
-  - pytest-cases
   - pytest-cov
   - pytest-dotenv
   - pytest-xdist
   - virtualenv
 
   # optional
-  - python-dateutil>=2.4.0
   - affine
   - scipy
   - pandas

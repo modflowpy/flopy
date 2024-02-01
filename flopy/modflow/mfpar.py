@@ -4,6 +4,7 @@ the ModflowPar class as `flopy.modflow.ModflowPar`.
 
 
 """
+
 import numpy as np
 
 from .mfmlt import ModflowMlt

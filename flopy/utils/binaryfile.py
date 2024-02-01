@@ -8,6 +8,7 @@ important classes that can be accessed by the user.
 *  CellBudgetFile (Binary cell-by-cell flow file)
 
 """
+
 import os
 import warnings
 from pathlib import Path
@@ -1262,9 +1263,9 @@ class CellBudgetFile:
                     self.nlay = np.abs(header["nlay"])
 
             # store record and byte position mapping
-            self.recorddict[
-                tuple(header)
-            ] = ipos  # store the position right after header2
+            self.recorddict[tuple(header)] = (
+                ipos  # store the position right after header2
+            )
             self.recordarray.append(header)
             self.iposarray.append(
                 ipos

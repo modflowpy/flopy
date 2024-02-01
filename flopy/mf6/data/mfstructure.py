@@ -3,6 +3,7 @@ mfstructure module.  Contains classes related to package structure
 
 
 """
+
 import ast
 import keyword
 import os
@@ -275,9 +276,9 @@ class DfnPackage(Dfn):
                 current_block.add_dataset(block_dataset_struct)
             else:
                 new_data_item_struct.block_type = block_type
-                dataset_items_in_block[
-                    new_data_item_struct.name
-                ] = new_data_item_struct
+                dataset_items_in_block[new_data_item_struct.name] = (
+                    new_data_item_struct
+                )
 
                 # if data item belongs to existing dataset(s)
                 item_location_found = False
@@ -585,9 +586,9 @@ class DfnFile(Dfn):
                     current_block.add_dataset(block_dataset_struct)
                 else:
                     new_data_item_struct.block_type = block_type
-                    dataset_items_in_block[
-                        new_data_item_struct.name
-                    ] = new_data_item_struct
+                    dataset_items_in_block[new_data_item_struct.name] = (
+                        new_data_item_struct
+                    )
 
                     # if data item belongs to existing dataset(s)
                     item_location_found = False
@@ -651,9 +652,9 @@ class DfnFile(Dfn):
                             key,
                             val,
                         ) in new_data_item_struct.keystring_dict.items():
-                            keystring_items_needed_dict[
-                                key
-                            ] = new_data_item_struct
+                            keystring_items_needed_dict[key] = (
+                                new_data_item_struct
+                            )
 
                     # if data set does not exist
                     if not item_location_found:

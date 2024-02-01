@@ -1,4 +1,5 @@
 """Initialize MfUsg."""
+
 from .cln_dtypes import MfUsgClnDtypes
 from .mfusg import MfUsg
 from .mfusgbcf import MfUsgBcf

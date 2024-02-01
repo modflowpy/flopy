@@ -5,6 +5,7 @@ Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
 <https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/swi2_seawater_intrusion_pack.html>`_.
 """
+
 import numpy as np
 
 from ..pakbase import Package

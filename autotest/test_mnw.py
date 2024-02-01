@@ -349,12 +349,16 @@ def test_mnw2_create_file(function_tmpdir, dataframe):
             wellids[i],
             nnodes=nlayers[i],
             nper=len(stress_period_data.index),
-            node_data=node_data.to_records(index=False)
-            if not dataframe
-            else node_data,
-            stress_period_data=stress_period_data.to_records(index=False)
-            if not dataframe
-            else stress_period_data,
+            node_data=(
+                node_data.to_records(index=False)
+                if not dataframe
+                else node_data
+            ),
+            stress_period_data=(
+                stress_period_data.to_records(index=False)
+                if not dataframe
+                else stress_period_data
+            ),
         )
 
         wells.append(wl)
