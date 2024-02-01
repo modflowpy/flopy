@@ -25,7 +25,6 @@ dependencies:
   - modflow-devtools
   - pytest
   - pytest-benchmark
-  - pytest-cases
   - pytest-cov
   - pytest-dotenv
   - pytest-xdist
