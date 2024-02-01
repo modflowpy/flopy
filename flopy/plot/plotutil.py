@@ -341,7 +341,7 @@ class PlotUtilities:
                                 model_name=model_name,
                                 colorbar=True,
                                 modelgrid=defaults["modelgrid"],
-                                **kwargs
+                                **kwargs,
                             )
                         )
 
@@ -434,7 +434,7 @@ class PlotUtilities:
                                 model_name=model_name,
                                 colorbar=True,
                                 modelgrid=defaults["modelgrid"],
-                                **kwargs
+                                **kwargs,
                             )
                         )
 
@@ -466,7 +466,7 @@ class PlotUtilities:
                                     model_name=model_name,
                                     colorbar=True,
                                     modelgrid=defaults["modelgrid"],
-                                    **kwargs
+                                    **kwargs,
                                 )
                             )
 
@@ -497,7 +497,7 @@ class PlotUtilities:
                                 fignum=fignum,
                                 colorbar=True,
                                 modelgrid=defaults["modelgrid"],
-                                **kwargs
+                                **kwargs,
                             )
                         )
 
