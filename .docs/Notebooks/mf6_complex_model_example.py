@@ -56,6 +56,7 @@ data_pth = os.path.join(
     "examples",
     "data",
     "mf6",
+    "create_tests",
     "test005_advgw_tidal",
 )
 assert os.path.isdir(data_pth)

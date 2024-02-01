@@ -1336,7 +1336,7 @@ def test005_create_tests_advgw_tidal(function_tmpdir, example_data_path):
     # init paths
     test_ex_name = "test005_advgw_tidal"
     model_name = "AdvGW_tidal"
-    pth = example_data_path / "mf6" / test_ex_name
+    pth = example_data_path / "mf6" / "create_tests" / test_ex_name
     expected_output_folder = pth / "expected_output"
     expected_head_file = expected_output_folder / "AdvGW_tidal.hds"
 
