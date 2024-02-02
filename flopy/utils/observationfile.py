@@ -511,12 +511,32 @@ class CsvFile:
             # read header line
             line = self.file.readline()
             self._header = line.rstrip().split(delimiter)
+            self.__fix_duplicate_headings()
             self.floattype = "f8"
             self.dtype = _build_dtype(self._header, self.floattype)
 
             self.data = self.read_csv(
                 self.file, self.dtype, delimiter, deletechars, replace_space
             )
+
+    def __fix_duplicate_headings(self):
+        """
+        Method to increment duplicate observation names if they exist
+
+        """
+        new_header = []
+        while self._header:
+            colname = self._header.pop(0)
+            cnt = 1
+            if colname in new_header:
+                cnt = 1
+                basename = colname
+                while colname in new_header:
+                    colname = f"{basename}_{cnt}"
+                    cnt += 1
+            new_header.append(colname)
+
+        self._header = new_header
 
     @property
     def obsnames(self):
