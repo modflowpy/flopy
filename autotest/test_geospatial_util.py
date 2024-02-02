@@ -506,3 +506,47 @@ def test_mixed_collection(
                 is_equal = gi2 == gi1[ix]
 
             assert is_equal, "GeoSpatialCollection conversion error"
+
+
+@requires_pkg("geopandas")
+def test_geopandas_dtypes(
+    polygon,
+    poly_w_hole,
+    multipolygon,
+    point,
+    multipoint,
+    linestring,
+    multilinestring,
+):
+    col = [
+        Shape.from_geojson(polygon),
+        Shape.from_geojson(poly_w_hole),
+        Shape.from_geojson(multipolygon),
+        Shape.from_geojson(point),
+        Shape.from_geojson(multipoint),
+        Shape.from_geojson(linestring),
+        Shape.from_geojson(multilinestring),
+    ]
+
+    gi1 = [i.__geo_interface__ for i in col]
+    col = Collection(col)
+
+    gc1 = GeoSpatialCollection(col)
+    gdf = gc1.geo_dataframe
+
+    collections = [gdf, gdf.geometry, gdf.geometry.values]
+    for col in collections:
+        gc2 = GeoSpatialCollection(col)
+
+        for ix, gi in enumerate(gc2):
+            t = gi.flopy_geometry
+            gi2 = t.__geo_interface__
+
+            is_equal = gi2 == gi1[ix]
+
+            if not is_equal:
+                t = reversed(t)
+                gi2 = t.__geo_interface__
+                is_equal = gi2 == gi1[ix]
+
+            assert is_equal, "GeoSpatialCollection conversion error"

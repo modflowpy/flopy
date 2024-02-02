@@ -374,6 +374,14 @@ class GeoSpatialCollection:
                     if k != "geometry":
                         self.__attributes[k] = obj[k].values
 
+            elif isinstance(obj, gpd.GeoSeries):
+                for geom in obj.values:
+                    self.__collection.append(GeoSpatialUtil(geom))
+
+            elif isinstance(obj, gpd.array.GeometryArray):
+                for geom in obj:
+                    self.__collection.append(GeoSpatialUtil(geom))
+
         if not self.__collection:
             raise AssertionError(
                 f"Reader is not installed for collection type: {type(obj)}"
