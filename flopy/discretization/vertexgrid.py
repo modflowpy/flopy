@@ -330,7 +330,6 @@ class VertexGrid(Grid):
                 xoff=self.xoffset * factor,
                 yoff=self.yoffset * factor,
                 angrot=self.angrot,
-                crs=self.crs,
             )
         else:
             raise AssertionError(
