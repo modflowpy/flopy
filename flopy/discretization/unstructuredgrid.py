@@ -590,6 +590,10 @@ class UnstructuredGrid(Grid):
                 top=self.top * factor,
                 botm=self.botm * factor,
                 idomain=self.idomain,
+                xoff=self.xoffset * factor,
+                yoff=self.yoffset * factor,
+                angrot=self.angrot,
+                crs=self.crs,
             )
         else:
             raise AssertionError(
