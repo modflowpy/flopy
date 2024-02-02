@@ -326,6 +326,10 @@ class VertexGrid(Grid):
                 ],
                 top=self.top * factor,
                 botm=self.botm * factor,
+                idomain=self.idomain,
+                xoff=self.xoffset * factor,
+                yoff=self.yoffset * factor,
+                angrot=self.angrot,
             )
         else:
             raise AssertionError(
