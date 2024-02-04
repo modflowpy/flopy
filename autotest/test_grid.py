@@ -1098,7 +1098,7 @@ def test_voronoi_vertex_grid(function_tmpdir):
         GridCases.voronoi_nested_circles(),
         GridCases.voronoi_polygons(),
         GridCases.voronoi_many_polygons(),
-    ],
+    ] if (has_pkg("shapely", True) and has_pkg("scipy", True)) else []
 )
 def test_voronoi_grid(request, function_tmpdir, grid_info):
     name = (
