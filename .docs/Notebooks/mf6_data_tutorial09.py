@@ -27,7 +27,6 @@
 # The following code sets up a basic simulation.
 
 # package import
-from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import flopy

@@ -41,7 +41,6 @@
 # functionality in FloPy.
 
 # package import
-from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import flopy

@@ -27,6 +27,7 @@
 # + pycharm={"name": "#%%\n"}
 import os
 import sys
+from pprint import pformat
 from tempfile import TemporaryDirectory
 
 import matplotlib as mpl
@@ -36,13 +37,7 @@ import numpy as np
 sys.path.append(os.path.join("..", "common"))
 import notebook_utils
 
-# run installed version of flopy or add local path
-try:
-    import flopy
-except:
-    fpth = os.path.abspath(os.path.join("..", ".."))
-    sys.path.append(fpth)
-    import flopy
+import flopy
 
 print(sys.version)
 print(f"numpy version: {np.__version__}")
@@ -74,11 +69,7 @@ ml = flopy.modflow.Modflow.load(
 ml.change_model_ws(new_pth=str(modelpth))
 ml.write_input()
 success, buff = ml.run_model(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Something bad happened.")
+assert success, pformat(buff)
 
 files = ["freyberg.hds", "freyberg.cbc"]
 for f in files:

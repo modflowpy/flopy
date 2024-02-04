@@ -34,8 +34,6 @@
 # examples.
 
 # package import
-import os
-from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import numpy as np

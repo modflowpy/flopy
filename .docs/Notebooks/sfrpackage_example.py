@@ -36,6 +36,7 @@ import shutil
 
 # +
 import sys
+from pprint import pformat
 from tempfile import TemporaryDirectory
 
 import matplotlib as mpl
@@ -197,11 +198,7 @@ m.external_fnames
 m.write_input()
 
 success, buff = m.run_model(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+assert success, pformat(buff)
 
 # ### Load SFR formated water balance output into pandas dataframe using the `SfrFile` class
 

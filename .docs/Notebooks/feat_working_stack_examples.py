@@ -20,6 +20,7 @@
 
 import sys
 from pathlib import Path
+from pprint import pformat
 from tempfile import TemporaryDirectory
 
 import matplotlib as mpl
@@ -33,11 +34,7 @@ from IPython.display import clear_output, display
 proj_root = Path.cwd().parent.parent
 
 # run installed version of flopy or add local path
-try:
-    import flopy
-except:
-    sys.path.append(proj_root)
-    import flopy
+import flopy
 
 print(sys.version)
 print(f"numpy version: {np.__version__}")
@@ -92,7 +89,8 @@ ml.write_input()
 
 # Now run the model.
 
-ml.run_model(silent=True)
+success, buff = ml.run_model(silent=True)
+assert success, pformat(buff)
 
 # ### Inspecting outputs
 #

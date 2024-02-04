@@ -20,15 +20,9 @@
 #
 # The `Mf6Splitter()` class supports Structured, Vertex, and Unstructured Grid models.
 
-import os
 import sys
 
-try:
-    import flopy
-except:
-    fpth = os.path.abspath(os.path.join("..", ".."))
-    sys.path.append(fpth)
-    import flopy
+import flopy
 
 from pathlib import Path
 from tempfile import TemporaryDirectory

@@ -17,8 +17,6 @@
 
 # # Exporting to netCDF and shapefile
 
-import datetime
-
 # +
 import os
 import sys

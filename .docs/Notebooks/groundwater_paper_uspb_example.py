@@ -22,18 +22,14 @@
 # +
 import os
 import sys
+from pprint import pformat
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.ndimage
 
-try:
-    import flopy
-except:
-    fpth = os.path.abspath(os.path.join("..", "..", ".."))
-    sys.path.append(fpth)
-    import flopy
+import flopy
 
 print(sys.version)
 print(f"numpy version: {np.__version__}")
@@ -107,7 +103,8 @@ plt.savefig(os.path.join(ws, "capture_fraction_010y.png"), dpi=300)
 ml.change_model_ws(ws)
 ml.exe_name = "mf2005dbl"
 ml.write_input()
-ml.run_model(silent=True)
+success, buff = ml.run_model(silent=True)
+assert success, pformat(buff)
 
 # +
 hedObj = flopy.utils.HeadFile(os.path.join(ws, "DG.hds"), precision="double")
