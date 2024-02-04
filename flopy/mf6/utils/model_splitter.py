@@ -427,7 +427,7 @@ class Mf6Splitter(object):
                     mnums1 = membership[nodes1]
                     mnums2 = membership[nodes2]
                     ev = np.equal(mnums1, mnums2)
-                    if np.alltrue(ev):
+                    if np.all(ev):
                         continue
                     idx = np.where(~ev)[0]
                     mnum_to = mnums1[idx]
