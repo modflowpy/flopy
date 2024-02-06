@@ -1,8 +1,6 @@
 # This workflow tests flopy with random subsets of optional dependencies.
 # Flopy should not crash due to the absence of any optional dependencies,
 # rather it should gracefully raise an ImportError if absent when needed.
-# This workflow also installs the latest nightly build of numpy to check
-# for regressions and provide an early warning of impending deprecations.
 name: FloPy optional dependency testing
 on:
   schedule:
@@ -55,9 +53,6 @@ jobs:
             cat removed_dependencies.txt
             pip uninstall --yes $rmvd
           fi
-
-          # Install numpy nightly build
-          pip install -U --pre --only-binary :all: -i https://pypi.anaconda.org/scientific-python-nightly-wheels/simple numpy
       
       - name: Upload removed dependencies log
         uses: actions/upload-artifact@v4
