@@ -23,9 +23,10 @@
 #
 # First we locate the model directory.
 
+from pathlib import Path
+
 # +
 from pprint import pformat
-from pathlib import Path
 
 import flopy
 

@@ -42,6 +42,7 @@ reader urword
 optional true
 longname keyword to print input to list file
 description keyword to indicate that the list of exchange entries will be echoed to the listing file immediately after it is read.
+mf6internal iprpak
 
 block options
 name print_flows
@@ -50,6 +51,7 @@ reader urword
 optional true
 longname keyword to print gwfgwf flows to list file
 description keyword to indicate that the list of exchange flow rates will be printed to the listing file for every stress period in which ``SAVE BUDGET'' is specified in Output Control.
+mf6internal iprflow
 
 block options
 name save_flows
@@ -58,6 +60,7 @@ reader urword
 optional true
 longname keyword to save GWFGWF flows
 description keyword to indicate that cell-by-cell flow terms will be written to the budget file for each model provided that the Output Control for the models are set up with the ``BUDGET SAVE FILE'' option.
+mf6internal ipakcb
 
 block options
 name adv_scheme
@@ -168,6 +171,7 @@ reader urword
 optional true
 longname activate interface model on exchange
 description activates the interface model mechanism for calculating the coefficients at (and possibly near) the exchange. This keyword should only be used for development purposes.
+mf6internal dev_ifmod_on
 
 # --------------------- exg gwtgwt dimensions ---------------------
 
@@ -185,6 +189,7 @@ description keyword and integer value specifying the number of GWT-GWT exchanges
 block exchangedata
 name exchangedata
 type recarray cellidm1 cellidm2 ihc cl1 cl2 hwva aux boundname
+shape (nexg)
 reader urword
 optional false
 longname exchange data

@@ -1292,7 +1292,7 @@ def test_load_with_list_reader(function_tmpdir):
 @requires_exe("mf2005")
 @pytest.mark.parametrize(
     "container",
-    ["recarray", "dataframe", "dict_of_recarray", "dict_of_dataframe"]
+    ["recarray", "dataframe", "dict_of_recarray", "dict_of_dataframe"],
 )
 def test_pkg_data_containers(function_tmpdir, container):
     """Test various containers for package data (list, ndarray, recarray, dataframe, dict of such)"""
@@ -1304,7 +1304,6 @@ def test_pkg_data_containers(function_tmpdir, container):
 
     name = "pkg_data"
     ws = function_tmpdir
-    
 
     # create the ghbs
     ghb_ra = ModflowGhb.get_empty(20)
@@ -1360,6 +1359,7 @@ def test_pkg_data_containers(function_tmpdir, container):
     m.write_input()
     success, buff = m.run_model(silent=False, report=True)
     from pprint import pformat
+
     assert success, pformat(buff)
 
 

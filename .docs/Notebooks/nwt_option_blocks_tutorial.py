@@ -29,7 +29,6 @@ import sys
 from tempfile import TemporaryDirectory
 
 import flopy
-
 from flopy.utils import OptionBlock
 
 print(sys.version)

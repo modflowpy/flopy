@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on September 30, 2023 14:44:04 UTC
+# FILE created on February 07, 2024 20:16:08 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -124,12 +124,12 @@ class ModflowGwtlkt(mfpackage.MFPackage):
         * laksetting (keystring) line of information that is parsed into a
           keyword and values. Keyword values that can be used to start the
           LAKSETTING string include: STATUS, CONCENTRATION, RAINFALL,
-          EVAPORATION, RUNOFF, and AUXILIARY. These settings are used to assign
-          the concentration of associated with the corresponding flow terms.
-          Concentrations cannot be specified for all flow terms. For example,
-          the Lake Package supports a "WITHDRAWAL" flow term. If this
-          withdrawal term is active, then water will be withdrawn from the lake
-          at the calculated concentration of the lake.
+          EVAPORATION, RUNOFF, EXT-INFLOW, and AUXILIARY. These settings are
+          used to assign the concentration of associated with the corresponding
+          flow terms. Concentrations cannot be specified for all flow terms.
+          For example, the Lake Package supports a "WITHDRAWAL" flow term. If
+          this withdrawal term is active, then water will be withdrawn from the
+          lake at the calculated concentration of the lake.
             status : [string]
                 * status (string) keyword option to define lake status. STATUS
                   can be ACTIVE, INACTIVE, or CONSTANT. By default, STATUS is

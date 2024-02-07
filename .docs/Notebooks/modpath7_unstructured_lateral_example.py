@@ -36,7 +36,6 @@ proj_root = Path.cwd().parent.parent
 
 import flopy
 
-
 temp_dir = TemporaryDirectory()
 workspace = Path(temp_dir.name)
 sim_name = "ex04_mf6"

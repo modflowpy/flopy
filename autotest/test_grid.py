@@ -1091,14 +1091,18 @@ def test_voronoi_vertex_grid(function_tmpdir):
 @requires_pkg("shapely", "scipy")
 @pytest.mark.parametrize(
     "grid_info",
-    [
-        GridCases.voronoi_polygon(),
-        GridCases.voronoi_rectangle(),
-        GridCases.voronoi_circle(),
-        GridCases.voronoi_nested_circles(),
-        GridCases.voronoi_polygons(),
-        GridCases.voronoi_many_polygons(),
-    ] if (has_pkg("shapely", True) and has_pkg("scipy", True)) else []
+    (
+        [
+            GridCases.voronoi_polygon(),
+            GridCases.voronoi_rectangle(),
+            GridCases.voronoi_circle(),
+            GridCases.voronoi_nested_circles(),
+            GridCases.voronoi_polygons(),
+            GridCases.voronoi_many_polygons(),
+        ]
+        if (has_pkg("shapely", True) and has_pkg("scipy", True))
+        else []
+    ),
 )
 def test_voronoi_grid(request, function_tmpdir, grid_info):
     name = (

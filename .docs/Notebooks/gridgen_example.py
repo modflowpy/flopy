@@ -35,7 +35,6 @@ import numpy as np
 
 # run installed version of flopy or add local path
 import flopy
-
 from flopy.utils import flopy_io
 from flopy.utils.gridgen import Gridgen
 

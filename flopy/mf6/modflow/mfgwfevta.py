@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on September 30, 2023 14:44:04 UTC
+# FILE created on February 07, 2024 20:16:08 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -81,15 +81,14 @@ class ModflowGwfevta(mfpackage.MFPackage):
         * rate (double) is the maximum ET flux rate (:math:`LT^{-1}`).
     depth : [double]
         * depth (double) is the ET extinction depth (:math:`L`).
-    aux(iaux) : [double]
-        * aux(iaux) (double) is an array of values for auxiliary variable
-          AUX(IAUX), where iaux is a value from 1 to NAUX, and AUX(IAUX) must
-          be listed as part of the auxiliary variables. A separate array can be
-          specified for each auxiliary variable. If an array is not specified
-          for an auxiliary variable, then a value of zero is assigned. If the
-          value specified here for the auxiliary variable is the same as
-          auxmultname, then the evapotranspiration rate will be multiplied by
-          this array.
+    aux : [double]
+        * aux (double) is an array of values for auxiliary variable AUX(IAUX),
+          where iaux is a value from 1 to NAUX, and AUX(IAUX) must be listed as
+          part of the auxiliary variables. A separate array can be specified
+          for each auxiliary variable. If an array is not specified for an
+          auxiliary variable, then a value of zero is assigned. If the value
+          specified here for the auxiliary variable is the same as auxmultname,
+          then the evapotranspiration rate will be multiplied by this array.
     filename : String
         File name for this package.
     pname : String
@@ -112,7 +111,7 @@ class ModflowGwfevta(mfpackage.MFPackage):
     surface = ArrayTemplateGenerator(("gwf6", "evta", "period", "surface"))
     rate = ArrayTemplateGenerator(("gwf6", "evta", "period", "rate"))
     depth = ArrayTemplateGenerator(("gwf6", "evta", "period", "depth"))
-    aux = ArrayTemplateGenerator(("gwf6", "evta", "period", "aux(iaux)"))
+    aux = ArrayTemplateGenerator(("gwf6", "evta", "period", "aux"))
     package_abbr = "gwfevta"
     _package_type = "evta"
     dfn_file_name = "gwf-evta.dfn"
@@ -158,6 +157,7 @@ class ModflowGwfevta(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprpak",
         ],
         [
             "block options",
@@ -165,6 +165,7 @@ class ModflowGwfevta(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprflow",
         ],
         [
             "block options",
@@ -172,6 +173,7 @@ class ModflowGwfevta(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal ipakcb",
         ],
         [
             "block options",
@@ -282,6 +284,7 @@ class ModflowGwfevta(mfpackage.MFPackage):
             "type double precision",
             "shape (ncol*nrow; ncpl)",
             "reader readarray",
+            "time_series true",
             "default_value 1.e-3",
         ],
         [
@@ -294,10 +297,12 @@ class ModflowGwfevta(mfpackage.MFPackage):
         ],
         [
             "block period",
-            "name aux(iaux)",
+            "name aux",
             "type double precision",
             "shape (ncol*nrow; ncpl)",
             "reader readarray",
+            "time_series true",
+            "mf6internal auxvar",
         ],
     ]
 
@@ -347,5 +352,5 @@ class ModflowGwfevta(mfpackage.MFPackage):
         self.surface = self.build_mfdata("surface", surface)
         self.rate = self.build_mfdata("rate", rate)
         self.depth = self.build_mfdata("depth", depth)
-        self.aux = self.build_mfdata("aux(iaux)", aux)
+        self.aux = self.build_mfdata("aux", aux)
         self._init_complete = True

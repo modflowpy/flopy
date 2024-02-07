@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on September 30, 2023 14:44:04 UTC
+# FILE created on February 07, 2024 20:16:08 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -60,6 +60,8 @@ class ModflowGwfchd(mfpackage.MFPackage):
           containing data for the obs package with variable names as keys and
           package data as values. Data just for the observations variable is
           also acceptable. See obs package documentation for more information.
+    dev_no_newton : boolean
+        * dev_no_newton (boolean) turn off Newton for unconfined cells
     maxbound : integer
         * maxbound (integer) integer value specifying the maximum number of
           constant-head cells that will be specified for use during any stress
@@ -148,6 +150,7 @@ class ModflowGwfchd(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprpak",
         ],
         [
             "block options",
@@ -155,6 +158,7 @@ class ModflowGwfchd(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprflow",
         ],
         [
             "block options",
@@ -162,6 +166,7 @@ class ModflowGwfchd(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal ipakcb",
         ],
         [
             "block options",
@@ -238,6 +243,14 @@ class ModflowGwfchd(mfpackage.MFPackage):
             "optional false",
         ],
         [
+            "block options",
+            "name dev_no_newton",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal inewton",
+        ],
+        [
             "block dimensions",
             "name maxbound",
             "type integer",
@@ -262,6 +275,7 @@ class ModflowGwfchd(mfpackage.MFPackage):
             "type recarray cellid head aux boundname",
             "shape (maxbound)",
             "reader urword",
+            "mf6internal spd",
         ],
         [
             "block period",
@@ -292,6 +306,7 @@ class ModflowGwfchd(mfpackage.MFPackage):
             "reader urword",
             "optional true",
             "time_series true",
+            "mf6internal auxvar",
         ],
         [
             "block period",
@@ -317,6 +332,7 @@ class ModflowGwfchd(mfpackage.MFPackage):
         save_flows=None,
         timeseries=None,
         observations=None,
+        dev_no_newton=None,
         maxbound=None,
         stress_period_data=None,
         filename=None,
@@ -342,6 +358,7 @@ class ModflowGwfchd(mfpackage.MFPackage):
         self._obs_package = self.build_child_package(
             "obs", observations, "continuous", self._obs_filerecord
         )
+        self.dev_no_newton = self.build_mfdata("dev_no_newton", dev_no_newton)
         self.maxbound = self.build_mfdata("maxbound", maxbound)
         self.stress_period_data = self.build_mfdata(
             "stress_period_data", stress_period_data

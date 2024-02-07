@@ -39,7 +39,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import flopy
-
 from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
 
 print(sys.version)

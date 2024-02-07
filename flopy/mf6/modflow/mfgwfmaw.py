@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on September 30, 2023 14:44:04 UTC
+# FILE created on February 07, 2024 20:16:08 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -234,11 +234,11 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           if the screen top is less than the screen bottom.
         * scrn_bot (double) value that defines the bottom elevation of the
           screen for the multi-aquifer well connection. If CONDEQN is
-          SPECIFIED, THIEM, SKIN, or COMPOSITE, SCRN_BOT can be any value is
-          set to the bottom of the cell. If CONDEQN is MEAN, SCRN_BOT is set to
-          the multi-aquifer well connection cell bottom if the specified value
-          is less than the cell bottom. The program will terminate with an
-          error if the screen bottom is greater than the screen top.
+          SPECIFIED, THIEM, SKIN, or COMPOSITE, SCRN_BOT can be any value and
+          is set to the bottom of the cell. If CONDEQN is MEAN, SCRN_BOT is set
+          to the multi-aquifer well connection cell bottom if the specified
+          value is less than the cell bottom. The program will terminate with
+          an error if the screen bottom is greater than the screen top.
         * hk_skin (double) value that defines the skin (filter pack) hydraulic
           conductivity (if CONDEQN for the multi-aquifer well is SKIN,
           CUMULATIVE, or MEAN) or conductance (if CONDEQN for the multi-aquifer

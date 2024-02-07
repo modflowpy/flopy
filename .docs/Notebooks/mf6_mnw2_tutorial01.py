@@ -23,7 +23,6 @@ import sys
 from tempfile import TemporaryDirectory
 
 import numpy as np
-
 import pandas as pd
 
 import flopy
