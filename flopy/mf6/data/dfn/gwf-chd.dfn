@@ -36,6 +36,7 @@ reader urword
 optional true
 longname print input to listing file
 description REPLACE print_input {'{#1}': 'constant-head'}
+mf6internal iprpak
 
 block options
 name print_flows
@@ -44,6 +45,7 @@ reader urword
 optional true
 longname print CHD flows to listing file
 description REPLACE print_flows {'{#1}': 'constant-head'}
+mf6internal iprflow
 
 block options
 name save_flows
@@ -52,6 +54,7 @@ reader urword
 optional true
 longname save CHD flows to budget file
 description REPLACE save_flows {'{#1}': 'constant-head'}
+mf6internal ipakcb
 
 block options
 name ts_filerecord
@@ -128,6 +131,15 @@ optional false
 longname obs6 input filename
 description REPLACE obs6_filename {'{#1}': 'constant-head'}
 
+# dev options
+block options
+name dev_no_newton
+type keyword
+reader urword
+optional true
+longname turn off Newton for unconfined cells
+description turn off Newton for unconfined cells
+mf6internal inewton
 
 # --------------------- gwf chd dimensions ---------------------
 
@@ -162,6 +174,7 @@ shape (maxbound)
 reader urword
 longname
 description
+mf6internal spd
 
 block period
 name cellid
@@ -195,6 +208,7 @@ optional true
 time_series true
 longname auxiliary variables
 description REPLACE aux {'{#1}': 'constant head'}
+mf6internal auxvar
 
 block period
 name boundname

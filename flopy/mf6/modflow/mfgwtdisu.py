@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on September 30, 2023 14:44:04 UTC
+# FILE created on February 07, 2024 20:16:08 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -358,7 +358,7 @@ class ModflowGwtdisu(mfpackage.MFPackage):
             "type recarray iv xv yv",
             "shape (nvert)",
             "reader urword",
-            "optional false",
+            "optional true",
         ],
         [
             "block vertices",
@@ -394,7 +394,7 @@ class ModflowGwtdisu(mfpackage.MFPackage):
             "type recarray icell2d xc yc ncvert icvert",
             "shape (nodes)",
             "reader urword",
-            "optional false",
+            "optional true",
         ],
         [
             "block cell2d",

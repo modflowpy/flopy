@@ -45,6 +45,7 @@ reader urword
 optional true
 longname print input to listing file
 description REPLACE print_input {'{#1}': 'recharge'}
+mf6internal iprpak
 
 block options
 name print_flows
@@ -53,6 +54,7 @@ reader urword
 optional true
 longname print recharge rates to listing file
 description REPLACE print_flows {'{#1}': 'recharge'}
+mf6internal iprflow
 
 block options
 name save_flows
@@ -61,6 +63,7 @@ reader urword
 optional true
 longname save recharge to budget file
 description REPLACE save_flows {'{#1}': 'recharge'}
+mf6internal ipakcb
 
 block options
 name ts_filerecord
@@ -170,6 +173,7 @@ shape (maxbound)
 reader urword
 longname
 description
+mf6internal spd
 
 block period
 name cellid
@@ -203,6 +207,7 @@ optional true
 time_series true
 longname auxiliary variables
 description REPLACE aux {'{#1}': 'recharge'}
+mf6internal auxvar
 
 block period
 name boundname

@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on September 30, 2023 14:44:04 UTC
+# FILE created on February 07, 2024 20:16:08 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -119,6 +119,7 @@ class ModflowGwtcnc(mfpackage.MFPackage):
     dfn = [
         [
             "header",
+            "multi-package",
         ],
         [
             "block options",
@@ -150,6 +151,7 @@ class ModflowGwtcnc(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprflow",
         ],
         [
             "block options",
@@ -157,6 +159,7 @@ class ModflowGwtcnc(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal ipakcb",
         ],
         [
             "block options",
@@ -164,6 +167,7 @@ class ModflowGwtcnc(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprpak",
         ],
         [
             "block options",
@@ -264,6 +268,7 @@ class ModflowGwtcnc(mfpackage.MFPackage):
             "type recarray cellid conc aux boundname",
             "shape (maxbound)",
             "reader urword",
+            "mf6internal spd",
         ],
         [
             "block period",
@@ -283,6 +288,7 @@ class ModflowGwtcnc(mfpackage.MFPackage):
             "in_record true",
             "reader urword",
             "time_series true",
+            "mf6internal tspvar",
         ],
         [
             "block period",
@@ -294,6 +300,7 @@ class ModflowGwtcnc(mfpackage.MFPackage):
             "reader urword",
             "optional true",
             "time_series true",
+            "mf6internal auxvar",
         ],
         [
             "block period",

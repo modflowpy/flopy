@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on September 30, 2023 14:44:04 UTC
+# FILE created on February 07, 2024 20:16:08 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -39,7 +39,7 @@ class ModflowUtlspc(mfpackage.MFPackage):
           when writing index variables.
         * spcsetting (keystring) line of information that is parsed into a
           keyword and values. Keyword values that can be used to start the
-          MAWSETTING string include: CONCENTRATION.
+          SPCSETTING string include: CONCENTRATION.
             concentration : [double]
                 * concentration (double) is the boundary concentration. If the
                   Options block includes a TIMESERIESFILE entry (see the "Time-

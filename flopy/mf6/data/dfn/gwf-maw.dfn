@@ -485,7 +485,7 @@ tagged false
 in_record true
 reader urword
 longname screen bottom
-description value that defines the bottom elevation of the screen for the multi-aquifer well connection. If CONDEQN is SPECIFIED, THIEM, SKIN, or COMPOSITE, SCRN\_BOT can be any value is set to the bottom of the cell. If CONDEQN is MEAN, SCRN\_BOT is set to the multi-aquifer well connection cell bottom if the specified value is less than the cell bottom. The program will terminate with an error if the screen bottom is greater than the screen top.
+description value that defines the bottom elevation of the screen for the multi-aquifer well connection. If CONDEQN is SPECIFIED, THIEM, SKIN, or COMPOSITE, SCRN\_BOT can be any value and is set to the bottom of the cell. If CONDEQN is MEAN, SCRN\_BOT is set to the multi-aquifer well connection cell bottom if the specified value is less than the cell bottom. The program will terminate with an error if the screen bottom is greater than the screen top.
 
 block connectiondata
 name hk_skin

@@ -352,7 +352,7 @@ tagged false
 in_record true
 reader urword
 longname
-description line of information that is parsed into a keyword and values.  Keyword values that can be used to start the LAKSETTING string include: STATUS, CONCENTRATION, RAINFALL, EVAPORATION, RUNOFF, and AUXILIARY.  These settings are used to assign the concentration of associated with the corresponding flow terms.  Concentrations cannot be specified for all flow terms.  For example, the Lake Package supports a ``WITHDRAWAL'' flow term.  If this withdrawal term is active, then water will be withdrawn from the lake at the calculated concentration of the lake.
+description line of information that is parsed into a keyword and values.  Keyword values that can be used to start the LAKSETTING string include: STATUS, CONCENTRATION, RAINFALL, EVAPORATION, RUNOFF, EXT-INFLOW, and AUXILIARY.  These settings are used to assign the concentration of associated with the corresponding flow terms.  Concentrations cannot be specified for all flow terms.  For example, the Lake Package supports a ``WITHDRAWAL'' flow term.  If this withdrawal term is active, then water will be withdrawn from the lake at the calculated concentration of the lake.
 
 block period
 name status

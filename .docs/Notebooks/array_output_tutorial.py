@@ -35,6 +35,7 @@ from tempfile import TemporaryDirectory
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+
 import flopy
 
 # Set name of MODFLOW exe

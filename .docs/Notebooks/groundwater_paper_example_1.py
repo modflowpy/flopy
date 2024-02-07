@@ -31,7 +31,6 @@ import numpy as np
 
 # run installed version of flopy or add local path
 import flopy
-
 import flopy.modflow as fpm
 import flopy.utils as fpu
 

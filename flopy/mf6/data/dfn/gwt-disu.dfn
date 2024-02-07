@@ -176,7 +176,7 @@ name vertices
 type recarray iv xv yv
 shape (nvert)
 reader urword
-optional false
+optional true
 longname vertices data
 description
 
@@ -219,7 +219,7 @@ name cell2d
 type recarray icell2d xc yc ncvert icvert
 shape (nodes)
 reader urword
-optional false
+optional true
 longname cell2d data
 description
 

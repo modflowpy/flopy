@@ -3,9 +3,9 @@ import shutil
 
 import numpy as np
 import pytest
-import flopy
 from modflow_devtools.markers import requires_exe
 
+import flopy
 from flopy.modflow import (
     HeadObservation,
     Modflow,
@@ -18,7 +18,6 @@ from flopy.modflow import (
     ModflowPcg,
 )
 from flopy.utils.observationfile import Mf6Obs
-
 
 
 @requires_exe("mf2005")
@@ -463,21 +462,23 @@ def test_duplicate_observation_names(function_tmpdir):
     top = 10
     botm = [0, -10]
 
-    dis = flopy.mf6.ModflowGwfdis(gwf, nlay=nlay, nrow=nrow, ncol=ncol, top=top,
-                               botm=botm)
+    dis = flopy.mf6.ModflowGwfdis(
+        gwf, nlay=nlay, nrow=nrow, ncol=ncol, top=top, botm=botm
+    )
     ic = flopy.mf6.ModflowGwfic(gwf, strt=top)
     npf = flopy.mf6.ModflowGwfnpf(gwf, k=1, k33=1)
     sto = flopy.mf6.ModflowGwfsto(gwf)
     obs = flopy.mf6.ModflowUtlobs(
         gwf,
-        continuous={"repeat_obs.csv": [
-            ("obsdup", "HEAD", (0, 4, 4)),
-            ("obsdup", "HEAD", (1, 4, 4))
-        ]
-        }
+        continuous={
+            "repeat_obs.csv": [
+                ("obsdup", "HEAD", (0, 4, 4)),
+                ("obsdup", "HEAD", (1, 4, 4)),
+            ]
+        },
     )
 
-    spd = {0: [((1, 4, 4), -50.)]}
+    spd = {0: [((1, 4, 4), -50.0)]}
     wel = flopy.mf6.ModflowGwfwel(gwf, stress_period_data=spd)
     sim.write_simulation()
     sim.run_simulation()

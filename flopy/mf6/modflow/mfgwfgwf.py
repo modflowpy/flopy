@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on September 30, 2023 14:44:04 UTC
+# FILE created on February 07, 2024 20:16:08 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -196,6 +196,7 @@ class ModflowGwfgwf(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprpak",
         ],
         [
             "block options",
@@ -203,6 +204,7 @@ class ModflowGwfgwf(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprflow",
         ],
         [
             "block options",
@@ -210,6 +212,7 @@ class ModflowGwfgwf(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal ipakcb",
         ],
         [
             "block options",
@@ -367,6 +370,7 @@ class ModflowGwfgwf(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal dev_ifmod_on",
         ],
         [
             "block dimensions",
@@ -379,6 +383,7 @@ class ModflowGwfgwf(mfpackage.MFPackage):
             "block exchangedata",
             "name exchangedata",
             "type recarray cellidm1 cellidm2 ihc cl1 cl2 hwva aux boundname",
+            "shape (nexg)",
             "reader urword",
             "optional false",
         ],

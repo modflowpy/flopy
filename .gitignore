@@ -101,3 +101,6 @@ app
 
 # mac files
 **.DS_Store
+
+# DFN backups
+flopy/mf6/data/dfn_backup/

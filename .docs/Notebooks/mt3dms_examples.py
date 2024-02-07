@@ -45,7 +45,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import flopy
-
 from flopy.utils.util_array import read1d
 
 mpl.rcParams["figure.figsize"] = (8, 8)
