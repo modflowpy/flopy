@@ -49,6 +49,7 @@ from flopy.mf6 import (
     ModflowNam,
     ModflowTdis,
     ModflowUtllaktab,
+    ModflowUtlspca,
 )
 from flopy.mf6.coordinates.modeldimensions import (
     DataDimensions,
@@ -257,15 +258,15 @@ def to_os_sep(s):
 def test_load_and_run_sim_when_namefile_uses_filenames(
     function_tmpdir, example_data_path
 ):
-    ws = function_tmpdir / "ws"
-    ml_name = "freyberg"
-    nam_name = "mfsim.nam"
-    nam_path = ws / nam_name
-    copytree(example_data_path / f"mf6-{ml_name}", ws)
+    # copy model input files to temp workspace
+    model_name = "mf6-freyberg"
+    workspace = function_tmpdir / model_name
+    copytree(example_data_path / model_name, workspace)
 
-    sim = MFSimulation.load(nam_name, sim_ws=ws)
+    # load, check and run simulation
+    sim = MFSimulation.load(sim_ws=workspace)
     sim.check()
-    success, buff = sim.run_simulation(report=True)
+    success, _ = sim.run_simulation(report=True)
     assert success
 
 
@@ -273,26 +274,28 @@ def test_load_and_run_sim_when_namefile_uses_filenames(
 def test_load_and_run_sim_when_namefile_uses_abs_paths(
     function_tmpdir, example_data_path
 ):
-    ws = function_tmpdir / "ws"
-    ml_name = "freyberg"
-    nam_name = "mfsim.nam"
-    nam_path = ws / nam_name
-    copytree(example_data_path / f"mf6-{ml_name}", ws)
+    # copy model input files to temp workspace
+    model_name = "freyberg"
+    workspace = function_tmpdir / "ws"
+    copytree(example_data_path / f"mf6-{model_name}", workspace)
 
-    with set_dir(ws):
+    # sub abs paths into namefile
+    with set_dir(workspace):
+        nam_path = workspace / "mfsim.nam"
         lines = open(nam_path).readlines()
         with open(nam_path, "w") as f:
             for l in lines:
-                pattern = f"{ml_name}."
+                pattern = f"{model_name}."
                 if pattern in l:
                     l = l.replace(
-                        pattern, str(ws.absolute()) + os.sep + pattern
+                        pattern, str(workspace.absolute()) + os.sep + pattern
                     )
                 f.write(l)
 
-    sim = MFSimulation.load(nam_name, sim_ws=ws)
+    # load, check and run simulation
+    sim = MFSimulation.load(sim_ws=workspace)
     sim.check()
-    success, buff = sim.run_simulation(report=True)
+    success, _ = sim.run_simulation(report=True)
     assert success
 
 
@@ -301,40 +304,53 @@ def test_load_and_run_sim_when_namefile_uses_abs_paths(
 def test_load_sim_when_namefile_uses_rel_paths(
     function_tmpdir, example_data_path, sep
 ):
-    ws = function_tmpdir / "ws"
-    ml_name = "freyberg"
-    nam_name = "mfsim.nam"
-    nam_path = ws / nam_name
-    copytree(example_data_path / f"mf6-{ml_name}", ws)
+    # copy model input files to temp workspace
+    model_name = "freyberg"
+    workspace = function_tmpdir / "ws"
+    copytree(example_data_path / f"mf6-{model_name}", workspace)
 
-    with set_dir(ws):
+    # sub rel paths into namefile
+    with set_dir(workspace):
+        nam_path = workspace / "mfsim.nam"
         lines = open(nam_path).readlines()
         with open(nam_path, "w") as f:
             for l in lines:
-                pattern = f"{ml_name}."
+                pattern = f"{model_name}."
                 if pattern in l:
                     if sep == "win":
                         l = to_win_sep(
                             l.replace(
-                                pattern, "../" + ws.name + "/" + ml_name + "."
+                                pattern,
+                                "../"
+                                + workspace.name
+                                + "/"
+                                + model_name
+                                + ".",
                             )
                         )
                     else:
                         l = to_posix_sep(
                             l.replace(
-                                pattern, "../" + ws.name + "/" + ml_name + "."
+                                pattern,
+                                "../"
+                                + workspace.name
+                                + "/"
+                                + model_name
+                                + ".",
                             )
                         )
                 f.write(l)
 
-    sim = MFSimulation.load(nam_name, sim_ws=ws)
+    # load and check simulation
+    sim = MFSimulation.load(sim_ws=workspace)
     sim.check()
 
     # don't run simulation with Windows sep on Linux or Mac
     if sep == "win" and platform.system() != "Windows":
         return
 
-    success, buff = sim.run_simulation(report=True)
+    # run simulation
+    success, _ = sim.run_simulation(report=True)
     assert success
 
 
@@ -343,36 +359,49 @@ def test_load_sim_when_namefile_uses_rel_paths(
 def test_write_simulation_always_writes_posix_path_separators(
     function_tmpdir, example_data_path, sep
 ):
-    ws = function_tmpdir / "ws"
-    ml_name = "freyberg"
-    nam_name = "mfsim.nam"
-    nam_path = ws / nam_name
-    copytree(example_data_path / f"mf6-{ml_name}", ws)
+    # copy model input files to temp workspace
+    model_name = "freyberg"
+    workspace = function_tmpdir / "ws"
+    copytree(example_data_path / f"mf6-{model_name}", workspace)
 
-    with set_dir(ws):
+    # use OS-specific path separators
+    with set_dir(workspace):
+        nam_path = workspace / "mfsim.nam"
         lines = open(nam_path).readlines()
         with open(nam_path, "w") as f:
             for l in lines:
-                pattern = f"{ml_name}."
+                pattern = f"{model_name}."
                 if pattern in l:
                     if sep == "win":
                         l = to_win_sep(
                             l.replace(
-                                pattern, "../" + ws.name + "/" + ml_name + "."
+                                pattern,
+                                "../"
+                                + workspace.name
+                                + "/"
+                                + model_name
+                                + ".",
                             )
                         )
                     else:
                         l = to_posix_sep(
                             l.replace(
-                                pattern, "../" + ws.name + "/" + ml_name + "."
+                                pattern,
+                                "../"
+                                + workspace.name
+                                + "/"
+                                + model_name
+                                + ".",
                             )
                         )
                 f.write(l)
 
-    sim = MFSimulation.load(nam_name, sim_ws=ws)
+    # load and write simulation
+    sim = MFSimulation.load(sim_ws=workspace)
     sim.write_simulation()
 
-    lines = open(ws / "mfsim.nam").readlines()
+    # make sure posix separators were written
+    lines = open(workspace / "mfsim.nam").readlines()
     assert all("\\" not in l for l in lines)
 
 
@@ -1656,12 +1685,41 @@ def test_sfr_connections(function_tmpdir, example_data_path):
 
         # reload simulation
         sim2 = MFSimulation.load(sim_ws=sim_ws)
-        sim.set_all_data_external()
-        sim.write_simulation()
-        success, buff = sim.run_simulation()
+        sim2.set_all_data_external()
+        sim2.write_simulation()
+        success, buff = sim2.run_simulation()
         assert (
             success
-        ), f"simulation {sim.name} did not run after being reloaded"
+        ), f"simulation {sim2.name} did not run after being reloaded"
+
+        # test sfr recarray data
+        model2 = sim2.get_model()
+        sfr2 = model2.get_package("sfr")
+        sfr_pd = sfr2.packagedata
+        rec_data = [
+            (0, 0, 0, 0, 1.0, 1.0, 0.01, 10.0, 1.0, 1.0, 1.0, 1, 1.0, 0),
+            (1, 0, 1, 0, 1.0, 1.0, 0.01, 10.0, 1.0, 1.0, 1.0, 2, 1.0, 0),
+        ]
+        rec_type = [
+            ("ifno", int),
+            ("layer", int),
+            ("row", int),
+            ("column", int),
+            ("rlen", float),
+            ("rwid", float),
+            ("rgrd", float),
+            ("rtp", float),
+            ("rbth", float),
+            ("rhk", float),
+            ("man", float),
+            ("nconn", int),
+            ("ustrf", float),
+            ("nvd", int),
+        ]
+        pkg_data = np.rec.array(rec_data, rec_type)
+        sfr_pd.set_record({"data": pkg_data})
+        data = sfr_pd.get_data()
+        assert data[0][1] == (0, 0, 0)
 
 
 @requires_exe("mf6")
@@ -2201,6 +2259,29 @@ def test_multi_model(function_tmpdir):
     assert fi_out[2][1] == "gwt_model_1.rch3.spc"
     assert fi_out[1][2] is None
     assert fi_out[2][2] == "MIXED"
+
+    spca1 = ModflowUtlspca(
+        gwt2, filename="gwt_model_1.rch1.spc", print_input=True
+    )
+    spca2 = ModflowUtlspca(
+        gwt2, filename="gwt_model_1.rch2.spc", print_input=False
+    )
+    spca3 = ModflowUtlspca(
+        gwt2, filename="gwt_model_1.rch3.spc", print_input=True
+    )
+    spca4 = ModflowUtlspca(
+        gwt2, filename="gwt_model_1.rch4.spc", print_input=True
+    )
+
+    # test writing and loading spca packages
+    sim2.write_simulation()
+    sim3 = MFSimulation.load(sim_ws=sim2.sim_path)
+    gwt3 = sim3.get_model("gwt_model_1")
+    spc1 = gwt3.get_package("gwt_model_1.rch1.spc")
+    assert isinstance(spc1, ModflowUtlspca)
+    assert spc1.print_input.get_data() is True
+    spc2 = gwt3.get_package("gwt_model_1.rch2.spc")
+    assert spc2.print_input.get_data() is not True
 
     # create a new gwt model
     sourcerecarray = [("WEL-1", "AUX", "CONCENTRATION")]

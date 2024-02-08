@@ -1,4 +1,5 @@
 """ Base classes for Modflow 6 """
+
 import copy
 import inspect
 import os

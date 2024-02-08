@@ -1336,7 +1336,7 @@ def test005_create_tests_advgw_tidal(function_tmpdir, example_data_path):
     # init paths
     test_ex_name = "test005_advgw_tidal"
     model_name = "AdvGW_tidal"
-    pth = example_data_path / "mf6" / "create_tests" / test_ex_name
+    pth = example_data_path / "mf6" / test_ex_name
     expected_output_folder = pth / "expected_output"
     expected_head_file = expected_output_folder / "AdvGW_tidal.hds"
 
@@ -3783,6 +3783,19 @@ def test005_advgw_tidal(function_tmpdir, example_data_path):
     names = ghb.ts.time_series_namerecord.get_data()
     assert names[0][0] == "tides"
 
+    # test obs blocks
+    obs_pkg = model.get_package("obs-1")
+    cont_mfl = obs_pkg.continuous
+    cont_data = cont_mfl.get_data()
+    assert len(cont_data) == 2
+    assert "head_hydrographs.csv" in cont_data
+    assert "gwf-advtidal.obs.flow.csv" in cont_data
+    flow = cont_data["gwf-advtidal.obs.flow.csv"]
+    assert flow[0][0] == "icf1"
+    assert flow[0][1] == "flow-ja-face"
+    assert flow[0][2] == (2, 4, 6)
+    assert flow[0][3] == (2, 4, 7)
+
     # add a stress period beyond nper
     spd = ghb.stress_period_data.get_data()
     spd[20] = copy.deepcopy(spd[0])
@@ -4240,7 +4253,34 @@ def test045_lake1ss_table(function_tmpdir, example_data_path):
     save_folder = function_tmpdir / "save"
     save_folder.mkdir()
     sim.set_sim_path(save_folder)
+    sim.set_all_data_external(
+        external_data_folder="test_folder",
+        base_name="ext_file",
+        binary=True,
+    )
     sim.write_simulation()
+    # verify external files were written
+    ext_folder = os.path.join(save_folder, "test_folder")
+    files_to_check = [
+        "ext_file_lakeex1b.dis_botm_layer1.bin",
+        "ext_file_lakeex1b.dis_botm_layer2.bin",
+        "ext_file_lakeex1b.dis_botm_layer3.bin",
+        "ext_file_lakeex1b.dis_botm_layer4.bin",
+        "ext_file_lakeex1b.dis_botm_layer5.bin",
+        "ext_file_lakeex1b.npf_k_layer1.bin",
+        "ext_file_lakeex1b.npf_k_layer5.bin",
+        "ext_file_lakeex1b.chd_stress_period_data_1.bin",
+        "ext_file_lakeex1b.lak_connectiondata.txt",
+        "ext_file_lakeex1b.lak_packagedata.txt",
+        "ext_file_lakeex1b.lak_perioddata_1.txt",
+        "ext_file_lakeex1b_table.ref_table.txt",
+        "ext_file_lakeex1b.evt_depth_1.bin",
+        "ext_file_lakeex1b.evt_rate_1.bin",
+        "ext_file_lakeex1b.evt_surface_1.bin",
+    ]
+    for file in files_to_check:
+        data_file_path = os.path.join(ext_folder, file)
+        assert os.path.exists(data_file_path)
 
     # run simulation
     success, buff = sim.run_simulation()

@@ -172,3 +172,188 @@ def test_plot_map_view_mp6_endpoint(modpath_model):
     )
     # plt.show()
     assert isinstance(ep, PathCollection)
+
+
+# MP7
+
+
+simname = "test_plot"
+nlay = 1
+nrow = 10
+ncol = 10
+top = 1.0
+botm = [0.0]
+nper = 1
+perlen = 1.0
+nstp = 1
+tsmult = 1.0
+porosity = 0.1
+
+
+@pytest.fixture
+def mf6_gwf_sim(module_tmpdir):
+    gwfname = f"{simname}_gwf"
+
+    # create simulation
+    sim = flopy.mf6.MFSimulation(
+        sim_name=simname,
+        exe_name="mf6",
+        version="mf6",
+        sim_ws=module_tmpdir,
+    )
+
+    # create tdis package
+    flopy.mf6.modflow.mftdis.ModflowTdis(
+        sim,
+        pname="tdis",
+        time_units="DAYS",
+        nper=nper,
+        perioddata=[(perlen, nstp, tsmult)],
+    )
+
+    # create gwf model
+    gwf = flopy.mf6.ModflowGwf(sim, modelname=gwfname, save_flows=True)
+
+    # create gwf discretization
+    flopy.mf6.modflow.mfgwfdis.ModflowGwfdis(
+        gwf,
+        pname="dis",
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+    )
+
+    # create gwf initial conditions package
+    flopy.mf6.modflow.mfgwfic.ModflowGwfic(gwf, pname="ic")
+
+    # create gwf node property flow package
+    flopy.mf6.modflow.mfgwfnpf.ModflowGwfnpf(
+        gwf,
+        pname="npf",
+        save_saturation=True,
+        save_specific_discharge=True,
+    )
+
+    # create gwf chd package
+    spd = {
+        0: [[(0, 0, 0), 1.0, 1.0], [(0, 9, 9), 0.0, 0.0]],
+        1: [[(0, 0, 0), 0.0, 0.0], [(0, 9, 9), 1.0, 2.0]],
+    }
+    chd = flopy.mf6.ModflowGwfchd(
+        gwf,
+        pname="CHD-1",
+        stress_period_data=spd,
+        auxiliary=["concentration"],
+    )
+
+    # create gwf output control package
+    gwf_budget_file = f"{gwfname}.bud"
+    gwf_head_file = f"{gwfname}.hds"
+    oc = flopy.mf6.ModflowGwfoc(
+        gwf,
+        budget_filerecord=gwf_budget_file,
+        head_filerecord=gwf_head_file,
+        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    )
+
+    # create iterative model solution for gwf model
+    ims = flopy.mf6.ModflowIms(sim)
+
+    return sim
+
+
+@pytest.fixture
+def mp7_sim(function_tmpdir, mf6_gwf_sim):
+    pass
+
+
+@pytest.mark.skip(reason="todo")
+@requires_exe("mf6", "mp7")
+def test_plot_map_view_mp7_pathline(mp7_sim):
+    pass
+
+
+@pytest.mark.skip(reason="todo")
+@requires_exe("mf6", "mp7")
+def test_plot_cross_section_mp7_pathline(mp7_sim):
+    pass
+
+
+# MF6 PRT
+
+
+# @pytest.fixture
+# def mf6_prt_sim(function_tmpdir, mf6_gwf_sim):
+#     prtname = f"{simname}_prt"
+#
+#     # create prt model
+#     prt = flopy.mf6.ModflowPrt(mf6_gwf_sim, modelname=prtname)
+#
+#     # create prt discretization
+#     flopy.mf6.modflow.mfgwfdis.ModflowGwfdis(
+#         prt,
+#         pname="dis",
+#         nlay=nlay,
+#         nrow=nrow,
+#         ncol=ncol,
+#     )
+#
+#     # create mip package
+#     flopy.mf6.ModflowPrtmip(prt, pname="mip", porosity=porosity)
+#
+#     # create prp package
+#     flopy.mf6.ModflowPrtprp(
+#         prt,
+#         pname="prp1",
+#         filename=f"{prtname}_1.prp",
+#         nreleasepts=len(releasepts),
+#         packagedata=releasepts,
+#         perioddata={0: ["FIRST"]},
+#     )
+#
+#     # create output control package
+#     flopy.mf6.ModflowPrtoc(
+#         prt,
+#         pname="oc",
+#         track_filerecord=[prt_track_file],
+#         trackcsv_filerecord=[prt_track_csv_file],
+#     )
+#
+#     # create a flow model interface
+#     # todo Fienen's report (crash when FMI created but not needed)
+#     # flopy.mf6.ModflowPrtfmi(
+#     #     prt,
+#     #     packagedata=[
+#     #         ("GWFHEAD", gwf_head_file),
+#     #         ("GWFBUDGET", gwf_budget_file),
+#     #     ],
+#     # )
+#
+#     # create exchange
+#     flopy.mf6.ModflowGwfprt(
+#         sim,
+#         exgtype="GWF6-PRT6",
+#         exgmnamea=gwfname,
+#         exgmnameb=prtname,
+#         filename=f"{gwfname}.gwfprt",
+#     )
+#
+#     # add explicit model solution
+#     ems = flopy.mf6.ModflowEms(
+#         sim,
+#         pname="ems",
+#         filename=f"{prtname}.ems",
+#     )
+#     sim.register_solution_package(ems, [prt.name])
+#
+#     return sim
+#
+#
+# @requires_exe("mf6")
+# def test_plot_map_view_prt_pathline(mf6_prt_sim):
+#     pass
+#
+#
+# @requires_exe("mf6")
+# def test_plot_cross_section_prt_pathline(mf6_prt_sim):
+#     pass

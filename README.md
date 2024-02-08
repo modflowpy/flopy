@@ -1,7 +1,7 @@
 
 <img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png" alt="flopy3" style="width:50;height:20">
 
-### Version 3.5.0
+### Version 3.6.0
 [![flopy continuous integration](https://github.com/modflowpy/flopy/actions/workflows/commit.yml/badge.svg?branch=develop)](https://github.com/modflowpy/flopy/actions/workflows/commit.yml)
 [![Read the Docs](https://github.com/modflowpy/flopy/actions/workflows/rtd.yml/badge.svg?branch=develop)](https://github.com/modflowpy/flopy/actions/workflows/rtd.yml)
 
@@ -20,21 +20,29 @@
 Introduction
 -----------------------------------------------
 
-FloPy includes support for [MODFLOW 6](docs/mf6.md), MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, and MODFLOW-2000. Other supported MODFLOW-based models include MODPATH (version 6 and 7), MT3DMS, MT3D-USGS, and SEAWAT.
+FloPy includes support for [MODFLOW 6](https://github.com/MODFLOW-USGS/modflow6), MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, and MODFLOW-2000. Other supported MODFLOW-based models include MODPATH (version 6 and 7), MT3DMS, MT3D-USGS, and SEAWAT.
 
 For general modeling issues, please consult a modeling forum, such as the [MODFLOW Users Group](https://groups.google.com/forum/#!forum/modflow).  Other MODFLOW resources are listed in the [MODFLOW Resources](https://github.com/modflowpy/flopy#modflow-resources) section.
 
 Documentation
 -----------------------------------------------
-* [Latest release](https://flopy.readthedocs.io)
-* [Current release candidate](https://flopy.readthedocs.io/en/latest/)
+* [Latest release](https://flopy.readthedocs.io/en/stable)
+* [Current release candidate](https://flopy.readthedocs.io/en/latest)
 
 Installation
 -----------------------------------------------
 
-FloPy requires **Python** 3.8 (or higher), **NumPy** 1.15.0 (or higher), and **matplotlib** 1.4.0 (or higher).  Dependencies for optional FloPy methods are summarized [here](.docs/optional_dependencies.md).
+FloPy requires **Python** 3.8+ with: 
 
-To install FloPy type:
+```
+numpy >=1.15.0,<2.0.0
+matplotlib >=1.4.0
+pandas >=2.0.0
+```
+
+Dependencies for optional features are summarized [here](https://flopy.readthedocs.io/en/latest/md/optional_dependencies.html).
+
+To install type:
 
     conda install -c conda-forge flopy
 
@@ -47,9 +55,9 @@ The release candidate version can also be installed from the git repository usin
 
 After FloPy is installed, MODFLOW and related programs can be installed using the command:
 
-    get-modflow :flopy
+    get-modflow :
 
-See [documentation](.docs/md/get_modflow.md) for more information.
+See the [docs](https://flopy.readthedocs.io/en/latest/md/get_modflow.html) for more information.
 
 
 Getting Started
@@ -96,9 +104,9 @@ pmv.plot_vector(qx, qy, normalize=True, color="white")
 Additional FloPy Resources
 ------------------------------------------------
 
-- [FloPy tutorials](https://flopy.readthedocs.io/en/stable/tutorials.html) and scripts demonstrating the use of FloPy to run and post-process MODFLOW-based models.
+- [FloPy tutorials](https://flopy.readthedocs.io/en/latest/tutorials.html) and scripts demonstrating the use of FloPy to run and post-process MODFLOW-based models.
 
-- [FloPy example notebooks](https://flopy.readthedocs.io/en/stable/notebooks.html) demonstrating the use of FloPy pre- and post-processing capabilities with a variety of MODFLOW-based models.
+- [FloPy example notebooks](https://flopy.readthedocs.io/en/latest/notebooks.html) demonstrating the use of FloPy pre- and post-processing capabilities with a variety of MODFLOW-based models.
 
 - [MODFLOW 6 example problems](https://modflow6-examples.readthedocs.io/en/latest/) demonstrating FloPy use to create, run, and post-process MODFLOW 6 models.
 
@@ -106,7 +114,7 @@ Additional FloPy Resources
 
 - A table of the supported and proposed model checks implemented in  FloPy is available in [docs/model_checks.md](docs/model_checks.md) on the github repo.
 
-- A summary of changes in each FloPy version is available in [docs/version_changes.md](docs/version_changes.md) on the github repo.
+- A summary of changes in each FloPy version is available in [docs/version_changes.md](https://flopy.readthedocs.io/en/latest/md/version_changes.html) on the github repo.
 
 Questions
 ------------------------------------------------
@@ -142,7 +150,7 @@ How to Cite
 
 ##### ***Software/Code citation for FloPy:***
 
-[Bakker, Mark, Post, Vincent, Hughes, J. D., Langevin, C. D., White, J. T., Leaf, A. T., Paulinski, S. R., Bellino, J. C., Morway, E. D., Toews, M. W., Larsen, J. D., Fienen, M. N., Starn, J. J., Brakenhoff, D. A., and Bonelli, W. P., 2023, FloPy v3.5.0: U.S. Geological Survey Software Release, 25 November 2023, https://doi.org/10.5066/F7BK19FH](https://doi.org/10.5066/F7BK19FH)
+[Bakker, Mark, Post, Vincent, Hughes, J. D., Langevin, C. D., White, J. T., Leaf, A. T., Paulinski, S. R., Bellino, J. C., Morway, E. D., Toews, M. W., Larsen, J. D., Fienen, M. N., Starn, J. J., Brakenhoff, D. A., and Bonelli, W. P., 2024, FloPy v3.6.0: U.S. Geological Survey Software Release, 08 February 2024, https://doi.org/10.5066/F7BK19FH](https://doi.org/10.5066/F7BK19FH)
 
 
 Additional FloPy Related Publications

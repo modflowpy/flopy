@@ -1,3 +1,6 @@
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
 import numpy as np
 
 from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
@@ -6,11 +9,13 @@ from flopy.utils.voronoi import VoronoiGrid
 
 
 class GridCases:
-    def structured_small(self):
+    @staticmethod
+    def structured_small():
         nlay, nrow, ncol = 3, 2, 3
         delc = 1.0 * np.ones(nrow, dtype=float)
         delr = 1.0 * np.ones(ncol, dtype=float)
         top = 10.0 * np.ones((nrow, ncol), dtype=float)
+        idomain = np.ones((nlay, nrow, ncol), dtype=int)
         botm = np.zeros((nlay, nrow, ncol), dtype=float)
         botm[0, :, :] = 5.0
         botm[1, :, :] = 0.0
@@ -23,9 +28,11 @@ class GridCases:
             delr=delr,
             top=top,
             botm=botm,
+            idomain=idomain,
         )
 
-    def structured_cbd_small(self):
+    @staticmethod
+    def structured_cbd_small():
         nlay = 3
         nrow = ncol = 15
         laycbd = np.array([1, 2, 0], dtype=int)
@@ -59,7 +66,8 @@ class GridCases:
             laycbd=laycbd,
         )
 
-    def vertex_small(self):
+    @staticmethod
+    def vertex_small():
         nlay, ncpl = 3, 5
         vertices = [
             [0, 0.0, 3.0],
@@ -81,6 +89,7 @@ class GridCases:
             [3, 1.5, 1.5, 4, 4, 5, 8, 7],
             [4, 0.5, 0.5, 4, 6, 7, 10, 9],
         ]
+        idomain = np.ones((nlay, ncpl), dtype=int)
         top = np.ones(ncpl, dtype=float) * 10.0
         botm = np.zeros((nlay, ncpl), dtype=float)
         botm[0, :] = 5.0
@@ -93,9 +102,11 @@ class GridCases:
             cell2d=cell2d,
             top=top,
             botm=botm,
+            idomain=idomain,
         )
 
-    def unstructured_small(self):
+    @staticmethod
+    def unstructured_small():
         nlay = 3
         ncpl = [5, 5, 5]
         vertices = [
@@ -112,21 +123,21 @@ class GridCases:
             [10, 1.0, 0.0],
         ]
         iverts = [
-            [0, 0, 1, 4, 3],
-            [1, 1, 2, 5, 4],
-            [2, 3, 4, 7, 6],
-            [3, 4, 5, 8, 7],
-            [4, 6, 7, 10, 9],
-            [5, 0, 1, 4, 3],
-            [6, 1, 2, 5, 4],
-            [7, 3, 4, 7, 6],
-            [8, 4, 5, 8, 7],
-            [9, 6, 7, 10, 9],
-            [10, 0, 1, 4, 3],
-            [11, 1, 2, 5, 4],
-            [12, 3, 4, 7, 6],
-            [13, 4, 5, 8, 7],
-            [14, 6, 7, 10, 9],
+            [0, 1, 4, 3],
+            [1, 2, 5, 4],
+            [3, 4, 7, 6],
+            [4, 5, 8, 7],
+            [6, 7, 10, 9],
+            [0, 1, 4, 3],
+            [1, 2, 5, 4],
+            [3, 4, 7, 6],
+            [4, 5, 8, 7],
+            [6, 7, 10, 9],
+            [0, 1, 4, 3],
+            [1, 2, 5, 4],
+            [3, 4, 7, 6],
+            [4, 5, 8, 7],
+            [6, 7, 10, 9],
         ]
         xcenters = [
             0.5,
@@ -142,6 +153,7 @@ class GridCases:
             1.5,
             0.5,
         ]
+        idomain = np.ones((nlay, 5), dtype=int)
         top = np.ones((nlay, 5), dtype=float)
         top[0, :] = 10.0
         top[1, :] = 5.0
@@ -159,9 +171,11 @@ class GridCases:
             ncpl=ncpl,
             top=top.flatten(),
             botm=botm.flatten(),
+            idomain=idomain.flatten(),
         )
 
-    def unstructured_medium(self):
+    @staticmethod
+    def unstructured_medium():
         iverts = [
             [4, 3, 2, 1, 0, None],
             [7, 0, 1, 6, 5, None],
@@ -205,7 +219,8 @@ class GridCases:
 
         return UnstructuredGrid(verts, iverts, ncpl=[len(iverts)])
 
-    def voronoi_polygon(self, function_tmpdir):
+    @staticmethod
+    def voronoi_polygon():
         ncpl = 3803
         domain = [
             [1831.381546, 6335.543757],
@@ -231,18 +246,20 @@ class GridCases:
         max_area = 100.0**2
         angle = 30
 
-        tri = Triangle(
-            maximum_area=max_area, angle=angle, model_ws=str(function_tmpdir)
-        )
-        tri.add_polygon(poly)
-        tri.build(verbose=False)
-        vor = VoronoiGrid(tri)
-        gridprops = vor.get_gridprops_vertexgrid()
-        grid = VertexGrid(**gridprops, nlay=1)
+        with TemporaryDirectory() as tempdir:
+            tri = Triangle(
+                maximum_area=max_area, angle=angle, model_ws=str(Path(tempdir))
+            )
+            tri.add_polygon(poly)
+            tri.build(verbose=False)
+            vor = VoronoiGrid(tri)
+            gridprops = vor.get_gridprops_vertexgrid()
+            grid = VertexGrid(**gridprops, nlay=1)
 
         return ncpl, vor, gridprops, grid
 
-    def voronoi_rectangle(self, function_tmpdir):
+    @staticmethod
+    def voronoi_rectangle():
         ncpl = 1679
         xmin = 0.0
         xmax = 2.0
@@ -254,18 +271,20 @@ class GridCases:
         max_area = 0.001
         angle = 30
 
-        tri = Triangle(
-            maximum_area=max_area, angle=angle, model_ws=str(function_tmpdir)
-        )
-        tri.add_polygon(poly)
-        tri.build(verbose=False)
-        vor = VoronoiGrid(tri)
-        gridprops = vor.get_gridprops_vertexgrid()
-        grid = VertexGrid(**gridprops, nlay=1)
+        with TemporaryDirectory() as tempdir:
+            tri = Triangle(
+                maximum_area=max_area, angle=angle, model_ws=str(Path(tempdir))
+            )
+            tri.add_polygon(poly)
+            tri.build(verbose=False)
+            vor = VoronoiGrid(tri)
+            gridprops = vor.get_gridprops_vertexgrid()
+            grid = VertexGrid(**gridprops, nlay=1)
 
         return ncpl, vor, gridprops, grid
 
-    def voronoi_circle(self, function_tmpdir):
+    @staticmethod
+    def voronoi_circle():
         ncpl = 538
         theta = np.arange(0.0, 2 * np.pi, 0.2)
         radius = 100.0
@@ -275,18 +294,20 @@ class GridCases:
         max_area = 50
         angle = 30
 
-        tri = Triangle(
-            maximum_area=max_area, angle=angle, model_ws=str(function_tmpdir)
-        )
-        tri.add_polygon(poly)
-        tri.build(verbose=False)
-        vor = VoronoiGrid(tri)
-        gridprops = vor.get_gridprops_vertexgrid()
-        grid = VertexGrid(**gridprops, nlay=1)
+        with TemporaryDirectory() as tempdir:
+            tri = Triangle(
+                maximum_area=max_area, angle=angle, model_ws=str(Path(tempdir))
+            )
+            tri.add_polygon(poly)
+            tri.build(verbose=False)
+            vor = VoronoiGrid(tri)
+            gridprops = vor.get_gridprops_vertexgrid()
+            grid = VertexGrid(**gridprops, nlay=1)
 
         return ncpl, vor, gridprops, grid
 
-    def voronoi_nested_circles(self, function_tmpdir):
+    @staticmethod
+    def voronoi_nested_circles():
         ncpl = 300
 
         theta = np.arange(0.0, 2 * np.pi, 0.2)
@@ -305,86 +326,92 @@ class GridCases:
         max_area = 100
         angle = 30
 
-        tri = Triangle(
-            maximum_area=max_area, angle=angle, model_ws=str(function_tmpdir)
-        )
-        for poly in polys:
-            tri.add_polygon(poly)
-        tri.add_hole((25, 25))
-        tri.build(verbose=False)
-        vor = VoronoiGrid(tri)
-        gridprops = vor.get_gridprops_vertexgrid()
-        grid = VertexGrid(**gridprops, nlay=1)
+        with TemporaryDirectory() as tempdir:
+            tri = Triangle(
+                maximum_area=max_area, angle=angle, model_ws=str(Path(tempdir))
+            )
+            for poly in polys:
+                tri.add_polygon(poly)
+            tri.add_hole((25, 25))
+            tri.build(verbose=False)
+            vor = VoronoiGrid(tri)
+            gridprops = vor.get_gridprops_vertexgrid()
+            grid = VertexGrid(**gridprops, nlay=1)
 
         return ncpl, vor, gridprops, grid
 
-    def voronoi_polygons(self, function_tmpdir):
+    @staticmethod
+    def voronoi_polygons():
         ncpl = 410
         active_domain = [(0, 0), (100, 0), (100, 100), (0, 100)]
         area1 = [(10, 10), (40, 10), (40, 40), (10, 40)]
         area2 = [(60, 60), (80, 60), (80, 80), (60, 80)]
-        tri = Triangle(angle=30, model_ws=str(function_tmpdir))
-        tri.add_polygon(active_domain)
-        tri.add_polygon(area1)
-        tri.add_polygon(area2)
-        tri.add_region(
-            (1, 1), 0, maximum_area=100
-        )  # point inside active domain
-        tri.add_region((11, 11), 1, maximum_area=10)  # point inside area1
-        tri.add_region((61, 61), 2, maximum_area=3)  # point inside area2
-        tri.build(verbose=False)
-        vor = VoronoiGrid(tri)
-        gridprops = vor.get_gridprops_vertexgrid()
-        grid = VertexGrid(**gridprops, nlay=1)
+
+        with TemporaryDirectory() as tempdir:
+            tri = Triangle(angle=30, model_ws=str(Path(tempdir)))
+            tri.add_polygon(active_domain)
+            tri.add_polygon(area1)
+            tri.add_polygon(area2)
+            tri.add_region(
+                (1, 1), 0, maximum_area=100
+            )  # point inside active domain
+            tri.add_region((11, 11), 1, maximum_area=10)  # point inside area1
+            tri.add_region((61, 61), 2, maximum_area=3)  # point inside area2
+            tri.build(verbose=False)
+            vor = VoronoiGrid(tri)
+            gridprops = vor.get_gridprops_vertexgrid()
+            grid = VertexGrid(**gridprops, nlay=1)
 
         return ncpl, vor, gridprops, grid
 
-    def voronoi_many_polygons(self, function_tmpdir):
+    @staticmethod
+    def voronoi_many_polygons():
         ncpl = 1305
         active_domain = [(0, 0), (100, 0), (100, 100), (0, 100)]
         area1 = [(10, 10), (40, 10), (40, 40), (10, 40)]
         area2 = [(70, 70), (90, 70), (90, 90), (70, 90)]
 
-        tri = Triangle(angle=30, model_ws=str(function_tmpdir))
+        with TemporaryDirectory() as tempdir:
+            tri = Triangle(angle=30, model_ws=str(Path(tempdir)))
 
-        # requirement that active_domain is first polygon to be added
-        tri.add_polygon(active_domain)
+            # requirement that active_domain is first polygon to be added
+            tri.add_polygon(active_domain)
 
-        # requirement that any holes be added next
-        theta = np.arange(0.0, 2 * np.pi, 0.2)
-        radius = 10.0
-        x = radius * np.cos(theta) + 50.0
-        y = radius * np.sin(theta) + 70.0
-        circle_poly0 = [(x, y) for x, y in zip(x, y)]
-        tri.add_polygon(circle_poly0)
-        tri.add_hole((50, 70))
+            # requirement that any holes be added next
+            theta = np.arange(0.0, 2 * np.pi, 0.2)
+            radius = 10.0
+            x = radius * np.cos(theta) + 50.0
+            y = radius * np.sin(theta) + 70.0
+            circle_poly0 = [(x, y) for x, y in zip(x, y)]
+            tri.add_polygon(circle_poly0)
+            tri.add_hole((50, 70))
 
-        # Add a polygon to force cells to conform to it
-        theta = np.arange(0.0, 2 * np.pi, 0.2)
-        radius = 10.0
-        x = radius * np.cos(theta) + 70.0
-        y = radius * np.sin(theta) + 20.0
-        circle_poly1 = [(x, y) for x, y in zip(x, y)]
-        tri.add_polygon(circle_poly1)
-        # tri.add_hole((70, 20))
+            # Add a polygon to force cells to conform to it
+            theta = np.arange(0.0, 2 * np.pi, 0.2)
+            radius = 10.0
+            x = radius * np.cos(theta) + 70.0
+            y = radius * np.sin(theta) + 20.0
+            circle_poly1 = [(x, y) for x, y in zip(x, y)]
+            tri.add_polygon(circle_poly1)
+            # tri.add_hole((70, 20))
 
-        # add line through domain to force conforming cells
-        line = [(x, x) for x in np.linspace(11, 89, 100)]
-        tri.add_polygon(line)
+            # add line through domain to force conforming cells
+            line = [(x, x) for x in np.linspace(11, 89, 100)]
+            tri.add_polygon(line)
 
-        # then regions and other polygons should follow
-        tri.add_polygon(area1)
-        tri.add_polygon(area2)
-        tri.add_region(
-            (1, 1), 0, maximum_area=100
-        )  # point inside active domain
-        tri.add_region((11, 11), 1, maximum_area=10)  # point inside area1
-        tri.add_region((70, 70), 2, maximum_area=1)  # point inside area2
+            # then regions and other polygons should follow
+            tri.add_polygon(area1)
+            tri.add_polygon(area2)
+            tri.add_region(
+                (1, 1), 0, maximum_area=100
+            )  # point inside active domain
+            tri.add_region((11, 11), 1, maximum_area=10)  # point inside area1
+            tri.add_region((70, 70), 2, maximum_area=1)  # point inside area2
 
-        tri.build(verbose=False)
+            tri.build(verbose=False)
 
-        vor = VoronoiGrid(tri)
-        gridprops = vor.get_gridprops_vertexgrid()
-        grid = VertexGrid(**gridprops, nlay=1)
+            vor = VoronoiGrid(tri)
+            gridprops = vor.get_gridprops_vertexgrid()
+            grid = VertexGrid(**gridprops, nlay=1)
 
         return ncpl, vor, gridprops, grid

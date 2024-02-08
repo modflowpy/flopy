@@ -14,7 +14,6 @@ from ...utils.observationfile import CsvFile
 
 
 class MF6Output:
-
     """
     A class that uses meta programming to get output
 
@@ -201,6 +200,26 @@ class MF6Output:
 
                 setattr(self.__class__, rectype, get_layerfile_data)
                 self._methods.append(f"{rectype}()")
+
+    def __repr__(self):
+        """
+        String representation of the MF6Output object
+
+        Returns
+        -------
+        s : str
+            human readable class representation
+        """
+        name = self._obj.name
+        if isinstance(name, list):
+            name = name[0]
+        l = [
+            f"MF6Output Class for {name}",
+            f"Available output methods include:",
+        ]
+        l += [f".{m}" for m in self.methods()]
+        s = "\n".join(l)
+        return s
 
     def methods(self):
         """

@@ -348,7 +348,7 @@ class MFArray(MFMultiDimVar):
         """
 
         try:
-            model_grid = self._data_dimensions.get_model_grid()
+            model_grid = self.data_dimensions.get_model_grid()
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(
@@ -381,7 +381,7 @@ class MFArray(MFMultiDimVar):
         """
         if layered_data is True and self.structure.layered is False:
             if (
-                self._data_dimensions.get_model_grid().grid_type()
+                self.data_dimensions.get_model_grid().grid_type()
                 == DiscretizationType.DISU
             ):
                 comment = f"Layered option not available for unstructured grid. {self._path}"
@@ -430,7 +430,7 @@ class MFArray(MFMultiDimVar):
                 )
         else:
             if (
-                self._data_dimensions.get_model_grid().grid_type()
+                self.data_dimensions.get_model_grid().grid_type()
                 == DiscretizationType.DISU
             ):
                 comment = f"Layered option not available for unstructured grid. {self._path}"
@@ -482,6 +482,7 @@ class MFArray(MFMultiDimVar):
                 Whether to replace an existing external file.
             check_data : bool
                 Verify data prior to storing
+
         """
         storage = self._get_storage_obj()
         if storage is None:
@@ -861,11 +862,11 @@ class MFArray(MFMultiDimVar):
             )
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(
-                self._data_dimensions.structure.get_model(),
-                self._data_dimensions.structure.get_package(),
-                self._data_dimensions.structure.path,
+                self.data_dimensions.structure.get_model(),
+                self.data_dimensions.structure.get_package(),
+                self.data_dimensions.structure.path,
                 "setting record",
-                self._data_dimensions.structure.name,
+                self.data_dimensions.structure.name,
                 inspect.stack()[0][3],
                 type_,
                 value_,
@@ -933,7 +934,7 @@ class MFArray(MFMultiDimVar):
             # handle special case of aux variables in an array
             self.layered = True
             aux_var_names = (
-                self._data_dimensions.package_dim.get_aux_variables()
+                self.data_dimensions.package_dim.get_aux_variables()
             )
             if len(aux_data) == len(aux_var_names[0]) - 1:
                 for layer, aux_var_data in enumerate(aux_data):
@@ -980,11 +981,11 @@ class MFArray(MFMultiDimVar):
                 )
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(
-                    self._data_dimensions.structure.get_model(),
-                    self._data_dimensions.structure.get_package(),
-                    self._data_dimensions.structure.path,
+                    self.data_dimensions.structure.get_model(),
+                    self.data_dimensions.structure.get_package(),
+                    self.data_dimensions.structure.path,
                     "setting aux variables",
-                    self._data_dimensions.structure.name,
+                    self.data_dimensions.structure.name,
                     inspect.stack()[0][3],
                     type_,
                     value_,
@@ -1064,7 +1065,7 @@ class MFArray(MFMultiDimVar):
         self._resync()
         if self.structure.layered:
             try:
-                model_grid = self._data_dimensions.get_model_grid()
+                model_grid = self.data_dimensions.get_model_grid()
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(
@@ -1101,7 +1102,7 @@ class MFArray(MFMultiDimVar):
         else:
             file_access = MFFileAccessArray(
                 self.structure,
-                self._data_dimensions,
+                self.data_dimensions,
                 self._simulation_data,
                 self._path,
                 self._current_key,
@@ -1272,7 +1273,7 @@ class MFArray(MFMultiDimVar):
             return DataStorage(
                 self._simulation_data,
                 self._model_or_sim,
-                self._data_dimensions,
+                self.data_dimensions,
                 self._get_file_entry,
                 DataStorageType.internal_array,
                 DataStructureType.ndarray,
@@ -1284,7 +1285,7 @@ class MFArray(MFMultiDimVar):
             return DataStorage(
                 self._simulation_data,
                 self._model_or_sim,
-                self._data_dimensions,
+                self.data_dimensions,
                 self._get_file_entry,
                 DataStorageType.internal_array,
                 DataStructureType.ndarray,
@@ -1402,7 +1403,7 @@ class MFArray(MFMultiDimVar):
                     self._simulation_data.debug,
                     ex,
                 )
-            package_dim = self._data_dimensions.package_dim
+            package_dim = self.data_dimensions.package_dim
             model_name = package_dim.model_dim[0].model_name
             self._simulation_data.mfpath.add_ext_file(file_path, model_name)
         return file_entry
@@ -1430,7 +1431,7 @@ class MFArray(MFMultiDimVar):
             )
         file_access = MFFileAccessArray(
             self.structure,
-            self._data_dimensions,
+            self.data_dimensions,
             self._simulation_data,
             self._path,
             self._current_key,
@@ -1683,6 +1684,7 @@ class MFTransientArray(MFArray, MFTransient):
                 Whether to replace an existing external file.
             check_data : bool
                 Verify data prior to storing
+
         """
         # store each stress period in separate file(s)
         for sp in self._data_storage.keys():
@@ -1803,7 +1805,7 @@ class MFTransientArray(MFArray, MFTransient):
         """
         if self._data_storage is not None and len(self._data_storage) > 0:
             if key is None:
-                sim_time = self._data_dimensions.package_dim.model_dim[
+                sim_time = self.data_dimensions.package_dim.model_dim[
                     0
                 ].simulation_time
                 num_sp = sim_time.get_num_stress_periods()
@@ -1825,7 +1827,7 @@ class MFTransientArray(MFArray, MFTransient):
         """
         if self._data_storage is not None and len(self._data_storage) > 0:
             if key is None:
-                sim_time = self._data_dimensions.package_dim.model_dim[
+                sim_time = self.data_dimensions.package_dim.model_dim[
                     0
                 ].simulation_time
                 num_sp = sim_time.get_num_stress_periods()

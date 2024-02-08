@@ -1,3 +1,6 @@
+# This workflow tests flopy with random subsets of optional dependencies.
+# Flopy should not crash due to the absence of any optional dependencies,
+# rather it should gracefully raise an ImportError if absent when needed.
 name: FloPy optional dependency testing
 on:
   schedule:
@@ -25,7 +28,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
@@ -52,7 +55,7 @@ jobs:
           fi
       
       - name: Upload removed dependencies log
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: smoke-test-removed-dependencies
           path: ./removed_dependencies.txt
@@ -62,12 +65,12 @@ jobs:
       
       - name: Smoke test (${{ matrix.optdeps }})
         working-directory: autotest
-        run: pytest -v -n=auto --smoke --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
+        run: pytest -v -n=auto -m "not regression and not example" --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload failed test outputs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: failed-smoke-${{ runner.os }}-${{ env.PYTHON_VERSION }}

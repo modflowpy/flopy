@@ -25,6 +25,7 @@
 # +
 import os
 import sys
+from pprint import pformat
 from tempfile import TemporaryDirectory
 
 import matplotlib as mpl
@@ -277,11 +278,7 @@ oc = flopy.mf6.ModflowGwfoc(
 
 sim.write_simulation()
 success, buff = sim.run_simulation(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+assert success, pformat(buff)
 
 # +
 # load and store the head arrays from the parent and child models

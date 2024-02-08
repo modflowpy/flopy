@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on September 30, 2023 14:44:04 UTC
+# FILE created on February 07, 2024 20:16:08 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -79,6 +79,9 @@ class ModflowGwfdrn(mfpackage.MFPackage):
           Package can be used with the Water Mover (MVR) Package. When the
           MOVER option is specified, additional memory is allocated within the
           package to store the available, provided, and received water.
+    dev_cubic_scaling : boolean
+        * dev_cubic_scaling (boolean) cubic-scaling is used to scale the drain
+          conductance
     maxbound : integer
         * maxbound (integer) integer value specifying the maximum number of
           drains cells that will be specified for use during any stress period.
@@ -179,6 +182,7 @@ class ModflowGwfdrn(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprpak",
         ],
         [
             "block options",
@@ -186,6 +190,7 @@ class ModflowGwfdrn(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprflow",
         ],
         [
             "block options",
@@ -193,6 +198,7 @@ class ModflowGwfdrn(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal ipakcb",
         ],
         [
             "block options",
@@ -277,6 +283,14 @@ class ModflowGwfdrn(mfpackage.MFPackage):
             "optional true",
         ],
         [
+            "block options",
+            "name dev_cubic_scaling",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal icubicsfac",
+        ],
+        [
             "block dimensions",
             "name maxbound",
             "type integer",
@@ -301,6 +315,7 @@ class ModflowGwfdrn(mfpackage.MFPackage):
             "type recarray cellid elev cond aux boundname",
             "shape (maxbound)",
             "reader urword",
+            "mf6internal spd",
         ],
         [
             "block period",
@@ -341,6 +356,7 @@ class ModflowGwfdrn(mfpackage.MFPackage):
             "reader urword",
             "optional true",
             "time_series true",
+            "mf6internal auxvar",
         ],
         [
             "block period",
@@ -368,6 +384,7 @@ class ModflowGwfdrn(mfpackage.MFPackage):
         timeseries=None,
         observations=None,
         mover=None,
+        dev_cubic_scaling=None,
         maxbound=None,
         stress_period_data=None,
         filename=None,
@@ -395,6 +412,9 @@ class ModflowGwfdrn(mfpackage.MFPackage):
             "obs", observations, "continuous", self._obs_filerecord
         )
         self.mover = self.build_mfdata("mover", mover)
+        self.dev_cubic_scaling = self.build_mfdata(
+            "dev_cubic_scaling", dev_cubic_scaling
+        )
         self.maxbound = self.build_mfdata("maxbound", maxbound)
         self.stress_period_data = self.build_mfdata(
             "stress_period_data", stress_period_data

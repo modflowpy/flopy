@@ -29,7 +29,6 @@
 #    3) __Useful methods and features__
 
 import os
-import shutil
 
 # +
 import sys
@@ -39,15 +38,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
-# run installed version of flopy or add local path
-try:
-    import flopy
-except:
-    fpth = os.path.abspath(os.path.join("..", ".."))
-    sys.path.append(fpth)
-    import flopy
-
-import flopy.utils.binaryfile as bf
+import flopy
 from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
 
 print(sys.version)

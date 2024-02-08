@@ -28,7 +28,6 @@
 # * any other analysis where a distribution of transmissivity by layer is needed for a specified vertical interval of the model.
 
 # +
-import os
 import sys
 from tempfile import TemporaryDirectory
 

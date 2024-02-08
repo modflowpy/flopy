@@ -46,6 +46,7 @@ reader urword
 optional true
 longname print input to listing file
 description REPLACE print_input {'{#1}': 'evapotranspiration'}
+mf6internal iprpak
 
 block options
 name print_flows
@@ -54,6 +55,7 @@ reader urword
 optional true
 longname print evapotranspiration rates to listing file
 description REPLACE print_flows {'{#1}': 'evapotranspiration'}
+mf6internal iprflow
 
 block options
 name save_flows
@@ -62,6 +64,7 @@ reader urword
 optional true
 longname save CHD flows to budget file
 description REPLACE save_flows {'{#1}': 'evapotranspiration'}
+mf6internal ipakcb
 
 block options
 name tas_filerecord
@@ -178,6 +181,7 @@ name rate
 type double precision
 shape (ncol*nrow; ncpl)
 reader readarray
+time_series true
 longname evapotranspiration surface
 description is the maximum ET flux rate ($LT^{-1}$).
 default_value 1.e-3
@@ -192,9 +196,11 @@ description is the ET extinction depth ($L$).
 default_value 1.0
 
 block period
-name aux(iaux)
+name aux
 type double precision
 shape (ncol*nrow; ncpl)
 reader readarray
+time_series true
 longname auxiliary variable iaux
 description is an array of values for auxiliary variable AUX(IAUX), where iaux is a value from 1 to NAUX, and AUX(IAUX) must be listed as part of the auxiliary variables.  A separate array can be specified for each auxiliary variable.  If an array is not specified for an auxiliary variable, then a value of zero is assigned.  If the value specified here for the auxiliary variable is the same as auxmultname, then the evapotranspiration rate will be multiplied by this array.
+mf6internal auxvar

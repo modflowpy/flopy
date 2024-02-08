@@ -1356,7 +1356,7 @@ class MFFileAccessList(MFFileAccess):
                     if store_internal:
                         # store as rec array
                         storage.store_internal(
-                            data_loaded, None, False, current_key
+                            data_loaded, None, False, key=current_key
                         )
                         storage.data_dimensions.unlock()
                         return [False, line, data_line]
@@ -1802,9 +1802,9 @@ class MFFileAccessList(MFFileAccess):
                                             keyword_data_item.type = (
                                                 DatumType.string
                                             )
-                                            self._temp_dict[
-                                                data_item.name
-                                            ] = keyword_data_item
+                                            self._temp_dict[data_item.name] = (
+                                                keyword_data_item
+                                            )
                                         (
                                             data_index,
                                             more_data_expected,

@@ -24,12 +24,7 @@ def analytical_water_table_solution(h1, h2, z, R, K, L, x):
     h = np.zeros((x.shape[0]), float)
     b1 = h1 - z
     b2 = h2 - z
-    h = (
-        np.sqrt(
-            b1**2 - (x / L) * (b1**2 - b2**2) + (R * x / K) * (L - x)
-        )
-        + z
-    )
+    h = np.sqrt(b1**2 - (x / L) * (b1**2 - b2**2) + (R * x / K) * (L - x)) + z
     return h
 
 

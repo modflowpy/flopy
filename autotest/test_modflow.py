@@ -1292,85 +1292,75 @@ def test_load_with_list_reader(function_tmpdir):
 @requires_exe("mf2005")
 @pytest.mark.parametrize(
     "container",
-    [
-        str(np.recarray),
-        str(pd.DataFrame),
-        str(Dict[int, np.recarray]),
-        str(Dict[int, pd.DataFrame]),
-    ],
+    ["recarray", "dataframe", "dict_of_recarray", "dict_of_dataframe"],
 )
 def test_pkg_data_containers(function_tmpdir, container):
     """Test various containers for package data (list, ndarray, recarray, dataframe, dict of such)"""
 
+    nlay = 1
+    nrow = 10
+    ncol = 10
+    nper = 3
+
     name = "pkg_data"
     ws = function_tmpdir
-    m = Modflow(name, model_ws=ws)
-    size = 100
-    nlay = 10
-    nper = 1
 
-    # grid discretization
-    dis = ModflowDis(
-        m,
-        nper=nper,
-        nlay=nlay,
-        nrow=size,
-        ncol=size,
-        top=nlay,
-        botm=list(range(nlay)),
-    )
-
-    # recharge pkg
-    rch = ModflowRch(
-        m, rech={k: 0.001 - np.cos(k) * 0.001 for k in range(nper)}
-    )
+    # create the ghbs
+    ghb_ra = ModflowGhb.get_empty(20)
+    l = 0
+    for i in range(nrow):
+        ghb_ra[l] = (0, i, 0, 1.0, 100.0 + i)
+        l += 1
+        ghb_ra[l] = (0, i, ncol - 1, 1.0, 200.0 + i)
+        l += 1
+    ghb_spd = {0: ghb_ra}
 
     # well pkg, setup data per 'container' parameter
     # to test support for various container types
-    ra = ModflowWel.get_empty(size**2)
-    ra_per = ra.copy()
-    ra_per["k"] = 1
-    ra_per["i"] = (
-        (np.ones((size, size)) * np.arange(size))
-        .transpose()
-        .ravel()
-        .astype(int)
-    )
-    ra_per["j"] = list(range(size)) * size
+    wel_ra = ModflowWel.get_empty(2)
+    wel_ra[0] = (0, 1, 1, -5.0)
+    wel_ra[1] = (0, nrow - 3, ncol - 3, -10.0)
     wel_dtype = np.dtype(
         [
             ("k", int),
             ("i", int),
             ("j", int),
-            ("flux", np.float32),
+            ("q", np.float32),
         ]
     )
-    df_per = pd.DataFrame(ra_per)
-    if "'numpy.recarray'" in container:
-        well_spd = ra_per
-    elif "'pandas.core.frame.DataFrame'" in container:
-        well_spd = df_per
-    elif "Dict[int, numpy.recarray]" in container:
-        well_spd = {}
-        well_spd[0] = ra_per
-    elif "Dict[int, pandas.core.frame.DataFrame]" in container:
-        well_spd = {}
-        well_spd[0] = df_per
-    wel = ModflowWel(m, stress_period_data=well_spd)
+    df_per = pd.DataFrame(wel_ra)
+    if "dict_of_recarray" in container:
+        wel_spd = {0: wel_ra}
+    elif "dict_of_dataframe" in container:
+        wel_spd = {0: df_per}
+    elif "recarray" in container:
+        wel_spd = wel_ra
+    elif "dataframe" in container:
+        wel_spd = df_per
 
-    # basic pkg
+    m = Modflow(name, model_ws=ws)
+    dis = ModflowDis(
+        m,
+        nper=nper,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        top=nlay,
+        botm=list(range(nlay)),
+    )
+    ghb = ModflowGhb(m, stress_period_data=ghb_spd)
+    wel = ModflowWel(m, stress_period_data=wel_spd)
     bas = ModflowBas(m)
-
-    # solver
+    lpf = ModflowLpf(m)
     pcg = ModflowPcg(m)
-
-    # output control pkg
     oc = ModflowOc(m)
 
     # write and run the model
     m.write_input()
-    success, _ = m.run_model(silent=False)
-    assert success
+    success, buff = m.run_model(silent=False, report=True)
+    from pprint import pformat
+
+    assert success, pformat(buff)
 
 
 def get_perftest_model(ws, name):

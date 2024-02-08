@@ -1,14 +1,14 @@
 import os
 import shutil
+from pprint import pformat
+from types import SimpleNamespace
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from autotest.conftest import get_example_data_path
-from autotest.test_mp6_cases import Mp6Cases1, Mp6Cases2
 from modflow_devtools.markers import requires_exe, requires_pkg
 from numpy.lib.recfunctions import repack_fields
-from pytest_cases import parametrize_with_cases
 
 import flopy
 from flopy.discretization import StructuredGrid
@@ -534,15 +534,126 @@ def eval_timeseries(file):
     )
 
 
+def get_mf2005_model(name, ws, alt=False):
+    nrow = 3
+    ncol = 4
+    nlay = 2
+    nper = 1
+    l1_ibound = np.array(
+        [[[-1, -1, -1, -1], [-1, 1, 1, -1], [-1, -1, -1, -1]]]
+    )
+    l2_ibound = np.ones((1, nrow, ncol))
+    l2_ibound_alt = np.ones((1, nrow, ncol))
+    l2_ibound_alt[0, 0, 0] = 0
+    bt1 = np.ones((1, nrow, ncol)) + 5
+    bt2 = np.ones((1, nrow, ncol)) + 3
+    ctx = SimpleNamespace(
+        nrow=nrow,
+        ncol=ncol,
+        nlay=nlay,
+        nper=nper,
+        l1_ibound=l1_ibound,
+        l2_ibound=l2_ibound,
+        l2_ibound_alt=l2_ibound_alt,
+        ibound=np.concatenate(
+            (l1_ibound, l2_ibound_alt if alt else l2_ibound), axis=0
+        ),
+        laytype=[0, 0 if alt else 1],
+        hnoflow=-888,
+        hdry=-777,
+        top=np.zeros((1, nrow, ncol)) + 10,
+        bt1=bt1,
+        bt2=bt2,
+        botm=np.concatenate((bt1, bt2), axis=0),
+        ipakcb=740,
+    )
+
+    # create modflow model
+    m = flopy.modflow.Modflow(
+        modelname=name + ("alt" if alt else ""),
+        namefile_ext="nam",
+        version="mf2005",
+        exe_name="mf2005",
+        model_ws=ws,
+    )
+
+    # dis
+    dis = flopy.modflow.ModflowDis(
+        model=m,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        nper=nper,
+        delr=1.0,
+        delc=1.0,
+        laycbd=0,
+        top=ctx.top,
+        botm=ctx.botm,
+        perlen=1,
+        nstp=1,
+        tsmult=1,
+        steady=True,
+    )
+
+    # bas
+    bas = flopy.modflow.ModflowBas(
+        model=m,
+        ibound=ctx.ibound,
+        strt=10,
+        ifrefm=True,
+        ixsec=False,
+        ichflg=False,
+        stoper=None,
+        hnoflo=ctx.hnoflow,
+        extension="bas",
+        unitnumber=None,
+        filenames=None,
+    )
+    # lpf
+    lpf = flopy.modflow.ModflowLpf(
+        model=m,
+        ipakcb=ctx.ipakcb,
+        laytyp=ctx.laytype,
+        hk=10,
+        vka=10,
+        hdry=ctx.hdry,
+    )
+
+    # well
+    wel = flopy.modflow.ModflowWel(
+        model=m,
+        ipakcb=ctx.ipakcb,
+        stress_period_data={0: [[1, 1, 1, -5.0]]},
+    )
+
+    flopy.modflow.ModflowPcg(
+        m, hclose=0.001, rclose=0.001, mxiter=150, iter1=30
+    )
+
+    ocspd = {}
+    for p in range(nper):
+        ocspd[(p, 0)] = ["save head", "save budget"]
+    ocspd[(0, 0)] = [
+        "save head",
+        "save budget",
+    ]  # pretty sure it just uses the last for everything
+    flopy.modflow.ModflowOc(m, stress_period_data=ocspd)
+
+    return m, ctx
+
+
 @requires_exe("mf2005", "mp6")
-@parametrize_with_cases("ml", cases=Mp6Cases1)
-def test_data_pass_no_modflow(ml):
+@pytest.mark.parametrize("alt", [True, False])
+def test_data_pass_no_modflow(function_tmpdir, alt):
     """
     test that user can pass and create a mp model without an accompanying modflow model
-    Returns
-    -------
-
     """
+
+    ml, ctx = get_mf2005_model("data_pass", function_tmpdir, alt)
+    ml.write_input()
+    success, buff = ml.run_model()
+    assert success, pformat(buff)
+
     dis_file = f"{ml.name}.dis"
     bud_file = f"{ml.name}.cbc"
     hd_file = f"{ml.name}.hds"
@@ -568,30 +679,30 @@ def test_data_pass_no_modflow(ml):
     assert mp.budget_file == bud_file
     assert mp.dis_file == dis_file
     assert mp.nrow_ncol_nlay_nper == (
-        Mp6Cases1.nrow,
-        Mp6Cases1.ncol,
-        Mp6Cases1.nlay,
-        Mp6Cases1.nper,
+        ctx.nrow,
+        ctx.ncol,
+        ctx.nlay,
+        ctx.nper,
     )
 
     mpbas = flopy.modpath.Modpath6Bas(
         mp,
-        hnoflo=Mp6Cases1.hnoflow,
-        hdry=Mp6Cases1.hdry,
+        hnoflo=ctx.hnoflow,
+        hdry=ctx.hdry,
         def_face_ct=0,
         bud_label=None,
         def_iface=None,
-        laytyp=Mp6Cases1.laytype[ml.name],
-        ibound=Mp6Cases1.ibound[ml.name],
+        laytyp=ctx.laytype,
+        ibound=ctx.ibound,
         prsity=0.30,
         prsityCB=0.30,
         extension="mpbas",
         unitnumber=86,
     )
     # test layertype is created correctly
-    assert np.isclose(mpbas.laytyp.array, Mp6Cases1.laytype[ml.name]).all()
+    assert np.isclose(mpbas.laytyp.array, ctx.laytype).all()
     # test ibound is pulled from modflow model
-    assert np.isclose(mpbas.ibound.array, Mp6Cases1.ibound[ml.name]).all()
+    assert np.isclose(mpbas.ibound.array, ctx.ibound).all()
 
     sim = flopy.modpath.Modpath6Sim(model=mp)
     stl = flopy.modpath.mp6sim.StartingLocationsFile(model=mp)
@@ -609,14 +720,17 @@ def test_data_pass_no_modflow(ml):
 
 
 @requires_exe("mf2005", "mp6")
-@parametrize_with_cases("ml", cases=Mp6Cases1)
-def test_data_pass_with_modflow(ml):
+@pytest.mark.parametrize("alt", [True, False])
+def test_data_pass_with_modflow(function_tmpdir, alt):
     """
     test that user specified head files etc. are preferred over files from the modflow model
-    Returns
-    -------
-
     """
+
+    ml, ctx = get_mf2005_model("data_pass", function_tmpdir, alt)
+    ml.write_input()
+    success, buff = ml.run_model()
+    assert success, pformat(buff)
+
     dis_file = f"{ml.name}.dis"
     bud_file = f"{ml.name}.cbc"
     hd_file = f"{ml.name}.hds"
@@ -642,21 +756,21 @@ def test_data_pass_with_modflow(ml):
     assert mp.budget_file == bud_file
     assert mp.dis_file == dis_file
     assert mp.nrow_ncol_nlay_nper == (
-        Mp6Cases1.nrow,
-        Mp6Cases1.ncol,
-        Mp6Cases1.nlay,
-        Mp6Cases1.nper,
+        ctx.nrow,
+        ctx.ncol,
+        ctx.nlay,
+        ctx.nper,
     )
 
     mpbas = flopy.modpath.Modpath6Bas(
         mp,
-        hnoflo=Mp6Cases1.hnoflow,
-        hdry=Mp6Cases1.hdry,
+        hnoflo=ctx.hnoflow,
+        hdry=ctx.hdry,
         def_face_ct=0,
         bud_label=None,
         def_iface=None,
-        laytyp=Mp6Cases1.laytype[ml.name],
-        ibound=Mp6Cases1.ibound[ml.name],
+        laytyp=ctx.laytype,
+        ibound=ctx.ibound,
         prsity=0.30,
         prsityCB=0.30,
         extension="mpbas",
@@ -664,9 +778,9 @@ def test_data_pass_with_modflow(ml):
     )
 
     # test layertype is created correctly!
-    assert np.isclose(mpbas.laytyp.array, Mp6Cases1.laytype[ml.name]).all()
+    assert np.isclose(mpbas.laytyp.array, ctx.laytype).all()
     # test ibound is pulled from modflow model
-    assert np.isclose(mpbas.ibound.array, Mp6Cases1.ibound[ml.name]).all()
+    assert np.isclose(mpbas.ibound.array, ctx.ibound).all()
 
     sim = flopy.modpath.Modpath6Sim(model=mp)
     stl = flopy.modpath.mp6sim.StartingLocationsFile(model=mp)
@@ -684,14 +798,17 @@ def test_data_pass_with_modflow(ml):
 
 
 @requires_exe("mf2005", "mp6")
-@parametrize_with_cases("ml", cases=Mp6Cases1)
-def test_just_from_model(ml):
+@pytest.mark.parametrize("alt", [True, False])
+def test_just_from_model(function_tmpdir, alt):
     """
     test that user specified head files etc. are preferred over files from the modflow model
-    Returns
-    -------
-
     """
+
+    ml, ctx = get_mf2005_model("data_pass", function_tmpdir, alt)
+    ml.write_input()
+    success, buff = ml.run_model()
+    assert success, pformat(buff)
+
     dis_file = f"{ml.name}.dis"
     bud_file = f"{ml.name}.cbc"
     hd_file = f"{ml.name}.hds"
@@ -717,16 +834,16 @@ def test_just_from_model(ml):
     assert mp.budget_file == bud_file
     assert mp.dis_file == dis_file
     assert mp.nrow_ncol_nlay_nper == (
-        Mp6Cases1.nrow,
-        Mp6Cases1.ncol,
-        Mp6Cases1.nlay,
-        Mp6Cases1.nper,
+        ctx.nrow,
+        ctx.ncol,
+        ctx.nlay,
+        ctx.nper,
     )
 
     mpbas = flopy.modpath.Modpath6Bas(
         mp,
-        hnoflo=Mp6Cases1.hnoflow,
-        hdry=Mp6Cases1.hdry,
+        hnoflo=ctx.hnoflow,
+        hdry=ctx.hdry,
         def_face_ct=0,
         bud_label=None,
         def_iface=None,
@@ -738,10 +855,10 @@ def test_just_from_model(ml):
         unitnumber=86,
     )
     # test layertype is created correctly!
-    assert np.isclose(mpbas.laytyp.array, Mp6Cases1.laytype[ml.name]).all()
+    assert np.isclose(mpbas.laytyp.array, ctx.laytype).all()
 
     # test ibound is pulled from modflow model
-    assert np.isclose(mpbas.ibound.array, Mp6Cases1.ibound[ml.name]).all()
+    assert np.isclose(mpbas.ibound.array, ctx.ibound).all()
 
     sim = flopy.modpath.Modpath6Sim(model=mp)
     stl = flopy.modpath.mp6sim.StartingLocationsFile(model=mp)
@@ -758,9 +875,9 @@ def test_just_from_model(ml):
     assert success
 
 
-def make_mp_model(nm, m, ws, use_pandas):
+def get_mp6_model(m, ctx, name, ws, use_pandas):
     mp = flopy.modpath.Modpath6(
-        modelname=nm,
+        modelname=name,
         simfile_ext="mpsim",
         namefile_ext="mpnam",
         version="modpath",
@@ -778,13 +895,13 @@ def make_mp_model(nm, m, ws, use_pandas):
 
     mpbas = flopy.modpath.Modpath6Bas(
         mp,
-        hnoflo=Mp6Cases2.hnoflow,
-        hdry=Mp6Cases2.hdry,
+        hnoflo=ctx.hnoflow,
+        hdry=ctx.hdry,
         def_face_ct=0,
         bud_label=None,
         def_iface=None,
-        laytyp=Mp6Cases2.laytype["mf1"],
-        ibound=Mp6Cases2.ibound["mf1"],
+        laytyp=ctx.laytype,
+        ibound=ctx.ibound,
         prsity=0.30,
         prsityCB=0.30,
         extension="mpbas",
@@ -803,31 +920,30 @@ def make_mp_model(nm, m, ws, use_pandas):
     stldata[1]["xloc0"] = 0.1
     stldata[1]["yloc0"] = 0.2
     stl.data = stldata
+
     return mp
 
 
 @requires_exe("mf2005")
-@parametrize_with_cases("ml", cases=Mp6Cases2)
-def test_mp_wpandas_wo_pandas(ml):
-    """
-    test that user can pass and create a mp model without an accompanying modflow model
-    Returns
-    -------
+def test_mp_pandas(function_tmpdir):
+    name = "mp_pandas"
+    ml, ctx = get_mf2005_model(name, function_tmpdir)
+    ml.write_input()
+    success, _ = ml.run_model()
+    assert success
 
-    """
-
-    mp_pandas = make_mp_model("pandas", ml, ml.model_ws, use_pandas=True)
-    mp_no_pandas = make_mp_model(
-        "no_pandas", ml, ml.model_ws, use_pandas=False
+    mp_pandas = get_mp6_model(ml, ctx, name, function_tmpdir, use_pandas=True)
+    mp_no_pandas = get_mp6_model(
+        ml, ctx, name, function_tmpdir, use_pandas=False
     )
 
     mp_no_pandas.write_input()
     success, buff = mp_no_pandas.run_model()
-    assert success
+    assert success, pformat(buff)
 
     mp_pandas.write_input()
     success, buff = mp_pandas.run_model()
-    assert success
+    assert success, pformat(buff)
 
     # read the two files and ensure they are identical
     with open(mp_pandas.get_package("loc").fn_path) as f:

@@ -28,13 +28,7 @@ import os
 import sys
 from tempfile import TemporaryDirectory
 
-try:
-    import flopy
-except:
-    fpth = os.path.abspath(os.path.join("..", ".."))
-    sys.path.append(fpth)
-    import flopy
-
+import flopy
 from flopy.utils import OptionBlock
 
 print(sys.version)

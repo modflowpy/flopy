@@ -3,9 +3,12 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+FloPy
+=====
+
 .. image:: _images/flopylogo.png
 
-**Documentation for version 3.5.0.dev0**
+**Documentation for version 3.6.0.dev0**
 
 Documentation is generated with Sphinx from the `FloPy repository <https://github.com/modflowpy/flopy>`_.
 
@@ -29,4 +32,3 @@ Indices and tables
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`

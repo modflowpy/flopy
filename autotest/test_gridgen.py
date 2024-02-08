@@ -11,11 +11,13 @@ from modflow_devtools.markers import requires_exe, requires_pkg
 from modflow_devtools.misc import has_pkg
 
 import flopy
+from flopy.discretization.unstructuredgrid import UnstructuredGrid
+from flopy.discretization.vertexgrid import VertexGrid
 from flopy.utils.gridgen import Gridgen
 
 
 @requires_exe("gridgen")
-def test_ctor_accepts_path_or_string(function_tmpdir):
+def test_ctor_accepts_path_or_string_model_ws(function_tmpdir):
     grid = GridCases().structured_small()
 
     g = Gridgen(grid, model_ws=function_tmpdir)
@@ -23,6 +25,131 @@ def test_ctor_accepts_path_or_string(function_tmpdir):
 
     g = Gridgen(grid, model_ws=str(function_tmpdir))
     assert g.model_ws == function_tmpdir
+
+
+def get_structured_grid():
+    """Get a small version of the first grid in:
+    .docs/Notebooks/gridgen_example.py"""
+
+    Lx = 100.0
+    Ly = 100.0
+    nlay = 2
+    nrow = 11
+    ncol = 11
+    delr = Lx / ncol
+    delc = Ly / nrow
+    h0 = 10
+    h1 = 5
+    top = h0
+    botm = np.zeros((nlay, nrow, ncol), dtype=np.float32)
+    botm[1, :, :] = -10.0
+    ms = flopy.modflow.Modflow(rotation=-20.0)
+    dis = flopy.modflow.ModflowDis(
+        ms,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=delr,
+        delc=delc,
+        top=top,
+        botm=botm,
+    )
+    return ms.modelgrid
+
+
+@requires_exe("gridgen")
+@requires_pkg("shapefile")
+# GRIDGEN seems not to like paths containing "[" or "]", as
+# function_tmpdir does with parametrization, do it manually
+# @pytest.mark.parametrize("grid_type", ["vertex", "unstructured"])
+def test_add_active_domain(function_tmpdir):  # , grid_type):
+    bgrid = get_structured_grid()
+
+    # test providing active domain various ways
+    for grid_type in ["vertex", "unstructured"]:
+        grids = []
+        for feature in [
+            [[[(0, 0), (0, 60), (40, 80), (60, 0), (0, 0)]]],
+            function_tmpdir / "ad0.shp",
+            function_tmpdir / "ad0",
+            "ad0.shp",
+            "ad0",
+        ]:
+            print(
+                "Testing add_active_domain() for",
+                grid_type,
+                "grid with features",
+                feature,
+            )
+            gridgen = Gridgen(bgrid, model_ws=function_tmpdir)
+            gridgen.add_active_domain(
+                feature,
+                range(bgrid.nlay),
+            )
+            gridgen.build()
+            grid = (
+                VertexGrid(**gridgen.get_gridprops_vertexgrid())
+                if grid_type == "vertex"
+                else UnstructuredGrid(
+                    **gridgen.get_gridprops_unstructuredgrid()
+                )
+            )
+            grid.plot()
+            grids.append(grid)
+            # plt.show()
+
+            assert grid.nnodes < bgrid.nnodes
+            assert not np.array_equal(grid.ncpl, bgrid.ncpl)
+            assert all(np.array_equal(grid.ncpl, g.ncpl) for g in grids)
+            assert all(grid.nnodes == g.nnodes for g in grids)
+
+
+@requires_exe("gridgen")
+@requires_pkg("shapefile")
+# GRIDGEN seems not to like paths containing "[" or "]", as
+# function_tmpdir does with parametrization, do it manually
+# @pytest.mark.parametrize("grid_type", ["vertex", "unstructured"])
+def test_add_refinement_feature(function_tmpdir):  # , grid_type):
+    bgrid = get_structured_grid()
+
+    # test providing refinement feature various ways
+    for grid_type in ["vertex", "unstructured"]:
+        grids = []
+        for features in [
+            [[[(0, 0), (0, 60), (40, 80), (60, 0), (0, 0)]]],
+            function_tmpdir / "rf0.shp",
+            function_tmpdir / "rf0",
+            "rf0.shp",
+            "rf0",
+        ]:
+            print(
+                "Testing add_refinement_feature() for",
+                grid_type,
+                "grid with features",
+                features,
+            )
+            gridgen = Gridgen(bgrid, model_ws=function_tmpdir)
+            gridgen.add_refinement_features(
+                features,
+                "polygon",
+                1,
+                range(bgrid.nlay),
+            )
+            gridgen.build()
+            grid = (
+                VertexGrid(**gridgen.get_gridprops_vertexgrid())
+                if grid_type == "vertex"
+                else UnstructuredGrid(
+                    **gridgen.get_gridprops_unstructuredgrid()
+                )
+            )
+            grid.plot()
+            # plt.show()
+
+            assert grid.nnodes > bgrid.nnodes
+            assert not np.array_equal(grid.ncpl, bgrid.ncpl)
+            assert all(np.array_equal(grid.ncpl, g.ncpl) for g in grids)
+            assert all(grid.nnodes == g.nnodes for g in grids)
 
 
 @pytest.mark.slow

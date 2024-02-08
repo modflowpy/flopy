@@ -2,7 +2,7 @@ import os
 import subprocess
 import warnings
 from pathlib import Path
-from typing import Union
+from typing import List, Union
 
 import numpy as np
 
@@ -13,6 +13,7 @@ from ..mf6.modflow import ModflowGwfdis
 from ..mfusg.mfusgdisu import MfUsgDisU
 from ..modflow import ModflowDis
 from ..utils import import_optional_dependency
+from ..utils.flopy_io import relpath_safe
 from .util_array import Util2d  # read1d,
 
 # todo
@@ -57,7 +58,7 @@ def features_to_shapefile(
     featuretype : str
         Must be 'point', 'line', 'linestring', or 'polygon'
     filename : str or PathLike
-        Path of the shapefile to write
+        The shapefile to write (extension is optional)
 
     Returns
     -------
@@ -79,7 +80,7 @@ def features_to_shapefile(
         "linestring",
         "polygon",
     ]:
-        raise Exception(f"Unrecognized feature type: {featuretype}")
+        raise ValueError(f"Unrecognized feature type: {featuretype}")
 
     if featuretype.lower() in ("line", "linestring"):
         wr = shapefile.Writer(str(filename), shapeType=shapefile.POLYLINE)
@@ -255,10 +256,9 @@ class Gridgen:
         # Set default surface interpolation for all surfaces (nlay + 1)
         surface_interpolation = surface_interpolation.upper()
         if surface_interpolation not in ["INTERPOLATE", "REPLICATE"]:
-            raise Exception(
-                "Error.  Unknown surface interpolation method: "
-                "{}.  Must be INTERPOLATE or "
-                "REPLICATE".format(surface_interpolation)
+            raise ValueError(
+                f"Unknown surface interpolation method {surface_interpolation}, "
+                "expected 'INTERPOLATE' or 'REPLICATE'"
             )
         self.surface_interpolation = [
             surface_interpolation for k in range(self.nlay + 1)
@@ -284,9 +284,7 @@ class Gridgen:
         # Set up a blank _refinement_features list with empty list for
         # each layer
         self._rfdict = {}
-        self._refinement_features = []
-        for k in range(self.nlay):
-            self._refinement_features.append([])
+        self._refinement_features = [[] for _ in range(self.nlay)]
 
         # Set up blank _elev and _elev_extent dictionaries
         self._asciigrid_dict = {}
@@ -317,10 +315,10 @@ class Gridgen:
         assert 0 <= isurf <= self.nlay + 1
         type = type.upper()
         if type not in ["INTERPOLATE", "REPLICATE", "ASCIIGRID"]:
-            raise Exception(
-                "Error.  Unknown surface interpolation type: "
-                "{}.  Must be INTERPOLATE or "
-                "REPLICATE".format(type)
+            raise ValueError(
+                "Unknown surface interpolation type "
+                f"{type}, expected 'INTERPOLATE',"
+                "'REPLICATE', or 'ASCIIGRID'"
             )
         else:
             self.surface_interpolation[isurf] = type
@@ -328,16 +326,14 @@ class Gridgen:
         if type == "ASCIIGRID":
             if isinstance(elev, np.ndarray):
                 if elev_extent is None:
-                    raise Exception(
-                        "Error.  ASCIIGRID was specified but "
-                        "elev_extent was not."
+                    raise ValueError(
+                        "ASCIIGRID was specified but elev_extent was not."
                     )
                 try:
                     xmin, xmax, ymin, ymax = elev_extent
                 except:
-                    raise Exception(
-                        "Cannot cast elev_extent into xmin, xmax, "
-                        "ymin, ymax: {}".format(elev_extent)
+                    raise ValueError(
+                        f"Cannot unpack elev_extent as tuple (xmin, xmax, ymin, ymax): {elev_extent}"
                     )
 
                 nm = f"_gridgen.lay{isurf}.asc"
@@ -347,31 +343,41 @@ class Gridgen:
 
             elif isinstance(elev, str):
                 if not os.path.isfile(os.path.join(self.model_ws, elev)):
-                    raise Exception(
-                        "Error.  elev is not a valid file: "
-                        "{}".format(os.path.join(self.model_ws, elev))
+                    raise ValueError(
+                        f"Elevation file not found: {os.path.join(self.model_ws, elev)}"
                     )
                 self._asciigrid_dict[isurf] = elev
             else:
-                raise Exception(
-                    "Error.  ASCIIGRID was specified but "
-                    "elev was not specified as a numpy ndarray or"
-                    "valid asciigrid file."
+                raise ValueError(
+                    "ASCIIGRID was specified but elevation was not provided as a numpy ndarray or asciigrid file."
                 )
+
+    def resolve_shapefile_path(self, p):
+        def _resolve(p):
+            # try expanding absolute path
+            path = Path(p).expanduser().absolute()
+            # try looking in workspace
+            return path if path.is_file() else self.model_ws / p
+
+        path = _resolve(p)
+        path = (
+            path if path.is_file() else _resolve(Path(p).with_suffix(".shp"))
+        )
+        return path if path.is_file() else None
 
     def add_active_domain(self, feature, layers):
         """
         Parameters
         ----------
-        feature : str or list
+        feature : str, path-like or array-like
             feature can be:
-                 a string containing the name of a polygon
-                 a list of polygons
-                 flopy.utils.geometry.Collection object of Polygons
-                 shapely.geometry.Collection object of Polygons
-                 geojson.GeometryCollection object of Polygons
-                 list of shapefile.Shape objects
-                 shapefile.Shapes object
+                a shapefile name (str) or Pathlike
+                a list of polygons
+                a flopy.utils.geometry.Collection object of Polygons
+                a shapely.geometry.Collection object of Polygons
+                a geojson.GeometryCollection object of Polygons
+                a list of shapefile.Shape objects
+                a shapefile.Shapes object
         layers : list
             A list of layers (zero based) for which this active domain
             applies.
@@ -385,37 +391,43 @@ class Gridgen:
         self.nodes = 0
         self.nja = 0
 
-        # Create shapefile or set shapefile to feature
-        adname = f"ad{len(self._addict)}"
-        if isinstance(feature, list):
-            # Create a shapefile
-            adname_w_path = os.path.join(self.model_ws, adname)
-            features_to_shapefile(feature, "polygon", adname_w_path)
-            shapefile = adname
+        # expand shapefile path or create one from polygon feature
+        if isinstance(feature, (str, os.PathLike)):
+            shapefile_path = self.resolve_shapefile_path(feature)
+        elif isinstance(feature, (list, tuple, np.ndarray)):
+            shapefile_path = self.model_ws / f"ad{len(self._addict)}.shp"
+            features_to_shapefile(feature, "polygon", shapefile_path)
         else:
-            shapefile = feature
+            raise ValueError(
+                "Feature must be a pathlike (shapefile) or array-like of geometries"
+            )
 
-        self._addict[adname] = shapefile
-        sn = os.path.join(self.model_ws, f"{shapefile}.shp")
-        assert os.path.isfile(sn), f"Shapefile does not exist: {sn}"
+        # make sure shapefile exists
+        assert (
+            shapefile_path and shapefile_path.is_file()
+        ), f"Shapefile does not exist: {shapefile_path}"
 
+        # store shapefile info
+        self._addict[shapefile_path.stem] = relpath_safe(
+            shapefile_path, self.model_ws
+        )
         for k in layers:
-            self._active_domain[k] = adname
+            self._active_domain[k] = shapefile_path.stem
 
     def add_refinement_features(self, features, featuretype, level, layers):
         """
         Parameters
         ----------
-        features : str, list, or collection object
+        features : str, path-like or array-like
             features can be
-                a string containing the name of a shapefile
+                a shapefile name (str) or Pathlike
                 a list of points, lines, or polygons
-                flopy.utils.geometry.Collection object
+                a flopy.utils.geometry.Collection object
                 a list of flopy.utils.geometry objects
-                shapely.geometry.Collection object
-                geojson.GeometryCollection object
+                a shapely.geometry.Collection object
+                a geojson.GeometryCollection object
                 a list of shapefile.Shape objects
-                shapefile.Shapes object
+                a shapefile.Shapes object
         featuretype : str
             Must be either 'point', 'line', or 'polygon'
         level : int
@@ -434,20 +446,29 @@ class Gridgen:
         self.nja = 0
 
         # Create shapefile or set shapefile to feature
-        rfname = f"rf{len(self._rfdict)}"
-        if isinstance(features, list):
-            rfname_w_path = os.path.join(self.model_ws, rfname)
-            features_to_shapefile(features, featuretype, rfname_w_path)
-            shapefile = rfname
+        if isinstance(features, (str, os.PathLike)):
+            shapefile_path = self.resolve_shapefile_path(features)
+        elif isinstance(features, (list, tuple, np.ndarray)):
+            shapefile_path = self.model_ws / f"rf{len(self._rfdict)}.shp"
+            features_to_shapefile(features, featuretype, shapefile_path)
         else:
-            shapefile = features
+            raise ValueError(
+                "Features must be a pathlike (shapefile) or array-like of geometries"
+            )
 
-        self._rfdict[rfname] = [shapefile, featuretype, level]
-        sn = os.path.join(self.model_ws, f"{shapefile}.shp")
-        assert os.path.isfile(sn), f"Shapefile does not exist: {sn}"
+        # make sure shapefile exists
+        assert (
+            shapefile_path and shapefile_path.is_file()
+        ), f"Shapefile does not exist: {shapefile_path}"
 
+        # store shapefile info
+        self._rfdict[shapefile_path.stem] = [
+            relpath_safe(shapefile_path, self.model_ws),
+            featuretype,
+            level,
+        ]
         for k in layers:
-            self._refinement_features[k].append(rfname)
+            self._refinement_features[k].append(shapefile_path.stem)
 
     def build(self, verbose=False):
         """
@@ -505,10 +526,9 @@ class Gridgen:
         self._mkvertdict()
 
         # read and save nodelay array to self
-        fname = os.path.join(self.model_ws, "qtg.nodesperlay.dat")
-        f = open(fname, "r")
-        self.nodelay = read1d(f, self.nodelay)
-        f.close()
+        self.nodelay = self.read_qtg_nodesperlay_dat(
+            model_ws=self.model_ws, nlay=self.nlay
+        )
 
         # Create a recarray of the grid polygon shapefile
         shapename = os.path.join(self.model_ws, "qtgrid")
@@ -660,8 +680,6 @@ class Gridgen:
                 buff,
             )
 
-        return
-
     def plot(
         self,
         ax=None,
@@ -742,25 +760,7 @@ class Gridgen:
             Recarray representation of the node file with zero-based indexing
 
         """
-
-        # nodes, nlay, ivsd, itmuni, lenuni, idsymrd, laycbd
-        fname = os.path.join(self.model_ws, "qtg.nod")
-        f = open(fname, "r")
-        dt = np.dtype(
-            [
-                ("node", int),
-                ("layer", int),
-                ("x", float),
-                ("y", float),
-                ("z", float),
-                ("dx", float),
-                ("dy", float),
-                ("dz", float),
-            ]
-        )
-        node_ra = np.genfromtxt(fname, dtype=dt, skip_header=1)
-        node_ra["layer"] -= 1
-        node_ra["node"] -= 1
+        node_ra = self.read_qtg_nod(model_ws=self.model_ws, nodes_only=False)
         return node_ra
 
     def get_disu(
@@ -805,12 +805,7 @@ class Gridgen:
         """
 
         # nodes, nlay, ivsd, itmuni, lenuni, idsymrd, laycbd
-        fname = os.path.join(self.model_ws, "qtg.nod")
-        f = open(fname, "r")
-        line = f.readline()
-        ll = line.strip().split()
-        nodes = int(ll.pop(0))
-        f.close()
+        nodes = self.read_qtg_nod(model_ws=self.model_ws, nodes_only=True)
         nlay = self.nlay
         ivsd = 0
         idsymrd = 0
@@ -820,20 +815,16 @@ class Gridgen:
         self.nodes = nodes
 
         # nodelay
-        nodelay = np.empty((nlay), dtype=int)
-        fname = os.path.join(self.model_ws, "qtg.nodesperlay.dat")
-        f = open(fname, "r")
-        nodelay = read1d(f, nodelay)
-        f.close()
+        nodelay = self.read_qtg_nodesperlay_dat(
+            model_ws=self.model_ws, nlay=nlay
+        )
 
         # top
         top = [0] * nlay
         for k in range(nlay):
-            fname = os.path.join(self.model_ws, f"quadtreegrid.top{k + 1}.dat")
-            f = open(fname, "r")
-            tpk = np.empty((nodelay[k]), dtype=np.float32)
-            tpk = read1d(f, tpk)
-            f.close()
+            tpk = self.read_quadtreegrid_top_dat(
+                model_ws=self.model_ws, nodelay=nodelay, lay=k
+            )
             if tpk.min() == tpk.max():
                 tpk = tpk.min()
             else:
@@ -849,11 +840,9 @@ class Gridgen:
         # bot
         bot = [0] * nlay
         for k in range(nlay):
-            fname = os.path.join(self.model_ws, f"quadtreegrid.bot{k + 1}.dat")
-            f = open(fname, "r")
-            btk = np.empty((nodelay[k]), dtype=np.float32)
-            btk = read1d(f, btk)
-            f.close()
+            btk = self.read_quadtreegrid_bot_dat(
+                model_ws=self.model_ws, nodelay=nodelay, lay=k
+            )
             if btk.min() == btk.max():
                 btk = btk.min()
             else:
@@ -868,11 +857,7 @@ class Gridgen:
 
         # area
         area = [0] * nlay
-        fname = os.path.join(self.model_ws, "qtg.area.dat")
-        f = open(fname, "r")
-        anodes = np.empty((nodes), dtype=np.float32)
-        anodes = read1d(f, anodes)
-        f.close()
+        anodes = self.read_qtg_area_dat(model_ws=self.model_ws, nodes=nodes)
         istart = 0
         for k in range(nlay):
             istop = istart + nodelay[k]
@@ -891,54 +876,33 @@ class Gridgen:
             istart = istop
 
         # iac
-        iac = np.empty((nodes), dtype=int)
-        fname = os.path.join(self.model_ws, "qtg.iac.dat")
-        f = open(fname, "r")
-        iac = read1d(f, iac)
-        f.close()
-
+        iac = self.read_qtg_iac_dat(model_ws=self.model_ws, nodes=nodes)
         # Calculate njag and save as nja to self
-        njag = iac.sum()
-        self.nja = njag
+        nja = iac.sum()
+        self.nja = nja
 
         # ja -- this is being read is as one-based, which is also what is
         # expected by the ModflowDisu constructor
-        ja = np.empty((njag), dtype=int)
-        fname = os.path.join(self.model_ws, "qtg.ja.dat")
-        f = open(fname, "r")
-        ja = read1d(f, ja)
-        f.close()
+        ja = self.read_qtg_ja_dat(model_ws=self.model_ws, nja=nja)
 
         # ivc
-        fldr = np.empty((njag), dtype=int)
-        fname = os.path.join(self.model_ws, "qtg.fldr.dat")
-        f = open(fname, "r")
-        fldr = read1d(f, fldr)
+        fldr = self.read_qtg_fldr_dat(model_ws=self.model_ws, nja=nja)
         ivc = np.where(abs(fldr) == 3, 1, 0)
-        f.close()
 
         cl1 = None
         cl2 = None
         # cl12
-        cl12 = np.empty((njag), dtype=np.float32)
-        fname = os.path.join(self.model_ws, "qtg.c1.dat")
-        f = open(fname, "r")
-        cl12 = read1d(f, cl12)
-        f.close()
+        cl12 = self.read_qtg_cl_dat(model_ws=self.model_ws, nja=nja)
 
         # fahl
-        fahl = np.empty((njag), dtype=np.float32)
-        fname = os.path.join(self.model_ws, "qtg.fahl.dat")
-        f = open(fname, "r")
-        fahl = read1d(f, fahl)
-        f.close()
+        fahl = self.read_qtg_fahl_dat(model_ws=self.model_ws, nja=nja)
 
         # create dis object instance
         disu = MfUsgDisU(
             model,
             nodes=nodes,
             nlay=nlay,
-            njag=njag,
+            njag=nja,
             ivsd=ivsd,
             nper=nper,
             itmuni=itmuni,
@@ -962,7 +926,7 @@ class Gridgen:
             steady=steady,
         )
 
-        # return dis object instance
+        # return disu object instance
         return disu
 
     def get_nodes(self):
@@ -974,12 +938,7 @@ class Gridgen:
         nodes : int
 
         """
-        fname = os.path.join(self.model_ws, "qtg.nod")
-        f = open(fname, "r")
-        line = f.readline()
-        ll = line.strip().split()
-        nodes = int(ll.pop(0))
-        f.close()
+        nodes = self.read_qtg_nod(model_ws=self.model_ws, nodes_only=True)
         return nodes
 
     def get_nlay(self):
@@ -1005,11 +964,9 @@ class Gridgen:
 
         """
         nlay = self.get_nlay()
-        nodelay = np.empty((nlay), dtype=int)
-        fname = os.path.join(self.model_ws, "qtg.nodesperlay.dat")
-        f = open(fname, "r")
-        nodelay = read1d(f, nodelay)
-        f.close()
+        nodelay = self.read_qtg_nodesperlay_dat(
+            model_ws=self.model_ws, nlay=nlay
+        )
         return nodelay
 
     def get_top(self):
@@ -1029,11 +986,9 @@ class Gridgen:
         istart = 0
         for k in range(nlay):
             istop = istart + nodelay[k]
-            fname = os.path.join(self.model_ws, f"quadtreegrid.top{k + 1}.dat")
-            f = open(fname, "r")
-            tpk = np.empty((nodelay[k]), dtype=np.float32)
-            tpk = read1d(f, tpk)
-            f.close()
+            tpk = self.read_quadtreegrid_top_dat(
+                model_ws=self.model_ws, nodelay=nodelay, lay=k
+            )
             top[istart:istop] = tpk
             istart = istop
         return top
@@ -1055,11 +1010,11 @@ class Gridgen:
         istart = 0
         for k in range(nlay):
             istop = istart + nodelay[k]
-            fname = os.path.join(self.model_ws, f"quadtreegrid.bot{k + 1}.dat")
-            f = open(fname, "r")
-            btk = np.empty((nodelay[k]), dtype=np.float32)
-            btk = read1d(f, btk)
-            f.close()
+            btk = self.read_quadtreegrid_bot_dat(
+                model_ws=self.model_ws,
+                nodelay=nodelay,
+                lay=k,
+            )
             bot[istart:istop] = btk
             istart = istop
         return bot
@@ -1075,11 +1030,7 @@ class Gridgen:
 
         """
         nodes = self.get_nodes()
-        fname = os.path.join(self.model_ws, "qtg.area.dat")
-        f = open(fname, "r")
-        area = np.empty((nodes), dtype=np.float32)
-        area = read1d(f, area)
-        f.close()
+        area = self.read_qtg_area_dat(model_ws=self.model_ws, nodes=nodes)
         return area
 
     def get_iac(self):
@@ -1093,11 +1044,7 @@ class Gridgen:
 
         """
         nodes = self.get_nodes()
-        iac = np.empty((nodes), dtype=int)
-        fname = os.path.join(self.model_ws, "qtg.iac.dat")
-        f = open(fname, "r")
-        iac = read1d(f, iac)
-        f.close()
+        iac = self.read_qtg_iac_dat(model_ws=self.model_ws, nodes=nodes)
         return iac
 
     def get_ja(self, nja=None):
@@ -1119,12 +1066,7 @@ class Gridgen:
         if nja is None:
             iac = self.get_iac()
             nja = iac.sum()
-        ja = np.empty((nja), dtype=int)
-        fname = os.path.join(self.model_ws, "qtg.ja.dat")
-        f = open(fname, "r")
-        ja = read1d(f, ja)
-        ja -= 1
-        f.close()
+        ja = self.read_qtg_ja_dat(model_ws=self.model_ws, nja=nja)
         return ja
 
     def get_fldr(self):
@@ -1140,12 +1082,8 @@ class Gridgen:
 
         """
         iac = self.get_iac()
-        njag = iac.sum()
-        fldr = np.empty((njag), dtype=int)
-        fname = os.path.join(self.model_ws, "qtg.fldr.dat")
-        f = open(fname, "r")
-        fldr = read1d(f, fldr)
-        f.close()
+        nja = iac.sum()
+        fldr = self.read_qtg_fldr_dat(model_ws=self.model_ws, nja=nja)
         return fldr
 
     def get_ivc(self, fldr=None):
@@ -1167,9 +1105,7 @@ class Gridgen:
         """
         if fldr is None:
             fldr = self.get_fldr()
-        ivc = np.zeros(fldr.shape, dtype=int)
-        idx = abs(fldr) == 3
-        ivc[idx] = 1
+        ivc = np.where(abs(fldr) == 3, 1, 0)
         return ivc
 
     def get_ihc(self, nodelay=None, ia=None, fldr=None):
@@ -1178,6 +1114,12 @@ class Gridgen:
 
         Parameters
         ----------
+        nodelay : ndarray
+            Number of nodes in each layer. If None, then it is read from
+            gridgen output.
+        ia : ndarray
+            Starting location of a row in the matrix. If None,
+            then it is read from gridgen output.
         fldr : ndarray
             Flow direction indicator array.  If None, then it is read from
             gridgen output.
@@ -1230,12 +1172,8 @@ class Gridgen:
 
         """
         iac = self.get_iac()
-        njag = iac.sum()
-        cl12 = np.empty((njag), dtype=np.float32)
-        fname = os.path.join(self.model_ws, "qtg.c1.dat")
-        f = open(fname, "r")
-        cl12 = read1d(f, cl12)
-        f.close()
+        nja = iac.sum()
+        cl12 = self.read_qtg_cl_dat(model_ws=self.model_ws, nja=nja)
         return cl12
 
     def get_fahl(self):
@@ -1251,12 +1189,9 @@ class Gridgen:
 
         """
         iac = self.get_iac()
-        njag = iac.sum()
-        fahl = np.empty((njag), dtype=np.float32)
-        fname = os.path.join(self.model_ws, "qtg.fahl.dat")
-        f = open(fname, "r")
-        fahl = read1d(f, fahl)
-        f.close()
+        nja = iac.sum()
+        fahl = self.read_qtg_fahl_dat(model_ws=self.model_ws, nja=nja)
+
         return fahl
 
     def get_hwva(self, ja=None, ihc=None, fahl=None, top=None, bot=None):
@@ -1424,8 +1359,8 @@ class Gridgen:
         nodes = self.get_nodes()
         nlay = self.get_nlay()
         iac = self.get_iac()
-        njag = iac.sum()
-        ja = self.get_ja(njag)
+        nja = iac.sum()
+        ja = self.get_ja(nja)
         nodelay = self.get_nodelay()
         top = self.get_top()
         top = self.gridarray_to_flopyusg_gridarray(nodelay, top)
@@ -1440,7 +1375,7 @@ class Gridgen:
 
         gridprops["nodes"] = nodes
         gridprops["nlay"] = nlay
-        gridprops["njag"] = njag
+        gridprops["njag"] = nja
         gridprops["ivsd"] = 0
         gridprops["idsymrd"] = 0
         gridprops["iac"] = iac
@@ -1496,12 +1431,12 @@ class Gridgen:
         iac = self.get_iac()
         gridprops["iac"] = iac
 
-        # Calculate njag and save as nja to self
-        njag = iac.sum()
-        gridprops["nja"] = njag
+        # Calculate nja and save as nja to self
+        nja = iac.sum()
+        gridprops["nja"] = nja
 
         # ja
-        ja = self.get_ja(njag)
+        ja = self.get_ja(nja)
         gridprops["ja"] = ja
 
         # cl12
@@ -1943,27 +1878,12 @@ class Gridgen:
         None
 
         """
-        shapefile = import_optional_dependency("shapefile")
-
         # ensure there are active leaf cells from gridgen
-        fname = os.path.join(self.model_ws, "qtg.nod")
-        if not os.path.isfile(fname):
-            raise Exception(
-                f"File {fname} should have been created by gridgen."
-            )
-        f = open(fname, "r")
-        line = f.readline()
-        ll = line.strip().split()
-        nodes = int(ll[0])
+        nodes = self.read_qtg_nod(model_ws=self.model_ws, nodes_only=True)
         if nodes == 0:
             raise Exception("Gridgen resulted in no active cells.")
 
-        # ensure shape file was created by gridgen
-        fname = os.path.join(self.model_ws, "qtgrid.shp")
-        assert os.path.isfile(fname), "gridgen shape file does not exist"
-
-        # read vertices from shapefile
-        sf = shapefile.Reader(fname)
+        sf = self.read_qtgrid_shp(model_ws=self.model_ws)
         shapes = sf.shapes()
         fields = sf.fields
         attributes = [l[0] for l in fields[1:]]
@@ -1973,3 +1893,248 @@ class Gridgen:
             nodenumber = int(records[i][idx]) - 1
             self._vertdict[nodenumber] = shapes[i].points
         return
+
+    @staticmethod
+    def read_qtg_nod(
+        model_ws: Union[str, os.PathLike], nodes_only: bool = False
+    ):
+        """Read qtg.nod file
+
+        Parameters
+        ----------
+        model_ws : Union[str, os.PathLike]
+            Directory where file is stored
+        nodes_only : bool, optional
+            Read only the number of nodes from file, by default False which
+            reads the entire file
+
+        Returns
+        -------
+        int or numpy recarray
+
+        """
+
+        fname = os.path.join(model_ws, "qtg.nod")
+
+        with open(fname, "r") as f:
+            if nodes_only:
+                line = f.readline()
+                ll = line.strip().split()
+                nodes = int(ll[0])
+            else:
+                dt = np.dtype(
+                    [
+                        ("node", int),
+                        ("layer", int),
+                        ("x", float),
+                        ("y", float),
+                        ("z", float),
+                        ("dx", float),
+                        ("dy", float),
+                        ("dz", float),
+                    ]
+                )
+                nodes = np.genfromtxt(fname, dtype=dt, skip_header=1)
+                nodes["layer"] -= 1
+                nodes["node"] -= 1
+            return nodes
+
+    @staticmethod
+    def read_qtgrid_shp(model_ws: Union[str, os.PathLike]):
+        """Read qtgrid.shp file
+
+        Parameters
+        ----------
+        model_ws : Union[str, os.PathLike]
+            Directory where file is stored
+
+        Returns
+        -------
+        shapefile
+        """
+        shapefile = import_optional_dependency("shapefile")
+
+        # ensure shape file was created by gridgen
+        fname = os.path.join(model_ws, "qtgrid.shp")
+        # read vertices from shapefile
+        return shapefile.Reader(fname)
+
+    @staticmethod
+    def read_qtg_nodesperlay_dat(model_ws: Union[str, os.PathLike], nlay: int):
+        """Read qtgrid.shp file
+
+        Parameters
+        ----------
+        model_ws : Union[str, os.PathLike]
+            Directory where file is stored
+        nlay : int
+            Number of layers
+
+        Returns
+        -------
+        np.ndarray
+        """
+        fname = os.path.join(model_ws, "qtg.nodesperlay.dat")
+        with open(fname, "r") as f:
+            return read1d(f=f, a=np.empty((nlay), dtype=int))
+
+    @staticmethod
+    def read_quadtreegrid_top_dat(
+        model_ws: Union[str, os.PathLike], nodelay: List[int], lay: int
+    ):
+        """Read quadtreegrid.top_.dat file
+
+        Parameters
+        ----------
+        model_ws : Union[str, os.PathLike]
+            Directory where file is stored
+        nodelay : list[int]
+            Number of nodes in each layer
+        lay : int
+            Layer
+
+        Returns
+        -------
+        np.ndarray
+        """
+        fname = os.path.join(model_ws, f"quadtreegrid.top{lay + 1}.dat")
+        with open(fname, "r") as f:
+            return read1d(f=f, a=np.empty((nodelay[lay]), dtype=np.float32))
+
+    @staticmethod
+    def read_quadtreegrid_bot_dat(
+        model_ws: Union[str, os.PathLike], nodelay: List[int], lay: int
+    ):
+        """Read quadtreegrid.bot_.dat file
+
+        Parameters
+        ----------
+        model_ws : Union[str, os.PathLike]
+            Directory where file is stored
+        nodelay : list[int]
+            Number of nodes in each layer
+        lay : int
+            Layer
+
+        Returns
+        -------
+        np.ndarray
+        """
+        fname = os.path.join(model_ws, f"quadtreegrid.bot{lay + 1}.dat")
+        with open(fname, "r") as f:
+            return read1d(f=f, a=np.empty((nodelay[lay]), dtype=np.float32))
+
+    @staticmethod
+    def read_qtg_area_dat(model_ws: Union[str, os.PathLike], nodes: int):
+        """Read qtg.area.dat file
+
+        Parameters
+        ----------
+        model_ws : Union[str, os.PathLike]
+            Directory where file is stored
+        nodes : int
+            Number of nodes
+
+        Returns
+        -------
+        np.ndarray
+        """
+        fname = os.path.join(model_ws, "qtg.area.dat")
+        with open(fname, "r") as f:
+            return read1d(f=f, a=np.empty((nodes), dtype=np.float32))
+
+    @staticmethod
+    def read_qtg_iac_dat(model_ws: Union[str, os.PathLike], nodes: int):
+        """Read qtg.iac.dat file
+
+        Parameters
+        ----------
+        model_ws : Union[str, os.PathLike]
+            Directory where file is stored
+        nodes : int
+            Number of nodes
+
+        Returns
+        -------
+        np.ndarray
+        """
+        fname = os.path.join(model_ws, "qtg.iac.dat")
+        with open(fname, "r") as f:
+            return read1d(f=f, a=np.empty((nodes), dtype=int))
+
+    @staticmethod
+    def read_qtg_ja_dat(model_ws: Union[str, os.PathLike], nja: int):
+        """Read qtg.ja.dat file
+
+        Parameters
+        ----------
+        model_ws : Union[str, os.PathLike]
+            Directory where file is stored
+        nja : int
+            Number of connections
+
+        Returns
+        -------
+        np.ndarray
+        """
+        fname = os.path.join(model_ws, "qtg.ja.dat")
+        with open(fname, "r") as f:
+            ja = read1d(f=f, a=np.empty((nja), dtype=int)) - 1
+            return ja
+
+    @staticmethod
+    def read_qtg_fldr_dat(model_ws: Union[str, os.PathLike], nja: int):
+        """Read qtg.fldr.dat file
+
+        Parameters
+        ----------
+        model_ws : Union[str, os.PathLike]
+            Directory where file is stored
+        nja : int
+            Number of connections
+
+        Returns
+        -------
+        np.ndarray
+        """
+        fname = os.path.join(model_ws, "qtg.fldr.dat")
+        with open(fname, "r") as f:
+            return read1d(f=f, a=np.empty((nja), dtype=int))
+
+    @staticmethod
+    def read_qtg_cl_dat(model_ws: Union[str, os.PathLike], nja: int):
+        """Read qtg.c1.dat file
+
+        Parameters
+        ----------
+        model_ws : Union[str, os.PathLike]
+            Directory where file is stored
+        nja : int
+            Number of connections
+
+        Returns
+        -------
+        np.ndarray
+        """
+        fname = os.path.join(model_ws, "qtg.c1.dat")
+        with open(fname, "r") as f:
+            return read1d(f=f, a=np.empty((nja), dtype=np.float32))
+
+    @staticmethod
+    def read_qtg_fahl_dat(model_ws: Union[str, os.PathLike], nja: int):
+        """Read qtg.fahl.dat file
+
+        Parameters
+        ----------
+        model_ws : Union[str, os.PathLike]
+            Directory where file is stored
+        nja : int
+            Number of connections
+
+        Returns
+        -------
+        np.ndarray
+        """
+        fname = os.path.join(model_ws, "qtg.fahl.dat")
+        with open(fname, "r") as f:
+            return read1d(f=f, a=np.empty((nja), dtype=np.float32))

@@ -37,20 +37,14 @@ import os
 
 # +
 import sys
+from pprint import pformat
 from tempfile import TemporaryDirectory
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
-# run installed version of flopy or add local path
-try:
-    import flopy
-except:
-    fpth = os.path.abspath(os.path.join("..", ".."))
-    sys.path.append(fpth)
-    import flopy
-
+import flopy
 from flopy.utils.util_array import read1d
 
 mpl.rcParams["figure.figsize"] = (8, 8)
@@ -126,11 +120,7 @@ def p01(dirname, al, retardation, lambda1, mixelm):
     lmt = flopy.modflow.ModflowLmt(mf)
     mf.write_input()
     success, buff = mf.run_model(silent=True, report=True)
-    if success:
-        for line in buff:
-            print(line)
-    else:
-        raise ValueError("Failed to run.")
+    assert success, pformat(buff)
 
     modelname_mt = f"{dirname}_mt"
     mt = flopy.mt3d.Mt3dms(

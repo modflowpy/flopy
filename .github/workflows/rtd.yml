@@ -33,7 +33,7 @@ jobs:
           echo $GITHUB_EVENT_NAME
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.8
           cache: 'pip'
@@ -77,7 +77,7 @@ jobs:
 
       - name: Upload notebooks artifact for ReadtheDocs
         if: github.repository_owner == 'modflowpy' && github.event_name == 'push' && runner.os == 'Linux'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: notebooks-for-${{ github.sha }}
           path: .docs/Notebooks/*.ipynb

@@ -1,4 +1,3 @@
-import os
 from itertools import repeat
 
 import numpy as np
@@ -15,7 +14,6 @@ from flopy.utils import (
     CellBudgetFile,
     HeadFile,
     HeadUFile,
-    UcnFile,
     Util2d,
 )
 from flopy.utils.binaryfile import (
@@ -212,7 +210,6 @@ def test_get_headfile_precision(example_data_path):
     precision = get_headfile_precision(
         example_data_path
         / "mf6"
-        / "create_tests"
         / "test005_advgw_tidal"
         / "expected_output"
         / "AdvGW_tidal.hds"

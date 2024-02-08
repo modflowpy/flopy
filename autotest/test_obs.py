@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 from modflow_devtools.markers import requires_exe
 
+import flopy
 from flopy.modflow import (
     HeadObservation,
     Modflow,
@@ -444,3 +445,46 @@ def test_multilayerhob_pr_multiline():
     hob = ModflowHob.load(StringIO(problem_hob), ml)
 
     assert len(hob.obs_data) == 2, "pr, mlay... load error"
+
+
+def test_duplicate_observation_names(function_tmpdir):
+    sim_ws = function_tmpdir
+    sim = flopy.mf6.MFSimulation(sim_ws=sim_ws)
+
+    tdis = flopy.mf6.ModflowTdis(sim)
+    ims = flopy.mf6.ModflowIms(sim)
+
+    gwf = flopy.mf6.ModflowGwf(sim)
+
+    nlay = 2
+    nrow = 10
+    ncol = 10
+    top = 10
+    botm = [0, -10]
+
+    dis = flopy.mf6.ModflowGwfdis(
+        gwf, nlay=nlay, nrow=nrow, ncol=ncol, top=top, botm=botm
+    )
+    ic = flopy.mf6.ModflowGwfic(gwf, strt=top)
+    npf = flopy.mf6.ModflowGwfnpf(gwf, k=1, k33=1)
+    sto = flopy.mf6.ModflowGwfsto(gwf)
+    obs = flopy.mf6.ModflowUtlobs(
+        gwf,
+        continuous={
+            "repeat_obs.csv": [
+                ("obsdup", "HEAD", (0, 4, 4)),
+                ("obsdup", "HEAD", (1, 4, 4)),
+            ]
+        },
+    )
+
+    spd = {0: [((1, 4, 4), -50.0)]}
+    wel = flopy.mf6.ModflowGwfwel(gwf, stress_period_data=spd)
+    sim.write_simulation()
+    sim.run_simulation()
+
+    gwf = sim.get_model()
+    obs = gwf.obs.output.obs()
+    data = obs.get_data()
+    if len(data.dtype.names) != 3:
+        raise AssertionError("CsvFile not incrementing duplicate headings")

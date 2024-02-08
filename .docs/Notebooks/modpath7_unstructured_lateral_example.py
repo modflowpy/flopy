@@ -34,13 +34,7 @@ import numpy as np
 
 proj_root = Path.cwd().parent.parent
 
-# run installed version of flopy or add local path
-try:
-    import flopy
-except:
-    sys.path.append(proj_root)
-    import flopy
-
+import flopy
 
 temp_dir = TemporaryDirectory()
 workspace = Path(temp_dir.name)

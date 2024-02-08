@@ -24,19 +24,14 @@ import os
 
 # +
 import sys
+from pprint import pformat
 from tempfile import TemporaryDirectory
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
-# run installed version of flopy or add local path
-try:
-    import flopy
-except:
-    fpth = os.path.abspath(os.path.join("..", ".."))
-    sys.path.append(fpth)
-    import flopy
+import flopy
 
 print(sys.version)
 print(f"numpy version: {np.__version__}")
@@ -65,7 +60,7 @@ k = 1.0
 # One big difference between MODFLOW 6 and previous MODFLOW versions is that MODFLOW 6 is based on the concept of a simulation.  A simulation consists of the following:
 #
 # * Temporal discretization (TDIS)
-# * One or more models (GWF is the only model supported at present)
+# * One or more models (e.g. GWF, GWT)
 # * Zero or more exchanges (instructions for how models are coupled)
 # * Solutions
 #
@@ -200,11 +195,7 @@ print(os.listdir(workspace))
 
 # Run the simulation
 success, buff = sim.run_simulation(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+assert success, pformat(buff)
 
 # ### Post-Process Head Results
 #

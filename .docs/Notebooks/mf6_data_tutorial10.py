@@ -20,16 +20,12 @@
 # +
 import os
 import sys
+from pprint import pformat
 from tempfile import TemporaryDirectory
 
 import numpy as np
 
-try:
-    import flopy
-except:
-    fpth = os.path.abspath(os.path.join("..", ".."))
-    sys.path.append(fpth)
-    import flopy
+import flopy
 
 # init paths
 exe_name = "mf6"
@@ -178,11 +174,7 @@ ghb.obs.print_input = True
 
 sim.write_simulation()
 success, buff = sim.run_simulation(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+assert success, pformat(buff)
 
 # clean up for next example
 model.remove_package("ghb")

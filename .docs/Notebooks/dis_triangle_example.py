@@ -22,7 +22,6 @@
 # First set the path and import the required packages. The flopy path doesn't have to be set if you install flopy from a binary installer. If you want to run this notebook, you have to set the path to your own flopy path.
 
 # +
-import os
 import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -254,6 +253,7 @@ oc = flopy.mf6.ModflowGwfoc(
 )
 sim.write_simulation()
 success, buff = sim.run_simulation(report=True)
+assert success
 
 # +
 fname = workspace / f"{name}.hds"

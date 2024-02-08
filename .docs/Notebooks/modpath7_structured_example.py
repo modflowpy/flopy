@@ -32,15 +32,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.lib.recfunctions import repack_fields
 
-# run installed version of flopy or add local path
-try:
-    import flopy
-except:
-    fpth = os.path.abspath(os.path.join("..", ".."))
-    sys.path.append(fpth)
-    import flopy
+import flopy
 
-    print(sys.version)
+print(sys.version)
 print(f"numpy version: {np.__version__}")
 print(f"matplotlib version: {mpl.__version__}")
 print(f"flopy version: {flopy.__version__}")

@@ -20,6 +20,7 @@
     --------
 
     """
+
 from .crosssection import PlotCrossSection
 from .map import PlotMapView
 from .plotutil import (

@@ -142,7 +142,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             for a selected stress period. The dictionary keys are the
             MFDataList dtype names for the stress period data."""
         sarr = self.get_data(key=kper)
-        model_grid = self._data_dimensions.get_model_grid()
+        model_grid = self.data_dimensions.get_model_grid()
         return list_to_array(sarr, model_grid, kper, mask)
 
     def new_simulation(self, sim_data):
@@ -761,7 +761,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
     ):
         try:
             # freeze model grid to boost performance
-            self._data_dimensions.lock()
+            self.data_dimensions.lock()
             # init
             indent = self._simulation_data.indent_string
             file_entry = []
@@ -872,7 +872,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 self._crnt_line_num += 1
 
         # unfreeze model grid
-        self._data_dimensions.unlock()
+        self.data_dimensions.unlock()
         return "".join(file_entry)
 
     def _get_file_entry_record(
@@ -913,7 +913,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                     ex,
                 )
         else:
-            data_dim = self._data_dimensions
+            data_dim = self.data_dimensions
             data_line = data_complete[mflist_line]
             for data_item in data_set.data_item_structures:
                 if data_item.is_aux:
@@ -931,7 +931,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                                 data_val,
                                                 data_item.type,
                                                 self._simulation_data,
-                                                self._data_dimensions,
+                                                self.data_dimensions,
                                                 data_item.is_cellid,
                                                 data_item.possible_cellid,
                                                 data_item,
@@ -1028,7 +1028,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                 model_num = DatumUtil.cellid_model_num(
                                     data_item,
                                     self.structure.model_data,
-                                    self._data_dimensions.package_dim.model_dim,
+                                    self.data_dimensions.package_dim.model_dim,
                                 )
                                 model_grid = data_dim.get_model_grid(model_num)
                                 cellid_size = (
@@ -1180,7 +1180,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                                         data_line[data_index],
                                                         k_data_item.type,
                                                         self._simulation_data,
-                                                        self._data_dimensions,
+                                                        self.data_dimensions,
                                                         k_data_item.is_cellid,
                                                         k_data_item.possible_cellid,
                                                         k_data_item,
@@ -1244,7 +1244,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                                 data_val,
                                                 DatumType.string,
                                                 self._simulation_data,
-                                                self._data_dimensions,
+                                                self.data_dimensions,
                                                 False,
                                                 data_item=data_item,
                                                 verify_data=self._simulation_data.verify_data,
@@ -1257,7 +1257,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                             data_val,
                                             data_item.type,
                                             self._simulation_data,
-                                            self._data_dimensions,
+                                            self.data_dimensions,
                                             data_item.is_cellid,
                                             data_item.possible_cellid,
                                             data_item,
@@ -1369,7 +1369,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         else:
             file_access = MFFileAccessList(
                 self.structure,
-                self._data_dimensions,
+                self.data_dimensions,
                 self._simulation_data,
                 self._path,
                 self._current_key,
@@ -1383,7 +1383,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         return DataStorage(
             self._simulation_data,
             self._model_or_sim,
-            self._data_dimensions,
+            self.data_dimensions,
             self._get_file_entry,
             DataStorageType.internal_array,
             DataStructureType.recarray,
@@ -1546,8 +1546,8 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
     @property
     def masked_4D_arrays(self):
         """Returns list data as a masked 4D array."""
-        model_grid = self._data_dimensions.get_model_grid()
-        nper = self._data_dimensions.package_dim.model_dim[
+        model_grid = self.data_dimensions.get_model_grid()
+        nper = self.data_dimensions.package_dim.model_dim[
             0
         ].simulation_time.get_num_stress_periods()
         # get the first kper
@@ -1593,8 +1593,8 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
 
     def masked_4D_arrays_itr(self):
         """Returns list data as an iterator of a masked 4D array."""
-        model_grid = self._data_dimensions.get_model_grid()
-        nper = self._data_dimensions.package_dim.model_dim[
+        model_grid = self.data_dimensions.get_model_grid()
+        nper = self.data_dimensions.package_dim.model_dim[
             0
         ].simulation_time.get_num_stress_periods()
         # get the first kper
@@ -1796,7 +1796,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             if key is None:
                 if "array" in kwargs:
                     output = []
-                    sim_time = self._data_dimensions.package_dim.model_dim[
+                    sim_time = self.data_dimensions.package_dim.model_dim[
                         0
                     ].simulation_time
                     num_sp = sim_time.get_num_stress_periods()

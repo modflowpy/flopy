@@ -104,7 +104,7 @@ tagged false
 in_record true
 reader urword
 longname
-description line of information that is parsed into a keyword and values.  Keyword values that can be used to start the MAWSETTING string include: CONCENTRATION.
+description line of information that is parsed into a keyword and values.  Keyword values that can be used to start the SPCSETTING string include: CONCENTRATION.
 
 block period
 name concentration

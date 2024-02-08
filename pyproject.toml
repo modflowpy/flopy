@@ -29,13 +29,14 @@ classifiers = [
 ]
 requires-python = ">=3.8"
 dependencies = [
-    "numpy >=1.15.0",
+    "numpy >=1.15.0,<2.0.0",
     "matplotlib >=1.4.0",
     "pandas >=2.0.0"
 ]
 dynamic = ["version", "readme"]
 
 [project.optional-dependencies]
+dev = ["flopy[lint,test,optional,doc]"]
 lint = [
     "black",
     "cffconvert",
@@ -53,7 +54,6 @@ test = [
     "modflow-devtools",
     "pytest",
     "pytest-benchmark",
-    "pytest-cases",
     "pytest-cov",
     "pytest-dotenv",
     "pytest-xdist",
@@ -64,12 +64,12 @@ optional = [
     "descartes",
     "fiona",
     "geojson",
+    "geopandas",
     "imageio",
     "netcdf4",
     "pymetis ; platform_system != 'Windows'",
     "pyproj",
     "pyshp",
-    "python-dateutil >=2.4.0",
     "pyvista",
     "rasterio",
     "rasterstats",
@@ -83,6 +83,7 @@ doc = [
     "ipython[kernel]",
     "jupytext",
     "myst-parser",
+    "nbconvert <7.14.0",
     "nbsphinx",
     "PyYAML",
     "rtds-action",

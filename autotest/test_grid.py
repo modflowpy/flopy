@@ -13,11 +13,11 @@ from flaky import flaky
 from matplotlib import pyplot as plt
 from modflow_devtools.markers import requires_exe, requires_pkg
 from modflow_devtools.misc import has_pkg
-from pytest_cases import parametrize_with_cases
 
 from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
 from flopy.mf6 import MFSimulation
 from flopy.modflow import Modflow, ModflowDis
+from flopy.utils import import_optional_dependency
 from flopy.utils.crs import get_authority_crs
 from flopy.utils.cvfdutil import gridlist_to_disv_gridprops, to_cvfd
 from flopy.utils.triangle import Triangle
@@ -1089,7 +1089,21 @@ def test_voronoi_vertex_grid(function_tmpdir):
 @flaky
 @requires_exe("triangle")
 @requires_pkg("shapely", "scipy")
-@parametrize_with_cases("grid_info", cases=GridCases, prefix="voronoi")
+@pytest.mark.parametrize(
+    "grid_info",
+    (
+        [
+            GridCases.voronoi_polygon(),
+            GridCases.voronoi_rectangle(),
+            GridCases.voronoi_circle(),
+            GridCases.voronoi_nested_circles(),
+            GridCases.voronoi_polygons(),
+            GridCases.voronoi_many_polygons(),
+        ]
+        if (has_pkg("shapely", True) and has_pkg("scipy", True))
+        else []
+    ),
+)
 def test_voronoi_grid(request, function_tmpdir, grid_info):
     name = (
         request.node.name.replace("/", "_")
@@ -1233,18 +1247,16 @@ def test_vertex_neighbors(vertex_grid):
 
 def test_unstructured_neighbors(unstructured_grid):
     rook_neighbors = unstructured_grid.neighbors(5)
-    assert np.allclose(rook_neighbors, [0, 10, 1, 2, 3, 7, 12])
+    assert np.allclose(rook_neighbors, [0, 10, 1, 6, 11, 2, 7, 12])
 
     queen_neighbors = unstructured_grid.neighbors(
         5, method="queen", reset=True
     )
-    assert np.allclose(
-        queen_neighbors, [0, 10, 1, 6, 11, 2, 3, 4, 7, 8, 12, 13]
-    )
+    assert np.allclose(queen_neighbors, [0, 10, 1, 6, 11, 2, 3, 7, 8, 12, 13])
 
 
-@parametrize_with_cases("grid", cases=GridCases, prefix="structured_cbd")
-def test_structured_ncb_thickness(grid):
+def test_structured_ncb_thickness():
+    grid = GridCases.structured_cbd_small()
     thickness = grid.cell_thickness
 
     assert thickness.shape[0] == grid.nlay + np.count_nonzero(
@@ -1266,7 +1278,9 @@ def test_structured_ncb_thickness(grid):
     ), "saturated_thickness is not properly indexing confining beds"
 
 
-@parametrize_with_cases("grid", cases=GridCases, prefix="unstructured")
+@pytest.mark.parametrize(
+    "grid", [GridCases.unstructured_small(), GridCases.unstructured_medium()]
+)
 def test_unstructured_iverts(grid):
     iverts = grid.iverts
     assert not any(
@@ -1274,21 +1288,30 @@ def test_unstructured_iverts(grid):
     ), "None type should not be returned in iverts list"
 
 
-@parametrize_with_cases("grid", cases=GridCases, prefix="structured")
+@pytest.mark.parametrize(
+    "grid", [GridCases.structured_small(), GridCases.structured_cbd_small()]
+)
 def test_get_lni_structured(grid):
     for nn in range(0, grid.nnodes):
         layer, i = grid.get_lni([nn])[0]
         assert layer * grid.ncpl + i == nn
 
 
-@parametrize_with_cases("grid", cases=GridCases, prefix="vertex")
+@pytest.mark.parametrize(
+    "grid",
+    [
+        GridCases.vertex_small(),
+    ],
+)
 def test_get_lni_vertex(grid):
     for nn in range(0, grid.nnodes):
         layer, i = grid.get_lni([nn])[0]
         assert layer * grid.ncpl + i == nn
 
 
-@parametrize_with_cases("grid", cases=GridCases, prefix="unstructured")
+@pytest.mark.parametrize(
+    "grid", [GridCases.unstructured_small(), GridCases.unstructured_medium()]
+)
 def test_get_lni_unstructured(grid):
     for nn in range(0, grid.nnodes):
         layer, i = grid.get_lni([nn])[0]
@@ -1300,3 +1323,63 @@ def test_get_lni_unstructured(grid):
             )
         )
         assert csum[layer] + i == nn
+
+
+def test_structured_convert(structured_grid):
+    factor = 3
+    new_grid = structured_grid.convert_grid(factor=factor)
+
+    xf = np.sum(new_grid.xvertices) / np.sum(structured_grid.xvertices)
+    yf = np.sum(new_grid.yvertices) / np.sum(structured_grid.yvertices)
+    zf = np.sum(new_grid.zvertices) / np.sum(structured_grid.zvertices)
+    if xf != factor or yf != factor or zf != factor:
+        raise AssertionError(
+            "structured grid conversion is not returning proper vertices"
+        )
+
+
+def test_vertex_convert(vertex_grid):
+    factor = 3
+    new_grid = vertex_grid.convert_grid(factor=factor)
+
+    xf = np.sum(new_grid.xvertices) / np.sum(vertex_grid.xvertices)
+    yf = np.sum(new_grid.yvertices) / np.sum(vertex_grid.yvertices)
+    zf = np.sum(new_grid.zvertices) / np.sum(vertex_grid.zvertices)
+    if xf != factor or yf != factor or zf != factor:
+        raise AssertionError(
+            "structured grid conversion is not returning proper vertices"
+        )
+
+
+def test_unstructured_convert(unstructured_grid):
+    factor = 3
+    new_grid = unstructured_grid.convert_grid(factor=factor)
+
+    xf = np.sum(new_grid.xvertices) / np.sum(unstructured_grid.xvertices)
+    yf = np.sum(new_grid.yvertices) / np.sum(unstructured_grid.yvertices)
+    zf = np.sum(new_grid.zvertices) / np.sum(unstructured_grid.zvertices)
+    if xf != factor or yf != factor or zf != factor:
+        raise AssertionError(
+            "structured grid conversion is not returning proper vertices"
+        )
+
+
+@requires_pkg("geopandas")
+def test_geo_dataframe(structured_grid, vertex_grid, unstructured_grid):
+    geopandas = import_optional_dependency("geopandas")
+    grids = (structured_grid, vertex_grid, unstructured_grid)
+
+    for grid in grids:
+        gdf = grid.geo_dataframe
+        if not isinstance(gdf, geopandas.GeoDataFrame):
+            raise TypeError("geo_dataframe not returning GeoDataFrame object")
+
+        geoms = gdf.geometry.values
+        for node, geom in enumerate(geoms):
+            coords = geom.exterior.coords
+            cv = grid.get_cell_vertices(node)
+            for coord in coords:
+                if coord not in cv:
+                    raise AssertionError(
+                        f"Cell vertices incorrect for node={node}"
+                    )

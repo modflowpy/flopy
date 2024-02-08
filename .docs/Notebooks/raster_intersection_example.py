@@ -37,14 +37,8 @@ import pandas as pd
 import shapefile
 import shapely
 
-try:
-    import flopy
-    from flopy.utils import Raster
-except:
-    fpth = os.path.abspath(os.path.join("..", ".."))
-    sys.path.append(fpth)
-    import flopy
-    from flopy.utils import Raster
+import flopy
+from flopy.utils import Raster
 
 print(sys.version)
 print(f"numpy version: {np.__version__}")

@@ -67,8 +67,6 @@
 # simulation (`MFSimulation`) and a model (`MFModel`) object in FloPy.
 
 # package import
-import os
-from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import numpy as np

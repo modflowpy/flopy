@@ -50,19 +50,13 @@
 
 # +
 import os
-import sys
 from pathlib import Path
 from shutil import copyfile
 from tempfile import TemporaryDirectory
 
 proj_root = Path.cwd().parent.parent
 
-# run installed version of flopy or add local path
-try:
-    import flopy
-except:
-    sys.path.append(proj_root)
-    import flopy
+import flopy
 
 # temporary directory
 temp_dir = TemporaryDirectory()

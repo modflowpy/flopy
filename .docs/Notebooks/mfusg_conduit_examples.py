@@ -20,6 +20,7 @@
 # +
 import os
 import shutil
+from pprint import pformat
 from tempfile import TemporaryDirectory
 
 import matplotlib.pyplot as plt
@@ -73,11 +74,7 @@ mf.model_ws = model_ws
 
 mf.write_input()
 success, buff = mf.run_model(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+assert success, pformat(buff)
 
 head_file = os.path.join(mf.model_ws, "ex3.clnhds")
 headobj = flopy.utils.HeadFile(head_file)

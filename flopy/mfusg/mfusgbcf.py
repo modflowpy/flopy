@@ -4,6 +4,7 @@ Mfusgbcf module.
 Contains the MfUsgBcf class. Note that the user can
 access the MfUsgBcf class as `flopy.mfusg.MfUsgBcf`.
 """
+
 import numpy as np
 
 from ..modflow import ModflowBcf

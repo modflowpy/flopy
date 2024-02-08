@@ -251,7 +251,7 @@ class MFData(DataInterface):
         self._data_type = structure.type
         self._keyword = ""
         if self._simulation_data is not None:
-            self._data_dimensions = DataDimensions(dimensions, structure)
+            self.data_dimensions = DataDimensions(dimensions, structure)
             # build a unique path in the simulation dictionary
             self._org_path = self._path
             index = 0
@@ -380,13 +380,13 @@ class MFData(DataInterface):
         layers = []
         layer_dims = self.structure.data_item_structures[0].layer_dims
         if len(layer_dims) == 1:
-            layers.append(self._data_dimensions.get_model_grid().num_layers())
+            layers.append(self.data_dimensions.get_model_grid().num_layers())
         else:
             for layer in layer_dims:
                 if layer == "nlay":
                     # get the layer size from the model grid
                     try:
-                        model_grid = self._data_dimensions.get_model_grid()
+                        model_grid = self.data_dimensions.get_model_grid()
                     except Exception as ex:
                         type_, value_, traceback_ = sys.exc_info()
                         raise MFDataException(
@@ -521,13 +521,13 @@ class MFData(DataInterface):
             const_val,
             data_type,
             self._simulation_data,
-            self._data_dimensions,
+            self.data_dimensions,
             verify_data=self._simulation_data.verify_data,
         )
         return f"{sim_data.indent_string.join(const_format)}{suffix}"
 
     def _get_aux_var_name(self, aux_var_index):
-        aux_var_names = self._data_dimensions.package_dim.get_aux_variables()
+        aux_var_names = self.data_dimensions.package_dim.get_aux_variables()
         # TODO: Verify that this works for multi-dimensional layering
         return aux_var_names[0][aux_var_index[0] + 1]
 
@@ -608,7 +608,7 @@ class MFMultiDimVar(MFData):
         self, fname, factor, binary, iprn, data_type, ext_file_action
     ):
         file_mgmt = self._simulation_data.mfpath
-        model_name = self._data_dimensions.package_dim.model_dim[0].model_name
+        model_name = self.data_dimensions.package_dim.model_dim[0].model_name
         ext_file_path = file_mgmt.get_updated_path(
             fname, model_name, ext_file_action
         )

@@ -4,6 +4,7 @@ mbase module
   all of the other models inherit from.
 
 """
+
 import abc
 import copy
 import os
@@ -33,7 +34,7 @@ if on_windows:
     flopy_bin = os.path.expandvars(r"%LOCALAPPDATA%\flopy\bin")
 else:
     flopy_bin = os.path.join(os.path.expanduser("~"), ".local/share/flopy/bin")
-os.environ["PATH"] = flopy_bin + os.path.pathsep + os.environ.get("PATH", "")
+os.environ["PATH"] = os.environ.get("PATH", "") + os.path.pathsep + flopy_bin
 
 ## Global variables
 # Multiplier for individual array elements in integer and real arrays read by

@@ -1277,6 +1277,10 @@ class DataStorage:
                     DataStorageType.internal_array
                 )
                 if data is None or isinstance(data, np.recarray):
+                    if not self.tuple_cellids(data):
+                        # fix data so cellid is a single tuple
+                        data = self.make_tuple_cellids(data.tolist())
+                if data is None or isinstance(data, np.recarray):
                     if self._simulation_data.verify_data and check_data:
                         self._verify_list(data)
                     self.layer_storage.first_item().internal_data = data
@@ -1368,16 +1372,16 @@ class DataStorage:
                     # convert numbers to be multiplied by the original factor
                     data = data * adjustment
             if const:
-                self.layer_storage[
-                    layer
-                ].data_storage_type = DataStorageType.internal_constant
+                self.layer_storage[layer].data_storage_type = (
+                    DataStorageType.internal_constant
+                )
                 self.layer_storage[layer].data_const_value = [
                     mfdatautil.get_first_val(data)
                 ]
             else:
-                self.layer_storage[
-                    layer
-                ].data_storage_type = DataStorageType.internal_array
+                self.layer_storage[layer].data_storage_type = (
+                    DataStorageType.internal_array
+                )
                 try:
                     self.layer_storage[layer].internal_data = np.reshape(
                         data, dimensions
@@ -1402,6 +1406,14 @@ class DataStorage:
                         traceback_,
                         message,
                         self._simulation_data.debug,
+                    )
+                data_type = self.data_dimensions.structure.get_datum_type(True)
+                dt = self.layer_storage[layer].internal_data.dtype
+                if dt != data_type:
+                    self.layer_storage[layer].internal_data = (
+                        self.layer_storage[layer].internal_data.astype(
+                            data_type
+                        )
                     )
             if not preserve_record:
                 self.layer_storage[layer].factor = multiplier
@@ -1602,9 +1614,15 @@ class DataStorage:
         return new_data
 
     def tuple_cellids(self, data):
+        if data is None or len(data) == 0:
+            return True
         for data_entry, cellid in zip(data[0], self.recarray_cellid_list):
             if cellid:
-                if isinstance(data_entry, int):
+                if (
+                    isinstance(data_entry, int)
+                    or isinstance(data_entry, np.int32)
+                    or isinstance(data_entry, np.int64)
+                ):
                     # cellid is stored in separate columns in the recarray
                     # (eg: one column for layer one column for row and
                     # one columne for column)
@@ -1784,9 +1802,9 @@ class DataStorage:
                 if self._calc_data_size(data, 2) == 1 and data_size > 1:
                     # constant data, need to expand
                     self.layer_storage[layer_new].data_const_value = data
-                    self.layer_storage[
-                        layer_new
-                    ].data_storage_type = DataStorageType.internal_constant
+                    self.layer_storage[layer_new].data_storage_type = (
+                        DataStorageType.internal_constant
+                    )
                     data = self._fill_const_layer(layer)
                 elif isinstance(data, list):
                     data = self._to_ndarray(data, layer)
@@ -1843,9 +1861,9 @@ class DataStorage:
         self.layer_storage[layer].fname = file_path
         self.layer_storage[layer].iprn = print_format
         self.layer_storage[layer].binary = binary
-        self.layer_storage[
-            layer
-        ].data_storage_type = DataStorageType.external_file
+        self.layer_storage[layer].data_storage_type = (
+            DataStorageType.external_file
+        )
 
     def point_to_existing_external_file(self, arr_line, layer):
         (

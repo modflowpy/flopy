@@ -3,6 +3,7 @@ Module to read MODFLOW output files.  The module contains shared
 abstract classes that should not be directly accessed.
 
 """
+
 import os
 from pathlib import Path
 from typing import Union

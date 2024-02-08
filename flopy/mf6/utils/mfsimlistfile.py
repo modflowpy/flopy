@@ -83,7 +83,7 @@ class MfSimulationList:
         if units not in UNITS:
             msg = (
                 "units input variable must be "
-                + " ,".join(UNITS)
+                + ", ".join(UNITS)
                 + f": {units} was specified."
             )
             raise ValueError(msg)

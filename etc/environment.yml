@@ -6,7 +6,7 @@ dependencies:
 
   # required
   - python>=3.8
-  - numpy>=1.15.0
+  - numpy>=1.15.0,<2.0.0
   - matplotlib>=1.4.0
 
   # lint
@@ -25,14 +25,12 @@ dependencies:
   - modflow-devtools
   - pytest
   - pytest-benchmark
-  - pytest-cases
   - pytest-cov
   - pytest-dotenv
   - pytest-xdist
   - virtualenv
 
   # optional
-  - python-dateutil>=2.4.0
   - affine
   - scipy
   - pandas

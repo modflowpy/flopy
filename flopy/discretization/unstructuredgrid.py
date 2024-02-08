@@ -553,6 +553,52 @@ class UnstructuredGrid(Grid):
 
         return copy.copy(self._polygons)
 
+    @property
+    def geo_dataframe(self):
+        """
+        Returns a geopandas GeoDataFrame of the model grid
+
+        Returns
+        -------
+            GeoDataFrame
+        """
+        polys = [[self.get_cell_vertices(nn)] for nn in range(self.nnodes)]
+        gdf = super().geo_dataframe(polys)
+        return gdf
+
+    def convert_grid(self, factor):
+        """
+        Method to scale the model grid based on user supplied scale factors
+
+        Parameters
+        ----------
+        factor
+
+        Returns
+        -------
+            Grid object
+        """
+        if self.is_complete:
+            return UnstructuredGrid(
+                vertices=[
+                    [i[0], i[1] * factor, i[2] * factor]
+                    for i in self._vertices
+                ],
+                iverts=self._iverts,
+                xcenters=self._xc * factor,
+                ycenters=self._yc * factor,
+                top=self.top * factor,
+                botm=self.botm * factor,
+                idomain=self.idomain,
+                xoff=self.xoffset * factor,
+                yoff=self.yoffset * factor,
+                angrot=self.angrot,
+            )
+        else:
+            raise AssertionError(
+                "Grid is not complete and cannot be converted"
+            )
+
     def intersect(self, x, y, z=None, local=False, forgive=False):
         """
         Get the CELL2D number of a point with coordinates x and y

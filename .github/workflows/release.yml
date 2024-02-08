@@ -25,7 +25,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.8
           cache: 'pip'
@@ -73,7 +73,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload failed test outputs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: failed-${{ matrix.os }}-${{ matrix.python-version }}
@@ -111,7 +111,7 @@ jobs:
           sed -i '1i # Changelog' $clog
 
       - name: Upload changelog
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: changelog
           path: CHANGELOG.md
@@ -175,7 +175,7 @@ jobs:
 
       # actions/download-artifact won't look at previous workflow runs but we need to in order to get changelog
       - name: Download artifacts
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v3
 
       - name: Draft release
         env:
@@ -211,7 +211,7 @@ jobs:
           ref: master
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.8
           cache: 'pip'
@@ -231,7 +231,7 @@ jobs:
         run: twine check --strict dist/*
 
       - name: Upload package
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist

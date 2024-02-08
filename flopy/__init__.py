@@ -19,6 +19,7 @@ assistance is welcomed. Please email the development team if you want to
 contribute.
 
 """
+
 # See CITATION.cff for authors
 __author__ = "FloPy Team"
 

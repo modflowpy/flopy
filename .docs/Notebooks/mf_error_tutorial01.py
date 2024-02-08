@@ -21,13 +21,7 @@ import os
 import sys
 from tempfile import TemporaryDirectory
 
-# run installed version of flopy or add local path
-try:
-    import flopy
-except:
-    fpth = os.path.abspath(os.path.join("..", ".."))
-    sys.path.append(fpth)
-    import flopy
+import flopy
 
 print(sys.version)
 print(f"flopy version: {flopy.__version__}")
@@ -83,22 +77,18 @@ m.rch.check()
 
 m.check(f=os.path.join(workspace, "checksummary.csv"))
 
-# +
-summary_pth = os.path.join(workspace, "checksummary.csv")
-
 try:
     import pandas as pd
 
+    summary_pth = os.path.join(workspace, "checksummary.csv")
     df = pd.read_csv(summary_pth)
 except:
     df = open(summary_pth).readlines()
 df
-# -
 
 # #### checking on `write_input()`
 # checking is also performed by default when `write_input()` is called at the package or model level. Checking on write is performed with the same `verbose` setting as specified for the model. However, if errors or warnings are encountered and `level=1` (default) or higher, a screen message notifies the user of the errors.
 #
 # By default, the checks performed on `load()` and `write_input()` save results to a summary file, which is named after the packge or the model.
 
-# + pycharm={"name": "#%%\n"}
 m.write_input()

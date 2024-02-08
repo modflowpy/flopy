@@ -222,7 +222,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
         Process open/close line extracting the multiplier, print format,
         binary flag, data file path, and any comments
         """
-        data_dim = self._data_dimensions
+        data_dim = self.data_dimensions
         (
             multiplier,
             print_format,
@@ -310,10 +310,10 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
         """get the number of spatial coordinates used in the cellid"""
         model_num = datautil.DatumUtil.cellid_model_num(
             data_item_name,
-            self._data_dimensions.structure.model_data,
-            self._data_dimensions.package_dim.model_dim,
+            self.data_dimensions.structure.model_data,
+            self.data_dimensions.package_dim.model_dim,
         )
-        model_grid = self._data_dimensions.get_model_grid(model_num=model_num)
+        model_grid = self.data_dimensions.get_model_grid(model_num=model_num)
         return model_grid.get_num_spatial_coordinates()
 
     def _build_data_header(self):
@@ -330,7 +330,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
         s_type = pandas.StringDtype
         f_type = np.float64
         i_type = np.int64
-        data_dim = self._data_dimensions
+        data_dim = self.data_dimensions
         # loop through data structure definition information
         for data_item, index in zip(
             self.structure.data_item_structures,
@@ -651,11 +651,11 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
                 )
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(
-                    self._data_dimensions.structure.get_model(),
-                    self._data_dimensions.structure.get_package(),
-                    self._data_dimensions.structure.path,
+                    self.data_dimensions.structure.get_model(),
+                    self.data_dimensions.structure.get_package(),
+                    self.data_dimensions.structure.path,
                     "setting list data",
-                    self._data_dimensions.structure.name,
+                    self.data_dimensions.structure.name,
                     inspect.stack()[0][3],
                     type_,
                     value_,
@@ -692,11 +692,11 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
                 )
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(
-                    self._data_dimensions.structure.get_model(),
-                    self._data_dimensions.structure.get_package(),
-                    self._data_dimensions.structure.path,
+                    self.data_dimensions.structure.get_model(),
+                    self.data_dimensions.structure.get_package(),
+                    self.data_dimensions.structure.path,
                     "setting list data",
-                    self._data_dimensions.structure.name,
+                    self.data_dimensions.structure.name,
                     inspect.stack()[0][3],
                     type_,
                     value_,
@@ -713,11 +713,11 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
             )
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(
-                self._data_dimensions.structure.get_model(),
-                self._data_dimensions.structure.get_package(),
-                self._data_dimensions.structure.path,
+                self.data_dimensions.structure.get_model(),
+                self.data_dimensions.structure.get_package(),
+                self.data_dimensions.structure.path,
                 "setting list data",
-                self._data_dimensions.structure.name,
+                self.data_dimensions.structure.name,
                 inspect.stack()[0][3],
                 type_,
                 value_,
@@ -772,7 +772,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
             for a selected stress period. The dictionary keys are the
             MFDataList dtype names for the stress period data."""
         sarr = self.get_data(key=kper)
-        model_grid = self._data_dimensions.get_model_grid()
+        model_grid = self.data_dimensions.get_model_grid()
         return list_to_array(sarr, model_grid, kper, mask)
 
     def set_record(self, record, autofill=False, check_data=True):
@@ -798,20 +798,20 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
                 if "binary" in record:
                     if (
                         record["binary"]
-                        and self._data_dimensions.package_dim.boundnames()
+                        and self.data_dimensions.package_dim.boundnames()
                     ):
                         message = (
                             "Unable to store list data ({}) to a binary "
                             "file when using boundnames"
-                            ".".format(self._data_dimensions.structure.name)
+                            ".".format(self.data_dimensions.structure.name)
                         )
                         type_, value_, traceback_ = sys.exc_info()
                         raise MFDataException(
-                            self._data_dimensions.structure.get_model(),
-                            self._data_dimensions.structure.get_package(),
-                            self._data_dimensions.structure.path,
+                            self.data_dimensions.structure.get_model(),
+                            self.data_dimensions.structure.get_package(),
+                            self.data_dimensions.structure.path,
                             "writing list data to binary file",
-                            self._data_dimensions.structure.name,
+                            self.data_dimensions.structure.name,
                             inspect.stack()[0][3],
                             type_,
                             value_,
@@ -1159,7 +1159,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
                 None,
                 True,
                 self.path,
-                self._data_dimensions.package_dim,
+                self.data_dimensions.package_dim,
                 self._package,
                 self._block,
             )
@@ -1181,7 +1181,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
         # write
         file_access = MFFileAccessList(
             self.structure,
-            self._data_dimensions,
+            self.data_dimensions,
             self._simulation_data,
             self._path,
             self._current_key,
@@ -1224,7 +1224,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
         if data_storage.binary:
             file_access = MFFileAccessList(
                 self.structure,
-                self._data_dimensions,
+                self.data_dimensions,
                 self._simulation_data,
                 self._path,
                 self._current_key,
@@ -1441,7 +1441,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
         returned the resolved relative path of external file in "data_storage"
         """
         # pathing to external file
-        data_dim = self._data_dimensions
+        data_dim = self.data_dimensions
         model_name = data_dim.package_dim.model_dim[0].model_name
         fp_relative = data_storage.fname
         if model_name is not None and fp_relative is not None:
@@ -1985,7 +1985,6 @@ class MFPandasTransientList(
                 Whether to replace an existing external file.
             check_data : bool
                 Verify data prior to storing
-
         """
         self._cache_model_grid = True
         for sp in self._data_storage.keys():
@@ -2125,7 +2124,7 @@ class MFPandasTransientList(
             if key is None:
                 if "array" in kwargs:
                     output = []
-                    sim_time = self._data_dimensions.package_dim.model_dim[
+                    sim_time = self.data_dimensions.package_dim.model_dim[
                         0
                     ].simulation_time
                     num_sp = sim_time.get_num_stress_periods()
@@ -2201,8 +2200,8 @@ class MFPandasTransientList(
 
     def masked_4D_arrays_itr(self):
         """Returns list data as an iterator of a masked 4D array."""
-        model_grid = self._data_dimensions.get_model_grid()
-        nper = self._data_dimensions.package_dim.model_dim[
+        model_grid = self.data_dimensions.get_model_grid()
+        nper = self.data_dimensions.package_dim.model_dim[
             0
         ].simulation_time.get_num_stress_periods()
         # get the first kper

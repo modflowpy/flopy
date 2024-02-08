@@ -17,5 +17,7 @@
 examples/data/** binary
 .docs/groundwater_paper/uspb/** binary
 
-# Exclude example data folder
-examples/data/** linguist-documentation
+# Configure github-linguist exclusions
+*.bas -linguist-detectable
+.docs/** linguist-documentation
+docs/** linguist-documentation

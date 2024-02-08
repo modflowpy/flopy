@@ -24,18 +24,13 @@
 # +
 import os
 import sys
+from pprint import pformat
 
 import matplotlib as mpl
 import numpy as np
 
 # run installed version of flopy or add local path
-try:
-    import flopy
-except:
-    fpth = os.path.abspath(os.path.join("..", "..", ".."))
-    sys.path.append(fpth)
-    import flopy
-
+import flopy
 import flopy.modflow as fpm
 import flopy.utils as fpu
 
@@ -86,11 +81,7 @@ fpm.ModflowOc(model)
 
 model.write_input()
 success, buff = model.run_model(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+assert success, pformat(buff)
 
 # After MODFLOW has responded with the positive {\tt Normal termination of simulation}, the calculated heads can be read from the binary output file. First a file object is created. As the modelname used for all MODFLOW files was specified as {\tt gwexample} in step 1, the file with the heads is called {\tt gwexample.hds}. FloPy includes functions to read data from the file object, including heads for specified layers or time steps, or head time series at individual cells. For this simple mode, all computed heads are read.
 
