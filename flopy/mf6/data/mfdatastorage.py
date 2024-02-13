@@ -497,9 +497,7 @@ class DataStorage:
                             layer_str,
                             self._get_layer_header_str(index),
                         )
-            elif (
-                storage.data_storage_type == DataStorageType.external_file
-            ):
+            elif storage.data_storage_type == DataStorageType.external_file:
                 header = self._get_layer_header_str(index)
                 if self.layered:
                     data_str = "{}{}{{{}}}\n({})\n".format(
