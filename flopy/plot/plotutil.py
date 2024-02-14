@@ -2681,6 +2681,7 @@ MP7_ENDPOINT_DTYPE = np.dtype(
         ("cellface", np.int32),
     ]
 )
+MP_MIN_PLOT_FIELDS = ["x", "y", "z", "time", "k", "particleid"]
 
 
 def to_mp7_pathlines(
@@ -2709,12 +2710,12 @@ def to_mp7_pathlines(
     # check format
     dt = data.dtypes
     if not (
-        all(n in dt for n in MP7_PATHLINE_DTYPE.fields.keys())
+        all(n in dt for n in MP_MIN_PLOT_FIELDS)
         or all(n in dt for n in PRT_PATHLINE_DTYPE.fields.keys())
     ):
         raise ValueError(
             "Pathline data must contain the following fields: "
-            f"{MP7_PATHLINE_DTYPE.fields.keys()} for MODPATH 7, or "
+            f"{MP_MIN_PLOT_FIELDS} for MODPATH 7, or "
             f"{PRT_PATHLINE_DTYPE.fields.keys()} for MODFLOW 6 PRT"
         )
 
@@ -2795,12 +2796,12 @@ def to_mp7_endpoints(
             data if ret_type == pd.DataFrame else data.to_records(index=False)
         )
     if not (
-        all(n in dt for n in MP7_PATHLINE_DTYPE.fields.keys())
+        all(n in dt for n in MP_MIN_PLOT_FIELDS)
         or all(n in dt for n in PRT_PATHLINE_DTYPE.fields.keys())
     ):
         raise ValueError(
             "Pathline data must contain the following fields: "
-            f"{MP7_PATHLINE_DTYPE.fields.keys()} for MODPATH 7, or "
+            f"{MP_MIN_PLOT_FIELDS} for MODPATH 7, or "
             f"{PRT_PATHLINE_DTYPE.fields.keys()} for MODFLOW 6 PRT"
         )
 
