@@ -164,6 +164,7 @@ class GridIntersect:
              if specified.
         """
         self.mfgrid = mfgrid
+        self.local = local
         if method is None:
             # determine method from grid_type
             self.method = self.mfgrid.grid_type
@@ -179,7 +180,7 @@ class GridIntersect:
 
         if self.method == "vertex":
             # build arrays of geoms and cellids
-            self.geoms, self.cellids = self._get_gridshapes(local=local)
+            self.geoms, self.cellids = self._get_gridshapes()
 
             # build STR-tree if specified
             if self.rtree:
@@ -334,14 +335,9 @@ class GridIntersect:
         elif self.mfgrid.grid_type == "unstructured":
             raise NotImplementedError()
 
-    def _rect_grid_to_geoms_cellids(self, local=False):
+    def _rect_grid_to_geoms_cellids(self):
         """internal method, return shapely polygons and cellids for structured
         grid cells.
-
-        Parameters
-        ----------
-        local : bool, optional
-            build geometries using local model coordinates
 
         Returns
         -------
@@ -356,7 +352,7 @@ class GridIntersect:
         ncol = self.mfgrid.ncol
         ncells = nrow * ncol
         cellids = np.arange(ncells)
-        if local:
+        if self.local:
             xvertices, yvertices = np.meshgrid(*self.mfgrid.xyedges)
         else:
             xvertices = self.mfgrid.xvertices
@@ -400,7 +396,7 @@ class GridIntersect:
 
         return geoms, cellids
 
-    def _usg_grid_to_geoms_cellids(self, local=False):
+    def _usg_grid_to_geoms_cellids(self):
         """internal method, return shapely polygons and cellids for
         unstructured grids.
 
@@ -413,14 +409,9 @@ class GridIntersect:
         """
         raise NotImplementedError()
 
-    def _vtx_grid_to_geoms_cellids(self, local=False):
+    def _vtx_grid_to_geoms_cellids(self):
         """internal method, return shapely polygons and cellids for vertex
         grids.
-
-        Parameters
-        ----------
-        local : bool, optional
-            build geometries using local model coordinates
 
         Returns
         -------
@@ -441,7 +432,7 @@ class GridIntersect:
                     f"icvert_{i}" for i in range(self.mfgrid._cell2d["ncvert"][icell])
                 ]
                 for iv in self.mfgrid._cell2d[icverts][icell]:
-                    if local:
+                    if self.local:
                         xy = (
                             self.mfgrid._vertices.xv[iv],
                             self.mfgrid._vertices.yv[iv],
@@ -462,7 +453,7 @@ class GridIntersect:
             for icell in range(len(self.mfgrid._cell2d)):
                 points = []
                 for iv in self.mfgrid._cell2d[icell][4:]:
-                    if local:
+                    if self.local:
                         xy = (
                             self.mfgrid._vertices[iv][1],
                             self.mfgrid._vertices[iv][2],
@@ -1217,7 +1208,7 @@ class GridIntersect:
                 self.mfgrid.angrot != 0.0
                 or self.mfgrid.xoffset != 0.0
                 or self.mfgrid.yoffset != 0.0
-            ):
+            ) and not self.local:
                 rx, ry = transform(
                     p.x,
                     p.y,
@@ -1355,11 +1346,13 @@ class GridIntersect:
         pl = shapely_geo.box(xmin, ymin, xmax, ymax)
 
         # rotate and translate linestring to local coords
-        if self.mfgrid.xoffset != 0.0 or self.mfgrid.yoffset != 0.0:
+        if (
+            self.mfgrid.xoffset != 0.0 or self.mfgrid.yoffset != 0.0
+        ) and not self.local:
             shp = affinity_loc.translate(
                 shp, xoff=-self.mfgrid.xoffset, yoff=-self.mfgrid.yoffset
             )
-        if self.mfgrid.angrot != 0.0:
+        if self.mfgrid.angrot != 0.0 and not self.local:
             shp = affinity_loc.rotate(shp, -self.mfgrid.angrot, origin=(0.0, 0.0))
 
         # clip line to mfgrid bbox
@@ -1386,7 +1379,7 @@ class GridIntersect:
                     self.mfgrid.angrot != 0.0
                     or self.mfgrid.xoffset != 0.0
                     or self.mfgrid.yoffset != 0.0
-                ):
+                ) and not self.local:
                     v_realworld = []
                     for pt in v:
                         pt = np.array(pt)
@@ -1430,7 +1423,7 @@ class GridIntersect:
                 self.mfgrid.angrot != 0.0
                 or self.mfgrid.xoffset != 0.0
                 or self.mfgrid.yoffset != 0.0
-            ):
+            ) and not self.local:
                 v_realworld = []
                 for pt in vertices:
                     pt = np.array(pt)
@@ -1550,7 +1543,7 @@ class GridIntersect:
             self.mfgrid.angrot != 0.0
             or self.mfgrid.xoffset != 0.0
             or self.mfgrid.yoffset != 0.0
-        ):
+        ) and not self.local:
             x0, y0 = transform(
                 [x[0]],
                 [y[0]],
@@ -1915,11 +1908,11 @@ class GridIntersect:
         ixshapes = []
 
         # transform polygon to local grid coordinates
-        if self.mfgrid.xoffset != 0.0 or self.mfgrid.yoffset != 0.0:
+        if (self.mfgrid.xoffset != 0.0 or self.mfgrid.yoffset != 0.0) and not self.local:
             shp = affinity_loc.translate(
                 shp, xoff=-self.mfgrid.xoffset, yoff=-self.mfgrid.yoffset
             )
-        if self.mfgrid.angrot != 0.0:
+        if self.mfgrid.angrot != 0.0 and not self.local:
             shp = affinity_loc.rotate(shp, -self.mfgrid.angrot, origin=(0.0, 0.0))
 
         # use the bounds of the polygon to restrict the cell search
@@ -1980,7 +1973,7 @@ class GridIntersect:
                     self.mfgrid.angrot != 0.0
                     or self.mfgrid.xoffset != 0.0
                     or self.mfgrid.yoffset != 0.0
-                ):
+                ) and not self.local:
                     v_realworld = []
                     if intersect.geom_type.startswith("Multi"):
                         for ipoly in intersect.geoms:
