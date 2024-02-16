@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+import matplotlib.pyplot as plt
 from matplotlib.collections import PatchCollection
 from modflow_devtools.markers import requires_pkg
 
@@ -181,3 +182,49 @@ def test_cross_section_invalid_line_representations_fail(line):
     grid = structured_square_grid(side=10)
     with pytest.raises(ValueError):
         flopy.plot.PlotCrossSection(modelgrid=grid, line={"line": line})
+
+
+def test_plot_limits():
+    xymin, xymax = 0, 1000
+    cellsize = 50
+    nrow = (xymax - xymin) // cellsize
+    ncol = nrow
+    nlay = 1
+
+    delc = np.full((nrow,), cellsize)
+    delr = np.full((ncol,), cellsize)
+
+    top = np.full((nrow, ncol), 100)
+    botm = np.full((nlay, nrow, ncol), 0)
+    idomain = np.ones(botm.shape, dtype=int)
+
+    grid = flopy.discretization.StructuredGrid(
+        delc=delc, delr=delr, top=top, botm=botm, idomain=idomain
+    )
+
+    fig, ax = plt.subplots()
+    user_extent = 0, 500, 0, 25
+    ax.axis(user_extent)
+
+    pxc = flopy.plot.PlotCrossSection(
+        modelgrid=grid, ax=ax, line={"column": 4}
+    )
+    pxc.plot_grid()
+
+    lims = ax.axes.viewLim
+    if (lims.x0, lims.x1, lims.y0, lims.y1) != user_extent:
+        raise AssertionError("PlotMapView not checking for user scaling")
+
+    plt.close(fig)
+
+    fig, ax = plt.subplots(figsize=(8, 8))
+    pxc = flopy.plot.PlotCrossSection(
+        modelgrid=grid, ax=ax, line={"column": 4}
+    )
+    pxc.plot_grid()
+
+    lims = ax.axes.viewLim
+    if (lims.x0, lims.x1, lims.y0, lims.y1) != pxc.extent:
+        raise AssertionError("PlotMapView auto extent setting not working")
+
+    plt.close(fig)

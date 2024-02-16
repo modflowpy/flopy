@@ -836,7 +836,7 @@ class StructuredGrid(Grid):
                 row number
             j : int
                 column number
-            as_node : bool
+            as_nodes : bool
                 flag to return neighbors as node numbers
             method : str
                 "rook" for shared edge neighbors (default) "queen" for shared
