@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on February 07, 2024 20:16:08 UTC
+# FILE created on February 18, 2024 14:36:23 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -235,7 +235,7 @@ class ModflowNam(mfpackage.MFPackage):
             "block solutiongroup",
             "name slntype",
             "type string",
-            "valid ims6",
+            "valid ims6 ems6",
             "in_record true",
             "tagged false",
             "reader urword",

@@ -171,7 +171,7 @@ description is the list of solution types and models in the solution.
 block solutiongroup
 name slntype
 type string
-valid ims6
+valid ims6 ems6
 in_record true
 tagged false
 reader urword
