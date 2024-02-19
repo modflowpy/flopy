@@ -31,7 +31,8 @@ requires-python = ">=3.8"
 dependencies = [
     "numpy >=1.15.0,<2.0.0",
     "matplotlib >=1.4.0",
-    "pandas >=2.0.0"
+    "pandas >=2.0.0",
+    "modflow-devtools >= 1.4.0"
 ]
 dynamic = ["version", "readme"]
 
@@ -51,7 +52,6 @@ test = [
     "filelock",
     "jupyter",
     "jupytext",
-    "modflow-devtools",
     "pytest",
     "pytest-benchmark",
     "pytest-cov",

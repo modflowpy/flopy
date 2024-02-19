@@ -18,11 +18,14 @@ import warnings
 import zipfile
 from importlib.util import find_spec
 from pathlib import Path
+from typing import Dict, List, Tuple
+
+from modflow_devtools.ostags import SUPPORTED_OSTAGS
 
 __all__ = ["run_main"]
 __license__ = "CC0"
 
-from typing import Dict, List, Tuple
+
 
 default_owner = "MODFLOW-USGS"
 default_repo = "executables"
@@ -33,7 +36,6 @@ renamed_prefix = {
     "modflow6-nightly-build": "modflow6_nightly",
 }
 available_repos = list(renamed_prefix.keys())
-available_ostags = ["linux", "mac", "win32", "win64"]
 max_http_tries = 3
 
 # Check if this is running from flopy
@@ -73,7 +75,7 @@ def get_suffixes(ostag) -> Tuple[str, str]:
         return "", ".dylib"
     else:
         raise KeyError(
-            f"unrecognized ostag {ostag!r}; choose one of {available_ostags}"
+            f"unrecognized ostag {ostag!r}; choose one of {SUPPORTED_OSTAGS}"
         )
 
 
@@ -712,7 +714,7 @@ Examples:
     )
     parser.add_argument(
         "--ostag",
-        choices=available_ostags,
+        choices=SUPPORTED_OSTAGS,
         help="Operating system tag; default is to automatically choose.",
     )
     parser.add_argument(
