@@ -347,7 +347,7 @@ By default, `pytest-benchmark` will only print profiling results to `stdout`. If
 
 ## Branching model
 
-This project follows the [git flow](https://nvie.com/posts/a-successful-git-branching-model/): development occurs on the `develop` branch, while `main` is reserved for the state of the latest release. Development PRs are typically squashed to `develop`, to avoid merge commits. At release time, release branches are merged to `main`, and then `main` is merged back into `develop`.
+This project follows the [git flow](https://nvie.com/posts/a-successful-git-branching-model/): development occurs on the `develop` branch, while `master` is reserved for the state of the latest release. Development PRs are typically squashed to `develop`, to avoid merge commits. At release time, release branches are merged to `master`, and then `master` is merged back into `develop`.
 
 ## Deprecation policy
 
