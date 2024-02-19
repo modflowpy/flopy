@@ -18,6 +18,7 @@ import warnings
 import zipfile
 from importlib.util import find_spec
 from pathlib import Path
+from platform import processor
 
 __all__ = ["run_main"]
 __license__ = "CC0"
@@ -33,7 +34,7 @@ renamed_prefix = {
     "modflow6-nightly-build": "modflow6_nightly",
 }
 available_repos = list(renamed_prefix.keys())
-available_ostags = ["linux", "mac", "win32", "win64"]
+available_ostags = ["linux", "mac", "macarm", "win32", "win64"]
 max_http_tries = 3
 
 # Check if this is running from flopy
@@ -60,7 +61,7 @@ def get_ostag() -> str:
     elif sys.platform.startswith("win"):
         return "win" + ("64" if sys.maxsize > 2**32 else "32")
     elif sys.platform.startswith("darwin"):
-        return "mac"
+        return "macarm" if processor() == "arm" else "mac"
     raise ValueError(f"platform {sys.platform!r} not supported")
 
 
@@ -69,7 +70,7 @@ def get_suffixes(ostag) -> Tuple[str, str]:
         return ".exe", ".dll"
     elif ostag == "linux":
         return "", ".so"
-    elif ostag == "mac":
+    elif "mac" in ostag:
         return "", ".dylib"
     else:
         raise KeyError(
