@@ -18,13 +18,12 @@ import warnings
 import zipfile
 from importlib.util import find_spec
 from pathlib import Path
-from typing import Dict, List, Tuple
-
-from modflow_devtools.ostags import SUPPORTED_OSTAGS
+from platform import processor
 
 __all__ = ["run_main"]
 __license__ = "CC0"
 
+from typing import Dict, List, Tuple
 
 default_owner = "MODFLOW-USGS"
 default_repo = "executables"
@@ -35,6 +34,7 @@ renamed_prefix = {
     "modflow6-nightly-build": "modflow6_nightly",
 }
 available_repos = list(renamed_prefix.keys())
+available_ostags = ["linux", "mac", "macarm", "win32", "win64"]
 max_http_tries = 3
 
 # Check if this is running from flopy
@@ -61,7 +61,7 @@ def get_ostag() -> str:
     elif sys.platform.startswith("win"):
         return "win" + ("64" if sys.maxsize > 2**32 else "32")
     elif sys.platform.startswith("darwin"):
-        return "mac"
+        return "macarm" if processor() == "arm" else "mac"
     raise ValueError(f"platform {sys.platform!r} not supported")
 
 
@@ -70,11 +70,11 @@ def get_suffixes(ostag) -> Tuple[str, str]:
         return ".exe", ".dll"
     elif ostag == "linux":
         return "", ".so"
-    elif ostag == "mac":
+    elif "mac" in ostag:
         return "", ".dylib"
     else:
         raise KeyError(
-            f"unrecognized ostag {ostag!r}; choose one of {SUPPORTED_OSTAGS}"
+            f"unrecognized ostag {ostag!r}; choose one of {available_ostags}"
         )
 
 
@@ -713,7 +713,7 @@ Examples:
     )
     parser.add_argument(
         "--ostag",
-        choices=SUPPORTED_OSTAGS,
+        choices=available_ostags,
         help="Operating system tag; default is to automatically choose.",
     )
     parser.add_argument(

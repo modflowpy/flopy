@@ -8,7 +8,6 @@ dependencies:
   - python>=3.8
   - numpy>=1.15.0,<2.0.0
   - matplotlib>=1.4.0
-  - modflow-devtools>=1.4.0
 
   # lint
   - black
@@ -23,6 +22,7 @@ dependencies:
   - filelock
   - jupyter
   - jupytext
+  - modflow-devtools
   - pytest
   - pytest-benchmark
   - pytest-cov
