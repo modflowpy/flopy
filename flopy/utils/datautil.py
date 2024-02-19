@@ -54,24 +54,32 @@ def max_tuple_abs_size(some_tuple):
 
 class DatumUtil:
     @staticmethod
-    def is_int(str):
-        try:
-            int(str)
-            return True
-        except TypeError:
-            return False
-        except ValueError:
-            return False
+    def is_int(v):
+        if isinstance(v, np.ndarray):
+            try:
+                int(v.item())
+            except ValueError:
+                return False
+        else:
+            try:
+                int(v)
+                return True
+            except (TypeError, ValueError):
+                return False
 
     @staticmethod
-    def is_float(str):
-        try:
-            float(str)
-            return True
-        except TypeError:
-            return False
-        except ValueError:
-            return False
+    def is_float(v):
+        if isinstance(v, np.ndarray):
+            try:
+                float(v.item())
+            except ValueError:
+                return False
+        else:
+            try:
+                float(v)
+                return True
+            except (TypeError, ValueError):
+                return False
 
     @staticmethod
     def is_basic_type(obj):
