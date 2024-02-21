@@ -265,8 +265,7 @@ class PlotCrossSection:
             self._masked_values = [model.hnoflo, model.hdry]
 
         # Set axis limits
-        self.ax.set_xlim(self.extent[0], self.extent[1])
-        self.ax.set_ylim(self.extent[2], self.extent[3])
+        self._set_axes_limits(self.ax)
 
     @staticmethod
     def _is_valid(line):
@@ -357,6 +356,25 @@ class PlotCrossSection:
 
         return xmin, xmax, ymin, ymax
 
+    def _set_axes_limits(self, ax):
+        """
+        Internal method to set axes limits
+
+        Parameters
+        ----------
+        ax : matplotlib.pyplot axis
+            The plot axis
+
+        Returns
+        -------
+        ax : matplotlib.pyplot axis object
+
+        """
+        if ax.get_autoscale_on():
+            ax.set_xlim(self.extent[0], self.extent[1])
+            ax.set_ylim(self.extent[2], self.extent[3])
+        return ax
+
     def plot_array(self, a, masked_values=None, head=None, **kwargs):
         """
         Plot a three-dimensional array as a patch collection.
@@ -402,8 +420,7 @@ class PlotCrossSection:
         pc = self.get_grid_patch_collection(a, projpts, **kwargs)
         if pc is not None:
             ax.add_collection(pc)
-            ax.set_xlim(self.extent[0], self.extent[1])
-            ax.set_ylim(self.extent[2], self.extent[3])
+            ax = self._set_axes_limits(ax)
 
         return pc
 
@@ -464,8 +481,7 @@ class PlotCrossSection:
                 )
                 surface.append(line)
 
-        ax.set_xlim(self.extent[0], self.extent[1])
-        ax.set_ylim(self.extent[2], self.extent[3])
+        ax = self._set_axes_limits(ax)
 
         return surface
 
@@ -523,8 +539,7 @@ class PlotCrossSection:
         )
         if pc is not None:
             ax.add_collection(pc)
-            ax.set_xlim(self.extent[0], self.extent[1])
-            ax.set_ylim(self.extent[2], self.extent[3])
+            ax = self._set_axes_limits(ax)
 
         return pc
 
@@ -659,8 +674,7 @@ class PlotCrossSection:
             if plot_triplot:
                 ax.triplot(triang, color="black", marker="o", lw=0.75)
 
-        ax.set_xlim(self.extent[0], self.extent[1])
-        ax.set_ylim(self.extent[2], self.extent[3])
+        ax = self._set_axes_limits(ax)
 
         return contour_set
 

@@ -82,6 +82,25 @@ class PlotMapView:
             self._extent = self.mg.extent
         return self._extent
 
+    def _set_axes_limits(self, ax):
+        """
+        Internal method to set axes limits
+
+        Parameters
+        ----------
+        ax : matplotlib.pyplot axis
+            The plot axis
+
+        Returns
+        -------
+        ax : matplotlib.pyplot axis object
+
+        """
+        if ax.get_autoscale_on():
+            ax.set_xlim(self.extent[0], self.extent[1])
+            ax.set_ylim(self.extent[2], self.extent[3])
+        return ax
+
     def plot_array(self, a, masked_values=None, **kwargs):
         """
         Plot an array.  If the array is three-dimensional, then the method
@@ -152,8 +171,7 @@ class PlotMapView:
         ax.add_collection(collection)
 
         # set limits
-        ax.set_xlim(self.extent[0], self.extent[1])
-        ax.set_ylim(self.extent[2], self.extent[3])
+        ax = self._set_axes_limits(ax)
         return collection
 
     def contour_array(self, a, masked_values=None, tri_mask=False, **kwargs):
@@ -305,8 +323,7 @@ class PlotMapView:
             if plot_triplot:
                 ax.triplot(triang, color="black", marker="o", lw=0.75)
 
-        ax.set_xlim(self.extent[0], self.extent[1])
-        ax.set_ylim(self.extent[2], self.extent[3])
+        ax = self._set_axes_limits(ax)
 
         return contour_set
 
@@ -423,8 +440,7 @@ class PlotMapView:
         collection = LineCollection(grid_lines, colors=colors, **kwargs)
 
         ax.add_collection(collection)
-        ax.set_xlim(self.extent[0], self.extent[1])
-        ax.set_ylim(self.extent[2], self.extent[3])
+        ax = self._set_axes_limits(ax)
         return collection
 
     def plot_bc(
@@ -605,6 +621,7 @@ class PlotMapView:
         """
         ax = kwargs.pop("ax", self.ax)
         patch_collection = plotutil.plot_shapefile(obj, ax, **kwargs)
+        ax = self._set_axes_limits(ax)
         return patch_collection
 
     def plot_vector(
@@ -701,6 +718,7 @@ class PlotMapView:
         # these are vectors not locations
         urot, vrot = geometry.rotate(u, v, 0.0, 0.0, self.mg.angrot_radians)
         quiver = ax.quiver(x, y, urot, vrot, pivot=pivot, **kwargs)
+        ax = self._set_axes_limits(ax)
         return quiver
 
     def plot_pathline(self, pl, travel_time=None, **kwargs):
@@ -845,9 +863,7 @@ class PlotMapView:
                 )
 
         # set axis limits
-        ax.set_xlim(self.extent[0], self.extent[1])
-        ax.set_ylim(self.extent[2], self.extent[3])
-
+        ax = self._set_axes_limits(ax)
         return lc
 
     def plot_timeseries(self, ts, travel_time=None, **kwargs):
@@ -989,4 +1005,6 @@ class PlotMapView:
         if createcb:
             cb = plt.colorbar(sp, ax=ax, shrink=shrink)
             cb.set_label(colorbar_label)
+
+        ax = self._set_axes_limits(ax)
         return sp
