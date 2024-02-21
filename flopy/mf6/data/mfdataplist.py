@@ -67,6 +67,55 @@ class PandasListStorage:
         self.data_storage_type = None
         self.modified = False
 
+    def __repr__(self):
+        return self.get_data_str(True)
+
+    def __str__(self):
+        return self.get_data_str(False)
+
+    def _get_header_str(self):
+        header_list = []
+        if self.data_storage_type == DataStorageType.external_file:
+            header_list.append(f"open/close {self.fname}")
+        else:
+            header_list.append("internal")
+        if self.iprn is not None:
+            header_list.append(f"iprn {self.iprn}")
+        if len(header_list) > 0:
+            return ", ".join(header_list)
+        else:
+            return ""
+
+    def get_data_str(self, formal):
+        data_str = ""
+        layer_str = ""
+        if self.data_storage_type == DataStorageType.internal_array:
+            if self.internal_data is not None:
+                header = self._get_header_str()
+                if formal:
+                    data_str = "{}{}{{{}}}\n({})\n".format(
+                        data_str,
+                        layer_str,
+                        header,
+                        repr(self.internal_data),
+                    )
+                else:
+                    data_str = "{}{}{{{}}}\n({})\n".format(
+                        data_str,
+                        layer_str,
+                        header,
+                        str(self.internal_data),
+                    )
+        elif self.data_storage_type == DataStorageType.external_file:
+            header = self._get_header_str()
+            data_str = "{}{}{{{}}}\n({})\n".format(
+                data_str,
+                layer_str,
+                header,
+                "External data not displayed",
+            )
+        return data_str
+
     def get_record(self):
         rec = {}
         if self.internal_data is not None:
