@@ -126,6 +126,8 @@ def test_get_release(repo):
         assert {a.rpartition("_")[2] for a in actual_assets} >= {
             a for a in expected_assets if not a.startswith("win")
         }
+    elif repo == "modflow6-nightly-build":
+        expected_assets.append("macarm.zip")
     else:
         for ostag in expected_ostags:
             assert any(
