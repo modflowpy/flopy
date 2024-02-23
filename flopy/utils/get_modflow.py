@@ -18,6 +18,7 @@ import warnings
 import zipfile
 from importlib.util import find_spec
 from pathlib import Path
+from platform import processor
 
 __all__ = ["run_main"]
 __license__ = "CC0"
@@ -33,7 +34,7 @@ renamed_prefix = {
     "modflow6-nightly-build": "modflow6_nightly",
 }
 available_repos = list(renamed_prefix.keys())
-available_ostags = ["linux", "mac", "win32", "win64"]
+available_ostags = ["linux", "mac", "macarm", "win32", "win64"]
 max_http_tries = 3
 
 # Check if this is running from flopy
@@ -69,7 +70,7 @@ def get_suffixes(ostag) -> Tuple[str, str]:
         return ".exe", ".dll"
     elif ostag == "linux":
         return "", ".so"
-    elif ostag == "mac":
+    elif "mac" in ostag:
         return "", ".dylib"
     else:
         raise KeyError(
@@ -405,16 +406,25 @@ def run_main(
     # get the selected release
     release = get_release(owner, repo, release_id, quiet)
     assets = release.get("assets", [])
-
+    asset_names = [a["name"] for a in assets]
     for asset in assets:
-        if ostag in asset["name"]:
+        asset_name = asset["name"]
+        if ostag in asset_name:
+            # temporary hack for nightly gfortran build for ARM macs
+            # todo: clean up if/when all repos have an ARM mac build
+            if (
+                repo == "modflow6-nightly-build"
+                and "macarm.zip" in asset_names
+                and processor() == "arm"
+                and ostag == "mac.zip"
+            ):
+                continue
             break
     else:
         raise ValueError(
             f"could not find ostag {ostag!r} from release {release['tag_name']!r}; "
             f"see available assets here:\n{release['html_url']}"
         )
-    asset_name = asset["name"]
     download_url = asset["browser_download_url"]
     if repo == "modflow6":
         asset_pth = Path(asset_name)
@@ -598,7 +608,7 @@ def run_main(
                     break
                 shutil.rmtree(str(bindir_path))
 
-    if ostag in ["linux", "mac"]:
+    if ostag in ["linux", "mac", "macarm"]:
         # similar to "chmod +x fname" for each executable
         for fname in chmod:
             pth = bindir / fname
