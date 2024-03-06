@@ -1797,7 +1797,7 @@ def run_model(
     if custom_print is not None:
         print = custom_print
     else:
-        print = __builtins__['print']
+        print = __builtins__["print"]
 
     success = False
     buff = []
