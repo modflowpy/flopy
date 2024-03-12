@@ -299,8 +299,7 @@ class MFScalar(mfdata.MFData):
                     )
         else:
             message = (
-                "{} of type {} does not support add one "
-                "operation.".format(
+                "{} of type {} does not support add one " "operation.".format(
                     self._data_name, self.structure.get_datum_type()
                 )
             )
@@ -385,7 +384,7 @@ class MFScalar(mfdata.MFData):
                     ex,
                 )
         if self.structure.type == DatumType.keyword:
-            if data is not None and data != False:
+            if data is not None and data is not False:
                 # keyword appears alone
                 return "{}{}\n".format(
                     self._simulation_data.indent_string,
@@ -408,7 +407,8 @@ class MFScalar(mfdata.MFData):
                         ):
                             data = data[0]
                         if len(data) > index and (
-                            data[index] is not None and data[index] != False
+                            data[index] is not None
+                            and data[index] is not False
                         ):
                             text_line.append(data_item.name.upper())
                             if (
@@ -421,7 +421,7 @@ class MFScalar(mfdata.MFData):
                                 # assume the keyword was excluded
                                 index -= 1
                     else:
-                        if data is not None and data != False:
+                        if data is not None and data is not False:
                             text_line.append(data_item.name.upper())
                 else:
                     if data is not None and data != "":
@@ -429,12 +429,12 @@ class MFScalar(mfdata.MFData):
                             if len(data) > index:
                                 if (
                                     data[index] is not None
-                                    and data[index] != False
+                                    and data[index] is not False
                                 ):
                                     current_data = data[index]
                                 else:
                                     break
-                            elif data_item.optional == True:
+                            elif data_item.optional is True:
                                 break
                             else:
                                 message = (
@@ -462,7 +462,7 @@ class MFScalar(mfdata.MFData):
                         if data_item.type == DatumType.keyword:
                             if (
                                 current_data is not None
-                                and current_data != False
+                                and current_data is not False
                             ):
                                 if (
                                     isinstance(data[index], str)

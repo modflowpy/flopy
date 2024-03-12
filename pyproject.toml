@@ -38,11 +38,8 @@ dynamic = ["version", "readme"]
 [project.optional-dependencies]
 dev = ["flopy[lint,test,optional,doc]"]
 lint = [
-    "black",
     "cffconvert",
-    "flake8",
-    "isort",
-    "pylint",
+    "ruff"
 ]
 test = [
     "flopy[lint]",
@@ -115,11 +112,31 @@ include = ["flopy", "flopy.*"]
 "flopy.mf6.data" = ["dfn/*.dfn"]
 "flopy.plot" = ["mplstyle/*.mplstyle"]
 
-[tool.black]
+[tool.ruff]
 line-length = 79
-target_version = ["py38"]
+target-version = "py38"
+include = [
+    "pyproject.toml",
+    "flopy/**/*.py",
+    "autotest/**/*.py",
+    "examples/**/*.py",
+    "scripts/**/*.py",
+    ".docs/**/*.py",
+]
+extend-include = [
+    "examples/**/*.ipynb"
+]
 
-[tool.isort]
-profile = "black"
-src_paths = ["flopy"]
-line_length = 79
+[tool.ruff.lint]
+ignore = [
+    "E402", # module level import not at top of file
+    "E712", # Avoid equality comparisons to `True`
+    "E722", # do not use bare `except`
+    "E741", # ambiguous variable name
+    "F401", # unused import
+    "F403", # unable to detect undefined names (star imports)
+    "F524", # `.format` missing argument(s) for placeholder(s)
+    "F811", # Redefinition of unused variable
+    "F821", # undefined name TODO FIXME
+    "F841", # local variable assigned but never used
+]

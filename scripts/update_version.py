@@ -93,7 +93,7 @@ def get_software_citation(
 
     sb = ""
     if not approved:
-        sb = f" (preliminary)"
+        sb = " (preliminary)"
     # format author names
     authors = []
     for author in citation["authors"]:
@@ -168,7 +168,7 @@ def update_readme_markdown(
         if "### Version " in line:
             line = f"### Version {version}"
             if not approved:
-                line += f" (preliminary)"
+                line += " (preliminary)"
         elif "[flopy continuous integration]" in line:
             line = (
                 "[![flopy continuous integration](https://github.com/"

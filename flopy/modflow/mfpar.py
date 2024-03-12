@@ -306,7 +306,7 @@ class ModflowPar:
                 for [layer, mltarr, zonarr, izones] in clusters:
                     # print layer, mltarr, zonarr, izones
                     foundlayer = False
-                    if findlayer == None:
+                    if findlayer is None:
                         foundlayer = True
                     else:
                         if layer == (findlayer + 1):

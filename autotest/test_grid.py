@@ -1119,7 +1119,7 @@ def test_voronoi_grid(request, function_tmpdir, grid_info):
     # ensure proper number of cells
     almost_right = ncpl == 538 and gridprops["ncpl"] == 535
     if almost_right:
-        warn(f"off-by-3")
+        warn("off-by-3")
 
     # ensure that all cells have 3 or more points
     invalid_cells = [i for i, ivts in enumerate(vor.iverts) if len(ivts) < 3]

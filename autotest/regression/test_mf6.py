@@ -299,7 +299,7 @@ def test_np001(function_tmpdir, example_data_path):
         )
     except FlopyException:
         ex = True
-    assert ex == True
+    assert ex is True
 
     kwargs = {}
     kwargs["xul"] = 20.5
@@ -855,9 +855,9 @@ def test_np002(function_tmpdir, example_data_path):
     sim.simulation_data.max_columns_of_data = 22
 
     name = sim.name_file
-    assert name.continue_.get_data() == None
-    assert name.nocheck.get_data() == True
-    assert name.memory_print_option.get_data() == None
+    assert name.continue_.get_data() is None
+    assert name.nocheck.get_data() is True
+    assert name.memory_print_option.get_data() is None
 
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
     tdis_package = ModflowTdis(
@@ -1885,7 +1885,7 @@ def test005_create_tests_advgw_tidal(function_tmpdir, example_data_path):
     assert model.name_file.filename == "new_name.nam"
     package_type_dict = {}
     for package in model.packagelist:
-        if not package.package_type in package_type_dict:
+        if package.package_type not in package_type_dict:
             filename = os.path.split(package.filename)[1]
             assert filename == f"new_name.{package.package_type}"
             package_type_dict[package.package_type] = 1
@@ -1901,7 +1901,7 @@ def test005_create_tests_advgw_tidal(function_tmpdir, example_data_path):
     sim.rename_all_packages("all_files_same_name")
     package_type_dict = {}
     for package in model.packagelist:
-        if not package.package_type in package_type_dict:
+        if package.package_type not in package_type_dict:
             filename = os.path.split(package.filename)[1]
             assert filename == f"all_files_same_name.{package.package_type}"
             package_type_dict[package.package_type] = 1
@@ -2220,9 +2220,9 @@ def test035_create_tests_fhb(function_tmpdir, example_data_path):
     )
     time = model.modeltime
     assert (
-        time.steady_state[0] == False
-        and time.steady_state[1] == False
-        and time.steady_state[2] == False
+        time.steady_state[0] is False
+        and time.steady_state[1] is False
+        and time.steady_state[2] is False
     )
     wel_period = {0: [((0, 1, 0), "flow")]}
     wel_package = ModflowGwfwel(
@@ -3771,10 +3771,10 @@ def test005_advgw_tidal(function_tmpdir, example_data_path):
     model = sim.get_model(model_name)
     time = model.modeltime
     assert (
-        time.steady_state[0] == True
-        and time.steady_state[1] == False
-        and time.steady_state[2] == False
-        and time.steady_state[3] == False
+        time.steady_state[0] is True
+        and time.steady_state[1] is False
+        and time.steady_state[2] is False
+        and time.steady_state[3] is False
     )
     ghb = model.get_package("ghb")
     obs = ghb.obs

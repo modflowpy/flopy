@@ -1352,9 +1352,7 @@ class ModflowMnw2(Package):
                 np.recarray
             )
 
-        stress_period_data = (
-            {}
-        )  # stress period data table for package (flopy convention)
+        stress_period_data = {}  # stress period data table for package (flopy convention)
         itmp = []
         for per in range(0, nper):
             # dataset 3

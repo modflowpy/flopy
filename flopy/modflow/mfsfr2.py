@@ -905,9 +905,7 @@ class ModflowSfr2(Package):
         channel_geometry_data = {}
         channel_flow_data = {}
         dataset_5 = {}
-        aux_variables = (
-            {}
-        )  # not sure where the auxiliary variables are supposed to go
+        aux_variables = {}  # not sure where the auxiliary variables are supposed to go
         for i in range(0, nper):
             # Dataset 5
             dataset_5[i] = _get_dataset(f.readline(), [-1, 0, 0, 0])

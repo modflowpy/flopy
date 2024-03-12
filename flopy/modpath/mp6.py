@@ -202,7 +202,7 @@ class Modpath6(BaseModel):
         return self.__next_ext_unit
 
     def getsim(self):
-        if self.__sim == None:
+        if self.__sim is None:
             for p in self.packagelist:
                 if isinstance(p, Modpath6Sim):
                     self.__sim = p

@@ -291,7 +291,7 @@ def flux_to_wel(cbc_file, text, precision="single", model=None, verbose=False):
 
     # create a empty numpy array of shape (time,layer,row,col)
     m4d = np.zeros((cbf.nper, cbf.nlay, cbf.nrow, cbf.ncol), dtype=np.float32)
-    m4d[:] = np.NaN
+    m4d[:] = np.nan
 
     # process the records in the cell budget file
     iper = -1
@@ -305,7 +305,7 @@ def flux_to_wel(cbc_file, text, precision="single", model=None, verbose=False):
                 arr = arr[0]
                 print(arr.max(), arr.min(), arr.sum())
                 # masked where zero
-                arr[np.where(arr == 0.0)] = np.NaN
+                arr[np.where(arr == 0.0)] = np.nan
                 m4d[iper + 1] = arr
             iper += 1
 

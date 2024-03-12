@@ -126,11 +126,7 @@ class MF6Output:
                                                     [
                                                         obj._simulation_data.mfdata[
                                                             ky
-                                                        ].array[
-                                                            0
-                                                        ][
-                                                            -2
-                                                        ]
+                                                        ].array[0][-2]
                                                     ]
                                                 ]
                                                 break
@@ -215,7 +211,7 @@ class MF6Output:
             name = name[0]
         l = [
             f"MF6Output Class for {name}",
-            f"Available output methods include:",
+            "Available output methods include:",
         ]
         l += [f".{m}" for m in self.methods()]
         s = "\n".join(l)

@@ -67,8 +67,7 @@ def read_gncrecarray(gnc_file, cellid_size=3, cellid_size_2=3):
                 ),
                 make_int_tuple(
                     linesp[
-                        cellid_size
-                        + cellid_size_2 : cellid_size * 2
+                        cellid_size + cellid_size_2 : cellid_size * 2
                         + cellid_size_2
                     ]
                 ),

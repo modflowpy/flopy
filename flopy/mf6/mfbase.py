@@ -1,4 +1,4 @@
-""" Base classes for Modflow 6 """
+"""Base classes for Modflow 6"""
 
 import copy
 import inspect

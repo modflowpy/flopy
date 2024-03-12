@@ -135,7 +135,9 @@ def test_rect_grid_3d_point_outside():
 
 @requires_pkg("shapely")
 def test_rect_grid_3d_point_inside():
-    botm = np.concatenate([np.ones(4), 0.5 * np.ones(4), np.zeros(4)]).reshape(3, 2, 2)
+    botm = np.concatenate([np.ones(4), 0.5 * np.ones(4), np.zeros(4)]).reshape(
+        3, 2, 2
+    )
     gr = get_rect_grid(top=np.ones(4), botm=botm)
     ix = GridIntersect(gr, method="structured")
     result = ix.intersect(Point(2.0, 2.0, 0.2))
@@ -454,7 +456,9 @@ def test_rect_grid_linestring_in_and_out_of_cell():
 def test_rect_grid_linestring_in_and_out_of_cell2():
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect(LineString([(5, 15), (5.0, 9), (15.0, 5.0), (5.0, 1.0)]))
+    result = ix.intersect(
+        LineString([(5, 15), (5.0, 9), (15.0, 5.0), (5.0, 1.0)])
+    )
     assert len(result) == 3
     # assert result.cellids[0] == (1, 0)
     # assert result.cellids[1] == (1, 1)
@@ -751,7 +755,9 @@ def test_rect_grid_polygon_outside():
 def test_rect_grid_polygon_in_2cells():
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect(Polygon([(2.5, 5.0), (7.5, 5.0), (7.5, 15.0), (2.5, 15.0)]))
+    result = ix.intersect(
+        Polygon([(2.5, 5.0), (7.5, 5.0), (7.5, 15.0), (2.5, 15.0)])
+    )
     assert len(result) == 2
     assert result.areas.sum() == 50.0
 
@@ -788,7 +794,9 @@ def test_rect_grid_polygon_running_along_boundary():
 def test_rect_grid_polygon_on_inner_boundary():
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect(Polygon([(5.0, 10.0), (15.0, 10.0), (15.0, 5.0), (5.0, 5.0)]))
+    result = ix.intersect(
+        Polygon([(5.0, 10.0), (15.0, 10.0), (15.0, 5.0), (5.0, 5.0)])
+    )
     assert len(result) == 2
     assert result.areas.sum() == 50.0
 
@@ -969,7 +977,9 @@ def test_rect_grid_polygon_outside_shapely(rtree):
 def test_rect_grid_polygon_in_2cells_shapely(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="vertex", rtree=rtree)
-    result = ix.intersect(Polygon([(2.5, 5.0), (7.5, 5.0), (7.5, 15.0), (2.5, 15.0)]))
+    result = ix.intersect(
+        Polygon([(2.5, 5.0), (7.5, 5.0), (7.5, 15.0), (2.5, 15.0)])
+    )
     assert len(result) == 2
     assert result.areas.sum() == 50.0
 
@@ -990,7 +1000,9 @@ def test_rect_grid_polygon_on_outer_boundary_shapely(rtree):
 def test_rect_grid_polygon_on_inner_boundary_shapely(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="vertex", rtree=rtree)
-    result = ix.intersect(Polygon([(5.0, 10.0), (15.0, 10.0), (15.0, 5.0), (5.0, 5.0)]))
+    result = ix.intersect(
+        Polygon([(5.0, 10.0), (15.0, 10.0), (15.0, 5.0), (5.0, 5.0)])
+    )
     assert len(result) == 2
     assert result.areas.sum() == 50.0
 
@@ -1073,7 +1085,9 @@ def test_tri_grid_polygon_in_2cells(rtree):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(Polygon([(2.5, 5.0), (5.0, 5.0), (5.0, 15.0), (2.5, 15.0)]))
+    result = ix.intersect(
+        Polygon([(2.5, 5.0), (5.0, 5.0), (5.0, 15.0), (2.5, 15.0)])
+    )
     assert len(result) == 2
     assert result.areas.sum() == 25.0
 
@@ -1098,7 +1112,9 @@ def test_tri_grid_polygon_on_inner_boundary(rtree):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(Polygon([(5.0, 10.0), (15.0, 10.0), (15.0, 5.0), (5.0, 5.0)]))
+    result = ix.intersect(
+        Polygon([(5.0, 10.0), (15.0, 10.0), (15.0, 5.0), (5.0, 5.0)])
+    )
     assert len(result) == 4
     assert result.areas.sum() == 50.0
 
@@ -1374,7 +1390,9 @@ def test_rasters(example_data_path):
     if (np.max(data) - 2608.557) > 1e-4:
         raise AssertionError
 
-    data = rio.resample_to_grid(ml.modelgrid, band=rio.bands[0], method="nearest")
+    data = rio.resample_to_grid(
+        ml.modelgrid, band=rio.bands[0], method="nearest"
+    )
     if data.size != 5913:
         raise AssertionError
     if abs(np.min(data) - 1942.1735) > 1e-4:
@@ -1423,11 +1441,15 @@ def test_raster_sampling_methods(example_data_path):
     }
 
     for method, value in methods.items():
-        data = rio.resample_to_grid(ml.modelgrid, band=rio.bands[0], method=method)
+        data = rio.resample_to_grid(
+            ml.modelgrid, band=rio.bands[0], method=method
+        )
 
         print(data[30, 37])
         if np.abs(data[30, 37] - value) > 1e-05:
-            raise AssertionError(f"{method} resampling returning incorrect values")
+            raise AssertionError(
+                f"{method} resampling returning incorrect values"
+            )
 
 
 if __name__ == "__main__":

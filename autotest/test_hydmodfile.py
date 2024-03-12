@@ -79,24 +79,16 @@ def test_hydmodfile_read(hydmod_model_path):
     assert isinstance(h, HydmodObs)
 
     ntimes = h.get_ntimes()
-    assert ntimes == 101, "Not enough times in hydmod file ()...".format(
-        os.path.basename(pth)
-    )
+    assert ntimes == 101, "Not enough times in hydmod file ()...".format()
 
     times = h.get_times()
-    assert len(times) == 101, "Not enough times in hydmod file ()...".format(
-        os.path.basename(pth)
-    )
+    assert len(times) == 101, "Not enough times in hydmod file ()...".format()
 
     nitems = h.get_nobs()
-    assert nitems == 8, "Not enough records in hydmod file ()...".format(
-        os.path.basename(pth)
-    )
+    assert nitems == 8, "Not enough records in hydmod file ()...".format()
 
     labels = h.get_obsnames()
-    assert len(labels) == 8, "Not enough labels in hydmod file ()...".format(
-        os.path.basename(pth)
-    )
+    assert len(labels) == 8, "Not enough labels in hydmod file ()...".format()
     print(labels)
 
     for idx in range(ntimes):
