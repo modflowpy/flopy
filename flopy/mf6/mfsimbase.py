@@ -1535,7 +1535,7 @@ class MFSimulationBase(PackageContainer):
         if not sim_data.max_columns_user_set:
             # search for dis packages
             for model in self._models.values():
-                dis = model.get_package("dis")
+                dis = model.get_package("dis", type_only=True)
                 if dis is not None and hasattr(dis, "ncol"):
                     sim_data.max_columns_of_data = dis.ncol.get_data()
                     sim_data.max_columns_user_set = False

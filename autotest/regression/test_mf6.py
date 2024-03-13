@@ -1946,6 +1946,17 @@ def test005_create_tests_advgw_tidal(function_tmpdir, example_data_path):
             assert value[0][0] == "ghb- 2-6-10"
     assert found_flows and found_obs
 
+    # check model.time steady state and transient
+    sto_package = model.get_package("sto")
+    sto_package.steady_state.set_data({0: True, 1: False, 2: False, 3: False})
+    sto_package.transient.set_data({0: False, 1: True, 2: True, 3: True})
+    flopy.mf6.ModflowGwfdrn(model, pname="storm")
+    ss = model.modeltime.steady_state
+    assert ss[0]
+    assert not ss[1]
+    assert not ss[2]
+    assert not ss[3]
+
     # clean up
     sim.delete_output_files()
 
