@@ -1603,7 +1603,11 @@ class CellBudgetFile:
         paknam : str
             The `from` package name for the record.
         paknam2 : str
-            The `to` package name for the record.
+            The `to` package name for the record.  This argument can be
+            useful for MODFLOW 6 budget files if multiple packages of
+            the same type are specified.  The paknam2 argument can be
+            specified as the package name (not the package type) in
+            order to retrieve budget data for a specific named package.
         full3D : boolean
             If true, then return the record as a three dimensional numpy
             array, even for those list-style records written as part of a
