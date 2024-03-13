@@ -661,7 +661,7 @@ class MFScalar(mfdata.MFData):
             data_path=self._path,
         )
 
-    def _get_storage_obj(self):
+    def _get_storage_obj(self, first_record=False):
         return self._data_storage
 
     def plot(self, filename_base=None, file_extension=None, **kwargs):
@@ -911,7 +911,11 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
     def _new_storage(self, stress_period=0):
         return {}
 
-    def _get_storage_obj(self):
+    def _get_storage_obj(self, first_record=False):
+        if first_record and isinstance(self._data_storage, dict):
+            for value in self._data_storage.values():
+                return value
+            return None
         if (
             self._current_key is None
             or self._current_key not in self._data_storage

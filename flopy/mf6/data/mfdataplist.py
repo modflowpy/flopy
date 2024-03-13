@@ -67,6 +67,55 @@ class PandasListStorage:
         self.data_storage_type = None
         self.modified = False
 
+    def __repr__(self):
+        return self.get_data_str(True)
+
+    def __str__(self):
+        return self.get_data_str(False)
+
+    def _get_header_str(self):
+        header_list = []
+        if self.data_storage_type == DataStorageType.external_file:
+            header_list.append(f"open/close {self.fname}")
+        else:
+            header_list.append("internal")
+        if self.iprn is not None:
+            header_list.append(f"iprn {self.iprn}")
+        if len(header_list) > 0:
+            return ", ".join(header_list)
+        else:
+            return ""
+
+    def get_data_str(self, formal):
+        data_str = ""
+        layer_str = ""
+        if self.data_storage_type == DataStorageType.internal_array:
+            if self.internal_data is not None:
+                header = self._get_header_str()
+                if formal:
+                    data_str = "{}{}{{{}}}\n({})\n".format(
+                        data_str,
+                        layer_str,
+                        header,
+                        repr(self.internal_data),
+                    )
+                else:
+                    data_str = "{}{}{{{}}}\n({})\n".format(
+                        data_str,
+                        layer_str,
+                        header,
+                        str(self.internal_data),
+                    )
+        elif self.data_storage_type == DataStorageType.external_file:
+            header = self._get_header_str()
+            data_str = "{}{}{{{}}}\n({})\n".format(
+                data_str,
+                layer_str,
+                header,
+                "External data not displayed",
+            )
+        return data_str
+
     def get_record(self):
         rec = {}
         if self.internal_data is not None:
@@ -726,7 +775,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
                 self._simulation_data.debug,
             )
 
-        data_storage = self._get_storage()
+        data_storage = self._get_storage_obj()
         if append:
             # append data to existing dataframe
             current_data = self._get_dataframe()
@@ -742,7 +791,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
 
     def has_modified_ext_data(self):
         """check to see if external data has been modified since last read"""
-        data_storage = self._get_storage()
+        data_storage = self._get_storage_obj()
         return (
             data_storage.data_storage_type == DataStorageType.external_file
             and data_storage.internal_data is not None
@@ -750,7 +799,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
 
     def binary_ext_data(self):
         """check for binary data"""
-        data_storage = self._get_storage()
+        data_storage = self._get_storage_obj()
         return data_storage.binary
 
     def to_array(self, kper=0, mask=False):
@@ -792,7 +841,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
 
         """
         if isinstance(record, dict):
-            data_storage = self._get_storage()
+            data_storage = self._get_storage_obj()
             if "filename" in record:
                 data_storage.set_external(record["filename"])
                 if "binary" in record:
@@ -851,9 +900,9 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
         """
         try:
             self._resync()
-            if self._get_storage() is None:
+            if self._get_storage_obj() is None:
                 self._data_storage = self._new_storage()
-            data_storage = self._get_storage()
+            data_storage = self._get_storage_obj()
             if (
                 data_storage.data_storage_type
                 == DataStorageType.internal_array
@@ -952,7 +1001,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
                 Verify data prior to storing
 
         """
-        storage = self._get_storage()
+        storage = self._get_storage_obj()
         # check if data is already stored external
         if (
             storage is None
@@ -999,7 +1048,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
         """
         # only store data externally (do not subpackage info)
         if self.structure.construct_package is None:
-            storage = self._get_storage()
+            storage = self._get_storage_obj()
             # check if data is already stored external
             if (
                 replace_existing_external
@@ -1030,7 +1079,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
 
     def external_file_name(self):
         """Returns external file name, or None if this is not external data."""
-        storage = self._get_storage()
+        storage = self._get_storage_obj()
         if storage is None:
             return None
         if (
@@ -1191,15 +1240,15 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
             fd_data_file,
             self._model_or_sim.modeldiscrit,
         )
-        data_storage = self._get_storage()
+        data_storage = self._get_storage_obj()
         data_storage.internal_data = None
 
     def has_data(self, key=None):
         """Returns whether this MFList has any data associated with it."""
         try:
-            if self._get_storage() is None:
+            if self._get_storage_obj() is None:
                 return False
-            return self._get_storage().has_data()
+            return self._get_storage_obj().has_data()
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(
@@ -1281,7 +1330,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
             next data line : str
 
         """
-        data_storage = self._get_storage()
+        data_storage = self._get_storage_obj()
         data_storage.modified = False
         # parse first line to determine if this is internal or external data
         datautil.PyListUtil.reset_delimiter_used()
@@ -1338,7 +1387,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
     def _new_storage(self):
         return {"Data": PandasListStorage()}
 
-    def _get_storage(self):
+    def _get_storage_obj(self, first_record=False):
         return self._data_storage["Data"]
 
     def _get_id_fields(self, data_frame):
@@ -1484,7 +1533,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
 
     def _get_dataframe(self):
         """get and return dataframe for this list data"""
-        data_storage = self._get_storage()
+        data_storage = self._get_storage_obj()
         if data_storage is None or data_storage.data_storage_type is None:
             block_exists = self._block.header_exists(
                 self._current_key, self.path
@@ -1551,9 +1600,9 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
 
         """
         try:
-            if self._get_storage() is None:
+            if self._get_storage_obj() is None:
                 return None
-            record = self._get_storage().get_record()
+            record = self._get_storage_obj().get_record()
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(
@@ -1650,7 +1699,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
         -------
             result of pandas to_csv call
         """
-        data_storage = self._get_storage()
+        data_storage = self._get_storage_obj()
         if data_storage is None:
             return ""
         if (
@@ -1751,7 +1800,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
         file_path : file path to data
 
         """
-        data_storage = self._get_storage()
+        data_storage = self._get_storage_obj()
         if data_storage.fname is None:
             return None
         if self._model_or_sim.type == "model":
@@ -1989,11 +2038,11 @@ class MFPandasTransientList(
         self._cache_model_grid = True
         for sp in self._data_storage.keys():
             self._current_key = sp
-            storage = self._get_storage()
+            storage = self._get_storage_obj()
             if storage.internal_size == 0:
                 storage.internal_data = self.get_dataframe(sp)
             if storage.internal_size > 0 and (
-                self._get_storage().data_storage_type
+                self._get_storage_obj().data_storage_type
                 != DataStorageType.external_file
                 or replace_existing_external
             ):
@@ -2027,7 +2076,7 @@ class MFPandasTransientList(
         for sp in self._data_storage.keys():
             self._current_key = sp
             if (
-                self._get_storage().data_storage_type
+                self._get_storage_obj().data_storage_type
                 == DataStorageType.external_file
             ):
                 super().store_internal(
@@ -2482,7 +2531,11 @@ class MFPandasTransientList(
     def _new_storage(self):
         return {}
 
-    def _get_storage(self):
+    def _get_storage_obj(self, first_record=False):
+        if first_record and isinstance(self._data_storage, dict):
+            for value in self._data_storage.values():
+                return value
+            return None
         if (
             self._current_key is None
             or self._current_key not in self._data_storage
