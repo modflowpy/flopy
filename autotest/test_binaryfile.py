@@ -559,3 +559,22 @@ def test_read_mf2005_freyberg(example_data_path, function_tmpdir, compact):
     assert len(cbb_data) == len(cbb_data_kstpkper)
     for i in range(len(cbb_data)):
         assert np.array_equal(cbb_data[i], cbb_data_kstpkper[i])
+
+
+def test_read_mf6_budgetfile(example_data_path):
+    cbb_file = (
+        example_data_path
+        / "mf6"
+        / "test005_advgw_tidal"
+        / "expected_output"
+        / "AdvGW_tidal.cbc"
+    )
+    cbb = CellBudgetFile(cbb_file)
+    rch_zone_1 = cbb.get_data(paknam2="rch-zone_1".upper())
+    rch_zone_2 = cbb.get_data(paknam2="rch-zone_2".upper())
+    rch_zone_3 = cbb.get_data(paknam2="rch-zone_3".upper())
+
+    # ensure there is a record for each time step
+    assert len(rch_zone_1) == 120 * 3 + 1
+    assert len(rch_zone_2) == 120 * 3 + 1
+    assert len(rch_zone_3) == 120 * 3 + 1
