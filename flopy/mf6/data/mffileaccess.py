@@ -1469,9 +1469,7 @@ class MFFileAccessList(MFFileAccess):
                                     current_key,
                                     self._data_line,
                                     False,
-                                )[
-                                    0:2
-                                ]
+                                )[0:2]
                             elif (
                                 data_item.name == "boundname"
                                 and self._data_dimensions.package_dim.boundnames()
@@ -1720,9 +1718,7 @@ class MFFileAccessList(MFFileAccess):
                                                 for (
                                                     key,
                                                     record,
-                                                ) in (
-                                                    data_item.keystring_dict.items()
-                                                ):
+                                                ) in data_item.keystring_dict.items():
                                                     if (
                                                         isinstance(
                                                             record,
@@ -2050,9 +2046,7 @@ class MFFileAccessList(MFFileAccess):
                             current_key,
                             data_line,
                             add_to_last_line,
-                        )[
-                            0:3
-                        ]
+                        )[0:3]
                     else:
                         # read in aux variables
                         (
@@ -2070,9 +2064,7 @@ class MFFileAccessList(MFFileAccess):
                             current_key,
                             data_line,
                             add_to_last_line,
-                        )[
-                            0:3
-                        ]
+                        )[0:3]
         return data_index, data_line, more_data_expected
 
     def _append_data_list(
@@ -2323,7 +2315,7 @@ class MFFileAccessScalar(MFFileAccess):
                 if (
                     len(arr_line) <= index + 1
                     or data_item_type[0] != DatumType.keyword
-                    or (index > 0 and optional == True)
+                    or (index > 0 and optional is True)
                 ):
                     break
                 index += 1

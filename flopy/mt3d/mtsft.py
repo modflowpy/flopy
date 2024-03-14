@@ -431,7 +431,7 @@ class Mt3dSft(Package):
         # Loop through each stress period and assign source & sink concentrations to stream features
         nper = self.parent.nper
         for kper in range(nper):
-            if f.closed == True:
+            if f.closed:
                 f = open(f.name, "a")
 
             # List of concentrations associated with various boundaries

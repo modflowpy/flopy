@@ -237,8 +237,9 @@ class ModflowFhb(Package):
         # perform some simple verification
         if len(self.bdtime) != self.nbdtim:
             raise ValueError(
-                "bdtime has {} entries but requires "
-                "{} entries.".format(len(self.bdtime), self.nbdtim)
+                "bdtime has {} entries but requires " "{} entries.".format(
+                    len(self.bdtime), self.nbdtim
+                )
             )
 
         if self.nflw > 0:
@@ -249,8 +250,9 @@ class ModflowFhb(Package):
 
             if self.ds5.shape[0] != self.nflw:
                 raise ValueError(
-                    "dataset 5 has {} rows but requires "
-                    "{} rows.".format(self.ds5.shape[0], self.nflw)
+                    "dataset 5 has {} rows but requires " "{} rows.".format(
+                        self.ds5.shape[0], self.nflw
+                    )
                 )
             nc = self.nbdtim
             if model.structured:
@@ -270,8 +272,9 @@ class ModflowFhb(Package):
                 )
             if self.ds7.shape[0] != self.nhed:
                 raise ValueError(
-                    "dataset 7 has {} rows but requires "
-                    "{} rows.".format(self.ds7.shape[0], self.nhed)
+                    "dataset 7 has {} rows but requires " "{} rows.".format(
+                        self.ds7.shape[0], self.nhed
+                    )
                 )
             nc = self.nbdtim
             if model.structured:

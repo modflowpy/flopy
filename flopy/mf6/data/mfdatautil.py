@@ -151,7 +151,7 @@ def list_to_array(sarr, model_grid, kper=0, mask=False):
         MODFLOW zero-based stress period number to return. (default is
         zero)
     mask : bool
-        return array with np.NaN instead of zero
+        return array with np.nan instead of zero
 
     Returns
     ----------
@@ -192,7 +192,7 @@ def list_to_array(sarr, model_grid, kper=0, mask=False):
         if sarr[0] == 0:
             if mask:
                 for name, arr in arrays.items():
-                    arrays[name][:] = np.NaN
+                    arrays[name][:] = np.nan
             return arrays
         else:
             raise Exception("MfList: something bad happened")
@@ -210,7 +210,7 @@ def list_to_array(sarr, model_grid, kper=0, mask=False):
             arr[idx] /= cnt[idx]
         if mask:
             arr = np.ma.masked_where(cnt == 0.0, arr)
-            arr[cnt == 0.0] = np.NaN
+            arr[cnt == 0.0] = np.nan
 
         arrays[name] = arr.copy()
     return arrays

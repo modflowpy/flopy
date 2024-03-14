@@ -274,7 +274,7 @@ class UnstructuredModelCell(ModelCell):
         jas = self._simulation_data.mfdata[
             (self._model_name, "disu8", "connectiondata", "ja")
         ]
-        if reverse_connection == False:
+        if reverse_connection is False:
             connection_list = jas[self._cellid - 1]
             connecting_cellid = cellid
         else:
@@ -478,8 +478,9 @@ class ModelGrid:
                 (self._model_name, "disu", "griddata", "idomain")
             ].get_data()
         except_str = (
-            "ERROR: Grid type {} for model {} not "
-            "recognized.".format(self._grid_type, self._model_name)
+            "ERROR: Grid type {} for model {} not " "recognized.".format(
+                self._grid_type, self._model_name
+            )
         )
         print(except_str)
         raise MFGridException(except_str)

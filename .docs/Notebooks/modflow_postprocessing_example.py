@@ -100,7 +100,7 @@ flopy.export.utils.export_array(
     grid, os.path.join(workspace, "heads5_rot.tif"), hdslayer, nodata=nodata
 )
 
-results = np.loadtxt(os.path.join(workspace, f"heads5_rot.asc"), skiprows=6)
+results = np.loadtxt(os.path.join(workspace, "heads5_rot.asc"), skiprows=6)
 results[results == nodata] = np.nan
 plt.imshow(results)
 plt.colorbar()

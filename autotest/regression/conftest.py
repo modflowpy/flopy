@@ -18,10 +18,10 @@ def get_mf6_examples_path() -> Path:
     __mf6_examples_lock.acquire()
     try:
         if __mf6_examples_path.is_dir() and any(__mf6_examples_path.glob("*")):
-            print(f"Example models already exist")
+            print("Example models already exist")
         else:
             __mf6_examples_path.mkdir(exist_ok=True)
-            print(f"Downloading example models")
+            print("Downloading example models")
             download_and_unzip(
                 url="https://github.com/MODFLOW-USGS/modflow6-examples/releases/download/current/modflow6-examples.zip",
                 path=str(__mf6_examples_path),

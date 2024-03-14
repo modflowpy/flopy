@@ -160,7 +160,7 @@ class MFTransient:
     def _verify_sp(self, sp_num):
         if self._path[0].lower() == "nam":
             return True
-        if not ("tdis", "dimensions", "nper") in self._simulation_data.mfdata:
+        if ("tdis", "dimensions", "nper") not in self._simulation_data.mfdata:
             raise FlopyException(
                 "Could not find number of stress periods (nper)."
             )

@@ -812,7 +812,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
             MODFLOW zero-based stress period number to return (default is
             zero)
         mask : bool
-            return array with np.NaN instead of zero
+            return array with np.nan instead of zero
 
         Returns
         ----------
@@ -1065,8 +1065,9 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
                         >= VerbosityLevel.verbose.value
                     ):
                         print(
-                            "Storing {} to external file {}.."
-                            ".".format(self.structure.name, external_file_path)
+                            "Storing {} to external file {}.." ".".format(
+                                self.structure.name, external_file_path
+                            )
                         )
                     external_data = {
                         "filename": external_file_path,

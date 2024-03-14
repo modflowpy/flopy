@@ -1,25 +1,25 @@
 """
-    the main entry point of utils
+the main entry point of utils
 
-    Parameters
-    ----------
+Parameters
+----------
 
-    Attributes
-    ----------
+Attributes
+----------
 
-    Methods
-    -------
+Methods
+-------
 
-    See Also
-    --------
+See Also
+--------
 
-    Notes
-    -----
+Notes
+-----
 
-    Examples
-    --------
+Examples
+--------
 
-    """
+"""
 
 from .utl_import import import_optional_dependency  # isort:skip
 from . import get_modflow as get_modflow_module

@@ -339,7 +339,7 @@ class Mt3dUzt(Package):
         # (Loop through each stress period and write uzt information)
         nper = self.parent.nper
         for kper in range(nper):
-            if f_uzt.closed == True:
+            if f_uzt.closed:
                 f_uzt = open(f_uzt.name, "a")
 
             # Concentrations associated with distributed stresses (Infil, ET)

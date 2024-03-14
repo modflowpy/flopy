@@ -1405,7 +1405,7 @@ class Transient2d(DataInterface):
             pak_name : str package name (e.g. RCH)
             m4ds : dict(name,(masked) 4d numpy.ndarray)
                 each ndarray must have shape (nper,1,nrow,ncol).
-                if an entire (nrow,ncol) slice is np.NaN, then
+                if an entire (nrow,ncol) slice is np.nan, then
                 that kper is skipped.
         Returns
         -------

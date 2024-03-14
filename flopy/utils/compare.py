@@ -564,7 +564,7 @@ def compare_heads(
     if files1 is None:
         # Get oc info, and return if OC not included in models
         ocf1 = get_entries_from_namefile(namefile1, "OC")
-        if not any(ocf1) is None:
+        if any(ocf1) is not None:
             return True
 
         hu1, hfpth1, du1, _ = ModflowOc.get_ocoutput_units(ocf1[0][0])

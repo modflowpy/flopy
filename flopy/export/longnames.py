@@ -1,4 +1,4 @@
-""" Human readable long names for netCDF variables. """
+"""Human readable long names for netCDF variables."""
 
 NC_LONG_NAMES = {
     "botm": "Model layer bottom elevations",

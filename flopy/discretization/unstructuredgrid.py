@@ -1025,7 +1025,7 @@ class UnstructuredGrid(Grid):
             if not (len(header) == 1 and header[0] == "UNSTRUCTURED") or (
                 len(header) == 2 and header == ["UNSTRUCTURED", "GWF"]
             ):
-                raise ValueError(f"Invalid GSF file, no header")
+                raise ValueError("Invalid GSF file, no header")
 
             nnodes = int(split_line()[0])
             verts_declared = int(split_line()[0])

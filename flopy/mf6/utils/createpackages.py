@@ -844,8 +844,9 @@ def create_packages():
 
             # write out child packages class
             chld_cls = (
-                "\n\nclass {}Packages(mfpackage.MFChildPackage"
-                "s):\n".format(package_name.title())
+                "\n\nclass {}Packages(mfpackage.MFChildPackage" "s):\n".format(
+                    package_name.title()
+                )
             )
             chld_var = (
                 f"    package_abbr = "
@@ -1073,7 +1074,7 @@ def create_packages():
                 load_txt,
             )
             sim_file = open(
-                os.path.join(util_path, "..", "modflow", f"mfsimulation.py"),
+                os.path.join(util_path, "..", "modflow", "mfsimulation.py"),
                 "w",
                 newline="\n",
             )

@@ -1507,7 +1507,7 @@ class BaseModel(ModelInterface):
         if self.verbose:
             print("\nWriting packages:")
 
-        if SelPackList == False:
+        if SelPackList is False:
             for p in self.packagelist:
                 if self.verbose:
                     print("   Package: ", p.name[0])
@@ -1799,7 +1799,7 @@ def run_model(
 
     # make sure executable exists
     if exe_name is None:
-        raise ValueError(f"An executable name or path must be provided")
+        raise ValueError("An executable name or path must be provided")
     exe_path = resolve_exe(exe_name)
     if not silent:
         print(

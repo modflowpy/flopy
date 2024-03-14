@@ -210,7 +210,7 @@ class PackageInterface:
             if kp in self.__dict__:
                 kparams[kp] = name
         if "hk" in self.__dict__:
-            if self.hk.shape[1] == None:
+            if self.hk.shape[1] is None:
                 hk = np.asarray(
                     [a.array.flatten() for a in self.hk], dtype=object
                 )
@@ -219,7 +219,7 @@ class PackageInterface:
         else:
             hk = self.k.array.copy()
         if "vka" in self.__dict__ and self.layvka.sum() > 0:
-            if self.vka.shape[1] == None:
+            if self.vka.shape[1] is None:
                 vka = np.asarray(
                     [a.array.flatten() for a in self.vka], dtype=object
                 )
@@ -509,7 +509,7 @@ class Package(PackageInterface):
         s = self.__doc__
         exclude_attributes = ["extension", "heading", "name", "parent", "url"]
         for attr, value in sorted(self.__dict__.items()):
-            if not (attr in exclude_attributes):
+            if attr not in exclude_attributes:
                 if isinstance(value, list):
                     if len(value) == 1:
                         s += f" {attr} = {value[0]!s}\n"

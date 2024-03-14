@@ -1109,7 +1109,7 @@ class MFBlock:
             elif (
                 arr_line[0].lower() == "readasarrays"
                 and self.path[-1].lower() == "options"
-                and self._container_package.structure.read_as_arrays == False
+                and self._container_package.structure.read_as_arrays is False
             ):
                 error_msg = (
                     "ERROR: Attempting to read a ReadAsArrays "
@@ -1243,7 +1243,7 @@ class MFBlock:
 
     def _save_comments(self, arr_line, line, key, comments):
         # FIX: Save these comments somewhere in the data set
-        if not key in self.datasets_keyword:
+        if key not in self.datasets_keyword:
             if MFComment.is_comment(key, True):
                 if comments:
                     comments.append("\n")
@@ -1489,8 +1489,9 @@ class MFBlock:
                         >= VerbosityLevel.verbose.value
                     ):
                         print(
-                            "        writing data {} ({}).."
-                            ".".format(dataset.structure.name, transient_key)
+                            "        writing data {} ({}).." ".".format(
+                                dataset.structure.name, transient_key
+                            )
                         )
                     if basic_list:
                         ext_fname = dataset.external_file_name(transient_key)
@@ -2096,8 +2097,8 @@ class MFPackage(PackageContainer, PackageInterface):
                                             not datautil.DatumUtil.is_float(
                                                 row[data_index]
                                             )
-                                            and not row[data_index]
-                                            in time_series_name_dict
+                                            and row[data_index]
+                                            not in time_series_name_dict
                                         ):
                                             desc = (
                                                 f"Invalid non-numeric "
@@ -2120,8 +2121,8 @@ class MFPackage(PackageContainer, PackageInterface):
                                 val = np.isnan(np.sum(data))
                                 if val:
                                     desc = (
-                                        f"One or more nan values were "
-                                        f"found in auxiliary data."
+                                        "One or more nan values were "
+                                        "found in auxiliary data."
                                     )
                                     chk._add_to_summary(
                                         "Warning",
@@ -2165,8 +2166,7 @@ class MFPackage(PackageContainer, PackageInterface):
                     bl_repr = repr(block)
                     if len(bl_repr.strip()) > 0:
                         data_str = (
-                            "{}Block {}\n--------------------\n{}"
-                            "\n".format(
+                            "{}Block {}\n--------------------\n{}" "\n".format(
                                 data_str, block.structure.name, repr(block)
                             )
                         )
@@ -2174,8 +2174,7 @@ class MFPackage(PackageContainer, PackageInterface):
                     bl_str = str(block)
                     if len(bl_str.strip()) > 0:
                         data_str = (
-                            "{}Block {}\n--------------------\n{}"
-                            "\n".format(
+                            "{}Block {}\n--------------------\n{}" "\n".format(
                                 data_str, block.structure.name, str(block)
                             )
                         )
