@@ -290,7 +290,7 @@ class MFModel(PackageContainer, ModelInterface):
                         last_ss_value = True
                     elif index in tr_periods and tr_periods[index]:
                         last_ss_value = False
-                    if last_ss_value:
+                    if last_ss_value is True:
                         steady[index] = True
 
         # build model time
