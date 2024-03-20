@@ -133,7 +133,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             MODFLOW zero-based stress period number to return. (default is
             zero)
         mask : bool
-            return array with np.NaN instead of zero
+            return array with np.nan instead of zero
 
         Returns
         ----------
@@ -221,8 +221,9 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                         >= VerbosityLevel.verbose.value
                     ):
                         print(
-                            "Storing {} to external file {}.."
-                            ".".format(self.structure.name, external_file_path)
+                            "Storing {} to external file {}.." ".".format(
+                                self.structure.name, external_file_path
+                            )
                         )
                     external_data = {
                         "filename": external_file_path,
@@ -712,7 +713,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                         if (
                             val is not None
                             and val.lower() == search_term
-                            and (col == None or col == col_num)
+                            and (col is None or col == col_num)
                         ):
                             return (row, col)
                         col_num += 1
@@ -977,7 +978,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 ):
                     data_complete_len = len(data_line)
                     if data_complete_len <= index:
-                        if data_item.optional == False:
+                        if data_item.optional is False:
                             message = (
                                 "Not enough data provided "
                                 "for {}. Data for required data "

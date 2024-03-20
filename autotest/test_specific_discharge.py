@@ -205,7 +205,7 @@ def mf6_model(function_tmpdir):
     gwf = ModflowGwf(
         sim,
         modelname="mf6",
-        model_nam_file=f"mf6.nam",
+        model_nam_file="mf6.nam",
     )
     gwf.name_file.save_flows = True
 

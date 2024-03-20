@@ -80,7 +80,7 @@ def MergeData(ndim, zdata, tb):
     found.fill(False)
     for idx, layer in enumerate(zdata):
         for jdx, z in enumerate(layer):
-            if found[jdx] == True:
+            if found[jdx] is True:
                 continue
             t0 = tb[idx][0] - sv
             t1 = tb[idx][1] + sv

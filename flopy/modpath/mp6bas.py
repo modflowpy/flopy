@@ -189,7 +189,7 @@ class Modpath6Bas(Package):
 
             # run though flow packages
             flow_package = self.parent.getmf().get_package("BCF6")
-            if flow_package != None:
+            if flow_package is not None:
                 lc = Util2d(
                     self.parent,
                     (nlay,),
@@ -201,7 +201,7 @@ class Modpath6Bas(Package):
                 have_layertype = True
 
             flow_package = self.parent.getmf().get_package("LPF")
-            if flow_package != None and not have_layertype:
+            if flow_package is not None and not have_layertype:
                 lc = Util2d(
                     self.parent,
                     (nlay,),
@@ -212,7 +212,7 @@ class Modpath6Bas(Package):
                 )
                 have_layertype = True
             flow_package = self.parent.getmf().get_package("UPW")
-            if flow_package != None and have_layertype:
+            if flow_package is not None and have_layertype:
                 lc = Util2d(
                     self.parent,
                     (nlay,),

@@ -7,6 +7,7 @@ It requires Python 3.6 or later, and has no dependencies.
 
 See https://developer.github.com/v3/repos/releases/ for GitHub Releases API.
 """
+
 import json
 import os
 import shutil

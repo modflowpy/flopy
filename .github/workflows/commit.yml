@@ -61,31 +61,11 @@ jobs:
           pip install .
           pip install ".[lint]"
 
-      - name: Run isort
-        run: |
-          echo "if isort check fails update isort using"
-          echo "  pip install isort --upgrade"
-          echo "and run"
-          echo "  isort ./flopy"
-          echo "and then commit the changes."
-          isort --check --diff ./flopy
+      - name: Lint
+        run: ruff check .
 
-      - name: Run black
-        run: |
-          echo "if black check fails update black using"
-          echo "  pip install black --upgrade"
-          echo "and run"
-          echo "  black ./flopy"
-          echo "and then commit the changes."
-          black --check --diff ./flopy
-
-      - name: Run flake8
-        run: |
-          flake8 --count --show-source --exit-zero ./flopy
-
-      - name: Run pylint
-        run: |
-          pylint --jobs=2 --errors-only --exit-zero ./flopy
+      - name: Check format
+        run: ruff format . --check
 
       - name: Check CITATION.cff
         run: |

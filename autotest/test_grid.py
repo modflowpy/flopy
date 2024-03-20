@@ -145,6 +145,31 @@ def test_get_vertices():
     assert np.array_equal(a1, a2)
 
 
+def test_get_cell_vertices():
+    m = Modflow()
+    _ = ModflowDis(m, nrow=40, ncol=20, delr=25.0, delc=25.0)
+    mg = m.modelgrid
+    ul = [(0.0, 1000.0), (25.0, 1000.0), (25.0, 975.0), (0.0, 975.0)]
+    assert mg.get_cell_vertices(0) == ul
+    assert mg.get_cell_vertices(0, 0) == ul
+    ll = [(0.0, 25.0), (25.0, 25.0), (25.0, 0.0), (0.0, 0.0)]
+    assert mg.get_cell_vertices(780) == ll
+    assert mg.get_cell_vertices(node=780) == ll
+    assert mg.get_cell_vertices(39, 0) == ll
+    assert mg.get_cell_vertices(j=0, i=39) == ll
+    # test exceptions
+    with pytest.raises(TypeError):
+        mg.get_cell_vertices()
+    with pytest.raises(TypeError):
+        mg.get_cell_vertices(0, 0, 0)
+    with pytest.raises(TypeError):
+        mg.get_cell_vertices(0, 0, node=0)
+    with pytest.raises(TypeError):
+        mg.get_cell_vertices(0, i=0)
+    with pytest.raises(TypeError):
+        mg.get_cell_vertices(nn=0)
+
+
 def test_get_lrc_get_node():
     nlay, nrow, ncol = 3, 4, 5
     nnodes = nlay * nrow * ncol
@@ -1119,7 +1144,7 @@ def test_voronoi_grid(request, function_tmpdir, grid_info):
     # ensure proper number of cells
     almost_right = ncpl == 538 and gridprops["ncpl"] == 535
     if almost_right:
-        warn(f"off-by-3")
+        warn("off-by-3")
 
     # ensure that all cells have 3 or more points
     invalid_cells = [i for i, ivts in enumerate(vor.iverts) if len(ivts) < 3]

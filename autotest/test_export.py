@@ -520,7 +520,7 @@ def test_shapefile_ibound(function_tmpdir, example_data_path):
     field_names = [item[0] for item in shape.fields][1:]
     ib_idx = field_names.index("ibound_1")
     txt = f"should be int instead of {type(shape.record(0)[ib_idx])}"
-    assert type(shape.record(0)[ib_idx]) == int, txt
+    assert isinstance(shape.record(0)[ib_idx], int), txt
     shape.close()
 
 

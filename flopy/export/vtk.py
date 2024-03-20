@@ -1458,7 +1458,7 @@ class Vtk:
                     w.SetFileName(str(foo))
                     w.Update()
 
-        if not type(self.pvd) == bool:
+        if not isinstance(self.pvd, bool):
             if f.suffix not in (".vtk", ".vtu"):
                 pvdfile = f.parent / f"{f.name}.pvd"
             else:

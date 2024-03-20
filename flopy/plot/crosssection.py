@@ -141,7 +141,7 @@ class PlotCrossSection:
             ln = line[onkey]
 
             if not PlotCrossSection._is_valid(ln):
-                raise ValueError(f"Invalid line representation")
+                raise ValueError("Invalid line representation")
 
             gu = GeoSpatialUtil(ln, shapetype="linestring")
             verts = gu.points

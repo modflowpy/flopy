@@ -384,7 +384,7 @@ class ParticleData:
         if grid.grid_type == "structured":
             if not hasattr(self.particledata, "k"):
                 raise ValueError(
-                    f"Particle representation is not structured but grid is"
+                    "Particle representation is not structured but grid is"
                 )
 
             def cvt_z(p, k, i, j):
@@ -407,7 +407,7 @@ class ParticleData:
         else:
             if hasattr(self.particledata, "k"):
                 raise ValueError(
-                    f"Particle representation is structured but grid is not"
+                    "Particle representation is structured but grid is not"
                 )
 
             def cvt_z(p, nn):
@@ -776,7 +776,7 @@ class CellDataType:
 def get_release_points(subdivisiondata, grid, k=None, i=None, j=None, nn=None):
     if nn is None and (k is None or i is None or j is None):
         raise ValueError(
-            f"A cell (node) must be specified by indices (for structured grids) or node number (for vertex/unstructured)"
+            "A cell (node) must be specified by indices (for structured grids) or node number (for vertex/unstructured)"
         )
 
     rpts = []
@@ -802,7 +802,7 @@ def get_release_points(subdivisiondata, grid, k=None, i=None, j=None, nn=None):
             )
     else:
         raise ValueError(
-            f"A cell (node) must be specified by indices (for structured grids) or node number (for vertex/unstructured)"
+            "A cell (node) must be specified by indices (for structured grids) or node number (for vertex/unstructured)"
         )
     xs, ys = list(zip(*verts))
     minx, maxx = min(xs), max(xs)
@@ -1131,7 +1131,7 @@ class LRCParticleData:
 
         if grid.grid_type != "structured":
             raise ValueError(
-                f"Particle representation is structured but grid is not"
+                "Particle representation is structured but grid is not"
             )
 
         irpt_offset = 0

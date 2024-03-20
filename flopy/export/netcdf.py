@@ -56,7 +56,7 @@ class Logger:
     def __init__(self, filename, echo=False):
         self.items = {}
         self.echo = bool(echo)
-        if filename == True:
+        if filename is True:
             self.echo = True
             self.filename = None
         elif filename:
@@ -387,10 +387,9 @@ class NetCdf:
         else:
             for vname, array in other.items():
                 vname_norm = self.normalize_name(vname)
-                assert (
-                    vname_norm in self.nc.variables.keys()
-                ), f"dict var not in self.vars:{vname}-->" + ",".join(
-                    self.nc.variables.keys()
+                assert vname_norm in self.nc.variables.keys(), (
+                    f"dict var not in self.vars:{vname}-->"
+                    + ",".join(self.nc.variables.keys())
                 )
 
                 new_vname = vname_norm + suffix
@@ -681,7 +680,7 @@ class NetCdf:
                 "The FloPy NetCDF module requires pyproj >= 2.2.0."
             )
 
-        print(f"initialize_geometry::")
+        print("initialize_geometry::")
 
         self.log(f"model crs: {self.model_crs}")
         print(f"model crs: {self.model_crs}")

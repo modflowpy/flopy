@@ -2417,12 +2417,10 @@ def intersect_modpath_with_crosssection(
                     oppts[cell],
                 )
                 idx = [
-                    i
-                    for i, (x, y) in enumerate(zip(m0[0], m1[0]))
-                    if x == y == True
+                    i for i, (x, y) in enumerate(zip(m0[0], m1[0])) if x == y
                 ]
             else:
-                idx = [i for i, x in enumerate(m0[0]) if x == True]
+                idx = [i for i, x in enumerate(m0[0]) if x]
 
             if idx:
                 if cell not in idict:
@@ -2685,7 +2683,7 @@ MP_MIN_PLOT_FIELDS = ["x", "y", "z", "time", "k", "particleid"]
 
 
 def to_mp7_pathlines(
-    data: Union[np.recarray, pd.DataFrame]
+    data: Union[np.recarray, pd.DataFrame],
 ) -> Union[np.recarray, pd.DataFrame]:
     """
     Convert MODFLOW 6 PRT pathline data to MODPATH 7 pathline format.
@@ -2767,7 +2765,7 @@ def to_mp7_pathlines(
 
 
 def to_mp7_endpoints(
-    data: Union[np.recarray, pd.DataFrame]
+    data: Union[np.recarray, pd.DataFrame],
 ) -> Union[np.recarray, pd.DataFrame]:
     """
     Convert MODFLOW 6 PRT pathline data to MODPATH 7 endpoint format.
@@ -2886,7 +2884,7 @@ def to_mp7_endpoints(
 
 
 def to_prt_pathlines(
-    data: Union[np.recarray, pd.DataFrame]
+    data: Union[np.recarray, pd.DataFrame],
 ) -> Union[np.recarray, pd.DataFrame]:
     """
     Convert MODPATH 7 pathline or endpoint data to MODFLOW 6 PRT pathline format.

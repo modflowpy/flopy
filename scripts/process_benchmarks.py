@@ -62,7 +62,7 @@ def get_benchmarks(paths):
 # create data frame and save to CSV
 benchmarks_df = pd.DataFrame(get_benchmarks(json_paths))
 benchmarks_df["time"] = pd.to_datetime(benchmarks_df["time"])
-benchmarks_df.to_csv(str(outdir / f"benchmarks.csv"), index=False)
+benchmarks_df.to_csv(str(outdir / "benchmarks.csv"), index=False)
 
 
 def matplotlib_plot(stats):

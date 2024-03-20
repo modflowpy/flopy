@@ -2249,10 +2249,10 @@ def test_multi_model(function_tmpdir):
     gwt2 = sim2.get_model("gwt_model_1")
     ssm2 = gwt2.get_package("ssm")
     fileinput = [
-        ("RCH-1", f"gwt_model_1.rch1.spc"),
-        ("RCH-2", f"gwt_model_1.rch2.spc"),
-        ("RCH-3", f"gwt_model_1.rch3.spc", "MIXED"),
-        ("RCH-4", f"gwt_model_1.rch4.spc"),
+        ("RCH-1", "gwt_model_1.rch1.spc"),
+        ("RCH-2", "gwt_model_1.rch2.spc"),
+        ("RCH-3", "gwt_model_1.rch3.spc", "MIXED"),
+        ("RCH-4", "gwt_model_1.rch4.spc"),
     ]
     ssm2.fileinput = fileinput
     fi_out = ssm2.fileinput.get_data()

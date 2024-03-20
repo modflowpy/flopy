@@ -215,9 +215,7 @@ class ModflowDrt(Package):
         None
 
         """
-        if (
-            check
-        ):  # allows turning off package checks when writing files at model level
+        if check:  # allows turning off package checks when writing files at model level
             self.check(
                 f=f"{self.name[0]}.chk",
                 verbose=self.parent.verbose,

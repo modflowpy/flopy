@@ -1176,11 +1176,11 @@ class MFDataItemStructure:
     def is_file_name(self):
         if (
             self.name.lower() in self.file_name_keywords
-            and self.file_name_keywords[self.name.lower()] == True
+            and self.file_name_keywords[self.name.lower()] is True
         ):
             return True
         for key, item in self.contained_keywords.items():
-            if self.name.lower().find(key) != -1 and item == True:
+            if self.name.lower().find(key) != -1 and item is True:
                 return True
         return False
 
@@ -1557,7 +1557,7 @@ class MFDataStructure:
                 item.type != DatumType.record
                 and item.type != DatumType.repeating_record
             )
-            or record == True
+            or record is True
         ):
             if item.name not in self.expected_data_items:
                 raise StructException(

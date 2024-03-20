@@ -1042,7 +1042,7 @@ class MFModel(PackageContainer, ModelInterface):
                             h_columns = ",".join(search_output.data_header)
                             fd.write(f",{h_columns}\n")
                         else:
-                            fd.write(f",cellid,data\n")
+                            fd.write(",cellid,data\n")
                         # write data found
                         for index, data_entry in enumerate(
                             search_output.data_entries
@@ -1074,7 +1074,7 @@ class MFModel(PackageContainer, ModelInterface):
                                 )
                                 fd.write(f",{output}")
                                 fd.write(self._format_data_entry(data_entry))
-                    fd.write(f"\n")
+                    fd.write("\n")
         return output_by_package
 
     def match_array_cells(
@@ -1284,7 +1284,7 @@ class MFModel(PackageContainer, ModelInterface):
         for package_struct in self.structure.package_struct_objs.values():
             if (
                 not package_struct.optional
-                and not package_struct.file_type in self.package_type_dict
+                and package_struct.file_type not in self.package_type_dict
             ):
                 return False
 
