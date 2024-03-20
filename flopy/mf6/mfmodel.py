@@ -264,25 +264,31 @@ class MFModel(PackageContainer, ModelInterface):
             simulation.
 
         """
-        tdis = self.simulation.get_package("tdis")
+        tdis = self.simulation.get_package("tdis", type_only=True)
         period_data = tdis.perioddata.get_data()
 
         # build steady state data
-        sto = self.get_package("sto")
+        sto = self.get_package("sto", type_only=True)
         if sto is None:
             steady = np.full((len(period_data["perlen"])), True, dtype=bool)
         else:
             steady = np.full((len(period_data["perlen"])), False, dtype=bool)
             ss_periods = sto.steady_state.get_active_key_dict()
+            for period, val in ss_periods.items():
+                if val:
+                    ss_periods[period] = sto.steady_state.get_data(period)
             tr_periods = sto.transient.get_active_key_dict()
+            for period, val in tr_periods.items():
+                if val:
+                    tr_periods[period] = sto.transient.get_data(period)
             if ss_periods:
                 last_ss_value = False
                 # loop through steady state array
                 for index, value in enumerate(steady):
                     # resolve if current index is steady state or transient
-                    if index in ss_periods:
+                    if index in ss_periods and ss_periods[index]:
                         last_ss_value = True
-                    elif index in tr_periods:
+                    elif index in tr_periods and tr_periods[index]:
                         last_ss_value = False
                     if last_ss_value is True:
                         steady[index] = True
@@ -830,7 +836,7 @@ class MFModel(PackageContainer, ModelInterface):
                 sim_data = simulation.simulation_data
                 if ftype == "dis" and not sim_data.max_columns_user_set:
                     # set column wrap to ncol
-                    dis = instance.get_package("dis")
+                    dis = instance.get_package("dis", type_only=True)
                     if dis is not None and hasattr(dis, "ncol"):
                         sim_data.max_columns_of_data = dis.ncol.get_data()
                         sim_data.max_columns_user_set = False
@@ -1242,7 +1248,7 @@ class MFModel(PackageContainer, ModelInterface):
             ss_list.append(True)
             index += 1
 
-        storage = self.get_package("sto")
+        storage = self.get_package("sto", type_only=True)
         if storage is not None:
             tr_keys = storage.transient.get_keys(True)
             ss_keys = storage.steady_state.get_keys(True)
