@@ -194,7 +194,7 @@ PRT_TEST_PATHLINES = pd.DataFrame.from_records(
             "PRP000000001",  # name
         ],
     ],
-    columns=PRT_PATHLINE_DTYPE.fields.keys(),
+    columns=PRT_PATHLINE_DTYPE.names,
 )
 MP7_TEST_PATHLINES = pd.DataFrame.from_records(
     [
@@ -233,7 +233,7 @@ MP7_TEST_PATHLINES = pd.DataFrame.from_records(
             1,  # timestep
         ],
     ],
-    columns=MP7_PATHLINE_DTYPE.fields.keys(),
+    columns=MP7_PATHLINE_DTYPE.names,
 )
 MP7_TEST_ENDPOINTS = pd.DataFrame.from_records(
     [
@@ -322,7 +322,7 @@ MP7_TEST_ENDPOINTS = pd.DataFrame.from_records(
             2,  # cellface
         ],
     ],
-    columns=MP7_ENDPOINT_DTYPE.fields.keys(),
+    columns=MP7_ENDPOINT_DTYPE.names,
 )
 
 
@@ -342,13 +342,13 @@ def test_to_mp7_pathlines(dataframe):
     assert len(mp7_pls) == 10
     assert set(
         dict(mp7_pls.dtypes).keys() if dataframe else mp7_pls.dtype.names
-    ) == set(MP7_PATHLINE_DTYPE.fields.keys())
+    ) == set(MP7_PATHLINE_DTYPE.names)
 
 
 @pytest.mark.parametrize("dataframe", [True, False])
 def test_to_mp7_pathlines_empty(dataframe):
     mp7_pls = to_mp7_pathlines(
-        pd.DataFrame.from_records([], columns=PRT_PATHLINE_DTYPE.fields.keys())
+        pd.DataFrame.from_records([], columns=PRT_PATHLINE_DTYPE.names)
         if dataframe
         else np.recarray((0,), dtype=PRT_PATHLINE_DTYPE)
     )
@@ -374,7 +374,7 @@ def test_to_mp7_pathlines_noop(dataframe):
     assert len(mp7_pls) == 2
     assert set(
         dict(mp7_pls.dtypes).keys() if dataframe else mp7_pls.dtype.names
-    ) == set(MP7_PATHLINE_DTYPE.fields.keys())
+    ) == set(MP7_PATHLINE_DTYPE.names)
     assert np.array_equal(
         mp7_pls if dataframe else pd.DataFrame(mp7_pls), MP7_TEST_PATHLINES
     )
@@ -391,13 +391,13 @@ def test_to_mp7_endpoints(dataframe):
     assert np.isclose(mp7_eps.time[0], PRT_TEST_PATHLINES.t.max())
     assert set(
         dict(mp7_eps.dtypes).keys() if dataframe else mp7_eps.dtype.names
-    ) == set(MP7_ENDPOINT_DTYPE.fields.keys())
+    ) == set(MP7_ENDPOINT_DTYPE.names)
 
 
 @pytest.mark.parametrize("dataframe", [True, False])
 def test_to_mp7_endpoints_empty(dataframe):
     mp7_eps = to_mp7_endpoints(
-        pd.DataFrame.from_records([], columns=PRT_PATHLINE_DTYPE.fields.keys())
+        pd.DataFrame.from_records([], columns=PRT_PATHLINE_DTYPE.names)
         if dataframe
         else np.recarray((0,), dtype=PRT_PATHLINE_DTYPE)
     )
@@ -445,7 +445,7 @@ def test_to_prt_pathlines_roundtrip(dataframe):
 @pytest.mark.parametrize("dataframe", [True, False])
 def test_to_prt_pathlines_roundtrip_empty(dataframe):
     mp7_pls = to_mp7_pathlines(
-        pd.DataFrame.from_records([], columns=PRT_PATHLINE_DTYPE.fields.keys())
+        pd.DataFrame.from_records([], columns=PRT_PATHLINE_DTYPE.names)
         if dataframe
         else np.recarray((0,), dtype=PRT_PATHLINE_DTYPE)
     )
@@ -454,4 +454,4 @@ def test_to_prt_pathlines_roundtrip_empty(dataframe):
     assert prt_pls.empty if dataframe else mp7_pls.size == 0
     assert set(
         dict(mp7_pls.dtypes).keys() if dataframe else mp7_pls.dtype.names
-    ) == set(MP7_PATHLINE_DTYPE.fields.keys())
+    ) == set(MP7_PATHLINE_DTYPE.names)

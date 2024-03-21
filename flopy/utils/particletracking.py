@@ -12,6 +12,18 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 
 
+MIN_PARTICLE_TRACK_DTYPE = np.dtype(
+    [
+        ("x", np.float32),
+        ("y", np.float32),
+        ("z", np.float32),
+        ("time", np.float32),
+        ("k", np.int32),
+        ("particleid", np.int32),
+    ]
+)
+
+
 class ParticleTrackFile(ABC):
     """
     Abstract base class for particle track output files. Exposes a unified API
@@ -30,16 +42,7 @@ class ParticleTrackFile(ABC):
 
     """
 
-    outdtype = np.dtype(
-        [
-            ("x", np.float32),
-            ("y", np.float32),
-            ("z", np.float32),
-            ("time", np.float32),
-            ("k", np.int32),
-            ("particleid", np.int32),
-        ]
-    )
+    outdtype = MIN_PARTICLE_TRACK_DTYPE
     """
     Minimal information shared by all particle track file formats.
     Track data are converted to this dtype for internal storage
