@@ -1784,10 +1784,10 @@ def run_model(
         Additional command line arguments to pass to the executable.
         (Default is None)
     custom_print: callable
-        Optional callbale for printing. It will replace the builtin
-        print function. This is useful for shorter prints or integration
-        into other systems such as GUIs.
-        default is None, i.e. use the builtion print
+        Optional callable for printing. It will replace the builtin print
+        function. This is useful for a shorter print output or integration into
+        other systems such as GUIs.
+        default is None, i.e. use the builtin print
     Returns
     -------
     success : boolean
