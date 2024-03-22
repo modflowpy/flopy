@@ -806,7 +806,7 @@ class TimeseriesFile(ModpathFile):
 
     def _load(self) -> Tuple[np.dtype, np.ndarray]:
         dtype = self.dtypes[self.version]
-        if not self.compact:
+        if self.version in [3, 5] and not self.compact:
             dtype = np.dtype(
                 [
                     ("timestepindex", np.int32),
