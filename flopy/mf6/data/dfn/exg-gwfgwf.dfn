@@ -241,6 +241,7 @@ in_record true
 tagged false
 reader urword
 optional false
+shape (ncelldim)
 longname cellid of first cell
 description is the cellid of the cell in model 1 as specified in the simulation name file. For a structured grid that uses the DIS input file, CELLIDM1 is the layer, row, and column numbers of the cell.   For a grid that uses the DISV input file, CELLIDM1 is the layer number and CELL2D number for the two cells.  If the model uses the unstructured discretization (DISU) input file, then CELLIDM1 is the node number for the cell.
 numeric_index true
@@ -252,6 +253,7 @@ in_record true
 tagged false
 reader urword
 optional false
+shape (ncelldim)
 longname cellid of second cell
 description is the cellid of the cell in model 2 as specified in the simulation name file. For a structured grid that uses the DIS input file, CELLIDM2 is the layer, row, and column numbers of the cell.   For a grid that uses the DISV input file, CELLIDM2 is the layer number and CELL2D number for the two cells.  If the model uses the unstructured discretization (DISU) input file, then CELLIDM2 is the node number for the cell.
 numeric_index true

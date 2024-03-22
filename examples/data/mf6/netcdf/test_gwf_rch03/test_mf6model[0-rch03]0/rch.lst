@@ -1,0 +1,315 @@
+                             MODFLOW 6 PROFESSIONAL
+                U.S. GEOLOGICAL SURVEY MODULAR HYDROLOGIC MODEL
+                          GROUNDWATER FLOW MODEL (GWF)
+                  VERSION 6.5.0.dev0 (preliminary) 07/13/2023
+                               ***DEVELOP MODE***
+
+        MODFLOW 6 compiled Oct 30 2023 08:23:02 with GCC version 11.3.0
+
+This software is preliminary or provisional and is subject to 
+revision. It is being provided to meet the need for timely best 
+science. The software has not received final approval by the U.S. 
+Geological Survey (USGS). No warranty, expressed or implied, is made 
+by the USGS or the U.S. Government as to the functionality of the 
+software and related material nor shall the fact of release 
+constitute any such warranty. The software is provided on the 
+condition that neither the USGS nor the U.S. Government shall be held 
+liable for any damages resulting from the authorized or unauthorized 
+use of the software.
+
+
+As a work of the United States Government, this USGS product is 
+in the public domain within the United States. You can copy, 
+modify, distribute, and perform the work, even for commercial 
+purposes, all without asking permission. Additionally, USGS 
+waives copyright and related rights in the work worldwide 
+through CC0 1.0 Universal Public Domain Dedication 
+(https://creativecommons.org/publicdomain/zero/1.0/).
+
+The following GNU Lesser General Public License (LGPL) libraries
+are used in this USGS product:
+
+    SPARSKIT version 2.0
+      ilut, luson, and qsplit 
+      (https://www-users.cse.umn.edu/~saad/software/SPARSKIT/)
+
+    RCM - Reverse Cuthill McKee Ordering
+      (https://people.math.sc.edu/Burkardt/f_src/rcm/rcm.html)
+
+    BLAS - Basic Linear Algebra Subprograms Level 1
+      (https://people.math.sc.edu/Burkardt/f_src/blas1_d/blas1_d.html)
+
+    SPARSEKIT - Sparse Matrix Utility Package
+      amux, dperm, dvperm, rperm, and cperm
+      (https://people.sc.fsu.edu/~jburkardt/f77_src/sparsekit/sparsekit.html)
+
+The following BSD-3 License libraries are used in this USGS product:
+
+    Modern Fortran DAG Library
+      Copyright (c) 2018, Jacob Williams
+      All rights reserved.
+      (https://github.com/jacobwilliams/daglib)
+
+The following 2-clause BSD License library is used in this
+USGS product:
+
+    PETSc, the Portable, Extensible Toolkit for Scientific
+    Computation Library
+      Copyright (c) 1991-2021, UChicago Argonne, LLC
+      and the PETSc Development Team All rights reserved.
+      (https://petsc.org/release/)
+
+MODFLOW 6 compiler options: -cpp -I src/libmf6core.a.p -I src -I ../src -I
+src/libmf6_external.a.p -I
+/home/mreno/.clone/external/petsc/arch-linux-c-debug/include -I
+/home/mreno/.clone/external/petsc/include -I
+/home/mreno/.clone/external/petsc/arch-linux-c-debug/lib -I
+/home/mreno/miniconda3/envs/modflow6/include -I -fdiagnostics-color=always
+-imultiarch x86_64-linux-gnu -D _FILE_OFFSET_BITS=64 -D __linux__ -D
+__WITH_PETSC__ -D __WITH_MPI__ -D __WITH_NETCDF__ -mtune=generic
+-march=x86-64 -g -O2 -Wall -Wpedantic -Wcharacter-truncation
+-Wno-unused-dummy-argument -Wno-intrinsic-shadow -Wno-maybe-uninitialized
+-Wno-uninitialized -std=f2008 -fall-intrinsics -fbacktrace -fcheck=all
+-ffpe-trap=overflow,zero,invalid -ffpe-summary=overflow
+-ffpe-trap=overflow,zero,invalid -fPIC -J src/libmf6core.a.p
+-fpre-include=/usr/include/finclude/math-vector-fortran.h
+
+System command used to initiate simulation:
+/home/mreno/.clone/usgs/w/netcdf/2/modflow6/bin/mf6
+
+MODFLOW was compiled using uniform precision.
+
+Real Variables
+  KIND: 8
+  TINY (smallest non-zero value):    2.225074-308
+  HUGE (largest value):    1.797693+308
+  PRECISION: 15
+  SIZE IN BITS: 64
+
+Integer Variables
+  KIND: 4
+  HUGE (largest value): 2147483647
+  SIZE IN BITS: 32
+
+Long Integer Variables
+  KIND: 8
+  HUGE (largest value): 9223372036854775807
+  SIZE IN BITS: 64
+
+Logical Variables
+  KIND: 4
+  SIZE IN BITS: 32
+
+ NAMEFILE OPTIONS:
+    FLOWS WILL BE SAVED TO BUDGET FILE SPECIFIED IN OUTPUT CONTROL
+ END NAMEFILE OPTIONS:
+
+ DIS -- STRUCTURED GRID DISCRETIZATION PACKAGE, VERSION 2 : 3/27/2014 - INPUT READ FROM MEMPATH: __INPUT__/RCH/DIS                                 
+
+
+ NPF -- NODE PROPERTY FLOW PACKAGE, VERSION 1, 3/30/2015 INPUT READ FROM MEMPATH: __INPUT__/RCH/NPF                                 
+
+ Setting Discretization Options
+ End Setting Discretization Options
+
+ Setting Discretization Dimensions
+    NLAY = 2
+    NROW = 4
+    NCOL = 5
+ End Setting Discretization Dimensions
+
+ Setting Discretization Griddata
+    DELR set from input file
+    DELC set from input file
+    TOP set from input file
+    BOTM set from input file
+    IDOMAIN set from input file
+ End Setting Discretization Griddata
+
+
+ The specified IDOMAIN results in a reduced number of cells.
+ Number of user nodes: 40
+ Number of nodes in solution: 21
+
+
+ Setting NPF Options
+    Cell-by-cell flow information will be saved to binary file whenever ICBCFL is not zero.
+ End Setting NPF Options
+
+ Setting NPF Griddata
+    ICELLTYPE set from input file
+    K set from input file
+    K33 not provided.  Setting K33 = K.
+    K22 not provided.  Setting K22 = K.
+ End Setting NPF Griddata
+
+
+ RCH   -- RCH PACKAGE, VERSION 8, 2/22/2014 INPUT READ FROM MEMPATH: __INPUT__/RCH/RCHA_0                              
+
+ PROCESSING RCH BASE OPTIONS
+    RCH FLOWS WILL BE PRINTED TO LISTING FILE.
+ END OF RCH BASE OPTIONS
+
+ PROCESSING RCHA OPTIONS
+    RECHARGE INPUT WILL BE READ AS ARRAY(S).
+ END OF RCHA OPTIONS
+
+ CHD   -- CHD PACKAGE, VERSION 8, 2/22/2014 INPUT READ FROM MEMPATH: __INPUT__/RCH/CHD_0                               
+
+ PROCESSING CHD BASE OPTIONS
+ END OF CHD BASE OPTIONS
+
+ PROCESSING CHD BASE DIMENSIONS
+    MAXBOUND =       1
+ END OF CHD BASE DIMENSIONS
+
+ IC -- INITIAL CONDITIONS PACKAGE, VERSION 8, 3/28/2015 INPUT READ FROM UNIT 1005
+ # File generated by Flopy version 3.5.0.dev0 on 10/30/2023 at 09:10:24.
+ PROCESSING GRIDDATA
+
+     INITIAL HEAD =   100.0000    
+ END PROCESSING GRIDDATA
+    BINARY GRID INFORMATION WILL BE WRITTEN TO:
+      UNIT NUMBER: 1013
+      FILE NAME: rch.dis.grb
+
+ OPENED rch.dis.grb
+ FILE TYPE:DATA(BINARY)   UNIT 1013   STATUS:REPLACE             
+ FORMAT:UNFORMATTED            ACCESS:STREAM              
+ ACTION:READWRITE           
+
+      THE LAST TIME STEP WILL BE PRINTED
+      THE LAST TIME STEP WILL BE PRINTED
+ # File generated by Flopy version 3.5.0.dev0 on 10/30/2023 at 09:10:24.
+
+ PROCESSING OC OPTIONS
+
+    BUDGET INFORMATION WILL BE WRITTEN TO:
+      UNIT NUMBER: 1014
+      FILE NAME: rch.cbc
+
+ OPENED rch.cbc
+ FILE TYPE:DATA(BINARY)   UNIT 1014   STATUS:REPLACE             
+ FORMAT:UNFORMATTED            ACCESS:STREAM              
+ ACTION:READWRITE           
+
+    HEAD INFORMATION WILL BE WRITTEN TO:
+      UNIT NUMBER: 1015
+      FILE NAME: rch.hds
+
+ OPENED rch.hds
+ FILE TYPE:DATA(BINARY)   UNIT 1015   STATUS:REPLACE             
+ FORMAT:UNFORMATTED            ACCESS:STREAM              
+ ACTION:READWRITE           
+
+ END OF OC OPTIONS
+
+start timestep kper="1" kstp="1" mode="normal"
+
+
+ BEGIN READING OUTPUT CONTROL FOR STRESS PERIOD 1
+      ALL TIME STEPS WILL BE SAVED
+      ALL TIME STEPS WILL BE SAVED
+      ALL TIME STEPS WILL BE PRINTED
+      ALL TIME STEPS WILL BE PRINTED
+
+ END READING OUTPUT CONTROL FOR STRESS PERIOD 1
+
+ SLN_1 INNER ITERATION SUMMARY
+ --------------------------------------------------------------------------------------------------------------------------------------
+      TOTAL      OUTER      INNER                                                            MAXIMUM                                   
+  ITERATION  ITERATION  ITERATION  MAXIMUM CHANGE      MAXIMUM CHANGE MODEL-(CELLID)        RESIDUAL    MAXIMUM RESIDUAL MODEL-(CELLID)
+ --------------------------------------------------------------------------------------------------------------------------------------
+          1          1          1       502.80949                      1_GWF-(1,3,3)      -3.1080829                      1_GWF-(2,3,2)
+          2          1          2       21.395628                      1_GWF-(1,2,3)     -0.25310353                      1_GWF-(2,3,3)
+          3          1          3       2.5239279                      1_GWF-(1,3,3) -3.43324668E-02                      1_GWF-(2,2,3)
+          4          1          4     -0.69758972                      1_GWF-(1,2,3) -3.70113883E-03                      1_GWF-(1,3,3)
+          5          1          5  7.99908961E-02                      1_GWF-(1,3,3) -9.50901370E-05                      1_GWF-(2,2,3)
+          6          1          6 -1.66550535E-03                      1_GWF-(1,3,3) -8.63059126E-06                      1_GWF-(1,3,3)
+          7          1          7  1.64469559E-04                      1_GWF-(1,3,3)  8.91964544E-08                      1_GWF-(1,3,3)
+          8          1          8 -1.29162721E-06                      1_GWF-(1,3,3)  3.96607837E-09                      1_GWF-(1,3,3)
+          9          1          9 -4.96159813E-09                      1_GWF-(1,3,3) -1.23655123E-10                      1_GWF-(2,4,4)
+         10          1         10  2.32823912E-10                      1_GWF-(1,2,3) -2.42451408E-10                      1_GWF-(2,4,4)
+         11          2          1 -2.20952007E-12                      1_GWF-(1,2,3) -2.41277922E-10                      1_GWF-(2,4,4)
+ --------------------------------------------------------------------------------------------------------------------------------------
+
+
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      1
+ UBDSV06 SAVING             RCHA IN MODEL RCH              PACKAGE RCH             CONNECTED TO MODEL RCH              PACKAGE RCHA_0           ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      1
+ UBDSV06 SAVING              CHD IN MODEL RCH              PACKAGE RCH             CONNECTED TO MODEL RCH              PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      1
+
+ RCHA PACKAGE (RCHA_0) FLOW RATES   PERIOD      1   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (2,1,1)               0.0000000     
+     7      (2,2,2)               7.0000000     
+     8      (1,2,3)               8.0000000     
+     12     (2,3,2)               12.000000     
+     13     (1,3,3)               13.000000     
+     14     (2,3,4)               14.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD    1
+  ---------------------------------------------------------------------------
+
+                1               2               3               4               5
+ ................................................................................
+   1     1.000000E+30    1.000000E+30    1.000000E+30    1.000000E+30    1.000000E+30
+   2     1.000000E+30    1.000000E+30     626.043        1.000000E+30    1.000000E+30
+   3     1.000000E+30    1.000000E+30     626.093        1.000000E+30    1.000000E+30
+   4     1.000000E+30    1.000000E+30    1.000000E+30    1.000000E+30    1.000000E+30
+1
+  HEAD IN LAYER   2 AT END OF TIME STEP   1 IN STRESS PERIOD    1
+  ---------------------------------------------------------------------------
+
+                1               2               3               4               5
+ ................................................................................
+   1      100.000         100.538         100.810         100.902         100.993    
+   2      100.542         100.804         100.990        1.000000E+30     101.085    
+   3      100.822         101.006         101.146         101.263         101.177    
+   4      100.917         101.013         101.115         101.187         101.182    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD    1
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD   1
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                RCHA =          54.0000                  RCHA =          54.0000     RCHA_0                           
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+            TOTAL IN =          54.0000              TOTAL IN =          54.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+                RCHA =           0.0000                  RCHA =           0.0000     RCHA_0                           
+                 CHD =          54.0000                   CHD =          54.0000     CHD_0                            
+
+           TOTAL OUT =          54.0000             TOTAL OUT =          54.0000
+
+            IN - OUT =       1.1270E-09              IN - OUT =       1.1270E-09
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD    1
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+
+
+end timestep
+

@@ -1,5 +1,6 @@
 # --------------------- gwf ghb options ---------------------
 # flopy multi-package
+# flopy netcdf
 # package-type stress-package
 
 block options

@@ -1,4 +1,5 @@
 # --------------------- sim tdis options ---------------------
+# flopy netcdf
 
 block options
 name time_units

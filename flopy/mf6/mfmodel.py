@@ -1,17 +1,20 @@
+import copy
 import inspect
 import os
 import sys
+import time
 from typing import Union
 
 import numpy as np
 
+import flopy
 from ..discretization.grid import Grid
 from ..discretization.modeltime import ModelTime
 from ..discretization.structuredgrid import StructuredGrid
 from ..discretization.unstructuredgrid import UnstructuredGrid
 from ..discretization.vertexgrid import VertexGrid
 from ..mbase import ModelInterface
-from ..utils import datautil
+from ..utils import datautil, import_optional_dependency
 from ..utils.check import mf6check
 from .coordinates import modeldimensions
 from .data import mfdata, mfdatalist, mfstructure
@@ -1144,7 +1147,12 @@ class MFModel(PackageContainer, ModelInterface):
         else:
             return f",{data_entry}\n"
 
-    def write(self, ext_file_action=ExtFileAction.copy_relative_paths):
+    def write(
+        self,
+        ext_file_action=ExtFileAction.copy_relative_paths,
+        write_netcdf=False,
+        to_cdl=False,
+    ):
         """
         Writes out model's package files.
 
@@ -1154,6 +1162,12 @@ class MFModel(PackageContainer, ModelInterface):
             Defines what to do with external files when the simulation path has
             changed.  defaults to copy_relative_paths which copies only files
             with relative paths, leaving files defined by absolute paths fixed.
+        write_netcdf : bool
+            Generate NetCDF file instead of package file for packages that
+            support this.  This is currently a pre-release feature that
+            may not work with the current release of MODFLOW-6.
+        to_cdl : bool
+            Generate text version of netcdf file (debug feature)
 
         """
 
@@ -1164,16 +1178,136 @@ class MFModel(PackageContainer, ModelInterface):
         ):
             print("    writing model name file...")
 
-        self.name_file.write(ext_file_action=ext_file_action)
+        model_netcdf = None
+        netcdf_file = f"{self.name}.nc"
+        if write_netcdf:
+            # make sure all packages are named and there is a netcdf enabled
+            # package in this model
+            has_netcdf_package = False
+            for package in self.packagelist:
+                if (
+                    package.structure.netcdf
+                    and not package.package_type.lower().startswith("dis")
+                ):
+                    has_netcdf_package = True
+                if package.package_name is None:
+                    name_iter = datautil.NameIter(package.package_type, False)
+                    for package_name in name_iter:
+                        if package_name not in self.package_name_dict:
+                            package.package_name = package_name
+                            break
+            # only write netcdf file if there is a non-dis package that
+            # supports netcdf in the model
+            if has_netcdf_package:
+                # build file name
+                file_mgr = self.simulation_data.mfpath
+                model_folder_path = file_mgr.get_model_path(self.name)
+                netcdf_file_path = os.path.join(
+                    model_folder_path,
+                    netcdf_file,
+                )
+                if self.name in file_mgr.model_relative_path:
+                    mrp = file_mgr.model_relative_path[self.name]
+                else:
+                    mrp = "."
+                if mrp == ".":
+                    netcdf_file_relative_path = netcdf_file
+                else:
+                    netcdf_file_relative_path = os.path.join(mrp, netcdf_file)
+                # handle netcdf setup
+                netcdf4 = import_optional_dependency("netCDF4")
+                # open the file for writing
+                try:
+                    model_netcdf = netcdf4.Dataset(netcdf_file_path, "w")
+                except Exception as e:
+                    raise Exception("error creating netcdf dataset") from e
+
+                # add global attributes
+                model_netcdf.description = "MODFLOW 6 NetCDF4 file prototype"
+                model_netcdf.history = "Created " + time.ctime(time.time())
+                model_netcdf.source = f"flopy v{flopy.__version__}"
+                model_netcdf.mf6_modeltype = self.model_type.upper()
+                model_netcdf.mf6_modelname = self.name.upper()
+                model_netcdf.Conventions = ""
+                model_netcdf.set_fill_on()
+
+                # add time dimension
+                tdis = self.simulation.get_package("tdis")
+                period_data = tdis.perioddata.get_data()
+                model_netcdf.createDimension(
+                    "LINELENGTH", self.simulation_data.netcdf_linelength
+                )
+                model_netcdf.createDimension(
+                    "LENAUXNAME", self.simulation_data.netcdf_lenauxname
+                )
+                model_netcdf.createDimension(
+                    "LENBOUNDNAME", self.simulation_data.netcdf_lenboundname
+                )
+                model_netcdf.createDimension("NPER", len(period_data))
+                # add spatial dimensions
+                grid = self.modelgrid
+                if grid.grid_type == "structured":
+                    model_netcdf.createDimension("NLAY", grid.nlay)
+                    model_netcdf.createDimension("NROW", grid.nrow)
+                    model_netcdf.createDimension("NCOL", grid.ncol)
+                    model_netcdf.createDimension("NCPL", grid.ncpl)
+                    model_netcdf.createDimension("NCELLDIM", 3)
+                elif grid.grid_type == "vertex":
+                    model_netcdf.createDimension("NLAY", grid.nlay)
+                    model_netcdf.createDimension("NCPL", grid.ncpl)
+                    model_netcdf.createDimension("NVERT", grid.nvert)
+                    model_netcdf.createDimension("NCELLDIM", 2)
+                elif grid.grid_type == "unstructured":
+                    model_netcdf.createDimension("NODES", grid.nnodes)
+                    dis = self.get_package("disu")
+                    model_netcdf.createDimension("NJA", dis.nja.get_data())
+                    model_netcdf.createDimension("NCELLDIM", 1)
 
         # write packages
+        packages_to_netcdf = []
         for pp in self.packagelist:
             if (
                 self.simulation_data.verbosity_level.value
                 >= VerbosityLevel.normal.value
             ):
                 print(f"    writing package {pp._get_pname()}...")
-            pp.write(ext_file_action=ext_file_action)
+            if pp.write(
+                ext_file_action=ext_file_action,
+                netcdf_file=model_netcdf,
+            ):
+                packages_to_netcdf.append(pp)
+
+        if write_netcdf and len(packages_to_netcdf) > 0:
+            # create temporary name file
+            ncdf_name = copy.deepcopy(self.name_file)
+            packages = ncdf_name.packages
+            packages_data = packages.get_data()
+
+            # update name file to point to netcdf files
+            for pp_ncdf in packages_to_netcdf:
+                pkg_type = pp_ncdf.package_type.upper()
+                if len(pkg_type) > 3 and pkg_type[-1] == "A":
+                    pkg_type = pkg_type[0:-1]
+                if packages_data is not None:
+                    for index, entry in enumerate(packages_data):
+                        if entry[0].upper() == f"{pkg_type}6":
+                            # update file name
+                            packages_data[index][1] = netcdf_file_relative_path
+            packages.set_data(packages_data)
+
+            # write
+            ncdf_name.write(ext_file_action=ext_file_action)
+            model_netcdf.sync()
+            # write netcdf text file
+            netcdf_file_path = os.path.join(
+                model_folder_path,
+                f"{self.name}.nc.out",
+            )
+            if to_cdl:
+                model_netcdf.tocdl(data=True, outfile=netcdf_file_path)
+            model_netcdf.close()
+        else:
+            self.name_file.write(ext_file_action=ext_file_action)
 
     def get_grid_type(self):
         """
@@ -1492,7 +1626,9 @@ class MFModel(PackageContainer, ModelInterface):
             for child_package in child_package_list:
                 self._remove_package_from_dictionaries(child_package)
 
-    def update_package_filename(self, package, new_name):
+    def update_package_name(
+        self, package, new_file_name=None, new_package_name=None
+    ):
         """
         Updates the filename for a package.  For internal flopy use only.
 
@@ -1500,8 +1636,10 @@ class MFModel(PackageContainer, ModelInterface):
         ----------
         package : MFPackage
             Package object
-        new_name : str
-            New package name
+        new_file_name : str
+            New file name
+        new_package_name : str
+            New package naem
         """
         try:
             # get namefile package data
@@ -1527,8 +1665,10 @@ class MFModel(PackageContainer, ModelInterface):
             for item in package_data:
                 leaf = os.path.split(item[1])[1]
                 if leaf == old_leaf:
-                    item[1] = os.path.join(model_rel_path, new_name)
-
+                    if new_file_name is not None:
+                        item[1] = os.path.join(model_rel_path, new_file_name)
+                    if new_package_name is not None:
+                        item[2] = new_package_name
                 if new_rec_array is None:
                     new_rec_array = np.rec.array(
                         [item.tolist()], package_data.dtype
@@ -1892,7 +2032,10 @@ class MFModel(PackageContainer, ModelInterface):
                         f"{ftype}-{self._ftype_num_dict[ftype]}"
                     )
         else:
-            dict_package_name = ftype
+            if pname is not None:
+                dict_package_name = pname
+            else:
+                dict_package_name = ftype
 
         # clean up model type text
         model_type = self.structure.model_type
@@ -1923,6 +2066,12 @@ class MFModel(PackageContainer, ModelInterface):
                 _internal_package=True,
             )
             package.load(strict)
+
+        if dict_package_name != pname:
+            # update namefile
+            self.update_package_name(
+                package, new_package_name=dict_package_name
+            )
 
         # register child package with the model
         self._add_package(package, package.path)

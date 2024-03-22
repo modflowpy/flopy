@@ -49,11 +49,13 @@ class MFArray(MFMultiDimVar):
         enable=True,
         path=None,
         dimensions=None,
+        package=None,
         block=None,
     ):
         super().__init__(
             sim_data, model_or_sim, structure, enable, path, dimensions
         )
+        self._package = package
         self._block = block
         if self.structure.layered:
             try:
@@ -387,9 +389,8 @@ class MFArray(MFMultiDimVar):
                 comment = f"Layered option not available for unstructured grid. {self._path}"
             else:
                 comment = (
-                    'Data "{}" does not support layered option. ' "{}".format(
-                        self._data_name, self._path
-                    )
+                    'Data "{}" does not support layered option. '
+                    "{}".format(self._data_name, self._path)
                 )
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(
@@ -437,9 +438,8 @@ class MFArray(MFMultiDimVar):
                 comment = f"Layered option not available for unstructured grid. {self._path}"
             else:
                 comment = (
-                    'Data "{}" does not support layered option. ' "{}".format(
-                        self._data_name, self._path
-                    )
+                    'Data "{}" does not support layered option. '
+                    "{}".format(self._data_name, self._path)
                 )
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(
@@ -546,7 +546,8 @@ class MFArray(MFMultiDimVar):
                     >= VerbosityLevel.verbose.value
                 ):
                     print(
-                        "Storing {} layer {} to external file {}.." ".".format(
+                        "Storing {} layer {} to external file {}.."
+                        ".".format(
                             self.structure.name,
                             current_layer[0] + 1,
                             file_path,
@@ -635,7 +636,8 @@ class MFArray(MFMultiDimVar):
                     >= VerbosityLevel.verbose.value
                 ):
                     print(
-                        "Storing {} layer {} internally.." ".".format(
+                        "Storing {} layer {} internally.."
+                        ".".format(
                             self.structure.name,
                             current_layer[0] + 1,
                         )
@@ -1128,6 +1130,78 @@ class MFArray(MFMultiDimVar):
         else:
             return False
 
+    def _add_layer_dimension(self, data):
+        # add layer dimension to data
+        mg = self._model_or_sim.modelgrid
+        nlay = mg.nlay
+        if nlay == 1:
+            data = np.expand_dims(data, axis=0)
+        elif nlay > 1:
+            if self.structure.type == DatumType.integer:
+                empty_layer = np.ma.zeros(data.shape, int)
+                empty_layer = np.ma.masked_where(empty_layer == 0, empty_layer)
+            else:
+                empty_layer = np.ma.zeros(data.shape, float)
+                empty_layer = np.ma.masked_where(
+                    empty_layer == 0.0, empty_layer
+                )
+            layer_list = [data]
+            for lay in range(1, nlay):
+                layer_list.append(empty_layer)
+            data = np.ma.stack(layer_list)
+        return data
+
+    def _netcdf_precision_fill(self):
+        # build dimensions
+        dimensions = self.structure.shape
+        model_dim = self.data_dimensions.get_model_dim(None)
+        dimensions = model_dim.deconstruct_axis(dimensions)
+        for idx, dim in enumerate(dimensions):
+            dimensions[idx] = dim.upper()
+        dimensions.reverse()
+        # build precision string
+        if self.structure.type == DatumType.integer:
+            precision_str = "i4"
+            fill_value = -2147483647
+        else:
+            precision_str = "f8"
+            fill_value = 3e30
+        return precision_str, fill_value, dimensions
+
+    def write_netcdf(self, netcdf):
+        """Writes data to netcdf file.
+        Parameters
+        ----------
+            netcdf : NetCDF4
+                NetCDF4 object to write data to.
+        """
+        precision_str, fill_value, dimensions = self._netcdf_precision_fill()
+        attribs = {}
+        # get data
+        data = self.get_data()
+        if (
+            self.structure.data_item_structures[0].numeric_index
+            or self.structure.data_item_structures[0].is_cellid
+        ):
+            # for cellid and numeric indices convert from 0 base to 1 based
+            data = abs(data) + 1
+
+        # write
+        if data is not None:
+            self.write_netcdf_var(
+                self._model_or_sim.name,
+                netcdf,
+                self._package,
+                self._block,
+                precision_str,
+                tuple(dimensions),
+                data,
+                self.structure.name,
+                attribs,
+                fill_value,
+            )
+        return []
+
     def get_file_entry(
         self, layer=None, ext_file_action=ExtFileAction.copy_relative_paths
     ):
@@ -1217,9 +1291,8 @@ class MFArray(MFMultiDimVar):
                 # set layer range
                 if not shape_ml.in_shape(layer):
                     comment = (
-                        'Layer {} for variable "{}" does not exist' ".".format(
-                            layer, self._data_name
-                        )
+                        'Layer {} for variable "{}" does not exist'
+                        ".".format(layer, self._data_name)
                     )
                     type_, value_, traceback_ = sys.exc_info()
                     raise MFDataException(
@@ -1607,6 +1680,7 @@ class MFTransientArray(MFArray, MFTransient):
         enable=True,
         path=None,
         dimensions=None,
+        package=None,
         block=None,
     ):
         MFTransient.__init__(self)
@@ -1619,6 +1693,7 @@ class MFTransientArray(MFArray, MFTransient):
             enable=enable,
             path=path,
             dimensions=dimensions,
+            package=package,
             block=block,
         )
         self.repeating = True
@@ -1814,6 +1889,68 @@ class MFTransientArray(MFArray, MFTransient):
             else:
                 self.get_data_prep(key)
                 return super().get_record()
+
+    def write_netcdf(self, netcdf):
+        """Writes data to netcdf file.
+        Parameters
+        ----------
+            netcdf : NetCDF4
+                NetCDF4 object to write data to.
+        """
+        # build dataset
+        all_data = []
+        nsp = 0
+        iper = []
+        iper_with_data = []
+
+        # build precision string
+        precision_str, fill_value, dimensions = self._netcdf_precision_fill()
+        # add "stress period" as extra dimension to array
+        for sp in self._data_storage.keys():
+            last_data = self.get_data(sp)
+            if (
+                self.structure.data_item_structures[0].numeric_index
+                or self.structure.data_item_structures[0].is_cellid
+            ):
+                # for cellid and numeric indices convert from 0 base to 1 based
+                last_data = abs(last_data) + 1
+            if last_data is not None and len(last_data) > 0:
+                iper_with_data.append(sp + 1)
+            all_data.append(last_data)
+            nsp += 1
+            iper.append(sp + 1)
+        if nsp == 0:
+            return []
+        stacked_data = np.ma.stack(all_data)
+
+        attribs = {}
+        # create array sp dimension
+        nsp_label = f"dim_{self._package.package_name}_niper"
+
+        if self.name == "aux":
+            var_dim = f"dim_{self._package.package_name}_naux"
+            dimensions.insert(0, var_dim)
+
+        # build dimensions
+        dimensions.insert(0, nsp_label)
+        # add iper
+        arr = np.array(iper_with_data, dtype=int)
+        attribs["mf6_iper"] = arr
+
+        # write data
+        self.write_netcdf_var(
+            self._model_or_sim.name,
+            netcdf,
+            self._package,
+            self._block,
+            precision_str,
+            tuple(dimensions),
+            stacked_data,
+            self.structure.name,
+            attribs,
+            fill_value,
+        )
+        return iper
 
     def get_data(self, key=None, apply_mult=True, **kwargs):
         """Returns the data associated with stress period key `key`.

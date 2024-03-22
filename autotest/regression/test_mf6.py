@@ -318,6 +318,7 @@ def test_np001(function_tmpdir, example_data_path):
         exe_name="mf6",
         sim_ws=data_path,
         write_headers=False,
+        use_pandas=False,
     )
     sim.set_sim_path(ws)
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
@@ -593,6 +594,8 @@ def test_np001(function_tmpdir, example_data_path):
     # test data file with relative path to simulation path
     riv_path = os.path.join(ws, "riv_folder", "riv.txt")
     assert os.path.exists(riv_path)
+
+    model.export(os.path.join(ws, "np001.nc"))
 
     # run simulation
     sim.run_simulation()
@@ -2231,9 +2234,9 @@ def test035_create_tests_fhb(function_tmpdir, example_data_path):
     )
     time = model.modeltime
     assert (
-        time.steady_state[0] is False
-        and time.steady_state[1] is False
-        and time.steady_state[2] is False
+        not time.steady_state[0]
+        and not time.steady_state[1]
+        and not time.steady_state[2]
     )
     wel_period = {0: [((0, 1, 0), "flow")]}
     wel_package = ModflowGwfwel(
@@ -3592,7 +3595,7 @@ def test001a_tharmonic(function_tmpdir, example_data_path):
     # run simulation
     success, buff = sim.run_simulation()
     print(sim.name)
-    assert success, f"simulation {sim.name} did not run"
+    assert success, f"simulation {sim.name} did not run ({sim.sim_path})"
 
     # get expected results
     budget_obj = CellBudgetFile(expected_cbc_file_a, precision="auto")
@@ -3782,10 +3785,10 @@ def test005_advgw_tidal(function_tmpdir, example_data_path):
     model = sim.get_model(model_name)
     time = model.modeltime
     assert (
-        time.steady_state[0] is True
-        and time.steady_state[1] is False
-        and time.steady_state[2] is False
-        and time.steady_state[3] is False
+        time.steady_state[0]
+        and not time.steady_state[1]
+        and not time.steady_state[2]
+        and not time.steady_state[3]
     )
     ghb = model.get_package("ghb")
     obs = ghb.obs

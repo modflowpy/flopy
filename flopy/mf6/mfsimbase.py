@@ -1,3 +1,4 @@
+import copy
 import errno
 import inspect
 import os.path
@@ -24,6 +25,7 @@ from flopy.mf6.mfbase import (
 from flopy.mf6.mfpackage import MFPackage
 from flopy.mf6.modflow import mfnam, mftdis
 from flopy.mf6.utils import binaryfile_utils, mfobservation
+from flopy.utils import import_optional_dependency
 
 
 class SimulationDict(dict):
@@ -258,6 +260,10 @@ class MFSimulationData:
         self.max_columns_user_set = False
         self.max_columns_auto_set = False
         self.use_pandas = True
+
+        self.netcdf_linelength = 300
+        self.netcdf_lenauxname = 16
+        self.netcdf_lenboundname = 40
 
         self._update_str_format()
 
@@ -614,9 +620,9 @@ class MFSimulationBase(PackageContainer):
     def _get_data_str(self, formal):
         file_mgt = self.simulation_data.mfpath
         data_str = (
-            "sim_name = {}\nsim_path = {}\nexe_name = " "{}\n" "\n".format(
-                self.name, file_mgt.get_sim_path(), self.exe_name
-            )
+            "sim_name = {}\nsim_path = {}\nexe_name = "
+            "{}\n"
+            "\n".format(self.name, file_mgt.get_sim_path(), self.exe_name)
         )
 
         for package in self._packagelist:
@@ -1392,7 +1398,9 @@ class MFSimulationBase(PackageContainer):
                 message=message,
             )
 
-    def update_package_filename(self, package, new_name):
+    def update_package_name(
+        self, package, new_file_name=None, new_package_name=None
+    ):
         """
         Updates internal arrays to be consistent with a new file name.
         This is for internal flopy library use only.
@@ -1401,27 +1409,30 @@ class MFSimulationBase(PackageContainer):
         ----------
             package: MFPackage
                 Package with new name
-            new_name: str
-                Package's new name
+        new_file_name : str
+            New file name
+        new_package_name : str
+            New package name - currently not supported by simulation name file
 
         """
+        assert new_package_name is None
         if (
             self._tdis_file is not None
             and package.filename == self._tdis_file.filename
         ):
-            self._set_timing_block(new_name)
+            self._set_timing_block(new_file_name)
         elif package.filename in self._exchange_files:
-            self._exchange_files[new_name] = self._exchange_files.pop(
+            self._exchange_files[new_file_name] = self._exchange_files.pop(
                 package.filename
             )
-            self._rename_exchange_file(package, new_name)
+            self._rename_exchange_file(package, new_file_name)
         elif package.filename in self._solution_files:
-            self._solution_files[new_name] = self._solution_files.pop(
+            self._solution_files[new_file_name] = self._solution_files.pop(
                 package.filename
             )
-            self._update_solution_group(package.filename, new_name)
+            self._update_solution_group(package.filename, new_file_name)
         else:
-            self._other_files[new_name] = self._other_files.pop(
+            self._other_files[new_file_name] = self._other_files.pop(
                 package.filename
             )
 
@@ -1516,7 +1527,11 @@ class MFSimulationBase(PackageContainer):
             package.set_all_data_internal(check_data)
 
     def write_simulation(
-        self, ext_file_action=ExtFileAction.copy_relative_paths, silent=False
+        self,
+        ext_file_action=ExtFileAction.copy_relative_paths,
+        silent=False,
+        write_netcdf=False,
+        to_cdl=False,
     ):
         """
         Write the simulation to files.
@@ -1529,7 +1544,12 @@ class MFSimulationBase(PackageContainer):
                 by absolute paths fixed.
             silent : bool
                 Writes out the simulation in silent mode (verbosity_level = 0)
-
+            write_netcdf : bool
+                Generate NetCDF file instead of package file for packages that
+                support this.  This is currently a pre-release feature that
+                may not work with the current release of MODFLOW-6.
+            to_cdl : bool
+                Generate text version of netcdf file (debug feature)
         """
         sim_data = self.simulation_data
         if not sim_data.max_columns_user_set:
@@ -1545,14 +1565,12 @@ class MFSimulationBase(PackageContainer):
         if silent:
             self.simulation_data.verbosity_level = VerbosityLevel.quiet
 
-        # write simulation name file
-        if (
-            self.simulation_data.verbosity_level.value
-            >= VerbosityLevel.normal.value
-        ):
-            print("writing simulation...")
-            print("  writing simulation name file...")
-        self.name_file.write(ext_file_action=ext_file_action)
+        sim_netcdf = None
+        packages_to_netcdf = []
+        netcdf_file = f"{self.name}_data.nc"
+        netcdf_file_out = f"{self.name}_data.nc.out"
+        file_mgr = self.simulation_data.mfpath
+        sim_folder_path = file_mgr.get_sim_path()
 
         # write TDIS file
         if (
@@ -1560,7 +1578,11 @@ class MFSimulationBase(PackageContainer):
             >= VerbosityLevel.normal.value
         ):
             print("  writing simulation tdis package...")
-        self._tdis_file.write(ext_file_action=ext_file_action)
+        if self._tdis_file.write(
+            ext_file_action=ext_file_action,
+            netcdf_file=sim_netcdf,
+        ):
+            packages_to_netcdf.append(self._tdis_file)
 
         # write solution files
         for solution_file in self._solution_files.values():
@@ -1572,11 +1594,14 @@ class MFSimulationBase(PackageContainer):
                     f"  writing solution package "
                     f"{solution_file._get_pname()}..."
                 )
-            solution_file.write(ext_file_action=ext_file_action)
+            solution_file.write(
+                ext_file_action=ext_file_action,
+                netcdf_file=sim_netcdf,
+            )
 
         # write exchange files
         for exchange_file in self._exchange_files.values():
-            exchange_file.write()
+            exchange_file.write(netcdf_file=sim_netcdf)
 
         # write other packages
         for pp in self._other_files.values():
@@ -1585,7 +1610,10 @@ class MFSimulationBase(PackageContainer):
                 >= VerbosityLevel.normal.value
             ):
                 print(f"  writing package {pp._get_pname()}...")
-            pp.write(ext_file_action=ext_file_action)
+            pp.write(
+                ext_file_action=ext_file_action,
+                netcdf_file=sim_netcdf,
+            )
 
         # FIX: model working folder should be model name file folder
 
@@ -1596,7 +1624,19 @@ class MFSimulationBase(PackageContainer):
                 >= VerbosityLevel.normal.value
             ):
                 print(f"  writing model {model.name}...")
-            model.write(ext_file_action=ext_file_action)
+            model.write(
+                ext_file_action=ext_file_action,
+                write_netcdf=write_netcdf,
+                to_cdl=to_cdl,
+            )
+
+            # write simulation name file
+            if (
+                self.simulation_data.verbosity_level.value
+                >= VerbosityLevel.normal.value
+            ):
+                print("  writing simulation name file...")
+            self.name_file.write(ext_file_action=ext_file_action)
 
         self.simulation_data.mfpath.set_last_accessed_path()
 

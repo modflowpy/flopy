@@ -1,4 +1,5 @@
 # --------------------- gwf disv options ---------------------
+# flopy netcdf
 
 block options
 name length_units

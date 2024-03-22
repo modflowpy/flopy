@@ -1,0 +1,141 @@
+netcdf disu01a {
+dimensions:
+	LINELENGTH = 300 ;
+	LENAUXNAME = 16 ;
+	LENBOUNDNAME = 40 ;
+	NPER = 1 ;
+	NODES = 27 ;
+	NJA = 135 ;
+	NCELLDIM = 1 ;
+	dim_chd_0_maxbound = 2 ;
+	dim_chd_0_niper = 1 ;
+variables:
+	double disu_vertical_offset_tolerance ;
+		disu_vertical_offset_tolerance:mf6_input = "DISU6:DISU01A/DISU/VERTICAL_OFFSET_TOLERANCE" ;
+	int disu_nodes ;
+		disu_nodes:mf6_input = "DISU6:DISU01A/DISU/NODES" ;
+	int disu_nja ;
+		disu_nja:mf6_input = "DISU6:DISU01A/DISU/NJA" ;
+	double disu_top(NODES) ;
+		disu_top:_FillValue = 3.e+30 ;
+		disu_top:mf6_input = "DISU6:DISU01A/DISU/TOP" ;
+	double disu_bot(NODES) ;
+		disu_bot:_FillValue = 3.e+30 ;
+		disu_bot:mf6_input = "DISU6:DISU01A/DISU/BOT" ;
+	double disu_area(NODES) ;
+		disu_area:_FillValue = 3.e+30 ;
+		disu_area:mf6_input = "DISU6:DISU01A/DISU/AREA" ;
+	int disu_iac(NODES) ;
+		disu_iac:_FillValue = -2147483647 ;
+		disu_iac:mf6_input = "DISU6:DISU01A/DISU/IAC" ;
+	int disu_ja(NJA) ;
+		disu_ja:_FillValue = -2147483647 ;
+		disu_ja:mf6_input = "DISU6:DISU01A/DISU/JA" ;
+	int disu_ihc(NJA) ;
+		disu_ihc:_FillValue = -2147483647 ;
+		disu_ihc:mf6_input = "DISU6:DISU01A/DISU/IHC" ;
+	double disu_cl12(NJA) ;
+		disu_cl12:_FillValue = 3.e+30 ;
+		disu_cl12:mf6_input = "DISU6:DISU01A/DISU/CL12" ;
+	double disu_hwva(NJA) ;
+		disu_hwva:_FillValue = 3.e+30 ;
+		disu_hwva:mf6_input = "DISU6:DISU01A/DISU/HWVA" ;
+	double ic_strt(NODES) ;
+		ic_strt:_FillValue = 3.e+30 ;
+		ic_strt:mf6_input = "IC6:DISU01A/IC/STRT" ;
+	int npf_icelltype(NODES) ;
+		npf_icelltype:_FillValue = -2147483647 ;
+		npf_icelltype:mf6_input = "NPF6:DISU01A/NPF/ICELLTYPE" ;
+	double npf_k(NODES) ;
+		npf_k:_FillValue = 3.e+30 ;
+		npf_k:mf6_input = "NPF6:DISU01A/NPF/K" ;
+	int chd_0_maxbound ;
+		chd_0_maxbound:mf6_input = "CHD6:DISU01A/CHD_0/MAXBOUND" ;
+	int chd_0_cellid(dim_chd_0_niper, dim_chd_0_maxbound, NCELLDIM) ;
+		chd_0_cellid:_FillValue = -2147483647 ;
+		chd_0_cellid:mf6_input = "CHD6:DISU01A/CHD_0/CELLID" ;
+	double chd_0_head(dim_chd_0_niper, dim_chd_0_maxbound) ;
+		chd_0_head:_FillValue = 3.e+30 ;
+		chd_0_head:mf6_input = "CHD6:DISU01A/CHD_0/HEAD" ;
+	int chd_0_iper(dim_chd_0_niper) ;
+		chd_0_iper:_FillValue = -2147483647 ;
+		chd_0_iper:mf6_input = "CHD6:DISU01A/CHD_0/IPER" ;
+
+// global attributes:
+		:description = "MODFLOW 6 NetCDF4 file prototype" ;
+		:history = "Created Tue Feb 20 08:30:12 2024" ;
+		:source = "flopy v3.5.0.dev0" ;
+		:mf6_modeltype = "GWF6" ;
+		:mf6_modelname = "DISU01A" ;
+		:Conventions = "" ;
+data:
+
+ disu_vertical_offset_tolerance = 0 ;
+
+ disu_nodes = 27 ;
+
+ disu_nja = 135 ;
+
+ disu_top = 0, 0, 0, 0, 0, 0, 0, 0, 0, -10, -10, -10, -10, -10, -10, -10, 
+    -10, -10, -20, -20, -20, -20, -20, -20, -20, -20, -20 ;
+
+ disu_bot = -10, -10, -10, -10, -10, -10, -10, -10, -10, -20, -20, -20, -20, 
+    -20, -20, -20, -20, -20, -30, -30, -30, -30, -30, -30, -30, -30, -30 ;
+
+ disu_area = 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 
+    100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100 ;
+
+ disu_iac = 4, 5, 4, 5, 6, 5, 4, 5, 4, 5, 6, 5, 6, 7, 6, 5, 6, 5, 4, 5, 4, 5, 
+    6, 5, 4, 5, 4 ;
+
+ disu_ja = 1, 2, 4, 10, 2, 1, 3, 5, 11, 3, 2, 6, 12, 4, 1, 5, 7, 13, 5, 2, 4, 
+    6, 8, 14, 6, 3, 5, 9, 15, 7, 4, 8, 16, 8, 5, 7, 9, 17, 9, 6, 8, 18, 10, 
+    1, 11, 13, 19, 11, 2, 10, 12, 14, 20, 12, 3, 11, 15, 21, 13, 4, 10, 14, 
+    16, 22, 14, 5, 11, 13, 15, 17, 23, 15, 6, 12, 14, 18, 24, 16, 7, 13, 17, 
+    25, 17, 8, 14, 16, 18, 26, 18, 9, 15, 17, 27, 19, 10, 20, 22, 20, 11, 19, 
+    21, 23, 21, 12, 20, 24, 22, 13, 19, 23, 25, 23, 14, 20, 22, 24, 26, 24, 
+    15, 21, 23, 27, 25, 16, 22, 26, 26, 17, 23, 25, 27, 27, 18, 24, 26 ;
+
+ disu_ihc = 1, 1, 1, 0, 2, 1, 1, 1, 0, 3, 1, 1, 0, 4, 1, 1, 1, 0, 5, 1, 1, 1, 
+    1, 0, 6, 1, 1, 1, 0, 7, 1, 1, 0, 8, 1, 1, 1, 0, 9, 1, 1, 0, 10, 0, 1, 1, 
+    0, 11, 0, 1, 1, 1, 0, 12, 0, 1, 1, 0, 13, 0, 1, 1, 1, 0, 14, 0, 1, 1, 1, 
+    1, 0, 15, 0, 1, 1, 1, 0, 16, 0, 1, 1, 0, 17, 0, 1, 1, 1, 0, 18, 0, 1, 1, 
+    0, 19, 0, 1, 1, 20, 0, 1, 1, 1, 21, 0, 1, 1, 22, 0, 1, 1, 1, 23, 0, 1, 1, 
+    1, 1, 24, 0, 1, 1, 1, 25, 0, 1, 1, 26, 0, 1, 1, 1, 27, 0, 1, 1 ;
+
+ disu_cl12 = 1, 5, 5, 5, 2, 5, 5, 5, 5, 3, 5, 5, 5, 4, 5, 5, 5, 5, 5, 5, 5, 
+    5, 5, 5, 6, 5, 5, 5, 5, 7, 5, 5, 5, 8, 5, 5, 5, 5, 9, 5, 5, 5, 10, 5, 5, 
+    5, 5, 11, 5, 5, 5, 5, 5, 12, 5, 5, 5, 5, 13, 5, 5, 5, 5, 5, 14, 5, 5, 5, 
+    5, 5, 5, 15, 5, 5, 5, 5, 5, 16, 5, 5, 5, 5, 17, 5, 5, 5, 5, 5, 18, 5, 5, 
+    5, 5, 19, 5, 5, 5, 20, 5, 5, 5, 5, 21, 5, 5, 5, 22, 5, 5, 5, 5, 23, 5, 5, 
+    5, 5, 5, 24, 5, 5, 5, 5, 25, 5, 5, 5, 26, 5, 5, 5, 5, 27, 5, 5, 5 ;
+
+ disu_hwva = 1, 10, 10, 100, 2, 10, 10, 10, 100, 3, 10, 10, 100, 4, 10, 10, 
+    10, 100, 5, 10, 10, 10, 10, 100, 6, 10, 10, 10, 100, 7, 10, 10, 100, 8, 
+    10, 10, 10, 100, 9, 10, 10, 100, 10, 100, 10, 10, 100, 11, 100, 10, 10, 
+    10, 100, 12, 100, 10, 10, 100, 13, 100, 10, 10, 10, 100, 14, 100, 10, 10, 
+    10, 10, 100, 15, 100, 10, 10, 10, 100, 16, 100, 10, 10, 100, 17, 100, 10, 
+    10, 10, 100, 18, 100, 10, 10, 100, 19, 100, 10, 10, 20, 100, 10, 10, 10, 
+    21, 100, 10, 10, 22, 100, 10, 10, 10, 23, 100, 10, 10, 10, 10, 24, 100, 
+    10, 10, 10, 25, 100, 10, 10, 26, 100, 10, 10, 10, 27, 100, 10, 10 ;
+
+ ic_strt = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+    0, 0, 0, 0, 0 ;
+
+ npf_icelltype = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+    0, 0, 0, 0, 0, 0, 0 ;
+
+ npf_k = 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
+    1, 1, 1, 1 ;
+
+ chd_0_maxbound = 2 ;
+
+ chd_0_cellid =
+  1,
+  9 ;
+
+ chd_0_head =
+  1, 0 ;
+
+ chd_0_iper = 1 ;
+}

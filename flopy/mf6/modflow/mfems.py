@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on February 07, 2024 20:16:08 UTC
+# FILE created on March 22, 2024 17:50:17 UTC
 from .. import mfpackage
 
 
@@ -44,7 +44,7 @@ class ModflowEms(mfpackage.MFPackage):
         loading_package=False,
         filename=None,
         pname=None,
-        **kwargs,
+        **kwargs
     ):
         super().__init__(
             simulation, "ems", filename, pname, loading_package, **kwargs

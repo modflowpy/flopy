@@ -1,0 +1,137 @@
+netcdf gwf_mst03 {
+dimensions:
+	LINELENGTH = 300 ;
+	LENAUXNAME = 16 ;
+	LENBOUNDNAME = 40 ;
+	NPER = 2 ;
+	NLAY = 1 ;
+	NROW = 1 ;
+	NCOL = 1 ;
+	NCPL = 1 ;
+	NCELLDIM = 3 ;
+	dim_wel-1_naux = 1 ;
+	dim_wel-1_maxbound = 1 ;
+	dim_wel-1_niper = 2 ;
+variables:
+	int dis_nlay ;
+		dis_nlay:mf6_input = "DIS6:GWF_MST03/DIS/NLAY" ;
+	int dis_nrow ;
+		dis_nrow:mf6_input = "DIS6:GWF_MST03/DIS/NROW" ;
+	int dis_ncol ;
+		dis_ncol:mf6_input = "DIS6:GWF_MST03/DIS/NCOL" ;
+	double dis_delr(NCOL) ;
+		dis_delr:_FillValue = 3.e+30 ;
+		dis_delr:mf6_input = "DIS6:GWF_MST03/DIS/DELR" ;
+	double dis_delc(NROW) ;
+		dis_delc:_FillValue = 3.e+30 ;
+		dis_delc:mf6_input = "DIS6:GWF_MST03/DIS/DELC" ;
+	double dis_top(NROW, NCOL) ;
+		dis_top:_FillValue = 3.e+30 ;
+		dis_top:mf6_input = "DIS6:GWF_MST03/DIS/TOP" ;
+	double dis_botm(NLAY, NROW, NCOL) ;
+		dis_botm:_FillValue = 3.e+30 ;
+		dis_botm:mf6_input = "DIS6:GWF_MST03/DIS/BOTM" ;
+	int dis_idomain(NLAY, NROW, NCOL) ;
+		dis_idomain:_FillValue = -2147483647 ;
+		dis_idomain:mf6_input = "DIS6:GWF_MST03/DIS/IDOMAIN" ;
+	double ic_strt(NLAY, NROW, NCOL) ;
+		ic_strt:_FillValue = 3.e+30 ;
+		ic_strt:mf6_input = "IC6:GWF_MST03/IC/STRT" ;
+		ic_strt:_Storage = "chunked" ;
+		ic_strt:_ChunkSizes = 1, 1, 1 ;
+		ic_strt:_DeflateLevel = 4 ;
+		ic_strt:_Shuffle = "true" ;
+		ic_strt:_Endianness = "little" ;
+	int npf_icelltype(NLAY, NROW, NCOL) ;
+		npf_icelltype:_FillValue = -2147483647 ;
+		npf_icelltype:mf6_input = "NPF6:GWF_MST03/NPF/ICELLTYPE" ;
+	double npf_k(NLAY, NROW, NCOL) ;
+		npf_k:_FillValue = 3.e+30 ;
+		npf_k:mf6_input = "NPF6:GWF_MST03/NPF/K" ;
+	double npf_k33(NLAY, NROW, NCOL) ;
+		npf_k33:_FillValue = 3.e+30 ;
+		npf_k33:mf6_input = "NPF6:GWF_MST03/NPF/K33" ;
+	char wel-1_auxiliary(dim_wel-1_naux, LENAUXNAME) ;
+		wel-1_auxiliary:_Encoding = "ascii" ;
+		wel-1_auxiliary:mf6_input = "WEL6:GWF_MST03/WEL-1/AUXILIARY" ;
+	int wel-1_print_input ;
+		wel-1_print_input:mf6_input = "WEL6:GWF_MST03/WEL-1/PRINT_INPUT" ;
+	int wel-1_print_flows ;
+		wel-1_print_flows:mf6_input = "WEL6:GWF_MST03/WEL-1/PRINT_FLOWS" ;
+	int wel-1_maxbound ;
+		wel-1_maxbound:mf6_input = "WEL6:GWF_MST03/WEL-1/MAXBOUND" ;
+	int wel-1_iper(dim_wel-1_niper) ;
+		wel-1_iper:mf6_input = "WEL6:GWF_MST03/WEL-1/IPER" ;
+	int wel-1_cellid(dim_wel-1_niper, dim_wel-1_maxbound, NCELLDIM) ;
+		wel-1_cellid:_FillValue = -2147483647 ;
+		wel-1_cellid:mf6_input = "WEL6:GWF_MST03/WEL-1/CELLID" ;
+	double wel-1_q(dim_wel-1_niper, dim_wel-1_maxbound) ;
+		wel-1_q:_FillValue = 3.e+30 ;
+		wel-1_q:mf6_input = "WEL6:GWF_MST03/WEL-1/Q" ;
+	double wel-1_aux(dim_wel-1_niper, dim_wel-1_maxbound, dim_wel-1_naux) ;
+		wel-1_aux:_FillValue = 3.e+30 ;
+		wel-1_aux:mf6_input = "WEL6:GWF_MST03/WEL-1/AUX" ;
+
+// global attributes:
+		:description = "MODFLOW 6 NetCDF4 file prototype" ;
+		:history = "Created Mon Oct 30 09:14:14 2023" ;
+		:source = "mf6netcdf4.py" ;
+		:mf6_modeltype = "GWF6" ;
+		:mf6_modelname = "GWF_MST03" ;
+		:Conventions = "CF-1.8" ;
+data:
+
+ dis_nlay = 1 ;
+
+ dis_nrow = 1 ;
+
+ dis_ncol = 1 ;
+
+ dis_delr = 10 ;
+
+ dis_delc = 10 ;
+
+ dis_top =
+  10 ;
+
+ dis_botm =
+  0 ;
+
+ dis_idomain =
+  1 ;
+
+ ic_strt =
+  10 ;
+
+ npf_icelltype =
+  1 ;
+
+ npf_k =
+  1 ;
+
+ npf_k33 =
+  1 ;
+
+ wel-1_auxiliary =
+  "concentration   " ;
+
+ wel-1_print_input = 1 ;
+
+ wel-1_print_flows = 1 ;
+
+ wel-1_maxbound = 1 ;
+
+ wel-1_iper = 1, 2 ;
+
+ wel-1_cellid =
+  1, 1, 1,
+  1, 1, 1 ;
+
+ wel-1_q =
+  -25,
+  25 ;
+
+ wel-1_aux =
+  0,
+  0 ;
+}

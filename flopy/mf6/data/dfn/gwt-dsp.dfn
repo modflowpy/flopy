@@ -1,4 +1,5 @@
 # --------------------- gwt dsp options ---------------------
+# flopy netcdf
 
 block options
 name xt3d_off

@@ -1,0 +1,3 @@
+total_inner_iterations,totim,kper,kstp,nouter,inner_iterations,solution_outer_dvmax,solution_outer_dvmax_model,solution_outer_dvmax_package,solution_outer_dvmax_node
+10,1.0000000000000000,1,1,1,10,526.09314739476588,1,,13
+11,1.0000000000000000,1,1,2,1,-0.21600499167107046E-11,1,,13

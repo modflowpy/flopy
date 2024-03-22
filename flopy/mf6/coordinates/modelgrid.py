@@ -429,7 +429,9 @@ class ModelGrid:
             (model_name, "nam", "packages", "packages")
         ]
         structure = MFStructure()
-        if (
+        if isinstance(package_recarray, AttributeError):
+            return DiscretizationType.UNDEFINED
+        elif (
             package_recarray.search_data(
                 f"dis{structure.get_version_string()}", 0
             )
@@ -478,15 +480,17 @@ class ModelGrid:
                 (self._model_name, "disu", "griddata", "idomain")
             ].get_data()
         except_str = (
-            "ERROR: Grid type {} for model {} not " "recognized.".format(
-                self._grid_type, self._model_name
-            )
+            "ERROR: Grid type {} for model {} not "
+            "recognized.".format(self._grid_type, self._model_name)
         )
         print(except_str)
         raise MFGridException(except_str)
 
     def grid_type(self):
-        if self.freeze_grid:
+        if (
+            self.freeze_grid
+            and self._grid_type != DiscretizationType.UNDEFINED
+        ):
             return self._grid_type
         else:
             return self.get_grid_type(self._simulation_data, self._model_name)
