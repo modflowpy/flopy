@@ -1,7 +1,6 @@
 """Test get-modflow utility."""
 
 import os
-import platform
 import sys
 from os.path import expandvars
 from pathlib import Path
