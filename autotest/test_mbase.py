@@ -173,7 +173,9 @@ def test_run_model_exe_rel_path(mf6_model_path, function_tmpdir, use_ext):
         relpath_safe(Path(which("mf6") or "")),
     ],
 )
-def test_run_model_custom_print(mf6_model_path, function_tmpdir, use_paths, exe):
+def test_run_model_custom_print(
+    mf6_model_path, function_tmpdir, use_paths, exe
+):
     ws = function_tmpdir / "ws"
     copytree(mf6_model_path, ws)
 
