@@ -345,6 +345,31 @@ class ModflowDis(Package):
         """
         return self.get_totim()[-1]
 
+    def get_per_stp_perlen(self):
+        """
+        Get lists for stress periods, time steps, and period lengths in the model.
+
+        Returns
+        -------
+        per: list of ints
+            Stress periods in the model
+        stp: list of ints
+            Timesteps in each stress period
+        perlen: list of ints
+            Length of each timestep
+        """
+
+        nstp = self.nstp.array
+        nperlen = self.perlen.array
+        per = []
+        stp = []
+        perlen = []
+        for iper in range(self.nper):
+            per.append(iper + 1)  # Use 1-based indexing
+            stp.append(nstp[iper])
+            perlen.append(nperlen[iper])
+        return per, stp, perlen
+
     def get_kstp_kper_toffset(self, t=0.0, use_cached_totim=False):
         """
         Get the stress period, time step, and time offset from passed time.
