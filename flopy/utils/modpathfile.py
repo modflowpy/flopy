@@ -415,7 +415,9 @@ class PathlineFile(ModpathFile):
                 The following keyword options will be removed for FloPy 3.6:
                 - ``epsg`` (int): use ``crs`` instead.
         """
-        import pdb; pdb.set_trace()
+        import pdb
+
+        pdb.set_trace()
         super().write_shapefile(
             data=data if data is not None else pathline_data,
             one_per_particle=one_per_particle,
