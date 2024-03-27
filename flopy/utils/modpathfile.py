@@ -345,7 +345,7 @@ class PathlineFile(ModpathFile):
 
         Returns
         -------
-        data : np.recarray
+        np.recarray
             Slice of pathline data array (e.g. PathlineFile._data)
             containing only pathlines that pass through (k,i,j) or (node)
             dest_cells.
@@ -415,10 +415,8 @@ class PathlineFile(ModpathFile):
                 The following keyword options will be removed for FloPy 3.6:
                 - ``epsg`` (int): use ``crs`` instead.
         """
-        import pdb
-
-        pdb.set_trace()
-        super().write_shapefile(
+        ParticleTrackFile.write_shapefile(
+            self,
             data=data if data is not None else pathline_data,
             one_per_particle=one_per_particle,
             direction=direction,
@@ -638,7 +636,7 @@ class EndpointFile(ModpathFile):
 
         Returns
         -------
-        data : np.recarray
+        np.recarray
             Slice of endpoint data array (e.g. EndpointFile.get_alldata)
             containing only endpoint data with final locations in (k,i,j) or
             (node) dest_cells.
@@ -918,7 +916,7 @@ class TimeseriesFile(ModpathFile):
 
         Returns
         -------
-        data : np.recarray
+        np.recarray
             Slice of timeseries data array (e.g. TmeseriesFile._data)
             containing only timeseries that pass through (k,i,j) or
             (node) dest_cells.
@@ -986,7 +984,8 @@ class TimeseriesFile(ModpathFile):
              The following keyword options will be removed for FloPy 3.6:
                - ``epsg`` (int): use ``crs`` instead.
         """
-        super().write_shapefile(
+        ParticleTrackFile.write_shapefile(
+            self,
             data=data if data is not None else timeseries_data,
             one_per_particle=one_per_particle,
             direction=direction,
