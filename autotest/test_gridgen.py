@@ -851,3 +851,91 @@ def test_gridgen(function_tmpdir):
         "should not be (without vertical pass through activated)."
     )
     assert max(ja0) <= disu_vp.nodelay[0], msg
+
+
+@pytest.mark.xfail
+@requires_exe("mf6", "gridgen")
+def test_flopy_issue_1492(function_tmpdir):
+    name = "mymodel"
+    nlay = 3
+    nrow = 10
+    ncol = 10
+    delr = delc = 1.1  # <-- 1.0 converges
+    top = 1
+    bot = 0
+    dz = (top - bot) / nlay
+    botm = [top - k * dz for k in range(1, nlay + 1)]
+
+    # Create a dummy model and regular grid to use as the base grid for gridgen
+    sim = flopy.mf6.MFSimulation(
+        sim_name=name, sim_ws=function_tmpdir, exe_name="mf6"
+    )
+    gwf = flopy.mf6.ModflowGwf(sim, modelname=name)
+
+    dis = flopy.mf6.ModflowGwfdis(
+        gwf,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=delr,
+        delc=delc,
+        top=top,
+        botm=botm,
+    )
+
+    # Create and build the gridgen model with a refined area in the middle
+    g = Gridgen(dis, model_ws=function_tmpdir)
+    # polys = [Polygon([(4, 4), (6, 4), (6, 6), (4, 6)])]
+    # g.add_refinement_features(polys, "polygon", 3, range(nlay))
+    g.build()
+
+    # retrieve a dictionary of arguments to be passed
+    # directly into the flopy disv constructor
+    disv_gridprops = g.get_gridprops_disv()
+
+    # find the cell numbers for constant heads
+    chdspd = []
+    ilay = 0
+    for x, y, head in [(0, 10, 1.0), (10, 0, 0.0)]:
+        ra = g.intersect([(x, y)], "point", ilay)
+        ic = ra["nodenumber"][0]
+        chdspd.append([(ilay, ic), head])
+
+    # build run and post-process the MODFLOW 6 model
+    sim = flopy.mf6.MFSimulation(
+        sim_name=name,
+        sim_ws=function_tmpdir,
+        exe_name="mf6",
+        verbosity_level=0,
+    )
+    tdis = flopy.mf6.ModflowTdis(sim)
+    ims = flopy.mf6.ModflowIms(sim, linear_acceleration="bicgstab")
+    gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
+    disv = flopy.mf6.ModflowGwfdisv(gwf, **disv_gridprops)
+    ic = flopy.mf6.ModflowGwfic(gwf)
+    npf = flopy.mf6.ModflowGwfnpf(
+        gwf, xt3doptions=True, save_specific_discharge=True
+    )
+    chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chdspd)
+    budget_file = name + ".bud"
+    head_file = name + ".hds"
+    oc = flopy.mf6.ModflowGwfoc(
+        gwf,
+        budget_filerecord=budget_file,
+        head_filerecord=head_file,
+        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    )
+    sim.write_simulation()
+    success, _ = sim.run_simulation(silent=False)
+    assert success
+
+    head = gwf.output.head().get_data()
+    bud = gwf.output.budget()
+    spdis = bud.get_data(text="DATA-SPDIS")[0]
+
+    pmv = flopy.plot.PlotMapView(gwf)
+    pmv.plot_array(head)
+    pmv.plot_grid(colors="white")
+    pmv.contour_array(head, levels=[0.2, 0.4, 0.6, 0.8], linewidths=3.0)
+    pmv.plot_vector(spdis["qx"], spdis["qy"], color="white")
+    plt.show()
