@@ -234,8 +234,8 @@ class ParticleTrackFile(ABC):
 
         """
         from ..export.shapefile_utils import recarray2shp
-        from ..utils import geometry
-        from ..utils.geometry import LineString
+        from . import geometry
+        from .geometry import LineString
 
         series = data
         if series is None:

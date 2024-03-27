@@ -2697,7 +2697,7 @@ def to_mp7_pathlines(
     np.recarray or pd.DataFrame (consistent with input type)
     """
 
-    from flopy.utils.particletracking import MIN_PARTICLE_TRACK_DTYPE
+    from flopy.utils.particletrackfile import MIN_PARTICLE_TRACK_DTYPE
 
     # determine return type
     ret_type = type(data)
@@ -2781,7 +2781,7 @@ def to_mp7_endpoints(
     np.recarray or pd.DataFrame (consistent with input type)
     """
 
-    from flopy.utils.particletracking import MIN_PARTICLE_TRACK_DTYPE
+    from flopy.utils.particletrackfile import MIN_PARTICLE_TRACK_DTYPE
 
     # determine return type
     ret_type = type(data)

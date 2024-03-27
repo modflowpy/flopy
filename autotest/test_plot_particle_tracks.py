@@ -4,12 +4,12 @@ import numpy as np
 import pandas as pd
 import pytest
 from matplotlib.collections import LineCollection, PathCollection
-from modflow_devtools.markers import requires_exe, requires_pkg
+from modflow_devtools.markers import requires_exe
 
 from flopy.modflow import Modflow
 from flopy.modpath import Modpath6, Modpath6Bas
 from flopy.plot import PlotCrossSection, PlotMapView
-from flopy.utils import CellBudgetFile, EndpointFile, HeadFile, PathlineFile
+from flopy.utils import EndpointFile, PathlineFile
 
 
 @pytest.fixture
@@ -78,6 +78,8 @@ def test_plot_map_view_mp6_plot_pathline(modpath_model):
 @pytest.mark.slow
 @requires_exe("mf2005", "mp6")
 def test_plot_cross_section_mp6_plot_pathline(modpath_model):
+    from matplotlib import pyplot as plt
+
     ml, mp, sim = modpath_model
     mp.write_input()
     mp.run_model(silent=False)
@@ -91,6 +93,7 @@ def test_plot_cross_section_mp6_plot_pathline(modpath_model):
         mx = PlotCrossSection(model=ml, line={"row": 4})
         mx.plot_bc("WEL", kper=2, color="blue")
         pth = mx.plot_pathline(pl, method="cell", colors="red")
+        plt.show()
         assert isinstance(pth, LineCollection)
         assert len(pth._paths) == 6
 

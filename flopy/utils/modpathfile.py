@@ -9,7 +9,7 @@ from typing import List, Union, Tuple, Optional
 import numpy as np
 from numpy.lib.recfunctions import append_fields, repack_fields
 
-from flopy.utils.particletracking import ParticleTrackFile
+from flopy.utils.particletrackfile import ParticleTrackFile
 
 from ..utils.flopy_io import loadtxt
 
@@ -363,6 +363,69 @@ class PathlineFile(ModpathFile):
             dest_cells=dest_cells, to_recarray=to_recarray
         )
 
+    def write_shapefile(
+        self,
+        data=None,
+        pathline_data=None,
+        one_per_particle=True,
+        direction="ending",
+        shpname="pathlines.shp",
+        mg=None,
+        crs=None,
+        **kwargs,
+    ):
+        """
+        Write pathlines to a shapefile.
+
+        Parameters
+        ----------
+        data : np.recarray
+            Record array of same form as that returned by
+            .get_alldata() (if None, .get_alldata() is exported).
+        timeseries_data : np.recarray
+            Record array of same form as that returned by
+            .get_alldata() (if None, .get_alldata() is exported).
+
+            .. deprecated:: 3.7
+                The ``timeseries_data`` option will be removed for FloPy 3.8+. Use ``data`` instead.
+        one_per_particle : boolean (default True)
+            True writes a single LineString with a single set of attribute
+            data for each particle. False writes a record/geometry for each
+            pathline segment (each row in the Timeseries file). This option can
+            be used to visualize attribute information (time, model layer,
+            etc.) across a pathline in a GIS.
+        direction : str
+            String defining if starting or ending particle locations should be
+            included in shapefile attribute information. Only used if
+            one_per_particle=False. (default is 'ending')
+        shpname : str
+            File path for shapefile
+        mg : flopy.discretization.grid instance
+            Used to scale and rotate Global x,y,z values in MODPATH Timeseries
+            file.
+        crs : pyproj.CRS, int, str, optional
+            Coordinate reference system (CRS) for the model grid
+            (must be projected; geographic CRS are not supported).
+            The value can be anything accepted by
+            :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+            such as an authority string (eg "EPSG:26916") or a WKT string.
+        kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
+
+            .. deprecated:: 3.5
+                The following keyword options will be removed for FloPy 3.6:
+                - ``epsg`` (int): use ``crs`` instead.
+        """
+        import pdb; pdb.set_trace()
+        super().write_shapefile(
+            data=data if data is not None else pathline_data,
+            one_per_particle=one_per_particle,
+            direction=direction,
+            shpname=shpname,
+            mg=mg,
+            crs=crs,
+            **kwargs,
+        )
+
 
 class EndpointFile(ModpathFile):
     """
@@ -635,6 +698,7 @@ class EndpointFile(ModpathFile):
 
     def write_shapefile(
         self,
+        data=None,
         endpoint_data=None,
         shpname="endpoints.shp",
         direction="ending",
@@ -645,9 +709,15 @@ class EndpointFile(ModpathFile):
         """
         Write particle starting / ending locations to shapefile.
 
+        data : np.recarray
+            Record array of same form as that returned by EndpointFile.get_alldata.
+            (if none, EndpointFile.get_alldata() is exported).
         endpoint_data : np.recarray
             Record array of same form as that returned by EndpointFile.get_alldata.
             (if none, EndpointFile.get_alldata() is exported).
+
+            .. deprecated:: 3.7
+                The ``endpoint_data`` option will be removed for FloPy 3.8+. Use ``data`` instead.
         shpname : str
             File path for shapefile
         direction : str
@@ -664,10 +734,9 @@ class EndpointFile(ModpathFile):
             such as an authority string (eg "EPSG:26916") or a WKT string.
         kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
 
-          .. deprecated:: 3.5
-             The following keyword options will be removed for FloPy 3.6:
-
-               - ``epsg`` (int): use ``crs`` instead.
+            .. deprecated:: 3.5
+                The following keyword options will be removed for FloPy 3.6:
+                - ``epsg`` (int): use ``crs`` instead.
 
         """
         from ..discretization import StructuredGrid
@@ -675,7 +744,7 @@ class EndpointFile(ModpathFile):
         from ..utils import geometry
         from ..utils.geometry import Point
 
-        epd = endpoint_data.copy()
+        epd = (data if data is not None else endpoint_data).copy()
         if epd is None:
             epd = self.get_alldata()
 
@@ -862,3 +931,65 @@ class TimeseriesFile(ModpathFile):
 
         """
         return super().get_destination_data(dest_cells=dest_cells)
+
+    def write_shapefile(
+        self,
+        data=None,
+        timeseries_data=None,
+        one_per_particle=True,
+        direction="ending",
+        shpname="pathlines.shp",
+        mg=None,
+        crs=None,
+        **kwargs,
+    ):
+        """
+        Write timeseries to a shapefile
+
+        data : np.recarray
+            Record array of same form as that returned by
+            Timeseries.get_alldata(). (if none, Timeseries.get_alldata()
+            is exported).
+        timeseries_data : np.recarray
+            Record array of same form as that returned by
+            Timeseries.get_alldata(). (if none, Timeseries.get_alldata()
+            is exported).
+
+            .. deprecated:: 3.7
+                The ``timeseries_data`` option will be removed for FloPy 3.8+. Use ``data`` instead.
+        one_per_particle : boolean (default True)
+            True writes a single LineString with a single set of attribute
+            data for each particle. False writes a record/geometry for each
+            pathline segment (each row in the Timeseries file). This option can
+            be used to visualize attribute information (time, model layer,
+            etc.) across a pathline in a GIS.
+        direction : str
+            String defining if starting or ending particle locations should be
+            included in shapefile attribute information. Only used if
+            one_per_particle=False. (default is 'ending')
+        shpname : str
+            File path for shapefile
+        mg : flopy.discretization.grid instance
+            Used to scale and rotate Global x,y,z values in MODPATH Timeseries
+            file.
+        crs : pyproj.CRS, int, str, optional
+            Coordinate reference system (CRS) for the model grid
+            (must be projected; geographic CRS are not supported).
+            The value can be anything accepted by
+            :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
+            such as an authority string (eg "EPSG:26916") or a WKT string.
+        kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
+
+          .. deprecated:: 3.5
+             The following keyword options will be removed for FloPy 3.6:
+               - ``epsg`` (int): use ``crs`` instead.
+        """
+        super().write_shapefile(
+            data=data if data is not None else timeseries_data,
+            one_per_particle=one_per_particle,
+            direction=direction,
+            shpname=shpname,
+            mg=mg,
+            crs=crs,
+            **kwargs,
+        )
