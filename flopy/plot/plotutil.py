@@ -2417,10 +2417,12 @@ def intersect_modpath_with_crosssection(
                     oppts[cell],
                 )
                 idx = [
-                    i for i, (x, y) in enumerate(zip(m0[0], m1[0])) if x == y
+                    i
+                    for i, (x, y) in enumerate(zip(m0[0], m1[0]))
+                    if x == y == True
                 ]
             else:
-                idx = [i for i, x in enumerate(m0[0]) if x]
+                idx = [i for i, x in enumerate(m0[0]) if x == True]
 
             if idx:
                 if cell not in idict:
