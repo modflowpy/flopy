@@ -352,7 +352,6 @@ def loadtxt(
     ra : np.recarray
         Numpy record array of file contents.
     """
-    from ..utils import import_optional_dependency
 
     if use_pandas:
         if delimiter.isspace():
