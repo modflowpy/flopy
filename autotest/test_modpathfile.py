@@ -347,7 +347,7 @@ def test_write_shapefile(function_tmpdir, mp7_small, longfieldname):
 
     # write the pathline recarray to shapefile
     pathline_file.write_shapefile(
-        data=pathlines,
+        pathline_data=pathlines,
         shpname=shp_file,
         one_per_particle=False,
         mg=grid,

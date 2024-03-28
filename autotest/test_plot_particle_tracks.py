@@ -58,7 +58,6 @@ def test_plot_map_view_mp6_plot_pathline(modpath_model):
         mx.plot_grid()
         mx.plot_bc("WEL", kper=2, color="blue")
         pth = mx.plot_pathline(pl, colors="red")
-        # plt.show()
         assert isinstance(pth, LineCollection)
         assert len(pth._paths) == 114
 
@@ -78,8 +77,6 @@ def test_plot_map_view_mp6_plot_pathline(modpath_model):
 @pytest.mark.slow
 @requires_exe("mf2005", "mp6")
 def test_plot_cross_section_mp6_plot_pathline(modpath_model):
-    from matplotlib import pyplot as plt
-
     ml, mp, sim = modpath_model
     mp.write_input()
     mp.run_model(silent=False)
@@ -93,7 +90,6 @@ def test_plot_cross_section_mp6_plot_pathline(modpath_model):
         mx = PlotCrossSection(model=ml, line={"row": 4})
         mx.plot_bc("WEL", kper=2, color="blue")
         pth = mx.plot_pathline(pl, method="cell", colors="red")
-        plt.show()
         assert isinstance(pth, LineCollection)
         assert len(pth._paths) == 6
 
