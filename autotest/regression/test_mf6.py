@@ -2230,10 +2230,8 @@ def test035_create_tests_fhb(function_tmpdir, example_data_path):
         model, storagecoefficient=True, iconvert=0, ss=0.01, sy=0.0
     )
     time = model.modeltime
-    assert (
-        time.steady_state[0] is False
-        and time.steady_state[1] is False
-        and time.steady_state[2] is False
+    assert not (
+        time.steady_state[0] or time.steady_state[1] or time.steady_state[2]
     )
     wel_period = {0: [((0, 1, 0), "flow")]}
     wel_package = ModflowGwfwel(
@@ -3782,10 +3780,10 @@ def test005_advgw_tidal(function_tmpdir, example_data_path):
     model = sim.get_model(model_name)
     time = model.modeltime
     assert (
-        time.steady_state[0] is True
-        and time.steady_state[1] is False
-        and time.steady_state[2] is False
-        and time.steady_state[3] is False
+        time.steady_state[0]
+        and not time.steady_state[1]
+        and not time.steady_state[2]
+        and not time.steady_state[3]
     )
     ghb = model.get_package("ghb")
     obs = ghb.obs
