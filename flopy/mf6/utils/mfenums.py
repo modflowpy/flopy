@@ -11,3 +11,4 @@ class DiscretizationType(Enum):
     DISV = 2
     DISU = 3
     DISL = 4
+    DIS2D = 5
