@@ -405,6 +405,10 @@ class ModelDimensions:
             self._model_grid = ModelGrid(
                 self.model_name, self.simulation_data, DiscretizationType.DISL
             )
+        elif grid_type == DiscretizationType.DIS2D:
+            self._model_grid = ModelGrid(
+                self.model_name, self.simulation_data, DiscretizationType.DIS2D
+            )
         else:
             self._model_grid = ModelGrid(
                 self.model_name,
