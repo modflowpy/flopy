@@ -1306,7 +1306,10 @@ class MFModel(PackageContainer, ModelInterface):
             if to_cdl:
                 if not os.path.exists(model_folder_path):
                     os.makedirs(model_folder_path)
-                model_netcdf.tocdl(data=True, outfile=netcdf_file_path)
+                try:
+                    model_netcdf.tocdl(data=True, outfile=netcdf_file_path)
+                except FileNotFoundError:
+                    raise Exception(f"File not found: {netcdf_file_path}")
             model_netcdf.close()
         else:
             self.name_file.write(ext_file_action=ext_file_action)
