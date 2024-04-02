@@ -1104,7 +1104,14 @@ class Vtk:
         if isinstance(pathlines, list):
             if len(pathlines) == 0:
                 return
-            pathlines = [(pl.to_records(index=False) if isinstance(pl, pd.DataFrame) else pl) for pl in pathlines]
+            pathlines = [
+                (
+                    pl.to_records(index=False)
+                    if isinstance(pl, pd.DataFrame)
+                    else pl
+                )
+                for pl in pathlines
+            ]
             if all(k in pathlines[0].dtype.names for k in mpx_keys):
                 keys = mpx_keys
             elif all(k in pathlines[0].dtype.names for k in prt_keys):
