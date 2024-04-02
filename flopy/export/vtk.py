@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Union
 
 import numpy as np
+import pandas as pd
 
 from ..datbase import DataInterface, DataType
 from ..utils import Util3d, import_optional_dependency
@@ -1079,23 +1080,53 @@ class Vtk:
 
     def add_pathline_points(self, pathlines, timeseries=False):
         """
-        Method to add Modpath output from a pathline or timeseries file
-        to the grid. Colors will be representative of totim.
+        Method to add particle pathlines to the grid, with points
+        colored by travel-time. Supports MODPATH or MODFLOW6 PRT
+        pathline format, or MODPATH timeseries format.
 
         Parameters
         ----------
-        pathlines : np.recarray or list
-            pathlines accepts a numpy recarray of a particle pathline or
-            a list of numpy reccarrays associated with pathlines
-        timeseries : bool
-            method to plot data as a series of vtk timeseries files for
-            animation or as a single static vtk file. Default is false
+        pathlines : pd.dataframe, np.recarray or list
+            Particle pathlines, either as a single dataframe or recarray
+            or a list of such, separated by particle ID. If pathlines are
+            not provided separately, the dataframe or recarray must have
+            columns: 'time', 'k' & 'particleid' for MODPATH 3, 5, 6 or 7,
+            and 'irpt', 'iprp', 'imdl', and 'trelease' for MODFLOW 6 PRT,
+            so particle pathlines can be distinguished.
+        timeseries : bool, optional
+            Whether to plot data as a series of vtk timeseries files for
+            animation or as a single static vtk file. Default is false.
         """
 
-        if isinstance(pathlines, (np.recarray, np.ndarray)):
-            pathlines = [pathlines]
+        mpx_keys = ["particleid", "time", "k"]
+        prt_keys = ["imdl", "iprp", "irpt", "trelease", "ilay"]
 
-        keys = ["particleid", "time"]
+        if isinstance(pathlines, pd.DataFrame):
+            pathlines = pathlines.to_records(index=False)
+
+        if isinstance(pathlines, (np.recarray, np.ndarray)):
+            if all(k in pathlines.dtype.names for k in mpx_keys):
+                keys = mpx_keys
+                pids = np.unique(pathlines.particleid)
+                pathlines = [
+                    pathlines[pathlines.particleid == pid] for pid in pids
+                ]
+            elif all(k in pathlines.dtype.names for k in prt_keys):
+                keys = prt_keys
+                pls = []
+                for imdl in np.unique(pathlines.imdl):
+                    for iprp in np.unique(pathlines.iprp):
+                        for irpt in np.unique(pathlines.irpt):
+                            pl = pathlines[
+                                (pathlines.imdl == imdl)
+                                & (pathlines.iprp == iprp)
+                                & (pathlines.irpt == irpt)
+                            ]
+                            pls.extend(
+                                [pl[pl.trelease == t] for t in np.unique(pl.t)]
+                            )
+                pathlines = pls
+
         if not timeseries:
             arrays = {key: [] for key in keys}
             points = []
