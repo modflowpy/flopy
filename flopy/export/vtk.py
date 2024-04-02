@@ -1101,10 +1101,17 @@ class Vtk:
         mpx_keys = ["particleid", "time", "k"]
         prt_keys = ["imdl", "iprp", "irpt", "trelease", "ilay"]
 
-        if isinstance(pathlines, pd.DataFrame):
-            pathlines = pathlines.to_records(index=False)
-
-        if isinstance(pathlines, (np.recarray, np.ndarray)):
+        if isinstance(pathlines, list):
+            if len(pathlines) == 0:
+                return
+            pathlines = [(pl.to_records(index=False) if isinstance(pl, pd.DataFrame) else pl) for pl in pathlines]
+            if all(k in pathlines[0].dtype.names for k in mpx_keys):
+                keys = mpx_keys
+            elif all(k in pathlines[0].dtype.names for k in prt_keys):
+                keys = prt_keys
+            else:
+                raise ValueError("Unrecognized pathline format")
+        elif isinstance(pathlines, (np.recarray, np.ndarray, pd.DataFrame)):
             if all(k in pathlines.dtype.names for k in mpx_keys):
                 keys = mpx_keys
                 pids = np.unique(pathlines.particleid)
@@ -1126,6 +1133,8 @@ class Vtk:
                                 [pl[pl.trelease == t] for t in np.unique(pl.t)]
                             )
                 pathlines = pls
+            else:
+                raise ValueError("Unrecognized pathline format")
 
         if not timeseries:
             arrays = {key: [] for key in keys}
