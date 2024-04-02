@@ -301,5 +301,3 @@ try:
 except PermissionError:
     # can occur on windows: https://docs.python.org/3/library/tempfile.html#tempfile.TemporaryDirectory
     pass
-
-
