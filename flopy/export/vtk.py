@@ -1117,8 +1117,10 @@ class Vtk:
             elif all(k in pathlines[0].dtype.names for k in prt_keys):
                 keys = prt_keys
             else:
-                raise ValueError("Unrecognized pathline format")
+                raise ValueError("Unrecognized pathline dtype")
         elif isinstance(pathlines, (np.recarray, np.ndarray, pd.DataFrame)):
+            if isinstance(pathlines, pd.DataFrame):
+                pathlines = pathlines.to_records(index=False)
             if all(k in pathlines.dtype.names for k in mpx_keys):
                 keys = mpx_keys
                 pids = np.unique(pathlines.particleid)
@@ -1141,7 +1143,9 @@ class Vtk:
                             )
                 pathlines = pls
             else:
-                raise ValueError("Unrecognized pathline format")
+                raise ValueError("Unrecognized pathline dtype")
+        else:
+            raise ValueError("Unsupported pathline format, expected array, recarray, dataframe, or list")
 
         if not timeseries:
             arrays = {key: [] for key in keys}
