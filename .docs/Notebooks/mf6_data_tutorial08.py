@@ -223,7 +223,7 @@ print(f"New filename for stress period 2:  {spd_record[1]['filename']}")
 # parameter to True will also produce a text-readable version of the
 # NETCDF data.
 
-sim.write_simulation(write_netcdf=True, to_cdl=True)
+sim.write_simulation(write_netcdf=True)
 
 # An alternative to individually setting each file to external is to call the set_all_files_external method (there is also a set_all_files_internal method to do the opposite). While this requires less code, it does not give you the ability to set the names of each individual external file. By setting the binary attribute to True, flopy will store data to binary files wherever possible.
 
@@ -301,3 +301,5 @@ try:
 except PermissionError:
     # can occur on windows: https://docs.python.org/3/library/tempfile.html#tempfile.TemporaryDirectory
     pass
+
+
