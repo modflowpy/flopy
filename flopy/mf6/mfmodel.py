@@ -1304,6 +1304,8 @@ class MFModel(PackageContainer, ModelInterface):
                 f"{self.name}.nc.out",
             )
             if to_cdl:
+                if not os.path.exists(model_folder_path):
+                    os.makedirs(model_folder_path)
                 model_netcdf.tocdl(data=True, outfile=netcdf_file_path)
             model_netcdf.close()
         else:
