@@ -149,7 +149,7 @@ class ModflowUtlspca(mfpackage.MFPackage):
         concentration=0.0,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             model, "spca", filename, pname, loading_package, **kwargs

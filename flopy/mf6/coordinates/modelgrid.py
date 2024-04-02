@@ -480,8 +480,9 @@ class ModelGrid:
                 (self._model_name, "disu", "griddata", "idomain")
             ].get_data()
         except_str = (
-            "ERROR: Grid type {} for model {} not "
-            "recognized.".format(self._grid_type, self._model_name)
+            "ERROR: Grid type {} for model {} not " "recognized.".format(
+                self._grid_type, self._model_name
+            )
         )
         print(except_str)
         raise MFGridException(except_str)

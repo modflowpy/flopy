@@ -168,7 +168,7 @@ class ModflowMvt(mfpackage.MFPackage):
         budgetcsv_filerecord=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             parent_model_or_package,
@@ -176,7 +176,7 @@ class ModflowMvt(mfpackage.MFPackage):
             filename,
             pname,
             loading_package,
-            **kwargs
+            **kwargs,
         )
 
         # set up variables

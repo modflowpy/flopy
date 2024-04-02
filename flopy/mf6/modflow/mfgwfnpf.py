@@ -610,7 +610,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         wetdry=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             model, "npf", filename, pname, loading_package, **kwargs

@@ -203,7 +203,7 @@ class ModflowGnc(mfpackage.MFPackage):
         gncdata=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             simulation, "gnc", filename, pname, loading_package, **kwargs

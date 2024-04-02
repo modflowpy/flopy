@@ -341,7 +341,7 @@ class ModflowGwfrch(mfpackage.MFPackage):
         stress_period_data=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             model, "rch", filename, pname, loading_package, **kwargs

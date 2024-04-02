@@ -122,7 +122,7 @@ class ModflowGwtfmi(mfpackage.MFPackage):
         packagedata=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             model, "fmi", filename, pname, loading_package, **kwargs

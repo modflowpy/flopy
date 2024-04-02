@@ -229,8 +229,9 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                         >= VerbosityLevel.verbose.value
                     ):
                         print(
-                            "Storing {} to external file {}.."
-                            ".".format(self.structure.name, external_file_path)
+                            "Storing {} to external file {}.." ".".format(
+                                self.structure.name, external_file_path
+                            )
                         )
                     external_data = {
                         "filename": external_file_path,

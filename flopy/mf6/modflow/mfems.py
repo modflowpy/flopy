@@ -44,7 +44,7 @@ class ModflowEms(mfpackage.MFPackage):
         loading_package=False,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             simulation, "ems", filename, pname, loading_package, **kwargs

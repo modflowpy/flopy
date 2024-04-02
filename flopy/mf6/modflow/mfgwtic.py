@@ -61,7 +61,7 @@ class ModflowGwtic(mfpackage.MFPackage):
         strt=0.0,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             model, "ic", filename, pname, loading_package, **kwargs

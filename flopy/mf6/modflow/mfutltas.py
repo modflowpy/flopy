@@ -173,7 +173,7 @@ class ModflowUtltas(mfpackage.MFPackage):
         tas_array=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             parent_package, "tas", filename, pname, loading_package, **kwargs

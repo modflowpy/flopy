@@ -614,7 +614,7 @@ class ModflowGwtmwt(mfpackage.MFPackage):
         mwtperioddata=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             model, "mwt", filename, pname, loading_package, **kwargs

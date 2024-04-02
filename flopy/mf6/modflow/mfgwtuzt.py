@@ -634,7 +634,7 @@ class ModflowGwtuzt(mfpackage.MFPackage):
         uztperioddata=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             model, "uzt", filename, pname, loading_package, **kwargs

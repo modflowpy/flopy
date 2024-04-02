@@ -242,7 +242,7 @@ class ModflowUtlts(mfpackage.MFPackage):
         timeseries=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             parent_package, "ts", filename, pname, loading_package, **kwargs

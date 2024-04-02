@@ -56,7 +56,7 @@ class ModflowGwtadv(mfpackage.MFPackage):
         scheme=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             model, "adv", filename, pname, loading_package, **kwargs

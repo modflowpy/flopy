@@ -474,7 +474,7 @@ class ModflowGwtdisu(mfpackage.MFPackage):
         cell2d=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             model, "disu", filename, pname, loading_package, **kwargs

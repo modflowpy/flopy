@@ -276,7 +276,7 @@ class ModflowNam(mfpackage.MFPackage):
         solutiongroup=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             simulation, "nam", filename, pname, loading_package, **kwargs

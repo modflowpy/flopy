@@ -128,7 +128,7 @@ class ModflowUtlsfrtab(mfpackage.MFPackage):
         table=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             model, "sfrtab", filename, pname, loading_package, **kwargs

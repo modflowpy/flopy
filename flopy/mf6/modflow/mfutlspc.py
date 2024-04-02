@@ -185,7 +185,7 @@ class ModflowUtlspc(mfpackage.MFPackage):
         perioddata=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             model, "spc", filename, pname, loading_package, **kwargs

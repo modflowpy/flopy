@@ -467,9 +467,7 @@ class ModelDimensions:
                             data_item_struct,
                             path=path,
                             repeating_key=repeating_key,
-                        )[
-                            0
-                        ]
+                        )[0]
                         num_cols = num_cols + num
                         shape_consistent = (
                             shape_consistent and consistent_shape

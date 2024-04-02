@@ -304,8 +304,7 @@ class MFScalar(mfdata.MFData):
                     )
         else:
             message = (
-                "{} of type {} does not support add one "
-                "operation.".format(
+                "{} of type {} does not support add one " "operation.".format(
                     self._data_name, self.structure.get_datum_type()
                 )
             )

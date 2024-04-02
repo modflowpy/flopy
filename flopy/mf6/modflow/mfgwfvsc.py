@@ -290,7 +290,7 @@ class ModflowGwfvsc(mfpackage.MFPackage):
         packagedata=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             model, "vsc", filename, pname, loading_package, **kwargs

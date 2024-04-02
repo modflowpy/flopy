@@ -760,7 +760,7 @@ class ModflowIms(mfpackage.MFPackage):
         reordering_method=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             simulation, "ims", filename, pname, loading_package, **kwargs

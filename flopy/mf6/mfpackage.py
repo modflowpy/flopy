@@ -1569,8 +1569,9 @@ class MFBlock:
                         >= VerbosityLevel.verbose.value
                     ):
                         print(
-                            "        writing data {} ({}).."
-                            ".".format(dataset.structure.name, transient_key)
+                            "        writing data {} ({}).." ".".format(
+                                dataset.structure.name, transient_key
+                            )
                         )
                     if write_netcdf:
                         if dataset.path not in nc_paths_used:
@@ -2270,8 +2271,7 @@ class MFPackage(PackageContainer, PackageInterface):
                     bl_repr = repr(block)
                     if len(bl_repr.strip()) > 0:
                         data_str = (
-                            "{}Block {}\n--------------------\n{}"
-                            "\n".format(
+                            "{}Block {}\n--------------------\n{}" "\n".format(
                                 data_str, block.structure.name, repr(block)
                             )
                         )
@@ -2279,8 +2279,7 @@ class MFPackage(PackageContainer, PackageInterface):
                     bl_str = str(block)
                     if len(bl_str.strip()) > 0:
                         data_str = (
-                            "{}Block {}\n--------------------\n{}"
-                            "\n".format(
+                            "{}Block {}\n--------------------\n{}" "\n".format(
                                 data_str, block.structure.name, str(block)
                             )
                         )

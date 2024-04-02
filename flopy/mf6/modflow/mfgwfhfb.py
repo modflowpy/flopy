@@ -148,7 +148,7 @@ class ModflowGwfhfb(mfpackage.MFPackage):
         stress_period_data=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             model, "hfb", filename, pname, loading_package, **kwargs

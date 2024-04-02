@@ -176,7 +176,7 @@ class ModflowGwtdsp(mfpackage.MFPackage):
         atv=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             model, "dsp", filename, pname, loading_package, **kwargs

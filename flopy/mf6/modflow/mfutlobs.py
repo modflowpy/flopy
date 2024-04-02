@@ -194,7 +194,7 @@ class ModflowUtlobs(mfpackage.MFPackage):
         continuous=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             parent_model_or_package,
@@ -202,7 +202,7 @@ class ModflowUtlobs(mfpackage.MFPackage):
             filename,
             pname,
             loading_package,
-            **kwargs
+            **kwargs,
         )
 
         # set up variables

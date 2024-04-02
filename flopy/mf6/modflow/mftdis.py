@@ -180,7 +180,7 @@ class ModflowTdis(mfpackage.MFPackage):
         perioddata=((1.0, 1, 1.0),),
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             simulation, "tdis", filename, pname, loading_package, **kwargs

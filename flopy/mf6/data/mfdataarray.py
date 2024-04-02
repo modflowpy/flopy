@@ -389,8 +389,9 @@ class MFArray(MFMultiDimVar):
                 comment = f"Layered option not available for unstructured grid. {self._path}"
             else:
                 comment = (
-                    'Data "{}" does not support layered option. '
-                    "{}".format(self._data_name, self._path)
+                    'Data "{}" does not support layered option. ' "{}".format(
+                        self._data_name, self._path
+                    )
                 )
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(
@@ -438,8 +439,9 @@ class MFArray(MFMultiDimVar):
                 comment = f"Layered option not available for unstructured grid. {self._path}"
             else:
                 comment = (
-                    'Data "{}" does not support layered option. '
-                    "{}".format(self._data_name, self._path)
+                    'Data "{}" does not support layered option. ' "{}".format(
+                        self._data_name, self._path
+                    )
                 )
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(
@@ -546,8 +548,7 @@ class MFArray(MFMultiDimVar):
                     >= VerbosityLevel.verbose.value
                 ):
                     print(
-                        "Storing {} layer {} to external file {}.."
-                        ".".format(
+                        "Storing {} layer {} to external file {}.." ".".format(
                             self.structure.name,
                             current_layer[0] + 1,
                             file_path,
@@ -636,8 +637,7 @@ class MFArray(MFMultiDimVar):
                     >= VerbosityLevel.verbose.value
                 ):
                     print(
-                        "Storing {} layer {} internally.."
-                        ".".format(
+                        "Storing {} layer {} internally.." ".".format(
                             self.structure.name,
                             current_layer[0] + 1,
                         )
@@ -1291,8 +1291,9 @@ class MFArray(MFMultiDimVar):
                 # set layer range
                 if not shape_ml.in_shape(layer):
                     comment = (
-                        'Layer {} for variable "{}" does not exist'
-                        ".".format(layer, self._data_name)
+                        'Layer {} for variable "{}" does not exist' ".".format(
+                            layer, self._data_name
+                        )
                     )
                     type_, value_, traceback_ = sys.exc_info()
                     raise MFDataException(
