@@ -1145,7 +1145,9 @@ class Vtk:
             else:
                 raise ValueError("Unrecognized pathline dtype")
         else:
-            raise ValueError("Unsupported pathline format, expected array, recarray, dataframe, or list")
+            raise ValueError(
+                "Unsupported pathline format, expected array, recarray, dataframe, or list"
+            )
 
         if not timeseries:
             arrays = {key: [] for key in keys}
