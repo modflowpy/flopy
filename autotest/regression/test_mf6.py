@@ -2233,10 +2233,8 @@ def test035_create_tests_fhb(function_tmpdir, example_data_path):
         model, storagecoefficient=True, iconvert=0, ss=0.01, sy=0.0
     )
     time = model.modeltime
-    assert (
-        not time.steady_state[0]
-        and not time.steady_state[1]
-        and not time.steady_state[2]
+    assert not (
+        time.steady_state[0] or time.steady_state[1] or time.steady_state[2]
     )
     wel_period = {0: [((0, 1, 0), "flow")]}
     wel_package = ModflowGwfwel(

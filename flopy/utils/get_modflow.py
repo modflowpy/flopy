@@ -35,7 +35,7 @@ renamed_prefix = {
     "modflow6-nightly-build": "modflow6_nightly",
 }
 available_repos = list(renamed_prefix.keys())
-available_ostags = ["linux", "mac", "macarm", "win32", "win64"]
+available_ostags = ["linux", "mac", "macarm", "win32", "win64", "win64par"]
 max_http_tries = 3
 
 # Check if this is running from flopy
@@ -67,7 +67,7 @@ def get_ostag() -> str:
 
 
 def get_suffixes(ostag) -> Tuple[str, str]:
-    if ostag in ["win32", "win64"]:
+    if ostag in ["win32", "win64", "win64par"]:
         return ".exe", ".dll"
     elif ostag == "linux":
         return "", ".so"
@@ -429,7 +429,6 @@ def run_main(
     download_url = asset["browser_download_url"]
     if repo == "modflow6":
         asset_pth = Path(asset_name)
-        asset_stem = asset_pth.stem
         asset_suffix = asset_pth.suffix
         dst_fname = "-".join([repo, release["tag_name"], ostag]) + asset_suffix
     else:

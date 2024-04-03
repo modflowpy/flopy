@@ -496,8 +496,8 @@ class MFModel(PackageContainer, ModelInterface):
                 iac=dis.iac.array,
                 ja=dis.ja.array,
             )
-        elif self.get_grid_type() == DiscretizationType.DISL:
-            dis = self.get_package("disl")
+        elif self.get_grid_type() == DiscretizationType.DISV1D:
+            dis = self.get_package("disv1d")
             if not hasattr(dis, "_init_complete"):
                 if not hasattr(dis, "cell1d"):
                     # disv package has not yet been initialized
@@ -1343,11 +1343,11 @@ class MFModel(PackageContainer, ModelInterface):
             return DiscretizationType.DISU
         elif (
             package_recarray.search_data(
-                f"disl{structure.get_version_string()}", 0
+                f"disv1d{structure.get_version_string()}", 0
             )
             is not None
         ):
-            return DiscretizationType.DISL
+            return DiscretizationType.DISV1D
 
         return DiscretizationType.UNDEFINED
 
