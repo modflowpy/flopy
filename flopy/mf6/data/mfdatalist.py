@@ -756,7 +756,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
     def _fill_bound_list(lst, fill_val, dim_size=None):
         if dim_size is not None:
             fill = []
-            for n in range(0, dim_size):
+            for _ in range(0, dim_size):
                 fill.append(fill_val)
         else:
             fill = fill_val
@@ -1192,7 +1192,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                 if aux_var_name.lower() != "auxiliary":
                                     data_val = data_line[index]
                                     if data_val is not None:
-                                        txt = proc_item(
+                                        proc_item(
                                             data_val,
                                             data_item.type,
                                             self._simulation_data,
@@ -2163,7 +2163,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             if idx > 0:
                 # add empty keys for empty stress periods
                 for ibt_sp in range(last_sp + 1, sp):
-                    if sp in self.empty_keys and self.empty_keys[sp]:
+                    if ibt_sp in self.empty_keys and self.empty_keys[ibt_sp]:
                         for key in ncdf_dict.keys():
                             # if "_cellid" not in key:
                             ncdf_dict[key].append([])

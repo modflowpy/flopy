@@ -25,7 +25,6 @@ from .data.mfdatautil import (
     DataSearchOutput,
     MFComment,
     cellids_equal,
-    to_netcdf,
 )
 from .data.mfstructure import DatumType, MFDataItemStructure, MFStructure
 from .mfbase import (

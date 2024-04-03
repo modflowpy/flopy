@@ -10,7 +10,7 @@ from ..data import mfdata
 from ..data.mfstructure import DatumType
 from ..mfbase import ExtFileAction, MFDataException
 from .mfdatastorage import DataStorage, DataStorageType, DataStructureType
-from .mfdatautil import append_item, convert_data, proc_item, to_string
+from .mfdatautil import append_item, convert_data, proc_item
 from .mffileaccess import MFFileAccessScalar
 
 

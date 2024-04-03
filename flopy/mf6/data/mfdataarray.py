@@ -1146,7 +1146,7 @@ class MFArray(MFMultiDimVar):
                     empty_layer == 0.0, empty_layer
                 )
             layer_list = [data]
-            for lay in range(1, nlay):
+            for _ in range(1, nlay):
                 layer_list.append(empty_layer)
             data = np.ma.stack(layer_list)
         return data

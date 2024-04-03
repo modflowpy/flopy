@@ -1,9 +1,7 @@
-import copy
 import errno
 import inspect
 import os.path
 import sys
-import warnings
 from pathlib import Path
 from typing import List, Optional, Union
 
@@ -25,7 +23,6 @@ from flopy.mf6.mfbase import (
 from flopy.mf6.mfpackage import MFPackage
 from flopy.mf6.modflow import mfnam, mftdis
 from flopy.mf6.utils import binaryfile_utils, mfobservation
-from flopy.utils import import_optional_dependency
 
 
 class SimulationDict(dict):
@@ -1567,10 +1564,6 @@ class MFSimulationBase(PackageContainer):
 
         sim_netcdf = None
         packages_to_netcdf = []
-        netcdf_file = f"{self.name}_data.nc"
-        netcdf_file_out = f"{self.name}_data.nc.out"
-        file_mgr = self.simulation_data.mfpath
-        sim_folder_path = file_mgr.get_sim_path()
 
         # write TDIS file
         if (
