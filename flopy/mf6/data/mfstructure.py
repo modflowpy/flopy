@@ -81,7 +81,6 @@ class Dfn:
             "gwf-dis",  # dfn completed  tex updated
             "gwf-disv",  # dfn completed  tex updated
             "gwf-disu",  # dfn completed  tex updated
-            "lnf-disl",  # dfn completed  tex updated
             "gwf-ic",  # dfn completed  tex updated
             "gwf-npf",  # dfn completed  tex updated
             "gwf-sto",  # dfn completed  tex updated

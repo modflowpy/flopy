@@ -1455,13 +1455,14 @@ def test_vtk_unstructured(function_tmpdir, unstructured_grid):
 
 
 @requires_pkg("vtk", "pyvista")
-def test_vtk_to_pyvista(function_tmpdir, example_data_path):
+def test_vtk_to_pyvista(function_tmpdir):
     from autotest.test_mp7_cases import Mp7Cases
+    from pprint import pformat
 
     case_mf6 = Mp7Cases.mp7_mf6(function_tmpdir)
     case_mf6.write_input()
     success, buff = case_mf6.run_model()
-    assert success, f"MP7 model ({case_mf6.name}) failed"
+    assert success, f"MP7 model ({case_mf6.name}) failed: {pformat(buff)}"
 
     gwf = case_mf6.flowmodel
     plf = PathlineFile(Path(case_mf6.model_ws) / f"{case_mf6.name}.mppth")
@@ -1479,6 +1480,9 @@ def test_vtk_to_pyvista(function_tmpdir, example_data_path):
     n_pts = sum([pl.shape[0] for pl in pls])
     assert pathlines.n_points == n_pts
     assert pathlines.n_cells == n_pts + len(pls)
+    assert "particleid" in pathlines.point_data
+    assert "time" in pathlines.point_data
+    assert "k" in pathlines.point_data
 
     # uncomment to debug
     # grid.plot()

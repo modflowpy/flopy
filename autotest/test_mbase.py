@@ -160,3 +160,34 @@ def test_run_model_exe_rel_path(mf6_model_path, function_tmpdir, use_ext):
         assert success
         assert any(buff)
         assert any(ws.glob("*.lst"))
+
+
+@pytest.mark.mf6
+@requires_exe("mf6")
+@pytest.mark.parametrize("use_paths", [True, False])
+@pytest.mark.parametrize(
+    "exe",
+    [
+        "mf6",
+        Path(which("mf6") or ""),
+        relpath_safe(Path(which("mf6") or "")),
+    ],
+)
+def test_run_model_custom_print(
+    mf6_model_path, function_tmpdir, use_paths, exe
+):
+    ws = function_tmpdir / "ws"
+    copytree(mf6_model_path, ws)
+
+    success, buff = run_model(
+        exe_name=exe,
+        namefile="mfsim.nam",
+        model_ws=ws if use_paths else str(ws),
+        silent=False,
+        report=True,
+        custom_print=print,
+    )
+
+    assert success
+    assert any(buff)
+    assert any(ws.glob("*.lst"))
