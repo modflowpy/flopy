@@ -4,9 +4,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from autotest.test_mp7_cases import Mp7Cases
 from modflow_devtools.markers import requires_exe, requires_pkg
 
+from autotest.test_mp7_cases import Mp7Cases
 from flopy.mf6 import (
     MFSimulation,
     ModflowGwf,

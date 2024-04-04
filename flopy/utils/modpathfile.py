@@ -4,7 +4,7 @@ Support for MODPATH output files.
 
 import itertools
 import os
-from typing import List, Union, Tuple, Optional
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 from numpy.lib.recfunctions import append_fields, repack_fields

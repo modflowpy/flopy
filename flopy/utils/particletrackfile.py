@@ -2,15 +2,13 @@
 Utilities for parsing particle tracking output files.
 """
 
-from typing import Union
-import numpy as np
-from numpy.lib.recfunctions import stack_arrays
-
-
 import os
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import Union
 
+import numpy as np
+from numpy.lib.recfunctions import stack_arrays
 
 MIN_PARTICLE_TRACK_DTYPE = np.dtype(
     [
