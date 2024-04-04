@@ -417,7 +417,9 @@ class MfList(DataInterface, DataListInterface):
         self.__vtype[kper] = np.recarray
 
     def __cast_dataframe(self, kper, d):
-        self.__cast_recarray(kper, d.to_records(index=False))
+        self.__cast_recarray(
+            kper, d.to_records(index=False).astype(self.dtype)
+        )
 
     def get_dataframe(self, squeeze=False):
         """

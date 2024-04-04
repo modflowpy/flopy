@@ -9,6 +9,7 @@ MODFLOW Guide
 """
 
 import numpy as np
+import pandas as pd
 
 from ..pakbase import Package
 from ..utils import MfList
@@ -194,9 +195,11 @@ class ModflowRiv(Package):
         chk = self._get_check(f, verbose, level, checktype)
         chk.summary_array = basechk.summary_array
 
-        for per in self.stress_period_data.data.keys():
-            if isinstance(self.stress_period_data.data[per], np.recarray):
-                spd = self.stress_period_data.data[per]
+        for per, data in self.stress_period_data.data.items():
+            if isinstance(data, (np.recarray, pd.DataFrame)):
+                if isinstance(data, pd.DataFrame):
+                    data = data.to_records(index=False).astype(self.dtype)
+                spd = data
                 inds = (
                     (spd.k, spd.i, spd.j)
                     if self.parent.structured

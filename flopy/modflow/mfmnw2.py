@@ -1075,6 +1075,12 @@ class ModflowMnw2(Package):
             dtype=self.get_default_spd_dtype(structured=self.structured),
         )
         if stress_period_data is not None:
+            stress_period_data = {
+                per: sp.to_records(index=False)
+                if isinstance(sp, pd.DataFrame)
+                else sp
+                for per, sp in stress_period_data.items()
+            }
             for per, data in stress_period_data.items():
                 spd = ModflowMnw2.get_empty_stress_period_data(
                     len(data), aux_names=aux
