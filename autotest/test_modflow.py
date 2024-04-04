@@ -8,10 +8,10 @@ from typing import Dict
 import numpy as np
 import pandas as pd
 import pytest
-from autotest.conftest import get_example_data_path
 from modflow_devtools.markers import excludes_platform, requires_exe
 from modflow_devtools.misc import has_pkg
 
+from autotest.conftest import get_example_data_path
 from flopy.discretization import StructuredGrid
 from flopy.mf6 import MFSimulation
 from flopy.modflow import (

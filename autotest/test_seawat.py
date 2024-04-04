@@ -2,9 +2,9 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from autotest.conftest import get_example_data_path
 from modflow_devtools.markers import requires_exe
 
+from autotest.conftest import get_example_data_path
 from flopy.modflow import (
     Modflow,
     ModflowBas,

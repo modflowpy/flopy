@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
-from autotest.test_grid_cases import GridCases
 
+from autotest.test_grid_cases import GridCases
 from flopy.utils.geometry import is_clockwise, point_in_polygon
 
 

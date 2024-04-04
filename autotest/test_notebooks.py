@@ -2,9 +2,10 @@ import re
 from pprint import pprint
 
 import pytest
-from autotest.conftest import get_project_root_path
 from flaky import flaky
 from modflow_devtools.misc import run_cmd
+
+from autotest.conftest import get_project_root_path
 
 
 def get_notebooks(pattern=None, exclude=None):

@@ -5,12 +5,12 @@ from shutil import which
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from autotest.test_grid_cases import GridCases
 from matplotlib.collections import LineCollection, PathCollection, QuadMesh
 from modflow_devtools.markers import requires_exe, requires_pkg
 from modflow_devtools.misc import has_pkg
 
 import flopy
+from autotest.test_grid_cases import GridCases
 from flopy.discretization.unstructuredgrid import UnstructuredGrid
 from flopy.discretization.vertexgrid import VertexGrid
 from flopy.utils.gridgen import Gridgen

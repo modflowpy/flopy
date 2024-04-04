@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
-from autotest.test_grid_cases import GridCases
 from modflow_devtools.markers import requires_pkg
 
 import flopy
+from autotest.test_grid_cases import GridCases
 from flopy.discretization import StructuredGrid
 from flopy.mf6.modflow.mfsimulation import MFSimulation
 from flopy.modflow.mf import Modflow

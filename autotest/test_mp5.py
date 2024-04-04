@@ -1,9 +1,9 @@
 import os
 
 import numpy as np
-from autotest.test_mp6 import eval_timeseries
 from matplotlib import pyplot as plt
 
+from autotest.test_mp6 import eval_timeseries
 from flopy.modflow import Modflow
 from flopy.plot import PlotMapView
 from flopy.utils import EndpointFile, PathlineFile

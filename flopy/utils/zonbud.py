@@ -611,7 +611,7 @@ class ZoneBudget:
                 # Get the face flow
                 q = data[k, i, jl]
 
-                # Get indices where flow face values are positive (flow out of higher zone)
+                # Get indices with positive flow face values (out of higher zone)
                 # Don't include CH to CH flow (can occur if CHTOCH option is used)
                 # Create an iterable tuple of (from zone, to zone, flux)
                 # Then group tuple by (from_zone, to_zone) and sum the flux values
@@ -623,7 +623,7 @@ class ZoneBudget:
                     fzi, tzi, np.abs(fi), kstpkper, totim
                 )
 
-                # Get indices where flow face values are negative (flow into higher zone)
+                # Get indices with negative flow face values (into higher zone)
                 # Don't include CH to CH flow (can occur if CHTOCH option is used)
                 # Create an iterable tuple of (from zone, to zone, flux)
                 # Then group tuple by (from_zone, to_zone) and sum the flux values
@@ -650,7 +650,7 @@ class ZoneBudget:
                 # Get the face flow
                 q = data[k, i, j]
 
-                # Get indices where flow face values are positive (flow out of higher zone)
+                # Get indices with positive flow face values (out of higher zone)
                 # Don't include CH to CH flow (can occur if CHTOCH option is used)
                 # Create an iterable tuple of (from zone, to zone, flux)
                 # Then group tuple by (from_zone, to_zone) and sum the flux values
@@ -662,7 +662,7 @@ class ZoneBudget:
                     fzi, tzi, np.abs(fi), kstpkper, totim
                 )
 
-                # Get indices where flow face values are negative (flow into higher zone)
+                # Get indices with negative flow face values (into higher zone)
                 # Don't include CH to CH flow (can occur if CHTOCH option is used)
                 # Create an iterable tuple of (from zone, to zone, flux)
                 # Then group tuple by (from_zone, to_zone) and sum the flux values

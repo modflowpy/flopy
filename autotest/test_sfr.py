@@ -8,9 +8,9 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from autotest.conftest import get_example_data_path, get_project_root_path
 from modflow_devtools.markers import requires_exe, requires_pkg
 
+from autotest.conftest import get_example_data_path, get_project_root_path
 from flopy.discretization import StructuredGrid
 from flopy.modflow import Modflow, ModflowDis, ModflowSfr2, ModflowStr
 from flopy.modflow.mfsfr2 import check

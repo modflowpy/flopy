@@ -1,17 +1,13 @@
 import argparse
 import json
 import re
-import subprocess
 import textwrap
 from datetime import datetime
-from enum import Enum
-from os import PathLike, environ
 from pathlib import Path
-from typing import NamedTuple, Optional
 
 import yaml
 from filelock import FileLock
-from packaging.version import Version, parse
+from packaging.version import Version
 
 _project_name = "flopy"
 _project_root_path = Path(__file__).parent.parent
@@ -77,8 +73,8 @@ def update_version_txt(version: Version):
 def update_version_py(timestamp: datetime, version: Version):
     with open(_version_py_path, "w") as f:
         f.write(
-            f"# {_project_name} version file automatically created using "
-            f"{Path(__file__).name} on {timestamp:%B %d, %Y %H:%M:%S}\n\n"
+            f"# {_project_name} version file automatically created using\n"
+            f"# {Path(__file__).name} on {timestamp:%B %d, %Y %H:%M:%S}\n\n"
         )
         f.write(f'__version__ = "{version}"\n')
         f.close()
@@ -310,14 +306,14 @@ if __name__ == "__main__":
         "--approve",
         required=False,
         action="store_true",
-        help="Approve the release (defaults to false for preliminary/development distributions)",
+        help="Approve the release (defaults false)",
     )
     parser.add_argument(
         "-g",
         "--get",
         required=False,
         action="store_true",
-        help="Just get the current version number, don't update anything (defaults to false)",
+        help="Just get the current version number, no updates (defaults false)",
     )
     args = parser.parse_args()
 

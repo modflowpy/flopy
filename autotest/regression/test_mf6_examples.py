@@ -2,9 +2,9 @@ from pathlib import Path
 from shutil import copytree
 
 import pytest
-from autotest.regression.conftest import is_nested
 from modflow_devtools.markers import requires_exe, requires_pkg
 
+from autotest.regression.conftest import is_nested
 from flopy.mf6 import MFSimulation
 from flopy.utils.compare import compare_heads
 

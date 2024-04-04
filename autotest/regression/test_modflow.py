@@ -4,9 +4,9 @@ from pathlib import Path
 from shutil import copytree
 
 import pytest
-from autotest.conftest import get_example_data_path
 from modflow_devtools.markers import requires_exe, requires_pkg
 
+from autotest.conftest import get_example_data_path
 from flopy.modflow import Modflow, ModflowOc
 from flopy.utils.compare import compare_budget, compare_heads
 
