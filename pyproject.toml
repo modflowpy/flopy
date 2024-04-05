@@ -54,6 +54,7 @@ test = [
     "pytest-cov",
     "pytest-dotenv",
     "pytest-xdist",
+    "pyzmq >=25.1.2",
     "virtualenv"
 ]
 optional = [
