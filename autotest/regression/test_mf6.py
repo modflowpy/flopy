@@ -751,7 +751,7 @@ def test_np001(function_tmpdir, example_data_path):
                 found_cellid = True
     assert found_cellid
 
-    # test empty stress period
+    # test empty stress period and remove output
     well_spd = {0: [(-1, -1, -1, -2000.0), (0, 0, 7, -2.0)], 1: []}
     wel_package = ModflowGwfwel(
         model,
@@ -762,6 +762,13 @@ def test_np001(function_tmpdir, example_data_path):
         save_flows=True,
         maxbound=2,
         stress_period_data=well_spd,
+    )
+    oc_package = ModflowGwfoc(
+        model,
+        budget_filerecord=[("np001_mod 1.cbc",)],
+        head_filerecord=[("np001_mod 1.hds",)],
+        saverecord={0: []},
+        printrecord={0: []},
     )
     sim.write_simulation()
     found_begin = False
@@ -787,6 +794,10 @@ def test_np001(function_tmpdir, example_data_path):
         spath,
         write_headers=False,
     )
+    # test to make sure oc empty record dictionary is set
+    oc = test_sim.get_model().get_package("oc")
+    assert oc.saverecord.empty_keys[0] is True
+    # test wel package
     wel = test_sim.get_model().get_package("wel_2")
     wel._filename = "np001_spd_test.wel"
     wel.write()
