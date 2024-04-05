@@ -107,6 +107,7 @@ def test_ts(function_tmpdir, example_data_path):
         head_filerecord=[(f"{name}.hds",)],
         saverecord={
             0: [("HEAD", "ALL"), ("BUDGET", "ALL")],
+            1: [],
         },
         printrecord=[("HEAD", "ALL")],
     )
