@@ -1745,6 +1745,9 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                 self.get_data_prep(sto_key)
                 if super().has_data():
                     return True
+            for val in self.empty_keys.values():
+                if val:
+                    return True
             return False
         else:
             self.get_data_prep(key)

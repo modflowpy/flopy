@@ -1031,6 +1031,12 @@ class MFBlock:
                                 and result[1][:3].upper() == "END"
                             ):
                                 break
+        else:
+            # block empty, store empty array in block variables
+            empty_arr = []
+            for ds in self.datasets.values():
+                if isinstance(ds, mfdata.MFTransient):
+                    ds.set_data(empty_arr)
         self.loaded = True
         self.is_valid()
 
@@ -2976,7 +2982,7 @@ class MFPackage(PackageContainer, PackageInterface):
                             block_header_info, fd_input_file, strict
                         )
 
-                        # write post block comment comment
+                        # write post block comment
                         self._simulation_data.mfdata[
                             cur_block.block_headers[-1].blk_post_comment_path
                         ] = self.post_block_comments
