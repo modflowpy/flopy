@@ -805,6 +805,9 @@ class MFSimulationBase(PackageContainer):
                 package="nam",
                 message=message,
             )
+        if models is None:
+            return instance
+        
         for item in models:
             # resolve model working folder and name file
             path, name_file = os.path.split(item[1])
