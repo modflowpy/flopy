@@ -793,6 +793,9 @@ class MFModel(PackageContainer, ModelInterface):
         package_recarray = instance.simulation_data.mfdata[
             (modelname, "nam", "packages", "packages")
         ]
+        if package_recarray.array is None:
+            return instance
+
         for item in package_recarray.get_data():
             if item[0] in priority_packages:
                 packages_ordered.insert(0, (item[0], item[1], item[2]))
