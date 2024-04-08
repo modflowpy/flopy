@@ -3,13 +3,17 @@ import pandas as pd
 import pytest
 
 from flopy.plot.plotutil import (
-    MP7_ENDPOINT_DTYPE,
-    MP7_PATHLINE_DTYPE,
-    PRT_PATHLINE_DTYPE,
     to_mp7_endpoints,
     to_mp7_pathlines,
     to_prt_pathlines,
 )
+from flopy.utils.modpathfile import (
+    EndpointFile as MpEndpointFile,
+)
+from flopy.utils.modpathfile import (
+    PathlineFile as MpPathlineFile,
+)
+from flopy.utils.prtfile import PathlineFile as PrtPathlineFile
 
 PRT_TEST_PATHLINES = pd.DataFrame.from_records(
     [
@@ -194,7 +198,7 @@ PRT_TEST_PATHLINES = pd.DataFrame.from_records(
             "PRP000000001",  # name
         ],
     ],
-    columns=PRT_PATHLINE_DTYPE.names,
+    columns=PrtPathlineFile.dtypes["base"].names,
 )
 MP7_TEST_PATHLINES = pd.DataFrame.from_records(
     [
@@ -233,7 +237,7 @@ MP7_TEST_PATHLINES = pd.DataFrame.from_records(
             1,  # timestep
         ],
     ],
-    columns=MP7_PATHLINE_DTYPE.names,
+    columns=MpPathlineFile.dtypes[7].names,
 )
 MP7_TEST_ENDPOINTS = pd.DataFrame.from_records(
     [
@@ -322,114 +326,152 @@ MP7_TEST_ENDPOINTS = pd.DataFrame.from_records(
             2,  # cellface
         ],
     ],
-    columns=MP7_ENDPOINT_DTYPE.names,
+    columns=MpEndpointFile.dtypes[7].names,
 )
 
 
 @pytest.mark.parametrize("dataframe", [True, False])
-def test_to_mp7_pathlines(dataframe):
-    prt_pls = (
-        PRT_TEST_PATHLINES
-        if dataframe
-        else PRT_TEST_PATHLINES.to_records(index=False)
-    )
-    mp7_pls = to_mp7_pathlines(prt_pls)
+@pytest.mark.parametrize("source", ["prt"])  # , "mp3", "mp5", "mp6"])
+def test_to_mp7_pathlines(dataframe, source):
+    if source == "prt":
+        pls = (
+            PRT_TEST_PATHLINES
+            if dataframe
+            else PRT_TEST_PATHLINES.to_records(index=False)
+        )
+    elif source == "mp3":
+        pass
+    elif source == "mp5":
+        pass
+    elif source == "mp7":
+        pass
+    mp7_pls = to_mp7_pathlines(pls)
     assert (
-        type(prt_pls)
+        type(pls)
         == type(mp7_pls)
         == (pd.DataFrame if dataframe else np.recarray)
     )
     assert len(mp7_pls) == 10
     assert set(
         dict(mp7_pls.dtypes).keys() if dataframe else mp7_pls.dtype.names
-    ) == set(MP7_PATHLINE_DTYPE.names)
+    ) == set(MpPathlineFile.dtypes[7].names)
 
 
 @pytest.mark.parametrize("dataframe", [True, False])
-def test_to_mp7_pathlines_empty(dataframe):
-    mp7_pls = to_mp7_pathlines(
-        pd.DataFrame.from_records([], columns=PRT_PATHLINE_DTYPE.names)
-        if dataframe
-        else np.recarray((0,), dtype=PRT_PATHLINE_DTYPE)
-    )
-    assert mp7_pls.empty if dataframe else mp7_pls.size == 0
+@pytest.mark.parametrize("source", ["prt"])  # , "mp3", "mp5", "mp6"])
+def test_to_mp7_pathlines_empty(dataframe, source):
+    if source == "prt":
+        pls = to_mp7_pathlines(
+            pd.DataFrame.from_records(
+                [], columns=PrtPathlineFile.dtypes["base"].names
+            )
+            if dataframe
+            else np.recarray((0,), dtype=PrtPathlineFile.dtypes["base"])
+        )
+    elif source == "mp3":
+        pass
+    elif source == "mp5":
+        pass
+    elif source == "mp7":
+        pass
+    assert pls.empty if dataframe else pls.size == 0
     if dataframe:
-        mp7_pls = mp7_pls.to_records(index=False)
-    assert mp7_pls.dtype == MP7_PATHLINE_DTYPE
+        pls = pls.to_records(index=False)
+    assert pls.dtype == MpPathlineFile.dtypes[7]
 
 
 @pytest.mark.parametrize("dataframe", [True, False])
 def test_to_mp7_pathlines_noop(dataframe):
-    prt_pls = (
+    pls = (
         MP7_TEST_PATHLINES
         if dataframe
         else MP7_TEST_PATHLINES.to_records(index=False)
     )
-    mp7_pls = to_mp7_pathlines(prt_pls)
+    mp7_pls = to_mp7_pathlines(pls)
     assert (
-        type(prt_pls)
+        type(pls)
         == type(mp7_pls)
         == (pd.DataFrame if dataframe else np.recarray)
     )
     assert len(mp7_pls) == 2
     assert set(
         dict(mp7_pls.dtypes).keys() if dataframe else mp7_pls.dtype.names
-    ) == set(MP7_PATHLINE_DTYPE.names)
+    ) == set(MpPathlineFile.dtypes[7].names)
     assert np.array_equal(
         mp7_pls if dataframe else pd.DataFrame(mp7_pls), MP7_TEST_PATHLINES
     )
 
 
 @pytest.mark.parametrize("dataframe", [True, False])
-def test_to_mp7_endpoints(dataframe):
-    mp7_eps = to_mp7_endpoints(
-        PRT_TEST_PATHLINES
-        if dataframe
-        else PRT_TEST_PATHLINES.to_records(index=False)
-    )
-    assert len(mp7_eps) == 1
-    assert np.isclose(mp7_eps.time[0], PRT_TEST_PATHLINES.t.max())
+@pytest.mark.parametrize("source", ["prt"])  # , "mp3", "mp5", "mp6"])
+def test_to_mp7_endpoints(dataframe, source):
+    if source == "prt":
+        eps = to_mp7_endpoints(
+            PRT_TEST_PATHLINES
+            if dataframe
+            else PRT_TEST_PATHLINES.to_records(index=False)
+        )
+    elif source == "mp3":
+        pass
+    elif source == "mp5":
+        pass
+    elif source == "mp6":
+        pass
+    assert len(eps) == 1
+    assert np.isclose(eps.time[0], PRT_TEST_PATHLINES.t.max())
     assert set(
-        dict(mp7_eps.dtypes).keys() if dataframe else mp7_eps.dtype.names
-    ) == set(MP7_ENDPOINT_DTYPE.names)
+        dict(eps.dtypes).keys() if dataframe else eps.dtype.names
+    ) == set(MpEndpointFile.dtypes[7].names)
 
 
 @pytest.mark.parametrize("dataframe", [True, False])
-def test_to_mp7_endpoints_empty(dataframe):
-    mp7_eps = to_mp7_endpoints(
-        pd.DataFrame.from_records([], columns=PRT_PATHLINE_DTYPE.names)
+@pytest.mark.parametrize("source", ["prt"])  # , "mp3", "mp5", "mp6"])
+def test_to_mp7_endpoints_empty(dataframe, source):
+    eps = to_mp7_endpoints(
+        pd.DataFrame.from_records(
+            [], columns=PrtPathlineFile.dtypes["base"].names
+        )
         if dataframe
-        else np.recarray((0,), dtype=PRT_PATHLINE_DTYPE)
+        else np.recarray((0,), dtype=PrtPathlineFile.dtypes["base"])
     )
-    assert mp7_eps.empty if dataframe else mp7_eps.size == 0
+    assert eps.empty if dataframe else eps.size == 0
     if dataframe:
-        mp7_eps = mp7_eps.to_records(index=False)
-    assert mp7_eps.dtype == MP7_ENDPOINT_DTYPE
+        eps = eps.to_records(index=False)
+    assert eps.dtype == MpEndpointFile.dtypes[7]
 
 
 @pytest.mark.parametrize("dataframe", [True, False])
 def test_to_mp7_endpoints_noop(dataframe):
     """Test a recarray or dataframe which already contains MP7 endpoint data"""
-    mp7_eps = to_mp7_endpoints(
+    eps = to_mp7_endpoints(
         MP7_TEST_ENDPOINTS
         if dataframe
         else MP7_TEST_ENDPOINTS.to_records(index=False)
     )
     assert np.array_equal(
-        mp7_eps if dataframe else pd.DataFrame(mp7_eps), MP7_TEST_ENDPOINTS
+        eps if dataframe else pd.DataFrame(eps), MP7_TEST_ENDPOINTS
     )
 
 
 @pytest.mark.parametrize("dataframe", [True, False])
-def test_to_prt_pathlines_roundtrip(dataframe):
-    mp7_pls = to_mp7_pathlines(
-        PRT_TEST_PATHLINES
-        if dataframe
-        else PRT_TEST_PATHLINES.to_records(index=False)
-    )
-    prt_pls = to_prt_pathlines(mp7_pls)
+@pytest.mark.parametrize("source", ["prt"])  # , "mp3", "mp5", "mp6"])
+def test_to_prt_pathlines_roundtrip(dataframe, source):
+    if source == "prt":
+        pls = to_mp7_pathlines(
+            PRT_TEST_PATHLINES
+            if dataframe
+            else PRT_TEST_PATHLINES.to_records(index=False)
+        )
+    elif source == "mp3":
+        pass
+    elif source == "mp5":
+        pass
+    elif source == "mp6":
+        pass
+    prt_pls = to_prt_pathlines(pls)
     if not dataframe:
         prt_pls = pd.DataFrame(prt_pls)
+    # import pdb; pdb.set_trace()
     assert np.allclose(
         PRT_TEST_PATHLINES.drop(
             ["imdl", "iprp", "irpt", "name", "istatus", "ireason"],
@@ -443,15 +485,25 @@ def test_to_prt_pathlines_roundtrip(dataframe):
 
 
 @pytest.mark.parametrize("dataframe", [True, False])
-def test_to_prt_pathlines_roundtrip_empty(dataframe):
-    mp7_pls = to_mp7_pathlines(
-        pd.DataFrame.from_records([], columns=PRT_PATHLINE_DTYPE.names)
-        if dataframe
-        else np.recarray((0,), dtype=PRT_PATHLINE_DTYPE)
-    )
-    prt_pls = to_prt_pathlines(mp7_pls)
-    assert mp7_pls.empty if dataframe else mp7_pls.size == 0
-    assert prt_pls.empty if dataframe else mp7_pls.size == 0
+@pytest.mark.parametrize("source", ["prt"])  # , "mp3", "mp5", "mp6"])
+def test_to_prt_pathlines_roundtrip_empty(dataframe, source):
+    if source == "prt":
+        pls = to_mp7_pathlines(
+            pd.DataFrame.from_records(
+                [], columns=PrtPathlineFile.dtypes["base"].names
+            )
+            if dataframe
+            else np.recarray((0,), dtype=PrtPathlineFile.dtypes["base"])
+        )
+    elif source == "mp3":
+        pass
+    elif source == "mp5":
+        pass
+    elif source == "mp6":
+        pass
+    prt_pls = to_prt_pathlines(pls)
+    assert pls.empty if dataframe else pls.size == 0
+    assert prt_pls.empty if dataframe else pls.size == 0
     assert set(
-        dict(mp7_pls.dtypes).keys() if dataframe else mp7_pls.dtype.names
-    ) == set(MP7_PATHLINE_DTYPE.names)
+        dict(pls.dtypes).keys() if dataframe else pls.dtype.names
+    ) == set(MpPathlineFile.dtypes[7].names)

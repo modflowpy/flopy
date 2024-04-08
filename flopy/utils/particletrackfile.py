@@ -40,11 +40,15 @@ class ParticleTrackFile(ABC):
 
     """
 
+    dtype = MIN_PARTICLE_TRACK_DTYPE
+    """
+    Minimal data shared by all particle track file formats.
+    """
+
+    # legacy, todo: deprecate
     outdtype = MIN_PARTICLE_TRACK_DTYPE
     """
-    Minimal information shared by all particle track file formats.
-    Track data are converted to this dtype for internal storage
-    and for return from (sub-)class methods.
+    Minimal data shared by all particle track file formats.
     """
 
     def __init__(
@@ -173,10 +177,8 @@ class ParticleTrackFile(ABC):
 
         Returns
         -------
-        data : np.recarray
-            Slice of data array (e.g. PathlineFile._data, TimeseriesFile._data)
-            containing endpoint, pathline, or timeseries data that intersect
-            (k,i,j) or (node) dest_cells.
+        np.recarray or list of np.recarray
+            Pathline components intersecting (k,i,j) or (node) dest_cells.
 
         """
 
