@@ -1,9 +1,9 @@
 import os
 
 import pytest
-from autotest.conftest import get_example_data_path
 from modflow_devtools.markers import requires_exe
 
+from autotest.conftest import get_example_data_path
 from flopy.modflow import Modflow, ModflowNwt, ModflowUpw
 from flopy.utils import parsenamefile
 from flopy.utils.compare import compare_budget, compare_heads

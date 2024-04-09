@@ -1052,9 +1052,13 @@ class MFBlock:
                                 and result[1][:3].upper() == "END"
                             ):
                                 break
-        elif arr_line[0][:3].upper() == "END":
-            # record empty block
-            self._find_data_by_keyword(line, fd_block, initial_comment, True)
+        else:
+            # block empty, store empty array in block variables
+            empty_arr = []
+            for ds in self.datasets.values():
+                if isinstance(ds, mfdata.MFTransient):
+                    transient_key = block_header.get_transient_key()
+                    ds.set_data(empty_arr, transient_key)
         self.loaded = True
         self.is_valid()
 
@@ -3080,7 +3084,7 @@ class MFPackage(PackageContainer, PackageInterface):
                             block_header_info, fd_input_file, strict
                         )
 
-                        # write post block comment comment
+                        # write post block comment
                         self._simulation_data.mfdata[
                             cur_block.block_headers[-1].blk_post_comment_path
                         ] = self.post_block_comments

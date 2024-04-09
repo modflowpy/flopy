@@ -7,13 +7,13 @@ from warnings import warn
 import matplotlib
 import numpy as np
 import pytest
-from autotest.test_dis_cases import case_dis, case_disv
-from autotest.test_grid_cases import GridCases
 from flaky import flaky
 from matplotlib import pyplot as plt
 from modflow_devtools.markers import requires_exe, requires_pkg
 from modflow_devtools.misc import has_pkg
 
+from autotest.test_dis_cases import case_dis, case_disv
+from autotest.test_grid_cases import GridCases
 from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
 from flopy.mf6 import MFSimulation
 from flopy.modflow import Modflow, ModflowDis

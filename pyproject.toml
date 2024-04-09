@@ -54,6 +54,7 @@ test = [
     "pytest-cov",
     "pytest-dotenv",
     "pytest-xdist",
+    "pyzmq >=25.1.2",
     "virtualenv"
 ]
 optional = [
@@ -128,8 +129,10 @@ extend-include = [
 ]
 
 [tool.ruff.lint]
+select = ["F", "E", "I001"]
 ignore = [
     "E402", # module level import not at top of file
+    "E501", # line too long TODO FIXME
     "E712", # Avoid equality comparisons to `True`
     "E722", # do not use bare `except`
     "E741", # ambiguous variable name

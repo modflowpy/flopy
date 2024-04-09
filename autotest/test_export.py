@@ -7,7 +7,6 @@ from typing import List
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from autotest.conftest import get_example_data_path
 from flaky import flaky
 from modflow_devtools.markers import (
     excludes_platform,
@@ -17,6 +16,7 @@ from modflow_devtools.markers import (
 from modflow_devtools.misc import has_pkg
 
 import flopy
+from autotest.conftest import get_example_data_path
 from flopy.discretization import StructuredGrid, UnstructuredGrid
 from flopy.export import NetCdf
 from flopy.export.shapefile_utils import recarray2shp, shp2recarray
@@ -1456,8 +1456,9 @@ def test_vtk_unstructured(function_tmpdir, unstructured_grid):
 
 @requires_pkg("vtk", "pyvista")
 def test_vtk_to_pyvista(function_tmpdir):
-    from autotest.test_mp7_cases import Mp7Cases
     from pprint import pformat
+
+    from autotest.test_mp7_cases import Mp7Cases
 
     case_mf6 = Mp7Cases.mp7_mf6(function_tmpdir)
     case_mf6.write_input()

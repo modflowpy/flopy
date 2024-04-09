@@ -1,10 +1,10 @@
 import numpy as np
 import pandas as pd
 import pytest
-from autotest.conftest import get_example_data_path
 from modflow_devtools.markers import requires_exe
 
 import flopy
+from autotest.conftest import get_example_data_path
 from flopy.mf6 import MFSimulation
 
 MEMORY_UNITS = ("gigabytes", "megabytes", "kilobytes", "bytes")

@@ -2,12 +2,12 @@ from itertools import repeat
 
 import numpy as np
 import pytest
-from autotest.conftest import get_example_data_path
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from modflow_devtools.markers import requires_exe
 
 import flopy
+from autotest.conftest import get_example_data_path
 from flopy.modflow import Modflow
 from flopy.utils import (
     BinaryHeader,

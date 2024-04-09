@@ -8,11 +8,11 @@ from platform import system
 from urllib.error import HTTPError
 
 import pytest
-from autotest.conftest import get_project_root_path
 from flaky import flaky
 from modflow_devtools.markers import requires_github
 from modflow_devtools.misc import run_py_script
 
+from autotest.conftest import get_project_root_path
 from flopy.utils import get_modflow
 from flopy.utils.get_modflow import get_release, get_releases, select_bindir
 

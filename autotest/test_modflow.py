@@ -8,10 +8,10 @@ from typing import Dict
 import numpy as np
 import pandas as pd
 import pytest
-from autotest.conftest import get_example_data_path
 from modflow_devtools.markers import excludes_platform, requires_exe
 from modflow_devtools.misc import has_pkg
 
+from autotest.conftest import get_example_data_path
 from flopy.discretization import StructuredGrid
 from flopy.mf6 import MFSimulation
 from flopy.modflow import (
@@ -915,11 +915,19 @@ def test_bcs_check(function_tmpdir):
     assert len(chk.summary_array) == 1
 
     ghb = ModflowGhb(mf, stress_period_data={0: [0, 0, 0, 100, 1]})
+    riv_spd = pd.DataFrame(
+        [[0, 0, 0, 0, 101.0, 10.0, 100.0], [0, 0, 0, 1, 80.0, 10.0, 90.0]],
+        columns=["per", "k", "i", "j", "stage", "cond", "rbot"],
+    )
+
+    pers = riv_spd.groupby("per")
+    riv_spd = {i: pers.get_group(i).drop("per", axis=1) for i in [0]}
     riv = ModflowRiv(
         mf,
-        stress_period_data={
-            0: [[0, 0, 0, 101, 10, 100], [0, 0, 1, 80, 10, 90]]
-        },
+        stress_period_data=riv_spd,
+        # stress_period_data={
+        #     0: [[0, 0, 0, 101, 10, 100], [0, 0, 1, 80, 10, 90]]
+        # },
     )
     chk = ghb.check()
     assert chk.summary_array["desc"][0] == "BC in inactive cell"

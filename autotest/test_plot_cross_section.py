@@ -1,6 +1,6 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-import matplotlib.pyplot as plt
 from matplotlib.collections import PatchCollection
 from modflow_devtools.markers import requires_pkg
 
