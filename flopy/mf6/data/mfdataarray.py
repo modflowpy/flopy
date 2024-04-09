@@ -1178,7 +1178,7 @@ class MFArray(MFMultiDimVar):
         precision_str, fill_value, dimensions = self._netcdf_precision_fill()
         attribs = {}
         # get data
-        data = self.get_data()
+        data = self.get_data(apply_mult=True)
         if (
             self.structure.data_item_structures[0].numeric_index
             or self.structure.data_item_structures[0].is_cellid
@@ -1908,7 +1908,7 @@ class MFTransientArray(MFArray, MFTransient):
         precision_str, fill_value, dimensions = self._netcdf_precision_fill()
         # add "stress period" as extra dimension to array
         for sp in self._data_storage.keys():
-            last_data = self.get_data(sp)
+            last_data = self.get_data(sp, apply_mult=True)
             if (
                 self.structure.data_item_structures[0].numeric_index
                 or self.structure.data_item_structures[0].is_cellid
