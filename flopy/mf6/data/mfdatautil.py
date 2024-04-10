@@ -78,6 +78,7 @@ def convert_data(data, data_dimensions, data_type, data_item=None, sub_amt=1):
                 if isinstance(data, str):
                     # fix any scientific formatting that python can't handle
                     data = data.replace("d", "e")
+                    data = data.replace("D", "e")
                 return float(data)
             except (ValueError, TypeError):
                 try:

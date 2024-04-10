@@ -11,6 +11,6 @@ BEGIN Dimensions
 END Dimensions
 
 BEGIN Period 1
-  1  1  1   10.0000000    
+  1  1  1   1D1    
   1  1  10   0.0000000
 END Period

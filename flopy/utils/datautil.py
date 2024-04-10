@@ -368,11 +368,19 @@ class PyListUtil:
                         max_split_type = delimiter
                         max_split_list = alt_split
 
+            if max_split_type is None and max_split_size > 0:
+                split_first = max_split_list[0].strip().split(",")
+                if len(split_first) > 1:
+                    max_split_list = split_first + max_split_list[1:]
+                    max_split_size = len(max_split_list)
+                    max_split_type = "combo"
+
             if max_split_type is not None and max_split_size > 1:
                 clean_line = max_split_list
                 if PyListUtil.line_num == 0:
                     PyListUtil.delimiter_used = max_split_type
-                elif PyListUtil.delimiter_used != max_split_type:
+                elif PyListUtil.delimiter_used != max_split_type or \
+                        max_split_type == "combo":
                     PyListUtil.consistent_delim = False
             if max_split_size > 1:
                 PyListUtil.line_num += 1
