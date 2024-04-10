@@ -379,8 +379,10 @@ class PyListUtil:
                 clean_line = max_split_list
                 if PyListUtil.line_num == 0:
                     PyListUtil.delimiter_used = max_split_type
-                elif PyListUtil.delimiter_used != max_split_type or \
-                        max_split_type == "combo":
+                elif (
+                    PyListUtil.delimiter_used != max_split_type
+                    or max_split_type == "combo"
+                ):
                     PyListUtil.consistent_delim = False
             if max_split_size > 1:
                 PyListUtil.line_num += 1
