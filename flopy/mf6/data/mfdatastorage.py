@@ -18,7 +18,7 @@ from ...utils.datautil import (
 from ..data import mfdatautil
 from ..data.mfstructure import DatumType, MFDataItemStructure
 from ..mfbase import MFDataException, VerbosityLevel
-from .mfdatautil import MFComment, convert_data, iterable, data_item_may_exist
+from .mfdatautil import MFComment, convert_data, data_item_may_exist, iterable
 from .mffileaccess import MFFileAccess, MFFileAccessArray, MFFileAccessList
 
 

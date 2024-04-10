@@ -8,6 +8,7 @@ from typing import Union
 import numpy as np
 
 import flopy
+
 from ..discretization.grid import Grid
 from ..discretization.modeltime import ModelTime
 from ..discretization.structuredgrid import StructuredGrid

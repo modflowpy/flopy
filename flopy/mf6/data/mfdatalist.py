@@ -16,10 +16,10 @@ from ..utils.mfenums import DiscretizationType
 from .mfdatastorage import DataStorage, DataStorageType, DataStructureType
 from .mfdatautil import (
     append_item,
+    data_item_may_exist,
     list_to_array,
     proc_item,
     to_string,
-    data_item_may_exist,
 )
 from .mffileaccess import MFFileAccessList
 from .mfstructure import DatumType, MFDataStructure

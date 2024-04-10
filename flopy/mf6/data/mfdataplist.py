@@ -18,9 +18,9 @@ from ..utils.mfenums import DiscretizationType
 from .mfdatalist import MFList, MFTransientList
 from .mfdatastorage import DataStorageType, DataStructureType
 from .mfdatautil import (
+    data_item_may_exist,
     list_to_array,
     process_open_close_line,
-    data_item_may_exist,
 )
 from .mffileaccess import MFFileAccessList
 from .mfstructure import DatumType, MFDataStructure
