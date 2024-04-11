@@ -18,7 +18,7 @@ from ...utils.datautil import (
 from ..data import mfdatautil
 from ..data.mfstructure import DatumType, MFDataItemStructure
 from ..mfbase import MFDataException, VerbosityLevel
-from .mfdatautil import MFComment, convert_data, iterable
+from .mfdatautil import MFComment, convert_data, data_item_may_exist, iterable
 from .mffileaccess import MFFileAccess, MFFileAccessArray, MFFileAccessList
 
 
@@ -2709,6 +2709,14 @@ class DataStorage:
             data_set.data_item_structures,
             range(0, len(data_set.data_item_structures)),
         ):
+            may_exist = data_item_may_exist(
+                data_item,
+                self._data_path,
+                self.data_dimensions,
+                self._simulation_data,
+            )
+            if not may_exist:
+                continue
             # handle optional mnames
             if (
                 not data_item.optional
@@ -2823,6 +2831,14 @@ class DataStorage:
                                 resolved_shape = [1]
                         else:
                             if resolve_data_shape:
+                                if data_item is not None:
+                                    model_num = DatumUtil.cellid_model_num(
+                                        data_item.name,
+                                        self.data_dimensions.structure.model_data,
+                                        self.data_dimensions.package_dim.model_dim,
+                                    )
+                                else:
+                                    model_num = None
                                 data_dim = self.data_dimensions
                                 (
                                     resolved_shape,
@@ -2833,6 +2849,7 @@ class DataStorage:
                                     data,
                                     repeating_key=key,
                                     min_size=min_size,
+                                    model_num=model_num,
                                 )
                             else:
                                 resolved_shape = [1]

@@ -21,13 +21,16 @@ from .data import (
     mfdatascalar,
     mfstructure,
 )
-from .data.mfdatautil import DataSearchOutput, MFComment, cellids_equal
+from .data.mfdatautil import (
+    DataSearchOutput,
+    MFComment,
+    cellids_equal,
+)
 from .data.mfstructure import DatumType, MFDataItemStructure, MFStructure
 from .mfbase import (
     ExtFileAction,
     FlopyException,
     MFDataException,
-    MFFileMgmt,
     MFInvalidTransientBlockHeaderException,
     PackageContainer,
     PackageContainerType,
@@ -234,6 +237,22 @@ class MFBlockHeader:
             simulation_data.mfdata[self.comment_path] = comment
         self.comment = None
 
+    def get_header_entries(self):
+        entries = []
+        if isinstance(self.data_items[0], mfdatascalar.MFScalar):
+            one_based = self.data_items[0].structure.type == DatumType.integer
+            entry = self.data_items[0].get_file_entry(
+                values_only=True, one_based=one_based
+            )
+        else:
+            entry = self.data_items[0].get_file_entry()
+        entries.append(entry.rstrip())
+        if len(self.data_items) > 1:
+            for data_item in self.data_items[1:]:
+                entry = data_item.get_file_entry(values_only=True)
+                entries.append(entry.rstrip())
+        return entries
+
     def write_header(self, fd):
         """Writes block header to file object `fd`.
 
@@ -245,20 +264,11 @@ class MFBlockHeader:
         """
         fd.write(f"BEGIN {self.name}")
         if len(self.data_items) > 0:
-            if isinstance(self.data_items[0], mfdatascalar.MFScalar):
-                one_based = (
-                    self.data_items[0].structure.type == DatumType.integer
-                )
-                entry = self.data_items[0].get_file_entry(
-                    values_only=True, one_based=one_based
-                )
-            else:
-                entry = self.data_items[0].get_file_entry()
-            fd.write(str(entry.rstrip()))
-            if len(self.data_items) > 1:
-                for data_item in self.data_items[1:]:
-                    entry = data_item.get_file_entry(values_only=True)
-                    fd.write("%s" % (entry.rstrip()))
+            entries = self.get_header_entries()
+            fd.write(str(entries[0]))
+            if len(entries) > 1:
+                for entry in entries[1:]:
+                    fd.write("%s" % entry)
         if self.get_comment().text:
             fd.write(" ")
             self.get_comment().write(fd)
@@ -436,13 +446,22 @@ class MFBlock:
                 enable,
                 path,
                 dimensions,
+                package,
+                self,
             )
         elif (
             data_type == mfstructure.DataType.scalar_keyword_transient
             or data_type == mfstructure.DataType.scalar_transient
         ):
             trans_scalar = mfdatascalar.MFScalarTransient(
-                sim_data, model_or_sim, structure, enable, path, dimensions
+                sim_data,
+                model_or_sim,
+                structure,
+                enable,
+                path,
+                dimensions,
+                package,
+                self,
             )
             if data is not None:
                 trans_scalar.set_data(data, key=0)
@@ -456,6 +475,7 @@ class MFBlock:
                 enable,
                 path,
                 dimensions,
+                package,
                 self,
             )
         elif data_type == mfstructure.DataType.array_transient:
@@ -466,6 +486,7 @@ class MFBlock:
                 enable,
                 path,
                 dimensions,
+                package,
                 self,
             )
             if data is not None:
@@ -1041,7 +1062,9 @@ class MFBlock:
         self.loaded = True
         self.is_valid()
 
-    def _find_data_by_keyword(self, line, fd, initial_comment):
+    def _find_data_by_keyword(
+        self, line, fd, initial_comment, load_empty=False
+    ):
         first_key = None
         nothing_found = False
         next_line = [True, line]
@@ -1056,12 +1079,18 @@ class MFBlock:
                         >= VerbosityLevel.verbose.value
                     ):
                         print(f"        loading data {ds_name}...")
-                    next_line = self.datasets[ds_name].load(
-                        next_line[1],
-                        fd,
-                        self.block_headers[-1],
-                        initial_comment,
-                    )
+                    if load_empty:
+                        self.datasets[ds_name].load_empty(
+                            self.block_headers[-1],
+                        )
+                        return first_key, next_line
+                    else:
+                        next_line = self.datasets[ds_name].load(
+                            next_line[1],
+                            fd,
+                            self.block_headers[-1],
+                            initial_comment,
+                        )
                 except MFDataException as mfde:
                     raise MFDataException(
                         mfdata_except=mfde,
@@ -1256,14 +1285,24 @@ class MFBlock:
                     comments.append("\n")
                 comments.append(arr_line)
 
-    def write(self, fd, ext_file_action=ExtFileAction.copy_relative_paths):
+    def write(
+        self,
+        fd,
+        ext_file_action=ExtFileAction.copy_relative_paths,
+        write_netcdf=False,
+    ):
         """Writes block to a file object.
 
         Parameters
         ----------
         fd : file object
             File object to write to.
-
+        ext_file_action : ExtFileAction
+            How to handle pathing of external data files.
+        write_netcdf : bool
+            Generate NetCDF file instead of package file for packages that
+            support this.  This is currently a pre-release feature that
+            may not work with the current release of MODFLOW-6.
         """
         # never write an empty block
         is_empty = self.is_empty()
@@ -1280,11 +1319,41 @@ class MFBlock:
             for repeating_dataset in repeating_datasets:
                 # resolve any missing block headers
                 self._add_missing_block_headers(repeating_dataset)
-            for block_header in sorted(self.block_headers):
+            if write_netcdf:
+                # build header value list
+                pkg_name = self._container_package.package_name
+                header_name = self.block_headers[0].name
+                header_values = []
+                for block_header in sorted(self.block_headers):
+                    header_values.append(block_header.get_header_entries())
+                # construct header dimension variable
+                if header_name.lower() == "period":
+                    header_name = "iper"
+                hd_dim_name = f"dim_{pkg_name}_n{header_name}"
+                fd.createDimension(hd_dim_name, len(header_values))
                 # write block
-                self._write_block(fd, block_header, ext_file_action)
+                self._write_block(
+                    fd,
+                    self.block_headers[0],
+                    ext_file_action,
+                    write_netcdf,
+                )
+            else:
+                for block_header in sorted(self.block_headers):
+                    # write block
+                    self._write_block(
+                        fd,
+                        block_header,
+                        ext_file_action,
+                        write_netcdf,
+                    )
         else:
-            self._write_block(fd, self.block_headers[0], ext_file_action)
+            self._write_block(
+                fd,
+                self.block_headers[0],
+                ext_file_action,
+                write_netcdf,
+            )
 
     def _add_missing_block_headers(self, repeating_dataset):
         key_data_list = repeating_dataset.get_active_key_list()
@@ -1435,7 +1504,7 @@ class MFBlock:
                 os.makedirs(fd_folder_path)
         return fd_main, fd_file_path
 
-    def _write_block(self, fd, block_header, ext_file_action):
+    def _write_block(self, fd, block_header, ext_file_action, write_netcdf):
         transient_key = None
         basic_list = False
         dataset_one = list(self.datasets.values())[0]
@@ -1453,14 +1522,19 @@ class MFBlock:
                     ),
                 )
             # write block header
-            block_header.write_header(fd)
+            if not write_netcdf:
+                block_header.write_header(fd)
         if len(block_header.data_items) > 0:
             transient_key = block_header.get_transient_key()
 
         # gather data sets to write
         data_set_output = []
+        data_set_names = []
         data_found = False
+        nc_paths_used = {}
+        nc_ipers = []
         for key, dataset in self.datasets.items():
+            data_set_names.append(dataset.structure.name)
             try:
                 if transient_key is None:
                     if (
@@ -1470,7 +1544,9 @@ class MFBlock:
                         print(
                             f"        writing data {dataset.structure.name}..."
                         )
-                    if basic_list:
+                    if write_netcdf:
+                        dataset.write_netcdf(fd)
+                    elif basic_list:
                         ext_fname = dataset.external_file_name()
                         if ext_fname is not None:
                             # if dataset.has_modified_ext_data():
@@ -1500,7 +1576,11 @@ class MFBlock:
                                 dataset.structure.name, transient_key
                             )
                         )
-                    if basic_list:
+                    if write_netcdf:
+                        if dataset.path not in nc_paths_used:
+                            nc_ipers += dataset.write_netcdf(fd)
+                            nc_paths_used[dataset.path] = True
+                    elif basic_list:
                         ext_fname = dataset.external_file_name(transient_key)
                         if ext_fname is not None:
                             # if dataset.has_modified_ext_data(transient_key):
@@ -1550,45 +1630,66 @@ class MFBlock:
                 )
         if not data_found:
             return
-        if not basic_list:
-            # write block header
-            block_header.write_header(fd)
+        if not write_netcdf:
+            if not basic_list:
+                # write block header
+                block_header.write_header(fd)
+                if self.external_file_name is not None:
+                    indent_string = self._simulation_data.indent_string
+                    fd.write(
+                        f"{indent_string}open/close "
+                        f'"{self.external_file_name}"\n'
+                    )
+                    # write block contents to external file
+                    fd_main, fd = self._prepare_external(
+                        fd, self.external_file_name
+                    )
+                # write data sets
+                for output in data_set_output:
+                    fd.write(output)
 
-            if self.external_file_name is not None:
-                indent_string = self._simulation_data.indent_string
-                fd.write(
-                    f"{indent_string}open/close "
-                    f'"{self.external_file_name}"\n'
-                )
-                # write block contents to external file
-                fd_main, fd = self._prepare_external(
-                    fd, self.external_file_name
-                )
-            # write data sets
-            for output in data_set_output:
-                fd.write(output)
+            # write trailing comments
+            pth = block_header.blk_trailing_comment_path
+            if pth in self._simulation_data.mfdata:
+                self._simulation_data.mfdata[pth].write(fd)
 
-        # write trailing comments
-        pth = block_header.blk_trailing_comment_path
-        if pth in self._simulation_data.mfdata:
-            self._simulation_data.mfdata[pth].write(fd)
+            if self.external_file_name is not None and not basic_list:
+                # switch back writing to package file
+                fd.close()
+                fd = fd_main
 
-        if self.external_file_name is not None and not basic_list:
-            # switch back writing to package file
-            fd.close()
-            fd = fd_main
+            # write block footer
+            block_header.write_footer(fd)
 
-        # write block footer
-        block_header.write_footer(fd)
+            # write post block comments
+            pth = block_header.blk_post_comment_path
+            if pth in self._simulation_data.mfdata:
+                self._simulation_data.mfdata[pth].write(fd)
 
-        # write post block comments
-        pth = block_header.blk_post_comment_path
-        if pth in self._simulation_data.mfdata:
-            self._simulation_data.mfdata[pth].write(fd)
-
-        # write extra line if comments are off
-        if not self._simulation_data.comments_on:
-            fd.write("\n")
+            # write extra line if comments are off
+            if not self._simulation_data.comments_on:
+                fd.write("\n")
+        elif len(nc_ipers) > 0:
+            nc_ipers = list(set(nc_ipers))
+            nc_ipers.sort()
+            arr = np.array(nc_ipers, dtype=int)
+            iper_label = "iper"
+            nsp_label = f"dim_{self._container_package.package_name}_niper"
+            iper_dim = [nsp_label]
+            fill = -2147483647
+            attribs = {}
+            mfdata.MFData.write_netcdf_var(
+                self._model_or_sim.name,
+                fd,
+                self._container_package,
+                self,
+                "i4",
+                iper_dim,
+                arr,
+                iper_label,
+                attribs,
+                fill,
+            )
 
     def is_allowed(self):
         """Determine if block is valid based on the values of dependant
@@ -1939,7 +2040,7 @@ class MFPackage(PackageContainer, PackageInterface):
                 )
         if self.model_or_sim is not None and fname is not None:
             if self._package_type != "nam":
-                self.model_or_sim.update_package_filename(self, fname)
+                self.model_or_sim.update_package_name(self, fname)
         self._filename = fname
 
     @property
@@ -2300,7 +2401,7 @@ class MFPackage(PackageContainer, PackageInterface):
                         else:
                             current_size = size_def.get_data()
 
-                        if new_size > current_size:
+                        if new_size > -1 and new_size != current_size:
                             # store current size
                             size_def.set_data(new_size)
 
@@ -3021,16 +3122,31 @@ class MFPackage(PackageContainer, PackageInterface):
                     # treat unresolved text as a comment for now
                     self._store_comment(line, found_first_block)
 
-    def write(self, ext_file_action=ExtFileAction.copy_relative_paths):
+    def write(
+        self,
+        ext_file_action=ExtFileAction.copy_relative_paths,
+        netcdf_file=None,
+    ):
         """Writes the package to a file.
 
         Parameters
         ----------
         ext_file_action : ExtFileAction
             How to handle pathing of external data files.
+        netcdf_file : NetCDF
+            NetCDF file to write to instead of package file for packages that
+            support this.  This is currently a pre-release feature that
+            may not work with the current release of MODFLOW-6.
+        Returns
+        -------
+        write_netcdf : boolean
+            whether package data was written to a netcdf file
         """
         if self.simulation_data.auto_set_sizes:
             self._update_size_defs()
+
+        # determine whether to write as a netcdf file
+        write_netcdf = netcdf_file is not None and self.structure.netcdf
 
         # create any folders in path
         package_file_path = self.get_file_path()
@@ -3038,11 +3154,14 @@ class MFPackage(PackageContainer, PackageInterface):
         if package_folder and not os.path.isdir(package_folder):
             os.makedirs(os.path.split(package_file_path)[0])
 
-        # open file
-        fd = open(package_file_path, "w")
+        if write_netcdf:
+            fd = netcdf_file
+        else:
+            # open file
+            fd = open(package_file_path, "w")
 
         # write flopy header
-        if self.simulation_data.write_headers:
+        if self.simulation_data.write_headers and not write_netcdf:
             dt = datetime.datetime.now()
             header = (
                 "# File generated by Flopy version {} on {} at {}."
@@ -3055,9 +3174,11 @@ class MFPackage(PackageContainer, PackageInterface):
             fd.write(header)
 
         # write blocks
-        self._write_blocks(fd, ext_file_action)
+        self._write_blocks(fd, ext_file_action, write_netcdf=write_netcdf)
 
-        fd.close()
+        if not write_netcdf:
+            fd.close()
+        return write_netcdf
 
     def create_package_dimensions(self):
         """Creates a package dimensions object.  For internal FloPy library
@@ -3172,7 +3293,7 @@ class MFPackage(PackageContainer, PackageInterface):
                 self.path + ("pkg_hdr_comments",)
             ].text += line
 
-    def _write_blocks(self, fd, ext_file_action):
+    def _write_blocks(self, fd, ext_file_action, write_netcdf=False):
         # verify that all blocks are valid
         if not self.is_valid():
             message = (
@@ -3197,7 +3318,10 @@ class MFPackage(PackageContainer, PackageInterface):
 
         # write initial comments
         pkg_hdr_comments_path = self.path + ("pkg_hdr_comments",)
-        if pkg_hdr_comments_path in self._simulation_data.mfdata:
+        if (
+            pkg_hdr_comments_path in self._simulation_data.mfdata
+            and not write_netcdf
+        ):
             self._simulation_data.mfdata[
                 self.path + ("pkg_hdr_comments",)
             ].write(fd, False)
@@ -3211,7 +3335,11 @@ class MFPackage(PackageContainer, PackageInterface):
             ):
                 print(f"      writing block {block.structure.name}...")
             # write block
-            block.write(fd, ext_file_action=ext_file_action)
+            block.write(
+                fd,
+                ext_file_action=ext_file_action,
+                write_netcdf=write_netcdf,
+            )
             block_num += 1
 
     def get_file_path(self):

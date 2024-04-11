@@ -1,0 +1,3516 @@
+                             MODFLOW 6 PROFESSIONAL
+                U.S. GEOLOGICAL SURVEY MODULAR HYDROLOGIC MODEL
+                          GROUNDWATER FLOW MODEL (GWF)
+                  VERSION 6.5.0.dev0 (preliminary) 07/13/2023
+                               ***DEVELOP MODE***
+
+        MODFLOW 6 compiled Oct 30 2023 08:23:02 with GCC version 11.3.0
+
+This software is preliminary or provisional and is subject to 
+revision. It is being provided to meet the need for timely best 
+science. The software has not received final approval by the U.S. 
+Geological Survey (USGS). No warranty, expressed or implied, is made 
+by the USGS or the U.S. Government as to the functionality of the 
+software and related material nor shall the fact of release 
+constitute any such warranty. The software is provided on the 
+condition that neither the USGS nor the U.S. Government shall be held 
+liable for any damages resulting from the authorized or unauthorized 
+use of the software.
+
+
+As a work of the United States Government, this USGS product is 
+in the public domain within the United States. You can copy, 
+modify, distribute, and perform the work, even for commercial 
+purposes, all without asking permission. Additionally, USGS 
+waives copyright and related rights in the work worldwide 
+through CC0 1.0 Universal Public Domain Dedication 
+(https://creativecommons.org/publicdomain/zero/1.0/).
+
+The following GNU Lesser General Public License (LGPL) libraries
+are used in this USGS product:
+
+    SPARSKIT version 2.0
+      ilut, luson, and qsplit 
+      (https://www-users.cse.umn.edu/~saad/software/SPARSKIT/)
+
+    RCM - Reverse Cuthill McKee Ordering
+      (https://people.math.sc.edu/Burkardt/f_src/rcm/rcm.html)
+
+    BLAS - Basic Linear Algebra Subprograms Level 1
+      (https://people.math.sc.edu/Burkardt/f_src/blas1_d/blas1_d.html)
+
+    SPARSEKIT - Sparse Matrix Utility Package
+      amux, dperm, dvperm, rperm, and cperm
+      (https://people.sc.fsu.edu/~jburkardt/f77_src/sparsekit/sparsekit.html)
+
+The following BSD-3 License libraries are used in this USGS product:
+
+    Modern Fortran DAG Library
+      Copyright (c) 2018, Jacob Williams
+      All rights reserved.
+      (https://github.com/jacobwilliams/daglib)
+
+The following 2-clause BSD License library is used in this
+USGS product:
+
+    PETSc, the Portable, Extensible Toolkit for Scientific
+    Computation Library
+      Copyright (c) 1991-2021, UChicago Argonne, LLC
+      and the PETSc Development Team All rights reserved.
+      (https://petsc.org/release/)
+
+MODFLOW 6 compiler options: -cpp -I src/libmf6core.a.p -I src -I ../src -I
+src/libmf6_external.a.p -I
+/home/mreno/.clone/external/petsc/arch-linux-c-debug/include -I
+/home/mreno/.clone/external/petsc/include -I
+/home/mreno/.clone/external/petsc/arch-linux-c-debug/lib -I
+/home/mreno/miniconda3/envs/modflow6/include -I -fdiagnostics-color=always
+-imultiarch x86_64-linux-gnu -D _FILE_OFFSET_BITS=64 -D __linux__ -D
+__WITH_PETSC__ -D __WITH_MPI__ -D __WITH_NETCDF__ -mtune=generic
+-march=x86-64 -g -O2 -Wall -Wpedantic -Wcharacter-truncation
+-Wno-unused-dummy-argument -Wno-intrinsic-shadow -Wno-maybe-uninitialized
+-Wno-uninitialized -std=f2008 -fall-intrinsics -fbacktrace -fcheck=all
+-ffpe-trap=overflow,zero,invalid -ffpe-summary=overflow
+-ffpe-trap=overflow,zero,invalid -fPIC -J src/libmf6core.a.p
+-fpre-include=/usr/include/finclude/math-vector-fortran.h
+
+System command used to initiate simulation:
+/home/mreno/.clone/usgs/w/netcdf/2/modflow6/bin/mf6
+
+MODFLOW was compiled using uniform precision.
+
+Real Variables
+  KIND: 8
+  TINY (smallest non-zero value):    2.225074-308
+  HUGE (largest value):    1.797693+308
+  PRECISION: 15
+  SIZE IN BITS: 64
+
+Integer Variables
+  KIND: 4
+  HUGE (largest value): 2147483647
+  SIZE IN BITS: 32
+
+Long Integer Variables
+  KIND: 8
+  HUGE (largest value): 9223372036854775807
+  SIZE IN BITS: 64
+
+Logical Variables
+  KIND: 4
+  SIZE IN BITS: 32
+
+ NAMEFILE OPTIONS:
+    FLOWS WILL BE SAVED TO BUDGET FILE SPECIFIED IN OUTPUT CONTROL
+ END NAMEFILE OPTIONS:
+
+ DIS -- STRUCTURED GRID DISCRETIZATION PACKAGE, VERSION 2 : 3/27/2014 - INPUT READ FROM MEMPATH: __INPUT__/EVT02/DIS                               
+
+
+ NPF -- NODE PROPERTY FLOW PACKAGE, VERSION 1, 3/30/2015 INPUT READ FROM MEMPATH: __INPUT__/EVT02/NPF                               
+
+ Setting Discretization Options
+ End Setting Discretization Options
+
+ Setting Discretization Dimensions
+    NLAY = 1
+    NROW = 1
+    NCOL = 3
+ End Setting Discretization Dimensions
+
+ Setting Discretization Griddata
+    DELR set from input file
+    DELC set from input file
+    TOP set from input file
+    BOTM set from input file
+ End Setting Discretization Griddata
+
+ Setting NPF Options
+    Cell-by-cell flow information will be saved to binary file whenever ICBCFL is not zero.
+ End Setting NPF Options
+
+ Setting NPF Griddata
+    ICELLTYPE set from input file
+    K set from input file
+    K33 not provided.  Setting K33 = K.
+    K22 not provided.  Setting K22 = K.
+ End Setting NPF Griddata
+
+
+ EVT   -- EVT PACKAGE, VERSION 8, 2/22/2014 INPUT READ FROM MEMPATH: __INPUT__/EVT02/EVT_0                             
+
+ PROCESSING EVT BASE OPTIONS
+    EVT FLOWS WILL BE PRINTED TO LISTING FILE.
+ END OF EVT BASE OPTIONS
+
+ PROCESSING EVT OPTIONS
+    ET RATE AT SURFACE WILL BE AS SPECIFIED BY PETM0.
+ END OF EVT OPTIONS
+
+ PROCESSING EVT BASE DIMENSIONS
+    MAXBOUND =       1
+ END OF EVT BASE DIMENSIONS
+
+ PROCESSING EVT DIMENSIONS
+    NSEG = 1
+ END OF EVT DIMENSIONS
+
+ CHD   -- CHD PACKAGE, VERSION 8, 2/22/2014 INPUT READ FROM MEMPATH: __INPUT__/EVT02/CHD_0                             
+
+ PROCESSING CHD BASE OPTIONS
+ END OF CHD BASE OPTIONS
+
+ PROCESSING CHD BASE DIMENSIONS
+    MAXBOUND =       2
+ END OF CHD BASE DIMENSIONS
+
+ IC -- INITIAL CONDITIONS PACKAGE, VERSION 8, 3/28/2015 INPUT READ FROM UNIT 1005
+ # File generated by Flopy version 3.5.0.dev0 on 10/30/2023 at 09:08:53.
+ PROCESSING GRIDDATA
+
+     INITIAL HEAD =   1.000000    
+ END PROCESSING GRIDDATA
+    BINARY GRID INFORMATION WILL BE WRITTEN TO:
+      UNIT NUMBER: 1013
+      FILE NAME: evt02.dis.grb
+
+ OPENED evt02.dis.grb
+ FILE TYPE:DATA(BINARY)   UNIT 1013   STATUS:REPLACE             
+ FORMAT:UNFORMATTED            ACCESS:STREAM              
+ ACTION:READWRITE           
+
+      THE LAST TIME STEP WILL BE PRINTED
+      THE LAST TIME STEP WILL BE PRINTED
+ # File generated by Flopy version 3.5.0.dev0 on 10/30/2023 at 09:08:53.
+
+ PROCESSING OC OPTIONS
+
+    BUDGET INFORMATION WILL BE WRITTEN TO:
+      UNIT NUMBER: 1014
+      FILE NAME: evt02.cbc
+
+ OPENED evt02.cbc
+ FILE TYPE:DATA(BINARY)   UNIT 1014   STATUS:REPLACE             
+ FORMAT:UNFORMATTED            ACCESS:STREAM              
+ ACTION:READWRITE           
+
+    HEAD INFORMATION WILL BE WRITTEN TO:
+      UNIT NUMBER: 1015
+      FILE NAME: evt02.hds
+
+ OPENED evt02.hds
+ FILE TYPE:DATA(BINARY)   UNIT 1015   STATUS:REPLACE             
+ FORMAT:UNFORMATTED            ACCESS:STREAM              
+ ACTION:READWRITE           
+
+ END OF OC OPTIONS
+
+start timestep kper="1" kstp="1" mode="normal"
+
+
+ BEGIN READING OUTPUT CONTROL FOR STRESS PERIOD 1
+      ALL TIME STEPS WILL BE SAVED
+      ALL TIME STEPS WILL BE SAVED
+      ALL TIME STEPS WILL BE PRINTED
+      ALL TIME STEPS WILL BE PRINTED
+
+ END READING OUTPUT CONTROL FOR STRESS PERIOD 1
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      1
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      1
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      1
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD      1   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)               0.0000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD    1
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      1.00000         1.00000         1.00000    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD    1
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD   1
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+            TOTAL IN =           0.0000              TOTAL IN =           0.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =           0.0000             TOTAL OUT =           0.0000
+
+            IN - OUT =           0.0000              IN - OUT =           0.0000
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD    1
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+
+
+end timestep
+
+
+start timestep kper="2" kstp="1" mode="normal"
+
+
+ END OF FILE DETECTED IN OUTPUT CONTROL.
+ CURRENT OUTPUT CONTROL SETTINGS WILL BE 
+ REPEATED UNTIL THE END OF THE SIMULATION.
+
+ OUTPUT CONTROL FOR STRESS PERIOD 2 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      2
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      2
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      2
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD      2   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)               0.0000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD    2
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      3.02041         3.02041         3.02041    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD    2
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD   2
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+            TOTAL IN =           0.0000              TOTAL IN =           0.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =           0.0000             TOTAL OUT =           0.0000
+
+            IN - OUT =           0.0000              IN - OUT =           0.0000
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD    2
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 1.72800E+05  2880.0      48.000      2.0000     5.47570E-03
+
+
+end timestep
+
+
+start timestep kper="3" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 3 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      3
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      3
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      3
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD      3   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -4.53514278E-07
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD    3
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      5.04082         5.04082         5.04082    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD    3
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD   3
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       4.5351E-07                   CHD =       4.5351E-07     CHD_0                            
+
+            TOTAL IN =       4.5351E-07              TOTAL IN =       4.5351E-07
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       4.5351E-07                   EVT =       4.5351E-07     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       4.5351E-07             TOTAL OUT =       4.5351E-07
+
+            IN - OUT =      -5.3516E-13              IN - OUT =      -5.3516E-13
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD    3
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 2.59200E+05  4320.0      72.000      3.0000     8.21355E-03
+
+
+end timestep
+
+
+start timestep kper="4" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 4 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      4
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      4
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      4
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD      4   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -2.29024763E-05
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD    4
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      7.06122         7.06122         7.06122    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD    4
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD   4
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       2.3356E-05                   CHD =       2.2902E-05     CHD_0                            
+
+            TOTAL IN =       2.3356E-05              TOTAL IN =       2.2902E-05
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       2.3356E-05                   EVT =       2.2902E-05     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       2.3356E-05             TOTAL OUT =       2.2902E-05
+
+            IN - OUT =      -9.1761E-15              IN - OUT =       5.2598E-13
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD    4
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 3.45600E+05  5760.0      96.000      4.0000     1.09514E-02
+
+
+end timestep
+
+
+start timestep kper="5" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 5 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      5
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      5
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      5
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD      5   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -4.53514461E-05
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD    5
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      9.08163         9.08163         9.08163    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD    5
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD   5
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       6.8707E-05                   CHD =       4.5351E-05     CHD_0                            
+
+            TOTAL IN =       6.8707E-05              TOTAL IN =       4.5351E-05
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       6.8707E-05                   EVT =       4.5351E-05     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       6.8707E-05             TOTAL OUT =       4.5351E-05
+
+            IN - OUT =       8.6168E-13              IN - OUT =       8.7086E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD    5
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 4.32000E+05  7200.0      120.00      5.0000     1.36893E-02
+
+
+end timestep
+
+
+start timestep kper="6" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 6 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      6
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      6
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      6
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD      6   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -6.78004194E-05
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD    6
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      11.1020         11.1020         11.1020    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD    6
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD   6
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       1.3651E-04                   CHD =       6.7800E-05     CHD_0                            
+
+            TOTAL IN =       1.3651E-04              TOTAL IN =       6.7800E-05
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       1.3651E-04                   EVT =       6.7800E-05     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       1.3651E-04             TOTAL OUT =       6.7800E-05
+
+            IN - OUT =       1.8979E-12              IN - OUT =       1.0362E-12
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD    6
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 5.18400E+05  8640.0      144.00      6.0000     1.64271E-02
+
+
+end timestep
+
+
+start timestep kper="7" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 7 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      7
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      7
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      7
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD      7   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -9.02493951E-05
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD    7
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      13.1224         13.1224         13.1224    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD    7
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD   7
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       2.2676E-04                   CHD =       9.0249E-05     CHD_0                            
+
+            TOTAL IN =       2.2676E-04              TOTAL IN =       9.0249E-05
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       2.2676E-04                   EVT =       9.0249E-05     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       2.2676E-04             TOTAL OUT =       9.0249E-05
+
+            IN - OUT =       2.9638E-12              IN - OUT =       1.0659E-12
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD    7
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 6.04800E+05  10080.      168.00      7.0000     1.91650E-02
+
+
+end timestep
+
+
+start timestep kper="8" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 8 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      8
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      8
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      8
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD      8   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -1.12698371E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD    8
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      15.1429         15.1429         15.1429    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD    8
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD   8
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       3.3946E-04                   CHD =       1.1270E-04     CHD_0                            
+
+            TOTAL IN =       3.3946E-04              TOTAL IN =       1.1270E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       3.3946E-04                   EVT =       1.1270E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       3.3946E-04             TOTAL OUT =       1.1270E-04
+
+            IN - OUT =       3.9722E-12              IN - OUT =       1.0084E-12
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD    8
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 6.91200E+05  11520.      192.00      8.0000     2.19028E-02
+
+
+end timestep
+
+
+start timestep kper="9" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 9 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      9
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      9
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      9
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD      9   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -1.35147348E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD    9
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      17.1633         17.1633         17.1633    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD    9
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD   9
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       4.7460E-04                   CHD =       1.3515E-04     CHD_0                            
+
+            TOTAL IN =       4.7460E-04              TOTAL IN =       1.3515E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       4.7460E-04                   EVT =       1.3515E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       4.7460E-04             TOTAL OUT =       1.3515E-04
+
+            IN - OUT =       4.9885E-12              IN - OUT =       1.0163E-12
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD    9
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 7.77600E+05  12960.      216.00      9.0000     2.46407E-02
+
+
+end timestep
+
+
+start timestep kper="10" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 10 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     10
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     10
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     10
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     10   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -1.57596327E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   10
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      19.1837         19.1837         19.1837    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   10
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  10
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       6.3220E-04                   CHD =       1.5760E-04     CHD_0                            
+
+            TOTAL IN =       6.3220E-04              TOTAL IN =       1.5760E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       6.3220E-04                   EVT =       1.5760E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       6.3220E-04             TOTAL OUT =       1.5760E-04
+
+            IN - OUT =       5.8551E-12              IN - OUT =       8.6659E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   10
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 8.64000E+05  14400.      240.00      10.000     2.73785E-02
+
+
+end timestep
+
+
+start timestep kper="11" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 11 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     11
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     11
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     11
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     11   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -1.80045304E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   11
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      21.2041         21.2041         21.2041    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   11
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  11
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       8.1224E-04                   CHD =       1.8005E-04     CHD_0                            
+
+            TOTAL IN =       8.1224E-04              TOTAL IN =       1.8005E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       8.1224E-04                   EVT =       1.8005E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       8.1224E-04             TOTAL OUT =       1.8005E-04
+
+            IN - OUT =       6.9261E-12              IN - OUT =       1.0710E-12
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   11
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 9.50400E+05  15840.      264.00      11.000     3.01164E-02
+
+
+end timestep
+
+
+start timestep kper="12" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 12 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     12
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     12
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     12
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     12   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -2.02494283E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   12
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      23.2245         23.2245         23.2245    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   12
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  12
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       1.0147E-03                   CHD =       2.0249E-04     CHD_0                            
+
+            TOTAL IN =       1.0147E-03              TOTAL IN =       2.0249E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       1.0147E-03                   EVT =       2.0249E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       1.0147E-03             TOTAL OUT =       2.0249E-04
+
+            IN - OUT =       8.0569E-12              IN - OUT =       1.1308E-12
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   12
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 1.03680E+06  17280.      288.00      12.000     3.28542E-02
+
+
+end timestep
+
+
+start timestep kper="13" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 13 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     13
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     13
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     13
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     13   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -2.24943262E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   13
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      25.2449         25.2449         25.2449    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   13
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  13
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       1.2397E-03                   CHD =       2.2494E-04     CHD_0                            
+
+            TOTAL IN =       1.2397E-03              TOTAL IN =       2.2494E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       1.2397E-03                   EVT =       2.2494E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       1.2397E-03             TOTAL OUT =       2.2494E-04
+
+            IN - OUT =       8.8570E-12              IN - OUT =       8.0017E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   13
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 1.12320E+06  18720.      312.00      13.000     3.55921E-02
+
+
+end timestep
+
+
+start timestep kper="14" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 14 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     14
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     14
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     14
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     14   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -2.47392240E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   14
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      27.2653         27.2653         27.2653    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   14
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  14
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       1.4871E-03                   CHD =       2.4739E-04     CHD_0                            
+
+            TOTAL IN =       1.4871E-03              TOTAL IN =       2.4739E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       1.4871E-03                   EVT =       2.4739E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       1.4871E-03             TOTAL OUT =       2.4739E-04
+
+            IN - OUT =       9.6877E-12              IN - OUT =       8.3070E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   14
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 1.20960E+06  20160.      336.00      14.000     3.83299E-02
+
+
+end timestep
+
+
+start timestep kper="15" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 15 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     15
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     15
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     15
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     15   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -2.69841219E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   15
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      29.2857         29.2857         29.2857    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   15
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  15
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       1.7569E-03                   CHD =       2.6984E-04     CHD_0                            
+
+            TOTAL IN =       1.7569E-03              TOTAL IN =       2.6984E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       1.7569E-03                   EVT =       2.6984E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       1.7569E-03             TOTAL OUT =       2.6984E-04
+
+            IN - OUT =       1.0412E-11              IN - OUT =       7.2447E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   15
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 1.29600E+06  21600.      360.00      15.000     4.10678E-02
+
+
+end timestep
+
+
+start timestep kper="16" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 16 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     16
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     16
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     16
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     16   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -2.92290197E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   16
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      31.3061         31.3061         31.3061    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   16
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  16
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       2.0492E-03                   CHD =       2.9229E-04     CHD_0                            
+
+            TOTAL IN =       2.0492E-03              TOTAL IN =       2.9229E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       2.0492E-03                   EVT =       2.9229E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       2.0492E-03             TOTAL OUT =       2.9229E-04
+
+            IN - OUT =       1.1319E-11              IN - OUT =       9.0680E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   16
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 1.38240E+06  23040.      384.00      16.000     4.38056E-02
+
+
+end timestep
+
+
+start timestep kper="17" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 17 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     17
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     17
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     17
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     17   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -3.14739176E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   17
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      33.3265         33.3265         33.3265    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   17
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  17
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       2.3639E-03                   CHD =       3.1474E-04     CHD_0                            
+
+            TOTAL IN =       2.3639E-03              TOTAL IN =       3.1474E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       2.3639E-03                   EVT =       3.1474E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       2.3639E-03             TOTAL OUT =       3.1474E-04
+
+            IN - OUT =       1.2061E-11              IN - OUT =       7.4219E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   17
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 1.46880E+06  24480.      408.00      17.000     4.65435E-02
+
+
+end timestep
+
+
+start timestep kper="18" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 18 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     18
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     18
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     18
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     18   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -3.37188156E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   18
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      35.3469         35.3469         35.3469    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   18
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  18
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       2.7011E-03                   CHD =       3.3719E-04     CHD_0                            
+
+            TOTAL IN =       2.7011E-03              TOTAL IN =       3.3719E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       2.7011E-03                   EVT =       3.3719E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       2.7011E-03             TOTAL OUT =       3.3719E-04
+
+            IN - OUT =       1.2925E-11              IN - OUT =       8.6356E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   18
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 1.55520E+06  25920.      432.00      18.000     4.92813E-02
+
+
+end timestep
+
+
+start timestep kper="19" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 19 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     19
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     19
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     19
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     19   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -3.59637134E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   19
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      37.3673         37.3673         37.3673    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   19
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  19
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       3.0608E-03                   CHD =       3.5964E-04     CHD_0                            
+
+            TOTAL IN =       3.0608E-03              TOTAL IN =       3.5964E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       3.0608E-03                   EVT =       3.5964E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       3.0608E-03             TOTAL OUT =       3.5964E-04
+
+            IN - OUT =       1.2861E-11              IN - OUT =      -6.3881E-14
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   19
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 1.64160E+06  27360.      456.00      19.000     5.20192E-02
+
+
+end timestep
+
+
+start timestep kper="20" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 20 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     20
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     20
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     20
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     20   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -3.82086114E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   20
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      39.3878         39.3878         39.3878    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   20
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  20
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       3.4429E-03                   CHD =       3.8209E-04     CHD_0                            
+
+            TOTAL IN =       3.4429E-03              TOTAL IN =       3.8209E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       3.4429E-03                   EVT =       3.8209E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       3.4429E-03             TOTAL OUT =       3.8209E-04
+
+            IN - OUT =       1.3372E-11              IN - OUT =       5.1157E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   20
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 1.72800E+06  28800.      480.00      20.000     5.47570E-02
+
+
+end timestep
+
+
+start timestep kper="21" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 21 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     21
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     21
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     21
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     21   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -4.04535094E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   21
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      41.4082         41.4082         41.4082    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   21
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  21
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       3.8474E-03                   CHD =       4.0454E-04     CHD_0                            
+
+            TOTAL IN =       3.8474E-03              TOTAL IN =       4.0454E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       3.8474E-03                   EVT =       4.0454E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       3.8474E-03             TOTAL OUT =       4.0454E-04
+
+            IN - OUT =       1.3593E-11              IN - OUT =       2.2080E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   21
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 1.81440E+06  30240.      504.00      21.000     5.74949E-02
+
+
+end timestep
+
+
+start timestep kper="22" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 22 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     22
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     22
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     22
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     22   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -4.26984072E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   22
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      43.4286         43.4286         43.4286    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   22
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  22
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       4.2744E-03                   CHD =       4.2698E-04     CHD_0                            
+
+            TOTAL IN =       4.2744E-03              TOTAL IN =       4.2698E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       4.2744E-03                   EVT =       4.2698E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       4.2744E-03             TOTAL OUT =       4.2698E-04
+
+            IN - OUT =       1.3557E-11              IN - OUT =      -3.6704E-14
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   22
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 1.90080E+06  31680.      528.00      22.000     6.02327E-02
+
+
+end timestep
+
+
+start timestep kper="23" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 23 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     23
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     23
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     23
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     23   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -4.49433052E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   23
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      45.4490         45.4490         45.4490    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   23
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  23
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       4.7238E-03                   CHD =       4.4943E-04     CHD_0                            
+
+            TOTAL IN =       4.7238E-03              TOTAL IN =       4.4943E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       4.7238E-03                   EVT =       4.4943E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       4.7238E-03             TOTAL OUT =       4.4943E-04
+
+            IN - OUT =       1.3838E-11              IN - OUT =       2.8167E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   23
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 1.98720E+06  33120.      552.00      23.000     6.29706E-02
+
+
+end timestep
+
+
+start timestep kper="24" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 24 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     24
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     24
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     24
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     24   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -4.71882031E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   24
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      47.4694         47.4694         47.4694    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   24
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  24
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       5.1957E-03                   CHD =       4.7188E-04     CHD_0                            
+
+            TOTAL IN =       5.1957E-03              TOTAL IN =       4.7188E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       5.1957E-03                   EVT =       4.7188E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       5.1957E-03             TOTAL OUT =       4.7188E-04
+
+            IN - OUT =       1.4694E-11              IN - OUT =       8.5593E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   24
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 2.07360E+06  34560.      576.00      24.000     6.57084E-02
+
+
+end timestep
+
+
+start timestep kper="25" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 25 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     25
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     25
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     25
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     25   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -4.94331010E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   25
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      49.4898         49.4898         49.4898    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   25
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  25
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       5.6900E-03                   CHD =       4.9433E-04     CHD_0                            
+
+            TOTAL IN =       5.6900E-03              TOTAL IN =       4.9433E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       5.6900E-03                   EVT =       4.9433E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       5.6900E-03             TOTAL OUT =       4.9433E-04
+
+            IN - OUT =       1.4219E-11              IN - OUT =      -4.7517E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   25
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 2.16000E+06  36000.      600.00      25.000     6.84463E-02
+
+
+end timestep
+
+
+start timestep kper="26" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 26 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     26
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     26
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     26
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     26   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -5.16779990E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   26
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      51.5102         51.5102         51.5102    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   26
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  26
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       6.2068E-03                   CHD =       5.1678E-04     CHD_0                            
+
+            TOTAL IN =       6.2068E-03              TOTAL IN =       5.1678E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       6.2068E-03                   EVT =       5.1678E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       6.2068E-03             TOTAL OUT =       5.1678E-04
+
+            IN - OUT =       1.3963E-11              IN - OUT =      -2.5600E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   26
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 2.24640E+06  37440.      624.00      26.000     7.11841E-02
+
+
+end timestep
+
+
+start timestep kper="27" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 27 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     27
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     27
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     27
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     27   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -5.39228968E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   27
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      53.5306         53.5306         53.5306    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   27
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  27
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       6.7460E-03                   CHD =       5.3923E-04     CHD_0                            
+
+            TOTAL IN =       6.7460E-03              TOTAL IN =       5.3923E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       6.7460E-03                   EVT =       5.3923E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       6.7460E-03             TOTAL OUT =       5.3923E-04
+
+            IN - OUT =       1.4970E-11              IN - OUT =       1.0073E-12
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   27
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 2.33280E+06  38880.      648.00      27.000     7.39220E-02
+
+
+end timestep
+
+
+start timestep kper="28" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 28 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     28
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     28
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     28
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     28   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -5.61677948E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   28
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      55.5510         55.5510         55.5510    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   28
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  28
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       7.3077E-03                   CHD =       5.6168E-04     CHD_0                            
+
+            TOTAL IN =       7.3077E-03              TOTAL IN =       5.6168E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       7.3077E-03                   EVT =       5.6168E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       7.3077E-03             TOTAL OUT =       5.6168E-04
+
+            IN - OUT =       1.5378E-11              IN - OUT =       4.0819E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   28
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 2.41920E+06  40320.      672.00      28.000     7.66598E-02
+
+
+end timestep
+
+
+start timestep kper="29" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 29 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     29
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     29
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     29
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     29   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -5.84126928E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   29
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      57.5714         57.5714         57.5714    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   29
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  29
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       7.8918E-03                   CHD =       5.8413E-04     CHD_0                            
+
+            TOTAL IN =       7.8918E-03              TOTAL IN =       5.8413E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       7.8918E-03                   EVT =       5.8413E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       7.8918E-03             TOTAL OUT =       5.8413E-04
+
+            IN - OUT =       1.5506E-11              IN - OUT =       1.2740E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   29
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 2.50560E+06  41760.      696.00      29.000     7.93977E-02
+
+
+end timestep
+
+
+start timestep kper="30" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 30 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     30
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     30
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     30
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     30   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -6.06575907E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   30
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      59.5918         59.5918         59.5918    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   30
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  30
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       8.4984E-03                   CHD =       6.0658E-04     CHD_0                            
+
+            TOTAL IN =       8.4984E-03              TOTAL IN =       6.0658E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       8.4984E-03                   EVT =       6.0658E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       8.4984E-03             TOTAL OUT =       6.0658E-04
+
+            IN - OUT =       1.5656E-11              IN - OUT =       1.4992E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   30
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 2.59200E+06  43200.      720.00      30.000     8.21355E-02
+
+
+end timestep
+
+
+start timestep kper="31" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 31 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     31
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     31
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     31
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     31   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -6.29024887E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   31
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      61.6122         61.6122         61.6122    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   31
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  31
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       9.1274E-03                   CHD =       6.2902E-04     CHD_0                            
+
+            TOTAL IN =       9.1274E-03              TOTAL IN =       6.2902E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       9.1274E-03                   EVT =       6.2902E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       9.1274E-03             TOTAL OUT =       6.2902E-04
+
+            IN - OUT =       1.5161E-11              IN - OUT =      -4.9478E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   31
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 2.67840E+06  44640.      744.00      31.000     8.48734E-02
+
+
+end timestep
+
+
+start timestep kper="32" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 32 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     32
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     32
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     32
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     32   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -6.51473866E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   32
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      63.6327         63.6326         63.6327    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   32
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  32
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       9.7789E-03                   CHD =       6.5147E-04     CHD_0                            
+
+            TOTAL IN =       9.7789E-03              TOTAL IN =       6.5147E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       9.7789E-03                   EVT =       6.5147E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       9.7789E-03             TOTAL OUT =       6.5147E-04
+
+            IN - OUT =       1.4724E-11              IN - OUT =      -4.3678E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   32
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 2.76480E+06  46080.      768.00      32.000     8.76112E-02
+
+
+end timestep
+
+
+start timestep kper="33" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 33 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     33
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     33
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     33
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     33   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -6.73922845E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   33
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      65.6531         65.6531         65.6531    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   33
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  33
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       1.0453E-02                   CHD =       6.7392E-04     CHD_0                            
+
+            TOTAL IN =       1.0453E-02              TOTAL IN =       6.7392E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       1.0453E-02                   EVT =       6.7392E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       1.0453E-02             TOTAL OUT =       6.7392E-04
+
+            IN - OUT =       1.6046E-11              IN - OUT =       1.3215E-12
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   33
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 2.85120E+06  47520.      792.00      33.000     9.03491E-02
+
+
+end timestep
+
+
+start timestep kper="34" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 34 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     34
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     34
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     34
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     34   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -6.96371825E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   34
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      67.6735         67.6735         67.6735    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   34
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  34
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       1.1149E-02                   CHD =       6.9637E-04     CHD_0                            
+
+            TOTAL IN =       1.1149E-02              TOTAL IN =       6.9637E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       1.1149E-02                   EVT =       6.9637E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       1.1149E-02             TOTAL OUT =       6.9637E-04
+
+            IN - OUT =       1.7005E-11              IN - OUT =       9.5975E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   34
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 2.93760E+06  48960.      816.00      34.000     9.30869E-02
+
+
+end timestep
+
+
+start timestep kper="35" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 35 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     35
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     35
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     35
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     35   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -7.18820805E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   35
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      69.6939         69.6939         69.6939    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   35
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  35
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       1.1868E-02                   CHD =       7.1882E-04     CHD_0                            
+
+            TOTAL IN =       1.1868E-02              TOTAL IN =       7.1882E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       1.1868E-02                   EVT =       7.1882E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       1.1868E-02             TOTAL OUT =       7.1882E-04
+
+            IN - OUT =       1.9228E-11              IN - OUT =       2.2230E-12
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   35
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 3.02400E+06  50400.      840.00      35.000     9.58248E-02
+
+
+end timestep
+
+
+start timestep kper="36" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 36 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     36
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     36
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     36
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     36   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -7.41269784E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   36
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      71.7143         71.7143         71.7143    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   36
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  36
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       1.2609E-02                   CHD =       7.4127E-04     CHD_0                            
+
+            TOTAL IN =       1.2609E-02              TOTAL IN =       7.4127E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       1.2609E-02                   EVT =       7.4127E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       1.2609E-02             TOTAL OUT =       7.4127E-04
+
+            IN - OUT =       2.2838E-11              IN - OUT =       3.6098E-12
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   36
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 3.11040E+06  51840.      864.00      36.000     9.85626E-02
+
+
+end timestep
+
+
+start timestep kper="37" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 37 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     37
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     37
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     37
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     37   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -7.63718764E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   37
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      73.7347         73.7347         73.7347    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   37
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  37
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       1.3373E-02                   CHD =       7.6372E-04     CHD_0                            
+
+            TOTAL IN =       1.3373E-02              TOTAL IN =       7.6372E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       1.3373E-02                   EVT =       7.6372E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       1.3373E-02             TOTAL OUT =       7.6372E-04
+
+            IN - OUT =       2.4811E-11              IN - OUT =       1.9724E-12
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   37
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 3.19680E+06  53280.      888.00      37.000     0.10130    
+
+
+end timestep
+
+
+start timestep kper="38" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 38 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     38
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     38
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     38
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     38   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -7.86167742E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   38
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      75.7551         75.7551         75.7551    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   38
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  38
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       1.4159E-02                   CHD =       7.8617E-04     CHD_0                            
+
+            TOTAL IN =       1.4159E-02              TOTAL IN =       7.8617E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       1.4159E-02                   EVT =       7.8617E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       1.4159E-02             TOTAL OUT =       7.8617E-04
+
+            IN - OUT =       2.4887E-11              IN - OUT =       7.6214E-14
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   38
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 3.28320E+06  54720.      912.00      38.000     0.10404    
+
+
+end timestep
+
+
+start timestep kper="39" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 39 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     39
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     39
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     39
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     39   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -8.08616722E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   39
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      77.7755         77.7755         77.7755    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   39
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  39
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       1.4968E-02                   CHD =       8.0862E-04     CHD_0                            
+
+            TOTAL IN =       1.4968E-02              TOTAL IN =       8.0862E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       1.4968E-02                   EVT =       8.0862E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       1.4968E-02             TOTAL OUT =       8.0862E-04
+
+            IN - OUT =       2.5606E-11              IN - OUT =       7.1924E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   39
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 3.36960E+06  56160.      936.00      39.000     0.10678    
+
+
+end timestep
+
+
+start timestep kper="40" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 40 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     40
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     40
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     40
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     40   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -8.31065702E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   40
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      79.7959         79.7959         79.7959    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   40
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  40
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       1.5799E-02                   CHD =       8.3107E-04     CHD_0                            
+
+            TOTAL IN =       1.5799E-02              TOTAL IN =       8.3107E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       1.5799E-02                   EVT =       8.3107E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       1.5799E-02             TOTAL OUT =       8.3107E-04
+
+            IN - OUT =       2.7023E-11              IN - OUT =       1.4165E-12
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   40
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 3.45600E+06  57600.      960.00      40.000     0.10951    
+
+
+end timestep
+
+
+start timestep kper="41" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 41 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     41
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     41
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     41
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     41   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -8.53514681E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   41
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      81.8163         81.8163         81.8163    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   41
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  41
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       1.6652E-02                   CHD =       8.5351E-04     CHD_0                            
+
+            TOTAL IN =       1.6652E-02              TOTAL IN =       8.5351E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       1.6652E-02                   EVT =       8.5351E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       1.6652E-02             TOTAL OUT =       8.5351E-04
+
+            IN - OUT =       2.7840E-11              IN - OUT =       8.1759E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   41
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 3.54240E+06  59040.      984.00      41.000     0.11225    
+
+
+end timestep
+
+
+start timestep kper="42" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 42 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     42
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     42
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     42
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     42   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -8.75963661E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   42
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      83.8367         83.8367         83.8367    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   42
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  42
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       1.7528E-02                   CHD =       8.7596E-04     CHD_0                            
+
+            TOTAL IN =       1.7528E-02              TOTAL IN =       8.7596E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       1.7528E-02                   EVT =       8.7596E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       1.7528E-02             TOTAL OUT =       8.7596E-04
+
+            IN - OUT =       2.8407E-11              IN - OUT =       5.6639E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   42
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 3.62880E+06  60480.      1008.0      42.000     0.11499    
+
+
+end timestep
+
+
+start timestep kper="43" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 43 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     43
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     43
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     43
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     43   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -8.98412641E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   43
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      85.8571         85.8571         85.8571    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   43
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  43
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       1.8427E-02                   CHD =       8.9841E-04     CHD_0                            
+
+            TOTAL IN =       1.8427E-02              TOTAL IN =       8.9841E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       1.8427E-02                   EVT =       8.9841E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       1.8427E-02             TOTAL OUT =       8.9841E-04
+
+            IN - OUT =       3.0810E-11              IN - OUT =       2.4035E-12
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   43
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 3.71520E+06  61920.      1032.0      43.000     0.11773    
+
+
+end timestep
+
+
+start timestep kper="44" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 44 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     44
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     44
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     44
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     44   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -9.20861620E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   44
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      87.8776         87.8775         87.8776    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   44
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  44
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       1.9348E-02                   CHD =       9.2086E-04     CHD_0                            
+
+            TOTAL IN =       1.9348E-02              TOTAL IN =       9.2086E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       1.9348E-02                   EVT =       9.2086E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       1.9348E-02             TOTAL OUT =       9.2086E-04
+
+            IN - OUT =       3.4766E-11              IN - OUT =       3.9554E-12
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   44
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 3.80160E+06  63360.      1056.0      44.000     0.12047    
+
+
+end timestep
+
+
+start timestep kper="45" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 45 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     45
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     45
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     45
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     45   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -9.43310599E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   45
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      89.8980         89.8980         89.8980    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   45
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  45
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       2.0291E-02                   CHD =       9.4331E-04     CHD_0                            
+
+            TOTAL IN =       2.0291E-02              TOTAL IN =       9.4331E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       2.0291E-02                   EVT =       9.4331E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       2.0291E-02             TOTAL OUT =       9.4331E-04
+
+            IN - OUT =       3.4687E-11              IN - OUT =      -7.8544E-14
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   45
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 3.88800E+06  64800.      1080.0      45.000     0.12320    
+
+
+end timestep
+
+
+start timestep kper="46" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 46 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     46
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     46
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     46
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     46   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -9.65759578E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   46
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      91.9184         91.9184         91.9184    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   46
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  46
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       2.1257E-02                   CHD =       9.6576E-04     CHD_0                            
+
+            TOTAL IN =       2.1257E-02              TOTAL IN =       9.6576E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       2.1257E-02                   EVT =       9.6576E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       2.1257E-02             TOTAL OUT =       9.6576E-04
+
+            IN - OUT =       3.6606E-11              IN - OUT =       1.9195E-12
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   46
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 3.97440E+06  66240.      1104.0      46.000     0.12594    
+
+
+end timestep
+
+
+start timestep kper="47" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 47 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     47
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     47
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     47
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     47   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -9.88208558E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   47
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      93.9388         93.9388         93.9388    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   47
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  47
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       2.2245E-02                   CHD =       9.8821E-04     CHD_0                            
+
+            TOTAL IN =       2.2245E-02              TOTAL IN =       9.8821E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       2.2245E-02                   EVT =       9.8821E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       2.2245E-02             TOTAL OUT =       9.8821E-04
+
+            IN - OUT =       3.6204E-11              IN - OUT =      -4.0207E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   47
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 4.06080E+06  67680.      1128.0      47.000     0.12868    
+
+
+end timestep
+
+
+start timestep kper="48" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 48 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     48
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     48
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     48
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     48   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -1.00000000E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   48
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      95.9592         95.9592         95.9592    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   48
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  48
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       2.2345E-02                   CHD =       1.0000E-04     CHD_0                            
+
+            TOTAL IN =       2.2345E-02              TOTAL IN =       1.0000E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       2.2345E-02                   EVT =       1.0000E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       2.2345E-02             TOTAL OUT =       1.0000E-04
+
+            IN - OUT =       3.9047E-11              IN - OUT =       2.8424E-12
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   48
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 4.14720E+06  69120.      1152.0      48.000     0.13142    
+
+
+end timestep
+
+
+start timestep kper="49" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 49 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     49
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     49
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     49
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     49   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -1.00000000E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   49
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      97.9796         97.9796         97.9796    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   49
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  49
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       2.2445E-02                   CHD =       1.0000E-04     CHD_0                            
+
+            TOTAL IN =       2.2445E-02              TOTAL IN =       1.0000E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       2.2445E-02                   EVT =       1.0000E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       2.2445E-02             TOTAL OUT =       1.0000E-04
+
+            IN - OUT =       3.7045E-11              IN - OUT =      -2.0016E-12
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   49
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 4.23360E+06  70560.      1176.0      49.000     0.13415    
+
+
+end timestep
+
+
+start timestep kper="50" kstp="1" mode="normal"
+
+
+ OUTPUT CONTROL FOR STRESS PERIOD 50 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     50
+ UBDSV06 SAVING              EVT IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE EVT_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     50
+ UBDSV06 SAVING              CHD IN MODEL EVT02            PACKAGE EVT02           CONNECTED TO MODEL EVT02            PACKAGE CHD_0            ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD     50
+
+ EVT PACKAGE (EVT_0) FLOW RATES   PERIOD     50   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,2)              -1.00000000E-04
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD   50
+  ---------------------------------------------------------------------------
+
+                1               2               3
+ ................................................
+   1      100.000         100.000         100.000    
+
+ HEAD WILL BE SAVED ON UNIT 1015 AT END OF TIME STEP    1, STRESS PERIOD   50
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD  50
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 EVT =           0.0000                   EVT =           0.0000     EVT_0                            
+                 CHD =       2.2545E-02                   CHD =       1.0000E-04     CHD_0                            
+
+            TOTAL IN =       2.2545E-02              TOTAL IN =       1.0000E-04
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 EVT =       2.2545E-02                   EVT =       1.0000E-04     EVT_0                            
+                 CHD =           0.0000                   CHD =           0.0000     CHD_0                            
+
+           TOTAL OUT =       2.2545E-02             TOTAL OUT =       1.0000E-04
+
+            IN - OUT =       3.6543E-11              IN - OUT =      -5.0248E-13
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD   50
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 4.32000E+06  72000.      1200.0      50.000     0.13689    
+
+
+end timestep
+

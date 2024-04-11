@@ -4,12 +4,13 @@ import sys
 import numpy as np
 
 from ...datbase import DataType
+from ...utils import import_optional_dependency
 from ...utils.datautil import clean_filename
 from ..data import mfdata
 from ..data.mfstructure import DatumType
 from ..mfbase import ExtFileAction, MFDataException
 from .mfdatastorage import DataStorage, DataStorageType, DataStructureType
-from .mfdatautil import convert_data, to_string
+from .mfdatautil import append_item, convert_data, proc_item
 from .mffileaccess import MFFileAccessScalar
 
 
@@ -46,10 +47,14 @@ class MFScalar(mfdata.MFData):
         enable=True,
         path=None,
         dimensions=None,
+        package=None,
+        block=None,
     ):
         super().__init__(
             sim_data, model_or_sim, structure, enable, path, dimensions
         )
+        self._package = package
+        self._block = block
         self._data_type = self.structure.data_item_structures[0].type
         self._data_storage = self._new_storage()
         if data is not None:
@@ -318,11 +323,89 @@ class MFScalar(mfdata.MFData):
                 self._simulation_data.debug,
             )
 
+    def _write_netcdf_entry(
+        self, netcdf, key, lst, size, package, block, is_cellid
+    ):
+        attribs = {}
+
+        size = ()
+        if isinstance(lst, list):
+            if is_cellid:
+                # build dimensions
+                size += ("NCELLDIM",)
+            precision_str = "i4"
+            fill_value = None
+            arr = np.array(lst, dtype=int)
+        elif isinstance(lst, int):
+            precision_str = "i4"
+            fill_value = None
+            arr = np.array(lst, dtype=int)
+        elif isinstance(lst, float):
+            precision_str = "f8"
+            fill_value = None
+            arr = np.array(lst, dtype=float)
+        elif isinstance(lst, str):
+            precision_str = "S1"
+            size += ("LINELENGTH",)
+            fill_value = None
+            netcdf4 = import_optional_dependency("netCDF4")
+            txt = lst.ljust(self._simulation_data.netcdf_linelength)
+            arr = np.array(txt, f"S{self._simulation_data.netcdf_linelength}")
+            arr = netcdf4.stringtochar(arr, encoding="ascii")
+            attribs["_Encoding"] = "ascii"
+        else:
+            precision_str = None
+            fill_value = None
+            arr = np.array(lst)
+        # write
+        self.write_netcdf_var(
+            self._model_or_sim.name,
+            netcdf,
+            package,
+            block,
+            precision_str,
+            size,
+            arr,
+            key,
+            attribs,
+            fill_value,
+        )
+
+    def write_netcdf(self, netcdf):
+        """Writes data to netcdf file.
+        Parameters
+        ----------
+            netcdf : NetCDF4
+                NetCDF4 object to write data to.
+        """
+        ncdf_dict = {}
+        self.get_file_entry(ncdf_dict=ncdf_dict)
+        for key, lst in ncdf_dict.items():
+            lst_data = lst[key][0]
+            if len(lst_data) == 1:
+                lst_data = lst_data[0]
+            self._write_netcdf_entry(
+                netcdf,
+                key,
+                lst_data,
+                (),
+                self._package,
+                self._block,
+                f"{key}_cellid" in ncdf_dict,
+            )
+        if self.name.lower() == "maxbound":
+            # create dimension for this variable
+            var_dim = f"dim_{self._package.package_name}_{self.name.lower()}"
+            size = self.get_data()
+            netcdf.createDimension(var_dim, size)
+        return []
+
     def get_file_entry(
         self,
         values_only=False,
         one_based=False,
         ext_file_action=ExtFileAction.copy_relative_paths,
+        ncdf_dict=None,
     ):
         """Returns a string containing the data formatted for a MODFLOW 6
         file.
@@ -335,6 +418,9 @@ class MFScalar(mfdata.MFData):
                 Return one-based integer values
             ext_file_action : ExtFileAction
                 How to handle external paths.
+            ncdf_dict : dictionary
+                Dictionary that gets populated with netcdf data.  Overrides
+                functionality that returns a string.
 
         Returns
         -------
@@ -383,14 +469,39 @@ class MFScalar(mfdata.MFData):
                     self._simulation_data.debug,
                     ex,
                 )
+            if (
+                data is not None
+                and data is not False
+                and self.structure.type == DatumType.keyword
+            ):
+                if data is True:
+                    data = 1
+                data_multi_list = (
+                    isinstance(data, list)
+                    and len(data) > 0
+                    and isinstance(data[0], tuple)
+                    and len(data[0]) > 1
+                )
+                if ncdf_dict is None or not data_multi_list:
+                    append_item(
+                        ncdf_dict=ncdf_dict,
+                        ncdf_key=f"{self.structure.name}",
+                        ncdf_item=data,
+                    )
+                if ncdf_dict is not None and not data_multi_list:
+                    return None
         if self.structure.type == DatumType.keyword:
             if data is not None and data is not False:
+                if ncdf_dict is not None:
+                    return None
                 # keyword appears alone
                 return "{}{}\n".format(
                     self._simulation_data.indent_string,
                     self.structure.name.upper(),
                 )
             else:
+                if ncdf_dict is not None:
+                    return None
                 return ""
         elif self.structure.type == DatumType.record:
             text_line = []
@@ -410,7 +521,13 @@ class MFScalar(mfdata.MFData):
                             data[index] is not None
                             and data[index] is not False
                         ):
-                            text_line.append(data_item.name.upper())
+                            append_item(
+                                text_line,
+                                data_item.name.upper(),
+                                ncdf_dict,
+                                data_item.name,
+                                True,
+                            )
                             if (
                                 isinstance(data[index], str)
                                 and data_item.name.upper()
@@ -422,7 +539,13 @@ class MFScalar(mfdata.MFData):
                                 index -= 1
                     else:
                         if data is not None and data is not False:
-                            text_line.append(data_item.name.upper())
+                            append_item(
+                                text_line,
+                                data_item.name.upper(),
+                                ncdf_dict,
+                                data_item.name,
+                                True,
+                            )
                 else:
                     if data is not None and data != "":
                         if isinstance(data, list) or isinstance(data, tuple):
@@ -471,17 +594,27 @@ class MFScalar(mfdata.MFData):
                                     # if data has been commented out,
                                     # keep the comment
                                     text_line.append(data[index])
-                                text_line.append(data_item.name.upper())
+                                append_item(
+                                    text_line,
+                                    data_item.name.upper(),
+                                    ncdf_dict,
+                                    data_item.name,
+                                    True,
+                                )
                         else:
                             try:
-                                text_line.append(
-                                    to_string(
-                                        current_data,
-                                        self._data_type,
-                                        self._simulation_data,
-                                        self.data_dimensions,
-                                        data_item=data_item,
-                                    )
+                                proc_item(
+                                    current_data,
+                                    self._data_type,
+                                    self._simulation_data,
+                                    self.data_dimensions,
+                                    data_item.is_cellid,
+                                    data_item.possible_cellid,
+                                    data_item,
+                                    self._simulation_data.verify_data,
+                                    text_line,
+                                    ncdf_dict,
+                                    data_item.name,
                                 )
                             except Exception as ex:
                                 message = (
@@ -505,6 +638,8 @@ class MFScalar(mfdata.MFData):
                                 )
                 index += 1
 
+            if ncdf_dict is not None:
+                return None
             text = self._simulation_data.indent_string.join(text_line)
             return f"{self._simulation_data.indent_string}{text}\n"
         else:
@@ -551,13 +686,19 @@ class MFScalar(mfdata.MFData):
                 )
             try:
                 # data
-                values = to_string(
+                values = []
+                proc_item(
                     data,
                     self._data_type,
                     self._simulation_data,
                     self.data_dimensions,
-                    data_item=data_item,
-                    verify_data=self._simulation_data.verify_data,
+                    data_item.is_cellid,
+                    data_item.possible_cellid,
+                    data_item,
+                    self._simulation_data.verify_data,
+                    values,
+                    ncdf_dict,
+                    data_item.name,
                 )
             except Exception as ex:
                 message = (
@@ -578,15 +719,17 @@ class MFScalar(mfdata.MFData):
                     message,
                     self._simulation_data.debug,
                 )
+            if ncdf_dict is not None:
+                return None
             if values_only:
-                return f"{self._simulation_data.indent_string}{values}"
+                return f"{self._simulation_data.indent_string}{values[0]}"
             else:
                 # keyword + data
                 return "{}{}{}{}\n".format(
                     self._simulation_data.indent_string,
                     self.structure.name.upper(),
                     self._simulation_data.indent_string,
-                    values,
+                    values[0],
                 )
 
     def load(
@@ -726,6 +869,8 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
         enable=True,
         path=None,
         dimensions=None,
+        package=None,
+        block=None,
     ):
         mfdata.MFTransient.__init__(self)
         MFScalar.__init__(
@@ -736,6 +881,8 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
             enable=enable,
             path=path,
             dimensions=dimensions,
+            package=package,
+            block=block,
         )
         self.repeating = True
 

@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on February 07, 2024 20:16:08 UTC
+# FILE created on March 22, 2024 17:50:17 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -160,7 +160,7 @@ class ModflowGwfevt(mfpackage.MFPackage):
     dfn_file_name = "gwf-evt.dfn"
 
     dfn = [
-        ["header", "multi-package", "package-type stress-package"],
+        ["header", "multi-package", "netcdf", "package-type stress-package"],
         [
             "block options",
             "name fixed_cell",
@@ -311,7 +311,8 @@ class ModflowGwfevt(mfpackage.MFPackage):
             "name nseg",
             "type integer",
             "reader urword",
-            "optional false",
+            "optional true",
+            "default_val 1",
         ],
         [
             "block period",
@@ -382,6 +383,7 @@ class ModflowGwfevt(mfpackage.MFPackage):
             "in_record true",
             "reader urword",
             "optional true",
+            "exists_when nseg > 1",
             "time_series true",
         ],
         [
@@ -393,6 +395,7 @@ class ModflowGwfevt(mfpackage.MFPackage):
             "in_record true",
             "reader urword",
             "optional true",
+            "exists_when nseg > 1",
             "time_series true",
         ],
         [
@@ -404,6 +407,7 @@ class ModflowGwfevt(mfpackage.MFPackage):
             "in_record true",
             "reader urword",
             "optional true",
+            "exists_when surf_rate_specified = True",
             "time_series true",
         ],
         [
@@ -445,7 +449,7 @@ class ModflowGwfevt(mfpackage.MFPackage):
         observations=None,
         surf_rate_specified=None,
         maxbound=None,
-        nseg=None,
+        nseg=1,
         stress_period_data=None,
         filename=None,
         pname=None,

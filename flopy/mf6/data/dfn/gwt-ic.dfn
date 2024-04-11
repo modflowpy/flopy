@@ -1,4 +1,5 @@
 # --------------------- gwt ic griddata ---------------------
+# flopy netcdf
 
 block griddata
 name strt

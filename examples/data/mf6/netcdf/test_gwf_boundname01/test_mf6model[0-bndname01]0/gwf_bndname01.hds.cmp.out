@@ -1,0 +1,7 @@
+Performing HEAD to HEAD comparison
+/tmp/pytest-of-mreno/pytest-1882/test_mf6model[0-bndname01]0/gwf_bndname01.hds is a binary file.
+/tmp/pytest-of-mreno/pytest-1882/test_mf6model[0-bndname01]0/mf6/gwf_bndname01.hds is a binary file.
+                                        MAXIMUM         EXCEEDS
+  STRESS PERIOD       TIME STEP HEAD DIFFERENCE        CRITERIA
+--------------- --------------- --------------- ---------------
+              1               1               0                

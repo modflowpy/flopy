@@ -1,0 +1,224 @@
+                               MODFLOW 6 EXTENDED
+                U.S. GEOLOGICAL SURVEY MODULAR HYDROLOGIC MODEL
+                          GROUNDWATER FLOW MODEL (GWF)
+                  VERSION 6.5.0.dev2 (preliminary) 02/13/2024
+                               ***DEVELOP MODE***
+
+        MODFLOW 6 compiled Feb 20 2024 15:55:58 with GCC version 11.4.0
+
+This software is preliminary or provisional and is subject to 
+revision. It is being provided to meet the need for timely best 
+science. The software has not received final approval by the U.S. 
+Geological Survey (USGS). No warranty, expressed or implied, is made 
+by the USGS or the U.S. Government as to the functionality of the 
+software and related material nor shall the fact of release 
+constitute any such warranty. The software is provided on the 
+condition that neither the USGS nor the U.S. Government shall be held 
+liable for any damages resulting from the authorized or unauthorized 
+use of the software.
+
+
+As a work of the United States Government, this USGS product is 
+in the public domain within the United States. You can copy, 
+modify, distribute, and perform the work, even for commercial 
+purposes, all without asking permission. Additionally, USGS 
+waives copyright and related rights in the work worldwide 
+through CC0 1.0 Universal Public Domain Dedication 
+(https://creativecommons.org/publicdomain/zero/1.0/).
+
+The following GNU Lesser General Public License (LGPL) libraries
+are used in this USGS product:
+
+    SPARSKIT version 2.0
+      ilut, luson, and qsplit 
+      (https://www-users.cse.umn.edu/~saad/software/SPARSKIT/)
+
+    RCM - Reverse Cuthill McKee Ordering
+      (https://people.math.sc.edu/Burkardt/f_src/rcm/rcm.html)
+
+    BLAS - Basic Linear Algebra Subprograms Level 1
+      (https://people.math.sc.edu/Burkardt/f_src/blas1_d/blas1_d.html)
+
+    SPARSEKIT - Sparse Matrix Utility Package
+      amux, dperm, dvperm, rperm, and cperm
+      (https://people.sc.fsu.edu/~jburkardt/f77_src/sparsekit/sparsekit.html)
+
+The following BSD-3 License libraries are used in this USGS product:
+
+    Modern Fortran DAG Library
+      Copyright (c) 2018, Jacob Williams
+      All rights reserved.
+      (https://github.com/jacobwilliams/daglib)
+
+The following library is used in this USGS product:
+
+    NetCDF, network Common Data Form software library
+      Copyright (c) 1993-2014 University Corporation for Atmospheric
+      Research/Unidata. Redistribution and use in source and binary
+      forms, with or without modification, are permitted provided that
+      the conditions in the NetCDF copyright are met
+        (https://www.unidata.ucar.edu/software/netcdf/copyright.html)
+
+The following 2-clause BSD License library is used in this
+USGS product:
+
+    PETSc, the Portable, Extensible Toolkit for Scientific
+    Computation Library
+      Copyright (c) 1991-2021, UChicago Argonne, LLC
+      and the PETSc Development Team All rights reserved.
+      (https://petsc.org/release/)
+
+MODFLOW 6 compiler options: -fdiagnostics-color=always -cpp -I
+src/libmf6core.a.p -I src -I ../src -I src/libmf6_external.a.p -I
+/home/mjreno/.clone/external/petsc/arch-linux-c-debug/include -I
+/home/mjreno/.clone/external/petsc/include -I
+/home/mjreno/.clone/external/petsc/arch-linux-c-debug/lib -I /usr/include -I
+/usr/include/hdf5/serial -imultiarch x86_64-linux-gnu -D _FILE_OFFSET_BITS=64
+-D __linux__ -D __WITH_PETSC__ -D __WITH_MPI__ -D __WITH_NETCDF__
+-mtune=generic -march=x86-64 -O2 -Wall -Wpedantic -Wcharacter-truncation
+-Wno-unused-dummy-argument -Wno-intrinsic-shadow -Wno-maybe-uninitialized
+-Wno-uninitialized -std=f2008 -fall-intrinsics -ffpe-summary=overflow
+-ffpe-trap=overflow,zero,invalid -fPIC -J src/libmf6core.a.p
+-fpre-include=/usr/include/finclude/math-vector-fortran.h
+
+System command used to initiate simulation:
+../../../bin/mf6
+
+MODFLOW was compiled using uniform precision.
+
+Real Variables
+  KIND: 8
+  TINY (smallest non-zero value):    2.225074-308
+  HUGE (largest value):    1.797693+308
+  PRECISION: 15
+  SIZE IN BITS: 64
+
+Integer Variables
+  KIND: 4
+  HUGE (largest value): 2147483647
+  SIZE IN BITS: 32
+
+Long Integer Variables
+  KIND: 8
+  HUGE (largest value): 9223372036854775807
+  SIZE IN BITS: 64
+
+Logical Variables
+  KIND: 4
+  SIZE IN BITS: 32
+
+ NAMEFILE OPTIONS:
+ END NAMEFILE OPTIONS:
+
+ DISU -- UNSTRUCTURED GRID DISCRETIZATION PACKAGE, VERSION 2 : 3/27/2014 - INPUT READ FROM MEMPATH: __INPUT__/DISU01A/DISU                            
+
+
+ Setting Discretization Options
+    VERTICAL_OFFSET_TOLERANCE = 0.0000000000000000
+ End Setting Discretization Options
+
+ Setting Discretization Dimensions
+    NODES = 27
+    NJA = 135
+ End Setting Discretization Dimensions
+
+ Setting Discretization Griddata
+    TOP set from input file
+    BOT set from input file
+    AREA set from input file
+ End Setting Discretization Griddata
+
+ Setting Discretization Connectivity
+    IAC set from input file
+    JA set from input file
+    IHC set from input file
+    CL12 set from input file
+    HWVA set from input file
+ End Setting Discretization Connectivity
+
+
+ NPF -- NODE PROPERTY FLOW PACKAGE, VERSION 1, 3/30/2015 INPUT READ FROM MEMPATH: __INPUT__/DISU01A/NPF                             
+
+
+ IC -- Initial Conditions Package, Version 8, 3/28/2015 input read from mempath: __INPUT__/DISU01A/IC                              
+
+
+ Setting NPF Options
+ End Setting NPF Options
+
+ Setting NPF Griddata
+    ICELLTYPE set from input file
+    K set from input file
+    K33 not provided.  Setting K33 = K.
+    K22 not provided.  Setting K22 = K.
+ End Setting NPF Griddata
+
+
+ CHD   -- CHD PACKAGE, VERSION 8, 2/22/2014 INPUT READ FROM MEMPATH: __INPUT__/DISU01A/CHD_0                           
+
+ PROCESSING CHD BASE OPTIONS
+ END OF CHD BASE OPTIONS
+
+ PROCESSING CHD BASE DIMENSIONS
+    MAXBOUND =       2
+ END OF CHD BASE DIMENSIONS
+    STRT set from input file
+    BINARY GRID INFORMATION WILL BE WRITTEN TO:
+      UNIT NUMBER: 1006
+      FILE NAME: disu01a.nc.grb
+
+ OPENED disu01a.nc.grb
+ FILE TYPE:DATA(BINARY)   UNIT 1006   STATUS:REPLACE             
+ FORMAT:UNFORMATTED            ACCESS:STREAM              
+ ACTION:READWRITE           
+
+      THE LAST TIME STEP WILL BE PRINTED
+      THE LAST TIME STEP WILL BE PRINTED
+
+start timestep kper="1" kstp="1" mode="normal"
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD    1
+  ---------------------------------------------------------------------------
+
+            1           2           3           4           5           6           7           8           9          10
+           11          12          13          14          15          16          17          18          19          20
+           21          22          23          24          25          26          27
+ ....................................................................................................................................................................................................................................................................................................................................
+   1    1.000      0.6434      0.5000      0.6434      0.5000      0.3566      0.5000      0.3566       0.000      0.6838    
+       0.5735      0.5000      0.5735      0.5000      0.4265      0.5000      0.4265      0.3162      0.5882      0.5404    
+       0.5000      0.5404      0.5000      0.4596      0.5000      0.4596      0.4118    
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD   1
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 CHD =          10.2941                   CHD =          10.2941     CHD_0                            
+
+            TOTAL IN =          10.2941              TOTAL IN =          10.2941
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 CHD =          10.2941                   CHD =          10.2941     CHD_0                            
+
+           TOTAL OUT =          10.2941             TOTAL OUT =          10.2941
+
+            IN - OUT =       6.3459E-06              IN - OUT =       6.3459E-06
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD    1
+                          TIME STEP LENGTH =    1.00000    
+                        STRESS PERIOD TIME =    1.00000    
+                     TOTAL SIMULATION TIME =    1.00000    
+
+end timestep
+

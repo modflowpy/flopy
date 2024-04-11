@@ -1,0 +1,2014 @@
+                             MODFLOW 6 PROFESSIONAL
+                U.S. GEOLOGICAL SURVEY MODULAR HYDROLOGIC MODEL
+                          GROUNDWATER FLOW MODEL (GWF)
+                  VERSION 6.5.0.dev0 (preliminary) 07/13/2023
+                               ***DEVELOP MODE***
+
+        MODFLOW 6 compiled Oct 30 2023 08:23:02 with GCC version 11.3.0
+
+This software is preliminary or provisional and is subject to 
+revision. It is being provided to meet the need for timely best 
+science. The software has not received final approval by the U.S. 
+Geological Survey (USGS). No warranty, expressed or implied, is made 
+by the USGS or the U.S. Government as to the functionality of the 
+software and related material nor shall the fact of release 
+constitute any such warranty. The software is provided on the 
+condition that neither the USGS nor the U.S. Government shall be held 
+liable for any damages resulting from the authorized or unauthorized 
+use of the software.
+
+
+As a work of the United States Government, this USGS product is 
+in the public domain within the United States. You can copy, 
+modify, distribute, and perform the work, even for commercial 
+purposes, all without asking permission. Additionally, USGS 
+waives copyright and related rights in the work worldwide 
+through CC0 1.0 Universal Public Domain Dedication 
+(https://creativecommons.org/publicdomain/zero/1.0/).
+
+The following GNU Lesser General Public License (LGPL) libraries
+are used in this USGS product:
+
+    SPARSKIT version 2.0
+      ilut, luson, and qsplit 
+      (https://www-users.cse.umn.edu/~saad/software/SPARSKIT/)
+
+    RCM - Reverse Cuthill McKee Ordering
+      (https://people.math.sc.edu/Burkardt/f_src/rcm/rcm.html)
+
+    BLAS - Basic Linear Algebra Subprograms Level 1
+      (https://people.math.sc.edu/Burkardt/f_src/blas1_d/blas1_d.html)
+
+    SPARSEKIT - Sparse Matrix Utility Package
+      amux, dperm, dvperm, rperm, and cperm
+      (https://people.sc.fsu.edu/~jburkardt/f77_src/sparsekit/sparsekit.html)
+
+The following BSD-3 License libraries are used in this USGS product:
+
+    Modern Fortran DAG Library
+      Copyright (c) 2018, Jacob Williams
+      All rights reserved.
+      (https://github.com/jacobwilliams/daglib)
+
+The following 2-clause BSD License library is used in this
+USGS product:
+
+    PETSc, the Portable, Extensible Toolkit for Scientific
+    Computation Library
+      Copyright (c) 1991-2021, UChicago Argonne, LLC
+      and the PETSc Development Team All rights reserved.
+      (https://petsc.org/release/)
+
+MODFLOW 6 compiler options: -cpp -I src/libmf6core.a.p -I src -I ../src -I
+src/libmf6_external.a.p -I
+/home/mreno/.clone/external/petsc/arch-linux-c-debug/include -I
+/home/mreno/.clone/external/petsc/include -I
+/home/mreno/.clone/external/petsc/arch-linux-c-debug/lib -I
+/home/mreno/miniconda3/envs/modflow6/include -I -fdiagnostics-color=always
+-imultiarch x86_64-linux-gnu -D _FILE_OFFSET_BITS=64 -D __linux__ -D
+__WITH_PETSC__ -D __WITH_MPI__ -D __WITH_NETCDF__ -mtune=generic
+-march=x86-64 -g -O2 -Wall -Wpedantic -Wcharacter-truncation
+-Wno-unused-dummy-argument -Wno-intrinsic-shadow -Wno-maybe-uninitialized
+-Wno-uninitialized -std=f2008 -fall-intrinsics -fbacktrace -fcheck=all
+-ffpe-trap=overflow,zero,invalid -ffpe-summary=overflow
+-ffpe-trap=overflow,zero,invalid -fPIC -J src/libmf6core.a.p
+-fpre-include=/usr/include/finclude/math-vector-fortran.h
+
+System command used to initiate simulation:
+/home/mreno/.clone/usgs/w/netcdf/2/modflow6/bin/mf6
+
+MODFLOW was compiled using uniform precision.
+
+Real Variables
+  KIND: 8
+  TINY (smallest non-zero value):    2.225074-308
+  HUGE (largest value):    1.797693+308
+  PRECISION: 15
+  SIZE IN BITS: 64
+
+Integer Variables
+  KIND: 4
+  HUGE (largest value): 2147483647
+  SIZE IN BITS: 32
+
+Long Integer Variables
+  KIND: 8
+  HUGE (largest value): 9223372036854775807
+  SIZE IN BITS: 64
+
+Logical Variables
+  KIND: 4
+  SIZE IN BITS: 32
+
+ NAMEFILE OPTIONS:
+    NEWTON-RAPHSON method enabled for the model.
+    NEWTON-RAPHSON UNDER-RELAXATION based on the bottom elevation of the model will be applied to the model.
+ END NAMEFILE OPTIONS:
+
+ DIS -- STRUCTURED GRID DISCRETIZATION PACKAGE, VERSION 2 : 3/27/2014 - INPUT READ FROM MEMPATH: __INPUT__/GWF_MST03/DIS                           
+
+
+ NPF -- NODE PROPERTY FLOW PACKAGE, VERSION 1, 3/30/2015 INPUT READ FROM MEMPATH: __INPUT__/GWF_MST03/NPF                           
+
+ Setting Discretization Options
+ End Setting Discretization Options
+
+ Setting Discretization Dimensions
+    NLAY = 1
+    NROW = 1
+    NCOL = 1
+ End Setting Discretization Dimensions
+
+ Setting Discretization Griddata
+    DELR set from input file
+    DELC set from input file
+    TOP set from input file
+    BOTM set from input file
+    IDOMAIN set from input file
+ End Setting Discretization Griddata
+
+ Setting NPF Options
+    Cell-by-cell flow information will be saved to binary file whenever ICBCFL is not zero.
+ End Setting NPF Options
+
+ Setting NPF Griddata
+    ICELLTYPE set from input file
+    K set from input file
+    K33 set from input file
+    K22 not provided.  Setting K22 = K.
+ End Setting NPF Griddata
+
+
+ WEL   -- WEL PACKAGE, VERSION 8, 2/22/2014 INPUT READ FROM MEMPATH: __INPUT__/GWF_MST03/WEL-1                         
+
+ PROCESSING WEL BASE OPTIONS
+    FLOWS WILL BE SAVED TO BUDGET FILE SPECIFIED IN OUTPUT CONTROL
+    LISTS OF WEL CELLS WILL BE PRINTED.
+    WEL FLOWS WILL BE PRINTED TO LISTING FILE.
+ END OF WEL BASE OPTIONS
+
+ PROCESSING WEL OPTIONS
+ END OF WEL OPTIONS
+
+ PROCESSING WEL BASE DIMENSIONS
+    MAXBOUND =       1
+ END OF WEL BASE DIMENSIONS
+
+ IC -- INITIAL CONDITIONS PACKAGE, VERSION 8, 3/28/2015 INPUT READ FROM UNIT 1004
+ # File generated by Flopy version 3.5.0.dev0 on 10/30/2023 at 09:14:14.
+ PROCESSING GRIDDATA
+
+     INITIAL HEAD =   10.00000    
+ END PROCESSING GRIDDATA
+
+ STO -- STORAGE PACKAGE, VERSION 1, 5/19/2014 INPUT READ FROM UNIT 1003
+
+
+ # File generated by Flopy version 3.5.0.dev0 on 10/30/2023 at 09:14:14.
+ PROCESSING STORAGE OPTIONS
+ END OF STORAGE OPTIONS
+ PROCESSING GRIDDATA
+
+                 ICONVERT = 1
+
+         SPECIFIC STORAGE =  0.1000000E-09
+
+           SPECIFIC YIELD =  0.1000000    
+ END PROCESSING GRIDDATA
+    BINARY GRID INFORMATION WILL BE WRITTEN TO:
+      UNIT NUMBER: 1018
+      FILE NAME: gwf_mst03.nc.grb
+
+ OPENED gwf_mst03.nc.grb
+ FILE TYPE:DATA(BINARY)   UNIT 1018   STATUS:REPLACE             
+ FORMAT:UNFORMATTED            ACCESS:STREAM              
+ ACTION:READWRITE           
+
+      THE LAST TIME STEP WILL BE PRINTED
+      THE LAST TIME STEP WILL BE PRINTED
+ # File generated by Flopy version 3.5.0.dev0 on 10/30/2023 at 09:14:14.
+
+ PROCESSING OC OPTIONS
+
+    BUDGET INFORMATION WILL BE WRITTEN TO:
+      UNIT NUMBER: 1019
+      FILE NAME: gwf_mst03.cbc
+
+ OPENED gwf_mst03.cbc
+ FILE TYPE:DATA(BINARY)   UNIT 1019   STATUS:REPLACE             
+ FORMAT:UNFORMATTED            ACCESS:STREAM              
+ ACTION:READWRITE           
+
+    HEAD INFORMATION WILL BE WRITTEN TO:
+      UNIT NUMBER: 1020
+      FILE NAME: gwf_mst03.hds
+
+ OPENED gwf_mst03.hds
+ FILE TYPE:DATA(BINARY)   UNIT 1020   STATUS:REPLACE             
+ FORMAT:UNFORMATTED            ACCESS:STREAM              
+ ACTION:READWRITE           
+
+ END OF OC OPTIONS
+
+start timestep kper="1" kstp="1" mode="normal"
+
+
+ BEGIN READING OUTPUT CONTROL FOR STRESS PERIOD 1
+      ALL TIME STEPS WILL BE SAVED
+      ALL TIME STEPS WILL BE PRINTED
+      ALL TIME STEPS WILL BE PRINTED
+
+ END READING OUTPUT CONTROL FOR STRESS PERIOD 1
+
+
+ PROCESSING STORAGE PERIOD DATA
+ END PROCESSING STORAGE PERIOD DATA
+
+
+ STRESS PERIOD 1 IS TRANSIENT
+
+ --------------------------------------------------------------------
+  WEL NO.    LAYER    ROW     COL     STRESS RATE     CONCENTRATION  
+ --------------------------------------------------------------------
+     1         1       1       1    -25.0000000       0.00000000     
+ --------------------------------------------------------------------
+
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      1   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)              -25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD    1
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      9.64285    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP    1, STRESS PERIOD    1
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD   1
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       3.5077E-08                STO-SS =       2.4554E-07     STORAGE                          
+              STO-SY =           3.5714                STO-SY =          25.0000     STORAGE                          
+                 WEL =           0.0000                   WEL =           0.0000     WEL-1                            
+
+            TOTAL IN =           3.5714              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =           0.0000                STO-SS =           0.0000     STORAGE                          
+              STO-SY =           0.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =           3.5714                   WEL =          25.0000     WEL-1                            
+
+           TOTAL OUT =           3.5714             TOTAL OUT =          25.0000
+
+            IN - OUT =       1.0965E-12              IN - OUT =       7.6774E-12
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD    1
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME  12343.      205.71      3.4286     0.14286     3.91122E-04
+         TOTAL TIME  12343.      205.71      3.4286     0.14286     3.91122E-04
+
+
+end timestep
+
+
+start timestep kper="1" kstp="2" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      1   STEP        2
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)              -25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   2 IN STRESS PERIOD    1
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      9.28571    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP    2, STRESS PERIOD    1
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    2, STRESS PERIOD   1
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       6.8878E-08                STO-SS =       2.3661E-07     STORAGE                          
+              STO-SY =           7.1429                STO-SY =          25.0000     STORAGE                          
+                 WEL =           0.0000                   WEL =           0.0000     WEL-1                            
+
+            TOTAL IN =           7.1429              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =           0.0000                STO-SS =           0.0000     STORAGE                          
+              STO-SY =           0.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =           7.1429                   WEL =          25.0000     WEL-1                            
+
+           TOTAL OUT =           7.1429             TOTAL OUT =          25.0000
+
+            IN - OUT =      -5.4299E-10              IN - OUT =      -3.8086E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    2 IN STRESS PERIOD    1
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME  24686.      411.43      6.8571     0.28571     7.82243E-04
+         TOTAL TIME  24686.      411.43      6.8571     0.28571     7.82243E-04
+
+
+end timestep
+
+
+start timestep kper="1" kstp="3" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      1   STEP        3
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)              -25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   3 IN STRESS PERIOD    1
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      8.92857    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP    3, STRESS PERIOD    1
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    3, STRESS PERIOD   1
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       1.0140E-07                STO-SS =       2.2768E-07     STORAGE                          
+              STO-SY =          10.7143                STO-SY =          25.0000     STORAGE                          
+                 WEL =           0.0000                   WEL =           0.0000     WEL-1                            
+
+            TOTAL IN =          10.7143              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =           0.0000                STO-SS =           0.0000     STORAGE                          
+              STO-SY =           0.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =          10.7143                   WEL =          25.0000     WEL-1                            
+
+           TOTAL OUT =          10.7143             TOTAL OUT =          25.0000
+
+            IN - OUT =      -1.0871E-09              IN - OUT =      -3.8087E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    3 IN STRESS PERIOD    1
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME  37029.      617.14      10.286     0.42857     1.17336E-03
+         TOTAL TIME  37029.      617.14      10.286     0.42857     1.17336E-03
+
+
+end timestep
+
+
+start timestep kper="1" kstp="4" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      1   STEP        4
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)              -25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   4 IN STRESS PERIOD    1
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      8.57143    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP    4, STRESS PERIOD    1
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    4, STRESS PERIOD   1
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       1.3265E-07                STO-SS =       2.1875E-07     STORAGE                          
+              STO-SY =          14.2857                STO-SY =          25.0000     STORAGE                          
+                 WEL =           0.0000                   WEL =           0.0000     WEL-1                            
+
+            TOTAL IN =          14.2857              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =           0.0000                STO-SS =           0.0000     STORAGE                          
+              STO-SY =           0.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =          14.2857                   WEL =          25.0000     WEL-1                            
+
+           TOTAL OUT =          14.2857             TOTAL OUT =          25.0000
+
+            IN - OUT =      -1.6312E-09              IN - OUT =      -3.8086E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    4 IN STRESS PERIOD    1
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME  49371.      822.86      13.714     0.57143     1.56449E-03
+         TOTAL TIME  49371.      822.86      13.714     0.57143     1.56449E-03
+
+
+end timestep
+
+
+start timestep kper="1" kstp="5" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      1   STEP        5
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)              -25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   5 IN STRESS PERIOD    1
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      8.21428    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP    5, STRESS PERIOD    1
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    5, STRESS PERIOD   1
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       1.6263E-07                STO-SS =       2.0982E-07     STORAGE                          
+              STO-SY =          17.8571                STO-SY =          25.0000     STORAGE                          
+                 WEL =           0.0000                   WEL =           0.0000     WEL-1                            
+
+            TOTAL IN =          17.8571              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =           0.0000                STO-SS =           0.0000     STORAGE                          
+              STO-SY =           0.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =          17.8571                   WEL =          25.0000     WEL-1                            
+
+           TOTAL OUT =          17.8571             TOTAL OUT =          25.0000
+
+            IN - OUT =      -2.1753E-09              IN - OUT =      -3.8087E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    5 IN STRESS PERIOD    1
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME  61714.      1028.6      17.143     0.71429     1.95561E-03
+         TOTAL TIME  61714.      1028.6      17.143     0.71429     1.95561E-03
+
+
+end timestep
+
+
+start timestep kper="1" kstp="6" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      1   STEP        6
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)              -25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   6 IN STRESS PERIOD    1
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      7.85714    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP    6, STRESS PERIOD    1
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    6, STRESS PERIOD   1
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       1.9133E-07                STO-SS =       2.0089E-07     STORAGE                          
+              STO-SY =          21.4286                STO-SY =          25.0000     STORAGE                          
+                 WEL =           0.0000                   WEL =           0.0000     WEL-1                            
+
+            TOTAL IN =          21.4286              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =           0.0000                STO-SS =           0.0000     STORAGE                          
+              STO-SY =           0.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =          21.4286                   WEL =          25.0000     WEL-1                            
+
+           TOTAL OUT =          21.4286             TOTAL OUT =          25.0000
+
+            IN - OUT =      -2.7194E-09              IN - OUT =      -3.8088E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    6 IN STRESS PERIOD    1
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME  74057.      1234.3      20.571     0.85714     2.34673E-03
+         TOTAL TIME  74057.      1234.3      20.571     0.85714     2.34673E-03
+
+
+end timestep
+
+
+start timestep kper="1" kstp="7" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      1   STEP        7
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)              -25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   7 IN STRESS PERIOD    1
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      7.50000    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP    7, STRESS PERIOD    1
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    7, STRESS PERIOD   1
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       2.1875E-07                STO-SS =       1.9196E-07     STORAGE                          
+              STO-SY =          25.0000                STO-SY =          25.0000     STORAGE                          
+                 WEL =           0.0000                   WEL =           0.0000     WEL-1                            
+
+            TOTAL IN =          25.0000              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =           0.0000                STO-SS =           0.0000     STORAGE                          
+              STO-SY =           0.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =          25.0000                   WEL =          25.0000     WEL-1                            
+
+           TOTAL OUT =          25.0000             TOTAL OUT =          25.0000
+
+            IN - OUT =      -3.2635E-09              IN - OUT =      -3.8087E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    7 IN STRESS PERIOD    1
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+
+
+end timestep
+
+
+start timestep kper="1" kstp="8" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      1   STEP        8
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)              -25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   8 IN STRESS PERIOD    1
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      7.14286    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP    8, STRESS PERIOD    1
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    8, STRESS PERIOD   1
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       2.4490E-07                STO-SS =       1.8304E-07     STORAGE                          
+              STO-SY =          28.5714                STO-SY =          25.0000     STORAGE                          
+                 WEL =           0.0000                   WEL =           0.0000     WEL-1                            
+
+            TOTAL IN =          28.5714              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =           0.0000                STO-SS =           0.0000     STORAGE                          
+              STO-SY =           0.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =          28.5714                   WEL =          25.0000     WEL-1                            
+
+           TOTAL OUT =          28.5714             TOTAL OUT =          25.0000
+
+            IN - OUT =      -3.8076E-09              IN - OUT =      -3.8087E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    8 IN STRESS PERIOD    1
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME  98743.      1645.7      27.429      1.1429     3.12897E-03
+         TOTAL TIME  98743.      1645.7      27.429      1.1429     3.12897E-03
+
+
+end timestep
+
+
+start timestep kper="1" kstp="9" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      1   STEP        9
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)              -25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   9 IN STRESS PERIOD    1
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      6.78571    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP    9, STRESS PERIOD    1
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    9, STRESS PERIOD   1
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       2.6977E-07                STO-SS =       1.7411E-07     STORAGE                          
+              STO-SY =          32.1429                STO-SY =          25.0000     STORAGE                          
+                 WEL =           0.0000                   WEL =           0.0000     WEL-1                            
+
+            TOTAL IN =          32.1429              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =           0.0000                STO-SS =           0.0000     STORAGE                          
+              STO-SY =           0.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =          32.1429                   WEL =          25.0000     WEL-1                            
+
+           TOTAL OUT =          32.1429             TOTAL OUT =          25.0000
+
+            IN - OUT =      -4.3517E-09              IN - OUT =      -3.8087E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    9 IN STRESS PERIOD    1
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME 1.11086E+05  1851.4      30.857      1.2857     3.52009E-03
+         TOTAL TIME 1.11086E+05  1851.4      30.857      1.2857     3.52009E-03
+
+
+end timestep
+
+
+start timestep kper="1" kstp="10" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      1   STEP       10
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)              -25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP  10 IN STRESS PERIOD    1
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      6.42857    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP   10, STRESS PERIOD    1
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP   10, STRESS PERIOD   1
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       2.9337E-07                STO-SS =       1.6518E-07     STORAGE                          
+              STO-SY =          35.7143                STO-SY =          25.0000     STORAGE                          
+                 WEL =           0.0000                   WEL =           0.0000     WEL-1                            
+
+            TOTAL IN =          35.7143              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =           0.0000                STO-SS =           0.0000     STORAGE                          
+              STO-SY =           0.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =          35.7143                   WEL =          25.0000     WEL-1                            
+
+           TOTAL OUT =          35.7143             TOTAL OUT =          25.0000
+
+            IN - OUT =      -4.8958E-09              IN - OUT =      -3.8088E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP   10 IN STRESS PERIOD    1
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME 1.23429E+05  2057.1      34.286      1.4286     3.91122E-03
+         TOTAL TIME 1.23429E+05  2057.1      34.286      1.4286     3.91122E-03
+
+
+end timestep
+
+
+start timestep kper="1" kstp="11" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      1   STEP       11
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)              -25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP  11 IN STRESS PERIOD    1
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      6.07143    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP   11, STRESS PERIOD    1
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP   11, STRESS PERIOD   1
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       3.1569E-07                STO-SS =       1.5625E-07     STORAGE                          
+              STO-SY =          39.2857                STO-SY =          25.0000     STORAGE                          
+                 WEL =           0.0000                   WEL =           0.0000     WEL-1                            
+
+            TOTAL IN =          39.2857              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =           0.0000                STO-SS =           0.0000     STORAGE                          
+              STO-SY =           0.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =          39.2857                   WEL =          25.0000     WEL-1                            
+
+           TOTAL OUT =          39.2857             TOTAL OUT =          25.0000
+
+            IN - OUT =      -5.4399E-09              IN - OUT =      -3.8087E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP   11 IN STRESS PERIOD    1
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME 1.35771E+05  2262.9      37.714      1.5714     4.30234E-03
+         TOTAL TIME 1.35771E+05  2262.9      37.714      1.5714     4.30234E-03
+
+
+end timestep
+
+
+start timestep kper="1" kstp="12" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      1   STEP       12
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)              -25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP  12 IN STRESS PERIOD    1
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      5.71429    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP   12, STRESS PERIOD    1
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP   12, STRESS PERIOD   1
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       3.3673E-07                STO-SS =       1.4732E-07     STORAGE                          
+              STO-SY =          42.8571                STO-SY =          25.0000     STORAGE                          
+                 WEL =           0.0000                   WEL =           0.0000     WEL-1                            
+
+            TOTAL IN =          42.8571              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =           0.0000                STO-SS =           0.0000     STORAGE                          
+              STO-SY =           0.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =          42.8571                   WEL =          25.0000     WEL-1                            
+
+           TOTAL OUT =          42.8571             TOTAL OUT =          25.0000
+
+            IN - OUT =      -5.9840E-09              IN - OUT =      -3.8086E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP   12 IN STRESS PERIOD    1
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME 1.48114E+05  2468.6      41.143      1.7143     4.69346E-03
+         TOTAL TIME 1.48114E+05  2468.6      41.143      1.7143     4.69346E-03
+
+
+end timestep
+
+
+start timestep kper="1" kstp="13" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      1   STEP       13
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)              -25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP  13 IN STRESS PERIOD    1
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      5.35714    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP   13, STRESS PERIOD    1
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP   13, STRESS PERIOD   1
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       3.5651E-07                STO-SS =       1.3839E-07     STORAGE                          
+              STO-SY =          46.4286                STO-SY =          25.0000     STORAGE                          
+                 WEL =           0.0000                   WEL =           0.0000     WEL-1                            
+
+            TOTAL IN =          46.4286              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =           0.0000                STO-SS =           0.0000     STORAGE                          
+              STO-SY =           0.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =          46.4286                   WEL =          25.0000     WEL-1                            
+
+           TOTAL OUT =          46.4286             TOTAL OUT =          25.0000
+
+            IN - OUT =      -6.5281E-09              IN - OUT =      -3.8088E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP   13 IN STRESS PERIOD    1
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME 1.60457E+05  2674.3      44.571      1.8571     5.08458E-03
+         TOTAL TIME 1.60457E+05  2674.3      44.571      1.8571     5.08458E-03
+
+
+end timestep
+
+
+start timestep kper="1" kstp="14" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      1   STEP       14
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)              -25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP  14 IN STRESS PERIOD    1
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      5.00000    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP   14, STRESS PERIOD    1
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP   14, STRESS PERIOD   1
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       3.7500E-07                STO-SS =       1.2946E-07     STORAGE                          
+              STO-SY =          50.0000                STO-SY =          25.0000     STORAGE                          
+                 WEL =           0.0000                   WEL =           0.0000     WEL-1                            
+
+            TOTAL IN =          50.0000              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =           0.0000                STO-SS =           0.0000     STORAGE                          
+              STO-SY =           0.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =          50.0000                   WEL =          25.0000     WEL-1                            
+
+           TOTAL OUT =          50.0000             TOTAL OUT =          25.0000
+
+            IN - OUT =      -7.0722E-09              IN - OUT =      -3.8088E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP   14 IN STRESS PERIOD    1
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME 1.72800E+05  2880.0      48.000      2.0000     5.47570E-03
+         TOTAL TIME 1.72800E+05  2880.0      48.000      2.0000     5.47570E-03
+
+
+end timestep
+
+
+start timestep kper="2" kstp="1" mode="normal"
+
+
+ END OF FILE DETECTED IN OUTPUT CONTROL.
+ CURRENT OUTPUT CONTROL SETTINGS WILL BE 
+ REPEATED UNTIL THE END OF THE SIMULATION.
+
+ OUTPUT CONTROL FOR STRESS PERIOD 2 IS REPEATED USING SETTINGS FROM A PREVIOUS STRESS PERIOD.
+
+
+ STRESS PERIOD 2 IS TRANSIENT
+
+ --------------------------------------------------------------------
+  WEL NO.    LAYER    ROW     COL     STRESS RATE     CONCENTRATION  
+ --------------------------------------------------------------------
+     1         1       1       1     25.0000000       0.00000000     
+ --------------------------------------------------------------------
+
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      2   STEP        1
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)               25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD    2
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      5.35714    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP    1, STRESS PERIOD    2
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD   2
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       3.7500E-07                STO-SS =           0.0000     STORAGE                          
+              STO-SY =          50.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =           3.5714                   WEL =          25.0000     WEL-1                            
+
+            TOTAL IN =          53.5714              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =       1.8495E-08                STO-SS =       1.2946E-07     STORAGE                          
+              STO-SY =           3.5714                STO-SY =          25.0000     STORAGE                          
+                 WEL =          50.0000                   WEL =           0.0000     WEL-1                            
+
+           TOTAL OUT =          53.5714             TOTAL OUT =          25.0000
+
+            IN - OUT =      -7.6163E-09              IN - OUT =      -3.8087E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD    2
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME  12343.      205.71      3.4286     0.14286     3.91122E-04
+         TOTAL TIME 1.85143E+05  3085.7      51.429      2.1429     5.86682E-03
+
+
+end timestep
+
+
+start timestep kper="2" kstp="2" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      2   STEP        2
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)               25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   2 IN STRESS PERIOD    2
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      5.71429    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP    2, STRESS PERIOD    2
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    2, STRESS PERIOD   2
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       3.7500E-07                STO-SS =           0.0000     STORAGE                          
+              STO-SY =          50.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =           7.1429                   WEL =          25.0000     WEL-1                            
+
+            TOTAL IN =          57.1429              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =       3.8265E-08                STO-SS =       1.3839E-07     STORAGE                          
+              STO-SY =           7.1429                STO-SY =          25.0000     STORAGE                          
+                 WEL =          50.0000                   WEL =           0.0000     WEL-1                            
+
+           TOTAL OUT =          57.1429             TOTAL OUT =          25.0000
+
+            IN - OUT =      -8.1604E-09              IN - OUT =      -3.8088E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    2 IN STRESS PERIOD    2
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME  24686.      411.43      6.8571     0.28571     7.82243E-04
+         TOTAL TIME 1.97486E+05  3291.4      54.857      2.2857     6.25794E-03
+
+
+end timestep
+
+
+start timestep kper="2" kstp="3" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      2   STEP        3
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)               25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   3 IN STRESS PERIOD    2
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      6.07143    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP    3, STRESS PERIOD    2
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    3, STRESS PERIOD   2
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       3.7500E-07                STO-SS =           0.0000     STORAGE                          
+              STO-SY =          50.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =          10.7143                   WEL =          25.0000     WEL-1                            
+
+            TOTAL IN =          60.7143              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =       5.9311E-08                STO-SS =       1.4732E-07     STORAGE                          
+              STO-SY =          10.7143                STO-SY =          25.0000     STORAGE                          
+                 WEL =          50.0000                   WEL =           0.0000     WEL-1                            
+
+           TOTAL OUT =          60.7143             TOTAL OUT =          25.0000
+
+            IN - OUT =      -8.7045E-09              IN - OUT =      -3.8087E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    3 IN STRESS PERIOD    2
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME  37029.      617.14      10.286     0.42857     1.17336E-03
+         TOTAL TIME 2.09829E+05  3497.1      58.286      2.4286     6.64907E-03
+
+
+end timestep
+
+
+start timestep kper="2" kstp="4" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      2   STEP        4
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)               25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   4 IN STRESS PERIOD    2
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      6.42857    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP    4, STRESS PERIOD    2
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    4, STRESS PERIOD   2
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       3.7500E-07                STO-SS =           0.0000     STORAGE                          
+              STO-SY =          50.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =          14.2857                   WEL =          25.0000     WEL-1                            
+
+            TOTAL IN =          64.2857              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =       8.1633E-08                STO-SS =       1.5625E-07     STORAGE                          
+              STO-SY =          14.2857                STO-SY =          25.0000     STORAGE                          
+                 WEL =          50.0000                   WEL =           0.0000     WEL-1                            
+
+           TOTAL OUT =          64.2857             TOTAL OUT =          25.0000
+
+            IN - OUT =      -9.2486E-09              IN - OUT =      -3.8088E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    4 IN STRESS PERIOD    2
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME  49371.      822.86      13.714     0.57143     1.56449E-03
+         TOTAL TIME 2.22171E+05  3702.9      61.714      2.5714     7.04019E-03
+
+
+end timestep
+
+
+start timestep kper="2" kstp="5" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      2   STEP        5
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)               25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   5 IN STRESS PERIOD    2
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      6.78571    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP    5, STRESS PERIOD    2
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    5, STRESS PERIOD   2
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       3.7500E-07                STO-SS =           0.0000     STORAGE                          
+              STO-SY =          50.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =          17.8571                   WEL =          25.0000     WEL-1                            
+
+            TOTAL IN =          67.8571              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =       1.0523E-07                STO-SS =       1.6518E-07     STORAGE                          
+              STO-SY =          17.8571                STO-SY =          25.0000     STORAGE                          
+                 WEL =          50.0000                   WEL =           0.0000     WEL-1                            
+
+           TOTAL OUT =          67.8571             TOTAL OUT =          25.0000
+
+            IN - OUT =      -9.7927E-09              IN - OUT =      -3.8087E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    5 IN STRESS PERIOD    2
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME  61714.      1028.6      17.143     0.71429     1.95561E-03
+         TOTAL TIME 2.34514E+05  3908.6      65.143      2.7143     7.43131E-03
+
+
+end timestep
+
+
+start timestep kper="2" kstp="6" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      2   STEP        6
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)               25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   6 IN STRESS PERIOD    2
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      7.14286    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP    6, STRESS PERIOD    2
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    6, STRESS PERIOD   2
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       3.7500E-07                STO-SS =           0.0000     STORAGE                          
+              STO-SY =          50.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =          21.4286                   WEL =          25.0000     WEL-1                            
+
+            TOTAL IN =          71.4286              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =       1.3010E-07                STO-SS =       1.7411E-07     STORAGE                          
+              STO-SY =          21.4286                STO-SY =          25.0000     STORAGE                          
+                 WEL =          50.0000                   WEL =           0.0000     WEL-1                            
+
+           TOTAL OUT =          71.4286             TOTAL OUT =          25.0000
+
+            IN - OUT =      -1.0337E-08              IN - OUT =      -3.8088E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    6 IN STRESS PERIOD    2
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME  74057.      1234.3      20.571     0.85714     2.34673E-03
+         TOTAL TIME 2.46857E+05  4114.3      68.571      2.8571     7.82243E-03
+
+
+end timestep
+
+
+start timestep kper="2" kstp="7" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      2   STEP        7
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)               25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   7 IN STRESS PERIOD    2
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      7.50000    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP    7, STRESS PERIOD    2
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    7, STRESS PERIOD   2
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       3.7500E-07                STO-SS =           0.0000     STORAGE                          
+              STO-SY =          50.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =          25.0000                   WEL =          25.0000     WEL-1                            
+
+            TOTAL IN =          75.0000              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =       1.5625E-07                STO-SS =       1.8304E-07     STORAGE                          
+              STO-SY =          25.0000                STO-SY =          25.0000     STORAGE                          
+                 WEL =          50.0000                   WEL =           0.0000     WEL-1                            
+
+           TOTAL OUT =          75.0000             TOTAL OUT =          25.0000
+
+            IN - OUT =      -1.0881E-08              IN - OUT =      -3.8087E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    7 IN STRESS PERIOD    2
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME 2.59200E+05  4320.0      72.000      3.0000     8.21355E-03
+
+
+end timestep
+
+
+start timestep kper="2" kstp="8" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      2   STEP        8
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)               25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   8 IN STRESS PERIOD    2
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      7.85714    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP    8, STRESS PERIOD    2
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    8, STRESS PERIOD   2
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       3.7500E-07                STO-SS =           0.0000     STORAGE                          
+              STO-SY =          50.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =          28.5714                   WEL =          25.0000     WEL-1                            
+
+            TOTAL IN =          78.5714              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =       1.8367E-07                STO-SS =       1.9196E-07     STORAGE                          
+              STO-SY =          28.5714                STO-SY =          25.0000     STORAGE                          
+                 WEL =          50.0000                   WEL =           0.0000     WEL-1                            
+
+           TOTAL OUT =          78.5714             TOTAL OUT =          25.0000
+
+            IN - OUT =      -1.1425E-08              IN - OUT =      -3.8088E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    8 IN STRESS PERIOD    2
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME  98743.      1645.7      27.429      1.1429     3.12897E-03
+         TOTAL TIME 2.71543E+05  4525.7      75.429      3.1429     8.60467E-03
+
+
+end timestep
+
+
+start timestep kper="2" kstp="9" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      2   STEP        9
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)               25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   9 IN STRESS PERIOD    2
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      8.21428    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP    9, STRESS PERIOD    2
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    9, STRESS PERIOD   2
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       3.7500E-07                STO-SS =           0.0000     STORAGE                          
+              STO-SY =          50.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =          32.1429                   WEL =          25.0000     WEL-1                            
+
+            TOTAL IN =          82.1429              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =       2.1237E-07                STO-SS =       2.0089E-07     STORAGE                          
+              STO-SY =          32.1429                STO-SY =          25.0000     STORAGE                          
+                 WEL =          50.0000                   WEL =           0.0000     WEL-1                            
+
+           TOTAL OUT =          82.1429             TOTAL OUT =          25.0000
+
+            IN - OUT =      -1.1969E-08              IN - OUT =      -3.8087E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    9 IN STRESS PERIOD    2
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME 1.11086E+05  1851.4      30.857      1.2857     3.52009E-03
+         TOTAL TIME 2.83886E+05  4731.4      78.857      3.2857     8.99580E-03
+
+
+end timestep
+
+
+start timestep kper="2" kstp="10" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      2   STEP       10
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)               25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP  10 IN STRESS PERIOD    2
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      8.57143    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP   10, STRESS PERIOD    2
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP   10, STRESS PERIOD   2
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       3.7500E-07                STO-SS =           0.0000     STORAGE                          
+              STO-SY =          50.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =          35.7143                   WEL =          25.0000     WEL-1                            
+
+            TOTAL IN =          85.7143              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =       2.4235E-07                STO-SS =       2.0982E-07     STORAGE                          
+              STO-SY =          35.7143                STO-SY =          25.0000     STORAGE                          
+                 WEL =          50.0000                   WEL =           0.0000     WEL-1                            
+
+           TOTAL OUT =          85.7143             TOTAL OUT =          25.0000
+
+            IN - OUT =      -1.2513E-08              IN - OUT =      -3.8089E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP   10 IN STRESS PERIOD    2
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME 1.23429E+05  2057.1      34.286      1.4286     3.91122E-03
+         TOTAL TIME 2.96229E+05  4937.1      82.286      3.4286     9.38692E-03
+
+
+end timestep
+
+
+start timestep kper="2" kstp="11" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      2   STEP       11
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)               25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP  11 IN STRESS PERIOD    2
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      8.92857    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP   11, STRESS PERIOD    2
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP   11, STRESS PERIOD   2
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       3.7500E-07                STO-SS =           0.0000     STORAGE                          
+              STO-SY =          50.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =          39.2857                   WEL =          25.0000     WEL-1                            
+
+            TOTAL IN =          89.2857              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =       2.7360E-07                STO-SS =       2.1875E-07     STORAGE                          
+              STO-SY =          39.2857                STO-SY =          25.0000     STORAGE                          
+                 WEL =          50.0000                   WEL =           0.0000     WEL-1                            
+
+           TOTAL OUT =          89.2857             TOTAL OUT =          25.0000
+
+            IN - OUT =      -1.3057E-08              IN - OUT =      -3.8087E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP   11 IN STRESS PERIOD    2
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME 1.35771E+05  2262.9      37.714      1.5714     4.30234E-03
+         TOTAL TIME 3.08571E+05  5142.9      85.714      3.5714     9.77804E-03
+
+
+end timestep
+
+
+start timestep kper="2" kstp="12" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      2   STEP       12
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)               25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP  12 IN STRESS PERIOD    2
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      9.28571    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP   12, STRESS PERIOD    2
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP   12, STRESS PERIOD   2
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       3.7500E-07                STO-SS =           0.0000     STORAGE                          
+              STO-SY =          50.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =          42.8571                   WEL =          25.0000     WEL-1                            
+
+            TOTAL IN =          92.8571              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =       3.0612E-07                STO-SS =       2.2768E-07     STORAGE                          
+              STO-SY =          42.8571                STO-SY =          25.0000     STORAGE                          
+                 WEL =          50.0000                   WEL =           0.0000     WEL-1                            
+
+           TOTAL OUT =          92.8571             TOTAL OUT =          25.0000
+
+            IN - OUT =      -1.3601E-08              IN - OUT =      -3.8085E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP   12 IN STRESS PERIOD    2
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME 1.48114E+05  2468.6      41.143      1.7143     4.69346E-03
+         TOTAL TIME 3.20914E+05  5348.6      89.143      3.7143     1.01692E-02
+
+
+end timestep
+
+
+start timestep kper="2" kstp="13" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      2   STEP       13
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)               25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP  13 IN STRESS PERIOD    2
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      9.64285    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP   13, STRESS PERIOD    2
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP   13, STRESS PERIOD   2
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       3.7500E-07                STO-SS =           0.0000     STORAGE                          
+              STO-SY =          50.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =          46.4286                   WEL =          25.0000     WEL-1                            
+
+            TOTAL IN =          96.4286              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =       3.3992E-07                STO-SS =       2.3661E-07     STORAGE                          
+              STO-SY =          46.4286                STO-SY =          25.0000     STORAGE                          
+                 WEL =          50.0000                   WEL =           0.0000     WEL-1                            
+
+           TOTAL OUT =          96.4286             TOTAL OUT =          25.0000
+
+            IN - OUT =      -1.4146E-08              IN - OUT =      -3.8089E-09
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP   13 IN STRESS PERIOD    2
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME 1.60457E+05  2674.3      44.571      1.8571     5.08458E-03
+         TOTAL TIME 3.33257E+05  5554.3      92.571      3.8571     1.05603E-02
+
+
+end timestep
+
+
+start timestep kper="2" kstp="14" mode="normal"
+
+
+ WEL PACKAGE (WEL-1) FLOW RATES   PERIOD      2   STEP       14
+ -----------------------------------------------
+   NUMBER   CELLID                    RATE      
+ -----------------------------------------------
+     1      (1,1,1)               25.000000     
+ -----------------------------------------------
+
+
+
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP  14 IN STRESS PERIOD    2
+  ---------------------------------------------------------------------------
+
+                1
+ ................
+   1      10.0000    
+
+ HEAD WILL BE SAVED ON UNIT 1020 AT END OF TIME STEP   14, STRESS PERIOD    2
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP   14, STRESS PERIOD   2
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       3.7500E-07                STO-SS =           0.0000     STORAGE                          
+              STO-SY =          50.0000                STO-SY =           0.0000     STORAGE                          
+                 WEL =          50.0000                   WEL =          25.0000     WEL-1                            
+
+            TOTAL IN =         100.0000              TOTAL IN =          25.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =       3.7500E-07                STO-SS =       2.4554E-07     STORAGE                          
+              STO-SY =          50.0000                STO-SY =          25.0000     STORAGE                          
+                 WEL =          50.0000                   WEL =           0.0000     WEL-1                            
+
+           TOTAL OUT =         100.0000             TOTAL OUT =          25.0000
+
+            IN - OUT =       1.8599E-07              IN - OUT =       1.4009E-06
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP   14 IN STRESS PERIOD    2
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  12343.      205.71      3.4286     0.14286     3.91122E-04
+ STRESS PERIOD TIME 1.72800E+05  2880.0      48.000      2.0000     5.47570E-03
+         TOTAL TIME 3.45600E+05  5760.0      96.000      4.0000     1.09514E-02
+
+
+end timestep
+

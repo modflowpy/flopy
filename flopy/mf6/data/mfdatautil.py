@@ -8,6 +8,7 @@ import numpy as np
 
 from ...utils.datautil import DatumUtil, PyListUtil, clean_filename
 from ..mfbase import FlopyException, MFDataException
+from ..utils.mfenums import DiscretizationType
 from .mfstructure import DatumType
 
 
@@ -34,6 +35,84 @@ def cellids_equal(cellid_1, cellid_2):
     for id1, id2 in zip(cellid_1, cellid_2):
         if id1 != id2:
             return False
+    return True
+
+
+def resolve_exists_when(data_item, value, data_dimensions, simulation_data):
+    exists_when_formula = data_item.exists_when
+    if len(exists_when_formula) != 3:
+        message = (
+            "ERROR: Unable to resolve dimension for "
+            f"{data_item.name} using formula {exists_when_formula}."
+        )
+        print(message)
+        type_, value_, traceback_ = sys.exc_info()
+        raise MFDataException(
+            data_dimensions.structure.get_model(),
+            data_dimensions.structure.get_package(),
+            data_dimensions.structure.path,
+            "storing data",
+            data_dimensions.structure.name,
+            inspect.stack()[0][3],
+            type_,
+            value_,
+            traceback_,
+            message,
+            simulation_data.debug,
+        )
+
+    if DatumUtil.is_int(exists_when_formula[2]):
+        compare = int(exists_when_formula[2])
+        if value is None:
+            return True
+    elif DatumUtil.is_float(exists_when_formula[2]):
+        compare = float(exists_when_formula[2])
+        if value is None:
+            return True
+    elif exists_when_formula[2] == "True":
+        compare = True
+    elif exists_when_formula[2] == "False":
+        compare = False
+    else:
+        compare = exists_when_formula[2]
+        if value is None:
+            return True
+    if exists_when_formula[1] == "=":
+        if value == compare:
+            return True
+    elif exists_when_formula[1] == ">":
+        if value > compare:
+            return True
+    elif exists_when_formula[1] == "<":
+        if value < compare:
+            return True
+    return False
+
+
+def data_item_may_exist(
+    data_item, data_path, data_dimensions, simulation_data
+):
+    if data_item.optional:
+        if data_item.exists_when is None:
+            return True
+        parent_path = data_path[:-2]
+        result = simulation_data.mfdata.find_in_path(
+            parent_path, data_item.exists_when[0]
+        )
+        if result[0] is not None:
+            data = result[0].get_data()
+            if data is None:
+                data_is = result[0].structure.data_item_structures[0]
+                default_val = data_is.get_default_value()
+                # resolve formula
+                return resolve_exists_when(
+                    data_item, default_val, data_dimensions, simulation_data
+                )
+            else:
+                # resolve formula
+                return resolve_exists_when(
+                    data_item, data, data_dimensions, simulation_data
+                )
     return True
 
 
@@ -78,7 +157,6 @@ def convert_data(data, data_dimensions, data_type, data_item=None, sub_amt=1):
                 if isinstance(data, str):
                     # fix any scientific formatting that python can't handle
                     data = data.replace("d", "e")
-                    data = data.replace("D", "e")
                 return float(data)
             except (ValueError, TypeError):
                 try:
@@ -346,6 +424,62 @@ def process_open_close_line(
     return multiplier, print_format, binary, data_file, data, comment
 
 
+def append_item(
+    text_line=None,
+    text_item=None,
+    ncdf_dict=None,
+    ncdf_key=None,
+    ncdf_item=None,
+):
+    if ncdf_dict is None:
+        if text_line is not None:
+            text_line.append(text_item)
+    else:
+        if ncdf_key not in ncdf_dict:
+            ncdf_dict[ncdf_key] = {ncdf_key: [[]]}
+        ncdf_dict[ncdf_key][ncdf_key][-1].append(ncdf_item)
+
+
+def proc_item(
+    val,
+    data_type,
+    sim_data,
+    data_dim,
+    is_cellid=False,
+    possible_cellid=False,
+    data_item=None,
+    verify_data=True,
+    text_line=None,
+    dt=None,
+    key=None,
+):
+    if dt is not None:
+        to_ncdf_dict(
+            dt,
+            key,
+            val,
+            sim_data,
+            data_dim,
+            is_cellid,
+            possible_cellid,
+            data_item,
+            verify_data,
+        )
+    else:
+        text_line.append(
+            to_string(
+                val,
+                data_type,
+                sim_data,
+                data_dim,
+                is_cellid,
+                possible_cellid,
+                data_item,
+                verify_data,
+            )
+        )
+
+
 def to_string(
     val,
     data_type,
@@ -402,7 +536,10 @@ def to_string(
             )
             model_grid = data_dim.get_model_grid(model_num=model_num)
             cellid_size = model_grid.get_num_spatial_coordinates()
-            if len(val) != cellid_size:
+            if (
+                len(val) != cellid_size
+                and model_grid.grid_type() != DiscretizationType.UNDEFINED
+            ):
                 message = (
                     'Cellid "{}" contains {} integer(s). Expected a'
                     " cellid containing {} integer(s) for grid type"
@@ -455,6 +592,131 @@ def to_string(
         return str(val).upper()
     else:
         return str(val)
+
+
+def to_ncdf_dict(
+    dt,
+    key,
+    val,
+    sim_data,
+    data_dim,
+    is_cellid=False,
+    possible_cellid=False,
+    data_item=None,
+    verify_data=True,
+):
+    if key not in dt:
+        dt[key] = {}
+    if key not in dt[key]:
+        dt[key][key] = [[]]
+    if is_cellid or (possible_cellid and isinstance(val, tuple)):
+        if (
+            verify_data
+            and is_cellid
+            and data_dim.get_model_dim(None).model_name is not None
+        ):
+            model_num = DatumUtil.cellid_model_num(
+                data_item.name,
+                data_dim.structure.model_data,
+                data_dim.package_dim.model_dim,
+            )
+            model_grid = data_dim.get_model_grid(model_num=model_num)
+            cellid_size = model_grid.get_num_spatial_coordinates()
+            if len(val) != cellid_size:
+                message = (
+                    'Cellid "{}" contains {} integer(s). Expected a'
+                    " cellid containing {} integer(s) for grid type"
+                    " {}.".format(
+                        val,
+                        len(val),
+                        cellid_size,
+                        str(model_grid.grid_type()),
+                    )
+                )
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(
+                    data_dim.structure.get_model(),
+                    data_dim.structure.get_package(),
+                    data_dim.structure.path,
+                    "converting cellid to string",
+                    data_dim.structure.name,
+                    inspect.stack()[0][3],
+                    type_,
+                    value_,
+                    traceback_,
+                    message,
+                    sim_data.debug,
+                )
+
+        string_val = []
+        if isinstance(val, str):
+            string_val.append(val)
+        else:
+            for item in val:
+                string_val.append(str(item + 1))
+        dt[key][key][-1].append(list(val))
+        dt[key][f"{key}_cellid"] = True
+    else:
+        if (
+            DatumUtil.is_int(val)
+            and data_item is not None
+            and data_item.numeric_index
+        ):
+            val += 1
+        if key == "aux":
+            if len(dt[key][key][-1]) == 0:
+                dt[key][key][-1].append([])
+            dt[key][key][-1][-1].append(val)
+        else:
+            shape_key = f"{data_item.name}_shape"
+            if (
+                shape_key in dt[key]
+                and len(dt[key][shape_key]) > 0
+                and data_item.block_name == "period"
+            ):
+                size = dt[key][shape_key][-1]
+                if len(dt[key][key][-1]) == 0:
+                    dt[key][key][-1].append([val])
+                elif len(dt[key][key][-1][-1]) < size:
+                    dt[key][key][-1][-1].append(val)
+                else:
+                    dt[key][key][-1].append([val])
+            else:
+                dt[key][key][-1].append(val)
+    return None
+
+
+def to_netcdf(
+    netcdf,
+    name,
+    precision_str,
+    dimensions,
+    attribs,
+    data,
+    fill_value=-99999.9,
+):
+    # create variable
+    var = netcdf.createVariable(
+        name,
+        precision_str,
+        dimensions,
+        fill_value=fill_value,
+        zlib=True,
+    )
+    # create variable attributes
+    for k, v in attribs.items():
+        try:
+            var.setncattr(k, v)
+        except Exception as e:
+            print(f"error setting attribute{k} for variable " f"{name}: {e!s}")
+    # attach data to variable
+    try:
+        var[:] = data
+    except ValueError as v:
+        print(f"Error occurred when assigning data to variable {name}")
+        raise v
+    # resync
+    netcdf.sync()
 
 
 class DataSearchOutput:

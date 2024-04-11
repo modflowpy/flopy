@@ -1,5 +1,6 @@
 # --------------------- gwt cnc options ---------------------
 # flopy multi-package
+# flopy netcdf
 
 block options
 name auxiliary
