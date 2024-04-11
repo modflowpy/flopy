@@ -86,8 +86,9 @@ class DataDimensions:
         data_item_num=None,
         repeating_key=None,
         min_size=False,
+        model_num=None,
     ):
-        return self.get_model_dim(data_item_num).get_data_shape(
+        return self.get_model_dim(data_item_num, model_num).get_data_shape(
             self.structure,
             data_item,
             data_set_struct,

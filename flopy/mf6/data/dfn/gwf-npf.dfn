@@ -1,4 +1,5 @@
 # --------------------- gwf npf options ---------------------
+# flopy netcdf
 
 block options
 name save_flows

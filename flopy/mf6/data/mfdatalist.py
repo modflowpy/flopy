@@ -1,3 +1,4 @@
+import copy
 import inspect
 import math
 import os
@@ -7,12 +8,19 @@ import numpy as np
 
 from ...datbase import DataListInterface, DataType
 from ...mbase import ModelInterface
+from ...utils import import_optional_dependency
 from ...utils.datautil import DatumUtil
 from ..data import mfdata, mfstructure
 from ..mfbase import ExtFileAction, MFDataException, VerbosityLevel
 from ..utils.mfenums import DiscretizationType
 from .mfdatastorage import DataStorage, DataStorageType, DataStructureType
-from .mfdatautil import list_to_array, to_string
+from .mfdatautil import (
+    append_item,
+    data_item_may_exist,
+    list_to_array,
+    proc_item,
+    to_string,
+)
 from .mffileaccess import MFFileAccessList
 from .mfstructure import DatumType, MFDataStructure
 
@@ -737,6 +745,255 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 ex,
             )
 
+    def _pad_list(self, lst, txt_len):
+        for idx, item in enumerate(lst):
+            if isinstance(item, list):
+                self._pad_list(item, txt_len)
+            else:
+                lst[idx] = item.ljust(txt_len)
+
+    @staticmethod
+    def _fill_bound_list(lst, fill_val, dim_size=None):
+        if dim_size is not None:
+            fill = []
+            for _ in range(0, dim_size):
+                fill.append(fill_val)
+        else:
+            fill = fill_val
+        max_bound = 0
+        for sub_lst in lst:
+            if len(sub_lst) > max_bound:
+                max_bound = len(sub_lst)
+        for sub_lst in lst:
+            while len(sub_lst) < max_bound:
+                sub_lst.append(fill)
+
+    def _write_netcdf_entry(
+        self,
+        netcdf,
+        key,
+        data_dict,
+        data_lst,
+        size,
+        package,
+        block,
+        iper=False,
+    ):
+        attribs = {}
+        data_shape_key = f"{key}_shape"
+        data_shape_var_key = f"{key}_shape_desc"
+        # build dimensions
+        dimensions = self.structure.shape
+        model_dim = self.data_dimensions.get_model_dim(None)
+        dimensions = model_dim.deconstruct_axis(dimensions)
+        for idx, dim in enumerate(dimensions):
+            dimensions[idx] = dim.upper()
+        dimensions.reverse()
+        # see if all dimensions exist in netcdf file
+        dim_found = 0
+        dim_not_found = 0
+        if len(dimensions) > 0:
+            for dimension in dimensions:
+                if (
+                    dimension in netcdf.dimensions
+                    or dimension.lower() in netcdf.dimensions
+                ):
+                    dim_found += 1
+                else:
+                    dim_not_found += 1
+        if data_shape_var_key in data_dict:
+            shape_key = data_dict[data_shape_var_key]
+            if len(shape_key) == 1:
+                if (
+                    shape_key[0] in netcdf.dimensions
+                    or shape_key[0].upper() in netcdf.dimensions
+                ):
+                    dim_found += 1
+                else:
+                    dim_not_found += 1
+        if "maxbound" in self.structure.shape and not iper:
+            var_dim = f"dim_{self._package.package_name}_maxbound"
+            size += (var_dim,)
+            # count "maxbound" as found
+            dim_not_found -= 1
+        else:
+            if isinstance(data_lst[0], list):
+                data_lst = data_lst[0]
+            if (
+                len(data_lst) > 1
+                and key != "auxiliary"
+                and data_shape_key not in data_dict
+            ):
+                if dim_not_found == 0:
+                    size = (dimensions[0],)
+                else:
+                    if data_shape_var_key not in data_dict:
+                        var_dim = f"{key}_len"
+                    else:
+                        var_dim = data_dict[data_shape_var_key][0]
+                    if var_dim not in netcdf.dimensions:
+                        netcdf.createDimension(var_dim, len(data_lst))
+                    size += (var_dim,)
+
+        if key == "aux":
+            var_dim = f"dim_{self._package.package_name}_naux"
+            size += (var_dim,)
+        if data_shape_key in data_dict and dim_not_found > 0:
+            if len(size) == 0:
+                # calculate total data size and assign to size
+                # making this a 1-d array
+                data_size = 0
+                for num in data_dict[data_shape_key]:
+                    data_size += num
+                # store data size as a dimension
+                pkg_name = self._package.package_name
+                var_dim = f"dim_{pkg_name}_{data_dict[data_shape_var_key][0]}"
+                if var_dim not in netcdf.dimensions:
+                    netcdf.createDimension(var_dim, data_size)
+                # reference data size in data shape
+                size = (var_dim,)
+            else:
+                if len(data_dict[data_shape_key]) > 0:
+                    data_size = data_dict[data_shape_key][0]
+                    # store data size as a dimension
+                    pkg_name = self._package.package_name
+                    var_dim = (
+                        f"dim_{pkg_name}_{data_dict[data_shape_var_key][0]}"
+                    )
+                    if var_dim not in netcdf.dimensions:
+                        netcdf.createDimension(var_dim, data_size)
+                    # reference data size in data shape
+                    size += (var_dim,)
+        if (
+            data_shape_var_key in data_dict
+            and len(data_dict[data_shape_var_key]) > 0
+            and data_dict[data_shape_var_key][0] == "ncelldim"
+        ):
+            # build dimensions
+            size += ("NCELLDIM",)
+            precision_str = "i4"
+            fill_value = -2147483647
+            if "maxbound" in self.structure.shape and not iper:
+                # build fill list
+                mg = self._get_model_grid()
+                dims = len(mg.idomain.shape)
+                fill_lst = []
+                for idx in range(0, dims):
+                    fill_lst.append(fill_value)
+                # fill empty spots
+                self._fill_bound_list(data_lst, fill_lst)
+            arr = np.array(data_lst, dtype=int)
+            arr = np.ma.masked_values(arr, fill_value)
+            arr += 1
+        else:
+            if isinstance(data_lst[0], list):
+                if key == "aux":
+                    first_val = data_lst[0][0][0]
+                else:
+                    first_val = data_lst[0][0]
+            else:
+                first_val = data_lst[0]
+            dim_size = None
+            if len(size) == 3:
+                dim_size = netcdf.dimensions[size[-1]].size
+            if isinstance(first_val, (int, np.int32, np.int64)):
+                precision_str = "i4"
+                fill_value = -2147483647
+                if "maxbound" in self.structure.shape and not iper:
+                    self._fill_bound_list(data_lst, fill_value, dim_size)
+                arr = np.array(data_lst, dtype=int)
+                arr = np.ma.masked_values(arr, fill_value)
+            elif isinstance(first_val, (float, np.float32, np.float64)):
+                precision_str = "f8"
+                fill_value = 3e30
+                if "maxbound" in self.structure.shape and not iper:
+                    self._fill_bound_list(data_lst, fill_value, dim_size)
+                arr = np.array(data_lst, dtype=float)
+                arr = np.ma.masked_values(arr, fill_value)
+            elif isinstance(first_val, str):
+                precision_str = "S1"
+                if key == "auxiliary":
+                    var_dim = f"dim_{self._package.package_name}_naux"
+                    if var_dim not in netcdf.dimensions:
+                        netcdf.createDimension(var_dim, len(data_lst))
+                    if var_dim not in size:
+                        size += (var_dim,)
+                    size += ("LENAUXNAME",)
+                    txt_len = self._simulation_data.netcdf_lenauxname
+                elif key == "boundname":
+                    size += ("LENBOUNDNAME",)
+                    txt_len = self._simulation_data.netcdf_lenboundname
+                else:
+                    size += ("LINELENGTH",)
+                    txt_len = self._simulation_data.netcdf_linelength
+                fill_value = "".ljust(txt_len)
+                if "maxbound" in self.structure.shape and not iper:
+                    self._fill_bound_list(data_lst, fill_value, dim_size)
+                self._pad_list(data_lst, txt_len)
+                netcdf4 = import_optional_dependency("netCDF4")
+                try:
+                    arr = np.array(data_lst, f"S{txt_len}")
+                    arr_mask = np.array([fill_value], f"S{txt_len}")
+                    arr = np.ma.masked_object(arr, arr_mask[0])
+                except ValueError as v:
+                    print(
+                        f"Error occurred creating numpy array for data "
+                        f"{self.name}."
+                    )
+                    raise v
+                arr = netcdf4.stringtochar(arr, encoding="ascii")
+                attribs["_Encoding"] = "ascii"
+                fill_value = None
+            else:
+                precision_str = None
+                fill_value = None
+                arr = np.array(data_lst)
+
+        # write
+        self.write_netcdf_var(
+            self._model_or_sim.name,
+            netcdf,
+            package,
+            block,
+            precision_str,
+            size,
+            arr,
+            key,
+            attribs,
+            fill_value,
+        )
+
+    def write_netcdf(self, netcdf):
+        """Writes data to netcdf file.
+        Parameters
+        ----------
+            netcdf : NetCDF4
+                NetCDF4 object to write data to.
+        """
+        ncdf_dict = {}
+        self._get_file_entry(ncdf_dict=ncdf_dict)
+        if "filerecord" in self.structure.name and len(ncdf_dict) > 0:
+            key = self.structure.data_item_structures[-1].name
+            lst = list(ncdf_dict[key].values())
+            if len(lst) > 0:
+                val = lst[-1]
+                self._write_netcdf_entry(
+                    netcdf,
+                    self.structure.name,
+                    ncdf_dict[key],
+                    val,
+                    (),
+                    self._package,
+                    self._block,
+                )
+        else:
+            for key, data_dict in ncdf_dict.items():
+                lst = data_dict[key]
+                self._write_netcdf_entry(
+                    netcdf, key, data_dict, lst, (), self._package, self._block
+                )
+        return []
+
     def get_file_entry(
         self,
         ext_file_action=ExtFileAction.copy_relative_paths,
@@ -757,8 +1014,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         return self._get_file_entry(ext_file_action)
 
     def _get_file_entry(
-        self,
-        ext_file_action=ExtFileAction.copy_relative_paths,
+        self, ext_file_action=ExtFileAction.copy_relative_paths, ncdf_dict=None
     ):
         try:
             # freeze model grid to boost performance
@@ -860,6 +1116,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                     self.structure,
                     storage,
                     indent,
+                    ncdf_dict,
                 )
 
                 # comments
@@ -885,6 +1142,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         data_set,
         storage,
         indent,
+        ncdf_dict=None,
     ):
         if (
             storage.layer_storage.first_item().data_storage_type
@@ -923,21 +1181,29 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                             data_dim.package_dim.get_aux_variables()
                         )
                         if aux_var_names is not None:
+                            if (
+                                ncdf_dict is not None
+                                and data_item.name in ncdf_dict
+                            ):
+                                ncdf_dict[data_item.name][data_item.name][
+                                    -1
+                                ].append([])
                             for aux_var_name in aux_var_names[0]:
                                 if aux_var_name.lower() != "auxiliary":
                                     data_val = data_line[index]
                                     if data_val is not None:
-                                        text_line.append(
-                                            to_string(
-                                                data_val,
-                                                data_item.type,
-                                                self._simulation_data,
-                                                self.data_dimensions,
-                                                data_item.is_cellid,
-                                                data_item.possible_cellid,
-                                                data_item,
-                                                self._simulation_data.verify_data,
-                                            )
+                                        proc_item(
+                                            data_val,
+                                            data_item.type,
+                                            self._simulation_data,
+                                            self.data_dimensions,
+                                            data_item.is_cellid,
+                                            data_item.possible_cellid,
+                                            data_item,
+                                            self._simulation_data.verify_data,
+                                            text_line,
+                                            ncdf_dict,
+                                            data_item.name,
                                         )
                                     index += 1
                     except Exception as ex:
@@ -976,9 +1242,16 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                     or not data_item.is_mname
                     or not storage.in_model
                 ):
+                    # check to see if data item should not exist
+                    may_exist = data_item_may_exist(
+                        data_item, self.path, data_dim, self._simulation_data
+                    )
+                    if not may_exist:
+                        continue
+
                     data_complete_len = len(data_line)
                     if data_complete_len <= index:
-                        if data_item.optional is False:
+                        if not data_item.optional:
                             message = (
                                 "Not enough data provided "
                                 "for {}. Data for required data "
@@ -1008,11 +1281,17 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                             break
                     try:
                         # resolve size of data
+                        model_num = DatumUtil.cellid_model_num(
+                            data_item.name,
+                            self.structure.model_data,
+                            self.data_dimensions.package_dim.model_dim,
+                        )
                         resolved_shape, shape_rule = data_dim.get_data_shape(
                             data_item,
                             self.structure,
                             [data_line],
                             repeating_key=self._current_key,
+                            model_num=model_num,
                         )
                         data_val = data_line[index]
                         if data_item.is_cellid or (
@@ -1026,12 +1305,9 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                 and len(data_item.shape) > 0
                                 and data_item.shape[0] == "ncelldim"
                             ):
-                                model_num = DatumUtil.cellid_model_num(
-                                    data_item,
-                                    self.structure.model_data,
-                                    self.data_dimensions.package_dim.model_dim,
+                                model_grid = data_dim.get_model_grid(
+                                    model_num=model_num
                                 )
-                                model_grid = data_dim.get_model_grid(model_num)
                                 cellid_size = (
                                     model_grid.get_num_spatial_coordinates()
                                 )
@@ -1063,12 +1339,45 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                             self._simulation_data.debug,
                             ex,
                         )
+                    if ncdf_dict is not None and len(data_item.shape) > 0:
+                        # record data size in netcdf dictionary
+                        data_key = f"{data_item.name}"
+                        if data_key not in ncdf_dict:
+                            ncdf_dict[data_key] = {}
+                        shape_desc = f"{data_item.name}_shape_desc"
+                        if shape_desc not in ncdf_dict[data_key]:
+                            ncdf_dict[data_key][shape_desc] = data_item.shape
+                        shape_key = f"{data_item.name}_shape"
+                        if shape_key not in ncdf_dict[data_key]:
+                            ncdf_dict[data_key][shape_key] = []
+                        if data_key == "auxiliary":
+                            # do not count the auxiliary keyword in the shape
+                            data_size -= 1
+                        ncdf_dict[data_key][shape_key].append(data_size)
+                    if ncdf_dict is not None and len(data_set.shape) > 1:
+                        # record data size in netcdf dictionary
+                        data_key = f"{data_set.name}"
+                        if data_key not in ncdf_dict:
+                            ncdf_dict[data_key] = {}
+                        shape_desc = f"{data_item.name}_shape_desc"
+                        if shape_desc not in ncdf_dict[data_key]:
+                            ncdf_dict[data_key][shape_desc] = data_item.shape
                     for data_index in range(0, data_size):
                         if data_complete_len > index:
                             data_val = data_line[index]
                             if data_item.type == DatumType.keyword:
                                 if data_val is not None:
-                                    text_line.append(data_item.display_name)
+                                    if (
+                                        text_line is not None
+                                        or ncdf_dict is not None
+                                    ):
+                                        append_item(
+                                            text_line,
+                                            data_item.display_name,
+                                            ncdf_dict,
+                                            f"{data_item.name}",
+                                            data_val is not False,
+                                        )
                                 if self.structure.block_variable:
                                     # block variables behave differently for
                                     # now.  this needs to be resolved
@@ -1076,12 +1385,19 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                     index += 1
                             elif data_item.type == DatumType.keystring:
                                 if data_val is not None:
-                                    text_line.append(data_val)
+                                    append_item(
+                                        text_line,
+                                        data_val,
+                                        ncdf_dict,
+                                        f"ks_{data_item.name}",
+                                        data_item.name,
+                                    )
                                 index += 1
 
                                 # keystring must be at the end of the line so
                                 # everything else is part of the keystring data
                                 data_key = data_val.lower()
+                                keystr_struct = None
                                 if data_key not in data_item.keystring_dict:
                                     key_record = f"{data_key}record"
                                     if key_record in data_item.keystring_dict:
@@ -1172,21 +1488,27 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                                     data_line[data_index]
                                                     is not None
                                                 ):
-                                                    text_line.append(
-                                                        k_data_item.display_name
+                                                    append_item(
+                                                        text_line,
+                                                        k_data_item.display_name,
+                                                        ncdf_dict,
+                                                        f"{k_data_item.name}",
+                                                        data_line[data_index]
+                                                        is not False,
                                                     )
                                             else:
-                                                text_line.append(
-                                                    to_string(
-                                                        data_line[data_index],
-                                                        k_data_item.type,
-                                                        self._simulation_data,
-                                                        self.data_dimensions,
-                                                        k_data_item.is_cellid,
-                                                        k_data_item.possible_cellid,
-                                                        k_data_item,
-                                                        self._simulation_data.verify_data,
-                                                    )
+                                                proc_item(
+                                                    data_line[data_index],
+                                                    k_data_item.type,
+                                                    self._simulation_data,
+                                                    self.data_dimensions,
+                                                    k_data_item.is_cellid,
+                                                    k_data_item.possible_cellid,
+                                                    k_data_item,
+                                                    self._simulation_data.verify_data,
+                                                    text_line,
+                                                    ncdf_dict,
+                                                    k_data_item.name,
                                                 )
                                                 data_index += 1
                                         except Exception as ex:
@@ -1247,23 +1569,25 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                                 self._simulation_data,
                                                 self.data_dimensions,
                                                 False,
-                                                data_item=data_item,
-                                                verify_data=self._simulation_data.verify_data,
+                                                False,
+                                                data_item,
+                                                self._simulation_data.verify_data,
                                             )
                                         )
                                         index += 1
                                         data_val = data_line[index]
-                                    text_line.append(
-                                        to_string(
-                                            data_val,
-                                            data_item.type,
-                                            self._simulation_data,
-                                            self.data_dimensions,
-                                            data_item.is_cellid,
-                                            data_item.possible_cellid,
-                                            data_item,
-                                            self._simulation_data.verify_data,
-                                        )
+                                    proc_item(
+                                        data_val,
+                                        data_item.type,
+                                        self._simulation_data,
+                                        self.data_dimensions,
+                                        data_item.is_cellid,
+                                        data_item.possible_cellid,
+                                        data_item,
+                                        self._simulation_data.verify_data,
+                                        text_line,
+                                        ncdf_dict,
+                                        data_item.name,
                                     )
                                 except Exception as ex:
                                     message = (
@@ -1616,9 +1940,10 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                     m4d[0, :, :, :] = array
                     for kper in range(1, nper):
                         arrays = self.to_array(kper=kper, mask=True)
-                        for tname, array in arrays.items():
-                            if tname == name:
-                                m4d[kper, :, :, :] = array
+                        if arrays is not None:
+                            for tname, array in arrays.items():
+                                if tname == name:
+                                    m4d[kper, :, :, :] = array
                     yield name, m4d
                 else:
                     m3d = np.zeros(
@@ -1823,6 +2148,60 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             return super().get_data(apply_mult=apply_mult)
         else:
             return None
+
+    def write_netcdf(self, netcdf):
+        """Writes data to netcdf file.
+        Parameters
+        ----------
+            netcdf : NetCDF4
+                NetCDF4 object to write data to.
+        """
+        # build dataset
+        nsp = 0
+        ncdf_dict = {}
+        # build 2d arrays (stress period, maxbound)
+        iper = []
+        last_sp = 0
+        for idx, sp in enumerate(self._data_storage.keys()):
+            if idx > 0:
+                # add empty keys for empty stress periods
+                for ibt_sp in range(last_sp + 1, sp):
+                    if ibt_sp in self.empty_keys and self.empty_keys[ibt_sp]:
+                        for key in ncdf_dict.keys():
+                            # if "_cellid" not in key:
+                            ncdf_dict[key].append([])
+                # add empty keys for current stress period
+                for key in ncdf_dict.keys():
+                    if "_cellid" not in key:
+                        ncdf_dict[key][key].append([])
+            self.get_data_prep(sp)
+            self._get_file_entry(ncdf_dict=ncdf_dict)
+            nsp += 1
+            iper.append(sp + 1)
+
+        # build dimensions
+        dimensions = self.structure.shape
+        model_dim = self.data_dimensions.get_model_dim(None)
+        dimensions = model_dim.deconstruct_axis(dimensions)
+        nsp_label = f"dim_{self._package.package_name}_niper"
+        dimensions.insert(0, nsp_label)
+        if "maxbound" in dimensions:
+            dimensions.remove("maxbound")
+        # write data
+        for key, data_d in ncdf_dict.items():
+            if key in data_d:
+                lst = data_d[key]
+                dim_copy = copy.deepcopy(dimensions)
+                self._write_netcdf_entry(
+                    netcdf,
+                    key,
+                    data_d,
+                    lst,
+                    dim_copy,
+                    self._package,
+                    self._block,
+                )
+        return iper
 
     def set_record(self, data_record, autofill=False, check_data=True):
         """Sets the contents of the data based on the contents of

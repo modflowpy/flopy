@@ -212,6 +212,8 @@ class DfnPackage(Dfn):
             if isinstance(item, str):
                 if item == "multi-package":
                     header_dict["multi-package"] = True
+                if item == "netcdf":
+                    header_dict["netcdf"] = True
                 if item.startswith("package-type"):
                     header_dict["package-type"] = item.split(" ")[1]
         for dfn_entry in self.dfn_list[1:]:
@@ -506,6 +508,8 @@ class DfnFile(Dfn):
                 # load flopy data
                 if line_lst[2] == "multi-package":
                     header_dict["multi-package"] = True
+                if line_lst[2] == "netcdf":
+                    header_dict["netcdf"] = True
                 if line_lst[2] == "parent_name_type" and len(line_lst) == 5:
                     header_dict["parent_name_type"] = [
                         line_lst[3],
@@ -930,6 +934,8 @@ class MFDataItemStructure:
         self.parameter_name = None
         self.one_per_pkg = False
         self.jagged_array = None
+        self.default_val = None
+        self.exists_when = None
 
     def set_value(self, line, common):
         arr_line = line.strip().split()
@@ -1107,6 +1113,10 @@ class MFDataItemStructure:
                 self.one_per_pkg = bool(arr_line[1])
             elif arr_line[0] == "jagged_array":
                 self.jagged_array = arr_line[1]
+            elif arr_line[0] == "default_val":
+                self.default_value = arr_line[1]
+            elif arr_line[0] == "exists_when":
+                self.exists_when = arr_line[1:]
 
     def get_type_string(self):
         return f"[{self.type_string}]"
@@ -1258,6 +1268,15 @@ class MFDataItemStructure:
         elif self.type == DatumType.list_defined:
             return str
         return str
+
+    def get_default_value(self):
+        if self.default_value is None:
+            return self.default_value
+        else:
+            return self._get_type()(self.default_value)
+
+    def get_exists_when(self):
+        return self.exists_when
 
     def _str_to_enum_type(self, type_string):
         if type_string.lower() == "keyword":
@@ -2137,6 +2156,7 @@ class MFInputFileStructure:
         self.has_packagedata = "packagedata" in self.blocks
         self.has_perioddata = "period" in self.blocks
         self.multi_package_support = "multi-package" in self.header
+        self.netcdf = "netcdf" in self.header
         self.stress_package = (
             "package-type" in self.header
             and self.header["package-type"] == "stress-package"

@@ -153,6 +153,8 @@ def build_dfn_string(dfn_list, header, package_abbr, flopy_dict):
     for key, value in header.items():
         if key == "multi-package":
             dfn_string = f'{dfn_string}\n{leading_spaces} "multi-package", '
+        if key == "netcdf":
+            dfn_string = f'{dfn_string}\n{leading_spaces} "netcdf", '
         if key == "package-type":
             dfn_string = (
                 f'{dfn_string}\n{leading_spaces} "package-type ' f'{value}"'

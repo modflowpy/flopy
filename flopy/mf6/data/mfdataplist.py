@@ -15,9 +15,13 @@ from ...utils import datautil
 from ..data import mfdata
 from ..mfbase import ExtFileAction, MFDataException, VerbosityLevel
 from ..utils.mfenums import DiscretizationType
-from .mfdatalist import MFList
+from .mfdatalist import MFList, MFTransientList
 from .mfdatastorage import DataStorageType, DataStructureType
-from .mfdatautil import list_to_array, process_open_close_line
+from .mfdatautil import (
+    data_item_may_exist,
+    list_to_array,
+    process_open_close_line,
+)
 from .mffileaccess import MFFileAccessList
 from .mfstructure import DatumType, MFDataStructure
 
@@ -385,6 +389,12 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
             self.structure.data_item_structures,
             range(0, len(self.structure.data_item_structures)),
         ):
+            may_exist = data_item_may_exist(
+                data_item, self.path, data_dim, self._simulation_data
+            )
+            if not may_exist:
+                continue
+
             if data_item.name.lower() == "aux":
                 # get all of the aux variables for this dataset
                 aux_var_names = data_dim.package_dim.get_aux_variables()
@@ -1631,6 +1641,27 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
                 record["data"] = self._get_dataframe()
         return record
 
+    def write_netcdf(self, netcdf):
+        """Writes data to netcdf file.
+        Parameters
+        ----------
+            netcdf : NetCDF4
+                NetCDF4 object to write data to.
+        """
+        list_data = MFList(
+            self._simulation_data,
+            self._model_or_sim,
+            self.structure,
+            None,
+            True,
+            self.path,
+            self.data_dimensions.package_dim,
+            self._package,
+            self._block,
+        )
+        list_data.set_record(self.get_record())
+        return list_data.write_netcdf(netcdf)
+
     def write_file_entry(
         self,
         fd_data_file,
@@ -2430,6 +2461,26 @@ class MFPandasTransientList(
                 ext_file_action=ext_file_action,
                 fd_main=fd_main,
             )
+
+    def write_netcdf(self, netcdf):
+        """Writes data to netcdf file.
+        Parameters
+        ----------
+            netcdf : NetCDF4
+                NetCDF4 object to write data to.
+        """
+        list_data = MFTransientList(
+            self._simulation_data,
+            self._model_or_sim,
+            self.structure,
+            True,
+            self.path,
+            self.data_dimensions.package_dim,
+            self._package,
+            self._block,
+        )
+        list_data.set_record(self.get_record())
+        return list_data.write_netcdf(netcdf)
 
     def get_file_entry(
         self, key=0, ext_file_action=ExtFileAction.copy_relative_paths

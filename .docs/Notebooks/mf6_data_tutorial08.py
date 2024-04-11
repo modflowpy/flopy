@@ -15,7 +15,8 @@
 #     section: mf6
 # ---
 
-# # MODFLOW 6: External Files, Binary Data, and Performance Optimization
+# # MODFLOW 6: External Files, Binary and NetCDF Data, and Performance
+# # Optimization
 #
 # This tutorial shows the different options for storing MODFLOW data in FloPy.
 # Interaction with a FloPy MODFLOW 6 model is different from other models,
@@ -213,6 +214,16 @@ spd_record = wel.stress_period_data.get_record()
 print(f"New filename for stress period 1:  {spd_record[0]['filename']}")
 print(f"New binary flag for stress period 1:  {spd_record[0]['binary']}")
 print(f"New filename for stress period 2:  {spd_record[1]['filename']}")
+
+# ## Saving data in MODFLOW-6 readable NETCDF format.
+#
+# Data can be saved in a MODFLOW-6 readable NETCDF format by calling
+# the MFSimulation object's "write_simulation" method and setting the
+# write_netcdf parameter to True. Additionally, setting the to_cdl
+# parameter to True will also produce a text-readable version of the
+# NETCDF data.
+
+sim.write_simulation(write_netcdf=True)
 
 # An alternative to individually setting each file to external is to call the set_all_files_external method (there is also a set_all_files_internal method to do the opposite). While this requires less code, it does not give you the ability to set the names of each individual external file. By setting the binary attribute to True, flopy will store data to binary files wherever possible.
 

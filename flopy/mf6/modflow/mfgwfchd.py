@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on February 07, 2024 20:16:08 UTC
+# FILE created on March 22, 2024 17:50:17 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -119,7 +119,7 @@ class ModflowGwfchd(mfpackage.MFPackage):
     dfn_file_name = "gwf-chd.dfn"
 
     dfn = [
-        ["header", "multi-package", "package-type stress-package"],
+        ["header", "multi-package", "netcdf", "package-type stress-package"],
         [
             "block options",
             "name auxiliary",

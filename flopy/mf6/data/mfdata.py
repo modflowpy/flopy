@@ -14,7 +14,7 @@ from ..mfbase import (
     VerbosityLevel,
 )
 from .mfdatastorage import DataStructureType
-from .mfdatautil import to_string
+from .mfdatautil import to_netcdf, to_string
 
 
 class MFTransient:
@@ -83,6 +83,9 @@ class MFTransient:
     def add_transient_key(self, transient_key):
         if isinstance(transient_key, int):
             self._verify_sp(transient_key)
+
+    def load_empty(self, block_header):
+        self.empty_keys[block_header.get_transient_key()] = True
 
     def update_transient_key(self, old_transient_key, new_transient_key):
         if old_transient_key in self._data_storage:
@@ -331,6 +334,37 @@ class MFData(DataInterface):
             "must define plottable in child class to use this base class"
         )
 
+    @staticmethod
+    def write_netcdf_var(
+        model_name,
+        netcdf,
+        package,
+        block,
+        precision_str,
+        dimensions,
+        data,
+        var_name,
+        attribs,
+        fill_value=-99999.9,
+    ):
+        mf6_input = (
+            f"{package.structure.file_type}6:"
+            f"{model_name}/{package.package_name}/"
+            f"{var_name}"
+        )
+        attribs["mf6_input"] = mf6_input.upper()
+
+        name = f"{package.package_name}_{var_name}"
+        to_netcdf(
+            netcdf,
+            name,
+            precision_str,
+            dimensions,
+            attribs,
+            data,
+            fill_value,
+        )
+
     @property
     def _cache_model_grid(self):
         return self._cache_next_grid
@@ -374,6 +408,9 @@ class MFData(DataInterface):
         elif self.data_type == DataType.transientlist:
             return utils.mflist_export(f, self, **kwargs)
         return utils.transient2d_export(f, self, **kwargs)
+
+    def load_empty(self, block_header):
+        return
 
     def new_simulation(self, sim_data):
         self._simulation_data = sim_data
@@ -597,7 +634,7 @@ class MFMultiDimVar(MFData):
                     int_format.append("1.0")
                 else:
                     int_format.append("1")
-        if layer_storage.iprn is not None:
+        if layer_storage.iprn is not None and str(layer_storage.iprn) != "":
             int_format.append("IPRN")
             int_format.append(str(layer_storage.iprn))
         return self._simulation_data.indent_string.join(int_format)
@@ -642,7 +679,7 @@ class MFMultiDimVar(MFData):
                     ext_format.append(str(factor))
         if binary:
             ext_format.append("(BINARY)")
-        if iprn is not None:
+        if iprn is not None and str(iprn) != "":
             ext_format.append("IPRN")
             ext_format.append(str(iprn))
         return (
