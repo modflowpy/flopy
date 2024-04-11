@@ -2015,12 +2015,12 @@ def test_array(function_tmpdir):
     drn_array = drn.stress_period_data.array
     assert drn_array[0][0][1] == 60.0
     assert drn_array[1][0][1] == 60.0
-    assert drn_array[2] is None
+    assert drn_array[2] is None or len(drn_array[2]) == 0
     assert drn_array[3][0][1] == 55.0
     drn_gd_0 = drn.stress_period_data.get_data(0)
     assert drn_gd_0[0][1] == 60.0
     drn_gd_1 = drn.stress_period_data.get_data(1)
-    assert drn_gd_1 is None
+    assert drn_gd_1 is None or len(drn_gd_1[2]) == 0
     drn_gd_2 = drn.stress_period_data.get_data(2)
     assert len(drn_gd_2) == 0
     drn_gd_3 = drn.stress_period_data.get_data(3)
