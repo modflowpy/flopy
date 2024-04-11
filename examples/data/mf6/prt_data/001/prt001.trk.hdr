@@ -1,0 +1,2 @@
+kper,kstp,imdl,iprp,irpt,ilay,icell,izone,istatus,ireason,trelease,t,x,y,z,name
+<i4,<i4,<i4,<i4,<i4,<i4,<i4,<i4,<i4,<i4,<f8,<f8,<f8,<f8,<f8,|S40

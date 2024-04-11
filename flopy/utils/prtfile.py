@@ -54,19 +54,25 @@ class PathlineFile(ParticleTrackFile):
                 ("dest", np.str_),  # destination name, for convenience
                 ("istatus", np.int32),
                 ("ireason", np.int32),
-                ("trelease", np.int32),
-                ("t", np.int32),
-                ("t0", np.int32),  # release time, for convenience
-                ("tt", np.int32),  # termination time, convenience
-                ("time", np.int32),  # conform to canonical dtype
-                ("x", np.int32),
-                ("y", np.int32),
-                ("z", np.int32),
+                ("trelease", np.float32),
+                ("t", np.float32),
+                ("t0", np.float32),  # release time, for convenience
+                ("tt", np.float32),  # termination time, convenience
+                ("time", np.float32),  # conform to canonical dtype
+                ("x", np.float32),
+                ("y", np.float32),
+                ("z", np.float32),
                 ("particleid", np.int32),  # conform to canonical dtype
                 ("name", np.str_),
             ]
         ),
     }
+    """
+    Base (directly from MODFLOW 6 PRT) and full (extended by this class) dtypes for PRT.
+    The extended dtype complies with the canonical `flopy.utils.particletrackfile.dtype`
+    and provides a few other columns for convenience, including release and termination 
+    time and destination zone number/name.
+    """
 
     def __init__(
         self,
@@ -105,7 +111,7 @@ class PathlineFile(ParticleTrackFile):
             data = pd.read_csv(self.fname, dtype=dtype)
         except UnicodeDecodeError:
             try:
-                data = np.fromfile(self.fname, dtype=dtype)
+                data = pd.DataFrame(np.fromfile(self.fname, dtype=dtype))
             except:
                 raise ValueError("Unreadable file, expected binary or CSV")
 
@@ -113,7 +119,8 @@ class PathlineFile(ParticleTrackFile):
         data = data.sort_values(self.key_cols)
         data["particleid"] = data.groupby(self.key_cols).ngroup()
 
-        # add release time and termination time columns
+        # add time, release time and termination time columns
+        data["time"] = data["t"]
         data["t0"] = (
             data.groupby("particleid")
             .apply(lambda x: x.t.min())
@@ -135,32 +142,21 @@ class PathlineFile(ParticleTrackFile):
                 axis=1,
             )
 
-        return dtype, data
+        return self.dtypes["full"], data
 
     def intersect(
-        self, cells, to_recarray
+        self, cells, to_recarray=True
     ) -> Union[List[np.recarray], np.recarray]:
-        if isinstance(cells, (list, tuple)):
-            allint = all(isinstance(el, int) for el in cells)
-            if allint:
-                t = []
-                for el in cells:
-                    t.append((el,))
-                    cells = t
+        """Find intersection of pathlines with cells."""
 
-        icell = self._data[["icell"]]
-        cells = np.array(cells, dtype=icell.dtype)
-        inds = np.in1d(icell, cells)
-        epdest = self._data[inds].copy().view(np.recarray)
+        if not all(isinstance(nn, int) for nn in cells):
+            raise ValueError("Expected integer cell numbers")
+
+        idxs = np.in1d(self._data[["icell"]], np.array(cells, dtype=np.int32))
+        sect = self._data[idxs].copy()
+        pids = np.unique(sect["particleid"])
         if to_recarray:
-            # use particle ids to get the rest of the paths
-            inds = np.in1d(self._data["particleid"], epdest.particleid)
-            series = self._data[inds].copy()
-            series.sort(order=["particleid", "time"])
-            series = series.view(np.recarray)
+            idxs = np.in1d(sect["particleid"], pids)
+            return sect[idxs].sort_values(by=["particleid", "time"])
         else:
-            # collect unique particleids in selection
-            partids = np.unique(epdest["particleid"])
-            series = [self.get_data(partid) for partid in partids]
-
-        return series
+            return [self.get_data(pid) for pid in pids]
