@@ -2062,7 +2062,7 @@ def test004_create_tests_bcfss(function_tmpdir, example_data_path):
         readasarrays=True,
         save_flows=True,
         auxiliary=[("var1", "var2")],
-        recharge={0: 0.004},
+        recharge={0: 0.004, 1: []},
         aux=aux,
     )  # *** test if aux works ***
     chk = rch_package.check()
@@ -2078,6 +2078,11 @@ def test004_create_tests_bcfss(function_tmpdir, example_data_path):
     assert aux_out[0][1][0, 0] == 1.3
     assert aux_out[1][0][0, 0] == 200.0
     assert aux_out[1][1][0, 0] == 1.5
+    # write test
+    sim.set_sim_path(function_tmpdir)
+    sim.write_simulation()
+    # update recharge
+    recharge = {0: 0.004, 1: 0.004}
 
     riv_period = {}
     riv_period_array = []
