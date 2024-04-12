@@ -355,7 +355,7 @@ def loadtxt(
 
     if use_pandas:
         if delimiter.isspace():
-            kwargs["delim_whitespace"] = True
+            kwargs["sep"] = "\\s+"
         if isinstance(dtype, np.dtype) and "names" not in kwargs:
             kwargs["names"] = dtype.names
 
