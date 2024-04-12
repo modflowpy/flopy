@@ -1037,7 +1037,7 @@ class MFBlock:
             for ds in self.datasets.values():
                 if isinstance(ds, mfdata.MFTransient):
                     transient_key = block_header.get_transient_key()
-                    ds.set_data(empty_arr, transient_key)
+                    ds.set_data(empty_arr, key=transient_key)
         self.loaded = True
         self.is_valid()
 
