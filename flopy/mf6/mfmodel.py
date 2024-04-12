@@ -531,6 +531,44 @@ class MFModel(PackageContainer, ModelInterface):
                     yoff=self._modelgrid.yoffset,
                     angrot=self._modelgrid.angrot,
                 )
+        elif self.get_grid_type() == DiscretizationType.DISV2D:
+            dis = self.get_package("disv2d")
+            if not hasattr(dis, "_init_complete"):
+                if not hasattr(dis, "cell2d"):
+                    # disv package has not yet been initialized
+                    return self._modelgrid
+                else:
+                    # disv package has been partially initialized
+                    self._modelgrid = VertexGrid(
+                        vertices=dis.vertices.array,
+                        cell2d=dis.cell2d.array,
+                        top=None,
+                        botm=None,
+                        idomain=None,
+                        lenuni=None,
+                        crs=self._modelgrid.crs,
+                        xoff=self._modelgrid.xoffset,
+                        yoff=self._modelgrid.yoffset,
+                        angrot=self._modelgrid.angrot,
+                    )
+            else:
+                botm = dis.botm.array
+                idomain = dis.idomain.array
+                if idomain is None:
+                    force_resync = True
+                    idomain = self._resolve_idomain(idomain, botm)
+                self._modelgrid = VertexGrid(
+                    vertices=dis.vertices.array,
+                    cell2d=dis.cell2d.array,
+                    top=dis.top.array,
+                    botm=botm,
+                    idomain=idomain,
+                    lenuni=dis.length_units.array,
+                    crs=self._modelgrid.crs,
+                    xoff=self._modelgrid.xoffset,
+                    yoff=self._modelgrid.yoffset,
+                    angrot=self._modelgrid.angrot,
+                )
         else:
             return self._modelgrid
 
@@ -1217,6 +1255,13 @@ class MFModel(PackageContainer, ModelInterface):
             is not None
         ):
             return DiscretizationType.DISV1D
+        elif (
+            package_recarray.search_data(
+                f"disv2d{structure.get_version_string()}", 0
+            )
+            is not None
+        ):
+            return DiscretizationType.DISV2D
 
         return DiscretizationType.UNDEFINED
 
