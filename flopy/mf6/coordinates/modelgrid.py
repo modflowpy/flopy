@@ -533,8 +533,10 @@ class ModelGrid:
                 np.arange(1, self.num_rows() + 1, 1, np.int32),
                 np.arange(1, self.num_columns() + 1, 1, np.int32),
             ]
-        elif (self.grid_type() == DiscretizationType.DISV
-              or self.grid_type() == DiscretizationType.DISV2D):
+        elif (
+            self.grid_type() == DiscretizationType.DISV
+            or self.grid_type() == DiscretizationType.DISV2D
+        ):
             return [np.arange(1, self.num_cells_per_layer() + 1, 1, np.int32)]
         elif (
             self.grid_type() == DiscretizationType.DISU
@@ -598,8 +600,10 @@ class ModelGrid:
     def get_horizontal_cross_section_dim_names(self):
         if self.grid_type() == DiscretizationType.DIS:
             return ["row", "column"]
-        elif (self.grid_type() == DiscretizationType.DISV
-              or self.grid_type() == DiscretizationType.DISV2D):
+        elif (
+            self.grid_type() == DiscretizationType.DISV
+            or self.grid_type() == DiscretizationType.DISV2D
+        ):
             return ["layer_cell_num"]
         elif (
             self.grid_type() == DiscretizationType.DISU
