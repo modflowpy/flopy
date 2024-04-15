@@ -443,14 +443,14 @@ class GridIntersect:
                         )
                     )
                 )
-                for node in range(self.mfgrid.nnodes)
+                for node in range(self.mfgrid.ncpl)
             ]
         else:
             geoms = [
                 shapely.polygons(self.mfgrid.get_cell_vertices(node))
-                for node in range(self.mfgrid.nnodes)
+                for node in range(self.mfgrid.ncpl)
             ]
-        return np.array(geoms), np.arange(self.mfgrid.nnodes)
+        return np.array(geoms), np.arange(self.mfgrid.ncpl)
 
     def _rect_grid_to_shape_list(self):
         """internal method, list of shapely polygons for structured grid cells.
