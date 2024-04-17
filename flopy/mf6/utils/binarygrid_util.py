@@ -427,10 +427,12 @@ class MfGrdFile(FlopyBinaryData):
         """
         # disu is the only grid that has the number of cells
         # set to nodes.  All other grids use NCELLS in grb
-        if self._grid_type in ("DISU",):
+        if "NCELLS" in self._datadict:
+            ncells = self._datadict["NCELLS"]
+        elif "NODES" in self._datadict:
             ncells = self._datadict["NODES"]
         else:
-            ncells = self._datadict["NCELLS"]
+            ncells = None
         return ncells
 
     @property
@@ -442,12 +444,7 @@ class MfGrdFile(FlopyBinaryData):
         -------
         nodes : int
         """
-        # disu is the only grid that has the number of cells
-        # set to nodes.  All other grids use NCELLS in grb
-        if self._grid_type in ("DISU",):
-            nodes = self._datadict["NODES"]
-        else:
-            nodes = self.ncells
+        nodes = self.ncells
         return nodes
 
     @property
