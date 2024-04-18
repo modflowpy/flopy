@@ -101,8 +101,6 @@ def test_lgrutil():
         ((2, 3, 3), -3),
     ]
 
-    return
-
 
 def test_lgrutil2():
     # Define parent grid information
