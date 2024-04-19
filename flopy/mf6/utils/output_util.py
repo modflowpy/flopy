@@ -291,7 +291,7 @@ class MF6Output:
 
     def __budgetcsv(self):
         """
-        Convience method to open and return a budget csv object
+        Convenience method to open and return a budget csv object
 
         Returns
         -------

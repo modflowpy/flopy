@@ -1326,7 +1326,7 @@ class PlotUtilities:
     @staticmethod
     def _set_layer_range(mflay, maxlay):
         """
-        Re-usable method to check for mflay and set
+        Reusable method to check for mflay and set
         the range of plottable layers
 
         Parameters
@@ -1572,7 +1572,7 @@ class UnstructuredPlotUtilities:
     def line_intersect_grid(ptsin, xgrid, ygrid):
         """
         Uses cross product method to find which cells intersect with the
-        line and then uses the parameterized line equation to caluculate
+        line and then uses the parameterized line equation to calculate
         intersection x, y vertex points. Should be quite fast for large model
         grids!
 

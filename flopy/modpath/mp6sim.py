@@ -171,7 +171,7 @@ class Modpath6Sim(Package):
         ----------
         f : str or file handle
             String defining file name or file handle for summary file
-            of check method output. If a sting is passed a file handle
+            of check method output. If a string is passed a file handle
             is created. If f is None, check method does not write
             results to a summary file. (default is None)
         verbose : bool

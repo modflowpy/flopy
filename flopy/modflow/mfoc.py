@@ -492,7 +492,7 @@ class ModflowOc(Package):
 
         Returns
         -------
-        iubud : integer ot list of integers
+        iubud : integer or list of integers
             Unit number or list of cell-by-cell budget output unit numbers.
             None is returned if ipakcb is less than one for all packages.
 

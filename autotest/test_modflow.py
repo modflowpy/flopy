@@ -1047,7 +1047,7 @@ def test_oc_check():
 
     ModflowDis(m)
     oc.stress_period_data = {(0, 0): ["save head", "save budget"]}
-    chk = oc.check()  # check passsed
+    chk = oc.check()  # check passed
     assert len(chk.summary_array) == 0, len(chk.summary_array)
 
     oc.stress_period_data = {(0, 0): ["save"]}

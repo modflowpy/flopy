@@ -136,7 +136,7 @@ class SwrFile(FlopyBinaryData):
         Returns
         ----------
         out : tuple of int
-            A tupe with the number of records and number of flow items
+            A tuple with the number of records and number of flow items
             in the file. The number of flow items is non-zero only if
             swrtype='flow'.
 

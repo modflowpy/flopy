@@ -82,7 +82,7 @@ class styles:
             location of the heading in the y-direction in normalized plot
             dimensions ranging from 0 to 1 (default is 1.01)
         idx : int
-            index for programatically generating the heading letter when letter
+            index for programmatically generating the heading letter when letter
             is None and idx is not None. idx = 0 will generate A
             (default is None)
 

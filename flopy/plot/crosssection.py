@@ -1563,7 +1563,7 @@ class PlotCrossSection:
             dictionary defined by node number which contains model
             patch vertices.
         fill_between : bool
-            flag to create polygons that mimick the matplotlib fill between
+            flag to create polygons that mimic the matplotlib fill between
             method. Only used by the plot_fill_between method.
         **kwargs : dictionary
             keyword arguments passed to matplotlib.collections.PatchCollection

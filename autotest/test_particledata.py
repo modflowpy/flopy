@@ -674,7 +674,7 @@ def test_nodeparticledata_to_prp_disv_defaults(
     mp7_rpts.sort()
 
     # convert particle data to prt format, flatten (remove cell ID tuples),
-    # remove irpt as it is not gauranteed to match, and sort
+    # remove irpt as it is not guaranteed to match, and sort
     prt_rpts = flatten(list(pdat.to_prp(grid)))
     prt_rpts = [r[1:] for r in prt_rpts]  #
     prt_rpts.sort()

@@ -488,7 +488,7 @@ class Util3d(DataInterface):
         ext_filename is reset to value.
     bin : bool
         flag to control writing external arrays as binary (optional)
-        (the defaut is False)
+        (the default is False)
 
     Attributes
     ----------
@@ -2391,7 +2391,7 @@ class Util2d(DataInterface):
             record multiplier - this method is used primarily for writing model input files
 
         """
-        # convert array to sting with specified format
+        # convert array to string with specified format
         a_string = self.array2string(
             self.shape, self._array, python_format=self.format.py
         )

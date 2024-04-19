@@ -803,7 +803,7 @@ class Grid:
 
     def cross_section_adjust_indicies(self, k, cbcnt):
         """
-        Method to get adjusted indicies by layer and confining bed
+        Method to get adjusted indices by layer and confining bed
         for PlotCrossSection plotting
 
         Parameters
@@ -826,8 +826,8 @@ class Grid:
         self, plotarray, xcenters, head, elev, projpts
     ):
         """
-        Method to set countour array centers for rare instances where
-        matplotlib contouring is prefered over trimesh plotting
+        Method to set contour array centers for rare instances where
+        matplotlib contouring is preferred over trimesh plotting
 
         Parameters
         ----------

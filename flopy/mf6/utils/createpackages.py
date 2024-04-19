@@ -67,7 +67,7 @@ There are three possible types (or combination of them) that can be used for
 "parent package type", MFPackage, MFModel, and MFSimulation. If a package
 supports multiple types of parents (for example, it can be either in the model
 namefile or in a package, like the obs package), include all the types
-supported, seperating each type with a / (MFPackage/MFModel).
+supported, separating each type with a / (MFPackage/MFModel).
 
 To create a new type of model choose a unique three letter model abbreviation
 ("gwf", "gwt", ...). Create a name file dfn with the naming convention

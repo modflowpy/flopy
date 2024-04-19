@@ -24,7 +24,7 @@ class MFObservation:
     -------
     mfdict: (dict) the sim.simulation_dict.mfdict object for the flopy project
     path: (object) the path object detailing model names and paths
-    key: (tuple, stings) user supplied dictionary key to request observation
+    key: (tuple, strings) user supplied dictionary key to request observation
     utility data
 
     Returns:
@@ -55,7 +55,7 @@ class Observations:
 
     Input:
     ------
-    fi = (sting) name of the observation binary output file
+    fi = (string) name of the observation binary output file
 
     Methods:
     --------
@@ -197,7 +197,7 @@ class Observations:
 
         Parameters
         ----------
-        keys: (string) sting of dictionary/observation keys separated by comma.
+        keys: (string) string of dictionary/observation keys separated by comma.
               (optional)
         idx: (int) time index location (optional)
         totim: (float) simulation time (optional)

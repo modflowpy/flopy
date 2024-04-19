@@ -225,7 +225,7 @@ def read_fixed_var(line, ncol=1, length=10, ipos=None, free=False):
     ipos : list, int, or numpy array
         user-provided column widths. (default is None)
     free : bool
-        boolean indicating if sting is free format. ncol, length, and
+        boolean indicating if string is free format. ncol, length, and
         ipos are not used if free is True. (default is False)
 
     Returns
@@ -591,7 +591,7 @@ def relpath_safe(
 def scrub_login(s: str) -> str:
     """
     Remove the current login name from the given string,
-    replacing any occurences with "***".
+    replacing any occurrences with "***".
 
     Parameters
     ----------

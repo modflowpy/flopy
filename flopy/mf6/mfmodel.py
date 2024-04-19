@@ -697,7 +697,7 @@ class MFModel(PackageContainer, ModelInterface):
             or dictionary of ....
         **kwargs : keyword arguments
             modelgrid: flopy.discretization.Grid
-                User supplied modelgrid object which will supercede the built
+                User supplied modelgrid object which will supersede the built
                 in modelgrid object
             if fmt is set to 'vtk', parameters of Vtk initializer
 
