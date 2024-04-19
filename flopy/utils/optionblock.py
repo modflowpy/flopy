@@ -155,10 +155,10 @@ class OptionBlock:
         Parameters
         ----------
             key : str
-                string refering to an attribute
+                string referring to an attribute
             value : object
                 a python object (int, str, float, bool) that
-                is consistant with the attribute data type
+                is consistent with the attribute data type
 
         """
         if key == "auxillary":  # catch typo from older version
@@ -241,7 +241,7 @@ class OptionBlock:
         """
         Method to build a type dictionary for type
         enforcements in __setattr__. This uses the package's
-        contex tree to build and enforce attribute
+        context tree to build and enforce attribute
         types for the class
 
         """

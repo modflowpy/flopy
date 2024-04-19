@@ -150,7 +150,7 @@ class GridIntersect:
         mfgrid : flopy modflowgrid
             MODFLOW grid as implemented in flopy
         method : str, optional
-            Options are either 'vertex' which uses shapely interesection operations
+            Options are either 'vertex' which uses shapely intersection operations
             or 'structured' which uses optimized methods that only work for structured
             grids. The default is None, which determines intersection method based on
             the grid type.

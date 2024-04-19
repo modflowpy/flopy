@@ -596,7 +596,7 @@ def model_export(
         output format flag. 'vtk' will export to vtk
     **kwargs : keyword arguments
         modelgrid: flopy.discretization.Grid
-            user supplied modelgrid object which will supercede the built
+            user supplied modelgrid object which will supersede the built
             in modelgrid object
         crs : pyproj.CRS, int, str, optional if `prjfile` is specified
             Coordinate reference system (CRS) for the model grid
@@ -687,9 +687,9 @@ def package_export(
         package to export
     fmt : str
         output format flag. 'vtk' will export to vtk
-    ** kwargs : keword arguments
+    ** kwargs : keyword arguments
         modelgrid: flopy.discretization.Grid
-            user supplied modelgrid object which will supercede the built
+            user supplied modelgrid object which will supersede the built
             in modelgrid object
         crs : pyproj.CRS, int, str, optional if `prjfile` is specified
             Coordinate reference system (CRS) for the model grid
@@ -873,7 +873,7 @@ def mflist_export(f: Union[str, os.PathLike, NetCdf], mfl, **kwargs):
     mfl : MfList instance
     **kwargs : keyword arguments
         modelgrid : flopy.discretization.Grid
-            model grid instance which will supercede the flopy.model.modelgrid
+            model grid instance which will supersede the flopy.model.modelgrid
         crs : pyproj.CRS, int, str, optional if `prjfile` is specified
             Coordinate reference system (CRS) for the model grid
             (must be projected; geographic CRS are not supported).
@@ -1034,7 +1034,7 @@ def transient2d_export(f: Union[str, os.PathLike], t2d, fmt=None, **kwargs):
         min_valid : minimum valid value
         max_valid : maximum valid value
         modelgrid : flopy.discretization.Grid
-            model grid instance which will supercede the flopy.model.modelgrid
+            model grid instance which will supersede the flopy.model.modelgrid
         if fmt is set to 'vtk', parameters of Vtk initializer
 
     """
@@ -1194,7 +1194,7 @@ def array3d_export(f: Union[str, os.PathLike], u3d, fmt=None, **kwargs):
         min_valid : minimum valid value
         max_valid : maximum valid value
         modelgrid : flopy.discretization.Grid
-            model grid instance which will supercede the flopy.model.modelgrid
+            model grid instance which will supersede the flopy.model.modelgrid
         if fmt is set to 'vtk', parameters of Vtk initializer
 
     """
@@ -1372,7 +1372,7 @@ def array2d_export(
         min_valid : minimum valid value
         max_valid : maximum valid value
         modelgrid : flopy.discretization.Grid
-            model grid instance which will supercede the flopy.model.modelgrid
+            model grid instance which will supersede the flopy.model.modelgrid
         if fmt is set to 'vtk', parameters of Vtk initializer
 
     """
@@ -1525,9 +1525,9 @@ def export_array(
         model grid
     filename : str or PathLike
         Path of output file. Export format is determined by
-        file extention.
+        file extension.
         '.asc'  Arc Ascii grid
-        '.tif'  GeoTIFF (requries rasterio package)
+        '.tif'  GeoTIFF (requires rasterio package)
         '.shp'  Shapefile
     a : 2D numpy.ndarray
         Array to export
@@ -1924,7 +1924,7 @@ def export_array_contours(
     modelgrid : flopy.discretization.Grid object
         model grid object
     filename : str or PathLike
-        Path of output file with '.shp' extention.
+        Path of output file with '.shp' extension.
     a : 2D numpy array
         Array to contour
     fieldname : str

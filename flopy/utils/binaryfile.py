@@ -1086,7 +1086,7 @@ class CellBudgetFile:
 
     def _set_precision(self, precision="single"):
         """
-        Method to set the budget precsion from a CBC file. Enables
+        Method to set the budget precision from a CBC file. Enables
         Auto precision code to work
 
         Parameters

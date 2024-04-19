@@ -319,7 +319,7 @@ def basic_check(Qx_ext, Qy_ext, Qz_ext):
 
 
 def local_balance_check(Qx_ext, Qy_ext, Qz_ext, hdsfile=None, model=None):
-    # calculate water blance at every cell
+    # calculate water balance at every cell
     local_balance = (
         Qx_ext[:, :, :-1]
         - Qx_ext[:, :, 1:]

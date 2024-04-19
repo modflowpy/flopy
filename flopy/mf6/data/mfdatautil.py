@@ -966,7 +966,7 @@ class ListTemplateGenerator(TemplateGenerator):
                 "Data dimensions can not be determined for  "
                 "{}. Data structure may be jagged or may contain "
                 "a keystring. Data type information is therefore "
-                "dependant on the data and can not be retreived "
+                "dependent on the data and can not be retrieved "
                 "prior to the data being loaded"
                 ".".format(data_storage.data_dimensions.structure.name)
             )

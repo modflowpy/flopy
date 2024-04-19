@@ -100,11 +100,11 @@ class Vtk:
     modelgrid : flopy.discretization.Grid object
         any flopy modelgrid object, example. VertexGrid
     vertical_exageration : float
-        floating point value to scale vertical exageration of the vtk points
+        floating point value to scale vertical exaggeration of the vtk points
         default is 1.
     binary : bool
         flag that indicates if Vtk will write a binary or text file. Binary
-        is prefered as paraview has a bug (8/4/2021) where is cannot represent
+        is preferred as paraview has a bug (8/4/2021) where is cannot represent
         NaN values from ASCII (non xml) files. In this case no-data values
         are set to 1e+30.
     xml : bool
@@ -121,7 +121,7 @@ class Vtk:
         boolean flag to interpolate vertex elevations based on shared cell
         elevations. Default is False.
     point_scalars : bool
-        boolen flag to write interpolated data at each point based "shared
+        boolean flag to write interpolated data at each point based "shared
         vertices".
 
     """
@@ -184,7 +184,7 @@ class Vtk:
 
         self.nvpl = nvpl
 
-        # method to accomodate DISU grids, do not use modelgrid.ncpl!
+        # method to accommodate DISU grids, do not use modelgrid.ncpl!
         self.ncpl = len(self.iverts)
         if self.nnodes == len(self.iverts):
             self.nlay = 1
@@ -521,7 +521,7 @@ class Vtk:
             mf6 = False
             hfb_data = pkg.hfb_data
         else:
-            # asssume that there is no transient hfb data for now
+            # assume that there is no transient hfb data for now
             hfb_data = pkg.stress_period_data.array[0]
             mf6 = True
 
@@ -792,7 +792,7 @@ class Vtk:
         if self.__transient_output_data:
             raise AssertionError(
                 "Transient arrays cannot be mixed with transient output, "
-                "Please create a seperate vtk object for transient package "
+                "Please create a separate vtk object for transient package "
                 "data"
             )
 
@@ -1206,7 +1206,7 @@ class Vtk:
         if not self.__transient_output_data and self.__transient_data:
             raise AssertionError(
                 "Head data cannot be mixed with transient package data, "
-                "Please create a seperate vtk object for transient head data"
+                "Please create a separate vtk object for transient head data"
             )
 
         if kstpkper is None:
@@ -1256,7 +1256,7 @@ class Vtk:
         if not self.__transient_output_data and self.__transient_data:
             raise AssertionError(
                 "Binary data cannot be mixed with transient package data, "
-                "Please create a seperate vtk object for transient head data"
+                "Please create a separate vtk object for transient head data"
             )
 
         records = cbc.get_unique_record_names(decode=True)

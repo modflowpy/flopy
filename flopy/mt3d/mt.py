@@ -295,7 +295,7 @@ class Mt3dms(BaseModel):
             else:
                 xoff = self.mf._modelgrid.xoffset
             if xoff is None:
-                # incase mf._modelgrid.xoffset is not set but mf._xul is
+                # in case mf._modelgrid.xoffset is not set but mf._xul is
                 if self.mf._xul is not None:
                     xoff = self._modelgrid._xul_to_xll(self.mf._xul)
                 else:
@@ -307,7 +307,7 @@ class Mt3dms(BaseModel):
             else:
                 yoff = self.mf._modelgrid.yoffset
             if yoff is None:
-                # incase mf._modelgrid.yoffset is not set but mf._yul is
+                # in case mf._modelgrid.yoffset is not set but mf._yul is
                 if self.mf._yul is not None:
                     yoff = self._modelgrid._yul_to_yll(self.mf._yul)
                 else:
