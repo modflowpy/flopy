@@ -566,7 +566,8 @@ class PackageContainer:
         self.package_type_dict[package.package_type.lower()].append(package)
 
     def _remove_package(self, package):
-        self._packagelist.remove(package)
+        if package in self._packagelist:
+            self._packagelist.remove(package)
         if (
             package.package_name is not None
             and package.package_name.lower() in self.package_name_dict
@@ -577,10 +578,12 @@ class PackageContainer:
             and package.filename.lower() in self.package_filename_dict
         ):
             del self.package_filename_dict[package.filename.lower()]
-        package_list = self.package_type_dict[package.package_type.lower()]
-        package_list.remove(package)
-        if len(package_list) == 0:
-            del self.package_type_dict[package.package_type.lower()]
+        if package.package_type.lower() in self.package_type_dict:
+            package_list = self.package_type_dict[package.package_type.lower()]
+            if package in package_list:
+                package_list.remove(package)
+            if len(package_list) == 0:
+                del self.package_type_dict[package.package_type.lower()]
 
         # collect keys of items to be removed from main dictionary
         items_to_remove = []

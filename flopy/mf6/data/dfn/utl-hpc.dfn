@@ -1,0 +1,40 @@
+# --------------------- sim hpc options ---------------------
+# flopy subpackage hpc_filerecord hpc hpc_data hpc
+# flopy parent_name_type parent_package MFSimulation
+
+block options
+name dev_log_mpi
+type keyword
+reader urword
+optional true
+longname log mpi traffic
+description keyword to enable (extremely verbose) logging of mpi traffic to file.
+
+
+# --------------------- sim hpc partitions ---------------------
+
+block partitions
+name partitions
+type recarray mname mrank
+reader urword
+optional
+longname list of partition numbers
+description is the list of zero-based partition numbers.
+
+block partitions
+name mname
+in_record true
+type string
+tagged false
+reader urword
+longname model name
+description is the unique model name.
+
+block partitions
+name mrank
+in_record true
+type integer
+tagged false
+reader urword
+longname model rank
+description is the zero-based partition number (also: MPI rank or processor id) to which the model will be assigned.
