@@ -658,3 +658,18 @@ def test_uzf_negative_iuzfopt(function_tmpdir):
     assert (
         np.max(extpd) == np.min(extpd) and np.max(extpd) != 0.2
     ), "Read error for iuzfopt less than 0"
+
+
+def test_optionsblock_auxillary_typo():
+    # Incorrect: auxillary
+    #   Correct: auxiliary
+    options = OptionBlock("", ModflowWel, block=True)
+    assert options.auxiliary == []
+    with pytest.deprecated_call():
+        assert options.auxillary == []
+    with pytest.deprecated_call():
+        options.auxillary = ["aux", "iface"]
+    assert options.auxiliary == ["aux", "iface"]
+    options.auxiliary = []
+    with pytest.deprecated_call():
+        assert options.auxillary == []
