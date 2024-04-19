@@ -30,31 +30,65 @@ class ModflowUtlhpc(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
-    partitions = ListTemplateGenerator(('hpc', 'partitions',
-                                        'partitions'))
+
+    partitions = ListTemplateGenerator(("hpc", "partitions", "partitions"))
     package_abbr = "utlhpc"
     _package_type = "hpc"
     dfn_file_name = "utl-hpc.dfn"
 
     dfn = [
-           ["header", ],
-           ["block options", "name dev_log_mpi", "type keyword",
-            "reader urword", "optional true"],
-           ["block partitions", "name partitions",
-            "type recarray mname mrank", "reader urword", "optional"],
-           ["block partitions", "name mname", "in_record true",
-            "type string", "tagged false", "reader urword"],
-           ["block partitions", "name mrank", "in_record true",
-            "type integer", "tagged false", "reader urword"]]
+        [
+            "header",
+        ],
+        [
+            "block options",
+            "name dev_log_mpi",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block partitions",
+            "name partitions",
+            "type recarray mname mrank",
+            "reader urword",
+            "optional",
+        ],
+        [
+            "block partitions",
+            "name mname",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block partitions",
+            "name mrank",
+            "in_record true",
+            "type integer",
+            "tagged false",
+            "reader urword",
+        ],
+    ]
 
-    def __init__(self, parent_package, loading_package=False, dev_log_mpi=None,
-                 partitions=None, filename=None, pname=None, **kwargs):
-        super().__init__(parent_package, "hpc", filename, pname,
-                         loading_package, **kwargs)
+    def __init__(
+        self,
+        parent_package,
+        loading_package=False,
+        dev_log_mpi=None,
+        partitions=None,
+        filename=None,
+        pname=None,
+        **kwargs
+    ):
+        super().__init__(
+            parent_package, "hpc", filename, pname, loading_package, **kwargs
+        )
 
         # set up variables
         self.dev_log_mpi = self.build_mfdata("dev_log_mpi", dev_log_mpi)

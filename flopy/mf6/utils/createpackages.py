@@ -341,8 +341,9 @@ def add_var(
         # init hidden variable
         init_vars.append(create_init_var(f"_{clean_ds_name}", name, "None"))
         if mf_nam:
-            options_param_list.append([f"{parameter_name}_data=None",
-                                       parameter_name])
+            options_param_list.append(
+                [f"{parameter_name}_data=None", parameter_name]
+            )
         else:
             # init child package
             init_vars.append(
@@ -356,7 +357,9 @@ def add_var(
             # add to parameter list
             init_param_list.append(f"{clean_parameter_name}=None")
             # add to set parameter list
-            set_param_list.append(f"{clean_parameter_name}={clean_parameter_name}")
+            set_param_list.append(
+                f"{clean_parameter_name}={clean_parameter_name}"
+            )
 
     package_properties.append(create_property(clean_ds_name))
     doc_string.add_parameter(description, model_parameter=True)
@@ -709,12 +712,17 @@ def create_packages():
             for data_structure in block.data_structures.values():
                 # only create one property for each unique data structure name
                 if data_structure.name not in data_structure_dict:
-                    mf_sim = "parent_name_type" in package[0].header and \
-                             package[0].header["parent_name_type"][1] == \
-                             "MFSimulation"
+                    mf_sim = (
+                        "parent_name_type" in package[0].header
+                        and package[0].header["parent_name_type"][1]
+                        == "MFSimulation"
+                    )
                     mf_nam = package[0].file_type == "nam"
-                    if data_structure.construct_package is not None and \
-                            not mf_sim and not mf_nam:
+                    if (
+                        data_structure.construct_package is not None
+                        and not mf_sim
+                        and not mf_nam
+                    ):
                         c_pkg = data_structure.construct_package
                     else:
                         c_pkg = None
@@ -733,7 +741,7 @@ def create_packages():
                         data_structure.path,
                         data_structure.get_datatype(),
                         False,
-                        #c_pkg,
+                        # c_pkg,
                         data_structure.construct_package,
                         data_structure.construct_data,
                         data_structure.parameter_name,
@@ -854,8 +862,12 @@ def create_packages():
             newline="\n",
         )
         pb_file.write(package_string)
-        if package[0].sub_package and package_abbr != "utltab" and \
-                package[0].header["parent_name_type"][1] != "MFSimulation":
+        if (
+            package[0].sub_package
+            and package_abbr != "utltab"
+            and "parent_name_type" in package[0].header
+            and package[0].header["parent_name_type"][1] != "MFSimulation"
+        ):
             set_param_list.append("filename=filename")
             set_param_list.append("pname=pname")
             set_param_list.append("child_builder_call=True")
@@ -872,9 +884,8 @@ def create_packages():
 
             # write out child packages class
             chld_cls = (
-                "\n\nclass {}Packages(mfpackage.MFChildPackage" "s):\n".format(
-                    package_name.title()
-                )
+                "\n\nclass {}Packages(mfpackage.MFChildPackage"
+                "s):\n".format(package_name.title())
             )
             chld_var = (
                 f"    package_abbr = "

@@ -614,9 +614,9 @@ class MFSimulationBase(PackageContainer):
     def _get_data_str(self, formal):
         file_mgt = self.simulation_data.mfpath
         data_str = (
-            "sim_name = {}\nsim_path = {}\nexe_name = " "{}\n" "\n".format(
-                self.name, file_mgt.get_sim_path(), self.exe_name
-            )
+            "sim_name = {}\nsim_path = {}\nexe_name = "
+            "{}\n"
+            "\n".format(self.name, file_mgt.get_sim_path(), self.exe_name)
         )
 
         for package in self._packagelist:
@@ -1318,9 +1318,7 @@ class MFSimulationBase(PackageContainer):
                 f"{package_type}.  Package data must be provided in a "
                 f"dictionary.  User provided type {type(package_data)}."
             )
-            raise MFDataException(
-                package=package_type, message=message
-            )
+            raise MFDataException(package=package_type, message=message)
         # find package - only supporting utl packages for now
         package_obj = self.package_factory(package_type, "utl")
         if package_obj is not None:
