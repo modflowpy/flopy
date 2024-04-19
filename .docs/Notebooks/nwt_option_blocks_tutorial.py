@@ -183,9 +183,9 @@ options
 
 options.noprint = True
 
-# and the user can also add auxillary variables by using `options.auxillary`
+# and the user can also add auxiliary variables by using `options.auxiliary`
 
-options.auxillary = ["aux", "iface"]
+options.auxiliary = ["aux", "iface"]
 
 # ### Now we can create a new wel file using this `OptionBlock`
 #
