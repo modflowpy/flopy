@@ -84,7 +84,7 @@ class ModflowUtlhpc(mfpackage.MFPackage):
         partitions=None,
         filename=None,
         pname=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             parent_package, "hpc", filename, pname, loading_package, **kwargs

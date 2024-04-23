@@ -614,9 +614,9 @@ class MFSimulationBase(PackageContainer):
     def _get_data_str(self, formal):
         file_mgt = self.simulation_data.mfpath
         data_str = (
-            "sim_name = {}\nsim_path = {}\nexe_name = "
-            "{}\n"
-            "\n".format(self.name, file_mgt.get_sim_path(), self.exe_name)
+            "sim_name = {}\nsim_path = {}\nexe_name = " "{}\n" "\n".format(
+                self.name, file_mgt.get_sim_path(), self.exe_name
+            )
         )
 
         for package in self._packagelist:

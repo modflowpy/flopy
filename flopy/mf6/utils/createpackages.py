@@ -884,8 +884,9 @@ def create_packages():
 
             # write out child packages class
             chld_cls = (
-                "\n\nclass {}Packages(mfpackage.MFChildPackage"
-                "s):\n".format(package_name.title())
+                "\n\nclass {}Packages(mfpackage.MFChildPackage" "s):\n".format(
+                    package_name.title()
+                )
             )
             chld_var = (
                 f"    package_abbr = "
