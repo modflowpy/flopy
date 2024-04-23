@@ -6,6 +6,7 @@ from .utl_import import import_optional_dependency
 def area_of_polygon(x, y):
     shapely = import_optional_dependency("shapely")
     from shapely.geometry import Polygon
+
     pgon = Polygon(zip(x, y))
     return pgon.area
 
@@ -13,6 +14,7 @@ def area_of_polygon(x, y):
 def centroid_of_polygon(points):
     shapely = import_optional_dependency("shapely")
     from shapely.geometry import Polygon
+
     pgon = Polygon(points)
     return pgon.centroid.x, pgon.centroid.y
 
