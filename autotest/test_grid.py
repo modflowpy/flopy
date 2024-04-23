@@ -20,10 +20,10 @@ from flopy.modflow import Modflow, ModflowDis
 from flopy.utils import import_optional_dependency
 from flopy.utils.crs import get_authority_crs
 from flopy.utils.cvfdutil import (
-    gridlist_to_disv_gridprops,
-    to_cvfd,
     area_of_polygon,
     centroid_of_polygon,
+    gridlist_to_disv_gridprops,
+    to_cvfd,
 )
 from flopy.utils.triangle import Triangle
 from flopy.utils.voronoi import VoronoiGrid
