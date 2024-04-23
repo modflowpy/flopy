@@ -865,8 +865,10 @@ def create_packages():
         if (
             package[0].sub_package
             and package_abbr != "utltab"
-            and ("parent_name_type" not in package[0].header
-            or package[0].header["parent_name_type"][1] != "MFSimulation")
+            and (
+                "parent_name_type" not in package[0].header
+                or package[0].header["parent_name_type"][1] != "MFSimulation"
+            )
         ):
             set_param_list.append("filename=filename")
             set_param_list.append("pname=pname")
