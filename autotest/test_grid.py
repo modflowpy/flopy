@@ -19,7 +19,12 @@ from flopy.mf6 import MFSimulation
 from flopy.modflow import Modflow, ModflowDis
 from flopy.utils import import_optional_dependency
 from flopy.utils.crs import get_authority_crs
-from flopy.utils.cvfdutil import gridlist_to_disv_gridprops, to_cvfd
+from flopy.utils.cvfdutil import (
+    gridlist_to_disv_gridprops,
+    to_cvfd,
+    area_of_polygon,
+    centroid_of_polygon,
+)
 from flopy.utils.triangle import Triangle
 from flopy.utils.voronoi import VoronoiGrid
 
@@ -944,6 +949,28 @@ def test_tocvfd3():
     answer = [28, 250.0, 150.0, 7, 38, 142, 143, 45, 46, 44, 38]
     for i, j in zip(cell2d[28], answer):
         assert i == j, f"{i} not equal {j}"
+
+
+@requires_pkg("shapely")
+def test_area_centroid_polygon():
+    pts = [
+        (685053.450097303, 6295544.549730939),
+        (685055.8377391606, 6295545.167682521),
+        (685057.3028430222, 6295542.712221102),
+        (685055.3500302795, 6295540.907246565),
+        (685053.2040466429, 6295542.313082705),
+        (685053.450097303, 6295544.549730939),
+    ]
+    xc, yc = centroid_of_polygon(pts)
+    result = np.array([xc, yc])
+    answer = np.array((685055.1035824707, 6295543.12059913))
+    assert np.allclose(
+        result, answer
+    ), "cvfdutil centroid of polygon incorrect"
+    x, y = list(zip(*pts))
+    result = area_of_polygon(x, y)
+    answer = 11.228131838368032
+    assert np.allclose(result, answer), "cvfdutil area of polygon incorrect"
 
 
 def test_unstructured_grid_shell():
