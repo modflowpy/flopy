@@ -1,5 +1,5 @@
 from functools import reduce
-from itertools import chain
+from itertools import chain, repeat
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -276,13 +276,18 @@ def test_particledata_to_prp_dis_9():
     assert np.allclose(rpts_prt, rpts_exp, atol=1e-3)
 
 
-@pytest.mark.parametrize("localx", [None, 0.5, 0.25])
-@pytest.mark.parametrize("localy", [None, 0.5, 0.25])
-def test_particledata_to_prp_disv_1(localx, localy):
+@pytest.mark.parametrize("lx", [None, 0.5, 0.25])  # local x coord
+@pytest.mark.parametrize("ly", [None, 0.5, 0.25])  # local y coord
+@pytest.mark.parametrize(
+    "localz", [False, True]
+)  # whether to return local z coords
+def test_particledata_to_prp_disv_1(lx, ly, localz):
     """
     1 particle in bottom left cell, testing with default
     location (middle), explicitly specifying middle, and
-    offset in x and y directions
+    offset in x and y directions. Also test the `localz`
+    switch, which determines whether to return local z
+    coordinates (on interval [0, 1]) rather than global.
     """
 
     # model grid
@@ -290,28 +295,28 @@ def test_particledata_to_prp_disv_1(localx, localy):
 
     # particle data
     locs = [4]
-    localx = [localx] if localx else None
-    localy = [localy] if localy else None
+    lx = [lx] if lx else None
+    ly = [ly] if ly else None
     part_data = ParticleData(
         partlocs=locs,
         structured=False,
         particleids=range(len(locs)),
-        localx=localx,
-        localy=localy,
+        localx=lx,
+        localy=ly,
     )
 
     # convert to global coordinates
-    rpts_prt = flatten(list(part_data.to_prp(grid)))
+    rpts_prt = flatten(list(part_data.to_prp(grid, localz=localz)))
 
     # check conversion succeeded
     assert len(rpts_prt) == len(locs)
     assert all(
         len(c) == 6 for c in rpts_prt
     )  # each coord should be a tuple (irpt, k, j, x, y, z)
-    for ci, c in enumerate(rpts_prt):
-        assert np.isclose(c[3], localx[0] if localx else 0.5)  # check x
-        assert np.isclose(c[4], localy[0] if localy else 0.5)  # check y
-        assert np.isclose(c[5], 7.5)  # check z
+    for rpt in rpts_prt:
+        assert np.isclose(rpt[3], lx[0] if lx else 0.5)  # check x
+        assert np.isclose(rpt[4], ly[0] if ly else 0.5)  # check y
+        assert np.isclose(rpt[5], 0.5 if localz else 7.5)  # check z
 
     # debugging: plot grid, cell centers, and particle location
     # fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 10))
@@ -333,7 +338,10 @@ def test_particledata_to_prp_disv_1(localx, localy):
     # plt.show()
 
 
-def test_particledata_to_prp_disv_9():
+@pytest.mark.parametrize(
+    "localz", [False, True]
+)  # whether to return local z coords
+def test_particledata_to_prp_disv_9(localz):
     # minimal vertex grid
     grid = GridCases().vertex_small()
 
@@ -367,24 +375,27 @@ def test_particledata_to_prp_disv_9():
             0,
             float(f"0.{i + 1}"),
             float(f"2.{i + 1}"),
-            (grid.xyzextent[5] - grid.xyzextent[4]) / 2,
+            0.5 if localz else ((grid.xyzextent[5] - grid.xyzextent[4]) / 2),
         )
         for i in range(9)
     ]
 
     # convert to prt format
-    rpts_prt = flatten(list(part_data.to_prp(grid)))
+    rpts_prt = flatten(list(part_data.to_prp(grid, localz=localz)))
     assert np.allclose(rpts_prt, rpts_exp, atol=1e-3)
 
 
-def test_lrcparticledata_to_prp_divisions_defaults():
+@pytest.mark.parametrize(
+    "localz", [False, True]
+)  # whether to return local z coords
+def test_lrcparticledata_to_prp_divisions_defaults(localz):
     sd_data = CellDataType()
     regions = [[0, 0, 1, 0, 1, 1]]
     part_data = LRCParticleData(
         subdivisiondata=[sd_data], lrcregions=[regions]
     )
     grid = GridCases().structured_small()
-    rpts_prt = flatten(list(part_data.to_prp(grid)))
+    rpts_prt = flatten(list(part_data.to_prp(grid, localz=localz)))
     rpts_exp = [
         [0, 0, 0, 1, 1.166666, 1.166666, 5.833333],
         [1, 0, 0, 1, 1.166666, 1.166666, 7.5],
@@ -441,6 +452,9 @@ def test_lrcparticledata_to_prp_divisions_defaults():
         [52, 0, 1, 1, 1.833333, 0.833333, 7.5],
         [53, 0, 1, 1, 1.833333, 0.833333, 9.166666],
     ]
+    if localz:
+        locz = [0.166666, 0.5, 0.833333] * 18
+        rpts_exp = [(*rpt[0:-1], z) for rpt, z in zip(rpts_exp, locz)]
 
     num_cells = reduce(
         sum,
@@ -605,8 +619,11 @@ def test_lrcparticledata_to_prp_1_per_face():
     assert np.allclose(rpts_prt, rpts_exp)
 
 
+@pytest.mark.parametrize(
+    "localz", [False, True]
+)  # whether to return local z coords
 def test_nodeparticledata_to_prp_disv_defaults(
-    function_tmpdir, example_data_path
+    function_tmpdir, example_data_path, localz
 ):
     """
     This test loads a GWF simulation, runs it, and feeds it to an MP7 simulation
@@ -669,14 +686,15 @@ def test_nodeparticledata_to_prp_disv_defaults(
     mp7_pls = pd.concat([pd.DataFrame(ra) for ra in pldata])
     mp7_pls = mp7_pls.sort_values(by=["time", "particleid"]).head(27)
     mp7_rpts = [
-        [0, r.k, r.x, r.y, r.z] for r in mp7_pls.itertuples()
+        [0, r.k, r.x, r.y, r.zloc if localz else r.z]
+        for r in mp7_pls.itertuples()
     ]  # omit rpt index
     mp7_rpts.sort()
 
     # convert particle data to prt format, flatten (remove cell ID tuples),
     # remove irpt as it is not guaranteed to match, and sort
-    prt_rpts = flatten(list(pdat.to_prp(grid)))
-    prt_rpts = [r[1:] for r in prt_rpts]  #
+    prt_rpts = flatten(list(pdat.to_prp(grid, localz=localz)))
+    prt_rpts = [r[1:] for r in prt_rpts]
     prt_rpts.sort()
     assert np.allclose(prt_rpts, mp7_rpts)
 
