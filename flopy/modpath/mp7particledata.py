@@ -1,12 +1,12 @@
 """
-mp7particledata module. Contains the ParticleData, CellDataType,
-    FaceDataType, and NodeParticleData classes.
+Support for MODPATH 7 particle release configurations. Contains the
+ParticleData, CellDataType, FaceDataType, and NodeParticleData classes.
 
 
 """
 
 from itertools import product
-from typing import Generator, Iterator, Tuple
+from typing import Iterator, Tuple
 
 import numpy as np
 import pandas as pd
@@ -363,13 +363,16 @@ class ParticleData:
         for v in d:
             f.write(fmt.format(*v))
 
-    def to_coords(self, grid) -> Iterator[tuple]:
+    def to_coords(self, grid, localz=False) -> Iterator[tuple]:
         """
-        Compute global particle coordinates on the given grid.
+        Compute particle coordinates on the given grid.
 
         Parameters
         ----------
-        grid : The grid on which to locate particle release points.
+        grid : flopy.discretization.grid.Grid
+            The grid on which to locate particle release points.
+        localz : bool, optional
+            Whether to return local z coordinates.
 
         Returns
         -------
@@ -401,7 +404,9 @@ class ParticleData:
                 return [
                     cvt_xy(row.localx, xs),
                     cvt_xy(row.localy, ys),
-                    cvt_z(row.localz, row.k, row.i, row.j),
+                    row.localz
+                    if localz
+                    else cvt_z(row.localz, row.k, row.i, row.j),
                 ]
 
         else:
@@ -425,13 +430,13 @@ class ParticleData:
                 return [
                     cvt_xy(row.localx, xs),
                     cvt_xy(row.localy, ys),
-                    cvt_z(row.localz, row.node),
+                    row.localz if localz else cvt_z(row.localz, row.node),
                 ]
 
         for t in self.particledata.itertuples():
             yield convert(t)
 
-    def to_prp(self, grid) -> Iterator[tuple]:
+    def to_prp(self, grid, localz=False) -> Iterator[tuple]:
         """
         Convert particle data to PRT particle release point (PRP)
         package data entries for the given grid. A model grid is
@@ -441,7 +446,10 @@ class ParticleData:
 
         Parameters
         ----------
-        grid : The grid on which to locate particle release points.
+        grid : flopy.discretization.grid.Grid
+            The grid on which to locate particle release points.
+        localz : bool, optional
+            Whether to return local z coordinates.
 
         Returns
         -------
@@ -454,7 +462,7 @@ class ParticleData:
         for i, (t, c) in enumerate(
             zip(
                 self.particledata.itertuples(index=False),
-                self.to_coords(grid),
+                self.to_coords(grid, localz),
             )
         ):
             row = [i]  # release point index (irpt)
@@ -773,7 +781,9 @@ class CellDataType:
         f.write(line)
 
 
-def get_release_points(subdivisiondata, grid, k=None, i=None, j=None, nn=None):
+def get_release_points(
+    subdivisiondata, grid, k=None, i=None, j=None, nn=None, localz=False
+):
     if nn is None and (k is None or i is None or j is None):
         raise ValueError(
             "A cell (node) must be specified by indices (for structured grids) or node number (for vertex/unstructured)"
@@ -785,7 +795,7 @@ def get_release_points(subdivisiondata, grid, k=None, i=None, j=None, nn=None):
     # get cell coords and span in each dimension
     if not (k is None or i is None or j is None):
         verts = grid.get_cell_vertices(i, j)
-        minz, maxz = grid.botm[k, i, j], grid.top[i, j]
+        minz, maxz = (0, 1) if localz else (grid.botm[k, i, j], grid.top[i, j])
     elif nn is not None:
         verts = grid.get_cell_vertices(nn)
         if grid.grid_type == "structured":
@@ -797,8 +807,12 @@ def get_release_points(subdivisiondata, grid, k=None, i=None, j=None, nn=None):
         else:
             k, j = grid.get_lni([nn])[0]
             minz, maxz = (
-                grid.botm[k, j],
-                grid.top[j] if k == 0 else grid.botm[k - 1, j],
+                (0, 1)
+                if localz
+                else (
+                    grid.botm[k, j],
+                    grid.top[j] if k == 0 else grid.botm[k - 1, j],
+                )
             )
     else:
         raise ValueError(
@@ -1086,13 +1100,16 @@ class LRCParticleData:
                 line += "\n"
                 f.write(line)
 
-    def to_coords(self, grid) -> Iterator[tuple]:
+    def to_coords(self, grid, localz=False) -> Iterator[tuple]:
         """
         Compute global particle coordinates on the given grid.
 
         Parameters
         ----------
-        grid : The grid on which to locate particle release points.
+        grid : flopy.discretization.grid.Grid
+            The grid on which to locate particle release points.
+        localz : bool, optional
+            Whether to return local z coordinates.
 
         Returns
         -------
@@ -1107,11 +1124,11 @@ class LRCParticleData:
                         for j in range(minj, maxj + 1):
                             for sd in self.subdivisiondata:
                                 for rpt in get_release_points(
-                                    sd, grid, k, i, j
+                                    sd, grid, k, i, j, localz=localz
                                 ):
-                                    yield (rpt[3], rpt[4], rpt[5])
+                                    yield (*rpt[3:6],)
 
-    def to_prp(self, grid) -> Iterator[tuple]:
+    def to_prp(self, grid, localz=False) -> Iterator[tuple]:
         """
         Convert particle data to PRT particle release point (PRP)
         package data entries for the given grid. A model grid is
@@ -1121,7 +1138,10 @@ class LRCParticleData:
 
         Parameters
         ----------
-        grid : The grid on which to locate particle release points.
+        grid : flopy.discretization.grid.Grid
+            The grid on which to locate particle release points.
+        localz : bool, optional
+            Whether to return local z coordinates.
 
         Returns
         -------
@@ -1143,7 +1163,9 @@ class LRCParticleData:
                         for j in range(minj, maxj + 1):
                             for sd in self.subdivisiondata:
                                 for irpt, rpt in enumerate(
-                                    get_release_points(sd, grid, k, i, j)
+                                    get_release_points(
+                                        sd, grid, k, i, j, localz=localz
+                                    )
                                 ):
                                     assert rpt[0] == k
                                     assert rpt[1] == i
@@ -1314,13 +1336,16 @@ class NodeParticleData:
                     line += "\n"
             f.write(line)
 
-    def to_coords(self, grid) -> Iterator[tuple]:
+    def to_coords(self, grid, localz=False) -> Iterator[tuple]:
         """
         Compute global particle coordinates on the given grid.
 
         Parameters
         ----------
-        grid : The grid on which to locate particle release points.
+        grid : flopy.discretization.grid.Grid
+            The grid on which to locate particle release points.
+        localz : bool, optional
+            Whether to return local z coordinates.
 
         Returns
         -------
@@ -1329,11 +1354,13 @@ class NodeParticleData:
 
         for sd in self.subdivisiondata:
             for nd in self.nodedata:
-                rpts = get_release_points(sd, grid, nn=int(nd[0]))
-                for i, rpt in enumerate(rpts):
-                    yield (rpt[1], rpt[2], rpt[3])
+                rpts = get_release_points(
+                    sd, grid, nn=int(nd[0]), localz=localz
+                )
+                for rpt in rpts:
+                    yield (*rpt[1:4],)
 
-    def to_prp(self, grid) -> Iterator[tuple]:
+    def to_prp(self, grid, localz=False) -> Iterator[tuple]:
         """
         Convert particle data to PRT particle release point (PRP)
         package data entries for the given grid. A model grid is
@@ -1343,7 +1370,10 @@ class NodeParticleData:
 
         Parameters
         ----------
-        grid : The grid on which to locate particle release points.
+        grid : flopy.discretization.grid.Grid
+            The grid on which to locate particle release points.
+        localz : bool, optional
+            Whether to return local z coordinates.
 
         Returns
         -------
@@ -1353,7 +1383,9 @@ class NodeParticleData:
 
         for sd in self.subdivisiondata:
             for nd in self.nodedata:
-                rpts = get_release_points(sd, grid, nn=int(nd[0]))
+                rpts = get_release_points(
+                    sd, grid, nn=int(nd[0]), localz=localz
+                )
                 for irpt, rpt in enumerate(rpts):
                     row = [irpt]
                     if grid.grid_type == "structured":
