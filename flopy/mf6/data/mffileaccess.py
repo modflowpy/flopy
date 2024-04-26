@@ -581,10 +581,6 @@ class MFFileAccessArray(MFFileAccess):
         fd=None,
         data_item=None,
     ):
-        # determine line size
-        line_size = None
-        if isinstance(data_dim, list):
-            line_size = data_dim[-1]
         # load variable data from file
         current_size = 0
         if layer is None:
@@ -605,8 +601,6 @@ class MFFileAccessArray(MFFileAccess):
                 if line == "" or arr_line[0].upper() == "END":
                     break
                 if not MFComment.is_comment(arr_line, True):
-                    if line_size is not None:
-                        arr_line = arr_line[:line_size]
                     data_raw += arr_line
                 else:
                     PyListUtil.reset_delimiter_used()
@@ -615,8 +609,6 @@ class MFFileAccessArray(MFFileAccess):
                 line = fd.readline()
                 arr_line = PyListUtil.split_data_line(line, True)
                 if not MFComment.is_comment(arr_line, True):
-                    if line_size is not None:
-                        arr_line = arr_line[:line_size]
                     data_raw += arr_line
                 else:
                     PyListUtil.reset_delimiter_used()
