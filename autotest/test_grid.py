@@ -882,6 +882,7 @@ def test_grid_crs_exceptions():
         sg.set_coord_info(prj=not_a_file)
 
 
+@requires_pkg("shapely")
 def test_tocvfd1():
     vertdict = {}
     vertdict[0] = [(0, 0), (100, 0), (100, 100), (0, 100), (0, 0)]
@@ -890,6 +891,7 @@ def test_tocvfd1():
     assert 6 in iverts[0]
 
 
+@requires_pkg("shapely")
 def test_tocvfd2():
     vertdict = {}
     vertdict[0] = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0)]
@@ -898,6 +900,7 @@ def test_tocvfd2():
     assert [1, 4, 5, 6, 2, 1] in iverts
 
 
+@requires_pkg("shapely")
 def test_tocvfd3():
     # create the nested grid described in the modflow-usg documentation
 

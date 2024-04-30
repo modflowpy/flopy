@@ -2,6 +2,7 @@ from itertools import product
 
 import numpy as np
 import pytest
+from modflow_devtools.markers import requires_pkg
 
 from flopy.utils.gridutil import (
     get_disu_kwargs,
@@ -61,6 +62,7 @@ def test_get_lni_infers_layer_count_when_int_ncpl(ncpl, nodes, expected):
         assert ln == expected[i]
 
 
+@requires_pkg("shapely")
 @pytest.mark.parametrize(
     "nlay, nrow, ncol, delr, delc, tp, botm",
     [
@@ -123,6 +125,7 @@ def test_get_disu_kwargs(nlay, nrow, ncol, delr, delc, tp, botm):
     # print(kwargs["nja"])
 
 
+@requires_pkg("shapely")
 @pytest.mark.parametrize(
     "nlay, nrow, ncol, delr, delc, tp, botm",
     [
@@ -160,6 +163,7 @@ def test_get_disv_kwargs(nlay, nrow, ncol, delr, delc, tp, botm):
     # print(kwargs["cell2d"])
 
 
+@requires_pkg("shapely")
 @pytest.mark.parametrize(
     "qx, qy, qz, nlay, nrow, ncol",
     [
