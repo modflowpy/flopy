@@ -35,16 +35,16 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: 3.9
           cache: 'pip'
           cache-dependency-path: pyproject.toml
 
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
 
-      - name: Install hdf5 (macOS)
-        if: runner.os == 'macOS'
-        run: brew install hdf5
+      # - name: Install hdf5 (macOS)
+      #   if: runner.os == 'macOS'
+      #   run: brew install hdf5
 
       - name: Install flopy and dependencies
         run: pip install ".[test, doc, optional]"
