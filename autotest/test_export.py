@@ -1707,7 +1707,7 @@ def test_vtk_add_model_without_packages_names(function_tmpdir):
 
 
 @pytest.mark.mf6
-@requires_pkg("vtk")
+@requires_pkg("vtk", "shapely")
 def test_vtk_export_disv1_model(function_tmpdir):
     from vtkmodules.util.numpy_support import vtk_to_numpy
     from vtkmodules.vtkIOLegacy import vtkUnstructuredGridReader
@@ -1779,7 +1779,7 @@ def test_vtk_export_disv1_model(function_tmpdir):
 
 
 @pytest.mark.mf6
-@requires_pkg("vtk")
+@requires_pkg("vtk", "shapely")
 def test_vtk_export_disv2_model(function_tmpdir):
     from vtkmodules.util.numpy_support import vtk_to_numpy
     from vtkmodules.vtkIOLegacy import vtkUnstructuredGridReader
