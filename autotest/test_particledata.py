@@ -1,11 +1,12 @@
 from functools import reduce
-from itertools import chain, repeat
+from itertools import chain
+from pprint import pformat
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
-from modflow_devtools.markers import requires_pkg
+from modflow_devtools.markers import requires_exe, requires_pkg
 
 import flopy
 from autotest.test_grid_cases import GridCases
@@ -22,9 +23,11 @@ from flopy.modpath import (
     Modpath7Sim,
     NodeParticleData,
     ParticleData,
+    ParticleGroupLRCTemplate,
     ParticleGroupNodeTemplate,
 )
-from flopy.utils.modpathfile import PathlineFile
+from flopy.modpath.mp7particlegroup import ParticleGroup
+from flopy.utils.modpathfile import EndpointFile, PathlineFile
 
 # utilities
 
@@ -44,7 +47,7 @@ def flatten(a):
     ]
 
 
-# test constructors
+# test initializers
 
 
 structured_dtype = np.dtype(
@@ -388,7 +391,7 @@ def test_particledata_to_prp_disv_9(localz):
 @pytest.mark.parametrize(
     "localz", [False, True]
 )  # whether to return local z coords
-def test_lrcparticledata_to_prp_divisions_defaults(localz):
+def test_lrcparticledata_to_prp_divisions_defaults(localz, array_snapshot):
     sd_data = CellDataType()
     regions = [[0, 0, 1, 0, 1, 1]]
     part_data = LRCParticleData(
@@ -396,66 +399,6 @@ def test_lrcparticledata_to_prp_divisions_defaults(localz):
     )
     grid = GridCases().structured_small()
     rpts_prt = flatten(list(part_data.to_prp(grid, localz=localz)))
-    rpts_exp = [
-        [0, 0, 0, 1, 1.166666, 1.166666, 5.833333],
-        [1, 0, 0, 1, 1.166666, 1.166666, 7.5],
-        [2, 0, 0, 1, 1.166666, 1.166666, 9.166666],
-        [3, 0, 0, 1, 1.1666666, 1.5, 5.833333],
-        [4, 0, 0, 1, 1.1666666, 1.5, 7.5],
-        [5, 0, 0, 1, 1.1666666, 1.5, 9.166666],
-        [6, 0, 0, 1, 1.166666, 1.833333, 5.833333],
-        [7, 0, 0, 1, 1.166666, 1.833333, 7.5],
-        [8, 0, 0, 1, 1.166666, 1.833333, 9.166666],
-        [9, 0, 0, 1, 1.5, 1.166666, 5.833333],
-        [10, 0, 0, 1, 1.5, 1.166666, 7.5],
-        [11, 0, 0, 1, 1.5, 1.166666, 9.166666],
-        [12, 0, 0, 1, 1.5, 1.5, 5.833333],
-        [13, 0, 0, 1, 1.5, 1.5, 7.5],
-        [14, 0, 0, 1, 1.5, 1.5, 9.166666],
-        [15, 0, 0, 1, 1.5, 1.833333, 5.833333],
-        [16, 0, 0, 1, 1.5, 1.833333, 7.5],
-        [17, 0, 0, 1, 1.5, 1.833333, 9.166666],
-        [18, 0, 0, 1, 1.833333, 1.166666, 5.833333],
-        [19, 0, 0, 1, 1.833333, 1.166666, 7.5],
-        [20, 0, 0, 1, 1.833333, 1.166666, 9.166666],
-        [21, 0, 0, 1, 1.833333, 1.5, 5.833333],
-        [22, 0, 0, 1, 1.833333, 1.5, 7.5],
-        [23, 0, 0, 1, 1.833333, 1.5, 9.166666],
-        [24, 0, 0, 1, 1.833333, 1.833333, 5.833333],
-        [25, 0, 0, 1, 1.833333, 1.833333, 7.5],
-        [26, 0, 0, 1, 1.833333, 1.833333, 9.166666],
-        [27, 0, 1, 1, 1.166666, 0.166666, 5.833333],
-        [28, 0, 1, 1, 1.166666, 0.166666, 7.5],
-        [29, 0, 1, 1, 1.166666, 0.166666, 9.166666],
-        [30, 0, 1, 1, 1.166666, 0.5, 5.833333],
-        [31, 0, 1, 1, 1.166666, 0.5, 7.5],
-        [32, 0, 1, 1, 1.166666, 0.5, 9.166666],
-        [33, 0, 1, 1, 1.166666, 0.833333, 5.833333],
-        [34, 0, 1, 1, 1.166666, 0.833333, 7.5],
-        [35, 0, 1, 1, 1.166666, 0.833333, 9.166666],
-        [36, 0, 1, 1, 1.5, 0.166666, 5.833333],
-        [37, 0, 1, 1, 1.5, 0.166666, 7.5],
-        [38, 0, 1, 1, 1.5, 0.166666, 9.166666],
-        [39, 0, 1, 1, 1.5, 0.5, 5.833333],
-        [40, 0, 1, 1, 1.5, 0.5, 7.5],
-        [41, 0, 1, 1, 1.5, 0.5, 9.166666],
-        [42, 0, 1, 1, 1.5, 0.833333, 5.833333],
-        [43, 0, 1, 1, 1.5, 0.833333, 7.5],
-        [44, 0, 1, 1, 1.5, 0.833333, 9.166666],
-        [45, 0, 1, 1, 1.833333, 0.166666, 5.833333],
-        [46, 0, 1, 1, 1.833333, 0.166666, 7.5],
-        [47, 0, 1, 1, 1.833333, 0.166666, 9.166666],
-        [48, 0, 1, 1, 1.833333, 0.5, 5.833333],
-        [49, 0, 1, 1, 1.833333, 0.5, 7.5],
-        [50, 0, 1, 1, 1.833333, 0.5, 9.166666],
-        [51, 0, 1, 1, 1.833333, 0.833333, 5.833333],
-        [52, 0, 1, 1, 1.833333, 0.833333, 7.5],
-        [53, 0, 1, 1, 1.833333, 0.833333, 9.166666],
-    ]
-    if localz:
-        locz = [0.166666, 0.5, 0.833333] * 18
-        rpts_exp = [(*rpt[0:-1], z) for rpt, z in zip(rpts_exp, locz)]
-
     num_cells = reduce(
         sum,
         [
@@ -473,7 +416,7 @@ def test_lrcparticledata_to_prp_divisions_defaults(localz):
         * sd_data.layercelldivisions
     )
     assert act_len == exp_len
-    assert np.allclose(rpts_prt, rpts_exp)
+    assert rpts_prt == array_snapshot
 
 
 def test_lrcparticledata_to_prp_divisions_custom():
@@ -581,7 +524,7 @@ def test_lrcparticledata_to_prp_top_bottom():
     assert rpts_prt[1][6] == grid.top_botm[0, 1, 1]
 
 
-def test_lrcparticledata_to_prp_1_per_face():
+def test_lrcparticledata_to_prp_1_per_face(array_snapshot):
     sddata = FaceDataType(
         horizontaldivisions1=1,
         verticaldivisions1=1,
@@ -600,15 +543,6 @@ def test_lrcparticledata_to_prp_1_per_face():
     data = LRCParticleData(subdivisiondata=[sddata], lrcregions=[lrcregions])
     grid = GridCases().structured_small()
     rpts_prt = flatten(list(data.to_prp(grid)))
-    rpts_exp = [
-        # irpt, k, i, j, x, y, z
-        [0, 0, 1, 1, 1.0, 0.5, 7.5],
-        [1, 0, 1, 1, 2.0, 0.5, 7.5],
-        [2, 0, 1, 1, 1.5, 0.0, 7.5],
-        [3, 0, 1, 1, 1.5, 1.0, 7.5],
-        [4, 0, 1, 1, 1.5, 0.5, 5.0],
-        [5, 0, 1, 1, 1.5, 0.5, 10.0],
-    ]
     num_cells = len(
         [
             (lrc[3] - lrc[0]) * (lrc[4] - lrc[1]) * (lrc[5] - lrc[2])
@@ -616,7 +550,7 @@ def test_lrcparticledata_to_prp_1_per_face():
         ]
     )
     assert len(rpts_prt) == num_cells * 6  # 1 particle on each face
-    assert np.allclose(rpts_prt, rpts_exp)
+    assert rpts_prt == array_snapshot
 
 
 @pytest.mark.parametrize(
@@ -810,7 +744,7 @@ def test_nodeparticledata_prp_disv_big(function_tmpdir):
     print(rpts_prt)
 
 
-# test write
+# test write()
 
 
 def test_lrcparticledata_write(function_tmpdir):
@@ -841,3 +775,102 @@ def test_lrcparticledata_write(function_tmpdir):
     # check lines written
     lines = open(p).readlines()
     assert lines == ["1 1\n", "2 1 0\n", " 5 5 1\n", "1 3 3 3 4 4 \n"]
+
+
+# To make it easier to compare MODFLOW 6 PRT and MODPATH 7 results,
+# we want to_coords() and to_prp() to return release configurations
+# in the same order as is generated by MODPATH 7. That is, an input
+# file for MF6 PRT's PRP package should list particle release points
+# in the same order that MODPATH 7 assigns particle IDs upon release
+# from any input style. The tests below set up bare-bones MP7 models
+# in endpoint mode and compare against their release points.
+
+
+@pytest.fixture
+def mf6_sim(function_tmpdir):
+    name = "tiny-gwf"
+    sim = flopy.mf6.MFSimulation(
+        sim_name=name, sim_ws=function_tmpdir, exe_name="mf6"
+    )
+    tdis = flopy.mf6.ModflowTdis(sim)
+    ims = flopy.mf6.ModflowIms(sim)
+    gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
+    dis = flopy.mf6.ModflowGwfdis(gwf, nrow=1, ncol=1)
+    ic = flopy.mf6.ModflowGwfic(gwf)
+    npf = flopy.mf6.ModflowGwfnpf(gwf, save_specific_discharge=True)
+    chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=[[(0, 0, 0), 1.0]])
+    budget_file = name + ".bud"
+    head_file = name + ".hds"
+    oc = flopy.mf6.ModflowGwfoc(
+        gwf,
+        budget_filerecord=budget_file,
+        head_filerecord=head_file,
+        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    )
+    return sim
+
+
+def get_mp7_sim(mf6_sim, groups):
+    mp = Modpath7(
+        modelname=f"{mf6_sim.name}_mp7",
+        flowmodel=mf6_sim.get_model(),
+        exe_name="mp7",
+        model_ws=mf6_sim.sim_path,
+    )
+    mpbas = Modpath7Bas(mp)
+    mpsim = Modpath7Sim(
+        mp,
+        simulationtype="endpoint",
+        trackingdirection="forward",
+        particlegroups=groups,
+    )
+    return mp
+
+
+@requires_exe("mp7")
+def test_lrcparticledata_celldatatype_to_coords_order(mf6_sim):
+    mf6_sim.write_simulation()
+    success, buff = mf6_sim.run_simulation()
+    assert success, pformat(buff)
+
+    pdata = flopy.modpath.LRCParticleData()
+    pg = ParticleGroupLRCTemplate(particlegroupname="PG1", particledata=pdata)
+    mp7_sim = get_mp7_sim(mf6_sim, [pg])
+    mp7_sim.write_input()
+    success, buff = mp7_sim.run_model()
+    assert success, pformat(buff)
+
+    gwf = mf6_sim.get_model()
+    grid = gwf.modelgrid
+    ep_file = EndpointFile(mf6_sim.sim_path / f"{mp7_sim.name}.mpend")
+    expected = ep_file.get_destination_endpoint_data(range(grid.nnodes))[
+        ["x0", "y0", "z0"]
+    ].tolist()
+    actual = list(pdata.to_coords(grid))
+    assert len(expected) == len(actual) == 27
+    assert np.allclose(expected, actual)
+
+
+def test_lrcparticledata_facedatatype_to_coords_order(mf6_sim):
+    mf6_sim.write_simulation()
+    success, buff = mf6_sim.run_simulation()
+    assert success, pformat(buff)
+
+    pdata = flopy.modpath.LRCParticleData(
+        subdivisiondata=[FaceDataType()],
+    )
+    pg = ParticleGroupLRCTemplate(particlegroupname="PG1", particledata=pdata)
+    mp7_sim = get_mp7_sim(mf6_sim, [pg])
+    mp7_sim.write_input()
+    success, buff = mp7_sim.run_model()
+    assert success, pformat(buff)
+
+    gwf = mf6_sim.get_model()
+    grid = gwf.modelgrid
+    ep_file = EndpointFile(mf6_sim.sim_path / f"{mp7_sim.name}.mpend")
+    expected = ep_file.get_destination_endpoint_data(range(grid.nnodes))[
+        ["x0", "y0", "z0"]
+    ].tolist()
+    actual = list(pdata.to_coords(grid))
+    assert len(expected) == len(actual) == 54
+    assert np.allclose(expected, actual)
