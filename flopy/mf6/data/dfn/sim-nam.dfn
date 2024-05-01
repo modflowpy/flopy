@@ -41,6 +41,50 @@ optional true
 longname print input to listing file
 description keyword to activate printing of simulation input summaries to the simulation list file (mfsim.lst). With this keyword, input summaries will be written for those packages that support newer input data model routines.  Not all packages are supported yet by the newer input data model routines.
 
+block options
+name hpc_filerecord
+type record hpc6 filein hpc6_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description hpc record
+
+block options
+name hpc6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname head keyword
+description keyword to specify that record corresponds to a hpc file.
+
+block options
+name filein
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an input filename is expected next.
+
+block options
+name hpc6_filename
+type string
+preserve_case true
+in_record true
+reader urword
+optional false
+tagged false
+longname file name of time series information
+description name of input file to define HPC file settings for the HPC package. See the ``HPC File'' section for instructions for preparing HPC input files.
+
+
 # --------------------- sim nam timing ---------------------
 
 block timing

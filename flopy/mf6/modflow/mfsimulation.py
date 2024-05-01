@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on February 07, 2024 20:16:08 UTC
+# FILE created on April 19, 2024 19:08:53 UTC
 import os
 from typing import Union
 
@@ -40,6 +40,11 @@ class MFSimulation(mfsimbase.MFSimulationBase):
           keyword, input summaries will be written for those packages that
           support newer input data model routines. Not all packages are
           supported yet by the newer input data model routines.
+    hpc : {varname:data} or hpc_data data
+        * Contains data for the hpc package. Data can be stored in a dictionary
+          containing data for the hpc package with variable names as keys and
+          package data as values. Data just for the hpc variable is also
+          acceptable. See hpc package documentation for more information.
     tdis6 : string
         * tdis6 (string) is the name of the Temporal Discretization (TDIS)
           Input File.
@@ -94,6 +99,7 @@ class MFSimulation(mfsimbase.MFSimulationBase):
         memory_print_option=None,
         maxerrors=None,
         print_input=None,
+        hpc_data=None,
     ):
         super().__init__(
             sim_name=sim_name,
@@ -117,6 +123,7 @@ class MFSimulation(mfsimbase.MFSimulationBase):
         self.memory_print_option = self.name_file.memory_print_option
         self.maxerrors = self.name_file.maxerrors
         self.print_input = self.name_file.print_input
+        self.hpc_data = self._create_package("hpc", hpc_data)
 
     @classmethod
     def load(

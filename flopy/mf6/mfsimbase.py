@@ -1309,6 +1309,26 @@ class MFSimulationBase(PackageContainer):
                         mfdata_except=mfde, package="nam", message=message
                     )
 
+    def _create_package(self, package_type, package_data):
+        if package_data is None:
+            return None
+        if not isinstance(package_data, dict):
+            message = (
+                "Error occurred while creating the solution package "
+                f"{package_type}.  Package data must be provided in a "
+                f"dictionary.  User provided type {type(package_data)}."
+            )
+            raise MFDataException(package=package_type, message=message)
+        # find package - only supporting utl packages for now
+        package_obj = self.package_factory(package_type, "utl")
+        if package_obj is not None:
+            # determine file name
+            if "filename" not in package_data:
+                package_data["filename"] = f"{self.name}.{package_type}"
+            # create package which should automatically register with the
+            # simulation
+            pkg = package_obj(self, **package_data)
+
     @staticmethod
     def _rename_package_group(group_dict, name):
         package_type_count = {}
@@ -1738,6 +1758,17 @@ class MFSimulationBase(PackageContainer):
 
             self._remove_package(package)
 
+        # if this is a package referenced from a filerecord, remove filerecord
+        # from name file
+        file_record_name = f"_{package.package_type}_filerecord"
+        if hasattr(self.name_file, file_record_name):
+            file_record = getattr(self.name_file, file_record_name)
+            if isinstance(file_record, mfdata.MFData):
+                file_record.set_data(None)
+            if hasattr(self.name_file, package.package_type):
+                child_pkgs = getattr(self.name_file, package.package_type)
+                child_pkgs._remove_packages(package.filename, True)
+
     @property
     def model_dict(self):
         """
@@ -2110,6 +2141,13 @@ class MFSimulationBase(PackageContainer):
                 )
                 package.filename = file_name
                 self._other_files[file_name] = package
+
+            # If this package is declared in the namefile options block,
+            # update namefile
+            file_record = f"_{package.package_type}_filerecord"
+            if hasattr(self.name_file, file_record):
+                fr_obj = getattr(self.name_file, file_record)
+                fr_obj.set_data(package.filename)
 
         if package.package_type.lower() in self.structure.package_struct_objs:
             return (

@@ -1,6 +1,6 @@
 # --------------------- gwf gnc options ---------------------
 # flopy subpackage gnc_filerecord gnc gncdata gncdata
-# flopy parent_name_type parent_model_or_package
+# flopy parent_name_type parent_model_or_package MFModel/MFPackage
 
 block options
 name print_input

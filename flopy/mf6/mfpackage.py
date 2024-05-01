@@ -2581,7 +2581,7 @@ class MFPackage(PackageContainer, PackageInterface):
         if data is not None:
             package_group = getattr(self, pkg_type)
             # build child package file name
-            child_path = package_group._next_default_file_path()
+            child_path = package_group.next_default_file_path()
             # create new empty child package
             package_obj = self.package_factory(
                 pkg_type, self.model_or_sim.model_type
@@ -3387,7 +3387,7 @@ class MFChildPackages:
                 return True
         return False
 
-    def _next_default_file_path(self):
+    def next_default_file_path(self):
         possible_path = self.__default_file_path_base(self._cpparent.filename)
         suffix = 0
         while self.__file_path_taken(possible_path):
@@ -3405,7 +3405,7 @@ class MFChildPackages:
             self._remove_packages(fname)
         if fname is None:
             # build a file name
-            fname = self._next_default_file_path()
+            fname = self.next_default_file_path()
             package._filename = fname
         # check file record variable
         found = False
@@ -3443,7 +3443,7 @@ class MFChildPackages:
     def _append_package(self, package, fname, update_frecord=True):
         if fname is None:
             # build a file name
-            fname = self._next_default_file_path()
+            fname = self.next_default_file_path()
             package._filename = fname
 
         if update_frecord:
@@ -3463,11 +3463,12 @@ class MFChildPackages:
         # add the package to the list
         self._packages.append(package)
 
-    def _remove_packages(self, fname=None):
+    def _remove_packages(self, fname=None, only_pop_from_list=False):
         rp_list = []
         for idx, package in enumerate(self._packages):
             if fname is None or package.filename == fname:
-                self._model_or_sim.remove_package(package)
+                if not only_pop_from_list:
+                    self._model_or_sim.remove_package(package)
                 rp_list.append(idx)
         for idx in reversed(rp_list):
             self._packages.pop(idx)
