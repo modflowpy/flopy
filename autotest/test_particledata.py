@@ -391,7 +391,7 @@ def test_particledata_to_prp_disv_9(localz):
 @pytest.mark.parametrize(
     "localz", [False, True]
 )  # whether to return local z coords
-def test_lrcparticledata_to_prp_divisions_defaults(localz, snapshot):
+def test_lrcparticledata_to_prp_divisions_defaults(localz, array_snapshot):
     sd_data = CellDataType()
     regions = [[0, 0, 1, 0, 1, 1]]
     part_data = LRCParticleData(
@@ -416,7 +416,7 @@ def test_lrcparticledata_to_prp_divisions_defaults(localz, snapshot):
         * sd_data.layercelldivisions
     )
     assert act_len == exp_len
-    assert rpts_prt == snapshot
+    assert rpts_prt == array_snapshot
 
 
 def test_lrcparticledata_to_prp_divisions_custom():
@@ -524,7 +524,7 @@ def test_lrcparticledata_to_prp_top_bottom():
     assert rpts_prt[1][6] == grid.top_botm[0, 1, 1]
 
 
-def test_lrcparticledata_to_prp_1_per_face(snapshot):
+def test_lrcparticledata_to_prp_1_per_face(array_snapshot):
     sddata = FaceDataType(
         horizontaldivisions1=1,
         verticaldivisions1=1,
@@ -550,7 +550,7 @@ def test_lrcparticledata_to_prp_1_per_face(snapshot):
         ]
     )
     assert len(rpts_prt) == num_cells * 6  # 1 particle on each face
-    assert rpts_prt == snapshot
+    assert rpts_prt == array_snapshot
 
 
 @pytest.mark.parametrize(
