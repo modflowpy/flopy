@@ -258,7 +258,7 @@ class VoronoiGrid:
     Parameters
     ----------
     input : flopy.utils.Triangle
-        Constructred and built flopy Triangle object.
+        Constructed and built flopy Triangle object.
     kwargs : dict
         List of additional keyword arguments that will be passed through to
         scipy.spatial.Voronoi.  For circular shaped model grids, the
@@ -368,7 +368,7 @@ class VoronoiGrid:
         ax : matplotlib.pyplot.Axes
             axes to plot the patch collection
         kwargs : dict
-            Additional keyward arguments to pass to the flopy.plot.plot_cvfd
+            Additional keyword arguments to pass to the flopy.plot.plot_cvfd
             function that returns a patch collection from verts and iverts
 
         Returns

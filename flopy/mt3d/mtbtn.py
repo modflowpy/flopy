@@ -914,7 +914,7 @@ class Mt3dBtn(Package):
                 if m_arr[i].upper() == "ALTWTSORB":
                     AltWTSorb = True
         elif model.verbose:
-            print("   optional keywords not identifed/loaded")
+            print("   optional keywords not identified/loaded")
 
         # A3
         if model.verbose:

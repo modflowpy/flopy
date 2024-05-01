@@ -844,7 +844,7 @@ class ModflowSfr2(Package):
                 options.maxval = int(t[2])
                 line = f.readline()
 
-            # set varibles to be passed to class args
+            # set variables to be passed to class args
             transroute = options.transroute
             reachinput = options.reachinput
             tabfiles = isinstance(options.tabfiles, np.ndarray)
@@ -2344,7 +2344,7 @@ class check:
         isnan = np.any(np.isnan(np.array(self.reach_data.tolist())), axis=1)
         nanreaches = self.reach_data[isnan]
         if np.any(isnan):
-            txt += f"Found {len(nanreaches)} reachs with nans:\n"
+            txt += f"Found {len(nanreaches)} reaches with nans:\n"
             if self.level == 1:
                 txt += _print_rec_array(nanreaches, delimiter=" ")
         for per, sd in self.segment_data.items():

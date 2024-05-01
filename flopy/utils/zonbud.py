@@ -1380,7 +1380,7 @@ class ZoneBudget:
             elif "totim" in line.lower():
                 otype = 2
             else:
-                raise AssertionError("Cant distinguish output type")
+                raise AssertionError("Can't distinguish output type")
         return otype
 
     @classmethod
@@ -1774,7 +1774,7 @@ class ZoneBudget6:
     model_ws : str
         path to model
     exe_name : str
-        excutable name
+        executable name
     extension : str
         name file extension
     """

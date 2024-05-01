@@ -364,7 +364,7 @@ def test_control_records(function_tmpdir):
 
     if spd_ls2["filename"] is None or not spd_ls2["binary"]:
         raise AssertionError(
-            "External binary file input not being preseved for MFList"
+            "External binary file input not being preserved for MFList"
         )
 
 

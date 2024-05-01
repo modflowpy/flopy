@@ -28,6 +28,7 @@ This document describes how to set up a FloPy development environment, run the e
   - [Performance testing](#performance-testing)
     - [Benchmarking](#benchmarking)
     - [Profiling](#profiling)
+  - [Snapshot testing](#snapshot-testing)
 - [Branching model](#branching-model)
 - [Deprecation policy](#deprecation-policy)
 - [Miscellaneous](#miscellaneous)
@@ -344,6 +345,16 @@ Benchmark results are only printed to `stdout` by default. To save results to a 
 Profiling is [distinct](https://stackoverflow.com/a/39381805/6514033) from benchmarking in evaluating a program's call stack in detail, while benchmarking just invokes a function repeatedly and computes summary statistics. Profiling is also accomplished with `pytest-benchmark`: use the `--benchmark-cprofile` option when running tests which use the `benchmark` fixture described above. The option's value is the column to sort results by. For instance, to sort by total time, use `--benchmark-cprofile="tottime"`. See the `pytest-benchmark` [docs](https://pytest-benchmark.readthedocs.io/en/stable/usage.html#commandline-options) for more information.
 
 By default, `pytest-benchmark` will only print profiling results to `stdout`. If the `--benchmark-autosave` flag is provided, performance profile data will be included in the JSON files written to the `.benchmarks` save directory as described in the benchmarking section above.
+
+### Snapshot testing
+
+Snapshot testing is a form of regression testing in which a "snapshot" of the results of some computation is verified and captured by the developer to be compared against when tests are subsequently run. This is accomplished with [`syrupy`](https://github.com/tophat/syrupy), which provides a `snapshot` fixture overriding the equality operator to allow comparison with e.g. `snapshot == result`. A few custom fixtures for snapshots of NumPy arrays are provided in `autotest/conftest.py`:
+
+- `array_snapshot`: saves an array in a binary file for compact storage, can be inspected programmatically with `np.load()`
+- `text_array_snapshot`: flattens an array and stores it in a text file, compromise between readability and disk usage
+- `readable_array_snapshot`: stores an array in a text file in its original shape, easy to inspect but largest on disk
+
+By default, tests run in comparison mode. This means a newly written test using any of the snapshot fixtures will fail until a snapshot is created. Snapshots can be created/updated by running pytest with the `--snapshot-update` flag.
 
 ## Branching model
 

@@ -100,11 +100,11 @@ class Vtk:
     modelgrid : flopy.discretization.Grid object
         any flopy modelgrid object, example. VertexGrid
     vertical_exageration : float
-        floating point value to scale vertical exageration of the vtk points
+        floating point value to scale vertical exaggeration of the vtk points
         default is 1.
     binary : bool
         flag that indicates if Vtk will write a binary or text file. Binary
-        is prefered as paraview has a bug (8/4/2021) where is cannot represent
+        is preferred as paraview has a bug (8/4/2021) where is cannot represent
         NaN values from ASCII (non xml) files. In this case no-data values
         are set to 1e+30.
     xml : bool
@@ -121,7 +121,7 @@ class Vtk:
         boolean flag to interpolate vertex elevations based on shared cell
         elevations. Default is False.
     point_scalars : bool
-        boolen flag to write interpolated data at each point based "shared
+        boolean flag to write interpolated data at each point based "shared
         vertices".
 
     """
@@ -184,7 +184,7 @@ class Vtk:
 
         self.nvpl = nvpl
 
-        # method to accomodate DISU grids, do not use modelgrid.ncpl!
+        # method to accommodate DISU grids, do not use modelgrid.ncpl!
         self.ncpl = len(self.iverts)
         if self.nnodes == len(self.iverts):
             self.nlay = 1
@@ -521,7 +521,7 @@ class Vtk:
             mf6 = False
             hfb_data = pkg.hfb_data
         else:
-            # asssume that there is no transient hfb data for now
+            # assume that there is no transient hfb data for now
             hfb_data = pkg.stress_period_data.array[0]
             mf6 = True
 
@@ -792,7 +792,7 @@ class Vtk:
         if self.__transient_output_data:
             raise AssertionError(
                 "Transient arrays cannot be mixed with transient output, "
-                "Please create a seperate vtk object for transient package "
+                "Please create a separate vtk object for transient package "
                 "data"
             )
 
@@ -1098,8 +1098,8 @@ class Vtk:
             animation or as a single static vtk file. Default is false.
         """
 
-        mpx_keys = ["particleid", "time", "k"]
-        prt_keys = ["imdl", "iprp", "irpt", "trelease", "ilay"]
+        mpx_fields = ["particleid", "time", "k"]
+        prt_fields = ["imdl", "iprp", "irpt", "trelease", "ilay"]
 
         if isinstance(pathlines, list):
             if len(pathlines) == 0:
@@ -1112,23 +1112,32 @@ class Vtk:
                 )
                 for pl in pathlines
             ]
-            if all(k in pathlines[0].dtype.names for k in mpx_keys):
-                keys = mpx_keys
-            elif all(k in pathlines[0].dtype.names for k in prt_keys):
-                keys = prt_keys
-            else:
+            fields = pathlines[0].dtype.names
+            arr_fields = {
+                n: pathlines[0].dtype[n]
+                for n in fields
+                if np.issubdtype(pathlines[0].dtype[n], np.number)
+            }
+            if not (
+                all(k in fields for k in mpx_fields)
+                or all(k in fields for k in prt_fields)
+            ):
                 raise ValueError("Unrecognized pathline dtype")
         elif isinstance(pathlines, (np.recarray, np.ndarray, pd.DataFrame)):
             if isinstance(pathlines, pd.DataFrame):
                 pathlines = pathlines.to_records(index=False)
-            if all(k in pathlines.dtype.names for k in mpx_keys):
-                keys = mpx_keys
+            fields = pathlines.dtype.names
+            arr_fields = {
+                n: pathlines.dtype[n]
+                for n in fields
+                if np.issubdtype(pathlines.dtype[n], np.number)
+            }
+            if all(k in pathlines.dtype.names for k in mpx_fields):
                 pids = np.unique(pathlines.particleid)
                 pathlines = [
                     pathlines[pathlines.particleid == pid] for pid in pids
                 ]
-            elif all(k in pathlines.dtype.names for k in prt_keys):
-                keys = prt_keys
+            elif all(k in pathlines.dtype.names for k in prt_fields):
                 pls = []
                 for imdl in np.unique(pathlines.imdl):
                     for iprp in np.unique(pathlines.iprp):
@@ -1150,7 +1159,7 @@ class Vtk:
             )
 
         if not timeseries:
-            arrays = {key: [] for key in keys}
+            arrays = {f: [] for f in arr_fields}
             points = []
             lines = []
             for recarray in pathlines:
@@ -1160,8 +1169,8 @@ class Vtk:
                     t = tuple(rec[["x", "y", "z"]])
                     line.append(t)
                     points.append(t)
-                    for key in keys:
-                        arrays[key].append(rec[key])
+                    for f in arr_fields:
+                        arrays[f].append(rec[f])
                 lines.append(line)
 
             self._set_particle_track_data(points, lines, arrays)
@@ -1176,14 +1185,12 @@ class Vtk:
                     time = rec["time"]
                     if time not in points:
                         points[time] = [tuple(rec[["x", "y", "z"]])]
-                        t = {key: [] for key in keys}
-                        timeseries_data[time] = t
-
+                        timeseries_data[time] = {f: [] for f in arr_fields}
                     else:
                         points[time].append(tuple(rec[["x", "y", "z"]]))
 
-                    for key in keys:
-                        timeseries_data[time][key].append(rec[key])
+                    for f in arr_fields:
+                        timeseries_data[time][f].append(rec[f])
 
             self.__pathline_transient_data = timeseries_data
             self._pathline_points = points
@@ -1206,7 +1213,7 @@ class Vtk:
         if not self.__transient_output_data and self.__transient_data:
             raise AssertionError(
                 "Head data cannot be mixed with transient package data, "
-                "Please create a seperate vtk object for transient head data"
+                "Please create a separate vtk object for transient head data"
             )
 
         if kstpkper is None:
@@ -1256,7 +1263,7 @@ class Vtk:
         if not self.__transient_output_data and self.__transient_data:
             raise AssertionError(
                 "Binary data cannot be mixed with transient package data, "
-                "Please create a seperate vtk object for transient head data"
+                "Please create a separate vtk object for transient head data"
             )
 
         records = cbc.get_unique_record_names(decode=True)

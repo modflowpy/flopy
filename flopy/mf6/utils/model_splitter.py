@@ -2663,7 +2663,7 @@ class Mf6Splitter(object):
 
     def _remap_adv_tag(self, mkey, recarray, item, mapper):
         """
-        Method to remap advanced package ids such as SFR's ifno varaible
+        Method to remap advanced package ids such as SFR's ifno variable
 
         Parameters
         ----------
@@ -3310,5 +3310,5 @@ class Mf6Splitter(object):
 
 # todo: development notes:
 #   Then set up checks for model splitting
-#       (ex. doesnt parallel a fault, doesnt cut through a lake,
+#       (ex. doesn't parallel a fault, doesn't cut through a lake,
 #       active cells in modelgrid...)

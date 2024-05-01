@@ -1591,7 +1591,7 @@ class MFBlock:
             fd.write("\n")
 
     def is_allowed(self):
-        """Determine if block is valid based on the values of dependant
+        """Determine if block is valid based on the values of dependent
         MODFLOW variables."""
         if self.structure.variable_dependant_path:
             # fill in empty part of the path with the current path

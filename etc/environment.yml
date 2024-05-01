@@ -28,6 +28,7 @@ dependencies:
   - pytest-cov
   - pytest-dotenv
   - pytest-xdist
+  - syrupy
   - virtualenv
 
   # optional

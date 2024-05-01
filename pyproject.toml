@@ -55,6 +55,7 @@ test = [
     "pytest-dotenv",
     "pytest-xdist",
     "pyzmq >=25.1.2",
+    "syrupy",
     "virtualenv"
 ]
 optional = [

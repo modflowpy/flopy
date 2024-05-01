@@ -2070,7 +2070,7 @@ class MFBlockStructure:
 
 class MFInputFileStructure:
     """
-    MODFLOW Input File Stucture class.  Loads file
+    MODFLOW Input File Structure class.  Loads file
     structure information for individual input file
     types.
 

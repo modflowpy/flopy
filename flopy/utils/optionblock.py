@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 
 from ..utils import flopy_io
@@ -49,12 +51,21 @@ class OptionBlock:
         self._attr_types = {}
         self.options_line = options_line
         self.package = package
-        self.auxillary = []
+        self.auxiliary = []
         self.noprint = False
         self.block = block
 
         self.__build_attr_types()
         self._set_attributes()
+
+    def __getattr__(self, key):
+        if key == "auxillary":  # catch typo from older version
+            key = "auxiliary"
+            warnings.warn(
+                "the atttribute 'auxillary' is deprecated, use 'auxiliary' instead",
+                category=DeprecationWarning,
+            )
+        return super().__getattribute__(key)
 
     @property
     def single_line_options(self):
@@ -144,12 +155,19 @@ class OptionBlock:
         Parameters
         ----------
             key : str
-                string refering to an attribute
+                string referring to an attribute
             value : object
                 a python object (int, str, float, bool) that
-                is consistant with the attribute data type
+                is consistent with the attribute data type
 
         """
+        if key == "auxillary":  # catch typo from older version
+            key = "auxiliary"
+            warnings.warn(
+                "the atttribute 'auxillary' is deprecated, use 'auxiliary' instead",
+                category=DeprecationWarning,
+            )
+
         err_msg = "Data type must be compatible with {}"
         if key in ("_context", "_attr_types", "options_line"):
             self.__dict__[key] = value
@@ -223,7 +241,7 @@ class OptionBlock:
         """
         Method to build a type dictionary for type
         enforcements in __setattr__. This uses the package's
-        contex tree to build and enforce attribute
+        context tree to build and enforce attribute
         types for the class
 
         """

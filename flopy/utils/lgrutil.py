@@ -181,25 +181,23 @@ class Lgr:
         self.yllp = yllp
 
         # child grid properties
-        self.nplbeg = idxl.min()
-        self.nplend = idxl.max()
-        self.npcbeg = idxc.min()
-        self.npcend = idxc.max()
-        self.nprbeg = idxr.min()
-        self.nprend = idxr.max()
+        self.nplbeg = int(idxl.min())
+        self.nplend = int(idxl.max())
+        self.npcbeg = int(idxc.min())
+        self.npcend = int(idxc.max())
+        self.nprbeg = int(idxr.min())
+        self.nprend = int(idxr.max())
 
         # child grid dimensions
-        self.nlay = self.ncppl.sum()
+        self.nlay = int(self.ncppl.sum())
         self.nrow = (self.nprend - self.nprbeg + 1) * ncpp
         self.ncol = (self.npcend - self.npcbeg + 1) * ncpp
 
         # assign child properties
         self.delr, self.delc = self.get_delr_delc()
         self.top, self.botm = self.get_top_botm()
-        self.xll = xllp + self.delrp[0 : self.npcbeg].sum()
-        self.yll = yllp + self.delcp[self.nprend + 1 :].sum()
-
-        return
+        self.xll = xllp + float(self.delrp[0 : self.npcbeg].sum())
+        self.yll = yllp + float(self.delcp[self.nprend + 1 :].sum())
 
     def get_shape(self):
         """
@@ -232,13 +230,13 @@ class Lgr:
         jstart = 0
         jend = self.ncpp
         for j in range(self.npcbeg, self.npcend + 1):
-            delr[jstart:jend] = self.delrp[j] / self.ncpp
+            delr[jstart:jend] = float(self.delrp[j]) / self.ncpp
             jstart = jend
             jend = jstart + self.ncpp
         istart = 0
         iend = self.ncpp
         for i in range(self.nprbeg, self.nprend + 1):
-            delc[istart:iend] = self.delcp[i] / self.ncpp
+            delc[istart:iend] = float(self.delcp[i]) / self.ncpp
             istart = iend
             iend = istart + self.ncpp
         return delr, delc
@@ -252,7 +250,7 @@ class Lgr:
         botm = np.zeros((self.nlay + 1, self.nrow, self.ncol), dtype=float)
         for ip in range(self.nprbeg, self.nprend + 1):
             for jp in range(self.npcbeg, self.npcend + 1):
-                top = pbotm[0, ip, jp]
+                top = float(pbotm[0, ip, jp])
                 icrowstart = (ip - self.nprbeg) * self.ncpp
                 icrowend = icrowstart + self.ncpp
                 iccolstart = (jp - self.npcbeg) * self.ncpp
@@ -260,8 +258,8 @@ class Lgr:
                 botm[0, icrowstart:icrowend, iccolstart:iccolend] = top
                 kc = 1
                 for kp in range(self.nplbeg, self.nplend + 1):
-                    top = pbotm[kp, ip, jp]
-                    bot = pbotm[kp + 1, ip, jp]
+                    top = float(pbotm[kp, ip, jp])
+                    bot = float(pbotm[kp + 1, ip, jp])
                     dz = (top - bot) / self.ncppl[kp]
                     for _ in range(self.ncppl[kp]):
                         botm[kc, icrowstart:icrowend, iccolstart:iccolend] = (
@@ -303,7 +301,7 @@ class Lgr:
                 icrowend = icrowstart + self.ncpp
                 iccolstart = (jp - self.npcbeg) * self.ncpp
                 iccolend = iccolstart + self.ncpp
-                value = parent_array[ip, jp]
+                value = int(parent_array[ip, jp])
                 child_array[icrowstart:icrowend, iccolstart:iccolend] = value
         return child_array
 
@@ -477,28 +475,28 @@ class Lgr:
                         cl2 = None
                         hwva = None
 
-                        tpp = topp[ip, jp]
-                        btp = botp[kp, ip, jp]
+                        tpp = float(topp[ip, jp])
+                        btp = float(botp[kp, ip, jp])
                         if kp > 0:
-                            tpp = botp[kp - 1, ip, jp]
+                            tpp = float(botp[kp - 1, ip, jp])
 
-                        tpc = topc[ic, jc]
-                        btc = botc[kc, ic, jc]
+                        tpc = float(topc[ic, jc])
+                        btc = float(botc[kc, ic, jc])
                         if kc > 0:
-                            tpc = botc[kc - 1, ic, jc]
+                            tpc = float(botc[kc - 1, ic, jc])
 
                         if ihc == 0:
                             cl1 = 0.5 * (tpp - btp)
                             cl2 = 0.5 * (tpc - btc)
-                            hwva = delrc[jc] * delcc[ic]
+                            hwva = float(delrc[jc]) * float(delcc[ic])
                         else:
                             if abs(idir) == 1:
-                                cl1 = 0.5 * delrp[jp]
-                                cl2 = 0.5 * delrc[jc]
-                                hwva = delcc[ic]
+                                cl1 = 0.5 * float(delrp[jp])
+                                cl2 = 0.5 * float(delrc[jc])
+                                hwva = float(delcc[ic])
                             elif abs(idir) == 2:
-                                cl1 = 0.5 * delcp[ip]
-                                cl2 = 0.5 * delcc[ic]
+                                cl1 = 0.5 * float(delcp[ip])
+                                cl2 = 0.5 * float(delcc[ic])
                                 hwva = delrc[jc]
 
                         # connection distance
@@ -507,17 +505,24 @@ class Lgr:
                             if abs(idir) == 3:
                                 cd = cl1 + cl2
                             else:
-                                x1 = xc[ic, jc]
-                                y1 = yc[ic, jc]
-                                x2 = xp[ip, jp]
-                                y2 = yp[ip, jp]
+                                x1 = float(xc[ic, jc])
+                                y1 = float(yc[ic, jc])
+                                x2 = float(xp[ip, jp])
+                                y2 = float(yp[ip, jp])
                                 cd = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
-                        exg = [(kp, ip, jp), (kc, ic, jc), ihc, cl1, cl2, hwva]
+                        exg = [
+                            (kp, ip, jp),
+                            (kc, ic, jc),
+                            ihc,
+                            cl1,
+                            cl2,
+                            hwva,
+                        ]
                         if angldegx:
-                            exg.append(angle)
+                            exg.append(float(angle))
                         if cdist:
-                            exg.append(cd)
+                            exg.append(float(cd))
                         exglist.append(exg)
         return exglist
 

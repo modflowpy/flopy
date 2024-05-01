@@ -699,7 +699,7 @@ class ModflowAg(Package):
         f : str
             filename
         model : gsflow.modflow.Modflow object
-            model to attach the ag pacakge to
+            model to attach the ag package to
         nper : int
             number of stress periods in model
         ext_unit_dict : dict, optional
