@@ -1891,9 +1891,7 @@ class Gridgen:
         idx = attributes.index("nodenumber")
         for i in range(len(shapes)):
             nodenumber = int(records[i][idx]) - 1
-            points = shapes[i].points
-            # import pdb; pdb.set_trace()
-            self._vertdict[nodenumber] = points
+            self._vertdict[nodenumber] = shapes[i].points
 
     @staticmethod
     def read_qtg_nod(

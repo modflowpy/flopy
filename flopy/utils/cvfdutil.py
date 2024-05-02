@@ -183,7 +183,10 @@ def to_cvfd(
         xcyc[icell, 1] = yc
         ivertlist = []
         for p in points:
-            pt = (round(p[0], 9), round(p[1], 9))
+            pt = (
+                round(p[0], duplicate_decimals),
+                round(p[1], duplicate_decimals),
+            )
             if pt in vertexdict:
                 ivert = vertexdict[pt]
             else:
@@ -247,24 +250,8 @@ def to_cvfd(
         if verbose:
             print("Done checking for hanging nodes.")
 
-    # drop duplicate vertices
-    def filter_verts():
-        return (
-            pd.DataFrame(np.array(vertexdict_keys), columns=["x", "y"])
-            .round(duplicate_decimals)
-            .drop_duplicates(["x", "y"], ignore_index=False)
-            .to_numpy()
-        )
-
-    verts = filter_verts()
-
-    def filter_iverts():
-        vtups = [tuple(v) for v in verts.tolist()]
-        vdict = {k: v for k, v in vertexdict.items() if k in vtups}
-        for vl in vertexlist:
-            yield [v for v in vl if v in vdict.values()]
-
-    iverts = list(filter_iverts())
+    verts = np.array(vertexdict_keys)
+    iverts = vertexlist
 
     return verts, iverts
 

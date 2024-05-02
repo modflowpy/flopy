@@ -888,10 +888,8 @@ def test_flopy_issue_1492(function_tmpdir):
     )
     og_grid = gwf.modelgrid
 
-    # Create and build the gridgen model with a refined area in the middle
+    # Create and build the gridgen model
     g = Gridgen(dis, model_ws=function_tmpdir)
-    # polys = [Polygon([(4, 4), (6, 4), (6, 6), (4, 6)])]
-    # g.add_refinement_features(polys, "polygon", 3, range(nlay))
     g.build()
 
     # retrieve a dictionary of arguments to be passed
@@ -935,19 +933,16 @@ def test_flopy_issue_1492(function_tmpdir):
     success, _ = sim.run_simulation(silent=False)
     assert success
 
-    head = gwf.output.head().get_data()
-    bud = gwf.output.budget()
-    spdis = bud.get_data(text="DATA-SPDIS")[0]
+    # debugging duplicate vertices
     grid = gwf.modelgrid
-    og_verts = pd.DataFrame(
-        og_grid.verts, columns=["x", "y"]
-    )  # .round(3).sort_values(by=["x", "y"], ignore_index=True).drop_duplicates(ignore_index=True)
-    mg_verts = pd.DataFrame(
-        grid.verts, columns=["x", "y"]
-    )  # .round(3).sort_values(by=["x", "y"], ignore_index=True).drop_duplicates(ignore_index=True)
+    og_verts = pd.DataFrame(og_grid.verts, columns=["x", "y"])
+    mg_verts = pd.DataFrame(grid.verts, columns=["x", "y"])
 
     plot_debug = False
     if plot_debug:
+        head = gwf.output.head().get_data()
+        bud = gwf.output.budget()
+        spdis = bud.get_data(text="DATA-SPDIS")[0]
         pmv = flopy.plot.PlotMapView(gwf)
         pmv.plot_array(head)
         pmv.plot_grid(colors="white")
