@@ -116,6 +116,7 @@ def to_cvfd(
     nodestart=None,
     nodestop=None,
     skip_hanging_node_check=False,
+    duplicate_decimals=9,
     verbose=False,
 ):
     """
@@ -135,6 +136,11 @@ def to_cvfd(
     skip_hanging_node_check : bool
         skip the hanging node check.  this may only be necessary for quad-based
         grid refinement. (default is False)
+
+    duplicate_decimals : int
+        decimals to round duplicate vertex checks.  GRIDGEN can occasionally
+        produce very-nearly overlapping vertices, this can be used to change
+        the sensitivity for filtering out duplicates. (default is 9)
 
     verbose : bool
         print messages to the screen. (default is False)
@@ -242,20 +248,25 @@ def to_cvfd(
             print("Done checking for hanging nodes.")
 
     # drop duplicate vertices
-    verts = (
-        pd.DataFrame(np.array(vertexdict_keys), columns=["x", "y"])
-        .round(9)
-        .drop_duplicates(["x", "y"], ignore_index=False)
-        .to_numpy()
-    )
+    def filter_verts():
+        return (
+            pd.DataFrame(np.array(vertexdict_keys), columns=["x", "y"])
+            .round(duplicate_decimals)
+            .drop_duplicates(["x", "y"], ignore_index=False)
+            .to_numpy()
+        )
 
-    def get_iverts():
+    verts = filter_verts()
+
+    def filter_iverts():
         vtups = [tuple(v) for v in verts.tolist()]
         vdict = {k: v for k, v in vertexdict.items() if k in vtups}
-        for v in vertexlist:
-            yield [vv for vv in v if vv in vdict.values()]
+        for vl in vertexlist:
+            yield [v for v in vl if v in vdict.values()]
 
-    return verts, list(get_iverts())
+    iverts = list(filter_iverts())
+
+    return verts, iverts
 
 
 def shapefile_to_cvfd(shp, **kwargs):
