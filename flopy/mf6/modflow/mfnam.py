@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on February 07, 2024 20:16:08 UTC
+# FILE created on April 23, 2024 17:27:32 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -40,6 +40,11 @@ class ModflowNam(mfpackage.MFPackage):
           keyword, input summaries will be written for those packages that
           support newer input data model routines. Not all packages are
           supported yet by the newer input data model routines.
+    hpc : {varname:data} or hpc_data data
+        * Contains data for the hpc package. Data can be stored in a dictionary
+          containing data for the hpc package with variable names as keys and
+          package data as values. Data just for the hpc variable is also
+          acceptable. See hpc package documentation for more information.
     tdis6 : string
         * tdis6 (string) is the name of the Temporal Discretization (TDIS)
           Input File.
@@ -79,6 +84,9 @@ class ModflowNam(mfpackage.MFPackage):
 
     """
 
+    hpc_filerecord = ListTemplateGenerator(
+        ("nam", "options", "hpc_filerecord")
+    )
     models = ListTemplateGenerator(("nam", "models", "models"))
     exchanges = ListTemplateGenerator(("nam", "exchanges", "exchanges"))
     solutiongroup = ListTemplateGenerator(
@@ -127,6 +135,48 @@ class ModflowNam(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+        ],
+        [
+            "block options",
+            "name hpc_filerecord",
+            "type record hpc6 filein hpc6_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "construct_package hpc",
+            "construct_data hpc_data",
+            "parameter_name hpc",
+        ],
+        [
+            "block options",
+            "name hpc6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name hpc6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged false",
         ],
         [
             "block timing",
@@ -290,6 +340,7 @@ class ModflowNam(mfpackage.MFPackage):
         )
         self.maxerrors = self.build_mfdata("maxerrors", maxerrors)
         self.print_input = self.build_mfdata("print_input", print_input)
+        self._hpc_filerecord = self.build_mfdata("hpc_filerecord", None)
         self.tdis6 = self.build_mfdata("tdis6", tdis6)
         self.models = self.build_mfdata("models", models)
         self.exchanges = self.build_mfdata("exchanges", exchanges)
