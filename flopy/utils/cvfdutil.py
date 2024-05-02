@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 from .utl_import import import_optional_dependency
 
@@ -115,6 +116,7 @@ def to_cvfd(
     nodestart=None,
     nodestop=None,
     skip_hanging_node_check=False,
+    duplicate_decimals=9,
     verbose=False,
 ):
     """
@@ -134,6 +136,11 @@ def to_cvfd(
     skip_hanging_node_check : bool
         skip the hanging node check.  this may only be necessary for quad-based
         grid refinement. (default is False)
+
+    duplicate_decimals : int
+        decimals to round duplicate vertex checks.  GRIDGEN can occasionally
+        produce very-nearly overlapping vertices, this can be used to change
+        the sensitivity for filtering out duplicates. (default is 9)
 
     verbose : bool
         print messages to the screen. (default is False)
@@ -176,7 +183,10 @@ def to_cvfd(
         xcyc[icell, 1] = yc
         ivertlist = []
         for p in points:
-            pt = tuple(p)
+            pt = (
+                round(p[0], duplicate_decimals),
+                round(p[1], duplicate_decimals),
+            )
             if pt in vertexdict:
                 ivert = vertexdict[pt]
             else:

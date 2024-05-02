@@ -1892,7 +1892,6 @@ class Gridgen:
         for i in range(len(shapes)):
             nodenumber = int(records[i][idx]) - 1
             self._vertdict[nodenumber] = shapes[i].points
-        return
 
     @staticmethod
     def read_qtg_nod(
