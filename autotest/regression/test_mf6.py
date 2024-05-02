@@ -3314,10 +3314,8 @@ def test028_create_tests_sfr(function_tmpdir, example_data_path):
     # test hpc package
     part = [("model1", 1), ("model2", 2)]
     hpc = ModflowUtlhpc(
-        sim,
-        dev_log_mpi=True,
-        partitions=part,
-        filename="test.hpc")
+        sim, dev_log_mpi=True, partitions=part, filename="test.hpc"
+    )
 
     assert sim.hpc.dev_log_mpi.get_data()
     assert hpc.filename == "test.hpc"
@@ -3352,16 +3350,19 @@ def test028_create_tests_sfr(function_tmpdir, example_data_path):
         sim_name=test_ex_name,
         version="mf6",
         exe_name="mf6",
-        sim_ws=os.path.join(function_tmpdir, "temp"))
+        sim_ws=os.path.join(function_tmpdir, "temp"),
+    )
     hpc_n = sim3.get_package("hpc")
     assert hpc_n is None
     fr_2 = sim3.name_file._hpc_filerecord.get_data()
     assert fr_2 is None
     sim3.set_sim_path(function_tmpdir)
 
-    hpc_data = {"filename": "hpc_data_file.hpc",
-                "dev_log_mpi": True,
-                "partitions": part}
+    hpc_data = {
+        "filename": "hpc_data_file.hpc",
+        "dev_log_mpi": True,
+        "partitions": part,
+    }
     sim4 = MFSimulation(
         sim_name=test_ex_name,
         version="mf6",
