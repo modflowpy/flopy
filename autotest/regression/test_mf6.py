@@ -42,6 +42,7 @@ from flopy.mf6 import (
     ModflowGwtssm,
     ModflowIms,
     ModflowTdis,
+    ModflowUtlhpc,
     ModflowUtltas,
 )
 from flopy.mf6.data.mfdatastorage import DataStorageType
@@ -3110,7 +3111,7 @@ def test028_create_tests_sfr(function_tmpdir, example_data_path):
         delc=5000.0,
         top=top,
         botm=botm,
-        # idomain=idomain,
+        idomain=idomain,
         filename=f"{model_name}.dis",
     )
     strt = testutils.read_std_array(os.path.join(pth, "strt.txt"), "float")
@@ -3310,8 +3311,77 @@ def test028_create_tests_sfr(function_tmpdir, example_data_path):
         htol=10.0,
     )
 
+    # test hpc package
+    part = [("model1", 1), ("model2", 2)]
+    hpc = ModflowUtlhpc(
+        sim, dev_log_mpi=True, partitions=part, filename="test.hpc"
+    )
+
+    assert sim.hpc.dev_log_mpi.get_data()
+    assert hpc.filename == "test.hpc"
+    part = hpc.partitions.get_data()
+    assert part[0][0] == "model1"
+    assert part[0][1] == 1
+    assert part[1][0] == "model2"
+    assert part[1][1] == 2
+
+    sim.write_simulation()
+    sim2 = MFSimulation.load(
+        sim_name=test_ex_name,
+        version="mf6",
+        exe_name="mf6",
+        sim_ws=function_tmpdir,
+    )
+    hpc_a = sim2.get_package("hpc")
+    assert hpc_a.filename == "test.hpc"
+    fr = sim2.name_file._hpc_filerecord.get_data()
+    assert fr[0][0] == "test.hpc"
+    assert hpc_a.dev_log_mpi.get_data()
+    part_a = hpc_a.partitions.get_data()
+    assert part_a[0][0] == "model1"
+    assert part_a[0][1] == 1
+    assert part_a[1][0] == "model2"
+    assert part_a[1][1] == 2
+
+    sim2.remove_package(hpc_a)
+    sim2.set_sim_path(os.path.join(function_tmpdir, "temp"))
+    sim2.write_simulation()
+    sim3 = MFSimulation.load(
+        sim_name=test_ex_name,
+        version="mf6",
+        exe_name="mf6",
+        sim_ws=os.path.join(function_tmpdir, "temp"),
+    )
+    hpc_n = sim3.get_package("hpc")
+    assert hpc_n is None
+    fr_2 = sim3.name_file._hpc_filerecord.get_data()
+    assert fr_2 is None
+    sim3.set_sim_path(function_tmpdir)
+
+    hpc_data = {
+        "filename": "hpc_data_file.hpc",
+        "dev_log_mpi": True,
+        "partitions": part,
+    }
+    sim4 = MFSimulation(
+        sim_name=test_ex_name,
+        version="mf6",
+        exe_name="mf6",
+        sim_ws=pth,
+        hpc_data=hpc_data,
+    )
+    fr_4 = sim4.name_file._hpc_filerecord.get_data()
+    assert fr_4[0][0] == "hpc_data_file.hpc"
+    assert sim4.hpc.filename == "hpc_data_file.hpc"
+    assert sim4.hpc.dev_log_mpi.get_data()
+    part = sim4.hpc.partitions.get_data()
+    assert part[0][0] == "model1"
+    assert part[0][1] == 1
+    assert part[1][0] == "model2"
+    assert part[1][1] == 2
+
     # clean up
-    sim.delete_output_files()
+    sim3.delete_output_files()
 
 
 @requires_exe("mf6")
