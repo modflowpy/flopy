@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 from .utl_import import import_optional_dependency
 
@@ -176,7 +177,7 @@ def to_cvfd(
         xcyc[icell, 1] = yc
         ivertlist = []
         for p in points:
-            pt = tuple(p)
+            pt = (round(p[0], 9), round(p[1], 9))
             if pt in vertexdict:
                 ivert = vertexdict[pt]
             else:
@@ -240,10 +241,21 @@ def to_cvfd(
         if verbose:
             print("Done checking for hanging nodes.")
 
-    verts = np.array(vertexdict_keys)
-    iverts = vertexlist
+    # drop duplicate vertices
+    verts = (
+        pd.DataFrame(np.array(vertexdict_keys), columns=["x", "y"])
+        .round(9)
+        .drop_duplicates(["x", "y"], ignore_index=False)
+        .to_numpy()
+    )
 
-    return verts, iverts
+    def get_iverts():
+        vtups = [tuple(v) for v in verts.tolist()]
+        vdict = {k: v for k, v in vertexdict.items() if k in vtups}
+        for v in vertexlist:
+            yield [vv for vv in v if vv in vdict.values()]
+
+    return verts, list(get_iverts())
 
 
 def shapefile_to_cvfd(shp, **kwargs):

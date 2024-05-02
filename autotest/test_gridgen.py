@@ -4,6 +4,7 @@ from shutil import which
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import pytest
 from matplotlib.collections import LineCollection, PathCollection, QuadMesh
 from modflow_devtools.markers import requires_exe, requires_pkg
@@ -853,10 +854,14 @@ def test_gridgen(function_tmpdir):
     assert max(ja0) <= disu_vp.nodelay[0], msg
 
 
-@pytest.mark.xfail
 @requires_exe("mf6", "gridgen")
 def test_flopy_issue_1492(function_tmpdir):
-    name = "mymodel"
+    """
+    Submitted by David Brakenhoff in
+    https://github.com/modflowpy/flopy/issues/1492
+    """
+
+    name = "issue1492"
     nlay = 3
     nrow = 10
     ncol = 10
@@ -871,7 +876,6 @@ def test_flopy_issue_1492(function_tmpdir):
         sim_name=name, sim_ws=function_tmpdir, exe_name="mf6"
     )
     gwf = flopy.mf6.ModflowGwf(sim, modelname=name)
-
     dis = flopy.mf6.ModflowGwfdis(
         gwf,
         nlay=nlay,
@@ -882,6 +886,7 @@ def test_flopy_issue_1492(function_tmpdir):
         top=top,
         botm=botm,
     )
+    og_grid = gwf.modelgrid
 
     # Create and build the gridgen model with a refined area in the middle
     g = Gridgen(dis, model_ws=function_tmpdir)
@@ -925,6 +930,7 @@ def test_flopy_issue_1492(function_tmpdir):
         head_filerecord=head_file,
         saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
     )
+
     sim.write_simulation()
     success, _ = sim.run_simulation(silent=False)
     assert success
@@ -932,10 +938,22 @@ def test_flopy_issue_1492(function_tmpdir):
     head = gwf.output.head().get_data()
     bud = gwf.output.budget()
     spdis = bud.get_data(text="DATA-SPDIS")[0]
+    grid = gwf.modelgrid
+    og_verts = pd.DataFrame(
+        og_grid.verts, columns=["x", "y"]
+    )  # .round(3).sort_values(by=["x", "y"], ignore_index=True).drop_duplicates(ignore_index=True)
+    mg_verts = pd.DataFrame(
+        grid.verts, columns=["x", "y"]
+    )  # .round(3).sort_values(by=["x", "y"], ignore_index=True).drop_duplicates(ignore_index=True)
 
-    pmv = flopy.plot.PlotMapView(gwf)
-    pmv.plot_array(head)
-    pmv.plot_grid(colors="white")
-    pmv.contour_array(head, levels=[0.2, 0.4, 0.6, 0.8], linewidths=3.0)
-    pmv.plot_vector(spdis["qx"], spdis["qy"], color="white")
-    plt.show()
+    plot_debug = False
+    if plot_debug:
+        pmv = flopy.plot.PlotMapView(gwf)
+        pmv.plot_array(head)
+        pmv.plot_grid(colors="white")
+        ax = plt.gca()
+        verts = grid.verts
+        ax.plot(verts[:, 0], verts[:, 1], "bo", alpha=0.25, ms=5)
+        pmv.contour_array(head, levels=[0.2, 0.4, 0.6, 0.8], linewidths=3.0)
+        pmv.plot_vector(spdis["qx"], spdis["qy"], color="white")
+        plt.show()
