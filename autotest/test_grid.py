@@ -541,6 +541,9 @@ def unstructured_from_gridspec_driver(example_data_path, gsf_file):
         lines = file.readlines()
         split = [line.strip().split() for line in lines]
 
+        # remove comments
+        split = [item for item in split if item[0] != "#"]
+
         # check number of nodes
         nnodes = int(split[1][0])
         assert len(grid.iverts) == nnodes
