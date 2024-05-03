@@ -583,16 +583,18 @@ def unstructured_from_gridspec_driver(example_data_path, gsf_file):
         # check elevation
         assert max(grid.top) == max([xyz[2] for xyz in expected_verts])
         assert min(grid.botm) == min([xyz[2] for xyz in expected_verts])
-    
-    
+
+
 def test_unstructured_from_gridspec(example_data_path):
     unstructured_from_gridspec_driver(example_data_path, "freyberg.usg.gsf")
 
 
 def test_unstructured_from_gridspec_comments(example_data_path):
-    unstructured_from_gridspec_driver(example_data_path, "freyberg.usg.gsf.with_comment")
+    unstructured_from_gridspec_driver(
+        example_data_path, "freyberg.usg.gsf.with_comment"
+    )
 
-    
+
 @pytest.mark.parametrize(
     "crs,expected_srs",
     (
