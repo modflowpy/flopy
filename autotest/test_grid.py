@@ -532,14 +532,17 @@ def test_unstructured_from_verts_and_iverts(
     assert g.nnodes == g.ncpl.sum() == 1090
 
 
-def test_unstructured_from_gridspec(example_data_path):
+def unstructured_from_gridspec_driver(example_data_path, gsf_file):
     model_path = example_data_path / "freyberg_usg"
-    spec_path = model_path / "freyberg.usg.gsf"
+    spec_path = model_path / gsf_file
     grid = UnstructuredGrid.from_gridspec(spec_path)
 
     with open(spec_path) as file:
         lines = file.readlines()
         split = [line.strip().split() for line in lines]
+
+        # remove comments
+        split = [item for item in split if item[0] != "#"]
 
         # check number of nodes
         nnodes = int(split[1][0])
@@ -583,6 +586,16 @@ def test_unstructured_from_gridspec(example_data_path):
         # check elevation
         assert max(grid.top) == max([xyz[2] for xyz in expected_verts])
         assert min(grid.botm) == min([xyz[2] for xyz in expected_verts])
+
+
+def test_unstructured_from_gridspec(example_data_path):
+    unstructured_from_gridspec_driver(example_data_path, "freyberg.usg.gsf")
+
+
+def test_unstructured_from_gridspec_comments(example_data_path):
+    unstructured_from_gridspec_driver(
+        example_data_path, "freyberg.usg.gsf.with_comment"
+    )
 
 
 @pytest.mark.parametrize(

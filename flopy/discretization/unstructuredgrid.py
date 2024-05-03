@@ -1019,9 +1019,13 @@ class UnstructuredGrid(Grid):
         with open(file_path) as file:
 
             def split_line():
-                return file.readline().strip().split()
+                return [
+                    head.upper() for head in file.readline().strip().split()
+                ]
 
             header = split_line()
+            while header[0][0] == "#":
+                header = split_line()
             if not (len(header) == 1 and header[0] == "UNSTRUCTURED") or (
                 len(header) == 2 and header == ["UNSTRUCTURED", "GWF"]
             ):
