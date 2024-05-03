@@ -682,10 +682,13 @@ class MFModel(PackageContainer, ModelInterface):
 
     @property
     def output(self):
+        budgetkey = None
+        if self.model_type == "gwt6":
+            budgetkey = "MASS BUDGET FOR ENTIRE MODEL"
         try:
-            return self.oc.output
+            return MF6Output(self.oc, budgetkey=budgetkey)
         except AttributeError:
-            return MF6Output(self)
+            return MF6Output(self, budgetkey=budgetkey)
 
     def export(self, f, **kwargs):
         """Method to export a model to a shapefile or netcdf file

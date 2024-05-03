@@ -23,7 +23,7 @@ class MF6Output:
 
     """
 
-    def __init__(self, obj):
+    def __init__(self, obj, budgetkey=None):
         from ..modflow import ModflowGwfoc, ModflowGwtoc, ModflowUtlobs
 
         # set initial observation definitions
@@ -39,6 +39,11 @@ class MF6Output:
         self._obj = obj
         self._methods = []
         self._sim_ws = obj.simulation_data.mfpath.get_sim_path()
+        self._budgetkey = (
+            "VOLUME BUDGET FOR ENTIRE MODEL"
+            if budgetkey is None
+            else budgetkey
+        )
         self.__budgetcsv = False
 
         if not isinstance(obj, (PackageInterface, ModelInterface)):
@@ -382,7 +387,7 @@ class MF6Output:
         if self._lst is not None:
             try:
                 list_file = os.path.join(self._sim_ws, self._lst)
-                return Mf6ListBudget(list_file)
+                return Mf6ListBudget(list_file, budgetkey=self._budgetkey)
             except (AssertionError, OSError):
                 return None
 
