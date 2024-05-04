@@ -296,6 +296,16 @@ class MfList(DataInterface, DataListInterface):
             fmt_string = "".join(fmts)
         return fmt_string
 
+    def __cast_tabular(self, data):
+        data = pd.DataFrame(data)
+        if "kper" in data.dtypes:
+            groups = data.groupby("kper")
+            data = {kper: group.drop("kper", axis=1) for kper, group in groups}
+            for kper, d in data.items():
+                self.__cast_dataframe(kper, d)
+        else:
+            self.__cast_dataframe(0, data)
+
     # Private method to cast the data argument
     # Should only be called by the constructor
     def __cast_data(self, data):
@@ -350,15 +360,18 @@ class MfList(DataInterface, DataListInterface):
                         f"{type(d)} at kper {kper}"
                     )
 
-        # A single recarray - same MfList for all stress periods
+        # A single dataframe
+        elif isinstance(data, pd.DataFrame):
+            self.__cast_tabular(data)
+
+        # A single recarray
         elif isinstance(data, np.recarray):
-            self.__cast_recarray(0, data)
+            self.__cast_tabular(data)
+
         # A single ndarray
         elif isinstance(data, np.ndarray):
             self.__cast_ndarray(0, data)
-        # A single dataframe
-        elif isinstance(data, pd.DataFrame):
-            self.__cast_dataframe(0, data)
+
         # A single filename
         elif isinstance(data, str):
             self.__cast_str(0, data)
