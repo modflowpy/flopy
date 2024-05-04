@@ -917,17 +917,12 @@ def test_bcs_check(function_tmpdir):
     ghb = ModflowGhb(mf, stress_period_data={0: [0, 0, 0, 100, 1]})
     riv_spd = pd.DataFrame(
         [[0, 0, 0, 0, 101.0, 10.0, 100.0], [0, 0, 0, 1, 80.0, 10.0, 90.0]],
-        columns=["per", "k", "i", "j", "stage", "cond", "rbot"],
+        columns=["kper", "k", "i", "j", "stage", "cond", "rbot"],
     )
 
-    pers = riv_spd.groupby("per")
-    riv_spd = {i: pers.get_group(i).drop("per", axis=1) for i in [0]}
     riv = ModflowRiv(
         mf,
-        stress_period_data=riv_spd,
-        # stress_period_data={
-        #     0: [[0, 0, 0, 101, 10, 100], [0, 0, 1, 80, 10, 90]]
-        # },
+        stress_period_data=riv_spd.to_records(index=False),
     )
     chk = ghb.check()
     assert chk.summary_array["desc"][0] == "BC in inactive cell"
