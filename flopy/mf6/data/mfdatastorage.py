@@ -2012,6 +2012,7 @@ class DataStorage:
                     self._data_type,
                     self.get_data_dimensions(layer),
                     layer,
+                    self.layered,
                     read_file,
                 )[0]
             if apply_mult and self.layer_storage[layer].factor is not None:
@@ -2470,6 +2471,7 @@ class DataStorage:
                             np_data_type,
                             self.get_data_dimensions(layer),
                             layer,
+                            self.layered,
                             read_file,
                         )[0]
                         * mult

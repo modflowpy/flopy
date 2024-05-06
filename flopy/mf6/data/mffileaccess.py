@@ -577,14 +577,17 @@ class MFFileAccessArray(MFFileAccess):
         data_type,
         data_dim,
         layer,
+        layered,
         fname=None,
         fd=None,
-        data_item=None,
     ):
         # determine line size
         line_size = None
-        if isinstance(data_dim, list):
-            line_size = data_dim[-1]
+        if layered:
+            # if the array is layered (meaning a control record for
+            # each layer), then limit line size to number of columns
+            if isinstance(data_dim, list):
+                line_size = data_dim[-1]
         # load variable data from file
         current_size = 0
         if layer is None:
@@ -894,6 +897,7 @@ class MFFileAccessArray(MFFileAccess):
                     data_type,
                     storage.get_data_dimensions(layer),
                     layer,
+                    storage.layered,
                     fd=file_handle,
                 )
             except Exception as ex:
