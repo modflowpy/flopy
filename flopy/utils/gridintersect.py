@@ -2246,13 +2246,17 @@ class ModflowGridIndices:
         """
         jpos = []
 
-        if x == arr[-1]:
+        if np.isclose(x, arr[-1]):
             return len(arr) - 2
 
-        if x < min(arr[0], arr[-1]):
-            return None
+        xmin = min(arr[0], arr[-1])
+        xmax = max(arr[0], arr[-1])
 
-        if x > max(arr[0], arr[-1]):
+        if np.isclose(x, xmin):
+            x = xmin
+        if np.isclose(x, xmax):
+            x = xmax
+        if not (xmin <= x <= xmax):
             return None
 
         # go through each position
