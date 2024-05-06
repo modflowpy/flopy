@@ -584,8 +584,8 @@ class MFFileAccessArray(MFFileAccess):
         # determine line size
         line_size = None
         if layered:
-            # if the array is layered (meaning a control record for)
-            # each layer, then limit line size to number of columns
+            # if the array is layered (meaning a control record for
+            # each layer), then limit line size to number of columns
             if isinstance(data_dim, list):
                 line_size = data_dim[-1]
         # load variable data from file
