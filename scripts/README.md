@@ -6,7 +6,6 @@ This document describes the utility scripts in this directory.
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 - [Processing benchmarks](#processing-benchmarks)
-- [Preparing for PRs](#preparing-for-prs)
 - [Running notebooks](#running-notebooks)
 - [Updating version](#updating-version)
 
@@ -28,14 +27,6 @@ Input JSON files are expected to be named according to the `pytest-benchmark` fo
 For instance, `e689af57e7439b9005749d806248897ad550eab5_20150811_041632_uncommitted-changes.json`.
 
 **Note**: the `process_benchmarks.py` script depends on `seaborn`, which is not included as a dependency in either `etc/environment.yml` or in any of the optional groups in `pyproject.toml`, since this is the only place it is used in this repository.
-
-## Preparing for PRs
-
-The `pull_request_prepare.py` script lints Python source code files by running `black` and `isort` on the `flopy` subdirectory. This script should be run before opening a pull request, as CI will fail if the code is not properly formatted. For instance, from the project root:
-
-```shell
-python scripts/pull_request_prepare.py
-```
 
 ## Running notebooks
 

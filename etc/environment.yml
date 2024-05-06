@@ -10,11 +10,8 @@ dependencies:
   - matplotlib>=1.4.0
 
   # lint
-  - black
   - cffconvert
-  - flake8
-  - isort
-  - pylint
+  - ruff
 
   # test
   - coverage
