@@ -144,21 +144,24 @@ def pytest_report_header(config):
         except metadata.PackageNotFoundError:
             items.append(f"{name} (not found)")
     lines.append("required packages: " + ", ".join(items))
-    installed = []
-    not_found = []
-    for name in extra["optional"]:
-        if name in processed:
-            continue
-        processed.add(name)
-        try:
-            version = metadata.version(name)
-            installed.append(f"{name}-{version}")
-        except metadata.PackageNotFoundError:
-            not_found.append(name)
-    if installed:
-        lines.append("optional packages: " + ", ".join(installed))
-    if not_found:
-        lines.append("optional packages not found: " + ", ".join(not_found))
+    for optional in ["optional", "test"]:
+        installed = []
+        not_found = []
+        for name in extra[optional]:
+            if name in processed:
+                continue
+            processed.add(name)
+            try:
+                version = metadata.version(name)
+                installed.append(f"{name}-{version}")
+            except metadata.PackageNotFoundError:
+                not_found.append(name)
+        if installed:
+            lines.append(f"{optional} packages: {', '.join(installed)}")
+        if not_found:
+            lines.append(
+                f"{optional} packages not found: {', '.join(not_found)}"
+            )
     return "\n".join(lines)
 
 
