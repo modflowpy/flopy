@@ -213,7 +213,9 @@ Each example should create and (attempt to) dispose of its own isolated temporar
 
 To run the tests you will need `pytest` and a few plugins, including [`pytest-xdist`](https://pytest-xdist.readthedocs.io/en/latest/), [`pytest-dotenv`](https://github.com/quiqua/pytest-dotenv), and [`pytest-benchmark`](https://pytest-benchmark.readthedocs.io/en/latest/index.html). Test dependencies are specified in the `test` extras group in `pyproject.toml` (with pip, use `pip install ".[test]"`). Test dependencies are included in the Conda environment `etc/environment`.
 
-**Note:** to prepare your code for a pull request, you will need a few more packages specified in the `lint` extras group in `pyproject.toml` (also included by default for Conda). See the docs on [submitting a pull request](CONTRIBUTING.md) for more info.
+**Note:** tests require the [`modflow-devtools`](https://github.com/MODFLOW-USGS/modflow-devtools) package, which is a grab bag of utilities and `pytest` fixtures shared by FloPy, MODFLOW 6, and other related projects. If you see testing errors that don't seem related to the contents of the tests, updating to the latest `modflow-devtools` is recommended as a first troubleshooting step.
+
+**Note:** to prepare your code for a pull request, you will need the [`ruff`](https://docs.astral.sh/ruff/) linter/formatter, which is included in the `lint` extras group in `pyproject.toml` (also included by default for Conda). See the docs on [submitting a pull request](CONTRIBUTING.md) for more info.
 
 ### Configuring tests
 
