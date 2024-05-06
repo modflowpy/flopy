@@ -855,6 +855,7 @@ def test_gridgen(function_tmpdir):
 
 
 @requires_exe("mf6", "gridgen")
+@requires_pkg("shapely", "shapefile")
 def test_flopy_issue_1492(function_tmpdir):
     """
     Submitted by David Brakenhoff in
