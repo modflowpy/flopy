@@ -19,7 +19,7 @@ class styles:
     _ws = os.path.abspath(os.path.dirname(__file__))
     _map_style = os.path.join(_ws, "mplstyle", "usgsmap.mplstyle")
     _plot_style = os.path.join(_ws, "mplstyle", "usgsplot.mplstyle")
-    if platform.system() == "linux":
+    if "linux" in platform.system().lower():
         _map_style = os.path.join(_ws, "mplstyle", "usgsmap_linux.mplstyle")
         _plot_style = os.path.join(_ws, "mplstyle", "usgsplot_linux.mplstyle")
 
