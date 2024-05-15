@@ -350,11 +350,7 @@ By default, `pytest-benchmark` will only print profiling results to `stdout`. If
 
 ### Snapshot testing
 
-Snapshot testing is a form of regression testing in which a "snapshot" of the results of some computation is verified and captured by the developer to be compared against when tests are subsequently run. This is accomplished with [`syrupy`](https://github.com/tophat/syrupy), which provides a `snapshot` fixture overriding the equality operator to allow comparison with e.g. `snapshot == result`. A few custom fixtures for snapshots of NumPy arrays are provided in `autotest/conftest.py`:
-
-- `array_snapshot`: saves an array in a binary file for compact storage, can be inspected programmatically with `np.load()`
-- `text_array_snapshot`: flattens an array and stores it in a text file, compromise between readability and disk usage
-- `readable_array_snapshot`: stores an array in a text file in its original shape, easy to inspect but largest on disk
+Snapshot testing is a form of regression testing in which a "snapshot" of the results of some computation is verified and captured by the developer to be compared against when tests are subsequently run. This is accomplished with [`syrupy`](https://github.com/tophat/syrupy) via [fixtures defined in `modflow-devtools`](https://modflow-devtools.readthedocs.io/en/latest/md/snapshots.html).
 
 By default, tests run in comparison mode. This means a newly written test using any of the snapshot fixtures will fail until a snapshot is created. Snapshots can be created/updated by running pytest with the `--snapshot-update` flag.
 
