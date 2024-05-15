@@ -19,7 +19,8 @@ dependencies:
   - filelock
   - jupyter
   - jupytext
-  - modflow-devtools
+  - pip:
+      - git+https://github.com/MODFLOW-USGS/modflow-devtools.git
   - pytest!=8.1.0
   - pytest-benchmark
   - pytest-cov
