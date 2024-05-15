@@ -19,7 +19,7 @@ jobs:
 
     defaults:
       run:
-        shell: bash
+        shell: bash -l {0}
 
     steps:
       - name: Checkout flopy repo
