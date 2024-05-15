@@ -43,6 +43,11 @@ jobs:
           init-shell: >-
             bash
             powershell
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install .
       
       - name: Workaround OpenGL issue on Linux
         if: runner.os == 'Linux'
