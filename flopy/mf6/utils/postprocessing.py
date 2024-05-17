@@ -126,7 +126,7 @@ def get_structured_faceflows(
             else:
                 # handle 2D layers/rows case
                 return 1 if ncol == 1 else 0
-        elif d == nrow * ncol:
+        elif d % (nrow * ncol) == 0:
             return 2
         else:
             return 1
