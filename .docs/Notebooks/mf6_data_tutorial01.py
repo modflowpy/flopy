@@ -47,7 +47,7 @@ import flopy
 
 temp_dir = TemporaryDirectory()
 workspace = temp_dir.name
-name = "tutorial01_mf6_data"
+name = "tutorial01"
 
 # set up simulation and basic packages
 sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=workspace)
@@ -56,7 +56,8 @@ flopy.mf6.ModflowTdis(
 )
 flopy.mf6.ModflowIms(sim)
 gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
-flopy.mf6.ModflowGwfdis(gwf, nlay=3, nrow=4, ncol=5)
+botm = [30.0, 20.0, 10.0]
+flopy.mf6.ModflowGwfdis(gwf, nlay=3, nrow=4, ncol=5, top=50.0, botm=botm)
 flopy.mf6.ModflowGwfic(gwf)
 flopy.mf6.ModflowGwfnpf(gwf, save_specific_discharge=True)
 flopy.mf6.ModflowGwfchd(

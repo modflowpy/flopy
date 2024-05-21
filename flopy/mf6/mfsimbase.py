@@ -254,7 +254,7 @@ class MFSimulationData:
         self.verify_data = True
         self.debug = False
         self.verbose = True
-        self.verbosity_level = VerbosityLevel.normal
+        self._verbosity_level = VerbosityLevel.normal
         self.max_columns_user_set = False
         self.max_columns_auto_set = False
         self.use_pandas = True
@@ -274,6 +274,17 @@ class MFSimulationData:
         # --- temporary variables ---
         # other external files referenced
         self.referenced_files = {}
+
+    @property
+    def verbosity_level(self):
+        return self._verbosity_level
+
+    @verbosity_level.setter
+    def verbosity_level(self, val):
+        if isinstance(val, VerbosityLevel):
+            self._verbosity_level = val
+        elif isinstance(val, int):
+            self._verbosity_level = VerbosityLevel(val)
 
     @property
     def lazy_io(self):
