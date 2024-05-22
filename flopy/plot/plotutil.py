@@ -2733,7 +2733,7 @@ def to_mp7_pathlines(
             ],
             dtype=MpPathlineFile.dtypes[7],
         )
-    elif all(n in data.dtypes for n in ParticleTrackFile.dtype.names):
+    elif all(n in data.dtypes for n in ParticleTrackFile._dtype.names):
         data = np.core.records.fromarrays(
             [
                 data["particleid"],
@@ -2762,7 +2762,7 @@ def to_mp7_pathlines(
             f"{pformat(MpPathlineFile.dtypes[6].names)} for MODPATH 6, or;\n"
             f"{pformat(MpPathlineFile.dtypes[7].names)} for MODPATH 7, or;\n"
             f"{pformat(PrtPathlineFile.dtypes['base'].names)} for MODFLOW 6 PRT, or;\n"
-            f"{pformat(ParticleTrackFile.dtype.names)} (minimal expected dtype names)"
+            f"{pformat(ParticleTrackFile._dtype.names)} (minimal expected dtype names)"
         )
 
     return pd.DataFrame(data) if rt == pd.DataFrame else data
@@ -2893,7 +2893,7 @@ def to_mp7_endpoints(
             ],
             dtype=MpEndpointFile.dtypes[7],
         )
-    elif all(n in data.dtypes for n in ParticleTrackFile.dtype.names):
+    elif all(n in data.dtypes for n in ParticleTrackFile._dtype.names):
         data = np.core.records.fromarrays(
             [
                 endpts["particleid"],
@@ -2933,7 +2933,7 @@ def to_mp7_endpoints(
             f"{pformat(MpEndpointFile.dtypes[6].names)} for MODPATH 6, or;\n"
             f"{pformat(MpEndpointFile.dtypes[7].names)} for MODPATH 7, or;\n"
             f"{pformat(PrtPathlineFile.dtypes['base'].names)} for MODFLOW 6 PRT, or;\n"
-            f"{pformat(ParticleTrackFile.dtype.names)} (minimal expected dtype names)"
+            f"{pformat(ParticleTrackFile._dtype.names)} (minimal expected dtype names)"
         )
 
     return pd.DataFrame(data) if rt == pd.DataFrame else data
@@ -3020,7 +3020,7 @@ def to_prt_pathlines(
         n in data.dtypes for n in PrtPathlineFile.dtypes["base"].names
     ):  # already in prt format?
         return data if rt == pd.DataFrame else data.to_records(index=False)
-    elif all(n in data.dtypes for n in ParticleTrackFile.dtype.names):
+    elif all(n in data.dtypes for n in ParticleTrackFile._dtype.names):
         data = np.core.records.fromarrays(
             [
                 np.zeros(data.shape[0]),
@@ -3053,7 +3053,7 @@ def to_prt_pathlines(
             f"{pformat(MpEndpointFile.dtypes[5].names)} for MODPATH 5 endpoints, or;\n"
             f"{pformat(MpEndpointFile.dtypes[3].names)} for MODPATH 3 endpoints, or;\n"
             f"{pformat(PrtPathlineFile.dtypes['base'].names)} for MODFLOW 6 PRT, or;\n"
-            f"{pformat(ParticleTrackFile.dtype.names)} (minimal expected dtype names)"
+            f"{pformat(ParticleTrackFile._dtype.names)} (minimal expected dtype names)"
         )
 
     if rt == pd.DataFrame:

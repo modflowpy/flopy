@@ -18,61 +18,18 @@ class PathlineFile(ParticleTrackFile):
     key_cols = ["imdl", "iprp", "irpt", "trelease"]
     """Columns making up each particle's composite key."""
 
-    dtypes = {
-        "base": np.dtype(
-            [
-                ("kper", np.int32),
-                ("kstp", np.int32),
-                ("imdl", np.int32),
-                ("iprp", np.int32),
-                ("irpt", np.int32),
-                ("ilay", np.int32),
-                ("icell", np.int32),
-                ("izone", np.int32),
-                ("istatus", np.int32),
-                ("ireason", np.int32),
-                ("trelease", np.float32),
-                ("t", np.float32),
-                ("x", np.float32),
-                ("y", np.float32),
-                ("z", np.float32),
-                ("name", np.str_),
-            ]
-        ),
-        "full": np.dtype(
-            [
-                ("kper", np.int32),
-                ("kstp", np.int32),
-                ("imdl", np.int32),
-                ("iprp", np.int32),
-                ("irpt", np.int32),
-                ("ilay", np.int32),
-                ("k", np.int32),  # conform to canonical dtype
-                ("icell", np.int32),
-                ("izone", np.int32),
-                ("idest", np.int32),  # destination zone, for convenience
-                ("dest", np.str_),  # destination name, for convenience
-                ("istatus", np.int32),
-                ("ireason", np.int32),
-                ("trelease", np.float32),
-                ("t", np.float32),
-                ("t0", np.float32),  # release time, for convenience
-                ("tt", np.float32),  # termination time, convenience
-                ("time", np.float32),  # conform to canonical dtype
-                ("x", np.float32),
-                ("y", np.float32),
-                ("z", np.float32),
-                ("particleid", np.int32),  # conform to canonical dtype
-                ("name", np.str_),
-            ]
-        ),
-    }
-    """
-    Base (directly from MODFLOW 6 PRT) and full (extended by this class) dtypes for PRT.
-    The extended dtype complies with the canonical `flopy.utils.particletrackfile.dtype`
-    and provides a few other columns for convenience, including release and termination 
-    time and destination zone number/name.
-    """
+    @property
+    def dtype(self):
+        """
+        PRT track file dtype. This is loaded dynamically from the binary header file or CSV file
+        headers. A best-effort attempt is made to add extra columns to comply with the canonical
+        `flopy.utils.particletrackfile.dtype`, as well as convenience columns, including release
+        and termination time and destination zone number and name.
+
+        Consumers of this class which expect the canonical particle track file attributes should
+        call `validate()` to make sure the attributes were successfully loaded.
+        """
+        return self._dtype
 
     def __init__(
         self,
@@ -82,14 +39,14 @@ class PathlineFile(ParticleTrackFile):
         verbose: bool = False,
     ):
         super().__init__(filename, verbose)
-        self.dtype, self._data = self._load(header_filename, destination_map)
+        self._dtype, self._data = self._load(header_filename, destination_map)
 
     def _load(
         self,
         header_filename=None,
         destination_map=None,
     ) -> np.ndarray:
-        # load dtype from header file if present, otherwise use default dtype
+        # if a header file is present, we're reading a binary file
         hdr_fname = (
             None
             if header_filename is None
@@ -103,17 +60,11 @@ class PathlineFile(ParticleTrackFile):
                     "formats": lines[1].strip().split(","),
                 }
             )
+            data = pd.DataFrame(np.fromfile(self.fname, dtype=dtype))
         else:
-            dtype = self.dtypes["base"]
-
-        # read as binary or csv
-        try:
-            data = pd.read_csv(self.fname, dtype=dtype)
-        except UnicodeDecodeError:
-            try:
-                data = pd.DataFrame(np.fromfile(self.fname, dtype=dtype))
-            except:
-                raise ValueError("Unreadable file, expected binary or CSV")
+            # otherwise we're reading a CSV file
+            data = pd.read_csv(self.fname)
+            dtype = data.to_records(index=False).dtype
 
         # add particle id column
         data = data.sort_values(self.key_cols)
@@ -134,6 +85,9 @@ class PathlineFile(ParticleTrackFile):
             .tt
         )
 
+        # add k column
+        data["k"] = data["ilay"]
+
         # assign destinations if zone map is provided
         if destination_map is not None:
             data["idest"] = data[data.istatus > 1].izone
@@ -142,7 +96,7 @@ class PathlineFile(ParticleTrackFile):
                 axis=1,
             )
 
-        return self.dtypes["full"], data
+        return data.to_records(index=False).dtype, data
 
     def intersect(
         self, cells, to_recarray=True
@@ -160,3 +114,12 @@ class PathlineFile(ParticleTrackFile):
             return sect[idxs].sort_values(by=["particleid", "time"])
         else:
             return [self.get_data(pid) for pid in pids]
+
+    @staticmethod
+    def get_track_dtype(path: Union[str, os.PathLike]):
+        """Read a numpy dtype describing particle track
+        data format from the ascii track header file."""
+
+        hdr_lns = open(path).readlines()
+        hdr_lns_spl = [[ll.strip() for ll in l.split(",")] for l in hdr_lns]
+        return np.dtype(list(zip(hdr_lns_spl[0], hdr_lns_spl[1])))

@@ -1,509 +1,412 @@
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
 
+import flopy
 from flopy.plot.plotutil import (
     to_mp7_endpoints,
     to_mp7_pathlines,
     to_prt_pathlines,
 )
-from flopy.utils.modpathfile import (
-    EndpointFile as MpEndpointFile,
-)
-from flopy.utils.modpathfile import (
-    PathlineFile as MpPathlineFile,
-)
+from flopy.utils.modpathfile import EndpointFile as MpEndpointFile
+from flopy.utils.modpathfile import PathlineFile as MpPathlineFile
 from flopy.utils.prtfile import PathlineFile as PrtPathlineFile
 
-PRT_TEST_PATHLINES = pd.DataFrame.from_records(
-    [
-        [
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            0,
-            0,
-            0,
-            0.0,
-            0.000000,
-            0.100000,
-            9.1,
-            0.5,
-            "PRP000000001",
+
+nlay = 1
+nrow = 10
+ncol = 10
+top = 1.0
+botm = [0.0]
+nper = 1
+perlen = 1.0
+nstp = 1
+tsmult = 1.0
+porosity = 0.1
+
+
+def get_partdata(grid, rpts):
+    """
+    Make a flopy.modpath.ParticleData from the given grid and release points.
+    """
+
+    if grid.grid_type == "structured":
+        return flopy.modpath.ParticleData(
+            partlocs=[grid.get_lrc(p[0])[0] for p in rpts],
+            structured=True,
+            localx=[p[1] for p in rpts],
+            localy=[p[2] for p in rpts],
+            localz=[p[3] for p in rpts],
+            timeoffset=0,
+            drape=0,
+        )
+    else:
+        return flopy.modpath.ParticleData(
+            partlocs=[p[0] for p in rpts],
+            structured=False,
+            localx=[p[1] for p in rpts],
+            localy=[p[2] for p in rpts],
+            localz=[p[3] for p in rpts],
+            timeoffset=0,
+            drape=0,
+        )
+
+
+@pytest.fixture
+def gwf_sim(function_tmpdir):
+    gwf_ws = function_tmpdir / "gwf"
+    gwf_name = "plotutil_gwf"
+
+    # create simulation
+    sim = flopy.mf6.MFSimulation(
+        sim_name=gwf_name,
+        exe_name="mf6",
+        version="mf6",
+        sim_ws=gwf_ws,
+    )
+
+    # create tdis package
+    flopy.mf6.modflow.mftdis.ModflowTdis(
+        sim,
+        pname="tdis",
+        time_units="DAYS",
+        nper=nper,
+        perioddata=[
+            (perlen, nstp, tsmult)
         ],
-        [
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            0,
-            1,
-            1,
-            0.0,
-            0.063460,
-            0.111111,
-            9.0,
-            0.5,
-            "PRP000000001",
+    )
+
+    # create gwf model
+    gwf = flopy.mf6.ModflowGwf(sim, modelname=gwf_name, save_flows=True)
+
+    # create gwf discretization
+    flopy.mf6.modflow.mfgwfdis.ModflowGwfdis(
+        gwf,
+        pname="dis",
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+    )
+
+    # create gwf initial conditions package
+    flopy.mf6.modflow.mfgwfic.ModflowGwfic(gwf, pname="ic")
+
+    # create gwf node property flow package
+    flopy.mf6.modflow.mfgwfnpf.ModflowGwfnpf(
+        gwf,
+        pname="npf",
+        save_saturation=True,
+        save_specific_discharge=True,
+    )
+
+    # create gwf chd package
+    spd = {
+        0: [[(0, 0, 0), 1.0, 1.0], [(0, 9, 9), 0.0, 0.0]],
+        1: [[(0, 0, 0), 0.0, 0.0], [(0, 9, 9), 1.0, 2.0]],
+    }
+    chd = flopy.mf6.ModflowGwfchd(
+        gwf,
+        pname="CHD-1",
+        stress_period_data=spd,
+        auxiliary=["concentration"],
+    )
+
+    # create gwf output control package
+    # output file names
+    gwf_budget_file = f"{gwf_name}.bud"
+    gwf_head_file = f"{gwf_name}.hds"
+    oc = flopy.mf6.ModflowGwfoc(
+        gwf,
+        budget_filerecord=gwf_budget_file,
+        head_filerecord=gwf_head_file,
+        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    )
+
+    # create iterative model solution for gwf model
+    ims = flopy.mf6.ModflowIms(sim)
+
+    return sim
+
+
+@pytest.fixture
+def mp7_sim(gwf_sim, function_tmpdir):
+    gwf = gwf_sim.get_model()
+    mp7_ws = function_tmpdir / "mp7"
+    releasepts_mp7 = [
+        # node number, localx, localy, localz
+        (0, float(f"0.{i + 1}"), float(f"0.{i + 1}"), 0.5)
+        for i in range(9)
+    ]
+
+    partdata = get_partdata(gwf.modelgrid, releasepts_mp7)
+    mp7_name = "plotutil_mp7"
+    pg = flopy.modpath.ParticleGroup(
+        particlegroupname="G1",
+        particledata=partdata,
+        filename=f"{mp7_name}.sloc",
+    )
+    mp = flopy.modpath.Modpath7(
+        modelname=mp7_name,
+        flowmodel=gwf,
+        exe_name="mp7",
+        model_ws=mp7_ws,
+        headfilename=f"{gwf.name}.hds",
+        budgetfilename=f"{gwf.name}.bud",
+    )
+    mpbas = flopy.modpath.Modpath7Bas(
+        mp,
+        porosity=porosity,
+    )
+    mpsim = flopy.modpath.Modpath7Sim(
+        mp,
+        simulationtype="pathline",
+        trackingdirection="forward",
+        budgetoutputoption="summary",
+        stoptimeoption="extend",
+        particlegroups=[pg],
+    )
+
+    return mp
+
+
+@pytest.fixture
+def prt_sim(function_tmpdir):
+    gwf_ws = function_tmpdir / "gwf"
+    prt_ws = function_tmpdir / "prt"
+    prt_name = "plotutil_prt"
+    gwf_name = "plotutil_gwf"
+    releasepts_prt = [
+        # particle index, k, i, j, x, y, z
+        [i, 0, 0, 0, float(f"0.{i + 1}"), float(f"9.{i + 1}"), 0.5]
+        for i in range(9)
+    ]
+
+    # create simulation
+    sim = flopy.mf6.MFSimulation(
+        sim_name=prt_name,
+        exe_name="mf6",
+        version="mf6",
+        sim_ws=prt_ws,
+    )
+
+    # create tdis package
+    flopy.mf6.modflow.mftdis.ModflowTdis(
+        sim,
+        pname="tdis",
+        time_units="DAYS",
+        nper=nper,
+        perioddata=[
+            (
+                perlen,
+                nstp,
+                tsmult,
+            )
         ],
-        [
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            11,
-            0,
-            1,
-            1,
-            0.0,
-            0.830431,
-            0.184020,
-            8.0,
-            0.5,
-            "PRP000000001",
+    )
+
+    # create prt model
+    prt = flopy.mf6.ModflowPrt(sim, modelname=prt_name, save_flows=True)
+
+    # create prt discretization
+    flopy.mf6.modflow.mfgwfdis.ModflowGwfdis(
+        prt,
+        pname="dis",
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+    )
+
+    # create mip package
+    flopy.mf6.ModflowPrtmip(
+        prt, pname="mip", porosity=porosity
+    )
+
+    # create prp package
+    prp_track_file = f"{prt_name}.prp.trk"
+    prp_track_csv_file = f"{prt_name}.prp.trk.csv"
+    flopy.mf6.ModflowPrtprp(
+        prt,
+        pname="prp1",
+        filename=f"{prt_name}_1.prp",
+        nreleasepts=len(releasepts_prt),
+        packagedata=releasepts_prt,
+        perioddata={0: ["FIRST"]},
+        track_filerecord=[prp_track_file],
+        trackcsv_filerecord=[prp_track_csv_file],
+        stop_at_weak_sink="saws" in prt_name,
+        boundnames=True,
+        exit_solve_tolerance=1e-5,
+    )
+
+    # create output control package
+    prt_budget_file = f"{prt_name}.bud"
+    prt_track_file = f"{prt_name}.trk"
+    prt_track_csv_file = f"{prt_name}.trk.csv"
+    flopy.mf6.ModflowPrtoc(
+        prt,
+        pname="oc",
+        budget_filerecord=[prt_budget_file],
+        track_filerecord=[prt_track_file],
+        trackcsv_filerecord=[prt_track_csv_file],
+        saverecord=[("BUDGET", "ALL")],
+    )
+
+    # create the flow model interface
+    gwf_budget_file = gwf_ws / f"{gwf_name}.bud"
+    gwf_head_file = gwf_ws / f"{gwf_name}.hds"
+    flopy.mf6.ModflowPrtfmi(
+        prt,
+        packagedata=[
+            ("GWFHEAD", gwf_head_file),
+            ("GWFBUDGET", gwf_budget_file),
         ],
-        [
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            21,
-            0,
-            1,
-            1,
-            0.0,
-            2.026390,
-            0.267596,
-            7.0,
-            0.5,
-            "PRP000000001",
-        ],
-        [
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            31,
-            0,
-            1,
-            1,
-            0.0,
-            3.704265,
-            0.360604,
-            6.0,
-            0.5,
-            "PRP000000001",
-        ],
-        [
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            60,
-            0,
-            1,
-            1,
-            0.0,
-            39.087992,
-            9.639587,
-            4.0,
-            0.5,
-            "PRP000000001",
-        ],
-        [
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            70,
-            0,
-            1,
-            1,
-            0.0,
-            40.765791,
-            9.732597,
-            3.0,
-            0.5,
-            "PRP000000001",
-        ],
-        [
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            80,
-            0,
-            1,
-            1,
-            0.0,
-            41.961755,
-            9.816110,
-            2.0,
-            0.5,
-            "PRP000000001",
-        ],
-        [
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            90,
-            0,
-            1,
-            1,
-            0.0,
-            42.728752,
-            9.888968,
-            1.0,
-            0.5,
-            "PRP000000001",
-        ],
-        [
-            1,  # kper
-            1,  # kstp
-            1,  # imdl
-            1,  # iprp
-            1,  # irpt
-            1,  # ilay
-            100,  # icell
-            0,  # izone
-            5,  # istatus
-            3,  # ireason
-            0.0,  # trelease
-            42.728752,  # t
-            9.888968,  # x
-            1.0,  # y
-            0.5,  # z
-            "PRP000000001",  # name
-        ],
-    ],
-    columns=PrtPathlineFile.dtypes["base"].names,
-)
-MP7_TEST_PATHLINES = pd.DataFrame.from_records(
-    [
-        [
-            1,  # particleid
-            1,  # particlegroup
-            1,  # sequencenumber
-            1,  # particleidloc
-            0.0,  # time
-            1.0,  # x
-            2.0,  # y
-            3.0,  # z
-            1,  # k
-            1,  # node
-            0.1,  # xloc
-            0.1,  # yloc
-            0.1,  # zloc
-            1,  # stressperiod
-            1,  # timestep
-        ],
-        [
-            1,
-            1,
-            1,
-            1,
-            1.0,  # time
-            2.0,  # x
-            3.0,  # y
-            4.0,  # z
-            2,  # k
-            2,  # node
-            0.9,  # xloc
-            0.9,  # yloc
-            0.9,  # zloc
-            1,  # stressperiod
-            1,  # timestep
-        ],
-    ],
-    columns=MpPathlineFile.dtypes[7].names,
-)
-MP7_TEST_ENDPOINTS = pd.DataFrame.from_records(
-    [
-        [
-            1,  # particleid
-            1,  # particlegroup
-            1,  # particleidloc
-            2,  # status (terminated at boundary face)
-            0.0,  # time0
-            1.0,  # time
-            1,  # node0
-            1,  # k0
-            0.1,  # xloc0
-            0.1,  # yloc0
-            0.1,  # zloc0
-            0.0,  # x0
-            1.0,  # y0
-            2.0,  # z0
-            1,  # zone0
-            1,  # initialcellface
-            5,  # node
-            2,  # k
-            0.9,  # xloc
-            0.9,  # yloc
-            0.9,  # zloc
-            10.0,  # x
-            11.0,  # y
-            12.0,  # z
-            2,  # zone
-            2,  # cellface
-        ],
-        [
-            2,  # particleid
-            1,  # particlegroup
-            2,  # particleidloc
-            2,  # status (terminated at boundary face)
-            0.0,  # time0
-            2.0,  # time
-            1,  # node0
-            1,  # k0
-            0.1,  # xloc0
-            0.1,  # yloc0
-            0.1,  # zloc0
-            0.0,  # x0
-            1.0,  # y0
-            2.0,  # z0
-            1,  # zone0
-            1,  # initialcellface
-            5,  # node
-            2,  # k
-            0.9,  # xloc
-            0.9,  # yloc
-            0.9,  # zloc
-            10.0,  # x
-            11.0,  # y
-            12.0,  # z
-            2,  # zone
-            2,  # cellface
-        ],
-        [
-            3,  # particleid
-            1,  # particlegroup
-            3,  # particleidloc
-            2,  # status (terminated at boundary face)
-            0.0,  # time0
-            3.0,  # time
-            1,  # node0
-            1,  # k0
-            0.1,  # xloc0
-            0.1,  # yloc0
-            0.1,  # zloc0
-            0.0,  # x0
-            1.0,  # y0
-            2.0,  # z0
-            1,  # zone0
-            1,  # initialcellface
-            5,  # node
-            2,  # k
-            0.9,  # xloc
-            0.9,  # yloc
-            0.9,  # zloc
-            10.0,  # x
-            11.0,  # y
-            12.0,  # z
-            2,  # zone
-            2,  # cellface
-        ],
-    ],
-    columns=MpEndpointFile.dtypes[7].names,
-)
+    )
+
+    # add explicit model solution
+    ems = flopy.mf6.ModflowEms(
+        sim,
+        pname="ems",
+        filename=f"{prt_name}.ems",
+    )
+    sim.register_solution_package(ems, [prt.name])
+
+    return sim
 
 
 @pytest.mark.parametrize("dataframe", [True, False])
-@pytest.mark.parametrize("source", ["prt"])  # , "mp3", "mp5", "mp6"])
-def test_to_mp7_pathlines(dataframe, source):
-    if source == "prt":
-        pls = (
-            PRT_TEST_PATHLINES
-            if dataframe
-            else PRT_TEST_PATHLINES.to_records(index=False)
-        )
-    elif source == "mp3":
-        pass
-    elif source == "mp5":
-        pass
-    elif source == "mp7":
-        pass
-    mp7_pls = to_mp7_pathlines(pls)
+def test_to_mp7_pathlines(prt_sim, dataframe):
+    prt_pls = pd.read_csv(prt_sim.sim_path / f"{prt_sim.name}.trk.csv")
+    mp7_pls = to_mp7_pathlines(prt_pls)
+
     assert (
-        type(pls)
+        type(prt_pls)
         == type(mp7_pls)
         == (pd.DataFrame if dataframe else np.recarray)
     )
-    assert len(mp7_pls) == 10
     assert set(
         dict(mp7_pls.dtypes).keys() if dataframe else mp7_pls.dtype.names
     ) == set(MpPathlineFile.dtypes[7].names)
 
 
 @pytest.mark.parametrize("dataframe", [True, False])
-@pytest.mark.parametrize("source", ["prt"])  # , "mp3", "mp5", "mp6"])
-def test_to_mp7_pathlines_empty(dataframe, source):
-    if source == "prt":
-        pls = to_mp7_pathlines(
-            pd.DataFrame.from_records(
-                [], columns=PrtPathlineFile.dtypes["base"].names
-            )
-            if dataframe
-            else np.recarray((0,), dtype=PrtPathlineFile.dtypes["base"])
+def test_to_mp7_pathlines_empty(dataframe):
+    prt_pls = (
+        pd.DataFrame.from_records(
+            [], columns=PrtPathlineFile.dtype.names
         )
-    elif source == "mp3":
-        pass
-    elif source == "mp5":
-        pass
-    elif source == "mp7":
-        pass
-    assert pls.empty if dataframe else pls.size == 0
+        if dataframe
+        else np.recarray((0,), dtype=PrtPathlineFile.dtype)
+    )
+    mp7_pls = to_mp7_pathlines(prt_pls)
+
+    assert prt_pls.empty if dataframe else prt_pls.size == 0
     if dataframe:
-        pls = pls.to_records(index=False)
-    assert pls.dtype == MpPathlineFile.dtypes[7]
+        mp7_pls = mp7_pls.to_records(index=False)
+    assert mp7_pls.dtype == MpPathlineFile.dtypes[7]
 
 
 @pytest.mark.parametrize("dataframe", [True, False])
-def test_to_mp7_pathlines_noop(dataframe):
-    pls = (
-        MP7_TEST_PATHLINES
-        if dataframe
-        else MP7_TEST_PATHLINES.to_records(index=False)
+def test_to_mp7_pathlines_noop(mp7_sim, dataframe):
+    plf = flopy.utils.PathlineFile(Path(mp7_sim.model_ws) / f"{mp7_sim.name}.mppth")
+    og_pls = pd.DataFrame(
+        plf.get_destination_pathline_data(range(mp7_sim.modelgrid.nnodes), to_recarray=True)
     )
-    mp7_pls = to_mp7_pathlines(pls)
+    mp7_pls = to_mp7_pathlines(og_pls)
+
     assert (
-        type(pls)
+        type(mp7_pls)
         == type(mp7_pls)
         == (pd.DataFrame if dataframe else np.recarray)
     )
-    assert len(mp7_pls) == 2
     assert set(
         dict(mp7_pls.dtypes).keys() if dataframe else mp7_pls.dtype.names
     ) == set(MpPathlineFile.dtypes[7].names)
     assert np.array_equal(
-        mp7_pls if dataframe else pd.DataFrame(mp7_pls), MP7_TEST_PATHLINES
+        mp7_pls if dataframe else pd.DataFrame(mp7_pls), og_pls
     )
 
 
 @pytest.mark.parametrize("dataframe", [True, False])
-@pytest.mark.parametrize("source", ["prt"])  # , "mp3", "mp5", "mp6"])
-def test_to_mp7_endpoints(dataframe, source):
-    if source == "prt":
-        eps = to_mp7_endpoints(
-            PRT_TEST_PATHLINES
-            if dataframe
-            else PRT_TEST_PATHLINES.to_records(index=False)
-        )
-    elif source == "mp3":
-        pass
-    elif source == "mp5":
-        pass
-    elif source == "mp6":
-        pass
-    assert len(eps) == 1
-    assert np.isclose(eps.time[0], PRT_TEST_PATHLINES.t.max())
+def test_to_mp7_endpoints(prt_sim, dataframe):
+    prt_pls = pd.read_csv(prt_sim.sim_path / f"{prt_sim.name}.trk.csv")
+    prt_eps = prt_pls[prt_pls.ireason == 3]
+    mp7_eps = to_mp7_endpoints(mp7_eps)
+    
+    assert np.isclose(mp7_eps.time[0], prt_eps.t.max())
     assert set(
-        dict(eps.dtypes).keys() if dataframe else eps.dtype.names
+        dict(mp7_eps.dtypes).keys() if dataframe else mp7_eps.dtype.names
     ) == set(MpEndpointFile.dtypes[7].names)
 
 
 @pytest.mark.parametrize("dataframe", [True, False])
-@pytest.mark.parametrize("source", ["prt"])  # , "mp3", "mp5", "mp6"])
-def test_to_mp7_endpoints_empty(dataframe, source):
-    eps = to_mp7_endpoints(
+def test_to_mp7_endpoints_empty(dataframe):
+    mp7_eps = to_mp7_endpoints(
         pd.DataFrame.from_records(
-            [], columns=PrtPathlineFile.dtypes["base"].names
+            [], columns=PrtPathlineFile.dtype.names
         )
         if dataframe
-        else np.recarray((0,), dtype=PrtPathlineFile.dtypes["base"])
+        else np.recarray((0,), dtype=PrtPathlineFile.dtype)
     )
-    assert eps.empty if dataframe else eps.size == 0
+
+    assert mp7_eps.empty if dataframe else mp7_eps.size == 0
     if dataframe:
-        eps = eps.to_records(index=False)
-    assert eps.dtype == MpEndpointFile.dtypes[7]
+        mp7_eps = mp7_eps.to_records(index=False)
+    assert mp7_eps.dtype == MpEndpointFile.dtypes[7]
 
 
 @pytest.mark.parametrize("dataframe", [True, False])
-def test_to_mp7_endpoints_noop(dataframe):
+def test_to_mp7_endpoints_noop(mp7_sim, dataframe):
     """Test a recarray or dataframe which already contains MP7 endpoint data"""
-    eps = to_mp7_endpoints(
-        MP7_TEST_ENDPOINTS
-        if dataframe
-        else MP7_TEST_ENDPOINTS.to_records(index=False)
+    epf = flopy.utils.EndpointFile(Path(mp7_sim.model_ws) / f"{mp7_sim.name}.mpend")
+    og_eps = pd.DataFrame(
+        epf.get_destination_endpoint_data(range(mp7_sim.modelgrid.nnodes), to_recarray=True)
     )
+    mp7_eps = to_mp7_endpoints(og_eps)
+
     assert np.array_equal(
-        eps if dataframe else pd.DataFrame(eps), MP7_TEST_ENDPOINTS
+        mp7_eps if dataframe else pd.DataFrame(mp7_eps), og_eps
     )
 
 
 @pytest.mark.parametrize("dataframe", [True, False])
-@pytest.mark.parametrize("source", ["prt"])  # , "mp3", "mp5", "mp6"])
-def test_to_prt_pathlines_roundtrip(dataframe, source):
-    if source == "prt":
-        pls = to_mp7_pathlines(
-            PRT_TEST_PATHLINES
-            if dataframe
-            else PRT_TEST_PATHLINES.to_records(index=False)
-        )
-    elif source == "mp3":
-        pass
-    elif source == "mp5":
-        pass
-    elif source == "mp6":
-        pass
-    prt_pls = to_prt_pathlines(pls)
+def test_to_prt_pathlines_roundtrip(prt_sim, dataframe):
+    og_pls = pd.read_csv(prt_sim.sim_path / f"{prt_sim.name}.trk.csv")
+    mp7_pls = to_mp7_pathlines(
+        og_pls
+        if dataframe
+        else og_pls.to_records(index=False)
+    )
+    prt_pls = to_prt_pathlines(mp7_pls)
+
     if not dataframe:
         prt_pls = pd.DataFrame(prt_pls)
-    # import pdb; pdb.set_trace()
     assert np.allclose(
-        PRT_TEST_PATHLINES.drop(
-            ["imdl", "iprp", "irpt", "name", "istatus", "ireason"],
-            axis=1,
-        ),
         prt_pls.drop(
             ["imdl", "iprp", "irpt", "name", "istatus", "ireason"],
             axis=1,
         ),
+        og_pls.drop(
+            ["imdl", "iprp", "irpt", "name", "istatus", "ireason"],
+            axis=1,
+        ),
     )
 
 
 @pytest.mark.parametrize("dataframe", [True, False])
-@pytest.mark.parametrize("source", ["prt"])  # , "mp3", "mp5", "mp6"])
-def test_to_prt_pathlines_roundtrip_empty(dataframe, source):
-    if source == "prt":
-        pls = to_mp7_pathlines(
-            pd.DataFrame.from_records(
-                [], columns=PrtPathlineFile.dtypes["base"].names
-            )
-            if dataframe
-            else np.recarray((0,), dtype=PrtPathlineFile.dtypes["base"])
+def test_to_prt_pathlines_roundtrip_empty(dataframe):
+    og_pls = to_mp7_pathlines(
+        pd.DataFrame.from_records(
+            [], columns=PrtPathlineFile.dtype.names
         )
-    elif source == "mp3":
-        pass
-    elif source == "mp5":
-        pass
-    elif source == "mp6":
-        pass
-    prt_pls = to_prt_pathlines(pls)
-    assert pls.empty if dataframe else pls.size == 0
-    assert prt_pls.empty if dataframe else pls.size == 0
+        if dataframe
+        else np.recarray((0,), dtype=PrtPathlineFile.dtype)
+    )
+    prt_pls = to_prt_pathlines(og_pls)
+
+    assert og_pls.empty if dataframe else og_pls.size == 0
+    assert prt_pls.empty if dataframe else og_pls.size == 0
     assert set(
-        dict(pls.dtypes).keys() if dataframe else pls.dtype.names
+        dict(og_pls.dtypes).keys() if dataframe else og_pls.dtype.names
     ) == set(MpPathlineFile.dtypes[7].names)

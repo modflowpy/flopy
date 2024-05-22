@@ -4,11 +4,13 @@ Utilities for parsing particle tracking output files.
 
 import os
 from abc import ABC, abstractmethod
+from collections import OrderedDict
 from pathlib import Path
 from typing import Union
 
 import numpy as np
 from numpy.lib.recfunctions import stack_arrays
+import pandas as pd
 
 MIN_PARTICLE_TRACK_DTYPE = np.dtype(
     [
@@ -27,10 +29,6 @@ class ParticleTrackFile(ABC):
     Abstract base class for particle track output files. Exposes a unified API
     supporting MODPATH versions 3, 5, 6 and 7, as well as MODFLOW 6 PRT models.
 
-    Notes
-    -----
-
-
     Parameters
     ----------
     filename : str or PathLike
@@ -40,16 +38,19 @@ class ParticleTrackFile(ABC):
 
     """
 
-    dtype = MIN_PARTICLE_TRACK_DTYPE
-    """
-    Minimal data shared by all particle track file formats.
-    """
-
     # legacy, todo: deprecate
     outdtype = MIN_PARTICLE_TRACK_DTYPE
     """
     Minimal data shared by all particle track file formats.
     """
+
+    @property
+    @abstractmethod
+    def dtype(self):
+        """
+        Particle track file data dtype.
+        """
+        return MIN_PARTICLE_TRACK_DTYPE
 
     def __init__(
         self,
@@ -334,3 +335,16 @@ class ParticleTrackFile(ABC):
 
         # write the final recarray to a shapefile
         recarray2shp(sdata, geoms, shpname=shpname, crs=crs, **kwargs)
+
+    def validate(self):
+        dtype = self.dtype
+        expected = OrderedDict(MIN_PARTICLE_TRACK_DTYPE.fields.items())
+        if isinstance(dtype, dict):
+            for dt in dtype.values():
+                self.validate(dt)
+        elif isinstance(dtype, pd.Series):
+            subset = OrderedDict({k: v for k, v in dtype.to_dict().items() if k in MIN_PARTICLE_TRACK_DTYPE.names})
+            assert subset == expected
+        elif isinstance(dtype, np.dtypes.VoidDType):
+            subset = OrderedDict({k: v for k, v in dtype.fields.items() if k in MIN_PARTICLE_TRACK_DTYPE.names})
+            assert subset == expected
