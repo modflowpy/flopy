@@ -312,6 +312,7 @@ type keyword
 tagged true
 reader urword
 optional true
+deprecated 6.5.0
 longname activate seepage
 description keyword specifying that groundwater discharge (GWSEEP) to land surface will be simulated. Groundwater discharge is nonzero when groundwater head is greater than land surface.  This option is no longer recommended; a better approach is to use the Drain Package with discharge scaling as a way to handle seepage to land surface.  The Drain Package with discharge scaling is described in Chapter 3 of the Supplemental Technical Information. 
 

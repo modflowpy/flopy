@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on April 19, 2024 19:08:53 UTC
+# FILE created on May 23, 2024 14:30:07 UTC
 import os
 from typing import Union
 
@@ -68,7 +68,8 @@ class MFSimulation(mfsimbase.MFSimulationBase):
           in the solution group, then MXITER must be 1.
     solutiongroup : [slntype, slnfname, slnmnames]
         * slntype (string) is the type of solution. The Integrated Model
-          Solution (IMS6) is the only supported option in this version.
+          Solution (IMS6) and Explicit Model Solution (EMS6) are the only
+          supported options in this version.
         * slnfname (string) name of file containing solution input.
         * slnmnames (string) is the array of model names to add to this
           solution. The number of model names is determined by the number of

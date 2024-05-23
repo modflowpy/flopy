@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on February 07, 2024 20:16:08 UTC
+# FILE created on May 23, 2024 14:30:07 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator
 
@@ -17,6 +17,9 @@ class ModflowGwfic(mfpackage.MFPackage):
     loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
+    export_array_ascii : boolean
+        * export_array_ascii (boolean) keyword that specifies input griddata
+          arrays should be written to layered ascii output files.
     strt : [double]
         * strt (double) is the initial (starting) head---that is, head at the
           beginning of the GWF Model simulation. STRT must be specified for all
@@ -49,6 +52,14 @@ class ModflowGwfic(mfpackage.MFPackage):
             "header",
         ],
         [
+            "block options",
+            "name export_array_ascii",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_ascii",
+        ],
+        [
             "block griddata",
             "name strt",
             "type double precision",
@@ -63,6 +74,7 @@ class ModflowGwfic(mfpackage.MFPackage):
         self,
         model,
         loading_package=False,
+        export_array_ascii=None,
         strt=1.0,
         filename=None,
         pname=None,
@@ -73,5 +85,8 @@ class ModflowGwfic(mfpackage.MFPackage):
         )
 
         # set up variables
+        self.export_array_ascii = self.build_mfdata(
+            "export_array_ascii", export_array_ascii
+        )
         self.strt = self.build_mfdata("strt", strt)
         self._init_complete = True

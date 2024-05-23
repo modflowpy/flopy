@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on February 07, 2024 20:16:08 UTC
+# FILE created on May 23, 2024 14:30:07 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -20,7 +20,11 @@ class ModflowUtlspca(mfpackage.MFPackage):
     readasarrays : boolean
         * readasarrays (boolean) indicates that array-based input will be used
           for the SPC Package. This keyword must be specified to use array-
-          based input.
+          based input. When READASARRAYS is specified, values must be provided
+          for every cell within a model layer, even those cells that have an
+          IDOMAIN value less than one. Values assigned to cells with IDOMAIN
+          values less than one are not used and have no effect on simulation
+          results.
     print_input : boolean
         * print_input (boolean) keyword to indicate that the list of spc
           information will be written to the listing file immediately after it

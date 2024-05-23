@@ -1,0 +1,438 @@
+# --------------------- gwe uze options ---------------------
+# flopy multi-package
+
+block options
+name flow_package_name
+type string
+shape
+reader urword
+optional true
+longname keyword to specify name of corresponding flow package
+description keyword to specify the name of the corresponding flow package.  If not specified, then the corresponding flow package must have the same name as this advanced transport package (the name associated with this package in the GWE name file).
+
+block options
+name auxiliary
+type string
+shape (naux)
+reader urword
+optional true
+longname keyword to specify aux variables
+description REPLACE auxnames {'{#1}': 'Groundwater Energy Transport'}
+
+block options
+name flow_package_auxiliary_name
+type string
+shape
+reader urword
+optional true
+longname keyword to specify name of concentration auxiliary variable in flow package
+description keyword to specify the name of an auxiliary variable in the corresponding flow package.  If specified, then the simulated concentrations from this advanced transport package will be copied into the auxiliary variable specified with this name.  Note that the flow package must have an auxiliary variable with this name or the program will terminate with an error.  If the flows for this advanced transport package are read from a file, then this option will have no effect.
+
+block options
+name boundnames
+type keyword
+shape
+reader urword
+optional true
+longname
+description REPLACE boundnames {'{#1}': 'unsaturated zone flow'}
+
+block options
+name print_input
+type keyword
+reader urword
+optional true
+longname print input to listing file
+description REPLACE print_input {'{#1}': 'unsaturated zone flow'}
+
+block options
+name print_temperature
+type keyword
+reader urword
+optional true
+longname print calculated temperatures to listing file
+description REPLACE print_temperature {'{#1}': 'UZF cell', '{#2}': 'temperatures', '{#3}': 'TEMPERATURE'}
+
+block options
+name print_flows
+type keyword
+reader urword
+optional true
+longname print calculated flows to listing file
+description REPLACE print_flows {'{#1}': 'unsaturated zone'}
+
+block options
+name save_flows
+type keyword
+reader urword
+optional true
+longname save UZE cell flows to budget file
+description REPLACE save_flows {'{#1}': 'unsaturated zone'}
+
+block options
+name temperature_filerecord
+type record temperature fileout tempfile
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name temperature
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname stage keyword
+description keyword to specify that record corresponds to temperature.
+
+block options
+name tempfile
+type string
+preserve_case true
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname file keyword
+description name of the binary output file to write temperature information.
+
+block options
+name budget_filerecord
+type record budget fileout budgetfile
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name budget
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname budget keyword
+description keyword to specify that record corresponds to the budget.
+
+block options
+name fileout
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an output filename is expected next.
+
+block options
+name budgetfile
+type string
+preserve_case true
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname file keyword
+description name of the binary output file to write budget information.
+
+block options
+name budgetcsv_filerecord
+type record budgetcsv fileout budgetcsvfile
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name budgetcsv
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname budget keyword
+description keyword to specify that record corresponds to the budget CSV.
+
+block options
+name budgetcsvfile
+type string
+preserve_case true
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname file keyword
+description name of the comma-separated value (CSV) output file to write budget summary information.  A budget summary record will be written to this file for each time step of the simulation.
+
+block options
+name ts_filerecord
+type record ts6 filein ts6_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name ts6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname head keyword
+description keyword to specify that record corresponds to a time-series file.
+
+block options
+name filein
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an input filename is expected next.
+
+block options
+name ts6_filename
+type string
+preserve_case true
+in_record true
+reader urword
+optional false
+tagged false
+longname file name of time series information
+description REPLACE timeseriesfile {}
+
+block options
+name obs_filerecord
+type record obs6 filein obs6_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name obs6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname obs keyword
+description keyword to specify that record corresponds to an observations file.
+
+block options
+name obs6_filename
+type string
+preserve_case true
+in_record true
+tagged false
+reader urword
+optional false
+longname obs6 input filename
+description REPLACE obs6_filename {'{#1}': 'UZE'}
+
+
+# --------------------- gwe uze packagedata ---------------------
+
+block packagedata
+name packagedata
+type recarray uzfno strt aux boundname
+shape (maxbound)
+reader urword
+longname
+description
+
+block packagedata
+name uzfno
+type integer
+shape
+tagged false
+in_record true
+reader urword
+longname UZF cell number for this entry
+description integer value that defines the UZF cell number associated with the specified PACKAGEDATA data on the line. UZFNO must be greater than zero and less than or equal to NUZFCELLS. Unsaturated zone flow information must be specified for every UZF cell or the program will terminate with an error.  The program also will terminate with an error if information for a UZF cell is specified more than once.
+numeric_index true
+
+block packagedata
+name strt
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+longname starting UZF cell temperature
+description real value that defines the starting temperature for the unsaturated zone flow cell.
+
+block packagedata
+name aux
+type double precision
+in_record true
+tagged false
+shape (naux)
+reader urword
+time_series true
+optional true
+longname auxiliary variables
+description REPLACE aux {'{#1}': 'unsaturated zone flow'}
+
+block packagedata
+name boundname
+type string
+shape
+tagged false
+in_record true
+reader urword
+optional true
+longname UZF cell name
+description REPLACE boundname {'{#1}': 'unsaturated zone flow'}
+
+
+# --------------------- gwe uze period ---------------------
+
+block period
+name iper
+type integer
+block_variable True
+in_record true
+tagged false
+shape
+valid
+reader urword
+optional false
+longname stress period number
+description REPLACE iper {}
+
+block period
+name uzeperioddata
+type recarray uzfno uzesetting
+shape
+reader urword
+longname
+description
+
+block period
+name uzfno
+type integer
+shape
+tagged false
+in_record true
+reader urword
+longname unsaturated zone flow cell number for this entry
+description integer value that defines the UZF cell number associated with the specified PERIOD data on the line. UZFNO must be greater than zero and less than or equal to NUZFCELLS.
+numeric_index true
+
+block period
+name uzesetting
+type keystring status temperature infiltration uzet auxiliaryrecord
+shape
+tagged false
+in_record true
+reader urword
+longname
+description line of information that is parsed into a keyword and values.  Keyword values that can be used to start the UZESETTING string include: STATUS, TEMPERATURE, INFILTRATION, UZET, and AUXILIARY.  These settings are used to assign the temperature associated with the corresponding flow terms.  Temperatures cannot be specified for all flow terms.
+
+block period
+name status
+type string
+shape
+tagged true
+in_record true
+reader urword
+longname unsaturated zone flow cell temperature status
+description keyword option to define UZF cell status.  STATUS can be ACTIVE, INACTIVE, or CONSTANT. By default, STATUS is ACTIVE, which means that temperature will be calculated for the UZF cell.  If a UZF cell is inactive, then there will be no energy fluxes into or out of the UZF cell and the inactive value will be written for the UZF cell temperature.  If a UZF cell is constant, then the temperature for the UZF cell will be fixed at the user specified value.
+
+block period
+name temperature
+type string
+shape
+tagged true
+in_record true
+time_series true
+reader urword
+longname unsaturated zone flow cell temperature
+description real or character value that defines the temperature for the unsaturated zone flow cell. The specified TEMPERATURE is only applied if the unsaturated zone flow cell is a constant temperature cell. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+
+block period
+name infiltration
+type string
+shape
+tagged true
+in_record true
+reader urword
+time_series true
+longname infiltration temperature
+description real or character value that defines the temperature of the infiltration $(^\circ C)$ for the UZF cell. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+
+block period
+name uzet
+type string
+shape
+tagged true
+in_record true
+reader urword
+time_series true
+longname unsaturated zone et temperature
+description real or character value that states what fraction of the simulated unsaturated zone evapotranspiration is associated with evaporation.  The evaporative losses from the unsaturated zone moisture content will have an evaporative cooling effect on the GWE cell from which the evaporation originated. If this value is larger than 1, then it will be reset to 1.  If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+
+block period
+name auxiliaryrecord
+type record auxiliary auxname auxval
+shape
+tagged
+in_record true
+reader urword
+longname
+description
+
+block period
+name auxiliary
+type keyword
+shape
+in_record true
+reader urword
+longname
+description keyword for specifying auxiliary variable.
+
+block period
+name auxname
+type string
+shape
+tagged false
+in_record true
+reader urword
+longname
+description name for the auxiliary variable to be assigned AUXVAL.  AUXNAME must match one of the auxiliary variable names defined in the OPTIONS block. If AUXNAME does not match one of the auxiliary variable names defined in the OPTIONS block the data are ignored.
+
+block period
+name auxval
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+time_series true
+longname auxiliary variable value
+description value for the auxiliary variable. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.

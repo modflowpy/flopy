@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on February 07, 2024 20:16:08 UTC
+# FILE created on May 23, 2024 14:30:07 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -44,7 +44,7 @@ class ModflowUtlats(mfpackage.MFPackage):
           the maximum number of outer iterations (OUTER_MAXIMUM) and
           ATS_OUTER_MAXIMUM_FRACTION (an optional variable in the IMS input
           file with a default value of 1/3), then the time step length is
-          multipled by dtadj. If the number of outer solver iterations are
+          multiplied by dtadj. If the number of outer solver iterations are
           greater than the product of the maximum number of outer iterations
           and ATS_OUTER_MAXIMUM_FRACTION, then the time step length is divided
           by dtadj. dtadj must be zero, one, or greater than one. If dtadj is

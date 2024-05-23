@@ -1,0 +1,41 @@
+# --------------------- prt mip options ---------------------
+
+block options
+name export_array_ascii
+type keyword
+reader urword
+optional true
+mf6internal export_ascii
+longname export array variables to layered ascii files.
+description keyword that specifies input griddata arrays should be written to layered ascii output files.
+
+# --------------------- prt mip griddata ---------------------
+
+block griddata
+name porosity
+type double precision
+shape (nodes)
+reader readarray
+layered true
+longname porosity
+description is the aquifer porosity.
+
+block griddata
+name retfactor
+type double precision
+shape (nodes)
+reader readarray
+layered true
+optional true
+longname retardation factor
+description is a real value by which velocity is divided within a given cell.  RETFACTOR can be used to account for solute retardation, i.e., the apparent effect of linear sorption on the velocity of particles that track solute advection.  RETFACTOR may be assigned any real value.  A RETFACTOR value greater than 1 represents particle retardation (slowing), and a value of 1 represents no retardation.  The effect of specifying a RETFACTOR value for each cell is the same as the effect of directly multiplying the POROSITY in each cell by the proposed RETFACTOR value for each cell.  RETFACTOR allows conceptual isolation of effects such as retardation from the effect of porosity.  The default value is 1.
+
+block griddata
+name izone
+type integer
+shape (nodes)
+reader readarray
+layered true
+optional true
+longname zone number
+description is an integer zone number assigned to each cell.  IZONE may be positive, negative, or zero.  The current cell's zone number is recorded with each particle track datum.  If a PRP package's ISTOPZONE option is set to any value other than zero, particles released by that PRP Package terminate if they enter a cell whose IZONE value matches ISTOPZONE.  If ISTOPZONE is not specified or is set to zero in a PRP Package, IZONE has no effect on the termination of particles released by that PRP Package.  Each PRP Package may configure a single ISTOPZONE value.

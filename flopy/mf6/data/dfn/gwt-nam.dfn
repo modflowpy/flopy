@@ -50,7 +50,7 @@ type string
 tagged false
 reader urword
 longname package type
-description is the file type, which must be one of the following character values shown in table~\ref{table:ftype}. Ftype may be entered in any combination of uppercase and lowercase.
+description is the file type, which must be one of the following character values shown in table~\ref{table:ftype-gwt}. Ftype may be entered in any combination of uppercase and lowercase.
 
 block packages
 name fname

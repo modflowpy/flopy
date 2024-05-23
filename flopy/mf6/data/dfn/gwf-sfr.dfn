@@ -427,8 +427,9 @@ shape
 tagged false
 in_record true
 reader urword
-longname
-description real value that defines the hydraulic conductivity of the reach streambed. RHK can be any positive value if the reach is not connected to an underlying GWF cell. Otherwise, RHK must be greater than zero.
+time_series true
+longname reach bed hydraulic conductivity
+description real or character value that defines the hydraulic conductivity of the reach streambed. RHK can be any positive value if the reach is not connected to an underlying GWF cell. Otherwise, RHK must be greater than zero. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block packagedata
 name man
@@ -677,13 +678,13 @@ numeric_index true
 
 block period
 name sfrsetting
-type keystring status manning stage inflow rainfall evaporation runoff diversionrecord upstream_fraction cross_sectionrecord auxiliaryrecord
+type keystring status bedk manning stage inflow rainfall evaporation runoff diversionrecord upstream_fraction cross_sectionrecord auxiliaryrecord
 shape
 tagged false
 in_record true
 reader urword
 longname
-description line of information that is parsed into a keyword and values.  Keyword values that can be used to start the SFRSETTING string include: STATUS, MANNING, STAGE, INFLOW, RAINFALL, EVAPORATION, RUNOFF, DIVERSION, UPSTREAM\_FRACTION, and AUXILIARY.
+description line of information that is parsed into a keyword and values.  Keyword values that can be used to start the SFRSETTING string include: STATUS, BEDK, MANNING, STAGE, INFLOW, RAINFALL, EVAPORATION, RUNOFF, DIVERSION, UPSTREAM\_FRACTION, and AUXILIARY.
 
 block period
 name status
@@ -694,6 +695,17 @@ in_record true
 reader urword
 longname well status
 description keyword option to define stream reach status.  STATUS can be ACTIVE, INACTIVE, or SIMPLE. The SIMPLE STATUS option simulates streamflow using a user-specified stage for a reach or a stage set to the top of the reach (depth = 0). In cases where the simulated leakage calculated using the specified stage exceeds the sum of inflows to the reach, the stage is set to the top of the reach and leakage is set equal to the sum of inflows. Upstream fractions should be changed using the UPSTREAM\_FRACTION SFRSETTING if the status for one or more reaches is changed to ACTIVE or INACTIVE. For example, if one of two downstream connections for a reach is inactivated, the upstream fraction for the active and inactive downstream reach should be changed to 1.0 and 0.0, respectively, to ensure that the active reach receives all of the downstream outflow from the upstream reach. By default, STATUS is ACTIVE.
+
+block period
+name bedk
+type string
+shape
+tagged true
+in_record true
+reader urword
+time_series true
+longname reach bed hydraulic conductivity
+description real or character value that defines the hydraulic conductivity of the reach streambed. BEDK can be any positive value if the reach is not connected to an underlying GWF cell. Otherwise, BEDK must be greater than zero. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block period
 name manning

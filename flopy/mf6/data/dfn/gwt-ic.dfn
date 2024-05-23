@@ -1,3 +1,14 @@
+# --------------------- gwt ic options ---------------------
+
+block options
+name export_array_ascii
+type keyword
+reader urword
+optional true
+mf6internal export_ascii
+longname export array variables to layered ascii files.
+description keyword that specifies input griddata arrays should be written to layered ascii output files.
+
 # --------------------- gwt ic griddata ---------------------
 
 block griddata

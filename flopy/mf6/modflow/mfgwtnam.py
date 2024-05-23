@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on February 07, 2024 20:16:08 UTC
+# FILE created on May 23, 2024 14:30:07 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -40,8 +40,8 @@ class ModflowGwtnam(mfpackage.MFPackage):
           Output Control.
     packages : [ftype, fname, pname]
         * ftype (string) is the file type, which must be one of the following
-          character values shown in table in mf6io.pdf. Ftype may be entered in
-          any combination of uppercase and lowercase.
+          character values shown in table ref{table:ftype-gwt}. Ftype may be
+          entered in any combination of uppercase and lowercase.
         * fname (string) is the name of the file containing the package input.
           The path to the file should be included if the file is not located in
           the folder where the program was run.

@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on April 23, 2024 17:27:32 UTC
+# FILE created on May 23, 2024 14:30:07 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -68,7 +68,8 @@ class ModflowNam(mfpackage.MFPackage):
           in the solution group, then MXITER must be 1.
     solutiongroup : [slntype, slnfname, slnmnames]
         * slntype (string) is the type of solution. The Integrated Model
-          Solution (IMS6) is the only supported option in this version.
+          Solution (IMS6) and Explicit Model Solution (EMS6) are the only
+          supported options in this version.
         * slnfname (string) name of file containing solution input.
         * slnmnames (string) is the array of model names to add to this
           solution. The number of model names is determined by the number of
@@ -285,7 +286,7 @@ class ModflowNam(mfpackage.MFPackage):
             "block solutiongroup",
             "name slntype",
             "type string",
-            "valid ims6",
+            "valid ims6 ems6",
             "in_record true",
             "tagged false",
             "reader urword",
