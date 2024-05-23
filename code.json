@@ -1,6 +1,6 @@
 [
     {
-        "status": "Preliminary",
+        "status": "Release",
         "languages": [
             "python"
         ],
@@ -29,9 +29,9 @@
         "downloadURL": "https://code.usgs.gov/usgs/modflow/flopy/archive/master.zip",
         "vcs": "git",
         "laborHours": -1,
-        "version": "3.7.0.dev0",
+        "version": "3.7.0",
         "date": {
-            "metadataLastUpdated": "2024-02-08"
+            "metadataLastUpdated": "2024-05-23"
         },
         "organization": "U.S. Geological Survey",
         "permissions": {
