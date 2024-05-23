@@ -1507,7 +1507,7 @@ class BaseModel(ModelInterface):
         if self.verbose:
             print("\nWriting packages:")
 
-        if SelPackList == False:
+        if SelPackList is False:
             for p in self.packagelist:
                 if self.verbose:
                     print("   Package: ", p.name[0])
@@ -1744,6 +1744,7 @@ def run_model(
     normal_msg="normal termination",
     use_async=False,
     cargs=None,
+    custom_print=None,
 ) -> Tuple[bool, List[str]]:
     """
     Run the model using subprocess.Popen, optionally collecting stdout and printing
@@ -1782,12 +1783,22 @@ def run_model(
     cargs : str or list, optional, default None
         Additional command line arguments to pass to the executable.
         (Default is None)
+    custom_print: callable
+        Optional callable for printing. It will replace the builtin print
+        function. This is useful for a shorter print output or integration into
+        other systems such as GUIs.
+        default is None, i.e. use the builtin print
     Returns
     -------
     success : boolean
     buff : list of lines of stdout (empty if report is False)
 
     """
+    if custom_print is not None:
+        print = custom_print
+    else:
+        print = __builtins__["print"]
+
     success = False
     buff = []
 
@@ -1799,7 +1810,7 @@ def run_model(
 
     # make sure executable exists
     if exe_name is None:
-        raise ValueError(f"An executable name or path must be provided")
+        raise ValueError("An executable name or path must be provided")
     exe_path = resolve_exe(exe_name)
     if not silent:
         print(

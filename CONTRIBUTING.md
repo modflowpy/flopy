@@ -58,11 +58,11 @@ Before you submit your Pull Request (PR) consider the following guidelines:
 5. Run the formatting tools from the project root:
 
    ```shell
-   black -v flopy
-   isort -v flopy
+   ruff check .
+   ruff format .
    ```
 
-   Note: Pull Requests must pass format checks run on the [GitHub actions](https://github.com/modflowpy/flopy/actions) before they will be accepted. If the Pull Request fails the `lint` job in the [continuous integration](https://github.com/modflowpy/flopy/actions/workflows/commit.yml) workflow, make sure the latest versions of `black` and `isort` are installed (this may require clearing CI caches).
+   Note: Pull Requests must pass format checks run on the [GitHub actions](https://github.com/modflowpy/flopy/actions) before they will be accepted. If the Pull Request fails the `lint` job in the [continuous integration](https://github.com/modflowpy/flopy/actions/workflows/commit.yml) workflow, make sure the latest version of `ruff` is installed (this may require clearing CI caches).
 
 6. Run the full FloPy test suite and ensure that all tests pass:
 

@@ -1013,7 +1013,8 @@ class CellBudgetFile:
         self.iposarray = []
         self.textlist = []
         self.imethlist = []
-        self.paknamlist = []
+        self.paknamlist_from = []
+        self.paknamlist_to = []
         self.nrecords = 0
         self.compact = True  # compact budget file flag
 
@@ -1079,12 +1080,13 @@ class CellBudgetFile:
         self.iposarray = []
         self.textlist = []
         self.imethlist = []
-        self.paknamlist = []
+        self.paknamlist_from = []
+        self.paknamlist_to = []
         self.nrecords = 0
 
     def _set_precision(self, precision="single"):
         """
-        Method to set the budget precsion from a CBC file. Enables
+        Method to set the budget precision from a CBC file. Enables
         Auto precision code to work
 
         Parameters
@@ -1219,8 +1221,10 @@ class CellBudgetFile:
                     raise BudgetIndexError("Improper precision")
                 self.textlist.append(header["text"])
                 self.imethlist.append(header["imeth"])
-            if header["paknam"] not in self.paknamlist:
-                self.paknamlist.append(header["paknam"])
+            if header["paknam"] not in self.paknamlist_from:
+                self.paknamlist_from.append(header["paknam"])
+            if header["paknam2"] not in self.paknamlist_to:
+                self.paknamlist_to.append(header["paknam2"])
             ipos = self.file.tell()
 
             if self.verbose:
@@ -1390,7 +1394,7 @@ class CellBudgetFile:
                 raise Exception(errmsg)
         return text16
 
-    def _find_paknam(self, paknam):
+    def _find_paknam(self, paknam, to=False):
         """
         Determine if selected record name is in budget file
 
@@ -1402,7 +1406,7 @@ class CellBudgetFile:
                 tpaknam = paknam.decode()
             else:
                 tpaknam = paknam
-            for t in self._unique_package_names():
+            for t in self._unique_package_names(to):
                 if tpaknam.upper() in t.decode():
                     paknam16 = t
                     break
@@ -1433,11 +1437,11 @@ class CellBudgetFile:
                 rec = rec.decode()
             print(f"{rec.strip():16} {imeth:5d}")
 
-    def list_unique_packages(self):
+    def list_unique_packages(self, to=False):
         """
         Print a list of unique package names
         """
-        for rec in self._unique_package_names():
+        for rec in self._unique_package_names(to):
             if isinstance(rec, bytes):
                 rec = rec.decode()
             print(rec)
@@ -1467,7 +1471,7 @@ class CellBudgetFile:
             names = self.textlist
         return names
 
-    def get_unique_package_names(self, decode=False):
+    def get_unique_package_names(self, decode=False, to=False):
         """
         Get a list of unique package names in the file
 
@@ -1482,17 +1486,18 @@ class CellBudgetFile:
             List of unique package names in the binary file.
 
         """
+
         if decode:
             names = []
-            for text in self.paknamlist:
+            for text in self._unique_package_names(to):
                 if isinstance(text, bytes):
                     text = text.decode()
                 names.append(text)
         else:
-            names = self.paknamlist
+            names = self._unique_package_names(to)
         return names
 
-    def _unique_package_names(self):
+    def _unique_package_names(self, to=False):
         """
         Get a list of unique package names in the file
 
@@ -1502,7 +1507,7 @@ class CellBudgetFile:
             List of unique package names in the binary file.
 
         """
-        return self.paknamlist
+        return self.paknamlist_to if to else self.paknamlist_from
 
     def get_kstpkper(self):
         """
@@ -1577,6 +1582,7 @@ class CellBudgetFile:
         totim=None,
         text=None,
         paknam=None,
+        paknam2=None,
         full3D=False,
     ) -> Union[List, np.ndarray]:
         """
@@ -1594,6 +1600,14 @@ class CellBudgetFile:
         text : str
             The text identifier for the record.  Examples include
             'RIVER LEAKAGE', 'STORAGE', 'FLOW RIGHT FACE', etc.
+        paknam : str
+            The `from` package name for the record.
+        paknam2 : str
+            The `to` package name for the record.  This argument can be
+            useful for MODFLOW 6 budget files if multiple packages of
+            the same type are specified.  The paknam2 argument can be
+            specified as the package name (not the package type) in
+            order to retrieve budget data for a specific named package.
         full3D : boolean
             If true, then return the record as a three dimensional numpy
             array, even for those list-style records written as part of a
@@ -1623,8 +1637,8 @@ class CellBudgetFile:
         if totim is not None:
             if len(self.times) == 0:
                 errmsg = """This is an older style budget file that
-                         does not have times in it.  Use the MODFLOW 
-                         compact budget format if you want to work with 
+                         does not have times in it.  Use the MODFLOW
+                         compact budget format if you want to work with
                          times.  Or you may access this file using the
                          kstp and kper arguments or the idx argument."""
                 raise Exception(errmsg)
@@ -1636,83 +1650,58 @@ class CellBudgetFile:
         paknam16 = None
         if paknam is not None:
             paknam16 = self._find_paknam(paknam)
+        paknam16_2 = None
+        if paknam2 is not None:
+            paknam16_2 = self._find_paknam(paknam2, to=True)
 
+        # build the selection mask
+        select_indices = np.array([True] * len(self.recordarray))
+        selected = False
+        if idx is not None:
+            select_indices[idx] = False
+            select_indices = ~select_indices
+            selected = True
         if kstpkper is not None:
             kstp1 = kstpkper[0] + 1
             kper1 = kstpkper[1] + 1
-            if text is None and paknam is None:
-                select_indices = np.where(
-                    (self.recordarray["kstp"] == kstp1)
-                    & (self.recordarray["kper"] == kper1)
-                )
-            else:
-                if paknam is None and text is not None:
-                    select_indices = np.where(
-                        (self.recordarray["kstp"] == kstp1)
-                        & (self.recordarray["kper"] == kper1)
-                        & (self.recordarray["text"] == text16)
-                    )
-                elif text is None and paknam is not None:
-                    select_indices = np.where(
-                        (self.recordarray["kstp"] == kstp1)
-                        & (self.recordarray["kper"] == kper1)
-                        & (self.recordarray["paknam"] == paknam16)
-                    )
-                else:
-                    select_indices = np.where(
-                        (self.recordarray["kstp"] == kstp1)
-                        & (self.recordarray["kper"] == kper1)
-                        & (self.recordarray["text"] == text16)
-                        & (self.recordarray["paknam"] == paknam16)
-                    )
+            select_indices = select_indices & (
+                self.recordarray["kstp"] == kstp1
+            )
+            select_indices = select_indices & (
+                self.recordarray["kper"] == kper1
+            )
+            selected = True
+        if text16 is not None:
+            select_indices = select_indices & (
+                self.recordarray["text"] == text16
+            )
+            selected = True
+        if paknam16 is not None:
+            select_indices = select_indices & (
+                self.recordarray["paknam"] == paknam16
+            )
+            selected = True
+        if paknam16_2 is not None:
+            select_indices = select_indices & (
+                self.recordarray["paknam2"] == paknam16_2
+            )
+            selected = True
+        if totim is not None:
+            select_indices = select_indices & np.isclose(
+                self.recordarray["totim"], totim
+            )
+            selected = True
 
-        elif totim is not None:
-            if text is None and paknam is None:
-                select_indices = np.where(self.recordarray["totim"] == totim)
-            else:
-                if paknam is None and text is not None:
-                    select_indices = np.where(
-                        (self.recordarray["totim"] == totim)
-                        & (self.recordarray["text"] == text16)
-                    )
-                elif text is None and paknam is not None:
-                    select_indices = np.where(
-                        (self.recordarray["totim"] == totim)
-                        & (self.recordarray["paknam"] == paknam16)
-                    )
-                else:
-                    select_indices = np.where(
-                        (self.recordarray["totim"] == totim)
-                        & (self.recordarray["text"] == text16)
-                        & (self.recordarray["paknam"] == paknam16)
-                    )
-
-        # allow for idx to be a list or a scalar
-        elif idx is not None:
-            if isinstance(idx, list):
-                select_indices = idx
-            else:
-                select_indices = [idx]
-
-        # case where only text is entered
-        elif text is not None:
-            select_indices = np.where(self.recordarray["text"] == text16)
-
-        else:
+        if not selected:
             raise TypeError(
                 "get_data() missing 1 required argument: 'kstpkper', 'totim', "
                 "'idx', or 'text'"
             )
-
-        # build and return the record list
-        if isinstance(select_indices, tuple):
-            select_indices = select_indices[0]
-        recordlist = []
-        for idx in select_indices:
-            rec = self.get_record(idx, full3D=full3D)
-            recordlist.append(rec)
-
-        return recordlist
+        return [
+            self.get_record(idx, full3D=full3D)
+            for idx, t in enumerate(select_indices)
+            if t
+        ]
 
     def get_ts(self, idx, text=None, times=None):
         """

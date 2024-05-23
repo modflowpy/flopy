@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on February 07, 2024 20:16:08 UTC
+# FILE created on May 23, 2024 14:30:07 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -38,7 +38,7 @@ class ModflowGwtgwt(mfpackage.MFPackage):
     auxiliary : [string]
         * auxiliary (string) an array of auxiliary variable names. There is no
           limit on the number of auxiliary variables that can be provided. Most
-          auxiliary variables will not be used by the GWF-GWF Exchange, but
+          auxiliary variables will not be used by the GWT-GWT Exchange, but
           they will be available for use by other parts of the program. If an
           auxiliary variable with the name "ANGLDEGX" is found, then this
           information will be used as the angle (provided in degrees) between
@@ -47,12 +47,8 @@ class ModflowGwtgwt(mfpackage.MFPackage):
           axis. The connection face normal is a normal vector on the cell face
           shared between the cell in model 1 and the cell in model 2 pointing
           away from the model 1 cell. Additional information on "ANGLDEGX" is
-          provided in the description of the DISU Package. If an auxiliary
-          variable with the name "CDIST" is found, then this information will
-          be used as the straight-line connection distance, including the
-          vertical component, between the two cell centers. Both ANGLDEGX and
-          CDIST are required if specific discharge is calculated for either of
-          the groundwater models.
+          provided in the description of the DISU Package. ANGLDEGX must be
+          specified if dispersion is simulated in the connected GWT models.
     boundnames : boolean
         * boundnames (boolean) keyword to indicate that boundary names may be
           provided with the list of GWT Exchange cells.
@@ -412,6 +408,7 @@ class ModflowGwtgwt(mfpackage.MFPackage):
             "shape (naux)",
             "reader urword",
             "optional true",
+            "mf6internal auxvar",
         ],
         [
             "block exchangedata",

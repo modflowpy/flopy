@@ -67,7 +67,7 @@ There are three possible types (or combination of them) that can be used for
 "parent package type", MFPackage, MFModel, and MFSimulation. If a package
 supports multiple types of parents (for example, it can be either in the model
 namefile or in a package, like the obs package), include all the types
-supported, seperating each type with a / (MFPackage/MFModel).
+supported, separating each type with a / (MFPackage/MFModel).
 
 To create a new type of model choose a unique three letter model abbreviation
 ("gwf", "gwt", ...). Create a name file dfn with the naming convention
@@ -317,6 +317,7 @@ def add_var(
     construct_data=None,
     parameter_name=None,
     set_param_list=None,
+    mf_nam=False,
 ):
     if set_param_list is None:
         set_param_list = []
@@ -339,19 +340,26 @@ def add_var(
         clean_parameter_name = datautil.clean_name(parameter_name)
         # init hidden variable
         init_vars.append(create_init_var(f"_{clean_ds_name}", name, "None"))
-        # init child package
-        init_vars.append(
-            create_package_init_var(
-                clean_parameter_name,
-                construct_package,
-                construct_data,
-                clean_ds_name,
+        if mf_nam:
+            options_param_list.append(
+                [f"{parameter_name}_data=None", parameter_name]
             )
-        )
-        # add to parameter list
-        init_param_list.append(f"{clean_parameter_name}=None")
-        # add to set parameter list
-        set_param_list.append(f"{clean_parameter_name}={clean_parameter_name}")
+        else:
+            # init child package
+            init_vars.append(
+                create_package_init_var(
+                    clean_parameter_name,
+                    construct_package,
+                    construct_data,
+                    clean_ds_name,
+                )
+            )
+            # add to parameter list
+            init_param_list.append(f"{clean_parameter_name}=None")
+            # add to set parameter list
+            set_param_list.append(
+                f"{clean_parameter_name}={clean_parameter_name}"
+            )
 
     package_properties.append(create_property(clean_ds_name))
     doc_string.add_parameter(description, model_parameter=True)
@@ -370,6 +378,8 @@ def build_init_string(
 ):
     line_chars = len(init_string)
     for index, param in enumerate(init_param_list):
+        if isinstance(param, list):
+            param = param[0]
         if index + 1 < len(init_param_list):
             line_chars += len(param) + 2
         else:
@@ -461,17 +471,26 @@ def build_model_init_vars(param_list):
     init_var_list = []
     # build set data calls
     for param in param_list:
-        param_parts = param.split("=")
-        init_var_list.append(
-            f"        self.name_file.{param_parts[0]}.set_data({param_parts[0]})"
-        )
+        if not isinstance(param, list):
+            param_parts = param.split("=")
+            init_var_list.append(
+                f"        self.name_file.{param_parts[0]}.set_data({param_parts[0]})"
+            )
     init_var_list.append("")
     # build attributes
     for param in param_list:
-        param_parts = param.split("=")
-        init_var_list.append(
-            f"        self.{param_parts[0]} = self.name_file.{param_parts[0]}"
-        )
+        if isinstance(param, list):
+            pkg_name = param[1]
+            param_parts = param[0].split("=")
+            init_var_list.append(
+                f"        self.{param_parts[0]} = "
+                f"self._create_package('{pkg_name}', {param_parts[0]})"
+            )
+        else:
+            param_parts = param.split("=")
+            init_var_list.append(
+                f"        self.{param_parts[0]} = self.name_file.{param_parts[0]}"
+            )
 
     return "\n".join(init_var_list)
 
@@ -486,6 +505,18 @@ def create_packages():
 
     # assemble package list of buildable packages
     package_list = []
+    for package in sim_struct.utl_struct_objs.values():
+        # add utility packages to list
+        package_list.append(
+            (
+                package,
+                PackageLevel.model_level,
+                "utl",
+                package.dfn_list,
+                package.file_type,
+                package.header,
+            )
+        )
     package_list.append(
         (
             sim_struct.name_file_struct_obj,
@@ -503,18 +534,6 @@ def create_packages():
                 package,
                 PackageLevel.sim_level,
                 "",
-                package.dfn_list,
-                package.file_type,
-                package.header,
-            )
-        )
-    for package in sim_struct.utl_struct_objs.values():
-        # add utility packages to list
-        package_list.append(
-            (
-                package,
-                PackageLevel.model_level,
-                "utl",
                 package.dfn_list,
                 package.file_type,
                 package.header,
@@ -568,6 +587,7 @@ def create_packages():
         set_param_list = []
         class_vars = []
         template_gens = []
+
         package_abbr = clean_class_string(
             f"{clean_class_string(package[2])}{package[0].file_type}"
         ).lower()
@@ -692,6 +712,20 @@ def create_packages():
             for data_structure in block.data_structures.values():
                 # only create one property for each unique data structure name
                 if data_structure.name not in data_structure_dict:
+                    mf_sim = (
+                        "parent_name_type" in package[0].header
+                        and package[0].header["parent_name_type"][1]
+                        == "MFSimulation"
+                    )
+                    mf_nam = package[0].file_type == "nam"
+                    if (
+                        data_structure.construct_package is not None
+                        and not mf_sim
+                        and not mf_nam
+                    ):
+                        c_pkg = data_structure.construct_package
+                    else:
+                        c_pkg = None
                     tg = add_var(
                         init_vars,
                         class_vars,
@@ -707,10 +741,12 @@ def create_packages():
                         data_structure.path,
                         data_structure.get_datatype(),
                         False,
+                        # c_pkg,
                         data_structure.construct_package,
                         data_structure.construct_data,
                         data_structure.parameter_name,
                         set_param_list,
+                        mf_nam,
                     )
                     if tg is not None and tg not in template_gens:
                         template_gens.append(tg)
@@ -826,8 +862,14 @@ def create_packages():
             newline="\n",
         )
         pb_file.write(package_string)
-
-        if package[0].sub_package and package_abbr != "utltab":
+        if (
+            package[0].sub_package
+            and package_abbr != "utltab"
+            and (
+                "parent_name_type" not in package[0].header
+                or package[0].header["parent_name_type"][1] != "MFSimulation"
+            )
+        ):
             set_param_list.append("filename=filename")
             set_param_list.append("pname=pname")
             set_param_list.append("child_builder_call=True")
@@ -844,8 +886,9 @@ def create_packages():
 
             # write out child packages class
             chld_cls = (
-                "\n\nclass {}Packages(mfpackage.MFChildPackage"
-                "s):\n".format(package_name.title())
+                "\n\nclass {}Packages(mfpackage.MFChildPackage" "s):\n".format(
+                    package_name.title()
+                )
             )
             chld_var = (
                 f"    package_abbr = "
@@ -1073,7 +1116,7 @@ def create_packages():
                 load_txt,
             )
             sim_file = open(
-                os.path.join(util_path, "..", "modflow", f"mfsimulation.py"),
+                os.path.join(util_path, "..", "modflow", "mfsimulation.py"),
                 "w",
                 newline="\n",
             )

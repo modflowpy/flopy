@@ -6,11 +6,11 @@ from types import SimpleNamespace
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from autotest.conftest import get_example_data_path
 from modflow_devtools.markers import requires_exe, requires_pkg
 from numpy.lib.recfunctions import repack_fields
 
 import flopy
+from autotest.conftest import get_example_data_path
 from flopy.discretization import StructuredGrid
 from flopy.export.shapefile_utils import shp2recarray
 from flopy.modflow import Modflow, ModflowMnw2

@@ -1,10 +1,10 @@
 import numpy as np
 import pandas as pd
 import pytest
-from autotest.conftest import get_example_data_path
 from modflow_devtools.markers import requires_exe
 
 import flopy
+from autotest.conftest import get_example_data_path
 from flopy.mf6 import MFSimulation
 
 MEMORY_UNITS = ("gigabytes", "megabytes", "kilobytes", "bytes")
@@ -104,13 +104,13 @@ def test_mfsimlist_memory(function_tmpdir):
 
     total_memory = mfsimlst.get_memory_usage()
     assert total_memory > 0.0, (
-        f"total memory is not greater than 0.0 " + f"({total_memory})"
+        "total memory is not greater than 0.0 " + f"({total_memory})"
     )
 
     total_memory_kb = mfsimlst.get_memory_usage(units="kilobytes")
     assert np.allclose(total_memory_kb, total_memory * 1e6), (
         f"total memory in kilobytes ({total_memory_kb}) is not equal to "
-        + f"the total memory converted to kilobytes "
+        + "the total memory converted to kilobytes "
         + f"({total_memory * 1e6})"
     )
 

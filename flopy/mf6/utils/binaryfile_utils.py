@@ -177,7 +177,7 @@ class MFOutputRequester:
             return data
 
     def _get_binary_file_object(self, path, bintype, key):
-        # simple method that trys to open the binary file object using Flopy
+        # simple method that tries to open the binary file object using Flopy
         if bintype == "CBC":
             try:
                 return bf.CellBudgetFile(path, precision="double")

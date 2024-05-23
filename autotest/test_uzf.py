@@ -369,8 +369,8 @@ def test_load_write_sfr_option_block(function_tmpdir, options_path):
         ext_unit_dict={},
     )
 
-    assert sfr3.options.strhc1kh == False
-    assert sfr3.options.strhc1kv == False
+    assert sfr3.options.strhc1kh is False
+    assert sfr3.options.strhc1kv is False
 
 
 def test_load_write_sfr_option_line(function_tmpdir, options_path):
@@ -658,3 +658,18 @@ def test_uzf_negative_iuzfopt(function_tmpdir):
     assert (
         np.max(extpd) == np.min(extpd) and np.max(extpd) != 0.2
     ), "Read error for iuzfopt less than 0"
+
+
+def test_optionsblock_auxillary_typo():
+    # Incorrect: auxillary
+    #   Correct: auxiliary
+    options = OptionBlock("", ModflowWel, block=True)
+    assert options.auxiliary == []
+    with pytest.deprecated_call():
+        assert options.auxillary == []
+    with pytest.deprecated_call():
+        options.auxillary = ["aux", "iface"]
+    assert options.auxiliary == ["aux", "iface"]
+    options.auxiliary = []
+    with pytest.deprecated_call():
+        assert options.auxillary == []

@@ -23,7 +23,7 @@ class MF6Output:
 
     """
 
-    def __init__(self, obj):
+    def __init__(self, obj, budgetkey=None):
         from ..modflow import ModflowGwfoc, ModflowGwtoc, ModflowUtlobs
 
         # set initial observation definitions
@@ -39,6 +39,11 @@ class MF6Output:
         self._obj = obj
         self._methods = []
         self._sim_ws = obj.simulation_data.mfpath.get_sim_path()
+        self._budgetkey = (
+            "VOLUME BUDGET FOR ENTIRE MODEL"
+            if budgetkey is None
+            else budgetkey
+        )
         self.__budgetcsv = False
 
         if not isinstance(obj, (PackageInterface, ModelInterface)):
@@ -126,11 +131,7 @@ class MF6Output:
                                                     [
                                                         obj._simulation_data.mfdata[
                                                             ky
-                                                        ].array[
-                                                            0
-                                                        ][
-                                                            -2
-                                                        ]
+                                                        ].array[0][-2]
                                                     ]
                                                 ]
                                                 break
@@ -215,7 +216,7 @@ class MF6Output:
             name = name[0]
         l = [
             f"MF6Output Class for {name}",
-            f"Available output methods include:",
+            "Available output methods include:",
         ]
         l += [f".{m}" for m in self.methods()]
         s = "\n".join(l)
@@ -295,7 +296,7 @@ class MF6Output:
 
     def __budgetcsv(self):
         """
-        Convience method to open and return a budget csv object
+        Convenience method to open and return a budget csv object
 
         Returns
         -------
@@ -386,7 +387,7 @@ class MF6Output:
         if self._lst is not None:
             try:
                 list_file = os.path.join(self._sim_ws, self._lst)
-                return Mf6ListBudget(list_file)
+                return Mf6ListBudget(list_file, budgetkey=self._budgetkey)
             except (AssertionError, OSError):
                 return None
 

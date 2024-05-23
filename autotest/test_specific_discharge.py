@@ -205,7 +205,7 @@ def mf6_model(function_tmpdir):
     gwf = ModflowGwf(
         sim,
         modelname="mf6",
-        model_nam_file=f"mf6.nam",
+        model_nam_file="mf6.nam",
     )
     gwf.name_file.save_flows = True
 
@@ -319,7 +319,7 @@ def basic_check(Qx_ext, Qy_ext, Qz_ext):
 
 
 def local_balance_check(Qx_ext, Qy_ext, Qz_ext, hdsfile=None, model=None):
-    # calculate water blance at every cell
+    # calculate water balance at every cell
     local_balance = (
         Qx_ext[:, :, :-1]
         - Qx_ext[:, :, 1:]

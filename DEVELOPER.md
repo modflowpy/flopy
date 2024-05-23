@@ -28,6 +28,7 @@ This document describes how to set up a FloPy development environment, run the e
   - [Performance testing](#performance-testing)
     - [Benchmarking](#benchmarking)
     - [Profiling](#profiling)
+  - [Snapshot testing](#snapshot-testing)
 - [Branching model](#branching-model)
 - [Deprecation policy](#deprecation-policy)
 - [Miscellaneous](#miscellaneous)
@@ -212,7 +213,9 @@ Each example should create and (attempt to) dispose of its own isolated temporar
 
 To run the tests you will need `pytest` and a few plugins, including [`pytest-xdist`](https://pytest-xdist.readthedocs.io/en/latest/), [`pytest-dotenv`](https://github.com/quiqua/pytest-dotenv), and [`pytest-benchmark`](https://pytest-benchmark.readthedocs.io/en/latest/index.html). Test dependencies are specified in the `test` extras group in `pyproject.toml` (with pip, use `pip install ".[test]"`). Test dependencies are included in the Conda environment `etc/environment`.
 
-**Note:** to prepare your code for a pull request, you will need a few more packages specified in the `lint` extras group in `pyproject.toml` (also included by default for Conda). See the docs on [submitting a pull request](CONTRIBUTING.md) for more info.
+**Note:** tests require the [`modflow-devtools`](https://github.com/MODFLOW-USGS/modflow-devtools) package, which is a grab bag of utilities and `pytest` fixtures shared by FloPy, MODFLOW 6, and other related projects. If you see testing errors that don't seem related to the contents of the tests, updating to the latest `modflow-devtools` is recommended as a first troubleshooting step.
+
+**Note:** to prepare your code for a pull request, you will need the [`ruff`](https://docs.astral.sh/ruff/) linter/formatter, which is included in the `lint` extras group in `pyproject.toml` (also included by default for Conda). See the docs on [submitting a pull request](CONTRIBUTING.md) for more info.
 
 ### Configuring tests
 
@@ -345,9 +348,15 @@ Profiling is [distinct](https://stackoverflow.com/a/39381805/6514033) from bench
 
 By default, `pytest-benchmark` will only print profiling results to `stdout`. If the `--benchmark-autosave` flag is provided, performance profile data will be included in the JSON files written to the `.benchmarks` save directory as described in the benchmarking section above.
 
+### Snapshot testing
+
+Snapshot testing is a form of regression testing in which a "snapshot" of the results of some computation is verified and captured by the developer to be compared against when tests are subsequently run. This is accomplished with [`syrupy`](https://github.com/tophat/syrupy) via [fixtures defined in `modflow-devtools`](https://modflow-devtools.readthedocs.io/en/latest/md/snapshots.html).
+
+By default, tests run in comparison mode. This means a newly written test using any of the snapshot fixtures will fail until a snapshot is created. Snapshots can be created/updated by running pytest with the `--snapshot-update` flag.
+
 ## Branching model
 
-This project follows the [git flow](https://nvie.com/posts/a-successful-git-branching-model/): development occurs on the `develop` branch, while `main` is reserved for the state of the latest release. Development PRs are typically squashed to `develop`, to avoid merge commits. At release time, release branches are merged to `main`, and then `main` is merged back into `develop`.
+This project follows the [git flow](https://nvie.com/posts/a-successful-git-branching-model/): development occurs on the `develop` branch, while `master` is reserved for the state of the latest release. Development PRs are typically squashed to `develop`, to avoid merge commits. At release time, release branches are merged to `master`, and then `master` is merged back into `develop`.
 
 ## Deprecation policy
 

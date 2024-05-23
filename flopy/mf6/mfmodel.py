@@ -264,27 +264,33 @@ class MFModel(PackageContainer, ModelInterface):
             simulation.
 
         """
-        tdis = self.simulation.get_package("tdis")
+        tdis = self.simulation.get_package("tdis", type_only=True)
         period_data = tdis.perioddata.get_data()
 
         # build steady state data
-        sto = self.get_package("sto")
+        sto = self.get_package("sto", type_only=True)
         if sto is None:
             steady = np.full((len(period_data["perlen"])), True, dtype=bool)
         else:
             steady = np.full((len(period_data["perlen"])), False, dtype=bool)
             ss_periods = sto.steady_state.get_active_key_dict()
+            for period, val in ss_periods.items():
+                if val:
+                    ss_periods[period] = sto.steady_state.get_data(period)
             tr_periods = sto.transient.get_active_key_dict()
+            for period, val in tr_periods.items():
+                if val:
+                    tr_periods[period] = sto.transient.get_data(period)
             if ss_periods:
                 last_ss_value = False
                 # loop through steady state array
                 for index, value in enumerate(steady):
                     # resolve if current index is steady state or transient
-                    if index in ss_periods:
+                    if index in ss_periods and ss_periods[index]:
                         last_ss_value = True
-                    elif index in tr_periods:
+                    elif index in tr_periods and tr_periods[index]:
                         last_ss_value = False
-                    if last_ss_value == True:
+                    if last_ss_value is True:
                         steady[index] = True
 
         # build model time
@@ -487,8 +493,8 @@ class MFModel(PackageContainer, ModelInterface):
                 iac=dis.iac.array,
                 ja=dis.ja.array,
             )
-        elif self.get_grid_type() == DiscretizationType.DISL:
-            dis = self.get_package("disl")
+        elif self.get_grid_type() == DiscretizationType.DISV1D:
+            dis = self.get_package("disv1d")
             if not hasattr(dis, "_init_complete"):
                 if not hasattr(dis, "cell1d"):
                     # disv package has not yet been initialized
@@ -516,6 +522,44 @@ class MFModel(PackageContainer, ModelInterface):
                 self._modelgrid = VertexGrid(
                     vertices=dis.vertices.array,
                     cell1d=dis.cell1d.array,
+                    top=dis.top.array,
+                    botm=botm,
+                    idomain=idomain,
+                    lenuni=dis.length_units.array,
+                    crs=self._modelgrid.crs,
+                    xoff=self._modelgrid.xoffset,
+                    yoff=self._modelgrid.yoffset,
+                    angrot=self._modelgrid.angrot,
+                )
+        elif self.get_grid_type() == DiscretizationType.DISV2D:
+            dis = self.get_package("disv2d")
+            if not hasattr(dis, "_init_complete"):
+                if not hasattr(dis, "cell2d"):
+                    # disv package has not yet been initialized
+                    return self._modelgrid
+                else:
+                    # disv package has been partially initialized
+                    self._modelgrid = VertexGrid(
+                        vertices=dis.vertices.array,
+                        cell2d=dis.cell2d.array,
+                        top=None,
+                        botm=None,
+                        idomain=None,
+                        lenuni=None,
+                        crs=self._modelgrid.crs,
+                        xoff=self._modelgrid.xoffset,
+                        yoff=self._modelgrid.yoffset,
+                        angrot=self._modelgrid.angrot,
+                    )
+            else:
+                botm = dis.botm.array
+                idomain = dis.idomain.array
+                if idomain is None:
+                    force_resync = True
+                    idomain = self._resolve_idomain(idomain, botm)
+                self._modelgrid = VertexGrid(
+                    vertices=dis.vertices.array,
+                    cell2d=dis.cell2d.array,
                     top=dis.top.array,
                     botm=botm,
                     idomain=idomain,
@@ -638,10 +682,13 @@ class MFModel(PackageContainer, ModelInterface):
 
     @property
     def output(self):
+        budgetkey = None
+        if self.model_type == "gwt6":
+            budgetkey = "MASS BUDGET FOR ENTIRE MODEL"
         try:
-            return self.oc.output
+            return MF6Output(self.oc, budgetkey=budgetkey)
         except AttributeError:
-            return MF6Output(self)
+            return MF6Output(self, budgetkey=budgetkey)
 
     def export(self, f, **kwargs):
         """Method to export a model to a shapefile or netcdf file
@@ -653,7 +700,7 @@ class MFModel(PackageContainer, ModelInterface):
             or dictionary of ....
         **kwargs : keyword arguments
             modelgrid: flopy.discretization.Grid
-                User supplied modelgrid object which will supercede the built
+                User supplied modelgrid object which will supersede the built
                 in modelgrid object
             if fmt is set to 'vtk', parameters of Vtk initializer
 
@@ -787,6 +834,9 @@ class MFModel(PackageContainer, ModelInterface):
         package_recarray = instance.simulation_data.mfdata[
             (modelname, "nam", "packages", "packages")
         ]
+        if package_recarray.array is None:
+            return instance
+
         for item in package_recarray.get_data():
             if item[0] in priority_packages:
                 packages_ordered.insert(0, (item[0], item[1], item[2]))
@@ -830,7 +880,7 @@ class MFModel(PackageContainer, ModelInterface):
                 sim_data = simulation.simulation_data
                 if ftype == "dis" and not sim_data.max_columns_user_set:
                     # set column wrap to ncol
-                    dis = instance.get_package("dis")
+                    dis = instance.get_package("dis", type_only=True)
                     if dis is not None and hasattr(dis, "ncol"):
                         sim_data.max_columns_of_data = dis.ncol.get_data()
                         sim_data.max_columns_user_set = False
@@ -1036,7 +1086,7 @@ class MFModel(PackageContainer, ModelInterface):
                             h_columns = ",".join(search_output.data_header)
                             fd.write(f",{h_columns}\n")
                         else:
-                            fd.write(f",cellid,data\n")
+                            fd.write(",cellid,data\n")
                         # write data found
                         for index, data_entry in enumerate(
                             search_output.data_entries
@@ -1068,7 +1118,7 @@ class MFModel(PackageContainer, ModelInterface):
                                 )
                                 fd.write(f",{output}")
                                 fd.write(self._format_data_entry(data_entry))
-                    fd.write(f"\n")
+                    fd.write("\n")
         return output_by_package
 
     def match_array_cells(
@@ -1203,11 +1253,18 @@ class MFModel(PackageContainer, ModelInterface):
             return DiscretizationType.DISU
         elif (
             package_recarray.search_data(
-                f"disl{structure.get_version_string()}", 0
+                f"disv1d{structure.get_version_string()}", 0
             )
             is not None
         ):
-            return DiscretizationType.DISL
+            return DiscretizationType.DISV1D
+        elif (
+            package_recarray.search_data(
+                f"disv2d{structure.get_version_string()}", 0
+            )
+            is not None
+        ):
+            return DiscretizationType.DISV2D
 
         return DiscretizationType.UNDEFINED
 
@@ -1242,7 +1299,7 @@ class MFModel(PackageContainer, ModelInterface):
             ss_list.append(True)
             index += 1
 
-        storage = self.get_package("sto")
+        storage = self.get_package("sto", type_only=True)
         if storage is not None:
             tr_keys = storage.transient.get_keys(True)
             ss_keys = storage.steady_state.get_keys(True)
@@ -1278,7 +1335,7 @@ class MFModel(PackageContainer, ModelInterface):
         for package_struct in self.structure.package_struct_objs.values():
             if (
                 not package_struct.optional
-                and not package_struct.file_type in self.package_type_dict
+                and package_struct.file_type not in self.package_type_dict
             ):
                 return False
 

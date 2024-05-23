@@ -19,9 +19,6 @@ class styles:
     _ws = os.path.abspath(os.path.dirname(__file__))
     _map_style = os.path.join(_ws, "mplstyle", "usgsmap.mplstyle")
     _plot_style = os.path.join(_ws, "mplstyle", "usgsplot.mplstyle")
-    if platform.system() == "linux":
-        _map_style = os.path.join(_ws, "mplstyle", "usgsmap_linux.mplstyle")
-        _plot_style = os.path.join(_ws, "mplstyle", "usgsplot_linux.mplstyle")
 
     @classmethod
     def USGSMap(cls):
@@ -82,7 +79,7 @@ class styles:
             location of the heading in the y-direction in normalized plot
             dimensions ranging from 0 to 1 (default is 1.01)
         idx : int
-            index for programatically generating the heading letter when letter
+            index for programmatically generating the heading letter when letter
             is None and idx is not None. idx = 0 will generate A
             (default is None)
 

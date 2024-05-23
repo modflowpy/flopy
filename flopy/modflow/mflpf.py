@@ -371,7 +371,7 @@ class ModflowLpf(Package):
         f.write(f"{self.heading}\n")
 
         # Item 1: IBCFCB, HDRY, NPLPF, <IKCFLAG>, OPTIONS
-        if self.parent.version == "mfusg" and self.parent.structured == False:
+        if self.parent.version == "mfusg" and not self.parent.structured:
             f.write(
                 "{:10d}{:10.6G}{:10d}{:10d} {:s}\n".format(
                     self.ipakcb,
@@ -405,7 +405,7 @@ class ModflowLpf(Package):
             if self.chani[k] <= 0.0:
                 f.write(self.hani[k].get_file_entry())
             f.write(self.vka[k].get_file_entry())
-            if transient == True:
+            if transient:
                 f.write(self.ss[k].get_file_entry())
                 if self.laytyp[k] != 0:
                     f.write(self.sy[k].get_file_entry())
@@ -477,7 +477,7 @@ class ModflowLpf(Package):
         t = line_parse(line)
         ipakcb, hdry, nplpf = int(t[0]), float(t[1]), int(t[2])
         item1_len = 3
-        if model.version == "mfusg" and model.structured == False:
+        if model.version == "mfusg" and not model.structured:
             ikcflag = int(t[3])
             item1_len = 4
         # if ipakcb != 0:

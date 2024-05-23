@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on February 07, 2024 20:16:08 UTC
+# FILE created on May 23, 2024 14:30:07 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -108,17 +108,11 @@ class ModflowGwfnpf(mfpackage.MFPackage):
           containing data for the tvk package with variable names as keys and
           package data as values. Data just for the perioddata variable is also
           acceptable. See tvk package documentation for more information.
+    export_array_ascii : boolean
+        * export_array_ascii (boolean) keyword that specifies input griddata
+          arrays should be written to layered ascii output files.
     dev_no_newton : boolean
         * dev_no_newton (boolean) turn off Newton for unconfined cells
-    dev_modflowusg_upstream_weighted_saturation : boolean
-        * dev_modflowusg_upstream_weighted_saturation (boolean) use MODFLOW-USG
-          upstream-weighted saturation approach
-    dev_modflownwt_upstream_weighting : boolean
-        * dev_modflownwt_upstream_weighting (boolean) use MODFLOW-NWT approach
-          for upstream weighting
-    dev_minimum_saturated_thickness : double
-        * dev_minimum_saturated_thickness (double) set minimum allowed
-          saturated thickness
     dev_omega : double
         * dev_omega (double) set saturation omega value
     icelltype : [integer]
@@ -455,35 +449,19 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         ],
         [
             "block options",
+            "name export_array_ascii",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_ascii",
+        ],
+        [
+            "block options",
             "name dev_no_newton",
             "type keyword",
             "reader urword",
             "optional true",
             "mf6internal inewton",
-        ],
-        [
-            "block options",
-            "name dev_modflowusg_upstream_weighted_saturation",
-            "type keyword",
-            "reader urword",
-            "optional true",
-            "mf6internal iusgnrhc",
-        ],
-        [
-            "block options",
-            "name dev_modflownwt_upstream_weighting",
-            "type keyword",
-            "reader urword",
-            "optional true",
-            "mf6internal inwtupw",
-        ],
-        [
-            "block options",
-            "name dev_minimum_saturated_thickness",
-            "type double precision",
-            "reader urword",
-            "optional true",
-            "mf6internal satmin",
         ],
         [
             "block options",
@@ -594,10 +572,8 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         k22overk=None,
         k33overk=None,
         perioddata=None,
+        export_array_ascii=None,
         dev_no_newton=None,
-        dev_modflowusg_upstream_weighted_saturation=None,
-        dev_modflownwt_upstream_weighting=None,
-        dev_minimum_saturated_thickness=None,
         dev_omega=None,
         icelltype=0,
         k=1.0,
@@ -638,18 +614,10 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         self._tvk_package = self.build_child_package(
             "tvk", perioddata, "tvk_perioddata", self._tvk_filerecord
         )
+        self.export_array_ascii = self.build_mfdata(
+            "export_array_ascii", export_array_ascii
+        )
         self.dev_no_newton = self.build_mfdata("dev_no_newton", dev_no_newton)
-        self.dev_modflowusg_upstream_weighted_saturation = self.build_mfdata(
-            "dev_modflowusg_upstream_weighted_saturation",
-            dev_modflowusg_upstream_weighted_saturation,
-        )
-        self.dev_modflownwt_upstream_weighting = self.build_mfdata(
-            "dev_modflownwt_upstream_weighting",
-            dev_modflownwt_upstream_weighting,
-        )
-        self.dev_minimum_saturated_thickness = self.build_mfdata(
-            "dev_minimum_saturated_thickness", dev_minimum_saturated_thickness
-        )
         self.dev_omega = self.build_mfdata("dev_omega", dev_omega)
         self.icelltype = self.build_mfdata("icelltype", icelltype)
         self.k = self.build_mfdata("k", k)

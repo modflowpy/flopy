@@ -77,11 +77,6 @@ node_data = pd.DataFrame(
 )
 node_data
 
-# #### convert the DataFrame to a recarray for compatibility with flopy
-
-node_data = node_data.to_records()
-node_data
-
 # ### Stress period information
 # (could also be developed externally)
 
@@ -97,7 +92,7 @@ stress_period_data = pd.DataFrame(
 stress_period_data
 
 pers = stress_period_data.groupby("per")
-stress_period_data = {i: pers.get_group(i).to_records() for i in [0, 1]}
+stress_period_data = {i: pers.get_group(i) for i in [0, 1]}
 stress_period_data
 
 # ### Make ``ModflowMnw2`` package object

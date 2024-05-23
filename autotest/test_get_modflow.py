@@ -1,7 +1,6 @@
 """Test get-modflow utility."""
 
 import os
-import platform
 import sys
 from os.path import expandvars
 from pathlib import Path
@@ -9,11 +8,11 @@ from platform import system
 from urllib.error import HTTPError
 
 import pytest
-from autotest.conftest import get_project_root_path
 from flaky import flaky
 from modflow_devtools.markers import requires_github
 from modflow_devtools.misc import run_py_script
 
+from autotest.conftest import get_project_root_path
 from flopy.utils import get_modflow
 from flopy.utils.get_modflow import get_release, get_releases, select_bindir
 
@@ -21,11 +20,9 @@ rate_limit_msg = "rate limit exceeded"
 flopy_dir = get_project_root_path()
 get_modflow_script = flopy_dir / "flopy" / "utils" / "get_modflow.py"
 bindir_options = {
-    "flopy": (
-        Path(expandvars(r"%LOCALAPPDATA%\flopy")) / "bin"
-        if system() == "Windows"
-        else Path.home() / ".local" / "share" / "flopy" / "bin"
-    ),
+    "flopy": Path(expandvars(r"%LOCALAPPDATA%\flopy")) / "bin"
+    if system() == "Windows"
+    else Path.home() / ".local" / "share" / "flopy" / "bin",
     "python": Path(sys.prefix)
     / ("Scripts" if system() == "Windows" else "bin"),
     "home": Path.home() / ".local" / "bin",
@@ -129,6 +126,8 @@ def test_get_release(repo):
         assert {a.rpartition("_")[2] for a in actual_assets} >= {
             a for a in expected_assets if not a.startswith("win")
         }
+    elif repo == "modflow6-nightly-build":
+        expected_assets.append("macarm.zip")
     else:
         for ostag in expected_ostags:
             assert any(

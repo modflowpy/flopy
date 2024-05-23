@@ -341,7 +341,10 @@ mapview = flopy.plot.PlotMapView(model=ml)
 # Plot a shapefile of
 shp = os.path.join(loadpth, "gis", "bedrock_outcrop_hole_rotate14")
 patch_collection = mapview.plot_shapefile(
-    shp, edgecolor="green", linewidths=2, alpha=0.5  # facecolor='none',
+    shp,
+    edgecolor="green",
+    linewidths=2,
+    alpha=0.5,  # facecolor='none',
 )
 # Plot a shapefile of a cross-section line
 shp = os.path.join(loadpth, "gis", "cross_section_rotate14")

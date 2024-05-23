@@ -488,7 +488,7 @@ class Util3d(DataInterface):
         ext_filename is reset to value.
     bin : bool
         flag to control writing external arrays as binary (optional)
-        (the defaut is False)
+        (the default is False)
 
     Attributes
     ----------
@@ -1405,7 +1405,7 @@ class Transient2d(DataInterface):
             pak_name : str package name (e.g. RCH)
             m4ds : dict(name,(masked) 4d numpy.ndarray)
                 each ndarray must have shape (nper,1,nrow,ncol).
-                if an entire (nrow,ncol) slice is np.NaN, then
+                if an entire (nrow,ncol) slice is np.nan, then
                 that kper is skipped.
         Returns
         -------
@@ -2391,7 +2391,7 @@ class Util2d(DataInterface):
             record multiplier - this method is used primarily for writing model input files
 
         """
-        # convert array to sting with specified format
+        # convert array to string with specified format
         a_string = self.array2string(
             self.shape, self._array, python_format=self.format.py
         )

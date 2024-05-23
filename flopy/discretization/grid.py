@@ -113,26 +113,12 @@ class Grid:
         rotation angle of model grid, as it is rotated around the origin point
     angrot_radians : float
         rotation angle of model grid, in radians
-    xgrid : ndarray
-        returns numpy meshgrid of x edges in reference frame defined by
-        point_type
-    ygrid : ndarray
-        returns numpy meshgrid of y edges in reference frame defined by
-        point_type
-    zgrid : ndarray
-        returns numpy meshgrid of z edges in reference frame defined by
-        point_type
     xcenters : ndarray
         returns x coordinate of cell centers
     ycenters : ndarray
         returns y coordinate of cell centers
     ycenters : ndarray
         returns z coordinate of cell centers
-    xyzgrid : [ndarray, ndarray, ndarray]
-        returns the location of grid edges of all model cells. if the model
-        grid contains spatial reference information, the grid edges are in the
-        coordinate system provided by the spatial reference information.
-        returns a list of three ndarrays for the x, y, and z coordinates
     xyzcellcenters : [ndarray, ndarray, ndarray]
         returns the cell centers of all model cells in the model grid.  if
         the model grid contains spatial reference information, the cell centers
@@ -150,10 +136,6 @@ class Grid:
         returns the model grid lines in a list.  each line is returned as a
         list containing two tuples in the format [(x1,y1), (x2,y2)] where
         x1,y1 and x2,y2 are the endpoints of the line.
-    xyvertices : (point_type) : ndarray
-        1D array of x and y coordinates of cell vertices for whole grid
-        (single layer) in C-style (row-major) order
-        (same as np.ravel())
 
     See Also
     --------
@@ -821,7 +803,7 @@ class Grid:
 
     def cross_section_adjust_indicies(self, k, cbcnt):
         """
-        Method to get adjusted indicies by layer and confining bed
+        Method to get adjusted indices by layer and confining bed
         for PlotCrossSection plotting
 
         Parameters
@@ -844,8 +826,8 @@ class Grid:
         self, plotarray, xcenters, head, elev, projpts
     ):
         """
-        Method to set countour array centers for rare instances where
-        matplotlib contouring is prefered over trimesh plotting
+        Method to set contour array centers for rare instances where
+        matplotlib contouring is preferred over trimesh plotting
 
         Parameters
         ----------

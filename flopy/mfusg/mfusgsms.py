@@ -5,6 +5,7 @@ mfusgsms module.  This is the solver for MODFLOW-USG.
 Contains the MfUsgSms class. Note that the user can access
 the MfUsgSms class as `flopy.mfusg.MfUsgSms`.
 """
+
 from ..pakbase import Package
 from ..utils.flopy_io import line_parse
 from .mfusg import MfUsg

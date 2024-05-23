@@ -159,12 +159,12 @@ def _add_output_nc_variable(
     array = np.zeros(
         (len(times), shape3d[0], shape3d[1], shape3d[2]), dtype=np.float32
     )
-    array[:] = np.NaN
+    array[:] = np.nan
 
     if isinstance(out_obj, ZBNetOutput):
         a = np.asarray(out_obj.zone_array, dtype=np.float32)
         if mask_array3d is not None:
-            a[mask_array3d] = np.NaN
+            a[mask_array3d] = np.nan
         for i, _ in enumerate(times):
             array[i, :, :, :] = a
 
@@ -187,7 +187,7 @@ def _add_output_nc_variable(
                         print(estr)
                     continue
                 if mask_array3d is not None and a.shape == mask_array3d.shape:
-                    a[mask_array3d] = np.NaN
+                    a[mask_array3d] = np.nan
                 try:
                     array[i, :, :, :] = a.astype(np.float32)
                 except Exception as e:
@@ -203,7 +203,7 @@ def _add_output_nc_variable(
         logger.log(f"creating array for {var_name}")
 
     for mask_val in mask_vals:
-        array[np.where(array == mask_val)] = np.NaN
+        array[np.where(array == mask_val)] = np.nan
     mx, mn = np.nanmax(array), np.nanmin(array)
     array[np.isnan(array)] = netcdf.FILLVALUE
 
@@ -596,7 +596,7 @@ def model_export(
         output format flag. 'vtk' will export to vtk
     **kwargs : keyword arguments
         modelgrid: flopy.discretization.Grid
-            user supplied modelgrid object which will supercede the built
+            user supplied modelgrid object which will supersede the built
             in modelgrid object
         crs : pyproj.CRS, int, str, optional if `prjfile` is specified
             Coordinate reference system (CRS) for the model grid
@@ -687,9 +687,9 @@ def package_export(
         package to export
     fmt : str
         output format flag. 'vtk' will export to vtk
-    ** kwargs : keword arguments
+    ** kwargs : keyword arguments
         modelgrid: flopy.discretization.Grid
-            user supplied modelgrid object which will supercede the built
+            user supplied modelgrid object which will supersede the built
             in modelgrid object
         crs : pyproj.CRS, int, str, optional if `prjfile` is specified
             Coordinate reference system (CRS) for the model grid
@@ -873,7 +873,7 @@ def mflist_export(f: Union[str, os.PathLike, NetCdf], mfl, **kwargs):
     mfl : MfList instance
     **kwargs : keyword arguments
         modelgrid : flopy.discretization.Grid
-            model grid instance which will supercede the flopy.model.modelgrid
+            model grid instance which will supersede the flopy.model.modelgrid
         crs : pyproj.CRS, int, str, optional if `prjfile` is specified
             Coordinate reference system (CRS) for the model grid
             (must be projected; geographic CRS are not supported).
@@ -1034,7 +1034,7 @@ def transient2d_export(f: Union[str, os.PathLike], t2d, fmt=None, **kwargs):
         min_valid : minimum valid value
         max_valid : maximum valid value
         modelgrid : flopy.discretization.Grid
-            model grid instance which will supercede the flopy.model.modelgrid
+            model grid instance which will supersede the flopy.model.modelgrid
         if fmt is set to 'vtk', parameters of Vtk initializer
 
     """
@@ -1082,9 +1082,9 @@ def transient2d_export(f: Union[str, os.PathLike], t2d, fmt=None, **kwargs):
         with np.errstate(invalid="ignore"):
             if array.dtype not in [int, np.int32, np.int64]:
                 if mask is not None:
-                    array[:, 0, mask] = np.NaN
-                array[array <= min_valid] = np.NaN
-                array[array >= max_valid] = np.NaN
+                    array[:, 0, mask] = np.nan
+                array[array <= min_valid] = np.nan
+                array[array >= max_valid] = np.nan
                 mx, mn = np.nanmax(array), np.nanmin(array)
             else:
                 mx, mn = np.nanmax(array), np.nanmin(array)
@@ -1099,7 +1099,7 @@ def transient2d_export(f: Union[str, os.PathLike], t2d, fmt=None, **kwargs):
 
         var_name = t2d.name.replace("_", "")
         if isinstance(f, dict):
-            array[array == netcdf.FILLVALUE] = np.NaN
+            array[array == netcdf.FILLVALUE] = np.nan
             f[var_name] = array
             return f
 
@@ -1194,7 +1194,7 @@ def array3d_export(f: Union[str, os.PathLike], u3d, fmt=None, **kwargs):
         min_valid : minimum valid value
         max_valid : maximum valid value
         modelgrid : flopy.discretization.Grid
-            model grid instance which will supercede the flopy.model.modelgrid
+            model grid instance which will supersede the flopy.model.modelgrid
         if fmt is set to 'vtk', parameters of Vtk initializer
 
     """
@@ -1243,7 +1243,7 @@ def array3d_export(f: Union[str, os.PathLike], u3d, fmt=None, **kwargs):
         # if isinstance(f,NetCdf) and array.shape != f.shape:
         #     f.log("broadcasting 3D array for {0}".format(var_name))
         #     full_array = np.empty(f.shape)
-        #     full_array[:] = np.NaN
+        #     full_array[:] = np.nan
         #     full_array[:array.shape[0]] = array
         #     array = full_array
         #     f.log("broadcasting 3D array for {0}".format(var_name))
@@ -1256,7 +1256,7 @@ def array3d_export(f: Union[str, os.PathLike], u3d, fmt=None, **kwargs):
         if mask is not None and array.shape != mask.shape:
             # f.log("broadcasting 3D array for {0}".format(var_name))
             full_array = np.empty(mask.shape)
-            full_array[:] = np.NaN
+            full_array[:] = np.nan
             full_array[: array.shape[0]] = array
             array = full_array
             # f.log("broadcasting 3D array for {0}".format(var_name))
@@ -1268,13 +1268,13 @@ def array3d_export(f: Union[str, os.PathLike], u3d, fmt=None, **kwargs):
                 # if u3d.model.modelgrid.bas6 is not None and "ibound" not
                 # in var_name:
                 #    array[u3d.model.modelgrid.bas6.ibound.array == 0] =
-                # np.NaN
+                # np.nan
                 # elif u3d.model.btn is not None and 'icbund' not in var_name:
-                #    array[u3d.model.modelgrid.btn.icbund.array == 0] = np.NaN
+                #    array[u3d.model.modelgrid.btn.icbund.array == 0] = np.nan
                 if mask is not None:
-                    array[mask] = np.NaN
-                array[array <= min_valid] = np.NaN
-                array[array >= max_valid] = np.NaN
+                    array[mask] = np.nan
+                array[array <= min_valid] = np.nan
+                array[array >= max_valid] = np.nan
                 mx, mn = np.nanmax(array), np.nanmin(array)
             else:
                 mx, mn = np.nanmax(array), np.nanmin(array)
@@ -1372,7 +1372,7 @@ def array2d_export(
         min_valid : minimum valid value
         max_valid : maximum valid value
         modelgrid : flopy.discretization.Grid
-            model grid instance which will supercede the flopy.model.modelgrid
+            model grid instance which will supersede the flopy.model.modelgrid
         if fmt is set to 'vtk', parameters of Vtk initializer
 
     """
@@ -1421,9 +1421,9 @@ def array2d_export(
                     and "ibound" not in u2d.name.lower()
                     and "idomain" not in u2d.name.lower()
                 ):
-                    array[modelgrid.idomain[0, :, :] == 0] = np.NaN
-                array[array <= min_valid] = np.NaN
-                array[array >= max_valid] = np.NaN
+                    array[modelgrid.idomain[0, :, :] == 0] = np.nan
+                array[array <= min_valid] = np.nan
+                array[array >= max_valid] = np.nan
                 mx, mn = np.nanmax(array), np.nanmin(array)
             else:
                 mx, mn = np.nanmax(array), np.nanmin(array)
@@ -1525,9 +1525,9 @@ def export_array(
         model grid
     filename : str or PathLike
         Path of output file. Export format is determined by
-        file extention.
+        file extension.
         '.asc'  Arc Ascii grid
-        '.tif'  GeoTIFF (requries rasterio package)
+        '.tif'  GeoTIFF (requires rasterio package)
         '.shp'  Shapefile
     a : 2D numpy.ndarray
         Array to export
@@ -1924,7 +1924,7 @@ def export_array_contours(
     modelgrid : flopy.discretization.Grid object
         model grid object
     filename : str or PathLike
-        Path of output file with '.shp' extention.
+        Path of output file with '.shp' extension.
     a : 2D numpy array
         Array to contour
     fieldname : str

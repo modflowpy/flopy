@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on February 07, 2024 20:16:08 UTC
+# FILE created on May 23, 2024 14:30:07 UTC
 import os
 from typing import Union
 
@@ -40,6 +40,11 @@ class MFSimulation(mfsimbase.MFSimulationBase):
           keyword, input summaries will be written for those packages that
           support newer input data model routines. Not all packages are
           supported yet by the newer input data model routines.
+    hpc : {varname:data} or hpc_data data
+        * Contains data for the hpc package. Data can be stored in a dictionary
+          containing data for the hpc package with variable names as keys and
+          package data as values. Data just for the hpc variable is also
+          acceptable. See hpc package documentation for more information.
     tdis6 : string
         * tdis6 (string) is the name of the Temporal Discretization (TDIS)
           Input File.
@@ -63,7 +68,8 @@ class MFSimulation(mfsimbase.MFSimulationBase):
           in the solution group, then MXITER must be 1.
     solutiongroup : [slntype, slnfname, slnmnames]
         * slntype (string) is the type of solution. The Integrated Model
-          Solution (IMS6) is the only supported option in this version.
+          Solution (IMS6) and Explicit Model Solution (EMS6) are the only
+          supported options in this version.
         * slnfname (string) name of file containing solution input.
         * slnmnames (string) is the array of model names to add to this
           solution. The number of model names is determined by the number of
@@ -94,6 +100,7 @@ class MFSimulation(mfsimbase.MFSimulationBase):
         memory_print_option=None,
         maxerrors=None,
         print_input=None,
+        hpc_data=None,
     ):
         super().__init__(
             sim_name=sim_name,
@@ -117,6 +124,7 @@ class MFSimulation(mfsimbase.MFSimulationBase):
         self.memory_print_option = self.name_file.memory_print_option
         self.maxerrors = self.name_file.maxerrors
         self.print_input = self.name_file.print_input
+        self.hpc_data = self._create_package("hpc", hpc_data)
 
     @classmethod
     def load(

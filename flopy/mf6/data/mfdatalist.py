@@ -133,7 +133,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             MODFLOW zero-based stress period number to return. (default is
             zero)
         mask : bool
-            return array with np.NaN instead of zero
+            return array with np.nan instead of zero
 
         Returns
         ----------
@@ -221,8 +221,9 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                         >= VerbosityLevel.verbose.value
                     ):
                         print(
-                            "Storing {} to external file {}.."
-                            ".".format(self.structure.name, external_file_path)
+                            "Storing {} to external file {}.." ".".format(
+                                self.structure.name, external_file_path
+                            )
                         )
                     external_data = {
                         "filename": external_file_path,
@@ -712,7 +713,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                         if (
                             val is not None
                             and val.lower() == search_term
-                            and (col == None or col == col_num)
+                            and (col is None or col == col_num)
                         ):
                             return (row, col)
                         col_num += 1
@@ -977,7 +978,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 ):
                     data_complete_len = len(data_line)
                     if data_complete_len <= index:
-                        if data_item.optional == False:
+                        if data_item.optional is False:
                             message = (
                                 "Not enough data provided "
                                 "for {}. Data for required data "
@@ -1391,7 +1392,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             data_path=self._path,
         )
 
-    def _get_storage_obj(self):
+    def _get_storage_obj(self, first_record=False):
         return self._data_storage
 
     def plot(
@@ -1744,6 +1745,9 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                 self.get_data_prep(sto_key)
                 if super().has_data():
                     return True
+            for val in self.empty_keys.values():
+                if val:
+                    return True
             return False
         else:
             self.get_data_prep(key)
@@ -2046,7 +2050,11 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
     def _new_storage(self, stress_period=0):
         return {}
 
-    def _get_storage_obj(self):
+    def _get_storage_obj(self, first_record=False):
+        if first_record and isinstance(self._data_storage, dict):
+            for value in self._data_storage.values():
+                return value
+            return None
         if (
             self._current_key is None
             or self._current_key not in self._data_storage

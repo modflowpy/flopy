@@ -361,10 +361,9 @@ class MfGrdFile(FlopyBinaryData):
         -------
         nlay : int
         """
-        if self._grid_type in ("DIS", "DISV"):
+        nlay = None
+        if "NLAY" in self._datadict:
             nlay = self._datadict["NLAY"]
-        else:
-            nlay = None
         return nlay
 
     @property
@@ -376,10 +375,9 @@ class MfGrdFile(FlopyBinaryData):
         -------
         nrow : int
         """
-        if self._grid_type == "DIS":
+        nrow = None
+        if "NROW" in self._datadict:
             nrow = self._datadict["NROW"]
-        else:
-            nrow = None
         return nrow
 
     @property
@@ -391,10 +389,9 @@ class MfGrdFile(FlopyBinaryData):
         -------
         ncol : int
         """
-        if self._grid_type == "DIS":
+        ncol = None
+        if "NCOL" in self._datadict:
             ncol = self._datadict["NCOL"]
-        else:
-            ncol = None
         return ncol
 
     @property
@@ -406,12 +403,9 @@ class MfGrdFile(FlopyBinaryData):
         -------
         ncpl : int
         """
-        if self._grid_type == "DISV":
+        ncpl = None
+        if "NCPL" in self._datadict:
             ncpl = self._datadict["NCPL"]
-        if self._grid_type == "DIS":
-            ncpl = self.nrow * self.ncol
-        else:
-            None
         return ncpl
 
     @property
@@ -423,10 +417,14 @@ class MfGrdFile(FlopyBinaryData):
         -------
         ncells : int
         """
-        if self._grid_type in ("DIS", "DISV"):
+        # disu is the only grid that has the number of cells
+        # set to nodes.  All other grids use NCELLS in grb
+        if "NCELLS" in self._datadict:
             ncells = self._datadict["NCELLS"]
-        else:
+        elif "NODES" in self._datadict:
             ncells = self._datadict["NODES"]
+        else:
+            ncells = None
         return ncells
 
     @property
@@ -438,10 +436,7 @@ class MfGrdFile(FlopyBinaryData):
         -------
         nodes : int
         """
-        if self._grid_type in ("DIS", "DISV"):
-            nodes = self.ncells
-        else:
-            nodes = self._datadict["NODES"]
+        nodes = self.ncells
         return nodes
 
     @property
@@ -455,10 +450,18 @@ class MfGrdFile(FlopyBinaryData):
         """
         if self._grid_type == "DIS":
             shape = (self.nlay, self.nrow, self.ncol)
+        elif self._grid_type == "DIS2D":
+            shape = (self.nrow, self.ncol)
         elif self._grid_type == "DISV":
             shape = (self.nlay, self.ncpl)
-        else:
+        elif self._grid_type == "DISV2D":
+            shape = (self.ncells,)
+        elif self._grid_type == "DISV1D":
+            shape = (self.ncells,)
+        elif self._grid_type == "DISU":
             shape = (self.nodes,)
+        else:
+            shape = None
         return shape
 
     @property
@@ -535,10 +538,9 @@ class MfGrdFile(FlopyBinaryData):
         -------
         delr : ndarray of floats
         """
-        if self.grid_type == "DIS":
+        delr = None
+        if "DELR" in self._datadict:
             delr = self._datadict["DELR"]
-        else:
-            delr = None
         return delr
 
     @property
@@ -551,10 +553,9 @@ class MfGrdFile(FlopyBinaryData):
         -------
         delc : ndarray of floats
         """
-        if self.grid_type == "DIS":
+        delc = None
+        if "DELC" in self._datadict:
             delc = self._datadict["DELC"]
-        else:
-            delc = None
         return delc
 
     @property
@@ -567,7 +568,10 @@ class MfGrdFile(FlopyBinaryData):
         -------
         top : ndarray of floats
         """
-        return self._datadict["TOP"]
+        top = None
+        if "TOP" in self._datadict:
+            top = self._datadict["TOP"]
+        return top
 
     @property
     def bot(self):
@@ -578,9 +582,10 @@ class MfGrdFile(FlopyBinaryData):
         -------
         bot : ndarray of floats
         """
-        if self.grid_type in ("DIS", "DISV"):
+        bot = None
+        if "BOTM" in self._datadict:
             bot = self._datadict["BOTM"]
-        else:
+        elif "BOT" in self._datadict:
             bot = self._datadict["BOT"]
         return bot
 
@@ -733,7 +738,7 @@ class MfGrdFile(FlopyBinaryData):
         -------
         cell2d : list of lists
         """
-        if self._grid_type == "DISV":
+        if self._grid_type in ("DISV", "DISV2D", "DISV1D"):
             vertices, cell2d = self.__build_vertices_cell2d()
         else:
             vertices, cell2d = None, None

@@ -241,6 +241,148 @@ def test_get_structured_faceflows_freyberg(
 
 @pytest.mark.mf6
 @requires_exe("mf6")
+def test_get_structured_faceflows_idomain(
+    function_tmpdir,
+):
+    name = "gsffi"
+
+    Lx = 1000
+    Ly = 1000
+
+    ncol = 100
+    nrow = 100
+    nlay = 3
+    top = 60
+    botm = [40, 20, 0]
+
+    Qwell = -1000
+
+    # Simulation
+    sim = flopy.mf6.MFSimulation(
+        sim_name=name,
+        version="mf6",
+        exe_name="mf6",
+        sim_ws=function_tmpdir,
+    )
+
+    tdis = flopy.mf6.ModflowTdis(
+        simulation=sim,
+        time_units="DAYS",
+        nper=1,
+        perioddata=[(1, 1, 1)],
+    )
+
+    ims = flopy.mf6.ModflowIms(
+        simulation=sim,
+        inner_dvclose=1e-6,
+    )
+
+    # Groundwater flow model
+    gwf = flopy.mf6.ModflowGwf(
+        simulation=sim,
+        modelname=name,
+        save_flows=True,
+    )
+
+    idomain = np.ones((nlay, nrow, ncol))
+    for r in range(40, 60):
+        for c in range(40, 60):
+            idomain[1, r, c] = -1
+
+    dis = flopy.mf6.ModflowGwfdis(
+        model=gwf,
+        length_units="METERS",
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=Lx / ncol,
+        delc=Ly / nrow,
+        top=top,
+        botm=botm,
+        idomain=idomain,
+    )
+
+    npf = flopy.mf6.ModflowGwfnpf(
+        model=gwf,
+        icelltype=[0, 0, 0],
+        k=[10, 0.01, 10],
+        k33=[1, 0.001, 1],
+    )
+
+    well_list = [
+        [
+            (nlay - 1, nrow // 2, ncol // 2),
+            Qwell,
+        ]
+    ]
+    well_spd = {0: well_list}
+
+    wel = flopy.mf6.ModflowGwfwel(
+        model=gwf,
+        stress_period_data=well_spd,
+    )
+
+    chd_list = []
+    for r in range(nrow):
+        for c in range(ncol):
+            chd_list.append(
+                [
+                    (0, r, c),
+                    top,
+                ]
+            )
+    chd_spd = {0: chd_list}
+
+    chd = flopy.mf6.ModflowGwfchd(
+        model=gwf,
+        stress_period_data=chd_spd,
+    )
+
+    ic = flopy.mf6.ModflowGwfic(
+        model=gwf,
+        strt=top,
+    )
+
+    oc = flopy.mf6.ModflowGwfoc(
+        model=gwf,
+        budget_filerecord=f"{name}.cbc",
+        head_filerecord=f"{name}.hds",
+        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    )
+
+    sim.write_simulation(silent=True)
+    success, _ = sim.run_simulation(silent=True)
+    assert success
+
+    cbb = gwf.output.budget()  # get handle to binary budget file
+    Qja = cbb.get_data(text="FLOW-JA-FACE")[0]
+    cbc = flopy.mf6.utils.get_structured_faceflows(
+        Qja, f"{function_tmpdir}/{name}.dis.grb"
+    )
+    cbf = cbc[2]
+
+    cbf0 = cbf[0, :, :]
+    # Sum vertical cell-face flows for all cells in the top aquifer
+    Qv_sum = cbf0.sum()
+    idx = idomain[1, :, :] == -1
+    Qv_wind = cbf0[idx].sum()  # Flow through aquitard window
+    Qv_aqui = cbf0[~idx].sum()  # Flow across aquitard
+
+    print(f"Total flow across bottom of upper aquifer {Qv_sum:0.2f} m^3/d")
+    print(
+        f"Flow across bottom of upper aquifer to aquitard {Qv_aqui:0.2f} m^3/d"
+    )
+    print(
+        f"Flow across bottom of upper aquifer to lower aquifer {Qv_wind:0.2f} m^3/d"
+    )
+
+    print(np.isclose(-Qwell, Qv_sum, atol=1e-3))
+    assert np.isclose(-Qwell, Qv_sum, atol=1e-3)
+    assert Qv_wind > Qv_aqui
+
+
+@pytest.mark.mf6
+@requires_exe("mf6")
 def test_flowja_residuals(function_tmpdir, mf6_freyberg_path):
     sim = MFSimulation.load(
         sim_name="freyberg",

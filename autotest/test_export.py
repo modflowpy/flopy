@@ -7,7 +7,6 @@ from typing import List
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from autotest.conftest import get_example_data_path
 from flaky import flaky
 from modflow_devtools.markers import (
     excludes_platform,
@@ -17,6 +16,7 @@ from modflow_devtools.markers import (
 from modflow_devtools.misc import has_pkg
 
 import flopy
+from autotest.conftest import get_example_data_path
 from flopy.discretization import StructuredGrid, UnstructuredGrid
 from flopy.export import NetCdf
 from flopy.export.shapefile_utils import recarray2shp, shp2recarray
@@ -520,7 +520,7 @@ def test_shapefile_ibound(function_tmpdir, example_data_path):
     field_names = [item[0] for item in shape.fields][1:]
     ib_idx = field_names.index("ibound_1")
     txt = f"should be int instead of {type(shape.record(0)[ib_idx])}"
-    assert type(shape.record(0)[ib_idx]) == int, txt
+    assert isinstance(shape.record(0)[ib_idx], int), txt
     shape.close()
 
 
@@ -1455,13 +1455,15 @@ def test_vtk_unstructured(function_tmpdir, unstructured_grid):
 
 
 @requires_pkg("vtk", "pyvista")
-def test_vtk_to_pyvista(function_tmpdir, example_data_path):
+def test_vtk_to_pyvista(function_tmpdir):
+    from pprint import pformat
+
     from autotest.test_mp7_cases import Mp7Cases
 
     case_mf6 = Mp7Cases.mp7_mf6(function_tmpdir)
     case_mf6.write_input()
     success, buff = case_mf6.run_model()
-    assert success, f"MP7 model ({case_mf6.name}) failed"
+    assert success, f"MP7 model ({case_mf6.name}) failed: {pformat(buff)}"
 
     gwf = case_mf6.flowmodel
     plf = PathlineFile(Path(case_mf6.model_ws) / f"{case_mf6.name}.mppth")
@@ -1479,6 +1481,9 @@ def test_vtk_to_pyvista(function_tmpdir, example_data_path):
     n_pts = sum([pl.shape[0] for pl in pls])
     assert pathlines.n_points == n_pts
     assert pathlines.n_cells == n_pts + len(pls)
+    assert "particleid" in pathlines.point_data
+    assert "time" in pathlines.point_data
+    assert "k" in pathlines.point_data
 
     # uncomment to debug
     # grid.plot()
@@ -1702,7 +1707,7 @@ def test_vtk_add_model_without_packages_names(function_tmpdir):
 
 
 @pytest.mark.mf6
-@requires_pkg("vtk")
+@requires_pkg("vtk", "shapely")
 def test_vtk_export_disv1_model(function_tmpdir):
     from vtkmodules.util.numpy_support import vtk_to_numpy
     from vtkmodules.vtkIOLegacy import vtkUnstructuredGridReader
@@ -1774,7 +1779,7 @@ def test_vtk_export_disv1_model(function_tmpdir):
 
 
 @pytest.mark.mf6
-@requires_pkg("vtk")
+@requires_pkg("vtk", "shapely")
 def test_vtk_export_disv2_model(function_tmpdir):
     from vtkmodules.util.numpy_support import vtk_to_numpy
     from vtkmodules.vtkIOLegacy import vtkUnstructuredGridReader

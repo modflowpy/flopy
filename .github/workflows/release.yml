@@ -63,8 +63,10 @@ jobs:
           python -c "import flopy; print(f'FloPy version: {flopy.__version__}')"
           echo "version=${ver#"v"}" >> $GITHUB_OUTPUT
 
-      - name: Lint Python files
-        run: python scripts/pull_request_prepare.py
+      - name: Lint and format Python files
+        run: |
+          ruff check . --fix
+          ruff format .
 
       - name: Run tests
         working-directory: autotest
@@ -80,13 +82,9 @@ jobs:
           path: |
             ./autotest/.failed/**
 
-      - name: Run notebooks
-        working-directory: scripts
-        run: python run_notebooks.py
-
       - name: Generate changelog
         id: cliff
-        uses: orhun/git-cliff-action@v2
+        uses: orhun/git-cliff-action@v3
         with:
           config: cliff.toml
           args: --verbose --unreleased --tag ${{ steps.version.outputs.version }}

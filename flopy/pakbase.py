@@ -210,7 +210,7 @@ class PackageInterface:
             if kp in self.__dict__:
                 kparams[kp] = name
         if "hk" in self.__dict__:
-            if self.hk.shape[1] == None:
+            if self.hk.shape[1] is None:
                 hk = np.asarray(
                     [a.array.flatten() for a in self.hk], dtype=object
                 )
@@ -219,7 +219,7 @@ class PackageInterface:
         else:
             hk = self.k.array.copy()
         if "vka" in self.__dict__ and self.layvka.sum() > 0:
-            if self.vka.shape[1] == None:
+            if self.vka.shape[1] is None:
                 vka = np.asarray(
                     [a.array.flatten() for a in self.vka], dtype=object
                 )
@@ -296,7 +296,7 @@ class PackageInterface:
         ----------
         f : str or file handle
             String defining file name or file handle for summary file
-            of check method output. If a sting is passed a file handle
+            of check method output. If a string is passed a file handle
             is created. If f is None, check method does not write
             results to a summary file. (default is None)
         verbose : bool
@@ -509,7 +509,7 @@ class Package(PackageInterface):
         s = self.__doc__
         exclude_attributes = ["extension", "heading", "name", "parent", "url"]
         for attr, value in sorted(self.__dict__.items()):
-            if not (attr in exclude_attributes):
+            if attr not in exclude_attributes:
                 if isinstance(value, list):
                     if len(value) == 1:
                         s += f" {attr} = {value[0]!s}\n"
@@ -742,7 +742,7 @@ class Package(PackageInterface):
     @staticmethod
     def _get_sfac_columns():
         """
-        This should be overriden for individual packages that support an
+        This should be overridden for individual packages that support an
         sfac multiplier for individual list columns
 
         """
@@ -1002,15 +1002,15 @@ class Package(PackageInterface):
                         it += 1
                 it += 1
 
-        # add auxillary information to nwt options
+        # add auxiliary information to nwt options
         if nwt_options is not None:
             if options:
                 if options[0] == "noprint":
                     nwt_options.noprint = True
                     if len(options) > 1:
-                        nwt_options.auxillary = options[1:]
+                        nwt_options.auxiliary = options[1:]
                 else:
-                    nwt_options.auxillary = options
+                    nwt_options.auxiliary = options
 
             options = nwt_options
 
@@ -1034,9 +1034,9 @@ class Package(PackageInterface):
                         if options[0] == "noprint":
                             nwt_options.noprint = True
                             if len(options) > 1:
-                                nwt_options.auxillary = options[1:]
+                                nwt_options.auxiliary = options[1:]
                         else:
-                            nwt_options.auxillary = options
+                            nwt_options.auxiliary = options
 
                     options = nwt_options
                 else:

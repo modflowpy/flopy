@@ -54,24 +54,32 @@ def max_tuple_abs_size(some_tuple):
 
 class DatumUtil:
     @staticmethod
-    def is_int(str):
-        try:
-            int(str)
-            return True
-        except TypeError:
-            return False
-        except ValueError:
-            return False
+    def is_int(v):
+        if isinstance(v, np.ndarray):
+            try:
+                int(v.item())
+            except ValueError:
+                return False
+        else:
+            try:
+                int(v)
+                return True
+            except (TypeError, ValueError):
+                return False
 
     @staticmethod
-    def is_float(str):
-        try:
-            float(str)
-            return True
-        except TypeError:
-            return False
-        except ValueError:
-            return False
+    def is_float(v):
+        if isinstance(v, np.ndarray):
+            try:
+                float(v.item())
+            except ValueError:
+                return False
+        else:
+            try:
+                float(v)
+                return True
+            except (TypeError, ValueError):
+                return False
 
     @staticmethod
     def is_basic_type(obj):
@@ -135,7 +143,7 @@ class PyListUtil:
         compares two lists, returns true if they are identical (with max_error)
     spilt_data_line : (line : string) : list
         splits a string apart (using split) and then cleans up the results
-        dealing with various MODFLOW input file releated delimiters.  returns
+        dealing with various MODFLOW input file related delimiters.  returns
         the delimiter type used.
     clean_numeric : (text : string) : string
         returns a cleaned up version of 'text' with only numeric characters
@@ -360,11 +368,21 @@ class PyListUtil:
                         max_split_type = delimiter
                         max_split_list = alt_split
 
+            if max_split_type is None and max_split_size > 0:
+                split_first = max_split_list[0].strip().split(",")
+                if len(split_first) > 1:
+                    max_split_list = split_first + max_split_list[1:]
+                    max_split_size = len(max_split_list)
+                    max_split_type = "combo"
+
             if max_split_type is not None and max_split_size > 1:
                 clean_line = max_split_list
                 if PyListUtil.line_num == 0:
                     PyListUtil.delimiter_used = max_split_type
-                elif PyListUtil.delimiter_used != max_split_type:
+                elif (
+                    PyListUtil.delimiter_used != max_split_type
+                    or max_split_type == "combo"
+                ):
                     PyListUtil.consistent_delim = False
             if max_split_size > 1:
                 PyListUtil.line_num += 1

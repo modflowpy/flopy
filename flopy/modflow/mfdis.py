@@ -612,9 +612,7 @@ class ModflowDis(Package):
         None
 
         """
-        if (
-            check
-        ):  # allows turning off package checks when writing files at model level
+        if check:  # allows turning off package checks when writing files at model level
             self.check(
                 f=f"{self.name[0]}.chk",
                 verbose=self.parent.verbose,
@@ -667,7 +665,7 @@ class ModflowDis(Package):
         ----------
         f : str or file handle
             String defining file name or file handle for summary file
-            of check method output. If a sting is passed a file handle
+            of check method output. If a string is passed a file handle
             is created. If f is None, check method does not write
             results to a summary file. (default is None)
         verbose : bool

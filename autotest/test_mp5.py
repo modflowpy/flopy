@@ -1,11 +1,9 @@
 import os
 
 import numpy as np
-import pandas as pd
-from autotest.test_mp6 import eval_timeseries
 from matplotlib import pyplot as plt
-from modflow_devtools.markers import requires_pkg
 
+from autotest.test_mp6 import eval_timeseries
 from flopy.modflow import Modflow
 from flopy.plot import PlotMapView
 from flopy.utils import EndpointFile, PathlineFile
@@ -50,14 +48,8 @@ def test_mp5_load(function_tmpdir, example_data_path):
     for n in pthobj.nid:
         p = pthobj.get_data(partid=n)
         e = endobj.get_data(partid=n)
-        try:
-            mm.plot_pathline(p, colors=colors[n], layer="all")
-        except:
-            assert False, f'could not plot pathline {n + 1} with layer="all"'
-        try:
-            mm.plot_endpoint(e)
-        except:
-            assert False, f'could not plot endpoint {n + 1} with layer="all"'
+        mm.plot_pathline(p, colors=colors[n], layer="all")
+        mm.plot_endpoint(e)
 
     # plot the grid and ibound array
     mm.plot_grid(lw=0.5)

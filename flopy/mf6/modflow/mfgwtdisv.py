@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on February 07, 2024 20:16:08 UTC
+# FILE created on May 23, 2024 14:30:07 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -45,6 +45,9 @@ class ModflowGwtdisv(mfpackage.MFPackage):
           The value for ANGROT does not affect the model simulation, but it is
           written to the binary grid file so that postprocessors can locate the
           grid in space.
+    export_array_ascii : boolean
+        * export_array_ascii (boolean) keyword that specifies input griddata
+          arrays should be written to layered ascii output files.
     nlay : integer
         * nlay (integer) is the number of layers in the model grid.
     ncpl : integer
@@ -155,6 +158,14 @@ class ModflowGwtdisv(mfpackage.MFPackage):
             "type double precision",
             "reader urword",
             "optional true",
+        ],
+        [
+            "block options",
+            "name export_array_ascii",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_ascii",
         ],
         [
             "block dimensions",
@@ -304,6 +315,7 @@ class ModflowGwtdisv(mfpackage.MFPackage):
         xorigin=None,
         yorigin=None,
         angrot=None,
+        export_array_ascii=None,
         nlay=None,
         ncpl=None,
         nvert=None,
@@ -326,6 +338,9 @@ class ModflowGwtdisv(mfpackage.MFPackage):
         self.xorigin = self.build_mfdata("xorigin", xorigin)
         self.yorigin = self.build_mfdata("yorigin", yorigin)
         self.angrot = self.build_mfdata("angrot", angrot)
+        self.export_array_ascii = self.build_mfdata(
+            "export_array_ascii", export_array_ascii
+        )
         self.nlay = self.build_mfdata("nlay", nlay)
         self.ncpl = self.build_mfdata("ncpl", ncpl)
         self.nvert = self.build_mfdata("nvert", nvert)

@@ -150,7 +150,7 @@ class MfUsgDisU(Package):
         expanded if CLN or GNC nodes exist in a simulation.
         (default is None.  cl1 and cl2 must be specified, or cl12 must be
         specified)
-    fahl : float or arry of floats
+    fahl : float or array of floats
         Area of the interface Anm between nodes n and m.
         (default is None.  fahl must be specified.)
     perlen : float or array of floats (nper)

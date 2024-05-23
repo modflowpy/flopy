@@ -254,7 +254,7 @@ class MFSimulationData:
         self.verify_data = True
         self.debug = False
         self.verbose = True
-        self.verbosity_level = VerbosityLevel.normal
+        self._verbosity_level = VerbosityLevel.normal
         self.max_columns_user_set = False
         self.max_columns_auto_set = False
         self.use_pandas = True
@@ -274,6 +274,17 @@ class MFSimulationData:
         # --- temporary variables ---
         # other external files referenced
         self.referenced_files = {}
+
+    @property
+    def verbosity_level(self):
+        return self._verbosity_level
+
+    @verbosity_level.setter
+    def verbosity_level(self, val):
+        if isinstance(val, VerbosityLevel):
+            self._verbosity_level = val
+        elif isinstance(val, int):
+            self._verbosity_level = VerbosityLevel(val)
 
     @property
     def lazy_io(self):
@@ -614,9 +625,9 @@ class MFSimulationBase(PackageContainer):
     def _get_data_str(self, formal):
         file_mgt = self.simulation_data.mfpath
         data_str = (
-            "sim_name = {}\nsim_path = {}\nexe_name = "
-            "{}\n"
-            "\n".format(self.name, file_mgt.get_sim_path(), self.exe_name)
+            "sim_name = {}\nsim_path = {}\nexe_name = " "{}\n" "\n".format(
+                self.name, file_mgt.get_sim_path(), self.exe_name
+            )
         )
 
         for package in self._packagelist:
@@ -805,6 +816,9 @@ class MFSimulationBase(PackageContainer):
                 package="nam",
                 message=message,
             )
+        if models is None:
+            return instance
+
         for item in models:
             # resolve model working folder and name file
             path, name_file = os.path.split(item[1])
@@ -1306,6 +1320,26 @@ class MFSimulationBase(PackageContainer):
                         mfdata_except=mfde, package="nam", message=message
                     )
 
+    def _create_package(self, package_type, package_data):
+        if package_data is None:
+            return None
+        if not isinstance(package_data, dict):
+            message = (
+                "Error occurred while creating the solution package "
+                f"{package_type}.  Package data must be provided in a "
+                f"dictionary.  User provided type {type(package_data)}."
+            )
+            raise MFDataException(package=package_type, message=message)
+        # find package - only supporting utl packages for now
+        package_obj = self.package_factory(package_type, "utl")
+        if package_obj is not None:
+            # determine file name
+            if "filename" not in package_data:
+                package_data["filename"] = f"{self.name}.{package_type}"
+            # create package which should automatically register with the
+            # simulation
+            pkg = package_obj(self, **package_data)
+
     @staticmethod
     def _rename_package_group(group_dict, name):
         package_type_count = {}
@@ -1535,7 +1569,7 @@ class MFSimulationBase(PackageContainer):
         if not sim_data.max_columns_user_set:
             # search for dis packages
             for model in self._models.values():
-                dis = model.get_package("dis")
+                dis = model.get_package("dis", type_only=True)
                 if dis is not None and hasattr(dis, "ncol"):
                     sim_data.max_columns_of_data = dis.ncol.get_data()
                     sim_data.max_columns_user_set = False
@@ -1631,6 +1665,7 @@ class MFSimulationBase(PackageContainer):
         normal_msg="normal termination",
         use_async=False,
         cargs=None,
+        custom_print=None,
     ):
         """
         Run the simulation.
@@ -1657,6 +1692,11 @@ class MFSimulationBase(PackageContainer):
             cargs : str or list of strings
                 Additional command line arguments to pass to the executable.
                 default is None
+            custom_print: callable
+                Optional callbale for printing. It will replace the builtin
+                print function. This is useful for shorter prints or integration
+                into other systems such as GUIs.
+                default is None, i.e. use the builtion print
 
         Returns
         --------
@@ -1683,6 +1723,7 @@ class MFSimulationBase(PackageContainer):
             normal_msg=normal_msg,
             use_async=use_async,
             cargs=cargs,
+            custom_print=custom_print,
         )
 
     def delete_output_files(self):
@@ -1727,6 +1768,17 @@ class MFSimulationBase(PackageContainer):
                 del self._other_files[package.filename]
 
             self._remove_package(package)
+
+        # if this is a package referenced from a filerecord, remove filerecord
+        # from name file
+        file_record_name = f"_{package.package_type}_filerecord"
+        if hasattr(self.name_file, file_record_name):
+            file_record = getattr(self.name_file, file_record_name)
+            if isinstance(file_record, mfdata.MFData):
+                file_record.set_data(None)
+            if hasattr(self.name_file, package.package_type):
+                child_pkgs = getattr(self.name_file, package.package_type)
+                child_pkgs._remove_packages(package.filename, True)
 
     @property
     def model_dict(self):
@@ -2100,6 +2152,13 @@ class MFSimulationBase(PackageContainer):
                 )
                 package.filename = file_name
                 self._other_files[file_name] = package
+
+            # If this package is declared in the namefile options block,
+            # update namefile
+            file_record = f"_{package.package_type}_filerecord"
+            if hasattr(self.name_file, file_record):
+                fr_obj = getattr(self.name_file, file_record)
+                fr_obj.set_data(package.filename)
 
         if package.package_type.lower() in self.structure.package_struct_objs:
             return (

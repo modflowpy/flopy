@@ -452,7 +452,10 @@ mapview = flopy.plot.PlotMapView(model=ml, ax=ax)
 # Plot a shapefile of
 shp = os.path.join(loadpth, "gis", "bedrock_outcrop_hole")
 patch_collection = mapview.plot_shapefile(
-    shp, edgecolor="green", linewidths=2, alpha=0.5  # facecolor='none',
+    shp,
+    edgecolor="green",
+    linewidths=2,
+    alpha=0.5,  # facecolor='none',
 )
 # Plot a shapefile of a cross-section line
 shp = os.path.join(loadpth, "gis", "cross_section")
@@ -488,7 +491,10 @@ mapview = flopy.plot.PlotMapView(model=ml)
 # Plot a shapefile of
 shp = os.path.join(loadpth, "gis", "bedrock_outcrop_hole_rotate14")
 patch_collection = mapview.plot_shapefile(
-    shp, edgecolor="green", linewidths=2, alpha=0.5  # facecolor='none',
+    shp,
+    edgecolor="green",
+    linewidths=2,
+    alpha=0.5,  # facecolor='none',
 )
 # Plot a shapefile of a cross-section line
 shp = os.path.join(loadpth, "gis", "cross_section_rotate14")
@@ -1024,7 +1030,7 @@ with styles.USGSMap():
     plt.colorbar(quadmesh, shrink=0.75)
 
     # change the font type to comic sans
-    styles.set_font_type(family="fantasy", fontname="Comic Sans MS"),
+    (styles.set_font_type(family="fantasy", fontname="Comic Sans MS"),)
 
     # use styles to add a heading, xlabel, ylabel, and remove tick marks
     styles.heading(

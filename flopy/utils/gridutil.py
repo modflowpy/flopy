@@ -33,9 +33,9 @@ def get_lni(ncpl, nodes) -> List[Tuple[int, int]]:
     """
 
     if not isinstance(ncpl, (int, list, tuple, np.ndarray)):
-        raise ValueError(f"ncpl must be int or array-like")
+        raise ValueError("ncpl must be int or array-like")
     if not isinstance(nodes, (list, tuple, np.ndarray)):
-        raise ValueError(f"nodes must be array-like")
+        raise ValueError("nodes must be array-like")
 
     if len(nodes) == 0:
         return []

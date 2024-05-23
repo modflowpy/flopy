@@ -142,7 +142,7 @@ class GridIntersect:
        structured routines, especially for larger grids.
     """
 
-    def __init__(self, mfgrid, method=None, rtree=True):
+    def __init__(self, mfgrid, method=None, rtree=True, local=False):
         """Intersect shapes (Point, Linestring, Polygon) with a modflow grid.
 
         Parameters
@@ -150,16 +150,21 @@ class GridIntersect:
         mfgrid : flopy modflowgrid
             MODFLOW grid as implemented in flopy
         method : str, optional
-            default is None, which determines intersection method based on
-            the grid type. Options are either 'vertex' which uses shapely
-            interesection operations or 'structured' which uses optimized
-            methods that only work for structured grids
+            Options are either 'vertex' which uses shapely intersection operations
+            or 'structured' which uses optimized methods that only work for structured
+            grids. The default is None, which determines intersection method based on
+            the grid type.
         rtree : bool, optional
             whether to build an STR-Tree, default is True. If False no STR-tree
             is built, but intersects will loop through all model gridcells
             (which is generally slower). Only read when `method='vertex'`.
+        local : bool, optional
+            use local model coordinates from model grid to build grid geometries,
+            default is False and uses real-world coordinates (with offset and rotation),
+             if specified.
         """
         self.mfgrid = mfgrid
+        self.local = local
         if method is None:
             # determine method from grid_type
             self.method = self.mfgrid.grid_type
@@ -356,8 +361,11 @@ class GridIntersect:
         ncol = self.mfgrid.ncol
         ncells = nrow * ncol
         cellids = np.arange(ncells)
-        xvertices = self.mfgrid.xvertices
-        yvertices = self.mfgrid.yvertices
+        if self.local:
+            xvertices, yvertices = np.meshgrid(*self.mfgrid.xyedges)
+        else:
+            xvertices = self.mfgrid.xvertices
+            yvertices = self.mfgrid.yvertices
 
         # arrays of coordinates for rectangle cells
         I, J = np.ogrid[0:nrow, 0:ncol]
@@ -421,47 +429,28 @@ class GridIntersect:
         cellids : array_like
             array of cellids
         """
-        shapely_geo = import_optional_dependency("shapely.geometry")
-
-        # for cell2d rec-arrays
-        geoms = []
-        cellids = []
-        if isinstance(self.mfgrid._cell2d, np.recarray):
-            for icell in self.mfgrid._cell2d.icell2d:
-                points = []
-                icverts = [
-                    f"icvert_{i}"
-                    for i in range(self.mfgrid._cell2d["ncvert"][icell])
-                ]
-                for iv in self.mfgrid._cell2d[icverts][icell]:
-                    points.append(
-                        (
-                            self.mfgrid._vertices.xv[iv],
-                            self.mfgrid._vertices.yv[iv],
+        shapely = import_optional_dependency("shapely")
+        if self.local:
+            geoms = [
+                shapely.polygons(
+                    list(
+                        zip(
+                            *self.mfgrid.get_local_coords(
+                                *np.array(
+                                    self.mfgrid.get_cell_vertices(node)
+                                ).T
+                            )
                         )
                     )
-                # close the polygon, if necessary
-                if points[0] != points[-1]:
-                    points.append(points[0])
-                geoms.append(shapely_geo.Polygon(points))
-                cellids.append(icell)
-        # for cell2d lists
-        elif isinstance(self.mfgrid._cell2d, list):
-            for icell in range(len(self.mfgrid._cell2d)):
-                points = []
-                for iv in self.mfgrid._cell2d[icell][4:]:
-                    points.append(
-                        (
-                            self.mfgrid._vertices[iv][1],
-                            self.mfgrid._vertices[iv][2],
-                        )
-                    )
-                # close the polygon, if necessary
-                if points[0] != points[-1]:
-                    points.append(points[0])
-                geoms.append(shapely_geo.Polygon(points))
-                cellids.append(icell)
-        return np.array(geoms), np.array(cellids)
+                )
+                for node in range(self.mfgrid.ncpl)
+            ]
+        else:
+            geoms = [
+                shapely.polygons(self.mfgrid.get_cell_vertices(node))
+                for node in range(self.mfgrid.ncpl)
+            ]
+        return np.array(geoms), np.arange(self.mfgrid.ncpl)
 
     def _rect_grid_to_shape_list(self):
         """internal method, list of shapely polygons for structured grid cells.
@@ -1207,7 +1196,7 @@ class GridIntersect:
                 self.mfgrid.angrot != 0.0
                 or self.mfgrid.xoffset != 0.0
                 or self.mfgrid.yoffset != 0.0
-            ):
+            ) and not self.local:
                 rx, ry = transform(
                     p.x,
                     p.y,
@@ -1347,11 +1336,13 @@ class GridIntersect:
         pl = shapely_geo.box(xmin, ymin, xmax, ymax)
 
         # rotate and translate linestring to local coords
-        if self.mfgrid.xoffset != 0.0 or self.mfgrid.yoffset != 0.0:
+        if (
+            self.mfgrid.xoffset != 0.0 or self.mfgrid.yoffset != 0.0
+        ) and not self.local:
             shp = affinity_loc.translate(
                 shp, xoff=-self.mfgrid.xoffset, yoff=-self.mfgrid.yoffset
             )
-        if self.mfgrid.angrot != 0.0:
+        if self.mfgrid.angrot != 0.0 and not self.local:
             shp = affinity_loc.rotate(
                 shp, -self.mfgrid.angrot, origin=(0.0, 0.0)
             )
@@ -1380,7 +1371,7 @@ class GridIntersect:
                     self.mfgrid.angrot != 0.0
                     or self.mfgrid.xoffset != 0.0
                     or self.mfgrid.yoffset != 0.0
-                ):
+                ) and not self.local:
                     v_realworld = []
                     for pt in v:
                         pt = np.array(pt)
@@ -1424,7 +1415,7 @@ class GridIntersect:
                 self.mfgrid.angrot != 0.0
                 or self.mfgrid.xoffset != 0.0
                 or self.mfgrid.yoffset != 0.0
-            ):
+            ) and not self.local:
                 v_realworld = []
                 for pt in vertices:
                     pt = np.array(pt)
@@ -1546,7 +1537,7 @@ class GridIntersect:
             self.mfgrid.angrot != 0.0
             or self.mfgrid.xoffset != 0.0
             or self.mfgrid.yoffset != 0.0
-        ):
+        ) and not self.local:
             x0, y0 = transform(
                 [x[0]],
                 [y[0]],
@@ -1913,11 +1904,13 @@ class GridIntersect:
         ixshapes = []
 
         # transform polygon to local grid coordinates
-        if self.mfgrid.xoffset != 0.0 or self.mfgrid.yoffset != 0.0:
+        if (
+            self.mfgrid.xoffset != 0.0 or self.mfgrid.yoffset != 0.0
+        ) and not self.local:
             shp = affinity_loc.translate(
                 shp, xoff=-self.mfgrid.xoffset, yoff=-self.mfgrid.yoffset
             )
-        if self.mfgrid.angrot != 0.0:
+        if self.mfgrid.angrot != 0.0 and not self.local:
             shp = affinity_loc.rotate(
                 shp, -self.mfgrid.angrot, origin=(0.0, 0.0)
             )
@@ -1982,7 +1975,7 @@ class GridIntersect:
                     self.mfgrid.angrot != 0.0
                     or self.mfgrid.xoffset != 0.0
                     or self.mfgrid.yoffset != 0.0
-                ):
+                ) and not self.local:
                     v_realworld = []
                     if intersect.geom_type.startswith("Multi"):
                         for ipoly in intersect.geoms:
@@ -2253,13 +2246,17 @@ class ModflowGridIndices:
         """
         jpos = []
 
-        if x == arr[-1]:
+        if np.isclose(x, arr[-1]):
             return len(arr) - 2
 
-        if x < min(arr[0], arr[-1]):
-            return None
+        xmin = min(arr[0], arr[-1])
+        xmax = max(arr[0], arr[-1])
 
-        if x > max(arr[0], arr[-1]):
+        if np.isclose(x, xmin):
+            x = xmin
+        if np.isclose(x, xmax):
+            x = xmax
+        if not (xmin <= x <= xmax):
             return None
 
         # go through each position

@@ -1,4 +1,4 @@
-""" unit format strings for netCDF variables. """
+"""unit format strings for netCDF variables."""
 
 NC_UNITS_FORMAT = {
     "2D_cumulative_well_flux": "{0}^3/{1}",

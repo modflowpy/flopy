@@ -296,6 +296,16 @@ class MfList(DataInterface, DataListInterface):
             fmt_string = "".join(fmts)
         return fmt_string
 
+    def __cast_tabular(self, data):
+        data = pd.DataFrame(data)
+        if "kper" in data.dtypes:
+            groups = data.groupby("kper")
+            data = {kper: group.drop("kper", axis=1) for kper, group in groups}
+            for kper, d in data.items():
+                self.__cast_dataframe(kper, d)
+        else:
+            self.__cast_dataframe(0, data)
+
     # Private method to cast the data argument
     # Should only be called by the constructor
     def __cast_data(self, data):
@@ -350,15 +360,18 @@ class MfList(DataInterface, DataListInterface):
                         f"{type(d)} at kper {kper}"
                     )
 
-        # A single recarray - same MfList for all stress periods
+        # A single dataframe
+        elif isinstance(data, pd.DataFrame):
+            self.__cast_tabular(data)
+
+        # A single recarray
         elif isinstance(data, np.recarray):
-            self.__cast_recarray(0, data)
+            self.__cast_tabular(data)
+
         # A single ndarray
         elif isinstance(data, np.ndarray):
             self.__cast_ndarray(0, data)
-        # A single dataframe
-        elif isinstance(data, pd.DataFrame):
-            self.__cast_dataframe(0, data)
+
         # A single filename
         elif isinstance(data, str):
             self.__cast_str(0, data)
@@ -417,7 +430,9 @@ class MfList(DataInterface, DataListInterface):
         self.__vtype[kper] = np.recarray
 
     def __cast_dataframe(self, kper, d):
-        self.__cast_recarray(kper, d.to_records(index=False))
+        self.__cast_recarray(
+            kper, d.to_records(index=False).astype(self.dtype)
+        )
 
     def get_dataframe(self, squeeze=False):
         """
@@ -1028,7 +1043,7 @@ class MfList(DataInterface, DataListInterface):
         kper : int
             MODFLOW zero-based stress period number to return. (default is zero)
         mask : boolean
-            return array with np.NaN instead of zero
+            return array with np.nan instead of zero
         Returns
         ----------
         out : dict of numpy.ndarrays
@@ -1079,7 +1094,7 @@ class MfList(DataInterface, DataListInterface):
             if kper < kpers[0]:
                 if mask:
                     for name, arr in arrays.items():
-                        arrays[name][:] = np.NaN
+                        arrays[name][:] = np.nan
                 return arrays
             # find the last kper
             else:
@@ -1094,7 +1109,7 @@ class MfList(DataInterface, DataListInterface):
             if sarr == 0:
                 if mask:
                     for name, arr in arrays.items():
-                        arrays[name][:] = np.NaN
+                        arrays[name][:] = np.nan
                 return arrays
             raise ValueError(
                 f"MfList: expected no entries for period {kper} but found {sarr}"
@@ -1124,12 +1139,12 @@ class MfList(DataInterface, DataListInterface):
                 arr[idx] /= cnt[idx]
             if mask:
                 arr = np.ma.masked_where(cnt == 0.0, arr)
-                arr[cnt == 0.0] = np.NaN
+                arr[cnt == 0.0] = np.nan
 
             arrays[name] = arr.copy()
         # elif mask:
         #     for name, arr in arrays.items():
-        #         arrays[name][:] = np.NaN
+        #         arrays[name][:] = np.nan
         return arrays
 
     @property

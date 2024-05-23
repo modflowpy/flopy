@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
-from autotest.test_grid_cases import GridCases
 
+from autotest.test_grid_cases import GridCases
 from flopy.utils.geometry import is_clockwise, point_in_polygon
 
 
@@ -46,7 +46,7 @@ def test_point_in_polygon_interior():
     ypts = grid.ycellcenters
     mask = point_in_polygon(xpts, ypts, cell)
     assert mask.sum() == 1
-    assert mask[0, 0] == True
+    assert mask[0, 0]
     debug_plot(grid, cell, xpts, ypts, mask)
 
 

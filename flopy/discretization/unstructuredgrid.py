@@ -360,7 +360,7 @@ class UnstructuredGrid(Grid):
     @property
     def xyzvertices(self):
         """
-        Method to get model grid verticies
+        Method to get model grid vertices
 
         Returns:
             list of dimension ncpl by nvertices
@@ -442,7 +442,7 @@ class UnstructuredGrid(Grid):
 
     def cross_section_adjust_indicies(self, k, cbcnt):
         """
-        Method to get adjusted indicies by layer and confining bed
+        Method to get adjusted indices by layer and confining bed
         for PlotCrossSection plotting
 
         Parameters
@@ -463,8 +463,8 @@ class UnstructuredGrid(Grid):
         self, plotarray, xcenters, head, elev, projpts
     ):
         """
-        Method to set countour array centers for rare instances where
-        matplotlib contouring is prefered over trimesh plotting
+        Method to set contour array centers for rare instances where
+        matplotlib contouring is preferred over trimesh plotting
 
         Parameters
         ----------
@@ -1019,13 +1019,17 @@ class UnstructuredGrid(Grid):
         with open(file_path) as file:
 
             def split_line():
-                return file.readline().strip().split()
+                return [
+                    head.upper() for head in file.readline().strip().split()
+                ]
 
             header = split_line()
+            while header[0][0] == "#":
+                header = split_line()
             if not (len(header) == 1 and header[0] == "UNSTRUCTURED") or (
                 len(header) == 2 and header == ["UNSTRUCTURED", "GWF"]
             ):
-                raise ValueError(f"Invalid GSF file, no header")
+                raise ValueError("Invalid GSF file, no header")
 
             nnodes = int(split_line()[0])
             verts_declared = int(split_line()[0])

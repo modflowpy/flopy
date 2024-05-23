@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on February 07, 2024 20:16:08 UTC
+# FILE created on May 23, 2024 14:30:07 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -128,7 +128,7 @@ class ModflowIms(mfpackage.MFPackage):
           option is deprecated and has no effect on simulation results as of
           version 6.1.1. The keyword, OUTER_RCLOSEBND can be still be specified
           for backward compatibility with previous versions of MODFLOW 6 but
-          eventually specificiation of OUTER_RCLOSEBND will cause MODFLOW 6 to
+          eventually specification of OUTER_RCLOSEBND will cause MODFLOW 6 to
           terminate with an error.
     outer_maximum : integer
         * outer_maximum (integer) integer value defining the maximum number of

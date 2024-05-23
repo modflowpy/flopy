@@ -419,7 +419,7 @@ class ModflowSwi2(Package):
         )
 
         # write SWI2 options
-        if self.options != None:
+        if self.options is not None:
             for o in self.options:
                 f.write(f" {o}")
         f.write("\n")

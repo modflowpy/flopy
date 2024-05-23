@@ -78,6 +78,7 @@ def convert_data(data, data_dimensions, data_type, data_item=None, sub_amt=1):
                 if isinstance(data, str):
                     # fix any scientific formatting that python can't handle
                     data = data.replace("d", "e")
+                    data = data.replace("D", "e")
                 return float(data)
             except (ValueError, TypeError):
                 try:
@@ -151,7 +152,7 @@ def list_to_array(sarr, model_grid, kper=0, mask=False):
         MODFLOW zero-based stress period number to return. (default is
         zero)
     mask : bool
-        return array with np.NaN instead of zero
+        return array with np.nan instead of zero
 
     Returns
     ----------
@@ -192,7 +193,7 @@ def list_to_array(sarr, model_grid, kper=0, mask=False):
         if sarr[0] == 0:
             if mask:
                 for name, arr in arrays.items():
-                    arrays[name][:] = np.NaN
+                    arrays[name][:] = np.nan
             return arrays
         else:
             raise Exception("MfList: something bad happened")
@@ -210,7 +211,7 @@ def list_to_array(sarr, model_grid, kper=0, mask=False):
             arr[idx] /= cnt[idx]
         if mask:
             arr = np.ma.masked_where(cnt == 0.0, arr)
-            arr[cnt == 0.0] = np.NaN
+            arr[cnt == 0.0] = np.nan
 
         arrays[name] = arr.copy()
     return arrays
@@ -965,7 +966,7 @@ class ListTemplateGenerator(TemplateGenerator):
                 "Data dimensions can not be determined for  "
                 "{}. Data structure may be jagged or may contain "
                 "a keystring. Data type information is therefore "
-                "dependant on the data and can not be retreived "
+                "dependent on the data and can not be retrieved "
                 "prior to the data being loaded"
                 ".".format(data_storage.data_dimensions.structure.name)
             )

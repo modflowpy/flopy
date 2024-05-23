@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on February 07, 2024 20:16:08 UTC
+# FILE created on May 23, 2024 14:30:07 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -59,7 +59,11 @@ class ModflowGwfwel(mfpackage.MFPackage):
           is equal to or less than the calculated interval above the cell
           bottom. AUTO_FLOW_REDUCE is set to 0.1 if the specified value is less
           than or equal to zero. By default, negative pumping rates are not
-          reduced during a simulation.
+          reduced during a simulation. This AUTO_FLOW_REDUCE option only
+          applies to wells in model cells that are marked as "convertible"
+          (ICELLTYPE /= 0) in the Node Property Flow (NPF) input file.
+          Reduction in flow will not occur for wells in cells marked as
+          confined (ICELLTYPE = 0).
     afrcsv_filerecord : [afrcsvfile]
         * afrcsvfile (string) name of the comma-separated value (CSV) output
           file to write information about well extraction rates that have been

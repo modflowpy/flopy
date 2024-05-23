@@ -1031,6 +1031,13 @@ class MFBlock:
                                 and result[1][:3].upper() == "END"
                             ):
                                 break
+        else:
+            # block empty, store empty array in block variables
+            empty_arr = []
+            for ds in self.datasets.values():
+                if isinstance(ds, mfdata.MFTransient):
+                    transient_key = block_header.get_transient_key()
+                    ds.set_data(empty_arr, key=transient_key)
         self.loaded = True
         self.is_valid()
 
@@ -1109,7 +1116,7 @@ class MFBlock:
             elif (
                 arr_line[0].lower() == "readasarrays"
                 and self.path[-1].lower() == "options"
-                and self._container_package.structure.read_as_arrays == False
+                and self._container_package.structure.read_as_arrays is False
             ):
                 error_msg = (
                     "ERROR: Attempting to read a ReadAsArrays "
@@ -1243,7 +1250,7 @@ class MFBlock:
 
     def _save_comments(self, arr_line, line, key, comments):
         # FIX: Save these comments somewhere in the data set
-        if not key in self.datasets_keyword:
+        if key not in self.datasets_keyword:
             if MFComment.is_comment(key, True):
                 if comments:
                     comments.append("\n")
@@ -1489,8 +1496,9 @@ class MFBlock:
                         >= VerbosityLevel.verbose.value
                     ):
                         print(
-                            "        writing data {} ({}).."
-                            ".".format(dataset.structure.name, transient_key)
+                            "        writing data {} ({}).." ".".format(
+                                dataset.structure.name, transient_key
+                            )
                         )
                     if basic_list:
                         ext_fname = dataset.external_file_name(transient_key)
@@ -1583,7 +1591,7 @@ class MFBlock:
             fd.write("\n")
 
     def is_allowed(self):
-        """Determine if block is valid based on the values of dependant
+        """Determine if block is valid based on the values of dependent
         MODFLOW variables."""
         if self.structure.variable_dependant_path:
             # fill in empty part of the path with the current path
@@ -2096,8 +2104,8 @@ class MFPackage(PackageContainer, PackageInterface):
                                             not datautil.DatumUtil.is_float(
                                                 row[data_index]
                                             )
-                                            and not row[data_index]
-                                            in time_series_name_dict
+                                            and row[data_index]
+                                            not in time_series_name_dict
                                         ):
                                             desc = (
                                                 f"Invalid non-numeric "
@@ -2120,8 +2128,8 @@ class MFPackage(PackageContainer, PackageInterface):
                                 val = np.isnan(np.sum(data))
                                 if val:
                                     desc = (
-                                        f"One or more nan values were "
-                                        f"found in auxiliary data."
+                                        "One or more nan values were "
+                                        "found in auxiliary data."
                                     )
                                     chk._add_to_summary(
                                         "Warning",
@@ -2165,8 +2173,7 @@ class MFPackage(PackageContainer, PackageInterface):
                     bl_repr = repr(block)
                     if len(bl_repr.strip()) > 0:
                         data_str = (
-                            "{}Block {}\n--------------------\n{}"
-                            "\n".format(
+                            "{}Block {}\n--------------------\n{}" "\n".format(
                                 data_str, block.structure.name, repr(block)
                             )
                         )
@@ -2174,8 +2181,7 @@ class MFPackage(PackageContainer, PackageInterface):
                     bl_str = str(block)
                     if len(bl_str.strip()) > 0:
                         data_str = (
-                            "{}Block {}\n--------------------\n{}"
-                            "\n".format(
+                            "{}Block {}\n--------------------\n{}" "\n".format(
                                 data_str, block.structure.name, str(block)
                             )
                         )
@@ -2575,7 +2581,7 @@ class MFPackage(PackageContainer, PackageInterface):
         if data is not None:
             package_group = getattr(self, pkg_type)
             # build child package file name
-            child_path = package_group._next_default_file_path()
+            child_path = package_group.next_default_file_path()
             # create new empty child package
             package_obj = self.package_factory(
                 pkg_type, self.model_or_sim.model_type
@@ -2977,7 +2983,7 @@ class MFPackage(PackageContainer, PackageInterface):
                             block_header_info, fd_input_file, strict
                         )
 
-                        # write post block comment comment
+                        # write post block comment
                         self._simulation_data.mfdata[
                             cur_block.block_headers[-1].blk_post_comment_path
                         ] = self.post_block_comments
@@ -3381,7 +3387,7 @@ class MFChildPackages:
                 return True
         return False
 
-    def _next_default_file_path(self):
+    def next_default_file_path(self):
         possible_path = self.__default_file_path_base(self._cpparent.filename)
         suffix = 0
         while self.__file_path_taken(possible_path):
@@ -3399,7 +3405,7 @@ class MFChildPackages:
             self._remove_packages(fname)
         if fname is None:
             # build a file name
-            fname = self._next_default_file_path()
+            fname = self.next_default_file_path()
             package._filename = fname
         # check file record variable
         found = False
@@ -3437,7 +3443,7 @@ class MFChildPackages:
     def _append_package(self, package, fname, update_frecord=True):
         if fname is None:
             # build a file name
-            fname = self._next_default_file_path()
+            fname = self.next_default_file_path()
             package._filename = fname
 
         if update_frecord:
@@ -3457,11 +3463,12 @@ class MFChildPackages:
         # add the package to the list
         self._packages.append(package)
 
-    def _remove_packages(self, fname=None):
+    def _remove_packages(self, fname=None, only_pop_from_list=False):
         rp_list = []
         for idx, package in enumerate(self._packages):
             if fname is None or package.filename == fname:
-                self._model_or_sim.remove_package(package)
+                if not only_pop_from_list:
+                    self._model_or_sim.remove_package(package)
                 rp_list.append(idx)
         for idx in reversed(rp_list):
             self._packages.pop(idx)

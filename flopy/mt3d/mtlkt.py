@@ -258,7 +258,7 @@ class Mt3dLkt(Package):
         # (Loop through each stress period and write LKT information)
         nper = self.parent.nper
         for kper in range(nper):
-            if f_lkt.closed == True:
+            if f_lkt.closed:
                 f_lkt = open(f_lkt.name, "a")
 
             # List of concentrations associated with fluxes in/out of lake

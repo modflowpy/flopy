@@ -1,6 +1,6 @@
 import pytest
-from autotest.conftest import get_example_data_path
 
+from autotest.conftest import get_example_data_path
 from flopy.utils.mfreadnam import (
     attribs_from_namfile_header,
     get_entries_from_namefile,

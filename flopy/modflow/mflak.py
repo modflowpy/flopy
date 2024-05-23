@@ -376,8 +376,9 @@ class ModflowLak(Package):
         if self.dis.steady[0]:
             if stage_range.shape != (nlakes, 2):
                 raise Exception(
-                    "stages shape should be ({},2) but is only "
-                    "{}.".format(nlakes, stage_range.shape)
+                    "stages shape should be ({},2) but is only " "{}.".format(
+                        nlakes, stage_range.shape
+                    )
                 )
         self.stage_range = stage_range
 

@@ -497,6 +497,22 @@ class DataStorage:
                             layer_str,
                             self._get_layer_header_str(index),
                         )
+            elif storage.data_storage_type == DataStorageType.external_file:
+                header = self._get_layer_header_str(index)
+                if self.layered:
+                    data_str = "{}{}{{{}}}\n({})\n".format(
+                        data_str,
+                        layer_str,
+                        header,
+                        "External data not displayed",
+                    )
+                else:
+                    data_str = "{}{}{{{}}}\n({})\n".format(
+                        data_str,
+                        layer_str,
+                        header,
+                        "External data not displayed",
+                    )
         return data_str
 
     def _get_layer_header_str(self, layer):
@@ -1372,16 +1388,16 @@ class DataStorage:
                     # convert numbers to be multiplied by the original factor
                     data = data * adjustment
             if const:
-                self.layer_storage[layer].data_storage_type = (
-                    DataStorageType.internal_constant
-                )
+                self.layer_storage[
+                    layer
+                ].data_storage_type = DataStorageType.internal_constant
                 self.layer_storage[layer].data_const_value = [
                     mfdatautil.get_first_val(data)
                 ]
             else:
-                self.layer_storage[layer].data_storage_type = (
-                    DataStorageType.internal_array
-                )
+                self.layer_storage[
+                    layer
+                ].data_storage_type = DataStorageType.internal_array
                 try:
                     self.layer_storage[layer].internal_data = np.reshape(
                         data, dimensions
@@ -1410,11 +1426,11 @@ class DataStorage:
                 data_type = self.data_dimensions.structure.get_datum_type(True)
                 dt = self.layer_storage[layer].internal_data.dtype
                 if dt != data_type:
-                    self.layer_storage[layer].internal_data = (
-                        self.layer_storage[layer].internal_data.astype(
-                            data_type
-                        )
-                    )
+                    self.layer_storage[
+                        layer
+                    ].internal_data = self.layer_storage[
+                        layer
+                    ].internal_data.astype(data_type)
             if not preserve_record:
                 self.layer_storage[layer].factor = multiplier
                 self.layer_storage[layer].iprn = print_format
@@ -1802,9 +1818,9 @@ class DataStorage:
                 if self._calc_data_size(data, 2) == 1 and data_size > 1:
                     # constant data, need to expand
                     self.layer_storage[layer_new].data_const_value = data
-                    self.layer_storage[layer_new].data_storage_type = (
-                        DataStorageType.internal_constant
-                    )
+                    self.layer_storage[
+                        layer_new
+                    ].data_storage_type = DataStorageType.internal_constant
                     data = self._fill_const_layer(layer)
                 elif isinstance(data, list):
                     data = self._to_ndarray(data, layer)
@@ -1861,9 +1877,9 @@ class DataStorage:
         self.layer_storage[layer].fname = file_path
         self.layer_storage[layer].iprn = print_format
         self.layer_storage[layer].binary = binary
-        self.layer_storage[layer].data_storage_type = (
-            DataStorageType.external_file
-        )
+        self.layer_storage[
+            layer
+        ].data_storage_type = DataStorageType.external_file
 
     def point_to_existing_external_file(self, arr_line, layer):
         (
@@ -1996,6 +2012,7 @@ class DataStorage:
                     self._data_type,
                     self.get_data_dimensions(layer),
                     layer,
+                    self.layered,
                     read_file,
                 )[0]
             if apply_mult and self.layer_storage[layer].factor is not None:
@@ -2090,8 +2107,9 @@ class DataStorage:
             )
         except Exception as se:
             comment = (
-                'Unable to resolve shape for data "{}" field "{}"'
-                ".".format(struct.name, data_item.name)
+                'Unable to resolve shape for data "{}" field "{}"' ".".format(
+                    struct.name, data_item.name
+                )
             )
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(
@@ -2453,6 +2471,7 @@ class DataStorage:
                             np_data_type,
                             self.get_data_dimensions(layer),
                             layer,
+                            self.layered,
                             read_file,
                         )[0]
                         * mult

@@ -235,3 +235,45 @@ def test_map_view_contour_array_structured(function_tmpdir, ndim, rng):
     # for ix, lev in enumerate(contours.levels):
     #     if not np.allclose(lev, levels[ix]):
     #         raise AssertionError("TriContour NaN catch Failed")
+
+
+def test_plot_limits():
+    xymin, xymax = 0, 1000
+    cellsize = 50
+    nrow = (xymax - xymin) // cellsize
+    ncol = nrow
+    nlay = 1
+
+    delc = np.full((nrow,), cellsize)
+    delr = np.full((ncol,), cellsize)
+
+    top = np.full((nrow, ncol), 100)
+    botm = np.full((nlay, nrow, ncol), 0)
+    idomain = np.ones(botm.shape, dtype=int)
+
+    grid = flopy.discretization.StructuredGrid(
+        delc=delc, delr=delr, top=top, botm=botm, idomain=idomain
+    )
+
+    fig, ax = plt.subplots()
+    user_extent = 0, 300, 0, 100
+    ax.axis(user_extent)
+
+    pmv = flopy.plot.PlotMapView(modelgrid=grid, ax=ax)
+    pmv.plot_grid()
+
+    lims = ax.axes.viewLim
+    if (lims.x0, lims.x1, lims.y0, lims.y1) != user_extent:
+        raise AssertionError("PlotMapView not checking for user scaling")
+
+    plt.close(fig)
+
+    fig, ax = plt.subplots(figsize=(8, 8))
+    pmv = flopy.plot.PlotMapView(modelgrid=grid, ax=ax)
+    pmv.plot_grid()
+
+    lims = ax.axes.viewLim
+    if (lims.x0, lims.x1, lims.y0, lims.y1) != pmv.extent:
+        raise AssertionError("PlotMapView auto extent setting not working")
+
+    plt.close(fig)

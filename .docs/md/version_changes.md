@@ -1,12 +1,66 @@
 # Changelog
+### Version 3.7.0
+
+#### New features
+
+* [feat(get-modflow)](https://github.com/modflowpy/flopy/commit/4c5e2ee3ec6699f61acb04a5e7bd35407b16f9ff): Support ARM mac distributions (#2110). Committed by wpbonelli on 2024-02-19.
+* [feat(get-modflow)](https://github.com/modflowpy/flopy/commit/53a94a9c6d57f8311318836b4291ac73b4b7f728): Support ARM mac nightly build (#2115). Committed by wpbonelli on 2024-02-23.
+* [feat(binaryfile)](https://github.com/modflowpy/flopy/commit/5ec612a1a5b21c094bd910c9ed39f3ea5fef5084): Get budget by second package name `paknam2` (#2050). Committed by Michael Ou@SSPA on 2024-03-14.
+* [feat(get-modflow)](https://github.com/modflowpy/flopy/commit/43e5178db2b52f136cab3d53cb290c2576af21ee): Support windows parallel nightly build (#2128). Committed by wpbonelli on 2024-03-22.
+* [feat](https://github.com/modflowpy/flopy/commit/f75853f9fe9921c5ed1aa4e6ab4cec594338905f): Add optional custom print callable (#2121). Committed by Mike Müller on 2024-03-25.
+* [feat(dis2d)](https://github.com/modflowpy/flopy/commit/18014af25dff00d659ebe30f9b5dc82da0143be3): Introduce limited support for a 2D structured grid (for overland flow) (#2131). Committed by langevin-usgs on 2024-04-01.
+* [feat(vtk)](https://github.com/modflowpy/flopy/commit/3028863dc48b6eb8622b0dcd1a4918cd31547429): Improve vtk particle track export (#2132). Committed by wpbonelli on 2024-04-02.
+* [feat(disv1d)](https://github.com/modflowpy/flopy/commit/4c44cb0d9d6ef02c092938dad943cdb8285f82a7): Rename DISL to DISV1D (#2133). Committed by langevin-usgs on 2024-04-02.
+* [feat(disv2d)](https://github.com/modflowpy/flopy/commit/e023235ad40cd373d428ce5c1533bd0047109a96): Introduce support for a 2D vertex grid (for overland flow) (#2151). Committed by langevin-usgs on 2024-04-15.
+* [feat(vtk)](https://github.com/modflowpy/flopy/commit/43cbe4762f6f339a554052a1d0d5836d863da13f): Include all arrays on pathline input (#2161). Committed by wpbonelli on 2024-04-19.
+* [feat(mp7particledata)](https://github.com/modflowpy/flopy/commit/e50ab9ae4fce67db947a022da994b26150df13aa): Add localz option for PRT PRP conversions (#2166). Committed by wpbonelli on 2024-04-24.
+* [feat(sim options block packages)](https://github.com/modflowpy/flopy/commit/4e1d53ac3685d9027b1ced45749c9e20d8b701d5): Support for packages declared in simulation name file's options block (#2164). Committed by spaulins-usgs on 2024-05-01.
+* [feat(sim options block packages)](https://github.com/modflowpy/flopy/commit/6237cecd5f393a15857b653e030130ab4861e3a5): Support for packages declared in simulation name file's options block (#2174). Committed by spaulins-usgs on 2024-05-02.
+* [feat(MfList)](https://github.com/modflowpy/flopy/commit/712221918b1f32b881244a19781d01f92d150196): Support kper field in stress period data (#2179). Committed by wpbonelli on 2024-05-04.
+
+#### Bug fixes
+
+* [fix(PRT)](https://github.com/modflowpy/flopy/commit/dda482b18a6e857ca66a44bbbd69bc3145a68060): Allow empty recarray or dataframe for output conversion fns (#2103). Committed by wpbonelli on 2024-02-19.
+* [fix(gridintersect)](https://github.com/modflowpy/flopy/commit/40c03913bdf4329e8540d365ccfffe1c2bf4fccf): Gridintersect does not work for rotated vertex grids (#2107). Committed by Davíd Brakenhoff on 2024-02-20.
+* [fix(str and repr)](https://github.com/modflowpy/flopy/commit/1fe51578309a693fae45d843e50aa6f9c86ad70c): Better repr and str output for transient data with multiple blocks (#2058) (#2102). Committed by scottrp on 2024-03-13.
+* [fix(get_package and model_time)](https://github.com/modflowpy/flopy/commit/11f573b0341b461a584faae4fd82ea4b2bbffc69): #2117, #2118 (#2123). Committed by spaulins-usgs on 2024-03-20.
+* [fix(modflow)](https://github.com/modflowpy/flopy/commit/aa9f410a4cfd2eecb9f5fa824fbf20103bf45bc0): Dataframe support was patchy in a few packages (#2136). Committed by wpbonelli on 2024-04-04.
+* [fix(dependencies)](https://github.com/modflowpy/flopy/commit/0fe415058118ca67a1e02cd5e583ce589a65c9f1): Pin pyzmq >= 25.1.2 for arm macs (#2138). Committed by wpbonelli on 2024-04-05.
+* [fix(empty transient data)](https://github.com/modflowpy/flopy/commit/0f14f1fdc02a34338795396549f15758e3ab2ba0): Empty first stress period block (#1091) (#2139). Committed by spaulins-usgs on 2024-04-05.
+* [fix(comma delimited, scientific notation)](https://github.com/modflowpy/flopy/commit/5aaa5fff0fd9004d16f1699261ed8ef72577a67c): #2053 (#2144). Committed by spaulins-usgs on 2024-04-11.
+* [fix(empty transient arrays)](https://github.com/modflowpy/flopy/commit/f4a4274ce676713614f47fc4968315ed30297b35): #2145 (#2146). Committed by spaulins-usgs on 2024-04-12.
+* [fix(#2152)](https://github.com/modflowpy/flopy/commit/57cf82ebfcfabfaaf65bde88619070a20a7744ac): Improve gridintersect geometry creation for vertex grids (#2154). Committed by Davíd Brakenhoff on 2024-04-15.
+* [fix(grb)](https://github.com/modflowpy/flopy/commit/30e03490e4afadda6ed155cff1c319ebd3c6d5b0): Update binary grid file reader for new grid types (#2157). Committed by langevin-usgs on 2024-04-17.
+* [fix(OptionBlock)](https://github.com/modflowpy/flopy/commit/187885b4a3b9f54dbe27d568639931b8094b488e): Deprecate attribute typo 'auxillary' -> 'auxiliary' (#2159). Committed by Mike Taves on 2024-04-19.
+* [fix(typos)](https://github.com/modflowpy/flopy/commit/ff82488c0105db52931730fac801fa49a504d1cf): Fixed a variety of typos throughout project (#2160). Committed by Mike Taves on 2024-04-19.
+* [fix(cvfdutil)](https://github.com/modflowpy/flopy/commit/bb5461ba32a2047d7451ca53d96ab1643f47309b): Polygon area and centroid calculations now use shapely (#2165). Committed by langevin-usgs on 2024-04-23.
+* [fix(gridgen)](https://github.com/modflowpy/flopy/commit/50bbd01a5bae8e80d8345c3f314cabd03df5bb22): Remove duplicate disv grid vertices #1492 (#2119). Committed by wpbonelli on 2024-05-02.
+* [fix(mfmodel)](https://github.com/modflowpy/flopy/commit/8e16aab76b6e4f892fcf7031488324c3d490b75b): Fix budgetkey for transport models (#2176). Committed by wpbonelli on 2024-05-03.
+* [fix(gridintersect)](https://github.com/modflowpy/flopy/commit/15d1d7f5eaf5f50455ff99a876e05c93a947aa5b): Relax cell boundary checks with np.isclose (#2173). Committed by wpbonelli on 2024-05-06.
+* [fix(MFFileAccessArray)](https://github.com/modflowpy/flopy/commit/344579b9e23484cd7947948a9ca24a01e161b20e): Read_text_data_from_file modified for non-layered (#2183). Committed by langevin-usgs on 2024-05-06.
+* [fix(styles)](https://github.com/modflowpy/flopy/commit/acfd0d37ec0dcb186635af8e70f8a5afbd1eadb6): Remove need for platform evaluation (#2188). Committed by jdhughes-usgs on 2024-05-09.
+* [fix(get_structured_faceflows)](https://github.com/modflowpy/flopy/commit/29e247dbe464a861be8ccb4a7ad84f3c4020dd59): Fix lower face flows when idomain is -1 (#2192). Committed by vincentpost on 2024-05-17.
+* [fix(tutorial, verbosity setter)](https://github.com/modflowpy/flopy/commit/7879c2f0e41299f70ec0b3b03d756feaf4f20f37): Fixed tutorial model name and verbosity setter (#2182) (#2193). Committed by scottrp on 2024-05-21.
+
+#### Refactoring
+
+* [refactor(datautil)](https://github.com/modflowpy/flopy/commit/b58a70379030d55735858201b16b2599b266ec50): In is_int/float use .item() for np arrays (#2068). Committed by wpbonelli on 2024-02-19.
+* [refactor(plotting)](https://github.com/modflowpy/flopy/commit/4e6f4c1b788ec5e64559975afffbcea539def8ac): Check for user set axes limits (#2108). Committed by Joshua Larsen on 2024-02-21.
+* [refactor(get_cell_vertices)](https://github.com/modflowpy/flopy/commit/00b3d1c75bcb98bd0ab99c4a9fb45cd8f829e8d3): Raise helpful messages, improve docs, add tests (#2125). Committed by Mike Taves on 2024-03-18.
+* [refactor(modpathfile)](https://github.com/modflowpy/flopy/commit/77e5e1dfbadad3fac3be9bf9cf6f0de64f826f66): Toward unified particle tracking api (#2127). Committed by wpbonelli on 2024-03-28.
+* [refactor(MFSimulationBase)](https://github.com/modflowpy/flopy/commit/9e87acddcf0740aac491826ef86fd45ae2304dac): Allow simulations to have no attached models (#2140). Committed by Joshua Larsen on 2024-04-06.
+* [refactor(lgrutil)](https://github.com/modflowpy/flopy/commit/029a4e165caed6af760517ed7bc1f2e62e218858): Convert numpy types to builtins for np2 compat (#2158). Committed by wpbonelli on 2024-04-19.
+* [refactor(mp7particledata)](https://github.com/modflowpy/flopy/commit/c7af787110eb1d984fa660c49014c999d87b0774): Match mp7 order in to_coords()/to_prp() (#2172). Committed by wpbonelli on 2024-05-01.
+
 ### Version 3.6.0
 
 #### New features
 
-* [feat(Mf6Splitter)](https://github.com/modflowpy/flopy/commit/44abb51b4fb2034d94d82cf686f44c3ddf238a1f): Preserve MFSimulation version & exe_name (#2033). Committed by wpbonelli on 2023-12-07.
 * [feat(set all data external options)](https://github.com/modflowpy/flopy/commit/02a2f91e802185fd6b31929f99e31fecbb41c499): Additional parameters added (#2041). Committed by scottrp on 2023-12-18.
 * [feat(PRT)](https://github.com/modflowpy/flopy/commit/a53cda7ff8f724dfc362b432ac9be8c98cc04165): Add conversion/plotting utils for MF6 particle tracking models (#1753). Committed by wpbonelli on 2023-12-22.
 * [feat](https://github.com/modflowpy/flopy/commit/6899553828725a302e23b5ec787cea481ce85d59): Add static methods to read gridgen quadtreegrid files (#2061). Committed by Martin Vonk on 2024-01-17.
+* [feat(GeoSpatialCollection)](https://github.com/modflowpy/flopy/commit/f8eac0feafd981d84367128a0fdf8e7e1789fa9b): Add support for GeoDataFrame objects (#2063). Committed by Joshua Larsen on 2024-01-26.
+* [feat(GeoSpatialCollection)](https://github.com/modflowpy/flopy/commit/86eb092bf5f4d44cc449a458b77114dcefcbdda7): Add support for geopandas GeoSeries and GeoArray (#2085). Committed by Joshua Larsen on 2024-02-02.
 
 #### Bug fixes
 
@@ -14,12 +68,14 @@
 * [fix(gridgen)](https://github.com/modflowpy/flopy/commit/51109751cf0f6c4ebfbc70ccf0ba0ced7fabd4b8): Support arbitrary path-like for shapefiles (#2026). Committed by wpbonelli on 2023-12-04.
 * [fix(subpackages)](https://github.com/modflowpy/flopy/commit/788a8df62b1519a621c2721bec12f75cfb11a8d7): Fixed detection issue of subpackages in some filein records (#2025). Committed by scottrp on 2023-12-04.
 * [fix(recarrays with cellid)](https://github.com/modflowpy/flopy/commit/a8800396b987e676bf0710a9d52a8cdce7b4d13f): Fixes bug when setting data as recarrays with cellids (#2029). Committed by scottrp on 2023-12-05.
+* [fix(Mf6Splitter)](https://github.com/modflowpy/flopy/commit/44abb51b4fb2034d94d82cf686f44c3ddf238a1f): Preserve MFSimulation version & exe_name (#2033). Committed by wpbonelli on 2023-12-07.
 * [fix(data storage)](https://github.com/modflowpy/flopy/commit/97da3961f531b26001e8cf55db0de45fc41befad): Added numpy type check for consistent integer and float sizes (32-bit vs 64-bit) (#2062). Committed by scottrp on 2024-01-17.
 * [fix(obs package loading)](https://github.com/modflowpy/flopy/commit/a017b77493482124c2f9a635bad19a0c0dfed8c9): Fixed problem with loading multiple continuous blocks (#2058) (#2064). Committed by scottrp on 2024-01-22.
 * [fix(particledata)](https://github.com/modflowpy/flopy/commit/ea73e0d2f52cf22511c211ea4f5dd5b0a96be69b): Support 1D numpy array for partlocs (#2074). Committed by wpbonelli on 2024-01-25.
 * [fix(tri2vor)](https://github.com/modflowpy/flopy/commit/1ab25fe1cd9b55a5128eaade60bd09122f82d096): Remove invalid geometries from voronoi nodes (#2076). Committed by Joshua Larsen on 2024-01-26.
 * [fix(MFSimulationList)](https://github.com/modflowpy/flopy/commit/f37610d1f775dbfcc935b129d76c13c407b30e3b): Fix comma spacing in error message (#2090). Committed by wpbonelli on 2024-02-04.
 * [fix(numpy 2.0 deprecation)](https://github.com/modflowpy/flopy/commit/ad35b8dda86959f8cdf4560934ab5f309dc28d56): Replace np.alltrue with np.all (#2088). Committed by mnfienen on 2024-02-04.
+* [fix(usgcln)](https://github.com/modflowpy/flopy/commit/4ffa04e0757aabf000e6d87a33901c7265b1fa9d): add explicit second dimension to util2d.load calls (#2097). Committed by cnicol-gwlogic on 2024-02-07.
 
 #### Refactoring
 
@@ -27,12 +83,10 @@
 * [refactor(remap_array)](https://github.com/modflowpy/flopy/commit/5a4533bf115dc4876a811b11d87d353ae01da8ea): Trap for None type idomain (#2034). Committed by Joshua Larsen on 2023-12-07.
 * [refactor(mbase)](https://github.com/modflowpy/flopy/commit/66b18624f78f36acd587c5a5bdcd90503397c3d1): Append not prepend flopy bindir to PATH (#2037). Committed by wpbonelli on 2023-12-08.
 * [refactor(pyproject.toml)](https://github.com/modflowpy/flopy/commit/b94745dc4f72a4568ab084a762f4d6a1502afbfd): Add dev dependency group (#2075). Committed by wpbonelli on 2024-01-25.
-* [refactor(GeoSpatialCollection)](https://github.com/modflowpy/flopy/commit/f8eac0feafd981d84367128a0fdf8e7e1789fa9b): Add support for GeoDataFrame objects (#2063). Committed by Joshua Larsen on 2024-01-26.
 * [refactor(contour_array)](https://github.com/modflowpy/flopy/commit/92853a95f6d38b73e561e3e155d92b75b93afb5d): Add tri_mask kwarg to parameters (#2078). Committed by Joshua Larsen on 2024-02-01.
 * [refactor(dependencies)](https://github.com/modflowpy/flopy/commit/da8a3bdd6ecdbced4a22054b57c45dca470ec709): Remove python-dateutil (#2080). Committed by wpbonelli on 2024-02-01.
 * [refactor(_plot_package_helper)](https://github.com/modflowpy/flopy/commit/cff4f2351d92ef8f894633481248b645c07f5c83): Pass kwargs to datatype helpers (#2081). Committed by Joshua Larsen on 2024-02-02.
 * [refactor(convert_grid)](https://github.com/modflowpy/flopy/commit/b9ca77160cab2bf0e1af1d1d17ac82f3fa6e9d84): Added offset and angrot info to conversion (#2083). Committed by Joshua Larsen on 2024-02-02.
-* [refactor(GeoSpatialCollection)](https://github.com/modflowpy/flopy/commit/86eb092bf5f4d44cc449a458b77114dcefcbdda7): Add support for geopandas GeoSeries and GeoArray (#2085). Committed by Joshua Larsen on 2024-02-02.
 * [refactor(dependencies)](https://github.com/modflowpy/flopy/commit/391a3690c57ccf2951f7d618c1afd4168dfa0f9b): Pin numpy<2 until other reqs support it (#2092). Committed by wpbonelli on 2024-02-07.
 * [refactor(mf6)](https://github.com/modflowpy/flopy/commit/d3e8a2a4342766288166e2251e96721007f5217f): Update DFNS for mf6.4.3, regen/reformat .py files (#2095). Committed by wpbonelli on 2024-02-07.
 

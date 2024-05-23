@@ -1,4 +1,4 @@
-""" Base classes for Modflow 6 """
+"""Base classes for Modflow 6"""
 
 import copy
 import inspect
@@ -566,7 +566,8 @@ class PackageContainer:
         self.package_type_dict[package.package_type.lower()].append(package)
 
     def _remove_package(self, package):
-        self._packagelist.remove(package)
+        if package in self._packagelist:
+            self._packagelist.remove(package)
         if (
             package.package_name is not None
             and package.package_name.lower() in self.package_name_dict
@@ -577,10 +578,12 @@ class PackageContainer:
             and package.filename.lower() in self.package_filename_dict
         ):
             del self.package_filename_dict[package.filename.lower()]
-        package_list = self.package_type_dict[package.package_type.lower()]
-        package_list.remove(package)
-        if len(package_list) == 0:
-            del self.package_type_dict[package.package_type.lower()]
+        if package.package_type.lower() in self.package_type_dict:
+            package_list = self.package_type_dict[package.package_type.lower()]
+            if package in package_list:
+                package_list.remove(package)
+            if len(package_list) == 0:
+                del self.package_type_dict[package.package_type.lower()]
 
         # collect keys of items to be removed from main dictionary
         items_to_remove = []
@@ -624,7 +627,7 @@ class PackageContainer:
             )
             main_dict[new_key] = main_dict.pop(key)
 
-    def get_package(self, name=None):
+    def get_package(self, name=None, type_only=False, name_only=False):
         """
         Finds a package by package name, package key, package type, or partial
         package name. returns either a single package, a list of packages,
@@ -633,7 +636,11 @@ class PackageContainer:
         Parameters
         ----------
         name : str
-            Name of the package, 'RIV', 'LPF', etc.
+            Name or type of the package, 'my-riv-1, 'RIV', 'LPF', etc.
+        type_only : bool
+            Search for package by type only
+        name_only : bool
+            Search for package by name only
 
         Returns
         -------
@@ -644,11 +651,11 @@ class PackageContainer:
             return self._packagelist[:]
 
         # search for full package name
-        if name.lower() in self.package_name_dict:
+        if name.lower() in self.package_name_dict and not type_only:
             return self.package_name_dict[name.lower()]
 
         # search for package type
-        if name.lower() in self.package_type_dict:
+        if name.lower() in self.package_type_dict and not name_only:
             if len(self.package_type_dict[name.lower()]) == 0:
                 return None
             elif len(self.package_type_dict[name.lower()]) == 1:
@@ -657,18 +664,19 @@ class PackageContainer:
                 return self.package_type_dict[name.lower()]
 
         # search for file name
-        if name.lower() in self.package_filename_dict:
+        if name.lower() in self.package_filename_dict and not type_only:
             return self.package_filename_dict[name.lower()]
 
         # search for partial and case-insensitive package name
-        for pp in self._packagelist:
-            if pp.package_name is not None:
-                # get first package of the type requested
-                package_name = pp.package_name.lower()
-                if len(package_name) > len(name):
-                    package_name = package_name[0 : len(name)]
-                if package_name.lower() == name.lower():
-                    return pp
+        if not type_only:
+            for pp in self._packagelist:
+                if pp.package_name is not None:
+                    # get first package of the type requested
+                    package_name = pp.package_name.lower()
+                    if len(package_name) > len(name):
+                        package_name = package_name[0 : len(name)]
+                    if package_name.lower() == name.lower():
+                        return pp
 
         return None
 

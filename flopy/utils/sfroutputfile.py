@@ -165,7 +165,7 @@ class SfrFile:
         """
         kwargs = {
             "filepath_or_buffer": self.filename,
-            "delim_whitespace": True,
+            "sep": "\\s+",
             "header": None,
             "names": self.names,
             "skiprows": self.sr,

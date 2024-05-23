@@ -3,9 +3,9 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from autotest.conftest import get_example_data_path
 from modflow_devtools.markers import requires_exe
 
+from autotest.conftest import get_example_data_path
 from flopy.mf6 import MFSimulation, ModflowGwfoc
 from flopy.modflow import Modflow
 from flopy.utils import CellBudgetFile

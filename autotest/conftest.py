@@ -1,16 +1,18 @@
 import re
 from importlib import metadata
+from io import BytesIO, StringIO
 from pathlib import Path
 from platform import system
-from typing import List
+from typing import List, Optional
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pytest
 from modflow_devtools.misc import is_in_ci
 
 # import modflow-devtools fixtures
 
-pytest_plugins = ["modflow_devtools.fixtures"]
+pytest_plugins = ["modflow_devtools.fixtures", "modflow_devtools.snapshots"]
 
 
 # constants
@@ -142,19 +144,22 @@ def pytest_report_header(config):
         except metadata.PackageNotFoundError:
             items.append(f"{name} (not found)")
     lines.append("required packages: " + ", ".join(items))
-    installed = []
-    not_found = []
-    for name in extra["optional"]:
-        if name in processed:
-            continue
-        processed.add(name)
-        try:
-            version = metadata.version(name)
-            installed.append(f"{name}-{version}")
-        except metadata.PackageNotFoundError:
-            not_found.append(name)
-    if installed:
-        lines.append("optional packages: " + ", ".join(installed))
-    if not_found:
-        lines.append("optional packages not found: " + ", ".join(not_found))
+    for optional in ["optional", "test"]:
+        installed = []
+        not_found = []
+        for name in extra[optional]:
+            if name in processed:
+                continue
+            processed.add(name)
+            try:
+                version = metadata.version(name)
+                installed.append(f"{name}-{version}")
+            except metadata.PackageNotFoundError:
+                not_found.append(name)
+        if installed:
+            lines.append(f"{optional} packages: {', '.join(installed)}")
+        if not_found:
+            lines.append(
+                f"{optional} packages not found: {', '.join(not_found)}"
+            )
     return "\n".join(lines)

@@ -218,7 +218,7 @@ class MfUsgGnc(Package):
 
     @staticmethod
     def get_empty(numgnc=0, numalphaj=1, iflalphan=0):
-        """Returns empty GNC recarray of defualt dtype."""
+        """Returns empty GNC recarray of default dtype."""
         # get an empty recarray that corresponds to dtype
         dtype = MfUsgGnc.get_default_dtype(numalphaj, iflalphan)
         return create_empty_recarray(numgnc, dtype, default_value=-1.0e10)

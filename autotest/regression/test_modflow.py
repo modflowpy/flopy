@@ -4,9 +4,9 @@ from pathlib import Path
 from shutil import copytree
 
 import pytest
-from autotest.conftest import get_example_data_path
 from modflow_devtools.markers import requires_exe, requires_pkg
 
+from autotest.conftest import get_example_data_path
 from flopy.modflow import Modflow, ModflowOc
 from flopy.utils.compare import compare_budget, compare_heads
 
@@ -394,14 +394,14 @@ def test_mf2005_lake(function_tmpdir, namfile, mf2005_test_path):
 
     fn0 = join(ws, Path(namfile).name)
 
-    # write free format files - wont run without resetting to free format - evt external file issue
+    # write free format files - won't run without resetting to free format - evt external file issue
     m.free_format_input = True
 
     # rewrite files
     model_ws2 = join(ws, "external")
     m.change_model_ws(
         model_ws2, reset_external=True
-    )  # l1b2k_bath wont run without this
+    )  # l1b2k_bath won't run without this
     m.write_input()
 
     success, buff = m.run_model()

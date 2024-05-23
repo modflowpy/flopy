@@ -160,7 +160,7 @@ class MFTransient:
     def _verify_sp(self, sp_num):
         if self._path[0].lower() == "nam":
             return True
-        if not ("tdis", "dimensions", "nper") in self._simulation_data.mfdata:
+        if ("tdis", "dimensions", "nper") not in self._simulation_data.mfdata:
             raise FlopyException(
                 "Could not find number of stress periods (nper)."
             )
@@ -269,10 +269,26 @@ class MFData(DataInterface):
         self._cached_model_grid = None
 
     def __repr__(self):
-        return repr(self._get_storage_obj())
+        if isinstance(self._data_storage, dict):
+            stor_size = len(self._data_storage)
+        else:
+            stor_size = 1
+        if stor_size <= 1:
+            return repr(self._get_storage_obj(first_record=True))
+        else:
+            rpr = repr(self._get_storage_obj(first_record=True))
+            return f"{rpr}...\nand {stor_size - 1} additional data blocks"
 
     def __str__(self):
-        return str(self._get_storage_obj())
+        if isinstance(self._data_storage, dict):
+            stor_size = len(self._data_storage)
+        else:
+            stor_size = 1
+        if stor_size <= 1:
+            return str(self._get_storage_obj(first_record=True))
+        else:
+            st = str(self._get_storage_obj(first_record=True))
+            return f"{st}...\nand {stor_size - 1} additional data blocks"
 
     @property
     def path(self):
@@ -531,7 +547,7 @@ class MFData(DataInterface):
         # TODO: Verify that this works for multi-dimensional layering
         return aux_var_names[0][aux_var_index[0] + 1]
 
-    def _get_storage_obj(self):
+    def _get_storage_obj(self, first_record=False):
         return self._data_storage
 
 

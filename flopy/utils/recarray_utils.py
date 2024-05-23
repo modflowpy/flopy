@@ -34,7 +34,7 @@ def create_empty_recarray(length, dtype, default_value=0):
     assert isinstance(dtype, np.dtype), msg
     for name in dtype.names:
         dt = dtype.fields[name][0]
-        if np.issubdtype(dt, np.float_):
+        if np.issubdtype(dt, np.float64):
             r[name] = default_value
     return r.view(np.recarray)
 

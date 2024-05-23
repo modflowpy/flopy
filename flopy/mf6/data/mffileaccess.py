@@ -577,10 +577,17 @@ class MFFileAccessArray(MFFileAccess):
         data_type,
         data_dim,
         layer,
+        layered,
         fname=None,
         fd=None,
-        data_item=None,
     ):
+        # determine line size
+        line_size = None
+        if layered:
+            # if the array is layered (meaning a control record for
+            # each layer), then limit line size to number of columns
+            if isinstance(data_dim, list):
+                line_size = data_dim[-1]
         # load variable data from file
         current_size = 0
         if layer is None:
@@ -601,6 +608,8 @@ class MFFileAccessArray(MFFileAccess):
                 if line == "" or arr_line[0].upper() == "END":
                     break
                 if not MFComment.is_comment(arr_line, True):
+                    if line_size is not None:
+                        arr_line = arr_line[:line_size]
                     data_raw += arr_line
                 else:
                     PyListUtil.reset_delimiter_used()
@@ -609,6 +618,8 @@ class MFFileAccessArray(MFFileAccess):
                 line = fd.readline()
                 arr_line = PyListUtil.split_data_line(line, True)
                 if not MFComment.is_comment(arr_line, True):
+                    if line_size is not None:
+                        arr_line = arr_line[:line_size]
                     data_raw += arr_line
                 else:
                     PyListUtil.reset_delimiter_used()
@@ -886,6 +897,7 @@ class MFFileAccessArray(MFFileAccess):
                     data_type,
                     storage.get_data_dimensions(layer),
                     layer,
+                    storage.layered,
                     fd=file_handle,
                 )
             except Exception as ex:
@@ -1469,9 +1481,7 @@ class MFFileAccessList(MFFileAccess):
                                     current_key,
                                     self._data_line,
                                     False,
-                                )[
-                                    0:2
-                                ]
+                                )[0:2]
                             elif (
                                 data_item.name == "boundname"
                                 and self._data_dimensions.package_dim.boundnames()
@@ -1720,9 +1730,7 @@ class MFFileAccessList(MFFileAccess):
                                                 for (
                                                     key,
                                                     record,
-                                                ) in (
-                                                    data_item.keystring_dict.items()
-                                                ):
+                                                ) in data_item.keystring_dict.items():
                                                     if (
                                                         isinstance(
                                                             record,
@@ -2050,9 +2058,7 @@ class MFFileAccessList(MFFileAccess):
                             current_key,
                             data_line,
                             add_to_last_line,
-                        )[
-                            0:3
-                        ]
+                        )[0:3]
                     else:
                         # read in aux variables
                         (
@@ -2070,9 +2076,7 @@ class MFFileAccessList(MFFileAccess):
                             current_key,
                             data_line,
                             add_to_last_line,
-                        )[
-                            0:3
-                        ]
+                        )[0:3]
         return data_index, data_line, more_data_expected
 
     def _append_data_list(
@@ -2323,7 +2327,7 @@ class MFFileAccessScalar(MFFileAccess):
                 if (
                     len(arr_line) <= index + 1
                     or data_item_type[0] != DatumType.keyword
-                    or (index > 0 and optional == True)
+                    or (index > 0 and optional is True)
                 ):
                     break
                 index += 1

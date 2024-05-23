@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on February 07, 2024 20:16:08 UTC
+# FILE created on May 23, 2024 14:30:07 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -40,6 +40,11 @@ class ModflowNam(mfpackage.MFPackage):
           keyword, input summaries will be written for those packages that
           support newer input data model routines. Not all packages are
           supported yet by the newer input data model routines.
+    hpc : {varname:data} or hpc_data data
+        * Contains data for the hpc package. Data can be stored in a dictionary
+          containing data for the hpc package with variable names as keys and
+          package data as values. Data just for the hpc variable is also
+          acceptable. See hpc package documentation for more information.
     tdis6 : string
         * tdis6 (string) is the name of the Temporal Discretization (TDIS)
           Input File.
@@ -63,7 +68,8 @@ class ModflowNam(mfpackage.MFPackage):
           in the solution group, then MXITER must be 1.
     solutiongroup : [slntype, slnfname, slnmnames]
         * slntype (string) is the type of solution. The Integrated Model
-          Solution (IMS6) is the only supported option in this version.
+          Solution (IMS6) and Explicit Model Solution (EMS6) are the only
+          supported options in this version.
         * slnfname (string) name of file containing solution input.
         * slnmnames (string) is the array of model names to add to this
           solution. The number of model names is determined by the number of
@@ -79,6 +85,9 @@ class ModflowNam(mfpackage.MFPackage):
 
     """
 
+    hpc_filerecord = ListTemplateGenerator(
+        ("nam", "options", "hpc_filerecord")
+    )
     models = ListTemplateGenerator(("nam", "models", "models"))
     exchanges = ListTemplateGenerator(("nam", "exchanges", "exchanges"))
     solutiongroup = ListTemplateGenerator(
@@ -127,6 +136,48 @@ class ModflowNam(mfpackage.MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+        ],
+        [
+            "block options",
+            "name hpc_filerecord",
+            "type record hpc6 filein hpc6_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "construct_package hpc",
+            "construct_data hpc_data",
+            "parameter_name hpc",
+        ],
+        [
+            "block options",
+            "name hpc6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name hpc6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged false",
         ],
         [
             "block timing",
@@ -235,7 +286,7 @@ class ModflowNam(mfpackage.MFPackage):
             "block solutiongroup",
             "name slntype",
             "type string",
-            "valid ims6",
+            "valid ims6 ems6",
             "in_record true",
             "tagged false",
             "reader urword",
@@ -290,6 +341,7 @@ class ModflowNam(mfpackage.MFPackage):
         )
         self.maxerrors = self.build_mfdata("maxerrors", maxerrors)
         self.print_input = self.build_mfdata("print_input", print_input)
+        self._hpc_filerecord = self.build_mfdata("hpc_filerecord", None)
         self.tdis6 = self.build_mfdata("tdis6", tdis6)
         self.models = self.build_mfdata("models", models)
         self.exchanges = self.build_mfdata("exchanges", exchanges)

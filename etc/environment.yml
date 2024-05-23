@@ -10,11 +10,8 @@ dependencies:
   - matplotlib>=1.4.0
 
   # lint
-  - black
   - cffconvert
-  - flake8
-  - isort
-  - pylint
+  - ruff
 
   # test
   - coverage
@@ -22,12 +19,14 @@ dependencies:
   - filelock
   - jupyter
   - jupytext
-  - modflow-devtools
-  - pytest
+  - pip:
+      - git+https://github.com/MODFLOW-USGS/modflow-devtools.git
+  - pytest!=8.1.0
   - pytest-benchmark
   - pytest-cov
   - pytest-dotenv
   - pytest-xdist
+  - syrupy
   - virtualenv
 
   # optional

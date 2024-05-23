@@ -387,8 +387,9 @@ class MFArray(MFMultiDimVar):
                 comment = f"Layered option not available for unstructured grid. {self._path}"
             else:
                 comment = (
-                    'Data "{}" does not support layered option. '
-                    "{}".format(self._data_name, self._path)
+                    'Data "{}" does not support layered option. ' "{}".format(
+                        self._data_name, self._path
+                    )
                 )
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(
@@ -436,8 +437,9 @@ class MFArray(MFMultiDimVar):
                 comment = f"Layered option not available for unstructured grid. {self._path}"
             else:
                 comment = (
-                    'Data "{}" does not support layered option. '
-                    "{}".format(self._data_name, self._path)
+                    'Data "{}" does not support layered option. ' "{}".format(
+                        self._data_name, self._path
+                    )
                 )
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(
@@ -544,8 +546,7 @@ class MFArray(MFMultiDimVar):
                     >= VerbosityLevel.verbose.value
                 ):
                     print(
-                        "Storing {} layer {} to external file {}.."
-                        ".".format(
+                        "Storing {} layer {} to external file {}.." ".".format(
                             self.structure.name,
                             current_layer[0] + 1,
                             file_path,
@@ -634,8 +635,7 @@ class MFArray(MFMultiDimVar):
                     >= VerbosityLevel.verbose.value
                 ):
                     print(
-                        "Storing {} layer {} internally.."
-                        ".".format(
+                        "Storing {} layer {} internally.." ".".format(
                             self.structure.name,
                             current_layer[0] + 1,
                         )
@@ -852,7 +852,7 @@ class MFArray(MFMultiDimVar):
                     self._set_data(record, layer=layer, preserve_record=False)
             else:
                 self._set_data(data_record, preserve_record=False)
-        elif type(data_record) == list:
+        elif isinstance(data_record, list):
             for layer, record in enumerate(data_record):
                 self._set_data(record, layer=layer, preserve_record=False)
         else:
@@ -1217,8 +1217,9 @@ class MFArray(MFMultiDimVar):
                 # set layer range
                 if not shape_ml.in_shape(layer):
                     comment = (
-                        'Layer {} for variable "{}" does not exist'
-                        ".".format(layer, self._data_name)
+                        'Layer {} for variable "{}" does not exist' ".".format(
+                            layer, self._data_name
+                        )
                     )
                     type_, value_, traceback_ = sys.exc_info()
                     raise MFDataException(
@@ -1293,7 +1294,7 @@ class MFArray(MFMultiDimVar):
                 data_path=self._path,
             )
 
-    def _get_storage_obj(self):
+    def _get_storage_obj(self, first_record=False):
         return self._data_storage
 
     def _set_storage_obj(self, storage):
@@ -1787,6 +1788,9 @@ class MFTransientArray(MFArray, MFTransient):
                 self.get_data_prep(sto_key)
                 if super().has_data():
                     return True
+            for val in self.empty_keys.values():
+                if val:
+                    return True
             return False
         else:
             self.get_data_prep(layer)
@@ -1917,7 +1921,11 @@ class MFTransientArray(MFArray, MFTransient):
                 if list_item is None:
                     self.remove_transient_key(key)
                     del_keys.append(key)
+                    self.empty_keys[key] = False
+                elif isinstance(list_item, list) and len(list_item) == 0:
+                    self.empty_keys[key] = True
                 else:
+                    self.empty_keys[key] = False
                     self._set_data_prep(list_item, key)
                     if is_record:
                         super().set_record(list_item)
@@ -1939,7 +1947,11 @@ class MFTransientArray(MFArray, MFTransient):
                     key = 0
             if data is None:
                 self.remove_transient_key(key)
+            elif isinstance(data, list) and len(data) == 0:
+                # add empty record
+                self.empty_keys[key] = True
             else:
+                self.empty_keys[key] = False
                 self._set_data_prep(data, key)
                 super().set_data(data, multiplier, layer)
 
@@ -1961,6 +1973,8 @@ class MFTransientArray(MFArray, MFTransient):
 
         """
 
+        if key in self.empty_keys and self.empty_keys[key]:
+            return ""
         self._get_file_entry_prep(key)
         return super().get_file_entry(ext_file_action=ext_file_action)
 
@@ -2020,7 +2034,11 @@ class MFTransientArray(MFArray, MFTransient):
     def _set_storage_obj(self, storage):
         self._data_storage[self._current_key] = storage
 
-    def _get_storage_obj(self):
+    def _get_storage_obj(self, first_record=False):
+        if first_record and isinstance(self._data_storage, dict):
+            for value in self._data_storage.values():
+                return value
+            return None
         if (
             self._current_key is None
             or self._current_key not in self._data_storage

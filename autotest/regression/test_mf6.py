@@ -42,6 +42,7 @@ from flopy.mf6 import (
     ModflowGwtssm,
     ModflowIms,
     ModflowTdis,
+    ModflowUtlhpc,
     ModflowUtltas,
 )
 from flopy.mf6.data.mfdatastorage import DataStorageType
@@ -299,7 +300,7 @@ def test_np001(function_tmpdir, example_data_path):
         )
     except FlopyException:
         ex = True
-    assert ex == True
+    assert ex is True
 
     kwargs = {}
     kwargs["xul"] = 20.5
@@ -751,7 +752,7 @@ def test_np001(function_tmpdir, example_data_path):
                 found_cellid = True
     assert found_cellid
 
-    # test empty stress period
+    # test empty stress period and remove output
     well_spd = {0: [(-1, -1, -1, -2000.0), (0, 0, 7, -2.0)], 1: []}
     wel_package = ModflowGwfwel(
         model,
@@ -762,6 +763,13 @@ def test_np001(function_tmpdir, example_data_path):
         save_flows=True,
         maxbound=2,
         stress_period_data=well_spd,
+    )
+    oc_package = ModflowGwfoc(
+        model,
+        budget_filerecord=[("np001_mod 1.cbc",)],
+        head_filerecord=[("np001_mod 1.hds",)],
+        saverecord={0: []},
+        printrecord={0: []},
     )
     sim.write_simulation()
     found_begin = False
@@ -787,6 +795,10 @@ def test_np001(function_tmpdir, example_data_path):
         spath,
         write_headers=False,
     )
+    # test to make sure oc empty record dictionary is set
+    oc = test_sim.get_model().get_package("oc")
+    assert oc.saverecord.empty_keys[0] is True
+    # test wel package
     wel = test_sim.get_model().get_package("wel_2")
     wel._filename = "np001_spd_test.wel"
     wel.write()
@@ -855,9 +867,9 @@ def test_np002(function_tmpdir, example_data_path):
     sim.simulation_data.max_columns_of_data = 22
 
     name = sim.name_file
-    assert name.continue_.get_data() == None
-    assert name.nocheck.get_data() == True
-    assert name.memory_print_option.get_data() == None
+    assert name.continue_.get_data() is None
+    assert name.nocheck.get_data() is True
+    assert name.memory_print_option.get_data() is None
 
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
     tdis_package = ModflowTdis(
@@ -1885,7 +1897,7 @@ def test005_create_tests_advgw_tidal(function_tmpdir, example_data_path):
     assert model.name_file.filename == "new_name.nam"
     package_type_dict = {}
     for package in model.packagelist:
-        if not package.package_type in package_type_dict:
+        if package.package_type not in package_type_dict:
             filename = os.path.split(package.filename)[1]
             assert filename == f"new_name.{package.package_type}"
             package_type_dict[package.package_type] = 1
@@ -1901,7 +1913,7 @@ def test005_create_tests_advgw_tidal(function_tmpdir, example_data_path):
     sim.rename_all_packages("all_files_same_name")
     package_type_dict = {}
     for package in model.packagelist:
-        if not package.package_type in package_type_dict:
+        if package.package_type not in package_type_dict:
             filename = os.path.split(package.filename)[1]
             assert filename == f"all_files_same_name.{package.package_type}"
             package_type_dict[package.package_type] = 1
@@ -1945,6 +1957,17 @@ def test005_create_tests_advgw_tidal(function_tmpdir, example_data_path):
             found_obs = True
             assert value[0][0] == "ghb- 2-6-10"
     assert found_flows and found_obs
+
+    # check model.time steady state and transient
+    sto_package = model.get_package("sto")
+    sto_package.steady_state.set_data({0: True, 1: False, 2: False, 3: False})
+    sto_package.transient.set_data({0: False, 1: True, 2: True, 3: True})
+    flopy.mf6.ModflowGwfdrn(model, pname="storm")
+    ss = model.modeltime.steady_state
+    assert ss[0]
+    assert not ss[1]
+    assert not ss[2]
+    assert not ss[3]
 
     # clean up
     sim.delete_output_files()
@@ -2040,7 +2063,7 @@ def test004_create_tests_bcfss(function_tmpdir, example_data_path):
         readasarrays=True,
         save_flows=True,
         auxiliary=[("var1", "var2")],
-        recharge={0: 0.004},
+        recharge={0: 0.004, 1: []},
         aux=aux,
     )  # *** test if aux works ***
     chk = rch_package.check()
@@ -2056,6 +2079,11 @@ def test004_create_tests_bcfss(function_tmpdir, example_data_path):
     assert aux_out[0][1][0, 0] == 1.3
     assert aux_out[1][0][0, 0] == 200.0
     assert aux_out[1][1][0, 0] == 1.5
+    # write test
+    sim.set_sim_path(function_tmpdir)
+    sim.write_simulation()
+    # update recharge
+    recharge = {0: 0.004, 1: 0.004}
 
     riv_period = {}
     riv_period_array = []
@@ -2219,10 +2247,8 @@ def test035_create_tests_fhb(function_tmpdir, example_data_path):
         model, storagecoefficient=True, iconvert=0, ss=0.01, sy=0.0
     )
     time = model.modeltime
-    assert (
-        time.steady_state[0] == False
-        and time.steady_state[1] == False
-        and time.steady_state[2] == False
+    assert not (
+        time.steady_state[0] or time.steady_state[1] or time.steady_state[2]
     )
     wel_period = {0: [((0, 1, 0), "flow")]}
     wel_package = ModflowGwfwel(
@@ -3085,7 +3111,7 @@ def test028_create_tests_sfr(function_tmpdir, example_data_path):
         delc=5000.0,
         top=top,
         botm=botm,
-        # idomain=idomain,
+        idomain=idomain,
         filename=f"{model_name}.dis",
     )
     strt = testutils.read_std_array(os.path.join(pth, "strt.txt"), "float")
@@ -3285,8 +3311,77 @@ def test028_create_tests_sfr(function_tmpdir, example_data_path):
         htol=10.0,
     )
 
+    # test hpc package
+    part = [("model1", 1), ("model2", 2)]
+    hpc = ModflowUtlhpc(
+        sim, dev_log_mpi=True, partitions=part, filename="test.hpc"
+    )
+
+    assert sim.hpc.dev_log_mpi.get_data()
+    assert hpc.filename == "test.hpc"
+    part = hpc.partitions.get_data()
+    assert part[0][0] == "model1"
+    assert part[0][1] == 1
+    assert part[1][0] == "model2"
+    assert part[1][1] == 2
+
+    sim.write_simulation()
+    sim2 = MFSimulation.load(
+        sim_name=test_ex_name,
+        version="mf6",
+        exe_name="mf6",
+        sim_ws=function_tmpdir,
+    )
+    hpc_a = sim2.get_package("hpc")
+    assert hpc_a.filename == "test.hpc"
+    fr = sim2.name_file._hpc_filerecord.get_data()
+    assert fr[0][0] == "test.hpc"
+    assert hpc_a.dev_log_mpi.get_data()
+    part_a = hpc_a.partitions.get_data()
+    assert part_a[0][0] == "model1"
+    assert part_a[0][1] == 1
+    assert part_a[1][0] == "model2"
+    assert part_a[1][1] == 2
+
+    sim2.remove_package(hpc_a)
+    sim2.set_sim_path(os.path.join(function_tmpdir, "temp"))
+    sim2.write_simulation()
+    sim3 = MFSimulation.load(
+        sim_name=test_ex_name,
+        version="mf6",
+        exe_name="mf6",
+        sim_ws=os.path.join(function_tmpdir, "temp"),
+    )
+    hpc_n = sim3.get_package("hpc")
+    assert hpc_n is None
+    fr_2 = sim3.name_file._hpc_filerecord.get_data()
+    assert fr_2 is None
+    sim3.set_sim_path(function_tmpdir)
+
+    hpc_data = {
+        "filename": "hpc_data_file.hpc",
+        "dev_log_mpi": True,
+        "partitions": part,
+    }
+    sim4 = MFSimulation(
+        sim_name=test_ex_name,
+        version="mf6",
+        exe_name="mf6",
+        sim_ws=pth,
+        hpc_data=hpc_data,
+    )
+    fr_4 = sim4.name_file._hpc_filerecord.get_data()
+    assert fr_4[0][0] == "hpc_data_file.hpc"
+    assert sim4.hpc.filename == "hpc_data_file.hpc"
+    assert sim4.hpc.dev_log_mpi.get_data()
+    part = sim4.hpc.partitions.get_data()
+    assert part[0][0] == "model1"
+    assert part[0][1] == 1
+    assert part[1][0] == "model2"
+    assert part[1][1] == 2
+
     # clean up
-    sim.delete_output_files()
+    sim3.delete_output_files()
 
 
 @requires_exe("mf6")
@@ -3771,10 +3866,10 @@ def test005_advgw_tidal(function_tmpdir, example_data_path):
     model = sim.get_model(model_name)
     time = model.modeltime
     assert (
-        time.steady_state[0] == True
-        and time.steady_state[1] == False
-        and time.steady_state[2] == False
-        and time.steady_state[3] == False
+        time.steady_state[0]
+        and not time.steady_state[1]
+        and not time.steady_state[2]
+        and not time.steady_state[3]
     )
     ghb = model.get_package("ghb")
     obs = ghb.obs

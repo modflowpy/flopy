@@ -18,6 +18,15 @@ optional true
 longname xt3d on right-hand side
 description add xt3d terms to right-hand side, when possible.  This option uses less memory, but may require more iterations.
 
+block options
+name export_array_ascii
+type keyword
+reader urword
+optional true
+mf6internal export_ascii
+longname export array variables to layered ascii files.
+description keyword that specifies input griddata arrays should be written to layered ascii output files.
+
 # --------------------- gwt dsp griddata ---------------------
 
 block griddata

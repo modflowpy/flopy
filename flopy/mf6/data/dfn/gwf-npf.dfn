@@ -224,6 +224,15 @@ tagged false
 longname file name of TVK information
 description defines a time-varying hydraulic conductivity (TVK) input file.  Records in the TVK file can be used to change hydraulic conductivity properties at specified times or stress periods.
 
+block options
+name export_array_ascii
+type keyword
+reader urword
+optional true
+mf6internal export_ascii
+longname export array variables to layered ascii files.
+description keyword that specifies input griddata arrays should be written to layered ascii output files.
+
 # dev options
 
 block options
@@ -234,33 +243,6 @@ optional true
 longname turn off Newton for unconfined cells
 description turn off Newton for unconfined cells
 mf6internal inewton
-
-block options
-name dev_modflowusg_upstream_weighted_saturation
-type keyword
-reader urword
-optional true
-longname use MODFLOW-USG upstream-weighted saturation approach
-description use MODFLOW-USG upstream-weighted saturation approach
-mf6internal iusgnrhc
-
-block options
-name dev_modflownwt_upstream_weighting
-type keyword
-reader urword
-optional true
-longname use MODFLOW-NWT approach for upstream weighting
-description use MODFLOW-NWT approach for upstream weighting
-mf6internal inwtupw
-
-block options
-name dev_minimum_saturated_thickness
-type double precision
-reader urword
-optional true
-longname set minimum allowed saturated thickness
-description set minimum allowed saturated thickness
-mf6internal satmin
 
 block options
 name dev_omega

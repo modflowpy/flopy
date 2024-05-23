@@ -289,7 +289,7 @@ def test_lake(function_tmpdir, example_data_path):
     lakes.shape = idomain.shape
     gwf.dis.idomain = np.where(lakes > -1, 1, idomain)
 
-    # convert to Newton-Raphson fomulation and update the linear accelerator
+    # convert to Newton-Raphson formulation and update the linear accelerator
     gwf.name_file.newtonoptions = "NEWTON UNDER_RELAXATION"
     sim.ims.linear_acceleration = "BICGSTAB"
 

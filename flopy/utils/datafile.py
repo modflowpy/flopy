@@ -274,7 +274,7 @@ class LayerFile:
                 kstpkper=kstpkper, totim=totim, mflay=mflay
             ).transpose()
         ).transpose()
-        if mflay != None:
+        if mflay is not None:
             attrib_dict = {f"{attrib_name}{mflay}": plotarray[0, :, :]}
         else:
             attrib_dict = {}

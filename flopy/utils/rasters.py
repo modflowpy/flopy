@@ -45,7 +45,7 @@ class Raster:
 
     """
 
-    FLOAT32 = (float, np.float32, np.float_)
+    FLOAT32 = (float, np.float32, np.float64)
     FLOAT64 = (np.float64,)
     INT8 = (np.int8, np.uint8)
     INT16 = (np.int16, np.uint16)
@@ -688,7 +688,7 @@ class Raster:
         """
         Method to get a numpy array corresponding to the
         provided raster band. Nodata vals are set to
-        np.NaN
+        np.nan
 
         Parameters
         ----------

@@ -5,7 +5,7 @@ Mfusgcln module.
 Contains the MfUsgCln class. Note that the user can
 access the MfUsgCln class as `flopy.mfusg.MfUsgCln`.
 
-Compatible with USG-Transport Version 1.7.0. which can be downloade from
+Compatible with USG-Transport Version 1.7.0. which can be download from
 https://www.gsi-net.com/en/software/free-software/modflow-usg.html
 
 Additional information for this MODFLOW package can be found at the `Online
@@ -19,6 +19,7 @@ for simulating groundwater flow and tightly coupled processes using a control
 volume finite-difference formulation: U.S. Geological Survey Techniques and
 Methods, book 6, chap. A45, 66 p.
 """
+
 import numpy as np
 
 from ..pakbase import Package

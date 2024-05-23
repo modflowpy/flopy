@@ -98,9 +98,7 @@ As described above, making a release manually involves the following steps:
 
 - Update MODFLOW 6 dfn files in the repository and MODFLOW 6 package classes by running `python -m flopy.mf6.utils.generate_classes --ref master --no-backup`
 
-- Run `isort` and `black` on the `flopy` module. This can be achieved by running `python scripts/pull_request_prepare.py` from the project root. The commands `isort .` and `black .` can also be run individually instead.
-
-- Use `run_notebooks.py` in the `scripts` directory to rerun all notebooks in `.docs/Notebooks`.
+- Run `ruff check .` and `ruff format .` from the project root.
 
 - Generate a changelog starting from the last release with [git cliff](https://github.com/orhun/git-cliff), for instance: `git cliff --config cliff.toml --unreleased --tag=<release version number>`.
 
@@ -121,7 +119,7 @@ As described above, making a release manually involves the following steps:
 
 2.  Set the development version as appropriate: `python scripts/update_version.py -v <version>`. The version number must comply with [PEP 440](https://peps.python.org/pep-0440/).
 
-3.  Lint Python files: `python scripts/pull_request_prepare.py`
+3.  Lint and format Python files: `ruff check .` and `ruff format .` from the project root.
 
 4.  Commit and push the updated `develop` branch.
 

@@ -836,7 +836,7 @@ class StructuredGrid(Grid):
                 row number
             j : int
                 column number
-            as_node : bool
+            as_nodes : bool
                 flag to return neighbors as node numbers
             method : str
                 "rook" for shared edge neighbors (default) "queen" for shared
@@ -991,30 +991,53 @@ class StructuredGrid(Grid):
 
     def get_cell_vertices(self, *args, **kwargs):
         """
-        Method to get a set of cell vertices for a single cell
-            used in the Shapefile export utilities and plotting code
-        :param node: (int) node number
-        :param i: (int) cell row number
-        :param j: (int) cell column number
+        Get a set of cell vertices for a single cell.
+
+        Parameters
+        ----------
+        node : int, optional
+            Node index, mutually exclusive with i and j
+        i, j : int, optional
+            Row and column index, mutually exclusive with node
+
         Returns
-        ------- list of x,y cell vertices
+        -------
+        list
+            list of tuples with x,y coordinates to cell vertices
+
+        Examples
+        --------
+        >>> import flopy
+        >>> import numpy as np
+        >>> delr, delc = np.array([10.0] * 3), np.array([10.0] * 4)
+        >>> sg = flopy.discretization.StructuredGrid(delr=delr, delc=delc)
+        >>> sg.get_cell_vertices(node=0)
+        [(0.0, 40.0), (10.0, 40.0), (10.0, 30.0), (0.0, 30.0)]
+        >>> sg.get_cell_vertices(3, 0)
+        [(0.0, 10.0), (10.0, 10.0), (10.0, 0.0), (0.0, 0.0)]
         """
-        nn = None
         if kwargs:
-            if "node" in kwargs:
-                nn = kwargs.pop("node")
-            else:
+            if args:
+                raise TypeError(
+                    "mixed positional and keyword arguments not supported"
+                )
+            elif "node" in kwargs:
+                _, i, j = self.get_lrc(kwargs.pop("node"))[0]
+            elif "i" in kwargs and "j" in kwargs:
                 i = kwargs.pop("i")
                 j = kwargs.pop("j")
+            if kwargs:
+                unused = ", ".join(kwargs.keys())
+                raise TypeError(f"unused keyword arguments: {unused}")
+        elif len(args) == 0:
+            raise TypeError("expected one or more arguments")
 
-        if len(args) > 0:
-            if len(args) == 1:
-                nn = args[0]
-            else:
-                i, j = args[0:2]
-
-        if nn is not None:
-            k, i, j = self.get_lrc(nn)[0]
+        if len(args) == 1:
+            _, i, j = self.get_lrc(args[0])[0]
+        elif len(args) == 2:
+            i, j = args
+        elif len(args) > 2:
+            raise TypeError("too many arguments")
 
         self._copy_cache = False
         cell_verts = [

@@ -1,10 +1,10 @@
 import numpy as np
 import pytest
-from autotest.conftest import get_example_data_path
 from modflow_devtools.markers import requires_exe, requires_pkg
 from modflow_devtools.misc import set_dir
 
 import flopy
+from autotest.conftest import get_example_data_path
 from flopy.mf6 import MFSimulation
 from flopy.mf6.utils import Mf6Splitter
 
@@ -364,7 +364,7 @@ def test_control_records(function_tmpdir):
 
     if spd_ls2["filename"] is None or not spd_ls2["binary"]:
         raise AssertionError(
-            "External binary file input not being preseved for MFList"
+            "External binary file input not being preserved for MFList"
         )
 
 

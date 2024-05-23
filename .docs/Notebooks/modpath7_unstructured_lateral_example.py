@@ -436,7 +436,7 @@ plt.show()
 sim.set_sim_path(workspace)
 sim.write_simulation()
 success, buff = sim.run_simulation(silent=True, report=True)
-assert success, f"Failed to run MF6 simulation."
+assert success, "Failed to run MF6 simulation."
 for line in buff:
     print(line)
 

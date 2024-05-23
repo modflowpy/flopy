@@ -1410,9 +1410,9 @@ class Mf6Splitter(object):
 
                     mapped_data[mkey]["packagedata"] = new_recarray
                     mapped_data[mkey]["nuzfcells"] = len(new_recarray)
-                    mapped_data[mkey][
-                        "ntrailwaves"
-                    ] = package.ntrailwaves.array
+                    mapped_data[mkey]["ntrailwaves"] = (
+                        package.ntrailwaves.array
+                    )
                     mapped_data[mkey]["nwavesets"] = package.nwavesets.array
                     mapped_data[mkey]["perioddata"] = spd
 
@@ -2399,7 +2399,7 @@ class Mf6Splitter(object):
                     new_model1[mm_idx] = tmp_models
 
                 cellid2 = recarray.id2
-                conv_idx = np.where((cellid2 != None))[0]
+                conv_idx = np.where((cellid2 is not None))[0]
                 if len(conv_idx) > 0:  # do stuff
                     # need to trap layers...
                     if pkg_type is None:
@@ -2456,7 +2456,7 @@ class Mf6Splitter(object):
                         for mkey, model in self._model_dict.items():
                             idx = np.where(new_model2 == mkey)
                             tmp_node = new_node2[idx]
-                            cidx = np.where((tmp_node != None))
+                            cidx = np.where((tmp_node is not None))
                             tmp_cellid = model.modelgrid.get_lrc(
                                 tmp_node[cidx].to_list()
                             )
@@ -2561,9 +2561,9 @@ class Mf6Splitter(object):
                                 ofile: new_recarray
                             }
                         else:
-                            mapped_data[mkey]["continuous"][
-                                ofile
-                            ] = new_recarray
+                            mapped_data[mkey]["continuous"][ofile] = (
+                                new_recarray
+                            )
                     else:
                         if "observations" not in mapped_data:
                             mapped_data["observations"] = {
@@ -2663,7 +2663,7 @@ class Mf6Splitter(object):
 
     def _remap_adv_tag(self, mkey, recarray, item, mapper):
         """
-        Method to remap advanced package ids such as SFR's ifno varaible
+        Method to remap advanced package ids such as SFR's ifno variable
 
         Parameters
         ----------
@@ -3310,5 +3310,5 @@ class Mf6Splitter(object):
 
 # todo: development notes:
 #   Then set up checks for model splitting
-#       (ex. doesnt parallel a fault, doesnt cut through a lake,
+#       (ex. doesn't parallel a fault, doesn't cut through a lake,
 #       active cells in modelgrid...)

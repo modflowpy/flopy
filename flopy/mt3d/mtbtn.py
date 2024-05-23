@@ -715,23 +715,23 @@ class Mt3dBtn(Package):
         f_btn.write(f"{self.tunit:4s}{self.lunit:4s}{self.munit:4s}\n")
 
         # A5
-        if self.parent.adv != None:
+        if self.parent.adv is not None:
             f_btn.write("T ")
         else:
             f_btn.write("F ")
-        if self.parent.dsp != None:
+        if self.parent.dsp is not None:
             f_btn.write("T ")
         else:
             f_btn.write("F ")
-        if self.parent.ssm != None:
+        if self.parent.ssm is not None:
             f_btn.write("T ")
         else:
             f_btn.write("F ")
-        if self.parent.rct != None:
+        if self.parent.rct is not None:
             f_btn.write("T ")
         else:
             f_btn.write("F ")
-        if self.parent.gcg != None:
+        if self.parent.gcg is not None:
             f_btn.write("T ")
         else:
             f_btn.write("F ")
@@ -771,10 +771,7 @@ class Mt3dBtn(Package):
         f_btn.write(
             f"{self.ifmtcn:10d}{self.ifmtnp:10d}{self.ifmtrf:10d}{self.ifmtdp:10d}"
         )
-        if self.savucn == True:
-            ss = "T"
-        else:
-            ss = "F"
+        ss = "T" if self.savucn else "F"
         f_btn.write(f"{ss:>10s}\n")
 
         # A16, A17
@@ -809,7 +806,7 @@ class Mt3dBtn(Package):
                 )
 
         # A20 CHKMAS, NPRMAS
-        if self.chkmas == True:
+        if self.chkmas:
             ss = "T"
         else:
             ss = "F"
@@ -917,7 +914,7 @@ class Mt3dBtn(Package):
                 if m_arr[i].upper() == "ALTWTSORB":
                     AltWTSorb = True
         elif model.verbose:
-            print("   optional keywords not identifed/loaded")
+            print("   optional keywords not identified/loaded")
 
         # A3
         if model.verbose:

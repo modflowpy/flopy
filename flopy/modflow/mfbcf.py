@@ -272,7 +272,7 @@ class ModflowBcf(Package):
         f_bcf.write(self.trpy.get_file_entry())
         transient = not dis.steady.all()
         for k in range(nlay):
-            if transient == True:
+            if transient:
                 f_bcf.write(self.sf1[k].get_file_entry())
             if (self.laycon[k] == 0) or (self.laycon[k] == 2):
                 f_bcf.write(self.tran[k].get_file_entry())
@@ -280,9 +280,7 @@ class ModflowBcf(Package):
                 f_bcf.write(self.hy[k].get_file_entry())
             if k < nlay - 1:
                 f_bcf.write(self.vcont[k].get_file_entry())
-            if (transient == True) and (
-                (self.laycon[k] == 2) or (self.laycon[k] == 3)
-            ):
+            if transient and ((self.laycon[k] == 2) or (self.laycon[k] == 3)):
                 f_bcf.write(self.sf2[k].get_file_entry())
             if (self.iwdflg != 0) and (
                 (self.laycon[k] == 1) or (self.laycon[k] == 3)
