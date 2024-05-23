@@ -310,7 +310,11 @@ def test_loadtxt(function_tmpdir, mp6_test_path):
     pthld = PathlineFile(pthfile)
     ra = loadtxt(pthfile, delimiter=" ", skiprows=3, dtype=pthld._dtype)
     ra2 = loadtxt(
-        pthfile, delimiter=" ", skiprows=3, dtype=pthld._dtype, use_pandas=False
+        pthfile,
+        delimiter=" ",
+        skiprows=3,
+        dtype=pthld._dtype,
+        use_pandas=False,
     )
     assert np.array_equal(ra, ra2)
 

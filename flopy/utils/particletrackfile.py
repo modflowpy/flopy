@@ -9,8 +9,8 @@ from pathlib import Path
 from typing import Union
 
 import numpy as np
-from numpy.lib.recfunctions import stack_arrays
 import pandas as pd
+from numpy.lib.recfunctions import stack_arrays
 
 MIN_PARTICLE_TRACK_DTYPE = np.dtype(
     [
@@ -44,13 +44,8 @@ class ParticleTrackFile(ABC):
     Minimal data shared by all particle track file formats.
     """
 
-    @property
-    @abstractmethod
-    def dtype(self):
-        """
-        Particle track file data dtype.
-        """
-        return MIN_PARTICLE_TRACK_DTYPE
+    dtypes = {"base": ..., "full": ...}
+    """Base and full (extended) canonical pathline data dtypes."""
 
     def __init__(
         self,
@@ -125,6 +120,12 @@ class ParticleTrackFile(ABC):
         )
 
         return data[idx]
+
+    def get_dataframe(self) -> pd.DataFrame:
+        return self._data
+
+    def get_recarray(self) -> np.recarray:
+        return self._data.to_records(index=False)
 
     def get_alldata(self, totim=None, ge=True, minimal=False):
         """
@@ -343,8 +344,20 @@ class ParticleTrackFile(ABC):
             for dt in dtype.values():
                 self.validate(dt)
         elif isinstance(dtype, pd.Series):
-            subset = OrderedDict({k: v for k, v in dtype.to_dict().items() if k in MIN_PARTICLE_TRACK_DTYPE.names})
+            subset = OrderedDict(
+                {
+                    k: v
+                    for k, v in dtype.to_dict().items()
+                    if k in MIN_PARTICLE_TRACK_DTYPE.names
+                }
+            )
             assert subset == expected
         elif isinstance(dtype, np.dtypes.VoidDType):
-            subset = OrderedDict({k: v for k, v in dtype.fields.items() if k in MIN_PARTICLE_TRACK_DTYPE.names})
+            subset = OrderedDict(
+                {
+                    k: v
+                    for k, v in dtype.fields.items()
+                    if k in MIN_PARTICLE_TRACK_DTYPE.names
+                }
+            )
             assert subset == expected

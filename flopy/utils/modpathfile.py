@@ -18,11 +18,6 @@ from ..utils.flopy_io import loadtxt
 class ModpathFile(ParticleTrackFile, ABC):
     """Provides MODPATH output file support."""
 
-    @property
-    @abstractmethod
-    def dtypes(self):
-        pass
-
     def __init__(
         self, filename: Union[str, os.PathLike], verbose: bool = False
     ):
@@ -167,67 +162,65 @@ class PathlineFile(ModpathFile):
 
     """
 
-    @property
-    def dtypes(self):
-        return {
-            **dict.fromkeys(
-                [3, 5],
-                np.dtype(
-                    [
-                        ("particleid", np.int32),
-                        ("x", np.float32),
-                        ("y", np.float32),
-                        ("zloc", np.float32),
-                        ("z", np.float32),
-                        ("time", np.float32),
-                        ("j", np.int32),
-                        ("i", np.int32),
-                        ("k", np.int32),
-                        ("cumulativetimestep", np.int32),
-                    ]
-                ),
-            ),
-            6: np.dtype(
+    dtypes = {
+        **dict.fromkeys(
+            [3, 5],
+            np.dtype(
                 [
                     ("particleid", np.int32),
-                    ("particlegroup", np.int32),
-                    ("timepointindex", np.int32),
-                    ("cumulativetimestep", np.int32),
-                    ("time", np.float32),
                     ("x", np.float32),
                     ("y", np.float32),
+                    ("zloc", np.float32),
                     ("z", np.float32),
-                    ("k", np.int32),
-                    ("i", np.int32),
+                    ("time", np.float32),
                     ("j", np.int32),
-                    ("grid", np.int32),
-                    ("xloc", np.float32),
-                    ("yloc", np.float32),
-                    ("zloc", np.float32),
-                    ("linesegmentindex", np.int32),
-                ]
-            ),
-            7: np.dtype(
-                [
-                    ("particleid", np.int32),
-                    ("particlegroup", np.int32),
-                    ("sequencenumber", np.int32),
-                    ("particleidloc", np.int32),
-                    ("time", np.float32),
-                    ("x", np.float32),
-                    ("y", np.float32),
-                    ("z", np.float32),
+                    ("i", np.int32),
                     ("k", np.int32),
-                    ("node", np.int32),
-                    ("xloc", np.float32),
-                    ("yloc", np.float32),
-                    ("zloc", np.float32),
-                    ("stressperiod", np.int32),
-                    ("timestep", np.int32),
+                    ("cumulativetimestep", np.int32),
                 ]
             ),
-        }
-    
+        ),
+        6: np.dtype(
+            [
+                ("particleid", np.int32),
+                ("particlegroup", np.int32),
+                ("timepointindex", np.int32),
+                ("cumulativetimestep", np.int32),
+                ("time", np.float32),
+                ("x", np.float32),
+                ("y", np.float32),
+                ("z", np.float32),
+                ("k", np.int32),
+                ("i", np.int32),
+                ("j", np.int32),
+                ("grid", np.int32),
+                ("xloc", np.float32),
+                ("yloc", np.float32),
+                ("zloc", np.float32),
+                ("linesegmentindex", np.int32),
+            ]
+        ),
+        7: np.dtype(
+            [
+                ("particleid", np.int32),
+                ("particlegroup", np.int32),
+                ("sequencenumber", np.int32),
+                ("particleidloc", np.int32),
+                ("time", np.float32),
+                ("x", np.float32),
+                ("y", np.float32),
+                ("z", np.float32),
+                ("k", np.int32),
+                ("node", np.int32),
+                ("xloc", np.float32),
+                ("yloc", np.float32),
+                ("zloc", np.float32),
+                ("stressperiod", np.int32),
+                ("timestep", np.int32),
+            ]
+        ),
+    }
+
     @property
     def dtype(self):
         return self._dtype
@@ -459,100 +452,98 @@ class EndpointFile(ModpathFile):
 
     """
 
-    @property
-    def dtypes(self):
-        return {
-            **dict.fromkeys(
-                [3, 5],
-                np.dtype(
-                    [
-                        ("zone", np.int32),
-                        ("j", np.int32),
-                        ("i", np.int32),
-                        ("k", np.int32),
-                        ("x", np.float32),
-                        ("y", np.float32),
-                        ("z", np.float32),
-                        ("zloc", np.float32),
-                        ("time", np.float32),
-                        ("x0", np.float32),
-                        ("y0", np.float32),
-                        ("zloc0", np.float32),
-                        ("j0", np.int32),
-                        ("i0", np.int32),
-                        ("k0", np.int32),
-                        ("zone0", np.int32),
-                        ("cumulativetimestep", np.int32),
-                        ("ipcode", np.int32),
-                        ("time0", np.float32),
-                    ]
-                ),
-            ),
-            6: np.dtype(
+    dtypes = {
+        **dict.fromkeys(
+            [3, 5],
+            np.dtype(
                 [
-                    ("particleid", np.int32),
-                    ("particlegroup", np.int32),
-                    ("status", np.int32),
-                    ("time0", np.float32),
-                    ("time", np.float32),
-                    ("initialgrid", np.int32),
-                    ("k0", np.int32),
-                    ("i0", np.int32),
-                    ("j0", np.int32),
-                    ("cellface0", np.int32),
-                    ("zone0", np.int32),
-                    ("xloc0", np.float32),
-                    ("yloc0", np.float32),
-                    ("zloc0", np.float32),
-                    ("x0", np.float32),
-                    ("y0", np.float32),
-                    ("z0", np.float32),
-                    ("finalgrid", np.int32),
-                    ("k", np.int32),
-                    ("i", np.int32),
+                    ("zone", np.int32),
                     ("j", np.int32),
-                    ("cellface", np.int32),
-                    ("zone", np.int32),
-                    ("xloc", np.float32),
-                    ("yloc", np.float32),
-                    ("zloc", np.float32),
+                    ("i", np.int32),
+                    ("k", np.int32),
                     ("x", np.float32),
                     ("y", np.float32),
                     ("z", np.float32),
-                    ("label", "|S40"),
-                ]
-            ),
-            7: np.dtype(
-                [
-                    ("particleid", np.int32),
-                    ("particlegroup", np.int32),
-                    ("particleidloc", np.int32),
-                    ("status", np.int32),
-                    ("time0", np.float32),
+                    ("zloc", np.float32),
                     ("time", np.float32),
-                    ("node0", np.int32),
-                    ("k0", np.int32),
-                    ("xloc0", np.float32),
-                    ("yloc0", np.float32),
-                    ("zloc0", np.float32),
                     ("x0", np.float32),
                     ("y0", np.float32),
-                    ("z0", np.float32),
+                    ("zloc0", np.float32),
+                    ("j0", np.int32),
+                    ("i0", np.int32),
+                    ("k0", np.int32),
                     ("zone0", np.int32),
-                    ("initialcellface", np.int32),
-                    ("node", np.int32),
-                    ("k", np.int32),
-                    ("xloc", np.float32),
-                    ("yloc", np.float32),
-                    ("zloc", np.float32),
-                    ("x", np.float32),
-                    ("y", np.float32),
-                    ("z", np.float32),
-                    ("zone", np.int32),
-                    ("cellface", np.int32),
+                    ("cumulativetimestep", np.int32),
+                    ("ipcode", np.int32),
+                    ("time0", np.float32),
                 ]
             ),
-        }
+        ),
+        6: np.dtype(
+            [
+                ("particleid", np.int32),
+                ("particlegroup", np.int32),
+                ("status", np.int32),
+                ("time0", np.float32),
+                ("time", np.float32),
+                ("initialgrid", np.int32),
+                ("k0", np.int32),
+                ("i0", np.int32),
+                ("j0", np.int32),
+                ("cellface0", np.int32),
+                ("zone0", np.int32),
+                ("xloc0", np.float32),
+                ("yloc0", np.float32),
+                ("zloc0", np.float32),
+                ("x0", np.float32),
+                ("y0", np.float32),
+                ("z0", np.float32),
+                ("finalgrid", np.int32),
+                ("k", np.int32),
+                ("i", np.int32),
+                ("j", np.int32),
+                ("cellface", np.int32),
+                ("zone", np.int32),
+                ("xloc", np.float32),
+                ("yloc", np.float32),
+                ("zloc", np.float32),
+                ("x", np.float32),
+                ("y", np.float32),
+                ("z", np.float32),
+                ("label", "|S40"),
+            ]
+        ),
+        7: np.dtype(
+            [
+                ("particleid", np.int32),
+                ("particlegroup", np.int32),
+                ("particleidloc", np.int32),
+                ("status", np.int32),
+                ("time0", np.float32),
+                ("time", np.float32),
+                ("node0", np.int32),
+                ("k0", np.int32),
+                ("xloc0", np.float32),
+                ("yloc0", np.float32),
+                ("zloc0", np.float32),
+                ("x0", np.float32),
+                ("y0", np.float32),
+                ("z0", np.float32),
+                ("zone0", np.int32),
+                ("initialcellface", np.int32),
+                ("node", np.int32),
+                ("k", np.int32),
+                ("xloc", np.float32),
+                ("yloc", np.float32),
+                ("zloc", np.float32),
+                ("x", np.float32),
+                ("y", np.float32),
+                ("z", np.float32),
+                ("zone", np.int32),
+                ("cellface", np.int32),
+            ]
+        ),
+    }
 
     @property
     def dtype(self):
@@ -817,63 +808,61 @@ class TimeseriesFile(ModpathFile):
     >>> ts1 = tsobj.get_data(partid=1)
     """
 
-    @property
-    def dtypes(self):
-        return {
-            **dict.fromkeys(
-                [3, 5],
-                np.dtype(
-                    [
-                        ("timestepindex", np.int32),
-                        ("particleid", np.int32),
-                        ("node", np.int32),
-                        ("x", np.float32),
-                        ("y", np.float32),
-                        ("z", np.float32),
-                        ("zloc", np.float32),
-                        ("time", np.float32),
-                        ("timestep", np.int32),
-                    ]
-                ),
-            ),
-            6: np.dtype(
+    dtypes = {
+        **dict.fromkeys(
+            [3, 5],
+            np.dtype(
                 [
-                    ("timepointindex", np.int32),
-                    ("timestep", np.int32),
-                    ("time", np.float32),
+                    ("timestepindex", np.int32),
                     ("particleid", np.int32),
-                    ("particlegroup", np.int32),
-                    ("x", np.float32),
-                    ("y", np.float32),
-                    ("z", np.float32),
-                    ("grid", np.int32),
-                    ("k", np.int32),
-                    ("i", np.int32),
-                    ("j", np.int32),
-                    ("xloc", np.float32),
-                    ("yloc", np.float32),
-                    ("zloc", np.float32),
-                ]
-            ),
-            7: np.dtype(
-                [
-                    ("timepointindex", np.int32),
-                    ("timestep", np.int32),
-                    ("time", np.float32),
-                    ("particleid", np.int32),
-                    ("particlegroup", np.int32),
-                    ("particleidloc", np.int32),
                     ("node", np.int32),
-                    ("xloc", np.float32),
-                    ("yloc", np.float32),
-                    ("zloc", np.float32),
                     ("x", np.float32),
                     ("y", np.float32),
                     ("z", np.float32),
-                    ("k", np.int32),
+                    ("zloc", np.float32),
+                    ("time", np.float32),
+                    ("timestep", np.int32),
                 ]
             ),
-        }
+        ),
+        6: np.dtype(
+            [
+                ("timepointindex", np.int32),
+                ("timestep", np.int32),
+                ("time", np.float32),
+                ("particleid", np.int32),
+                ("particlegroup", np.int32),
+                ("x", np.float32),
+                ("y", np.float32),
+                ("z", np.float32),
+                ("grid", np.int32),
+                ("k", np.int32),
+                ("i", np.int32),
+                ("j", np.int32),
+                ("xloc", np.float32),
+                ("yloc", np.float32),
+                ("zloc", np.float32),
+            ]
+        ),
+        7: np.dtype(
+            [
+                ("timepointindex", np.int32),
+                ("timestep", np.int32),
+                ("time", np.float32),
+                ("particleid", np.int32),
+                ("particlegroup", np.int32),
+                ("particleidloc", np.int32),
+                ("node", np.int32),
+                ("xloc", np.float32),
+                ("yloc", np.float32),
+                ("zloc", np.float32),
+                ("x", np.float32),
+                ("y", np.float32),
+                ("z", np.float32),
+                ("k", np.int32),
+            ]
+        ),
+    }
 
     @property
     def dtype(self):

@@ -18,13 +18,66 @@ class PathlineFile(ParticleTrackFile):
     key_cols = ["imdl", "iprp", "irpt", "trelease"]
     """Columns making up each particle's composite key."""
 
+    dtypes = {
+        "base": np.dtype(
+            [
+                ("kper", np.int32),
+                ("kstp", np.int32),
+                ("imdl", np.int32),
+                ("iprp", np.int32),
+                ("irpt", np.int32),
+                ("ilay", np.int32),
+                ("icell", np.int32),
+                ("izone", np.int32),
+                ("istatus", np.int32),
+                ("ireason", np.int32),
+                ("trelease", np.float32),
+                ("t", np.float32),
+                ("x", np.float32),
+                ("y", np.float32),
+                ("z", np.float32),
+                ("name", np.str_),
+            ]
+        ),
+        "full": np.dtype(
+            [
+                ("kper", np.int32),
+                ("kstp", np.int32),
+                ("imdl", np.int32),
+                ("iprp", np.int32),
+                ("irpt", np.int32),
+                ("ilay", np.int32),
+                ("k", np.int32),  # canonical base dtype
+                ("icell", np.int32),
+                ("izone", np.int32),
+                ("idest", np.int32),  # canonical full dtype
+                ("dest", np.str_),  # canonical full dtype
+                ("istatus", np.int32),
+                ("ireason", np.int32),
+                ("trelease", np.float32),
+                ("t", np.float32),
+                ("t0", np.float32),  # canonical full dtype
+                ("tt", np.float32),  # canonical full dtype
+                ("time", np.float32),  # canonical full dtype
+                ("x", np.float32),
+                ("y", np.float32),
+                ("z", np.float32),
+                ("particleid", np.int32),  # canonical base dtype
+                ("name", np.str_),
+            ]
+        ),
+    }
+    """Base and full (extended) PRT pathline data dtypes."""
+
     @property
     def dtype(self):
         """
         PRT track file dtype. This is loaded dynamically from the binary header file or CSV file
         headers. A best-effort attempt is made to add extra columns to comply with the canonical
-        `flopy.utils.particletrackfile.dtype`, as well as convenience columns, including release
-        and termination time and destination zone number and name.
+        `flopy.utils.particletrackfile.dtypes["base"]`, as well as convenience columns including
+        release and termination time, and destination zone number and name, for the full dtype.
+        If the loaded dtype is discovered to be different from `PrtPathlineFile.dtypes["base"]`,
+        a warning will be issued.
 
         Consumers of this class which expect the canonical particle track file attributes should
         call `validate()` to make sure the attributes were successfully loaded.
