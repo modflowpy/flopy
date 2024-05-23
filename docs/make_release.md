@@ -100,8 +100,6 @@ As described above, making a release manually involves the following steps:
 
 - Run `ruff check .` and `ruff format .` from the project root.
 
-- Use `run_notebooks.py` in the `scripts` directory to rerun all notebooks in `.docs/Notebooks`.
-
 - Generate a changelog starting from the last release with [git cliff](https://github.com/orhun/git-cliff), for instance: `git cliff --config cliff.toml --unreleased --tag=<release version number>`.
 
 - Prepend the release changelog to the comprehensive changelog file `docs/version_changes.md`.
