@@ -72,7 +72,7 @@ tagged false
 reader urword
 optional false
 longname time step multiplier factor
-description is the time step multiplier factor for this period.  If the number of outer solver iterations are less than the product of the maximum number of outer iterations (OUTER\_MAXIMUM) and ATS\_OUTER\_MAXIMUM\_FRACTION (an optional variable in the IMS input file with a default value of 1/3), then the time step length is multipled by dtadj.  If the number of outer solver iterations are greater than the product of the maximum number of outer iterations and ATS\_OUTER\_MAXIMUM\_FRACTION, then the time step length is divided by dtadj.  dtadj must be zero, one, or greater than one.  If dtadj is zero or one, then it has no effect on the simulation.  A value between 2.0 and 5.0 can be used as an initial estimate.
+description is the time step multiplier factor for this period.  If the number of outer solver iterations are less than the product of the maximum number of outer iterations (OUTER\_MAXIMUM) and ATS\_OUTER\_MAXIMUM\_FRACTION (an optional variable in the IMS input file with a default value of 1/3), then the time step length is multiplied by dtadj.  If the number of outer solver iterations are greater than the product of the maximum number of outer iterations and ATS\_OUTER\_MAXIMUM\_FRACTION, then the time step length is divided by dtadj.  dtadj must be zero, one, or greater than one.  If dtadj is zero or one, then it has no effect on the simulation.  A value between 2.0 and 5.0 can be used as an initial estimate.
 
 block perioddata
 name dtfailadj

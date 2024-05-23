@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on February 07, 2024 20:16:08 UTC
+# FILE created on May 23, 2024 14:30:07 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -34,13 +34,17 @@ class ModflowGwfgwf(mfpackage.MFPackage):
           indicates that a normal vector points directly along the positive x
           axis. The connection face normal is a normal vector on the cell face
           shared between the cell in model 1 and the cell in model 2 pointing
-          away from the model 1 cell. Additional information on "ANGLDEGX" is
-          provided in the description of the DISU Package. If an auxiliary
-          variable with the name "CDIST" is found, then this information will
-          be used as the straight-line connection distance, including the
-          vertical component, between the two cell centers. Both ANGLDEGX and
-          CDIST are required if specific discharge is calculated for either of
-          the groundwater models.
+          away from the model 1 cell. Additional information on "ANGLDEGX" and
+          when it is required is provided in the description of the DISU
+          Package. If an auxiliary variable with the name "CDIST" is found,
+          then this information will be used in the calculation of specific
+          discharge within model cells connected by the exchange. For a
+          horizontal connection, CDIST should be specified as the horizontal
+          distance between the cell centers, and should not include the
+          vertical component. For vertical connections, CDIST should be
+          specified as the difference in elevation between the two cell
+          centers. Both ANGLDEGX and CDIST are required if specific discharge
+          is calculated for either of the groundwater models.
     boundnames : boolean
         * boundnames (boolean) keyword to indicate that boundary names may be
           provided with the list of GWF Exchange cells.
@@ -452,6 +456,7 @@ class ModflowGwfgwf(mfpackage.MFPackage):
             "shape (naux)",
             "reader urword",
             "optional true",
+            "mf6internal auxvar",
         ],
         [
             "block exchangedata",

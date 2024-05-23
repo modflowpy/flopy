@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on February 07, 2024 20:16:08 UTC
+# FILE created on May 23, 2024 14:30:07 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -171,10 +171,13 @@ class ModflowGwfsfr(mfpackage.MFPackage):
         * rbth (double) real value that defines the thickness of the reach
           streambed. RBTH can be any value if the reach is not connected to an
           underlying GWF cell. Otherwise, RBTH must be greater than zero.
-        * rhk (double) real value that defines the hydraulic conductivity of
-          the reach streambed. RHK can be any positive value if the reach is
-          not connected to an underlying GWF cell. Otherwise, RHK must be
-          greater than zero.
+        * rhk (double) real or character value that defines the hydraulic
+          conductivity of the reach streambed. RHK can be any positive value if
+          the reach is not connected to an underlying GWF cell. Otherwise, RHK
+          must be greater than zero. If the Options block includes a
+          TIMESERIESFILE entry (see the "Time-Variable Input" section), values
+          can be obtained from a time series by entering the time-series name
+          in place of a numeric value.
         * man (string) real or character value that defines the Manning's
           roughness coefficient for the reach. MAN must be greater than zero.
           If the Options block includes a TIMESERIESFILE entry (see the "Time-
@@ -310,8 +313,9 @@ class ModflowGwfsfr(mfpackage.MFPackage):
           index variables.
         * sfrsetting (keystring) line of information that is parsed into a
           keyword and values. Keyword values that can be used to start the
-          SFRSETTING string include: STATUS, MANNING, STAGE, INFLOW, RAINFALL,
-          EVAPORATION, RUNOFF, DIVERSION, UPSTREAM_FRACTION, and AUXILIARY.
+          SFRSETTING string include: STATUS, BEDK, MANNING, STAGE, INFLOW,
+          RAINFALL, EVAPORATION, RUNOFF, DIVERSION, UPSTREAM_FRACTION, and
+          AUXILIARY.
             status : [string]
                 * status (string) keyword option to define stream reach status.
                   STATUS can be ACTIVE, INACTIVE, or SIMPLE. The SIMPLE STATUS
@@ -329,6 +333,15 @@ class ModflowGwfsfr(mfpackage.MFPackage):
                   respectively, to ensure that the active reach receives all of
                   the downstream outflow from the upstream reach. By default,
                   STATUS is ACTIVE.
+            bedk : [string]
+                * bedk (string) real or character value that defines the
+                  hydraulic conductivity of the reach streambed. BEDK can be
+                  any positive value if the reach is not connected to an
+                  underlying GWF cell. Otherwise, BEDK must be greater than
+                  zero. If the Options block includes a TIMESERIESFILE entry
+                  (see the "Time-Variable Input" section), values can be
+                  obtained from a time series by entering the time-series name
+                  in place of a numeric value.
             manning : [string]
                 * manning (string) real or character value that defines the
                   Manning's roughness coefficient for the reach. MANNING must
@@ -863,6 +876,7 @@ class ModflowGwfsfr(mfpackage.MFPackage):
             "tagged false",
             "in_record true",
             "reader urword",
+            "time_series true",
         ],
         [
             "block packagedata",
@@ -1079,9 +1093,9 @@ class ModflowGwfsfr(mfpackage.MFPackage):
         [
             "block period",
             "name sfrsetting",
-            "type keystring status manning stage inflow rainfall evaporation "
-            "runoff diversionrecord upstream_fraction cross_sectionrecord "
-            "auxiliaryrecord",
+            "type keystring status bedk manning stage inflow rainfall "
+            "evaporation runoff diversionrecord upstream_fraction "
+            "cross_sectionrecord auxiliaryrecord",
             "shape",
             "tagged false",
             "in_record true",
@@ -1095,6 +1109,16 @@ class ModflowGwfsfr(mfpackage.MFPackage):
             "tagged true",
             "in_record true",
             "reader urword",
+        ],
+        [
+            "block period",
+            "name bedk",
+            "type string",
+            "shape",
+            "tagged true",
+            "in_record true",
+            "reader urword",
+            "time_series true",
         ],
         [
             "block period",

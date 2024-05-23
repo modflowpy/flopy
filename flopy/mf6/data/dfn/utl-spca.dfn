@@ -8,7 +8,7 @@ shape
 reader urword
 optional false
 longname use array-based input
-description indicates that array-based input will be used for the SPC Package.  This keyword must be specified to use array-based input.
+description indicates that array-based input will be used for the SPC Package.  This keyword must be specified to use array-based input.  When READASARRAYS is specified, values must be provided for every cell within a model layer, even those cells that have an IDOMAIN value less than one.  Values assigned to cells with IDOMAIN values less than one are not used and have no effect on simulation results.
 default_value True
 
 block options

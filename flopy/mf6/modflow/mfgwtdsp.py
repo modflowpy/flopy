@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on February 07, 2024 20:16:08 UTC
+# FILE created on May 23, 2024 14:30:07 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator
 
@@ -28,6 +28,9 @@ class ModflowGwtdsp(mfpackage.MFPackage):
     xt3d_rhs : boolean
         * xt3d_rhs (boolean) add xt3d terms to right-hand side, when possible.
           This option uses less memory, but may require more iterations.
+    export_array_ascii : boolean
+        * export_array_ascii (boolean) keyword that specifies input griddata
+          arrays should be written to layered ascii output files.
     diffc : [double]
         * diffc (double) effective molecular diffusion coefficient.
     alh : [double]
@@ -106,6 +109,14 @@ class ModflowGwtdsp(mfpackage.MFPackage):
             "optional true",
         ],
         [
+            "block options",
+            "name export_array_ascii",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_ascii",
+        ],
+        [
             "block griddata",
             "name diffc",
             "type double precision",
@@ -167,6 +178,7 @@ class ModflowGwtdsp(mfpackage.MFPackage):
         loading_package=False,
         xt3d_off=None,
         xt3d_rhs=None,
+        export_array_ascii=None,
         diffc=None,
         alh=None,
         alv=None,
@@ -184,6 +196,9 @@ class ModflowGwtdsp(mfpackage.MFPackage):
         # set up variables
         self.xt3d_off = self.build_mfdata("xt3d_off", xt3d_off)
         self.xt3d_rhs = self.build_mfdata("xt3d_rhs", xt3d_rhs)
+        self.export_array_ascii = self.build_mfdata(
+            "export_array_ascii", export_array_ascii
+        )
         self.diffc = self.build_mfdata("diffc", diffc)
         self.alh = self.build_mfdata("alh", alh)
         self.alv = self.build_mfdata("alv", alv)

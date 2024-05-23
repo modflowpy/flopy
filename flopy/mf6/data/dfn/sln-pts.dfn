@@ -1,0 +1,178 @@
+# --------------------- sln pts options ---------------------
+
+block options
+name print_option
+type string
+reader urword
+optional true
+longname print option
+description is a flag that controls printing of convergence information from the solver.  NONE means print nothing. SUMMARY means print only the total number of iterations and nonlinear residual reduction summaries. ALL means print linear matrix solver convergence information to the solution listing file and model specific linear matrix solver convergence information to each model listing file in addition to SUMMARY information. NONE is default if PRINT\_OPTION is not specified.
+
+block options
+name complexity
+type string
+reader urword
+optional true
+longname print option
+description is an optional keyword that defines default non-linear and linear solver parameters.  SIMPLE - indicates that default solver input values will be defined that work well for nearly linear models. This would be used for models that do not include nonlinear stress packages and models that are either confined or consist of a single unconfined layer that is thick enough to contain the water table within a single layer. MODERATE - indicates that default solver input values will be defined that work well for moderately nonlinear models. This would be used for models that include nonlinear stress packages and models that consist of one or more unconfined layers. The MODERATE option should be used when the SIMPLE option does not result in successful convergence.  COMPLEX - indicates that default solver input values will be defined that work well for highly nonlinear models. This would be used for models that include nonlinear stress packages and models that consist of one or more unconfined layers representing complex geology and surface-water/groundwater interaction. The COMPLEX option should be used when the MODERATE option does not result in successful convergence.  Non-linear and linear solver parameters assigned using a specified complexity can be modified in the NONLINEAR and LINEAR blocks. If the COMPLEXITY option is not specified, NONLINEAR and LINEAR variables will be assigned the simple complexity values.
+
+block options
+name csv_output_filerecord
+type record csv_output fileout csvfile
+shape
+reader urword
+tagged true
+optional true
+deprecated 6.1.1
+longname
+description
+
+block options
+name csv_output
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+deprecated 6.1.1
+longname budget keyword
+description keyword to specify that the record corresponds to the comma separated values solver convergence output.  The CSV\_OUTPUT option has been deprecated and split into the CSV_OUTER_OUTPUT and CSV_INNER_OUTPUT options.  Starting with MODFLOW 6 version 6.1.1 if the CSV_OUTPUT option is specified, then it is treated as the CSV_OUTER_OUTPUT option.
+
+block options
+name csvfile
+type string
+preserve_case true
+shape
+in_record true
+reader urword
+tagged false
+optional false
+deprecated 6.1.1
+longname file keyword
+description name of the ascii comma separated values output file to write solver convergence information. If PRINT\_OPTION is NONE or SUMMARY, comma separated values output includes maximum head change convergence information at the end of each outer iteration for each time step. If PRINT\_OPTION is ALL, comma separated values output includes maximum head change and maximum residual convergence information for the solution and each model (if the solution includes more than one model) and linear acceleration information for each inner iteration.
+
+block options
+name csv_outer_output_filerecord
+type record csv_outer_output fileout outer_csvfile
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name csv_outer_output
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname budget keyword
+description keyword to specify that the record corresponds to the comma separated values outer iteration convergence output.
+
+block options
+name fileout
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an output filename is expected next.
+
+block options
+name outer_csvfile
+type string
+preserve_case true
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname file keyword
+description name of the ascii comma separated values output file to write maximum dependent-variable (for example, head) change convergence information at the end of each outer iteration for each time step.
+
+block options
+name csv_inner_output_filerecord
+type record csv_inner_output fileout inner_csvfile
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name csv_inner_output
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname budget keyword
+description keyword to specify that the record corresponds to the comma separated values solver convergence output.
+
+block options
+name inner_csvfile
+type string
+preserve_case true
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname file keyword
+description name of the ascii comma separated values output file to write solver convergence information. Comma separated values output includes maximum dependent-variable (for example, head) change and maximum residual convergence information for the solution and each model (if the solution includes more than one model) and linear acceleration information for each inner iteration.
+
+block options
+name no_ptcrecord
+type record no_ptc no_ptc_option
+reader urword
+optional true
+longname no_ptc record
+description
+
+block options
+name no_ptc
+type keyword
+in_record true
+reader urword
+optional false
+tagged true
+longname no pseudo-transient continuation
+description is a flag that is used to disable pseudo-transient continuation (PTC). Option only applies to steady-state stress periods for models using the Newton-Raphson formulation. For many problems, PTC can significantly improve convergence behavior for steady-state simulations, and for this reason it is active by default.  In some cases, however, PTC can worsen the convergence behavior, especially when the initial conditions are similar to the solution.  When the initial conditions are similar to, or exactly the same as, the solution and convergence is slow, then the NO\_PTC FIRST option should be used to deactivate PTC for the first stress period.  The NO\_PTC ALL option should also be used in order to compare convergence behavior with other MODFLOW versions, as PTC is only available in MODFLOW 6.
+
+block options
+name no_ptc_option
+type string
+in_record true
+reader urword
+optional true
+tagged false
+longname no pseudo-transient continuation option
+description is an optional keyword that is used to define options for disabling pseudo-transient continuation (PTC). FIRST is an optional keyword to disable PTC for the first stress period, if steady-state and one or more model is using the Newton-Raphson formulation. ALL is an optional keyword to disable PTC for all steady-state stress periods for models using the Newton-Raphson formulation. If NO\_PTC\_OPTION is not specified, the NO\_PTC ALL option is used.
+
+block options
+name ats_outer_maximum_fraction
+type double precision
+reader urword
+optional true
+longname fraction of outer maximum used with ats
+description real value defining the fraction of the maximum allowable outer iterations used with the Adaptive Time Step (ATS) capability if it is active.  If this value is set to zero by the user, then this solution will have no effect on ATS behavior.  This value must be greater than or equal to zero and less than or equal to 0.5 or the program will terminate with an error.  If it is not specified by the user, then it is assigned a default value of one third.  When the number of outer iterations for this solution is less than the product of this value and the maximum allowable outer iterations, then ATS will increase the time step length by a factor of DTADJ in the ATS input file.  When the number of outer iterations for this solution is greater than the maximum allowable outer iterations minus the product of this value and the maximum allowable outer iterations, then the ATS (if active) will decrease the time step length by a factor of 1 / DTADJ.
+
+
+# --------------------- sln pts nonlinear ---------------------
+
+
+block nonlinear
+name outer_maximum
+type integer
+reader urword
+optional false
+longname outer maximum iterations
+description integer value defining the maximum number of outer (nonlinear) iterations -- that is, calls to the solution routine. For a linear problem OUTER\_MAXIMUM should be 1.

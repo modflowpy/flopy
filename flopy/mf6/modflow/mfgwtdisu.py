@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on February 07, 2024 20:16:08 UTC
+# FILE created on May 23, 2024 14:30:07 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -53,6 +53,9 @@ class ModflowGwtdisu(mfpackage.MFPackage):
           cell by a value less than this tolerance, then the program will not
           terminate with an error. The default value is zero. This option
           should generally not be used.
+    export_array_ascii : boolean
+        * export_array_ascii (boolean) keyword that specifies input griddata
+          arrays should be written to layered ascii output files.
     nodes : integer
         * nodes (integer) is the number of cells in the model grid.
     nja : integer
@@ -142,7 +145,7 @@ class ModflowGwtdisu(mfpackage.MFPackage):
           degrees points in the positive y-axis direction. ANGLDEGX is only
           needed if horizontal anisotropy is specified in the NPF Package, if
           the XT3D option is used in the NPF Package, or if the
-          SAVE_SPECIFIC_DISCHARGE option is specifed in the NPF Package.
+          SAVE_SPECIFIC_DISCHARGE option is specified in the NPF Package.
           ANGLDEGX does not need to be specified if these conditions are not
           met. ANGLDEGX is of size NJA; values specified for vertical
           connections and for the diagonal position are not used. Note that
@@ -251,6 +254,14 @@ class ModflowGwtdisu(mfpackage.MFPackage):
             "optional true",
             "default_value 0.0",
             "mf6internal voffsettol",
+        ],
+        [
+            "block options",
+            "name export_array_ascii",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_ascii",
         ],
         [
             "block dimensions",
@@ -456,6 +467,7 @@ class ModflowGwtdisu(mfpackage.MFPackage):
         yorigin=None,
         angrot=None,
         vertical_offset_tolerance=0.0,
+        export_array_ascii=None,
         nodes=None,
         nja=None,
         nvert=None,
@@ -487,6 +499,9 @@ class ModflowGwtdisu(mfpackage.MFPackage):
         self.angrot = self.build_mfdata("angrot", angrot)
         self.vertical_offset_tolerance = self.build_mfdata(
             "vertical_offset_tolerance", vertical_offset_tolerance
+        )
+        self.export_array_ascii = self.build_mfdata(
+            "export_array_ascii", export_array_ascii
         )
         self.nodes = self.build_mfdata("nodes", nodes)
         self.nja = self.build_mfdata("nja", nja)
