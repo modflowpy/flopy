@@ -82,10 +82,6 @@ jobs:
           path: |
             ./autotest/.failed/**
 
-      - name: Run notebooks
-        working-directory: scripts
-        run: python run_notebooks.py
-
       - name: Generate changelog
         id: cliff
         uses: orhun/git-cliff-action@v3

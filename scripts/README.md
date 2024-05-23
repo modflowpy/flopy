@@ -28,12 +28,6 @@ For instance, `e689af57e7439b9005749d806248897ad550eab5_20150811_041632_uncommit
 
 **Note**: the `process_benchmarks.py` script depends on `seaborn`, which is not included as a dependency in either `etc/environment.yml` or in any of the optional groups in `pyproject.toml`, since this is the only place it is used in this repository.
 
-## Running notebooks
-
-The `run_notebooks.py` script runs notebooks located in the `.docs/Notebooks` directory.
-
-Notebooks are run using `jupytext --from_ipynb --execute <notebook path>`. Note that notebooks are under version control, and running them with this script will produce large changesets in your working tree as outputs and execution metadata are updated. See the [developer docs](../DEVELOPER.md) for instructions to configure `git` to automatically strip notebook outputs before commits.
-
 ## Updating version
 
 The `update_version.py` script can be used to update FloPy version numbers. Running the script first updates the version in `version.txt`, then propagates the change to various other places version strings or timestamps are embedded in the repository:
