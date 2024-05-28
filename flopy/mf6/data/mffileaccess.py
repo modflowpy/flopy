@@ -1065,11 +1065,14 @@ class MFFileAccessList(MFFileAccess):
                     current_cellid_size += 1
                     rec_len = len(data_record)
                     if rec_len not in cellid_size:
-                        data_item_struct = \
-                            self.structure.data_item_structures[rec_len]
-                        cellid_size[rec_len] = \
+                        data_item_struct = self.structure.data_item_structures[
+                            rec_len
+                        ]
+                        cellid_size[rec_len] = (
                             self._data_dimensions.get_cellid_size(
-                                data_item_struct.name)
+                                data_item_struct.name
+                            )
+                        )
                     if current_cellid_size == cellid_size[rec_len]:
                         data_record += (current_cellid,)
                         current_cellid = ()
@@ -1137,12 +1140,16 @@ class MFFileAccessList(MFFileAccess):
     def _get_cell_header(self, data_item, data_set, index):
         cellid_size = self._data_dimensions.get_cellid_size(data_item.name)
         if cellid_size == 3:
-            return [(f"{data_item.name}_layer", np.int32),
-                    (f"{data_item.name}_row", np.int32),
-                    (f"{data_item.name}_column", np.int32)]
+            return [
+                (f"{data_item.name}_layer", np.int32),
+                (f"{data_item.name}_row", np.int32),
+                (f"{data_item.name}_column", np.int32),
+            ]
         elif cellid_size == 2:
-            return [(f"{data_item.name}_layer", np.int32),
-                    (f"{data_item.name}_cell", np.int32)]
+            return [
+                (f"{data_item.name}_layer", np.int32),
+                (f"{data_item.name}_cell", np.int32),
+            ]
         else:
             return [(f"{data_item.name}_nodes", np.int32)]
 
