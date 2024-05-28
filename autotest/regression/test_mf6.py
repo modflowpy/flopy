@@ -2853,6 +2853,11 @@ def test006_create_tests_2models_gnc(function_tmpdir, example_data_path):
     )
     sim.remove_package(exg_package.package_type)
 
+    exg_data = {
+        "filename": "exg_data.txt",
+        "data": exgrecarray,
+        "binary": True,
+    }
     exg_package = ModflowGwfgwf(
         sim,
         print_input=True,
@@ -2860,7 +2865,7 @@ def test006_create_tests_2models_gnc(function_tmpdir, example_data_path):
         save_flows=True,
         auxiliary="testaux",
         nexg=36,
-        exchangedata=exgrecarray,
+        exchangedata=exg_data,
         exgtype="gwf6-gwf6",
         exgmnamea=model_name_1,
         exgmnameb=model_name_2,
@@ -4039,6 +4044,11 @@ def test006_2models_different_dis(function_tmpdir, example_data_path):
     exgrecarray = testutils.read_exchangedata(
         os.path.join(pth, "exg.txt"), 3, 2
     )
+    exg_data = {
+        "filename": "exg_data.bin",
+        "data": exgrecarray,
+        "binary": True,
+    }
 
     # build obs dictionary
     gwf_obs = {
@@ -4055,7 +4065,7 @@ def test006_2models_different_dis(function_tmpdir, example_data_path):
         save_flows=True,
         auxiliary="testaux",
         nexg=9,
-        exchangedata=exgrecarray,
+        exchangedata=exg_data,
         exgtype="gwf6-gwf6",
         exgmnamea=model_name_1,
         exgmnameb=model_name_2,

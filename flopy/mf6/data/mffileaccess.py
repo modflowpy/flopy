@@ -1046,18 +1046,14 @@ class MFFileAccessList(MFFileAccess):
         self._last_line_info = []
         self.simple_line = False
 
-    def read_binary_data_from_file(
-        self, read_file, modelgrid, precision="double", build_cellid=True
-    ):
+    def read_binary_data_from_file(self, read_file, build_cellid=True):
         # read from file
-        header, int_cellid_indexes, ext_cellid_indexes = self._get_header(
-            modelgrid, precision
-        )
+        header, int_cellid_indexes, ext_cellid_indexes = self._get_header()
         file_array = np.fromfile(read_file, dtype=header, count=-1)
         if not build_cellid:
             return file_array
         # build data list for recarray
-        cellid_size = len(self._get_cell_header(modelgrid))
+        cellid_size = {}
         data_list = []
         for record in file_array:
             data_record = ()
@@ -1067,9 +1063,15 @@ class MFFileAccessList(MFFileAccess):
                 if index in ext_cellid_indexes:
                     current_cellid += (data_item - 1,)
                     current_cellid_size += 1
-                    if current_cellid_size == cellid_size:
-                        data_record += current_cellid
-                        data_record = (data_record,)
+                    rec_len = len(data_record)
+                    if rec_len not in cellid_size:
+                        data_item_struct = \
+                            self.structure.data_item_structures[rec_len]
+                        cellid_size[rec_len] = \
+                            self._data_dimensions.get_cellid_size(
+                                data_item_struct.name)
+                    if current_cellid_size == cellid_size[rec_len]:
+                        data_record += (current_cellid,)
                         current_cellid = ()
                         current_cellid_size = 0
                 else:
@@ -1077,18 +1079,14 @@ class MFFileAccessList(MFFileAccess):
             data_list.append(data_record)
         return data_list
 
-    def write_binary_file(
-        self, data, fname, modelgrid=None, precision="double"
-    ):
+    def write_binary_file(self, data, fname):
         fd = self._open_ext_file(fname, binary=True, write=True)
-        data_array = self._build_data_array(data, modelgrid, precision)
+        data_array = self._build_data_array(data)
         data_array.tofile(fd)
         fd.close()
 
-    def _build_data_array(self, data, modelgrid, precision):
-        header, int_cellid_indexes, ext_cellid_indexes = self._get_header(
-            modelgrid, precision
-        )
+    def _build_data_array(self, data):
+        header, int_cellid_indexes, ext_cellid_indexes = self._get_header()
         data_list = []
         for record in data:
             new_record = ()
@@ -1104,7 +1102,7 @@ class MFFileAccessList(MFFileAccess):
             data_list.append(new_record)
         return np.array(data_list, dtype=header)
 
-    def _get_header(self, modelgrid, precision):
+    def _get_header(self):
         np_flt_type = np.float64
         header = []
         int_cellid_indexes = {}
@@ -1112,7 +1110,11 @@ class MFFileAccessList(MFFileAccess):
         ext_index = 0
         for index, di_struct in enumerate(self.structure.data_item_structures):
             if di_struct.is_cellid:
-                cell_header = self._get_cell_header(modelgrid)
+                cell_header = self._get_cell_header(
+                    di_struct,
+                    self.structure.data_item_structures,
+                    index,
+                )
                 header += cell_header
                 int_cellid_indexes[index] = True
                 for index in range(ext_index, ext_index + len(cell_header)):
@@ -1132,13 +1134,17 @@ class MFFileAccessList(MFFileAccess):
                             ext_index += 1
         return header, int_cellid_indexes, ext_cellid_indexes
 
-    def _get_cell_header(self, modelgrid):
-        if modelgrid.grid_type == "structured":
-            return [("layer", np.int32), ("row", np.int32), ("col", np.int32)]
-        elif modelgrid.grid_type == "vertex":
-            return [("layer", np.int32), ("ncpl", np.int32)]
+    def _get_cell_header(self, data_item, data_set, index):
+        cellid_size = self._data_dimensions.get_cellid_size(data_item.name)
+        if cellid_size == 3:
+            return [(f"{data_item.name}_layer", np.int32),
+                    (f"{data_item.name}_row", np.int32),
+                    (f"{data_item.name}_column", np.int32)]
+        elif cellid_size == 2:
+            return [(f"{data_item.name}_layer", np.int32),
+                    (f"{data_item.name}_cell", np.int32)]
         else:
-            return [("nodes", np.int32)]
+            return [(f"{data_item.name}_nodes", np.int32)]
 
     def load_from_package(
         self, first_line, file_handle, storage, pre_data_comments=None
