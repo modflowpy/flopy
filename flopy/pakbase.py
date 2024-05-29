@@ -838,37 +838,10 @@ class Package(PackageInterface):
         axes = PlotUtilities._plot_package_helper(self, **kwargs)
         return axes
 
-    def to_shapefile(self, filename, **kwargs):
-        """
-        Export 2-D, 3-D, and transient 2-D model data to shapefile (polygons).
-        Adds an attribute for each layer in each data array
-
-        Parameters
-        ----------
-        filename : str
-            Shapefile name to write
-
-        Returns
-        ----------
-        None
-
-        See Also
-        --------
-
-        Notes
-        -----
-
-        Examples
-        --------
-        >>> import flopy
-        >>> ml = flopy.modflow.Modflow.load('test.nam')
-        >>> ml.lpf.to_shapefile('test_hk.shp')
-
-        """
-        import warnings
-
-        warnings.warn("to_shapefile() is deprecated. use .export()")
-        self.export(filename)
+    def to_shapefile(self, *args, **kwargs):
+        """Raises AttributeError, use :meth:`export`."""
+        # deprecated 3.2.4, changed to raise AttributeError version 3.8
+        raise AttributeError(".to_shapefile() was removed; use .export()")
 
     def webdoc(self):
         """Open the web documentation."""

@@ -2061,3 +2061,21 @@ def test_vtk_export_disu_model(function_tmpdir):
     strt_vtk = vtk_to_numpy(grid.GetCellData().GetArray("strt"))
     if not np.allclose(gwf.ic.strt.array, strt_vtk):
         raise AssertionError("'strt' array not written in proper node order")
+
+
+def test_to_shapefile_raises_attributeerror():
+    # deprecated 3.2.4, changed to raise AttributeError version 3.8
+    # these attributes and this test may eventually be removed
+    m = flopy.modflow.Modflow()
+    assert isinstance(m, flopy.mbase.BaseModel)
+    with pytest.raises(AttributeError, match="was removed"):
+        m.to_shapefile("nope.shp")
+    dis = flopy.modflow.ModflowDis(m)
+    assert isinstance(dis, flopy.pakbase.Package)
+    with pytest.raises(AttributeError, match="was removed"):
+        dis.to_shapefile("nope.shp")
+    wel = flopy.modflow.ModflowWel(m)
+    spd = wel.stress_period_data
+    assert isinstance(spd, flopy.utils.MfList)
+    with pytest.raises(AttributeError, match="was removed"):
+        spd.to_shapefile("nope.shp", kper=1)
