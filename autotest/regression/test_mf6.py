@@ -2886,6 +2886,7 @@ def test006_create_tests_2models_gnc(function_tmpdir, example_data_path):
 
     # change folder to save simulation
     sim.set_sim_path(function_tmpdir)
+    exg_package.exchangedata.set_record(exg_data)
 
     # write simulation to new location
     sim.write_simulation()
@@ -4087,6 +4088,7 @@ def test006_2models_different_dis(function_tmpdir, example_data_path):
 
     # change folder to save simulation
     sim.set_sim_path(function_tmpdir)
+    exg_package.exchangedata.set_record(exg_data)
 
     # write simulation to new location
     sim.write_simulation()

@@ -1106,6 +1106,7 @@ class MFFileAccessList(MFFileAccess):
         return np.array(data_list, dtype=header)
 
     def _get_header(self):
+        np_int_type = np.int32
         np_flt_type = np.float64
         header = []
         int_cellid_indexes = {}
@@ -1124,7 +1125,10 @@ class MFFileAccessList(MFFileAccess):
                     ext_cellid_indexes[index] = True
                 ext_index += len(cell_header)
             elif not di_struct.optional:
-                header.append((di_struct.name, np_flt_type))
+                if di_struct.type == DatumType.integer:
+                    header.append((di_struct.name, np_int_type))
+                else:
+                    header.append((di_struct.name, np_flt_type))
                 ext_index += 1
             elif di_struct.name == "aux":
                 aux_var_names = (
