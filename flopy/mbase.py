@@ -1703,34 +1703,10 @@ class BaseModel(ModelInterface):
         )
         return axes
 
-    def to_shapefile(
-        self, filename: Union[str, os.PathLike], package_names=None, **kwargs
-    ):
-        """
-        Wrapper function for writing a shapefile for the model grid.  If
-        package_names is not None, then search through the requested packages
-        looking for arrays that can be added to the shapefile as attributes
-
-        Parameters
-        ----------
-        filename : str or PathLike
-            Path of the shapefile to write
-        package_names : list of package names (e.g. ["dis","lpf"])
-            Packages to export data arrays to shapefile. (default is None)
-
-        Returns
-        -------
-        None
-
-        Examples
-        --------
-        >>> import flopy
-        >>> m = flopy.modflow.Modflow()
-        >>> m.to_shapefile('model.shp', SelPackList)
-
-        """
-        warnings.warn("to_shapefile() is deprecated. use .export()")
-        self.export(filename, package_names=package_names)
+    def to_shapefile(self, *args, **kwargs):
+        """Raises AttributeError, use :meth:`export`."""
+        # deprecated 3.2.4, changed to raise AttributeError version 3.8
+        raise AttributeError(".to_shapefile() was removed; use .export()")
 
 
 def run_model(

@@ -998,40 +998,10 @@ class MfList(DataInterface, DataListInterface):
 
         return axes
 
-    def to_shapefile(self, filename, kper=None):
-        """
-        Export stress period boundary condition (MfList) data for a specified
-        stress period
-
-        Parameters
-        ----------
-        filename : str
-            Shapefile name to write
-        kper : int
-            MODFLOW zero-based stress period number to return. (default is None)
-
-        Returns
-        ----------
-        None
-
-        See Also
-        --------
-
-        Notes
-        -----
-
-        Examples
-        --------
-        >>> import flopy
-        >>> ml = flopy.modflow.Modflow.load('test.nam')
-        >>> ml.wel.to_shapefile('test_hk.shp', kper=1)
-        """
-        import warnings
-
-        warnings.warn(
-            "Deprecation warning: to_shapefile() is deprecated. use .export()"
-        )
-        self.export(filename, kper=kper)
+    def to_shapefile(self, *args, **kwargs):
+        """Raises AttributeError, use :meth:`export`."""
+        # deprecated 3.2.4, changed to raise AttributeError version 3.8
+        raise AttributeError(".to_shapefile() was removed; use .export()")
 
     def to_array(self, kper=0, mask=False):
         """
