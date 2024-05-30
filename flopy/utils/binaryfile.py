@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import List, Optional, Union
 
 import numpy as np
+import pandas as pd
 
 from ..utils.datafile import Header, LayerFile
 from .gridutil import get_lni
@@ -457,12 +458,6 @@ class BinaryLayerFile(LayerFile):
     ):
         super().__init__(filename, precision, verbose, kwargs)
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *exc):
-        self.close()
-
     def _build_index(self):
         """
         Build the recordarray and iposarray, which maps the header information
@@ -508,8 +503,14 @@ class BinaryLayerFile(LayerFile):
 
         # self.recordarray contains a recordarray of all the headers.
         self.recordarray = np.array(self.recordarray, dtype=self.header_dtype)
-        self.iposarray = np.array(self.iposarray)
+        self.iposarray = np.array(self.iposarray, dtype=np.int64)
         self.nlay = np.max(self.recordarray["ilay"])
+
+        # provide headers as a pandas frame
+        self.headers = pd.DataFrame(self.recordarray, index=self.iposarray)
+        self.headers["text"] = (
+            self.headers["text"].str.decode("ascii", "strict").str.strip()
+        )
 
     def get_databytes(self, header):
         """
@@ -1302,6 +1303,28 @@ class CellBudgetFile:
         self.iposheader = np.array(self.iposheader, dtype=np.int64)
         self.iposarray = np.array(self.iposarray, dtype=np.int64)
         self.nper = self.recordarray["kper"].max()
+
+        # provide headers as a pandas frame
+        self.headers = pd.DataFrame(self.recordarray, index=self.iposarray)
+        # remove irrelevant columns
+        cols = self.headers.columns.to_list()
+        unique_imeth = self.headers["imeth"].unique()
+        if unique_imeth.max() == 0:
+            drop_cols = cols[cols.index("imeth") :]
+        elif 6 not in unique_imeth:
+            drop_cols = cols[cols.index("modelnam") :]
+        else:
+            drop_cols = []
+        if drop_cols:
+            self.headers.drop(columns=drop_cols, inplace=True)
+        for name in self.headers.columns:
+            dtype = self.header_dtype[name]
+            if np.issubdtype(dtype, bytes):  # convert to str
+                self.headers[name] = (
+                    self.headers[name]
+                    .str.decode("ascii", "strict")
+                    .str.strip()
+                )
 
     def _skip_record(self, header):
         """

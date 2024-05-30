@@ -221,6 +221,12 @@ class LayerFile:
                 angrot=0.0,
             )
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.close()
+
     def to_shapefile(
         self,
         filename: Union[str, os.PathLike],

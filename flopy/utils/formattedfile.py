@@ -7,6 +7,7 @@ important classes that can be accessed by the user.
 """
 
 import numpy as np
+import pandas as pd
 
 from ..utils.datafile import Header, LayerFile
 
@@ -153,8 +154,14 @@ class FormattedLayerFile(LayerFile):
 
         # self.recordarray contains a recordarray of all the headers.
         self.recordarray = np.array(self.recordarray, self.header.get_dtype())
-        self.iposarray = np.array(self.iposarray)
+        self.iposarray = np.array(self.iposarray, dtype=np.int64)
         self.nlay = np.max(self.recordarray["ilay"])
+
+        # provide headers as a pandas frame
+        self.headers = pd.DataFrame(self.recordarray, index=self.iposarray)
+        self.headers["text"] = self.headers["text"].str.decode(
+            "ascii", "strict"
+        )
 
     def _store_record(self, header, ipos):
         """
