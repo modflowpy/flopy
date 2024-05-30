@@ -39,6 +39,38 @@ def zonbud_model_path(example_data_path):
     return example_data_path / "zonbud_examples"
 
 
+def test_binaryread(example_data_path):
+    # test low-level binaryread() method
+    pth = example_data_path / "freyberg" / "freyberg.githds"
+    with open(pth, "rb") as fp:
+        res = flopy.utils.binaryfile.binaryread(fp, np.int32, 2)
+        np.testing.assert_array_equal(res, np.array([1, 1], np.int32))
+        res = flopy.utils.binaryfile.binaryread(fp, np.float32, 2)
+        np.testing.assert_array_equal(res, np.array([10, 10], np.float32))
+        res = flopy.utils.binaryfile.binaryread(fp, str)
+        assert res == b"            HEAD"
+        res = flopy.utils.binaryfile.binaryread(fp, np.int32)
+        assert res == 20
+
+
+def test_deprecated_binaryread_struct(example_data_path):
+    # similar to test_binaryread(), but check the calls are deprecated
+    pth = example_data_path / "freyberg" / "freyberg.githds"
+    with open(pth, "rb") as fp:
+        with pytest.deprecated_call():
+            res = flopy.utils.binaryfile.binaryread_struct(fp, np.int32, 2)
+        np.testing.assert_array_equal(res, np.array([1, 1], np.int32))
+        with pytest.deprecated_call():
+            res = flopy.utils.binaryfile.binaryread_struct(fp, np.float32, 2)
+        np.testing.assert_array_equal(res, np.array([10, 10], np.float32))
+        with pytest.deprecated_call():
+            res = flopy.utils.binaryfile.binaryread_struct(fp, str)
+        assert res == b"            HEAD"
+        with pytest.deprecated_call():
+            res = flopy.utils.binaryfile.binaryread_struct(fp, np.int32)
+        assert res == 20
+
+
 def test_binaryfile_writeread(function_tmpdir, nwt_model_path):
     model = "Pr3_MFNWT_lower.nam"
     ml = flopy.modflow.Modflow.load(
