@@ -274,10 +274,16 @@ def binaryread_struct(file, vartype, shape=(1,), charlen=16):
             cannot be returned, only multi-character strings.  Shape has no
             affect on strings.
 
+    .. deprecated:: 3.8.0
+       Use :meth:`binaryread` instead.
+
     """
     import struct
 
-    import numpy as np
+    warnings.warn(
+        "binaryread_struct() is deprecated; use binaryread() instead.",
+        DeprecationWarning,
+    )
 
     # store the mapping from type to struct format (fmt)
     typefmtd = {np.int32: "i", np.float32: "f", np.float64: "d"}
@@ -306,21 +312,33 @@ def binaryread_struct(file, vartype, shape=(1,), charlen=16):
 
 def binaryread(file, vartype, shape=(1,), charlen=16):
     """
-    Uses numpy to read from binary file.  This was found to be faster than the
-        struct approach and is used as the default.
+    Read text, a scalar value, or an array of values from a binary file.
+
+    Parameters
+    ----------
+    file : file object
+        is an open file object
+    vartype : type
+        is the return variable type: str, numpy.int32, numpy.float32,
+        or numpy.float64
+    shape : tuple, default (1,)
+        is the shape of the returned array (shape(1, ) returns a single
+        value) for example, shape = (nlay, nrow, ncol)
+    charlen : int, default 16
+        is the length of the text string.  Note that string arrays
+        cannot be returned, only multi-character strings.  Shape has no
+        affect on strings.
 
     """
 
     # read a string variable of length charlen
     if vartype == str:
-        result = file.read(charlen * 1)
+        result = file.read(charlen)
     else:
         # find the number of values
         nval = np.prod(shape)
         result = np.fromfile(file, vartype, nval)
-        if nval == 1:
-            result = result  # [0]
-        else:
+        if nval != 1:
             result = np.reshape(result, shape)
     return result
 
