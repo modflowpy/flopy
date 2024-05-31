@@ -72,8 +72,56 @@ jobs:
           $PSDefaultParameterValues['*:ErrorAction']='Stop'
           powershell .github/install_opengl.ps1
 
-      - name: Install MODFLOW executables
-        uses: modflowpy/install-modflow-action@v1
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install https://github.com/modflowpy/pymake/zipball/master
+          pip install https://github.com/Deltares/xmipy/zipball/develop
+          pip install https://github.com/MODFLOW-USGS/modflowapi/zipball/develop
+          pip install .[test,optional]
+
+      - name: Setup GNU Fortran
+        uses: fortran-lang/setup-fortran@v1
+        with:
+          compiler: gcc
+          version: 13
+
+      - name: Checkout MODFLOW 6
+        uses: actions/checkout@v4
+        with:
+          repository: MODFLOW-USGS/modflow6
+          path: modflow6
+
+      - name: Update flopy MODFLOW 6 classes
+        working-directory: modflow6/autotest
+        run: |
+          python update_flopy.py
+
+      - name: Install meson
+        run: |
+          pip3 install meson ninja
+
+      - name: Setup modflow
+        working-directory: modflow6
+        run: |
+          meson setup builddir --buildtype=debugoptimized --prefix=$(pwd) --libdir=bin
+
+      - name: Build modflow
+        working-directory: modflow6
+        run: |
+          meson compile -C builddir
+
+      - name: Install modflow
+        working-directory: modflow6
+        run: |
+          meson install -C builddir
+
+      - name: Get executables
+        working-directory: modflow6/autotest
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          pytest -v --durations=0 get_exes.py
 
       - name: Run tutorial and example notebooks
         working-directory: autotest
