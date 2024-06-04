@@ -20,7 +20,7 @@ class ModelCell:
         id of model cell
 
     Methods
-    ----------
+    -------
 
     See Also
     --------
@@ -50,7 +50,7 @@ class UnstructuredModelCell(ModelCell):
         name of the model
 
     Methods
-    ----------
+    -------
     get_cellid : ()
         returns the cellid
     get_top : ()
@@ -341,7 +341,7 @@ class ModelGrid:
         DiscretizationType.DISU)
 
     Methods
-    ----------
+    -------
     grid_type : ()
         returns the grid type
     grid_type_consistent : ()
@@ -789,7 +789,7 @@ class UnstructuredModelGrid(ModelGrid):
         contains all simulation related data
 
     Methods
-    ----------
+    -------
     get_unstruct_jagged_array_list : {}
         returns a dictionary of jagged arrays used in the unstructured grid
 

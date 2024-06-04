@@ -54,7 +54,7 @@ class FormattedHeader(Header):
             the header
 
         Returns
-        ----------
+        -------
         out : numpy array of header information
         also stores the header's format string as self.format_string
 
@@ -257,7 +257,7 @@ class FormattedLayerFile(LayerFile):
             row, and column values must be zero based.
 
         Returns
-        ----------
+        -------
         out : numpy array
             Array has size (ntimes, ncells + 1).  The first column in the
             data array will contain time (totim).

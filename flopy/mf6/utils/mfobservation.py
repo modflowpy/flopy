@@ -53,15 +53,16 @@ class Observations:
     Simple class to extract and view Observation files for Uzf models
     (possibly all obs/hobs)?
 
-    Input:
-    ------
-    fi = (string) name of the observation binary output file
+    Parameters
+    ----------
+    fi : str
+        name of the observation binary output file
 
-    Methods:
-    --------
+    Methods
+    -------
     get_data(): (np.array) returns array of observation data
         parameters:
-        -----------
+        ----------
         text = (str) specific modflow record name contained in Obs.out file
         idx = (int), (slice(start, stop)) integer or slice of data to be
         returned. corresponds to kstp*kper - 1
@@ -478,7 +479,7 @@ class MFObservationRequester:
         obstype: (string) SINGLE or CONTINUOUS
 
         Returns:
-        --------
+        -------
          sets key: path to self.obs_dataDict
 
         """

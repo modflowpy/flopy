@@ -109,7 +109,7 @@ class SwrFile(FlopyBinaryData):
         ----------
 
         Returns
-        ----------
+        -------
         data : numpy array
             Array has size (nrecord, 3). None is returned if swrtype is not
             'flow'
@@ -134,7 +134,7 @@ class SwrFile(FlopyBinaryData):
         Get the number of records in the file
 
         Returns
-        ----------
+        -------
         out : tuple of int
             A tuple with the number of records and number of flow items
             in the file. The number of flow items is non-zero only if
@@ -149,7 +149,7 @@ class SwrFile(FlopyBinaryData):
         in the file
 
         Returns
-        ----------
+        -------
         out : list of (kswr, kstp, kper) tuples
             List of unique kswr, kstp, kper combinations in binary file.
             kswr, kstp, and kper values are zero-based.
@@ -162,7 +162,7 @@ class SwrFile(FlopyBinaryData):
         Get the number of times in the file
 
         Returns
-        ----------
+        -------
         out : int
             The number of simulation times (totim) in binary file.
 
@@ -174,7 +174,7 @@ class SwrFile(FlopyBinaryData):
         Get a list of unique times in the file
 
         Returns
-        ----------
+        -------
         out : list of floats
             List contains unique simulation times (totim) in binary file.
 
@@ -186,7 +186,7 @@ class SwrFile(FlopyBinaryData):
         Get a list of unique record names in the file
 
         Returns
-        ----------
+        -------
         out : list of strings
             List of unique text names in the binary file.
 
@@ -210,7 +210,7 @@ class SwrFile(FlopyBinaryData):
             The simulation time. (default is None)
 
         Returns
-        ----------
+        -------
         data : numpy record array
             Array has size (nitems).
 
@@ -288,7 +288,7 @@ class SwrFile(FlopyBinaryData):
             (default is 0)
 
         Returns
-        ----------
+        -------
         out : numpy recarray
             Array has size (ntimes, nitems).  The first column in the
             data array will contain time (totim). nitems is 2 for stage

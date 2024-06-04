@@ -585,7 +585,7 @@ class EndpointFile(ModpathFile):
         Get the maximum travel time.
 
         Returns
-        ----------
+        -------
         out : float
             Maximum travel time.
 
@@ -600,7 +600,7 @@ class EndpointFile(ModpathFile):
         ----------
 
         Returns
-        ----------
+        -------
         data : numpy record array
             A numpy recarray with the endpoint particle data
 

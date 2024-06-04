@@ -554,7 +554,7 @@ class BinaryLayerFile(LayerFile):
             row, and column values must be zero based.
 
         Returns
-        ----------
+        -------
         out : numpy array
             Array has size (ntimes, ncells + 1).  The first column in the
             data array will contain time (totim).
@@ -937,7 +937,7 @@ class HeadUFile(BinaryLayerFile):
             values must be zero based.
 
         Returns
-        ----------
+        -------
         out : numpy array
             Array has size (ntimes, ncells + 1).  The first column in the
             data array will contain time (totim).
@@ -1474,7 +1474,7 @@ class CellBudgetFile:
             Optional boolean used to decode byte strings (default is False).
 
         Returns
-        ----------
+        -------
         names : list of strings
             List of unique text names in the binary file.
 
@@ -1499,7 +1499,7 @@ class CellBudgetFile:
             Optional boolean used to decode byte strings (default is False).
 
         Returns
-        ----------
+        -------
         names : list of strings
             List of unique package names in the binary file.
 
@@ -1520,7 +1520,7 @@ class CellBudgetFile:
         Get a list of unique package names in the file
 
         Returns
-        ----------
+        -------
         out : list of strings
             List of unique package names in the binary file.
 
@@ -1551,7 +1551,7 @@ class CellBudgetFile:
             'RIVER LEAKAGE', 'STORAGE', 'FLOW RIGHT FACE', etc.
 
         Returns
-        ----------
+        -------
         out : tuple
             indices of selected record name in budget file.
 
@@ -1632,7 +1632,7 @@ class CellBudgetFile:
             'COMPACT BUDGET' MODFLOW budget file.  (Default is False.)
 
         Returns
-        ----------
+        -------
         recordlist : list of records
             A list of budget objects.  The structure of the returned object
             depends on the structure of the data in the cbb file.
@@ -1738,7 +1738,7 @@ class CellBudgetFile:
             List of times to from which to get time series.
 
         Returns
-        ----------
+        -------
         out : numpy array
             Array has size (ntimes, ncells + 1).  The first column in the
             data array will contain time (totim).
@@ -1885,7 +1885,7 @@ class CellBudgetFile:
             'COMPACT BUDGET' MODFLOW budget file.  (Default is False.)
 
         Returns
-        ----------
+        -------
         record : a single data record
             The structure of the returned object depends on the structure of
             the data in the cbb file. Compact list data are returned as
@@ -2065,7 +2065,7 @@ class CellBudgetFile:
             Dictionary with node keywords and flows (q) items.
 
         Returns
-        ----------
+        -------
         out : numpy masked array
             List contains unique simulation times (totim) in binary file.
 
@@ -2083,7 +2083,7 @@ class CellBudgetFile:
         Get a list of unique times in the file
 
         Returns
-        ----------
+        -------
         out : list of floats
             List contains unique simulation times (totim) in binary file.
 

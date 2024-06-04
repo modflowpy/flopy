@@ -252,7 +252,7 @@ class LayerFile:
             Whether to print verbose output
 
         Returns
-        ----------
+        -------
         None
 
         See Also
@@ -341,7 +341,7 @@ class LayerFile:
                 if filename_base is not None. (default is 'png')
 
         Returns
-        ----------
+        -------
         None
 
         See Also
@@ -468,7 +468,7 @@ class LayerFile:
         Get a list of unique times in the file
 
         Returns
-        ----------
+        -------
         out : list of floats
             List contains unique simulation times (totim) in binary file.
 
@@ -505,7 +505,7 @@ class LayerFile:
            all layers will be included. (Default is None.)
 
         Returns
-        ----------
+        -------
         data : numpy array
             Array has size (nlay, nrow, ncol) if mflay is None or it has size
             (nrow, ncol) if mlay is specified.
@@ -556,7 +556,7 @@ class LayerFile:
            nodata value will be assigned np.nan.
 
         Returns
-        ----------
+        -------
         data : numpy array
             Array has size (ntimes, nlay, nrow, ncol) if mflay is None or it
             has size (ntimes, nrow, ncol) if mlay is specified.

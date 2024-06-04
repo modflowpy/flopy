@@ -251,8 +251,10 @@ class ModflowWel(Package):
         """
         Write the package file.
 
-        Parameters:
-            f: (str) optional file name
+        Parameters
+        ----------
+        f : str, optional
+            file name
 
         Returns
         -------

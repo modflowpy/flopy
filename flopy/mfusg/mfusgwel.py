@@ -249,9 +249,10 @@ class MfUsgWel(ModflowWel):
     def _check_for_aux(self, options, cln=False):
         """Check dtype for auxiliary variables, and add to options.
 
-        Parameters:
+        Parameters
         ----------
-            options: (list) package options
+        options: list
+            package options
 
         Returns
         -------
@@ -278,9 +279,10 @@ class MfUsgWel(ModflowWel):
     def write_file(self, f=None):
         """Write the package file.
 
-        Parameters:
+        Parameters
         ----------
-            f: (str) optional file name
+        f : str, optional
+            file name
 
         Returns
         -------

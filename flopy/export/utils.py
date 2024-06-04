@@ -324,10 +324,11 @@ def output_helper(
 
     Returns
     -------
-        None
-    Note:
+    None
+
+    Note
     ----
-        casts down double precision to single precision for netCDF files
+    casts down double precision to single precision for netCDF files
 
     """
     assert isinstance(ml, (BaseModel, ModelInterface))
@@ -867,7 +868,7 @@ def mflist_export(f: Union[str, os.PathLike, NetCdf], mfl, **kwargs):
     export helper for MfList instances
 
     Parameters
-    -----------
+    ----------
     f : str or PathLike or NetCdf
         file path or existing export instance type (NetCdf only for now)
     mfl : MfList instance
@@ -1024,7 +1025,7 @@ def transient2d_export(f: Union[str, os.PathLike], t2d, fmt=None, **kwargs):
     export helper for Transient2d instances
 
     Parameters
-    -----------
+    ----------
     f : str or PathLike
         filename or existing export instance type (NetCdf only for now)
     t2d : Transient2d instance
@@ -1184,7 +1185,7 @@ def array3d_export(f: Union[str, os.PathLike], u3d, fmt=None, **kwargs):
     export helper for Transient2d instances
 
     Parameters
-    -----------
+    ----------
     f : str or PathLike
         filename or existing export instance type (NetCdf only for now)
     u3d : Util3d instance

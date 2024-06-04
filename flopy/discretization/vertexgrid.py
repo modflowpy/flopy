@@ -61,7 +61,7 @@ class VertexGrid(Grid):
         returns list of cells and their vertices
 
     Methods
-    ----------
+    -------
     get_cell_vertices(cellid)
         returns vertices for a single cell at cellid.
 
