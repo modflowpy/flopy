@@ -1489,7 +1489,7 @@ class Vtk:
                                 self.add_array(array, name)
 
                             if per in self.__transient_vector:
-                                d = self.__transient_vector[d]
+                                d = self.__transient_vector[per]
                                 for name, vector in d.items():
                                     self.add_vector(vector, name)
 
