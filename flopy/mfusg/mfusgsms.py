@@ -1,4 +1,3 @@
-# pylint: disable=too-many-instance-attributes
 """
 mfusgsms module.  This is the solver for MODFLOW-USG.
 

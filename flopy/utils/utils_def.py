@@ -1,4 +1,3 @@
-# pylint: disable=E1101
 """
 Generic classes and utility functions
 """
