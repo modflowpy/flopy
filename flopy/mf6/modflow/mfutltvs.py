@@ -236,7 +236,7 @@ class UtltvsPackages(mfpackage.MFChildPackages):
     UtltvsPackages is a container class for the ModflowUtltvs class.
 
     Methods
-    ----------
+    -------
     initialize
         Initializes a new ModflowUtltvs package removing any sibling child
         packages attached to the same parent package. See ModflowUtltvs init

@@ -60,7 +60,7 @@ class ParticleTrackFile(ABC):
         Get the maximum particle ID.
 
         Returns
-        ----------
+        -------
         out : int
             Maximum particle ID.
 
@@ -72,7 +72,7 @@ class ParticleTrackFile(ABC):
         Get the maximum tracking time.
 
         Returns
-        ----------
+        -------
         out : float
             Maximum tracking time.
 
@@ -99,7 +99,7 @@ class ParticleTrackFile(ABC):
             Whether to return only the minimal, canonical fields. Default is False.
 
         Returns
-        ----------
+        -------
         data : np.recarray
             Recarray with dtype ParticleTrackFile.outdtype
 
@@ -136,7 +136,7 @@ class ParticleTrackFile(ABC):
             Whether to return only the minimal, canonical fields. Default is False.
 
         Returns
-        ----------
+        -------
         data : list of numpy record arrays
             List of recarrays with dtype ParticleTrackFile.outdtype
 

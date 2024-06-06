@@ -18,7 +18,7 @@ class ObsFiles(FlopyBinaryData):
         Get a list of unique times in the file
 
         Returns
-        ----------
+        -------
         out : list of floats
             List contains unique simulation times (totim) in binary file.
 
@@ -30,7 +30,7 @@ class ObsFiles(FlopyBinaryData):
         Get the number of times in the file
 
         Returns
-        ----------
+        -------
         out : int
             The number of simulation times (totim) in binary file.
 
@@ -42,7 +42,7 @@ class ObsFiles(FlopyBinaryData):
         Get the number of observations in the file
 
         Returns
-        ----------
+        -------
         out : tuple of int
             A tuple with the number of records and number of flow items
             in the file. The number of flow items is non-zero only if
@@ -56,7 +56,7 @@ class ObsFiles(FlopyBinaryData):
         Get a list of observation names in the file
 
         Returns
-        ----------
+        -------
         out : list of strings
             List of observation names in the binary file. totim is not
             included in the list of observation names.
@@ -82,7 +82,7 @@ class ObsFiles(FlopyBinaryData):
             data for all simulation times are returned. (default is None)
 
         Returns
-        ----------
+        -------
         data : numpy record array
             Array has size (ntimes, nitems). totim is always returned. nitems
             is 2 if idx or obsname is not None or nobs+1.

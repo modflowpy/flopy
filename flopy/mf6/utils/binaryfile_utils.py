@@ -57,7 +57,7 @@ class MFOutputRequester:
     binary data from the SimulationDict() object on the fly without
     actually storing it in the SimulationDict() object.
 
-    Parameters:
+    Parameters
     ----------
     mfdict: dict
         local instance of the SimulationDict() object
@@ -66,12 +66,12 @@ class MFOutputRequester:
     key: tuple
         user requested data key
 
-    Methods:
+    Methods
     -------
     MFOutputRequester.querybinarydata
         returns: Xarray object
 
-    Examples:
+    Examples
     --------
     >>> data = MFOutputRequester(mfdict, path, key)
     >>> data.querybinarydata

@@ -183,7 +183,7 @@ class ListBudget:
         water budgets.
 
         Returns
-        ----------
+        -------
         out : list of (kstp, kper) tuples
             List of unique kstp, kper combinations in list file.  kstp and
             kper values are zero-based.
@@ -551,7 +551,7 @@ class ListBudget:
             file.
 
         Example
-        --------
+        -------
         >>> objLST = MfListBudget("my_model.lst")
         >>> raryReducedPpg = objLST.get_reduced_pumping()
         >>> dfReducedPpg = pd.DataFrame.from_records(raryReducedPpg)

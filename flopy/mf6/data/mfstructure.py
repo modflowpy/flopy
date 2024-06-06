@@ -63,7 +63,7 @@ class Dfn:
     -----
 
     Examples
-    ----
+    --------
     """
 
     def __init__(self):
@@ -179,7 +179,7 @@ class DfnPackage(Dfn):
     -----
 
     Examples
-    ----
+    --------
     """
 
     def __init__(self, package):
@@ -447,7 +447,7 @@ class DfnFile(Dfn):
     -----
 
     Examples
-    ----
+    --------
     """
 
     def __init__(self, file):

@@ -28,7 +28,7 @@ class DataDimensions:
         (optional)
 
     Methods
-    ----------
+    -------
     get_model_grid : ()
         returns a model grid based on the current simulation data
 
@@ -151,7 +151,7 @@ class PackageDimensions:
         Tuple representing the path to this package
 
     Methods
-    ----------
+    -------
     get_aux_variables : (model_num=0)
         returns the package's aux variables
     boundnames : (model_num=0)
@@ -322,7 +322,7 @@ class ModelDimensions:
         object containing simulation time information
 
     Methods
-    ----------
+    -------
     get_model_grid : ()
         returns a model grid based on the current simulation data
 

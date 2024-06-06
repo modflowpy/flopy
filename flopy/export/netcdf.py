@@ -976,7 +976,7 @@ class NetCdf:
         Method to initialize a new group within a netcdf file. This group
         can have independent dimensions from the global dimensions
 
-        Parameters:
+        Parameters
         ----------
         name : str
             name of the netcdf group

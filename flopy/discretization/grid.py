@@ -128,7 +128,7 @@ class Grid:
         ndarrays for the x, y, and z coordinates
 
     Methods
-    ----------
+    -------
     get_coords(x, y)
         transform point or array of points x, y from model coordinates to
         spatial coordinates

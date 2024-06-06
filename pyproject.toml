@@ -130,7 +130,12 @@ extend-include = [
 ]
 
 [tool.ruff.lint]
-select = ["F", "E", "I001"]
+select = [
+    "D409", # pydocstyle - section-underline-matches-section-length
+    "E",    # pycodestyle error
+    "F",    # Pyflakes
+    "I001", # isort - unsorted-imports
+]
 ignore = [
     "E402", # module level import not at top of file
     "E501", # line too long TODO FIXME

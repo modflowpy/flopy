@@ -136,7 +136,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             return array with np.nan instead of zero
 
         Returns
-        ----------
+        -------
         out : dict of numpy.ndarrays
             Dictionary of 3-D numpy arrays containing the stress period data
             for a selected stress period. The dictionary keys are the
@@ -1451,7 +1451,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 List of unique values to be excluded from the plot.
 
         Returns
-        ----------
+        -------
         out : list
             Empty list is returned if filename_base is not None. Otherwise
             a list of matplotlib.pyplot.axis is returned.
@@ -2122,7 +2122,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                 List of unique values to be excluded from the plot.
 
         Returns
-        ----------
+        -------
         out : list
             Empty list is returned if filename_base is not None. Otherwise
             a list of matplotlib.pyplot.axis is returned.

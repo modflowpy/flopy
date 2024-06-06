@@ -140,7 +140,7 @@ class StructuredGrid(Grid):
         y-location points for the edges of the model grid
 
     Methods
-    ----------
+    -------
     get_cell_vertices(i, j)
         returns vertices for a single cell at row, column i, j.
     """

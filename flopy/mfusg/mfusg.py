@@ -307,7 +307,7 @@ class MfUsg(Modflow):
             Option to raise exceptions on package load failure.
 
         Returns
-        ----------
+        -------
         files_successfully_loaded : list of loaded files
         files_not_loaded : list of files that were not loaded
         """

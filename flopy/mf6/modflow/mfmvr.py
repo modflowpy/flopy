@@ -406,7 +406,7 @@ class MvrPackages(mfpackage.MFChildPackages):
     MvrPackages is a container class for the ModflowMvr class.
 
     Methods
-    ----------
+    -------
     initialize
         Initializes a new ModflowMvr package removing any sibling child
         packages attached to the same parent package. See ModflowMvr init

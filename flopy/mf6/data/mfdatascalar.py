@@ -668,7 +668,8 @@ class MFScalar(mfdata.MFData):
         """
         Helper method to plot scalar objects
 
-        Parameters:
+        Parameters
+        ----------
             scalar : flopy.mf6.data.mfscalar object
             filename_base : str
                 Base file name that will be used to automatically generate file
@@ -976,7 +977,7 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
                 extracted. (default is zero).
 
         Returns
-        ----------
+        -------
         axes : list
             Empty list is returned if filename_base is not None. Otherwise
             a list of matplotlib.pyplot.axis is returned.
