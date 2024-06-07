@@ -36,8 +36,7 @@ class Mt3dList(Package):
         return "List package class"
 
     def write_file(self):
-        # Not implemented for list class
-        return
+        raise NotImplementedError
 
 
 class Mt3dms(BaseModel):

@@ -24,8 +24,7 @@ class SeawatList(Package):
         return "List package class"
 
     def write_file(self):
-        # Not implemented for list class
-        return
+        raise NotImplementedError
 
 
 class Seawat(BaseModel):

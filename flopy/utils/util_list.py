@@ -611,8 +611,6 @@ class MfList(DataInterface, DataListInterface):
                 f"MfList error: unsupported data type: {type(data)}"
             )
 
-            # raise NotImplementedError("MfList.__setitem__() not implemented")
-
     def __fromfile(self, f):
         # d = np.fromfile(f,dtype=self.dtype,count=count)
         try:
