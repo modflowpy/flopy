@@ -196,11 +196,11 @@ class Gridgen:
         where intermediate layers are inactive.
         (default is False)
     **kwargs
-        verical_smoothing_level : int
+        smoothing_level_vertical : int
             maximum level difference between two vertically adjacent cells.
             Adjust with caution, as adjustments can cause unexpected results
             to simulated flows
-        horizontal_smoothing_level : int
+        smoothing_level_horizontal : int
             maximum level difference between two horizontally adjacent cells.
             Adjust with caution, as adjustments can cause unexpected results
             to simulated flows
