@@ -861,8 +861,7 @@ class Package(PackageInterface):
         Every Package needs its own write_file function
 
         """
-        print("IMPLEMENTATION ERROR: write_file must be overloaded")
-        return
+        raise NotImplementedError("write_file must be overloaded")
 
     @staticmethod
     def load(

@@ -34,8 +34,7 @@ class Modpath7List(Package):
         return
 
     def write_file(self):
-        # Not implemented for list class
-        return
+        raise NotImplementedError
 
 
 class Modpath7(BaseModel):

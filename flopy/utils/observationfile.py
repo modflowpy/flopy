@@ -236,7 +236,7 @@ class ObsFiles(FlopyBinaryData):
         Build the recordarray and iposarray, which maps the header information
         to the position in the formatted file.
         """
-        raise Exception(
+        raise NotImplementedError(
             "Abstract method _build_dtype called in BinaryFiles. "
             "This method needs to be overridden."
         )
@@ -246,7 +246,7 @@ class ObsFiles(FlopyBinaryData):
         Build the recordarray and iposarray, which maps the header information
         to the position in the formatted file.
         """
-        raise Exception(
+        raise NotImplementedError(
             "Abstract method _build_index called in BinaryFiles. "
             "This method needs to be overridden."
         )

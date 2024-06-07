@@ -956,8 +956,8 @@ class BaseModel(ModelInterface):
                     self.output_binflag.pop(i)
                     self.output_packages.pop(i)
         else:
-            msg = " either fname or unit must be passed to remove_output()"
-            raise Exception(msg)
+            msg = "either fname or unit must be passed to remove_output()"
+            raise TypeError(msg)
 
     def get_output(
         self, fname: Optional[Union[str, os.PathLike]] = None, unit=None
@@ -985,8 +985,8 @@ class BaseModel(ModelInterface):
                     return self.output_fnames[i]
             return None
         else:
-            msg = " either fname or unit must be passed to get_output()"
-            raise Exception(msg)
+            msg = "either fname or unit must be passed to get_output()"
+            raise TypeError(msg)
 
     def set_output_attribute(
         self,
@@ -1020,11 +1020,10 @@ class BaseModel(ModelInterface):
                     idx = i
                     break
         else:
-            msg = (
-                " either fname or unit must be passed "
+            raise TypeError(
+                "either fname or unit must be passed "
                 "to set_output_attribute()"
             )
-            raise Exception(msg)
         if attr is not None:
             if idx is not None:
                 for key, value in attr.items:
@@ -1065,8 +1064,8 @@ class BaseModel(ModelInterface):
                     idx = i
                     break
         else:
-            raise Exception(
-                " either fname or unit must be passed "
+            raise TypeError(
+                "either fname or unit must be passed "
                 "to set_output_attribute()"
             )
         v = None
@@ -1147,8 +1146,8 @@ class BaseModel(ModelInterface):
                 if u == unit:
                     plist.append(i)
         else:
-            msg = " either fname or unit must be passed to remove_external()"
-            raise Exception(msg)
+            msg = "either fname or unit must be passed to remove_external()"
+            raise TypeError(msg)
         # remove external file
         j = 0
         for i in plist:
@@ -1476,10 +1475,8 @@ class BaseModel(ModelInterface):
             normal_msg=normal_msg,
         )
 
-    def load_results(self):
-        print("load_results not implemented")
-
-        return None
+    def load_results(self, **kwargs):
+        raise NotImplementedError("load_results not implemented")
 
     def write_input(self, SelPackList=False, check=False):
         """
@@ -1543,18 +1540,14 @@ class BaseModel(ModelInterface):
         Every Package needs its own writenamefile function
 
         """
-        raise Exception(
-            "IMPLEMENTATION ERROR: writenamefile must be overloaded"
-        )
+        raise NotImplementedError("write_name_file must be overloaded")
 
     def set_model_units(self):
         """
         Every model needs its own set_model_units method
 
         """
-        raise Exception(
-            "IMPLEMENTATION ERROR: set_model_units must be overloaded"
-        )
+        raise NotImplementedError("set_model_units must be overloaded")
 
     @property
     def name(self):

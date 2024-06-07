@@ -409,7 +409,7 @@ class LayerFile:
         Build the recordarray and iposarray, which maps the header information
         to the position in the formatted file.
         """
-        raise Exception(
+        raise NotImplementedError(
             "Abstract method _build_index called in LayerFile.  "
             "This method needs to be overridden."
         )
@@ -584,7 +584,7 @@ class LayerFile:
         Read data from file
 
         """
-        raise Exception(
+        raise NotImplementedError(
             "Abstract method _read_data called in LayerFile.  "
             "This method needs to be overridden."
         )

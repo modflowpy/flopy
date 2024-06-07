@@ -35,8 +35,7 @@ class ModflowGlobal(Package):
         return "Global Package class"
 
     def write_file(self):
-        # Not implemented for global class
-        return
+        raise NotImplementedError
 
 
 class ModflowList(Package):
@@ -53,8 +52,7 @@ class ModflowList(Package):
         return "List Package class"
 
     def write_file(self):
-        # Not implemented for list class
-        return
+        raise NotImplementedError
 
 
 class Modflow(BaseModel):

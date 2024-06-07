@@ -175,7 +175,7 @@ class FormattedLayerFile(LayerFile):
         Return a text header object containing header formatting information
 
         """
-        raise Exception(
+        raise NotImplementedError(
             "Abstract method _get_text_header called in FormattedLayerFile. "
             "This method needs to be overridden."
         )

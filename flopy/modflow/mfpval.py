@@ -92,16 +92,16 @@ class ModflowPval(Package):
         """
         Write the package file.
 
-        Returns
-        -------
-        None
+        Raises
+        ------
+        NotImplementedError
 
         Notes
         -----
         Not implemented because parameters are only supported on load
 
         """
-        pass
+        raise NotImplementedError
 
     def __getitem__(self, item):
         """
