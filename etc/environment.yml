@@ -18,6 +18,7 @@ dependencies:
   - flaky
   - filelock
   - jupyter
+  - jupyter_client>=8.4.0
   - jupytext
   - pip:
       - git+https://github.com/MODFLOW-USGS/modflow-devtools.git

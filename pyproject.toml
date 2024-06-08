@@ -47,6 +47,7 @@ test = [
     "flaky",
     "filelock",
     "jupyter",
+    "jupyter_client >=8.4.0", # avoid datetime.utcnow() deprecation warning
     "jupytext",
     "modflow-devtools",
     "pytest !=8.1.0",
