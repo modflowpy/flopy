@@ -1090,7 +1090,7 @@ class ModflowSfr2(Package):
                 pth = os.path.join(self.parent.model_ws, f)
                 f = open(pth, "w")
             f.write(f"{chk.txt}\n")
-            # f.close()
+            f.close()
         return chk
 
     def assign_layers(self, adjust_botms=False, pad=1.0):
