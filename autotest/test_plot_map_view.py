@@ -214,7 +214,6 @@ def test_map_view_contour_array_structured(function_tmpdir, ndim, rng):
             plt.clf()
         elif ndim == 2:
             # 1 layer as 2D
-            # arr[-1, :] = np.nan  # add nan to test nan handling
             pmv = PlotMapView(modelgrid=grid, layer=l)
             contours = pmv.contour_array(
                 a=arr.reshape(nlay, nrow, ncol)[l, :, :]

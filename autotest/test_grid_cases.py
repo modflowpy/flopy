@@ -240,7 +240,6 @@ class GridCases:
             [1330.11116, 1809.788273],
             [399.1804436, 2998.515188],
             [914.7728404, 5132.494831],
-            #        [1831.381546, 6335.543757],
         ]
         poly = np.array(domain)
         max_area = 100.0**2
@@ -393,7 +392,6 @@ class GridCases:
             y = radius * np.sin(theta) + 20.0
             circle_poly1 = [(x, y) for x, y in zip(x, y)]
             tri.add_polygon(circle_poly1)
-            # tri.add_hole((70, 20))
 
             # add line through domain to force conforming cells
             line = [(x, x) for x in np.linspace(11, 89, 100)]

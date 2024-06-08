@@ -136,7 +136,6 @@ def test_get_vertices():
 
     xgrid = mg.xvertices
     ygrid = mg.yvertices
-    # a1 = np.array(mg.xyvertices)
     a1 = np.array(
         [
             [xgrid[0, 0], ygrid[0, 0]],
@@ -225,9 +224,7 @@ def test_get_rc_from_node_coordinates():
     delr = [0.5] * 5 + [2.0] * 5
     nrow = 10
     ncol = 10
-    mfdis = ModflowDis(
-        mf, nrow=nrow, ncol=ncol, delr=delr, delc=delc
-    )  # , xul=50, yul=1000)
+    mfdis = ModflowDis(mf, nrow=nrow, ncol=ncol, delr=delr, delc=delc)
     ygrid, xgrid, zgrid = mfdis.get_node_coordinates()
     for i in range(nrow):
         for j in range(ncol):

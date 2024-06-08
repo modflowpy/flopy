@@ -913,10 +913,6 @@ class GridIntersect:
             keep_cid = qcellids
 
         names = ["cellids", "ixshapes"]
-        # self.mfgrid.grid_type == "structured":
-        #     cid_dtype = "i"
-        # else:
-        #     cid_dtype = "O"
         formats = ["O", "O"]
         rec = np.recarray(len(keep_pts), names=names, formats=formats)
 
@@ -2265,7 +2261,6 @@ class ModflowGridIndices:
             xr = arr[j + 1]
             frac = (x - xl) / (xr - xl)
             if 0.0 <= frac <= 1.0:
-                # if min(xl, xr) <= x < max(xl, xr):
                 jpos.append(j)
         if len(jpos) == 0:
             return None

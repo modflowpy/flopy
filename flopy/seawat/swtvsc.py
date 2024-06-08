@@ -227,14 +227,6 @@ class SeawatVsc(Package):
         if self.mt3dmuflg == -1:
             f_vsc.write(f"{self.viscref}\n")
             f_vsc.write(f"{self.nsmueos} {self.mutempopt}\n")
-            # if self.nsmueos == 1:
-            #     f_vsc.write('{} {} {}\n'.format(self.mtmuspec, self.dmudc,
-            #                                   self.cmuref))
-            # else:
-            #     for iwr in range(self.nsmueos):
-            #         f_vsc.write('{} {} {}\n'.format(self.mtmuspec[iwr],
-            #                                         self.dmudc[iwr],
-            #                                         self.cmuref[iwr]))
             if self.nsmueos > 0:
                 for iwr in range(self.nsmueos):
                     f_vsc.write(

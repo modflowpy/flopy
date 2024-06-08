@@ -460,9 +460,6 @@ def test_rect_grid_linestring_in_and_out_of_cell2():
         LineString([(5, 15), (5.0, 9), (15.0, 5.0), (5.0, 1.0)])
     )
     assert len(result) == 3
-    # assert result.cellids[0] == (1, 0)
-    # assert result.cellids[1] == (1, 1)
-    # assert np.allclose(result.lengths.sum(), 21.540659228538015)
 
 
 @requires_pkg("shapely")

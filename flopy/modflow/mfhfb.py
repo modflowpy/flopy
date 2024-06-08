@@ -313,7 +313,6 @@ class ModflowHfb(Package):
             it = 2
             while it < len(t):
                 toption = t[it]
-                # print it, t[it]
                 if toption.lower() == "noprint":
                     options.append(toption)
                 elif "aux" in toption.lower():

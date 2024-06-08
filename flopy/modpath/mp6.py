@@ -16,7 +16,7 @@ class Modpath6List(Package):
     def __init__(self, model, extension="list", listunit=7):
         # call base package constructor
         super().__init__(model, extension, "LIST", listunit)
-        # self.parent.add_package(self) This package is not added to the base
+        # This package is not added to the base
         # model so that it is not included in get_name_file_entries()
         return
 
@@ -440,9 +440,6 @@ class Modpath6(BaseModel):
                                 append_node(side_faces, wellid, n, k, i, j)
             elif package.upper() == "RCH":
                 ParticleGenerationOption = 1
-                # for j in range(nrow):
-                #    for i in range(ncol):
-                #        group_name.append('rch')
                 group_name.append("rch")
                 group_placement.append(
                     [

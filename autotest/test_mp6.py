@@ -314,9 +314,6 @@ def test_loadtxt(function_tmpdir, mp6_test_path):
     )
     assert np.array_equal(ra, ra2)
 
-    # epfilewithnans = os.path.join('../examples/data/mp6/', 'freybergmp.mpend')
-    # epd = EndpointFile(epfilewithnans)
-
 
 @requires_exe("mf2005")
 def test_modpath(function_tmpdir, example_data_path):

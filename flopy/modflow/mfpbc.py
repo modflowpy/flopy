@@ -50,18 +50,6 @@ class ModflowPbc(Package):
         self.mxcos, self.cosines = self.assign_layer_row_column_data(
             cosines, 3, zerobase=False
         )
-        # self.mxcos = 0
-        # if (cosines != None):
-        #     error_message = 'cosines must have 3 columns'
-        #     if (not isinstance(cosines, list)):
-        #         cosines = [cosines]
-        #     for a in cosines:
-        #         a = np.atleast_2d(a)
-        #         nr, nc = a.shape
-        #         assert nc == 3, error_message
-        #         if (nr > self.mxcos):
-        #             self.mxcos = nr
-        #     self.cosines = cosines
         self.np = 0
         self.parent.add_package(self)
 

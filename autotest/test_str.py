@@ -28,7 +28,7 @@ def test_str_issue1164(function_tmpdir, example_data_path):
 
     # adjust stress period data
     spd0 = m.str.stress_period_data[0]
-    spd0["flow"][0] = 2.1149856e6  # 450000000000000000.0000e-17
+    spd0["flow"][0] = 2.1149856e6
     m.str.stress_period_data[0] = spd0
 
     # write model datasets and run fixed

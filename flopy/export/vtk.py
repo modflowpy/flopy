@@ -574,7 +574,6 @@ class Vtk:
 
             pts = []
             for v in v1:
-                # ix = np.where(v2 == v)
                 ix = np.where((v2.T[0] == v[0]) & (v2.T[1] == v[1]))
                 if len(ix[0]) > 0 and len(pts) < 2:
                     pts.append(v2[ix[0][0]])

@@ -591,11 +591,6 @@ class Grid:
     def xyzvertices(self):
         raise NotImplementedError("must define xyzvertices in child class")
 
-    # @property
-    # def indices(self):
-    #    raise NotImplementedError(
-    #        'must define indices in child '
-    #        'class to use this base class')
     @property
     def cross_section_vertices(self):
         return self.xyzvertices[0], self.xyzvertices[1]
@@ -962,8 +957,6 @@ class Grid:
         x, y = geometry.transform(
             x, y, self._xoff, self._yoff, self.angrot_radians, inverse=True
         )
-        # x -= self._xoff
-        # y -= self._yoff
 
         return x, y
 

@@ -850,8 +850,6 @@ def compare_heads(
                         v1 = h1.flatten()[ind]
                         v2 = h2.flatten()[ind]
                         d12 = v1 - v2
-                        # e += '    ' + fmtn.format(jdx + 1) + ' node: '
-                        # e += fmtn.format(ind + 1)  # convert to one-based
                         e += "    " + fmtn.format(jdx + 1)
                         e += f" {iv}"
                         e += " -- "

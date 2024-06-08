@@ -162,8 +162,6 @@ def test_sfr(function_tmpdir, mf2005_model_path, sfr_test_model_path):
         "test1tr.nam", "test1tr.sfr", mf2005_model_path, function_tmpdir
     )
 
-    # assert list(sfr.dataset_5.keys()) == [0, 1]
-
     m, sfr = sfr_process(
         "testsfr2_tab.nam",
         "testsfr2_tab_ICALC1.sfr",
@@ -429,7 +427,6 @@ def test_example(mf2005_model_path):
         delimiter=",",
         names=True,
     )
-    # segment_data = {0: ss_segment_data}
 
     channel_flow_data = {
         0: {
@@ -480,7 +477,6 @@ def test_example(mf2005_model_path):
         dataset_5=dataset_5,
     )
 
-    # assert istcb2 in m.package_units
     assert istcb2 in m.output_units
     assert True
 

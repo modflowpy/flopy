@@ -928,7 +928,6 @@ def mflist_export(f: Union[str, os.PathLike, NetCdf], mfl, **kwargs):
                 arrays = mfl.to_array(kk)
                 for name, array in arrays.items():
                     for k in range(array.shape[0]):
-                        # aname = name+"{0:03d}_{1:02d}".format(kk, k)
                         n = shapefile_utils.shape_attr_name(name, length=4)
                         aname = f"{n}{k + 1}{int(kk) + 1}"
                         array_dict[aname] = array[k]
@@ -963,11 +962,7 @@ def mflist_export(f: Union[str, os.PathLike, NetCdf], mfl, **kwargs):
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
         base_name = mfl.package.name[0].lower()
-        # f.log("getting 4D masked arrays for {0}".format(base_name))
-        # m4d = mfl.masked_4D_arrays
-        # f.log("getting 4D masked arrays for {0}".format(base_name))
 
-        # for name, array in m4d.items():
         for name, array in mfl.masked_4D_arrays_itr():
             var_name = f"{base_name}_{name}"
             if isinstance(f, dict):
@@ -1077,9 +1072,7 @@ def transient2d_export(f: Union[str, os.PathLike], t2d, fmt=None, **kwargs):
             ibnd = np.abs(modelgrid.idomain).sum(axis=0)
             mask = ibnd == 0
 
-        # f.log("getting 4D array for {0}".format(t2d.name_base))
         array = t2d.array
-        # f.log("getting 4D array for {0}".format(t2d.name_base))
         with np.errstate(invalid="ignore"):
             if array.dtype not in [int, np.int32, np.int64]:
                 if mask is not None:
@@ -1091,12 +1084,6 @@ def transient2d_export(f: Union[str, os.PathLike], t2d, fmt=None, **kwargs):
                 mx, mn = np.nanmax(array), np.nanmin(array)
                 array[array <= min_valid] = netcdf.FILLVALUE
                 array[array >= max_valid] = netcdf.FILLVALUE
-                # if t2d.model.bas6 is not None:
-                #    array[:, 0, t2d.model.bas6.ibound.array[0] == 0] = \
-                #        f.fillvalue
-                # elif t2d.model.btn is not None:
-                #    array[:, 0, t2d.model.btn.icbund.array[0] == 0] = \
-                #        f.fillvalue
 
         var_name = t2d.name.replace("_", "")
         if isinstance(f, dict):
@@ -1237,41 +1224,22 @@ def array3d_export(f: Union[str, os.PathLike], u3d, fmt=None, **kwargs):
         if isinstance(var_name, list) or isinstance(var_name, tuple):
             var_name = var_name[0]
         var_name = var_name.replace(" ", "_").lower()
-        # f.log("getting 3D array for {0}".format(var_name))
         array = u3d.array
 
-        # this is for the crappy vcont in bcf6
-        # if isinstance(f,NetCdf) and array.shape != f.shape:
-        #     f.log("broadcasting 3D array for {0}".format(var_name))
-        #     full_array = np.empty(f.shape)
-        #     full_array[:] = np.nan
-        #     full_array[:array.shape[0]] = array
-        #     array = full_array
-        #     f.log("broadcasting 3D array for {0}".format(var_name))
-        # f.log("getting 3D array for {0}".format(var_name))
-        #
         mask = None
         if modelgrid.idomain is not None and "ibound" not in var_name:
             mask = modelgrid.idomain == 0
 
         if mask is not None and array.shape != mask.shape:
-            # f.log("broadcasting 3D array for {0}".format(var_name))
             full_array = np.empty(mask.shape)
             full_array[:] = np.nan
             full_array[: array.shape[0]] = array
             array = full_array
-            # f.log("broadcasting 3D array for {0}".format(var_name))
 
         # runtime warning issued in some cases - need to track down cause
         # happens when NaN is already in array
         with np.errstate(invalid="ignore"):
             if array.dtype not in [int, np.int32, np.int64]:
-                # if u3d.model.modelgrid.bas6 is not None and "ibound" not
-                # in var_name:
-                #    array[u3d.model.modelgrid.bas6.ibound.array == 0] =
-                # np.nan
-                # elif u3d.model.btn is not None and 'icbund' not in var_name:
-                #    array[u3d.model.modelgrid.btn.icbund.array == 0] = np.nan
                 if mask is not None:
                     array[mask] = np.nan
                 array[array <= min_valid] = np.nan
@@ -1411,9 +1379,7 @@ def array2d_export(
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
         # try to mask the array - assume layer 1 ibound is a good mask
-        # f.log("getting 2D array for {0}".format(u2d.name))
         array = u2d.array
-        # f.log("getting 2D array for {0}".format(u2d.name))
 
         with np.errstate(invalid="ignore"):
             if array.dtype not in [int, np.int32, np.int64]:

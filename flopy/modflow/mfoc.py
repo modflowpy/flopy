@@ -363,13 +363,13 @@ class ModflowOc(Package):
                             if len(words) < 2:
                                 chk._add_to_summary(
                                     "Warning",
-                                    package="OC",  # value=kperkstp,
+                                    package="OC",
                                     desc=f"action {action!r} ignored; too few words",
                                 )
                             elif words[0:2] not in expected_actions:
                                 chk._add_to_summary(
                                     "Warning",
-                                    package="OC",  # value=kperkstp,
+                                    package="OC",
                                     desc=f"action {action!r} ignored",
                                 )
                             # TODO: check data list of layers for some actions
@@ -377,7 +377,7 @@ class ModflowOc(Package):
                 # repeat as many times as remaining keys not used
                 chk._add_to_summary(
                     "Warning",
-                    package="OC",  # value=kperkstp,
+                    package="OC",
                     desc="action(s) defined in OC stress_period_data ignored "
                     "as they are not part the stress periods defined by DIS",
                 )

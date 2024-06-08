@@ -62,25 +62,19 @@ class acdd:
 
         # recommended global attributes
         self.naming_authority = "ScienceBase"  # org. that provides the id
-        # self.history = None # This is a character array with a line for each invocation of a program that has modified the dataset.
         # Well-behaved generic netCDF applications should append a line containing:
         # date, time of day, user name, program name and command arguments.
         self.source = (
             model.model_ws
         )  # The method of production of the original data.
         # If it was model-generated, source should name the model and its version.
-        # self.processing_level = None # 	A textual description of the processing (or quality control) level of the data.
-        # self.comment = None #	Miscellaneous information about the data, not captured elsewhere.
         # This attribute is defined in the CF Conventions.
         self.acknowledgement = self._get_xml_attribute("datacred")
-        # self.license = None #
-        # self.standard_name_vocabulary = None
         self.date_created = self.sb["provenance"]["linkProcess"].get(
             "dateCreated"
         )
         self.creator_name = self.creator.get("name")
         self.creator_email = self.creator.get("email")
-        # self.creator_url = self.sb['webLinks'][0].get('uri')
         self.creator_institution = self.creator["organization"].get(
             "displayText"
         )

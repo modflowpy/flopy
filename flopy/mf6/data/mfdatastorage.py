@@ -1802,15 +1802,6 @@ class DataStorage:
                 # set as external data
                 self.layer_storage.first_item().internal_data = None
             else:
-                # if self.layer_storage.in_shape(layer_new):
-                #    factor = self.layer_storage[layer_new].factor
-                # if preserve_record:
-                #    adjustment = multiplier / factor
-                #    if adjustment != 1.0:
-                # convert numbers to be multiplied by the
-                # original factor
-                #        data = data * adjustment
-
                 # store data externally in file
                 data_size = self.get_data_size(layer_new)
                 data_type = data_dim.structure.data_item_structures[0].type

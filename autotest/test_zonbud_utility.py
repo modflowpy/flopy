@@ -125,12 +125,6 @@ def test_compare2zonebudget(cbc_f, zon_f, zbud_f, rtol):
 
             mxdiff = np.abs(a1 - a2).max()
             idxloc = np.argmax(np.abs(a1 - a2))
-            # txt = '{}: {} - Max: {}  a1: {}  a2: {}'.format(time,
-            #                                                 name,
-            #                                                 mxdiff,
-            #                                                 a1[idxloc],
-            #                                                 a2[idxloc])
-            # print(txt)
             s = f"Zonebudget arrays do not match at time {time} ({name}): {mxdiff}."
             assert allclose, s
 

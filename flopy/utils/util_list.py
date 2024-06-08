@@ -312,7 +312,6 @@ class MfList(DataInterface, DataListInterface):
         # If data is a list, then all we can do is try to cast it to
         # an ndarray, then cast again to a recarray
         if isinstance(data, list):
-            # warnings.warn("MfList casting list to array")
             try:
                 data = np.array(data)
             except Exception as e:
@@ -557,8 +556,6 @@ class MfList(DataInterface, DataListInterface):
         # If the data entry for kper is a string,
         # return the corresponding recarray,
         # but don't reset the value in the data dict
-        # assert kper in list(self.data.keys()), "MfList.__getitem__() kper " + \
-        #                                       str(kper) + " not in data.keys()"
         try:
             kper = int(kper)
         except Exception as e:
@@ -588,7 +585,6 @@ class MfList(DataInterface, DataListInterface):
         # If data is a list, then all we can do is try to cast it to
         # an ndarray, then cast again to a recarray
         if isinstance(data, list):
-            # warnings.warn("MfList casting list to array")
             try:
                 data = np.array(data)
             except Exception as e:
@@ -612,7 +608,6 @@ class MfList(DataInterface, DataListInterface):
             )
 
     def __fromfile(self, f):
-        # d = np.fromfile(f,dtype=self.dtype,count=count)
         try:
             d = np.genfromtxt(f, dtype=self.dtype)
         except Exception as e:
@@ -638,9 +633,6 @@ class MfList(DataInterface, DataListInterface):
                 self._model.array_free_format
                 and self._model.external_path is not None
             ):
-                # py_filepath = ''
-                # py_filepath = os.path.join(py_filepath,
-                #                            self._model.external_path)
                 filename = f"{self.package.name[0]}_{kper:04d}.dat"
                 filenames.append(filename)
         return filenames
@@ -897,7 +889,6 @@ class MfList(DataInterface, DataListInterface):
                     kper_data = kper_data[
                         np.where(kper_data[idx_val[0]] == idx_val[1])
                     ]
-                # kper_vtype = self.__vtype[kper]
                 v = function(kper_data[attr])
                 values.append(v)
         return values
@@ -1093,7 +1084,6 @@ class MfList(DataInterface, DataListInterface):
                     (self._model.nlay, self._model.nrow, self._model.ncol),
                     dtype=float,
                 )
-            # print(name,kper)
             for rec in sarr:
                 if unstructured:
                     arr[rec["node"]] += rec[name]
@@ -1110,9 +1100,6 @@ class MfList(DataInterface, DataListInterface):
                 arr[cnt == 0.0] = np.nan
 
             arrays[name] = arr.copy()
-        # elif mask:
-        #     for name, arr in arrays.items():
-        #         arrays[name][:] = np.nan
         return arrays
 
     @property

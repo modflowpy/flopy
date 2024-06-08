@@ -346,9 +346,7 @@ class PlotUtilities:
                         )
 
             elif isinstance(value, DataInterface):
-                if (
-                    value.data_type == DataType.transientlist
-                ):  # isinstance(value, (MfList, MFTransientList)):
+                if value.data_type == DataType.transientlist:
                     if package.parent.verbose:
                         print(
                             "plotting {} package MfList instance: {}".format(
@@ -404,9 +402,7 @@ class PlotUtilities:
                     if ax is not None:
                         caxs.append(ax)
 
-                elif (
-                    value.data_type == DataType.array3d
-                ):  # isinstance(value, Util3d):
+                elif value.data_type == DataType.array3d:
                     if value.array is not None:
                         if package.parent.verbose:
                             print(
@@ -414,7 +410,6 @@ class PlotUtilities:
                                     package.name[0], item
                                 )
                             )
-                        # fignum = list(range(ifig, ifig + inc))
                         fignum = list(
                             range(
                                 defaults["initial_fig"],
@@ -438,9 +433,7 @@ class PlotUtilities:
                             )
                         )
 
-                elif (
-                    value.data_type == DataType.array2d
-                ):  # isinstance(value, Util2d):
+                elif value.data_type == DataType.array2d:
                     if value.array is not None:
                         if len(value.array.shape) == 2:  # is this necessary?
                             if package.parent.verbose:
@@ -470,9 +463,7 @@ class PlotUtilities:
                                 )
                             )
 
-                elif (
-                    value.data_type == DataType.transient2d
-                ):  # isinstance(value, Transient2d):
+                elif value.data_type == DataType.transient2d:
                     if value.array is not None:
                         if package.parent.verbose:
                             print(
@@ -1658,7 +1649,6 @@ class UnstructuredPlotUtilities:
             ua = np.ones(denom.shape, dtype=denom.dtype) * np.nan
             idx = np.where(denom != 0.0)
             ua[idx] = numa[idx] / denom[idx]
-            # ub = numb / denom
             del numa
             del numb
             del denom

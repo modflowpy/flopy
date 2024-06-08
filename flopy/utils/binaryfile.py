@@ -1174,8 +1174,6 @@ class CellBudgetFile:
         kstp_len = [dt1]
         for i in range(kstp + 1):
             kstp_len.append(kstp_len[-1] * tsmult)
-        # kstp_len = np.array(kstp_len)
-        # kstp_len = kstp_len[:kstp].sum()
         kstp_len = sum(kstp_len[: kstp + 1])
         return kper_len + kstp_len
 

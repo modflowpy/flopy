@@ -190,7 +190,6 @@ class VertexGrid(Grid):
     @property
     def top_botm(self):
         new_top = np.expand_dims(self._top, 0)
-        # new_botm = np.expand_dims(self._botm, 0)
         return np.concatenate((new_top, self._botm), axis=0)
 
     @property

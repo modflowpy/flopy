@@ -65,7 +65,7 @@ class Mp7Cases:
     )
 
     v = [(0,), (400,)]
-    pids = [1, 2]  # [1000, 1001]
+    pids = [1, 2]
     part1 = ParticleData(v, structured=False, drape=1, particleids=pids)
     pg1 = ParticleGroup(
         particlegroupname="PG2", particledata=part1, filename="ex01a.pg2.sloc"

@@ -797,9 +797,6 @@ class PlotCrossSection:
         col = self.get_grid_line_collection(**kwargs)
         if col is not None:
             ax.add_collection(col)
-            # ax.set_xlim(self.extent[0], self.extent[1])
-            # ax.set_ylim(self.extent[2], self.extent[3])
-
         return col
 
     def plot_bc(

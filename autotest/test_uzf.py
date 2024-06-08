@@ -639,8 +639,6 @@ def test_uzf_negative_iuzfopt(function_tmpdir):
         seepsurfk=True,
     )
 
-    # uzf.write_file(os.path.join(model_ws, "uzf_neg.uzf"))
-
     ml.write_input()
     success, buff = ml.run_model()
     assert success, "UZF model with -1 iuzfopt failed to run"

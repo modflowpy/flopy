@@ -776,7 +776,6 @@ class MfUsgLpf(ModflowLpf):
         parm_dict = {}
         if nplpf > 0:
             par_types, parm_dict = mfpar.load(f_obj, nplpf, model.verbose)
-            # print parm_dict
 
         # non-parameter data
         transient = not dis.steady.all()

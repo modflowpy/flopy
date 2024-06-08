@@ -763,7 +763,7 @@ def test_vor_binary_write(function_tmpdir, layered):
             "filename": "recharge.bin",
             "binary": True,
             "iprn": 1,
-            "data": np.full(vor.ncpl, 0.000001, dtype=float),  # 0.000001,
+            "data": np.full(vor.ncpl, 0.000001, dtype=float),
         },
     }
     chd_data = [

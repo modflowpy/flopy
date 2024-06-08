@@ -231,13 +231,6 @@ def test_get_structured_faceflows_freyberg(
     # plt.show()
     plt.close("all")
 
-    # uv0 = np.column_stack((q0.U, q0.V))
-    # uv1 = np.column_stack((q1.U, q1.V))
-    # diff = uv1 - uv0
-    # assert (
-    #     np.allclose(uv0, uv1)
-    # ), "get_faceflows quivers are not equal to specific discharge vectors"
-
 
 @pytest.mark.mf6
 @requires_exe("mf6")
