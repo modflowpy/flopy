@@ -1214,10 +1214,10 @@ def test_point_offset_rot_structured_grid():
 @requires_pkg("shapely")
 def test_linestring_offset_rot_structured_grid():
     sgr = get_rect_grid(angrot=45.0, xyoffset=10.0)
-    ls = LineString([(5, 10.0 + np.sqrt(200.0)), (15, 10.0 + np.sqrt(200.0))])
+    ls = LineString([(5, 25), (15, 25)])
     ix = GridIntersect(sgr, method="structured")
     result = ix.intersect(ls)
-    assert len(result) == 2
+    assert len(result) == 3
     # check empty result when using local model coords
     ix = GridIntersect(sgr, method="structured", local=True)
     result = ix.intersect(ls)
