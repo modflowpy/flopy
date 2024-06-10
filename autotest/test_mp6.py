@@ -131,7 +131,7 @@ def test_mpsim(function_tmpdir, mp6_test_path):
         assert stllines[6].strip().split()[-1] == "p2"
 
 
-@requires_pkg("shapefile", "shapely")
+@requires_pkg("pyshp", "shapely", name_map={"pyshp": "shapefile"})
 def test_get_destination_data(function_tmpdir, mp6_test_path):
     copy_modpath_files(mp6_test_path, function_tmpdir, "EXAMPLE.")
     copy_modpath_files(mp6_test_path, function_tmpdir, "EXAMPLE-3.")

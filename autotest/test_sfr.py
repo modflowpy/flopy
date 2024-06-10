@@ -373,7 +373,7 @@ def test_const(sfr_data):
     assert True
 
 
-@requires_pkg("shapefile", "shapely")
+@requires_pkg("pyshp", "shapely", name_map={"pyshp": "shapefile"})
 def test_export(function_tmpdir, sfr_data):
     m = Modflow()
     dis = ModflowDis(m, 1, 10, 10, lenuni=2, itmuni=4)
