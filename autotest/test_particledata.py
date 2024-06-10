@@ -658,7 +658,7 @@ def test_nodeparticledata_to_prp_dis_1_per_face():
     assert len(rpts) == num_cells * 6
 
 
-@requires_pkg("shapefile")
+@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
 def test_nodeparticledata_prp_disv_big(function_tmpdir):
     Lx = 10000.0
     Ly = 10500.0

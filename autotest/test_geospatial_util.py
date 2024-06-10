@@ -153,7 +153,7 @@ def test_import_geospatial_utils():
     )
 
 
-@requires_pkg("shapefile", "shapely")
+@requires_pkg("pyshp", "shapely", name_map={"pyshp": "shapefile"})
 def test_geospatial_collection_load_shpfile(example_data_path):
     # with Path
     shp = example_data_path / "freyberg" / "gis" / "bedrock_outcrop_hole.shp"

@@ -177,7 +177,7 @@ def unstructured_grid(example_data_path):
     )
 
 
-@requires_pkg("shapefile")
+@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
 @pytest.mark.parametrize("pathlike", (True, False))
 def test_output_helper_shapefile_export(
     pathlike, function_tmpdir, example_data_path
@@ -202,7 +202,7 @@ def test_output_helper_shapefile_export(
     )
 
 
-@requires_pkg("shapefile")
+@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
 @pytest.mark.slow
 def test_freyberg_export(function_tmpdir, example_data_path):
     # steady state
@@ -296,7 +296,7 @@ def test_freyberg_export(function_tmpdir, example_data_path):
                 assert part.read_text() == wkt
 
 
-@requires_pkg("shapefile")
+@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
 @pytest.mark.parametrize("missing_arrays", [True, False])
 @pytest.mark.slow
 def test_disu_export(function_tmpdir, missing_arrays):
@@ -353,7 +353,7 @@ def test_export_output(crs, function_tmpdir, example_data_path):
     assert read_crs == get_authority_crs(4326)
 
 
-@requires_pkg("shapefile")
+@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
 def test_write_gridlines_shapefile(function_tmpdir):
     import shapefile
 
@@ -379,7 +379,7 @@ def test_write_gridlines_shapefile(function_tmpdir):
         assert len(sf) == 22
 
 
-@requires_pkg("shapefile")
+@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
 def test_export_shapefile_polygon_closed(function_tmpdir):
     from shapefile import Reader
 
@@ -501,7 +501,7 @@ def test_netcdf_classmethods(function_tmpdir, example_data_path):
     new_f.nc.close()
 
 
-@requires_pkg("shapefile")
+@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
 def test_shapefile_ibound(function_tmpdir, example_data_path):
     from shapefile import Reader
 
@@ -524,7 +524,7 @@ def test_shapefile_ibound(function_tmpdir, example_data_path):
     shape.close()
 
 
-@requires_pkg("shapefile")
+@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
 @pytest.mark.slow
 @pytest.mark.parametrize("namfile", namfiles())
 def test_shapefile(function_tmpdir, namfile):
@@ -549,7 +549,7 @@ def test_shapefile(function_tmpdir, namfile):
     ), f"wrong number of records in shapefile {fnc_name}"
 
 
-@requires_pkg("shapefile")
+@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
 @pytest.mark.slow
 @pytest.mark.parametrize("namfile", namfiles())
 def test_shapefile_export_modelgrid_override(function_tmpdir, namfile):
@@ -616,7 +616,7 @@ def test_export_netcdf(function_tmpdir, namfile):
     nc.close()
 
 
-@requires_pkg("shapefile")
+@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
 def test_export_array2(function_tmpdir):
     nrow = 7
     ncol = 11
@@ -650,7 +650,7 @@ def test_export_array2(function_tmpdir):
     assert os.path.isfile(filename), "did not create array shapefile"
 
 
-@requires_pkg("shapefile", "shapely")
+@requires_pkg("pyshp", "shapely", name_map={"pyshp": "shapefile"})
 def test_export_array_contours_structured(function_tmpdir):
     nrow = 7
     ncol = 11
@@ -686,7 +686,7 @@ def test_export_array_contours_structured(function_tmpdir):
     assert os.path.isfile(filename), "did not create contour shapefile"
 
 
-@requires_pkg("shapefile", "shapely")
+@requires_pkg("pyshp", "shapely", name_map={"pyshp": "shapefile"})
 def test_export_array_contours_unstructured(
     function_tmpdir, unstructured_grid
 ):
@@ -712,7 +712,7 @@ def test_export_array_contours_unstructured(
 from autotest.test_gridgen import sim_disu_diff_layers
 
 
-@requires_pkg("shapefile", "shapely")
+@requires_pkg("pyshp", "shapely", name_map={"pyshp": "shapefile"})
 def test_export_array_contours_unstructured_diff_layers(
     function_tmpdir, sim_disu_diff_layers
 ):
@@ -741,7 +741,7 @@ def test_export_array_contours_unstructured_diff_layers(
     # plt.show()
 
 
-@requires_pkg("shapefile", "shapely")
+@requires_pkg("pyshp", "shapely", name_map={"pyshp": "shapefile"})
 def test_export_contourf(function_tmpdir, example_data_path):
     from shapefile import Reader
 
@@ -784,7 +784,7 @@ def test_export_contourf(function_tmpdir, example_data_path):
 
 
 @pytest.mark.mf6
-@requires_pkg("shapefile", "shapely")
+@requires_pkg("pyshp", "shapely", name_map={"pyshp": "shapefile"})
 def test_export_contours(function_tmpdir, example_data_path):
     from shapefile import Reader
 
@@ -952,7 +952,7 @@ def test_mf6_grid_shp_export(function_tmpdir):
                 assert np.abs(it - it6) < 1e-6
 
 
-@requires_pkg("shapefile")
+@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
 @pytest.mark.slow
 def test_export_huge_shapefile(function_tmpdir):
     nlay = 2

@@ -2317,7 +2317,7 @@ def test035_create_tests_fhb(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("shapefile")
+@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
 @pytest.mark.regression
 def test006_create_tests_gwf3_disv(function_tmpdir, example_data_path):
     # init paths
