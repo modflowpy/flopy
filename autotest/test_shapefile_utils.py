@@ -53,7 +53,7 @@ def test_model_attributes_to_shapefile(example_data_path, function_tmpdir):
     assert shpfile_path.exists()
 
 
-@requires_pkg("pyproj", "pyshp", "shapely", name_map={"pyshp", "shapefile"})
+@requires_pkg("pyproj", "pyshp", "shapely", name_map={"pyshp": "shapefile"})
 def test_write_grid_shapefile(
     minimal_unstructured_grid_info, minimal_vertex_grid_info, function_tmpdir
 ):
