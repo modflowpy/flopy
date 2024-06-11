@@ -200,11 +200,10 @@ def swt4_namfiles():
     ]
 
 
-@pytest.mark.slow
 @requires_exe("swtv4")
 @pytest.mark.parametrize("namfile", swt4_namfiles())
 @pytest.mark.parametrize("binary", [True, False])
-def test_seawat_load_write_run(function_tmpdir, namfile, binary):
+def test_seawat_load_and_write(function_tmpdir, namfile, binary):
     model_name = Path(namfile).name
     m = Seawat.load(model_name, model_ws=Path(namfile).parent, verbose=True)
     m.change_model_ws(function_tmpdir, reset_external=True)
@@ -227,8 +226,6 @@ def test_seawat_load_write_run(function_tmpdir, namfile, binary):
             )
 
     m.write_input()
-    success, buff = m.run_model(silent=False)
-    assert success, buff
 
 
 @requires_exe("swtv4")

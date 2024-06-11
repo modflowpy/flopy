@@ -141,7 +141,7 @@ jobs:
     defaults:
       run:
         shell: bash -l {0}
-    timeout-minutes: 60
+    timeout-minutes: 45
     steps:
 
       - name: Checkout repo
