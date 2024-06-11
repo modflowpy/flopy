@@ -5,6 +5,7 @@ abstract classes that should not be directly accessed.
 """
 
 import os
+import warnings
 from pathlib import Path
 from typing import Union
 
@@ -221,6 +222,12 @@ class LayerFile:
                 angrot=0.0,
             )
 
+    def __len__(self):
+        """
+        Return the number of records (headers) in the file.
+        """
+        return len(self.recordarray)
+
     def __enter__(self):
         return self
 
@@ -431,9 +438,17 @@ class LayerFile:
         return
 
     def get_nrecords(self):
-        if isinstance(self.recordarray, np.recarray):
-            return self.recordarray.shape[0]
-        return 0
+        """
+        Return the number of records (headers) in the file.
+
+        .. deprecated:: 3.8.0
+           Use :meth:`len` instead.
+        """
+        warnings.warn(
+            "get_nrecords is deprecated; use len(obj) instead.",
+            DeprecationWarning,
+        )
+        return len(self)
 
     def _get_data_array(self, totim=0):
         """

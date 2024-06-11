@@ -705,7 +705,7 @@ class HeadFile(BinaryLayerFile):
             tsimtotal += tpd[0]
 
         # get total number of records
-        nrecords = self.recordarray.shape[0]
+        nrecords = len(self)
 
         # open backward file
         with open(filename, "wb") as fbin:
@@ -1034,7 +1034,6 @@ class CellBudgetFile:
         self.imethlist = []
         self.paknamlist_from = []
         self.paknamlist_to = []
-        self.nrecords = 0
         self.compact = True  # compact budget file flag
 
         self.dis = None
@@ -1087,6 +1086,26 @@ class CellBudgetFile:
     def __exit__(self, *exc):
         self.close()
 
+    def __len__(self):
+        """
+        Return the number of records (headers) in the file.
+        """
+        return len(self.recordarray)
+
+    @property
+    def nrecords(self):
+        """
+        Return the number of records (headers) in the file.
+
+        .. deprecated:: 3.8.0
+           Use :meth:`len` instead.
+        """
+        warnings.warn(
+            "obj.nrecords is deprecated; use len(obj) instead.",
+            DeprecationWarning,
+        )
+        return len(self)
+
     def __reset(self):
         """
         Reset indexing lists when determining precision
@@ -1101,7 +1120,6 @@ class CellBudgetFile:
         self.imethlist = []
         self.paknamlist_from = []
         self.paknamlist_to = []
-        self.nrecords = 0
 
     def _set_precision(self, precision="single"):
         """
@@ -1209,7 +1227,6 @@ class CellBudgetFile:
         while ipos < self.totalbytes:
             self.iposheader.append(ipos)
             header = self._get_header()
-            self.nrecords += 1
             totim = header["totim"]
             # if old-style (non-compact) file,
             # compute totim from kstp and kper
@@ -2117,12 +2134,17 @@ class CellBudgetFile:
 
         Returns
         -------
-
-        out : int
+        int
             Number of records in the file.
 
+        .. deprecated:: 3.8.0
+           Use :meth:`len` instead.
         """
-        return self.recordarray.shape[0]
+        warnings.warn(
+            "get_nrecords is deprecated; use len(obj) instead.",
+            DeprecationWarning,
+        )
+        return len(self)
 
     def get_residual(self, totim, scaled=False):
         """
@@ -2271,7 +2293,7 @@ class CellBudgetFile:
             tsimtotal += tpd[0]
 
         # get number of records
-        nrecords = self.get_nrecords()
+        nrecords = len(self)
 
         # open backward budget file
         with open(filename, "wb") as fbin:

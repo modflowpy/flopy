@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from autotest.conftest import get_example_data_path
 from flopy.mf6.modflow.mfsimulation import MFSimulation
 from flopy.utils.binaryfile import CellBudgetFile
 
@@ -289,6 +290,67 @@ def zonbud_model_path(example_data_path):
     return example_data_path / "zonbud_examples"
 
 
+def test_cellbudgetfile_get_indices_nrecords(example_data_path):
+    pth = example_data_path / "freyberg_multilayer_transient" / "freyberg.cbc"
+    with CellBudgetFile(pth) as cbc:
+        pass
+    assert cbc.get_indices() is None
+    idxs = cbc.get_indices("constant head")
+    assert type(idxs) == np.ndarray
+    assert idxs.dtype == np.int64
+    np.testing.assert_array_equal(idxs, list(range(0, 5476, 5)) + [5479])
+    idxs = cbc.get_indices(b"         STORAGE")
+    np.testing.assert_array_equal(idxs, list(range(4, 5475, 5)))
+
+    assert len(cbc) == 5483
+    with pytest.deprecated_call():
+        assert cbc.nrecords == 5483
+    with pytest.deprecated_call():
+        assert cbc.get_nrecords() == 5483
+
+
+def test_load_cell_budget_file_timeseries(example_data_path):
+    pth = example_data_path / "mf2005_test" / "swiex1.gitzta"
+    cbf = CellBudgetFile(pth, precision="single")
+    ts = cbf.get_ts(text="ZETASRF  1", idx=(0, 0, 24))
+    assert ts.shape == (4, 2)
+
+
+_example_data_path = get_example_data_path()
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        _example_data_path / "mf2005_test" / "swiex1.gitzta",
+        _example_data_path / "mp6" / "EXAMPLE.BUD",
+        _example_data_path
+        / "mfusg_test"
+        / "01A_nestedgrid_nognc"
+        / "output"
+        / "flow.cbc",
+    ],
+)
+def test_budgetfile_detect_precision_single(path):
+    file = CellBudgetFile(path, precision="auto")
+    assert file.realtype == np.float32
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        _example_data_path
+        / "mf6"
+        / "test006_gwf3"
+        / "expected_output"
+        / "flow_adj.cbc",
+    ],
+)
+def test_budgetfile_detect_precision_double(path):
+    file = CellBudgetFile(path, precision="auto")
+    assert file.realtype == np.float64
+
+
 def test_cellbudgetfile_position(function_tmpdir, zonbud_model_path):
     fpth = zonbud_model_path / "freyberg.gitcbc"
     v = CellBudgetFile(fpth)
@@ -305,7 +367,7 @@ def test_cellbudgetfile_position(function_tmpdir, zonbud_model_path):
     assert ipos == ival, f"position of index 8767 header != {ival}"
 
     cbcd = []
-    for i in range(idx, v.get_nrecords()):
+    for i in range(idx, len(v)):
         cbcd.append(v.get_data(i)[0])
     v.close()
 
@@ -334,7 +396,7 @@ def test_cellbudgetfile_position(function_tmpdir, zonbud_model_path):
     names = v2.get_unique_record_names(decode=True)
 
     cbcd2 = []
-    for i in range(0, v2.get_nrecords()):
+    for i in range(len(v2)):
         cbcd2.append(v2.get_data(i)[0])
     v2.close()
 
@@ -557,10 +619,11 @@ def test_cellbudgetfile_reverse_mf6(example_data_path, function_tmpdir):
     assert isinstance(rf, CellBudgetFile)
 
     # check that both files have the same number of records
-    nrecords = f.get_nrecords()
-    assert nrecords == rf.get_nrecords()
+    assert len(f) == 2
+    assert len(rf) == 2
 
     # check data were reversed
+    nrecords = len(f)
     for idx in range(nrecords - 1, -1, -1):
         # check headers
         f_header = list(f.recordarray[nrecords - idx - 1])
@@ -583,3 +646,22 @@ def test_cellbudgetfile_reverse_mf6(example_data_path, function_tmpdir):
         else:
             # flows should be negated
             assert np.array_equal(f_data[0][0], -rf_data[0][0])
+
+
+def test_read_mf6_budgetfile(example_data_path):
+    cbb_file = (
+        example_data_path
+        / "mf6"
+        / "test005_advgw_tidal"
+        / "expected_output"
+        / "AdvGW_tidal.cbc"
+    )
+    cbb = CellBudgetFile(cbb_file)
+    rch_zone_1 = cbb.get_data(paknam2="rch-zone_1".upper())
+    rch_zone_2 = cbb.get_data(paknam2="rch-zone_2".upper())
+    rch_zone_3 = cbb.get_data(paknam2="rch-zone_3".upper())
+
+    # ensure there is a record for each time step
+    assert len(rch_zone_1) == 120 * 3 + 1
+    assert len(rch_zone_2) == 120 * 3 + 1
+    assert len(rch_zone_3) == 120 * 3 + 1
