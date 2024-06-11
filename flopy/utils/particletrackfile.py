@@ -141,7 +141,7 @@ class ParticleTrackFile(ABC):
             List of recarrays with dtype ParticleTrackFile.outdtype
 
         """
-        nids = np.unique(self._data["particleid"]).size
+        nids = np.unique(self._data["particleid"])
         data = self._data[list(self.outdtype.names)] if minimal else self._data
         if totim is not None:
             idx = (
@@ -151,7 +151,7 @@ class ParticleTrackFile(ABC):
             )
             if len(idx) > 0:
                 data = data[idx]
-        return [data[data["particleid"] == i] for i in range(nids)]
+        return [data[data["particleid"] == i] for i in nids]
 
     def get_destination_data(
         self, dest_cells, to_recarray=True
