@@ -495,6 +495,7 @@ class Seawat(BaseModel):
             exe_name=None,
             verbose=verbose,
             model_ws=model_ws,
+            load_only=load_only,
             forgive=False,
         )
 
