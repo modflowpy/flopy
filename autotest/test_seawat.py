@@ -121,7 +121,7 @@ def test_seawat_henry(function_tmpdir):
     mswt.write_input()
 
     success, buff = mswt.run_model(silent=False)
-    assert success
+    assert success, buff
 
 
 @pytest.mark.slow
@@ -200,10 +200,11 @@ def swt4_namfiles():
     ]
 
 
+@pytest.mark.slow
 @requires_exe("swtv4")
 @pytest.mark.parametrize("namfile", swt4_namfiles())
 @pytest.mark.parametrize("binary", [True, False])
-def test_seawat_load_and_write(function_tmpdir, namfile, binary):
+def test_seawat_load_write_run(function_tmpdir, namfile, binary):
     model_name = Path(namfile).name
     m = Seawat.load(model_name, model_ws=Path(namfile).parent, verbose=True)
     m.change_model_ws(function_tmpdir, reset_external=True)
@@ -226,14 +227,28 @@ def test_seawat_load_and_write(function_tmpdir, namfile, binary):
             )
 
     m.write_input()
+    success, buff = m.run_model(silent=False)
+    assert success, buff
 
-    # TODO: run models in separate CI workflow?
-    #   with regression testing & benchmarking?
-    run = False
 
-    if run:
-        success, buff = m.run_model(silent=False)
-        assert success
+@requires_exe("swtv4")
+def test_seawat_load_only(function_tmpdir):
+    namfile = swt4_namfiles()[0]
+    model_name = Path(namfile).name
+    m = Seawat.load(model_name, model_ws=Path(namfile).parent, verbose=True)
+    m.change_model_ws(function_tmpdir, reset_external=True)
+    m.write_input()
+
+    files = function_tmpdir.glob("*.adv")
+    adv_file = next(files)
+    assert adv_file is not None
+    adv_file.unlink()
+
+    load_only = ["btn", "dis", "bas6", "oc"]
+    m = Seawat.load(
+        model_name, model_ws=function_tmpdir, load_only=load_only, verbose=True
+    )
+    assert set([pkg.upper() for pkg in load_only]) == set(m.get_package_list())
 
 
 def test_vdf_vsc(function_tmpdir):
