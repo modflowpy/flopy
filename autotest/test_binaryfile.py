@@ -1,6 +1,7 @@
 from itertools import repeat
 
 import numpy as np
+import pandas as pd
 import pytest
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
@@ -14,6 +15,7 @@ from flopy.utils import (
     CellBudgetFile,
     HeadFile,
     HeadUFile,
+    UcnFile,
     Util2d,
 )
 from flopy.utils.binaryfile import (
@@ -69,6 +71,116 @@ def test_deprecated_binaryread_struct(example_data_path):
         with pytest.deprecated_call():
             res = flopy.utils.binaryfile.binaryread_struct(fp, np.int32)
         assert res == 20
+
+
+def test_headfile_build_index(example_data_path):
+    # test low-level BinaryLayerFile._build_index() method
+    pth = example_data_path / "freyberg_multilayer_transient" / "freyberg.hds"
+    with HeadFile(pth) as hds:
+        pass
+    assert hds.nrow == 40
+    assert hds.ncol == 20
+    assert hds.nlay == 3
+    assert not hasattr(hds, "nper")
+    assert hds.totalbytes == 10_676_004
+    assert len(hds.recordarray) == 3291
+    assert type(hds.recordarray) == np.ndarray
+    assert hds.recordarray.dtype == np.dtype(
+        [
+            ("kstp", "i4"),
+            ("kper", "i4"),
+            ("pertim", "f4"),
+            ("totim", "f4"),
+            ("text", "S16"),
+            ("ncol", "i4"),
+            ("nrow", "i4"),
+            ("ilay", "i4"),
+        ]
+    )
+    # check first and last recorddict
+    list_recordarray = hds.recordarray.tolist()
+    assert list_recordarray[0] == (
+        (1, 1, 1.0, 1.0, b"            HEAD", 20, 40, 1)
+    )
+    assert list_recordarray[-1] == (
+        (1, 1097, 1.0, 1097.0, b"            HEAD", 20, 40, 3)
+    )
+    assert hds.times == list((np.arange(1097) + 1).astype(np.float32))
+    assert hds.kstpkper == [(1, kper + 1) for kper in range(1097)]
+    np.testing.assert_array_equal(hds.iposarray, np.arange(3291) * 3244 + 44)
+    assert hds.iposarray.dtype == np.int64
+    # check first and last row of data frame
+    pd.testing.assert_frame_equal(
+        hds.headers.iloc[[0, -1]],
+        pd.DataFrame(
+            {
+                "kstp": np.array([1, 1], np.int32),
+                "kper": np.array([1, 1097], np.int32),
+                "pertim": np.array([1.0, 1.0], np.float32),
+                "totim": np.array([1.0, 1097.0], np.float32),
+                "text": ["HEAD", "HEAD"],
+                "ncol": np.array([20, 20], np.int32),
+                "nrow": np.array([40, 40], np.int32),
+                "ilay": np.array([1, 3], np.int32),
+            },
+            index=[44, 10672804],
+        ),
+    )
+
+
+def test_concentration_build_index(example_data_path):
+    # test low-level BinaryLayerFile._build_index() method with UCN file
+    pth = example_data_path / "mt3d_test/mf2005mt3d/P07/MT3D001.UCN"
+    with UcnFile(pth) as ucn:
+        pass
+    assert ucn.nrow == 15
+    assert ucn.ncol == 21
+    assert ucn.nlay == 8
+    assert not hasattr(ucn, "nper")
+    assert ucn.totalbytes == 10_432
+    assert len(ucn.recordarray) == 8
+    assert type(ucn.recordarray) == np.ndarray
+    assert ucn.recordarray.dtype == np.dtype(
+        [
+            ("ntrans", "i4"),
+            ("kstp", "i4"),
+            ("kper", "i4"),
+            ("totim", "f4"),
+            ("text", "S16"),
+            ("ncol", "i4"),
+            ("nrow", "i4"),
+            ("ilay", "i4"),
+        ]
+    )
+    # check first and last recorddict
+    list_recordarray = ucn.recordarray.tolist()
+    assert list_recordarray[0] == (
+        (29, 1, 1, 100.0, b"CONCENTRATION   ", 21, 15, 1)
+    )
+    assert list_recordarray[-1] == (
+        (29, 1, 1, 100.0, b"CONCENTRATION   ", 21, 15, 8)
+    )
+    assert ucn.times == [np.float32(100.0)]
+    assert ucn.kstpkper == [(1, 1)]
+    np.testing.assert_array_equal(ucn.iposarray, np.arange(8) * 1304 + 44)
+    assert ucn.iposarray.dtype == np.int64
+    # check first and last row of data frame
+    pd.testing.assert_frame_equal(
+        ucn.headers.iloc[[0, -1]],
+        pd.DataFrame(
+            {
+                "ntrans": np.array([29, 29], np.int32),
+                "kstp": np.array([1, 1], np.int32),
+                "kper": np.array([1, 1], np.int32),
+                "totim": np.array([100.0, 100.0], np.float32),
+                "text": ["CONCENTRATION", "CONCENTRATION"],
+                "ncol": np.array([21, 21], np.int32),
+                "nrow": np.array([15, 15], np.int32),
+                "ilay": np.array([1, 8], np.int32),
+            },
+            index=[44, 9172],
+        ),
+    )
 
 
 def test_binaryfile_writeread(function_tmpdir, nwt_model_path):
