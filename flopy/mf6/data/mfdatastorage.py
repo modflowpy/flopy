@@ -1597,15 +1597,6 @@ class DataStorage:
             self._verify_list(new_data)
         return new_data
 
-    def _get_cellid_size(self, data_item_name):
-        model_num = DatumUtil.cellid_model_num(
-            data_item_name,
-            self.data_dimensions.structure.model_data,
-            self.data_dimensions.package_dim.model_dim,
-        )
-        model_grid = self.data_dimensions.get_model_grid(model_num=model_num)
-        return model_grid.get_num_spatial_coordinates()
-
     def make_tuple_cellids(self, data):
         # convert cellids from individual layer, row, column fields into
         # tuples (layer, row, column)
@@ -1616,7 +1607,7 @@ class DataStorage:
             new_line = []
             for item, is_cellid in zip(line, self.recarray_cellid_list_ex):
                 if is_cellid:
-                    cellid_size = self._get_cellid_size(
+                    cellid_size = self.data_dimensions.get_cellid_size(
                         self._recarray_type_list[data_idx][0],
                     )
                     current_cellid += (item,)
@@ -1761,10 +1752,7 @@ class DataStorage:
                         self._stress_period,
                     )
                     file_access.write_binary_file(
-                        self.layer_storage.first_item().internal_data,
-                        fp,
-                        self._model_or_sim.modeldiscrit,
-                        precision="double",
+                        self.layer_storage.first_item().internal_data, fp
                     )
                 else:
                     # make sure folder exists
@@ -1802,15 +1790,6 @@ class DataStorage:
                 # set as external data
                 self.layer_storage.first_item().internal_data = None
             else:
-                # if self.layer_storage.in_shape(layer_new):
-                #    factor = self.layer_storage[layer_new].factor
-                # if preserve_record:
-                #    adjustment = multiplier / factor
-                #    if adjustment != 1.0:
-                # convert numbers to be multiplied by the
-                # original factor
-                #        data = data * adjustment
-
                 # store data externally in file
                 data_size = self.get_data_size(layer_new)
                 data_type = data_dim.structure.data_item_structures[0].type
@@ -2030,9 +2009,7 @@ class DataStorage:
                 self._stress_period,
             )
             if self.layer_storage[layer].binary:
-                data = file_access.read_binary_data_from_file(
-                    read_file, self._model_or_sim.modeldiscrit
-                )
+                data = file_access.read_binary_data_from_file(read_file)
                 data_out = self._build_recarray(data, layer, False)
             else:
                 with open(read_file) as fd_read_file:
@@ -2144,7 +2121,7 @@ class DataStorage:
             return False
         if arr_line is None:
             return False
-        cellid_size = self._get_cellid_size(data_item.name)
+        cellid_size = self.data_dimensions.get_cellid_size(data_item.name)
         model_grid = self.data_dimensions.get_model_grid()
         if cellid_size + data_index > len(arr_line):
             return False
@@ -2291,7 +2268,7 @@ class DataStorage:
                         # this is a cell id.  verify that it contains the
                         # correct number of integers
                         if cellid_size is None:
-                            cellid_size = self._get_cellid_size(
+                            cellid_size = self.data_dimensions.get_cellid_size(
                                 self._recarray_type_list[index][0]
                             )
                         if (
@@ -2833,6 +2810,7 @@ class DataStorage:
                                     data_item,
                                     data_set,
                                     data,
+                                    data_item_num=index,
                                     repeating_key=key,
                                     min_size=min_size,
                                 )
@@ -2873,7 +2851,9 @@ class DataStorage:
                             ):
                                 # A cellid is a single entry (tuple) in the
                                 # recarray.  Adjust dimensions accordingly.
-                                size = self._get_cellid_size(data_item.name)
+                                size = self.data_dimensions.get_cellid_size(
+                                    data_item.name
+                                )
                                 data_item.remove_cellid(resolved_shape, size)
                         if not data_item.optional or not min_size:
                             for index in range(0, resolved_shape[0]):
@@ -2910,7 +2890,7 @@ class DataStorage:
         if iscellid and self._model_or_sim.model_type is not None:
             # write each part of the cellid out as a separate entry
             # to _recarray_list_list_ex
-            cellid_size = self._get_cellid_size(name)
+            cellid_size = self.data_dimensions.get_cellid_size(name)
             # determine header for different grid types
             if cellid_size == 1:
                 self._do_ex_list_append(name, int, iscellid)
