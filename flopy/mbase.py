@@ -570,37 +570,6 @@ class BaseModel(ModelInterface):
         except AttributeError:
             return None
 
-    # we don't need these - no need for controlled access to array_free_format
-    # def set_free_format(self, value=True):
-    #     """
-    #     Set the free format flag for the model instance
-    #
-    #     Parameters
-    #     ----------
-    #     value : bool
-    #         Boolean value to set free format flag for model. (default is True)
-    #
-    #     Returns
-    #     -------
-    #
-    #     """
-    #     if not isinstance(value, bool):
-    #         print('Error: set_free_format passed value must be a boolean')
-    #         return False
-    #     self.array_free_format = value
-    #
-    # def get_free_format(self):
-    #     """
-    #     Return the free format flag for the model
-    #
-    #     Returns
-    #     -------
-    #     out : bool
-    #         Free format flag for the model
-    #
-    #     """
-    #     return self.array_free_format
-
     def next_unit(self, i=None):
         if i is not None:
             self.__onunit__ = i - 1
@@ -759,7 +728,6 @@ class BaseModel(ModelInterface):
             else:
                 return None
 
-        # return self.get_package(item)
         # to avoid infinite recursion
         if (
             item == "_packagelist"
@@ -1187,10 +1155,6 @@ class BaseModel(ModelInterface):
             ptype = filename.split(".")[-1]
         ptype = str(ptype).upper()
 
-        # for pak in self.packagelist:
-        #     if ptype in pak.name:
-        #         print("BaseModel.add_existing_package() warning: " +\
-        #               "replacing existing package {0}".format(ptype))
         class Obj:
             pass
 
@@ -1331,10 +1295,6 @@ class BaseModel(ModelInterface):
                 os.makedirs(new_pth)
             except:
                 raise OSError(f"{new_pth} not valid, workspace-folder")
-                # line = '\n{} not valid, workspace-folder '.format(new_pth) + \
-                #        'was changed to {}\n'.format(os.getcwd())
-                # print(line)
-                # new_pth = os.getcwd()
 
         # --reset the model workspace
         old_pth = self._model_ws
@@ -1368,14 +1328,10 @@ class BaseModel(ModelInterface):
         for ext_file, output in zip(
             self.external_fnames, self.external_output
         ):
-            # new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
             # this is a wicked mess
             if output:
-                # new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
                 new_ext_file = ext_file
             else:
-                # fpth = os.path.abspath(os.path.join(old_pth, ext_file))
-                # new_ext_file = os.path.relpath(fpth, os.path.abspath(pth))
                 fdir = os.path.dirname(ext_file)
                 if fdir == "":
                     fpth = os.path.abspath(os.path.join(old_pth, ext_file))
@@ -1407,8 +1363,6 @@ class BaseModel(ModelInterface):
 
     def __setattr__(self, key, value):
         if key == "free_format_input":
-            # if self.bas6 is not None:
-            #    self.bas6.ifrefm = value
             super().__setattr__(key, value)
         elif key == "name":
             self._set_name(value)
@@ -1533,7 +1487,6 @@ class BaseModel(ModelInterface):
             print(" ")
         # write name file
         self.write_name_file()
-        # os.chdir(org_dir)
 
     def write_name_file(self):
         """
@@ -1798,8 +1751,6 @@ def run_model(
     def q_output(output, q):
         for line in iter(output.readline, b""):
             q.put(line)
-            # time.sleep(1)
-            # output.close()
 
     # create a list of arguments to pass to Popen
     if processors is not None:

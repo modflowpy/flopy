@@ -335,7 +335,6 @@ class ModflowFhb(Package):
         """
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         f = open(self.fn_path, "w")
-        # f.write('{0:s}\n'.format(self.heading))
 
         # Data set 1
         f.write(f"{self.nbdtim} ")

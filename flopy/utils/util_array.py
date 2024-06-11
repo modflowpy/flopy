@@ -6,8 +6,6 @@ util_array module.  Contains the util_2d, util_3d and transient_2d classes.
 
 """
 
-# from future.utils import with_metaclass
-
 import copy
 import os
 import shutil
@@ -255,7 +253,6 @@ class ArrayFormat:
         elif key.lower() == "binary":
             value = bool(value)
             if value and self.free:
-                #    raise Exception("cannot switch from 'free' to 'binary' format")
                 self._isfree = False
             self._isbinary = value
             self._set_defaults()
@@ -263,7 +260,6 @@ class ArrayFormat:
         elif key.lower() == "free":
             value = bool(value)
             if value and self.binary:
-                #    raise Exception("cannot switch from 'binary' to 'free' format")
                 self._isbinary = False
             self._isfree = bool(value)
             self._set_defaults()
@@ -771,7 +767,6 @@ class Util3d(DataInterface):
         if nrow is not None:
             # typical 3D case
             a = np.empty((self.shape), dtype=self._dtype)
-            # for i,u2d in self.uds:
             for i, u2d in enumerate(self.util_2ds):
                 a[i] = u2d.array
         else:
@@ -1226,7 +1221,6 @@ class Transient3d(DataInterface):
             arg,
             fmtin=self.fmtin,
             name=name,
-            #                     ext_filename=ext_filename,
             locat=self.locat,
             array_free_format=self.array_free_format,
         )
@@ -2143,9 +2137,6 @@ class Util2d(DataInterface):
         -------
             file_path (str) : path relative to python: includes model_ws
         """
-        # if self.vtype != str:
-        #    raise Exception("Util2d call to python_file_path " +
-        #                    "for vtype != str")
         python_file_path = ""
         if self._model.model_ws != ".":
             python_file_path = os.path.join(self._model.model_ws)
@@ -2258,8 +2249,6 @@ class Util2d(DataInterface):
 
     def get_external_cr(self):
         locat = self._model.next_ext_unit()
-        # if self.format.binary:
-        #    locat = -1 * np.abs(locat)
         self._model.add_external(
             self.model_file_path, locat, self.format.binary
         )
@@ -2838,11 +2827,6 @@ class Util2d(DataInterface):
                     curr_unit = cunit
                     break
 
-        # Allows for special MT3D array reader
-        # array_format = None
-        # if hasattr(model, 'array_format'):
-        #    array_format = model.array_format
-
         cr_dict = Util2d.parse_control_record(
             f_handle.readline(),
             current_unit=curr_unit,
@@ -2872,7 +2856,6 @@ class Util2d(DataInterface):
             fname = fname.replace('"', "")
             fname = fname.replace("\\", os.path.sep)
             fname = os.path.join(model.model_ws, fname)
-            # load_txt(shape, file_in, dtype, fmtin):
             assert os.path.exists(
                 fname
             ), f"Util2d.load() error: open/close file {fname} not found"
@@ -3005,7 +2988,6 @@ class Util2d(DataInterface):
                 nunit = abs(int(raw[1]))
                 if ext_unit_dict is not None:
                     try:
-                        # td = ext_unit_dict[int(raw[1])]
                         fname = ext_unit_dict[nunit].filename.strip()
                     except:
                         print(
@@ -3045,8 +3027,6 @@ class Util2d(DataInterface):
                     cnstnt = int(line[10:20].strip())
                 else:
                     cnstnt = 0
-                # if cnstnt == 0:
-                #    cnstnt = 1
             if locat != 0:
                 if len(line) >= 40:
                     fmtin = line[20:40].strip()
@@ -3056,10 +3036,6 @@ class Util2d(DataInterface):
                     iprn = int(line[40:50].strip())
                 except:
                     iprn = 0
-            # locat = int(raw[0])
-            # cnstnt = float(raw[1])
-            # fmtin = raw[2].strip()
-            # iprn = int(raw[3])
             if locat == 0:
                 freefmt = "constant"
             elif locat < 0:

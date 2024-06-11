@@ -866,7 +866,6 @@ def test_endpoint_output(function_tmpdir):
         f"endpoints in {os.path.basename(fpth0)} are not equal (within 1e-5) "
         f"to the endpoints  in {os.path.basename(fpth1)}"
     )
-    # assert not np.allclose(t0, t1), msg
 
 
 @requires_exe("mf6")

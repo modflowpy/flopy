@@ -203,7 +203,6 @@ class ModflowParBc:
                     pinst,
                 ]
 
-        # print bc_parms
         bcpar = ModflowParBc(bc_parms)
         return bcpar
 
@@ -245,7 +244,6 @@ class ModflowParBc:
         dtype = np.float32
         data = np.zeros(shape, dtype=dtype)
         for key, value in parm_dict.items():
-            # print key, value
             pdict, idict = pak_parms.bc_parms[key]
             inst_data = idict[value]
             if model.mfpar.pval is None:
@@ -257,7 +255,6 @@ class ModflowParBc:
                     pv = float(pdict["parval"])
             for [mltarr, zonarr, izones] in inst_data:
                 model.parameter_load = True
-                # print mltarr, zonarr, izones
                 if mltarr.lower() == "none":
                     mult = np.ones(shape, dtype=dtype)
                 else:

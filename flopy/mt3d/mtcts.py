@@ -144,19 +144,6 @@ class Mt3dCts(Package):
         self,
     ):
         raise NotImplementedError()
-        # # unit number
-        # if unitnumber is None:
-        #     unitnumber = self.unitnumber
-        # Package.__init__(self, model, extension, 'CTS', self.unitnumber)
-        #
-        # # Set dimensions
-        # nrow = model.nrow
-        # ncol = model.ncol
-        # nlay = model.nlay
-        # ncomp = model.ncomp
-        # mcomp = model.mcomp
-
-        # Set package specific parameters
 
     @classmethod
     def load(
@@ -201,70 +188,6 @@ class Mt3dCts(Package):
 
         raise NotImplementedError()
 
-        # if model.verbose:
-        #     sys.stdout.write('loading cts package file...\n')
-        #
-        # # Open file, if necessary
-        # openfile = not hasattr(f, 'read')
-        # if openfile:
-        #     filename = f
-        #     f = open(filename, 'r')
-        #
-        # # Set dimensions if necessary
-        # if nlay is None:
-        #     nlay = model.nlay
-        # if nrow is None:
-        #     nrow = model.nrow
-        # if ncol is None:
-        #     ncol = model.ncol
-        # if nper is None:
-        #     nper = model.nper
-        # if ncomp is None:
-        #     ncomp = model.ncomp
-        #
-        # # Item 1 (MXCTS, ICTSOUT, MXEXT, MXINJ, MXWEL, IFORCE)
-        # line = f.readline()
-        # if line[0] == '#':
-        #     raise ValueError('CTS package does not support comment lines')
-        # if model.verbose:
-        #     print('   loading MXCTS, ICTSOUT, MXEXT, MXINJ, MXWEL, IFORCE...')
-        #
-        # m_arr = line.strip().split()
-        # mxcts = int(m_arr[0])
-        # ictsout = int(m_arr[1])
-        # mxext = int(m_arr[2])
-        # mxinj = int(m_arr[3])
-        # mxwel = int(m_arr[4])
-        # iforce = int(m_arr[5])
-        #
-        # # Start of transient data
-        # for iper in range(nper):
-        #
-        #     if model.verbose:
-        #         print('   loading CTS data for kper {0:5d}'.format(iper + 1))
-        #
-        #     # Item 2 (NCTS)
-        #     line = f.readline()
-        #     m_arr = line.strip().split()
-        #     ncts = int(m_arr[0])
-        #
-        #     # Start of information for each CTS
-        #     for icts in range(ncts):
-        #
-        #         if model.verbose:
-        #             print('   loading data for system #{0:5d}'
-        #                   .format(icts + 1))
-        #         # Item 3 (ICTS, NEXT, NINJ, ITRTINJ)
-        #         line = f.readline()
-        #         m_arr = line.strip().split()
-        #         icts = int(m_arr[0])
-        #         next = int(m_arr[1])
-        #         ninj = int(m_arr[2])
-        #         itrtinj = int(m_arr[3])
-        #
-        # if openfile:
-        #     f.close()
-
     @staticmethod
     def get_default_CTS_dtype(ncomp=1, iforce=0):
         """
@@ -272,53 +195,6 @@ class Mt3dCts(Package):
         """
 
         raise NotImplementedError()
-
-        # # Item 3
-        # type_list = [("icts", int), ("next", int), ("ninj", int),
-        #              ("itrtinj", int)]
-        #
-        # # Create a list for storing items 5, 6, & 9
-        # items_5_6_7_9_list = []
-        # if ncomp > 1:
-        #     # Item 5 in CTS input
-        #     for comp in range(1, ncomp+1):
-        #         qincts_name = "qincts{0:d}".format(comp)
-        #         cincts_name = "cincts{0:d}".format(comp)
-        #         items_5_6_7_9_list.append((qincts_name, np.float32))
-        #         items_5_6_7_9_list.append((cincts_name, np.float32))
-        #
-        #     # Item 6 in CTS input
-        #     for comp in range(1, ncomp+1):
-        #         ioptinj_name = "ioptinj{0:d}".format(comp)
-        #         cmchginj_name = "cmchginj{0:d}".format(comp)
-        #         items_5_6_7_9_list.append((ioptinj_name, int))
-        #         items_5_6_7_9_list.append((cmchginj_name, np.float32))
-        #
-        #     if iforce == 0:
-        #         for comp in range(1, ncomp+1):
-        #             cnte_name = "cnte{0:d}".format(comp)
-        #             items_5_6_7_9_list.append(cnte_name, np.float32)
-        #
-        #     # Item 9 in CTS input
-        #     items_5_6_7_9_list.append(("qoutcts", np.float32))
-        #
-        # type_list.append(items_5_6_7_9_list)
-        #
-        # # Now create a list for the records in Item 4
-        # ext_wels_list = [("kext", int), ("iext", int), ("jext", int),
-        #                  ("iwext", int)]
-        #
-        # type_list.append(ext_wels_list)
-        #
-        # # Now create a list for the records in Item 8
-        # inj_wels_list = [("kinj", int), ("iinj", int), ("jinj", int),
-        #                  ("iwinj", int)]
-        # type_list.append(inj_wels_list)
-        #
-        # #
-        #
-        # dtype = np.dtype(type_list)
-        # dtype = dtype
 
     @staticmethod
     def _ftype():

@@ -57,7 +57,6 @@ def mfusg_model(module_tmpdir):
         ic = ra["nodenumber"][0]
         chdspd.append([ic, head, head])
 
-    # gridprops = g.get_gridprops()
     gridprops = g.get_gridprops_disu5()
 
     # create the mfusg modoel

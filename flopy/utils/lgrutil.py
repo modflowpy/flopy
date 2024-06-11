@@ -164,7 +164,7 @@ class Lgr:
         idxl, idxr, idxc = np.where(idomainp == 0)
         assert idxl.shape[0] > 1, "no zero values found in idomain"
 
-        # # child cells per parent and child cells per parent layer
+        # child cells per parent and child cells per parent layer
         self.ncpp = ncpp
         self.ncppl = Util2d(m, (nlayp,), np.int32, ncppl, "ncppl").array
 

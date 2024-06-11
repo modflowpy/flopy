@@ -476,7 +476,6 @@ class ModflowSwi2(Package):
         if self.nobs > 0:
             f.write("# Dataset 8\n")
             for i in range(self.nobs):
-                # f.write(self.obsnam[i] + 3 * '%10i' % self.obslrc + '\n')
                 f.write(f"{self.obsnam[i]} ")
                 for v in self.obslrc[i, :]:
                     f.write(f"{v + 1:10d}")

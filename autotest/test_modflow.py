@@ -555,8 +555,6 @@ def test_namfile_readwrite(function_tmpdir, example_data_path):
         delr=m.dis.delr.array,
         top=m.dis.top.array,
         botm=m.dis.botm.array,
-        # lenuni=3,
-        # length_multiplier=.3048,
         xoff=xll,
         yoff=yll,
         angrot=30,
@@ -593,7 +591,6 @@ def test_namfile_readwrite(function_tmpdir, example_data_path):
 def test_read_usgs_model_reference(function_tmpdir, model_reference_path):
     nlay, nrow, ncol = 1, 30, 5
     delr, delc = 250, 500
-    # xll, yll = 272300, 5086000
 
     mrf_path = function_tmpdir / model_reference_path.name
     shutil.copy(model_reference_path, mrf_path)
@@ -781,32 +778,6 @@ def test_mflist_external(function_tmpdir):
     assert np.array_equal(ml.wel[1], ml1.wel[1])
 
     ml1.write_input()
-
-    # ml = Modflow(
-    #     "mflist_test",
-    #     model_ws=str(function_tmpdir),
-    #     external_path=str(function_tmpdir / "ref"),
-    # )
-    # dis = ModflowDis(ml, 1, 10, 10, nper=3, perlen=1.0)
-    # wel_data = {
-    #     0: [[0, 0, 0, -1], [1, 1, 1, -1]],
-    #     1: [[0, 0, 0, -2], [1, 1, 1, -1]],
-    # }
-    # wel = ModflowWel(ml, stress_period_data=wel_data)
-    # ml.write_input()
-
-    # ml1 = Modflow.load(
-    #     "mflist_test.nam",
-    #     model_ws=ml.model_ws,
-    #     verbose=True,
-    #     forgive=False,
-    #     check=False,
-    # )
-
-    # assert np.array_equal(ml.wel[0], ml1.wel[0])
-    # assert np.array_equal(ml.wel[1], ml1.wel[1])
-
-    # ml1.write_input()
 
 
 @excludes_platform("windows", ci_only=True)
@@ -1111,7 +1082,6 @@ def test_default_oc_stress_period_data(function_tmpdir):
     lpf = ModflowLpf(m, ipakcb=100)
     wel_data = {0: [[0, 0, 0, -1000.0]]}
     wel = ModflowWel(m, ipakcb=101, stress_period_data=wel_data)
-    # spd = {(0, 0): ['save head', 'save budget']}
     oc = ModflowOc(m, stress_period_data=None)
     spd_oc = oc.stress_period_data
     tups = list(spd_oc.keys())
@@ -1268,10 +1238,6 @@ def test_load_with_list_reader(function_tmpdir):
         welra.tofile(f)
         welra.tofile(f)
         welra.tofile(f)
-
-    # no need to run the model
-    # success, buff = m.run_model(silent=True)
-    # assert success, 'model did not terminate successfully'
 
     # the m2 model will load all of these external files, possibly using sfac
     # and just create regular list input files for wel, drn, and ghb

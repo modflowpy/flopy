@@ -308,10 +308,6 @@ class Mf6Obs(ObsFiles):
             # get number of observations
             self.nobs = self.read_integer()
 
-            # # continue reading the file
-            # self.v = np.empty(self.nobs, dtype=float)
-            # self.v.fill(1.0E+32)
-
             # read obsnames
             obsnames = []
             for idx in range(0, self.nobs):

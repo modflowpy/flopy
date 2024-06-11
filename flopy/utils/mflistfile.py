@@ -651,7 +651,6 @@ class ListBudget:
                         line,
                     )
                     break
-                # print('info found for timestep stress period',ts,sp)
 
                 idxs.append([ts, sp, seekpoint])
 

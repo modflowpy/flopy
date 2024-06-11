@@ -480,9 +480,6 @@ class ModflowLpf(Package):
         if model.version == "mfusg" and not model.structured:
             ikcflag = int(t[3])
             item1_len = 4
-        # if ipakcb != 0:
-        #    model.add_pop_key_list(ipakcb)
-        #    ipakcb = 53
         # options
         storagecoefficient = False
         constantcv = False
@@ -546,7 +543,6 @@ class ModflowLpf(Package):
         par_types = []
         if nplpf > 0:
             par_types, parm_dict = mfpar.load(f, nplpf, model.verbose)
-            # print parm_dict
 
         # non-parameter data
         transient = not dis.steady.all()

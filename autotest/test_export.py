@@ -443,12 +443,10 @@ def test_export_array(function_tmpdir, example_data_path):
                 assert np.abs(val - m.modelgrid.extent[0]) < 1e-6
                 # ascii grid origin will differ if it was unrotated
                 # without scipy.rotate
-                # assert np.abs(val - m.modelgrid.xoffset) < 1e-6
             if "yllcorner" in line.lower():
                 val = float(line.strip().split()[-1])
                 assert np.abs(val - m.modelgrid.extent[2]) < 1e-6
                 # without scipy.rotate
-                # assert np.abs(val - m.modelgrid.yoffset) < 1e-6
             if "cellsize" in line.lower():
                 val = float(line.strip().split()[-1])
                 rot_cellsize = (
@@ -540,8 +538,6 @@ def test_shapefile(function_tmpdir, namfile):
 
     fnc_name = function_tmpdir / f"{model.name}.shp"
     fnc = model.export(fnc_name)
-    # fnc2 = m.export(fnc_name, package_names=None)
-    # fnc3 = m.export(fnc_name, package_names=['DIS'])
 
     s = Reader(fnc_name)
     assert (
@@ -899,7 +895,6 @@ def test_mf6_grid_shp_export(function_tmpdir):
     spd6 = flopy.mf6.ModflowGwfriv.stress_period_data.empty(
         gwf, maxbound=len(spd)
     )
-    # spd6[0]['cellid'] = cellid(spd.k, spd.i, spd.j, m.nrow, m.ncol)
     spd6[0]["cellid"] = list(zip(spd.k, spd.i, spd.j))
     for c in spd.dtype.names:
         if c in spd6[0].dtype.names:
@@ -907,7 +902,6 @@ def test_mf6_grid_shp_export(function_tmpdir):
     # MFTransient list apparently requires entries for additional stress periods,
     # even if they are the same
     spd6[1] = spd6[0]
-    # irch = np.zeros((nrow, ncol))
     riv6 = flopy.mf6.ModflowGwfriv(gwf, stress_period_data=spd6)
     rch6 = flopy.mf6.ModflowGwfrcha(gwf, recharge=rech)
 
@@ -922,7 +916,6 @@ def test_mf6_grid_shp_export(function_tmpdir):
     if not has_pkg("shapefile"):
         return
 
-    # rch6.export('{}/mf6.shp'.format(baseDir))
     m.export(function_tmpdir / "mfnwt.shp")
     gwf.export(function_tmpdir / "mf6.shp")
 
@@ -963,7 +956,6 @@ def test_export_huge_shapefile(function_tmpdir):
     perlen = 1
     nstp = 1
     tsmult = 1
-    # perioddata = [[perlen, nstp, tsmult]] * 2
     botm = np.zeros((nlay, nrow, ncol))
 
     m = flopy.modflow.Modflow(
@@ -1236,8 +1228,6 @@ def test_vtk_add_packages(function_tmpdir, example_data_path):
     # todo: pakbase.export() for vtk!!!!
     m.dis.export(ws, fmt="vtk", xml=True, binary=False)
     filetocheck = function_tmpdir / "DIS.vtk"
-    # totalbytes = os.path.getsize(filetocheck)
-    # assert(totalbytes==1019857)
     assert count_lines_in_file(filetocheck) == 27239
 
     # upw with point scalar output
@@ -1288,8 +1278,6 @@ def test_vtk_mf6(function_tmpdir, example_data_path):
 
     # check one
     filetocheck = function_tmpdir / "twrihfb2015_000000.vtk"
-    # totalbytes = os.path.getsize(filetocheck)
-    # assert(totalbytes==21609)
     assert count_lines_in_file(filetocheck) == 9537
 
 
@@ -1498,7 +1486,6 @@ def test_vtk_vertex(function_tmpdir, example_data_path):
 
     # disv test
     workspace = example_data_path / "mf6" / "test003_gwfs_disv"
-    # outfile = os.path.join("vtk_transient_test", "vtk_pacakages")
     sim = MFSimulation.load(sim_ws=workspace)
     gwf = sim.get_model("gwf_1")
 
@@ -1760,7 +1747,6 @@ def test_vtk_export_disv1_model(function_tmpdir):
     vtk_points = grid.GetPoints()
     vtk_points = vtk_points.GetData()
     vtk_points = vtk_to_numpy(vtk_points)
-    # print(vtk_points)
 
     # get cell locations (ia format of point to cell relationship)
     cell_locations = vtk_to_numpy(grid.GetCellLocationsArray())
@@ -1825,7 +1811,6 @@ def test_vtk_export_disv2_model(function_tmpdir):
     vtk_points = grid.GetPoints()
     vtk_points = vtk_points.GetData()
     vtk_points = vtk_to_numpy(vtk_points)
-    # print(vtk_points)
 
     # get cell locations (ia format of point to cell relationship)
     cell_locations = vtk_to_numpy(grid.GetCellLocationsArray())
@@ -2035,7 +2020,6 @@ def test_vtk_export_disu_model(function_tmpdir):
     vtk_points = grid.GetPoints()
     vtk_points = vtk_points.GetData()
     vtk_points = vtk_to_numpy(vtk_points)
-    # print(vtk_points)
 
     # get cell locations (ia format of point to cell relationship)
     cell_locations = vtk_to_numpy(grid.GetCellLocationsArray())[0:9]

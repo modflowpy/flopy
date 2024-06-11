@@ -169,8 +169,6 @@ class ZoneBudget:
                     self._zonenamedict[z] = "_".join(a.split())
                     seen.append(z)
 
-        # self._iflow_recnames = self._get_internal_flow_record_names()
-
         # All record names in the cell-by-cell budget binary file
         self.record_names = [
             n.strip() for n in self.cbc.get_unique_record_names(decode=True)
@@ -2423,7 +2421,7 @@ def _recarray_to_dataframe(
         else:
             index_cols = ["time_step", "stress_period", "name"]
 
-    df = df.set_index(index_cols)  # .sort_index(level=0)
+    df = df.set_index(index_cols)
     if zones is not None:
         keep_cols = zones
     else:

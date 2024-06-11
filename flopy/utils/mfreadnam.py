@@ -608,7 +608,6 @@ def get_mf6_files(mfnamefile):
         if len(olist) > 0:
             outplist = outplist + olist
         # terminate loop if no additional files
-        # if len(flist) < 1 and len(olist) < 1:
         if len(flist) < 1:
             break
 

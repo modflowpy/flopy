@@ -84,7 +84,6 @@ class ModflowMlt(Package):
         if mult_dict is not None:
             self.nml = len(mult_dict)
             self.mult_dict = mult_dict
-            # print mult_dict
         self.parent.add_package(self)
 
     def write_file(self):

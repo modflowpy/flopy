@@ -241,9 +241,6 @@ def test_lake(function_tmpdir, example_data_path):
     gwf.dis.top = top_tm
     gwf.dis.botm = bot_tm.reshape(gwf.modelgrid.shape)
 
-    # v = gwf.dis.top.array
-    # v = gwf.dis.botm.array
-
     k11_tm = k11.resample_to_grid(
         gwf.modelgrid,
         band=k11.bands[0],

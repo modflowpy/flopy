@@ -543,7 +543,6 @@ class SwrFile(FlopyBinaryData):
         for irch in range(self.nrecord):
             klay = self.itemlist[irch]
             for k in range(klay):
-                # r[idx, 0] = irch
                 reaches[idx] = irch
                 idx += 1
 

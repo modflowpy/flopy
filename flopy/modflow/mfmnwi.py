@@ -314,10 +314,6 @@ class ModflowMnwi(Package):
         # -open file for writing
         f = open(self.fn_path, "w")
 
-        # header not supported
-        # # -write header
-        # f.write('{}\n'.format(self.heading))
-
         # dataset 1 - WEL1flag QSUMflag SYNDflag
         line = f"{self.wel1flag:10d}"
         line += f"{self.qsumflag:10d}"

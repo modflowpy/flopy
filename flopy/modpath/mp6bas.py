@@ -152,7 +152,6 @@ class Modpath6Bas(Package):
             for i in range(self.def_face_ct):
                 f_bas.write(f"{self.bud_label[i]:20s}\n")
                 f_bas.write(f"{self.def_iface[i]:2d}\n")
-        # f_bas.write('\n')
 
         # need to reset lc fmtin
         lc = self.laytyp
@@ -161,7 +160,6 @@ class Modpath6Bas(Package):
         # from modpath bas--uses keyword array types
         f_bas.write(self.ibound.get_file_entry())
         # from MT3D bas--uses integer array types
-        # f_bas.write(self.ibound.get_file_entry())
         f_bas.write(self.prsity.get_file_entry())
         f_bas.write(self.prsityCB.get_file_entry())
 

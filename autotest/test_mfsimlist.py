@@ -160,7 +160,4 @@ def test_mfsimlist_memory_all(mem_option, function_tmpdir):
             total = 0.0
             for key, value in mem_dict.items():
                 total += value["MEMORYSIZE"]
-            # total_ = mfsimlst.get_memory_usage(units=units)
-            # diff = total_ - total
-            # percent_diff = 100.0 * diff / total_
             assert total > 0.0, "memory is not greater than zero"

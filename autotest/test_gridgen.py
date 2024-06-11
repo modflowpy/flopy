@@ -829,7 +829,6 @@ def test_gridgen(function_tmpdir):
         )
         == 0
     ), msg
-    # ms_u.disu.write_file()
 
     # test mfusg without vertical pass-through
     gu.vertical_pass_through = False

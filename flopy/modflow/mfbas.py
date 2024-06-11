@@ -141,8 +141,6 @@ class ModflowBas(Package):
         self.ichflg = ichflg
         self.stoper = stoper
 
-        # self.ifrefm = ifrefm
-        # model.array_free_format = ifrefm
         model.free_format_input = ifrefm
 
         self.hnoflo = hnoflo

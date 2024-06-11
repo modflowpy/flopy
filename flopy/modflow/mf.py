@@ -147,9 +147,6 @@ class Modflow(BaseModel):
         # external option stuff
         self.array_free_format = True
         self.array_format = "modflow"
-        # self.external_fnames = []
-        # self.external_units = []
-        # self.external_binflag = []
 
         self.load_fail = False
         # the starting external data unit number
@@ -236,16 +233,6 @@ class Modflow(BaseModel):
             "{} stress period(s)".format(nlay, nrow, ncol, nper)
         )
         return s
-
-    #
-    # def next_ext_unit(self):
-    #     """
-    #     Function to encapsulate next_ext_unit attribute
-    #
-    #     """
-    #     next_unit = self.__next_ext_unit + 1
-    #     self.__next_ext_unit += 1
-    #     return next_unit
 
     @property
     def modeltime(self):

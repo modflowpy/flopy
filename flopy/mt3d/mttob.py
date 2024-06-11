@@ -70,8 +70,7 @@ class Mt3dTob(Package):
         f_tob.write(
             "%s%10d%10d%10d\n" % (self.outnam, inConcObs, inFluxObs, inSaveObs)
         )
-        # if (inConcObs):
-        #
+
         if inFluxObs:
             nFluxGroup = len(self.FluxGroups)
             f_tob.write(

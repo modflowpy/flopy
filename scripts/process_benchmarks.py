@@ -16,7 +16,6 @@ outdir = Path(sys.argv[2])
 json_paths = list(Path(indir).rglob("*.json"))
 
 print(f"Found {len(json_paths)} JSON files")
-# pprint([str(p) for p in json_paths])
 
 
 def get_benchmarks(paths):
@@ -37,8 +36,6 @@ def get_benchmarks(paths):
                 fullname = benchmark["fullname"]
                 included = [
                     "min",
-                    # 'max',
-                    # 'median',
                     "mean",
                 ]
                 for stat, value in benchmark["stats"].items():
@@ -175,6 +172,5 @@ for case_name, case in cases:
     stats = pd.DataFrame(case).groupby("stat")
     case_name = str(case_name).replace("/", "_").replace(":", "_")
 
-    # fig = matplotlib_plot(stats)
     fig = seaborn_plot(stats)
     plt.savefig(str(outdir / f"{case_name}.png"))

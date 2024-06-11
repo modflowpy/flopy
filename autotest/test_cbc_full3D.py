@@ -31,7 +31,6 @@ def load_mf2005(path, ws_out):
     )
 
     # change work space
-    # ws_out = os.path.join(baseDir, name)
     ml.change_model_ws(ws_out)
 
     # save all budget data to a cell-by cell file
