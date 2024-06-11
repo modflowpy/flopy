@@ -78,6 +78,12 @@ def test_formattedfile_read(function_tmpdir, example_data_path):
     h = FormattedHeadFile(mf2005_model_path / "test1tr.githds")
     assert isinstance(h, FormattedHeadFile)
 
+    # check number of records
+    assert len(h) == 1
+    with pytest.deprecated_call():
+        assert h.get_nrecords() == 1
+    assert not hasattr(h, "nrecords")
+
     times = h.get_times()
     assert np.isclose(times[0], 1577880064.0)
 
