@@ -21,6 +21,7 @@ def test_headfile_build_index(example_data_path):
     assert hds.ncol == 10
     assert hds.nlay == 1
     assert not hasattr(hds, "nper")
+    assert hds.text == "head"
     assert hds.totalbytes == 1613
     assert len(hds.recordarray) == 1
     assert type(hds.recordarray) == np.ndarray

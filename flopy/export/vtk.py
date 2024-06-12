@@ -1197,14 +1197,18 @@ class Vtk:
         kstpkpers = hds.get_kstpkper()
         self._totim = dict(zip(kstpkpers, times))
 
+<<<<<<< HEAD
         text = hds.text.decode()
 
         d = {}
+=======
+        d = dict()
+>>>>>>> fb14357a (refactor(datafile): ignore "text" parameter, add attributes from file)
         for ki in kstpkper:
             d[ki] = hds.get_data(ki)
 
         self.__transient_output_data = False
-        self.add_transient_array(d, name=text, masked_values=masked_values)
+        self.add_transient_array(d, name=hds.text, masked_values=masked_values)
         self.__transient_output_data = True
 
     def add_cell_budget(self, cbc, text=None, kstpkper=None, masked_values=None):
