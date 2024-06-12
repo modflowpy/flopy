@@ -3,6 +3,7 @@ import inspect
 import io
 import os
 import sys
+import warnings
 
 import numpy as np
 import pandas
@@ -1148,20 +1149,32 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
                     break
         return valid
 
-    def _try_pandas_read(self, fd_data_file):
+    def _try_pandas_read(self, fd_data_file, file_name):
         delimiter_list = ["\\s+", ","]
         for delimiter in delimiter_list:
             try:
-                # read flopy formatted data, entire file
-                data_frame = pandas.read_csv(
-                    fd_data_file,
-                    sep=delimiter,
-                    names=self._header_names,
-                    dtype=self._data_header,
-                    comment="#",
-                    index_col=False,
-                    skipinitialspace=True,
-                )
+                with warnings.catch_warnings(record=True) as warn:
+                    # read flopy formatted data, entire file
+                    data_frame = pandas.read_csv(
+                        fd_data_file,
+                        sep=delimiter,
+                        names=self._header_names,
+                        dtype=self._data_header,
+                        comment="#",
+                        index_col=False,
+                        skipinitialspace=True,
+                    )
+                    if (
+                        self._simulation_data.verbosity_level.value
+                        >= VerbosityLevel.normal.value
+                    ):
+                        for warning in warn:
+                            print(
+                                "Pandas warning occurred while loading data "
+                                f"{self.path}:"
+                            )
+                            print(f'    Data File: "{file_name}:"')
+                            print(f'    Pandas Message: "{warning.message}"')
             except BaseException:
                 fd_data_file.seek(0)
                 continue
@@ -1203,13 +1216,15 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
         )
         io_file_data = io.StringIO("\n".join(file_data))
         if external_file:
-            data_frame = self._try_pandas_read(io_file_data)
+            data_frame = self._try_pandas_read(io_file_data, fd_data_file.name)
             if data_frame is not None:
                 self._decrement_id_fields(data_frame)
         else:
             # get number of rows of data
             if len(file_data) > 0:
-                data_frame = self._try_pandas_read(io_file_data)
+                data_frame = self._try_pandas_read(
+                    io_file_data, fd_data_file.name
+                )
                 if data_frame is not None:
                     self._decrement_id_fields(data_frame)
                     return_val = [True, fd_data_file.readline()]
