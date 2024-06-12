@@ -1228,14 +1228,12 @@ class Vtk:
         kstpkpers = hds.get_kstpkper()
         self._totim = {ki: time for (ki, time) in zip(kstpkpers, times)}
 
-        text = hds.text.decode()
-
         d = dict()
         for ki in kstpkper:
             d[ki] = hds.get_data(ki)
 
         self.__transient_output_data = False
-        self.add_transient_array(d, name=text, masked_values=masked_values)
+        self.add_transient_array(d, name=hds.text, masked_values=masked_values)
         self.__transient_output_data = True
 
     def add_cell_budget(

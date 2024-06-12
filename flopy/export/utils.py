@@ -161,6 +161,9 @@ def _add_output_nc_variable(
     )
     array[:] = np.nan
 
+    if isinstance(text, bytes):
+        text = text.decode("ascii")
+
     if isinstance(out_obj, ZBNetOutput):
         a = np.asarray(out_obj.zone_array, dtype=np.float32)
         if mask_array3d is not None:
@@ -179,7 +182,7 @@ def _add_output_nc_variable(
                     else:
                         a = out_obj.get_data(totim=t)
                 except Exception as e:
-                    nme = var_name + text.decode().strip().lower()
+                    nme = var_name + text
                     estr = f"error getting data for {nme} at time {t}:{e!s}"
                     if logger:
                         logger.warn(estr)
@@ -191,7 +194,7 @@ def _add_output_nc_variable(
                 try:
                     array[i, :, :, :] = a.astype(np.float32)
                 except Exception as e:
-                    nme = var_name + text.decode().strip().lower()
+                    nme = var_name + text
                     estr = f"error assigning {nme} data to array for time {t}:{e!s}"
                     if logger:
                         logger.warn(estr)
@@ -209,7 +212,7 @@ def _add_output_nc_variable(
 
     if isinstance(nc, dict):
         if text:
-            var_name = text.decode().strip().lower()
+            var_name = text
         nc[var_name] = array
         return nc
 
@@ -219,7 +222,7 @@ def _add_output_nc_variable(
     precision_str = "f4"
 
     if text:
-        var_name = text.decode().strip().lower()
+        var_name = text
     attribs = {"long_name": var_name}
     attribs["coordinates"] = "time layer latitude longitude"
     attribs["min"] = mn
@@ -434,7 +437,7 @@ def output_helper(
                     times,
                     shape3d,
                     out_obj,
-                    "concentration",
+                    out_obj.text,
                     logger=logger,
                     mask_vals=mask_vals,
                     mask_array3d=mask_array3d,
@@ -446,7 +449,7 @@ def output_helper(
                     times,
                     shape3d,
                     out_obj,
-                    out_obj.text.decode(),
+                    out_obj.text,
                     logger=logger,
                     mask_vals=mask_vals,
                     mask_array3d=mask_array3d,
