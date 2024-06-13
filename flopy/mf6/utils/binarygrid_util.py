@@ -280,13 +280,10 @@ class MfGrdFile(FlopyBinaryData):
         """
         iverts = None
         if "IAVERT" in self._datadict:
-            if self._grid_type == "DISV":
-                nsize = self.ncpl
-            elif self._grid_type == "DISU":
-                nsize = self.nodes
             iverts = []
             iavert = self.iavert
             javert = self.javert
+            nsize = iavert.shape[0] - 1
             for ivert in range(nsize):
                 i0 = iavert[ivert]
                 i1 = iavert[ivert + 1]
