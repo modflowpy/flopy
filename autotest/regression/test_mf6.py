@@ -49,7 +49,7 @@ from flopy.mf6.data.mfdatastorage import DataStorageType
 from flopy.mf6.mfbase import FlopyException, MFDataException
 from flopy.mf6.utils import testutils
 from flopy.utils import CellBudgetFile
-from flopy.utils.compare import compare_concentrations, compare_heads
+from flopy.utils.compare import compare_heads
 from flopy.utils.datautil import PyListUtil
 
 pytestmark = pytest.mark.mf6
@@ -3399,7 +3399,7 @@ def test_create_tests_transport(function_tmpdir, example_data_path):
     pth = example_data_path / "mf6" / "create_tests" / test_ex_name
     expected_output_folder = pth / "expected_output"
     expected_head_file = expected_output_folder / "gwf_mst03.hds"
-    expected_conc_file = expected_output_folder / "gwt_mst03.unc"
+    expected_conc_file = expected_output_folder / "gwt_mst03.ucn"
 
     laytyp = [1]
     ss = [1.0e-10]
@@ -3615,12 +3615,13 @@ def test_create_tests_transport(function_tmpdir, example_data_path):
         outfile=outfile,
     )
     conc_new = function_tmpdir / "gwt_mst03.ucn"
-    assert compare_concentrations(
+    assert compare_heads(
         None,
         None,
         files1=expected_conc_file,
         files2=conc_new,
         outfile=outfile,
+        text="concentration",
     )
 
     # clean up
