@@ -171,10 +171,10 @@ class BinaryHeader(Header):
 
     Parameters
     ----------
-        bintype : str
-            Type of file being opened. Accepted values are 'head' and 'ucn'.
-        precision : str
-            Precision of floating point data in the file.
+    bintype : str, default None
+        Type of file being opened. Accepted values are 'head' and 'ucn'.
+    precision : str, default 'single'
+        Precision of floating point data in the file.
 
     """
 
@@ -313,32 +313,47 @@ def binaryread_struct(file, vartype, shape=(1,), charlen=16):
 
 def binaryread(file, vartype, shape=(1,), charlen=16):
     """
-    Read text, a scalar value, or an array of values from a binary file.
+    Read character bytes, scalar or array values from a binary file.
 
     Parameters
     ----------
     file : file object
         is an open file object
     vartype : type
-        is the return variable type: str, numpy.int32, numpy.float32,
-        or numpy.float64
+        is the return variable type: bytes, numpy.int32,
+        numpy.float32, or numpy.float64. Using str is deprecated since
+        bytes is preferred.
     shape : tuple, default (1,)
         is the shape of the returned array (shape(1, ) returns a single
         value) for example, shape = (nlay, nrow, ncol)
     charlen : int, default 16
-        is the length of the text string.  Note that string arrays
-        cannot be returned, only multi-character strings.  Shape has no
-        affect on strings.
+        is the length character bytes.  Note that arrays of bytes
+        cannot be returned, only multi-character bytes.  Shape has no
+        affect on bytes.
 
+    Raises
+    ------
+    EOFError
     """
 
-    # read a string variable of length charlen
     if vartype == str:
+        # handle a hang-over from python2
+        warnings.warn(
+            "vartype=str is deprecated; use vartype=bytes instead.",
+            DeprecationWarning,
+        )
+        vartype = bytes
+    if vartype == bytes:
+        # read character bytes of length charlen
         result = file.read(charlen)
+        if len(result) < charlen:
+            raise EOFError
     else:
         # find the number of values
         nval = np.prod(shape)
         result = np.fromfile(file, vartype, nval)
+        if result.size < nval:
+            raise EOFError
         if nval != 1:
             result = np.reshape(result, shape)
     return result
@@ -364,22 +379,17 @@ def get_headfile_precision(filename: Union[str, os.PathLike]):
     Parameters
     ----------
     filename : str or PathLike
-    Path of binary MODFLOW file to determine precision.
+        Path of binary MODFLOW file to determine precision.
 
     Returns
     -------
-    result : str
-    Result will be unknown, single, or double
+    str
+        Result will be unknown, single, or double
 
     """
 
     # Set default result if neither single or double works
     result = "unknown"
-
-    # Create string containing set of ascii characters
-    asciiset = " "
-    for i in range(33, 127):
-        asciiset += chr(i)
 
     # Open file, and check filesize to ensure this is not an empty file
     f = open(filename, "rb")
@@ -399,15 +409,12 @@ def get_headfile_precision(filename: Union[str, os.PathLike]):
         ("text", "S16"),
     ]
     hdr = binaryread(f, vartype)
-    text = hdr[0][4]
-    try:
-        text = text.decode()
-        for t in text:
-            if t.upper() not in asciiset:
-                raise Exception()
+    charbytes = list(hdr[0][4])
+    if min(charbytes) >= 32 and max(charbytes) <= 126:
+        # check if bytes are within conventional ASCII range
         result = "single"
         success = True
-    except:
+    else:
         success = False
 
     # next try double
@@ -421,14 +428,10 @@ def get_headfile_precision(filename: Union[str, os.PathLike]):
             ("text", "S16"),
         ]
         hdr = binaryread(f, vartype)
-        text = hdr[0][4]
-        try:
-            text = text.decode()
-            for t in text:
-                if t.upper() not in asciiset:
-                    raise Exception()
+        charbytes = list(hdr[0][4])
+        if min(charbytes) >= 32 and max(charbytes) <= 126:
             result = "double"
-        except:
+        else:
             f.close()
             raise ValueError(
                 f"Could not determine the precision of the headfile {filename}"
@@ -1171,7 +1174,7 @@ class CellBudgetFile:
 
         try:
             self._build_index()
-        except BudgetIndexError:
+        except (BudgetIndexError, EOFError):
             success = False
             self.__reset()
 
@@ -1201,20 +1204,14 @@ class CellBudgetFile:
         Build the ordered dictionary, which maps the header information
         to the position in the binary file.
         """
-        asciiset = " "
-        for i in range(33, 127):
-            asciiset += chr(i)
-
         # read first record
         header = self._get_header()
         nrow = header["nrow"]
         ncol = header["ncol"]
-        text = header["text"]
-        if isinstance(text, bytes):
-            text = text.decode()
+        text = header["text"].decode("ascii").strip()
         if nrow < 0 or ncol < 0:
             raise Exception("negative nrow, ncol")
-        if not text.endswith("FLOW-JA-FACE"):
+        if text != "FLOW-JA-FACE":
             self.nrow = nrow
             self.ncol = ncol
             self.nlay = np.abs(header["nlay"])
@@ -1242,17 +1239,14 @@ class CellBudgetFile:
                 self.kstpkper.append(kstpkper)
             if header["text"] not in self.textlist:
                 # check the precision of the file using text records
-                try:
-                    tlist = [header["text"], header["modelnam"]]
-                    for text in tlist:
-                        if isinstance(text, bytes):
-                            text = text.decode()
-                        for t in text:
-                            if t.upper() not in asciiset:
-                                raise Exception()
-
-                except:
-                    raise BudgetIndexError("Improper precision")
+                tlist = [header["text"], header["modelnam"]]
+                for text in tlist:
+                    if len(text) == 0:
+                        continue
+                    charbytes = list(text)
+                    if min(charbytes) < 32 or max(charbytes) > 126:
+                        # not in conventional ASCII range
+                        raise BudgetIndexError("Improper precision")
                 self.textlist.append(header["text"])
                 self.imethlist.append(header["imeth"])
             if header["paknam"] not in self.paknamlist_from:
@@ -1279,23 +1273,15 @@ class CellBudgetFile:
                     "paknam2",
                 ]:
                     s = header[itxt]
-                    if isinstance(s, bytes):
-                        s = s.decode()
                     print(f"{itxt}: {s}")
                 print("file position: ", ipos)
-                if (
-                    header["imeth"].item() != 5
-                    and header["imeth"].item() != 6
-                    and header["imeth"].item() != 7
-                ):
+                if header["imeth"].item() not in {5, 6, 7}:
                     print("")
 
             # set the nrow, ncol, and nlay if they have not been set
             if self.nrow == 0:
-                text = header["text"]
-                if isinstance(text, bytes):
-                    text = text.decode()
-                if not text.endswith("FLOW-JA-FACE"):
+                text = header["text"].decode("ascii").strip()
+                if text != "FLOW-JA-FACE":
                     self.nrow = header["nrow"]
                     self.ncol = header["ncol"]
                     self.nlay = np.abs(header["nlay"])
@@ -1350,51 +1336,47 @@ class CellBudgetFile:
         nrow = header["nrow"]
         ncol = header["ncol"]
         imeth = header["imeth"]
+        realtype_nbytes = self.realtype(1).nbytes
         if imeth == 0:
-            nbytes = nrow * ncol * nlay * self.realtype(1).nbytes
+            nbytes = nrow * ncol * nlay * realtype_nbytes
         elif imeth == 1:
-            nbytes = nrow * ncol * nlay * self.realtype(1).nbytes
+            nbytes = nrow * ncol * nlay * realtype_nbytes
         elif imeth == 2:
             nlist = binaryread(self.file, np.int32)[0]
-            nbytes = nlist * (np.int32(1).nbytes + self.realtype(1).nbytes)
+            nbytes = nlist * (4 + realtype_nbytes)
         elif imeth == 3:
-            nbytes = nrow * ncol * self.realtype(1).nbytes
-            nbytes += nrow * ncol * np.int32(1).nbytes
+            nbytes = nrow * ncol * realtype_nbytes + (nrow * ncol * 4)
         elif imeth == 4:
-            nbytes = nrow * ncol * self.realtype(1).nbytes
+            nbytes = nrow * ncol * realtype_nbytes
         elif imeth == 5:
             nauxp1 = binaryread(self.file, np.int32)[0]
             naux = nauxp1 - 1
-
-            for i in range(naux):
-                temp = binaryread(self.file, str, charlen=16)
+            naux_nbytes = naux * 16
+            if naux_nbytes:
+                check = self.file.seek(naux_nbytes, 1)
+                if check < naux_nbytes:
+                    raise EOFError
             nlist = binaryread(self.file, np.int32)[0]
             if self.verbose:
                 print("naux: ", naux)
                 print("nlist: ", nlist)
                 print("")
-            nbytes = nlist * (
-                np.int32(1).nbytes
-                + self.realtype(1).nbytes
-                + naux * self.realtype(1).nbytes
-            )
+            nbytes = nlist * (4 + realtype_nbytes + naux * realtype_nbytes)
         elif imeth == 6:
             # read rest of list data
             nauxp1 = binaryread(self.file, np.int32)[0]
             naux = nauxp1 - 1
-
-            for i in range(naux):
-                temp = binaryread(self.file, str, charlen=16)
+            naux_nbytes = naux * 16
+            if naux_nbytes:
+                check = self.file.seek(naux_nbytes, 1)
+                if check < naux_nbytes:
+                    raise EOFError
             nlist = binaryread(self.file, np.int32)[0]
             if self.verbose:
                 print("naux: ", naux)
                 print("nlist: ", nlist)
                 print("")
-            nbytes = nlist * (
-                np.int32(1).nbytes * 2
-                + self.realtype(1).nbytes
-                + naux * self.realtype(1).nbytes
-            )
+            nbytes = nlist * (4 * 2 + realtype_nbytes + naux * realtype_nbytes)
         else:
             raise Exception(f"invalid method code {imeth}")
         if nbytes != 0:
@@ -1418,10 +1400,10 @@ class CellBudgetFile:
             for name in temp.dtype.names:
                 header2[name] = temp[name]
             if header2["imeth"].item() == 6:
-                header2["modelnam"] = binaryread(self.file, str, charlen=16)
-                header2["paknam"] = binaryread(self.file, str, charlen=16)
-                header2["modelnam2"] = binaryread(self.file, str, charlen=16)
-                header2["paknam2"] = binaryread(self.file, str, charlen=16)
+                header2["modelnam"] = binaryread(self.file, bytes, charlen=16)
+                header2["paknam"] = binaryread(self.file, bytes, charlen=16)
+                header2["modelnam2"] = binaryread(self.file, bytes, charlen=16)
+                header2["paknam2"] = binaryread(self.file, bytes, charlen=16)
         else:
             header2 = np.array(
                 [(0, 0.0, 0.0, 0.0, "", "", "", "")], dtype=self.header2_dtype
@@ -1951,9 +1933,7 @@ class CellBudgetFile:
         self.file.seek(ipos, 0)
         imeth = header["imeth"][0]
 
-        t = header["text"][0]
-        if isinstance(t, bytes):
-            t = t.decode("utf-8")
+        t = header["text"][0].decode("ascii")
         s = f"Returning {t.strip()} as "
 
         nlay = abs(header["nlay"][0])
@@ -2039,10 +2019,8 @@ class CellBudgetFile:
             naux = nauxp1 - 1
             l = [("node", np.int32), ("q", self.realtype)]
             for i in range(naux):
-                auxname = binaryread(self.file, str, charlen=16)
-                if not isinstance(auxname, str):
-                    auxname = auxname.decode()
-                l.append((auxname.strip(), self.realtype))
+                auxname = binaryread(self.file, bytes, charlen=16)
+                l.append((auxname.decode("ascii").strip(), self.realtype))
             dtype = np.dtype(l)
             nlist = binaryread(self.file, np.int32)[0]
             data = binaryread(self.file, dtype, shape=(nlist,))
@@ -2064,10 +2042,8 @@ class CellBudgetFile:
             naux = nauxp1 - 1
             l = [("node", np.int32), ("node2", np.int32), ("q", self.realtype)]
             for i in range(naux):
-                auxname = binaryread(self.file, str, charlen=16)
-                if not isinstance(auxname, str):
-                    auxname = auxname.decode()
-                l.append((auxname.strip(), self.realtype))
+                auxname = binaryread(self.file, bytes, charlen=16)
+                l.append((auxname.decode("ascii").strip(), self.realtype))
             dtype = np.dtype(l)
             nlist = binaryread(self.file, np.int32)[0]
             data = binaryread(self.file, dtype, shape=(nlist,))

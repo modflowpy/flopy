@@ -53,10 +53,28 @@ def test_binaryread(example_data_path):
         np.testing.assert_array_equal(res, np.array([1, 1], np.int32))
         res = flopy.utils.binaryfile.binaryread(fp, np.float32, 2)
         np.testing.assert_array_equal(res, np.array([10, 10], np.float32))
-        res = flopy.utils.binaryfile.binaryread(fp, str)
+        res = flopy.utils.binaryfile.binaryread(fp, bytes)
         assert res == b"            HEAD"
         res = flopy.utils.binaryfile.binaryread(fp, np.int32)
         assert res == 20
+
+
+def test_binaryread_misc(tmp_path):
+    # Check deprecated warning
+    file = tmp_path / "data.file"
+    file.write_bytes(b" data")
+    with file.open("rb") as fp:
+        with pytest.deprecated_call(match="vartype=str is deprecated"):
+            res = flopy.utils.binaryfile.binaryread(fp, str, charlen=5)
+        assert res == b" data"
+    # Test exceptions with a small file with 1 byte
+    file.write_bytes(b"\x00")
+    with file.open("rb") as fp:
+        with pytest.raises(EOFError):
+            flopy.utils.binaryfile.binaryread(fp, bytes, charlen=6)
+    with file.open("rb") as fp:
+        with pytest.raises(EOFError):
+            flopy.utils.binaryfile.binaryread(fp, np.int32)
 
 
 def test_deprecated_binaryread_struct(example_data_path):

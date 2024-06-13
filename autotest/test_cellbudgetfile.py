@@ -285,6 +285,18 @@ def test_cellbudgetfile_build_index_mf6(example_data_path):
     )
 
 
+def test_cellbudgetfile_imeth_5(example_data_path):
+    pth = example_data_path / "preserve_unitnums/testsfr2.ghb.cbc"
+    with CellBudgetFile(pth) as cbc:
+        pass
+    # check a few components
+    pd.testing.assert_index_equal(
+        cbc.headers.index, pd.Index(np.arange(12, dtype=np.int64) * 156 + 64)
+    )
+    assert cbc.headers.text.unique().tolist() == ["HEAD DEP BOUNDS"]
+    assert cbc.headers.imeth.unique().tolist() == [5]
+
+
 @pytest.fixture
 def zonbud_model_path(example_data_path):
     return example_data_path / "zonbud_examples"
