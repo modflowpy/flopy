@@ -470,6 +470,10 @@ class BinaryLayerFile(LayerFile):
         header = self._get_header()
         self.nrow = header["nrow"]
         self.ncol = header["ncol"]
+        self.text_bytes = header["text"]
+        self.text = (
+            self.text_bytes.decode("ascii").strip().lower().replace(" ", "_")
+        )
         if header["ilay"] > self.nlay:
             self.nlay = header["ilay"]
 
@@ -488,8 +492,12 @@ class BinaryLayerFile(LayerFile):
         while ipos < self.totalbytes:
             header = self._get_header()
             self.recordarray.append(header)
-            if self.text.upper() not in header["text"]:
-                continue
+            if header["text"] != self.text_bytes:
+                warnings.warn(
+                    "inconsistent text headers changing from "
+                    f"{self.text_bytes!r} to {header['text']!r}",
+                    UserWarning,
+                )
             if ipos == 0:
                 self.times.append(header["totim"])
                 self.kstpkper.append((header["kstp"], header["kper"]))
@@ -501,6 +509,8 @@ class BinaryLayerFile(LayerFile):
             ipos = self.file.tell()
             self.iposarray.append(ipos)
             databytes = self.get_databytes(header)
+            if ipos + databytes > self.totalbytes:
+                raise EOFError(f"attempting to seek {ipos + databytes}")
             self.file.seek(databytes, 1)
             ipos = self.file.tell()
 
@@ -617,14 +627,13 @@ class HeadFile(BinaryLayerFile):
     ----------
     filename : str or PathLike
         Path of the head file.
-    text : string
-        Name of the text string in the head file. Default is 'head'.
-    precision : string
-        Precision of floating point head data in the value. Accepted
-        values are 'auto', 'single' or 'double'. Default is 'auto',
-        which enables automatic detection of precision.
-    verbose : bool
-        Toggle logging output. Default is False.
+    text : str
+        Ignored.
+    precision : {'auto', 'single', 'double'}
+        Precision of floating point head data in the value. Default
+        'auto' enables automatic detection of precision.
+    verbose : bool, default False
+        Toggle logging output.
 
     Examples
     --------
@@ -634,7 +643,7 @@ class HeadFile(BinaryLayerFile):
     >>> hdobj.list_records()
     >>> rec = hdobj.get_data(kstpkper=(0, 49))
 
-    >>> ddnobj = bf.HeadFile('model.ddn', text='drawdown', precision='single')
+    >>> ddnobj = bf.HeadFile('model.ddn', precision='single')
     >>> ddnobj.list_records()
     >>> rec = ddnobj.get_data(totim=100.)
 
@@ -643,12 +652,11 @@ class HeadFile(BinaryLayerFile):
     def __init__(
         self,
         filename: Union[str, os.PathLike],
-        text="head",
+        text="head",  # noqa ARG002
         precision="auto",
         verbose=False,
         **kwargs,
     ):
-        self.text = text.encode()
         if precision == "auto":
             precision = get_headfile_precision(filename)
             if precision == "unknown":
@@ -749,14 +757,15 @@ class UcnFile(BinaryLayerFile):
 
     Parameters
     ----------
-    filename : string
-        Name of the concentration file
-    text : string
-        Name of the text string in the ucn file.  Default is 'CONCENTRATION'
-    precision : string
-        'auto', 'single' or 'double'.  Default is 'auto'.
-    verbose : bool
-        Write information to the screen.  Default is False.
+    filename : str or PathLike
+        Path of the concentration file.
+    text : str
+        Ignored.
+    precision : {'auto', 'single', 'double'}
+        Precision of floating point values. Default 'auto' enables automatic
+        detection of precision.
+    verbose : bool, default False
+        Write information to the screen.
 
     Attributes
     ----------
@@ -792,12 +801,11 @@ class UcnFile(BinaryLayerFile):
     def __init__(
         self,
         filename,
-        text="concentration",
+        text="concentration",  # noqa ARG002
         precision="auto",
         verbose=False,
         **kwargs,
     ):
-        self.text = text.encode()
         if precision == "auto":
             precision = get_headfile_precision(filename)
         if precision == "unknown":
@@ -821,14 +829,13 @@ class HeadUFile(BinaryLayerFile):
     ----------
     filename : str or PathLike
         Path of the head file
-    text : string
-        Name of the text string in the head file. Default is 'headu'.
-    precision : string
-        Precision of the floating point head data in the file. Accepted
-        values are 'auto', 'single' or 'double'. Default is 'auto', which
-        enables precision to be automatically detected.
-    verbose : bool
-        Toggle logging output. Default is False.
+    text : str
+        Ignored.
+    precision : {'auto', 'single', 'double'}
+        Precision of floating point values. Default 'auto' enables automatic
+        detection of precision.
+    verbose : bool, default False
+        Toggle logging output.
 
     Notes
     -----
@@ -859,7 +866,7 @@ class HeadUFile(BinaryLayerFile):
     def __init__(
         self,
         filename: Union[str, os.PathLike],
-        text="headu",
+        text="headu",  # noqa ARG002
         precision="auto",
         verbose=False,
         **kwargs,
@@ -867,7 +874,6 @@ class HeadUFile(BinaryLayerFile):
         """
         Class constructor
         """
-        self.text = text.encode()
         if precision == "auto":
             precision = get_headfile_precision(filename)
             if precision == "unknown":
@@ -990,11 +996,11 @@ class CellBudgetFile:
     ----------
     filename : str or PathLike
         Path of the cell budget file.
-    precision : string
-        Precision of floating point budget data in the file. Accepted
-        values are 'single' or 'double'. Default is 'single'.
-    verbose : bool
-        Toggle logging output. Default is False.
+    precision : {'auto', 'single', 'double'}
+        Precision of floating point values. Default 'auto' enables automatic
+        detection of precision.
+    verbose : bool, default False
+        Toggle logging output.
 
     Examples
     --------
@@ -2217,7 +2223,6 @@ class CellBudgetFile:
 
         Parameters
         ----------
-
         filename : str or PathLike, optional
             Path of the new reversed binary cell budget file to create.
         """

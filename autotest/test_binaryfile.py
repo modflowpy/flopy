@@ -3,6 +3,7 @@
 See also test_cellbudgetfile.py for similar tests.
 """
 
+import warnings
 from itertools import repeat
 
 import numpy as np
@@ -104,6 +105,8 @@ def test_headfile_build_index(example_data_path):
     assert hds.ncol == 20
     assert hds.nlay == 3
     assert not hasattr(hds, "nper")
+    assert hds.text == "head"
+    assert hds.text_bytes == b"HEAD".rjust(16)
     assert hds.totalbytes == 10_676_004
     assert len(hds.recordarray) == 3291
     assert type(hds.recordarray) == np.ndarray
@@ -150,7 +153,80 @@ def test_headfile_build_index(example_data_path):
     )
 
 
-def test_concentration_build_index(example_data_path):
+@pytest.mark.parametrize(
+    "pth, expected",
+    [
+        pytest.param(
+            "mf6-freyberg/freyberg.hds",
+            {
+                "precision": "double",
+                "nlay, nrow, ncol": (1, 40, 20),
+                "text": "head",
+                "text_bytes": b"HEAD".ljust(16),
+                "len(obj)": 1,
+            },
+            id="freyberg.hds",
+        ),
+        pytest.param(
+            "mf6/create_tests/test_transport/expected_output/gwt_mst03.ucn",
+            {
+                "precision": "double",
+                "nlay, nrow, ncol": (1, 1, 1),
+                "text": "concentration",
+                "text_bytes": b"CONCENTRATION".ljust(16),
+                "len(obj)": 28,
+            },
+            id="gwt_mst03.ucn",
+        ),
+        pytest.param(
+            "mfusg_test/03A_conduit_unconfined/output/ex3A.cln.hds",
+            {
+                "precision": "single",
+                "nlay, nrow, ncol": (1, 1, 2),
+                "text": "cln_heads",
+                "text_bytes": b"CLN HEADS".rjust(16),
+                "len(obj)": 1,
+            },
+            id="ex3A.cln.hds",
+        ),
+        pytest.param(
+            "mfusg_test/03A_conduit_unconfined/output/ex3A.ddn",
+            {
+                "precision": "single",
+                "nlay, nrow, ncol": (2, 100, 100),
+                "text": "drawdown",
+                "text_bytes": b"DRAWDOWN".rjust(16),
+                "len(obj)": 2,
+            },
+            id="ex3A.ddn",
+        ),
+    ],
+)
+def test_headfile_examples(example_data_path, pth, expected):
+    with HeadFile(example_data_path / pth) as obj:
+        assert obj.precision == expected["precision"]
+        assert (obj.nlay, obj.nrow, obj.ncol) == expected["nlay, nrow, ncol"]
+        assert obj.text == expected["text"]
+        assert obj.text_bytes == expected["text_bytes"]
+        assert len(obj) == expected["len(obj)"]
+
+
+@pytest.mark.parametrize(
+    "pth",
+    [
+        "mt3d_test/mf96mt3d/P01/case1b/MT3D001.UCN",
+        "unstructured/headu.githds",
+    ],
+)
+def test_not_headfile(example_data_path, pth):
+    # These examples pass get_headfile_precision, but are not HeadFiles
+    with pytest.raises(ValueError, match="cannot read file with HeadFile"):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            HeadFile(example_data_path / pth)
+
+
+def test_ucnfile_build_index(example_data_path):
     # test low-level BinaryLayerFile._build_index() method with UCN file
     pth = example_data_path / "mt3d_test/mf2005mt3d/P07/MT3D001.UCN"
     with UcnFile(pth) as ucn:
@@ -159,6 +235,8 @@ def test_concentration_build_index(example_data_path):
     assert ucn.ncol == 21
     assert ucn.nlay == 8
     assert not hasattr(ucn, "nper")
+    assert ucn.text == "concentration"
+    assert ucn.text_bytes == b"CONCENTRATION".ljust(16)
     assert ucn.totalbytes == 10_432
     assert len(ucn.recordarray) == 8
     assert type(ucn.recordarray) == np.ndarray
@@ -296,6 +374,8 @@ def test_headu_file_data(function_tmpdir, example_data_path):
     headobj = HeadUFile(fname)
     assert isinstance(headobj, HeadUFile)
     assert headobj.nlay == 3
+    assert headobj.text == "headu"
+    assert headobj.text_bytes == b"HEADU".rjust(16)
 
     # ensure recordarray is has correct data
     ra = headobj.recordarray
