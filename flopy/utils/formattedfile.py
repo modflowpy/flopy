@@ -361,7 +361,7 @@ class FormattedHeadFile(FormattedLayerFile):
 
     >>> import flopy.utils.formattedfile as ff
     >>> hdobj = ff.FormattedHeadFile('model.fhd', precision='single')
-    >>> hdobj.list_records()
+    >>> hdobj.headers
     >>> rec = hdobj.get_data(kstpkper=(0, 49))
     >>> rec2 = ddnobj.get_data(totim=100.)
 

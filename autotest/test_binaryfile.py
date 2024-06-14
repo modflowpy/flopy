@@ -131,6 +131,8 @@ def test_headfile_build_index(example_data_path):
     assert hds.kstpkper == [(1, kper + 1) for kper in range(1097)]
     np.testing.assert_array_equal(hds.iposarray, np.arange(3291) * 3244 + 44)
     assert hds.iposarray.dtype == np.int64
+    with pytest.deprecated_call(match="use headers instead"):
+        assert hds.list_records() is None
     # check first and last row of data frame
     pd.testing.assert_frame_equal(
         hds.headers.iloc[[0, -1]],
@@ -186,6 +188,8 @@ def test_concentration_build_index(example_data_path):
     assert ucn.kstpkper == [(1, 1)]
     np.testing.assert_array_equal(ucn.iposarray, np.arange(8) * 1304 + 44)
     assert ucn.iposarray.dtype == np.int64
+    with pytest.deprecated_call(match="use headers instead"):
+        assert ucn.list_records() is None
     # check first and last row of data frame
     pd.testing.assert_frame_equal(
         ucn.headers.iloc[[0, -1]],

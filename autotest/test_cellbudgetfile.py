@@ -400,10 +400,14 @@ def test_cellbudgetfile_position(function_tmpdir, zonbud_model_path):
 
     v2 = CellBudgetFile(opth, verbose=True)
 
-    try:
-        v2.list_records()
-    except:
-        assert False, f"could not list records on {opth}"
+    with pytest.deprecated_call(match="use headers instead"):
+        assert v2.list_records() is None
+    with pytest.deprecated_call(match=r"drop_duplicates\(\) instead"):
+        assert v2.list_unique_records() is None
+    with pytest.deprecated_call(match=r"drop_duplicates\(\) instead"):
+        assert v2.list_unique_packages(True) is None
+    with pytest.deprecated_call(match=r"drop_duplicates\(\) instead"):
+        assert v2.list_unique_packages(False) is None
 
     names = v2.get_unique_record_names(decode=True)
 
