@@ -238,7 +238,6 @@ fpth = path / "UZFtest2.uzfcb2.bin"
 avail = os.path.isfile(fpth)
 if avail:
     uzfbdobjct = flopy.utils.CellBudgetFile(fpth)
-    uzfbdobjct.list_records()
 else:
     print(f'"{fpth}" is not available')
 

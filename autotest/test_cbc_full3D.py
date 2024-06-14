@@ -86,7 +86,7 @@ def cbc_eval_size(cbcobj, nnodes, shape3d):
 def cbc_eval_data(cbcobj, shape3d):
     cbc_pth = cbcobj.filename
     print(f"{cbc_pth}:\n")
-    cbcobj.list_unique_records()
+    print(cbcobj.headers[["text", "imeth"]].drop_duplicates())
 
     names = cbcobj.get_unique_record_names(decode=True)
     times = cbcobj.get_times()

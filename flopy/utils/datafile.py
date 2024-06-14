@@ -430,9 +430,14 @@ class LayerFile:
     def list_records(self):
         """
         Print a list of all of the records in the file
-        obj.list_records()
 
+        .. deprecated:: 3.8.0
+           Use :attr:`headers` instead.
         """
+        warnings.warn(
+            "list_records() is deprecated; use headers instead.",
+            DeprecationWarning,
+        )
         for header in self.recordarray:
             print(header)
         return

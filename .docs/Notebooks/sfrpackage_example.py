@@ -33,8 +33,6 @@
 import glob
 import os
 import shutil
-
-# +
 import sys
 from pprint import pformat
 from tempfile import TemporaryDirectory
@@ -237,7 +235,7 @@ plt.legend()
 
 bpth = os.path.join(path, "test1ss.cbc")
 cbbobj = bf.CellBudgetFile(bpth)
-cbbobj.list_records()
+cbbobj.headers
 
 sfrleak = cbbobj.get_data(text="  STREAM LEAKAGE")[0]
 sfrleak[sfrleak == 0] = np.nan  # remove zero values

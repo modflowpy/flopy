@@ -44,6 +44,8 @@ def test_headfile_build_index(example_data_path):
     assert hds.kstpkper == [(50, 1)]
     np.testing.assert_array_equal(hds.iposarray, [98])
     assert hds.iposarray.dtype == np.int64
+    with pytest.deprecated_call(match="use headers instead"):
+        assert hds.list_records() is None
     pd.testing.assert_frame_equal(
         hds.headers,
         pd.DataFrame(

@@ -104,8 +104,9 @@ ax.legend()
 # +
 cbb_file = os.path.join(mf.model_ws, "ex3.clncbb")
 cbb = flopy.utils.CellBudgetFile(cbb_file)
-# cbb.list_records()
+cbb.headers
 
+# +
 simflow = cbb.get_data(kstpkper=(0, 0), text="GWF")[0]
 for i in range(nper - 1):
     simflow = np.append(
@@ -297,8 +298,9 @@ ax.legend()
 # +
 cbb_file = os.path.join(mf.model_ws, f"{modelname}.clncb")
 cbb = flopy.utils.CellBudgetFile(cbb_file)
-# cbb.list_records()
+cbb.headers
 
+# +
 simflow = cbb.get_data(kstpkper=(0, 0), text="GWF")[0]
 for i in range(nper - 1):
     simflow = np.append(
@@ -392,8 +394,9 @@ ax.set_title("MODFLOW USG Ex3b Conduit Unconfined")
 # +
 cbb_file = os.path.join(mf.model_ws, f"{modelname}.clncb")
 cbb = flopy.utils.CellBudgetFile(cbb_file)
-# cbb.list_records()
+cbb.headers
 
+# +
 simflow = cbb.get_data(kstpkper=(0, 0), text="GWF")[0]
 for i in range(nper - 1):
     simflow = np.append(
@@ -490,8 +493,9 @@ ax.legend()
 # +
 cbb_file = os.path.join(mf.model_ws, f"{modelname}.clncb")
 cbb = flopy.utils.CellBudgetFile(cbb_file)
-# cbb.list_records()
+cbb.headers
 
+# +
 simflow = cbb.get_data(kstpkper=(0, 0), text="GWF")[0]
 for i in range(nper - 1):
     simflow = np.append(
@@ -575,8 +579,9 @@ head_case4 = np.squeeze(simhead)
 # +
 cbb_file = os.path.join(mf.model_ws, f"{modelname}.clncb")
 cbb = flopy.utils.CellBudgetFile(cbb_file)
-# cbb.list_records()
+cbb.headers
 
+# +
 simflow = cbb.get_data(kstpkper=(0, 0), text="GWF")[0]
 for i in range(nper - 1):
     simflow = np.append(

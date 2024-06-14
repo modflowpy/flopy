@@ -20,9 +20,8 @@
 
 # ### Setup the Notebook Environment
 
-import os
-
 # +
+import os
 import sys
 from pprint import pformat
 from tempfile import TemporaryDirectory
@@ -272,8 +271,9 @@ bgf._datadict
 # read the cell budget file
 fname = os.path.join(workspace, f"{name}.cbb")
 cbb = flopy.utils.CellBudgetFile(fname, precision="double")
-cbb.list_records()
+cbb.headers.T
 
+# +
 flowja = cbb.get_data(text="FLOW-JA-FACE")[0][0, 0, :]
 chdflow = cbb.get_data(text="CHD")[0]
 # -

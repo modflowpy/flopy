@@ -3687,7 +3687,6 @@ def test001a_tharmonic(function_tmpdir, example_data_path):
 
     # get expected results
     budget_obj = CellBudgetFile(expected_cbc_file_a, precision="auto")
-    budget_obj.list_records()
     budget_frf_valid = np.array(
         budget_obj.get_data(text="    FLOW JA FACE", full3D=True)
     )
@@ -4464,7 +4463,6 @@ def test006_2models_mvr(function_tmpdir, example_data_path):
         expected_cbc_file_a,
         precision="double",
     )
-    budget_obj.list_records()
 
     # test getting models
     model_dict = sim.model_dict

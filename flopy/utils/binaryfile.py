@@ -631,11 +631,11 @@ class HeadFile(BinaryLayerFile):
 
     >>> import flopy.utils.binaryfile as bf
     >>> hdobj = bf.HeadFile('model.hds', precision='single')
-    >>> hdobj.list_records()
+    >>> hdobj.headers
     >>> rec = hdobj.get_data(kstpkper=(0, 49))
 
     >>> ddnobj = bf.HeadFile('model.ddn', text='drawdown', precision='single')
-    >>> ddnobj.list_records()
+    >>> ddnobj.headers
     >>> rec = ddnobj.get_data(totim=100.)
 
     """
@@ -784,7 +784,7 @@ class UcnFile(BinaryLayerFile):
 
     >>> import flopy.utils.binaryfile as bf
     >>> ucnobj = bf.UcnFile('MT3D001.UCN', precision='single')
-    >>> ucnobj.list_records()
+    >>> ucnobj.headers
     >>> rec = ucnobj.get_data(kstpkper=(0, 0))
 
     """
@@ -851,7 +851,7 @@ class HeadUFile(BinaryLayerFile):
 
     >>> import flopy.utils.binaryfile as bf
     >>> hdobj = bf.HeadUFile('model.hds')
-    >>> hdobj.list_records()
+    >>> hdobj.headers
     >>> usgheads = hdobj.get_data(kstpkper=(0, 49))
 
     """
@@ -1001,7 +1001,7 @@ class CellBudgetFile:
 
     >>> import flopy.utils.binaryfile as bf
     >>> cbb = bf.CellBudgetFile('mymodel.cbb')
-    >>> cbb.list_records()
+    >>> cbb.headers
     >>> rec = cbb.get_data(kstpkper=(0,0), text='RIVER LEAKAGE')
 
     """
@@ -1458,7 +1458,14 @@ class CellBudgetFile:
     def list_records(self):
         """
         Print a list of all of the records in the file
+
+        .. deprecated:: 3.8.0
+           Use :attr:`headers` instead.
         """
+        warnings.warn(
+            "list_records() is deprecated; use headers instead.",
+            DeprecationWarning,
+        )
         for rec in self.recordarray:
             if isinstance(rec, bytes):
                 rec = rec.decode()
@@ -1467,7 +1474,15 @@ class CellBudgetFile:
     def list_unique_records(self):
         """
         Print a list of unique record names
+
+        .. deprecated:: 3.8.0
+           Use `headers[["text", "imeth"]].drop_duplicates()` instead.
         """
+        warnings.warn(
+            "list_unique_records() is deprecated; use "
+            'headers[["text", "imeth"]].drop_duplicates() instead.',
+            DeprecationWarning,
+        )
         print("RECORD           IMETH")
         print(22 * "-")
         for rec, imeth in zip(self.textlist, self.imethlist):
@@ -1478,7 +1493,17 @@ class CellBudgetFile:
     def list_unique_packages(self, to=False):
         """
         Print a list of unique package names
+
+        .. deprecated:: 3.8.0
+           Use `headers.paknam.drop_duplicates()` or
+           `headers.paknam2.drop_duplicates()` instead.
         """
+        warnings.warn(
+            "list_unique_packages() is deprecated; use "
+            "headers.paknam.drop_duplicates() or "
+            "headers.paknam2.drop_duplicates() instead",
+            DeprecationWarning,
+        )
         for rec in self._unique_package_names(to):
             if isinstance(rec, bytes):
                 rec = rec.decode()
