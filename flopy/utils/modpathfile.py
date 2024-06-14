@@ -4,6 +4,7 @@ Support for MODPATH output files.
 
 import itertools
 import os
+from abc import ABC, abstractmethod
 from typing import List, Optional, Tuple, Union
 
 import numpy as np
@@ -14,7 +15,7 @@ from flopy.utils.particletrackfile import ParticleTrackFile
 from ..utils.flopy_io import loadtxt
 
 
-class ModpathFile(ParticleTrackFile):
+class ModpathFile(ParticleTrackFile, ABC):
     """Provides MODPATH output file support."""
 
     def __init__(
@@ -29,6 +30,51 @@ class ModpathFile(ParticleTrackFile):
             self.version,
             self.direction,
         ) = self.parse(filename, self.output_type)
+
+    def intersect(
+        self, cells, to_recarray
+    ) -> Union[List[np.recarray], np.recarray]:
+        if self.version < 7:
+            try:
+                raslice = self._data[["k", "i", "j"]]
+            except (KeyError, ValueError):
+                raise KeyError(
+                    "could not extract 'k', 'i', and 'j' keys "
+                    "from {} data".format(self.output_type.lower())
+                )
+        else:
+            try:
+                raslice = self._data[["node"]]
+            except (KeyError, ValueError):
+                msg = "could not extract 'node' key from {} data".format(
+                    self.output_type.lower()
+                )
+                raise KeyError(msg)
+            if isinstance(cells, (list, tuple)):
+                allint = all(isinstance(el, int) for el in cells)
+                # convert to a list of tuples
+                if allint:
+                    t = []
+                    for el in cells:
+                        t.append((el,))
+                        cells = t
+
+        cells = np.array(cells, dtype=raslice.dtype)
+        inds = np.in1d(raslice, cells)
+        epdest = self._data[inds].copy().view(np.recarray)
+
+        if to_recarray:
+            # use particle ids to get the rest of the paths
+            inds = np.in1d(self._data["particleid"], epdest.particleid)
+            series = self._data[inds].copy()
+            series.sort(order=["particleid", "time"])
+            series = series.view(np.recarray)
+        else:
+            # collect unique particleids in selection
+            partids = np.unique(epdest["particleid"])
+            series = [self.get_data(partid) for partid in partids]
+
+        return series
 
     @staticmethod
     def parse(
@@ -94,51 +140,6 @@ class ModpathFile(ParticleTrackFile):
                     break
 
         return modpath, compact, skiprows, version, direction
-
-    def intersect(
-        self, cells, to_recarray
-    ) -> Union[List[np.recarray], np.recarray]:
-        if self.version < 7:
-            try:
-                raslice = self._data[["k", "i", "j"]]
-            except (KeyError, ValueError):
-                raise KeyError(
-                    "could not extract 'k', 'i', and 'j' keys "
-                    "from {} data".format(self.output_type.lower())
-                )
-        else:
-            try:
-                raslice = self._data[["node"]]
-            except (KeyError, ValueError):
-                msg = "could not extract 'node' key from {} data".format(
-                    self.output_type.lower()
-                )
-                raise KeyError(msg)
-            if isinstance(cells, (list, tuple)):
-                allint = all(isinstance(el, int) for el in cells)
-                # convert to a list of tuples
-                if allint:
-                    t = []
-                    for el in cells:
-                        t.append((el,))
-                        cells = t
-
-        cells = np.array(cells, dtype=raslice.dtype)
-        inds = np.in1d(raslice, cells)
-        epdest = self._data[inds].copy().view(np.recarray)
-
-        if to_recarray:
-            # use particle ids to get the rest of the paths
-            inds = np.in1d(self._data["particleid"], epdest.particleid)
-            series = self._data[inds].copy()
-            series.sort(order=["particleid", "time"])
-            series = series.view(np.recarray)
-        else:
-            # collect unique particleids in selection
-            partids = np.unique(epdest["particleid"])
-            series = [self.get_data(partid) for partid in partids]
-
-        return series
 
 
 class PathlineFile(ModpathFile):
@@ -220,6 +221,10 @@ class PathlineFile(ModpathFile):
         ),
     }
 
+    @property
+    def dtype(self):
+        return self._dtype
+
     kijnames = [
         "k",
         "i",
@@ -236,7 +241,7 @@ class PathlineFile(ModpathFile):
         self, filename: Union[str, os.PathLike], verbose: bool = False
     ):
         super().__init__(filename, verbose=verbose)
-        self.dtype, self._data = self._load()
+        self._dtype, self._data = self._load()
         self.nid = np.unique(self._data["particleid"])
 
     def _load(self) -> Tuple[np.dtype, np.ndarray]:
@@ -540,6 +545,10 @@ class EndpointFile(ModpathFile):
         ),
     }
 
+    @property
+    def dtype(self):
+        return self._dtype
+
     kijnames = [
         "k0",
         "i0",
@@ -560,7 +569,7 @@ class EndpointFile(ModpathFile):
         self, filename: Union[str, os.PathLike], verbose: bool = False
     ):
         super().__init__(filename, verbose)
-        self.dtype, self._data = self._load()
+        self._dtype, self._data = self._load()
         self.nid = np.unique(self._data["particleid"])
 
     def _load(self) -> Tuple[np.dtype, np.ndarray]:
@@ -855,6 +864,10 @@ class TimeseriesFile(ModpathFile):
         ),
     }
 
+    @property
+    def dtype(self):
+        return self._dtype
+
     kijnames = [
         "k",
         "i",
@@ -870,7 +883,7 @@ class TimeseriesFile(ModpathFile):
 
     def __init__(self, filename, verbose=False):
         super().__init__(filename, verbose)
-        self.dtype, self._data = self._load()
+        self._dtype, self._data = self._load()
         self.nid = np.unique(self._data["particleid"])
 
     def _load(self) -> Tuple[np.dtype, np.ndarray]:

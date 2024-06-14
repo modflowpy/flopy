@@ -4,10 +4,12 @@ Utilities for parsing particle tracking output files.
 
 import os
 from abc import ABC, abstractmethod
+from collections import OrderedDict
 from pathlib import Path
 from typing import Union
 
 import numpy as np
+import pandas as pd
 from numpy.lib.recfunctions import stack_arrays
 
 MIN_PARTICLE_TRACK_DTYPE = np.dtype(
@@ -27,10 +29,6 @@ class ParticleTrackFile(ABC):
     Abstract base class for particle track output files. Exposes a unified API
     supporting MODPATH versions 3, 5, 6 and 7, as well as MODFLOW 6 PRT models.
 
-    Notes
-    -----
-
-
     Parameters
     ----------
     filename : str or PathLike
@@ -40,12 +38,14 @@ class ParticleTrackFile(ABC):
 
     """
 
+    # legacy, todo: deprecate
     outdtype = MIN_PARTICLE_TRACK_DTYPE
     """
-    Minimal information shared by all particle track file formats.
-    Track data are converted to this dtype for internal storage
-    and for return from (sub-)class methods.
+    Minimal data shared by all particle track file formats.
     """
+
+    dtypes = {"base": ..., "full": ...}
+    """Base and full (extended) canonical pathline data dtypes."""
 
     def __init__(
         self,
@@ -121,6 +121,12 @@ class ParticleTrackFile(ABC):
 
         return data[idx]
 
+    def get_dataframe(self) -> pd.DataFrame:
+        return self._data
+
+    def get_recarray(self) -> np.recarray:
+        return self._data.to_records(index=False)
+
     def get_alldata(self, totim=None, ge=True, minimal=False):
         """
         Get all particle tracks separately, optionally filtering by time.
@@ -173,10 +179,8 @@ class ParticleTrackFile(ABC):
 
         Returns
         -------
-        data : np.recarray
-            Slice of data array (e.g. PathlineFile._data, TimeseriesFile._data)
-            containing endpoint, pathline, or timeseries data that intersect
-            (k,i,j) or (node) dest_cells.
+        np.recarray or list of np.recarray
+            Pathline components intersecting (k,i,j) or (node) dest_cells.
 
         """
 
@@ -332,3 +336,28 @@ class ParticleTrackFile(ABC):
 
         # write the final recarray to a shapefile
         recarray2shp(sdata, geoms, shpname=shpname, crs=crs, **kwargs)
+
+    def validate(self):
+        dtype = self.dtype
+        expected = OrderedDict(MIN_PARTICLE_TRACK_DTYPE.fields.items())
+        if isinstance(dtype, dict):
+            for dt in dtype.values():
+                self.validate(dt)
+        elif isinstance(dtype, pd.Series):
+            subset = OrderedDict(
+                {
+                    k: v
+                    for k, v in dtype.to_dict().items()
+                    if k in MIN_PARTICLE_TRACK_DTYPE.names
+                }
+            )
+            assert subset == expected
+        elif isinstance(dtype, np.dtypes.VoidDType):
+            subset = OrderedDict(
+                {
+                    k: v
+                    for k, v in dtype.fields.items()
+                    if k in MIN_PARTICLE_TRACK_DTYPE.names
+                }
+            )
+            assert subset == expected
