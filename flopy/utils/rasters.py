@@ -45,7 +45,7 @@ class Raster:
 
     """
 
-    FLOAT32 = (float, np.float32, np.float64)
+    FLOAT32 = (float, np.float32)
     FLOAT64 = (np.float64,)
     INT8 = (np.int8, np.uint8)
     INT16 = (np.int16, np.uint16)
