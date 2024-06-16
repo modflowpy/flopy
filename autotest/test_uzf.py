@@ -647,15 +647,12 @@ def test_uzf_negative_iuzfopt(function_tmpdir):
         "uzf_neg.nam", version="mfnwt", model_ws=function_tmpdir
     )
 
-    pet = ml2.uzf.pet.array
-    extpd = ml2.uzf.pet.array
-
-    assert (
-        np.max(pet) == np.min(pet) and np.max(pet) != 0.1
-    ), "Read error for iuzfopt less than 0"
-    assert (
-        np.max(extpd) == np.min(extpd) and np.max(extpd) != 0.2
-    ), "Read error for iuzfopt less than 0"
+    np.testing.assert_array_equal(
+        ml2.uzf.pet.array, np.full((2, 1, 10, 10), 0.1, np.float32)
+    )
+    np.testing.assert_array_equal(
+        ml2.uzf.extdp.array, np.full((2, 1, 10, 10), 0.2, np.float32)
+    )
 
 
 def test_optionsblock_auxillary_typo():
