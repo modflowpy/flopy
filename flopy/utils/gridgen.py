@@ -733,7 +733,7 @@ class Gridgen:
         shapename = os.path.join(self.model_ws, "qtgrid")
         xmin, xmax, ymin, ymax = shapefile_extents(shapename)
 
-        idx = np.where(self.qtra.layer == layer)[0]
+        idx = np.asarray(self.qtra.layer == layer).nonzero()[0]
 
         pc = plot_shapefile(
             shapename,

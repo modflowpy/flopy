@@ -810,15 +810,15 @@ class MfList(DataInterface, DataListInterface):
             data = self[kper]
             if data is not None:
                 k = data["k"]
-                k_idx = np.where(np.logical_or(k < 0, k >= nl))
+                k_idx = np.asarray(np.logical_or(k < 0, k >= nl)).nonzero()
                 if k_idx[0].shape[0] > 0:
                     out_idx.extend(list(k_idx[0]))
                 i = data["i"]
-                i_idx = np.where(np.logical_or(i < 0, i >= nr))
+                i_idx = np.asarray(np.logical_or(i < 0, i >= nr)).nonzero()
                 if i_idx[0].shape[0] > 0:
                     out_idx.extend(list(i_idx[0]))
                 j = data["j"]
-                j_idx = np.where(np.logical_or(j < 0, j >= nc))
+                j_idx = np.asarray(np.logical_or(j < 0, j >= nc)).nonzero()
                 if j_idx[0].shape[0]:
                     out_idx.extend(list(j_idx[0]))
 
@@ -887,7 +887,9 @@ class MfList(DataInterface, DataListInterface):
                 kper_data = self.__data[kper]
                 if idx_val is not None:
                     kper_data = kper_data[
-                        np.where(kper_data[idx_val[0]] == idx_val[1])
+                        np.asarray(
+                            kper_data[idx_val[0]] == idx_val[1]
+                        ).nonzero()
                     ]
                 v = function(kper_data[attr])
                 values.append(v)

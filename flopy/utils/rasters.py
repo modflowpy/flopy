@@ -256,7 +256,7 @@ class Raster:
         dist = np.sqrt(xt + yt)
 
         # 3: find indices of minimum distance
-        md = np.where(dist == np.nanmin(dist))
+        md = np.asarray(dist == np.nanmin(dist)).nonzero()
 
         # 4: sample the array and average if necessary
         vals = []
@@ -534,7 +534,7 @@ class Raster:
                 xt = (pt[0] - xc) ** 2
                 yt = (pt[1] - yc) ** 2
                 hypot = np.sqrt(xt + yt)
-                ind = np.where(hypot == np.min(hypot))
+                ind = np.asarray(hypot == np.min(hypot)).nonzero()
                 yind.append(ind[0][0])
                 xind.append(ind[1][0])
 

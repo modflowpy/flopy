@@ -1647,7 +1647,7 @@ class UnstructuredPlotUtilities:
             numb = (x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)
             denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1)
             ua = np.ones(denom.shape, dtype=denom.dtype) * np.nan
-            idx = np.where(denom != 0.0)
+            idx = np.asarray(denom != 0.0).nonzero()
             ua[idx] = numa[idx] / denom[idx]
             del numa
             del numb
@@ -2231,7 +2231,7 @@ def advanced_package_bc_helper(pkg, modelgrid, kper):
             idx = np.array([list(i) for i in mflist["cellid"]], dtype=int).T
         else:
             iuzfbnd = pkg.iuzfbnd.array
-            idx = np.where(iuzfbnd != 0)
+            idx = np.asarray(iuzfbnd != 0).nonzero()
             idx = np.append([[0] * idx[-1].size], idx, axis=0)
     elif pkg.package_type in ("lak", "maw"):
         if pkg.parent.version == "mf6":
@@ -2239,7 +2239,7 @@ def advanced_package_bc_helper(pkg, modelgrid, kper):
             idx = np.array([list(i) for i in mflist["cellid"]], dtype=int).T
         else:
             lakarr = pkg.lakarr.array[kper]
-            idx = np.where(lakarr != 0)
+            idx = np.asarray(lakarr != 0).nonzero()
             idx = np.array(idx)
     else:
         raise NotImplementedError(

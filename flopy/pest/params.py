@@ -74,7 +74,7 @@ def zonearray2params(
     plist = []
     for i, iz in enumerate(parzones):
         span = {}
-        span["idx"] = np.where(zonearray == iz)
+        span["idx"] = np.asarray(zonearray == iz).nonzero()
         parname = f"{partype}_{iz}"
         startvalue = parvals[i]
         p = Params(

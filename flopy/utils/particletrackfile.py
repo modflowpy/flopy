@@ -106,16 +106,16 @@ class ParticleTrackFile(ABC):
         """
         data = self._data[list(self.outdtype.names)] if minimal else self._data
         idx = (
-            np.where(data["particleid"] == partid)[0]
+            np.asarray(data["particleid"] == partid).nonzero()[0]
             if totim is None
             else (
-                np.where(
+                np.asarray(
                     (data["time"] >= totim) & (data["particleid"] == partid)
-                )[0]
+                ).nonzero()[0]
                 if ge
-                else np.where(
+                else np.asarray(
                     (data["time"] <= totim) & (data["particleid"] == partid)
-                )[0]
+                ).nonzero()[0]
             )
         )
 
@@ -145,9 +145,9 @@ class ParticleTrackFile(ABC):
         data = self._data[list(self.outdtype.names)] if minimal else self._data
         if totim is not None:
             idx = (
-                np.where(data["time"] >= totim)[0]
+                np.asarray(data["time"] >= totim).nonzero()[0]
                 if ge
-                else np.where(data["time"] <= totim)[0]
+                else np.asarray(data["time"] <= totim).nonzero()[0]
             )
             if len(idx) > 0:
                 data = data[idx]

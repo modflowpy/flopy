@@ -1511,7 +1511,7 @@ class ModflowSfr2(Package):
 
         # slice the path
         path = np.array(self.paths[start_seg])
-        endidx = np.where(path == end_seg)[0]
+        endidx = np.asarray(path == end_seg).nonzero()[0]
         endidx = endidx if len(endidx) > 0 else None
         path = path[: np.squeeze(endidx)]
         path = [s for s in path if s > 0]  # skip lakes for now
@@ -1523,7 +1523,7 @@ class ModflowSfr2(Package):
         dist = np.cumsum(tmp.rchlen.values) * to_miles.get(mfunits, 1.0)
 
         # segment starts
-        starts = dist[np.where(tmp.ireach.values == 1)[0]]
+        starts = dist[np.asarray(tmp.ireach.values == 1).nonzero()[0]]
 
         ax = plt.subplots(figsize=(11, 8.5))[-1]
         ax.plot(dist, tops, label="Model top")
@@ -2411,7 +2411,7 @@ class check:
             # max node with * a tolerance
             # 1.25 * hyp is greater than distance of two diagonally adjacent nodes
             # where one is 1.5x larger than the other
-            breaks = np.where(dist > hyp * 1.25)
+            breaks = np.asarray(dist > hyp * 1.25).nonzero()
             breaks_reach_data = rd[breaks]
             segments_with_breaks = set(breaks_reach_data.iseg)
             if len(breaks) > 0:

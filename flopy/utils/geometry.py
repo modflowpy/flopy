@@ -872,9 +872,9 @@ def point_in_polygon(xc, yc, polygon):
             yc - polygon[i][1]
         ) / (polygon[j][1] - polygon[i][1])
 
-        comp = np.where(
+        comp = np.asarray(
             ((polygon[i][1] > yc) ^ (polygon[j][1] > yc)) & (xc < tmp)
-        )
+        ).nonzero()
 
         j = i
         if len(comp[0]) > 0:

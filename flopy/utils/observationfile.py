@@ -104,7 +104,7 @@ class ObsFiles(FlopyBinaryData):
         i0 = 0
         i1 = self.data.shape[0]
         if totim is not None:
-            idx = np.where(self.data["totim"] == totim)[0][0]
+            idx = np.asarray(self.data["totim"] == totim).nonzero()[0][0]
             i0 = idx
             i1 = idx + 1
         elif idx is not None:
@@ -183,7 +183,7 @@ class ObsFiles(FlopyBinaryData):
         i0 = 0
         i1 = self.data.shape[0]
         if totim is not None:
-            idx = np.where(self.data["totim"] == totim)[0][0]
+            idx = np.asarray(self.data["totim"] == totim).nonzero()[0][0]
             i0 = idx
             i1 = idx + 1
         elif idx is not None:

@@ -303,7 +303,7 @@ class FormattedLayerFile(LayerFile):
 
                 # Find the time index and then put value into result in the
                 # correct location.
-                itim = np.where(result[:, 0] == header["totim"])[0]
+                itim = np.asarray(result[:, 0] == header["totim"]).nonzero()[0]
                 result[itim, istat] = self._read_val(j)
             istat += 1
         return result

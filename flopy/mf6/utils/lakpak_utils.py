@@ -125,7 +125,7 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
     unique = np.unique(lake_map)
 
     # exclude lakes with lake numbers less than 0
-    idx = np.where(unique > -1)
+    idx = np.asarray(unique > -1).nonzero()
     unique = unique[idx]
 
     dx, dy = None, None
@@ -199,7 +199,9 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
 
         # reset idomain for lake
         if iconn > 0:
-            idx = np.where((lake_map == lake_number) & (idomain > 0))
+            idx = np.asarray(
+                (lake_map == lake_number) & (idomain > 0)
+            ).nonzero()
             idomain[idx] = 0
 
     return idomain, connection_dict, connectiondata

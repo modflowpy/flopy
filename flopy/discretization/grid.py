@@ -455,15 +455,15 @@ class Grid:
         bot = self.remove_confining_beds(bot)
         array = self.remove_confining_beds(array)
 
-        idx = np.where((array < top) & (array > bot))
+        idx = np.asarray((array < top) & (array > bot)).nonzero()
         thickness[idx] = array[idx] - bot[idx]
-        idx = np.where(array <= bot)
+        idx = np.asarray(array <= bot).nonzero()
         thickness[idx] = 0.0
         if mask is not None:
             if isinstance(mask, (float, int)):
                 mask = [float(mask)]
             for mask_value in mask:
-                thickness[np.where(array == mask_value)] = np.nan
+                thickness[np.asarray(array == mask_value).nonzero()] = np.nan
         return thickness
 
     def saturated_thick(self, array, mask=None):

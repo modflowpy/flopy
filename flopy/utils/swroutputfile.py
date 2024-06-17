@@ -231,11 +231,11 @@ class SwrFile(FlopyBinaryData):
             kper1 = kswrkstpkper[2]
 
             totim1 = self._recordarray[
-                np.where(
+                np.asarray(
                     (self._recordarray["kswr"] == kswr1)
                     & (self._recordarray["kstp"] == kstp1)
                     & (self._recordarray["kper"] == kper1)
-                )
+                ).nonzero()
             ]["totim"][0]
         elif totim is not None:
             totim1 = totim

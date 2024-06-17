@@ -287,6 +287,7 @@ def test_mf2000_zeroth(function_tmpdir, mf2kmt3d_model_path):
     assert success, f"{mt.name} did not run"
 
 
+@pytest.mark.slow
 @flaky(max_runs=3)
 @requires_exe("mfnwt", "mt3dms")
 @excludes_platform(

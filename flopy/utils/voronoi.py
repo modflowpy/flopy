@@ -153,11 +153,11 @@ def tri2vor(tri, **kwargs):
             polygon = [(x, y) for x, y in tri._polygons[ipolygon]]
             vor_vert_notindomain = point_in_polygon(xc, yc, polygon)
             vor_vert_notindomain = vor_vert_notindomain.flatten()
-            idx = np.where(vor_vert_notindomain == True)
+            idx = np.asarray(vor_vert_notindomain == True).nonzero()
             vor_vert_indomain[idx] = False
 
     idx_vertindex = -1 * np.ones((nvertices), int)
-    idx_filtered = np.where(vor_vert_indomain == True)
+    idx_filtered = np.asarray(vor_vert_indomain == True).nonzero()
     nvalid_vertices = len(idx_filtered[0])
     # renumber valid vertices consecutively
     idx_vertindex[idx_filtered] = np.arange(nvalid_vertices)
