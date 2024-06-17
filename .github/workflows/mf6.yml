@@ -52,20 +52,22 @@ jobs:
         repository: MODFLOW-USGS/modflow6
         path: modflow6
 
-    - name: Install executables
-      uses: modflowpy/install-modflow-action@v1
-
     - name: Build and install MF6
       working-directory: modflow6
       run: |
         meson setup builddir --buildtype=debugoptimized --prefix=$(pwd) --libdir=bin
         meson install -C builddir
         meson test --verbose --no-rebuild -C builddir
-        cp bin/* ~/.local/bin/modflow/
 
     - name: Update package classes
       working-directory: modflow6/autotest
       run: python update_flopy.py
+
+    - name: Install executables
+      working-directory: modflow6/autotest
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      run: pytest -v --durations=0 get_exes.py
 
     - name: Run tests
       working-directory: modflow6/autotest
