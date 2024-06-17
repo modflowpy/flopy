@@ -2710,7 +2710,13 @@ class DataStorage:
                                 self._append_type_lists(
                                     aux_var_name, data_type, False
                                 )
-
+                elif data_item.name == "petm0" and resolve_data_shape:
+                    for key in self._simulation_data.mfdata:
+                        if "surf_rate_specified" in key:
+                            if self._simulation_data.mfdata[key].get_data():
+                                self._append_type_lists(
+                                    data_item.name, data_type, False
+                                )
                 elif data_item.type == DatumType.record:
                     # record within a record, recurse
                     self.build_type_list(data_item, True, data)
