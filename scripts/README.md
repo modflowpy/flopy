@@ -33,7 +33,6 @@ For instance, `e689af57e7439b9005749d806248897ad550eab5_20150811_041632_uncommit
 The `update_version.py` script can be used to update FloPy version numbers. Running the script first updates the version in `version.txt`, then propagates the change to various other places version strings or timestamps are embedded in the repository:
 
 - `flopy/version.py`
-- `flopy/DISCLAIMER.md`
 - `CITATION.cff`
 - `README.md`
 - `docs/PyPI_release.md`
@@ -46,12 +45,10 @@ If the script is run with no arguments, the version number is not changed, but u
 python scripts/update_version.py -v 3.3.6
 ```
 
-To get the current version number, use the `--get` flag:
+To get the current version number, use the `--get` flag (short `-g`):
 
 ```shell
-python scripts/update_version.py
+python scripts/update_version.py -g
 ```
 
 This simply returns the contents of `version.txt` and does not write any changes to the repository's files.
-
-By default, the script assumes a local development version of FloPy. The `--approve` flag should be used prior to releasing a new FloPy version. This will alter the `DISCLAIMER.md` file, substituting wording to indicate the version is no longer preliminary but approved for official release. See [the release docs](../docs/make_release.md) for more information.
