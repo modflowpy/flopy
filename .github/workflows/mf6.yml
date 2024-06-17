@@ -93,6 +93,18 @@ jobs:
     - name: Checkout flopy repo
       uses: actions/checkout@v4
 
+    - name: Checkout MODFLOW 6
+      uses: actions/checkout@v4
+      with:
+        repository: MODFLOW-USGS/modflow6
+        path: modflow6
+
+    - name: Checkout MF6 examples
+      uses: actions/checkout@v4
+      with:
+        repository: MODFLOW-USGS/modflow6-examples
+        path: modflow6-examples
+
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
@@ -108,24 +120,13 @@ jobs:
         pip install https://github.com/MODFLOW-USGS/modflowapi/zipball/develop
         pip install .[test,optional]
         pip install meson ninja
+        pip install -r modflow6-examples/etc/requirements.pip.txt
 
     - name: Setup GNU Fortran
       uses: fortran-lang/setup-fortran@v1
       with:
         compiler: gcc
         version: 13
-
-    - name: Checkout MODFLOW 6
-      uses: actions/checkout@v4
-      with:
-        repository: MODFLOW-USGS/modflow6
-        path: modflow6
-
-    - name: Checkout MF6 examples
-      uses: actions/checkout@v4
-      with:
-        repository: MODFLOW-USGS/modflow6-examples
-        path: modflow6-examples
 
     - name: Install executables
       uses: modflowpy/install-modflow-action@v1
