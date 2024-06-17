@@ -299,7 +299,7 @@ def binaryread_struct(file, vartype, shape=(1,), charlen=16):
         # find the number of bytes for one value
         numbytes = vartype(1).nbytes
         # find the number of values
-        nval = np.core.fromnumeric.prod(shape)
+        nval = np.prod(shape)
         fmt = str(nval) + fmt
         s = file.read(numbytes * nval)
         result = struct.unpack(fmt, s)
@@ -1138,7 +1138,7 @@ class CellBudgetFile:
         h1dt = [
             ("kstp", "i4"),
             ("kper", "i4"),
-            ("text", "a16"),
+            ("text", "S16"),
             ("ncol", "i4"),
             ("nrow", "i4"),
             ("nlay", "i4"),
@@ -1161,10 +1161,10 @@ class CellBudgetFile:
             ("delt", ffmt),
             ("pertim", ffmt),
             ("totim", ffmt),
-            ("modelnam", "a16"),
-            ("paknam", "a16"),
-            ("modelnam2", "a16"),
-            ("paknam2", "a16"),
+            ("modelnam", "S16"),
+            ("paknam", "S16"),
+            ("modelnam2", "S16"),
+            ("paknam2", "S16"),
         ]
         self.header1_dtype = np.dtype(h1dt)
         self.header2_dtype0 = np.dtype(h2dt0)

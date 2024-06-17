@@ -6,8 +6,9 @@ dependencies:
 
   # required
   - python>=3.8
-  - numpy>=1.15.0,<2.0.0
+  - numpy>=1.20.3,<2.0.0
   - matplotlib>=1.4.0
+  - pandas>=2.0.0
 
   # lint
   - cffconvert
@@ -33,7 +34,6 @@ dependencies:
   # optional
   - affine
   - scipy
-  - pandas
   - netcdf4
   - pyshp
   - rasterio

@@ -124,12 +124,12 @@ class ModpathFile(ParticleTrackFile):
                         cells = t
 
         cells = np.array(cells, dtype=raslice.dtype)
-        inds = np.in1d(raslice, cells)
+        inds = np.isin(raslice, cells)
         epdest = self._data[inds].copy().view(np.recarray)
 
         if to_recarray:
             # use particle ids to get the rest of the paths
-            inds = np.in1d(self._data["particleid"], epdest.particleid)
+            inds = np.isin(self._data["particleid"], epdest.particleid)
             series = self._data[inds].copy()
             series.sort(order=["particleid", "time"])
             series = series.view(np.recarray)
@@ -693,7 +693,7 @@ class EndpointFile(ModpathFile):
         dtype = np.dtype(dtype)
         dest_cells = np.array(dest_cells, dtype=dtype)
 
-        inds = np.in1d(raslice, dest_cells)
+        inds = np.isin(raslice, dest_cells)
         return data[inds].copy().view(np.recarray)
 
     def write_shapefile(

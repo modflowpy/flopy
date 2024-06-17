@@ -371,9 +371,7 @@ class ModflowStr(Package):
                     )
                     assert d.dtype == self.dtype, e
                 elif isinstance(d, np.ndarray):
-                    d = np.core.records.fromarrays(
-                        d.transpose(), dtype=self.dtype
-                    )
+                    d = np.rec.fromarrays(d.transpose(), dtype=self.dtype)
                 elif isinstance(d, int):
                     if model.verbose:
                         if d < 0:
@@ -404,9 +402,7 @@ class ModflowStr(Package):
                     )
                     assert d.dtype == self.dtype2, e
                 elif isinstance(d, np.ndarray):
-                    d = np.core.records.fromarrays(
-                        d.transpose(), dtype=self.dtype2
-                    )
+                    d = np.rec.fromarrays(d.transpose(), dtype=self.dtype2)
                 elif isinstance(d, int):
                     if model.verbose:
                         if d < 0:
