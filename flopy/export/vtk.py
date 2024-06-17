@@ -574,7 +574,9 @@ class Vtk:
 
             pts = []
             for v in v1:
-                ix = np.where((v2.T[0] == v[0]) & (v2.T[1] == v[1]))
+                ix = np.asarray(
+                    (v2.T[0] == v[0]) & (v2.T[1] == v[1])
+                ).nonzero()
                 if len(ix[0]) > 0 and len(pts) < 2:
                     pts.append(v2[ix[0][0]])
 
@@ -652,7 +654,7 @@ class Vtk:
                     ps_array[pt] = array[value["idx"][ix]]
         else:
             ps_graph = self._point_scalar_numpy_graph.copy()
-            idxs = np.where(np.isnan(array))
+            idxs = np.asarray(np.isnan(array)).nonzero()
             not_graphed = np.isin(ps_graph, idxs[0])
             ps_graph[not_graphed] = -1
             ps_array = np.where(ps_graph >= 0, array[ps_graph], np.nan)

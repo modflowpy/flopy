@@ -598,7 +598,7 @@ class BinaryLayerFile(LayerFile):
 
                 # Find the time index and then put value into result in the
                 # correct location.
-                itim = np.where(result[:, 0] == header["totim"])[0]
+                itim = np.asarray(result[:, 0] == header["totim"]).nonzero()[0]
                 result[itim, istat] = binaryread(self.file, self.realtype)
             istat += 1
         return result
@@ -887,7 +887,9 @@ class HeadUFile(BinaryLayerFile):
         """
 
         if totim >= 0.0:
-            keyindices = np.where(self.recordarray["totim"] == totim)[0]
+            keyindices = np.asarray(
+                self.recordarray["totim"] == totim
+            ).nonzero()[0]
             if len(keyindices) == 0:
                 msg = f"totim value ({totim}) not found in file..."
                 raise Exception(msg)
@@ -1604,7 +1606,9 @@ class CellBudgetFile:
         # check and make sure that text is in file
         if text is not None:
             text16 = self._find_text(text)
-            select_indices = np.where(self.recordarray["text"] == text16)
+            select_indices = np.asarray(
+                self.recordarray["text"] == text16
+            ).nonzero()
             if isinstance(select_indices, tuple):
                 select_indices = select_indices[0]
         else:
@@ -1869,7 +1873,7 @@ class CellBudgetFile:
 
                     for vv in v:
                         field = vv.dtype.names[2]
-                        dix = np.where(np.isin(vv["node"], ndx))[0]
+                        dix = np.asarray(np.isin(vv["node"], ndx)).nonzero()[0]
                         if len(dix) > 0:
                             result[itim, 1:] = vv[field][dix]
 
@@ -2176,7 +2180,9 @@ class CellBudgetFile:
         residual = np.zeros((nlay, nrow, ncol), dtype=float)
         if scaled:
             inflow = np.zeros((nlay, nrow, ncol), dtype=float)
-        select_indices = np.where(self.recordarray["totim"] == totim)[0]
+        select_indices = np.asarray(
+            self.recordarray["totim"] == totim
+        ).nonzero()[0]
 
         for i in select_indices:
             text = self.recordarray[i]["text"].decode()
@@ -2187,9 +2193,9 @@ class CellBudgetFile:
                 residual -= flow[:, :, :]
                 residual[:, :, 1:] += flow[:, :, :-1]
                 if scaled:
-                    idx = np.where(flow < 0.0)
+                    idx = np.asarray(flow < 0.0).nonzero()
                     inflow[idx] -= flow[idx]
-                    idx = np.where(flow > 0.0)
+                    idx = np.asarray(flow > 0.0).nonzero()
                     l, r, c = idx
                     idx = (l, r, c + 1)
                     inflow[idx] += flow[idx]
@@ -2197,9 +2203,9 @@ class CellBudgetFile:
                 residual -= flow[:, :, :]
                 residual[:, 1:, :] += flow[:, :-1, :]
                 if scaled:
-                    idx = np.where(flow < 0.0)
+                    idx = np.asarray(flow < 0.0).nonzero()
                     inflow[idx] -= flow[idx]
-                    idx = np.where(flow > 0.0)
+                    idx = np.asarray(flow > 0.0).nonzero()
                     l, r, c = idx
                     idx = (l, r + 1, c)
                     inflow[idx] += flow[idx]
@@ -2207,16 +2213,16 @@ class CellBudgetFile:
                 residual -= flow[:, :, :]
                 residual[1:, :, :] += flow[:-1, :, :]
                 if scaled:
-                    idx = np.where(flow < 0.0)
+                    idx = np.asarray(flow < 0.0).nonzero()
                     inflow[idx] -= flow[idx]
-                    idx = np.where(flow > 0.0)
+                    idx = np.asarray(flow > 0.0).nonzero()
                     l, r, c = idx
                     idx = (l + 1, r, c)
                     inflow[idx] += flow[idx]
             else:
                 residual += flow
                 if scaled:
-                    idx = np.where(flow > 0.0)
+                    idx = np.asarray(flow > 0.0).nonzero()
                     inflow[idx] += flow[idx]
 
         if scaled:

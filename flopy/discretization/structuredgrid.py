@@ -930,7 +930,7 @@ class StructuredGrid(Grid):
                     "x, y point given is outside of the model area"
                 )
         else:
-            col = np.where(xcomp)[0][-1]
+            col = np.asarray(xcomp).nonzero()[0][-1]
 
         ycomp = y < ye
         if np.all(ycomp) or not np.any(ycomp):
@@ -941,7 +941,7 @@ class StructuredGrid(Grid):
                     "x, y point given is outside of the model area"
                 )
         else:
-            row = np.where(ycomp)[0][-1]
+            row = np.asarray(ycomp).nonzero()[0][-1]
         if np.any(np.isnan([row, col])):
             row = col = np.nan
             if z is not None:

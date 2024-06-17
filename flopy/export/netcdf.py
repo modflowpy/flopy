@@ -632,7 +632,7 @@ class NetCdf:
 
             d_data[np.isnan(d_data)] = FILLVALUE
             if mask_zero_diff:
-                d_data[np.where(d_data == 0.0)] = FILLVALUE
+                d_data[np.asarray(d_data == 0.0).nonzero()] = FILLVALUE
 
             var = new_net.create_variable(
                 vname, attrs, s_var.dtype, dimensions=s_var.dimensions

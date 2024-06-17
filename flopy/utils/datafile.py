@@ -463,7 +463,9 @@ class LayerFile:
         """
 
         if totim >= 0.0:
-            keyindices = np.where(self.recordarray["totim"] == totim)[0]
+            keyindices = np.asarray(
+                self.recordarray["totim"] == totim
+            ).nonzero()[0]
             if len(keyindices) == 0:
                 msg = f"totim value ({totim}) not found in file..."
                 raise Exception(msg)
@@ -545,10 +547,10 @@ class LayerFile:
         if kstpkper is not None:
             kstp1 = kstpkper[0] + 1
             kper1 = kstpkper[1] + 1
-            idx = np.where(
+            idx = np.asarray(
                 (self.recordarray["kstp"] == kstp1)
                 & (self.recordarray["kper"] == kper1)
-            )
+            ).nonzero()
             if idx[0].shape[0] == 0:
                 raise Exception(
                     f"get_data() error: kstpkper not found:{kstpkper}"

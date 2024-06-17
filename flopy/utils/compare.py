@@ -40,7 +40,7 @@ def _diffmax(v1, v2):
 
     diff = abs(v1 - v2)
     diffmax = diff.max()
-    return diffmax, np.where(diff == diffmax)
+    return diffmax, np.asarray(diff == diffmax).nonzero()
 
 
 def _difftol(v1, v2, tol):
@@ -75,7 +75,7 @@ def _difftol(v1, v2, tol):
         raise Exception(err)
 
     diff = abs(v1 - v2)
-    return diff.max(), np.where(diff > tol)
+    return diff.max(), np.asarray(diff > tol).nonzero()
 
 
 def compare_budget(

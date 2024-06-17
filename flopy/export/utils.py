@@ -203,7 +203,7 @@ def _add_output_nc_variable(
         logger.log(f"creating array for {var_name}")
 
     for mask_val in mask_vals:
-        array[np.where(array == mask_val)] = np.nan
+        array[np.asarray(array == mask_val).nonzero()] = np.nan
     mx, mn = np.nanmax(array), np.nanmin(array)
     array[np.isnan(array)] = netcdf.FILLVALUE
 

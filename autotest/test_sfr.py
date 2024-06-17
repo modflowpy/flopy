@@ -236,7 +236,7 @@ def test_sfr(function_tmpdir, mf2005_model_path, sfr_test_model_path):
     sfr.get_slopes(minimum_slope=-100, maximum_slope=100)
     reach_inds = 29
     outreach = sfr.reach_data.outreach[reach_inds]
-    out_inds = np.where(sfr.reach_data.reachID == outreach)
+    out_inds = np.asarray(sfr.reach_data.reachID == outreach).nonzero()
     assert (
         sfr.reach_data.slope[reach_inds]
         == (

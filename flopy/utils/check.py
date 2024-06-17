@@ -507,7 +507,7 @@ class check:
         True value in criteria.
         """
         if np.any(criteria):
-            inds = np.where(criteria)
+            inds = np.asarray(criteria).nonzero()
             v = a[inds]  # works with structured or unstructured
             pn = [self.package.name] * len(v)
             en = [error_name] * len(v)

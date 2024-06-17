@@ -1,12 +1,10 @@
 import re
 from importlib import metadata
-from io import BytesIO, StringIO
 from pathlib import Path
 from platform import system
-from typing import List, Optional
+from typing import List
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pytest
 from modflow_devtools.misc import is_in_ci
 
