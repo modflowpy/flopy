@@ -176,7 +176,6 @@ def update_pypi_release(timestamp: datetime, version: Version):
 def update_version(
     timestamp: datetime = datetime.now(),
     version: Version = None,
-    approved: bool = False,
 ):
     lock_path = Path(_version_txt_path.name + ".lock")
     try:
@@ -191,9 +190,9 @@ def update_version(
         with lock:
             update_version_txt(version)
             update_version_py(timestamp, version)
-            update_readme_markdown(timestamp, version, approved)
+            update_readme_markdown(timestamp, version)
             update_citation_cff(timestamp, version)
-            update_pypi_release(timestamp, version, approved)
+            update_pypi_release(timestamp, version)
     finally:
         try:
             lock_path.unlink()
