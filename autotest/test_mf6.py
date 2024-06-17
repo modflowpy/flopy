@@ -102,7 +102,7 @@ def write_head(
             ("kper", "i4"),
             ("pertim", "f8"),
             ("totim", "f8"),
-            ("text", "a16"),
+            ("text", "S16"),
             ("ncol", "i4"),
             ("nrow", "i4"),
             ("ilay", "i4"),

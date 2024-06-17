@@ -210,7 +210,7 @@ class ModflowFhb(Package):
                 ds5 = ds5.to_records(index=False)
             # convert numpy array to a recarray
             if ds5.dtype != dtype:
-                ds5 = np.core.records.fromarrays(ds5.transpose(), dtype=dtype)
+                ds5 = np.rec.fromarrays(ds5.transpose(), dtype=dtype)
 
         # assign dataset 5
         self.ds5 = ds5
@@ -229,7 +229,7 @@ class ModflowFhb(Package):
                 ds7 = ds7.to_records(index=False)
             # convert numpy array to a recarray
             if ds7.dtype != dtype:
-                ds7 = np.core.records.fromarrays(ds7.transpose(), dtype=dtype)
+                ds7 = np.rec.fromarrays(ds7.transpose(), dtype=dtype)
 
         # assign dataset 7
         self.ds7 = ds7

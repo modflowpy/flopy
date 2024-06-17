@@ -62,7 +62,7 @@ def ra_slice(ra, cols):
     --------
     >>> import numpy as np
     >>> from flopy.utils import ra_slice
-    >>> a = np.core.records.fromrecords([("a", 1, 1.1), ("b", 2, 2.1)])
+    >>> a = np.rec.fromrecords([("a", 1, 1.1), ("b", 2, 2.1)])
     >>> ra_slice(a, ['f0', 'f1'])
     rec.array([('a', 1), ('b', 2)],
               dtype=[('f0', '<U1'), ('f1', '<i4')])
@@ -75,7 +75,7 @@ def recarray(array, dtype):
     Convert a list of lists or tuples to a recarray.
 
     .. deprecated:: 3.5
-        Use numpy.core.records.fromrecords instead
+        Use numpy.rec.fromrecords instead
 
     Parameters
     ----------

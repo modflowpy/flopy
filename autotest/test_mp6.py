@@ -175,7 +175,7 @@ def test_get_destination_data(function_tmpdir, mp6_test_path):
         np.array(well_pthld)[["k", "i", "j"]].tolist(),
         dtype=starting_locs.dtype,
     )
-    assert np.all(np.in1d(starting_locs, pathline_locs))
+    assert np.all(np.isin(starting_locs, pathline_locs))
 
     # test writing a shapefile of endpoints
     epd.write_shapefile(

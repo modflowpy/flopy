@@ -1372,9 +1372,7 @@ class ModflowSfr2(Package):
             all_data[inds, per] = self.segment_data[per][varname]
             dtype.append((f"{varname}{per}", float))
         isvar = all_data.sum(axis=1) != 0
-        ra = np.core.records.fromarrays(
-            all_data[isvar].transpose().copy(), dtype=dtype
-        )
+        ra = np.rec.fromarrays(all_data[isvar].transpose().copy(), dtype=dtype)
         segs = self.segment_data[0].nseg[isvar]
         isseg = np.array(
             [True if s in segs else False for s in self.reach_data.iseg]
@@ -1387,7 +1385,7 @@ class ModflowSfr2(Package):
         return ra.view(np.recarray)
 
     def repair_outsegs(self):
-        isasegment = np.in1d(
+        isasegment = np.isin(
             self.segment_data[0].outseg, self.segment_data[0].nseg
         )
         isasegment = isasegment | (self.segment_data[0].outseg < 0)

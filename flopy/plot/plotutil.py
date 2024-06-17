@@ -2732,7 +2732,7 @@ def to_mp7_pathlines(
     data = data.to_records(index=False)
 
     # build mp7 format recarray
-    ret = np.core.records.fromarrays(
+    ret = np.rec.fromarrays(
         [
             data[seqn_key],
             data["iprp"],
@@ -2841,7 +2841,7 @@ def to_mp7_endpoints(
     endpts = endpts.to_records(index=False)
 
     # build mp7 format recarray
-    ret = np.core.records.fromarrays(
+    ret = np.rec.fromarrays(
         [
             endpts["sequencenumber"],
             endpts["iprp"],
@@ -2928,7 +2928,7 @@ def to_prt_pathlines(
     data = data.to_records(index=False)
 
     # build prt format recarray
-    ret = np.core.records.fromarrays(
+    ret = np.rec.fromarrays(
         [
             data["stressperiod"],
             data["timestep"],

@@ -111,7 +111,7 @@ cfdbud = cfd.get_budget()
 inyrbud = inyr.get_budget()
 
 names = ["FROM_RECHARGE"]
-rowidx = np.in1d(cmdbud["name"], names)
+rowidx = np.isin(cmdbud["name"], names)
 colidx = "ZONE_1"
 
 print(f"{cmdbud[rowidx][colidx][0]:,.1f} cubic meters/day")

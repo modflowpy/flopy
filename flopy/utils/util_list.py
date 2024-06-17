@@ -419,7 +419,7 @@ class MfList(DataInterface, DataListInterface):
                 f"dtype len: {len(self.dtype)}"
             )
         try:
-            self.__data[kper] = np.core.records.fromarrays(
+            self.__data[kper] = np.rec.fromarrays(
                 d.transpose(), dtype=self.dtype
             )
         except Exception as e:
