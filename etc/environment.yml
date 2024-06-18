@@ -6,7 +6,7 @@ dependencies:
 
   # required
   - python>=3.8
-  - numpy>=1.20.3,<3.0.0
+  - numpy>=2.0.0
   - matplotlib>=1.4.0
   - pandas>=2.0.0
 
