@@ -6,7 +6,6 @@ dependencies:
 
   # required
   - python>=3.8
-  - numpy>=2.0.0
   - matplotlib>=1.4.0
   - pandas>=2.0.0
 
@@ -22,6 +21,7 @@ dependencies:
   - jupyter_client>=8.4.0
   - jupytext
   - pip:
+      - numpy>=2.0.0
       - git+https://github.com/MODFLOW-USGS/modflow-devtools.git
   - pytest!=8.1.0
   - pytest-benchmark
