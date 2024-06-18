@@ -237,7 +237,6 @@ for col in range(0, 10):
             0.5,
             0.3,
             0.1,
-            None,
         )
 evt = flopy.mf6.ModflowGwfevt(
     gwf,
