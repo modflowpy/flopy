@@ -49,8 +49,7 @@ jobs:
     - name: Checkout MODFLOW 6
       uses: actions/checkout@v4
       with:
-        repository: wpbonelli/modflow6
-        ref: numpy2-fixes
+        repository: MODFLOW-USGS/modflow6
         path: modflow6
 
     - name: Build and install MF6
