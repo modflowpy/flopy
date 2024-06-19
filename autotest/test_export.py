@@ -410,7 +410,7 @@ def test_export_shapefile_polygon_closed(function_tmpdir):
 
 
 @excludes_platform("Windows")
-@requires_pkg("rasterio", "shapefile", "scipy")
+@requires_pkg("rasterio", "pyshp", "scipy", name_map={"pyshp": "shapefile"})
 def test_export_array(function_tmpdir, example_data_path):
     import rasterio
     from scipy.ndimage import rotate
@@ -1992,7 +1992,7 @@ def test_vtk_export_disu2_grid(function_tmpdir, example_data_path):
 
 @pytest.mark.mf6
 @requires_exe("mf6", "gridgen")
-@requires_pkg("vtk", "shapefile", "shapely")
+@requires_pkg("vtk", "pyshp", "shapely", name_map={"pyshp": "shapefile"})
 def test_vtk_export_disu_model(function_tmpdir):
     from vtkmodules.util.numpy_support import vtk_to_numpy
 

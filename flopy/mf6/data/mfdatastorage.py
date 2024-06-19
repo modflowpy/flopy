@@ -2535,7 +2535,7 @@ class DataStorage:
             data_array = np.ndarray(shape=dimensions, dtype=np_dtype)
             # fill array
             for index in ArrayIndexIter(dimensions):
-                data_array.itemset(index, next(data_iter))
+                data_array[index] = next(data_iter)
             return data_array
         elif self.data_structure_type == DataStructureType.scalar:
             return next(data_iter)

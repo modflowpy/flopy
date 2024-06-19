@@ -27,7 +27,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: 3.9
           cache: 'pip'
           cache-dependency-path: pyproject.toml
 
@@ -211,7 +211,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: 3.9
           cache: 'pip'
           cache-dependency-path: pyproject.toml
 
