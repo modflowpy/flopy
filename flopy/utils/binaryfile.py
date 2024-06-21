@@ -10,6 +10,7 @@ important classes that can be accessed by the user.
 """
 
 import os
+import tempfile
 import warnings
 from pathlib import Path
 from typing import List, Optional, Union
@@ -662,16 +663,15 @@ class HeadFile(BinaryLayerFile):
 
     def reverse(self, filename: Optional[os.PathLike] = None):
         """
-        Write a new binary head file with the records in reverse order.
-        If a new filename is not provided, or if the filename is the same
-        as the existing filename, the file will be overwritten and data
-        reloaded from the rewritten/reversed file.
+        Reverse the time order of the currently loaded binary head file. If a head
+        file name is not provided or the provided name is the same as the existing
+        filename, the file will be overwritten and reloaded.
 
         Parameters
         ----------
 
         filename : str or PathLike
-            Path of the new reversed binary file to create.
+            Path of the reversed binary head file.
         """
 
         filename = (
@@ -680,23 +680,9 @@ class HeadFile(BinaryLayerFile):
             else self.filename
         )
 
-        # header array formats
-        dt = np.dtype(
-            [
-                ("kstp", np.int32),
-                ("kper", np.int32),
-                ("pertim", np.float64),
-                ("totim", np.float64),
-                ("text", "S16"),
-                ("ncol", np.int32),
-                ("nrow", np.int32),
-                ("ilay", np.int32),
-            ]
-        )
-
         # make sure we have tdis
         if self.tdis is None or not any(self.tdis.perioddata.get_data()):
-            raise ValueError("tdis mu/st be known to reverse head file")
+            raise ValueError("tdis must be known to reverse head file")
 
         # extract period data
         pd = self.tdis.perioddata.get_data()
@@ -710,9 +696,10 @@ class HeadFile(BinaryLayerFile):
         # get total number of records
         nrecords = len(self)
 
-        # open backward file
-        with open(filename, "wb") as fbin:
-            # loop over head file records in reverse order
+        # loop over head file records in reverse order and write temp file
+        temp_file = tempfile.NamedTemporaryFile()
+        temp_file_path = Path(temp_file.name)
+        with open(temp_file_path, "wb") as f:
             for idx in range(nrecords - 1, -1, -1):
                 # load header array
                 header = self.recordarray[idx].copy()
@@ -729,14 +716,19 @@ class HeadFile(BinaryLayerFile):
                 perlen = pd[kper][0]
                 header["pertim"] = perlen - header["pertim"]
 
-                # write header information
-                h = np.array(header, dtype=dt)
-                h.tofile(fbin)
+                data = self.get_data(idx=idx)
+                for ilay in range(data.shape[0]):
+                    write_head(
+                        fbin=f,
+                        data=data[ilay],
+                        kstp=kstp,
+                        kper=kper,
+                        pertim=header["pertim"],
+                        totim=header["totim"],
+                        ilay=ilay + 1,
+                    )
 
-                # load and write data
-                data = self.get_data(idx=idx)[0][0]
-                data = np.array(data, dtype=np.float64)
-                data.tofile(fbin)
+        temp_file_path.rename(filename)
 
         # if we rewrote the original file, reinitialize
         if filename == self.filename:
@@ -2241,16 +2233,18 @@ class CellBudgetFile:
 
     def reverse(self, filename: Optional[os.PathLike] = None):
         """
-        Write a binary cell budget file with the records in reverse order.
-        If a new filename is not provided, or if the filename is the same
-        as the existing filename, the file will be overwritten and data
-        reloaded from the rewritten/reversed file.
+        Reverse the time order and signs of the currently loaded binary cell budget
+        file. If a file name is not provided or if the provided name is the same as
+        the existing filename, the file will be overwritten and reloaded.
 
-        Parameters
-        ----------
+        Notes
+        -----
+        While `HeadFile.reverse()` reverses only the temporal order of head data,
+        this method must reverse not only the order but also the sign (direction)
+        of the model's intercell flows.
 
         filename : str or PathLike, optional
-            Path of the new reversed binary cell budget file to create.
+            Path of the reversed binary cell budget file.
         """
 
         filename = (
@@ -2303,7 +2297,9 @@ class CellBudgetFile:
         nrecords = len(self)
 
         # open backward budget file
-        with open(filename, "wb") as fbin:
+        temp_file = tempfile.NamedTemporaryFile()
+        temp_file_path = Path(temp_file.name)
+        with open(temp_file_path, "wb") as fbin:
             # loop over budget file records in reverse order
             for idx in range(nrecords - 1, -1, -1):
                 # load header array
@@ -2389,6 +2385,8 @@ class CellBudgetFile:
                     raise ValueError("not expecting imeth " + header["imeth"])
                 # Write data
                 data.tofile(fbin)
+
+        temp_file_path.rename(filename)
 
         # if we rewrote the original file, reinitialize
         if filename == self.filename:
