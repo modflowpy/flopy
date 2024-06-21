@@ -62,7 +62,8 @@ def get_ostag() -> str:
     elif sys.platform.startswith("win"):
         return "win" + ("64" if sys.maxsize > 2**32 else "32")
     elif sys.platform.startswith("darwin"):
-        return "mac"
+        arch = processor()
+        return "mac" + (arch if arch == "arm" else "")
     raise ValueError(f"platform {sys.platform!r} not supported")
 
 
@@ -407,19 +408,9 @@ def run_main(
     # get the selected release
     release = get_release(owner, repo, release_id, quiet)
     assets = release.get("assets", [])
-    asset_names = [a["name"] for a in assets]
     for asset in assets:
         asset_name = asset["name"]
         if ostag in asset_name:
-            # temporary hack for nightly gfortran build for ARM macs
-            # todo: clean up if/when all repos have an ARM mac build
-            if (
-                repo == "modflow6-nightly-build"
-                and "macarm.zip" in asset_names
-                and processor() == "arm"
-                and ostag == "mac.zip"
-            ):
-                continue
             break
     else:
         raise ValueError(
@@ -608,7 +599,7 @@ def run_main(
                     break
                 shutil.rmtree(str(bindir_path))
 
-    if ostag in ["linux", "mac", "macarm"]:
+    if "win" not in ostag:
         # similar to "chmod +x fname" for each executable
         for fname in chmod:
             pth = bindir / fname
