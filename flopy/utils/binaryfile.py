@@ -709,8 +709,14 @@ class HeadFile(BinaryLayerFile):
                 tdis_maxtsim = sum([p[0] for p in pd])
         # if we have both, check them against each other
         if tdis_maxkper is not None:
-            assert maxkper == tdis_maxkper
-            assert maxtsim == tdis_maxtsim
+            assert maxkper == tdis_maxkper, (
+                f"Max stress period in binary head file ({maxkper}) != "
+                f"max stress period in provided tdis ({tdis_maxkper})"
+            )
+            assert maxtsim == tdis_maxtsim, (
+                f"Max simulation time in binary head file ({maxtsim}) != "
+                f"max simulation time in provided tdis ({tdis_maxtsim})"
+            )
 
         def reverse_header(header):
             """Reverse period, step and time fields in the record header"""
