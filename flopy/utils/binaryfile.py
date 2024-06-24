@@ -699,7 +699,7 @@ class HeadFile(BinaryLayerFile):
         # loop over head file records in reverse order and write temp file
         temp_dir_path = Path(tempfile.gettempdir())
         temp_file_path = temp_dir_path / filename.name
-        with open(temp_file_path, "w") as f:
+        with open(temp_file_path, "wb") as f:
             for idx in range(nrecords - 1, -1, -1):
                 # load header array
                 header = self.recordarray[idx].copy()
@@ -2304,7 +2304,7 @@ class CellBudgetFile:
         # open backward budget file
         temp_dir_path = Path(tempfile.gettempdir())
         temp_file_path = temp_dir_path / filename.name
-        with open(temp_file_path, "w") as f:
+        with open(temp_file_path, "wb") as f:
             # loop over budget file records in reverse order
             for idx in range(nrecords - 1, -1, -1):
                 # load header array
