@@ -40,6 +40,14 @@ jobs:
       - name: Install Modflow executables
         uses: modflowpy/install-modflow-action@v1
 
+      - name: Install triangle (macOS workaround)
+        if: runner.os == 'macOS'
+        uses: modflowpy/install-modflow-action@v1
+        with:
+          repo: executables
+          ostag: mac
+          subset: triangle
+
       - name: Run benchmarks
         working-directory: autotest
         run: |
