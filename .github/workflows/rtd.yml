@@ -82,6 +82,14 @@ jobs:
         with:
           repo: modflow6-nightly-build
 
+      - name: Install triangle (macOS workaround)
+        if: runner.os == 'macOS'
+        uses: modflowpy/install-modflow-action@v1
+        with:
+          repo: executables
+          ostag: mac
+          subset: triangle
+
       - name: Run tutorial and example notebooks
         working-directory: autotest
         run: pytest -v -n auto test_notebooks.py
