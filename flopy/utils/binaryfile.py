@@ -676,7 +676,7 @@ class HeadFile(BinaryLayerFile):
 
         filename = (
             Path(filename).expanduser().absolute()
-            if filename
+            if filename is not None
             else self.filename
         )
 
@@ -697,9 +697,9 @@ class HeadFile(BinaryLayerFile):
         nrecords = len(self)
 
         # loop over head file records in reverse order and write temp file
-        temp_file = tempfile.NamedTemporaryFile()
-        temp_file_path = Path(temp_file.name)
-        with open(temp_file_path, "wb") as f:
+        temp_dir_path = Path(tempfile.gettempdir())
+        temp_file_path = temp_dir_path / filename.name
+        with open(temp_file_path, "w") as f:
             for idx in range(nrecords - 1, -1, -1):
                 # load header array
                 header = self.recordarray[idx].copy()
@@ -728,7 +728,12 @@ class HeadFile(BinaryLayerFile):
                         ilay=ilay + 1,
                     )
 
-        temp_file_path.rename(filename)
+        # if we're rewriting the original file, close it first
+        if filename == self.filename:
+            self.close()
+
+        # move temp file to destination
+        temp_file_path.replace(filename)
 
         # if we rewrote the original file, reinitialize
         if filename == self.filename:
@@ -2249,7 +2254,7 @@ class CellBudgetFile:
 
         filename = (
             Path(filename).expanduser().absolute()
-            if filename
+            if filename is not None
             else self.filename
         )
 
@@ -2297,9 +2302,9 @@ class CellBudgetFile:
         nrecords = len(self)
 
         # open backward budget file
-        temp_file = tempfile.NamedTemporaryFile()
-        temp_file_path = Path(temp_file.name)
-        with open(temp_file_path, "wb") as fbin:
+        temp_dir_path = Path(tempfile.gettempdir())
+        temp_file_path = temp_dir_path / filename.name
+        with open(temp_file_path, "w") as f:
             # loop over budget file records in reverse order
             for idx in range(nrecords - 1, -1, -1):
                 # load header array
@@ -2334,7 +2339,7 @@ class CellBudgetFile:
                 ]
                 # Note: much of the code below is based on binary_file_writer.py
                 h = np.array(h, dtype=dt1)
-                h.tofile(fbin)
+                h.tofile(f)
                 if header["imeth"] == 6:
                     # Write additional header information to the backward budget file
                     h = header[
@@ -2346,7 +2351,7 @@ class CellBudgetFile:
                         ]
                     ]
                     h = np.array(h, dtype=dt2)
-                    h.tofile(fbin)
+                    h.tofile(f)
                     # Load data
                     data = self.get_data(idx)[0]
                     data = np.array(data)
@@ -2357,7 +2362,7 @@ class CellBudgetFile:
                     ndat = len(colnames) - 2
                     dt = np.dtype([("ndat", np.int32)])
                     h = np.array([(ndat,)], dtype=dt)
-                    h.tofile(fbin)
+                    h.tofile(f)
                     # Write auxiliary column names
                     naux = ndat - 1
                     if naux > 0:
@@ -2369,12 +2374,12 @@ class CellBudgetFile:
                             [(colname, "S16") for colname in colnames[3:]]
                         )
                         h = np.array(auxtxt, dtype=dt)
-                        h.tofile(fbin)
+                        h.tofile(f)
                     # Write nlist
                     nlist = data.shape[0]
                     dt = np.dtype([("nlist", np.int32)])
                     h = np.array([(nlist,)], dtype=dt)
-                    h.tofile(fbin)
+                    h.tofile(f)
                 elif header["imeth"] == 1:
                     # Load data
                     data = self.get_data(idx)[0][0][0]
@@ -2384,9 +2389,14 @@ class CellBudgetFile:
                 else:
                     raise ValueError("not expecting imeth " + header["imeth"])
                 # Write data
-                data.tofile(fbin)
+                data.tofile(f)
 
-        temp_file_path.rename(filename)
+        # if we're rewriting the original file, close it first
+        if filename == self.filename:
+            self.close()
+
+        # move temp file to destination
+        temp_file_path.replace(filename)
 
         # if we rewrote the original file, reinitialize
         if filename == self.filename:
