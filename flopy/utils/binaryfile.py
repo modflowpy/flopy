@@ -10,6 +10,7 @@ important classes that can be accessed by the user.
 """
 
 import os
+import tempfile
 import warnings
 from pathlib import Path
 from typing import List, Optional, Union
@@ -20,6 +21,8 @@ import pandas as pd
 from ..utils.datafile import Header, LayerFile
 from .gridutil import get_lni
 
+HEAD_TEXT = "            HEAD"
+
 
 def write_head(
     fbin,
@@ -28,7 +31,7 @@ def write_head(
     kper=1,
     pertim=1.0,
     totim=1.0,
-    text="            HEAD",
+    text=HEAD_TEXT,
     ilay=1,
 ):
     dt = np.dtype(
@@ -662,81 +665,99 @@ class HeadFile(BinaryLayerFile):
 
     def reverse(self, filename: Optional[os.PathLike] = None):
         """
-        Write a new binary head file with the records in reverse order.
-        If a new filename is not provided, or if the filename is the same
-        as the existing filename, the file will be overwritten and data
-        reloaded from the rewritten/reversed file.
+        Reverse the time order of the currently loaded binary head file. If a head
+        file name is not provided or the provided name is the same as the existing
+        filename, the file will be overwritten and reloaded.
 
         Parameters
         ----------
 
         filename : str or PathLike
-            Path of the new reversed binary file to create.
+            Path of the reversed binary head file.
         """
 
         filename = (
             Path(filename).expanduser().absolute()
-            if filename
+            if filename is not None
             else self.filename
         )
 
-        # header array formats
-        dt = np.dtype(
-            [
-                ("kstp", np.int32),
-                ("kper", np.int32),
-                ("pertim", np.float64),
-                ("totim", np.float64),
-                ("text", "S16"),
-                ("ncol", np.int32),
-                ("nrow", np.int32),
-                ("ilay", np.int32),
-            ]
-        )
+        def get_max_kper_kstp_tsim():
+            header = self.recordarray[-1]
+            kper = header["kper"] - 1
+            tsim = header["totim"]
+            kstp = {0: 0}
+            for i in range(len(self) - 1, -1, -1):
+                header = self.recordarray[i]
+                if (
+                    header["kper"] in kstp
+                    and header["kstp"] > kstp[header["kper"]]
+                ):
+                    kstp[header["kper"]] += 1
+                else:
+                    kstp[header["kper"]] = 0
+            return kper, kstp, tsim
 
-        # make sure we have tdis
-        if self.tdis is None or not any(self.tdis.perioddata.get_data()):
-            raise ValueError("tdis mu/st be known to reverse head file")
+        # get max period and time from the head file
+        maxkper, maxkstp, maxtsim = get_max_kper_kstp_tsim()
+        # if we have tdis, get max period number and simulation time from it
+        tdis_maxkper, tdis_maxtsim = None, None
+        if self.tdis is not None:
+            pd = self.tdis.perioddata.get_data()
+            if any(pd):
+                tdis_maxkper = len(pd) - 1
+                tdis_maxtsim = sum([p[0] for p in pd])
+        # if we have both, check them against each other
+        if tdis_maxkper is not None:
+            assert maxkper == tdis_maxkper, (
+                f"Max stress period in binary head file ({maxkper}) != "
+                f"max stress period in provided tdis ({tdis_maxkper})"
+            )
+            assert maxtsim == tdis_maxtsim, (
+                f"Max simulation time in binary head file ({maxtsim}) != "
+                f"max simulation time in provided tdis ({tdis_maxtsim})"
+            )
 
-        # extract period data
-        pd = self.tdis.perioddata.get_data()
+        def reverse_header(header):
+            """Reverse period, step and time fields in the record header"""
 
-        # get maximum period number and total simulation time
-        kpermx = len(pd) - 1
-        tsimtotal = 0.0
-        for tpd in pd:
-            tsimtotal += tpd[0]
+            # reverse kstp and kper headers
+            kstp = header["kstp"] - 1
+            kper = header["kper"] - 1
+            header["kstp"] = maxkstp[kper] - kstp + 1
+            header["kper"] = maxkper - kper + 1
 
-        # get total number of records
-        nrecords = len(self)
+            # reverse totim and pertim headers
+            header["totim"] = maxtsim - header["totim"]
+            perlen = pd[kper][0]
+            header["pertim"] = perlen - header["pertim"]
+            return header
 
-        # open backward file
-        with open(filename, "wb") as fbin:
-            # loop over head file records in reverse order
-            for idx in range(nrecords - 1, -1, -1):
-                # load header array
-                header = self.recordarray[idx].copy()
+        # reverse record order and write to temporary file
+        temp_dir_path = Path(tempfile.gettempdir())
+        temp_file_path = temp_dir_path / filename.name
+        with open(temp_file_path, "wb") as f:
+            for i in range(len(self) - 1, -1, -1):
+                header = self.recordarray[i].copy()
+                header = reverse_header(header)
+                data = self.get_data(idx=i)
+                ilay = header["ilay"]
+                write_head(
+                    fbin=f,
+                    data=data[ilay - 1],
+                    kstp=header["kstp"],
+                    kper=header["kper"],
+                    pertim=header["pertim"],
+                    totim=header["totim"],
+                    ilay=ilay,
+                )
 
-                # reverse kstp and kper in the header array
-                (kstp, kper) = (header["kstp"] - 1, header["kper"] - 1)
-                kstpmx = pd[kper][1] - 1
-                kstpb = kstpmx - kstp
-                kperb = kpermx - kper
-                (header["kstp"], header["kper"]) = (kstpb + 1, kperb + 1)
+        # if we're rewriting the original file, close it first
+        if filename == self.filename:
+            self.close()
 
-                # reverse totim and pertim in the header array
-                header["totim"] = tsimtotal - header["totim"]
-                perlen = pd[kper][0]
-                header["pertim"] = perlen - header["pertim"]
-
-                # write header information
-                h = np.array(header, dtype=dt)
-                h.tofile(fbin)
-
-                # load and write data
-                data = self.get_data(idx=idx)[0][0]
-                data = np.array(data, dtype=np.float64)
-                data.tofile(fbin)
+        # move temp file to destination
+        temp_file_path.replace(filename)
 
         # if we rewrote the original file, reinitialize
         if filename == self.filename:
@@ -2241,21 +2262,23 @@ class CellBudgetFile:
 
     def reverse(self, filename: Optional[os.PathLike] = None):
         """
-        Write a binary cell budget file with the records in reverse order.
-        If a new filename is not provided, or if the filename is the same
-        as the existing filename, the file will be overwritten and data
-        reloaded from the rewritten/reversed file.
+        Reverse the time order and signs of the currently loaded binary cell budget
+        file. If a file name is not provided or if the provided name is the same as
+        the existing filename, the file will be overwritten and reloaded.
 
-        Parameters
-        ----------
+        Notes
+        -----
+        While `HeadFile.reverse()` reverses only the temporal order of head data,
+        this method must reverse not only the order but also the sign (direction)
+        of the model's intercell flows.
 
         filename : str or PathLike, optional
-            Path of the new reversed binary cell budget file to create.
+            Path of the reversed binary cell budget file.
         """
 
         filename = (
             Path(filename).expanduser().absolute()
-            if filename
+            if filename is not None
             else self.filename
         )
 
@@ -2303,7 +2326,9 @@ class CellBudgetFile:
         nrecords = len(self)
 
         # open backward budget file
-        with open(filename, "wb") as fbin:
+        temp_dir_path = Path(tempfile.gettempdir())
+        temp_file_path = temp_dir_path / filename.name
+        with open(temp_file_path, "wb") as f:
             # loop over budget file records in reverse order
             for idx in range(nrecords - 1, -1, -1):
                 # load header array
@@ -2338,7 +2363,7 @@ class CellBudgetFile:
                 ]
                 # Note: much of the code below is based on binary_file_writer.py
                 h = np.array(h, dtype=dt1)
-                h.tofile(fbin)
+                h.tofile(f)
                 if header["imeth"] == 6:
                     # Write additional header information to the backward budget file
                     h = header[
@@ -2350,7 +2375,7 @@ class CellBudgetFile:
                         ]
                     ]
                     h = np.array(h, dtype=dt2)
-                    h.tofile(fbin)
+                    h.tofile(f)
                     # Load data
                     data = self.get_data(idx)[0]
                     data = np.array(data)
@@ -2361,7 +2386,7 @@ class CellBudgetFile:
                     ndat = len(colnames) - 2
                     dt = np.dtype([("ndat", np.int32)])
                     h = np.array([(ndat,)], dtype=dt)
-                    h.tofile(fbin)
+                    h.tofile(f)
                     # Write auxiliary column names
                     naux = ndat - 1
                     if naux > 0:
@@ -2373,12 +2398,12 @@ class CellBudgetFile:
                             [(colname, "S16") for colname in colnames[3:]]
                         )
                         h = np.array(auxtxt, dtype=dt)
-                        h.tofile(fbin)
+                        h.tofile(f)
                     # Write nlist
                     nlist = data.shape[0]
                     dt = np.dtype([("nlist", np.int32)])
                     h = np.array([(nlist,)], dtype=dt)
-                    h.tofile(fbin)
+                    h.tofile(f)
                 elif header["imeth"] == 1:
                     # Load data
                     data = self.get_data(idx)[0][0][0]
@@ -2388,7 +2413,14 @@ class CellBudgetFile:
                 else:
                     raise ValueError("not expecting imeth " + header["imeth"])
                 # Write data
-                data.tofile(fbin)
+                data.tofile(f)
+
+        # if we're rewriting the original file, close it first
+        if filename == self.filename:
+            self.close()
+
+        # move temp file to destination
+        temp_file_path.replace(filename)
 
         # if we rewrote the original file, reinitialize
         if filename == self.filename:
