@@ -1,16 +1,15 @@
 name: FloPy documentation
-
 on:
   push:
   pull_request:
     branches:
       - master
       - develop
+  workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-
   rtd_build:
     name: Prepare and test notebooks
     runs-on: ${{ matrix.os }}
@@ -95,7 +94,13 @@ jobs:
         run: pytest -v -n auto test_notebooks.py
 
       - name: Upload notebooks artifact for ReadtheDocs
-        if: github.repository_owner == 'modflowpy' && github.event_name == 'push' && runner.os == 'Linux'
+        if: |
+          github.repository_owner == 'modflowpy' && 
+          runner.os == 'Linux' &&
+          (
+            github.event_name == 'push' ||
+            github.event_name == 'workflow_dispatch'
+          )
         uses: actions/upload-artifact@v4
         with:
           name: notebooks-for-${{ github.sha }}
@@ -106,9 +111,12 @@ jobs:
     name: Read the Docs trigger
     needs: rtd_build
     runs-on: ubuntu-latest
-
     if:
-      github.repository_owner == 'modflowpy' && github.event_name == 'push'
+      github.repository_owner == 'modflowpy' &&
+      (
+          github.event_name == 'push' ||
+          github.event_name == 'workflow_dispatch'
+      )
     steps:
       - name: Trigger RTDs build on master and develop branches
         uses: dfm/rtds-action@v1
