@@ -733,7 +733,7 @@ class MFArray(MFMultiDimVar):
                     "array" in kwargs
                     and kwargs["array"]
                     and isinstance(self, MFTransientArray)
-                    and data is not []
+                    and data != []
                 ):
                     data = np.expand_dims(data, 0)
                 return data
