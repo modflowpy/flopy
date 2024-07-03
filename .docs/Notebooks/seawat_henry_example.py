@@ -10,6 +10,7 @@
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
+#     section: mt3d
 #     name: python3
 # ---
 
