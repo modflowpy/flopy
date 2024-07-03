@@ -13,12 +13,11 @@ on:
         type: string
         default: 'refs/heads/develop'
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 jobs:
   set_options:
     name: Set release options
-    if: github.ref_name != 'master'
     runs-on: ubuntu-22.04
     outputs:
       ref: ${{ steps.set_ref.outputs.ref }}
