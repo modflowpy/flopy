@@ -6,12 +6,39 @@ on:
       - master
       - develop
   workflow_dispatch:
+    inputs:
+      ref:
+        description: 'The tag, branch or commit hash to trigger an RTD build for. Branches and tags must be fully formed, e.g. refs/heads/<branch> or refs/tags/<tag> respectively.'
+        required: false
+        type: string
+        default: 'refs/heads/develop'
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  set_options:
+    name: Set release options
+    if: github.ref_name != 'master'
+    runs-on: ubuntu-22.04
+    outputs:
+      ref: ${{ steps.set_ref.outputs.ref }}
+    steps:
+      - name: Set ref
+        id: set_ref
+        run: |
+          # if ref was provided explicitly via workflow_dispatch, use it
+          if [[ ("${{ github.event_name }}" == "workflow_dispatch") && (-n "${{ inputs.ref }}") ]]; then
+            ref="${{ inputs.ref }}"
+            echo "using ref $ref from workflow_dispatch"
+          else
+            # otherwise use the current branch
+            ref="${{ github.ref }}"
+            echo "using current ref $ref"
+          fi
+          echo "ref=$ref" >> $GITHUB_OUTPUT
   rtd_build:
     name: Prepare and test notebooks
+    needs: set_options
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -25,6 +52,8 @@ jobs:
     steps:
       - name: Checkout flopy repo
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.set_options.outputs.ref }}
 
       - name: Output repo information
         run: |
@@ -109,7 +138,9 @@ jobs:
   # trigger rtd if previous job was successful
   rtd:
     name: Read the Docs trigger
-    needs: rtd_build
+    needs: 
+      - rtd_build
+      - set_options
     runs-on: ubuntu-latest
     if:
       github.repository_owner == 'modflowpy' &&
@@ -118,9 +149,9 @@ jobs:
           github.event_name == 'workflow_dispatch'
       )
     steps:
-      - name: Trigger RTDs build on master and develop branches
+      - name: Trigger RTDs build
         uses: dfm/rtds-action@v1
         with:
           webhook_url: ${{ secrets.RTDS_WEBHOOK_URL }}
           webhook_token: ${{ secrets.RTDS_WEBHOOK_TOKEN }}
-          commit_ref: ${{ github.ref }}
+          commit_ref: ${{ needs.set_options.outputs.ref }}
