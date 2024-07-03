@@ -142,6 +142,7 @@ ignore = [
     "E501", # line too long TODO FIXME
     "E712", # Avoid equality comparisons to `True`
     "E722", # do not use bare `except`
+    "E721", # use `is`/`is not` for type comparisons
     "E741", # ambiguous variable name
     "F401", # unused import
     "F403", # unable to detect undefined names (star imports)
