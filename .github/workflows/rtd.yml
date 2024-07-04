@@ -13,15 +13,15 @@ on:
         type: string
         default: 'refs/heads/develop'
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 jobs:
   set_options:
     name: Set release options
-    if: github.ref_name != 'master'
     runs-on: ubuntu-22.04
     outputs:
       ref: ${{ steps.set_ref.outputs.ref }}
+      sha: ${{ steps.set_sha.outputs.sha }}
     steps:
       - name: Set ref
         id: set_ref
@@ -36,6 +36,15 @@ jobs:
             echo "using current ref $ref"
           fi
           echo "ref=$ref" >> $GITHUB_OUTPUT
+      - name: Set sha
+        id: set_sha
+        run: |
+          if [[ ("${{ github.event_name }}" == "workflow_dispatch") && (-n "${{ inputs.ref }}") ]]; then
+            sha=$(git rev-parse ${{ steps.set_ref.outputs.ref }})
+          else
+            sha="${{ github.sha }}"
+          fi
+          echo "sha=$sha" >> $GITHUB_OUTPUT
   rtd_build:
     name: Prepare and test notebooks
     needs: set_options
@@ -132,7 +141,7 @@ jobs:
           )
         uses: actions/upload-artifact@v4
         with:
-          name: notebooks-for-${{ github.sha }}
+          name: notebooks-for-${{ needs.set_options.outputs.sha }}
           path: .docs/Notebooks/*.ipynb
 
   # trigger rtd if previous job was successful
