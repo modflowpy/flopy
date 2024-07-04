@@ -23,6 +23,7 @@ jobs:
       ref: ${{ steps.set_ref.outputs.ref }}
       sha: ${{ steps.set_sha.outputs.sha }}
     steps:
+      
       - name: Set ref
         id: set_ref
         run: |
@@ -36,6 +37,12 @@ jobs:
             echo "using current ref $ref"
           fi
           echo "ref=$ref" >> $GITHUB_OUTPUT
+
+      - name: Checkout flopy repo
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.set_ref.outputs.ref }}
+
       - name: Set sha
         id: set_sha
         run: |
@@ -45,6 +52,7 @@ jobs:
             sha="${{ github.sha }}"
           fi
           echo "sha=$sha" >> $GITHUB_OUTPUT
+
   rtd_build:
     name: Prepare and test notebooks
     needs: set_options
