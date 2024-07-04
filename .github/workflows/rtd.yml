@@ -39,7 +39,11 @@ jobs:
       - name: Set sha
         id: set_sha
         run: |
-          sha=$(git rev-parse ${{ steps.set_ref.outputs.ref }})
+          if [[ ("${{ github.event_name }}" == "workflow_dispatch") && (-n "${{ inputs.ref }}") ]]; then
+            sha=$(git rev-parse ${{ steps.set_ref.outputs.ref }})
+          else
+            sha="${{ github.sha }}"
+          fi
           echo "sha=$sha" >> $GITHUB_OUTPUT
   rtd_build:
     name: Prepare and test notebooks
