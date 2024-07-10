@@ -24,14 +24,15 @@
 import os
 import pathlib as pl
 import sys
-import yaml
 
 import matplotlib as mpl
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
-from shapely.geometry import LineString, Polygon
 import shapely
+import yaml
+from shapely.geometry import LineString, Polygon
+
 import flopy
 import flopy.plot.styles as styles
 from flopy.discretization import StructuredGrid, VertexGrid
@@ -44,6 +45,7 @@ print(sys.version)
 print(f"numpy version: {np.__version__}")
 print(f"matplotlib version: {mpl.__version__}")
 print(f"flopy version: {flopy.__version__}")
+
 
 # define a few utility functions
 def string2geom(geostring, conversion=None):
@@ -105,7 +107,10 @@ def set_idomain(grid, boundary):
     idomain = idomain.reshape(grid.shape)
     grid.idomain = idomain
 
-geometries = yaml.safe_load(open(pl.Path("../../examples/data/groundwater2023/geometries.yml")))
+
+geometries = yaml.safe_load(
+    open(pl.Path("../../examples/data/groundwater2023/geometries.yml"))
+)
 
 # basic figure size
 figwidth = 180  # 90 # mm

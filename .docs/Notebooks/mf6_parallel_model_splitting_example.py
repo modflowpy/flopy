@@ -21,19 +21,22 @@
 # The `Mf6Splitter()` class supports Structured, Vertex, and Unstructured Grid models.
 
 import sys
-import yaml
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import matplotlib.pyplot as plt
 import numpy as np
+import yaml
 
 import flopy
 from flopy.mf6.utils import Mf6Splitter
 from flopy.plot import styles
 from flopy.utils.geometry import LineString, Polygon
 
-geometries = yaml.safe_load(open(Path("../../examples/data/groundwater2023/geometries.yml")))
+geometries = yaml.safe_load(
+    open(Path("../../examples/data/groundwater2023/geometries.yml"))
+)
+
 
 # define a few utility functions
 def string2geom(geostring, conversion=None):
@@ -51,6 +54,7 @@ def string2geom(geostring, conversion=None):
         y = float(line[1]) * multiplier
         res.append((x, y))
     return res
+
 
 # ## Example 1: splitting a simple structured grid model
 #
