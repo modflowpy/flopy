@@ -267,7 +267,10 @@ class Raster:
             "width": width,
             "height": height,
             "crs": dst_crs,
-            "nodata": self.nodatavals[0]
+            "nodata": self.nodatavals[0],
+            "driver": self._meta["driver"],
+            "count": self._meta["count"],
+            "dtype": self._meta["dtype"]
         }
 
         with MemoryFile() as memfile:
@@ -924,7 +927,7 @@ class Raster:
                     )
                 crs = modelgrid.crs
 
-            if modelgrid.grid_type() != "structured":
+            if modelgrid.grid_type != "structured":
                 raise TypeError(
                     f"{type(modelgrid)} discretizations are not supported"
                 )
