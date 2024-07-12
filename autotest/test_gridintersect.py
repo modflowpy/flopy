@@ -1463,12 +1463,13 @@ def test_raster_reprojection(example_data_path):
     print(raster.crs.to_epsg())
     wgs_raster = raster.to_crs(crs=f"EPSG:{wgs_epsg}")
 
-
     if not wgs_raster.crs.to_epsg() == wgs_epsg:
         raise AssertionError(f"Raster not converted to EPSG {wgs_epsg}")
 
     transform = wgs_raster._meta["transform"]
-    if not np.isclose(transform.c, wgs_xmin) and not np.isclose(transform.f, wgs_ymax):
+    if not np.isclose(transform.c, wgs_xmin) and not np.isclose(
+        transform.f, wgs_ymax
+    ):
         raise AssertionError(f"Raster not reprojected to EPSG {wgs_epsg}")
 
     raster.to_crs(epsg=wgs_epsg, inplace=True)
@@ -1505,7 +1506,7 @@ def test_create_raster_from_array_modelgrid(example_data_path):
         idomain=np.ones((nlay, nrow, ncol), dtype=int),
         xoff=xmin,
         yoff=ymin,
-        crs=raster.crs
+        crs=raster.crs,
     )
 
     array = np.random.random((grid.ncpl * nbands,)) * 100
@@ -1520,13 +1521,14 @@ def test_create_raster_from_array_modelgrid(example_data_path):
         np.testing.assert_allclose(
             array[band - 1],
             ra,
-            err_msg="Array not properly reshaped or converted to raster"
+            err_msg="Array not properly reshaped or converted to raster",
         )
 
 
 @requires_pkg("rasterio", "affine")
 def test_create_raster_from_array_transform(example_data_path):
     import affine
+
     ws = example_data_path / "options" / "dem"
     raster_name = "dem.img"
 
@@ -1538,8 +1540,7 @@ def test_create_raster_from_array_transform(example_data_path):
     array = np.expand_dims(array, axis=0)
     # same location but shrink raster by factor 2
     new_transform = affine.Affine(
-        transform.a / 2, 0, transform.c,
-        0, transform.e / 2, transform.f
+        transform.a / 2, 0, transform.c, 0, transform.e / 2, transform.f
     )
 
     robj = Raster.raster_from_array(
@@ -1549,8 +1550,10 @@ def test_create_raster_from_array_transform(example_data_path):
     rxmin, rxmax, rymin, rymax = robj.bounds
     xmin, xmax, ymin, ymax = raster.bounds
 
-    if not ((xmax - xmin) / (rxmax - rxmin)) == 2 or\
-            not ((ymax - ymin) / (rymax - rymin)) == 2:
+    if (
+        not ((xmax - xmin) / (rxmax - rxmin)) == 2
+        or not ((ymax - ymin) / (rymax - rymin)) == 2
+    ):
         raise AssertionError("Transform based raster not working properly")
 
 

@@ -578,14 +578,14 @@ plt.colorbar(ax, shrink=0.7)
 #    - `crs`: the crs parameter can take many different formats of coordinate refence systems (WKT string, epsg code, pyproj.CRS, rasterio.CRS, proj4 string, epsg string, etc...)
 #    - `epsg`: integer epsg number
 #    - `inplace`: bool, default False creates a new raster object, True modifies the existing Raster object
-#    
+#
 # Here's example usage:
 
 cur_crs = rio.crs
 print(cur_crs)
 print(rio.transform)
 
-rio_reproj = rio.to_crs(crs="EPSG:4326") # WGS84 dec. lat lon
+rio_reproj = rio.to_crs(crs="EPSG:4326")  # WGS84 dec. lat lon
 print(rio_reproj.crs)
 print(rio_reproj.transform)
 

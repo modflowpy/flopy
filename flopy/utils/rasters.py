@@ -254,7 +254,11 @@ class Raster:
 
         """
         import rasterio
-        from rasterio.warp import calculate_default_transform, reproject, Resampling
+        from rasterio.warp import (
+            calculate_default_transform,
+            reproject,
+            Resampling,
+        )
         from rasterio.io import MemoryFile
 
         height = self._meta["height"]
@@ -273,7 +277,7 @@ class Raster:
             "nodata": self.nodatavals[0],
             "driver": self._meta["driver"],
             "count": self._meta["count"],
-            "dtype": self._meta["dtype"]
+            "dtype": self._meta["dtype"],
         }
 
         with MemoryFile() as memfile:
@@ -286,7 +290,7 @@ class Raster:
                         src_crs=self.crs,
                         dst_transform=transform,
                         dst_crs=dst_crs,
-                        resampling=Resampling.nearest
+                        resampling=Resampling.nearest,
                     )
             with memfile.open() as dataset:
                 array = dataset.read()
@@ -895,7 +899,11 @@ class Raster:
 
     @staticmethod
     def raster_from_array(
-            array, modelgrid=None, nodataval=1e-10, crs=None, transform=None,
+        array,
+        modelgrid=None,
+        nodataval=1e-10,
+        crs=None,
+        transform=None,
     ):
         """
         Method to create a raster from an array. When using a modelgrid to
@@ -943,21 +951,16 @@ class Raster:
                 )
 
             if not np.all(modelgrid.delc == modelgrid.delc[0]):
-                raise AssertionError(
-                    "DELC must have a uniform spacing"
-                )
+                raise AssertionError("DELC must have a uniform spacing")
 
             if not np.all(modelgrid.delr == modelgrid.delr[0]):
-                raise AssertionError(
-                    "DELR must have a uniform spacing"
-                )
+                raise AssertionError("DELR must have a uniform spacing")
 
             yul = modelgrid.yvertices[0, 0]
             xul = modelgrid.xvertices[0, 0]
             angrot = modelgrid.angrot
             transform = Affine(
-                modelgrid.delr[0], 0, xul,
-                0, -modelgrid.delc[0], yul
+                modelgrid.delr[0], 0, xul, 0, -modelgrid.delc[0], yul
             )
 
             if angrot != 0:
@@ -988,8 +991,6 @@ class Raster:
                 transform=transform,
                 nodataval=nodataval,
             )
-
-
 
     def plot(self, ax=None, contour=False, **kwargs):
         """
