@@ -254,12 +254,12 @@ class Raster:
 
         """
         import rasterio
+        from rasterio.io import MemoryFile
         from rasterio.warp import (
+            Resampling,
             calculate_default_transform,
             reproject,
-            Resampling,
         )
-        from rasterio.io import MemoryFile
 
         height = self._meta["height"]
         width = self._meta["width"]
