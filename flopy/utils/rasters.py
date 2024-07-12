@@ -95,10 +95,8 @@ class Raster:
 
         if isinstance(crs, CRS):
             pass
-        elif isinstance(crs, int):
-            crs = CRS.from_epsg(crs)
-        elif isinstance(crs, str):
-            crs = CRS.from_string(crs)
+        elif crs is not None:
+            crs = CRS.from_user_input(crs)
         else:
             TypeError("crs type not understood, provide an epsg or proj4")
 
@@ -146,6 +144,13 @@ class Raster:
         xmax, ymin = transform * (width, height)
 
         return xmin, xmax, ymin, ymax
+
+    @property
+    def transform(self):
+        """
+        Returns the affine transform for the raster
+        """
+        return self._meta["transform"]
 
     @property
     def bands(self):
@@ -252,14 +257,12 @@ class Raster:
         from rasterio.warp import calculate_default_transform, reproject, Resampling
         from rasterio.io import MemoryFile
 
-        src_crs = self.crs
-        src_transform = self._meta["transform"]
         height = self._meta["height"]
         width = self._meta["width"]
         xmin, xmax, ymin, ymax = self.bounds
 
         transform, width, height = calculate_default_transform(
-            src_crs, dst_crs, width, height, xmin, ymin, xmax, ymax
+            self.crs, dst_crs, width, height, xmin, ymin, xmax, ymax
         )
 
         kwargs = {
@@ -279,8 +282,8 @@ class Raster:
                     reproject(
                         source=self.get_array(band),
                         destination=rasterio.band(dst, band),
-                        src_transform=src_transform,
-                        src_crs=src_crs,
+                        src_transform=self.transform,
+                        src_crs=self.crs,
                         dst_transform=transform,
                         dst_crs=dst_crs,
                         resampling=Resampling.nearest
@@ -499,7 +502,7 @@ class Raster:
         rasterstats = import_optional_dependency("rasterstats")
         from scipy.interpolate import griddata
 
-        xmin, xmax, ymin, ymax = modelgrid.bounds
+        xmin, xmax, ymin, ymax = modelgrid.extent
         rxmin, rxmax, rymin, rymax = self.bounds
         if any([rxmax < xmin, rxmin > xmax, rymax < ymin, rymin > ymax]):
             raise AssertionError(
@@ -895,23 +898,30 @@ class Raster:
             array, modelgrid=None, nodataval=1e-10, crs=None, transform=None,
     ):
         """
+        Method to create a raster from an array. When using a modelgrid to
+        define the transform, delc and delr must be uniform in each dimension.
+        Otherwise, the user can define their own transform using the affine
+        package.
 
         Parameters
         ----------
-        array :
-        modelgrid :
-        nodata :
-        crs :
-
+        array : np.ndarray
+            array of (n-bands, nrows, ncols) for the raster
+        modelgrid : flopy.discretization.StructuredGrid
+            StructuredGrid object (optional), but transform must be defined
+            if a StructuredGrid is not supplied
+        nodataval : (int, float)
+            Null value
+        crs : coordinate reference system input of many types
         transform : affine.Affine
             optional affine transform that defines the spatial parameters
-            of the raster.
+            of the raster. This must be supplied if a modelgrid is not
+            used to define the transform
 
         Returns
         -------
             Raster object
         """
-        from rasterio.crs import CRS
         from affine import Affine
 
         if not isinstance(array, np.ndarray):
