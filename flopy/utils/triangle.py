@@ -131,6 +131,7 @@ class Triangle:
         None
 
         """
+        point = GeoSpatialUtil(point, shapetype="point").points
         self._regions.append([point, attribute, maximum_area])
 
     def build(self, verbose=False):
