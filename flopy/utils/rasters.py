@@ -95,10 +95,8 @@ class Raster:
 
         if isinstance(crs, CRS):
             pass
-        elif isinstance(crs, int):
-            crs = CRS.from_epsg(crs)
-        elif isinstance(crs, str):
-            crs = CRS.from_string(crs)
+        elif crs is not None:
+            crs = CRS.from_user_input(crs)
         else:
             TypeError("crs type not understood, provide an epsg or proj4")
 
@@ -127,6 +125,13 @@ class Raster:
             self._dataset = rio_ds
 
     @property
+    def crs(self):
+        """
+        Returns a rasterio CRS object
+        """
+        return self._meta["crs"]
+
+    @property
     def bounds(self):
         """
         Returns a tuple of xmin, xmax, ymin, ymax boundaries
@@ -139,6 +144,13 @@ class Raster:
         xmax, ymin = transform * (width, height)
 
         return xmin, xmax, ymin, ymax
+
+    @property
+    def transform(self):
+        """
+        Returns the affine transform for the raster
+        """
+        return self._meta["transform"]
 
     @property
     def bands(self):
@@ -183,6 +195,126 @@ class Raster:
         if self.__ycenters is None:
             self.__xycenters()
         return self.__ycenters
+
+    def to_crs(self, crs=None, epsg=None, inplace=False):
+        """
+        Method for re-projecting rasters from an existing CRS to a
+        new CRS
+
+        Parameters
+        ----------
+        crs : CRS user input of many different kinds
+        epsg : int
+            epsg code input that defines the coordinate system
+        inplace : bool
+            Boolean flag to indicate if the operation takes place "in place"
+            which reprojects the raster within the current object or the
+            default (False) to_crs() returns a reprojected Raster object
+
+        Returns
+        -------
+            Raster or None: returns a reprojected raster object if
+                inplace=False, otherwise the reprojected information
+                overwrites the current Raster object
+
+        """
+        from rasterio.crs import CRS
+
+        if self.crs is None:
+            raise ValueError(
+                "Cannot transform naive geometries.  "
+                "Please set a crs on the object first."
+            )
+        if crs is not None:
+            dst_crs = CRS.from_user_input(crs)
+        elif epsg is not None:
+            dst_crs = CRS.from_epsg(epsg)
+        else:
+            raise ValueError("Must pass either crs or epsg.")
+
+        # skip if the input CRS and output CRS are the exact same
+        if self.crs.to_epsg() == dst_crs.to_epsg():
+            return self
+
+        return self.__transform(dst_crs=dst_crs, inplace=inplace)
+
+    def __transform(self, dst_crs, inplace):
+        """
+
+        Parameters
+        ----------
+        dst_crs : rasterio.CRS object
+        inplace : bool
+
+        Returns
+        -------
+            Raster or None: returns a reprojected raster object if
+                inplace=False, otherwise the reprojected information
+                overwrites the current Raster object
+
+        """
+        import rasterio
+        from rasterio.io import MemoryFile
+        from rasterio.warp import (
+            Resampling,
+            calculate_default_transform,
+            reproject,
+        )
+
+        height = self._meta["height"]
+        width = self._meta["width"]
+        xmin, xmax, ymin, ymax = self.bounds
+
+        transform, width, height = calculate_default_transform(
+            self.crs, dst_crs, width, height, xmin, ymin, xmax, ymax
+        )
+
+        kwargs = {
+            "transform": transform,
+            "width": width,
+            "height": height,
+            "crs": dst_crs,
+            "nodata": self.nodatavals[0],
+            "driver": self._meta["driver"],
+            "count": self._meta["count"],
+            "dtype": self._meta["dtype"],
+        }
+
+        with MemoryFile() as memfile:
+            with memfile.open(**kwargs) as dst:
+                for band in self.bands:
+                    reproject(
+                        source=self.get_array(band),
+                        destination=rasterio.band(dst, band),
+                        src_transform=self.transform,
+                        src_crs=self.crs,
+                        dst_transform=transform,
+                        dst_crs=dst_crs,
+                        resampling=Resampling.nearest,
+                    )
+            with memfile.open() as dataset:
+                array = dataset.read()
+                bands = dataset.indexes
+                meta = dataset.meta
+
+                if inplace:
+                    for ix, band in enumerate(bands):
+                        self.__arr_dict[band] = array[ix]
+
+                    self.__xcenters = None
+                    self.__ycenters = None
+                    self._meta.update({k: v for k, v in kwargs.items()})
+                    self._dataset = None
+
+                else:
+                    return Raster(
+                        array,
+                        bands,
+                        meta["crs"],
+                        meta["transform"],
+                        meta["nodata"],
+                        meta["driver"],
+                    )
 
     def __xycenters(self):
         """
@@ -327,8 +459,6 @@ class Raster:
         modelgrid,
         band,
         method="nearest",
-        multithread=False,
-        thread_pool=2,
         extrapolate_edges=False,
     ):
         """
@@ -363,11 +493,6 @@ class Raster:
 
             `'mode'` for majority sampling
 
-        multithread : bool
-            DEPRECATED boolean flag indicating if multithreading should be
-            used with the ``mean`` and ``median`` sampling methods
-        thread_pool : int
-            DEPRECATED number of threads to use for mean and median sampling
         extrapolate_edges : bool
             boolean flag indicating if areas without data should be filled
             using the ``nearest`` interpolation method. This option
@@ -377,15 +502,17 @@ class Raster:
         -------
             np.array
         """
-        if multithread:
-            warnings.warn(
-                "multithread option has been deprecated and will be removed "
-                "in flopy version 3.3.8"
-            )
-
         import_optional_dependency("scipy")
         rasterstats = import_optional_dependency("rasterstats")
         from scipy.interpolate import griddata
+
+        xmin, xmax, ymin, ymax = modelgrid.extent
+        rxmin, rxmax, rymin, rymax = self.bounds
+        if any([rxmax < xmin, rxmin > xmax, rymax < ymin, rymin > ymax]):
+            raise AssertionError(
+                "Raster and model grid do not intersect. Check that the grid "
+                "and raster are in the same coordinate reference system"
+            )
 
         method = method.lower()
         if method in ("linear", "nearest", "cubic"):
@@ -769,6 +896,101 @@ class Raster:
             meta["nodata"],
             meta["driver"],
         )
+
+    @staticmethod
+    def raster_from_array(
+        array,
+        modelgrid=None,
+        nodataval=1e-10,
+        crs=None,
+        transform=None,
+    ):
+        """
+        Method to create a raster from an array. When using a modelgrid to
+        define the transform, delc and delr must be uniform in each dimension.
+        Otherwise, the user can define their own transform using the affine
+        package.
+
+        Parameters
+        ----------
+        array : np.ndarray
+            array of (n-bands, nrows, ncols) for the raster
+        modelgrid : flopy.discretization.StructuredGrid
+            StructuredGrid object (optional), but transform must be defined
+            if a StructuredGrid is not supplied
+        nodataval : (int, float)
+            Null value
+        crs : coordinate reference system input of many types
+        transform : affine.Affine
+            optional affine transform that defines the spatial parameters
+            of the raster. This must be supplied if a modelgrid is not
+            used to define the transform
+
+        Returns
+        -------
+            Raster object
+        """
+        from affine import Affine
+
+        if not isinstance(array, np.ndarray):
+            array = np.array(array)
+
+        if modelgrid is not None:
+            if crs is None:
+                if modelgrid.crs is None:
+                    raise ValueError(
+                        "Cannot create a raster from a grid without a "
+                        "coordinate reference system, please provide a crs "
+                        "using crs="
+                    )
+                crs = modelgrid.crs
+
+            if modelgrid.grid_type != "structured":
+                raise TypeError(
+                    f"{type(modelgrid)} discretizations are not supported"
+                )
+
+            if not np.all(modelgrid.delc == modelgrid.delc[0]):
+                raise AssertionError("DELC must have a uniform spacing")
+
+            if not np.all(modelgrid.delr == modelgrid.delr[0]):
+                raise AssertionError("DELR must have a uniform spacing")
+
+            yul = modelgrid.yvertices[0, 0]
+            xul = modelgrid.xvertices[0, 0]
+            angrot = modelgrid.angrot
+            transform = Affine(
+                modelgrid.delr[0], 0, xul, 0, -modelgrid.delc[0], yul
+            )
+
+            if angrot != 0:
+                transform *= Affine.rotation(angrot)
+
+            if array.size % modelgrid.ncpl != 0:
+                raise AssertionError(
+                    f"Array size {array.size} is not a multiple of the "
+                    f"number of cells per layer in the model grid "
+                    f"{modelgrid.ncpl}"
+                )
+
+            array = array.reshape((-1, modelgrid.nrow, modelgrid.ncol))
+
+        if transform is not None:
+            if crs is None:
+                raise ValueError(
+                    "Cannot create a raster without a coordinate reference "
+                    "system, please use crs= to provide a coordinate reference"
+                )
+
+            bands, height, width = array.shape
+
+            return Raster(
+                array,
+                bands=list(range(1, bands + 1)),
+                crs=crs,
+                transform=transform,
+                nodataval=nodataval,
+            )
 
     def plot(self, ax=None, contour=False, **kwargs):
         """

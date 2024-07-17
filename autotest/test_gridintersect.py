@@ -1449,6 +1449,114 @@ def test_raster_sampling_methods(example_data_path):
             )
 
 
+@requires_pkg("rasterio")
+def test_raster_reprojection(example_data_path):
+    ws = example_data_path / "options" / "dem"
+    raster_name = "dem.img"
+
+    wgs_epsg = 4326
+    wgs_xmin = -120.32116799649168
+    wgs_ymax = 39.46620605907534
+
+    raster = Raster.load(ws / raster_name)
+
+    print(raster.crs.to_epsg())
+    wgs_raster = raster.to_crs(crs=f"EPSG:{wgs_epsg}")
+
+    if not wgs_raster.crs.to_epsg() == wgs_epsg:
+        raise AssertionError(f"Raster not converted to EPSG {wgs_epsg}")
+
+    transform = wgs_raster._meta["transform"]
+    if not np.isclose(transform.c, wgs_xmin) and not np.isclose(
+        transform.f, wgs_ymax
+    ):
+        raise AssertionError(f"Raster not reprojected to EPSG {wgs_epsg}")
+
+    raster.to_crs(epsg=wgs_epsg, inplace=True)
+    transform2 = raster._meta["transform"]
+    for ix, val in enumerate(transform):
+        if not np.isclose(val, transform2[ix]):
+            raise AssertionError("In place reprojection not working")
+
+
+@requires_pkg("rasterio")
+def test_create_raster_from_array_modelgrid(example_data_path):
+    ws = example_data_path / "options" / "dem"
+    raster_name = "dem.img"
+
+    raster = Raster.load(ws / raster_name)
+
+    xsize = 200
+    ysize = 100
+    xmin, xmax, ymin, ymax = raster.bounds
+
+    nbands = 5
+    nlay = 1
+    nrow = int(np.floor((ymax - ymin) / ysize))
+    ncol = int(np.floor((xmax - xmin) / xsize))
+
+    delc = np.full((nrow,), ysize)
+    delr = np.full((ncol,), xsize)
+
+    grid = flopy.discretization.StructuredGrid(
+        delc=delc,
+        delr=delr,
+        top=np.ones((nrow, ncol)),
+        botm=np.zeros((nlay, nrow, ncol)),
+        idomain=np.ones((nlay, nrow, ncol), dtype=int),
+        xoff=xmin,
+        yoff=ymin,
+        crs=raster.crs,
+    )
+
+    array = np.random.random((grid.ncpl * nbands,)) * 100
+    robj = Raster.raster_from_array(array, grid)
+
+    if nbands != len(robj.bands):
+        raise AssertionError("Number of raster bands is incorrect")
+
+    array = array.reshape((nbands, nrow, ncol))
+    for band in robj.bands:
+        ra = robj.get_array(band)
+        np.testing.assert_allclose(
+            array[band - 1],
+            ra,
+            err_msg="Array not properly reshaped or converted to raster",
+        )
+
+
+@requires_pkg("rasterio", "affine")
+def test_create_raster_from_array_transform(example_data_path):
+    import affine
+
+    ws = example_data_path / "options" / "dem"
+    raster_name = "dem.img"
+
+    raster = Raster.load(ws / raster_name)
+
+    transform = raster._meta["transform"]
+    array = raster.get_array(band=raster.bands[0])
+
+    array = np.expand_dims(array, axis=0)
+    # same location but shrink raster by factor 2
+    new_transform = affine.Affine(
+        transform.a / 2, 0, transform.c, 0, transform.e / 2, transform.f
+    )
+
+    robj = Raster.raster_from_array(
+        array, crs=raster.crs, transform=new_transform
+    )
+
+    rxmin, rxmax, rymin, rymax = robj.bounds
+    xmin, xmax, ymin, ymax = raster.bounds
+
+    if (
+        not ((xmax - xmin) / (rxmax - rxmin)) == 2
+        or not ((ymax - ymin) / (rymax - rymin)) == 2
+    ):
+        raise AssertionError("Transform based raster not working properly")
+
+
 if __name__ == "__main__":
     sgr = get_rect_grid(angrot=45.0, xyoffset=10.0)
     ls = LineString([(5, 10.0 + np.sqrt(200.0)), (15, 10.0 + np.sqrt(200.0))])
