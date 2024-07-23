@@ -175,7 +175,7 @@ def test_lgrutil3():
     for k in range(nlayp):
         botmp[k] = -(k + 1) * dz
     idomainp = np.ones((nlayp, nrowp, ncolp), dtype=int)
-    idomainp[0, nrowp // 2, ncolp // 2] = 0
+    idomainp[:, nrowp // 2, ncolp // 2] = 0
     ncpp = 3
     ncppl = nlayp * [1]
     lgr = Lgr(
@@ -219,9 +219,11 @@ def test_lgrutil3():
     assert lgrtodisv.iverts[4] == [6, 7, 11, 10, 27, 23]
     assert lgrtodisv.iverts[6] == [9, 29, 30, 10, 14, 13]
 
-    assert gridprops["top"].min() == gridprops["top"].max() == dz
+    assert np.allclose(gridprops["top"], dz * np.ones((17,)))
 
     assert gridprops["botm"].shape == (3, 17)
-    assert gridprops["botm"][0].min() == gridprops["botm"][0].min() == -dz
-    assert gridprops["botm"][1].min() == gridprops["botm"][1].min() == -2 * dz
-    assert gridprops["botm"][2].min() == gridprops["botm"][2].min() == -3 * dz
+    b = np.empty((3, 17))
+    b[0] = -dz
+    b[1] = -2 * dz
+    b[2] = -3 * dz
+    assert np.allclose(gridprops["botm"], b)

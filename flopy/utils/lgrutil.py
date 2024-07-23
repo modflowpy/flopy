@@ -994,6 +994,10 @@ class LgrToDisv:
         assert (
             self.lgr.nlayp == self.lgr.nlay
         ), "Exporting disv grid properties requires parent and child models to have the same number of layers."
+        for k in range(self.lgr.nlayp - 1):
+            assert np.allclose(
+                self.lgr.idomain[k], self.lgr.idomain[k + 1]
+            ), "Exporting disv grid properties requires parent idomain is same for all layers."
 
         # get information and build gridprops
         xcyc = self.get_xcyc()
