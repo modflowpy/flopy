@@ -999,9 +999,7 @@ class LgrToDisv:
         xcyc = self.get_xcyc()
         top = self.get_top()
         botm = self.get_botm()
-        gridprops = get_disv_gridprops(
-            self.verts, self.iverts, xcyc=xcyc
-        )
+        gridprops = get_disv_gridprops(self.verts, self.iverts, xcyc=xcyc)
         gridprops["nlay"] = self.lgr.nlay
         gridprops["top"] = top
         gridprops["botm"] = botm
