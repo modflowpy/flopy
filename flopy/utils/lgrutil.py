@@ -2,8 +2,8 @@ import numpy as np
 
 from ..discretization import StructuredGrid
 from ..modflow import Modflow
-from .util_array import Util2d, Util3d
 from .cvfdutil import get_disv_gridprops
+from .util_array import Util2d, Util3d
 
 
 class SimpleRegularGrid:
