@@ -611,7 +611,6 @@ class Lgr:
             self.nlayp == self.nlay
         ), "Exporting disv grid properties requires parent and child models to have the same number of layers."
         lgrtodisv = LgrToDisv(self)
-        self._lgrtodisv = lgrtodisv
         xcyc = lgrtodisv.get_xcyc()
         # todo: add nlay, top, and botm to gridprops
         gridprops = get_disv_gridprops(
@@ -815,8 +814,8 @@ class LgrToDisv:
                     iverts.append(ivlist)
                     self.child_ij_to_global[(i, j)] = iglo
                     iglo += 1
-
-        return verts, iverts
+        self.verts = verts
+        self.iverts = iverts
 
     def merge_hanging_vertices(self, ip, jp, ivlist):
         """
