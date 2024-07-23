@@ -35,6 +35,7 @@ MODFLOW 6
    Notebooks/mf6_output_tutorial01
    Notebooks/mf6_sfr_tutorial01
    Notebooks/mf6_tutorial01
+   Notebooks/mf6_lgr_tutorial01
 
 
 MODFLOW-2005
@@ -48,15 +49,6 @@ MODFLOW-2005
    Notebooks/mf_load_tutorial
    Notebooks/mf_tutorial01
    Notebooks/mf_tutorial02
-
-
-MODFLOW-LGR
------------
-
-.. toctree::
-   :maxdepth: 2
-
-   Notebooks/lgr_tutorial01
 
 
 MODFLOW-NWT
