@@ -601,22 +601,11 @@ class Lgr:
         Returns
         -------
         gridprops : dict
-            Dictionary containing ncpl, nvert, vertices, and cell2d
+            Dictionary containing ncpl, nvert, vertices, cell2d,
+            nlay, top, and botm
 
         """
-        assert (
-            self.ncppl.min() == self.ncppl.max()
-        ), "Exporting disv grid properties requires ncppl to be 1."
-        assert (
-            self.nlayp == self.nlay
-        ), "Exporting disv grid properties requires parent and child models to have the same number of layers."
-        lgrtodisv = LgrToDisv(self)
-        xcyc = lgrtodisv.get_xcyc()
-        # todo: add nlay, top, and botm to gridprops
-        gridprops = get_disv_gridprops(
-            lgrtodisv.verts, lgrtodisv.iverts, xcyc=xcyc
-        )
-        return gridprops
+        return LgrToDisv(self).get_disv_gridprops()
 
 
 class LgrToDisv:
@@ -939,3 +928,81 @@ class LgrToDisv:
             (np.atleast_2d(py).T, np.atleast_2d(cy).T)
         ).flatten()
         return xcyc
+
+    def get_top(self):
+        """
+        Construct a 1d array of size (ncpl) that
+        contains the cell tops.
+
+        Returns
+        -------
+        top : ndarray
+            1d array of top elevations
+
+        """
+        top = np.empty((self.ncpl,))
+        pidx = self.pgrid.idomain[0] > 0
+        cidx = self.cgrid.idomain[0] > 0
+        pa = self.pgrid.top[pidx].flatten()
+        ca = self.cgrid.top[cidx].flatten()
+        top[:] = np.hstack((pa, ca))
+        return top
+
+    def get_botm(self):
+        """
+        Construct a 2d array of size (nlay, ncpl) that
+        contains the cell bottoms.
+
+        Returns
+        -------
+        botm : ndarray
+            2d array of bottom elevations
+
+        """
+        botm = np.empty((self.lgr.nlay, self.ncpl))
+        pidx = self.pgrid.idomain[0] > 0
+        cidx = self.cgrid.idomain[0] > 0
+        for k in range(self.lgr.nlay):
+            pa = self.pgrid.botm[k, pidx].flatten()
+            ca = self.cgrid.botm[k, cidx].flatten()
+            botm[k, :] = np.hstack((pa, ca))
+        return botm
+
+    def get_disv_gridprops(self):
+        """
+        Create and return a gridprops dictionary that can be
+        used to create a disv grid (instead of a separate parent
+        and child representation).  The gridprops dictionary can
+        be unpacked into the flopy.mf6.Modflowdisv() constructor
+        and flopy.discretization.VertexGrid() contructor.
+
+        Note that export capability will only work if the parent
+        and child models have corresponding layers.
+
+        Returns
+        -------
+        gridprops : dict
+            Dictionary containing ncpl, nvert, vertices, cell2d,
+            nlay, top, and botm
+
+        """
+
+        # check
+        assert (
+            self.lgr.ncppl.min() == self.lgr.ncppl.max()
+        ), "Exporting disv grid properties requires ncppl to be 1."
+        assert (
+            self.lgr.nlayp == self.lgr.nlay
+        ), "Exporting disv grid properties requires parent and child models to have the same number of layers."
+
+        # get information and build gridprops
+        xcyc = self.get_xcyc()
+        top = self.get_top()
+        botm = self.get_botm()
+        gridprops = get_disv_gridprops(
+            self.verts, self.iverts, xcyc=xcyc
+        )
+        gridprops["nlay"] = self.lgr.nlay
+        gridprops["top"] = top
+        gridprops["botm"] = botm
+        return gridprops

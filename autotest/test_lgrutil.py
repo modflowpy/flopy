@@ -161,7 +161,7 @@ def test_lgrutil3():
     # Define parent grid information
     xoffp = 0.0
     yoffp = 0.0
-    nlayp = 1
+    nlayp = 3
     nrowp = 3
     ncolp = 3
 
@@ -195,6 +195,15 @@ def test_lgrutil3():
 
     # check to make sure gridprops is accessible from lgr
     gridprops = lgr.to_disv_gridprops()
+    assert "ncpl" in gridprops
+    assert "nvert" in gridprops
+    assert "vertices" in gridprops
+    assert "nlay" in gridprops
+    assert "top" in gridprops
+    assert "botm" in gridprops
+    assert gridprops["ncpl"] == 17
+    assert gridprops["nvert"] == 32
+    assert gridprops["nlay"] == 3
 
     # test the lgr to disv class
     lgrtodisv = LgrToDisv(lgr)
@@ -209,3 +218,10 @@ def test_lgrutil3():
     assert lgrtodisv.iverts[3] == [4, 5, 20, 24, 9, 8]
     assert lgrtodisv.iverts[4] == [6, 7, 11, 10, 27, 23]
     assert lgrtodisv.iverts[6] == [9, 29, 30, 10, 14, 13]
+
+    assert gridprops["top"].min() == gridprops["top"].max() == dz
+
+    assert gridprops["botm"].shape == (3, 17)
+    assert gridprops["botm"][0].min() == gridprops["botm"][0].min() == -dz
+    assert gridprops["botm"][1].min() == gridprops["botm"][1].min() == -2 * dz
+    assert gridprops["botm"][2].min() == gridprops["botm"][2].min() == -3 * dz
