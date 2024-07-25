@@ -1275,11 +1275,15 @@ class MFModel(PackageContainer, ModelInterface):
         -------
         IMS package : ModflowIms
         """
-        solution_group = self.simulation.name_file.solutiongroup.get_data()
+        solution_group = self.simulation.name_file.solutiongroup.get_data(0)
         for record in solution_group:
-            for model_name in record[2:]:
-                if model_name == self.name:
-                    return self.simulation.get_solution_package(record[1])
+            for name in record.dtype.names:
+                if name == "slntype" or name == "slnfname":
+                    continue
+                if record[name] == self.name:
+                    return self.simulation.get_solution_package(
+                        record.slnfname
+                    )
         return None
 
     def get_steadystate_list(self):
