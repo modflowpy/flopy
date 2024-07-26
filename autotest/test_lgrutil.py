@@ -1,6 +1,6 @@
 import numpy as np
 
-from flopy.utils.lgrutil import Lgr
+from flopy.utils.lgrutil import Lgr, LgrToDisv
 
 
 def test_lgrutil():
@@ -155,3 +155,75 @@ def test_lgrutil2():
     ]
     assert np.allclose(lgr.delr, answer), f"{lgr.delr} /= {answer}"
     assert np.allclose(lgr.delc, answer), f"{lgr.delc} /= {answer}"
+
+
+def test_lgrutil3():
+    # Define parent grid information
+    xoffp = 0.0
+    yoffp = 0.0
+    nlayp = 3
+    nrowp = 3
+    ncolp = 3
+
+    dx = 100.0
+    dy = 100.0
+    dz = 10.0
+    delrp = dx * np.ones(ncolp)
+    delcp = dy * np.ones(nrowp)
+    topp = dz * np.ones((nrowp, ncolp), dtype=float)
+    botmp = np.empty((nlayp, nrowp, ncolp), dtype=float)
+    for k in range(nlayp):
+        botmp[k] = -(k + 1) * dz
+    idomainp = np.ones((nlayp, nrowp, ncolp), dtype=int)
+    idomainp[:, nrowp // 2, ncolp // 2] = 0
+    ncpp = 3
+    ncppl = nlayp * [1]
+    lgr = Lgr(
+        nlayp,
+        nrowp,
+        ncolp,
+        delrp,
+        delcp,
+        topp,
+        botmp,
+        idomainp,
+        ncpp=ncpp,
+        ncppl=ncppl,
+        xllp=xoffp,
+        yllp=yoffp,
+    )
+
+    # check to make sure gridprops is accessible from lgr
+    gridprops = lgr.to_disv_gridprops()
+    assert "ncpl" in gridprops
+    assert "nvert" in gridprops
+    assert "vertices" in gridprops
+    assert "nlay" in gridprops
+    assert "top" in gridprops
+    assert "botm" in gridprops
+    assert gridprops["ncpl"] == 17
+    assert gridprops["nvert"] == 32
+    assert gridprops["nlay"] == 3
+
+    # test the lgr to disv class
+    lgrtodisv = LgrToDisv(lgr)
+
+    # test guts of LgrToDisv to make sure hanging vertices added correctly
+    assert lgrtodisv.right_face_hanging[(1, 0)] == [0, 4, 8, 12]
+    assert lgrtodisv.left_face_hanging[(1, 2)] == [3, 7, 11, 15]
+    assert lgrtodisv.back_face_hanging[(2, 1)] == [12, 13, 14, 15]
+    assert lgrtodisv.front_face_hanging[(0, 1)] == [0, 1, 2, 3]
+
+    assert lgrtodisv.iverts[1] == [1, 2, 6, 18, 17, 5]
+    assert lgrtodisv.iverts[3] == [4, 5, 20, 24, 9, 8]
+    assert lgrtodisv.iverts[4] == [6, 7, 11, 10, 27, 23]
+    assert lgrtodisv.iverts[6] == [9, 29, 30, 10, 14, 13]
+
+    assert np.allclose(gridprops["top"], dz * np.ones((17,)))
+
+    assert gridprops["botm"].shape == (3, 17)
+    b = np.empty((3, 17))
+    b[0] = -dz
+    b[1] = -2 * dz
+    b[2] = -3 * dz
+    assert np.allclose(gridprops["botm"], b)

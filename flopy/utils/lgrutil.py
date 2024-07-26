@@ -2,6 +2,7 @@ import numpy as np
 
 from ..discretization import StructuredGrid
 from ..modflow import Modflow
+from .cvfdutil import get_disv_gridprops
 from .util_array import Util2d, Util3d
 
 
@@ -162,7 +163,7 @@ class Lgr:
         assert idomainp.shape == (nlayp, nrowp, ncolp)
         self.idomain = idomainp
         idxl, idxr, idxc = np.asarray(idomainp == 0).nonzero()
-        assert idxl.shape[0] > 1, "no zero values found in idomain"
+        assert idxl.shape[0] > 0, "no zero values found in idomain"
 
         # child cells per parent and child cells per parent layer
         self.ncpp = ncpp
@@ -585,3 +586,425 @@ class Lgr:
             yorigin,
         )
         return simple_regular_grid
+
+    def to_disv_gridprops(self):
+        """
+        Create and return a gridprops dictionary that can be
+        used to create a disv grid (instead of a separate parent
+        and child representation).  The gridprops dictionary can
+        be unpacked into the flopy.mf6.Modflowdisv() constructor
+        and flopy.discretization.VertexGrid() contructor.
+
+        Note that export capability will only work if the parent
+        and child models have corresponding layers.
+
+        Returns
+        -------
+        gridprops : dict
+            Dictionary containing ncpl, nvert, vertices, cell2d,
+            nlay, top, and botm
+
+        """
+        return LgrToDisv(self).get_disv_gridprops()
+
+
+class LgrToDisv:
+    def __init__(self, lgr):
+        """
+        Helper class used to convert and Lgr() object into
+        the grid properties needed to create a disv vertex
+        nested grid.  After instantiation, self.verts and
+        self.iverts are available.
+
+        The primary work of this class is identify hanging
+        vertices along the shared parent-child boundary and
+        include these hanging vertices in the vertex indicence
+        list for parent cells.
+
+        Parameters
+        ----------
+        lgr : Lgr instance
+            Lgr() object describing a parent-child relation
+
+        """
+
+        # store information
+        self.lgr = lgr
+        self.pgrid = lgr.parent.modelgrid
+        self.cgrid = lgr.child.modelgrid
+
+        # count active parent and child cells
+        self.ncpl_parent = np.count_nonzero(self.pgrid.idomain[0] > 0)
+        self.ncpl_child = np.count_nonzero(self.cgrid.idomain[0] > 0)
+        self.ncpl = self.ncpl_child + self.ncpl_parent
+
+        # find child vertices that act as hanging vertices on parent
+        # model cells
+        self.right_face_hanging = None
+        self.left_face_hanging = None
+        self.front_face_hanging = None
+        self.back_face_hanging = None
+        self.parent_ij_to_global = None
+        self.child_ij_to_global = None
+        self.find_hanging_vertices()
+
+        # build global verts and iverts keeping only idomain > 0
+        self.verts = None
+        self.iverts = None
+        self.build_verts_iverts()
+
+        # todo: remove unused vertices?
+
+    def find_hanging_vertices(self):
+        """
+        Hanging vertices are vertices that must be included
+        along the edge of parent cells.  These hanging vertices
+        mark the locations of corners of adjacent child cells.
+        Hanging vertices are not strictly
+        necessary to define the shape of a parent cell, but they are
+        required by modflow to describe connections between
+        parent and child cells.
+
+        This routine finds hanging vertices parent cells along
+        a parent-child boundary.  These hanging vertices are
+        stored in 4 member dictionaries, called right_face_hanging,
+        left_face_hanging, front_face_hanging, and back_face_hanging.
+        These dictionaries are used subsequently to insert
+        hanging vertices into the iverts array.
+
+        """
+
+        # create dictionaries for parent left, right, back, and front
+        # faces that have a key that is parent (row, col)
+        # and a value that is a list of child vertex numbers
+
+        # this list of child vertex numbers will be ordered from
+        # left to right (back/front) and from back to front (left/right)
+        # so when they are used later, two of them will need to be
+        # reversed so that clockwise ordering is maintained
+
+        nrowc = self.lgr.nrow
+        ncolc = self.lgr.ncol
+        iverts = self.cgrid.iverts
+        cidomain = self.lgr.get_idomain()
+
+        self.right_face_hanging = {}
+        self.left_face_hanging = {}
+        self.front_face_hanging = {}
+        self.back_face_hanging = {}
+
+        # map (i, j) to global cell number
+        self.parent_ij_to_global = {}
+        self.child_ij_to_global = {}
+
+        kc = 0
+        nodec = 0
+        for ic in range(nrowc):
+            for jc in range(ncolc):
+                plist = self.lgr.get_parent_connections(kc, ic, jc)
+                for (kp, ip, jp), idir in plist:
+                    if cidomain[kc, ic, jc] == 0:
+                        continue
+
+                    if (
+                        idir == -1
+                    ):  # left child face connected to right parent face
+                        # child vertices 0 and 3 added as hanging nodes
+                        if (ip, jp) in self.right_face_hanging:
+                            hlist = self.right_face_hanging.pop((ip, jp))
+                        else:
+                            hlist = []
+                        ivlist = iverts[nodec]
+                        for iv in (ivlist[0], ivlist[3]):
+                            if iv not in hlist:
+                                hlist.append(iv)
+                        self.right_face_hanging[(ip, jp)] = hlist
+
+                    elif idir == 1:
+                        # child vertices 1 and 2 added as hanging nodes
+                        if (ip, jp) in self.left_face_hanging:
+                            hlist = self.left_face_hanging.pop((ip, jp))
+                        else:
+                            hlist = []
+                        ivlist = iverts[nodec]
+                        for iv in (ivlist[1], ivlist[2]):
+                            if iv not in hlist:
+                                hlist.append(iv)
+                        self.left_face_hanging[(ip, jp)] = hlist
+
+                    elif idir == 2:
+                        # child vertices 0 and 1 added as hanging nodes
+                        if (ip, jp) in self.front_face_hanging:
+                            hlist = self.front_face_hanging.pop((ip, jp))
+                        else:
+                            hlist = []
+                        ivlist = iverts[nodec]
+                        for iv in (ivlist[0], ivlist[1]):
+                            if iv not in hlist:
+                                hlist.append(iv)
+                        self.front_face_hanging[(ip, jp)] = hlist
+
+                    elif idir == -2:
+                        # child vertices 3 and 2 added as hanging nodes
+                        if (ip, jp) in self.back_face_hanging:
+                            hlist = self.back_face_hanging.pop((ip, jp))
+                        else:
+                            hlist = []
+                        ivlist = iverts[nodec]
+                        for iv in (ivlist[3], ivlist[2]):
+                            if iv not in hlist:
+                                hlist.append(iv)
+                        self.back_face_hanging[(ip, jp)] = hlist
+
+                nodec += 1
+
+    def build_verts_iverts(self):
+        """
+        Build the verts and iverts members.  self.verts is a 2d
+        numpy array of size (nvert, 2).  Column 1 is x and column 2
+        is y.  self.iverts is a list of size ncpl (number of cells
+        per layer) with each entry being the list of vertex indices
+        that define the cell.
+
+        """
+
+        # stack vertex arrays; these will have more points than necessary,
+        # because parent and child vertices will overlap at corners, but
+        # duplicate vertices will be filtered later
+        pverts = self.pgrid.verts
+        cverts = self.cgrid.verts
+        nverts_parent = pverts.shape[0]
+        nverts_child = cverts.shape[0]
+        verts = np.vstack((pverts, cverts))
+
+        # build iverts list first with active parent cells
+        iverts = []
+        iglo = 0
+        for i in range(self.pgrid.nrow):
+            for j in range(self.pgrid.ncol):
+                if self.pgrid.idomain[0, i, j] > 0:
+                    ivlist = self.pgrid._build_structured_iverts(i, j)
+
+                    # merge hanging vertices if they exist
+                    ivlist = self.merge_hanging_vertices(i, j, ivlist)
+
+                    iverts.append(ivlist)
+                    self.parent_ij_to_global[(i, j)] = iglo
+                    iglo += 1
+
+        # now add active child cells
+        for i in range(self.cgrid.nrow):
+            for j in range(self.cgrid.ncol):
+                if self.cgrid.idomain[0, i, j] > 0:
+                    ivlist = [
+                        iv + nverts_parent
+                        for iv in self.cgrid._build_structured_iverts(i, j)
+                    ]
+                    iverts.append(ivlist)
+                    self.child_ij_to_global[(i, j)] = iglo
+                    iglo += 1
+        self.verts = verts
+        self.iverts = iverts
+
+    def merge_hanging_vertices(self, ip, jp, ivlist):
+        """
+        Given a list of vertices (ivlist) for parent row and column
+        (ip, jp) merge hanging vertices from adjacent child cells
+        into ivlist.
+
+        Parameters
+        ----------
+        ip : int
+            parent cell row number
+
+        jp : int
+            parent cell column number
+
+        ivlist : list of ints
+            list of vertex indices that define the parent
+            cell (ip, jp)
+
+        Returns
+        -------
+        ivlist : list of ints
+            modified list of vertices that now also contains
+            any hanging vertices needed to properly define
+            a parent cell adjacent to child cells
+
+        """
+        assert len(ivlist) == 4
+        child_ivlist_offset = self.pgrid.verts.shape[0]
+
+        # construct back edge
+        idx = 0
+        reverse = False
+        face_hanging = self.back_face_hanging
+        back_edge = [ivlist[idx]]
+        if (ip, jp) in face_hanging:
+            hlist = face_hanging[(ip, jp)]
+            if len(hlist) > 2:
+                hlist = hlist[1:-1]  # do not include two ends
+                hlist = [h + child_ivlist_offset for h in hlist]
+                if reverse:
+                    hlist = hlist[::-1]
+            else:
+                hlist = []
+            back_edge = [ivlist[idx]] + hlist
+
+        # construct right edge
+        idx = 1
+        reverse = False
+        face_hanging = self.right_face_hanging
+        right_edge = [ivlist[idx]]
+        if (ip, jp) in face_hanging:
+            hlist = face_hanging[(ip, jp)]
+            if len(hlist) > 2:
+                hlist = hlist[1:-1]  # do not include two ends
+                hlist = [h + child_ivlist_offset for h in hlist]
+                if reverse:
+                    hlist = hlist[::-1]
+            else:
+                hlist = []
+            right_edge = [ivlist[idx]] + hlist
+
+        # construct front edge
+        idx = 2
+        reverse = True
+        face_hanging = self.front_face_hanging
+        front_edge = [ivlist[idx]]
+        if (ip, jp) in face_hanging:
+            hlist = face_hanging[(ip, jp)]
+            if len(hlist) > 2:
+                hlist = hlist[1:-1]  # do not include two ends
+                hlist = [h + child_ivlist_offset for h in hlist]
+                if reverse:
+                    hlist = hlist[::-1]
+            else:
+                hlist = []
+            front_edge = [ivlist[idx]] + hlist
+
+        # construct left edge
+        idx = 3
+        reverse = True
+        face_hanging = self.left_face_hanging
+        left_edge = [ivlist[idx]]
+        if (ip, jp) in face_hanging:
+            hlist = face_hanging[(ip, jp)]
+            if len(hlist) > 2:
+                hlist = hlist[1:-1]  # do not include two ends
+                hlist = [h + child_ivlist_offset for h in hlist]
+                if reverse:
+                    hlist = hlist[::-1]
+            else:
+                hlist = []
+            left_edge = [ivlist[idx]] + hlist
+
+        ivlist = back_edge + right_edge + front_edge + left_edge
+
+        return ivlist
+
+    def get_xcyc(self):
+        """
+        Construct a 2d array of size (nvert, 2) that
+        contains the cell centers.
+
+        Returns
+        -------
+        xcyc : ndarray
+            2d array of x, y positions for cell centers
+
+        """
+        xcyc = np.empty((self.ncpl, 2))
+        pidx = self.pgrid.idomain[0] > 0
+        cidx = self.cgrid.idomain[0] > 0
+        px = self.pgrid.xcellcenters[pidx].flatten()
+        cx = self.cgrid.xcellcenters[cidx].flatten()
+        xcyc[:, 0] = np.vstack(
+            (np.atleast_2d(px).T, np.atleast_2d(cx).T)
+        ).flatten()
+        py = self.pgrid.ycellcenters[pidx].flatten()
+        cy = self.cgrid.ycellcenters[cidx].flatten()
+        xcyc[:, 1] = np.vstack(
+            (np.atleast_2d(py).T, np.atleast_2d(cy).T)
+        ).flatten()
+        return xcyc
+
+    def get_top(self):
+        """
+        Construct a 1d array of size (ncpl) that
+        contains the cell tops.
+
+        Returns
+        -------
+        top : ndarray
+            1d array of top elevations
+
+        """
+        top = np.empty((self.ncpl,))
+        pidx = self.pgrid.idomain[0] > 0
+        cidx = self.cgrid.idomain[0] > 0
+        pa = self.pgrid.top[pidx].flatten()
+        ca = self.cgrid.top[cidx].flatten()
+        top[:] = np.hstack((pa, ca))
+        return top
+
+    def get_botm(self):
+        """
+        Construct a 2d array of size (nlay, ncpl) that
+        contains the cell bottoms.
+
+        Returns
+        -------
+        botm : ndarray
+            2d array of bottom elevations
+
+        """
+        botm = np.empty((self.lgr.nlay, self.ncpl))
+        pidx = self.pgrid.idomain[0] > 0
+        cidx = self.cgrid.idomain[0] > 0
+        for k in range(self.lgr.nlay):
+            pa = self.pgrid.botm[k, pidx].flatten()
+            ca = self.cgrid.botm[k, cidx].flatten()
+            botm[k, :] = np.hstack((pa, ca))
+        return botm
+
+    def get_disv_gridprops(self):
+        """
+        Create and return a gridprops dictionary that can be
+        used to create a disv grid (instead of a separate parent
+        and child representation).  The gridprops dictionary can
+        be unpacked into the flopy.mf6.Modflowdisv() constructor
+        and flopy.discretization.VertexGrid() contructor.
+
+        Note that export capability will only work if the parent
+        and child models have corresponding layers.
+
+        Returns
+        -------
+        gridprops : dict
+            Dictionary containing ncpl, nvert, vertices, cell2d,
+            nlay, top, and botm
+
+        """
+
+        # check
+        assert (
+            self.lgr.ncppl.min() == self.lgr.ncppl.max()
+        ), "Exporting disv grid properties requires ncppl to be 1."
+        assert (
+            self.lgr.nlayp == self.lgr.nlay
+        ), "Exporting disv grid properties requires parent and child models to have the same number of layers."
+        for k in range(self.lgr.nlayp - 1):
+            assert np.allclose(
+                self.lgr.idomain[k], self.lgr.idomain[k + 1]
+            ), "Exporting disv grid properties requires parent idomain is same for all layers."
+
+        # get information and build gridprops
+        xcyc = self.get_xcyc()
+        top = self.get_top()
+        botm = self.get_botm()
+        gridprops = get_disv_gridprops(self.verts, self.iverts, xcyc=xcyc)
+        gridprops["nlay"] = self.lgr.nlay
+        gridprops["top"] = top
+        gridprops["botm"] = botm
+        return gridprops
