@@ -1719,7 +1719,6 @@ def test_vtk_export_disv1_model(function_tmpdir):
     )
 
     with pytest.deprecated_call():
-
         from flopy.utils.cvfdutil import gridlist_to_disv_gridprops
 
         gridprops = gridlist_to_disv_gridprops([mg])
