@@ -943,25 +943,27 @@ def test_tocvfd3():
         yoff=200,
         idomain=idomain,
     )
-    gridprops = gridlist_to_disv_gridprops([sg1, sg2])
-    assert "ncpl" in gridprops
-    assert "nvert" in gridprops
-    assert "vertices" in gridprops
-    assert "cell2d" in gridprops
 
-    ncpl = gridprops["ncpl"]
-    nvert = gridprops["nvert"]
-    vertices = gridprops["vertices"]
-    cell2d = gridprops["cell2d"]
-    assert ncpl == 121
-    assert nvert == 148
-    assert len(vertices) == nvert
-    assert len(cell2d) == 121
+    with pytest.deprecated_call():
+        gridprops = gridlist_to_disv_gridprops([sg1, sg2])
+        assert "ncpl" in gridprops
+        assert "nvert" in gridprops
+        assert "vertices" in gridprops
+        assert "cell2d" in gridprops
 
-    # spot check information for cell 28 (zero based)
-    answer = [28, 250.0, 150.0, 7, 38, 142, 143, 45, 46, 44, 38]
-    for i, j in zip(cell2d[28], answer):
-        assert i == j, f"{i} not equal {j}"
+        ncpl = gridprops["ncpl"]
+        nvert = gridprops["nvert"]
+        vertices = gridprops["vertices"]
+        cell2d = gridprops["cell2d"]
+        assert ncpl == 121
+        assert nvert == 148
+        assert len(vertices) == nvert
+        assert len(cell2d) == 121
+
+        # spot check information for cell 28 (zero based)
+        answer = [28, 250.0, 150.0, 7, 38, 142, 143, 45, 46, 44, 38]
+        for i, j in zip(cell2d[28], answer):
+            assert i == j, f"{i} not equal {j}"
 
 
 @requires_pkg("shapely")

@@ -1718,50 +1718,52 @@ def test_vtk_export_disv1_model(function_tmpdir):
         idomain=np.ones((nlay, nrow, ncol)),
     )
 
-    from flopy.utils.cvfdutil import gridlist_to_disv_gridprops
+    with pytest.deprecated_call():
 
-    gridprops = gridlist_to_disv_gridprops([mg])
-    gridprops["top"] = 0
-    gridprops["botm"] = np.zeros((nlay, nrow * ncol), dtype=float) - 1
-    gridprops["nlay"] = nlay
+        from flopy.utils.cvfdutil import gridlist_to_disv_gridprops
 
-    disv = ModflowGwfdisv(gwf, **gridprops)
-    ic = ModflowGwfic(gwf, strt=10)
-    npf = ModflowGwfnpf(gwf)
+        gridprops = gridlist_to_disv_gridprops([mg])
+        gridprops["top"] = 0
+        gridprops["botm"] = np.zeros((nlay, nrow * ncol), dtype=float) - 1
+        gridprops["nlay"] = nlay
 
-    # Export model without specifying packages_names parameter
-    # create the vtk output
-    gwf = sim.get_model()
-    vtkobj = Vtk(gwf, binary=False)
-    vtkobj.add_model(gwf)
-    f = function_tmpdir / "gwf.vtk"
-    vtkobj.write(f)
+        disv = ModflowGwfdisv(gwf, **gridprops)
+        ic = ModflowGwfic(gwf, strt=10)
+        npf = ModflowGwfnpf(gwf)
 
-    # load the output using the vtk standard library
-    gridreader = vtkUnstructuredGridReader()
-    gridreader.SetFileName(str(f))
-    gridreader.Update()
-    grid = gridreader.GetOutput()
+        # Export model without specifying packages_names parameter
+        # create the vtk output
+        gwf = sim.get_model()
+        vtkobj = Vtk(gwf, binary=False)
+        vtkobj.add_model(gwf)
+        f = function_tmpdir / "gwf.vtk"
+        vtkobj.write(f)
 
-    # get the points
-    vtk_points = grid.GetPoints()
-    vtk_points = vtk_points.GetData()
-    vtk_points = vtk_to_numpy(vtk_points)
+        # load the output using the vtk standard library
+        gridreader = vtkUnstructuredGridReader()
+        gridreader.SetFileName(str(f))
+        gridreader.Update()
+        grid = gridreader.GetOutput()
 
-    # get cell locations (ia format of point to cell relationship)
-    cell_locations = vtk_to_numpy(grid.GetCellLocationsArray())
-    cell_locations_answer = np.array([0, 8, 16, 24, 32, 40, 48, 56, 64])
-    print(f"Found cell locations {cell_locations} in vtk file.")
-    print(f"Expecting cell locations {cell_locations_answer}")
-    errmsg = "vtk cell locations do not match expected result."
-    assert np.allclose(cell_locations, cell_locations_answer), errmsg
+        # get the points
+        vtk_points = grid.GetPoints()
+        vtk_points = vtk_points.GetData()
+        vtk_points = vtk_to_numpy(vtk_points)
 
-    cell_types = vtk_to_numpy(grid.GetCellTypesArray())
-    cell_types_answer = np.array(9 * [42])
-    print(f"Found cell types {cell_types} in vtk file.")
-    print(f"Expecting cell types {cell_types_answer}")
-    errmsg = "vtk cell types do not match expected result."
-    assert np.allclose(cell_types, cell_types_answer), errmsg
+        # get cell locations (ia format of point to cell relationship)
+        cell_locations = vtk_to_numpy(grid.GetCellLocationsArray())
+        cell_locations_answer = np.array([0, 8, 16, 24, 32, 40, 48, 56, 64])
+        print(f"Found cell locations {cell_locations} in vtk file.")
+        print(f"Expecting cell locations {cell_locations_answer}")
+        errmsg = "vtk cell locations do not match expected result."
+        assert np.allclose(cell_locations, cell_locations_answer), errmsg
+
+        cell_types = vtk_to_numpy(grid.GetCellTypesArray())
+        cell_types_answer = np.array(9 * [42])
+        print(f"Found cell types {cell_types} in vtk file.")
+        print(f"Expecting cell types {cell_types_answer}")
+        errmsg = "vtk cell types do not match expected result."
+        assert np.allclose(cell_types, cell_types_answer), errmsg
 
 
 @pytest.mark.mf6
