@@ -2245,6 +2245,9 @@ def test_multi_model(function_tmpdir):
         assert rec_array[0][3] == model_names[1]
         assert rec_array[1][1] == "transport.ims"
         assert rec_array[1][2] == model_names[2]
+    assert gwf1.get_ims_package() is gwf2.get_ims_package()
+    assert gwf1.get_ims_package().filename == "flow.ims"
+    assert gwt.get_ims_package().filename == "transport.ims"
     # test ssm fileinput
     gwt2 = sim2.get_model("gwt_model_1")
     ssm2 = gwt2.get_package("ssm")
