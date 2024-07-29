@@ -11,7 +11,7 @@ import pandas as pd
 import pytest
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
-from modflow_devtools.markers import requires_exe
+from modflow_devtools.markers import requires_exe, requires_pkg
 
 import flopy
 from flopy.modflow import Modflow
@@ -541,6 +541,7 @@ def test_binaryfile_reverse_mf6_dis(function_tmpdir):
         assert np.allclose(budget, -budget_rev)
 
 
+@requires_pkg("shapely")
 def test_binaryfile_reverse_mf6_disv(function_tmpdir):
     name = "reverse_disv"
     sim = flopy.mf6.MFSimulation(
