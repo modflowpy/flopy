@@ -1,4 +1,40 @@
 # Changelog
+### Version 3.8.0rc
+
+#### New features
+
+* [feat(datafile)](https://github.com/modflowpy/flopy/commit/d36bb78c3b7a12ab6f77bbe31e3572915753c86b): Add .headers property with data frame (#2221). Committed by Mike Taves on 2024-06-11.
+* [feat(lgr-disv)](https://github.com/modflowpy/flopy/commit/7dec7c52db7c7bf3f8bca61de4d4a953ac1317d2): Add to_disv_gridprops() method to lgr object (#2271). Committed by langevin-usgs on 2024-07-26.
+
+#### Bug fixes
+
+* [fix(docs)](https://github.com/modflowpy/flopy/commit/4a26cab4e0af4f49775fd0dc327c8f5ff51843f6): Section underline matches section title (#2208). Committed by Mike Taves on 2024-06-06.
+* [fix(vtk)](https://github.com/modflowpy/flopy/commit/d81d7c089f0688173f25c1f6d1e860e08c3a17ba): Fix __transient_vector access (#2209). Committed by mickey-tsai on 2024-06-06.
+* [fix(swt)](https://github.com/modflowpy/flopy/commit/667774231a3c3e40fb68067331ead4b8a576cbee): Pass load_only down to Mt3dms.load() (#2222). Committed by wpbonelli on 2024-06-11.
+* [fix(ParticleTrackFile)](https://github.com/modflowpy/flopy/commit/f15caaa0554f306eb5839588e4c75f9e14ef9641): Fix particle filtering in get_alldata (#2223). Committed by martclanor on 2024-06-11.
+* [fix(regression)](https://github.com/modflowpy/flopy/commit/c69990ac37ce5d6828472af1eadab4dc6687c1e8): Corrections to test_create_tests_transport (#2228). Committed by Mike Taves on 2024-06-13.
+* [fix(binaryread)](https://github.com/modflowpy/flopy/commit/e2a85a38640656d5795f8859defb0de14cf668e6): Raise/handle EOFError, deprecate vartype=str (#2226). Committed by Mike Taves on 2024-06-13.
+* [fix(pandas warnings)](https://github.com/modflowpy/flopy/commit/5cdd609748cc70d93859192519d87d34194aec40): Catch pandas warnings and display them in a more useful way (#2229). Committed by scottrp on 2024-06-14.
+* [fix](https://github.com/modflowpy/flopy/commit/d9ebd81903bb6aa03864e156a0488128867286ef): Test_uzf_negative_iuzfopt (#2236). Committed by Mike Taves on 2024-06-17.
+* [fix(PlotMapView)](https://github.com/modflowpy/flopy/commit/678bb61346bc226831ae5b66615bc9a00c355cc5): Default to all layers in plot_pathline() (#2242). Committed by wpbonelli on 2024-06-19.
+* [fix(Raster)](https://github.com/modflowpy/flopy/commit/a2a159f1758781fc633710f68af5441eb1e4dafb): Reclassify np.float64 correctly (#2235). Committed by martclanor on 2024-06-24.
+* [fix(HeadFile)](https://github.com/modflowpy/flopy/commit/9db562a3b1d18af3801036b1d79d74668c0f71c6): Fix dis reversal, expand tests (#2247). Committed by wpbonelli on 2024-06-25.
+* [fix(mfmodel)](https://github.com/modflowpy/flopy/commit/576cefe5e9826a53a5085d7e3aee9ce7765be22f): Fix get_ims_package (#2272). Committed by martclanor on 2024-08-06.
+
+#### Refactoring
+
+* [refactor(expired deprecation)](https://github.com/modflowpy/flopy/commit/31955a7536b1f53d2a572580e05ff282a933716e): Raise AttributeError with to_shapefile (#2200). Committed by Mike Taves on 2024-05-30.
+* [refactor](https://github.com/modflowpy/flopy/commit/bbabf86c0292ed2b237f89371afba01140050592): Deprecate unused flopy.utils.binaryfile.binaryread_struct (#2201). Committed by Mike Taves on 2024-05-31.
+* [refactor(exceptions)](https://github.com/modflowpy/flopy/commit/0d9947eb8301561569676d4e3bdbc28a869e5bad): Raise NotImplementedError where appropriate (#2213). Committed by Mike Taves on 2024-06-07.
+* [refactor(datafile)](https://github.com/modflowpy/flopy/commit/e2d16df5cc1a27a43e274a5b16eee7d91d5decfa): Use len(obj) rather than obj.get_nrecords() (#2215). Committed by Mike Taves on 2024-06-11.
+* [refactor(binarygrid_util)](https://github.com/modflowpy/flopy/commit/ae388ef5a2f40abc950c05ca5b156f7e42337983): Refactor get_iverts to be general and not dependent on grid type (#2230). Committed by langevin-usgs on 2024-06-14.
+* [refactor(datafile)](https://github.com/modflowpy/flopy/commit/cfdedbcb35c2f812e2b7efd78706d4eaa8cdc8f5): Deprecate list_records() and other list_ methods (#2232). Committed by Mike Taves on 2024-06-14.
+* [refactor](https://github.com/modflowpy/flopy/commit/1e44b3fd57bfad1602a06247e44878a7237e0e3a): Fixes for numpy-2.0 deprecation warnings, require numpy>=1.20.3 (#2237). Committed by Mike Taves on 2024-06-17.
+* [refactor](https://github.com/modflowpy/flopy/commit/59040d0948337245d6527671960b56446d39d4d3): Np.where(cond) -> np.asarray(cond).nonzero() (#2238). Committed by wpbonelli on 2024-06-17.
+* [refactor(dependencies)](https://github.com/modflowpy/flopy/commit/e48198c661d8b10d1c1120a88a6cd0c7987d7b22): Support numpy 2 (#2241). Committed by wpbonelli on 2024-06-19.
+* [refactor(get-modflow)](https://github.com/modflowpy/flopy/commit/baf8dff95ae3cc55adee54ec3e141437ae153b9c): Support ARM macs by default (previously opt-in) (#2225). Committed by wpbonelli on 2024-06-21.
+* [refactor(Raster)](https://github.com/modflowpy/flopy/commit/bad483b3910218dc828c993863d540793111090d): Add new methods and checks (#2267). Committed by Joshua Larsen on 2024-07-17.
+
 ### Version 3.7.0
 
 #### New features
