@@ -56,7 +56,7 @@ jobs:
           if [[ "$ver" == *"rc"* ]]; then
             python scripts/update_version.py -v "${ver%"rc"}"
           else
-            python scripts/update_version.py -v "$ver" --approve
+            python scripts/update_version.py -v "$ver"
           fi
           
           # show version and set output
