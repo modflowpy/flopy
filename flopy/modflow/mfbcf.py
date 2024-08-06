@@ -45,7 +45,7 @@ class ModflowBcf(Package):
     vcont : float or array of floats (nlay-1, nrow, ncol)
         vertical leakance between layers (default is 1.0)
     sf1 : float or array of floats (nlay, nrow, ncol)
-        specific storage (confined) or storage coefficient (unconfined),
+        specific storage (confined) or specific yield (unconfined),
         read when there is at least one transient stress period.
         (default is 1e-5)
     sf2 : float or array of floats (nrow, ncol)
