@@ -127,12 +127,6 @@ class ModflowMnw1(Package):
             losstype  # -string indicating head loss type for each well
         )
         self.wel1_bynode_qsum = wel1_bynode_qsum  # -nested list containing file names, unit numbers, and ALLTIME flag for auxiliary output, e.g. [['test.ByNode',92,'ALLTIME']]
-        # if stress_period_data is not None:
-        #    for per, spd in stress_period_data.items():
-        #        for n in spd.dtype.names:
-        #            self.stress_period_data[per] = ModflowMnw1.get_empty_stress_period_data(len(spd),
-        #                                                                                    structured=self.parent.structured)
-        #            self.stress_period_data[per][n] = stress_period_data[per][n]
         if dtype is not None:
             self.dtype = dtype
         else:
@@ -149,9 +143,6 @@ class ModflowMnw1(Package):
             "LOSSTYPE (%s) must be one of the following: skin, linear, nonlinear"
             % (self.losstype)
         )
-        # auxFileExtensions = ['wl1','ByNode','Qsum']
-        # for each in self.wel1_bynode_qsum:
-        #    assert each[0].split('.')[1] in auxFileExtensions, 'File extensions in "wel1_bynode_qsum" must be one of the following: ".wl1", ".ByNode", or ".Qsum".'
         self.parent.add_package(self)
 
     @staticmethod
@@ -278,7 +269,6 @@ class ModflowMnw1(Package):
         """
 
         # -open file for writing
-        # f_mnw1 = open( self.file_name[0], 'w' )
         f = open(self.fn_path, "w")
 
         # -write header

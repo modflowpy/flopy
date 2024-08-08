@@ -84,23 +84,22 @@ class ModflowMlt(Package):
         if mult_dict is not None:
             self.nml = len(mult_dict)
             self.mult_dict = mult_dict
-            # print mult_dict
         self.parent.add_package(self)
 
     def write_file(self):
         """
         Write the package file.
 
-        Returns
-        -------
-        None
+        Raises
+        ------
+        NotImplementedError
 
         Notes
         -----
         Not implemented because parameters are only supported on load
 
         """
-        pass
+        raise NotImplementedError
 
     @classmethod
     def load(cls, f, model, nrow=None, ncol=None, ext_unit_dict=None):

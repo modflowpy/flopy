@@ -150,17 +150,6 @@ class Modpath6Sim(Package):
         self.retard_fac = retard_fac
         self.retard_fcCB = retard_fcCB
 
-        # self.mask_nlay = Util3d(model,(nlay,nrow,ncol),np.int32,\
-        # mask_nlay,name='mask_nlay',locat=self.unit_number[0])
-        # self.mask_1lay = Util3d(model,(nlay,nrow,ncol),np.int32,\
-        # mask_1lay,name='mask_1lay',locat=self.unit_number[0])
-        # self.stop_zone = Util3d(model,(nlay,nrow,ncol),np.int32,\
-        # stop_zone,name='stop_zone',locat=self.unit_number[0])
-        # self.retard_fac = Util3d(model,(nlay,nrow,ncol),np.float32,\
-        # retard_fac,name='retard_fac',locat=self.unit_number[0])
-        # self.retard_fcCB = Util3d(model,(nlay,nrow,ncol),np.float32,\
-        # retard_fcCB,name='retard_fcCB',locat=self.unit_number[0])
-
         self.parent.add_package(self)
 
     def check(self, f=None, verbose=True, level=1, checktype=None):

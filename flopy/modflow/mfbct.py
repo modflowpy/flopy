@@ -70,8 +70,6 @@ class ModflowBct(Package):
         self.porosity = Util3d(
             model, (nlay, nrow, ncol), np.float32, porosity, "porosity"
         )
-        # self.arad = Util2d(model, (1, nja), np.float32,
-        #                        arad, 'arad')
         self.dlh = Util3d(model, (nlay, nrow, ncol), np.float32, dlh, "dlh")
         self.dlv = Util3d(model, (nlay, nrow, ncol), np.float32, dlv, "dlv")
         self.dth = Util3d(model, (nlay, nrow, ncol), np.float32, dth, "dth")

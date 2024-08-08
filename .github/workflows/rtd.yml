@@ -1,16 +1,61 @@
 name: FloPy documentation
-
 on:
   push:
   pull_request:
     branches:
       - master
       - develop
-
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'The tag, branch or commit hash to trigger an RTD build for. Branches and tags must be fully formed, e.g. refs/heads/<branch> or refs/tags/<tag> respectively.'
+        required: false
+        type: string
+        default: 'refs/heads/develop'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
 jobs:
+  set_options:
+    name: Set release options
+    runs-on: ubuntu-22.04
+    outputs:
+      ref: ${{ steps.set_ref.outputs.ref }}
+      sha: ${{ steps.set_sha.outputs.sha }}
+    steps:
+      
+      - name: Set ref
+        id: set_ref
+        run: |
+          # if ref was provided explicitly via workflow_dispatch, use it
+          if [[ ("${{ github.event_name }}" == "workflow_dispatch") && (-n "${{ inputs.ref }}") ]]; then
+            ref="${{ inputs.ref }}"
+            echo "using ref $ref from workflow_dispatch"
+          else
+            # otherwise use the current branch
+            ref="${{ github.ref }}"
+            echo "using current ref $ref"
+          fi
+          echo "ref=$ref" >> $GITHUB_OUTPUT
+
+      - name: Checkout flopy repo
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.set_ref.outputs.ref }}
+
+      - name: Set sha
+        id: set_sha
+        run: |
+          if [[ ("${{ github.event_name }}" == "workflow_dispatch") && (-n "${{ inputs.ref }}") ]]; then
+            sha=$(git rev-parse ${{ steps.set_ref.outputs.ref }})
+          else
+            sha="${{ github.sha }}"
+          fi
+          echo "sha=$sha" >> $GITHUB_OUTPUT
 
   rtd_build:
     name: Prepare and test notebooks
+    needs: set_options
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -24,6 +69,8 @@ jobs:
     steps:
       - name: Checkout flopy repo
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.set_options.outputs.ref }}
 
       - name: Output repo information
         run: |
@@ -72,32 +119,56 @@ jobs:
           $PSDefaultParameterValues['*:ErrorAction']='Stop'
           powershell .github/install_opengl.ps1
 
-      - name: Install MODFLOW executables
+      - name: Install Modflow-related executables
         uses: modflowpy/install-modflow-action@v1
+
+      - name: Install Modflow dev build executables
+        uses: modflowpy/install-modflow-action@v1
+        with:
+          repo: modflow6-nightly-build
+
+      - name: Install triangle (macOS workaround)
+        if: runner.os == 'macOS'
+        uses: modflowpy/install-modflow-action@v1
+        with:
+          repo: executables
+          ostag: mac
+          subset: triangle
 
       - name: Run tutorial and example notebooks
         working-directory: autotest
         run: pytest -v -n auto test_notebooks.py
 
       - name: Upload notebooks artifact for ReadtheDocs
-        if: github.repository_owner == 'modflowpy' && github.event_name == 'push' && runner.os == 'Linux'
+        if: |
+          github.repository_owner == 'modflowpy' && 
+          runner.os == 'Linux' &&
+          (
+            github.event_name == 'push' ||
+            github.event_name == 'workflow_dispatch'
+          )
         uses: actions/upload-artifact@v4
         with:
-          name: notebooks-for-${{ github.sha }}
+          name: notebooks-for-${{ needs.set_options.outputs.sha }}
           path: .docs/Notebooks/*.ipynb
 
   # trigger rtd if previous job was successful
   rtd:
     name: Read the Docs trigger
-    needs: rtd_build
+    needs: 
+      - rtd_build
+      - set_options
     runs-on: ubuntu-latest
-
     if:
-      github.repository_owner == 'modflowpy' && github.event_name == 'push'
+      github.repository_owner == 'modflowpy' &&
+      (
+          github.event_name == 'push' ||
+          github.event_name == 'workflow_dispatch'
+      )
     steps:
-      - name: Trigger RTDs build on master and develop branches
+      - name: Trigger RTDs build
         uses: dfm/rtds-action@v1
         with:
           webhook_url: ${{ secrets.RTDS_WEBHOOK_URL }}
           webhook_token: ${{ secrets.RTDS_WEBHOOK_TOKEN }}
-          commit_ref: ${{ github.ref }}
+          commit_ref: ${{ needs.set_options.outputs.ref }}

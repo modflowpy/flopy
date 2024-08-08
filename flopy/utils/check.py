@@ -254,8 +254,6 @@ class check:
         if array is None:
             return np.recarray((0), dtype=dtype)
         ra = recarray(array, dtype)
-        # at = array.transpose()
-        # a = np.core.records.fromarrays(at, dtype=dtype)
         return ra
 
     def _txt_footer(
@@ -360,9 +358,6 @@ class check:
         stress_period_data where criteria=True.
         """
         inds_col = self._get_cell_inds_names()
-        # inds = stress_period_data[criteria][inds_col]\
-        #    .reshape(stress_period_data[criteria].shape + (-1,))
-        # inds = np.atleast_2d(np.squeeze(inds.tolist()))
         inds = stress_period_data[criteria]
         a = self._get_cellid_cols(inds, inds_col)
         inds = a.view(int)
@@ -489,15 +484,6 @@ class check:
         name, k,i,j indices, values, and description of error for each row in
         stress_period_data where criteria=True.
         """
-        # check for valid cell indices
-        # self._stress_period_data_valid_indices(stress_period_data)
-
-        # first check for and list nan values
-        # self._stress_period_data_nans(stress_period_data)
-
-        # next check for BCs in inactive cells
-        # self._stress_period_data_inactivecells(stress_period_data)
-
         if np.any(criteria):
             # list the values that met the criteria
             sa = self._list_spd_check_violations(
@@ -521,7 +507,7 @@ class check:
         True value in criteria.
         """
         if np.any(criteria):
-            inds = np.where(criteria)
+            inds = np.asarray(criteria).nonzero()
             v = a[inds]  # works with structured or unstructured
             pn = [self.package.name] * len(v)
             en = [error_name] * len(v)

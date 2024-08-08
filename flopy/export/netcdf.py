@@ -187,8 +187,6 @@ class NetCdf:
         if self.model_grid.grid_type == "structured":
             self.dimension_names = ("layer", "y", "x")
             STANDARD_VARS.extend(["delc", "delr"])
-        # elif self.model_grid.grid_type == 'vertex':
-        #    self.dimension_names = ('layer', 'ncpl')
         else:
             raise Exception(
                 f"Grid type {self.model_grid.grid_type} not supported."
@@ -400,9 +398,6 @@ class NetCdf:
                 attrs["name"] = new_vname
                 attrs["long_name"] = attrs["long_name"] + " " + suffix
                 var = self.nc.variables[vname_norm]
-                # assert var.shape == array.shape,\
-                #    "{0} shape ({1}) doesn't make array shape ({2})".\
-                #        format(new_vname,str(var.shape),str(array.shape))
                 new_var = self.create_variable(
                     new_vname, attrs, var.dtype, dimensions=var.dimensions
                 )
@@ -637,7 +632,7 @@ class NetCdf:
 
             d_data[np.isnan(d_data)] = FILLVALUE
             if mask_zero_diff:
-                d_data[np.where(d_data == 0.0)] = FILLVALUE
+                d_data[np.asarray(d_data == 0.0).nonzero()] = FILLVALUE
 
             var = new_net.create_variable(
                 vname, attrs, s_var.dtype, dimensions=s_var.dimensions
@@ -944,14 +939,6 @@ class NetCdf:
                     "This grid HAS been rotated before being saved to NetCDF. "
                     "To compute the unrotated grid, use the origin point and this array."
                 )
-        # else:
-        # vertices
-        # attribs = {"units": self.model_grid.lenuni.strip('s'),
-        #           "long_name": NC_LONG_NAMES.get("vertices",
-        #                                          "List of vertices used in the model by cell"),
-        #           }
-        # vertices = self.create_variable('vertices', attribs, dimensions=('ncpl',))
-        # vertices[:] = self.model_grid.vertices
 
         # Workaround for CF/CDM.
         # http://www.unidata.ucar.edu/software/thredds/current/netcdf-java/
@@ -976,7 +963,7 @@ class NetCdf:
         Method to initialize a new group within a netcdf file. This group
         can have independent dimensions from the global dimensions
 
-        Parameters:
+        Parameters
         ----------
         name : str
             name of the netcdf group
@@ -1248,18 +1235,6 @@ class NetCdf:
         if self.nc is None:
             self.initialize_file()
 
-        # check that the requested dimension exists and
-        # build up the chuck sizes
-        # chunks = []
-        # for dimension in dimensions:
-        #    assert self.nc.dimensions.get(dimension) is not None, \
-        #        "netcdf.create_variable() dimension not found:" + dimension
-        #    chunk = self.chunks[dimension]
-        #    assert chunk is not None, \
-        #        "netcdf.create_variable() chunk size of {0} is None in self.chunks". \
-        #            format(dimension)
-        #    chunks.append(chunk)
-
         self.var_attr_dict[name] = attributes
 
         var = self.nc.createVariable(
@@ -1268,8 +1243,7 @@ class NetCdf:
             dimensions,
             fill_value=self.fillvalue,
             zlib=True,
-        )  # ,
-        # chunksizes=tuple(chunks))
+        )
         for k, v in attributes.items():
             try:
                 var.setncattr(k, v)
@@ -1299,7 +1273,6 @@ class NetCdf:
 
         """
         if self.nc is None:
-            # self.initialize_file()
             mess = (
                 "NetCDF.add_global_attributes() should only "
                 "be called after the file has been initialized"
@@ -1408,7 +1381,6 @@ class NetCdf:
             return stuff
 
         # get a list of the flopy classes
-        # packages = inspect.getmembers(flopy.modflow, inspect.isclass)
         packages = [(pp.name[0], pp) for pp in self.model.packagelist]
         # get a list of the NetCDF variables
         attr = [v.split("_")[-1] for v in self.nc.variables]

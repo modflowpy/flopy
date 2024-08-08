@@ -821,9 +821,6 @@ class ModflowSwt(Package):
                 print(f"  loading swt dataset 15 for layer {kk}")
             ids16 = np.empty(26, dtype=np.int32)
             ids16 = read1d(f, ids16)
-            # for k in range(1, 26, 2):
-            #    model.add_pop_key_list(ids16[k])
-            #    ids16[k] = 2054  # all sub-wt data sent to unit 2054
             # dataset 17
             ids17 = [0] * iswtoc
             for k in range(iswtoc):

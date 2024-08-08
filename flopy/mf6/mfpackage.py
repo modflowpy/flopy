@@ -1473,7 +1473,6 @@ class MFBlock:
                     if basic_list:
                         ext_fname = dataset.external_file_name()
                         if ext_fname is not None:
-                            # if dataset.has_modified_ext_data():
                             binary = dataset.binary_ext_data()
                             # write block contents to external file
                             fd_main, fd = self._prepare_external(
@@ -1503,7 +1502,6 @@ class MFBlock:
                     if basic_list:
                         ext_fname = dataset.external_file_name(transient_key)
                         if ext_fname is not None:
-                            # if dataset.has_modified_ext_data(transient_key):
                             binary = dataset.binary_ext_data(transient_key)
                             # write block contents to external file
                             fd_main, fd = self._prepare_external(
@@ -3279,7 +3277,7 @@ class MFPackage(PackageContainer, PackageInterface):
                 MfList dictionary key. (default is None)
 
         Returns
-        ----------
+        -------
         axes : list
             Empty list is returned if filename_base is not None. Otherwise
             a list of matplotlib.pyplot.axis are returned.

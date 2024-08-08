@@ -63,7 +63,7 @@ class Dfn:
     -----
 
     Examples
-    ----
+    --------
     """
 
     def __init__(self):
@@ -179,7 +179,7 @@ class DfnPackage(Dfn):
     -----
 
     Examples
-    ----
+    --------
     """
 
     def __init__(self, package):
@@ -447,7 +447,7 @@ class DfnFile(Dfn):
     -----
 
     Examples
-    ----
+    --------
     """
 
     def __init__(self, file):
@@ -1440,7 +1440,6 @@ class MFDataStructure:
         self.parameter_name = data_item.parameter_name
         self.one_per_pkg = data_item.one_per_pkg
 
-        # self.data_item_structures_dict = {}
         self.data_item_structures = []
         self.expected_data_items = {}
         self.shape = data_item.shape

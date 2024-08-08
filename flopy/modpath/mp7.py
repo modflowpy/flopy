@@ -29,13 +29,12 @@ class Modpath7List(Package):
 
         # call base package constructor
         super().__init__(model, extension, "LIST", unitnumber)
-        # self.parent.add_package(self) This package is not added to the base
+        # This package is not added to the base
         # model so that it is not included in get_name_file_entries()
         return
 
     def write_file(self):
-        # Not implemented for list class
-        return
+        raise NotImplementedError
 
 
 class Modpath7(BaseModel):

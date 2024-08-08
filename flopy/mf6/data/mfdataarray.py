@@ -733,7 +733,7 @@ class MFArray(MFMultiDimVar):
                     "array" in kwargs
                     and kwargs["array"]
                     and isinstance(self, MFTransientArray)
-                    and data is not []
+                    and data is not []  # noqa: F632
                 ):
                     data = np.expand_dims(data, 0)
                 return data
@@ -1531,7 +1531,7 @@ class MFArray(MFMultiDimVar):
                 List of unique values to be excluded from the plot.
 
         Returns
-        ----------
+        -------
         out : list
             Empty list is returned if filename_base is not None. Otherwise
             a list of matplotlib.pyplot.axis is returned.
@@ -2100,7 +2100,7 @@ class MFTransientArray(MFArray, MFTransient):
                 extracted. (default is zero).
 
         Returns
-        ----------
+        -------
         axes : list
             Empty list is returned if filename_base is not None. Otherwise
             a list of matplotlib.pyplot.axis is returned.

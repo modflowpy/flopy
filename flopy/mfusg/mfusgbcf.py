@@ -74,7 +74,7 @@ class MfUsgBcf(ModflowBcf):
         is the vertical hydraulic conductivity of the cell and the leakance is
         computed for each vertical connection.
     sf1 : float or array of floats (nlay, nrow, ncol)
-        specific storage (confined) or storage coefficient (unconfined),
+        specific storage (confined) or specific yield (unconfined),
         read when there is at least one transient stress period.
         (default is 1e-5)
     sf2 : float or array of floats (nlay, nrow, ncol)

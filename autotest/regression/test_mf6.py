@@ -49,7 +49,7 @@ from flopy.mf6.data.mfdatastorage import DataStorageType
 from flopy.mf6.mfbase import FlopyException, MFDataException
 from flopy.mf6.utils import testutils
 from flopy.utils import CellBudgetFile
-from flopy.utils.compare import compare_concentrations, compare_heads
+from flopy.utils.compare import compare_heads
 from flopy.utils.datautil import PyListUtil
 
 pytestmark = pytest.mark.mf6
@@ -2317,7 +2317,7 @@ def test035_create_tests_fhb(function_tmpdir, example_data_path):
 
 
 @requires_exe("mf6")
-@requires_pkg("shapefile")
+@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
 @pytest.mark.regression
 def test006_create_tests_gwf3_disv(function_tmpdir, example_data_path):
     # init paths
@@ -2853,6 +2853,11 @@ def test006_create_tests_2models_gnc(function_tmpdir, example_data_path):
     )
     sim.remove_package(exg_package.package_type)
 
+    exg_data = {
+        "filename": "exg_data.txt",
+        "data": exgrecarray,
+        "binary": True,
+    }
     exg_package = ModflowGwfgwf(
         sim,
         print_input=True,
@@ -2860,7 +2865,7 @@ def test006_create_tests_2models_gnc(function_tmpdir, example_data_path):
         save_flows=True,
         auxiliary="testaux",
         nexg=36,
-        exchangedata=exgrecarray,
+        exchangedata=exg_data,
         exgtype="gwf6-gwf6",
         exgmnamea=model_name_1,
         exgmnameb=model_name_2,
@@ -2881,6 +2886,7 @@ def test006_create_tests_2models_gnc(function_tmpdir, example_data_path):
 
     # change folder to save simulation
     sim.set_sim_path(function_tmpdir)
+    exg_package.exchangedata.set_record(exg_data)
 
     # write simulation to new location
     sim.write_simulation()
@@ -3393,7 +3399,7 @@ def test_create_tests_transport(function_tmpdir, example_data_path):
     pth = example_data_path / "mf6" / "create_tests" / test_ex_name
     expected_output_folder = pth / "expected_output"
     expected_head_file = expected_output_folder / "gwf_mst03.hds"
-    expected_conc_file = expected_output_folder / "gwt_mst03.unc"
+    expected_conc_file = expected_output_folder / "gwt_mst03.ucn"
 
     laytyp = [1]
     ss = [1.0e-10]
@@ -3609,12 +3615,13 @@ def test_create_tests_transport(function_tmpdir, example_data_path):
         outfile=outfile,
     )
     conc_new = function_tmpdir / "gwt_mst03.ucn"
-    assert compare_concentrations(
+    assert compare_heads(
         None,
         None,
         files1=expected_conc_file,
         files2=conc_new,
         outfile=outfile,
+        text="concentration",
     )
 
     # clean up
@@ -3680,7 +3687,6 @@ def test001a_tharmonic(function_tmpdir, example_data_path):
 
     # get expected results
     budget_obj = CellBudgetFile(expected_cbc_file_a, precision="auto")
-    budget_obj.list_records()
     budget_frf_valid = np.array(
         budget_obj.get_data(text="    FLOW JA FACE", full3D=True)
     )
@@ -4039,6 +4045,11 @@ def test006_2models_different_dis(function_tmpdir, example_data_path):
     exgrecarray = testutils.read_exchangedata(
         os.path.join(pth, "exg.txt"), 3, 2
     )
+    exg_data = {
+        "filename": "exg_data.bin",
+        "data": exgrecarray,
+        "binary": True,
+    }
 
     # build obs dictionary
     gwf_obs = {
@@ -4055,7 +4066,7 @@ def test006_2models_different_dis(function_tmpdir, example_data_path):
         save_flows=True,
         auxiliary="testaux",
         nexg=9,
-        exchangedata=exgrecarray,
+        exchangedata=exg_data,
         exgtype="gwf6-gwf6",
         exgmnamea=model_name_1,
         exgmnameb=model_name_2,
@@ -4077,6 +4088,7 @@ def test006_2models_different_dis(function_tmpdir, example_data_path):
 
     # change folder to save simulation
     sim.set_sim_path(function_tmpdir)
+    exg_package.exchangedata.set_record(exg_data)
 
     # write simulation to new location
     sim.write_simulation()
@@ -4451,7 +4463,6 @@ def test006_2models_mvr(function_tmpdir, example_data_path):
         expected_cbc_file_a,
         precision="double",
     )
-    budget_obj.list_records()
 
     # test getting models
     model_dict = sim.model_dict

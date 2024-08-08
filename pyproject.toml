@@ -29,7 +29,7 @@ classifiers = [
 ]
 requires-python = ">=3.8"
 dependencies = [
-    "numpy >=1.15.0,<2.0.0",
+    "numpy>=1.20.3",
     "matplotlib >=1.4.0",
     "pandas >=2.0.0"
 ]
@@ -47,6 +47,7 @@ test = [
     "flaky",
     "filelock",
     "jupyter",
+    "jupyter_client >=8.4.0", # avoid datetime.utcnow() deprecation warning
     "jupytext",
     "modflow-devtools",
     "pytest !=8.1.0",
@@ -130,12 +131,18 @@ extend-include = [
 ]
 
 [tool.ruff.lint]
-select = ["F", "E", "I001"]
+select = [
+    "D409", # pydocstyle - section-underline-matches-section-length
+    "E",    # pycodestyle error
+    "F",    # Pyflakes
+    "I001", # isort - unsorted-imports
+]
 ignore = [
     "E402", # module level import not at top of file
     "E501", # line too long TODO FIXME
     "E712", # Avoid equality comparisons to `True`
     "E722", # do not use bare `except`
+    "E721", # use `is`/`is not` for type comparisons
     "E741", # ambiguous variable name
     "F401", # unused import
     "F403", # unable to detect undefined names (star imports)

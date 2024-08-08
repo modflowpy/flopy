@@ -272,7 +272,7 @@ class UtltsPackages(mfpackage.MFChildPackages):
     UtltsPackages is a container class for the ModflowUtlts class.
 
     Methods
-    ----------
+    -------
     initialize
         Initializes a new ModflowUtlts package removing any sibling child
         packages attached to the same parent package. See ModflowUtlts init

@@ -570,37 +570,6 @@ class BaseModel(ModelInterface):
         except AttributeError:
             return None
 
-    # we don't need these - no need for controlled access to array_free_format
-    # def set_free_format(self, value=True):
-    #     """
-    #     Set the free format flag for the model instance
-    #
-    #     Parameters
-    #     ----------
-    #     value : bool
-    #         Boolean value to set free format flag for model. (default is True)
-    #
-    #     Returns
-    #     -------
-    #
-    #     """
-    #     if not isinstance(value, bool):
-    #         print('Error: set_free_format passed value must be a boolean')
-    #         return False
-    #     self.array_free_format = value
-    #
-    # def get_free_format(self):
-    #     """
-    #     Return the free format flag for the model
-    #
-    #     Returns
-    #     -------
-    #     out : bool
-    #         Free format flag for the model
-    #
-    #     """
-    #     return self.array_free_format
-
     def next_unit(self, i=None):
         if i is not None:
             self.__onunit__ = i - 1
@@ -759,7 +728,6 @@ class BaseModel(ModelInterface):
             else:
                 return None
 
-        # return self.get_package(item)
         # to avoid infinite recursion
         if (
             item == "_packagelist"
@@ -956,8 +924,8 @@ class BaseModel(ModelInterface):
                     self.output_binflag.pop(i)
                     self.output_packages.pop(i)
         else:
-            msg = " either fname or unit must be passed to remove_output()"
-            raise Exception(msg)
+            msg = "either fname or unit must be passed to remove_output()"
+            raise TypeError(msg)
 
     def get_output(
         self, fname: Optional[Union[str, os.PathLike]] = None, unit=None
@@ -985,8 +953,8 @@ class BaseModel(ModelInterface):
                     return self.output_fnames[i]
             return None
         else:
-            msg = " either fname or unit must be passed to get_output()"
-            raise Exception(msg)
+            msg = "either fname or unit must be passed to get_output()"
+            raise TypeError(msg)
 
     def set_output_attribute(
         self,
@@ -1020,11 +988,10 @@ class BaseModel(ModelInterface):
                     idx = i
                     break
         else:
-            msg = (
-                " either fname or unit must be passed "
+            raise TypeError(
+                "either fname or unit must be passed "
                 "to set_output_attribute()"
             )
-            raise Exception(msg)
         if attr is not None:
             if idx is not None:
                 for key, value in attr.items:
@@ -1065,8 +1032,8 @@ class BaseModel(ModelInterface):
                     idx = i
                     break
         else:
-            raise Exception(
-                " either fname or unit must be passed "
+            raise TypeError(
+                "either fname or unit must be passed "
                 "to set_output_attribute()"
             )
         v = None
@@ -1147,8 +1114,8 @@ class BaseModel(ModelInterface):
                 if u == unit:
                     plist.append(i)
         else:
-            msg = " either fname or unit must be passed to remove_external()"
-            raise Exception(msg)
+            msg = "either fname or unit must be passed to remove_external()"
+            raise TypeError(msg)
         # remove external file
         j = 0
         for i in plist:
@@ -1188,10 +1155,6 @@ class BaseModel(ModelInterface):
             ptype = filename.split(".")[-1]
         ptype = str(ptype).upper()
 
-        # for pak in self.packagelist:
-        #     if ptype in pak.name:
-        #         print("BaseModel.add_existing_package() warning: " +\
-        #               "replacing existing package {0}".format(ptype))
         class Obj:
             pass
 
@@ -1332,10 +1295,6 @@ class BaseModel(ModelInterface):
                 os.makedirs(new_pth)
             except:
                 raise OSError(f"{new_pth} not valid, workspace-folder")
-                # line = '\n{} not valid, workspace-folder '.format(new_pth) + \
-                #        'was changed to {}\n'.format(os.getcwd())
-                # print(line)
-                # new_pth = os.getcwd()
 
         # --reset the model workspace
         old_pth = self._model_ws
@@ -1369,14 +1328,10 @@ class BaseModel(ModelInterface):
         for ext_file, output in zip(
             self.external_fnames, self.external_output
         ):
-            # new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
             # this is a wicked mess
             if output:
-                # new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
                 new_ext_file = ext_file
             else:
-                # fpth = os.path.abspath(os.path.join(old_pth, ext_file))
-                # new_ext_file = os.path.relpath(fpth, os.path.abspath(pth))
                 fdir = os.path.dirname(ext_file)
                 if fdir == "":
                     fpth = os.path.abspath(os.path.join(old_pth, ext_file))
@@ -1408,8 +1363,6 @@ class BaseModel(ModelInterface):
 
     def __setattr__(self, key, value):
         if key == "free_format_input":
-            # if self.bas6 is not None:
-            #    self.bas6.ifrefm = value
             super().__setattr__(key, value)
         elif key == "name":
             self._set_name(value)
@@ -1476,10 +1429,8 @@ class BaseModel(ModelInterface):
             normal_msg=normal_msg,
         )
 
-    def load_results(self):
-        print("load_results not implemented")
-
-        return None
+    def load_results(self, **kwargs):
+        raise NotImplementedError("load_results not implemented")
 
     def write_input(self, SelPackList=False, check=False):
         """
@@ -1536,25 +1487,20 @@ class BaseModel(ModelInterface):
             print(" ")
         # write name file
         self.write_name_file()
-        # os.chdir(org_dir)
 
     def write_name_file(self):
         """
         Every Package needs its own writenamefile function
 
         """
-        raise Exception(
-            "IMPLEMENTATION ERROR: writenamefile must be overloaded"
-        )
+        raise NotImplementedError("write_name_file must be overloaded")
 
     def set_model_units(self):
         """
         Every model needs its own set_model_units method
 
         """
-        raise Exception(
-            "IMPLEMENTATION ERROR: set_model_units must be overloaded"
-        )
+        raise NotImplementedError("set_model_units must be overloaded")
 
     @property
     def name(self):
@@ -1678,7 +1624,7 @@ class BaseModel(ModelInterface):
                 MfList dictionary key. (default is None)
 
         Returns
-        ----------
+        -------
         axes : list
             Empty list is returned if filename_base is not None. Otherwise
             a list of matplotlib.pyplot.axis are returned.
@@ -1703,34 +1649,10 @@ class BaseModel(ModelInterface):
         )
         return axes
 
-    def to_shapefile(
-        self, filename: Union[str, os.PathLike], package_names=None, **kwargs
-    ):
-        """
-        Wrapper function for writing a shapefile for the model grid.  If
-        package_names is not None, then search through the requested packages
-        looking for arrays that can be added to the shapefile as attributes
-
-        Parameters
-        ----------
-        filename : str or PathLike
-            Path of the shapefile to write
-        package_names : list of package names (e.g. ["dis","lpf"])
-            Packages to export data arrays to shapefile. (default is None)
-
-        Returns
-        -------
-        None
-
-        Examples
-        --------
-        >>> import flopy
-        >>> m = flopy.modflow.Modflow()
-        >>> m.to_shapefile('model.shp', SelPackList)
-
-        """
-        warnings.warn("to_shapefile() is deprecated. use .export()")
-        self.export(filename, package_names=package_names)
+    def to_shapefile(self, *args, **kwargs):
+        """Raises AttributeError, use :meth:`export`."""
+        # deprecated 3.2.4, changed to raise AttributeError version 3.8
+        raise AttributeError(".to_shapefile() was removed; use .export()")
 
 
 def run_model(
@@ -1829,8 +1751,6 @@ def run_model(
     def q_output(output, q):
         for line in iter(output.readline, b""):
             q.put(line)
-            # time.sleep(1)
-            # output.close()
 
     # create a list of arguments to pass to Popen
     if processors is not None:

@@ -197,7 +197,7 @@ class MvtPackages(mfpackage.MFChildPackages):
     MvtPackages is a container class for the ModflowMvt class.
 
     Methods
-    ----------
+    -------
     initialize
         Initializes a new ModflowMvt package removing any sibling child
         packages attached to the same parent package. See ModflowMvt init

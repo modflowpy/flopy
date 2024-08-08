@@ -13,10 +13,6 @@ jobs:
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
         python-version: [ 3.8, 3.9, "3.10", "3.11", "3.12" ]
-        exclude:
-          # avoid shutil.copytree infinite recursion bug
-          # https://github.com/python/cpython/pull/17098
-          - python-version: '3.8.0'
     defaults:
       run:
         shell: bash -l {0}
@@ -63,6 +59,14 @@ jobs:
         uses: modflowpy/install-modflow-action@v1
         with:
           repo: modflow6-nightly-build
+
+      - name: Install triangle (macOS workaround)
+        if: runner.os == 'macOS'
+        uses: modflowpy/install-modflow-action@v1
+        with:
+          repo: executables
+          ostag: mac
+          subset: triangle
 
       - name: Update FloPy packages
         run: python -m flopy.mf6.utils.generate_classes --ref develop --no-backup

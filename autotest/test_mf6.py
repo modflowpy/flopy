@@ -102,7 +102,7 @@ def write_head(
             ("kper", "i4"),
             ("pertim", "f8"),
             ("totim", "f8"),
-            ("text", "a16"),
+            ("text", "S16"),
             ("ncol", "i4"),
             ("nrow", "i4"),
             ("ilay", "i4"),
@@ -763,7 +763,7 @@ def test_vor_binary_write(function_tmpdir, layered):
             "filename": "recharge.bin",
             "binary": True,
             "iprn": 1,
-            "data": np.full(vor.ncpl, 0.000001, dtype=float),  # 0.000001,
+            "data": np.full(vor.ncpl, 0.000001, dtype=float),
         },
     }
     chd_data = [
@@ -2245,6 +2245,9 @@ def test_multi_model(function_tmpdir):
         assert rec_array[0][3] == model_names[1]
         assert rec_array[1][1] == "transport.ims"
         assert rec_array[1][2] == model_names[2]
+    assert gwf1.get_ims_package() is gwf2.get_ims_package()
+    assert gwf1.get_ims_package().filename == "flow.ims"
+    assert gwt.get_ims_package().filename == "transport.ims"
     # test ssm fileinput
     gwt2 = sim2.get_model("gwt_model_1")
     ssm2 = gwt2.get_package("ssm")
@@ -2417,3 +2420,55 @@ def test_remove_model(function_tmpdir, example_data_path):
         elif exg_index > 0:
             assert "end exchanges" in l
             break
+
+
+def test_flopy_2283(function_tmpdir):
+    # create triangular grid
+    triangle_ws = function_tmpdir / "triangle"
+    triangle_ws.mkdir()
+
+    active_area = [(0, 0), (0, 1000), (1000, 1000), (1000, 0)]
+    tri = Triangle(model_ws=triangle_ws, angle=30)
+    tri.add_polygon(active_area)
+    tri.add_region((1, 1), maximum_area=50**2)
+
+    tri.build()
+
+    # build vertex grid object
+    vgrid = flopy.discretization.VertexGrid(
+        vertices=tri.get_vertices(),
+        cell2d=tri.get_cell2d(),
+        xoff=199000,
+        yoff=215500,
+        crs=31370,
+        angrot=30,
+    )
+
+    # coord info is set (also correct when using vgrid.set_coord_info()
+    print(vgrid)
+
+    # create MODFLOW 6 model
+    ws = function_tmpdir / "model"
+    ws.mkdir()
+    sim = flopy.mf6.MFSimulation(sim_name="prj-test", sim_ws=ws)
+    tdis = flopy.mf6.ModflowTdis(sim)
+    ims = flopy.mf6.ModflowIms(sim)
+
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="gwf")
+    disv = flopy.mf6.ModflowGwfdisv(
+        gwf,
+        xorigin=vgrid.xoffset,
+        yorigin=vgrid.yoffset,
+        angrot=vgrid.angrot,  # no CRS info can be set in DISV
+        nlay=1,
+        top=0.0,
+        botm=-10.0,
+        ncpl=vgrid.ncpl,
+        nvert=vgrid.nvert,
+        cell2d=vgrid.cell2d,
+        vertices=tri.get_vertices(),  # this is not stored in the Vertex grid object?
+    )
+
+    assert gwf.modelgrid.xoffset == disv.xorigin.get_data()
+    assert gwf.modelgrid.yoffset == disv.yorigin.get_data()
+    assert gwf.modelgrid.angrot == disv.angrot.get_data()

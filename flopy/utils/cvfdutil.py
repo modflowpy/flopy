@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import pandas as pd
 
@@ -324,7 +326,7 @@ def gridlist_to_verts(gridlist):
     vertdict = {}
     icell = 0
     for sg in gridlist:
-        ilays, irows, icols = np.where(sg.idomain > 0)
+        ilays, irows, icols = np.asarray(sg.idomain > 0).nonzero()
         for _, i, j in zip(ilays, irows, icols):
             v = sg.get_cell_vertices(i, j)
             vertdict[icell] = v + [v[0]]
@@ -390,6 +392,10 @@ def gridlist_to_disv_gridprops(gridlist):
     be numbered according to consecutive numbering of active cells in the
     grid list.
 
+    This function is deprecated in 3.8 and will be removed in 3.9.  Use the
+    functionality in flopy.utils.cvfdutil.Lgr() to create a DISV mesh for a
+    nested grid.
+
     Parameters
     ----------
     gridlist : list
@@ -403,6 +409,13 @@ def gridlist_to_disv_gridprops(gridlist):
         modflow6 disv package.
 
     """
+    warnings.warn(
+        "the gridlist_to_disv_gridprops function is deprecated and will be "
+        "removed in version 3.9. Use flopy.utils.cvfdutil.Lgr() instead, which "
+        "allows a nested grid to be created and exported to a DISV mesh.",
+        PendingDeprecationWarning,
+    )
+
     verts, iverts = gridlist_to_verts(gridlist)
     gridprops = get_disv_gridprops(verts, iverts)
     return gridprops

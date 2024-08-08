@@ -322,7 +322,6 @@ def model_attributes_to_shapefile(
                         )
                         continue
                     name = shape_attr_name(a.name, keep_layer=True)
-                    # name = a.name.lower()
                     array_dict[name] = a.array
                 elif a.data_type == DataType.array3d:
                     # Not sure how best to check if an object has array data
@@ -362,9 +361,7 @@ def model_attributes_to_shapefile(
                             assert arr.shape == horz_shape
                             name = f"{aname}_{ilay + 1}"
                             array_dict[name] = arr
-                elif (
-                    a.data_type == DataType.transient2d
-                ):  # elif isinstance(a, Transient2d):
+                elif a.data_type == DataType.transient2d:
                     # Not sure how best to check if an object has array data
                     try:
                         assert a.array is not None
@@ -379,9 +376,7 @@ def model_attributes_to_shapefile(
                         arr = a.array[kper][0]
                         assert arr.shape == horz_shape
                         array_dict[name] = arr
-                elif (
-                    a.data_type == DataType.transientlist
-                ):  # elif isinstance(a, MfList):
+                elif a.data_type == DataType.transientlist:
                     try:
                         list(a.masked_4D_arrays_itr())
                     except:

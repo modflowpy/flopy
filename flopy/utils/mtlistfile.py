@@ -136,13 +136,6 @@ class MtListBudget:
         df_gw = pd.DataFrame(self.gw_data)
         df_gw.loc[:, "totim"] = df_gw.pop("totim_1")
 
-        # if cumulative:
-        #     keep = [c for c in df_gw.columns if "_flx" not in c]
-        #     df_gw = df_gw.loc[:,keep]
-        # else:
-        #     keep = [c for c in df_gw.columns if "_cum" not in c]
-        #     df_gw = df_gw.loc[:, keep]
-
         if diff:
             df_gw = self._diff(df_gw)
 
@@ -165,13 +158,6 @@ class MtListBudget:
                 self.sw_data[i] = lst[:min_len]
             df_sw = pd.DataFrame(self.sw_data)
             df_sw.loc[:, "totim"] = df_gw.totim.iloc[:min_len].values
-
-            # if cumulative:
-            #     keep = [c for c in df_sw.columns if "_flx" not in c]
-            #     df_sw = df_sw.loc[:, keep]
-            # else:
-            #     keep = [c for c in df_sw.columns if "_cum" not in c]
-            #     df_sw = df_sw.loc[:, keep]
 
             if diff:
                 df_sw = self._diff(df_sw)
@@ -463,10 +449,8 @@ class MtListBudget:
                     f"error parsing 'out' SW items on line {self.lcount}: {e!s}"
                 )
             self._add_to_sw_data("net", item, cval, fval, comp)
-        # out_tots = self._parse_sw_line(line)
 
     def _parse_sw_line(self, line):
-        # print(line)
         raw = line.strip().split("=")
         citem = raw[0].strip().strip(r"[\|]").replace(" ", "_")
         cval = float(raw[1].split()[0])
@@ -476,7 +460,6 @@ class MtListBudget:
         else:
             fitem = raw[1].split()[-1].replace(" ", "_")
             fval = float(raw[2])
-        # assert citem == fitem,"{0}, {1}".format(citem,fitem)
         return citem, cval, fval
 
     def _add_to_sw_data(self, inout, item, cval, fval, comp):

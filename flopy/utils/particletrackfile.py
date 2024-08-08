@@ -60,7 +60,7 @@ class ParticleTrackFile(ABC):
         Get the maximum particle ID.
 
         Returns
-        ----------
+        -------
         out : int
             Maximum particle ID.
 
@@ -72,7 +72,7 @@ class ParticleTrackFile(ABC):
         Get the maximum tracking time.
 
         Returns
-        ----------
+        -------
         out : float
             Maximum tracking time.
 
@@ -99,23 +99,23 @@ class ParticleTrackFile(ABC):
             Whether to return only the minimal, canonical fields. Default is False.
 
         Returns
-        ----------
+        -------
         data : np.recarray
             Recarray with dtype ParticleTrackFile.outdtype
 
         """
         data = self._data[list(self.outdtype.names)] if minimal else self._data
         idx = (
-            np.where(data["particleid"] == partid)[0]
+            np.asarray(data["particleid"] == partid).nonzero()[0]
             if totim is None
             else (
-                np.where(
+                np.asarray(
                     (data["time"] >= totim) & (data["particleid"] == partid)
-                )[0]
+                ).nonzero()[0]
                 if ge
-                else np.where(
+                else np.asarray(
                     (data["time"] <= totim) & (data["particleid"] == partid)
-                )[0]
+                ).nonzero()[0]
             )
         )
 
@@ -136,22 +136,22 @@ class ParticleTrackFile(ABC):
             Whether to return only the minimal, canonical fields. Default is False.
 
         Returns
-        ----------
+        -------
         data : list of numpy record arrays
             List of recarrays with dtype ParticleTrackFile.outdtype
 
         """
-        nids = np.unique(self._data["particleid"]).size
+        nids = np.unique(self._data["particleid"])
         data = self._data[list(self.outdtype.names)] if minimal else self._data
         if totim is not None:
             idx = (
-                np.where(data["time"] >= totim)[0]
+                np.asarray(data["time"] >= totim).nonzero()[0]
                 if ge
-                else np.where(data["time"] <= totim)[0]
+                else np.asarray(data["time"] <= totim).nonzero()[0]
             )
             if len(idx) > 0:
                 data = data[idx]
-        return [data[data["particleid"] == i] for i in range(nids)]
+        return [data[data["particleid"] == i] for i in nids]
 
     def get_destination_data(
         self, dest_cells, to_recarray=True

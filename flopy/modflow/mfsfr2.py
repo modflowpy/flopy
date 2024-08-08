@@ -306,9 +306,7 @@ class ModflowSfr2(Package):
 
     nsfrpar = 0
     default_value = 0.0
-    # LENUNI = {"u": 0, "f": 1, "m": 2, "c": 3}
     len_const = {1: 1.486, 2: 1.0, 3: 100.0}
-    # {"u": 0, "s": 1, "m": 2, "h": 3, "d": 4, "y": 5}
     time_const = {1: 1.0, 2: 60.0, 3: 3600.0, 4: 86400.0, 5: 31557600.0}
 
     def __init__(
@@ -511,7 +509,6 @@ class ModflowSfr2(Package):
                 nseg = len(segment_data[i])
                 self.segment_data[i] = self.get_empty_segment_data(nseg)
                 for n in segment_data[i].dtype.names:
-                    # inds = (segment_data[i]['nseg'] -1).astype(int)
                     self.segment_data[i][n] = segment_data[i][n]
         # compute outreaches if nseg and outseg columns have non-default values
         if (
@@ -920,7 +917,6 @@ class ModflowSfr2(Package):
                 # these could also be implemented as structured arrays with a column for segment number
                 current_6d = {}
                 current_6e = {}
-                # print(i,icalc,nstrm,isfropt,reachinput)
                 for j in range(itmp):
                     dataset_6a = _parse_6a(f.readline(), option)
                     current_aux[j] = dataset_6a[-1]
@@ -970,7 +966,6 @@ class ModflowSfr2(Package):
                                 dataset_6d.append(
                                     _get_dataset(f.readline(), [0.0] * 8)
                                 )
-                                # dataset_6d.append(list(map(float, f.readline().strip().split())))
                             current_6d[temp_nseg] = dataset_6d
                     if icalc == 4:
                         nstrpts = dataset_6a[5]
@@ -1095,7 +1090,7 @@ class ModflowSfr2(Package):
                 pth = os.path.join(self.parent.model_ws, f)
                 f = open(pth, "w")
             f.write(f"{chk.txt}\n")
-            # f.close()
+            f.close()
         return chk
 
     def assign_layers(self, adjust_botms=False, pad=1.0):
@@ -1152,8 +1147,6 @@ class ModflowSfr2(Package):
                         self.reach_data.j == jb
                     )
                     botm[-1, ib, jb] = streambotms[inds].min() - pad
-                    # l.append(botm[-1, ib, jb])
-                # botm[-1, below_i, below_j] = streambotms[below] - pad
                 l.append(botm[-1, below_i, below_j])
                 header += ",new_model_botm"
                 self.parent.dis.botm = botm
@@ -1205,65 +1198,7 @@ class ModflowSfr2(Package):
                 per > 0 > self.dataset_5[per][0]
             ):  # skip stress periods where seg data not defined
                 continue
-            # segments = self.segment_data[per].nseg
-            # outsegs = self.segment_data[per].outseg
-            #
-            # all_outsegs = np.vstack([segments, outsegs])
-            # max_outseg = all_outsegs[-1].max()
-            # knt = 1
-            # while max_outseg > 0:
-            #
-            #     nextlevel = np.array([outsegs[s - 1] if s > 0 and s < 999999 else 0
-            #                           for s in all_outsegs[-1]])
-            #
-            #     all_outsegs = np.vstack([all_outsegs, nextlevel])
-            #     max_outseg = nextlevel.max()
-            #     if max_outseg == 0:
-            #         break
-            #     knt += 1
-            #     if knt > self.nss:
-            #         # subset outsegs map to only include rows with outseg number > 0 in last column
-            #         circular_segs = all_outsegs.T[all_outsegs[-1] > 0]
-            #
-            #         # only retain one instance of each outseg number at iteration=nss
-            #         vals = []  # append outseg values to vals after they've appeared once
-            #         mask = [(True, vals.append(v))[0]
-            #                 if v not in vals
-            #                 else False for v in circular_segs[-1]]
-            #         circular_segs = circular_segs[:, np.array(mask)]
-            #
-            #         # cull the circular segments array to remove duplicate instances of routing circles
-            #         circles = []
-            #         duplicates = []
-            #         for i in range(np.shape(circular_segs)[0]):
-            #             # find where values in the row equal the last value;
-            #             # record the index of the second to last instance of last value
-            #             repeat_start_ind = np.where(circular_segs[i] == circular_segs[i, -1])[0][-2:][0]
-            #             # use that index to slice out the repeated segment sequence
-            #             circular_seq = circular_segs[i, repeat_start_ind:].tolist()
-            #             # keep track of unique sequences of repeated segments
-            #             if set(circular_seq) not in circles:
-            #                 circles.append(set(circular_seq))
-            #                 duplicates.append(False)
-            #             else:
-            #                 duplicates.append(True)
-            #         circular_segs = circular_segs[~np.array(duplicates), :]
-            #
-            #         txt += '{0} instances where an outlet was not found after {1} consecutive segments!\n' \
-            #             .format(len(circular_segs), self.nss)
-            #         if level == 1:
-            #             txt += '\n'.join([' '.join(map(str, row)) for row in circular_segs]) + '\n'
-            #         else:
-            #             f = 'circular_routing.csv'
-            #             np.savetxt(f, circular_segs, fmt='%d', delimiter=',', header=txt)
-            #             txt += 'See {} for details.'.format(f)
-            #         if verbose:
-            #             print(txt)
-            #         break
-            # # the array of segment sequence is useful for other other operations,
-            # # such as plotting elevation profiles
-            # self.outsegs[per] = all_outsegs
-            #
+
             # use graph instead of above loop
             nrow = len(self.segment_data[per].nseg)
             ncol = np.max(
@@ -1275,12 +1210,6 @@ class ModflowSfr2(Package):
                     all_outsegs[i, : len(v)] = v
             all_outsegs.sort(axis=0)
             self.outsegs[per] = all_outsegs
-            # create a dictionary listing outlets associated with each segment
-            # outlet is the last value in each row of outseg array that is != 0 or 999999
-            # self.outlets[per] = {i + 1: r[(r != 0) & (r != 999999)][-1]
-            # if len(r[(r != 0) & (r != 999999)]) > 0
-            # else i + 1
-            #                     for i, r in enumerate(all_outsegs.T)}
             self.outlets[per] = {
                 k: self.paths[k][-1] if k in self.paths else k
                 for k in self.segment_data[per].nseg
@@ -1290,7 +1219,7 @@ class ModflowSfr2(Package):
     def reset_reaches(self):
         self.reach_data.sort(order=["iseg", "ireach"])
         reach_data = self.reach_data
-        segment_data = list(set(self.reach_data.iseg))  # self.segment_data[0]
+        segment_data = list(set(self.reach_data.iseg))
         reach_counts = np.bincount(reach_data.iseg)[1:]
         reach_counts = dict(zip(range(1, len(reach_counts) + 1), reach_counts))
         ireach = [list(range(1, reach_counts[s] + 1)) for s in segment_data]
@@ -1443,9 +1372,7 @@ class ModflowSfr2(Package):
             all_data[inds, per] = self.segment_data[per][varname]
             dtype.append((f"{varname}{per}", float))
         isvar = all_data.sum(axis=1) != 0
-        ra = np.core.records.fromarrays(
-            all_data[isvar].transpose().copy(), dtype=dtype
-        )
+        ra = np.rec.fromarrays(all_data[isvar].transpose().copy(), dtype=dtype)
         segs = self.segment_data[0].nseg[isvar]
         isseg = np.array(
             [True if s in segs else False for s in self.reach_data.iseg]
@@ -1458,7 +1385,7 @@ class ModflowSfr2(Package):
         return ra.view(np.recarray)
 
     def repair_outsegs(self):
-        isasegment = np.in1d(
+        isasegment = np.isin(
             self.segment_data[0].outseg, self.segment_data[0].nseg
         )
         isasegment = isasegment | (self.segment_data[0].outseg < 0)
@@ -1584,7 +1511,7 @@ class ModflowSfr2(Package):
 
         # slice the path
         path = np.array(self.paths[start_seg])
-        endidx = np.where(path == end_seg)[0]
+        endidx = np.asarray(path == end_seg).nonzero()[0]
         endidx = endidx if len(endidx) > 0 else None
         path = path[: np.squeeze(endidx)]
         path = [s for s in path if s > 0]  # skip lakes for now
@@ -1596,7 +1523,7 @@ class ModflowSfr2(Package):
         dist = np.cumsum(tmp.rchlen.values) * to_miles.get(mfunits, 1.0)
 
         # segment starts
-        starts = dist[np.where(tmp.ireach.values == 1)[0]]
+        starts = dist[np.asarray(tmp.ireach.values == 1).nonzero()[0]]
 
         ax = plt.subplots(figsize=(11, 8.5))[-1]
         ax.plot(dist, tops, label="Model top")
@@ -1769,7 +1696,6 @@ class ModflowSfr2(Package):
         ), "MfList.__tofile() data arg not a recarray"
 
         # decide which columns to write
-        # columns = self._get_item2_names()
         columns = _get_item2_names(
             self.nstrm,
             self.reachinput,
@@ -1777,10 +1703,6 @@ class ModflowSfr2(Package):
             structured=self.parent.structured,
         )
 
-        # Add one to the kij indices
-        # names = self.reach_data.dtype.names
-        # lnames = []
-        # [lnames.append(name.lower()) for name in names]
         # --make copy of data for multiple calls
         d = np.array(self.reach_data)
         for idx in ["k", "i", "j", "node"]:
@@ -1973,10 +1895,6 @@ class ModflowSfr2(Package):
 
         """
 
-        # tabfiles = False
-        # tabfiles_dict = {}
-        # transroute = False
-        # reachinput = False
         if filename is not None:
             self.fn_path = filename
 
@@ -2034,7 +1952,6 @@ class ModflowSfr2(Package):
                                 f_sfr.write("\n")
 
                     if icalc == 4:
-                        # nstrpts = self.segment_data[i][j][5]
                         for k in range(3):
                             for d in self.channel_flow_data[i][nseg][k]:
                                 f_sfr.write(f"{d:.2f} ")
@@ -2405,7 +2322,6 @@ class check:
         passed = False
         if self.verbose:
             print(headertxt.strip())
-        # for per, segment_data in self.segment_data.items():
 
         inds = (sd.outseg < sd.nseg) & (sd.outseg > 0)
 
@@ -2436,7 +2352,6 @@ class check:
         if self.verbose:
             print(headertxt.strip())
 
-        # txt += self.sfr.get_outlets(level=self.level, verbose=False)  # will print twice if verbose=True
         # simpler check method using paths from routing graph
         circular_segs = [k for k, v in self.sfr.paths.items() if v is None]
         if len(circular_segs) > 0:
@@ -2496,7 +2411,7 @@ class check:
             # max node with * a tolerance
             # 1.25 * hyp is greater than distance of two diagonally adjacent nodes
             # where one is 1.5x larger than the other
-            breaks = np.where(dist > hyp * 1.25)
+            breaks = np.asarray(dist > hyp * 1.25).nonzero()
             breaks_reach_data = rd[breaks]
             segments_with_breaks = set(breaks_reach_data.iseg)
             if len(breaks) > 0:
@@ -2838,10 +2753,6 @@ class check:
             # (for other uses). Not sure if other check methods should also copy reach_data directly from
             # SFR package instance for consistency.
 
-            # use outreach values to get downstream elevations
-            # non_outlets = reach_data[reach_data.outreach != 0]
-            # outreach_elevdn = np.array([reach_data.strtop[o - 1] for o in reach_data.outreach])
-            # d_strtop = outreach_elevdn[reach_data.outreach != 0] - non_outlets.strtop
             rd = recfunctions.append_fields(
                 rd,
                 names=["strtopdn", "d_strtop"],
@@ -3320,8 +3231,6 @@ def _parse_1c(line, reachinput, transroute):
 
     """
     na = 0
-    # line = _get_dataset(line, [0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 1, 30, 1, 2, 0.75, 0.0001, []])
-    # line = line.strip().split()
     line = line_parse(line)
 
     nstrm = int(line.pop(0))
@@ -3398,7 +3307,6 @@ def _parse_6a(line, option):
     -------
         a list of length 13 containing all variables for Data Set 6a
     """
-    # line = line.strip().split()
     line = line_parse(line)
 
     xyz = []

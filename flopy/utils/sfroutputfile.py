@@ -147,7 +147,9 @@ class SfrFile:
             Number of SFR cells
 
         """
-        wherereach1 = np.where((df.segment == 1) & (df.reach == 1))[0]
+        wherereach1 = np.asarray(
+            (df.segment == 1) & (df.reach == 1)
+        ).nonzero()[0]
         if len(wherereach1) == 1:
             return len(df)
         elif len(wherereach1) > 1:

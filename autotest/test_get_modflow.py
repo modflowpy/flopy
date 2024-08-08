@@ -116,18 +116,16 @@ def test_get_release(repo):
     tag = "latest"
     release = get_release(repo=repo, tag=tag)
     assets = release["assets"]
-
-    expected_assets = ["linux.zip", "mac.zip", "win64.zip"]
+    expected_assets = ["linux.zip", "mac.zip", "macarm.zip", "win64.zip"]
     expected_ostags = [a.replace(".zip", "") for a in expected_assets]
     actual_assets = [asset["name"] for asset in assets]
 
     if repo == "modflow6":
-        # can remove if modflow6 releases follow asset name conventions followed in executables and nightly build repos
+        # can remove if modflow6 releases follow the same asset name
+        # convention used in the executables and nightly build repos
         assert {a.rpartition("_")[2] for a in actual_assets} >= {
             a for a in expected_assets if not a.startswith("win")
         }
-    elif repo == "modflow6-nightly-build":
-        expected_assets.append("macarm.zip")
     else:
         for ostag in expected_ostags:
             assert any(
@@ -142,15 +140,13 @@ def test_select_bindir(bindir, function_tmpdir):
         pytest.skip(f"{expected_path} is not writable")
     selected = select_bindir(f":{bindir}")
 
+    # For some reason sys.prefix can return different python
+    # installs when invoked here and get_modflow.py on macOS.
+    # Work around by just comparing the end of the bin path,
+    # should be .../Python.framework/Versions/<version>/bin
     if system() != "Darwin":
         assert selected == expected_path
     else:
-        # for some reason sys.prefix can return different python
-        # installs when invoked here and get_modflow.py on macOS
-        #   https://github.com/modflowpy/flopy/actions/runs/3331965840/jobs/5512345032#step:8:1835
-        #
-        # work around by just comparing the end of the bin path
-        # should be .../Python.framework/Versions/<version>/bin
         assert selected.parts[-4:] == expected_path.parts[-4:]
 
 

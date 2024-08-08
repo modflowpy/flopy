@@ -162,8 +162,6 @@ def test_sfr(function_tmpdir, mf2005_model_path, sfr_test_model_path):
         "test1tr.nam", "test1tr.sfr", mf2005_model_path, function_tmpdir
     )
 
-    # assert list(sfr.dataset_5.keys()) == [0, 1]
-
     m, sfr = sfr_process(
         "testsfr2_tab.nam",
         "testsfr2_tab_ICALC1.sfr",
@@ -238,7 +236,7 @@ def test_sfr(function_tmpdir, mf2005_model_path, sfr_test_model_path):
     sfr.get_slopes(minimum_slope=-100, maximum_slope=100)
     reach_inds = 29
     outreach = sfr.reach_data.outreach[reach_inds]
-    out_inds = np.where(sfr.reach_data.reachID == outreach)
+    out_inds = np.asarray(sfr.reach_data.reachID == outreach).nonzero()
     assert (
         sfr.reach_data.slope[reach_inds]
         == (
@@ -373,7 +371,7 @@ def test_const(sfr_data):
     assert True
 
 
-@requires_pkg("shapefile", "shapely")
+@requires_pkg("pyshp", "shapely", name_map={"pyshp": "shapefile"})
 def test_export(function_tmpdir, sfr_data):
     m = Modflow()
     dis = ModflowDis(m, 1, 10, 10, lenuni=2, itmuni=4)
@@ -429,7 +427,6 @@ def test_example(mf2005_model_path):
         delimiter=",",
         names=True,
     )
-    # segment_data = {0: ss_segment_data}
 
     channel_flow_data = {
         0: {
@@ -480,7 +477,6 @@ def test_example(mf2005_model_path):
         dataset_5=dataset_5,
     )
 
-    # assert istcb2 in m.package_units
     assert istcb2 in m.output_units
     assert True
 

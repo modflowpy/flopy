@@ -313,7 +313,7 @@ def test_get_destination_endpoint_data(
 
 @pytest.mark.parametrize("longfieldname", [True, False])
 @requires_exe("mf6", "mp7")
-@requires_pkg("shapefile", "shapely")
+@requires_pkg("pyshp", "shapely", name_map={"pyshp": "shapefile"})
 def test_write_shapefile(function_tmpdir, mp7_small, longfieldname):
     from shapefile import Reader
 

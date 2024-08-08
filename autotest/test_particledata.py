@@ -83,7 +83,7 @@ def test_particledata_structured_ctor_with_partlocs_as_list_of_tuples():
     assert isinstance(data.particledata, pd.DataFrame)
     assert np.array_equal(
         data.particledata.to_records(index=False),
-        np.core.records.fromrecords(
+        np.rec.fromrecords(
             [
                 (0, 1, 1, 0.5, 0.5, 0.5, 0.0, 0),
                 (0, 1, 2, 0.5, 0.5, 0.5, 0.0, 0),
@@ -102,7 +102,7 @@ def test_particledata_structured_ctor_with_partlocs_as_ndarray():
     assert isinstance(data.particledata, pd.DataFrame)
     assert np.array_equal(
         data.particledata.to_records(index=False),
-        np.core.records.fromrecords(
+        np.rec.fromrecords(
             [
                 (0, 1, 1, 0.5, 0.5, 0.5, 0.0, 0),
                 (0, 1, 2, 0.5, 0.5, 0.5, 0.0, 0),
@@ -121,7 +121,7 @@ def test_particledata_unstructured_ctor_with_partlocs_as_ndarray():
     assert isinstance(data.particledata, pd.DataFrame)
     assert np.array_equal(
         data.particledata.to_records(index=False),
-        np.core.records.fromrecords(
+        np.rec.fromrecords(
             [
                 (0, 0.5, 0.5, 0.5, 0.0, 0),
                 (1, 0.5, 0.5, 0.5, 0.0, 0),
@@ -141,7 +141,7 @@ def test_particledata_unstructured_ctor_with_partlocs_as_list():
     assert isinstance(data.particledata, pd.DataFrame)
     assert np.array_equal(
         data.particledata.to_records(index=False),
-        np.core.records.fromrecords(
+        np.rec.fromrecords(
             [
                 (0, 0.5, 0.5, 0.5, 0.0, 0),
                 (1, 0.5, 0.5, 0.5, 0.0, 0),
@@ -161,7 +161,7 @@ def test_particledata_unstructured_ctor_with_partlocs_as_ndarray():
     assert isinstance(data.particledata, pd.DataFrame)
     assert np.array_equal(
         data.particledata.to_records(index=False),
-        np.core.records.fromrecords(
+        np.rec.fromrecords(
             [
                 (0, 0.5, 0.5, 0.5, 0.0, 0),
                 (1, 0.5, 0.5, 0.5, 0.0, 0),
@@ -181,7 +181,7 @@ def test_particledata_structured_ctor_with_partlocs_as_list_of_lists():
     assert isinstance(data.particledata, pd.DataFrame)
     assert np.array_equal(
         data.particledata.to_records(index=False),
-        np.core.records.fromrecords(
+        np.rec.fromrecords(
             [
                 (0, 1, 1, 0.5, 0.5, 0.5, 0.0, 0),
                 (0, 1, 2, 0.5, 0.5, 0.5, 0.0, 0),
@@ -212,7 +212,7 @@ def test_particledata_to_prp_dis_1():
     )  # each coord should be a tuple (irpt, k, i, j, x, y, z)
 
     # expected
-    exp = np.core.records.fromrecords(
+    exp = np.rec.fromrecords(
         [
             (0, 1, 1, 0.5, 0.5, 0.5, 0.0, 0),
             (0, 1, 2, 0.5, 0.5, 0.5, 0.0, 0),
@@ -658,7 +658,7 @@ def test_nodeparticledata_to_prp_dis_1_per_face():
     assert len(rpts) == num_cells * 6
 
 
-@requires_pkg("shapefile")
+@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
 def test_nodeparticledata_prp_disv_big(function_tmpdir):
     Lx = 10000.0
     Ly = 10500.0

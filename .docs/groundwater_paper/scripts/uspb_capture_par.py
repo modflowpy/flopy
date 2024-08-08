@@ -311,17 +311,12 @@ def doit():
         # increment icnt
         icnt += 1
 
-    ## test cg_model function
-    # t = cf_model(models[0], klay, cells[0][0], cells[0][1], Qcf, baseQ)
-    # sys.stdout.write(t)
-
     # create multiprocessing pool
     pool = mp.Pool(processes=nproc)
     args = [
         (cf_model, idx, len(cells), klay, i, j, Qcf, baseQ, ml.lpf.hdry)
         for idx, (i, j) in enumerate(cells)
     ]
-    # sys.stdout.write(args)
     output = pool.map(unpack_args, args, nproc)
     pool.close()
     pool.join()

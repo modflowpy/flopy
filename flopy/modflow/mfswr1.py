@@ -87,15 +87,12 @@ class ModflowSwr1(Package):
         """
         Write the package file.
 
-        Returns
-        -------
-        None
+        Raises
+        ------
+        NotImplementedError
 
         """
-        print("SWR1 write method not implemented yet")
-        # f = open(self.fn_path, 'w')
-        # f.write('{0}\n'.format(self.heading))
-        # f.close()
+        raise NotImplementedError("SWR1 write method not implemented yet")
 
     @classmethod
     def load(cls, f, model, ext_unit_dict=None):

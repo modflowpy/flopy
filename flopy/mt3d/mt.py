@@ -36,8 +36,7 @@ class Mt3dList(Package):
         return "List package class"
 
     def write_file(self):
-        # Not implemented for list class
-        return
+        raise NotImplementedError
 
 
 class Mt3dms(BaseModel):
@@ -201,13 +200,8 @@ class Mt3dms(BaseModel):
         # the starting external data unit number
         self._next_ext_unit = 2000
         if external_path is not None:
-            # assert model_ws == '.', "ERROR: external cannot be used " + \
-            #                        "with model_ws"
-
-            # external_path = os.path.join(model_ws, external_path)
             if os.path.exists(external_path):
                 print(f"Note: external_path {external_path} already exists")
-            # assert os.path.exists(external_path),'external_path does not exist'
             else:
                 os.mkdir(external_path)
             self.external = True
@@ -510,9 +504,6 @@ class Mt3dms(BaseModel):
                 namefile_path, mt.mfnam_packages, verbose=verbose
             )
         except Exception as e:
-            # print("error loading name file entries from file")
-            # print(str(e))
-            # return None
             raise Exception(
                 f"error loading name file entries from file:\n{e!s}"
             )

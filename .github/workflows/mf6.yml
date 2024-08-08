@@ -8,14 +8,14 @@ on:
     branches:
       - master
       - develop
-
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
 
-  test:
+  test_mf6:
     name: Modflow6 FloPy tests
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     defaults:
       run:
         shell: bash
@@ -38,6 +38,7 @@ jobs:
         pip install https://github.com/Deltares/xmipy/zipball/develop
         pip install https://github.com/MODFLOW-USGS/modflowapi/zipball/develop
         pip install .[test,optional]
+        pip install meson ninja
 
     - name: Setup GNU Fortran
       uses: fortran-lang/setup-fortran@v1
@@ -51,46 +52,30 @@ jobs:
         repository: MODFLOW-USGS/modflow6
         path: modflow6
 
-    - name: Update flopy MODFLOW 6 classes
-      working-directory: modflow6/autotest
-      run: |
-        python update_flopy.py
-
-    - name: Install meson
-      run: |
-        pip3 install meson ninja
-
-    - name: Setup modflow
+    - name: Build and install MF6
       working-directory: modflow6
       run: |
         meson setup builddir --buildtype=debugoptimized --prefix=$(pwd) --libdir=bin
-
-    - name: Build modflow
-      working-directory: modflow6
-      run: |
-        meson compile -C builddir
-
-    - name: Install modflow
-      working-directory: modflow6
-      run: |
         meson install -C builddir
+        meson test --verbose --no-rebuild -C builddir
 
-    - name: Get executables
+    - name: Update package classes
+      working-directory: modflow6/autotest
+      run: python update_flopy.py
+
+    - name: Install executables
       working-directory: modflow6/autotest
       env:
         GITHUB_TOKEN: ${{ github.token }}
-      run: |
-        pytest -v --durations=0 get_exes.py
+      run: pytest -v --durations=0 get_exes.py
 
     - name: Run tests
       working-directory: modflow6/autotest
-      run: |
-        pytest -v --cov=flopy --cov-report=xml --durations=0 -n auto -m "not repo and not regression"
+      run: pytest -v --cov=flopy --cov-report=xml --cov-append --durations=0 -n auto -m "not repo and not regression"
 
     - name: Print coverage report before upload
       working-directory: ./modflow6/autotest
-      run: |
-        coverage report
+      run: coverage report
 
     - name: Upload coverage to Codecov
       if:
@@ -98,3 +83,68 @@ jobs:
       uses: codecov/codecov-action@v3
       with:
         files: ./modflow6/autotest/coverage.xml
+
+  test_mf6_examples:
+    name: MF6 examples FloPy tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      
+    - name: Checkout flopy repo
+      uses: actions/checkout@v4
+
+    - name: Checkout MODFLOW 6
+      uses: actions/checkout@v4
+      with:
+        repository: MODFLOW-USGS/modflow6
+        path: modflow6
+
+    - name: Checkout MF6 examples
+      uses: actions/checkout@v4
+      with:
+        repository: MODFLOW-USGS/modflow6-examples
+        path: modflow6-examples
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.9
+        cache: 'pip'
+        cache-dependency-path: pyproject.toml
+
+    - name: Install Python dependencies
+      run: |
+        pip install --upgrade pip
+        pip install https://github.com/modflowpy/pymake/zipball/master
+        pip install https://github.com/Deltares/xmipy/zipball/develop
+        pip install https://github.com/MODFLOW-USGS/modflowapi/zipball/develop
+        pip install .[test,optional]
+        pip install meson ninja
+        pip install -r modflow6-examples/etc/requirements.pip.txt
+
+    - name: Setup GNU Fortran
+      uses: fortran-lang/setup-fortran@v1
+      with:
+        compiler: gcc
+        version: 13
+
+    - name: Install executables
+      uses: modflowpy/install-modflow-action@v1
+
+    - name: Build and install MF6
+      working-directory: modflow6
+      run: |
+        meson setup builddir --buildtype=debugoptimized --prefix=$(pwd) --libdir=bin
+        meson install -C builddir
+        meson test --verbose --no-rebuild -C builddir
+        cp bin/* ~/.local/bin/modflow/
+
+    - name: Update package classes
+      working-directory: modflow6/autotest
+      run: python update_flopy.py
+
+    - name: Test MF6 examples
+      working-directory: modflow6-examples/autotest
+      run: pytest -v -n=auto --durations=0 test_scripts.py

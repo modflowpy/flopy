@@ -217,7 +217,7 @@ class UtlobsPackages(mfpackage.MFChildPackages):
     UtlobsPackages is a container class for the ModflowUtlobs class.
 
     Methods
-    ----------
+    -------
     initialize
         Initializes a new ModflowUtlobs package removing any sibling child
         packages attached to the same parent package. See ModflowUtlobs init

@@ -797,7 +797,7 @@ class PlotMapView:
                 else:
                     kon = self.layer
         else:
-            kon = self.layer
+            kon = -1
 
         # configure plot settings
         marker = kwargs.pop("marker", None)

@@ -1,11 +1,12 @@
 # ---
 # jupyter:
 #   jupytext:
+#     notebook_metadata_filter: metadata
 #     text_representation:
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.5
+#       jupytext_version: 1.14.4
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -569,6 +570,30 @@ plt.colorbar(ax, shrink=0.7)
 # -
 
 # The `ibound` array and the `top` array can be used to build or edit the BAS and DIS file objects in FloPy
+
+# ## Raster re-projection
+#
+# The `Raster` class has a built in `to_crs()` method that allows for raster reprojection. The `to_crs()` method has two possible parameters that can be used to define reprojection and one additional parameter for in place reprojection:
+#
+#    - `crs`: the crs parameter can take many different formats of coordinate refence systems (WKT string, epsg code, pyproj.CRS, rasterio.CRS, proj4 string, epsg string, etc...)
+#    - `epsg`: integer epsg number
+#    - `inplace`: bool, default False creates a new raster object, True modifies the existing Raster object
+#
+# Here's example usage:
+
+cur_crs = rio.crs
+print(cur_crs)
+print(rio.transform)
+
+rio_reproj = rio.to_crs(crs="EPSG:4326")  # WGS84 dec. lat lon
+print(rio_reproj.crs)
+print(rio_reproj.transform)
+
+# Reproject as an inplace operation
+
+rio.to_crs(epsg=4326, inplace=True)
+print(rio.crs)
+print(rio.transform)
 
 # ## Future development
 #

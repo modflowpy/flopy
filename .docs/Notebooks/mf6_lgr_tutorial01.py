@@ -462,23 +462,11 @@ if include_transport:
     # retrieve the exchange data from the lgr object
     exchangedata = lgr.get_exchange_data(angldegx=True, cdist=True)
     nexg = len(exchangedata)
-
-    # When creating the exchange, which couples the child and parent
-    # models, use the xt3d option, which is an alternative to the
-    # ghost-node correction.  This xt3d option was added as a new
-    # capability for the gwt-gwt and gwf-gwf exchanges in MODFLOW version 6.3.0.
-    exg = flopy.mf6.ModflowGwtgwt(
-        sim,
-        exgtype="GWT6-GWT6",
-        gwfmodelname1=gwfp.name,
-        gwfmodelname2=gwfc.name,
-        # xt3d=True,
-        auxiliary=["angldegx", "cdist"],
-        exgmnamea=pname,
-        exgmnameb=cname,
-        nexg=nexg,
-        exchangedata=exchangedata,
-    )
+    exg_data = {
+        "filename": "exg_data.bin",
+        "data": exchangedata,
+        "binary": True,
+    }
 
     # Set up the parent model and use the lgr.parent object to
     # help provide the necessary information.
@@ -521,6 +509,23 @@ if include_transport:
         sim, linear_acceleration="BICGSTAB", filename="tran.ims"
     )
     sim.register_ims_package(ims_tran, [gwtp.name, gwtc.name])
+
+    # When creating the exchange, which couples the child and parent
+    # models, use the xt3d option, which is an alternative to the
+    # ghost-node correction.  This xt3d option was added as a new
+    # capability for the gwt-gwt and gwf-gwf exchanges in MODFLOW version 6.3.0.
+    exg = flopy.mf6.ModflowGwtgwt(
+        sim,
+        exgtype="GWT6-GWT6",
+        gwfmodelname1=gwfp.name,
+        gwfmodelname2=gwfc.name,
+        # xt3d=True,
+        auxiliary=["angldegx", "cdist"],
+        exgmnamea=pname,
+        exgmnameb=cname,
+        nexg=nexg,
+        exchangedata=exg_data,
+    )
 
     # couple flow and transport models
     gwfgwt_p = flopy.mf6.ModflowGwfgwt(

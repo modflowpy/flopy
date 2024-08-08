@@ -14,7 +14,7 @@ from ..mfusg.mfusgdisu import MfUsgDisU
 from ..modflow import ModflowDis
 from ..utils import import_optional_dependency
 from ..utils.flopy_io import relpath_safe
-from .util_array import Util2d  # read1d,
+from .util_array import Util2d
 
 # todo
 # creation of line and polygon shapefiles from features (holes!)
@@ -196,11 +196,11 @@ class Gridgen:
         where intermediate layers are inactive.
         (default is False)
     **kwargs
-        verical_smoothing_level : int
+        smoothing_level_vertical : int
             maximum level difference between two vertically adjacent cells.
             Adjust with caution, as adjustments can cause unexpected results
             to simulated flows
-        horizontal_smoothing_level : int
+        smoothing_level_horizontal : int
             maximum level difference between two horizontally adjacent cells.
             Adjust with caution, as adjustments can cause unexpected results
             to simulated flows
@@ -733,7 +733,7 @@ class Gridgen:
         shapename = os.path.join(self.model_ws, "qtgrid")
         xmin, xmax, ymin, ymax = shapefile_extents(shapename)
 
-        idx = np.where(self.qtra.layer == layer)[0]
+        idx = np.asarray(self.qtra.layer == layer).nonzero()[0]
 
         pc = plot_shapefile(
             shapename,

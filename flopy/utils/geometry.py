@@ -11,7 +11,7 @@ class Shape:
     """
     Parent class for handling geo interfacing, do not instantiate directly
 
-    Parameters:
+    Parameters
     ----------
     type : str
         shapetype string
@@ -233,9 +233,9 @@ class MultiPolygon(Collection):
     Container for housing and describing multipolygon geometries (e.g. to be
         read or written to shapefiles or other geographic data formats)
 
-    Parameters:
+    Parameters
     ----------
-    polygons : list
+    polygons : list, tuple, default ()
         list of flopy.utils.geometry.Polygon objects
     """
 
@@ -261,9 +261,9 @@ class MultiLineString(Collection):
     Container for housing and describing multilinestring geometries (e.g. to be
         read or written to shapefiles or other geographic data formats)
 
-    Parameters:
+    Parameters
     ----------
-    polygons : list
+    linestrings : list, tuple, default ()
         list of flopy.utils.geometry.LineString objects
     """
 
@@ -289,9 +289,9 @@ class MultiPoint(Collection):
     Container for housing and describing multipoint geometries (e.g. to be
         read or written to shapefiles or other geographic data formats)
 
-    Parameters:
+    Parameters
     ----------
-    polygons : list
+    points : list, tuple, default ()
         list of flopy.utils.geometry.Point objects
     """
 
@@ -872,9 +872,9 @@ def point_in_polygon(xc, yc, polygon):
             yc - polygon[i][1]
         ) / (polygon[j][1] - polygon[i][1])
 
-        comp = np.where(
+        comp = np.asarray(
             ((polygon[i][1] > yc) ^ (polygon[j][1] > yc)) & (xc < tmp)
-        )
+        ).nonzero()
 
         j = i
         if len(comp[0]) > 0:

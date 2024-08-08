@@ -155,7 +155,7 @@ def list_to_array(sarr, model_grid, kper=0, mask=False):
         return array with np.nan instead of zero
 
     Returns
-    ----------
+    -------
     out : dict of numpy.ndarrays
         Dictionary of 3-D numpy arrays containing the stress period data
         for a selected stress period. The dictionary keys are the

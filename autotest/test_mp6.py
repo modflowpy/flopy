@@ -131,7 +131,7 @@ def test_mpsim(function_tmpdir, mp6_test_path):
         assert stllines[6].strip().split()[-1] == "p2"
 
 
-@requires_pkg("shapefile", "shapely")
+@requires_pkg("pyshp", "shapely", name_map={"pyshp": "shapefile"})
 def test_get_destination_data(function_tmpdir, mp6_test_path):
     copy_modpath_files(mp6_test_path, function_tmpdir, "EXAMPLE.")
     copy_modpath_files(mp6_test_path, function_tmpdir, "EXAMPLE-3.")
@@ -175,7 +175,7 @@ def test_get_destination_data(function_tmpdir, mp6_test_path):
         np.array(well_pthld)[["k", "i", "j"]].tolist(),
         dtype=starting_locs.dtype,
     )
-    assert np.all(np.in1d(starting_locs, pathline_locs))
+    assert np.all(np.isin(starting_locs, pathline_locs))
 
     # test writing a shapefile of endpoints
     epd.write_shapefile(
@@ -313,9 +313,6 @@ def test_loadtxt(function_tmpdir, mp6_test_path):
         pthfile, delimiter=" ", skiprows=3, dtype=pthld.dtype, use_pandas=False
     )
     assert np.array_equal(ra, ra2)
-
-    # epfilewithnans = os.path.join('../examples/data/mp6/', 'freybergmp.mpend')
-    # epd = EndpointFile(epfilewithnans)
 
 
 @requires_exe("mf2005")

@@ -229,7 +229,7 @@ class GncPackages(mfpackage.MFChildPackages):
     GncPackages is a container class for the ModflowGnc class.
 
     Methods
-    ----------
+    -------
     initialize
         Initializes a new ModflowGnc package removing any sibling child
         packages attached to the same parent package. See ModflowGnc init

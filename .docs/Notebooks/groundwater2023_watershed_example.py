@@ -29,12 +29,15 @@ import matplotlib as mpl
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
-from shapely.geometry import LineString
+import shapely
+import yaml
+from shapely.geometry import LineString, Polygon
 
 import flopy
 import flopy.plot.styles as styles
 from flopy.discretization import StructuredGrid, VertexGrid
 from flopy.utils.gridgen import Gridgen
+from flopy.utils.gridintersect import GridIntersect
 from flopy.utils.triangle import Triangle
 from flopy.utils.voronoi import VoronoiGrid
 
@@ -43,13 +46,70 @@ print(f"numpy version: {np.__version__}")
 print(f"matplotlib version: {mpl.__version__}")
 print(f"flopy version: {flopy.__version__}")
 
-# import all plot style information from defaults.py
-sys.path.append("../common")
-from groundwater2023_utils import (
-    densify_geometry,
-    geometries,
-    set_idomain,
-    string2geom,
+
+# define a few utility functions
+def string2geom(geostring, conversion=None):
+    if conversion is None:
+        multiplier = 1.0
+    else:
+        multiplier = float(conversion)
+    res = []
+    for line in geostring.split("\n"):
+        if not any(line):
+            continue
+        line = line.strip()
+        line = line.split(" ")
+        x = float(line[0]) * multiplier
+        y = float(line[1]) * multiplier
+        res.append((x, y))
+    return res
+
+
+def densify_geometry(line, step, keep_internal_nodes=True):
+    xy = []  # list of tuple of coordinates
+    lines_strings = []
+    if keep_internal_nodes:
+        for idx in range(1, len(line)):
+            lines_strings.append(
+                shapely.geometry.LineString(line[idx - 1 : idx + 1])
+            )
+    else:
+        lines_strings = [shapely.geometry.LineString(line)]
+
+    for line_string in lines_strings:
+        length_m = line_string.length  # get the length
+        for distance in np.arange(0, length_m + step, step):
+            point = line_string.interpolate(distance)
+            xy_tuple = (point.x, point.y)
+            if xy_tuple not in xy:
+                xy.append(xy_tuple)
+        # make sure the end point is in xy
+        if keep_internal_nodes:
+            xy_tuple = line_string.coords[-1]
+            if xy_tuple not in xy:
+                xy.append(xy_tuple)
+
+    return xy
+
+
+# function to set the active and inactive model area
+def set_idomain(grid, boundary):
+    ix = GridIntersect(grid, method="vertex", rtree=True)
+    result = ix.intersect(Polygon(boundary))
+    idx = [coords for coords in result.cellids]
+    idx = np.array(idx, dtype=int)
+    nr = idx.shape[0]
+    if idx.ndim == 1:
+        idx = idx.reshape((nr, 1))
+    idx = tuple([idx[:, i] for i in range(idx.shape[1])])
+    idomain = np.zeros(grid.shape[1:], dtype=int)
+    idomain[idx] = 1
+    idomain = idomain.reshape(grid.shape)
+    grid.idomain = idomain
+
+
+geometries = yaml.safe_load(
+    open(pl.Path("../../examples/data/groundwater2023/geometries.yml"))
 )
 
 # basic figure size

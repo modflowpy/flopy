@@ -55,16 +55,10 @@ def test_subwt(function_tmpdir, ibound_path):
         ss=1.0e-6,
     )
 
-    # temp_ib = np.ones((ml.nrow,ml.ncol),dtype=int)
-    # np.savetxt('temp_ib.dat',temp_ib,fmt='%1d')
     ibound = np.loadtxt(ibound_path)
     ibound[ibound == 5] = -1
     ModflowBas(ml, ibound=ibound, strt=100.0)
 
-    # sp1_wells = pd.DataFrame(data=np.argwhere(ibound == 2), columns=['i', 'j'])
-    # sp1_wells.loc[:, 'k'] = 0
-    # sp1_wells.loc[:, 'flux'] = 2200.0
-    # sp1_wells = sp1_wells.loc[:, ['k', 'i', 'j', 'flux']].values.tolist()
     idxs = np.argwhere(ibound == 2)
     sp1_wells = []
     for idx in idxs:
@@ -110,8 +104,6 @@ def test_subwt(function_tmpdir, ibound_path):
     )
 
     ml.run_model()
-
-    # contents = [f for f in function_tmpdir.glob("*.hds")]
 
     hds_geo = HeadFile(
         function_tmpdir / f"{ml.name}.swt_geostatic_stress.hds",

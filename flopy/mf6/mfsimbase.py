@@ -603,7 +603,7 @@ class MFSimulationBase(PackageContainer):
         Override __repr__ to print custom string.
 
         Returns
-        --------
+        -------
             repr string : str
                 string describing object
 
@@ -615,7 +615,7 @@ class MFSimulationBase(PackageContainer):
         Override __str__ to print custom string.
 
         Returns
-        --------
+        -------
             str string : str
                 string describing object
 
@@ -671,7 +671,7 @@ class MFSimulationBase(PackageContainer):
         Return a list of model names associated with this simulation.
 
         Returns
-        --------
+        -------
             list: list of model names
 
         """
@@ -683,7 +683,7 @@ class MFSimulationBase(PackageContainer):
         Return list of exchange files associated with this simulation.
 
         Returns
-        --------
+        -------
             list: list of exchange names
 
         """
@@ -1699,7 +1699,7 @@ class MFSimulationBase(PackageContainer):
                 default is None, i.e. use the builtion print
 
         Returns
-        --------
+        -------
             success : bool
             buff : list of lines of stdout
 
@@ -1786,7 +1786,7 @@ class MFSimulationBase(PackageContainer):
         Return a dictionary of models associated with this simulation.
 
         Returns
-        --------
+        -------
             model dict : dict
                 dictionary of models
 
@@ -1805,7 +1805,7 @@ class MFSimulationBase(PackageContainer):
                 will get the first model.
 
         Returns
-        --------
+        -------
             model : MFModel
 
         """
@@ -1833,7 +1833,7 @@ class MFSimulationBase(PackageContainer):
                 Name of exchange file to get
 
         Returns
-        --------
+        -------
             exchange package : MFPackage
 
         """
@@ -1853,7 +1853,7 @@ class MFSimulationBase(PackageContainer):
                 Name of mover file to get
 
         Returns
-        --------
+        -------
             mover package : MFPackage
 
         """
@@ -2076,7 +2076,7 @@ class MFSimulationBase(PackageContainer):
                 Produce a filename for this package
 
         Returns
-        --------
+        -------
             (path : tuple, package structure : MFPackageStructure)
 
         """
@@ -2213,7 +2213,7 @@ class MFSimulationBase(PackageContainer):
                Solution group of model
 
         Returns
-        --------
+        -------
            model_structure_object : MFModelStructure
         """
 
@@ -2262,7 +2262,7 @@ class MFSimulationBase(PackageContainer):
                 solution package file name
 
         Returns
-        --------
+        -------
             solution_package : MFPackage
 
         """
@@ -2318,7 +2318,7 @@ class MFSimulationBase(PackageContainer):
 
 
         Returns
-        --------
+        -------
             valid : bool
                 Whether this is a valid simulation
 
@@ -2556,7 +2556,7 @@ class MFSimulationBase(PackageContainer):
                     MFList dictionary key. (default is None)
 
         Returns
-        --------
+        -------
              axes: (list)
                 matplotlib.pyplot.axes objects
 

@@ -26,14 +26,35 @@ from tempfile import TemporaryDirectory
 
 import matplotlib.pyplot as plt
 import numpy as np
+import yaml
 
 import flopy
 from flopy.mf6.utils import Mf6Splitter
 from flopy.plot import styles
 from flopy.utils.geometry import LineString, Polygon
 
-sys.path.append("../common")
-from notebook_utils import geometries, string2geom
+geometries = yaml.safe_load(
+    open(Path("../../examples/data/groundwater2023/geometries.yml"))
+)
+
+
+# define a few utility functions
+def string2geom(geostring, conversion=None):
+    if conversion is None:
+        multiplier = 1.0
+    else:
+        multiplier = float(conversion)
+    res = []
+    for line in geostring.split("\n"):
+        if not any(line):
+            continue
+        line = line.strip()
+        line = line.split(" ")
+        x = float(line[0]) * multiplier
+        y = float(line[1]) * multiplier
+        res.append((x, y))
+    return res
+
 
 # ## Example 1: splitting a simple structured grid model
 #

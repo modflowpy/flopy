@@ -1,5 +1,4 @@
 import argparse
-import json
 import re
 import textwrap
 from datetime import datetime
@@ -9,6 +8,14 @@ import yaml
 from filelock import FileLock
 from packaging.version import Version
 
+_epilog = """\
+Update version information stored in version.txt in the project root,
+as well as several other files in the repository. If --version is not
+provided, the version number will not be changed. A file lock is held
+to synchronize file access. The version tag must comply with standard
+'<major>.<minor>.<patch>' format conventions for semantic versioning.
+To show the version without changing anything, use --get (short -g).
+"""
 _project_name = "flopy"
 _project_root_path = Path(__file__).parent.parent
 _version_txt_path = _project_root_path / "version.txt"
@@ -17,38 +24,11 @@ _version_py_path = _project_root_path / "flopy" / "version.py"
 # file names and the path to the file relative to the repo root directory
 file_paths_list = [
     _project_root_path / "CITATION.cff",
-    _project_root_path / "code.json",
     _project_root_path / "README.md",
     _project_root_path / "docs" / "PyPI_release.md",
     _project_root_path / "flopy" / "version.py",
-    _project_root_path / "flopy" / "DISCLAIMER.md",
 ]
 file_paths = {pth.name: pth for pth in file_paths_list}  # keys for each file
-
-
-approved_disclaimer = """Disclaimer
-----------
-
-This software is provided "as is" and "as-available", and makes no 
-representations or warranties of any kind concerning the software, whether 
-express, implied, statutory, or other. This includes, without limitation, 
-warranties of title, merchantability, fitness for a particular purpose, 
-non-infringement, absence of latent or other defects, accuracy, or the 
-presence or absence of errors, whether or not known or discoverable.
-"""
-
-preliminary_disclaimer = """Disclaimer
-----------
-
-This software is preliminary or provisional and is subject to revision. It is 
-being provided to meet the need for timely best science. This software is 
-provided "as is" and "as-available", and makes no representations or warranties 
-of any kind concerning the software, whether express, implied, statutory, or 
-other. This includes, without limitation, warranties of title, 
-merchantability, fitness for a particular purpose, non-infringement, absence 
-of latent or other defects, accuracy, or the presence or absence of errors, 
-whether or not known or discoverable.
-"""
 
 
 def split_nonnumeric(s):
@@ -56,12 +36,7 @@ def split_nonnumeric(s):
     return [s[: match.start()], s[match.start() :]] if match else s
 
 
-_initial_version = Version("0.0.1")
 _current_version = Version(_version_txt_path.read_text().strip())
-
-
-def get_disclaimer(approved: bool = False):
-    return approved_disclaimer if approved else preliminary_disclaimer
 
 
 def update_version_txt(version: Version):
@@ -81,15 +56,10 @@ def update_version_py(timestamp: datetime, version: Version):
     print(f"Updated {_version_py_path} to version {version}")
 
 
-def get_software_citation(
-    timestamp: datetime, version: Version, approved: bool = False
-):
+def get_software_citation(timestamp: datetime, version: Version):
     # get data Software/Code citation for FloPy
     citation = yaml.safe_load(file_paths["CITATION.cff"].read_text())
 
-    sb = ""
-    if not approved:
-        sb = " (preliminary)"
     # format author names
     authors = []
     for author in citation["authors"]:
@@ -116,7 +86,7 @@ def get_software_citation(
 
     # add the rest of the citation
     line += (
-        f", {timestamp.year}, FloPy v{version}{sb}: "
+        f", {timestamp.year}, FloPy v{version}: "
         f"U.S. Geological Survey Software Release, {timestamp:%d %B %Y}, "
         "https://doi.org/10.5066/F7BK19FH]"
         "(https://doi.org/10.5066/F7BK19FH)"
@@ -125,82 +95,43 @@ def get_software_citation(
     return line
 
 
-def update_codejson(
-    timestamp: datetime, version: Version, approved: bool = False
-):
-    # define json filename
-    json_fname = file_paths["code.json"]
-
-    # load and modify json file
-    data = json.loads(json_fname.read_text())
-
-    # modify the json file data
-    data[0]["date"]["metadataLastUpdated"] = timestamp.strftime("%Y-%m-%d")
-    data[0]["version"] = str(version)
-    data[0]["status"] = "Release" if approved else "Preliminary"
-
-    # rewrite the json file
-    with open(json_fname, "w") as f:
-        json.dump(data, f, indent=4)
-        f.write("\n")
-
-    print(f"Updated {json_fname} to version {version}")
-
-
-def update_readme_markdown(
-    timestamp: datetime, version: Version, approved: bool = False
-):
-    # create disclaimer text
-    disclaimer = get_disclaimer(approved)
-
+def update_readme_markdown(timestamp: datetime, version: Version):
     # read README.md into memory
     fpth = file_paths["README.md"]
     lines = fpth.read_text().rstrip().split("\n")
 
     # rewrite README.md
-    terminate = False
-    f = open(fpth, "w")
-    for line in lines:
-        if "### Version " in line:
-            line = f"### Version {version}"
-            if not approved:
-                line += " (preliminary)"
-        elif "[flopy continuous integration]" in line:
-            line = (
-                "[![flopy continuous integration](https://github.com/"
-                "modflowpy/flopy/actions/workflows/commit.yml/badge.svg?"
-                "branch=develop)](https://github.com/modflowpy/flopy/actions/"
-                "workflows/commit.yml)"
-            )
-        elif "[Read the Docs]" in line:
-            line = (
-                "[![Read the Docs](https://github.com/modflowpy/flopy/"
-                "actions/workflows/rtd.yml/badge.svg?branch=develop)]"
-                "(https://github.com/modflowpy/flopy/actions/"
-                "workflows/rtd.yml)"
-            )
-        elif "[Coverage Status]" in line:
-            line = (
-                "[![Coverage Status](https://coveralls.io/repos/github/"
-                "modflowpy/flopy/badge.svg?branch=develop)]"
-                "(https://coveralls.io/github/modflowpy/"
-                "flopy?branch=develop)"
-            )
-        elif "doi.org/10.5066/F7BK19FH" in line:
-            line = get_software_citation(timestamp, version, approved)
-        elif "Disclaimer" in line:
-            line = disclaimer
-            terminate = True
-        f.write(f"{line}\n")
-        if terminate:
-            break
+    with open(fpth, "w") as f:
+        for line in lines:
+            if "### Version " in line:
+                line = f"### Version {version}"
+            elif "[flopy continuous integration]" in line:
+                line = (
+                    "[![flopy continuous integration](https://github.com/"
+                    "modflowpy/flopy/actions/workflows/commit.yml/badge.svg?"
+                    "branch=develop)](https://github.com/modflowpy/flopy/actions/"
+                    "workflows/commit.yml)"
+                )
+            elif "[Read the Docs]" in line:
+                line = (
+                    "[![Read the Docs](https://github.com/modflowpy/flopy/"
+                    "actions/workflows/rtd.yml/badge.svg?branch=develop)]"
+                    "(https://github.com/modflowpy/flopy/actions/"
+                    "workflows/rtd.yml)"
+                )
+            elif "[Coverage Status]" in line:
+                line = (
+                    "[![Coverage Status](https://coveralls.io/repos/github/"
+                    "modflowpy/flopy/badge.svg?branch=develop)]"
+                    "(https://coveralls.io/github/modflowpy/"
+                    "flopy?branch=develop)"
+                )
+            elif "doi.org/10.5066/F7BK19FH" in line:
+                line = get_software_citation(timestamp, version)
 
-    f.close()
+            f.write(f"{line}\n")
+
     print(f"Updated {fpth} to version {version}")
-
-    # write disclaimer markdown file
-    file_paths["DISCLAIMER.md"].write_text(disclaimer)
-    print(f"Updated {file_paths['DISCLAIMER.md']} to version {version}")
 
 
 def update_citation_cff(timestamp: datetime, version: Version):
@@ -225,28 +156,18 @@ def update_citation_cff(timestamp: datetime, version: Version):
     print(f"Updated {fpth} to version {version}")
 
 
-def update_PyPI_release(
-    timestamp: datetime, version: Version, approved: bool = False
-):
-    # create disclaimer text
-    disclaimer = get_disclaimer(approved)
-
+def update_pypi_release(timestamp: datetime, version: Version):
     # read PyPI_release.md into memory
     fpth = file_paths["PyPI_release.md"]
     lines = fpth.read_text().rstrip().split("\n")
 
     # rewrite PyPI_release.md
-    terminate = False
     f = open(fpth, "w")
     for line in lines:
         if "doi.org/10.5066/F7BK19FH" in line:
-            line = get_software_citation(timestamp, version, approved)
-        elif "Disclaimer" in line:
-            line = disclaimer
-            terminate = True
+            line = get_software_citation(timestamp, version)
+
         f.write(f"{line}\n")
-        if terminate:
-            break
 
     f.close()
     print(f"Updated {fpth} to version {version}")
@@ -255,7 +176,6 @@ def update_PyPI_release(
 def update_version(
     timestamp: datetime = datetime.now(),
     version: Version = None,
-    approved: bool = False,
 ):
     lock_path = Path(_version_txt_path.name + ".lock")
     try:
@@ -270,10 +190,9 @@ def update_version(
         with lock:
             update_version_txt(version)
             update_version_py(timestamp, version)
-            update_readme_markdown(timestamp, version, approved)
+            update_readme_markdown(timestamp, version)
             update_citation_cff(timestamp, version)
-            update_codejson(timestamp, version, approved)
-            update_PyPI_release(timestamp, version, approved)
+            update_pypi_release(timestamp, version)
     finally:
         try:
             lock_path.unlink()
@@ -285,28 +204,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         prog=f"Update {_project_name} version",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=textwrap.dedent(
-            """\
-            Update version information stored in version.txt in the project root,
-            as well as several other files in the repository. If --version is not
-            provided, the version number will not be changed. A file lock is held
-            to synchronize file access. The version tag must comply with standard
-            '<major>.<minor>.<patch>' format conventions for semantic versioning.
-            """
-        ),
+        epilog=textwrap.dedent(_epilog),
     )
     parser.add_argument(
         "-v",
         "--version",
         required=False,
         help="Specify the release version",
-    )
-    parser.add_argument(
-        "-a",
-        "--approve",
-        required=False,
-        action="store_true",
-        help="Approve the release (defaults false)",
     )
     parser.add_argument(
         "-g",
@@ -318,14 +222,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.get:
-        print(
-            Version((_project_root_path / "version.txt").read_text().strip())
-        )
+        print(_current_version)
     else:
         update_version(
             timestamp=datetime.now(),
             version=(
                 Version(args.version) if args.version else _current_version
             ),
-            approved=args.approve,
         )

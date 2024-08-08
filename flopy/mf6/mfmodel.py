@@ -572,15 +572,10 @@ class MFModel(PackageContainer, ModelInterface):
         else:
             return self._modelgrid
 
-        if self.get_grid_type() != DiscretizationType.DISV:
-            # get coordinate data from dis file
-            xorig = dis.xorigin.get_data()
-            yorig = dis.yorigin.get_data()
-            angrot = dis.angrot.get_data()
-        else:
-            xorig = self._modelgrid.xoffset
-            yorig = self._modelgrid.yoffset
-            angrot = self._modelgrid.angrot
+        # get coordinate data from dis file
+        xorig = dis.xorigin.get_data()
+        yorig = dis.yorigin.get_data()
+        angrot = dis.angrot.get_data()
 
         # resolve offsets
         if xorig is None:
@@ -1275,11 +1270,15 @@ class MFModel(PackageContainer, ModelInterface):
         -------
         IMS package : ModflowIms
         """
-        solution_group = self.simulation.name_file.solutiongroup.get_data()
+        solution_group = self.simulation.name_file.solutiongroup.get_data(0)
         for record in solution_group:
-            for model_name in record[2:]:
-                if model_name == self.name:
-                    return self.simulation.get_solution_package(record[1])
+            for name in record.dtype.names:
+                if name == "slntype" or name == "slnfname":
+                    continue
+                if record[name] == self.name:
+                    return self.simulation.get_solution_package(
+                        record.slnfname
+                    )
         return None
 
     def get_steadystate_list(self):

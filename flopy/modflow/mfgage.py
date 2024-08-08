@@ -131,7 +131,7 @@ class ModflowGage(Package):
             # convert gage_data to a recarray, if necessary
             if isinstance(gage_data, np.ndarray):
                 if not gage_data.dtype == dtype:
-                    gage_data = np.core.records.fromarrays(
+                    gage_data = np.rec.fromarrays(
                         gage_data.transpose(), dtype=dtype
                     )
             elif isinstance(gage_data, pd.DataFrame):

@@ -346,9 +346,7 @@ class PlotUtilities:
                         )
 
             elif isinstance(value, DataInterface):
-                if (
-                    value.data_type == DataType.transientlist
-                ):  # isinstance(value, (MfList, MFTransientList)):
+                if value.data_type == DataType.transientlist:
                     if package.parent.verbose:
                         print(
                             "plotting {} package MfList instance: {}".format(
@@ -404,9 +402,7 @@ class PlotUtilities:
                     if ax is not None:
                         caxs.append(ax)
 
-                elif (
-                    value.data_type == DataType.array3d
-                ):  # isinstance(value, Util3d):
+                elif value.data_type == DataType.array3d:
                     if value.array is not None:
                         if package.parent.verbose:
                             print(
@@ -414,7 +410,6 @@ class PlotUtilities:
                                     package.name[0], item
                                 )
                             )
-                        # fignum = list(range(ifig, ifig + inc))
                         fignum = list(
                             range(
                                 defaults["initial_fig"],
@@ -438,9 +433,7 @@ class PlotUtilities:
                             )
                         )
 
-                elif (
-                    value.data_type == DataType.array2d
-                ):  # isinstance(value, Util2d):
+                elif value.data_type == DataType.array2d:
                     if value.array is not None:
                         if len(value.array.shape) == 2:  # is this necessary?
                             if package.parent.verbose:
@@ -470,9 +463,7 @@ class PlotUtilities:
                                 )
                             )
 
-                elif (
-                    value.data_type == DataType.transient2d
-                ):  # isinstance(value, Transient2d):
+                elif value.data_type == DataType.transient2d:
                     if value.array is not None:
                         if package.parent.verbose:
                             print(
@@ -1656,9 +1647,8 @@ class UnstructuredPlotUtilities:
             numb = (x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)
             denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1)
             ua = np.ones(denom.shape, dtype=denom.dtype) * np.nan
-            idx = np.where(denom != 0.0)
+            idx = np.asarray(denom != 0.0).nonzero()
             ua[idx] = numa[idx] / denom[idx]
-            # ub = numb / denom
             del numa
             del numb
             del denom
@@ -2241,7 +2231,7 @@ def advanced_package_bc_helper(pkg, modelgrid, kper):
             idx = np.array([list(i) for i in mflist["cellid"]], dtype=int).T
         else:
             iuzfbnd = pkg.iuzfbnd.array
-            idx = np.where(iuzfbnd != 0)
+            idx = np.asarray(iuzfbnd != 0).nonzero()
             idx = np.append([[0] * idx[-1].size], idx, axis=0)
     elif pkg.package_type in ("lak", "maw"):
         if pkg.parent.version == "mf6":
@@ -2249,7 +2239,7 @@ def advanced_package_bc_helper(pkg, modelgrid, kper):
             idx = np.array([list(i) for i in mflist["cellid"]], dtype=int).T
         else:
             lakarr = pkg.lakarr.array[kper]
-            idx = np.where(lakarr != 0)
+            idx = np.asarray(lakarr != 0).nonzero()
             idx = np.array(idx)
     else:
         raise NotImplementedError(
@@ -2742,7 +2732,7 @@ def to_mp7_pathlines(
     data = data.to_records(index=False)
 
     # build mp7 format recarray
-    ret = np.core.records.fromarrays(
+    ret = np.rec.fromarrays(
         [
             data[seqn_key],
             data["iprp"],
@@ -2851,7 +2841,7 @@ def to_mp7_endpoints(
     endpts = endpts.to_records(index=False)
 
     # build mp7 format recarray
-    ret = np.core.records.fromarrays(
+    ret = np.rec.fromarrays(
         [
             endpts["sequencenumber"],
             endpts["iprp"],
@@ -2938,7 +2928,7 @@ def to_prt_pathlines(
     data = data.to_records(index=False)
 
     # build prt format recarray
-    ret = np.core.records.fromarrays(
+    ret = np.rec.fromarrays(
         [
             data["stressperiod"],
             data["timestep"],

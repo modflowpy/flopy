@@ -24,8 +24,7 @@ class SeawatList(Package):
         return "List package class"
 
     def write_file(self):
-        # Not implemented for list class
-        return
+        raise NotImplementedError
 
 
 class Seawat(BaseModel):
@@ -146,10 +145,8 @@ class Seawat(BaseModel):
                 model_ws == "."
             ), "ERROR: external cannot be used with model_ws"
 
-            # external_path = os.path.join(model_ws, external_path)
             if os.path.exists(external_path):
                 print(f"Note: external_path {external_path} already exists")
-            # assert os.path.exists(external_path),'external_path does not exist'
             else:
                 os.mkdir(external_path)
             self.external = True
@@ -295,17 +292,12 @@ class Seawat(BaseModel):
         # Overrides BaseModel's setter for name property
         super()._set_name(value)
 
-        # for i in range(len(self.lst.extension)):
-        #    self.lst.file_name[i] = self.name + '.' + self.lst.extension[i]
-        # return
-
     def change_model_ws(self, new_pth=None, reset_external=False):
         # if hasattr(self,"_mf"):
         if self._mf is not None:
             self._mf.change_model_ws(
                 new_pth=new_pth, reset_external=reset_external
             )
-        # if hasattr(self,"_mt"):
         if self._mt is not None:
             self._mt.change_model_ws(
                 new_pth=new_pth, reset_external=reset_external
@@ -496,6 +488,7 @@ class Seawat(BaseModel):
             exe_name=None,
             verbose=verbose,
             model_ws=model_ws,
+            load_only=load_only,
             forgive=False,
         )
 

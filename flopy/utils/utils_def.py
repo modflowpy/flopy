@@ -1,4 +1,3 @@
-# pylint: disable=E1101
 """
 Generic classes and utility functions
 """
@@ -152,7 +151,7 @@ def get_util2d_shape_for_layer(model, layer=0):
         layer (base 0) for which Util2d shape is sought.
 
     Returns
-    ---------
+    -------
     (nrow,ncol) : tuple of ints
         util2d shape for the given layer
     """
@@ -186,7 +185,7 @@ def get_unitnumber_from_ext_unit_dict(
         Default is 0, in which case the returned output file is None.
 
     Returns
-    ---------
+    -------
     unitnumber : int
         file unit number for the given modflow package (or None)
     filenames : list
@@ -219,7 +218,7 @@ def type_from_iterable(_iter, index=0, _type=int, default_val=0):
     default_val : default value (0)
 
     Returns
-    ----------
+    -------
     val : value of type _type, or default_val
     """
     try:

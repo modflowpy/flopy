@@ -7,6 +7,7 @@ important classes that can be accessed by the user.
 """
 
 import numpy as np
+import pandas as pd
 
 from ..utils.datafile import Header, LayerFile
 
@@ -54,7 +55,7 @@ class FormattedHeader(Header):
             the header
 
         Returns
-        ----------
+        -------
         out : numpy array of header information
         also stores the header's format string as self.format_string
 
@@ -153,8 +154,14 @@ class FormattedLayerFile(LayerFile):
 
         # self.recordarray contains a recordarray of all the headers.
         self.recordarray = np.array(self.recordarray, self.header.get_dtype())
-        self.iposarray = np.array(self.iposarray)
+        self.iposarray = np.array(self.iposarray, dtype=np.int64)
         self.nlay = np.max(self.recordarray["ilay"])
+
+        # provide headers as a pandas frame
+        self.headers = pd.DataFrame(self.recordarray, index=self.iposarray)
+        self.headers["text"] = self.headers["text"].str.decode(
+            "ascii", "strict"
+        )
 
     def _store_record(self, header, ipos):
         """
@@ -175,7 +182,7 @@ class FormattedLayerFile(LayerFile):
         Return a text header object containing header formatting information
 
         """
-        raise Exception(
+        raise NotImplementedError(
             "Abstract method _get_text_header called in FormattedLayerFile. "
             "This method needs to be overridden."
         )
@@ -257,7 +264,7 @@ class FormattedLayerFile(LayerFile):
             row, and column values must be zero based.
 
         Returns
-        ----------
+        -------
         out : numpy array
             Array has size (ntimes, ncells + 1).  The first column in the
             data array will contain time (totim).
@@ -296,7 +303,7 @@ class FormattedLayerFile(LayerFile):
 
                 # Find the time index and then put value into result in the
                 # correct location.
-                itim = np.where(result[:, 0] == header["totim"])[0]
+                itim = np.asarray(result[:, 0] == header["totim"]).nonzero()[0]
                 result[itim, istat] = self._read_val(j)
             istat += 1
         return result
@@ -354,7 +361,7 @@ class FormattedHeadFile(FormattedLayerFile):
 
     >>> import flopy.utils.formattedfile as ff
     >>> hdobj = ff.FormattedHeadFile('model.fhd', precision='single')
-    >>> hdobj.list_records()
+    >>> hdobj.headers
     >>> rec = hdobj.get_data(kstpkper=(0, 49))
     >>> rec2 = ddnobj.get_data(totim=100.)
 
