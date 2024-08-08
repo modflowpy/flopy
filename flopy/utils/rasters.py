@@ -537,6 +537,13 @@ class Raster:
                 arr = self.get_array(band, masked=True)
             arr = arr.flatten()
 
+            # filter out nan values from the original dataset
+            if np.isnan(np.sum(arr)):
+                idx = np.isfinite(arr)
+                rxc = rxc[idx]
+                ryc = ryc[idx]
+                arr = arr[idx]
+
             # step 3: use griddata interpolation to snap to grid
             data = griddata(
                 (rxc, ryc),
