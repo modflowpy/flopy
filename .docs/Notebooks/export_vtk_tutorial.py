@@ -30,6 +30,7 @@
 import os
 import sys
 from pathlib import Path
+from pprint import pformat
 from tempfile import TemporaryDirectory
 
 import numpy as np
@@ -37,17 +38,17 @@ import numpy as np
 import flopy
 from flopy.export import vtk
 
-sys.path.append(os.path.join("..", "common"))
-import notebook_utils
-
 print(sys.version)
 print(f"flopy version: {flopy.__version__}")
 # -
 
 # load model for examples
 nam_file = "freyberg.nam"
-prj_root = notebook_utils.get_project_root_path()
-model_ws = prj_root / "examples" / "data" / "freyberg_multilayer_transient"
+model_ws = Path(
+    os.path.join(
+        "..", "..", "examples", "data", "freyberg_multilayer_transient"
+    )
+)
 ml = flopy.modflow.Modflow.load(nam_file, model_ws=model_ws, check=False)
 
 # Create a temporary workspace.
@@ -375,9 +376,330 @@ vtkobj.write(output_dir / "vector_example" / "spdis_vector.vtu")
 #
 # The `Vtk` class supports writing MODPATH pathline/timeseries data to a VTK file. To start the example, let's first load and run a MODPATH simulation (see flopy3_modpath7_unstructured_example for details) and then add the output to a `Vtk` object.
 
+
 # +
 # load and run the vertex grid model and modpath7
-notebook_utils.run(workspace)
+def run_vertex_grid_example(ws):
+    """load and run vertex grid example"""
+    if not os.path.exists(ws):
+        os.mkdir(ws)
+
+    from flopy.utils.gridgen import Gridgen
+
+    Lx = 10000.0
+    Ly = 10500.0
+    nlay = 3
+    nrow = 21
+    ncol = 20
+    delr = Lx / ncol
+    delc = Ly / nrow
+    top = 400
+    botm = [220, 200, 0]
+
+    ms = flopy.modflow.Modflow()
+    dis5 = flopy.modflow.ModflowDis(
+        ms,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=delr,
+        delc=delc,
+        top=top,
+        botm=botm,
+    )
+
+    model_name = "mp7p2"
+    model_ws = os.path.join(ws, "mp7_ex2", "mf6")
+    gridgen_ws = os.path.join(model_ws, "gridgen")
+    g = Gridgen(ms.modelgrid, model_ws=gridgen_ws)
+
+    rf0shp = os.path.join(gridgen_ws, "rf0")
+    xmin = 7 * delr
+    xmax = 12 * delr
+    ymin = 8 * delc
+    ymax = 13 * delc
+    rfpoly = [
+        [
+            [
+                (xmin, ymin),
+                (xmax, ymin),
+                (xmax, ymax),
+                (xmin, ymax),
+                (xmin, ymin),
+            ]
+        ]
+    ]
+    g.add_refinement_features(rfpoly, "polygon", 1, range(nlay))
+
+    rf1shp = os.path.join(gridgen_ws, "rf1")
+    xmin = 8 * delr
+    xmax = 11 * delr
+    ymin = 9 * delc
+    ymax = 12 * delc
+    rfpoly = [
+        [
+            [
+                (xmin, ymin),
+                (xmax, ymin),
+                (xmax, ymax),
+                (xmin, ymax),
+                (xmin, ymin),
+            ]
+        ]
+    ]
+    g.add_refinement_features(rfpoly, "polygon", 2, range(nlay))
+
+    rf2shp = os.path.join(gridgen_ws, "rf2")
+    xmin = 9 * delr
+    xmax = 10 * delr
+    ymin = 10 * delc
+    ymax = 11 * delc
+    rfpoly = [
+        [
+            [
+                (xmin, ymin),
+                (xmax, ymin),
+                (xmax, ymax),
+                (xmin, ymax),
+                (xmin, ymin),
+            ]
+        ]
+    ]
+    g.add_refinement_features(rfpoly, "polygon", 3, range(nlay))
+
+    g.build(verbose=False)
+
+    gridprops = g.get_gridprops_disv()
+    ncpl = gridprops["ncpl"]
+    top = gridprops["top"]
+    botm = gridprops["botm"]
+    nvert = gridprops["nvert"]
+    vertices = gridprops["vertices"]
+    cell2d = gridprops["cell2d"]
+    # cellxy = gridprops['cellxy']
+
+    # create simulation
+    sim = flopy.mf6.MFSimulation(
+        sim_name=model_name, version="mf6", exe_name="mf6", sim_ws=model_ws
+    )
+
+    # create tdis package
+    tdis_rc = [(1000.0, 1, 1.0)]
+    tdis = flopy.mf6.ModflowTdis(
+        sim, pname="tdis", time_units="DAYS", perioddata=tdis_rc
+    )
+
+    # create gwf model
+    gwf = flopy.mf6.ModflowGwf(
+        sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
+    )
+    gwf.name_file.save_flows = True
+
+    # create iterative model solution and register the gwf model with it
+    ims = flopy.mf6.ModflowIms(
+        sim,
+        pname="ims",
+        print_option="SUMMARY",
+        complexity="SIMPLE",
+        outer_hclose=1.0e-5,
+        outer_maximum=100,
+        under_relaxation="NONE",
+        inner_maximum=100,
+        inner_hclose=1.0e-6,
+        rcloserecord=0.1,
+        linear_acceleration="BICGSTAB",
+        scaling_method="NONE",
+        reordering_method="NONE",
+        relaxation_factor=0.99,
+    )
+    sim.register_ims_package(ims, [gwf.name])
+
+    # disv
+    disv = flopy.mf6.ModflowGwfdisv(
+        gwf,
+        nlay=nlay,
+        ncpl=ncpl,
+        top=top,
+        botm=botm,
+        nvert=nvert,
+        vertices=vertices,
+        cell2d=cell2d,
+    )
+
+    # initial conditions
+    ic = flopy.mf6.ModflowGwfic(gwf, pname="ic", strt=320.0)
+
+    # node property flow
+    npf = flopy.mf6.ModflowGwfnpf(
+        gwf,
+        xt3doptions=[("xt3d")],
+        save_specific_discharge=True,
+        icelltype=[1, 0, 0],
+        k=[50.0, 0.01, 200.0],
+        k33=[10.0, 0.01, 20.0],
+    )
+
+    # wel
+    wellpoints = [(4750.0, 5250.0)]
+    welcells = g.intersect(wellpoints, "point", 0)
+    # welspd = flopy.mf6.ModflowGwfwel.stress_period_data.empty(gwf, maxbound=1, aux_vars=['iface'])
+    welspd = [[(2, icpl), -150000, 0] for icpl in welcells["nodenumber"]]
+    wel = flopy.mf6.ModflowGwfwel(
+        gwf,
+        print_input=True,
+        auxiliary=[("iface",)],
+        stress_period_data=welspd,
+    )
+
+    # rch
+    aux = [np.ones(ncpl, dtype=int) * 6]
+    rch = flopy.mf6.ModflowGwfrcha(
+        gwf, recharge=0.005, auxiliary=[("iface",)], aux={0: [6]}
+    )
+    # riv
+    riverline = [[(Lx - 1.0, Ly), (Lx - 1.0, 0.0)]]
+    rivcells = g.intersect(riverline, "line", 0)
+    rivspd = [
+        [(0, icpl), 320.0, 100000.0, 318] for icpl in rivcells["nodenumber"]
+    ]
+    riv = flopy.mf6.ModflowGwfriv(gwf, stress_period_data=rivspd)
+
+    # output control
+    oc = flopy.mf6.ModflowGwfoc(
+        gwf,
+        pname="oc",
+        budget_filerecord=f"{model_name}.cbb",
+        head_filerecord=f"{model_name}.hds",
+        headprintrecord=[("COLUMNS", 10, "WIDTH", 15, "DIGITS", 6, "GENERAL")],
+        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+        printrecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    )
+
+    sim.write_simulation()
+    success, buff = sim.run_simulation(silent=True, report=True)
+    if success:
+        for line in buff:
+            print(line)
+    else:
+        raise ValueError("Failed to run.")
+
+    mp_namea = f"{model_name}a_mp"
+    mp_nameb = f"{model_name}b_mp"
+
+    pcoord = np.array(
+        [
+            [0.000, 0.125, 0.500],
+            [0.000, 0.375, 0.500],
+            [0.000, 0.625, 0.500],
+            [0.000, 0.875, 0.500],
+            [1.000, 0.125, 0.500],
+            [1.000, 0.375, 0.500],
+            [1.000, 0.625, 0.500],
+            [1.000, 0.875, 0.500],
+            [0.125, 0.000, 0.500],
+            [0.375, 0.000, 0.500],
+            [0.625, 0.000, 0.500],
+            [0.875, 0.000, 0.500],
+            [0.125, 1.000, 0.500],
+            [0.375, 1.000, 0.500],
+            [0.625, 1.000, 0.500],
+            [0.875, 1.000, 0.500],
+        ]
+    )
+    nodew = gwf.disv.ncpl.array * 2 + welcells["nodenumber"][0]
+    plocs = [nodew for i in range(pcoord.shape[0])]
+
+    # create particle data
+    pa = flopy.modpath.ParticleData(
+        plocs,
+        structured=False,
+        localx=pcoord[:, 0],
+        localy=pcoord[:, 1],
+        localz=pcoord[:, 2],
+        drape=0,
+    )
+
+    # create backward particle group
+    fpth = f"{mp_namea}.sloc"
+    pga = flopy.modpath.ParticleGroup(
+        particlegroupname="BACKWARD1", particledata=pa, filename=fpth
+    )
+
+    facedata = flopy.modpath.FaceDataType(
+        drape=0,
+        verticaldivisions1=10,
+        horizontaldivisions1=10,
+        verticaldivisions2=10,
+        horizontaldivisions2=10,
+        verticaldivisions3=10,
+        horizontaldivisions3=10,
+        verticaldivisions4=10,
+        horizontaldivisions4=10,
+        rowdivisions5=0,
+        columndivisions5=0,
+        rowdivisions6=4,
+        columndivisions6=4,
+    )
+    pb = flopy.modpath.NodeParticleData(subdivisiondata=facedata, nodes=nodew)
+    # create forward particle group
+    fpth = f"{mp_nameb}.sloc"
+    pgb = flopy.modpath.ParticleGroupNodeTemplate(
+        particlegroupname="BACKWARD2", particledata=pb, filename=fpth
+    )
+
+    # create modpath files
+    mp = flopy.modpath.Modpath7(
+        modelname=mp_namea, flowmodel=gwf, exe_name="mp7", model_ws=model_ws
+    )
+    flopy.modpath.Modpath7Bas(mp, porosity=0.1)
+    flopy.modpath.Modpath7Sim(
+        mp,
+        simulationtype="combined",
+        trackingdirection="backward",
+        weaksinkoption="pass_through",
+        weaksourceoption="pass_through",
+        referencetime=0.0,
+        stoptimeoption="extend",
+        timepointdata=[500, 1000.0],
+        particlegroups=pga,
+    )
+
+    # write modpath datasets
+    mp.write_input()
+
+    # run modpath
+    success, buff = mp.run_model(silent=True, report=True)
+    if success:
+        for line in buff:
+            print(line)
+    else:
+        raise ValueError("Failed to run.")
+
+    # create modpath files
+    mp = flopy.modpath.Modpath7(
+        modelname=mp_nameb, flowmodel=gwf, exe_name="mp7", model_ws=model_ws
+    )
+    flopy.modpath.Modpath7Bas(mp, porosity=0.1)
+    flopy.modpath.Modpath7Sim(
+        mp,
+        simulationtype="endpoint",
+        trackingdirection="backward",
+        weaksinkoption="pass_through",
+        weaksourceoption="pass_through",
+        referencetime=0.0,
+        stoptimeoption="extend",
+        particlegroups=pgb,
+    )
+
+    # write modpath datasets
+    mp.write_input()
+
+    # run modpath
+    success, buff = mp.run_model(silent=True, report=True)
+    assert success, pformat(buff)
+
+
+run_vertex_grid_example(workspace)
 
 # check if model ran properly
 modelpth = workspace / "mp7_ex2" / "mf6"
