@@ -1450,3 +1450,64 @@ def test_geo_dataframe(structured_grid, vertex_grid, unstructured_grid):
                     raise AssertionError(
                         f"Cell vertices incorrect for node={node}"
                     )
+
+
+def test_unstructured_iverts_cleanup():
+    grid = GridCases.structured_small()
+
+    # begin building unstructured grid information
+    top = grid.top.ravel()
+    botm = grid.botm[0].ravel()
+    idomain = np.ones(botm.shape, dtype=int)
+
+    # build iac and ja
+    neighbors = grid.neighbors(method="rook", reset=True)
+    iac, ja = [], []
+    for cell, neigh in neighbors.items():
+        iac.append(len(neigh) + 1)
+        ja.extend(
+            [
+                cell,
+            ]
+            + neigh
+        )
+
+    # build iverts and verts without using shared vertices
+    verts, iverts = [], []
+    xverts, yverts = grid.cross_section_vertices
+    ivt = 0
+    for cid, xvs in enumerate(xverts):
+        yvs = yverts[cid]
+        ivts = []
+        for ix, vert in enumerate(xvs[:-1]):
+            ivts.append(ivt)
+            verts.append([ivt, vert, yvs[ix]])
+            ivt += 1
+
+        ivts.append(ivts[0])
+        iverts.append(ivts)
+
+    ugrid = UnstructuredGrid(
+        vertices=verts,
+        iverts=iverts,
+        xcenters=grid.xcellcenters.ravel(),
+        ycenters=grid.ycellcenters.ravel(),
+        iac=iac,
+        ja=ja,
+        top=top,
+        botm=botm,
+        idomain=idomain,
+    )
+
+    if ugrid.nvert != (grid.ncpl * 4):
+        raise AssertionError(
+            "UnstructuredGrid is being built incorrectly for test case"
+        )
+
+    cleaned_vert_num = (grid.nrow + 1) * (grid.ncol + 1)
+    clean_ugrid = ugrid.clean_iverts()
+
+    if clean_ugrid.nvert != cleaned_vert_num:
+        raise AssertionError(
+            "Improper number of vertices for cleaned 'shared' iverts"
+        )

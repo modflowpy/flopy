@@ -445,7 +445,9 @@ class MFModel(PackageContainer, ModelInterface):
             if ncpl is None:
                 ncpl = np.array([dis.nodes.get_data()], dtype=int)
             cell2d = dis.cell2d.array
-            idomain = np.ones(dis.nodes.array, np.int32)
+            idomain = dis.idomain.array
+            if idomain is None:
+                idomain = np.ones(dis.nodes.array, dtype=int)
             if cell2d is None:
                 if (
                     self.simulation.simulation_data.verbosity_level.value
@@ -455,13 +457,7 @@ class MFModel(PackageContainer, ModelInterface):
                         "WARNING: cell2d information missing. Functionality of "
                         "the UnstructuredGrid will be limited."
                     )
-                iverts = None
-                xcenters = None
-                ycenters = None
-            else:
-                iverts = [list(i)[4:] for i in cell2d]
-                xcenters = dis.cell2d.array["xc"]
-                ycenters = dis.cell2d.array["yc"]
+
             vertices = dis.vertices.array
             if vertices is None:
                 if (
@@ -478,9 +474,7 @@ class MFModel(PackageContainer, ModelInterface):
 
             self._modelgrid = UnstructuredGrid(
                 vertices=vertices,
-                iverts=iverts,
-                xcenters=xcenters,
-                ycenters=ycenters,
+                cell2d=cell2d,
                 top=dis.top.array,
                 botm=dis.bot.array,
                 idomain=idomain,
