@@ -566,15 +566,10 @@ class MFModel(PackageContainer, ModelInterface):
         else:
             return self._modelgrid
 
-        if self.get_grid_type() != DiscretizationType.DISV:
-            # get coordinate data from dis file
-            xorig = dis.xorigin.get_data()
-            yorig = dis.yorigin.get_data()
-            angrot = dis.angrot.get_data()
-        else:
-            xorig = self._modelgrid.xoffset
-            yorig = self._modelgrid.yoffset
-            angrot = self._modelgrid.angrot
+        # get coordinate data from dis file
+        xorig = dis.xorigin.get_data()
+        yorig = dis.yorigin.get_data()
+        angrot = dis.angrot.get_data()
 
         # resolve offsets
         if xorig is None:
