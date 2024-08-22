@@ -192,14 +192,18 @@ class StructuredGrid(Grid):
         if top is not None:
             assert self.__nrow * self.__ncol == len(np.ravel(top))
         if botm is not None:
-            assert self.__nrow * self.__ncol == len(np.ravel(botm[0]))
-            if nlay is not None:
-                self.__nlay = nlay
-            else:
-                if laycbd is not None:
-                    self.__nlay = len(botm) - np.count_nonzero(laycbd)
+            if botm.ndim == 3:
+                assert self.__nrow * self.__ncol == len(np.ravel(botm[0]))
+                if nlay is not None:
+                    self.__nlay = nlay
                 else:
-                    self.__nlay = len(botm)
+                    if laycbd is not None:
+                        self.__nlay = len(botm) - np.count_nonzero(laycbd)
+                    else:
+                        self.__nlay = len(botm)
+            elif botm.ndim == 2:
+                assert botm.shape == (self.__nrow, self.__ncol)
+                self.__nlay = 1
         else:
             self.__nlay = nlay
         if laycbd is not None:
