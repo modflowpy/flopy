@@ -140,9 +140,9 @@ class VertexGrid(Grid):
         if self._cell1d is not None:
             return len(self._cell1d)
         if self._botm is not None:
-            if self._botm.ndim == 2: # (nlay, ncpl)
+            if self._botm.ndim == 2:  # (nlay, ncpl)
                 return self._botm.shape[1]
-            elif self._botm.ndim == 1: # (ncpl,)
+            elif self._botm.ndim == 1:  # (ncpl,)
                 return self._botm.shape[0]
         if self._cell2d is not None and self._nlay is None:
             return len(self._cell2d)
