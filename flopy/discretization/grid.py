@@ -595,7 +595,7 @@ class Grid:
     def cross_section_vertices(self):
         return self.xyzvertices[0], self.xyzvertices[1]
 
-    def geo_dataframe(self, polys):
+    def geo_dataframe(self, features, featuretype="Polygon"):
         """
         Method returns a geopandas GeoDataFrame of the Grid
 
@@ -606,7 +606,7 @@ class Grid:
         from ..utils.geospatial_utils import GeoSpatialCollection
 
         gc = GeoSpatialCollection(
-            polys, shapetype=["Polygon" for _ in range(len(polys))]
+            features, shapetype=[featuretype for _ in range(len(features))]
         )
         gdf = gc.geo_dataframe
         if self.crs is not None:
