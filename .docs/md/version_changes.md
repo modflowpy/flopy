@@ -1,4 +1,14 @@
 # Changelog
+### Version 3.9.0
+
+#### New features
+
+* [feat(cell1d)](https://github.com/modflowpy/flopy/commit/4ea71927f251c3675acf1b578bca623d023ccd2c): Add support for 1D vertex grids (#2296). Committed by langevin-usgs on 2024-08-23.
+
+#### Bug fixes
+
+* [fix(modelgrid)](https://github.com/modflowpy/flopy/commit/c42d8787bbcd4131b2f493ebc5a5a384b2e8b861): Add more support for mf6 surface water models  (#2295). Committed by langevin-usgs on 2024-08-22.
+
 ### Version 3.8.0
 
 #### New features
