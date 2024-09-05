@@ -131,6 +131,7 @@ class UnstructuredGrid(Grid):
         angrot=0.0,
         iac=None,
         ja=None,
+        cell2d=None,
         **kwargs,
     ):
         super().__init__(
@@ -146,6 +147,11 @@ class UnstructuredGrid(Grid):
             angrot=angrot,
             **kwargs,
         )
+        if cell2d is not None:
+            # modflow 6 DISU
+            xcenters = np.array([i[1] for i in cell2d])
+            ycenters = np.array([i[2] for i in cell2d])
+            iverts = [list(t)[4:] for t in cell2d]
 
         # if any of these are None, then the grid is not valid
         self._vertices = vertices
@@ -238,6 +244,31 @@ class UnstructuredGrid(Grid):
     @property
     def nvert(self):
         return len(self._vertices)
+
+    @property
+    def cell2d(self):
+        if self.is_valid:
+            ncenters = len(self._xc)
+            is_layered = False
+            if ncenters != self.nnodes and ncenters / self.nnodes % 0:
+                is_layered = True
+
+            ix_adj = 0
+            cell2d = []
+            for ix in range(self.nnodes):
+                if is_layered:
+                    if ix % self.ncpl[0] == 0 and ix != 0:
+                        ix_adj += self.ncpl[0]
+                iverts = self._iverts[ix - ix_adj]
+                c2drec = [
+                    ix,
+                    self._xc[ix - ix_adj],
+                    self._yc[ix - ix_adj],
+                    len(iverts),
+                ]
+                c2drec.extend(iverts)
+                cell2d.append(c2drec)
+            return cell2d
 
     @property
     def iverts(self):
@@ -566,6 +597,45 @@ class UnstructuredGrid(Grid):
         gdf = super().geo_dataframe(polys)
         return gdf
 
+    def neighbors(self, node=None, **kwargs):
+        """
+        Method to get nearest neighbors of a cell
+
+        Parameters
+        ----------
+        node : int
+            model grid node number
+
+        ** kwargs:
+            method : str
+                "iac" for specified connections from the DISU package
+                "rook" for shared edge neighbors
+                "queen" for shared vertex neighbors
+            reset : bool
+                flag to reset the neighbor calculation
+
+        Returns
+        -------
+            list or dict : list of cell node numbers or dict of all cells and
+                neighbors
+        """
+        method = kwargs.pop("method", None)
+        reset = kwargs.pop("reset", False)
+        if method == "iac":
+            if self._neighbors is None or reset:
+                neighors = {}
+                idx0 = 0
+                for node, ia in enumerate(self._iac):
+                    idx1 = idx0 + ia
+                    neighors[node] = list(self._ja[idx0 + 1 : idx1])
+                self._neighbors = neighors
+            if node is not None:
+                return self._neighbors[node]
+            else:
+                return self._neighbors
+        else:
+            return super().neighbors(node=node, method=method, reset=reset)
+
     def convert_grid(self, factor):
         """
         Method to scale the model grid based on user supplied scale factors
@@ -598,6 +668,66 @@ class UnstructuredGrid(Grid):
             raise AssertionError(
                 "Grid is not complete and cannot be converted"
             )
+
+    def clean_iverts(self, inplace=False):
+        """
+        Method to clean up duplicated iverts/verts when vertex information
+        is supplied in the unstructured grid.
+
+        Parameters:
+        ----------
+        inplace : bool
+            flag to clean and reset iverts in the current modelgrid object.
+            Default is False and returns a new modelgrid object
+
+        Returns
+        -------
+        UnstructuredGrid or None
+        """
+        if self.is_valid:
+            vset = {}
+            for rec in self._vertices:
+                vert = (rec[1], rec[2])
+                if vert in vset:
+                    vset[vert].add(rec[0])
+                else:
+                    vset[vert] = {
+                        rec[0],
+                    }
+
+            cnt = 0
+            ivert_remap = {}
+            vertices = []
+            for (xv, yv), iverts in vset.items():
+                for iv in iverts:
+                    ivert_remap[iv] = cnt
+                vertices.append((cnt, xv, yv))
+                cnt += 1
+
+            iverts = [[ivert_remap[v] for v in ivs] for ivs in self.iverts]
+            if inplace:
+                self._vertices = vertices
+                self._iverts = iverts
+                self._require_cache_updates()
+            else:
+                return UnstructuredGrid(
+                    vertices,
+                    iverts=iverts,
+                    xcenters=self._xc,
+                    ycenters=self._yc,
+                    top=self._top,
+                    botm=self._botm,
+                    idomain=self._idomain,
+                    lenuni=self.lenuni,
+                    ncpl=self._ncpl,
+                    crs=self._crs,
+                    prjfile=self._prjfile,
+                    xoff=self.xoffset,
+                    yoff=self.yoffset,
+                    angrot=self.angrot,
+                    iac=self._iac,
+                    ja=self._ja,
+                )
 
     def intersect(self, x, y, z=None, local=False, forgive=False):
         """

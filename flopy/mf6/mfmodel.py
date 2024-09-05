@@ -445,7 +445,9 @@ class MFModel(PackageContainer, ModelInterface):
             if ncpl is None:
                 ncpl = np.array([dis.nodes.get_data()], dtype=int)
             cell2d = dis.cell2d.array
-            idomain = np.ones(dis.nodes.array, np.int32)
+            idomain = dis.idomain.array
+            if idomain is None:
+                idomain = np.ones(dis.nodes.array, dtype=int)
             if cell2d is None:
                 if (
                     self.simulation.simulation_data.verbosity_level.value
@@ -455,13 +457,7 @@ class MFModel(PackageContainer, ModelInterface):
                         "WARNING: cell2d information missing. Functionality of "
                         "the UnstructuredGrid will be limited."
                     )
-                iverts = None
-                xcenters = None
-                ycenters = None
-            else:
-                iverts = [list(i)[4:] for i in cell2d]
-                xcenters = dis.cell2d.array["xc"]
-                ycenters = dis.cell2d.array["yc"]
+
             vertices = dis.vertices.array
             if vertices is None:
                 if (
@@ -478,9 +474,7 @@ class MFModel(PackageContainer, ModelInterface):
 
             self._modelgrid = UnstructuredGrid(
                 vertices=vertices,
-                iverts=iverts,
-                xcenters=xcenters,
-                ycenters=ycenters,
+                cell2d=cell2d,
                 top=dis.top.array,
                 botm=dis.bot.array,
                 idomain=idomain,
@@ -514,7 +508,7 @@ class MFModel(PackageContainer, ModelInterface):
                         angrot=self._modelgrid.angrot,
                     )
             else:
-                botm = dis.botm.array
+                botm = dis.bottom.array
                 idomain = dis.idomain.array
                 if idomain is None:
                     force_resync = True
@@ -522,7 +516,45 @@ class MFModel(PackageContainer, ModelInterface):
                 self._modelgrid = VertexGrid(
                     vertices=dis.vertices.array,
                     cell1d=dis.cell1d.array,
-                    top=dis.top.array,
+                    top=None,
+                    botm=botm,
+                    idomain=idomain,
+                    lenuni=dis.length_units.array,
+                    crs=self._modelgrid.crs,
+                    xoff=self._modelgrid.xoffset,
+                    yoff=self._modelgrid.yoffset,
+                    angrot=self._modelgrid.angrot,
+                )
+        elif self.get_grid_type() == DiscretizationType.DIS2D:
+            dis = self.get_package("dis2d")
+            if not hasattr(dis, "_init_complete"):
+                if not hasattr(dis, "delr"):
+                    # dis package has not yet been initialized
+                    return self._modelgrid
+                else:
+                    # dis package has been partially initialized
+                    self._modelgrid = StructuredGrid(
+                        delc=dis.delc.array,
+                        delr=dis.delr.array,
+                        top=None,
+                        botm=None,
+                        idomain=None,
+                        lenuni=None,
+                        crs=self._modelgrid.crs,
+                        xoff=self._modelgrid.xoffset,
+                        yoff=self._modelgrid.yoffset,
+                        angrot=self._modelgrid.angrot,
+                    )
+            else:
+                botm = dis.bottom.array
+                idomain = dis.idomain.array
+                if idomain is None:
+                    force_resync = True
+                    idomain = self._resolve_idomain(idomain, botm)
+                self._modelgrid = StructuredGrid(
+                    delc=dis.delc.array,
+                    delr=dis.delr.array,
+                    top=None,
                     botm=botm,
                     idomain=idomain,
                     lenuni=dis.length_units.array,
@@ -552,7 +584,7 @@ class MFModel(PackageContainer, ModelInterface):
                         angrot=self._modelgrid.angrot,
                     )
             else:
-                botm = dis.botm.array
+                botm = dis.bottom.array
                 idomain = dis.idomain.array
                 if idomain is None:
                     force_resync = True
@@ -560,7 +592,7 @@ class MFModel(PackageContainer, ModelInterface):
                 self._modelgrid = VertexGrid(
                     vertices=dis.vertices.array,
                     cell2d=dis.cell2d.array,
-                    top=dis.top.array,
+                    top=None,
                     botm=botm,
                     idomain=idomain,
                     lenuni=dis.length_units.array,
@@ -1253,6 +1285,13 @@ class MFModel(PackageContainer, ModelInterface):
             is not None
         ):
             return DiscretizationType.DISV1D
+        elif (
+            package_recarray.search_data(
+                f"dis2d{structure.get_version_string()}", 0
+            )
+            is not None
+        ):
+            return DiscretizationType.DIS2D
         elif (
             package_recarray.search_data(
                 f"disv2d{structure.get_version_string()}", 0

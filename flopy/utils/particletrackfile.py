@@ -291,11 +291,11 @@ class ParticleTrackFile(ABC):
                 if "particlegroup" in names:
                     t.append(ra.particlegroup[0])
                 t.append(ra.time.max())
+                if "k" in names:
+                    t.append(ra.k[loc_inds])
                 if "node" in names:
                     t.append(ra.node[loc_inds])
                 else:
-                    if "k" in names:
-                        t.append(ra.k[loc_inds])
                     if "i" in names:
                         t.append(ra.i[loc_inds])
                     if "j" in names:

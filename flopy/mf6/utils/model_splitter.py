@@ -152,6 +152,7 @@ class Mf6Splitter(object):
         self._connection = None
         self._uconnection = None
         self._usg_metadata = None
+        self._has_angldegx = False
         self._connection_ivert = None
         self._model_dict = None
         self._ivert_vert_remap = None
@@ -169,6 +170,8 @@ class Mf6Splitter(object):
         self._sfr_remaps = {}
         self._maw_remaps = {}
         self._allow_splitting = True
+
+        self._fdigits = 1
 
     @property
     def new_simulation(self):
@@ -216,6 +219,7 @@ class Mf6Splitter(object):
             self._connection = None
             self._uconnection = None
             self._usg_metadata = None
+            self._has_angldegx = False
             self._connection_ivert = None
             self._ivert_vert_remap = None
             self._sfr_mover_connections = []
@@ -657,8 +661,7 @@ class Mf6Splitter(object):
                 f"{bad_keys} are not in the active model extent; "
                 f"please adjust the model splitting array"
             )
-
-        if self._modelgrid.iverts is None:
+        if self._modelgrid.grid_type == "unstructured":
             self._map_iac_ja_connections()
         else:
             self._connection = self._modelgrid.neighbors(
@@ -703,14 +706,7 @@ class Mf6Splitter(object):
 
             for m in np.unique(array):
                 cells = np.asarray(array == m).nonzero()[0]
-                mapping = np.zeros(
-                    (
-                        len(
-                            cells,
-                        )
-                    ),
-                    dtype=int,
-                )
+                mapping = np.zeros((len(cells),), dtype=int)
                 mapping[:] = cells
                 grid_info[m] = [(len(cells),), None, None, mapping]
 
@@ -760,7 +756,7 @@ class Mf6Splitter(object):
                 if cmdl == mdl:
                     if nnode in new_connections[mdl]["internal"]:
                         new_connections[mdl]["internal"][nnode].append(cnnode)
-                        if self._connection_ivert is None:
+                        if self._uconnection is not None:
                             usg_meta[mdl][nnode]["ihc"].append(
                                 int(self._uconnection[node]["ihc"][ix + 1])
                             )
@@ -770,10 +766,14 @@ class Mf6Splitter(object):
                             usg_meta[mdl][nnode]["hwva"].append(
                                 self._uconnection[node]["hwva"][ix + 1]
                             )
+                            if self._has_angldegx:
+                                usg_meta[mdl][nnode]["angldegx"].append(
+                                    self._uconnection[node]["angldegx"][ix + 1]
+                                )
 
                     else:
                         new_connections[mdl]["internal"][nnode] = [cnnode]
-                        if self._connection_ivert is None:
+                        if self._uconnection is not None:
                             usg_meta[mdl][nnode] = {
                                 "ihc": [
                                     self._uconnection[node]["ihc"][0],
@@ -788,14 +788,20 @@ class Mf6Splitter(object):
                                     self._uconnection[node]["hwva"][ix + 1],
                                 ],
                             }
+                            if self._has_angldegx:
+                                usg_meta[mdl][nnode]["angldegx"] = [
+                                    self._uconnection[node]["angldegx"][0],
+                                    self._uconnection[node]["angldegx"][
+                                        ix + 1
+                                    ],
+                                ]
 
                 else:
                     if nnode in new_connections[mdl]["external"]:
                         new_connections[mdl]["external"][nnode].append(
                             (cmdl, cnnode)
                         )
-                        if self._connection_ivert is not None:
-                            tmp = self._connection_ivert[node]
+                        if self._uconnection is None:
                             exchange_meta[mdl][nnode][cnnode] = [
                                 node,
                                 cnode,
@@ -813,7 +819,7 @@ class Mf6Splitter(object):
                         new_connections[mdl]["external"][nnode] = [
                             (cmdl, cnnode)
                         ]
-                        if self._connection_ivert is not None:
+                        if self._uconnection is None:
                             exchange_meta[mdl][nnode] = {
                                 cnnode: [
                                     node,
@@ -832,7 +838,7 @@ class Mf6Splitter(object):
                                 ]
                             }
 
-        if self._modelgrid.grid_type == "vertex":
+        if self._modelgrid.grid_type in ("vertex", "unstructured"):
             self._map_verts_iverts(array)
 
         self._new_connections = new_connections
@@ -854,16 +860,23 @@ class Mf6Splitter(object):
         cl12 = self._model.disu.cl12.array
         ihc = self._model.disu.ihc.array
         hwva = self._model.disu.hwva.array
+        angldegx = self._model.disu.angldegx.array
+        if angldegx is not None:
+            self._has_angldegx = True
         idx0 = 0
         for ia in iac:
             idx1 = idx0 + ia
             cn = ja[idx0 + 1 : idx1]
-            conn[ja[idx0]] = cn
+            conn[ja[idx0]] = list(cn)
             uconn[ja[idx0]] = {
-                "cl12": cl12[idx0:idx1],
-                "ihc": ihc[idx0:idx1],
-                "hwva": hwva[idx0:idx1],
+                "cl12": list(cl12[idx0:idx1]),
+                "ihc": list(ihc[idx0:idx1]),
+                "hwva": list(hwva[idx0:idx1]),
             }
+
+            if self._has_angldegx:
+                uconn[ja[idx0]]["angldegx"] = list(angldegx[idx0:idx1])
+
             idx0 = idx1
 
         self._connection = conn
@@ -881,6 +894,8 @@ class Mf6Splitter(object):
         """
         iverts = self._modelgrid.iverts
         verts = self._modelgrid.verts
+        if iverts is None:
+            return
 
         ivlut = {mkey: {} for mkey in np.unique(array)}
         for mkey in np.unique(array):
@@ -1013,9 +1028,7 @@ class Mf6Splitter(object):
                 for mdl in mapped_data.keys():
                     if mapped_data[mdl]:
                         new_val = value.split(".")
-                        new_val = (
-                            f"{'.'.join(new_val[0:-1])}_{mdl}.{new_val[-1]}"
-                        )
+                        new_val = f"{'.'.join(new_val[0:-1])}_{mdl :0{self._fdigits}d}.{new_val[-1]}"
                         mapped_data[mdl][item] = new_val
         return mapped_data
 
@@ -1034,7 +1047,7 @@ class Mf6Splitter(object):
 
         """
         for mkey, metadata in self._usg_metadata.items():
-            iac, ja, ihc, cl12, hwva = [], [], [], [], []
+            iac, ja, ihc, cl12, hwva, angldegx = [], [], [], [], [], []
             for node, params in metadata.items():
                 conns = [node] + self._new_connections[mkey]["internal"][node]
                 iac.append(len(conns))
@@ -1042,6 +1055,8 @@ class Mf6Splitter(object):
                 ihc.extend(params["ihc"])
                 cl12.extend(params["cl12"])
                 hwva.extend(params["hwva"])
+                if self._has_angldegx:
+                    angldegx.extend(params["angldegx"])
 
             assert np.sum(iac) == len(ja)
 
@@ -1051,6 +1066,8 @@ class Mf6Splitter(object):
             mapped_data[mkey]["ihc"] = ihc
             mapped_data[mkey]["cl12"] = cl12
             mapped_data[mkey]["hwva"] = hwva
+            if self._has_angldegx:
+                mapped_data[mkey]["angldegx"] = angldegx
 
         return mapped_data
 
@@ -1195,7 +1212,7 @@ class Mf6Splitter(object):
                     else:
                         # external array
                         tmp = fnames[lay].split(".")
-                        filename = f"{'.'.join(tmp[:-1])}.{mkey}.{tmp[-1]}"
+                        filename = f"{'.'.join(tmp[:-1])}.{mkey :0{self._fdigits}d}.{tmp[-1]}"
 
                         cr = {
                             "filename": filename,
@@ -1280,7 +1297,7 @@ class Mf6Splitter(object):
 
                 if how == 3 and new_recarray is not None:
                     tmp = fname.split(".")
-                    filename = f"{'.'.join(tmp[:-1])}.{mkey}.{tmp[-1]}"
+                    filename = f"{'.'.join(tmp[:-1])}.{mkey :0{self._fdigits}d}.{tmp[-1]}"
 
                     new_recarray = {
                         "data": new_recarray,
@@ -1329,7 +1346,7 @@ class Mf6Splitter(object):
                 )
                 spd[per] = new_recarray
 
-            flow_package_const[-2] += f"_{mkey}"
+            flow_package_const[-2] += f"_{mkey :0{self._fdigits}d}"
             new_flow_package_name = ".".join(flow_package_const)
             mapped_data[mkey]["packagedata"] = new_packagedata
             mapped_data[mkey]["perioddata"] = spd
@@ -2218,7 +2235,7 @@ class Mf6Splitter(object):
             new_fnames = []
             for fname in fnames:
                 new_val = fname.split(".")
-                new_val = f"{'.'.join(new_val[0:-1])}_{mkey}.{new_val[-1]}"
+                new_val = f"{'.'.join(new_val[0:-1])}_{mkey :0{self._fdigits}d}.{new_val[-1]}"
                 new_fnames.append(new_val)
 
             new_packagedata = packagedata.copy()
@@ -2562,11 +2579,11 @@ class Mf6Splitter(object):
                     if isinstance(ofile, (list, tuple)):
                         fname = ofile[0]
                         tmp = fname.split(".")
-                        tmp[-2] += f"_{mkey}"
+                        tmp[-2] += f"_{mkey :0{self._fdigits}d}"
                         ofile[0] = ".".join(tmp)
                     else:
                         tmp = ofile.split(".")
-                        tmp[-2] += f"_{mkey}"
+                        tmp[-2] += f"_{mkey :0{self._fdigits}d}"
                         ofile = ".".join(tmp)
 
                     if pkg_type is None:
@@ -2804,6 +2821,9 @@ class Mf6Splitter(object):
             ),
         ):
             for item, value in package.__dict__.items():
+                if item in ("nja", "ja", "cl12", "ihc", "hwva", "angldegx"):
+                    continue
+
                 if item in ("delr", "delc"):
                     for mkey, d in self._grid_info.items():
                         if item == "delr":
@@ -2832,12 +2852,26 @@ class Mf6Splitter(object):
 
                 elif item == "iac":
                     mapped_data = self._remap_disu(mapped_data)
-                    break
 
                 elif item == "xorigin":
                     for mkey in self._model_dict.keys():
                         for k, v in self._offsets[mkey].items():
                             mapped_data[mkey][k] = v
+
+                elif item in ("vertices", "cell2d"):
+                    if value.array is not None:
+                        if item == "cell2d":
+                            mapped_data = self._remap_cell2d(
+                                item, value, mapped_data
+                            )
+                        else:
+                            for mkey in self._model_dict.keys():
+                                mapped_data[mkey][item] = (
+                                    self._ivert_vert_remap[mkey][item]
+                                )
+                                mapped_data[mkey]["nvert"] = len(
+                                    self._ivert_vert_remap[mkey][item]
+                                )
 
                 elif isinstance(value, mfdataarray.MFArray):
                     mapped_data = self._remap_array(item, value, mapped_data)
@@ -3066,19 +3100,26 @@ class Mf6Splitter(object):
         if self._modelgrid.grid_type == "unstructured":
             # use existing connection information
             aux = False
+            grid_dict = {i: m.modelgrid for i, m in self._model_dict.items()}
             for m0, model in self._model_dict.items():
+                grid0 = grid_dict[m0]
                 exg_nodes = self._new_connections[m0]["external"]
                 for m1 in nmodels:
+                    grid1 = grid_dict[m1]
                     if m1 in built:
                         continue
                     if m1 == m0:
                         continue
                     exchange_data = []
                     for node0, exg_list in exg_nodes.items():
+                        if grid0.idomain[node0] < 1:
+                            continue
                         for exg in exg_list:
                             if exg[0] != m1:
                                 continue
                             node1 = exg[-1]
+                            if grid1.idomain[node1] < 1:
+                                continue
                             exg_meta0 = self._exchange_metadata[m0][node0][
                                 node1
                             ]
@@ -3104,7 +3145,7 @@ class Mf6Splitter(object):
                             exgmnameb=mname1,
                             nexg=len(exchange_data),
                             exchangedata=exchange_data,
-                            filename=f"sim_{m0}_{m1}.{extension}",
+                            filename=f"sim_{m0 :0{self._fdigits}d}_{m1 :0{self._fdigits}d}.{extension}",
                             newton=newton,
                             xt3d=xt3d,
                         )
@@ -3242,7 +3283,7 @@ class Mf6Splitter(object):
                             auxiliary=["ANGLDEGX", "CDIST"],
                             nexg=len(exchange_data),
                             exchangedata=exchange_data,
-                            filename=f"sim_{m0}_{m1}.{extension}",
+                            filename=f"sim_{m0 :0{self._fdigits}d}_{m1 :0{self._fdigits}d}.{extension}",
                             newton=newton,
                             xt3d=xt3d,
                         )
@@ -3286,6 +3327,11 @@ class Mf6Splitter(object):
                 "is part of a split simulation"
             )
 
+        # set number formatting string for file paths
+        array = np.array(array).astype(int)
+        s = str(np.max(array))
+        self._fdigits = len(s)
+
         self._remap_nodes(array)
 
         if self._new_sim is None:
@@ -3306,7 +3352,7 @@ class Mf6Splitter(object):
             mdl_cls = PackageContainer.model_factory(self._model_type)
             self._model_dict[mkey] = mdl_cls(
                 self._new_sim,
-                modelname=f"{self._modelname}_{mkey}",
+                modelname=f"{self._modelname}_{mkey :0{self._fdigits}d}",
                 **nam_options,
             )
 
@@ -3320,9 +3366,3 @@ class Mf6Splitter(object):
         epaks = self._create_exchanges()
 
         return self._new_sim
-
-
-# todo: development notes:
-#   Then set up checks for model splitting
-#       (ex. doesn't parallel a fault, doesn't cut through a lake,
-#       active cells in modelgrid...)

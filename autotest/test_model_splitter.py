@@ -26,7 +26,7 @@ def test_structured_model_splitter(function_tmpdir):
     for row in range(modelgrid.nrow):
         if row != 0 and row % 2 == 0:
             ncol += 1
-        array[row, ncol:] = 2
+        array[row, ncol:] = 100
 
     mfsplit = Mf6Splitter(sim)
     new_sim = mfsplit.split_model(array)
@@ -37,13 +37,13 @@ def test_structured_model_splitter(function_tmpdir):
 
     original_heads = gwf.output.head().get_alldata()[-1]
 
-    ml0 = new_sim.get_model("freyberg_1")
-    ml1 = new_sim.get_model("freyberg_2")
+    ml0 = new_sim.get_model("freyberg_001")
+    ml1 = new_sim.get_model("freyberg_100")
 
     heads0 = ml0.output.head().get_alldata()[-1]
     heads1 = ml1.output.head().get_alldata()[-1]
 
-    new_heads = mfsplit.reconstruct_array({1: heads0, 2: heads1})
+    new_heads = mfsplit.reconstruct_array({1: heads0, 100: heads1})
 
     err_msg = "Heads from original and split models do not match"
     np.testing.assert_allclose(new_heads, original_heads, err_msg=err_msg)
@@ -691,3 +691,171 @@ def test_idomain_none(function_tmpdir):
 
     err_msg = "Heads from original and split models do not match"
     np.testing.assert_allclose(new_head, head, atol=1e-07, err_msg=err_msg)
+
+
+@requires_exe("mf6")
+def test_unstructured_complex_disu(function_tmpdir):
+    sim_path = function_tmpdir
+    split_sim_path = sim_path / "model_split"
+
+    # build the simulation structure
+    sim = flopy.mf6.MFSimulation(sim_ws=sim_path)
+    ims = flopy.mf6.ModflowIms(sim, complexity="SIMPLE")
+    tdis = flopy.mf6.ModflowTdis(sim)
+
+    mname = "disu_model"
+    gwf = flopy.mf6.ModflowGwf(sim, modelname=mname)
+
+    # start structured and then create a USG from it
+    nlay = 1
+    nrow = 10
+    ncol = 10
+    delc = np.ones((nrow,))
+    delr = np.ones((ncol,))
+    top = np.ones((nrow, ncol))
+    botm = np.zeros((nlay, nrow, ncol))
+    idomain = np.ones(botm.shape, dtype=int)
+    idomain[0, 1, 4] = 0
+    idomain[0, 8, 5] = 0
+
+    grid = flopy.discretization.StructuredGrid(
+        delc=delc, delr=delr, top=top, botm=botm, idomain=idomain
+    )
+
+    # build the USG connection information
+    neighbors = grid.neighbors(method="rook", reset=True)
+    iac, ja, ihc, cl12, hwva, angldegx = [], [], [], [], [], []
+    for cell, neigh in neighbors.items():
+        iac.append(len(neigh) + 1)
+        ihc.extend(
+            [
+                1,
+            ]
+            * (len(neigh) + 1)
+        )
+        ja.extend(
+            [
+                cell,
+            ]
+            + neigh
+        )
+        cl12.extend(
+            [
+                0,
+            ]
+            + [
+                1,
+            ]
+            * len(neigh)
+        )
+        hwva.extend(
+            [
+                0,
+            ]
+            + [
+                1,
+            ]
+            * len(neigh)
+        )
+        adx = [
+            0,
+        ]
+        for n in neigh:
+            ev = cell - n
+            if ev == -1 * ncol:
+                adx.append(270)
+            elif ev == ncol:
+                adx.append(90)
+            elif ev == -1:
+                adx.append(0)
+            else:
+                adx.append(180)
+        angldegx.extend(adx)
+
+    # build iverts and verts. Do not use shared iverts and mess with verts a
+    #   tiny bit
+    verts, cell2d = [], []
+    xverts, yverts = grid.cross_section_vertices
+    xcenters = grid.xcellcenters.ravel()
+    ycenters = grid.ycellcenters.ravel()
+    ivert = 0
+    for cell_num, xvs in enumerate(xverts):
+        if (cell_num - 3) % 10 == 0:
+            xvs[2] -= 0.001
+            xvs[3] -= 0.001
+        yvs = yverts[cell_num]
+
+        c2drec = [cell_num, xcenters[cell_num], ycenters[cell_num], len(xvs)]
+        for ix, vert in enumerate(xvs[:-1]):
+            c2drec.append(ivert)
+            verts.append([ivert, vert, yvs[ix]])
+            ivert += 1
+
+        c2drec.append(c2drec[4])
+        cell2d.append(c2drec)
+
+    nodes = len(cell2d)
+    nja = len(ja)
+    nvert = len(verts)
+
+    dis = flopy.mf6.ModflowGwfdisu(
+        gwf,
+        nodes=nodes,
+        nja=nja,
+        nvert=nvert,
+        top=np.ravel(grid.top),
+        bot=np.ravel(grid.botm),
+        area=np.ones((nodes,)),
+        idomain=grid.idomain.ravel(),
+        iac=iac,
+        ja=ja,
+        ihc=ihc,
+        cl12=cl12,
+        hwva=hwva,
+        angldegx=angldegx,
+        vertices=verts,
+        cell2d=cell2d,
+    )
+
+    # build npf, ic, CHD, OC package
+    npf = flopy.mf6.ModflowGwfnpf(gwf)
+    ic = flopy.mf6.ModflowGwfic(gwf)
+
+    spd = []
+    for i in range(nrow):
+        spd.append((0 + (i * 10), 0.9))
+        spd.append((9 + (i * 10), 0.5))
+
+    chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=spd)
+
+    spd = {0: [("HEAD", "LAST")]}
+    oc = flopy.mf6.ModflowGwfoc(
+        gwf, head_filerecord=f"{mname}.hds", saverecord=spd
+    )
+
+    sim.write_simulation()
+    sim.run_simulation()
+
+    heads = gwf.output.head().get_alldata()[-1]
+
+    array = np.zeros((nrow, ncol), dtype=int)
+    array[:, 5:] = 1
+
+    mfsplit = Mf6Splitter(sim)
+    new_sim = mfsplit.split_model(array)
+
+    new_sim.set_sim_path(split_sim_path)
+    new_sim.write_simulation()
+    new_sim.run_simulation()
+
+    gwf0 = new_sim.get_model(f"{mname}_0")
+    gwf1 = new_sim.get_model(f"{mname}_1")
+
+    heads0 = gwf0.output.head().get_alldata()[-1]
+    heads1 = gwf1.output.head().get_alldata()[-1]
+
+    new_heads = mfsplit.reconstruct_array({0: heads0, 1: heads1})
+
+    diff = np.abs(heads - new_heads)
+    if np.max(diff) > 1e-07:
+        raise AssertionError("Reconstructed head results outside of tolerance")
