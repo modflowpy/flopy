@@ -120,7 +120,7 @@ jobs:
           git config core.sharedRepository true
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
+          git add flopy docs .docs CITATION.cff README.md version.txt 
           git commit -m "ci(release): set version to ${{ steps.version.outputs.version }}, update plugins from DFN files, update changelog"
           git push origin "${{ github.ref_name }}"
 
