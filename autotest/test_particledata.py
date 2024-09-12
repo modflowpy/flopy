@@ -26,6 +26,7 @@ from flopy.modpath import (
     ParticleGroupLRCTemplate,
     ParticleGroupNodeTemplate,
 )
+from flopy.modpath.mp7particledata import get_extent
 from flopy.modpath.mp7particlegroup import ParticleGroup
 from flopy.utils.modpathfile import EndpointFile, PathlineFile
 
@@ -45,6 +46,20 @@ def flatten(a):
         ]
         for x in a
     ]
+
+
+# test get_extent()
+
+
+def test_get_extent_structured_multilayer():
+    grid = GridCases().structured_small()
+    i, j = 1, 2
+    for k in range(grid.nlay):
+        extent = get_extent(grid, k=k, i=i, j=j)
+        assert extent.minz == grid.botm[k, i, j]
+        assert extent.maxz == (
+            grid.top[i, j] if k == 0 else grid.botm[k - 1, i, j]
+        )
 
 
 # test initializers
