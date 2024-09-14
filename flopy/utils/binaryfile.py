@@ -13,6 +13,7 @@ import os
 import tempfile
 import warnings
 from pathlib import Path
+from shutil import copy
 from typing import List, Optional, Union
 
 import numpy as np
@@ -460,9 +461,9 @@ class BinaryLayerFile(LayerFile):
     """
 
     def __init__(
-        self, filename: Union[str, os.PathLike], precision, verbose, kwargs
+        self, filename: Union[str, os.PathLike], precision, verbose, **kwargs
     ):
-        super().__init__(filename, precision, verbose, kwargs)
+        super().__init__(filename, precision, verbose, **kwargs)
 
     def _build_index(self):
         """
@@ -661,7 +662,7 @@ class HeadFile(BinaryLayerFile):
         self.header_dtype = BinaryHeader.set_dtype(
             bintype="Head", precision=precision
         )
-        super().__init__(filename, precision, verbose, kwargs)
+        super().__init__(filename, precision, verbose, **kwargs)
 
     def reverse(self, filename: Optional[os.PathLike] = None):
         """
@@ -733,10 +734,16 @@ class HeadFile(BinaryLayerFile):
             header["pertim"] = perlen - header["pertim"]
             return header
 
+        inplace = filename == self.filename
+        if inplace:
+            temp_dir_path = Path(tempfile.gettempdir())
+            temp_file_path = temp_dir_path / filename.name
+            self.close()
+            copy(filename, temp_file_path)
+            super().__init__(temp_file_path, self.precision, self.verbose)
+
         # reverse record order and write to temporary file
-        temp_dir_path = Path(tempfile.gettempdir())
-        temp_file_path = temp_dir_path / filename.name
-        with open(temp_file_path, "wb") as f:
+        with open(filename, "wb") as f:
             for i in range(len(self) - 1, -1, -1):
                 header = self.recordarray[i].copy()
                 header = reverse_header(header)
@@ -752,16 +759,9 @@ class HeadFile(BinaryLayerFile):
                     ilay=ilay,
                 )
 
-        # if we're rewriting the original file, close it first
-        if filename == self.filename:
-            self.close()
-
-        # move temp file to destination
-        temp_file_path.replace(filename)
-
         # if we rewrote the original file, reinitialize
-        if filename == self.filename:
-            super().__init__(self.filename, self.precision, self.verbose, {})
+        if inplace:
+            super().__init__(filename, self.precision, self.verbose)
 
 
 class UcnFile(BinaryLayerFile):
@@ -828,7 +828,7 @@ class UcnFile(BinaryLayerFile):
         self.header_dtype = BinaryHeader.set_dtype(
             bintype="Ucn", precision=precision
         )
-        super().__init__(filename, precision, verbose, kwargs)
+        super().__init__(filename, precision, verbose, **kwargs)
         return
 
 
@@ -898,7 +898,7 @@ class HeadUFile(BinaryLayerFile):
         self.header_dtype = BinaryHeader.set_dtype(
             bintype="Head", precision=precision
         )
-        super().__init__(filename, precision, verbose, kwargs)
+        super().__init__(filename, precision, verbose, **kwargs)
 
     def _get_data_array(self, totim=0.0):
         """
@@ -2325,10 +2325,15 @@ class CellBudgetFile:
         # get number of records
         nrecords = len(self)
 
-        # open backward budget file
-        temp_dir_path = Path(tempfile.gettempdir())
-        temp_file_path = temp_dir_path / filename.name
-        with open(temp_file_path, "wb") as f:
+        inplace = filename == self.filename
+        if inplace:
+            temp_dir_path = Path(tempfile.gettempdir())
+            temp_file_path = temp_dir_path / filename.name
+            self.close()
+            copy(filename, temp_file_path)
+            self.__init__(temp_file_path, self.precision, self.verbose)
+
+        with open(filename, "wb") as f:
             # loop over budget file records in reverse order
             for idx in range(nrecords - 1, -1, -1):
                 # load header array
@@ -2415,13 +2420,6 @@ class CellBudgetFile:
                 # Write data
                 data.tofile(f)
 
-        # if we're rewriting the original file, close it first
-        if filename == self.filename:
-            self.close()
-
-        # move temp file to destination
-        temp_file_path.replace(filename)
-
         # if we rewrote the original file, reinitialize
-        if filename == self.filename:
-            self.__init__(self.filename, self.precision, self.verbose)
+        if inplace:
+            self.__init__(filename, self.precision, self.verbose)
