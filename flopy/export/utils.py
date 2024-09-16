@@ -1207,16 +1207,22 @@ def array3d_export(f: Union[str, os.PathLike], u3d, fmt=None, **kwargs):
         f
     ).suffix.lower() == ".shp":
         array_dict = {}
-        for ilay in range(modelgrid.nlay):
-            u2d = u3d[ilay]
-            if isinstance(u2d, np.ndarray):
-                dname = u3d.name
-                array = u2d
-            else:
-                dname = u2d.name
-                array = u2d.array
-            name = f"{shapefile_utils.shape_attr_name(dname)}_{ilay + 1}"
-            array_dict[name] = array
+        array_shape = u3d.array.shape
+
+        if len(array_shape) == 1:
+            name = shapefile_utils.shape_attr_name(u3d.name)
+            array_dict[name] = u3d.array
+        else:
+            for ilay in range(array_shape[0]):
+                u2d = u3d[ilay]
+                if isinstance(u2d, np.ndarray):
+                    dname = u3d.name
+                    array = u2d
+                else:
+                    dname = u2d.name
+                    array = u2d.array
+                name = f"{shapefile_utils.shape_attr_name(dname)}_{ilay + 1}"
+                array_dict[name] = array
         shapefile_utils.write_grid_shapefile(f, modelgrid, array_dict)
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):

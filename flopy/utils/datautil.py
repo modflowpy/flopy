@@ -606,7 +606,9 @@ class MultiList:
                             (entry_point[0][-1], new_location)
                         )
                     else:
-                        entry_point[0].append(callback(entry_point[1]))
+                        entry_point[0].append(
+                            callback(tuple(i + val for i in entry_point[1]))
+                        )
             entry_points = new_entry_points
 
     def first_item(self):
