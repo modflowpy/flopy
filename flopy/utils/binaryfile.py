@@ -13,7 +13,7 @@ import os
 import tempfile
 import warnings
 from pathlib import Path
-from shutil import copy
+from shutil import move
 from typing import List, Optional, Union
 
 import numpy as np
@@ -734,16 +734,18 @@ class HeadFile(BinaryLayerFile):
             header["pertim"] = perlen - header["pertim"]
             return header
 
+        target = filename
+
+        # if rewriting the same file, write
+        # temp file then copy it into place
         inplace = filename == self.filename
         if inplace:
             temp_dir_path = Path(tempfile.gettempdir())
             temp_file_path = temp_dir_path / filename.name
-            self.close()
-            copy(filename, temp_file_path)
-            super().__init__(temp_file_path, self.precision, self.verbose)
+            target = temp_file_path
 
-        # reverse record order and write to temporary file
-        with open(filename, "wb") as f:
+        # reverse record order
+        with open(target, "wb") as f:
             for i in range(len(self) - 1, -1, -1):
                 header = self.recordarray[i].copy()
                 header = reverse_header(header)
@@ -761,6 +763,7 @@ class HeadFile(BinaryLayerFile):
 
         # if we rewrote the original file, reinitialize
         if inplace:
+            move(target, filename)
             super().__init__(filename, self.precision, self.verbose)
 
 
@@ -2325,15 +2328,17 @@ class CellBudgetFile:
         # get number of records
         nrecords = len(self)
 
+        target = filename
+
+        # if rewriting the same file, write
+        # temp file then copy it into place
         inplace = filename == self.filename
         if inplace:
             temp_dir_path = Path(tempfile.gettempdir())
             temp_file_path = temp_dir_path / filename.name
-            self.close()
-            copy(filename, temp_file_path)
-            self.__init__(temp_file_path, self.precision, self.verbose)
+            target = temp_file_path
 
-        with open(filename, "wb") as f:
+        with open(target, "wb") as f:
             # loop over budget file records in reverse order
             for idx in range(nrecords - 1, -1, -1):
                 # load header array
@@ -2422,4 +2427,5 @@ class CellBudgetFile:
 
         # if we rewrote the original file, reinitialize
         if inplace:
+            move(target, filename)
             self.__init__(filename, self.precision, self.verbose)
