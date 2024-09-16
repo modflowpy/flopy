@@ -157,7 +157,7 @@ class LayerFile:
     """
 
     def __init__(
-        self, filename: Union[str, os.PathLike], precision, verbose, kwargs
+        self, filename: Union[str, os.PathLike], precision, verbose, **kwargs
     ):
         from ..discretization.structuredgrid import StructuredGrid
 

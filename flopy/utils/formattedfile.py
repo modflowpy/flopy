@@ -110,8 +110,8 @@ class FormattedLayerFile(LayerFile):
 
     """
 
-    def __init__(self, filename, precision, verbose, kwargs):
-        super().__init__(filename, precision, verbose, kwargs)
+    def __init__(self, filename, precision, verbose, **kwargs):
+        super().__init__(filename, precision, verbose, **kwargs)
 
     def _build_index(self):
         """
@@ -376,7 +376,7 @@ class FormattedHeadFile(FormattedLayerFile):
         **kwargs,
     ):
         self.text = text
-        super().__init__(filename, precision, verbose, kwargs)
+        super().__init__(filename, precision, verbose, **kwargs)
 
     def _get_text_header(self):
         """
