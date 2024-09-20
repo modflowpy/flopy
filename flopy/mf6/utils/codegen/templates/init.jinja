@@ -1,0 +1,18 @@
+def __init__(
+        self,
+        {%- for var in variables.values() if var.init_param %}
+        {%- if var.default is defined %}
+        {{ var.name }}={{ var.default }},
+        {%- else %}
+        {{ var.name }},
+        {%- endif -%}
+        {%- endfor %}
+        **kwargs,
+    ):
+        {{ init_body }}
+        {% if name.l == "exg" and n == "exgmnameb" -%}
+        parent.register_exchange_file(self)
+        {% endif -%}
+        {% if base == "MFPackage" %}
+        self._init_complete = True
+        {% endif %}
