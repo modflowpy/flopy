@@ -1,0 +1,20 @@
+def __init__(
+        self,
+        model: MFModel,
+        loading_package: bool = False,
+        {%- for name, var in variables.items() %}
+        {{ name }}: {{ var.type }} = {{ var.default }},
+        {%- endfor %}
+        filename: typing.Optional[PathLike] = None,
+        pname: typing.Optional[str] = None,
+        **kwargs,
+    ):
+        super().__init__(
+            model, "{{ subcomponent }}", filename, pname, loading_package, **kwargs
+        )
+
+        # set up variables
+        {%- for name, var in variables.items() %}
+        self.{{ name }} = self.build_mfdata("{{ name }}", {{ name }})
+        {%- endfor %}
+        self._init_complete = True

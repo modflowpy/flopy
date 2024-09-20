@@ -1,0 +1,112 @@
+{# A component class' docstring. #}
+    Modflow{{ component.title() }}{{ subcomponent }} defines a {{ subcomponent }} package within a {{ component }}6 model.
+
+    Parameters
+    ----------
+    model : MFModel
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+
+    loading_package : bool
+        Do not set this variable. It is intended for debugging and internal
+        processing purposes only.
+    {% for var in variables.values() %}
+    {{ var.name }} : {{ var.type }}
+        {%- if var.description is defined %}
+        {{ var.description|wordwrap|indent(8) }}
+        {%- endif -%}
+        {%- if var.is_record -%} {# record #}
+        {%- for field in var.children.values() %}
+        * {{ field.name}} : {{ field.type }}
+            {%- if field.description is defined %}
+            {{ field.description|wordwrap|indent(12) }}
+            {% endif -%}
+            {%- if field.is_record %}
+            {%- for f in child.children.values() -%}
+            * {{ f.name}} : {{ f.type }}
+                {%- if f.description is defined %}
+                {{ f.description|wordwrap|indent(12) }}
+                {%- endif %}
+            {% endfor -%}
+            {% endif -%}
+            {%- if field.is_union %}
+            {%- for choice in field.children.values() -%}
+            * {{ choice.name}} : {{ choice.type }}
+                {%- if choice.is_record %}
+                {%- if choice.children|length == 1 %}
+                {{ (choice.children|dictsort()|first)[1].description|wordwrap|indent(16) }}
+                {%- else -%}
+                {%- for field in choice.children.values() %}
+                * {{ field.name}} : {{ field.type }}
+                    {%- if field.description is defined %}
+                    {{ field.description|wordwrap|indent(16) }}
+                    {%- endif %}
+                {% endfor -%}
+                {% endif -%}
+                {%- else %}
+                {%- if choice.description is defined %}
+                {{ choice.description|wordwrap|indent(12) }}
+                {%- endif %}
+                {%- endif %}
+            {% endfor -%}
+            {% endif -%}
+        {% endfor -%}
+        {%- elif var.is_union -%} {# union #}
+        {%- for choice in var.children.values() %}
+        * {{ choice.name}} : {{ choice.type }}
+            {%- if choice.is_record %}
+            {%- for field in choice.children.values() %}
+            * {{ field.name}} : {{ field.type }}
+                {%- if field.description is defined %}
+                {{ field.description|wordwrap|indent(16) }}
+                {%- endif %}
+            {%- endfor %}
+            {%- else %}
+            {%- if choice.description is defined %}
+            {{ choice.description|wordwrap|indent(12) }}
+            {%- endif %}
+            {%- endif %}
+        {%- endfor %}
+        {%- elif var.is_list -%} {# list... #}
+        {%- for child in var.children.values() %}
+        {%- if child.is_record -%} {# ...of records #}
+        {%- for field in child.children.values() -%}
+        * {{ field.name}} : {{ field.type }}
+            {%- if field.description is defined %}
+            {{ field.description|wordwrap|indent(12) }}
+            {%- endif %}
+        {% endfor -%}
+        {%- elif child.is_union -%} {# ...of unions #}
+        {%- for choice in child.children.values() -%}
+        * {{ choice.name}} : {{ choice.type }}
+            {%- if choice.is_record %}
+            {%- if choice.children|length == 1 %}
+            {{ (choice.children|dictsort()|first)[1].description|wordwrap|indent(12) }}
+            {%- else -%}
+            {%- for field in choice.children.values() %}
+            * {{ field.name}} : {{ field.type }}
+                {%- if field.description is defined %}
+                {{ field.description|wordwrap|indent(16) }}
+                {%- endif %}
+            {% endfor -%}
+            {% endif -%}
+            {%- else %}
+            {%- if choice.description is defined %}
+            {{ choice.description|wordwrap|indent(12) }}
+            {%- endif %}
+            {%- endif %}
+        {% endfor -%}
+        {%- endif -%}
+        {% endfor -%}
+        {%- endif %}
+    {% endfor %}
+    filename : str
+        File name for this package.
+
+    pname : str
+        Package name for this package.
+
+    parent_file : PathLike
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have
+        a mfgwflak package parent_file.
