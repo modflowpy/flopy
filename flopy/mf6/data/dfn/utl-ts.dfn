@@ -62,6 +62,7 @@ valid stepwise linear linearend
 shape time_series_names
 tagged false
 reader urword
+in_record true
 optional false
 in_record true
 longname
@@ -112,6 +113,7 @@ name sfacs
 type keyword
 shape
 reader urword
+in_record true
 optional false
 in_record true
 longname

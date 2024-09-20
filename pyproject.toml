@@ -29,9 +29,10 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dependencies = [
+    "Jinja2>=3.0",
     "numpy>=1.20.3",
     "matplotlib >=1.4.0",
-    "pandas >=2.0.0"
+    "pandas >=2.0.0",
 ]
 dynamic = ["version", "readme"]
 

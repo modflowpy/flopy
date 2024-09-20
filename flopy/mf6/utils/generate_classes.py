@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 from warnings import warn
 
-from .createpackages import create_packages
+from .createpackages import make_all
 
 thisfilepath = os.path.dirname(os.path.abspath(__file__))
 flopypth = os.path.join(thisfilepath, "..", "..")
@@ -14,6 +14,10 @@ protected_dfns = ["flopy.dfn"]
 
 default_owner = "MODFLOW-USGS"
 default_repo = "modflow6"
+
+_MF6_PATH = Path(__file__).parents[1]
+_DFN_PATH = _MF6_PATH / "data" / "dfn"
+_TGT_PATH = _MF6_PATH / "modflow"
 
 
 def delete_files(files, pth, allow_failure=False, exclude=None):
@@ -195,7 +199,7 @@ def generate_classes(
     delete_mf6_classes()
 
     print("  Creating mf6 classes using the definition files")
-    create_packages()
+    make_all(_DFN_PATH, _TGT_PATH)
     list_files(os.path.join(flopypth, "mf6", "modflow"))
 
 
