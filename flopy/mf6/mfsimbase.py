@@ -483,15 +483,6 @@ class MFSimulationBase:
             self.simulation_data.lazy_io = True
         self._package_container = PackageContainer(self.simulation_data)
 
-        # verify metadata
-        fpdata = mfstructure.MFStructure()
-        if not fpdata.valid:
-            excpt_str = (
-                "Invalid package metadata.  Unable to load MODFLOW "
-                "file structure metadata."
-            )
-            raise FlopyException(excpt_str)
-
         # initialize
         self.dimensions = None
         self.type = "Simulation"
@@ -503,7 +494,7 @@ class MFSimulationBase:
         self._exchange_files = {}
         self._solution_files = {}
         self._other_files = {}
-        self.structure = fpdata.sim_struct
+        self.structure = mfstructure.MFStructure().sim_struct
         self.model_type = None
 
         self._exg_file_num = {}

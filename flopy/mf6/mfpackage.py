@@ -1888,7 +1888,6 @@ class MFPackage(PackageInterface):
     def __init_subclass__(cls):
         """Register package type"""
         super().__init_subclass__()
-        PackageContainer.modflow_packages.append(cls)
         PackageContainer.packages_by_abbr[cls.package_abbr] = cls
 
     def __setattr__(self, name, value):
@@ -3449,7 +3448,6 @@ class MFChildPackages:
     def __init_subclass__(cls):
         """Register package"""
         super().__init_subclass__()
-        PackageContainer.modflow_packages.append(cls)
         PackageContainer.packages_by_abbr[cls.package_abbr] = cls
 
     def __getattr__(self, attr):
