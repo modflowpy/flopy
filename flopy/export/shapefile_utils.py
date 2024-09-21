@@ -382,9 +382,20 @@ def model_attributes_to_shapefile(
                     except:
                         continue
                     for name, array in a.masked_4D_arrays_itr():
+                        n = shape_attr_name(name, length=4)
                         for kper in range(array.shape[0]):
+                            # guard clause for disu case
+                            # array is (kper, node) only
+                            if len(array.shape) == 2:
+                                aname = f"{n}{kper + 1}"
+                                arr = array[kper]
+                                assert arr.shape == horz_shape
+                                if np.all(np.isnan(arr)):
+                                    continue
+                                array_dict[aname] = arr
+                                continue
+                            # non-disu case
                             for k in range(array.shape[1]):
-                                n = shape_attr_name(name, length=4)
                                 aname = f"{n}{k + 1}{kper + 1}"
                                 arr = array[kper][k]
                                 assert arr.shape == horz_shape
