@@ -957,9 +957,6 @@ def test_mf6_grid_shp_export(function_tmpdir):
     for c in spd.dtype.names:
         if c in spd6[0].dtype.names:
             spd6[0][c] = spd[c]
-    # MFTransient list apparently requires entries for additional stress periods,
-    # even if they are the same
-    spd6[1] = spd6[0]
     riv6 = flopy.mf6.ModflowGwfriv(gwf, stress_period_data=spd6)
     rch6 = flopy.mf6.ModflowGwfrcha(gwf, recharge=rech)
 
