@@ -409,7 +409,6 @@ def test_export_shapefile_polygon_closed(function_tmpdir):
     shp.close()
 
 
-@excludes_platform("Windows")
 @requires_pkg("rasterio", "pyshp", "scipy", name_map={"pyshp": "shapefile"})
 def test_export_array(function_tmpdir, example_data_path):
     import rasterio
