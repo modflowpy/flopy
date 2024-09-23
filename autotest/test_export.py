@@ -466,10 +466,10 @@ def test_export_array(function_tmpdir, example_data_path):
     with rasterio.open(function_tmpdir / "fb.tif") as src:
         arr = src.read(1)
         assert src.shape == (m.nrow, m.ncol)
-        # TODO: these tests currently fail -- fix is in progress
-        # assert np.abs(src.bounds[0] - m.modelgrid.extent[0]) < 1e-6
-        # assert np.abs(src.bounds[1] - m.modelgrid.extent[1]) < 1e-6
-        pass
+        assert np.abs(src.bounds[0] - m.modelgrid.extent[0]) < 1e-6
+        assert np.abs(src.bounds[2] - m.modelgrid.extent[1]) < 1e-6
+        assert np.abs(src.bounds[1] - m.modelgrid.extent[2]) < 1e-6
+        assert np.abs(src.bounds[3] - m.modelgrid.extent[3]) < 1e-6
 
 
 @requires_pkg("netCDF4", "pyproj")
