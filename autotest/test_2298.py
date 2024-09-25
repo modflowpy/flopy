@@ -46,8 +46,9 @@ def fullname(t: type) -> str:
     origin = get_origin(t)
     args = get_args(t)
     if origin is Literal:
+        args = ['"' + a + '"' for a in args]
         return (
-            f"{Literal.__name__}[{', '.join(['"' + a + '"' for a in args])}]"
+            f"{Literal.__name__}[{', '.join(args)}]"
         )
     elif origin is Union:
         if len(args) == 2 and args[1] is type(None):
