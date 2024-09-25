@@ -47,9 +47,7 @@ def fullname(t: type) -> str:
     args = get_args(t)
     if origin is Literal:
         args = ['"' + a + '"' for a in args]
-        return (
-            f"{Literal.__name__}[{', '.join(args)}]"
-        )
+        return f"{Literal.__name__}[{', '.join(args)}]"
     elif origin is Union:
         if len(args) == 2 and args[1] is type(None):
             return f"{Optional.__name__}[{fullname(args[0])}]"
@@ -369,7 +367,10 @@ def get_template_context(
 
         # finally a bog standard scalar
         else:
-            var_["type"] = SCALAR_TYPES[type_]
+            # if it's a keyword tag for another
+            # variable, make it a string literal
+            tag = type_ == "keyword" and (wrap or var.get("tagged", False))
+            var_["type"] = Literal[name_] if tag else SCALAR_TYPES[type_]
 
         # make optional if needed
         if var_.get("optional", True):
@@ -492,6 +493,7 @@ def get_component_type(component, subcomponent) -> ComponentType:
         "gwf-dis",
         "prt-mip",
         "prt-oc",
+        "gwf-oc",
         # models
         "gwf-nam",
         "gwt-nam",
