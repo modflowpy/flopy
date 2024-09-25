@@ -134,6 +134,7 @@ def test_load_dfn_prt_prp():
 def get_template_context(
     component: str,
     subcomponent: str,
+    common_vars: Definition,
     definition: Definition,
     metadata: List[str],
 ) -> dict:
@@ -390,8 +391,23 @@ def get_template_context(
                 "default", False if var_["type"] is bool else None
             )
 
-        # remove backslashes from description
-        var_["description"] = var_.get("description", "").replace("\\", "")
+        # make substitutions from common variables
+        # and remove backslashes from description
+        def _map_descr(description: str) -> str:
+            description = description.replace("\\", "")
+            _, replace, tail = description.strip().partition("REPLACE")
+            if replace:
+                key, _, replacements = tail.strip().partition(" ")
+                replacements = eval(replacements)
+                val = common_vars.get(key, None).get("description", "")
+                if val is None:
+                    raise ValueError(f"Common variable not found: {key}")
+                if any(replacements):
+                    return val.replace("{#1}", replacements["{#1}"])
+                return val
+            return description
+
+        var_["description"] = _map_descr(var_.get("description", ""))
 
         # if name is a reserved keyword,
         # add trailing underscore to it
@@ -452,11 +468,14 @@ def get_template_context(
 def test_get_template_context(dfn, n_flat, n_nested):
     component, subcomponent = dfn.split("-")
 
+    with open(DFNS_PATH / "common.dfn") as f:
+        common_vars, _ = load_dfn(f)
+
     with open(DFNS_PATH / f"{dfn}.dfn") as f:
         variables, metadata = load_dfn(f)
 
     context = get_template_context(
-        component, subcomponent, variables, metadata
+        component, subcomponent, common_vars, variables, metadata
     )
     assert context["component"] == component
     assert context["subcomponent"] == subcomponent
@@ -466,13 +485,12 @@ def test_get_template_context(dfn, n_flat, n_nested):
 
 from jinja2 import Environment, PackageLoader
 
+TEMPLATE_ENV = Environment(loader=PackageLoader("flopy", "mf6/templates/"))
+
 
 class ComponentType(Enum):
     Package = "package"
     Simulation = "simulation"
-
-
-TEMPLATE_ENV = Environment(loader=PackageLoader("flopy", "mf6/templates/"))
 
 
 def get_component_type(component, subcomponent) -> ComponentType:
@@ -490,6 +508,7 @@ def get_component_type(component, subcomponent) -> ComponentType:
         "prt-prp",
         "gwe-ctp",
         "gwe-cnd",
+        "gwe-esl",
         "gwf-dis",
         "prt-mip",
         "prt-oc",
@@ -512,11 +531,14 @@ def test_render_template(dfn, function_tmpdir):
     comp_type = get_component_type(component, subcomponent).value
     template = TEMPLATE_ENV.get_template(f"{comp_type}.jinja")
 
+    with open(DFNS_PATH / "common.dfn") as f:
+        common_vars, _ = load_dfn(f)
+
     with open(DFNS_PATH / f"{dfn}.dfn", "r") as f:
         variables, metadata = load_dfn(f)
 
     context = get_template_context(
-        component, subcomponent, variables, metadata
+        component, subcomponent, common_vars, variables, metadata
     )
     source = template.render(**context)
     source_path = function_tmpdir / f"{comp_name}.py"
