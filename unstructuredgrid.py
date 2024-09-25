@@ -1,6 +1,5 @@
 import copy
 import os
-import flopy
 from typing import Union
 
 import numpy as np
@@ -130,10 +129,10 @@ class UnstructuredGrid(Grid):
         xoff=0.0,
         yoff=0.0,
         angrot=0.0,
-        nodes = None,
-        nlay = None,
-        njag = None,
-        nper = None,
+        nodes=None,
+        nlay=None,
+        njag=None,
+        nper=None,
         itmuni=None,
         idsymrd=None,
         laycbd=None,
@@ -141,8 +140,8 @@ class UnstructuredGrid(Grid):
         ivsd=None,
         area=None,
         ivc=None,
-        cl1=None, 
-        cl2=None, 
+        cl1=None,
+        cl2=None,
         cl12=None,
         fahl=None,
         perlen=None,
@@ -209,25 +208,22 @@ class UnstructuredGrid(Grid):
         self._nodes = nodes
         self._nlay = nlay
         self._njag = njag
-        self._nper = nper,
-        self._itmuni=itmuni,
-        self._idsymrd=idsymrd
-        self._laycbd=laycbd
-        self._nodelay=nodelay
-        self._ivsd=ivsd
-        self._area=area
-        self._ivc=ivc
-        self._cl1=cl1 
-        self._cl2=cl2 
-        self._cl12=cl12
-        self._fahl=fahl
-        self._perlen=perlen
-        self._nstp=nstp
-        self._tsmult=tsmult
-        self._steady=steady
-        
-        
-        
+        self._nper = (nper,)
+        self._itmuni = (itmuni,)
+        self._idsymrd = idsymrd
+        self._laycbd = laycbd
+        self._nodelay = nodelay
+        self._ivsd = ivsd
+        self._area = area
+        self._ivc = ivc
+        self._cl1 = cl1
+        self._cl2 = cl2
+        self._cl12 = cl12
+        self._fahl = fahl
+        self._perlen = perlen
+        self._nstp = nstp
+        self._tsmult = tsmult
+        self._steady = steady
 
     def set_ncpl(self, ncpl):
         if isinstance(ncpl, int):
@@ -262,8 +258,7 @@ class UnstructuredGrid(Grid):
     # def __init__(self, value=None):
     #     # Initialize the private attribute _value
     #     self._value = value
-        
-        
+
     @property
     def nlay(self):
         if self.ncpl is None:
@@ -324,18 +319,14 @@ class UnstructuredGrid(Grid):
     @property
     def iverts(self):
         if self._iverts is not None:
-            return [
-                [ivt for ivt in t if ivt is not None] for t in self._iverts
-            ]
+            return [[ivt for ivt in t if ivt is not None] for t in self._iverts]
 
     @property
     def verts(self):
         if self._vertices is None:
             return self._vertices
         else:
-            verts = np.array(
-                [list(t)[1:] for t in self._vertices], dtype=float
-            ).T
+            verts = np.array([list(t)[1:] for t in self._vertices], dtype=float).T
             x, y = transform(
                 verts[0],
                 verts[1],
@@ -352,7 +343,7 @@ class UnstructuredGrid(Grid):
     @property
     def ja(self):
         return self._ja
-    
+
     @property
     def njag(self):
         return self._njag  # Getter
@@ -371,11 +362,11 @@ class UnstructuredGrid(Grid):
 
     @property
     def area(self):
-        return self._area    # Getter
+        return self._area  # Getter
 
     @property
     def ivc(self):
-        return self._ivc   # Getter
+        return self._ivc  # Getter
 
     @property
     def cl1(self):
@@ -383,31 +374,31 @@ class UnstructuredGrid(Grid):
 
     @property
     def cl2(self):
-        return self._cl2   # Getter
+        return self._cl2  # Getter
 
     @property
     def cl12(self):
-        return self._cl12   # Getter
+        return self._cl12  # Getter
 
     @property
     def fahl(self):
-        return self._fahl   # Getter
+        return self._fahl  # Getter
 
     @property
     def nper(self):
-        return self._nper   # Getter
+        return self._nper  # Getter
 
     @property
     def itmuni(self):
-        return self._itmuni   # Getter
+        return self._itmuni  # Getter
 
     @property
     def perlen(self):
-        return self._perlen   # Getter
+        return self._perlen  # Getter
 
     @property
     def nstp(self):
-        return self._nstp   # Getter
+        return self._nstp  # Getter
 
     @property
     def tsmult(self):
@@ -415,7 +406,7 @@ class UnstructuredGrid(Grid):
 
     @property
     def steady(self):
-        return self._steady   # Getter
+        return self._steady  # Getter
 
     @property
     def ncpl(self):
@@ -537,7 +528,6 @@ class UnstructuredGrid(Grid):
             yv *= self.nlay
         return xv, yv
 
-        
     def cross_section_lay_ncpl_ncb(self, ncb):
         """
         Get PlotCrossSection compatible layers, ncpl, and ncb
@@ -694,8 +684,7 @@ class UnstructuredGrid(Grid):
                     self._polygons[ilay].append(p)
             else:
                 self._polygons = [
-                    Path(self.get_cell_vertices(nn))
-                    for nn in range(self.ncpl[0])
+                    Path(self.get_cell_vertices(nn)) for nn in range(self.ncpl[0])
                 ]
 
         return copy.copy(self._polygons)
@@ -766,10 +755,7 @@ class UnstructuredGrid(Grid):
         """
         if self.is_complete:
             return UnstructuredGrid(
-                vertices=[
-                    [i[0], i[1] * factor, i[2] * factor]
-                    for i in self._vertices
-                ],
+                vertices=[[i[0], i[1] * factor, i[2] * factor] for i in self._vertices],
                 iverts=self._iverts,
                 xcenters=self._xc * factor,
                 ycenters=self._yc * factor,
@@ -781,9 +767,7 @@ class UnstructuredGrid(Grid):
                 angrot=self.angrot,
             )
         else:
-            raise AssertionError(
-                "Grid is not complete and cannot be converted"
-            )
+            raise AssertionError("Grid is not complete and cannot be converted")
 
     def clean_iverts(self, inplace=False):
         """
@@ -993,9 +977,7 @@ class UnstructuredGrid(Grid):
             xvertices = xvertxform
             yvertices = yvertxform
 
-        self._cache_dict[cache_index_cc] = CachedData(
-            [xcenters, ycenters, zcenters]
-        )
+        self._cache_dict[cache_index_cc] = CachedData([xcenters, ycenters, zcenters])
         self._cache_dict[cache_index_vert] = CachedData(
             [xvertices, yvertices, zvertices]
         )
@@ -1265,9 +1247,7 @@ class UnstructuredGrid(Grid):
         with open(file_path) as file:
 
             def split_line():
-                return [
-                    head.upper() for head in file.readline().strip().split()
-                ]
+                return [head.upper() for head in file.readline().strip().split()]
 
             header = split_line()
             while header[0][0] == "#":
@@ -1310,13 +1290,8 @@ class UnstructuredGrid(Grid):
                         f"Cell {nn} declares {verts_declared} vertices but provides {verts_provided}"
                     )
 
-                verts = [
-                    int(vert) - 1 for vert in line[6 : 6 + verts_declared]
-                ]
-                elevs = [
-                    zverts[int(line[i]) - 1]
-                    for i in range(6, 6 + verts_declared)
-                ]
+                verts = [int(vert) - 1 for vert in line[6 : 6 + verts_declared]]
+                elevs = [zverts[int(line[i]) - 1] for i in range(6, 6 + verts_declared)]
 
                 xcenters.append(xc)
                 ycenters.append(yc)

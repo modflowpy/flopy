@@ -267,9 +267,7 @@ class MfUsgDisU(Package):
         self.idsymrd = idsymrd
 
         # LAYCBD
-        self.laycbd = Util2d(
-            model, (self.nlay,), np.int32, laycbd, name="laycbd"
-        )
+        self.laycbd = Util2d(model, (self.nlay,), np.int32, laycbd, name="laycbd")
         self.laycbd[-1] = 0  # bottom layer must be zero
 
         # NODELAY
@@ -422,13 +420,9 @@ class MfUsgDisU(Package):
         )
 
         # Stress period information
-        self.perlen = Util2d(
-            model, (self.nper,), np.float32, perlen, name="perlen"
-        )
+        self.perlen = Util2d(model, (self.nper,), np.float32, perlen, name="perlen")
         self.nstp = Util2d(model, (self.nper,), np.int32, nstp, name="nstp")
-        self.tsmult = Util2d(
-            model, (self.nper,), np.float32, tsmult, name="tsmult"
-        )
+        self.tsmult = Util2d(model, (self.nper,), np.float32, tsmult, name="tsmult")
         self.steady = Util2d(model, (self.nper,), bool, steady, name="steady")
 
         self.itmuni_dict = {
@@ -456,14 +450,14 @@ class MfUsgDisU(Package):
                 nper=self.nper,
                 iac=self.iac,
                 ja=self.ja,
-                idsymrd= self.idsymrd,
+                idsymrd=self.idsymrd,
                 laycbd=self.laycbd,
                 nodelay=self.nodelay,
                 ivsd=self.ivsd,
                 area=self.area,
                 ivc=self.ivc,
-                cl1=self.cl1, 
-                cl2=self.cl2, 
+                cl1=self.cl1,
+                cl2=self.cl2,
                 cl12=self.cl12,
                 fahl=self.fahl,
                 perlen=self.perlen,
@@ -472,9 +466,7 @@ class MfUsgDisU(Package):
                 steady=self.steady,
             )
 
-        self.tr = TemporalReference(
-            itmuni=self.itmuni, start_datetime=start_datetime
-        )
+        self.tr = TemporalReference(itmuni=self.itmuni, start_datetime=start_datetime)
 
         self.start_datetime = start_datetime
 
@@ -574,7 +566,6 @@ class MfUsgDisU(Package):
             )
             model.version = "mfusg"
 
-
         openfile = not hasattr(f, "read")
         if openfile:
             filename = f
@@ -637,9 +628,7 @@ class MfUsgDisU(Package):
         # dataset 3 -- nodelay
         if model.verbose:
             print("   loading NODELAY...")
-        nodelay = Util2d.load(
-            f, model, (nlay,), np.int32, "nodelay", ext_unit_dict
-        )
+        nodelay = Util2d.load(f, model, (nlay,), np.int32, "nodelay", ext_unit_dict)
         if model.verbose:
             print(f"   NODELAY {nodelay}")
 
@@ -648,9 +637,7 @@ class MfUsgDisU(Package):
             print("   loading TOP...")
         top = [0] * nlay
         for k in range(nlay):
-            tpk = Util2d.load(
-                f, model, (nodelay[k],), np.float32, "top", ext_unit_dict
-            )
+            tpk = Util2d.load(f, model, (nodelay[k],), np.float32, "top", ext_unit_dict)
             top[k] = tpk
         if model.verbose:
             for k, tpk in enumerate(top):
@@ -661,9 +648,7 @@ class MfUsgDisU(Package):
             print("   loading BOT...")
         bot = [0] * nlay
         for k in range(nlay):
-            btk = Util2d.load(
-                f, model, (nodelay[k],), np.float32, "btk", ext_unit_dict
-            )
+            btk = Util2d.load(f, model, (nodelay[k],), np.float32, "btk", ext_unit_dict)
             bot[k] = btk
         if model.verbose:
             for k, btk in enumerate(bot):
@@ -706,9 +691,7 @@ class MfUsgDisU(Package):
         if ivsd == 1:
             if model.verbose:
                 print("   loading IVC...")
-            ivc = Util2d.load(
-                f, model, (njag,), np.int32, "ivc", ext_unit_dict
-            )
+            ivc = Util2d.load(f, model, (njag,), np.int32, "ivc", ext_unit_dict)
             if model.verbose:
                 print(f"   IVC {ivc}")
 
@@ -717,9 +700,7 @@ class MfUsgDisU(Package):
         if idsymrd == 1:
             if model.verbose:
                 print("   loading CL1...")
-            cl1 = Util2d.load(
-                f, model, (njags,), np.float32, "cl1", ext_unit_dict
-            )
+            cl1 = Util2d.load(f, model, (njags,), np.float32, "cl1", ext_unit_dict)
             if model.verbose:
                 print(f"   CL1 {cl1}")
 
@@ -728,9 +709,7 @@ class MfUsgDisU(Package):
         if idsymrd == 1:
             if model.verbose:
                 print("   loading CL2...")
-            cl2 = Util2d.load(
-                f, model, (njags,), np.float32, "cl2", ext_unit_dict
-            )
+            cl2 = Util2d.load(f, model, (njags,), np.float32, "cl2", ext_unit_dict)
             if model.verbose:
                 print(f"   CL2 {cl2}")
 
@@ -739,9 +718,7 @@ class MfUsgDisU(Package):
         if idsymrd == 0:
             if model.verbose:
                 print("   loading CL12...")
-            cl12 = Util2d.load(
-                f, model, (njag,), np.float32, "cl12", ext_unit_dict
-            )
+            cl12 = Util2d.load(f, model, (njag,), np.float32, "cl12", ext_unit_dict)
             if model.verbose:
                 print(f"   CL12 {cl12}")
 
@@ -903,9 +880,7 @@ class MfUsgDisU(Package):
 
         # Item 13: NPER, NSTP, TSMULT, Ss/tr
         for t in range(self.nper):
-            f_dis.write(
-                f"{self.perlen[t]:14f}{self.nstp[t]:14d}{self.tsmult[t]:10f} "
-            )
+            f_dis.write(f"{self.perlen[t]:14f}{self.nstp[t]:14d}{self.tsmult[t]:10f} ")
             if self.steady[t]:
                 f_dis.write(" SS\n")
             else:
