@@ -329,9 +329,8 @@ def get_template_context(
             var_["is_record"] = True
 
         # are we wrapping a choice in a union?
-        # if so, make it a literal if just one
-        # single keyword, otherwise, repeating
-        # tuple of strings
+        # if so, use a literal for the leading
+        # keyword like tuple (Literal[...], T)
         elif wrap:
             name = name_
             field = _map_var(var)
@@ -351,7 +350,7 @@ def get_template_context(
             var_["is_choice"] = True
 
         # at this point, if it has a shape, it's an array.
-        # but if it's in a record use a tuple.
+        # but if it's in a record use a variadic tuple.
         elif shape is not None:
             if var.get("in_record", False):
                 if type_ not in SCALAR_TYPES.keys():
