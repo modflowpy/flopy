@@ -1,5 +1,6 @@
+from enum import Enum
+from keyword import kwlist
 from os import PathLike
-from types import NoneType
 from typing import (
     Any,
     Dict,
@@ -41,19 +42,21 @@ Definition = Dict[str, Dict[str, Scalar]]
 
 
 def fullname(t: type) -> str:
-    """Convert a type to a fully qualified name suitable for templating."""
+    """Convert a type to a name suitable for templating."""
     origin = get_origin(t)
     args = get_args(t)
-    if origin is Union:
-        if len(args) == 2 and args[1] is NoneType:
-            return f"typing.{Optional.__name__}[{fullname(args[0])}]"
-        return f"typing.{Union.__name__}[{', '.join([fullname(a) for a in args])}]"
-    if origin is tuple:
-        return f"typing.{Tuple.__name__}[{', '.join([fullname(a) for a in args])}]"
-    elif origin is list:
+    if origin is Literal:
         return (
-            f"typing.{List.__name__}[{', '.join([fullname(a) for a in args])}]"
+            f"{Literal.__name__}[{', '.join(['"' + a + '"' for a in args])}]"
         )
+    elif origin is Union:
+        if len(args) == 2 and args[1] is type(None):
+            return f"{Optional.__name__}[{fullname(args[0])}]"
+        return f"{Union.__name__}[{', '.join([fullname(a) for a in args])}]"
+    elif origin is tuple:
+        return f"{Tuple.__name__}[{', '.join([fullname(a) for a in args])}]"
+    elif origin is list:
+        return f"{List.__name__}[{', '.join([fullname(a) for a in args])}]"
     elif origin is np.ndarray:
         return f"NDArray[np.{fullname(args[1].__args__[0])}]"
     elif origin is np.dtype:
@@ -174,7 +177,9 @@ def get_template_context(
             "is_record": False,
             "is_union": False,
             "is_variadic": False,
+            "is_choice": False,
         }
+        name_ = var["name"]
         type_ = var["type"]
         shape = var.get("shape", None)
         shape = None if shape == "" else shape
@@ -269,7 +274,7 @@ def get_template_context(
                 var_["is_list"] = True
             elif _is_implicit_record():
                 # record implicitly defined, make it on the fly
-                name = var["name"]
+                name = name_
                 fields = _get_record_fields(name)
                 record_type = Tuple[
                     tuple([f["type"] for f in fields.values()])
@@ -283,6 +288,7 @@ def get_template_context(
                     "is_union": False,
                     "is_list": False,
                     "is_variadic": False,
+                    "is_choice": False,
                 }
                 var_["type"] = List[record_type]
                 var_["children"] = {name: record}
@@ -307,7 +313,7 @@ def get_template_context(
 
         # record (sum) type, children are fields
         elif type_.startswith("record"):
-            name = var["name"]
+            name = name_
             fields = _get_record_fields(name)
             if len(fields) > 1:
                 record_type = Tuple[
@@ -316,7 +322,7 @@ def get_template_context(
             elif len(fields) == 1:
                 t = list(fields.values())[0]["type"]
                 # make sure we don't double-wrap tuples
-                record_type = t if t is tuple else Tuple[(t,)]
+                record_type = t if get_origin(t) is tuple else Tuple[(t,)]
             # TODO: if record has 1 field, accept value directly?
             var_["type"] = record_type
             var_["children"] = fields
@@ -327,26 +333,22 @@ def get_template_context(
         # single keyword, otherwise, repeating
         # tuple of strings
         elif wrap:
-            name = var["name"]
+            name = name_
             field = _map_var(var)
             fields = {name: field}
-            # TODO: there is no way to represent a variadic tuple
-            # of different leading types (i.e., with only the last
-            # repeating).. could do:
-            #   - `Tuple[Union[Literal, T], ...]`?
-            # wrapped_type = Tuple[Union[Literal[name], field["type"]], ...]
-            #   - `Tuple[Literal, Tuple[T, ...]]`?
-            # ...
-            # field_type = Literal[name] if field["type"] is bool else wrapped_typed
             field_type = (
+                Literal[name] if field["type"] is bool else field["type"]
+            )
+            record_type = (
                 Tuple[Literal[name]]
                 if field["type"] is bool
-                else Tuple[Any, ...]
+                else Tuple[Literal[name], field["type"]]
             )
             fields[name] = {**field, "type": field_type}
-            var_["type"] = field_type
+            var_["type"] = record_type
             var_["children"] = fields
             var_["is_record"] = True
+            var_["is_choice"] = True
 
         # at this point, if it has a shape, it's an array.
         # but if it's in a record use a tuple.
@@ -369,7 +371,7 @@ def get_template_context(
         else:
             var_["type"] = SCALAR_TYPES[type_]
 
-        # wrap with optional if needed
+        # make optional if needed
         if var_.get("optional", True):
             var_["type"] = (
                 Optional[var_["type"]]
@@ -386,6 +388,15 @@ def get_template_context(
             var_["default"] = var.pop(
                 "default", False if var_["type"] is bool else None
             )
+
+        # remove backslashes from description
+        var_["description"] = var_.get("description", "").replace("\\", "")
+
+        # if name is a reserved keyword,
+        # add trailing underscore to it
+        var_["name"] = (
+            f"{var_['name']}_" if var_["name"] in kwlist else var_["name"]
+        )
 
         return var_
 
@@ -454,16 +465,26 @@ def test_get_template_context(dfn, n_flat, n_nested):
 
 from jinja2 import Environment, PackageLoader
 
-TEMPLATE_ENVS = {
-    "package": Environment(
-        loader=PackageLoader("flopy", "mf6/templates/package")
-    ),
-}
+
+class ComponentType(Enum):
+    Package = "package"
+    Simulation = "simulation"
+
+
+TEMPLATE_ENV = Environment(loader=PackageLoader("flopy", "mf6/templates/"))
+
+
+def get_component_type(component, subcomponent) -> ComponentType:
+    if component == "sim" and subcomponent == "nam":
+        return ComponentType.Simulation
+    else:
+        return ComponentType.Package
 
 
 @pytest.mark.parametrize(
     "dfn",
     [
+        # packages
         "gwf-ic",
         "prt-prp",
         "gwe-ctp",
@@ -471,14 +492,23 @@ TEMPLATE_ENVS = {
         "gwf-dis",
         "prt-mip",
         "prt-oc",
+        # models
+        "gwf-nam",
+        "gwt-nam",
+        "gwe-nam",
+        "prt-nam",
+        # solutions
+        "sln-ims",
+        "sln-ems",
+        # simulation
+        "sim-nam",
     ],
 )
-def test_render_package_template(dfn, function_tmpdir):
+def test_render_template(dfn, function_tmpdir):
     component, subcomponent = dfn.split("-")
     comp_name = f"{component}{subcomponent}"
-    comp_type = "package"
-    environment = TEMPLATE_ENVS[comp_type]
-    template = environment.get_template(f"{comp_type}.jinja")
+    comp_type = get_component_type(component, subcomponent).value
+    template = TEMPLATE_ENV.get_template(f"{comp_type}.jinja")
 
     with open(DFNS_PATH / f"{dfn}.dfn", "r") as f:
         variables, metadata = load_dfn(f)

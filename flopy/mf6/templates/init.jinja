@@ -5,8 +5,8 @@ def __init__(
         {%- for name, var in variables.items() %}
         {{ name }}: {{ var.type }} = {{ var.default }},
         {%- endfor %}
-        filename: typing.Optional[PathLike] = None,
-        pname: typing.Optional[str] = None,
+        filename: Optional[PathLike] = None,
+        pname: Optional[str] = None,
         **kwargs,
     ):
         super().__init__(
