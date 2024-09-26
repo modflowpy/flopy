@@ -46,6 +46,7 @@ test = [
     "coverage",
     "flaky",
     "filelock",
+    "Jinja2",
     "jupyter",
     "jupyter_client >=8.4.0", # avoid datetime.utcnow() deprecation warning
     "jupytext",
