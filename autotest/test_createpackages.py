@@ -5,6 +5,8 @@ from autotest.conftest import get_project_root_path
 from flopy.mf6.utils.createpackages import (
     TEMPLATE_ENV,
     TemplateType,
+    generate_components,
+    get_src_name,
     get_template_context,
 )
 from flopy.mf6.utils.dfn import load_dfn
@@ -48,8 +50,8 @@ def test_get_template_context(dfn, n_flat, n_nested):
 def test_render_template(dfn, function_tmpdir):
     component, subcomponent = dfn.split("-")
     context_name = f"{component}{subcomponent}"
-    context_type = TemplateType.from_pair(component, subcomponent).value
-    template = TEMPLATE_ENV.get_template(f"{context_type}.jinja")
+    template_type = TemplateType.from_pair(component, subcomponent).value
+    template = TEMPLATE_ENV.get_template(f"{template_type}.jinja")
 
     with open(DFNS_PATH / "common.dfn") as f:
         common_vars, _ = load_dfn(f)
@@ -64,7 +66,11 @@ def test_render_template(dfn, function_tmpdir):
         component, subcomponent, common_vars, flopy_vars, variables, metadata
     )
     source = template.render(**context)
-    source_path = function_tmpdir / f"{context_name}.py"
+    source_path = function_tmpdir / get_src_name(component, subcomponent)
     with open(source_path, "w") as f:
         f.write(source)
         run_cmd("ruff", "format", source_path, verbose=True)
+
+
+def test_generate_components(function_tmpdir):
+    generate_components(function_tmpdir, verbose=True)

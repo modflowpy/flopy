@@ -1,11 +1,11 @@
 {# A component class' docstring. #}
-    Modflow{{ component.title() }}{{ subcomponent }} defines a {{ subcomponent }} package within a {{ component }}6 model.
+    Modflow{{ title }} defines a {{ subcomponent }} package within a {{ parent.name }}.
 
     Parameters
     ----------
-    model : MFModel
-        Model that this package is a part of. Package is automatically
-        added to model when it is initialized.
+    {{ parent.name }} : {{ parent.type }}
+        {{ parent.name.title() }} that this package is a part of. Package is automatically
+        added to {{ parent.name }} when it is initialized.
 
     loading_package : bool
         Do not set this variable. It is intended for debugging and internal

@@ -7,9 +7,10 @@ from numpy.typing import NDArray
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 from flopy.mf6.mfmodel import MFModel
+from flopy.mf6 import MFSimulation
 
 
-class Modflow{{ component.title() }}{{ subcomponent }}(mfpackage.MFPackage):
+class Modflow{{ title }}(mfpackage.MFPackage):
     """{% include "docstring.jinja" %}"""
 
     {% include "attrs.jinja" %}

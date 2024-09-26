@@ -1,6 +1,6 @@
 {# Class attributes for a component class. #}
     {% for name, var in variables.items() if var.type %}
-    {%- if var.is_list or var.is_record %}
+    {%- if var.is_iterable or var.is_list or var.is_record %}
     {{ var.name }} = ListTemplateGenerator(("{{ component }}6", "{{ subcomponent }}", "{{ var.block }}", "{{ var.name }}"))
     {%- elif var.is_array %}
     {{ var.name }} = ArrayTemplateGenerator(("{{ component }}6", "{{ subcomponent }}", "{{ var.block }}", "{{ var.name }}"))

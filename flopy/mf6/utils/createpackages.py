@@ -81,6 +81,7 @@ files, the package classes, and updated init.py that createpackages.py created.
 
 """
 
+import collections
 import datetime
 import os
 import textwrap
@@ -90,6 +91,7 @@ from pathlib import Path
 from typing import (
     Dict,
     ForwardRef,
+    Iterable,
     List,
     Literal,
     Optional,
@@ -101,6 +103,7 @@ from typing import (
 
 import numpy as np
 from jinja2 import Environment, PackageLoader
+from modflow_devtools.misc import run_cmd
 from numpy.typing import NDArray
 
 # keep below as absolute imports
@@ -1195,6 +1198,8 @@ def fullname(t: type) -> str:
         return f"{Union.__name__}[{', '.join([fullname(a) for a in args])}]"
     elif origin is tuple:
         return f"{Tuple.__name__}[{', '.join([fullname(a) for a in args])}]"
+    elif origin is collections.abc.Iterable:
+        return f"{Iterable.__name__}[{', '.join([fullname(a) for a in args])}]"
     elif origin is list:
         return f"{List.__name__}[{', '.join([fullname(a) for a in args])}]"
     elif origin is np.ndarray:
@@ -1225,6 +1230,20 @@ def get_template_context(
     TODO: pull out a class for the input definition, and expose
     this as an instance method?
     """
+
+    def _title(comp, sub):
+        if comp == "sln":
+            return sub.title()
+        elif component == "exg":
+            return sub.title()
+        return f"{comp.title()}{sub}"
+
+    def _parent(comp, sub):
+        if comp in ["exg", "sln"]:
+            return {"name": "simulation", "type": "MFSimulation"}
+        if comp in ["utl"]:
+            return {"name": "package", "type": "MFPackage"}
+        return {"name": "model", "type": "MFModel"}
 
     def _convert(var: dict, wrap: bool = False) -> dict:
         """
@@ -1257,7 +1276,7 @@ def get_template_context(
             "is_list": False,
             "is_record": False,
             "is_union": False,
-            "is_variadic": False,
+            "is_iterable": False,
             "is_choice": False,
         }
         name_ = var["name"]
@@ -1365,7 +1384,7 @@ def get_template_context(
                     "is_record": True,
                     "is_union": False,
                     "is_list": False,
-                    "is_variadic": False,
+                    "is_iterable": False,
                     "is_choice": False,
                 }
                 var_["type"] = List[record_type]
@@ -1430,14 +1449,14 @@ def get_template_context(
         # at this point, if it has a shape, it's an array.
         # but if it's in a record use a variadic tuple.
         elif shape is not None:
+            scalars = list(SCALAR_TYPES.keys())
             if var.get("in_record", False):
-                if type_ not in SCALAR_TYPES.keys():
+                if type_ not in scalars:
                     raise TypeError(f"Unsupported repeating type: {type_}")
                 var_["type"] = Tuple[SCALAR_TYPES[type_], ...]
-                var_["is_variadic"] = True
-            elif type_ == "string":
-                var_["type"] = Tuple[SCALAR_TYPES[type_], ...]
-                var_["is_variadic"] = True
+            elif type_ in scalars:
+                var_["type"] = Iterable[SCALAR_TYPES[type_]]
+                var_["is_iterable"] = True
             else:
                 if type_ not in NP_SCALAR_TYPES.keys():
                     raise TypeError(f"Unsupported array type: {type_}")
@@ -1464,10 +1483,14 @@ def get_template_context(
                 else var_["type"]
             )
 
-            # keywords default to False, everything else to None
+            # keywords default to False, everything else to None.
+            # make sure strings are wrapped with quotation marks.
             var_["default"] = var.pop(
                 "default", False if var_["type"] is bool else None
             )
+            if isinstance(var_["default"], str):
+                default = var_["default"]
+                var_["default"] = f'"{default}"'
 
         # make substitutions from common variables
         # and remove backslashes from description
@@ -1511,16 +1534,46 @@ def get_template_context(
             var["children"] = {n: _qualify(c) for n, c in children.items()}
         return var
 
+    def _add_exg_vars(vars: dict) -> dict:
+        a = subcomponent[:3]
+        b = subcomponent[:3]
+        default = f"{a.upper()}6-{b.upper()}6"
+        return {
+            "exgtype": {
+                "name": "exgtype",
+                "type": "string",
+                "default": default,
+                "description": "The exchange type.",
+                "set_self": True,
+            },
+            "exgmnamea": {
+                "name": "exgmnamea",
+                "type": "string",
+                "description": "The name of the first model in the exchange.",
+                "set_self": True,
+            },
+            "exgmnameb": {
+                "name": "exgmnameb",
+                "type": "string",
+                "description": "The name of the second model in the exchange.",
+                "set_self": True,
+            },
+            **vars,
+        }
+
     def _variables(vars: dict) -> dict:
         """Get the class' member variables."""
-        return {
+        vars_ = vars.copy()
+        vars_ = _add_exg_vars(vars_) if component == "exg" else vars_
+        vars_ = {
             name: _qualify(_convert(var))
-            for name, var in vars.items()
+            for name, var in vars_.items()
             # filter components of composites
             # since we've inflated the parent
             # types in the hierarchy already
             if not var.get("in_record", False)
         }
+        return vars_
 
     def _dfn(vars: dict, meta: list) -> list:
         """
@@ -1545,6 +1598,8 @@ def get_template_context(
         ]
 
     return {
+        "title": _title(component, subcomponent),
+        "parent": _parent(component, subcomponent),
         "component": component,
         "subcomponent": subcomponent,
         "variables": _variables(definition),
@@ -1552,24 +1607,25 @@ def get_template_context(
     }
 
 
-def get_source_path(component, subcomponent):
+def get_src_name(component: str, subcomponent: str):
     def _name():
-        _case = (component, subcomponent)
-        if _case == ("sim", "nam"):
-            return "simulation"
-        elif _case == ("sim", "tdis"):
-            return "tdis"
+        if component == "sim":
+            if subcomponent == "nam":
+                return "simulation"
+            else:
+                return subcomponent
         elif component == "sln":
+            return subcomponent
+        elif component == "exg":
             return subcomponent
         return f"{component}{subcomponent}"
 
-    return SRCS_PATH / f"mf{_name()}.py"
+    return f"mf{_name()}.py"
 
 
-def generate_component(dfn_path):
+def generate_component(dfn_path: Path, out_path: Path, verbose: bool = False):
     comp, sub = dfn_path.stem.split("-")
-    py_path = get_source_path(comp, sub)
-    is_model = comp != "sim" and sub == "nam"
+    temp_type = TemplateType.from_pair(comp, sub)
 
     with open(DFNS_PATH / "common.dfn") as f:
         common_vars, _ = load_dfn(f)
@@ -1580,44 +1636,53 @@ def generate_component(dfn_path):
     with open(dfn_path, "r") as f:
         vars, meta = load_dfn(f)
 
-    with open(py_path, "w") as f:
+    # write simulation or package class file
+    src_path = out_path / get_src_name(comp, sub)
+    with open(src_path, "w") as f:
         context = get_template_context(
             component=comp,
             subcomponent=sub,
             common_vars=common_vars,
             flopy_vars=flopy_vars,
-            variables=vars,
+            definition=vars,
             metadata=meta,
         )
-        template = TEMPLATE_ENV.get_template(
-            f"{TemplateType.from_pair(comp, sub)}.jinja"
-        )
+        template = TEMPLATE_ENV.get_template(f"{temp_type.value}.jinja")
         source = template.render(**context)
+        if verbose:
+            print(f"Generating {src_path} from {dfn_path}")
         f.write(source)
 
-    if is_model:
-        py_path = SRCS_PATH / f"mf{comp}.py"
-        with open(py_path, "w") as f:
+    if temp_type == TemplateType.Model:
+        # write model class file
+        src_path = out_path / get_src_name(comp, "")
+        with open(src_path, "w") as f:
             context = get_template_context(
                 component=comp,
                 subcomponent=sub,
                 common_vars=common_vars,
                 flopy_vars=flopy_vars,
-                variables=vars,
+                definition=vars,
                 metadata=meta,
             )
-            template = TEMPLATE_ENV.get_template(
-                f"{TemplateType.from_pair(comp, sub)}.jinja"
-            )
+            template = TEMPLATE_ENV.get_template(f"{temp_type.value}.jinja")
             source = template.render(**context)
+            if verbose:
+                print(f"Generating {src_path} from {dfn_path}")
             f.write(source)
 
 
-def generate_components():
-    for dfn_path in DFNS_PATH.glob("*.dfn"):
-        generate_component(dfn_path)
+def generate_components(out_path: Path, verbose: bool = False):
+    dfn_paths = [
+        dfn
+        for dfn in DFNS_PATH.glob("*.dfn")
+        if dfn.stem not in ["common", "flopy"]
+    ]
+    for dfn_path in dfn_paths:
+        generate_component(dfn_path, out_path, verbose=verbose)
+    run_cmd("ruff", "format", out_path, verbose=verbose)
 
 
 if __name__ == "__main__":
     create_packages()
-    # generate_components
+    # generate_components(SRCS_PATH)
