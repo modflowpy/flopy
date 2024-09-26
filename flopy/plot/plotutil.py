@@ -1730,6 +1730,7 @@ class UnstructuredPlotUtilities:
             vdict
         """
         from ..utils.geometry import distance
+
         nodes = list(vdict.keys())
         dists = []
 

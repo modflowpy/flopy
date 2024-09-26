@@ -56,7 +56,7 @@ class PlotCrossSection:
         line=None,
         extent=None,
         geographic_coords=False,
-        min_segment_length=1e-02
+        min_segment_length=1e-02,
     ):
         self.ax = ax
         self.geographic_coords = geographic_coords
@@ -946,7 +946,9 @@ class PlotCrossSection:
 
         return patches
 
-    def plot_centers(self, a=None, s=None, masked_values=None, inactive=False, **kwargs):
+    def plot_centers(
+        self, a=None, s=None, masked_values=None, inactive=False, **kwargs
+    ):
         """
         Method to plot cell centers on cross-section using matplotlib
         scatter. This method accepts an optional data array(s) for
@@ -986,7 +988,7 @@ class PlotCrossSection:
                 self.mg.xoffset,
                 self.mg.yoffset,
                 self.mg.angrot_radians,
-                inverse=True
+                inverse=True,
             )
 
             for node, points in self.xypts.items():
@@ -994,10 +996,7 @@ class PlotCrossSection:
                 d0 = np.min(np.array(projpt).T[0])
 
                 xc_dist = geometry.project_point_onto_xc_line(
-                    points[:2],
-                    [xcs[node], ycs[node]],
-                    d0=d0,
-                    calc_dist=True
+                    points[:2], [xcs[node], ycs[node]], d0=d0, calc_dist=True
                 )
                 projctr[node] = xc_dist
 

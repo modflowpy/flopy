@@ -624,7 +624,9 @@ class PlotMapView:
         ax = self._set_axes_limits(ax)
         return patch_collection
 
-    def plot_centers(self, a=None, s=None, masked_values=None, inactive=False, **kwargs):
+    def plot_centers(
+        self, a=None, s=None, masked_values=None, inactive=False, **kwargs
+    ):
         """
         Method to plot cell centers on cross-section using matplotlib
         scatter. This method accepts an optional data array(s) for
@@ -650,29 +652,31 @@ class PlotMapView:
             matplotlib ax.scatter() object
         """
         ax = kwargs.pop("ax", self.ax)
-        
+
         xcenters = self.mg.get_xcellcenters_for_layer(self.layer).ravel()
         ycenters = self.mg.get_ycellcenters_for_layer(self.layer).ravel()
-        idomain = self.mg.get_plottable_layer_array(self.mg.idomain, self.layer).ravel()
-        
+        idomain = self.mg.get_plottable_layer_array(
+            self.mg.idomain, self.layer
+        ).ravel()
+
         active_ixs = list(range(len(xcenters)))
         if not inactive:
             active_ixs = np.where(idomain != 0)[0]
-        
+
         xcenters = xcenters[active_ixs]
         ycenters = ycenters[active_ixs]
-        
+
         if a is not None:
             a = self.mg.get_plottable_layer_array(a).ravel()
-            
+
             if masked_values is not None:
                 self._masked_values.extend(list(masked_values))
 
             for mval in self._masked_values:
                 a[a == mval] = np.nan
-            
+
             a = a[active_ixs]
-            
+
         if s is not None:
             if not isinstance(s, (int, float)):
                 s = self.mg.get_plottable_layer_array(s).ravel()

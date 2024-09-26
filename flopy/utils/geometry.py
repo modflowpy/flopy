@@ -926,8 +926,8 @@ def project_point_onto_xc_line(line, pts, d0=0, calc_dist=False):
     x = pts.T[0]
     y = pts.T[1]
 
-    bx = ((m * y) + (x - m * b)) / (1 + m ** 2)
-    by = ((m ** 2 * y) + (m * x) + b) / (1 + m ** 2)
+    bx = ((m * y) + (x - m * b)) / (1 + m**2)
+    by = ((m**2 * y) + (m * x) + b) / (1 + m**2)
 
     if calc_dist:
         # get distance between bxy, xy0
