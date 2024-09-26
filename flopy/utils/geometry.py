@@ -886,7 +886,7 @@ def point_in_polygon(xc, yc, polygon):
     return mask
 
 
-def project_point_onto_xc_line(line, pts, d0=0, direction="x"):
+def project_point_onto_xc_line(line, pts, d0=0, calc_dist=False):
     """
     Method to project points onto a cross sectional line
     that is defined by distance. Used for plotting MODPATH results
@@ -898,46 +898,80 @@ def project_point_onto_xc_line(line, pts, d0=0, direction="x"):
     pts : list or np.ndarray
         numpy array of [(x, y),] points to be projected
     d0 : distance offset along line of min(xl)
-    direction : string
-        projection direction "x" or "y"
+    calc_dist : bool
+        boolean flag to indicate that the return type is distance offset
+        by d0 (calculated from line[0]). If false this will return the
+        "projected" xy location along the cross-sectional line
+
 
     Returns:
-        np.ndarray of projected [(x, y),] points
+        tuple of (x , y) or distance
     """
     if isinstance(line, list):
         line = np.array(line)
 
     if isinstance(pts, list):
         pts = np.array(pts)
+        if pts.ndim == 1:
+            pts = np.expand_dims(pts, axis=0)
 
     x0, x1 = line.T[0, :]
     y0, y1 = line.T[1, :]
-    dx = np.abs(x0 - x1)
-    dy = np.abs(y0 - y1)
+    dx = x1 - x0
+    dy = y1 - y0
+    if dx == 0:
+        dx = 1e-10  # trap the vertical line condition to avoid inf slope
     m = dy / dx
     b = y0 - (m * x0)
     x = pts.T[0]
     y = pts.T[1]
 
-    if direction == "x":
-        if dy == 0:
-            pass
-        else:
-            y = (x * m) + b
+    bx = ((m * y) + (x - m * b)) / (1 + m ** 2)
+    by = ((m ** 2 * y) + (m * x) + b) / (1 + m ** 2)
+
+    if calc_dist:
+        # get distance between bxy, xy0
+        dist = distance(bx, by, x0, y0)
+        # get distance between xy0, xy1
+        dist0 = distance(x0, y0, x1, y1)
+        # get distance between bxy, xy1
+        dist1 = distance(bx, by, x1, y1)
+
+        adj = np.full((dist.size,), 1)
+        for ix, d in enumerate(dist):
+            if d <= dist0:
+                if dist1[ix] > dist0:
+                    adj[ix] = -1
+            else:
+                if dist1[ix] > d:
+                    adj[ix] = -1
+
+        dist *= adj
+        dist += d0
+        if len(dist) == 1:
+            dist = dist[0]
+        return dist
 
     else:
-        if dx == 0:
-            pass
-        else:
-            x = (y - b) / m
+        return bx, by
 
-    # now do distance equation on pts from x0, y0
-    asq = (x - x0) ** 2
-    bsq = (y - y0) ** 2
+
+def distance(x0, y0, x1, y1):
+    """
+    General distance equation
+
+    Parameters
+    ----------
+    x0 : float
+    y0 : float
+    x1 : np.array or float
+    y1 : np.array or float
+
+    Returns
+    -------
+        distance
+    """
+    asq = (x0 - x1) ** 2
+    bsq = (y0 - y1) ** 2
     dist = np.sqrt(asq + bsq)
-    if direction == "x":
-        x = dist + d0
-    else:
-        y = d0 - dist
-
-    return (x, y)
+    return dist
