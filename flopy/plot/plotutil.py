@@ -1736,9 +1736,13 @@ class UnstructuredPlotUtilities:
 
         for node in nodes:
             points = vdict[node]
-            pt0 = points[0]
-            pt1 = points[1]
-            dist = distance(pt0[0], pt0[1], pt1[0], pt1[1])
+            if len(points) < 2:
+                dist = 0
+            else:
+                pt0 = points[0]
+                pt1 = points[1]
+                dist = distance(pt0[0], pt0[1], pt1[0], pt1[1])
+
             dists.append(dist)
 
         dists = np.array(dists)
