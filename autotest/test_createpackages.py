@@ -4,7 +4,7 @@ from modflow_devtools.misc import run_cmd
 from autotest.conftest import get_project_root_path
 from flopy.mf6.utils.createpackages import (
     TEMPLATE_ENV,
-    ContextType,
+    TemplateType,
     get_template_context,
 )
 from flopy.mf6.utils.dfn import load_dfn
@@ -48,7 +48,7 @@ def test_get_template_context(dfn, n_flat, n_nested):
 def test_render_template(dfn, function_tmpdir):
     component, subcomponent = dfn.split("-")
     context_name = f"{component}{subcomponent}"
-    context_type = ContextType.from_pair(component, subcomponent).value
+    context_type = TemplateType.from_pair(component, subcomponent).value
     template = TEMPLATE_ENV.get_template(f"{context_type}.jinja")
 
     with open(DFNS_PATH / "common.dfn") as f:

@@ -29,9 +29,10 @@ classifiers = [
 ]
 requires-python = ">=3.8"
 dependencies = [
+    "Jinja2",
     "numpy>=1.20.3",
     "matplotlib >=1.4.0",
-    "pandas >=2.0.0"
+    "pandas >=2.0.0",
 ]
 dynamic = ["version", "readme"]
 
@@ -46,7 +47,6 @@ test = [
     "coverage",
     "flaky",
     "filelock",
-    "Jinja2",
     "jupyter",
     "jupyter_client >=8.4.0", # avoid datetime.utcnow() deprecation warning
     "jupytext",

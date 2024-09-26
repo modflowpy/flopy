@@ -1167,19 +1167,19 @@ NP_SCALAR_TYPES = {
 TEMPLATE_ENV = Environment(loader=PackageLoader("flopy", "mf6/templates/"))
 
 
-class ContextType(Enum):
+class TemplateType(Enum):
     Model = "model"
     Package = "package"
     Simulation = "simulation"
 
     @classmethod
-    def from_pair(cls, component, subcomponent) -> "ContextType":
+    def from_pair(cls, component, subcomponent) -> "TemplateType":
         if component == "sim" and subcomponent == "nam":
-            return ContextType.Simulation
+            return TemplateType.Simulation
         elif subcomponent == "nam":
-            return ContextType.Model
+            return TemplateType.Model
         else:
-            return ContextType.Package
+            return TemplateType.Package
 
 
 def fullname(t: type) -> str:
@@ -1590,7 +1590,7 @@ def generate_component(dfn_path):
             metadata=meta,
         )
         template = TEMPLATE_ENV.get_template(
-            f"{ContextType.from_pair(comp, sub)}.jinja"
+            f"{TemplateType.from_pair(comp, sub)}.jinja"
         )
         source = template.render(**context)
         f.write(source)
@@ -1607,7 +1607,7 @@ def generate_component(dfn_path):
                 metadata=meta,
             )
             template = TEMPLATE_ENV.get_template(
-                f"{ContextType.from_pair(comp, sub)}.jinja"
+                f"{TemplateType.from_pair(comp, sub)}.jinja"
             )
             source = template.render(**context)
             f.write(source)
