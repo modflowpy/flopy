@@ -85,9 +85,27 @@ import datetime
 import os
 import textwrap
 from enum import Enum
+from keyword import kwlist
+from pathlib import Path
+from typing import (
+    Dict,
+    ForwardRef,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Union,
+    get_args,
+    get_origin,
+)
+
+import numpy as np
+from jinja2 import Environment, PackageLoader
+from numpy.typing import NDArray
 
 # keep below as absolute imports
 from flopy.mf6.data import mfdatautil, mfstructure
+from flopy.mf6.utils.dfn import Definition, load_dfn
 from flopy.utils import datautil
 
 
@@ -1132,5 +1150,474 @@ def create_packages():
     init_file.close()
 
 
+DFNS_PATH = Path(__file__).parents[1] / "data" / "dfn"
+SRCS_PATH = Path(__file__).parents[1] / "modflow"
+SCALAR_TYPES = {
+    "keyword": bool,
+    "integer": int,
+    "double precision": float,
+    "string": str,
+}
+NP_SCALAR_TYPES = {
+    "keyword": np.bool_,
+    "integer": np.int_,
+    "double precision": np.float64,
+    "string": np.str_,
+}
+TEMPLATE_ENV = Environment(loader=PackageLoader("flopy", "mf6/templates/"))
+
+
+class ContextType(Enum):
+    Model = "model"
+    Package = "package"
+    Simulation = "simulation"
+
+    @classmethod
+    def from_pair(cls, component, subcomponent) -> "ContextType":
+        if component == "sim" and subcomponent == "nam":
+            return ContextType.Simulation
+        elif subcomponent == "nam":
+            return ContextType.Model
+        else:
+            return ContextType.Package
+
+
+def fullname(t: type) -> str:
+    """Convert a type to a name suitable for templating."""
+    origin = get_origin(t)
+    args = get_args(t)
+    if origin is Literal:
+        args = ['"' + a + '"' for a in args]
+        return f"{Literal.__name__}[{', '.join(args)}]"
+    elif origin is Union:
+        if len(args) == 2 and args[1] is type(None):
+            return f"{Optional.__name__}[{fullname(args[0])}]"
+        return f"{Union.__name__}[{', '.join([fullname(a) for a in args])}]"
+    elif origin is tuple:
+        return f"{Tuple.__name__}[{', '.join([fullname(a) for a in args])}]"
+    elif origin is list:
+        return f"{List.__name__}[{', '.join([fullname(a) for a in args])}]"
+    elif origin is np.ndarray:
+        return f"NDArray[np.{fullname(args[1].__args__[0])}]"
+    elif origin is np.dtype:
+        return str(t)
+    elif isinstance(t, ForwardRef):
+        return t.__forward_arg__
+    elif t is Ellipsis:
+        return "..."
+    elif isinstance(t, type):
+        return t.__qualname__
+    else:
+        return str(t)
+
+
+def get_template_context(
+    component: str,
+    subcomponent: str,
+    common_vars: Definition,
+    flopy_vars: Definition,
+    definition: Definition,
+    metadata: List[str],
+) -> dict:
+    """
+    Convert an input definition to a template rendering context.
+
+    TODO: pull out a class for the input definition, and expose
+    this as an instance method?
+    """
+
+    def _convert(var: dict, wrap: bool = False) -> dict:
+        """
+        Transform a variable from its original representation in
+        an input definition to a form suitable for type hints and
+        and docstrings.
+
+        This involves expanding nested type hierarchies, converting
+        input types to equivalent Python primitives and composites,
+        and various other shaping.
+
+        Notes
+        -----
+        If a `default_value` is not provided, keywords are `False`
+        by default. Everything else is `None` by default.
+
+        If `wrap` is true, scalars will be wrapped as records with
+        keywords represented as string literals. This is useful for
+        unions, to distinguish between choices having the same type.
+        """
+        var_ = {
+            **var,
+            # some flags the template uses for formatting.
+            # these are ofc derivable in Python but Jinja
+            # doesn't allow arbitrary expressions, and it
+            # doesn't seem to have `subclass`-ish filters.
+            # (we convert the variable type to string too
+            # before returning, for the same reason.)
+            "is_array": False,
+            "is_list": False,
+            "is_record": False,
+            "is_union": False,
+            "is_variadic": False,
+            "is_choice": False,
+        }
+        name_ = var["name"]
+        type_ = var["type"]
+        shape = var.get("shape", None)
+        shape = None if shape == "" else shape
+
+        # utilities for generating records
+        # as named tuples.
+
+        def _get_record_fields(name: str) -> dict:
+            """
+            Call `_map_var` recursively on each field
+            of the record variable with the given name.
+
+            Notes
+            -----
+            This function is provided because records
+            need extra processing; we remove keywords
+            and 'filein'/'fileout', which are details
+            of the mf6io format, not of python/flopy.
+            """
+            record = definition[name]
+            names = record["type"].split()[1:]
+            fields = {
+                n: {**_convert(field), "optional": field.get("optional", True)}
+                for n, field in definition.items()
+                if n in names
+            }
+            field_names = list(fields.keys())
+
+            # if the record represents a file...
+            if "file" in name:
+                # remove filein/fileout
+                for term in ["filein", "fileout"]:
+                    if term in field_names:
+                        fields.pop(term)
+
+                # remove leading keyword
+                keyword = next(iter(fields), None)
+                if keyword:
+                    fields.pop(keyword)
+
+                # set the type
+                n = list(fields.keys())[0]
+                path = fields[n]
+                path["type"] = os.PathLike
+                fields[n] = path
+
+            # if tagged, remove the leading keyword
+            elif record.get("tagged", False):
+                keyword = next(iter(fields), None)
+                if keyword:
+                    fields.pop(keyword)
+
+            return fields
+
+        # list input can have records or unions as rows.
+        # lists which have a consistent record type are
+        # regular, inconsistent record types irregular.
+        if type_.startswith("recarray"):
+            # make sure columns are defined
+            names = type_.split()[1:]
+            n_names = len(names)
+            if n_names < 1:
+                raise ValueError(f"Missing recarray definition: {type_}")
+
+            # regular tabular/columnar data (1 record type) can be
+            # defined with a nested record (i.e. explicit) or with
+            # fields directly inside the recarray (implicit). list
+            # data for unions/keystrings necessarily comes nested.
+
+            def _is_explicit_record():
+                return len(names) == 1 and definition[names[0]][
+                    "type"
+                ].startswith("record")
+
+            def _is_implicit_record():
+                types = [
+                    fullname(v["type"])
+                    for n, v in definition.items()
+                    if n in names
+                ]
+                scalar_types = list(SCALAR_TYPES.keys())
+                return all(t in scalar_types for t in types)
+
+            if _is_explicit_record():
+                name = names[0]
+                record_type = _convert(definition[name])
+                var_["type"] = List[record_type["type"]]
+                var_["children"] = {name: record_type}
+                var_["is_list"] = True
+            elif _is_implicit_record():
+                # record implicitly defined, make it on the fly
+                name = name_
+                fields = _get_record_fields(name)
+                record_type = Tuple[
+                    tuple([f["type"] for f in fields.values()])
+                ]
+                record = {
+                    "name": name,
+                    "type": record_type,
+                    "children": fields,
+                    "is_array": False,
+                    "is_record": True,
+                    "is_union": False,
+                    "is_list": False,
+                    "is_variadic": False,
+                    "is_choice": False,
+                }
+                var_["type"] = List[record_type]
+                var_["children"] = {name: record}
+                var_["is_list"] = True
+            else:
+                # irregular recarray, rows can be any of several types
+                children = {n: _convert(definition[n]) for n in names}
+                var_["type"] = List[
+                    Union[tuple([c["type"] for c in children.values()])]
+                ]
+                var_["children"] = children
+                var_["is_list"] = True
+
+        # now the basic composite types...
+        # union (product) type, children are choices of records
+        elif type_.startswith("keystring"):
+            names = type_.split()[1:]
+            children = {n: _convert(definition[n], wrap=True) for n in names}
+            var_["type"] = Union[tuple([c["type"] for c in children.values()])]
+            var_["children"] = children
+            var_["is_union"] = True
+
+        # record (sum) type, children are fields
+        elif type_.startswith("record"):
+            name = name_
+            fields = _get_record_fields(name)
+            if len(fields) > 1:
+                record_type = Tuple[
+                    tuple([c["type"] for c in fields.values()])
+                ]
+            elif len(fields) == 1:
+                t = list(fields.values())[0]["type"]
+                # make sure we don't double-wrap tuples
+                record_type = t if get_origin(t) is tuple else Tuple[(t,)]
+            # TODO: if record has 1 field, accept value directly?
+            var_["type"] = record_type
+            var_["children"] = fields
+            var_["is_record"] = True
+
+        # are we wrapping a choice in a union?
+        # if so, use a literal for the leading
+        # keyword like tuple (Literal[...], T)
+        elif wrap:
+            name = name_
+            field = _convert(var)
+            fields = {name: field}
+            field_type = (
+                Literal[name] if field["type"] is bool else field["type"]
+            )
+            record_type = (
+                Tuple[Literal[name]]
+                if field["type"] is bool
+                else Tuple[Literal[name], field["type"]]
+            )
+            fields[name] = {**field, "type": field_type}
+            var_["type"] = record_type
+            var_["children"] = fields
+            var_["is_record"] = True
+            var_["is_choice"] = True
+
+        # at this point, if it has a shape, it's an array.
+        # but if it's in a record use a variadic tuple.
+        elif shape is not None:
+            if var.get("in_record", False):
+                if type_ not in SCALAR_TYPES.keys():
+                    raise TypeError(f"Unsupported repeating type: {type_}")
+                var_["type"] = Tuple[SCALAR_TYPES[type_], ...]
+                var_["is_variadic"] = True
+            elif type_ == "string":
+                var_["type"] = Tuple[SCALAR_TYPES[type_], ...]
+                var_["is_variadic"] = True
+            else:
+                if type_ not in NP_SCALAR_TYPES.keys():
+                    raise TypeError(f"Unsupported array type: {type_}")
+                var_["type"] = NDArray[NP_SCALAR_TYPES[type_]]
+                var_["is_array"] = True
+
+        # finally a bog standard scalar
+        else:
+            # if it's a keyword tag for another
+            # variable, make it a string literal
+            tag = type_ == "keyword" and (wrap or var.get("tagged", False))
+            var_["type"] = Literal[name_] if tag else SCALAR_TYPES[type_]
+
+        # make optional if needed
+        if var_.get("optional", True):
+            var_["type"] = (
+                Optional[var_["type"]]
+                if (
+                    var_["type"] is not bool
+                    and var_.get("optional", True)
+                    and not var_.get("in_record", False)
+                    and not wrap
+                )
+                else var_["type"]
+            )
+
+            # keywords default to False, everything else to None
+            var_["default"] = var.pop(
+                "default", False if var_["type"] is bool else None
+            )
+
+        # make substitutions from common variables
+        # and remove backslashes from description
+        def _map_descr(description: str) -> str:
+            description = description.replace("\\", "")
+            _, replace, tail = description.strip().partition("REPLACE")
+            if replace:
+                key, _, replacements = tail.strip().partition(" ")
+                replacements = eval(replacements)
+                val = common_vars.get(key, None).get("description", "")
+                if val is None:
+                    raise ValueError(f"Common variable not found: {key}")
+                if any(replacements):
+                    return val.replace("{#1}", replacements["{#1}"])
+                return val
+            return description
+
+        var_["description"] = _map_descr(var_.get("description", ""))
+
+        # if name is a reserved keyword, add a trailing underscore to it
+        var_["name"] = (
+            f"{var_['name']}_" if var_["name"] in kwlist else var_["name"]
+        )
+
+        return var_
+
+    def _qualify(var: dict) -> dict:
+        """
+        Recursively convert the variable's type to a fully qualified string.
+
+        Notes
+        -----
+        Separate function operating on the entire variable (rather than the
+        type alone) because we want to pass typed definitions around until
+        conversion just before templating.
+        """
+
+        var["type"] = fullname(var["type"])
+        children = var.get("children", dict())
+        if any(children):
+            var["children"] = {n: _qualify(c) for n, c in children.items()}
+        return var
+
+    def _variables(vars: dict) -> dict:
+        """Get the class' member variables."""
+        return {
+            name: _qualify(_convert(var))
+            for name, var in vars.items()
+            # filter components of composites
+            # since we've inflated the parent
+            # types in the hierarchy already
+            if not var.get("in_record", False)
+        }
+
+    def _dfn(vars: dict, meta: list) -> list:
+        """
+        Get a list of the class' original definition attributes.
+
+        Notes
+        -----
+        Currently, generated classes have a `.dfn` property that
+        reproduces the corresponding DFN sans a few attributes.
+        This represents the DFN in raw form, before adapting to
+        Python, consolidating nested types, etc.
+        """
+
+        def _var_dfn(var: dict) -> List[str]:
+            exclude = ["longname", "description"]
+            return [
+                " ".join([k, v]) for k, v in var.items() if k not in exclude
+            ]
+
+        return [["header"] + [attr for attr in meta]] + [
+            _var_dfn(var) for var in vars.values()
+        ]
+
+    return {
+        "component": component,
+        "subcomponent": subcomponent,
+        "variables": _variables(definition),
+        "dfn": _dfn(definition, metadata),
+    }
+
+
+def get_source_path(component, subcomponent):
+    def _name():
+        _case = (component, subcomponent)
+        if _case == ("sim", "nam"):
+            return "simulation"
+        elif _case == ("sim", "tdis"):
+            return "tdis"
+        elif component == "sln":
+            return subcomponent
+        return f"{component}{subcomponent}"
+
+    return SRCS_PATH / f"mf{_name()}.py"
+
+
+def generate_component(dfn_path):
+    comp, sub = dfn_path.stem.split("-")
+    py_path = get_source_path(comp, sub)
+    is_model = comp != "sim" and sub == "nam"
+
+    with open(DFNS_PATH / "common.dfn") as f:
+        common_vars, _ = load_dfn(f)
+
+    with open(DFNS_PATH / "flopy.dfn") as f:
+        flopy_vars, _ = load_dfn(f)
+
+    with open(dfn_path, "r") as f:
+        vars, meta = load_dfn(f)
+
+    with open(py_path, "w") as f:
+        context = get_template_context(
+            component=comp,
+            subcomponent=sub,
+            common_vars=common_vars,
+            flopy_vars=flopy_vars,
+            variables=vars,
+            metadata=meta,
+        )
+        template = TEMPLATE_ENV.get_template(
+            f"{ContextType.from_pair(comp, sub)}.jinja"
+        )
+        source = template.render(**context)
+        f.write(source)
+
+    if is_model:
+        py_path = SRCS_PATH / f"mf{comp}.py"
+        with open(py_path, "w") as f:
+            context = get_template_context(
+                component=comp,
+                subcomponent=sub,
+                common_vars=common_vars,
+                flopy_vars=flopy_vars,
+                variables=vars,
+                metadata=meta,
+            )
+            template = TEMPLATE_ENV.get_template(
+                f"{ContextType.from_pair(comp, sub)}.jinja"
+            )
+            source = template.render(**context)
+            f.write(source)
+
+
+def generate_components():
+    for dfn_path in DFNS_PATH.glob("*.dfn"):
+        generate_component(dfn_path)
+
+
 if __name__ == "__main__":
     create_packages()
+    # generate_components
