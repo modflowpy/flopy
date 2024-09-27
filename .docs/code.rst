@@ -231,8 +231,8 @@ Contents:
 .. toctree::
    :maxdepth: 4
 
-   ./source/flopy.mf6.utils.createpackages.rst
-   ./source/flopy.mf6.utils.generate_classes.rst
+   ./source/flopy.mf6.createpackages.rst
+   ./source/flopy.mf6.generate_classes.rst
 
 
 Previous Versions of MODFLOW

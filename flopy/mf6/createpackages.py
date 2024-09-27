@@ -85,30 +85,41 @@ import collections
 import datetime
 import os
 import textwrap
+from abc import ABC, abstractmethod
+from dataclasses import asdict, dataclass, replace
 from enum import Enum
 from keyword import kwlist
+from os import PathLike
 from pathlib import Path
 from typing import (
+    Any,
     Dict,
     ForwardRef,
     Iterable,
     List,
     Literal,
+    NamedTuple,
     Optional,
     Tuple,
+    TypedDict,
     Union,
     get_args,
     get_origin,
 )
+from warnings import warn
 
 import numpy as np
 from jinja2 import Environment, PackageLoader
 from modflow_devtools.misc import run_cmd
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
+
+from flopy.mf6 import MFSimulation
 
 # keep below as absolute imports
 from flopy.mf6.data import mfdatautil, mfstructure
-from flopy.mf6.utils.dfn import Definition, load_dfn
+from flopy.mf6.mfmodel import MFModel
+from flopy.mf6.mfpackage import MFPackage
+from flopy.mf6.mfsimbase import MFSimulationBase
 from flopy.utils import datautil
 
 
@@ -858,7 +869,7 @@ def create_packages():
         local_datetime = datetime.datetime.now(datetime.timezone.utc)
         comment_string = (
             "# DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE "
-            "MUST BE CREATED BY\n# mf6/utils/createpackages.py\n"
+            "MUST BE CREATED BY\n# mf6/createpackages.py\n"
             "# FILE created on {} UTC".format(
                 local_datetime.strftime("%B %d, %Y %H:%M:%S")
             )
@@ -1153,8 +1164,11 @@ def create_packages():
     init_file.close()
 
 
-DFNS_PATH = Path(__file__).parents[1] / "data" / "dfn"
-SRCS_PATH = Path(__file__).parents[1] / "modflow"
+# ------------------------------------------
+
+
+DFN_PATH = Path(__file__).parent / "data" / "dfn"
+TGT_PATH = Path(__file__).parent / "modflow"
 SCALAR_TYPES = {
     "keyword": bool,
     "integer": int,
@@ -1170,22 +1184,147 @@ NP_SCALAR_TYPES = {
 TEMPLATE_ENV = Environment(loader=PackageLoader("flopy", "mf6/templates/"))
 
 
-class TemplateType(Enum):
+Scalar = Union[bool, int, float, str]
+Variable = Dict[str, Scalar]
+Variables = Dict[str, Variable]
+Metadata = List[str]
+Definition = Tuple[Variables, Metadata]
+Definitions = Dict[str, Definition]
+
+
+def load_dfn(f) -> Definition:
+    """
+    Load an input definition file. Returns a tuple containing
+    a dictionary variables and a list of metadata attributes.
+    """
+    meta = list()
+    vars = dict()
+    var = dict()
+
+    for line in f:
+        # remove whitespace/etc from the line
+        line = line.strip()
+
+        # record flopy metadata attributes but
+        # skip all other comment lines
+        if line.startswith("#"):
+            _, sep, tail = line.partition("flopy")
+            if sep == "flopy":
+                meta.append(tail.strip())
+            continue
+
+        # if we hit a newline and the parameter dict
+        # is nonempty, we've reached the end of its
+        # block of attributes
+        if not any(line):
+            if any(var):
+                vars[var["name"]] = var
+                var = dict()
+            continue
+
+        # split the attribute's key and value and
+        # store it in the parameter dictionary
+        key, _, value = line.partition(" ")
+        var[key] = value
+
+    # add the final parameter
+    if any(var):
+        vars[var["name"]] = var
+
+    return vars, meta
+
+
+class DefinitionName(NamedTuple):
+    l: str
+    r: str
+
+    @property
+    def title(self) -> str:
+        l, r = self
+        if l == "sln":
+            return r
+        elif l == "exg":
+            return r
+        return f"{l}{r}"
+
+    @property
+    def parent(self) -> type:
+        l, r = self
+        if l in ["exg", "sln"]:
+            return MFSimulation
+        if l in ["utl"]:
+            return MFPackage
+        return MFModel
+
+    @property
+    def parent_kind(self) -> str:
+        return self.parent.__name__.lower().replace("mf", "")
+
+    @property
+    def description(self) -> str:
+        l, r = self
+        title = self.title.title()
+        parent = self.parent
+        parent_kind = self.parent_kind
+        context = ContextType.from_dfn_name(self)
+        if context == ContextType.Package:
+            return (
+                f"Modflow{title} defines a {r} package "
+                f"within a {l} {parent_kind}."
+            )
+        elif context == ContextType.Model:
+            return f"Modflow{title} defines a {l.upper()} model."
+        elif context == ContextType.Simulation:
+            return """
+    MFSimulation is used to load, build, and/or save a MODFLOW 6 simulation.
+    A MFSimulation object must be created before creating any of the MODFLOW 6
+    model objects."""
+
+    @property
+    def target(self) -> str:
+        l, r = self
+
+        def _name():
+            if l == "sim":
+                if r == "nam":
+                    return "simulation"
+                else:
+                    return r
+            elif l == "sln":
+                return r
+            elif l == "exg":
+                return r
+            return f"{l}{r}"
+
+        return f"mf{_name()}.py"
+
+
+class ContextType(Enum):
     Model = "model"
     Package = "package"
     Simulation = "simulation"
 
+    @property
+    def base(self):
+        if self == ContextType.Model:
+            return MFModel
+        elif self == ContextType.Package:
+            return MFPackage
+        elif self == ContextType.Simulation:
+            return MFSimulationBase
+
     @classmethod
-    def from_pair(cls, component, subcomponent) -> "TemplateType":
-        if component == "sim" and subcomponent == "nam":
-            return TemplateType.Simulation
-        elif subcomponent == "nam":
-            return TemplateType.Model
+    def from_dfn_name(cls, dfn_name: DefinitionName) -> "ContextType":
+        l, r = dfn_name
+        if l == "sim" and r == "nam":
+            return ContextType.Simulation
+        elif r == "nam":
+            return ContextType.Model
         else:
-            return TemplateType.Package
+            return ContextType.Package
 
 
-def fullname(t: type) -> str:
+def _try_qualify(t) -> str:
     """Convert a type to a name suitable for templating."""
     origin = get_origin(t)
     args = get_args(t)
@@ -1194,16 +1333,20 @@ def fullname(t: type) -> str:
         return f"{Literal.__name__}[{', '.join(args)}]"
     elif origin is Union:
         if len(args) == 2 and args[1] is type(None):
-            return f"{Optional.__name__}[{fullname(args[0])}]"
-        return f"{Union.__name__}[{', '.join([fullname(a) for a in args])}]"
+            return f"{Optional.__name__}[{_try_qualify(args[0])}]"
+        return (
+            f"{Union.__name__}[{', '.join([_try_qualify(a) for a in args])}]"
+        )
     elif origin is tuple:
-        return f"{Tuple.__name__}[{', '.join([fullname(a) for a in args])}]"
+        return (
+            f"{Tuple.__name__}[{', '.join([_try_qualify(a) for a in args])}]"
+        )
     elif origin is collections.abc.Iterable:
-        return f"{Iterable.__name__}[{', '.join([fullname(a) for a in args])}]"
+        return f"{Iterable.__name__}[{', '.join([_try_qualify(a) for a in args])}]"
     elif origin is list:
-        return f"{List.__name__}[{', '.join([fullname(a) for a in args])}]"
+        return f"{List.__name__}[{', '.join([_try_qualify(a) for a in args])}]"
     elif origin is np.ndarray:
-        return f"NDArray[np.{fullname(args[1].__args__[0])}]"
+        return f"NDArray[np.{_try_qualify(args[1].__args__[0])}]"
     elif origin is np.dtype:
         return str(t)
     elif isinstance(t, ForwardRef):
@@ -1212,48 +1355,204 @@ def fullname(t: type) -> str:
         return "..."
     elif isinstance(t, type):
         return t.__qualname__
-    else:
-        return str(t)
+    return t
+
+
+def _try_enum_value(v: Any) -> Any:
+    return v.value if isinstance(v, Enum) else v
+
+
+def _try_de_underscore(k: str) -> str:
+    return k[1:] if k.startswith("_") else k
+
+
+def _render(d: dict) -> dict:
+    """
+    Recursively transform a dictionary for rendering in a template.
+    """
+
+    def _render_key(k):
+        return _try_de_underscore(k)
+
+    def _render_val(v):
+        return (
+            _render(v)
+            if isinstance(v, dict)
+            else _try_qualify(_try_enum_value(v))
+        )
+
+    # drop nones, except for default
+    _d = {
+        _render_key(k): _render_val(v)
+        for k, v in d.items()
+        if (k == "default" or v is not None)
+    }
+
+    # wrap default in quotation marks if it's a string
+    default = _d.get("default", None)
+    if default is not None and isinstance(default, str):
+        _d["default"] = f'"{default}"'
+
+    return _d
+
+
+class Renderable:
+    def render(self) -> dict:
+        """
+        Recursively transform the dataclass instance for rendering.
+        """
+        return _render(asdict(self))
+
+
+@dataclass(frozen=True)
+class Subpackage(Renderable):
+    parent: type
+    abbreviation: str
+    data_name: str
+    param_name: str
+    record_name: str
+
+
+class ParameterKind(Enum):
+    Array = "array"
+    Scalar = "scalar"
+    Record = "record"
+    Union = "union"
+    List = "list"
+
+    @classmethod
+    def from_type(cls, t: type) -> Optional["ParameterKind"]:
+        origin = get_origin(t)
+        try:
+            if t is np.ndarray or origin is NDArray or origin is ArrayLike:
+                return ParameterKind.Array
+            elif origin is collections.abc.Iterable or origin is list:
+                return ParameterKind.List
+            elif origin is tuple:
+                return ParameterKind.Record
+            elif origin is Union:
+                return ParameterKind.Union
+            elif issubclass(t, Scalar):
+                return ParameterKind.Scalar
+            return None
+        except:
+            pass
+
+
+@dataclass
+class Parameter(Renderable):
+    name: str
+    _type: type
+    description: Optional[str]
+    default: Optional[Any]
+    children: Optional[Dict[str, "Parameter"]]
+    subpackage: Optional[Subpackage]
+    kind: Optional[ParameterKind]
+    is_choice: bool = False
+    set_self: bool = False
+
+    def __init__(
+        self,
+        name: str,
+        _type: type,
+        description: Optional[str] = None,
+        default: Optional[Any] = None,
+        parent: Optional["Parameter"] = None,
+        children: Optional[Dict[str, "Parameter"]] = None,
+        subpackage: Optional[Subpackage] = None,
+        kind: Optional[ParameterKind] = None,
+        is_choice: bool = False,
+        set_self: bool = False,
+    ):
+        self.name = name
+        self._type = _type
+        self.description = description
+        self.default = default
+        self.parent = parent
+        self.children = children
+        self.subpackage = subpackage
+        # note the general kind of the parameter,
+        # i.e. the general type theoretic concept.
+        # this is ofc derivable on demand, but Jinja
+        # doesn't allow arbitrary expressions, and it
+        # doesn't seem to have `subclass`-ish filters.
+        self.kind = kind or ParameterKind.from_type(_type)
+        self.is_choice = is_choice
+        self.set_self = set_self
+
+
+Parameters = Dict[str, Parameter]
+
+
+def _try_get_subpkg(metadata: Metadata) -> Optional[Subpackage]:
+    lines = {
+        "subpkg": next(
+            iter(m for m in metadata if m.startswith("subpac")), None
+        ),
+        "parent": next(
+            iter(m for m in metadata if m.startswith("parent")), None
+        ),
+    }
+
+    def _subpkg():
+        line = lines["subpkg"]
+        _, record_name, abbreviation, param_name, data_name = line.split()
+        return {
+            "abbreviation": abbreviation,
+            "data_name": data_name,
+            "param_name": param_name,
+            "record_name": record_name,
+        }
+
+    def _parent():
+        line = lines["parent"]
+        _, _, param_type = line.split()
+        param_type = param_type.lower()
+        if "simulation" in param_type:
+            return MFSimulation
+        elif "model" in param_type:
+            return MFModel
+        return MFPackage
+
+    return (
+        Subpackage(parent=_parent(), **_subpkg())
+        if all(v for v in lines.values())
+        else None
+    )
 
 
 def get_template_context(
-    component: str,
-    subcomponent: str,
-    common_vars: Definition,
-    flopy_vars: Definition,
+    name: DefinitionName,
+    base: Union[MFSimulationBase, MFModel, MFPackage],
+    common: Variables,
     definition: Definition,
-    metadata: List[str],
+    references: Optional[Definitions] = None,
 ) -> dict:
     """
     Convert an input definition to a template rendering context.
 
-    TODO: pull out a class for the input definition, and expose
-    this as an instance method?
+    Notes
+    -----
+    Each input definition corresponds to a generated file/class.
+
+    A map of other definitions may be provided, in which case a
+    parameter in this context may act as kind of "foreign key",
+    identifying another context (e.g. a subpackage) which this
+    context "owns". This allows conditionally initializing any
+    subpackages in `__init__` for input contexts that use them.
     """
 
-    def _title(comp, sub):
-        if comp == "sln":
-            return sub.title()
-        elif component == "exg":
-            return sub.title()
-        return f"{comp.title()}{sub}"
+    variables, metadata = definition
 
-    def _parent(comp, sub):
-        if comp in ["exg", "sln"]:
-            return {"name": "simulation", "type": "MFSimulation"}
-        if comp in ["utl"]:
-            return {"name": "package", "type": "MFPackage"}
-        return {"name": "model", "type": "MFModel"}
-
-    def _convert(var: dict, wrap: bool = False) -> dict:
+    def _convert(variable: Variable, wrap: bool = False) -> Parameter:
         """
         Transform a variable from its original representation in
-        an input definition to a form suitable for type hints and
-        and docstrings.
+        an input definition to a parameter for inclusion in type
+        hints, docstrings, and the `__init__` method's signature.
 
-        This involves expanding nested type hierarchies, converting
-        input types to equivalent Python primitives and composites,
-        and various other shaping.
+        This involves expanding nested input hierarchies, mapping
+        types to roughly equivalent Python primitives/composites,
+        and other shaping.
 
         Notes
         -----
@@ -1264,33 +1563,39 @@ def get_template_context(
         keywords represented as string literals. This is useful for
         unions, to distinguish between choices having the same type.
         """
-        var_ = {
-            **var,
-            # some flags the template uses for formatting.
-            # these are ofc derivable in Python but Jinja
-            # doesn't allow arbitrary expressions, and it
-            # doesn't seem to have `subclass`-ish filters.
-            # (we convert the variable type to string too
-            # before returning, for the same reason.)
-            "is_array": False,
-            "is_list": False,
-            "is_record": False,
-            "is_union": False,
-            "is_iterable": False,
-            "is_choice": False,
-        }
-        name_ = var["name"]
-        type_ = var["type"]
-        shape = var.get("shape", None)
+
+        _name = variable["name"]
+        _type = variable.get("type", "unknown")
+        shape = variable.get("shape", None)
         shape = None if shape == "" else shape
+        optional = variable.get("optional", True)
+        in_record = variable.get("in_record", False)
+        tagged = variable.get("tagged, False")
+        description = variable.get("description", "")
+        children = None
 
-        # utilities for generating records
-        # as named tuples.
-
-        def _get_record_fields(name: str) -> dict:
+        def _description(description: str) -> str:
             """
-            Call `_map_var` recursively on each field
-            of the record variable with the given name.
+            Make substitutions from common variables,
+            remove backslashes from the description.
+            TODO: insert citations.
+            """
+            description = description.replace("\\", "")
+            _, replace, tail = description.strip().partition("REPLACE")
+            if replace:
+                key, _, replacements = tail.strip().partition(" ")
+                replacements = eval(replacements)
+                val = common.get(key, None).get("description", "")
+                if val is None:
+                    raise ValueError(f"Common variable not found: {key}")
+                if any(replacements):
+                    return val.replace("{#1}", replacements["{#1}"])
+                return val
+            return description
+
+        def _fields(record_name: str) -> Parameters:
+            """
+            Load a record's fields and recursively convert them.
 
             Notes
             -----
@@ -1299,17 +1604,17 @@ def get_template_context(
             and 'filein'/'fileout', which are details
             of the mf6io format, not of python/flopy.
             """
-            record = definition[name]
-            names = record["type"].split()[1:]
-            fields = {
-                n: {**_convert(field), "optional": field.get("optional", True)}
-                for n, field in definition.items()
-                if n in names
+            record = variables[record_name]
+            field_names = record["type"].split()[1:]
+            fields: Dict[str, Parameter] = {
+                n: _convert(field)
+                for n, field in variables.items()
+                if n in field_names
             }
             field_names = list(fields.keys())
 
             # if the record represents a file...
-            if "file" in name:
+            if "file" in record_name:
                 # remove filein/fileout
                 for term in ["filein", "fileout"]:
                     if term in field_names:
@@ -1322,9 +1627,9 @@ def get_template_context(
 
                 # set the type
                 n = list(fields.keys())[0]
-                path = fields[n]
-                path["type"] = os.PathLike
-                fields[n] = path
+                path_field = fields[n]
+                path_field._type = os.PathLike
+                fields[n] = path_field
 
             # if tagged, remove the leading keyword
             elif record.get("tagged", False):
@@ -1334,15 +1639,23 @@ def get_template_context(
 
             return fields
 
+        # now, proceed through the possible input types
+        # from top (composites) to bottom (primitives):
+        #   - list
+        #   - union
+        #   - record
+        #   - array
+        #   - scalar
+
         # list input can have records or unions as rows.
         # lists which have a consistent record type are
         # regular, inconsistent record types irregular.
-        if type_.startswith("recarray"):
+        if _type.startswith("recarray"):
             # make sure columns are defined
-            names = type_.split()[1:]
+            names = _type.split()[1:]
             n_names = len(names)
             if n_names < 1:
-                raise ValueError(f"Missing recarray definition: {type_}")
+                raise ValueError(f"Missing recarray definition: {_type}")
 
             # regular tabular/columnar data (1 record type) can be
             # defined with a nested record (i.e. explicit) or with
@@ -1350,234 +1663,365 @@ def get_template_context(
             # data for unions/keystrings necessarily comes nested.
 
             def _is_explicit_record():
-                return len(names) == 1 and definition[names[0]][
+                return len(names) == 1 and variables[names[0]][
                     "type"
                 ].startswith("record")
 
             def _is_implicit_record():
                 types = [
-                    fullname(v["type"])
-                    for n, v in definition.items()
+                    _try_qualify(v["type"])
+                    for n, v in variables.items()
                     if n in names
                 ]
                 scalar_types = list(SCALAR_TYPES.keys())
                 return all(t in scalar_types for t in types)
 
             if _is_explicit_record():
-                name = names[0]
-                record_type = _convert(definition[name])
-                var_["type"] = List[record_type["type"]]
-                var_["children"] = {name: record_type}
-                var_["is_list"] = True
+                record_name = names[0]
+                record_type = _convert(variables[record_name])
+                children = {record_name: record_type}
+                type_ = Iterable[record_type._type]
             elif _is_implicit_record():
                 # record implicitly defined, make it on the fly
-                name = name_
-                fields = _get_record_fields(name)
+                record_name = _name
+                record_fields = _fields(record_name)
                 record_type = Tuple[
-                    tuple([f["type"] for f in fields.values()])
+                    tuple([f._type for f in record_fields.values()])
                 ]
-                record = {
-                    "name": name,
-                    "type": record_type,
-                    "children": fields,
-                    "is_array": False,
-                    "is_record": True,
-                    "is_union": False,
-                    "is_list": False,
-                    "is_iterable": False,
-                    "is_choice": False,
-                }
-                var_["type"] = List[record_type]
-                var_["children"] = {name: record}
-                var_["is_list"] = True
+                record = Parameter(
+                    name=record_name,
+                    _type=record_type,
+                    children=record_fields,
+                )
+                children = {record_name: record}
+                type_ = Iterable[record_type]
             else:
                 # irregular recarray, rows can be any of several types
-                children = {n: _convert(definition[n]) for n in names}
-                var_["type"] = List[
-                    Union[tuple([c["type"] for c in children.values()])]
+                children = {n: _convert(variables[n]) for n in names}
+                type_ = Iterable[
+                    Union[tuple([c._type for c in children.values()])]
                 ]
-                var_["children"] = children
-                var_["is_list"] = True
 
-        # now the basic composite types...
-        # union (product) type, children are choices of records
-        elif type_.startswith("keystring"):
-            names = type_.split()[1:]
-            children = {n: _convert(definition[n], wrap=True) for n in names}
-            var_["type"] = Union[tuple([c["type"] for c in children.values()])]
-            var_["children"] = children
-            var_["is_union"] = True
+        # basic composite types...
+        # union (product), children are record choices
+        elif _type.startswith("keystring"):
+            names = _type.split()[1:]
+            children = {n: _convert(variables[n], wrap=True) for n in names}
+            type_ = Union[tuple([c._type for c in children.values()])]
 
         # record (sum) type, children are fields
-        elif type_.startswith("record"):
-            name = name_
-            fields = _get_record_fields(name)
-            if len(fields) > 1:
+        elif _type.startswith("record"):
+            children = _fields(_name)
+            if len(children) > 1:
                 record_type = Tuple[
-                    tuple([c["type"] for c in fields.values()])
+                    tuple([c._type for c in children.values()])
                 ]
-            elif len(fields) == 1:
-                t = list(fields.values())[0]["type"]
+            elif len(children) == 1:
+                t = list(children.values())[0]._type
                 # make sure we don't double-wrap tuples
                 record_type = t if get_origin(t) is tuple else Tuple[(t,)]
             # TODO: if record has 1 field, accept value directly?
-            var_["type"] = record_type
-            var_["children"] = fields
-            var_["is_record"] = True
+            type_ = record_type
 
-        # are we wrapping a choice in a union?
-        # if so, use a literal for the leading
-        # keyword like tuple (Literal[...], T)
+        # are we wrapping a record which is a
+        # choice within a union? if so, use a
+        # literal for the keyword as tag e.g.
+        # `Tuple[Literal[...], T]`
         elif wrap:
-            name = name_
-            field = _convert(var)
-            fields = {name: field}
+            field_name = _name
+            field = _convert(variable)
             field_type = (
-                Literal[name] if field["type"] is bool else field["type"]
+                Literal[field_name] if field._type is bool else field._type
             )
             record_type = (
-                Tuple[Literal[name]]
-                if field["type"] is bool
-                else Tuple[Literal[name], field["type"]]
+                Tuple[Literal[field_name]]
+                if field._type is bool
+                else Tuple[Literal[field_name], field._type]
             )
-            fields[name] = {**field, "type": field_type}
-            var_["type"] = record_type
-            var_["children"] = fields
-            var_["is_record"] = True
-            var_["is_choice"] = True
+            children = {
+                field_name: replace(field, _type=field_type, is_choice=True)
+            }
+            type_ = record_type
 
-        # at this point, if it has a shape, it's an array.
-        # but if it's in a record use a variadic tuple.
+        # at this point, if it has a shape, it's an array..
+        # but if it's in a record make it a variadic tuple,
+        # and if its item type is a string use an iterable.
         elif shape is not None:
             scalars = list(SCALAR_TYPES.keys())
-            if var.get("in_record", False):
-                if type_ not in scalars:
-                    raise TypeError(f"Unsupported repeating type: {type_}")
-                var_["type"] = Tuple[SCALAR_TYPES[type_], ...]
-            elif type_ in scalars:
-                var_["type"] = Iterable[SCALAR_TYPES[type_]]
-                var_["is_iterable"] = True
+            if in_record:
+                if _type not in scalars:
+                    raise TypeError(f"Unsupported repeating type: {_type}")
+                type_ = Tuple[SCALAR_TYPES[_type], ...]
+            elif _type in scalars and SCALAR_TYPES[_type] is str:
+                type_ = Iterable[SCALAR_TYPES[_type]]
             else:
-                if type_ not in NP_SCALAR_TYPES.keys():
-                    raise TypeError(f"Unsupported array type: {type_}")
-                var_["type"] = NDArray[NP_SCALAR_TYPES[type_]]
-                var_["is_array"] = True
+                if _type not in NP_SCALAR_TYPES.keys():
+                    raise TypeError(f"Unsupported array type: {_type}")
+                type_ = NDArray[NP_SCALAR_TYPES[_type]]
 
         # finally a bog standard scalar
         else:
-            # if it's a keyword tag for another
-            # variable, make it a string literal
-            tag = type_ == "keyword" and (wrap or var.get("tagged", False))
-            var_["type"] = Literal[name_] if tag else SCALAR_TYPES[type_]
+            # if it's a keyword, there are two cases we want to convert it to
+            # a string literal: if it's 1) tagging another variable, or 2) it
+            # is being wrapped into a record to represent a choice in a union
+            tag = _type == "keyword" and (tagged or wrap)
+            type_ = Literal[_name] if tag else SCALAR_TYPES.get(_type, _type)
 
         # make optional if needed
-        if var_.get("optional", True):
-            var_["type"] = (
-                Optional[var_["type"]]
-                if (
-                    var_["type"] is not bool
-                    and var_.get("optional", True)
-                    and not var_.get("in_record", False)
-                    and not wrap
-                )
-                else var_["type"]
+        if optional:
+            type_ = (
+                Optional[type_]
+                if (type_ is not bool and not in_record and not wrap)
+                else type_
             )
 
-            # keywords default to False, everything else to None.
-            # make sure strings are wrapped with quotation marks.
-            var_["default"] = var.pop(
-                "default", False if var_["type"] is bool else None
-            )
-            if isinstance(var_["default"], str):
-                default = var_["default"]
-                var_["default"] = f'"{default}"'
+        # keywords default to False, everything else to None
+        default = variable.get("default", False if type_ is bool else None)
 
-        # make substitutions from common variables
-        # and remove backslashes from description
-        def _map_descr(description: str) -> str:
-            description = description.replace("\\", "")
-            _, replace, tail = description.strip().partition("REPLACE")
-            if replace:
-                key, _, replacements = tail.strip().partition(" ")
-                replacements = eval(replacements)
-                val = common_vars.get(key, None).get("description", "")
-                if val is None:
-                    raise ValueError(f"Common variable not found: {key}")
-                if any(replacements):
-                    return val.replace("{#1}", replacements["{#1}"])
-                return val
-            return description
-
-        var_["description"] = _map_descr(var_.get("description", ""))
-
-        # if name is a reserved keyword, add a trailing underscore to it
-        var_["name"] = (
-            f"{var_['name']}_" if var_["name"] in kwlist else var_["name"]
+        return Parameter(
+            # if name is a reserved keyword, add a trailing underscore to it
+            name=f"{_name}_" if _name in kwlist else _name,
+            # MF6IO type is mapped to a (lenient) Python equivalent
+            _type=type_,
+            # default value
+            default=default,
+            # do substitutions, expand citations, apply formatting, etc
+            description=_description(description),
+            # child parameters
+            children=children,
+            # does variable reference another context (e.g. subpkg)?
+            subpackage=references.get(_name, None) if references else None,
         )
 
-        return var_
+    def _add_exg_params(params: Parameters) -> Parameters:
+        a = name.r[:3]
+        b = name.r[:3]
+        default = f"{a.upper()}6-{b.upper()}6"
+        return {
+            "exgtype": Parameter(
+                **{
+                    "name": "exgtype",
+                    "_type": str,
+                    "default": default,
+                    "description": "The exchange type.",
+                    "set_self": True,
+                }
+            ),
+            "exgmnamea": Parameter(
+                **{
+                    "name": "exgmnamea",
+                    "_type": str,
+                    "description": "The name of the first model in the exchange.",
+                    "set_self": True,
+                }
+            ),
+            "exgmnameb": Parameter(
+                **{
+                    "name": "exgmnameb",
+                    "_type": str,
+                    "description": "The name of the second model in the exchange.",
+                    "set_self": True,
+                }
+            ),
+            **params,
+        }
 
-    def _qualify(var: dict) -> dict:
+    def _add_pkg_params(params: Parameters) -> Parameters:
+        parent_type = name.parent
+        parent_name = parent_type.__name__.lower().replace("mf", "")
+        is_subpkg = name[0] in ["utl"]
+        out = {
+            parent_name: Parameter(
+                **{
+                    "name": parent_name,
+                    "_type": parent_type,
+                    "description": (
+                        f"{parent_name.title()} that this package is part of. "
+                        f"Package is automatically added to the {parent_name} "
+                        "when it is initialized."
+                    ),
+                }
+            ),
+            "loading_package": Parameter(
+                **{
+                    "name": "loading_package",
+                    "_type": bool,
+                    "description": (
+                        "Do not set this variable. It is intended for debugging "
+                        "and internal processing purposes only."
+                    ),
+                }
+            ),
+            **params,
+            "filename": Parameter(
+                **{
+                    "name": "filename",
+                    "_type": str,
+                    "description": "File name for this package.",
+                }
+            ),
+            "pname": Parameter(
+                **{
+                    "name": "pname",
+                    "_type": str,
+                    "description": "Package name for this package.",
+                }
+            ),
+        }
+        if is_subpkg:
+            out["parent_file"] = Parameter(
+                **{
+                    "name": "parent_file",
+                    "_type": PathLike,
+                    "description": (
+                        "Parent package file that references this package. Only needed "
+                        "for utility packages (mfutl*). For example, mfutllaktab package "
+                        "must have a mfgwflak package parent_file."
+                    ),
+                }
+            )
+        return out
+
+    def _add_mdl_params(params: Parameters) -> Parameters:
+        return {
+            "simulation": Parameter(
+                **{
+                    "name": "simulation",
+                    "_type": MFSimulation,
+                    "description": (
+                        "Simulation that this model is part of. "
+                        "Model is automatically added to the simulation "
+                        "when it is initialized."
+                    ),
+                }
+            ),
+            "modelname": Parameter(
+                **{
+                    "name": "modelname",
+                    "_type": str,
+                    "description": "The name of the model.",
+                }
+            ),
+            "model_nam_file": Parameter(
+                **{
+                    "name": "model_nam_file",
+                    "_type": PathLike,
+                    "description": (
+                        "The relative path to the model name file from model working folder."
+                    ),
+                }
+            ),
+            "version": Parameter(
+                **{
+                    "name": "version",
+                    "_type": str,
+                    "description": "The version of modflow",
+                }
+            ),
+            "exe_name": Parameter(
+                **{
+                    "name": "exe_name",
+                    "_type": str,
+                    "description": "The executable name.",
+                }
+            ),
+            "model_ws": Parameter(
+                **{
+                    "name": "model_ws",
+                    "_type": PathLike,
+                    "description": "The model working folder path.",
+                }
+            ),
+            **params,
+        }
+
+    def _add_sim_params(params: Parameters) -> Parameters:
+        sim_params = {
+            "sim_name": Parameter(
+                name="sim_name",
+                _type=str,
+                default="sim",
+                description="Name of the simulation.",
+            ),
+            "version": Parameter(
+                name="version",
+                _type=str,
+                default="mf6",
+            ),
+            "exe_name": Parameter(
+                name="exe_name",
+                _type=PathLike,
+                default="mf6",
+            ),
+            "sim_ws": Parameter(
+                name="sim_ws",
+                _type=PathLike,
+                default=os.curdir,
+            ),
+            "verbosity_level": Parameter(
+                name="verbosity_level",
+                _type=int,
+                default=1,
+            ),
+            "write_headers": Parameter(
+                name="write_headers",
+                _type=bool,
+                default=True,
+            ),
+            "use_pandas": Parameter(
+                name="use_pandas",
+                _type=bool,
+                default=True,
+            ),
+            "lazy_io": Parameter(
+                name="lazy_io",
+                _type=bool,
+                default=False,
+            ),
+        }
+        return {
+            **sim_params,
+            **params,
+        }
+
+    def _parameters(definition: Definition) -> Parameters:
         """
-        Recursively convert the variable's type to a fully qualified string.
+        Convert the input variables to parameters for an input
+        context class. Context-specific parameters may also be
+        added depending.
 
         Notes
         -----
-        Separate function operating on the entire variable (rather than the
-        type alone) because we want to pass typed definitions around until
-        conversion just before templating.
+        Not all variables become parameters; nested variables
+        will become components of composite parameters, e.g.,
+        record fields, keystring (union) choices, list items.
         """
 
-        var["type"] = fullname(var["type"])
-        children = var.get("children", dict())
-        if any(children):
-            var["children"] = {n: _qualify(c) for n, c in children.items()}
-        return var
-
-    def _add_exg_vars(vars: dict) -> dict:
-        a = subcomponent[:3]
-        b = subcomponent[:3]
-        default = f"{a.upper()}6-{b.upper()}6"
-        return {
-            "exgtype": {
-                "name": "exgtype",
-                "type": "string",
-                "default": default,
-                "description": "The exchange type.",
-                "set_self": True,
-            },
-            "exgmnamea": {
-                "name": "exgmnamea",
-                "type": "string",
-                "description": "The name of the first model in the exchange.",
-                "set_self": True,
-            },
-            "exgmnameb": {
-                "name": "exgmnameb",
-                "type": "string",
-                "description": "The name of the second model in the exchange.",
-                "set_self": True,
-            },
-            **vars,
-        }
-
-    def _variables(vars: dict) -> dict:
-        """Get the class' member variables."""
-        vars_ = vars.copy()
-        vars_ = _add_exg_vars(vars_) if component == "exg" else vars_
-        vars_ = {
-            name: _qualify(_convert(var))
-            for name, var in vars_.items()
-            # filter components of composites
-            # since we've inflated the parent
-            # types in the hierarchy already
+        vars, _ = definition
+        _vars = vars.copy()
+        params = {
+            name: _convert(var)
+            for name, var in _vars.items()
+            # filter composite components
+            # since we've already inflated
+            # parent types in the hierarchy
             if not var.get("in_record", False)
         }
-        return vars_
+        l, r = name
+        if l == "sim" and r == "nam":
+            params = _add_sim_params(params)
+        elif l == "exg":
+            params = _add_exg_params(params)
+        elif r == "nam":
+            params = _add_mdl_params(params)
+        else:
+            params = _add_pkg_params(params)
+        return {n: p.render() for n, p in params.items()}
 
-    def _dfn(vars: dict, meta: list) -> list:
+    def _dfn(definition: Definition) -> List[Metadata]:
         """
-        Get a list of the class' original definition attributes.
+        Get a list of the class' original definition attributes,
+        as an internal/partial reproduction of the DFN contents.
 
         Notes
         -----
@@ -1587,102 +2031,150 @@ def get_template_context(
         Python, consolidating nested types, etc.
         """
 
-        def _var_dfn(var: dict) -> List[str]:
+        vars, meta = definition
+
+        def _to_dfn_fmt(var: Variable) -> List[str]:
             exclude = ["longname", "description"]
             return [
                 " ".join([k, v]) for k, v in var.items() if k not in exclude
             ]
 
         return [["header"] + [attr for attr in meta]] + [
-            _var_dfn(var) for var in vars.values()
+            _to_dfn_fmt(var) for var in vars.values()
         ]
 
     return {
-        "title": _title(component, subcomponent),
-        "parent": _parent(component, subcomponent),
-        "component": component,
-        "subcomponent": subcomponent,
-        "variables": _variables(definition),
-        "dfn": _dfn(definition, metadata),
+        # the input definition's name.
+        "name": name,
+        # the corresponding context class name.
+        "class": name.title,
+        # the base class the context class inherits from.
+        "base": _try_qualify(base),
+        # contexts may be attached to a parent context type.
+        "parent": {
+            "name": name.title,
+            "type": _try_qualify(name.parent),
+            "kind": name.parent_kind,
+        },
+        # the context's description. header of the docstring.
+        "description": name.description,
+        # the context's parameters. inserted into docstring
+        # and __init__ method, optionally set in __init__.
+        "parameters": _parameters(definition),
+        # reproduction of (most of the) original DFN.
+        "dfn": _dfn(definition),
     }
 
 
-def get_src_name(component: str, subcomponent: str):
-    def _name():
-        if component == "sim":
-            if subcomponent == "nam":
-                return "simulation"
-            else:
-                return subcomponent
-        elif component == "sln":
-            return subcomponent
-        elif component == "exg":
-            return subcomponent
-        return f"{component}{subcomponent}"
+def generate_target(
+    dfn_name: DefinitionName,
+    out_path: Path,
+    common: Variables,
+    definition: Definition,
+    subpackages: Definitions,
+    verbose: bool = False,
+):
+    """
+    Generate Python source file(s) from the given input definition.
 
-    return f"mf{_name()}.py"
+    Notes
+    -----
 
+    Model definitions will produce two files / classes, one for the
+    model itself and one for its corresponding control file package.
+    """
 
-def generate_component(dfn_path: Path, out_path: Path, verbose: bool = False):
-    comp, sub = dfn_path.stem.split("-")
-    temp_type = TemplateType.from_pair(comp, sub)
-
-    with open(DFNS_PATH / "common.dfn") as f:
-        common_vars, _ = load_dfn(f)
-
-    with open(DFNS_PATH / "flopy.dfn") as f:
-        flopy_vars, _ = load_dfn(f)
-
-    with open(dfn_path, "r") as f:
-        vars, meta = load_dfn(f)
-
-    # write simulation or package class file
-    src_path = out_path / get_src_name(comp, sub)
-    with open(src_path, "w") as f:
-        context = get_template_context(
-            component=comp,
-            subcomponent=sub,
-            common_vars=common_vars,
-            flopy_vars=flopy_vars,
-            definition=vars,
-            metadata=meta,
-        )
-        template = TEMPLATE_ENV.get_template(f"{temp_type.value}.jinja")
+    template = TEMPLATE_ENV.get_template("context.jinja")
+    context_type = ContextType.from_dfn_name(dfn_name)
+    context_base = context_type.base
+    target_path = out_path / dfn_name.target
+    with open(target_path, "w") as f:
+        context = {
+            "context": context_type.value,
+            **get_template_context(
+                name=dfn_name,
+                base=context_base,
+                common=common,
+                definition=definition,
+                references=subpackages,
+            ),
+        }
         source = template.render(**context)
         if verbose:
-            print(f"Generating {src_path} from {dfn_path}")
+            print(f"Generating {target_path}")
         f.write(source)
 
-    if temp_type == TemplateType.Model:
-        # write model class file
-        src_path = out_path / get_src_name(comp, "")
-        with open(src_path, "w") as f:
-            context = get_template_context(
-                component=comp,
-                subcomponent=sub,
-                common_vars=common_vars,
-                flopy_vars=flopy_vars,
-                definition=vars,
-                metadata=meta,
-            )
-            template = TEMPLATE_ENV.get_template(f"{temp_type.value}.jinja")
+    # bc models are defined in `<mdl>-nam.dfn` files,
+    # we wrote the model class file above, also need
+    # to write the package class file.
+    if context_type == ContextType.Model:
+        _dfn_name = DefinitionName(l=dfn_name.l, r="")
+        target_path = out_path / _dfn_name.target
+        with open(target_path, "w") as f:
+            context = {
+                "context": "package",
+                **get_template_context(
+                    name=_dfn_name,
+                    base=MFPackage,
+                    common=common,
+                    definition=definition,
+                    references=subpackages,
+                ),
+            }
             source = template.render(**context)
             if verbose:
-                print(f"Generating {src_path} from {dfn_path}")
+                print(f"Generating {target_path}")
             f.write(source)
 
 
-def generate_components(out_path: Path, verbose: bool = False):
+def generate_targets(dfn_path: Path, out_path: Path, verbose: bool = False):
+    """Generate Python source files from the DFN files in the given location."""
+
+    # find definition files
     dfn_paths = [
         dfn
-        for dfn in DFNS_PATH.glob("*.dfn")
+        for dfn in dfn_path.glob("*.dfn")
         if dfn.stem not in ["common", "flopy"]
     ]
-    for dfn_path in dfn_paths:
-        generate_component(dfn_path, out_path, verbose=verbose)
+
+    # try to load common variables
+    if not any(p.stem == "common" for p in dfn_paths):
+        warn("No common input definition file...")
+    with open(dfn_path / "common.dfn") as f:
+        common, _ = load_dfn(f)
+
+    # load and generate subpackages first so we can
+    # identify references to them in other contexts
+    subpkg_paths = [dfn for dfn in dfn_paths if dfn.stem.startswith("utl")]
+    subpkgs = dict()
+    for p in subpkg_paths:
+        l, r = p.stem.split("-")
+        name = DefinitionName(l, r)
+        with open(p) as f:
+            variables, metadata = load_dfn(f)
+            definition = (variables, metadata)
+            subpackage = _try_get_subpkg(metadata)
+            if subpackage:
+                subpkgs[r] = subpackage
+            else:
+                warn(f"{name} lacks subpackage metadata, only: {metadata}")
+            generate_target(
+                name, out_path, common, definition, subpkgs, verbose
+            )
+
+    # load and generate the rest of the contexts
+    context_paths = [p for p in dfn_paths if p not in subpkg_paths]
+    for p in context_paths:
+        name = DefinitionName(*p.stem.split("-"))
+        with open(p) as f:
+            definition = load_dfn(f)
+            generate_target(
+                name, out_path, common, definition, subpkgs, verbose
+            )
+
+    # format the generated file
     run_cmd("ruff", "format", out_path, verbose=verbose)
 
 
 if __name__ == "__main__":
-    create_packages()
-    # generate_components(SRCS_PATH)
+    generate_targets(DFN_PATH, TGT_PATH)

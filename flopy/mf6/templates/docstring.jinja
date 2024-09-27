@@ -1,11 +1,11 @@
 {# A component class' docstring. #}
-    Modflow{{ title }} defines a {{ subcomponent }} package within a {{ parent.name }}.
+    {{ description }}
 
     Parameters
     ----------
     {{ parent.name }} : {{ parent.type }}
-        {{ parent.name.title() }} that this package is a part of. Package is automatically
-        added to {{ parent.name }} when it is initialized.
+        {{ parent.kind.title() }} that this package is a part of. Package is automatically
+        added to the parent {{ parent.kind }} when it is initialized.
 
     loading_package : bool
         Do not set this variable. It is intended for debugging and internal

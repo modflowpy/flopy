@@ -1,26 +1,67 @@
 def __init__(
         self,
-        {{ parent.name }}: {{ parent.type }},
-        loading_package: bool = False,
-        {%- for name, var in variables.items() %}
-        {{ name }}: {{ var.type }} = {{ var.default }},
+        {%- for name, param in parameters.items() %}
+        {{ name }}: {{ param.type }} = {{ param.default }},
         {%- endfor %}
-        filename: Optional[PathLike] = None,
-        pname: Optional[str] = None,
         **kwargs,
     ):
+{% if context == "simulation" %}
         super().__init__(
-            {{ parent.name }}, "{{ subcomponent }}", filename, pname, loading_package, **kwargs
+            {%- for name in parameters.keys() %}
+            {{ name }}={{ name }},
+            {%- endfor %},
+            **kwargs
         )
 
-        # set up variables
-        {%- for name, var in variables.items() if not var.set_self %}
-        self.{{ name }} = self.build_mfdata("{{ name }}", {{ name }})
-        {%- endfor %}
-        {%- for name, var in variables.items() if var.set_self %}
+        {%- for name, param in parameters.items() if param.block == "options" %}
+        self.name_file.{{ name }}.set_data({{ name }})
+        self.{{ name }} = self.name_file.{{ name }},
+        {%- if param.subpackage is defined %}
+        self{{ param.subpackage.data_name }} = self._create_package(
+            "{{ param.subpackage.param_name }}",
+            self.{{ param.subpackage.data_name }}
+        )
+        {% endif -%}
+        {% endfor -%}
+{% elif context == "model" %}
+        super().__init__(
+            model_type="{{ component }}6",
+            {%- for name in parameters.keys() %}
+            {{ name }}={{ name }},
+            {%- endfor %}
+            **kwargs,
+        )
+        
+        {%- for name, param in parameters.items() if param.block == "options" %}
+        self.name_file.{{ name }}.set_data({{ name }})
+        self.{{ name }} = self.name_file.{{ name }},
+        {% endfor -%}
+{% elif context == "package" %}
+        super().__init__(
+            package_type="{{ subcomponent }}",
+            {%- for name in parameters.keys() %}
+            {{ name }}={{ name }},
+            {%- endfor %}
+            **kwargs
+        )
+
+        {%- for name, param in parameters.items() %}
+        {%- if param.set_self %}
         self.{{ name }} = {{ name }}
+        {% else %}
+        self.{{ name }} = self.build_mfdata("{{ name }}", {{ name }})
+        {% endif -%}
+        {%- if param.subpackage is defined %}
+        self._{{ param.subpackage.abbr }}_package = self.build_child_package(
+            "{{ param.subpackage.abbrev }}",
+            {{ param.subpackage.data_name }},
+            "{{ param.subpackage.param_name }}",
+            self.{{ param.subpackage.record_name }}
+        )
+        {% endif -%}
         {%- endfor %}
         {%- if component == "exg" %}
         simulation.register_exchange_file(self)
         {% endif -%}
         self._init_complete = True
+{% endif %}

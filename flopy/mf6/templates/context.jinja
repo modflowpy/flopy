@@ -4,13 +4,14 @@ import typing
 import numpy as np
 from typing import Any, Optional, Tuple, List, Dict, Union, Literal
 from numpy.typing import NDArray
-from .. import mfpackage
-from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
+
+from flopy.mf6.data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
+from flopy.mf6.mfpackage import MFPackage
 from flopy.mf6.mfmodel import MFModel
-from flopy.mf6 import MFSimulation
+from flopy.mf6 import MFSimulation, MFSimulationBase
 
 
-class Modflow{{ title }}(mfpackage.MFPackage):
+class Modflow{{ class.title() }}({{ base }}):
     """{% include "docstring.jinja" %}"""
 
     {% include "attrs.jinja" %}

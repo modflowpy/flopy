@@ -1,12 +1,16 @@
 {# Class attributes for a component class. #}
-    {% for name, var in variables.items() if var.type %}
-    {%- if var.is_iterable or var.is_list or var.is_record %}
-    {{ var.name }} = ListTemplateGenerator(("{{ component }}6", "{{ subcomponent }}", "{{ var.block }}", "{{ var.name }}"))
-    {%- elif var.is_array %}
-    {{ var.name }} = ArrayTemplateGenerator(("{{ component }}6", "{{ subcomponent }}", "{{ var.block }}", "{{ var.name }}"))
+    {% for name, param in parameters.items() %}
+    {%- if param.kind == "list" or param.kind == "record" %}
+    {{ param.name }} = ListTemplateGenerator(("{{ component }}6", "{{ subcomponent }}", "{{ param.block }}", "{{ param.name }}"))
+    {%- elif param.kind == "array" %}
+    {{ param.name }} = ArrayTemplateGenerator(("{{ component }}6", "{{ subcomponent }}", "{{ param.block }}", "{{ param.name }}"))
     {%- endif -%}
     {%- endfor %}
+    {%- if context == "model" %}
+    model_type = {{ component }}
+    {%- elif context == "package" %}
     package_abbr = "{{ component }}{{ subcomponent }}"
     _package_type = "{{ subcomponent }}"
     dfn_file_name = "{{ component }}-{{ subcomponent }}.dfn"
     dfn = {{ dfn|pprint|indent(10) }}
+    {% endif -%}

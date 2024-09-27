@@ -69,7 +69,7 @@ jobs:
           subset: triangle
 
       - name: Update FloPy packages
-        run: python -m flopy.mf6.utils.generate_classes --ref develop --no-backup
+        run: python -m flopy.mf6.generate_classes --ref develop --no-backup
 
       - name: Run example tests
         working-directory: autotest

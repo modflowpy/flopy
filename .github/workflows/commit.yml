@@ -175,7 +175,7 @@ jobs:
           subset: triangle
 
       - name: Update package classes
-        run: python -m flopy.mf6.utils.generate_classes --ref develop --no-backup
+        run: python -m flopy.mf6.generate_classes --ref develop --no-backup
 
       - name: Run tests
         working-directory: autotest
