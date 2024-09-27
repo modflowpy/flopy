@@ -258,6 +258,7 @@ class PlotCrossSection:
             self.idomain = np.ones(botm.shape, dtype=int)
 
         self.projpts = self.set_zpts(None)
+        self.projctr = None
 
         # Create cross-section extent
         if extent is None:
@@ -1026,6 +1027,7 @@ class PlotCrossSection:
                     if node in projctr:
                         projctr.pop(node)
 
+        self.projctr = projctr
         nodes = list(projctr.keys())
         xcenters = list(projctr.values())
         zcenters = [np.mean(np.array(projpts[node]).T[1]) for node in nodes]
@@ -1046,7 +1048,7 @@ class PlotCrossSection:
         if s is not None:
             if not isinstance(s, (int, float)):
                 s = s[nodes]
-
+        print(len(xcenters))
         scat = ax.scatter(xcenters, zcenters, c=a, s=s, **kwargs)
         return scat
 
