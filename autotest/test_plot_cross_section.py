@@ -246,11 +246,7 @@ def test_plot_centers():
     idomain[0, :, 0:3] = 0
 
     grid = flopy.discretization.StructuredGrid(
-        delc=delc,
-        delr=delr,
-        top=top,
-        botm=botm,
-        idomain=idomain
+        delc=delc, delr=delr, top=top, botm=botm, idomain=idomain
     )
 
     line = {"line": [(0, 0), (10, 10)]}

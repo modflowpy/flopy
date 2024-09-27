@@ -293,11 +293,7 @@ def test_plot_centers():
     active_cells = np.count_nonzero(idomain)
 
     grid = flopy.discretization.StructuredGrid(
-        delc=delc,
-        delr=delr,
-        top=top,
-        botm=botm,
-        idomain=idomain
+        delc=delc, delr=delr, top=top, botm=botm, idomain=idomain
     )
 
     xcenters = grid.xcellcenters.ravel()
@@ -320,6 +316,4 @@ def test_plot_centers():
     for vert in verts:
         vert = tuple(vert)
         if vert not in xycenters:
-            raise AssertionError(
-                "center location not properly plotted"
-            )
+            raise AssertionError("center location not properly plotted")
