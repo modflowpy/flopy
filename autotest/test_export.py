@@ -875,7 +875,7 @@ def test_export_contours(function_tmpdir, example_data_path):
 
 @pytest.mark.mf6
 @requires_pkg("pyshp", "shapely", name_map={"pyshp": "shapefile"})
-def test_mf6_grid_shp_export(function_tmpdir):
+def test_export_mf6_shp(function_tmpdir):
     from shapefile import Reader
 
     nlay = 2
@@ -948,9 +948,6 @@ def test_mf6_grid_shp_export(function_tmpdir):
         gwf, pname="dis", nlay=nlay, nrow=nrow, ncol=ncol, top=top, botm=botm
     )
 
-    def cellid(k, i, j, nrow, ncol):
-        return k * nrow * ncol + i * ncol + j
-
     # Riv6
     spd6 = flopy.mf6.ModflowGwfriv.stress_period_data.empty(
         gwf, maxbound=len(spd)
@@ -1007,6 +1004,18 @@ def test_mf6_grid_shp_export(function_tmpdir):
         assert list(riv_shp.shapeRecord(-1).record) == list(
             riv6_shp.shapeRecord(-1).record
         )
+
+    # Check wel export with timeseries
+    wel_spd_0 = flopy.mf6.ModflowGwfwel.stress_period_data.empty(
+        gwf, maxbound=1, timeseries=True
+    )
+    wel_spd_0[0][0] = ((0, 0, 0), -99.0)
+    wel = flopy.mf6.ModflowGwfwel(
+        gwf,
+        maxbound=1,
+        stress_period_data={0: wel_spd_0[0]},
+    )
+    wel.export(function_tmpdir / "wel_test.shp")
 
 
 @requires_pkg("pyshp", name_map={"pyshp": "shapefile"})

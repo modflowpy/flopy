@@ -380,6 +380,13 @@ def model_attributes_to_shapefile(
                     # Skip empty transientlist
                     if not a.data:
                         continue
+                    # Skip transientlist if all elements are of object type
+                    if all(
+                        dtype == np.object_
+                        for dtype, _ in a.data[0].dtype.fields.values()
+                    ):
+                        continue
+
                     for name, array in a.masked_4D_arrays_itr():
                         n = shape_attr_name(name, length=4)
                         for kper in range(array.shape[0]):
