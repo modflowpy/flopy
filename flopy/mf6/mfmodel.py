@@ -1497,7 +1497,7 @@ class MFModel(ModelInterface):
         # remove package from local dictionaries and lists
         if package.path in self._package_paths:
             del self._package_paths[package.path]
-        self._package_container._remove_package(package)
+        self._package_container.remove_package(package)
 
     def get_package(self, name=None, type_only=False, name_only=False):
         """

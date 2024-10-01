@@ -563,7 +563,7 @@ class PackageContainer:
             self.package_type_dict[package.package_type.lower()] = []
         self.package_type_dict[package.package_type.lower()].append(package)
 
-    def _remove_package(self, package):
+    def remove_package(self, package):
         if package in self.packagelist:
             self.packagelist.remove(package)
         if (
