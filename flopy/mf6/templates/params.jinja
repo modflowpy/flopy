@@ -1,9 +1,0 @@
-{% for param in parameters.values() recursive %}
-    {% if loop.depth > 1 %}* {% endif %}{{ param.name }} : {{ param.type }}
-{%- if param.description is defined and not param.is_choice %}
-{{ param.description|wordwrap|indent(4 + (loop.depth * 4), first=True) }}
-{%- endif %}
-{%- if param.children is defined -%}
-{{ loop(param.children.values())|indent(4) }}
-{%- endif %}
-{% endfor %}

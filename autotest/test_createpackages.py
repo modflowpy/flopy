@@ -2,84 +2,65 @@ import pytest
 from modflow_devtools.misc import run_cmd
 
 from autotest.conftest import get_project_root_path
-from flopy.mf6.createpackages import (
-    TEMPLATE_ENV,
-    ContextType,
-    DefinitionName,
-    generate_targets,
-    get_template_context,
+from flopy.mf6.utils.createpackages import (
+    DfnName,
     load_dfn,
+    make_all,
+    make_context,
+    make_targets,
 )
-from flopy.mf6.mfpackage import MFPackage
 
 PROJ_ROOT = get_project_root_path()
 DFN_PATH = PROJ_ROOT / "flopy" / "mf6" / "data" / "dfn"
-DFNS = [
-    dfn
+DFN_NAMES = [
+    dfn.stem
     for dfn in DFN_PATH.glob("*.dfn")
     if dfn.stem not in ["common", "flopy"]
 ]
 
 
-@pytest.mark.parametrize("dfn", DFNS)
-def test_load_dfn(dfn):
-    dfn_path = DFN_PATH / dfn
+@pytest.mark.parametrize("dfn_name", DFN_NAMES)
+def test_load_dfn(dfn_name):
+    dfn_path = DFN_PATH / f"{dfn_name}.dfn"
     with open(dfn_path, "r") as f:
-        definition = load_dfn(f)
+        dfn = load_dfn(f, name=DfnName(*dfn_name.split("-")))
 
 
-# only test packages for which we know the
-# expected number of consolidated variables
 @pytest.mark.parametrize(
-    "dfn, n_flat, n_params", [("gwf-ic", 2, 6), ("prt-prp", 40, 22)]
+    "dfn_name, n_flat, n_params", [("gwf-ic", 2, 6), ("prt-prp", 40, 22)]
 )
-def test_get_template_context(dfn, n_flat, n_params):
-    dfn_name = DefinitionName(*dfn.split("-"))
-
+def test_make_context(dfn_name, n_flat, n_params):
     with open(DFN_PATH / "common.dfn") as f:
-        common, _ = load_dfn(f)
+        common = load_dfn(f)
 
-    with open(DFN_PATH / f"{dfn}.dfn") as f:
-        definition = load_dfn(f)
+    with open(DFN_PATH / f"{dfn_name}.dfn") as f:
+        dfn_name = DfnName(*dfn_name.split("-"))
+        dfn = load_dfn(f, name=dfn_name)
 
-    context = get_template_context(
-        dfn_name,
-        MFPackage,
-        common,
-        definition,
-    )
-    assert context["name"] == dfn_name
-    assert len(context["parameters"]) == n_params
-    assert len(context["dfn"]) == n_flat + 1  # +1 for metadata
+    ctx_name = dfn_name.contexts[0]
+    context = make_context(ctx_name, dfn, common=common)
+    assert len(dfn_name.contexts) == 1
+    assert len(context.variables) == n_params
+    assert len(context.metadata) == n_flat + 1  # +1 for metadata
 
 
-@pytest.mark.parametrize("dfn", [dfn.stem for dfn in DFNS])
-def test_render_template(dfn, function_tmpdir):
-    dfn_name = DefinitionName(*dfn.split("-"))
-    context_type = ContextType.from_dfn_name(dfn_name)
-    template = TEMPLATE_ENV.get_template("context.jinja")
-
+@pytest.mark.parametrize("dfn_name", DFN_NAMES)
+def test_make_targets(dfn_name, function_tmpdir):
     with open(DFN_PATH / "common.dfn") as f:
-        common, _ = load_dfn(f)
+        common = load_dfn(f)
 
-    with open(DFN_PATH / f"{dfn}.dfn", "r") as f:
-        definition = load_dfn(f)
+    with open(DFN_PATH / f"{dfn_name}.dfn", "r") as f:
+        dfn_name = DfnName(*dfn_name.split("-"))
+        dfn = load_dfn(f, name=dfn_name)
 
-    context = {
-        "context": context_type.value,
-        **get_template_context(
-            dfn_name,
-            context_type.base,
-            common,
-            definition,
-        ),
-    }
-    source = template.render(**context)
-    source_path = function_tmpdir / dfn_name.target
-    with open(source_path, "w") as f:
-        f.write(source)
-        run_cmd("ruff", "format", source_path, verbose=True)
+    make_targets(dfn, function_tmpdir, common=common)
+    for ctx_name in dfn_name.contexts:
+        run_cmd("ruff", "format", function_tmpdir, verbose=True)
+        run_cmd("ruff", "check", "--fix", function_tmpdir, verbose=True)
+        assert (function_tmpdir / ctx_name.target).is_file()
 
 
-def test_generate_components(function_tmpdir):
-    generate_targets(DFN_PATH, function_tmpdir, verbose=True)
+def test_make_all(function_tmpdir):
+    make_all(DFN_PATH, function_tmpdir, verbose=True)
+    run_cmd("ruff", "format", function_tmpdir, verbose=True)
+    run_cmd("ruff", "check", "--fix", function_tmpdir, verbose=True)
