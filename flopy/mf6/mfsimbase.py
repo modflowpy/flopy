@@ -1285,7 +1285,7 @@ class MFSimulationBase:
                         "New solution package will replace old package"
                         ".".format(file.package_name)
                     )
-                self._package_container._remove_package(
+                self._package_container.remove_package(
                     self._solution_files[file.filename]
                 )
                 del self._solution_files[file.filename]
@@ -1807,7 +1807,7 @@ class MFSimulationBase:
             if package.filename in self._other_files:
                 del self._other_files[package.filename]
 
-            self._package_container._remove_package(package)
+            self._package_container.remove_package(package)
 
         # if this is a package referenced from a filerecord, remove filerecord
         # from name file
@@ -2061,7 +2061,7 @@ class MFSimulationBase:
                     "WARNING: tdis package already exists. Replacing "
                     "existing tdis package."
                 )
-            self._package_container._remove_package(self._tdis_file)
+            self._package_container.remove_package(self._tdis_file)
         elif (
             package.package_type.lower()
             in mfstructure.MFStructure().flopy_dict["solution_packages"]
@@ -2076,7 +2076,7 @@ class MFSimulationBase:
                     f"{package.package_name.lower()} already exists.  "
                     "Replacing existing package."
                 )
-            self._package_container._remove_package(
+            self._package_container.remove_package(
                 self._package_container.package_name_dict[pname]
             )
         else:
@@ -2095,7 +2095,7 @@ class MFSimulationBase:
                         f"WARNING: package with name {pname} already exists. "
                         "Replacing existing package."
                     )
-                self._package_container._remove_package(
+                self._package_container.remove_package(
                     self._other_files[package.filename]
                 )
                 del self._other_files[package.filename]
