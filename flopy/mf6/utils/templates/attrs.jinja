@@ -1,10 +1,12 @@
-    {% for name, var in variables.items() if var.class_attr %}
-    {%- if var.kind == "list" or var.kind == "record" %}
-    {{ var.name }} = ListTemplateGenerator(("{{ component }}6", "{{ subcomponent }}", "{{ var.block }}", "{{ var.name }}"))
+    {%- if base != "MFSimulationBase" %}
+    {% for var in variables.values() if var.class_attr %}
+    {%- if var.kind == "list" or var.kind == "record" or var.kind == "union" %}
+    {{ var.name }} = ListTemplateGenerator(("{{ name.l }}6", "{{ name.r }}", "{{ var.block }}", "{{ var.name }}"))
     {%- elif var.kind == "array" %}
-    {{ var.name }} = ArrayTemplateGenerator(("{{ component }}6", "{{ subcomponent }}", "{{ var.block }}", "{{ var.name }}"))
+    {{ var.name }} = ArrayTemplateGenerator(("{{ name.l }}6", "{{ name.r }}", "{{ var.block }}", "{{ var.name }}"))
     {%- endif -%}
     {%- endfor %}
+    {% endif -%}
     {%- if base == "MFModel" %}
     model_type = "{{ name.title }}"
     {%- elif base == "MFPackage" %}

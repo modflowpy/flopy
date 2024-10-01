@@ -2,27 +2,29 @@ def __init__(
         self,
         {%- for name, var in variables.items() if var.init_param %}
         {%- if var.default is defined %}
-        {{ name }}{% if var._type is defined%}: {{ var._type }}{% endif %} = {{ var.default }},
+        {{ name }}: {{ var._type }} = {{ var.default }},
         {%- else -%}
-        {{ name }}{% if var._type is defined%}: {{ var._type }}{% endif %},
+        {{ name }}: {{ var._type }},
         {% endif -%}
         {%- endfor %}
         **kwargs,
     ):
-{% if base == "MFSimulation" %}
+{% if base == "MFSimulationBase" %}
         super().__init__(
             {%- for name, var in variables.items() if var.init_super %}
             {{ name }}={{ name }},
             {%- endfor %}
             **kwargs
         )
-        {%- for name, var in variables.items() if var.block == "options" %}
+        {%- for name, var in variables.items() %}
+        {%- if var.block == "options" and var.init_build %}
         self.name_file.{{ name }}.set_data({{ name }})
-        self.{{ name }} = self.name_file.{{ name }},
+        self.{{ name }} = self.name_file.{{ name }}
+        {% endif -%}
         {%- if var.subpkg is defined %}
-        self{{ var.subpkg.data_name }} = self._create_package(
-            "{{ var.subpkg.var_name }}",
-            self.{{ var.subpkg.data_name }}
+        self.{{ var.subpkg.param }} = self._create_package(
+            "{{ var.subpkg.abbr }}",
+            {{ var.subpkg.param }}
         )
         {% endif -%}
         {% endfor -%}
@@ -34,14 +36,18 @@ def __init__(
             {%- endfor %}
             **kwargs,
         )
-        {%- for name, var in variables.items() if var.block == "options" %}
+        {%- for name, var in variables.items() %}
+        {%- if var.block == "options" and var.init_build %}
         self.name_file.{{ name }}.set_data({{ name }})
         self.{{ name }} = self.name_file.{{ name }}
+        {% endif -%}
         {%- endfor %}
 {% elif base == "MFPackage" %}
         super().__init__(
-            {% if name.l == "exg" or name.l == "sln" -%}
+            {% if parent == "MFSimulation" -%}
             simulation,
+            {% elif parent == "MFModel" -%}
+            model,
             {%- endif %}
             package_type="{{ name.r }}",
             {%- for name, var in variables.items() if var.init_super %}
@@ -57,7 +63,7 @@ def __init__(
         self.{{ name }} = {{ name }}
         {% endif -%}
         {%- if var.subpkg is defined -%}
-        self._{{ name }} = self.build_mfdata("{{ name }}", {{ name }})
+        self._{{ name }} = self.build_mfdata("{{ name }}", None)
         self._{{ var.subpkg.abbr }}_package = self.build_child_package(
             "{{ var.subpkg.abbr }}",
             {{ var.subpkg.val }},

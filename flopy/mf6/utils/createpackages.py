@@ -281,7 +281,7 @@ class ContextName(NamedTuple):
         """A base class from which the input context should inherit."""
         l, r = self
         if self == ("sim", "nam"):
-            return MFSimulation
+            return MFSimulationBase
         if r is None:
             return MFModel
         return MFPackage
@@ -442,6 +442,7 @@ class Subpkg:
     abbr: str
     param: str
     parents: List[type]
+    description: Optional[str]
 
     @classmethod
     def from_dfn(cls, dfn: Dfn) -> Optional["Subpkg"]:
@@ -460,11 +461,13 @@ class Subpkg:
         def _subpkg():
             line = lines["subpkg"]
             _, key, abbr, param, val = line.split()
+            descr = dfn.get(val, dict()).get("description", None)
             return {
                 "key": key,
                 "val": val,
                 "abbr": abbr,
                 "param": param,
+                "description": descr,
             }
 
         def _parents():
@@ -506,6 +509,7 @@ class VarKind(Enum):
     @classmethod
     def from_type(cls, t: type) -> Optional["VarKind"]:
         origin = get_origin(t)
+        args = get_args(t)
         if t is np.ndarray or origin is NDArray or origin is ArrayLike:
             return VarKind.Array
         elif origin is collections.abc.Iterable or origin is list:
@@ -513,6 +517,8 @@ class VarKind(Enum):
         elif origin is tuple:
             return VarKind.Record
         elif origin is Union:
+            if len(args) == 2 and args[1] is type(None):
+                return cls.from_type(args[0])
             return VarKind.Union
         try:
             if issubclass(t, (bool, int, float, str)):
@@ -527,7 +533,7 @@ class Var:
     """A variable in a MODFLOW 6 input context."""
 
     name: str
-    _type: Optional[type]
+    _type: type
     block: Optional[str]
     description: Optional[str]
     default: Optional[Any]
@@ -540,6 +546,7 @@ class Var:
     init_assign: bool = False
     init_build: bool = False
     init_super: bool = False
+    class_attr: bool = False
 
     def __init__(
         self,
@@ -558,9 +565,10 @@ class Var:
         init_assign: bool = False,
         init_build: bool = False,
         init_super: bool = False,
+        class_attr: bool = False,
     ):
         self.name = name
-        self._type = _type
+        self._type = _type or Any
         self.block = block
         self.description = description
         self.default = default
@@ -589,6 +597,9 @@ class Var:
         self.init_build = init_build
         # whether to pass arg to super().__init__()
         self.init_super = init_super
+        # whether the variable has a corresponding
+        # class attribute
+        self.class_attr = True
 
 
 Vars = Dict[str, Var]
@@ -927,6 +938,7 @@ def make_context(
         # check if the variable references a subpackage
         subpkg = subpkgs.get(_name, None)
         if subpkg:
+            var_.init_build = False
             var_.subpkg = subpkg
 
         return var_
@@ -1056,8 +1068,13 @@ def make_context(
                     key = vars_.get(k, None)
                     if not key:
                         continue
+                    vars_[subpkg.key].init_param = False
+                    vars_[subpkg.key].class_attr = True
+                    vars_[subpkg.key].subpkg = None
                     vars_[subpkg.val] = Var(
                         name=subpkg.val,
+                        description=subpkg.description,
+                        subpkg=subpkg,
                         init_param=True,
                         init_assign=False,
                         init_super=False,
@@ -1146,8 +1163,13 @@ def make_context(
                     key = vars_.get(k, None)
                     if not key:
                         continue
+                    vars_[subpkg.key].init_param = False
+                    vars_[subpkg.key].class_attr = True
+                    vars_[subpkg.key].subpkg = None
                     vars_[subpkg.val] = Var(
                         name=subpkg.val,
+                        description=subpkg.description,
+                        subpkg=subpkg,
                         init_param=True,
                         init_assign=False,
                         init_super=False,
@@ -1163,7 +1185,8 @@ def make_context(
             if packages:
                 packages.init_param = False
                 vars_["packages"] = packages
-            return {
+
+            vars_ = {
                 "simulation": Var(
                     name="simulation",
                     _type=MFSimulation,
@@ -1225,6 +1248,36 @@ def make_context(
                 **vars_,
             }
 
+            # if a reference map is provided,
+            # find any variables referring to
+            # subpackages, and attach another
+            # "value" variable for them all..
+            # allows passing data directly to
+            # `__init__` instead of a path to
+            # load the subpackage from. maybe
+            # impossible if the data variable
+            # doesn't appear in the reference
+            # definition, though.
+            if subpkgs:
+                for k, subpkg in subpkgs.items():
+                    key = vars_.get(k, None)
+                    if not key:
+                        continue
+                    vars_[subpkg.key].init_param = False
+                    vars_[subpkg.key].class_attr = True
+                    vars_[subpkg.key].subpkg = None
+                    vars_[subpkg.val] = Var(
+                        name=subpkg.val,
+                        description=subpkg.description,
+                        subpkg=subpkg,
+                        init_param=True,
+                        init_assign=False,
+                        init_super=False,
+                        init_build=False,
+                    )
+
+            return vars_
+
         def _add_sim_params(_vars: Vars) -> Vars:
             """Add variables for a simulation context."""
             vars_ = _vars.copy()
@@ -1239,8 +1292,8 @@ def make_context(
                 var = vars_.get(k, None)
                 if var:
                     var.init_param = False
-                vars_[k] = var
-            return {
+                    vars_[k] = var
+            vars_ = {
                 "sim_name": Var(
                     name="sim_name",
                     _type=str,
@@ -1309,9 +1362,40 @@ def make_context(
                 **vars_,
             }
 
+            # if a reference map is provided,
+            # find any variables referring to
+            # subpackages, and attach another
+            # "value" variable for them all..
+            # allows passing data directly to
+            # `__init__` instead of a path to
+            # load the subpackage from. maybe
+            # impossible if the data variable
+            # doesn't appear in the reference
+            # definition, though.
+            if subpkgs:
+                for k, subpkg in subpkgs.items():
+                    key = vars_.get(k, None)
+                    if not key:
+                        continue
+                    vars_[subpkg.key].init_param = False
+                    vars_[subpkg.key].init_build = False
+                    vars_[subpkg.key].class_attr = True
+                    vars_[subpkg.key].subpkg = None
+                    vars_[subpkg.param] = Var(
+                        name=subpkg.param,
+                        description=subpkg.description,
+                        subpkg=subpkg,
+                        init_param=True,
+                        init_assign=False,
+                        init_super=False,
+                        init_build=False,
+                    )
+
+            return vars_
+
         # add initializer method parameters
         # for this particular context type
-        if name.base is MFSimulation:
+        if name.base is MFSimulationBase:
             vars_ = _add_sim_params(vars_)
         elif name.base is MFModel:
             vars_ = _add_mdl_vars(vars_)
