@@ -54,10 +54,6 @@ def model_is_copy(m1, m2):
         if k in [
             "_packagelist",
             "_package_paths",
-            "package_key_dict",
-            "package_type_dict",
-            "package_name_dict",
-            "package_filename_dict",
             "_ftype_num_dict",
         ]:
             continue
@@ -97,17 +93,13 @@ def package_is_copy(pk1, pk2):
         if k in [
             "_child_package_groups",
             "_data_list",
-            "_packagelist",
-            "_simulation_data",
+            "simulation_data",
             "blocks",
             "dimensions",
-            "package_key_dict",
-            "package_name_dict",
-            "package_filename_dict",
-            "package_type_dict",
             "post_block_comments",
             "simulation_data",
             "structure",
+            "_package_container",
         ]:
             continue
         elif isinstance(v, MFPackage):
