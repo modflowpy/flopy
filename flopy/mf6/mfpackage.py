@@ -2026,7 +2026,7 @@ class MFPackage(PackageInterface):
         """
         return self._package_container.get_package(name, type_only, name_only)
 
-    def _add_package(self, package, path):
+    def add_package(self, package):
         pkg_type = package.package_type.lower()
         if pkg_type in self._package_container.package_type_dict:
             for existing_pkg in self._package_container.package_type_dict[
@@ -2035,7 +2035,7 @@ class MFPackage(PackageInterface):
                 if existing_pkg is package:
                     # do not add the same package twice
                     return
-        self._package_container._add_package(package, path)
+        self._package_container.add_package(package)
 
     def _get_aux_data(self, aux_names):
         if hasattr(self, "stress_period_data"):

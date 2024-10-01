@@ -552,7 +552,7 @@ class PackageContainer:
         """Returns a list of package names."""
         return list(self.package_name_dict.keys())
 
-    def _add_package(self, package, path):
+    def add_package(self, package):
         # put in packages list and update lookup dictionaries
         self.packagelist.append(package)
         if package.package_name is not None:

@@ -1,7 +1,7 @@
 import inspect
 import os
 import sys
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 
@@ -1918,7 +1918,7 @@ class MFModel(ModelInterface):
                 package._filename = file_name
 
         if add_to_package_list:
-            self._package_container._add_package(package, path)
+            self._package_container.add_package(package)
 
             # add obs file to name file if it does not have a parent
             if package.package_type in self.structure.package_struct_objs or (
@@ -1967,7 +1967,7 @@ class MFModel(ModelInterface):
         strict,
         ref_path,
         dict_package_name=None,
-        parent_package=None,
+        parent_package: Optional[MFPackage] = None,
     ):
         """
         Loads a package from a file.  This method is used internally by FloPy
@@ -2065,12 +2065,10 @@ class MFModel(ModelInterface):
             package.load(strict)
 
         # register child package with the model
-        self._package_container._add_package(package, package.path)
+        self._package_container.add_package(package)
         if parent_package is not None:
             # register child package with the parent package
-            parent_package._package_container._add_package(
-                package, package.path
-            )
+            parent_package.add_package(package)
 
         return package
 

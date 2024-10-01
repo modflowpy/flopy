@@ -948,9 +948,7 @@ class MFSimulationBase:
                         f"  loading exchange package {exchange_file._get_pname()}..."
                     )
                 exchange_file.load(strict)
-                instance._package_container._add_package(
-                    exchange_file, exchange_file.path
-                )
+                instance._package_container.add_package(exchange_file)
                 instance._exchange_files[exgfile[1]] = exchange_file
 
         # load simulation packages
@@ -1184,10 +1182,10 @@ class MFSimulationBase:
         package.load(strict)
         self._other_files[package.filename] = package
         # register child package with the simulation
-        self._package_container._add_package(package, package.path)
+        self._package_container.add_package(package)
         if parent_package is not None:
             # register child package with the parent package
-            parent_package._add_package(package, package.path)
+            parent_package.add_package(package)
         return package
 
     def register_ims_package(
@@ -1294,9 +1292,7 @@ class MFSimulationBase:
                 break
         # register solution package
         if not in_simulation:
-            self._package_container._add_package(
-                solution_file, self._get_package_path(solution_file)
-            )
+            self._package_container.add_package(solution_file)
         # do not allow a solution package to be registered twice with the
         # same simulation
         if not in_simulation:
@@ -2149,7 +2145,7 @@ class MFSimulationBase:
                 # all but solution packages get added here.  solution packages
                 # are added during solution package registration
                 self._remove_package_by_type(package)
-                self._package_container._add_package(package, path)
+                self._package_container.add_package(package)
         sln_dict = mfstructure.MFStructure().flopy_dict["solution_packages"]
         if package.package_type.lower() == "nam":
             if not package.internal_package:
