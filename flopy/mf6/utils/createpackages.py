@@ -125,17 +125,17 @@ def _try_get_type_name(t) -> str:
     args = get_args(t)
     if origin is Literal:
         args = ['"' + a + '"' for a in args]
-        return f"{Literal.__name__}[{', '.join(args)}]"
+        return f"Literal[{', '.join(args)}]"
     elif origin is Union:
         if len(args) == 2 and args[1] is type(None):
             return f"{Optional.__name__}[{_try_get_type_name(args[0])}]"
-        return f"{Union.__name__}[{', '.join([_try_get_type_name(a) for a in args])}]"
+        return f"Union[{', '.join([_try_get_type_name(a) for a in args])}]"
     elif origin is tuple:
-        return f"{Tuple.__name__}[{', '.join([_try_get_type_name(a) for a in args])}]"
+        return f"Tuple[{', '.join([_try_get_type_name(a) for a in args])}]"
     elif origin is collections.abc.Iterable:
-        return f"{Iterable.__name__}[{', '.join([_try_get_type_name(a) for a in args])}]"
+        return f"Iterable[{', '.join([_try_get_type_name(a) for a in args])}]"
     elif origin is list:
-        return f"{List.__name__}[{', '.join([_try_get_type_name(a) for a in args])}]"
+        return f"List[{', '.join([_try_get_type_name(a) for a in args])}]"
     elif origin is np.ndarray:
         return f"NDArray[np.{_try_get_type_name(args[1].__args__[0])}]"
     elif origin is np.dtype:
