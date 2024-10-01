@@ -243,5 +243,5 @@ def cli_main():
 
 
 if __name__ == "__main__":
-    """Run command-line with: python -m flopy.mf6.generate_classes"""
+    """Run command-line with: python -m flopy.mf6.utils.generate_classes"""
     cli_main()

@@ -96,7 +96,7 @@ As described above, making a release manually involves the following steps:
 
 - Run `python scripts/update_version.py -v <semver>` to update the version number stored in `version.txt` and `flopy/version.py`. For an approved release use the `--approve` flag.
 
-- Update MODFLOW 6 dfn files in the repository and MODFLOW 6 package classes by running `python -m flopy.mf6.generate_classes --ref master --no-backup`
+- Update MODFLOW 6 dfn files in the repository and MODFLOW 6 package classes by running `python -m flopy.mf6.utils.generate_classes --ref master --no-backup`
 
 - Run `ruff check .` and `ruff format .` from the project root.
 

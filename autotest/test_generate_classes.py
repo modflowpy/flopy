@@ -122,7 +122,7 @@ def test_generate_classes_from_github_refs(
     out, err, ret = run_cmd(
         str(python),
         "-m",
-        "flopy.mf6.generate_classes",
+        "flopy.mf6.utils.generate_classes",
         "--owner",
         owner,
         "--repo",
