@@ -128,7 +128,7 @@ def _try_get_type_name(t) -> str:
         return f"Literal[{', '.join(args)}]"
     elif origin is Union:
         if len(args) == 2 and args[1] is type(None):
-            return f"{Optional.__name__}[{_try_get_type_name(args[0])}]"
+            return f"Optional[{_try_get_type_name(args[0])}]"
         return f"Union[{', '.join([_try_get_type_name(a) for a in args])}]"
     elif origin is tuple:
         return f"Tuple[{', '.join([_try_get_type_name(a) for a in args])}]"
