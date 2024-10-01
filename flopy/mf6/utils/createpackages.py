@@ -83,7 +83,7 @@ files, the package classes, and updated init.py that createpackages.py created.
 
 import collections
 import os
-from collections import UserDict
+from collections import UserDict, namedtuple
 from dataclasses import asdict, dataclass, replace
 from enum import Enum
 from keyword import kwlist
@@ -627,8 +627,9 @@ class Context:
     base: Optional[type]
     parent: Optional[type]
     description: Optional[str]
-    variables: Vars
     metadata: Metadata
+    variables: Vars
+    records: Vars
 
 
 _SCALAR_TYPES = {
@@ -667,8 +668,12 @@ def make_context(
     is related to.
     """
 
-    subpkgs = subpkgs or dict()
     common = common or dict()
+    subpkgs = subpkgs or dict()
+    records = dict()
+
+    def _nt_name(s):
+        return s.title().replace("record", "").replace("-", "_")
 
     def _convert(
         var: Dict[str, str],
@@ -708,6 +713,7 @@ def make_context(
         tagged = var.get("tagged, False")
         description = var.get("description", "")
         children = None
+        is_record = False
 
         def _description(descr: str) -> str:
             """
@@ -823,15 +829,27 @@ def make_context(
             elif _is_implicit_record():
                 record_name = _name
                 record_fields = _fields(record_name)
-                record_type = Tuple[
-                    tuple([f._type for f in record_fields.values()])
-                ]
+                field_types = [f._type for f in record_fields.values()]
+                record_type = Tuple[tuple(field_types)]
                 record = Var(
                     name=record_name,
                     _type=record_type,
                     block=block,
                     children=record_fields,
                 )
+                records[_nt_name(record_name)] = replace(
+                    record, name=_nt_name(record_name)
+                )
+                # TODO: do we want to use named tuples here?
+                # it's a bit less explicit and requires looking
+                # back and forth between the tuple definition
+                # and the class docstring... but nice to have
+                # a concise definition of each record type...
+                record_type = namedtuple(
+                    _nt_name(record_name),
+                    [_nt_name(k) for k in record_fields.keys()],
+                )
+                record = replace(record, _type=record_type)
                 children = {record_name: record}
                 type_ = Iterable[record_type]
             else:
@@ -861,6 +879,7 @@ def make_context(
                 record_type = t if get_origin(t) is tuple else Tuple[(t,)]
             # TODO: if record has 1 field, accept value directly?
             type_ = record_type
+            is_record = True
 
         # are we wrapping a record which is a
         # choice within a union? if so, use a
@@ -881,6 +900,7 @@ def make_context(
                 field_name: replace(field, _type=field_type, is_choice=True)
             }
             type_ = record_type
+            is_record = True
 
         # at this point, if it has a shape, it's an array..
         # but if it's in a record make it a variadic tuple,
@@ -905,14 +925,6 @@ def make_context(
             # is being wrapped into a record to represent a choice in a union
             tag = _type == "keyword" and (tagged or wrap)
             type_ = Literal[_name] if tag else _SCALAR_TYPES.get(_type, _type)
-
-        # make optional if needed
-        if optional:
-            type_ = (
-                Optional[type_]
-                if (type_ is not bool and not in_record and not wrap)
-                else type_
-            )
 
         # format the variable description
         description = _description(description)
@@ -941,6 +953,27 @@ def make_context(
             var_.init_build = False
             var_.subpkg = subpkg
 
+        # make named tuples for record types
+        if is_record:
+            records[_nt_name(name_)] = replace(var_, name=_nt_name(name_))
+            # TODO: do we want to use named tuples here?
+            # it's a bit less explicit and requires looking
+            # back and forth between the tuple definition
+            # and the class docstring... but nice to have
+            # a concise definition of each record type...
+            if children:
+                type_ = namedtuple(
+                    _nt_name(name_), [_nt_name(k) for k in children.keys()]
+                )
+
+        # make optional if needed
+        if optional:
+            var_._type = (
+                Optional[type_]
+                if (type_ is not bool and not in_record and not wrap)
+                else type_
+            )
+
         return var_
 
     def _variables() -> Vars:
@@ -965,6 +998,7 @@ def make_context(
             # their parents in the hierarchy
             if not var.get("in_record", False)
         }
+
         # set the name since we may have altered
         # it when creating the variable (e.g. to
         # avoid name/reserved keyword collisions.
@@ -1435,8 +1469,9 @@ def make_context(
         base=name.base,
         parent=name.parent,
         description=name.description,
-        variables=_variables(),
         metadata=_metadata(),
+        variables=_variables(),
+        records=records,
     )
 
 

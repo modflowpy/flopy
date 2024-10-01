@@ -11,6 +11,9 @@ from flopy.mf6.mfmodel import MFModel
 from flopy.mf6 import MFSimulation, MFSimulationBase
 
 
+{% include "records.jinja" %}
+
+
 class Modflow{{ name.title.title() }}({{ base }}):
     {% include "docstring.jinja" %}
 
