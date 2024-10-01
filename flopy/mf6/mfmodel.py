@@ -31,7 +31,7 @@ from .utils.mfenums import DiscretizationType
 from .utils.output_util import MF6Output
 
 
-class MFModel(PackageContainer, ModelInterface):
+class MFModel(ModelInterface):
     """
     MODFLOW-6 model base class.  Represents a single model in a simulation.
 
@@ -83,7 +83,7 @@ class MFModel(PackageContainer, ModelInterface):
         verbose=False,
         **kwargs,
     ):
-        super().__init__(simulation.simulation_data, modelname)
+        self._package_container = PackageContainer(simulation.simulation_data)
         self.simulation = simulation
         self.simulation_data = simulation.simulation_data
         self.name = modelname
@@ -137,7 +137,7 @@ class MFModel(PackageContainer, ModelInterface):
 
         # build model name file
         # create name file based on model type - support different model types
-        package_obj = self.package_factory("nam", model_type[0:3])
+        package_obj = PackageContainer.package_factory("nam", model_type[0:3])
         if not package_obj:
             excpt_str = (
                 f"Name file could not be found for model{model_type[0:3]}."
@@ -237,6 +237,20 @@ class MFModel(PackageContainer, ModelInterface):
                         "{}\n".format(data_str, package._get_pname(), pk_str)
                     )
         return data_str
+
+    @property
+    def package_key_dict(self):
+        return self._package_container.package_key_dict
+
+    @property
+    def package_dict(self):
+        """Returns a copy of the package name dictionary."""
+        return self._package_container.package_dict
+
+    @property
+    def package_names(self):
+        """Returns a list of package names."""
+        return self._package_container.package_names
 
     @property
     def nper(self):
@@ -638,7 +652,7 @@ class MFModel(PackageContainer, ModelInterface):
     @property
     def packagelist(self):
         """List of model packages."""
-        return self._packagelist
+        return self._package_container.packagelist
 
     @property
     def namefile(self):
@@ -844,7 +858,7 @@ class MFModel(PackageContainer, ModelInterface):
         )
 
         # build case consistent load_only dictionary for quick lookups
-        load_only = instance._load_only_dict(load_only)
+        load_only = PackageContainer._load_only_dict(load_only)
 
         # load name file
         instance.name_file.load(strict)
@@ -882,10 +896,12 @@ class MFModel(PackageContainer, ModelInterface):
             ):
                 if (
                     load_only is not None
-                    and not instance._in_pkg_list(
+                    and not PackageContainer._in_pkg_list(
                         priority_packages, ftype_orig, pname
                     )
-                    and not instance._in_pkg_list(load_only, ftype_orig, pname)
+                    and not PackageContainer._in_pkg_list(
+                        load_only, ftype_orig, pname
+                    )
                 ):
                     if (
                         simulation.simulation_data.verbosity_level.value
@@ -1373,7 +1389,8 @@ class MFModel(PackageContainer, ModelInterface):
         for package_struct in self.structure.package_struct_objs.values():
             if (
                 not package_struct.optional
-                and package_struct.file_type not in self.package_type_dict
+                and package_struct.file_type
+                not in self._package_container.package_type_dict
             ):
                 return False
 
@@ -1480,7 +1497,29 @@ class MFModel(PackageContainer, ModelInterface):
         # remove package from local dictionaries and lists
         if package.path in self._package_paths:
             del self._package_paths[package.path]
-        self._remove_package(package)
+        self._package_container._remove_package(package)
+
+    def get_package(self, name=None, type_only=False, name_only=False):
+        """
+        Finds a package by package name, package key, package type, or partial
+        package name. returns either a single package, a list of packages,
+        or None.
+
+        Parameters
+        ----------
+        name : str
+            Name or type of the package, 'my-riv-1, 'RIV', 'LPF', etc.
+        type_only : bool
+            Search for package by type only
+        name_only : bool
+            Search for package by name only
+
+        Returns
+        -------
+        pp : Package object
+
+        """
+        return self._package_container.get_package(name, type_only, name_only)
 
     def remove_package(self, package_name):
         """
@@ -1552,7 +1591,7 @@ class MFModel(PackageContainer, ModelInterface):
                     value_,
                     traceback_,
                     None,
-                    self._simulation_data.debug,
+                    self.simulation_data.debug,
                 )
             try:
                 self.name_file.packages.set_data(new_rec_array)
@@ -1637,7 +1676,7 @@ class MFModel(PackageContainer, ModelInterface):
                 value_,
                 traceback_,
                 None,
-                self._simulation_data.debug,
+                self.simulation_data.debug,
             )
         try:
             self.name_file.packages.set_data(new_rec_array)
@@ -1794,12 +1833,15 @@ class MFModel(PackageContainer, ModelInterface):
                     )
             elif (
                 not set_package_name
-                and package.package_name in self.package_name_dict
+                and package.package_name
+                in self._package_container.package_name_dict
             ):
                 # package of this type with this name already
                 # exists, replace it
                 self.remove_package(
-                    self.package_name_dict[package.package_name]
+                    self._package_container.package_name_dict[
+                        package.package_name
+                    ]
                 )
                 if (
                     self.simulation_data.verbosity_level.value
@@ -1842,7 +1884,10 @@ class MFModel(PackageContainer, ModelInterface):
                 # check for other registered packages of this type
                 name_iter = datautil.NameIter(package.package_type, False)
                 for package_name in name_iter:
-                    if package_name not in self.package_name_dict:
+                    if (
+                        package_name
+                        not in self._package_container.package_name_dict
+                    ):
                         package.package_name = package_name
                         suffix = package_name.split("_")
                         if (
@@ -1861,15 +1906,19 @@ class MFModel(PackageContainer, ModelInterface):
         if set_package_filename:
             # filename uses model base name
             package._filename = f"{self.name}.{package.package_type}"
-            if package._filename in self.package_filename_dict:
+            if (
+                package._filename
+                in self._package_container.package_filename_dict
+            ):
                 # auto generate a unique file name and register it
                 file_name = MFFileMgmt.unique_file_name(
-                    package._filename, self.package_filename_dict
+                    package._filename,
+                    self._package_container.package_filename_dict,
                 )
                 package._filename = file_name
 
         if add_to_package_list:
-            self._add_package(package, path)
+            self._package_container._add_package(package, path)
 
             # add obs file to name file if it does not have a parent
             if package.package_type in self.structure.package_struct_objs or (
@@ -1989,7 +2038,7 @@ class MFModel(PackageContainer, ModelInterface):
             model_type = model_type[0:-1]
 
         # create package
-        package_obj = self.package_factory(ftype, model_type)
+        package_obj = PackageContainer.package_factory(ftype, model_type)
         package = package_obj(
             self,
             filename=fname,
@@ -2002,7 +2051,9 @@ class MFModel(PackageContainer, ModelInterface):
             package.load(strict)
         except ReadAsArraysException:
             #  create ReadAsArrays package and load it instead
-            package_obj = self.package_factory(f"{ftype}a", model_type)
+            package_obj = PackageContainer.package_factory(
+                f"{ftype}a", model_type
+            )
             package = package_obj(
                 self,
                 filename=fname,
@@ -2014,10 +2065,12 @@ class MFModel(PackageContainer, ModelInterface):
             package.load(strict)
 
         # register child package with the model
-        self._add_package(package, package.path)
+        self._package_container._add_package(package, package.path)
         if parent_package is not None:
             # register child package with the parent package
-            parent_package._add_package(package, package.path)
+            parent_package._package_container._add_package(
+                package, package.path
+            )
 
         return package
 
