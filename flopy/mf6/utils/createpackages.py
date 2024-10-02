@@ -122,7 +122,7 @@ def _try_get_type_name(t) -> str:
     elif origin is Union:
         if len(args) >= 2 and args[-1] is type(None):
             if len(args) > 2:
-                return f"Optional[Tuple[{', '.join([_try_get_type_name(a) for a in args[:-1]])}]]"
+                return f"Optional[Union[{', '.join([_try_get_type_name(a) for a in args[:-1]])}]]"
             return f"Optional[{_try_get_type_name(args[0])}]"
         return f"Union[{', '.join([_try_get_type_name(a) for a in args])}]"
     elif origin is tuple:

@@ -1,4 +1,4 @@
-    {%- if base != "MFSimulationBase" %}
+    {%- if base == "MFPackage" %}
     {% for var in variables.values() if var.class_attr %}
     {%- if var.kind == "list" or var.kind == "record" or var.kind == "union" %}
     {{ var.name }} = ListTemplateGenerator(("{{ name.l }}6", "{{ name.r }}", "{{ var.block }}", "{{ var.name }}"))
