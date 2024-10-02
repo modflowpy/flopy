@@ -48,10 +48,14 @@ def __init__(
             simulation,
             {% elif parent == "MFModel" -%}
             model,
-            {%- endif %}
+            {% endif -%}
             package_type="{{ name.r }}",
             {%- for name, var in variables.items() if var.init_super %}
-            {{ name }}={{ name }},
+            {% if "parent" in name -%}
+            parent={{ name }},
+            {%- else -%}
+            {{ name|replace("_package", "") }}={{ name }},
+            {%- endif -%}
             {%- endfor %}
             **kwargs
         )

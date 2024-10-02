@@ -285,18 +285,6 @@ class ContextName(NamedTuple):
         return "MFPackage"
 
     @property
-    def parent(self) -> Optional[str]:
-        """A parent context which owns and manages the input context."""
-        l, r = self
-        if (l, r) == ("sim", "nam"):
-            return None
-        if l in ["sim", "exg", "sln"]:
-            return "MFSimulation"
-        if l == "utl":
-            return "MFPackage"
-        return "MFModel"
-
-    @property
     def target(self) -> str:
         """The source file name to generate."""
         return f"mf{self.title}.py"
@@ -439,7 +427,7 @@ class Subpkg:
     val: str
     abbr: str
     param: str
-    parents: List[type]
+    parents: List[Union[type, str]]
     description: Optional[str]
 
     @classmethod
@@ -471,16 +459,7 @@ class Subpkg:
         def _parents():
             line = lines["parent"]
             _, _, _type = line.split()
-            _type = _type.lower()
-
-            def _parent(t):
-                if "simulation" in t:
-                    return "MFSimulation"
-                elif "model" in t:
-                    return "MFModel"
-                return "MFPackage"
-
-            return [_parent(pt) for pt in _type.split("/")]
+            return _type.split("/")
 
         return (
             cls(**_subpkg(), parents=_parents())
@@ -508,16 +487,16 @@ class VarKind(Enum):
     def from_type(cls, t: type) -> Optional["VarKind"]:
         origin = get_origin(t)
         args = get_args(t)
+        if origin is Union:
+            if len(args) >= 2 and args[-1] is type(None):
+                return cls.from_type(args[0])
+            return VarKind.Union
         if t is np.ndarray or origin is NDArray or origin is ArrayLike:
             return VarKind.Array
         elif origin is collections.abc.Iterable or origin is list:
             return VarKind.List
         elif origin is tuple:
             return VarKind.Record
-        elif origin is Union:
-            if len(args) == 2 and args[1] is type(None):
-                return cls.from_type(args[0])
-            return VarKind.Union
         try:
             if issubclass(t, (bool, int, float, str)):
                 return VarKind.Scalar
@@ -544,7 +523,7 @@ class Var:
     init_assign: bool = False
     init_build: bool = False
     init_super: bool = False
-    class_attr: bool = False
+    class_attr: bool = True
 
     def __init__(
         self,
@@ -563,7 +542,7 @@ class Var:
         init_assign: bool = False,
         init_build: bool = False,
         init_super: bool = False,
-        class_attr: bool = False,
+        class_attr: bool = True,
     ):
         self.name = name
         self._type = _type or Any
@@ -597,7 +576,7 @@ class Var:
         self.init_super = init_super
         # whether the variable has a corresponding
         # class attribute
-        self.class_attr = True
+        self.class_attr = class_attr
 
 
 Vars = Dict[str, Var]
@@ -671,11 +650,38 @@ def make_context(
     records = dict()
 
     def _nt_name(s):
-        """Trim name of a named tuple representing a record."""
-        s = s.title().replace("record", "").replace("-", "_")
-        if s.endswith("s"):
-            return s[:-1]
+        """Trim the name of a record for a corresponding named tuple."""
+        s = s.title().replace("record", "").replace("-", "_").replace("_", "")
+        # if s.endswith("s"):
+        #     return s[:-1]
         return s
+
+    def _parent() -> Optional[str]:
+        """
+        Get the context's parent(s), i.e. context(s) which can
+        own an instance of this context. If this context is a
+        subpackage which can have multiple parent types, this
+        will be a Union of possible parent types, otherwise a
+        single parent type.
+
+        We return a string directly instead of a type to avoid
+        the need to import `MFSimulation/MFModel/MFPackage`.
+        """
+        l, r = dfn.name
+        if (l, r) == ("sim", "nam"):
+            return None
+        if l in ["sim", "exg", "sln"]:
+            return "MFSimulation"
+        if r == "nam":
+            return "MFModel"
+        subpkg = Subpkg.from_dfn(dfn)
+        if subpkg:
+            if len(subpkg.parents) > 1:
+                return f"Union[{', '.join([_try_get_type_name(t) for t in subpkg.parents])}]"
+            return subpkg.parents[0]
+        return "MFPackage"
+
+    parent = _parent()
 
     def _convert(
         var: Dict[str, str],
@@ -877,7 +883,7 @@ def make_context(
             children = _fields(_name)
             if len(children) > 1:
                 record_type = Tuple[
-                    tuple([c._type for c in children.values()])
+                    tuple([f._type for f in children.values()])
                 ]
             elif len(children) == 1:
                 t = list(children.values())[0]._type
@@ -939,8 +945,7 @@ def make_context(
         default = var.get("default", False if type_ is bool else None)
 
         # if name is a reserved keyword, add a trailing underscore to it
-        name_ = f"{_name}_" if _name in kwlist else _name
-        name_ = name_.replace("-", "_")
+        name_ = (f"{_name}_" if _name in kwlist else _name).replace("-", "_")
 
         # create var
         var_ = Var(
@@ -972,6 +977,7 @@ def make_context(
                 type_ = namedtuple(
                     _nt_name(name_), [_nt_name(k) for k in children.keys()]
                 )
+                var_._type = type_
 
         # make optional if needed
         if optional:
@@ -1126,12 +1132,17 @@ def make_context(
 
         def _add_pkg_vars(_vars: Vars) -> Vars:
             """Add variables for a package context."""
-            parent_type = name.parent
-            parent_name = parent_type.lower().replace("mf", "")
+            parent_name = "parent_" + (
+                parent.lower()
+                .replace("mf", "")
+                .replace("union[", "")
+                .replace("]", "")
+                .replace(", ", "_or_")
+            )
             vars_ = {
                 parent_name: Var(
                     name=parent_name,
-                    _type=parent_type,
+                    _type=parent,
                     description=(
                         f"{parent_name.title()} that this package is part of. "
                         f"Package is automatically added to the {parent_name} "
@@ -1139,7 +1150,7 @@ def make_context(
                     ),
                     init_param=True,
                     init_assign=False,
-                    init_super=False,
+                    init_super=True,
                 ),
                 "loading_package": Var(
                     name="loading_package",
@@ -1176,7 +1187,7 @@ def make_context(
             # is the path to the subpackage's
             # parent context
             subpkg = Subpkg.from_dfn(dfn)
-            if subpkg:
+            if subpkg and dfn.name.l != "utl":
                 vars_["parent_file"] = Var(
                     name="parent_file",
                     _type=Union[str, PathLike],
@@ -1474,7 +1485,7 @@ def make_context(
     return Context(
         name=name,
         base=name.base,
-        parent=name.parent,
+        parent=parent,
         description=name.description,
         metadata=_metadata(),
         variables=_variables(),

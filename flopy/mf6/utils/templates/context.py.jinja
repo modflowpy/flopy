@@ -13,9 +13,7 @@ from flopy.mf6.mfsimbase import MFSimulationBase
 from flopy.mf6.modflow.mfsimulation import MFSimulation
 {% endif %}
 
-
 {% include "records.jinja" %}
-
 
 class {% if base == "MFSimulationBase" %}MF{% else %}Modflow{% endif %}{{ name.title.title() }}({{ base }}):
     {% include "docstring.jinja" %}
