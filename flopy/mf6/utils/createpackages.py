@@ -111,11 +111,6 @@ from jinja2 import Environment, PackageLoader
 from modflow_devtools.misc import run_cmd
 from numpy.typing import ArrayLike, NDArray
 
-from flopy.mf6 import MFSimulation
-from flopy.mf6.mfmodel import MFModel
-from flopy.mf6.mfpackage import MFPackage
-from flopy.mf6.mfsimbase import MFSimulationBase
-
 
 def _try_get_type_name(t) -> str:
     """Convert a type to a name suitable for templating."""
@@ -125,7 +120,9 @@ def _try_get_type_name(t) -> str:
         args = ['"' + a + '"' for a in args]
         return f"Literal[{', '.join(args)}]"
     elif origin is Union:
-        if len(args) == 2 and args[1] is type(None):
+        if len(args) >= 2 and args[-1] is type(None):
+            if len(args) > 2:
+                return f"Optional[Tuple[{', '.join([_try_get_type_name(a) for a in args[:-1]])}]]"
             return f"Optional[{_try_get_type_name(args[0])}]"
         return f"Union[{', '.join([_try_get_type_name(a) for a in args])}]"
     elif origin is tuple:
@@ -193,12 +190,15 @@ def renderable(
 
     def __renderable(cls):
         def _render(d: dict) -> dict:
+            def _render_key(k):
+                return k
+
             def _render_val(v):
                 return _try_get_type_name(_try_get_enum_value(v))
 
             # drop nones except for any explicitly kept
             _d = {
-                k: _render_val(v)
+                _render_key(k): _render_val(v)
                 for k, v in d.items()
                 if (k in keep_none or v is not None)
             }
@@ -275,26 +275,26 @@ class ContextName(NamedTuple):
         return f"{l}{r}"
 
     @property
-    def base(self) -> Optional[type]:
+    def base(self) -> Optional[str]:
         """A base class from which the input context should inherit."""
         l, r = self
         if self == ("sim", "nam"):
-            return MFSimulationBase
+            return "MFSimulationBase"
         if r is None:
-            return MFModel
-        return MFPackage
+            return "MFModel"
+        return "MFPackage"
 
     @property
-    def parent(self) -> Optional[type]:
+    def parent(self) -> Optional[str]:
         """A parent context which owns and manages the input context."""
         l, r = self
         if (l, r) == ("sim", "nam"):
             return None
         if l in ["sim", "exg", "sln"]:
-            return MFSimulation
+            return "MFSimulation"
         if l == "utl":
-            return MFPackage
-        return MFModel
+            return "MFPackage"
+        return "MFModel"
 
     @property
     def target(self) -> str:
@@ -306,14 +306,14 @@ class ContextName(NamedTuple):
         """A description of the input context."""
         l, r = self
         title = self.title.title()
-        if self.base == MFPackage:
+        if self.base == "MFPackage":
             return (
                 f"Modflow{title} defines a {r} package within a {l} "
-                f"{self.base.__name__.lower().replace('mf', '')}."
+                f"{self.base.lower().replace('mf', '')}."
             )
-        elif self.base == MFModel:
+        elif self.base == "MFModel":
             return f"Modflow{title} defines a {l.upper()} model."
-        elif self.base == MFSimulation:
+        elif self.base == "MFSimulation":
             return """
     MFSimulation is used to load, build, and/or save a MODFLOW 6 simulation.
     A MFSimulation object must be created before creating any of the MODFLOW 6
@@ -475,10 +475,10 @@ class Subpkg:
 
             def _parent(t):
                 if "simulation" in t:
-                    return MFSimulation
+                    return "MFSimulation"
                 elif "model" in t:
-                    return MFModel
-                return MFPackage
+                    return "MFModel"
+                return "MFPackage"
 
             return [_parent(pt) for pt in _type.split("/")]
 
@@ -531,7 +531,7 @@ class Var:
     """A variable in a MODFLOW 6 input context."""
 
     name: str
-    _type: type
+    _type: Union[type, str]
     block: Optional[str]
     description: Optional[str]
     default: Optional[Any]
@@ -672,7 +672,10 @@ def make_context(
 
     def _nt_name(s):
         """Trim name of a named tuple representing a record."""
-        return s.title().replace("record", "").replace("-", "_")
+        s = s.title().replace("record", "").replace("-", "_")
+        if s.endswith("s"):
+            return s[:-1]
+        return s
 
     def _convert(
         var: Dict[str, str],
@@ -823,7 +826,7 @@ def make_context(
                 record_name = names[0]
                 record_spec = dfn[record_name]
                 record_type = _convert(record_spec, wrap=False)
-                children = {record_name: record_type}
+                children = {_nt_name(record_name).lower(): record_type}
                 type_ = Iterable[record_type._type]
             elif _is_implicit_record():
                 record_name = _name
@@ -848,8 +851,8 @@ def make_context(
                     _nt_name(record_name),
                     [_nt_name(k) for k in record_fields.keys()],
                 )
-                record = replace(record, _type=record_type)
-                children = {record_name: record}
+                record = replace(record, _type=record_type, name=_nt_name(record_name).lower())
+                children = {_nt_name(record_name): record}
                 type_ = Iterable[record_type]
             else:
                 # irregular recarray, rows can be any of several types
@@ -933,6 +936,7 @@ def make_context(
 
         # if name is a reserved keyword, add a trailing underscore to it
         name_ = f"{_name}_" if _name in kwlist else _name
+        name_ = name_.replace("-", "_")
 
         # create var
         var_ = Var(
@@ -1015,7 +1019,7 @@ def make_context(
             vars_ = {
                 "simulation": Var(
                     name="simulation",
-                    _type=MFSimulation,
+                    _type="MFSimulation",
                     description=(
                         "Simulation that this package is a part of. "
                         "Package is automatically added to simulation "
@@ -1119,7 +1123,7 @@ def make_context(
         def _add_pkg_vars(_vars: Vars) -> Vars:
             """Add variables for a package context."""
             parent_type = name.parent
-            parent_name = parent_type.__name__.lower().replace("mf", "")
+            parent_name = parent_type.lower().replace("mf", "")
             vars_ = {
                 parent_name: Var(
                     name=parent_name,
@@ -1222,7 +1226,7 @@ def make_context(
             vars_ = {
                 "simulation": Var(
                     name="simulation",
-                    _type=MFSimulation,
+                    _type="MFSimulation",
                     description=(
                         "Simulation that this model is part of. "
                         "Model is automatically added to the simulation "
@@ -1428,11 +1432,11 @@ def make_context(
 
         # add initializer method parameters
         # for this particular context type
-        if name.base is MFSimulationBase:
+        if name.base == "MFSimulationBase":
             vars_ = _add_sim_params(vars_)
-        elif name.base is MFModel:
+        elif name.base == "MFModel":
             vars_ = _add_mdl_vars(vars_)
-        elif name.base is MFPackage:
+        elif name.base == "MFPackage":
             if name.l == "exg":
                 vars_ = _add_exg_vars(vars_)
             else:
@@ -1531,7 +1535,7 @@ def make_all(dfndir: Path, outdir: Path, verbose: bool = False):
         warn("No common input definition file...")
         common = None
     else:
-        with open(common_path) as f:
+        with open(common_path, "r") as f:
             common = load_dfn(f)
 
     # load all definitions first before we generate targets,
@@ -1566,7 +1570,7 @@ def make_all(dfndir: Path, outdir: Path, verbose: bool = False):
     run_cmd("ruff", "check", "--fix", outdir, verbose=True)
 
 
-_MF6_PATH = Path(__file__).parent
+_MF6_PATH = Path(__file__).parents[1]
 _DFN_PATH = _MF6_PATH / "data" / "dfn"
 _TGT_PATH = _MF6_PATH / "modflow"
 

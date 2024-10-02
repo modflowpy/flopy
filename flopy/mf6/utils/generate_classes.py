@@ -15,7 +15,7 @@ protected_dfns = ["flopy.dfn"]
 default_owner = "MODFLOW-USGS"
 default_repo = "modflow6"
 
-_MF6_PATH = Path(__file__).parent
+_MF6_PATH = Path(__file__).parents[1]
 _DFN_PATH = _MF6_PATH / "data" / "dfn"
 _TGT_PATH = _MF6_PATH / "modflow"
 

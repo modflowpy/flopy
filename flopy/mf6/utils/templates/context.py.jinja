@@ -8,13 +8,16 @@ from numpy.typing import NDArray
 from flopy.mf6.data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 from flopy.mf6.mfpackage import MFPackage
 from flopy.mf6.mfmodel import MFModel
-from flopy.mf6 import MFSimulation, MFSimulationBase
+from flopy.mf6.mfsimbase import MFSimulationBase
+{% if base != "MFSimulationBase" %}
+from flopy.mf6.modflow.mfsimulation import MFSimulation
+{% endif %}
 
 
 {% include "records.jinja" %}
 
 
-class Modflow{{ name.title.title() }}({{ base }}):
+class {% if base == "MFSimulationBase" %}MF{% else %}Modflow{% endif %}{{ name.title.title() }}({{ base }}):
     {% include "docstring.jinja" %}
 
     {% include "attrs.jinja" %}
