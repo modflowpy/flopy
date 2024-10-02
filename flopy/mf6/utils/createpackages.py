@@ -851,7 +851,11 @@ def make_context(
                     _nt_name(record_name),
                     [_nt_name(k) for k in record_fields.keys()],
                 )
-                record = replace(record, _type=record_type, name=_nt_name(record_name).lower())
+                record = replace(
+                    record,
+                    _type=record_type,
+                    name=_nt_name(record_name).lower(),
+                )
                 children = {_nt_name(record_name): record}
                 type_ = Iterable[record_type]
             else:
