@@ -1580,7 +1580,7 @@ def make_all(dfndir: Path, outdir: Path, verbose: bool = False):
                 subpkgs[subpkg.key] = subpkg
 
     # generate target files
-    for name, dfn in dfns.items():
+    for dfn in dfns.values():
         with open(p) as f:
             make_targets(
                 dfn=dfn,
@@ -1588,6 +1588,16 @@ def make_all(dfndir: Path, outdir: Path, verbose: bool = False):
                 subpkgs=subpkgs,
                 common=common,
                 verbose=verbose,
+            )
+
+    # write __init__.py file
+    init_path = outdir / "__init__.py"
+    with open(init_path, "w") as f:
+        for dfn in dfns.values():
+            prefix = "MF" if dfn.name == ("sim", "nam") else "Modflow"
+            context = dfn.name.contexts[0]
+            f.write(
+                f"from .mf{context.title} import {prefix}{context.title.title()}\n"
             )
 
     # format the generated files
