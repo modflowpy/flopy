@@ -6,7 +6,7 @@ from typing import Any, Optional, Tuple, List, Dict, Union, Literal, Iterable
 from numpy.typing import NDArray
 
 from flopy.mf6.data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
-from flopy.mf6.mfpackage import MFPackage
+from flopy.mf6.mfpackage import MFPackage, MFChildPackages
 from flopy.mf6.mfmodel import MFModel
 from flopy.mf6.mfsimbase import MFSimulationBase
 {% if base != "MFSimulationBase" %}
@@ -23,3 +23,61 @@ class {% if base == "MFSimulationBase" %}MF{% else %}Modflow{% endif %}{{ name.t
     {% include "init.jinja" %}
 
     {% include "load.jinja" %}
+
+{% if subpkg %}
+class {{ name.title.title() }}Packages(MFChildPackages):
+    """
+    {{ name.title.title() }}Packages is a container class for the Modflow{{ name.title.title() }} class.
+
+    Methods
+    -------
+    initialize
+        Initializes a new Modflow{{ name.title.title() }} package removing any sibling child
+        packages attached to the same parent package. See Modflow{{ name.title.title() }} init
+        documentation for definition of parameters.
+    append_package
+        Adds a new Modflow{{ name.title.title() }} package to the container. See Modflow{{ name.title.title() }}
+        init documentation for definition of parameters.
+    """
+
+    package_abbr = "{{ name.title.lower() }}packages"
+
+    def initialize(
+        self,
+        {%- for name, var in variables.items() if ("parent" not in name and "loading" not in name) %}
+        {%- if var.default is defined %}
+        {{ name }}: {{ var._type }} = {{ var.default }},
+        {%- else -%}
+        {{ name }}: {{ var._type }},
+        {% endif -%}
+        {%- endfor %}
+    ):
+        new_package = Modflow{{ name.title.title() }}(
+            self._cpparent,
+            {%- for name, var in variables.items() if ("parent" not in name and "loading" not in name) %}
+            {{ name }}={{ name }},
+            {%- endfor %}
+            child_builder_call=True,
+        )
+        self.init_package(new_package, filename)
+
+    def append_package(
+        self,
+        {%- for name, var in variables.items() if ("parent" not in name and "loading" not in name) %}
+        {%- if var.default is defined %}
+        {{ name }}: {{ var._type }} = {{ var.default }},
+        {%- else -%}
+        {{ name }}: {{ var._type }},
+        {% endif -%}
+        {%- endfor %}
+    ):
+        new_package = Modflow{{ name.title.title() }}(
+            self._cpparent,
+            {%- for name, var in variables.items() if ("parent" not in name and "loading" not in name ) %}
+            {{ name }}={{ name }},
+            {%- endfor %}
+            pname=pname,
+            child_builder_call=True,
+        )
+        self._append_package(new_package, filename)
+{% endif %}

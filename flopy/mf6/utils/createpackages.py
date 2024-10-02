@@ -489,9 +489,16 @@ class VarKind(Enum):
         args = get_args(t)
         if origin is Union:
             if len(args) >= 2 and args[-1] is type(None):
+                if len(args) > 2:
+                    return VarKind.Union
                 return cls.from_type(args[0])
             return VarKind.Union
-        if t is np.ndarray or origin is NDArray or origin is ArrayLike:
+        if (
+            t is np.ndarray
+            or origin is np.ndarray
+            or origin is NDArray
+            or origin is ArrayLike
+        ):
             return VarKind.Array
         elif origin is collections.abc.Iterable or origin is list:
             return VarKind.List
@@ -602,11 +609,12 @@ class Context:
 
     name: ContextName
     base: Optional[type]
-    parent: Optional[type]
+    parent: Optional[Union[type, str]]
     description: Optional[str]
     metadata: Metadata
     variables: Vars
     records: Vars
+    subpkg: bool
 
 
 _SCALAR_TYPES = {
@@ -647,6 +655,7 @@ def make_context(
 
     common = common or dict()
     subpkgs = subpkgs or dict()
+    _subpkg = Subpkg.from_dfn(dfn)
     records = dict()
 
     def _nt_name(s):
@@ -674,11 +683,11 @@ def make_context(
             return "MFSimulation"
         if r == "nam":
             return "MFModel"
-        subpkg = Subpkg.from_dfn(dfn)
-        if subpkg:
-            if len(subpkg.parents) > 1:
-                return f"Union[{', '.join([_try_get_type_name(t) for t in subpkg.parents])}]"
-            return subpkg.parents[0]
+
+        if _subpkg:
+            if len(_subpkg.parents) > 1:
+                return f"Union[{', '.join([_try_get_type_name(t) for t in _subpkg.parents])}]"
+            return _subpkg.parents[0]
         return "MFPackage"
 
     parent = _parent()
@@ -1490,6 +1499,7 @@ def make_context(
         metadata=_metadata(),
         variables=_variables(),
         records=records,
+        subpkg=bool(_subpkg),
     )
 
 

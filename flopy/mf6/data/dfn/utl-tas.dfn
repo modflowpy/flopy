@@ -19,6 +19,7 @@ type keyword
 shape
 reader urword
 optional false
+in_record true
 longname
 description xxx
 
@@ -29,6 +30,7 @@ shape any1d
 tagged false
 reader urword
 optional false
+in_record true
 longname
 description Name by which a package references a particular time-array series. The name must be unique among all time-array series used in a package.
 
