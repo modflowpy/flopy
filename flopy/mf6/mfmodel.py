@@ -81,8 +81,11 @@ class MFModel(PackageContainer, ModelInterface):
         structure=None,
         model_rel_path=".",
         verbose=False,
+        parent=None,
         **kwargs,
     ):
+        if parent:
+            simulation = parent
         super().__init__(simulation.simulation_data, modelname)
         self.simulation = simulation
         self.simulation_data = simulation.simulation_data

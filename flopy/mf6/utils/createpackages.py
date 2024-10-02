@@ -292,10 +292,7 @@ class ContextName(NamedTuple):
         l, r = self
         title = self.title.title()
         if self.base == "MFPackage":
-            return (
-                f"Modflow{title} defines a {r} package within a {l} "
-                f"{self.base.lower().replace('mf', '')}."
-            )
+            return f"Modflow{title} defines a {r.upper()} package."
         elif self.base == "MFModel":
             return f"Modflow{title} defines a {l.upper()} model."
         elif self.base == "MFSimulationBase":
@@ -862,7 +859,9 @@ def make_context(
                 "type"
             ].startswith("record")
 
-            def _is_implicit_record():
+            def _is_implicit_scalar_record():
+                # if the record is defined implicitly and it has
+                # only scalar fields
                 types = [
                     _try_get_type_name(v["type"])
                     for n, v in dfn.items()
@@ -877,7 +876,7 @@ def make_context(
                 record_type = _convert(record_spec, wrap=False)
                 children = {_nt_name(record_name).lower(): record_type}
                 type_ = Iterable[record_type._type]
-            elif _is_implicit_record():
+            elif _is_implicit_scalar_record():
                 record_name = _name
                 record_fields = _fields(record_name)
                 field_types = [f._type for f in record_fields.values()]
@@ -904,11 +903,39 @@ def make_context(
                 children = {_nt_name(record_name): record}
                 type_ = Iterable[record_type]
             else:
-                # irregular recarray, rows can be any of several types
-                children = {n: _convert(dfn[n], wrap=False) for n in names}
-                type_ = Iterable[
-                    Union[tuple([c._type for c in children.values()])]
-                ]
+                # implicit complex record (i.e. some fields are records or unions)
+                record_fields = {
+                    n: _convert(dfn[n], wrap=False) for n in names
+                }
+                first = list(record_fields.values())[0]
+                single = len(record_fields) == 1
+                record_name = first.name if single else _name
+                _t = [f._type for f in record_fields.values()]
+                record_type = (
+                    first._type
+                    if (single and first.kind == VarKind.Union)
+                    else Tuple[tuple(_t)]
+                )
+                record = Var(
+                    name=record_name,
+                    _type=record_type,
+                    block=block,
+                    children=first.children if single else record_fields,
+                    description=description,
+                )
+                records[_nt_name(record_name)] = replace(
+                    record, name=_nt_name(record_name)
+                )
+                record_type = namedtuple(
+                    _nt_name(record_name),
+                    [_nt_name(k) for k in record_fields.keys()],
+                )
+                record = replace(
+                    record,
+                    _type=record_type,
+                    name=_nt_name(record_name).lower(),
+                )
+                type_ = Iterable[record_type]
 
         # union (product), children are record choices
         elif _type.startswith("keystring"):
@@ -981,6 +1008,8 @@ def make_context(
 
         # keywords default to False, everything else to None
         default = var.get("default", False if type_ is bool else None)
+        if _name in ["continue", "print_input"]:  # hack...
+            default = None
 
         # if name is a reserved keyword, add a trailing underscore to it.
         # convert dashes to underscores since it may become a class attr.
@@ -1081,6 +1110,7 @@ def make_context(
                         "Do not set this parameter. It is intended for "
                         "debugging and internal processing purposes only."
                     ),
+                    default=False,
                     init_param=True,
                     init_assign=False,
                     init_build=False,
@@ -1151,7 +1181,7 @@ def make_context(
                         continue
                     vars_[subpkg.key].init_param = False
                     vars_[subpkg.key].class_attr = True
-                    vars_[subpkg.key].subpkg = None
+                    # vars_[subpkg.key].subpkg = None
                     vars_[subpkg.val] = Var(
                         name=subpkg.val,
                         description=subpkg.description,
@@ -1166,14 +1196,7 @@ def make_context(
 
         def _add_pkg_vars(_vars: Vars) -> Vars:
             """Add variables for a package context."""
-            parent_prefix = "" if dfn.name == ("sim", "nam") else "parent_"
-            parent_name = parent_prefix + (
-                parent.lower()
-                .replace("mf", "")
-                .replace("union[", "")
-                .replace("]", "")
-                .replace(", ", "_or_")
-            )
+            parent_name = "parent"
             vars_ = {
                 parent_name: Var(
                     name=parent_name,
@@ -1190,6 +1213,7 @@ def make_context(
                         "Do not set this variable. It is intended for debugging "
                         "and internal processing purposes only."
                     ),
+                    default=False,
                     init_param=True,
                     init_assign=False,
                     init_super=True,
@@ -1247,8 +1271,8 @@ def make_context(
                     if not key:
                         continue
                     vars_[subpkg.key].init_param = False
+                    vars_[subpkg.key].init_build = True
                     vars_[subpkg.key].class_attr = True
-                    vars_[subpkg.key].subpkg = None
                     vars_[subpkg.val] = Var(
                         name=subpkg.val,
                         description=subpkg.description,
@@ -1348,7 +1372,6 @@ def make_context(
                         continue
                     vars_[subpkg.key].init_param = False
                     vars_[subpkg.key].class_attr = True
-                    vars_[subpkg.key].subpkg = None
                     vars_[subpkg.val] = Var(
                         name=subpkg.val,
                         description=subpkg.description,
@@ -1463,7 +1486,6 @@ def make_context(
                     vars_[subpkg.key].init_param = False
                     vars_[subpkg.key].init_build = False
                     vars_[subpkg.key].class_attr = True
-                    vars_[subpkg.key].subpkg = None
                     vars_[subpkg.param] = Var(
                         name=subpkg.param,
                         description=subpkg.description,
@@ -1617,11 +1639,13 @@ def make_all(dfndir: Path, outdir: Path, verbose: bool = False):
     init_path = outdir / "__init__.py"
     with open(init_path, "w") as f:
         for dfn in dfns.values():
-            prefix = "MF" if dfn.name == ("sim", "nam") else "Modflow"
-            context = dfn.name.contexts[0]
-            f.write(
-                f"from .mf{context.title} import {prefix}{context.title.title()}\n"
-            )
+            for context in dfn.name.contexts:
+                prefix = (
+                    "MF" if context.base == "MFSimulationBase" else "Modflow"
+                )
+                f.write(
+                    f"from .mf{context.title} import {prefix}{context.title.title()}\n"
+                )
 
     # format the generated files
     run_cmd("ruff", "format", outdir, verbose=verbose)

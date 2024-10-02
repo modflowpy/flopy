@@ -10,8 +10,6 @@ from flopy.mf6.mfpackage import MFPackage, MFChildPackages
 from flopy.mf6.mfmodel import MFModel
 {% if base == "MFSimulationBase" %}
 from flopy.mf6.mfsimbase import MFSimulationBase
-{% else %}
-from flopy.mf6.modflow.mfsimulation import MFSimulation
 {% endif %}
 
 {% include "records.jinja" %}
@@ -25,6 +23,7 @@ class {% if base == "MFSimulationBase" %}MF{% else %}Modflow{% endif %}{{ name.t
 
     {% include "load.jinja" %}
 
+{# inlining all this below since it can ideally be made unnecessary before long? -#}
 {% if subpkg %}
 class {{ name.title.title() }}Packages(MFChildPackages):
     """
@@ -45,8 +44,10 @@ class {{ name.title.title() }}Packages(MFChildPackages):
 
     def initialize(
         self,
-        {%- for name, var in variables.items() if ("parent" not in name and "loading" not in name) %}
-        {%- if var.default is defined %}
+        {%- for name, var in variables.items() if ("simulation" not in name and "model" not in name and "package" not in name and "loading" not in name ) %}
+        {%- if var._type == "MFSimulation" %}
+        {{ name }} = None,
+        {%- elif var.default is defined %}
         {{ name }}: {{ var._type }} = {{ var.default }},
         {%- else -%}
         {{ name }}: {{ var._type }},
@@ -55,7 +56,7 @@ class {{ name.title.title() }}Packages(MFChildPackages):
     ):
         new_package = Modflow{{ name.title.title() }}(
             self._cpparent,
-            {%- for name, var in variables.items() if ("parent" not in name and "loading" not in name) %}
+            {%- for name, var in variables.items() if ("simulation" not in name and "model" not in name and "package" not in name and "loading" not in name ) %}
             {{ name }}={{ name }},
             {%- endfor %}
             child_builder_call=True,
@@ -64,8 +65,10 @@ class {{ name.title.title() }}Packages(MFChildPackages):
 
     def append_package(
         self,
-        {%- for name, var in variables.items() if ("parent" not in name and "loading" not in name) %}
-        {%- if var.default is defined %}
+        {%- for name, var in variables.items() if ("simulation" not in name and "model" not in name and "package" not in name and "loading" not in name ) %}
+        {%- if var._type == "MFSimulation" %}
+        {{ name }} = None,
+        {%- elif var.default is defined %}
         {{ name }}: {{ var._type }} = {{ var.default }},
         {%- else -%}
         {{ name }}: {{ var._type }},
@@ -74,10 +77,9 @@ class {{ name.title.title() }}Packages(MFChildPackages):
     ):
         new_package = Modflow{{ name.title.title() }}(
             self._cpparent,
-            {%- for name, var in variables.items() if ("parent" not in name and "loading" not in name ) %}
+            {%- for name, var in variables.items() if ("simulation" not in name and "model" not in name and "package" not in name and "loading" not in name) %}
             {{ name }}={{ name }},
             {%- endfor %}
-            pname=pname,
             child_builder_call=True,
         )
         self._append_package(new_package, filename)

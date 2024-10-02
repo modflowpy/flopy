@@ -1,17 +1,17 @@
     {%- if base == "MFPackage" %}
     {% for var in variables.values() if var.class_attr %}
     {%- if var.kind == "list" or var.kind == "record" or var.kind == "union" %}
-    {{ var.name }} = ListTemplateGenerator(("{{ name.l }}6", "{{ name.r }}", "{{ var.block }}", "{{ var.name }}"))
+    {{ var.name }} = ListTemplateGenerator(({% if name.l is not none and name.l != "sim" %}"{{ name.l }}6", {% endif %}"{{ name.r }}", "{{ var.block }}", "{{ var.name }}"))
     {%- elif var.kind == "array" %}
-    {{ var.name }} = ArrayTemplateGenerator(("{{ name.l }}6", "{{ name.r }}", "{{ var.block }}", "{{ var.name }}"))
+    {{ var.name }} = ArrayTemplateGenerator(({% if name.l is not none and name.l != "sim" %}"{{ name.l }}6", {% endif %}"{{ name.r }}", "{{ var.block }}", "{{ var.name }}"))
     {%- endif -%}
     {%- endfor %}
     {% endif -%}
     {%- if base == "MFModel" %}
     model_type = "{{ name.title }}"
     {%- elif base == "MFPackage" %}
-    package_abbr = "{{ name.l }}{{ name.r }}"
+    package_abbr = "{% if name.l != "sln" and name.l != "sim" and name.l is not none %}{{ name.l }}{% endif %}{{ name.r }}"
     _package_type = "{{ name.r }}"
-    dfn_file_name = "{{ name.l }}-{{ name.r }}.dfn"
+    dfn_file_name = "{% if name.l != "sln" and name.l is not none %}{{ name.l }}-{% elif name.l is none %}sim-{% endif %}{{ name.r }}.dfn"
     dfn = {{ metadata|pprint|indent(10) }}
     {% endif -%}
