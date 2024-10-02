@@ -168,19 +168,14 @@ def renderable(
     based access but no arbitrary expressions,
     and only a limited set of custom filters.
     This can make it awkward to express some
-    conditionals. Conversely, Python classes
-    have some limitations (like no attribute
-    name collisions with reserved keywords).
-    So we convert the dataclasses we want to
+    things, so convert the dataclasses we'll
     pass to `template.render(...)` to dicts,
     with a few touchups.
 
     These include:
-        - removing key/value pairs whose value is None
-        - converting types to their suitably qualified names
-        - removing leading underscores (due to reserved keyword
-          collisions) from attribute names
-        - quoting strings forming the RHS of an assignment or
+        - converting types to suitably qualified type names
+        - optionally removing key/value pairs whose value is None
+        - optionally quoting strings forming the RHS of an assignment or
           argument passing expression
 
     """
@@ -196,7 +191,7 @@ def renderable(
             def _render_val(v):
                 return _try_get_type_name(_try_get_enum_value(v))
 
-            # drop nones except for any explicitly kept
+            # drop nones except where keep requested
             _d = {
                 _render_key(k): _render_val(v)
                 for k, v in d.items()
@@ -220,7 +215,6 @@ def renderable(
                 asdict(self, dict_factory=lambda d: _render(dict(d)))
             )
 
-        setattr(cls, "_render", _render)
         setattr(cls, "render", render)
         return cls
 
@@ -245,11 +239,10 @@ class ContextName(NamedTuple):
     From the `ContextName` several other things are derived,
     including:
 
+    - the input context class' name
+    - a description of the context class
     - the name of the source file to write
-    - the name of the input context class
-    - a description for the context class
-    - an optional base class for the context to inherit from
-    - an optional parent class which can own context instances
+    - the base class the context inherits from
 
     """
 
@@ -277,8 +270,8 @@ class ContextName(NamedTuple):
         return f"{l}{r}"
 
     @property
-    def base(self) -> Optional[str]:
-        """A base class from which the input context should inherit."""
+    def base(self) -> str:
+        """Base class from which the input context should inherit."""
         l, r = self
         if self == ("sim", "nam"):
             return "MFSimulationBase"
@@ -315,6 +308,12 @@ class DfnName(NamedTuple):
     Uniquely identifies an input definition by its name, which
     consists of a <= 3-letter left term and an optional right
     term, also <= 3 letters.
+
+    Notes
+    -----
+    A single `DefinitionName` may be associated with one or
+    more `ContextName`s. For instance, a model DFN file will
+    produce both a NAM package class and also a model class.
     """
 
     l: str
@@ -322,6 +321,16 @@ class DfnName(NamedTuple):
 
     @property
     def contexts(self) -> List[ContextName]:
+        """
+        Returns a list of contexts this definition will produce.
+
+        Notes
+        -----
+        Model definition files produce both a model class context and
+        a model namefile package context. The same goes for simulation
+        definition files. All other definition files produce a single
+        context.
+        """
         if self.r == "nam":
             if self.l == "sim":
                 return [
@@ -342,7 +351,7 @@ Metadata = List[str]
 @dataclass
 class Dfn(UserDict):
     """
-    An MF6 input definition. Contains variables and metadata.
+    An MF6 input definition.
     """
 
     name: Optional[DfnName]
@@ -501,12 +510,7 @@ class VarKind(Enum):
                     return VarKind.Union
                 return cls.from_type(args[0])
             return VarKind.Union
-        if (
-            t is np.ndarray
-            or origin is np.ndarray
-            or origin is NDArray
-            or origin is ArrayLike
-        ):
+        if origin is np.ndarray or origin is NDArray or origin is ArrayLike:
             return VarKind.Array
         elif origin is collections.abc.Iterable or origin is list:
             return VarKind.List
@@ -568,6 +572,11 @@ class Var:
         self.children = children
         self.meta = meta
         self.subpkg = subpkg
+        # TODO: the rest of the attributes below are
+        # needed to handle complexities in the input
+        # context classes; in a future version, they
+        # will ideally not be necessary.
+        # ---
         # the variable's general kind.
         # this is ofc derivable on demand but Jinja
         # doesn't allow arbitrary expressions, and it
@@ -606,8 +615,14 @@ class Context:
     than one input context (e.g. model DFNs yield a model class and a
     package class).
 
+    Notes
+    -----
     A context class minimally consists of a name, a map of variables,
-    and a list of metadata.
+    a map of records, and a list of metadata.
+
+    A separate map of record variables is maintained because we will
+    generate named tuples for record types, and complex filtering of
+    e.g. nested maps of variables is awkward or impossible in Jinja.
 
     The context class may inherit from a base class, and may specify
     a parent context within which it can be created (the parent then
@@ -667,7 +682,15 @@ def make_context(
     records = dict()
 
     def _nt_name(s):
-        """Trim the name of a record for a corresponding named tuple."""
+        """
+        Convert a record name to the name of a corresponding named tuple.
+
+        Notes
+        -----
+        Dashes and underscores are removed, with title-casing for clauses
+        separated by them, and a trailing "record" is removed if present.
+
+        """
         return (
             s.title().replace("record", "").replace("-", "_").replace("_", "")
         )
@@ -680,8 +703,11 @@ def make_context(
         will be a Union of possible parent types, otherwise a
         single parent type.
 
+        Notes
+        -----
         We return a string directly instead of a type to avoid
-        the need to import `MFSimulation/MFModel/MFPackage`.
+        the need to import `MFSimulation` in this file (avoids
+        potential for circular imports).
         """
         l, r = dfn.name
         if (l, r) == ("sim", "nam") and name == ("sim", "nam"):
@@ -707,22 +733,22 @@ def make_context(
         an input definition to a specification suitable for type
         hints, docstrings, an `__init__` method's signature, etc.
 
-        This involves expanding nested input hierarchies, mapping
+        This involves expanding nested type hierarchies, mapping
         types to roughly equivalent Python primitives/composites,
         and other shaping.
 
         Notes
         -----
+        The rules for optional variable defaults are as follows:
         If a `default_value` is not provided, keywords are `False`
-        by default. Everything else is `None` by default.
+        by default, everything else is `None`.
 
         If `wrap` is true, scalars will be wrapped as records with
         keywords represented as string literals. This is useful for
         unions, to distinguish between choices having the same type.
 
-        A map of subpackage references `refs` may be provided, in
-        which case any variable whose name is a key for any given
-        subpackage will detect and store the subpackage reference.
+        Any variable whose name functions as a key for a subpackage
+        will be provided with a subpackage reference.
         """
 
         # var attributes to be converted
@@ -762,7 +788,7 @@ def make_context(
 
         def _fields(record_name: str) -> Vars:
             """
-            Load a record's fields and recursively convert them.
+            Recursively load/convert a record's fields.
 
             Notes
             -----
@@ -863,11 +889,6 @@ def make_context(
                 records[_nt_name(record_name)] = replace(
                     record, name=_nt_name(record_name)
                 )
-                # TODO: do we want to use named tuples here?
-                # it's a bit less explicit and requires looking
-                # back and forth between the tuple definition
-                # and the class docstring... but nice to have
-                # a concise definition of each record type...
                 record_type = namedtuple(
                     _nt_name(record_name),
                     [_nt_name(k) for k in record_fields.keys()],
@@ -886,7 +907,6 @@ def make_context(
                     Union[tuple([c._type for c in children.values()])]
                 ]
 
-        # basic composite types...
         # union (product), children are record choices
         elif _type.startswith("keystring"):
             names = _type.split()[1:]
@@ -908,9 +928,9 @@ def make_context(
             type_ = record_type
             is_record = True
 
-        # are we wrapping a record which is a
-        # choice within a union? if so, use a
-        # literal for the keyword as tag e.g.
+        # are we wrapping a var into a record
+        # as a choice in a union? if so use a
+        # string literal for the keyword e.g.
         # `Tuple[Literal[...], T]`
         elif wrap:
             field_name = _name
@@ -947,9 +967,9 @@ def make_context(
 
         # finally a bog standard scalar
         else:
-            # if it's a keyword, there are two cases we want to convert it to
-            # a string literal: if it's 1) tagging another variable, or 2) it
-            # is being wrapped into a record to represent a choice in a union
+            # if it's a keyword, there are 2 cases where we want to convert
+            # it to a string literal: 1) it tags another variable, or 2) it
+            # is being wrapped into a record as a choice in a union
             tag = _type == "keyword" and (tagged or wrap)
             type_ = Literal[_name] if tag else _SCALAR_TYPES.get(_type, _type)
 
@@ -959,7 +979,8 @@ def make_context(
         # keywords default to False, everything else to None
         default = var.get("default", False if type_ is bool else None)
 
-        # if name is a reserved keyword, add a trailing underscore to it
+        # if name is a reserved keyword, add a trailing underscore to it.
+        # convert dashes to underscores since it may become a class attr.
         name_ = (f"{_name}_" if _name in kwlist else _name).replace("-", "_")
 
         # create var
@@ -980,14 +1001,9 @@ def make_context(
             var_.init_build = False
             var_.subpkg = subpkg
 
-        # make named tuples for record types
+        # if this is a record, make a named tuple for it
         if is_record:
             records[_nt_name(name_)] = replace(var_, name=_nt_name(name_))
-            # TODO: do we want to use named tuples here?
-            # it's a bit less explicit and requires looking
-            # back and forth between the tuple definition
-            # and the class docstring... but nice to have
-            # a concise definition of each record type...
             if children:
                 type_ = namedtuple(
                     _nt_name(name_), [_nt_name(k) for k in children.keys()]
@@ -1006,15 +1022,15 @@ def make_context(
 
     def _variables() -> Vars:
         """
-        Convert the input variables to parameters for an input
-        context class. Context-specific parameters may also be
-        added depending.
+        Return all input variables for an input context class.
 
         Notes
         -----
         Not all variables become parameters; nested variables
         will become components of composite parameters, e.g.,
         record fields, keystring (union) choices, list items.
+
+        Variables may be added, depending on the context type.
         """
 
         vars_ = dfn.copy()
@@ -1477,7 +1493,7 @@ def make_context(
 
     def _metadata() -> List[Metadata]:
         """
-        Get a list of the class' original definition attributes,
+        Get a list of the class' original definition attributes
         as a partial, internal reproduction of the DFN contents.
 
         Notes
@@ -1488,14 +1504,15 @@ def make_context(
         Python, consolidating nested types, etc.
         """
 
-        def _to_dfn_fmt(var: Var) -> List[str]:
+        def _fmt_var(var: Var) -> List[str]:
             exclude = ["longname", "description"]
             return [
                 " ".join([k, v]) for k, v in var.items() if k not in exclude
             ]
 
-        return [["header"] + [attr for attr in (dfn.metadata or list())]] + [
-            _to_dfn_fmt(var) for var in dfn.values()
+        meta = dfn.metadata or list()
+        return [["header"] + [m for m in meta]] + [
+            _fmt_var(var) for var in dfn.values()
         ]
 
     return Context(
