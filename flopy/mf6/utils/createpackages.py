@@ -268,6 +268,8 @@ class ContextName(NamedTuple):
         l, r = self
         if self == ("sim", "nam"):
             return "simulation"
+        if l is None:
+            return r
         if r is None:
             return l
         if l in ["sln", "exg"]:
@@ -320,11 +322,17 @@ class DfnName(NamedTuple):
 
     @property
     def contexts(self) -> List[ContextName]:
-        if self.l != "sim" and self.r == "nam":
-            return [
-                ContextName(*self),  # nam pkg
-                ContextName(self.l, None),  # model
-            ]
+        if self.r == "nam":
+            if self.l == "sim":
+                return [
+                    ContextName(None, self.r),  # nam pkg
+                    ContextName(*self),  # simulation
+                ]
+            else:
+                return [
+                    ContextName(*self),  # nam pkg
+                    ContextName(self.l, None),  # model
+                ]
         return [ContextName(*self)]
 
 
@@ -660,10 +668,9 @@ def make_context(
 
     def _nt_name(s):
         """Trim the name of a record for a corresponding named tuple."""
-        s = s.title().replace("record", "").replace("-", "_").replace("_", "")
-        # if s.endswith("s"):
-        #     return s[:-1]
-        return s
+        return (
+            s.title().replace("record", "").replace("-", "_").replace("_", "")
+        )
 
     def _parent() -> Optional[str]:
         """
@@ -677,13 +684,12 @@ def make_context(
         the need to import `MFSimulation/MFModel/MFPackage`.
         """
         l, r = dfn.name
-        if (l, r) == ("sim", "nam"):
+        if (l, r) == ("sim", "nam") and name == ("sim", "nam"):
             return None
         if l in ["sim", "exg", "sln"]:
             return "MFSimulation"
         if r == "nam":
             return "MFModel"
-
         if _subpkg:
             if len(_subpkg.parents) > 1:
                 return f"Union[{', '.join([_try_get_type_name(t) for t in _subpkg.parents])}]"
@@ -1141,7 +1147,8 @@ def make_context(
 
         def _add_pkg_vars(_vars: Vars) -> Vars:
             """Add variables for a package context."""
-            parent_name = "parent_" + (
+            parent_prefix = "" if dfn.name == ("sim", "nam") else "parent_"
+            parent_name = parent_prefix + (
                 parent.lower()
                 .replace("mf", "")
                 .replace("union[", "")
@@ -1219,7 +1226,7 @@ def make_context(
             # impossible if the data variable
             # doesn't appear in the reference
             # definition, though.
-            if subpkgs:
+            if subpkgs and name != (None, "nam"):
                 for k, subpkg in subpkgs.items():
                     key = vars_.get(k, None)
                     if not key:

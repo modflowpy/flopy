@@ -62,20 +62,22 @@ def __init__(
         {% if name.l == "exg" -%}
         simulation.register_exchange_file(self)
         {%- endif %}
-        {% for name, var in variables.items() -%}
+        {% for n, var in variables.items() -%}
         {%- if var.init_assign -%}
-        self.{{ name }} = {{ name }}
+        self.{{ n }} = {{ n }}
         {% endif -%}
         {%- if var.subpkg is defined -%}
-        self._{{ name }} = self.build_mfdata("{{ name }}", None)
+        self._{{ n }} = self.build_mfdata("{{ n }}", None)
+        {%- if name.r != "nam" %}
         self._{{ var.subpkg.abbr }}_package = self.build_child_package(
             "{{ var.subpkg.abbr }}",
             {{ var.subpkg.val }},
             "{{ var.subpkg.param }}",
             self.{{ var.subpkg.key }}
         )
+        {%- endif %}
         {% elif var.init_build -%}
-        self.{{ name }} = self.build_mfdata("{{ name }}", {{ name }})
+        self.{{ n }} = self.build_mfdata("{{ n }}", {{ n }})
         {% endif -%}
         {%- endfor -%}
         self._init_complete = True
