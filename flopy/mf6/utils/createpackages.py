@@ -112,8 +112,6 @@ from modflow_devtools.misc import run_cmd
 from numpy.typing import ArrayLike, NDArray
 
 from flopy.mf6 import MFSimulation
-
-# keep below as absolute imports
 from flopy.mf6.mfmodel import MFModel
 from flopy.mf6.mfpackage import MFPackage
 from flopy.mf6.mfsimbase import MFSimulationBase
@@ -673,6 +671,7 @@ def make_context(
     records = dict()
 
     def _nt_name(s):
+        """Trim name of a named tuple representing a record."""
         return s.title().replace("record", "").replace("-", "_")
 
     def _convert(
