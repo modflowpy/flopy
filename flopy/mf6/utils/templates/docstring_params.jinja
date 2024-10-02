@@ -1,9 +1,9 @@
-{% for var in variables.values() recursive %}
-    {% if loop.depth > 1 %}* {% endif %}{{ var.name }} : {{ var._type }}
-{%- if var.description is defined and not var.is_choice %}
-{{ var.description|wordwrap|indent(4 + (loop.depth * 4), first=True) }}
+{%- for v in variables.values() recursive %}
+    * {{ v.name }} : {{ v._type }}
+{%- if v.description is defined and not v.is_choice %}
+{{ v.description|wordwrap|indent(4 + (loop.depth * 4), first=True) }}
 {%- endif %}
-{%- if var.children is defined -%}
-{{ loop(var.children.values())|indent(4) }}
+{%- if v.children is defined and loop.depth < 2 -%}
+{{ loop(v.children.values())|indent(4) }}
 {%- endif %}
-{% endfor %}
+{% endfor -%}

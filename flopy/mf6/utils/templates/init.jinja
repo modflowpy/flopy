@@ -44,9 +44,7 @@ def __init__(
         {%- endfor %}
 {% elif base == "MFPackage" %}
         super().__init__(
-            {% if parent == "MFSimulation" -%}
-            simulation,
-            {% elif parent == "MFModel" -%}
+            {% if parent == "MFModel" -%}
             model,
             {% endif -%}
             package_type="{{ name.r }}",

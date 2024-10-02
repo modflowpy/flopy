@@ -265,6 +265,8 @@ class ContextName(NamedTuple):
             return r
         if r is None:
             return l
+        if l == "sim":
+            return r
         if l in ["sln", "exg"]:
             return r
         return f"{l}{r}"
@@ -296,7 +298,7 @@ class ContextName(NamedTuple):
             )
         elif self.base == "MFModel":
             return f"Modflow{title} defines a {l.upper()} model."
-        elif self.base == "MFSimulation":
+        elif self.base == "MFSimulationBase":
             return """
     MFSimulation is used to load, build, and/or save a MODFLOW 6 simulation.
     A MFSimulation object must be created before creating any of the MODFLOW 6
@@ -885,6 +887,7 @@ def make_context(
                     _type=record_type,
                     block=block,
                     children=record_fields,
+                    description=description,
                 )
                 records[_nt_name(record_name)] = replace(
                     record, name=_nt_name(record_name)
@@ -1175,11 +1178,7 @@ def make_context(
                 parent_name: Var(
                     name=parent_name,
                     _type=parent,
-                    description=(
-                        f"{parent_name.title()} that this package is part of. "
-                        f"Package is automatically added to the {parent_name} "
-                        "when it is initialized."
-                    ),
+                    description="Parent that this package is part of.",
                     init_param=True,
                     init_assign=False,
                     init_super=True,

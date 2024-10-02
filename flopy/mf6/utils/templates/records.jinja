@@ -1,3 +1,18 @@
 {%- for name, var in records.items() -%}
 {{ name }} = {{ var._type }}
+"""
+{%- if var.description is defined %}
+{{ var.description|wordwrap }}
+{%- endif %}
+{%- for v in var.children.values() recursive %}
+    * {{ v.name }} : {{ v._type }}
+{%- if v.description is defined and not v.is_choice %}
+{{ v.description|wordwrap|indent(4 + (loop.depth * 4), first=True) }}
+{%- endif %}
+{%- if v.children is defined -%}
+{{ loop(v.children.values())|indent(4) }}
+{%- endif %}
+{% endfor -%}
+"""
+
 {% endfor -%}
