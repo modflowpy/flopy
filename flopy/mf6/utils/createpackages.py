@@ -409,7 +409,7 @@ def load_dfn(f, name: Optional[DfnName] = None) -> Dfn:
                     meta = list
                 meta.append(f"{sep} {tail.strip()}")
                 continue
-            head, sep, tail = line.partition("solution_package")
+            _, sep, tail = line.partition("solution_package")
             continue
 
         # if we hit a newline and the parameter dict
