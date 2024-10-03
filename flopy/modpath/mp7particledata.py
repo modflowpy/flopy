@@ -809,7 +809,14 @@ def get_extent(grid, k=None, i=None, j=None, nn=None, localz=False) -> Extent:
     # get cell coords and span in each dimension
     if not (k is None or i is None or j is None):
         verts = grid.get_cell_vertices(i, j)
-        minz, maxz = (0, 1) if localz else (grid.botm[k, i, j], grid.top[i, j])
+        minz, maxz = (
+            (0, 1)
+            if localz
+            else (
+                grid.botm[k, i, j],
+                grid.top[i, j] if k == 0 else grid.botm[k - 1, i, j],
+            )
+        )
     elif nn is not None:
         verts = grid.get_cell_vertices(nn)
         if grid.grid_type == "structured":

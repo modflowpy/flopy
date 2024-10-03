@@ -409,7 +409,6 @@ def test_export_shapefile_polygon_closed(function_tmpdir):
     shp.close()
 
 
-@excludes_platform("Windows")
 @requires_pkg("rasterio", "pyshp", "scipy", name_map={"pyshp": "shapefile"})
 def test_export_array(function_tmpdir, example_data_path):
     import rasterio
@@ -467,10 +466,10 @@ def test_export_array(function_tmpdir, example_data_path):
     with rasterio.open(function_tmpdir / "fb.tif") as src:
         arr = src.read(1)
         assert src.shape == (m.nrow, m.ncol)
-        # TODO: these tests currently fail -- fix is in progress
-        # assert np.abs(src.bounds[0] - m.modelgrid.extent[0]) < 1e-6
-        # assert np.abs(src.bounds[1] - m.modelgrid.extent[1]) < 1e-6
-        pass
+        assert np.abs(src.bounds[0] - m.modelgrid.extent[0]) < 1e-6
+        assert np.abs(src.bounds[2] - m.modelgrid.extent[1]) < 1e-6
+        assert np.abs(src.bounds[1] - m.modelgrid.extent[2]) < 1e-6
+        assert np.abs(src.bounds[3] - m.modelgrid.extent[3]) < 1e-6
 
 
 @requires_pkg("netCDF4", "pyproj")
@@ -644,6 +643,65 @@ def test_export_array2(function_tmpdir):
     a = np.arange(nrow * ncol).reshape((nrow, ncol))
     export_array(modelgrid, filename, a, crs=crs)
     assert os.path.isfile(filename), "did not create array shapefile"
+
+
+@pytest.mark.mf6
+@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
+def test_array3d_export_structured(function_tmpdir):
+    from shapefile import Reader
+
+    xll, yll = 468970, 3478635
+    xur, yur = 681010, 3716462
+    spacing = 20000
+    ncol = int((xur - xll) / spacing)
+    nrow = int((yur - yll) / spacing)
+    sim = flopy.mf6.MFSimulation("sim", sim_ws=function_tmpdir)
+    gwf = flopy.mf6.ModflowGwf(
+        sim,
+        modelname="array3d_export_unstructured",
+    )
+    flopy.mf6.ModflowGwfdis(
+        gwf,
+        nlay=3,
+        top=5,
+        botm=[4, 3, 2],
+        delr=spacing,
+        delc=spacing,
+        nrow=nrow,
+        ncol=ncol,
+    )
+
+    shp_file = os.path.join(function_tmpdir, "dis_botm.shp")
+    gwf.dis.botm.export(shp_file)
+
+    with Reader(shp_file) as shp:
+        assert list(shp.shapeRecord(-1).record) == [
+            110,  # node
+            11,  # row
+            10,  # column
+            4.0,  # botm_1
+            3.0,  # botm_2
+            2.0,  # botm_3
+        ]
+
+
+@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
+def test_array3d_export_unstructured(function_tmpdir):
+    from shapefile import Reader
+
+    name = "array3d_export_unstructured"
+    sim = disu_sim(name, function_tmpdir)
+    gwf = sim.get_model(name)
+
+    shp_file = function_tmpdir / "disu_bot.shp"
+    gwf.disu.bot.export(shp_file)
+
+    with Reader(shp_file) as shp:
+        assert list(shp.shapeRecord(-1).record) == [
+            1770,  # node
+            3,  # layer
+            0.0,  # bot
+        ]
 
 
 @requires_pkg("pyshp", "shapely", name_map={"pyshp": "shapefile"})

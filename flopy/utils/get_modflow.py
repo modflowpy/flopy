@@ -160,8 +160,8 @@ def get_release(owner=None, repo=None, tag="latest", quiet=False) -> dict:
         try:
             with urllib.request.urlopen(request, timeout=10) as resp:
                 result = resp.read()
-                remaining = int(resp.headers["x-ratelimit-remaining"])
-                if remaining <= 10:
+                remaining = resp.headers.get("x-ratelimit-remaining", None)
+                if remaining and int(remaining) <= 10:
                     warnings.warn(
                         f"Only {remaining} GitHub API requests remaining "
                         "before rate-limiting"

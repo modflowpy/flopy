@@ -1,4 +1,13 @@
 # Changelog
+### Version 3.8.2
+
+#### Bug fixes
+
+* [fix(mp7particledata)](https://github.com/modflowpy/flopy/commit/a0e9219407b7be208d38f4f902cd2b5b96da1351): Fix get_extent() vertical extent calculation (#2307). Committed by wpbonelli on 2024-09-12.
+* [fix(array3d_export)](https://github.com/modflowpy/flopy/commit/693f01a0ce41f08d05395832b540fcc4f7dcff43): Fix exporting of array3d to shp (#2310). Committed by martclanor on 2024-09-16.
+* [fix(binaryfile)](https://github.com/modflowpy/flopy/commit/181e101a605bdb9b628c6781abff7b3276aca635): Accommodate windows drives for in-place reversal  (#2312). Committed by wpbonelli on 2024-09-16.
+* [fix(get_modflow)](https://github.com/modflowpy/flopy/commit/38180335445fa09f5463cf8b9239e6ed0c10bf5b): Accommodate missing ratelimit info on api response (#2320). Committed by wpbonelli on 2024-10-01.
+
 ### Version 3.8.1
 
 #### New features
