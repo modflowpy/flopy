@@ -368,6 +368,8 @@ class MfUsgDisU(Package):
             )
 
         # Connection lengths
+        self.cl1 = None
+        self.cl2 = None
         if idsymrd == 1:
             njags = int((njag - nodes) / 2)
             if cl1 is None:
@@ -447,6 +449,27 @@ class MfUsgDisU(Package):
                 top=self.top.array,
                 botm=self.bot.array,
                 lenuni=self.lenuni,
+                itmuni=self.itmuni,
+                nodes=self.nodes,
+                nlay=self.nlay,
+                njag=self.njag,
+                nper=self.nper,
+                iac=self.iac,
+                ja=self.ja,
+                idsymrd=self.idsymrd,
+                laycbd=self.laycbd,
+                nodelay=self.nodelay,
+                ivsd=self.ivsd,
+                area=self.area,
+                ivc=self.ivc,
+                cl1=self.cl1,
+                cl2=self.cl2,
+                cl12=self.cl12,
+                fahl=self.fahl,
+                perlen=self.perlen,
+                nstp=self.nstp,
+                tsmult=self.tsmult,
+                steady=self.steady,
             )
 
         self.tr = TemporalReference(

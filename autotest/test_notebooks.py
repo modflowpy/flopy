@@ -45,3 +45,9 @@ def test_notebooks(notebook):
     assert returncode == 0, f"could not run {notebook}"
     pprint(stdout)
     pprint(stderr)
+
+
+if __name__ == "__main__":
+    import pytest
+
+    pytest.main()

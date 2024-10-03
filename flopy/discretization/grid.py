@@ -410,6 +410,10 @@ class Grid:
         else:
             return self._laycbd
 
+    @laycbd.setter
+    def laycbd(self, value):
+        self._laycbd = value
+
     @property
     def cell_thickness(self):
         """

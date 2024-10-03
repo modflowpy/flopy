@@ -87,7 +87,18 @@ def test_generate_classes_from_github_refs(
     # create virtual environment
     venv = function_tmpdir / "venv"
     python = venv / "bin" / "python"
-    pip = venv / "bin" / "pip"
+    # pip = venv / "bin" / "pip"
+
+    # -------------------------------------------------
+    if sys.platform == "win32":  # For Windows
+        python = venv / "Scripts" / "python"
+        pip = venv / "Scripts" / "pip"
+    else:  # For Unix-based systems
+        python = venv / "bin" / "python"
+        pip = venv / "bin" / "pip"
+
+    # -------------------------------------------------
+
     cli_run([str(venv)])
     print(f"Using temp venv at {venv} to test class generation from {ref}")
 
@@ -98,13 +109,30 @@ def test_generate_classes_from_github_refs(
         assert not ret, out + err
 
     # get creation time of files
-    flopy_path = (
-        venv
-        / "lib"
-        / f"python{sys.version_info.major}.{sys.version_info.minor}"
-        / "site-packages"
-        / "flopy"
-    )
+    # -------------------------------------------------
+    if sys.platform == "win32":  # For Windows
+        flopy_path = (
+            venv
+            / "lib"
+            #    / f"python{sys.version_info.major}.{sys.version_info.minor}"
+            / "site-packages"
+            / "flopy"
+        )
+    else:  # For Unix-based systems
+        flopy_path = (
+            venv
+            / "lib"
+            / f"python{sys.version_info.major}.{sys.version_info.minor}"
+            / "site-packages"
+            / "flopy"
+        )
+    # -------------------------------------------------
+
+    # -------------------------------------------------
+    print(" venv = ", venv)
+    print(" flopy_path = ", flopy_path)
+    # sys.exit ()   This causes the test to fail.
+    # -------------------------------------------------
     assert flopy_path.is_dir()
     mod_files = list((flopy_path / "mf6" / "modflow").rglob("*")) + list(
         (flopy_path / "mf6" / "data" / "dfn").rglob("*")

@@ -129,6 +129,25 @@ class UnstructuredGrid(Grid):
         xoff=0.0,
         yoff=0.0,
         angrot=0.0,
+        nodes=None,
+        nlay=None,
+        njag=None,
+        nper=None,
+        itmuni=None,
+        idsymrd=None,
+        laycbd=None,
+        nodelay=None,
+        ivsd=None,
+        area=None,
+        ivc=None,
+        cl1=None,
+        cl2=None,
+        cl12=None,
+        fahl=None,
+        perlen=None,
+        nstp=None,
+        tsmult=None,
+        steady=None,
         iac=None,
         ja=None,
         cell2d=None,
@@ -186,6 +205,25 @@ class UnstructuredGrid(Grid):
 
         self._iac = iac
         self._ja = ja
+        self._nodes = nodes
+        self._nlay = nlay
+        self._njag = njag
+        self._nper = (nper,)
+        self._itmuni = (itmuni,)
+        self._idsymrd = idsymrd
+        self._laycbd = laycbd
+        self._nodelay = nodelay
+        self._ivsd = ivsd
+        self._area = area
+        self._ivc = ivc
+        self._cl1 = cl1
+        self._cl2 = cl2
+        self._cl12 = cl12
+        self._fahl = fahl
+        self._perlen = perlen
+        self._nstp = nstp
+        self._tsmult = tsmult
+        self._steady = steady
 
     def set_ncpl(self, ncpl):
         if isinstance(ncpl, int):
@@ -223,6 +261,10 @@ class UnstructuredGrid(Grid):
             return None
         else:
             return self.ncpl.shape[0]
+
+    @nlay.setter
+    def nlay(self, new_value):
+        self._value = new_value  # Setter, allows modification
 
     @property
     def grid_varies_by_layer(self):
@@ -301,6 +343,70 @@ class UnstructuredGrid(Grid):
     @property
     def ja(self):
         return self._ja
+
+    @property
+    def njag(self):
+        return self._njag  # Getter
+
+    @property
+    def idsymrd(self):
+        return self._idsymrd  # Getter
+
+    @property
+    def nodelay(self):
+        return self._nodelay  # Getter
+
+    @property
+    def ivsd(self):
+        return self._ivsd  # Getter
+
+    @property
+    def area(self):
+        return self._area  # Getter
+
+    @property
+    def ivc(self):
+        return self._ivc  # Getter
+
+    @property
+    def cl1(self):
+        return self._cl1  # Getter
+
+    @property
+    def cl2(self):
+        return self._cl2  # Getter
+
+    @property
+    def cl12(self):
+        return self._cl12  # Getter
+
+    @property
+    def fahl(self):
+        return self._fahl  # Getter
+
+    @property
+    def nper(self):
+        return self._nper  # Getter
+
+    @property
+    def itmuni(self):
+        return self._itmuni  # Getter
+
+    @property
+    def perlen(self):
+        return self._perlen  # Getter
+
+    @property
+    def nstp(self):
+        return self._nstp  # Getter
+
+    @property
+    def tsmult(self):
+        return self._tsmult  # Getter
+
+    @property
+    def steady(self):
+        return self._steady  # Getter
 
     @property
     def ncpl(self):
