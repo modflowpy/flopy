@@ -36,9 +36,6 @@ def generate_classes(
         MODFLOW 6 classes.  Default is none, which means that the branch
         will be used instead.  dfnpath will take precedence over branch
         if dfnpath is specified.
-    backup : bool, default True
-        Keep a backup of the definition files in dfn_backup with a date and
-        timestamp from when the definition files were replaced.
     verbose : bool, default False
         If True, print information about the code generation process.
     """
