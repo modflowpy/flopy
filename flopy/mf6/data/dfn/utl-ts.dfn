@@ -83,6 +83,8 @@ type keyword
 shape
 reader urword
 optional false
+init_build false
+init_param false
 longname
 description  xxx
 
@@ -93,6 +95,8 @@ valid stepwise linear linearend
 shape
 tagged false
 reader urword
+init_build false
+init_param false
 optional false
 longname
 description Interpolation method, which is either STEPWISE or LINEAR.
@@ -145,6 +149,8 @@ shape
 tagged false
 reader urword
 optional false
+init_build false
+init_param false
 longname
 description  xxx
 
