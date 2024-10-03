@@ -53,7 +53,7 @@ def __init__(
             **kwargs
         )
         {% if name.l == "exg" -%}
-        simulation.register_exchange_file(self)
+        parent.register_exchange_file(self)
         {%- endif %}
         {% for n, var in variables.items() -%}
         {%- if var.init_assign -%}

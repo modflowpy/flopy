@@ -376,6 +376,7 @@ def load_dfn(f, name: Optional[DfnName] = None) -> Dfn:
     a dictionary of variable specifications as well as a list
     of metadata attributes.
     """
+
     meta = None
     vars_ = dict()
     var = dict()
@@ -392,6 +393,13 @@ def load_dfn(f, name: Optional[DfnName] = None) -> Dfn:
                 if meta is None:
                     meta = list()
                 meta.append(tail.strip())
+                continue
+            head, sep, tail = line.partition("package-type")
+            if sep == "package-type":
+                if meta is None:
+                    meta = list
+                meta.append(f"{sep} {tail.strip()}")
+                continue
             continue
 
         # if we hit a newline and the parameter dict
@@ -1090,8 +1098,8 @@ def make_context(
             b = name.r[:3]
             default = f"{a.upper()}6-{b.upper()}6"
             vars_ = {
-                "simulation": Var(
-                    name="simulation",
+                "parent": Var(
+                    name="parent",
                     _type="MFSimulation",
                     description=(
                         "Simulation that this package is a part of. "
@@ -1101,7 +1109,7 @@ def make_context(
                     init_param=True,
                     init_assign=False,
                     init_build=False,
-                    init_super=False,
+                    init_super=True,
                 ),
                 "loading_package": Var(
                     name="loading_package",
