@@ -80,17 +80,17 @@ def compare_ast(
     t1 = type(node1)
     t2 = type(node2)
     if t1 is not t2:
-        print(f"[type mismatch] {t1} != {t2}")
+        print(f"type mismatch: {t1} != {t2}")
         return False
 
     if t1 is ClassDef:
         assert t2 is ClassDef
         assert node1.name == node2.name
         for base1, base2 in zip(node1.bases, node2.bases):
-            assert base1.attr == base2.id  # hack..
+            assert base1.id == base2.id
 
         body1, body2 = node1.body, node2.body
-        assert len(body1) == len(body2), f"bodies don't match in {node1.name}"
+        assert len(body1) == len(body2), f"body mismatch in {node1.name}"
 
         for b1, b2 in zip(body1, body2):
             if isinstance(b1, Assign):
@@ -100,7 +100,7 @@ def compare_ast(
                 diff = b1tgts ^ b2tgts
                 if any(diff):
                     warn(
-                        f"targets don't match for assignment in {node1.name}\n"
+                        f"assignment targets don't match in {node1.name}\n"
                         f"=> symmetric difference:\n{pformat(diff)}\n"
                         f"=> prev - test:\n{pformat(b1tgts - b2tgts)}\n"
                         f"=> test - prev:\n{pformat(b2tgts - b1tgts)}\n"

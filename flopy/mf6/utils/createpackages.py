@@ -108,6 +108,7 @@ from typing import (
 from warnings import warn
 
 import numpy as np
+from boltons.dictutils import OMD
 from jinja2 import Environment, PackageLoader
 from modflow_devtools.misc import run_cmd
 from numpy.typing import ArrayLike, NDArray
@@ -365,13 +366,14 @@ class Dfn(UserDict):
 
     def __init__(
         self,
-        variables: Dict[str, Dict[str, str]],
+        variables: Iterable[Tuple[str, Dict[str, Any]]],
         name: Optional[DfnName] = None,
         metadata: Optional[Metadata] = None,
     ):
-        super().__init__(variables)
+        self.omd = OMD(variables)
         self.name = name
         self.metadata = metadata
+        super().__init__(self.omd)
 
 
 Dfns = Dict[str, Dfn]
@@ -383,7 +385,7 @@ def load_dfn(f, name: Optional[DfnName] = None) -> Dfn:
     """
 
     meta = None
-    vars_ = dict()
+    vars_ = list()
     var = dict()
 
     for line in f:
@@ -417,7 +419,8 @@ def load_dfn(f, name: Optional[DfnName] = None) -> Dfn:
         # block of attributes
         if not any(line):
             if any(var):
-                vars_[var["name"]] = var
+                n = var["name"]
+                vars_.append((n, var))
                 var = dict()
             continue
 
@@ -432,7 +435,8 @@ def load_dfn(f, name: Optional[DfnName] = None) -> Dfn:
 
     # add the final parameter
     if any(var):
-        vars_[var["name"]] = var
+        n = var["name"]
+        vars_.append((n, var))
 
     return Dfn(variables=vars_, name=name, metadata=meta)
 
@@ -757,7 +761,7 @@ def make_context(
     parent = _parent()
 
     def _convert(
-        var: Dict[str, str],
+        var: Dict[str, Any],
         wrap: bool = False,
     ) -> Var:
         """
@@ -796,6 +800,7 @@ def make_context(
         children = None
         is_record = False
         class_attr = var.get("class_attr", False)
+        init_build = var.get("init_build", True)
 
         def _description(descr: str) -> str:
             """
@@ -1074,7 +1079,7 @@ def make_context(
             default=default,
             children=children,
             init_param=True,
-            init_build=True,
+            init_build=init_build,
             class_attr=class_attr,
         )
 
@@ -1576,7 +1581,7 @@ def make_context(
         Python, consolidating nested types, etc.
         """
 
-        def _fmt_var(var: Var) -> List[str]:
+        def _fmt_var(var: Union[Var, List[Var]]) -> List[str]:
             exclude = ["longname", "description"]
 
             def _fmt_name(k, v):
@@ -1590,7 +1595,7 @@ def make_context(
 
         meta = dfn.metadata or list()
         return [["header"] + [m for m in meta]] + [
-            _fmt_var(var) for var in dfn.values()
+            _fmt_var(var) for var in dfn.omd.values(multi=True)
         ]
 
     return Context(
