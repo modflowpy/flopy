@@ -1,5 +1,8 @@
 def __init__(
         self,
+        {% if parent and base != "MFModel" and name.l != "exg" -%}
+        {{ parent|lower|replace("mf", "")|replace("union", "")|replace("[", "")|replace("]", "")|replace(", ", "_or_") }} = None,
+        {%- endif %}
         {%- for name, var in variables.items() if var.init_param %}
         {%- if var._type == "MFSimulation" %}
         {{ name }} = None,
@@ -11,7 +14,11 @@ def __init__(
         {%- endfor %}
         **kwargs,
     ):
-{% if base == "MFSimulationBase" %}
+        {% if parent and base != "MFModel" and name.l != "exg" -%}
+        if {{ parent|lower|replace("mf", "")|replace("union", "")|replace("[", "")|replace("]", "")|replace(", ", "_or_") }}:
+            parent = {{ parent|lower|replace("mf", "")|replace("union", "")|replace("[", "")|replace("]", "")|replace(", ", "_or_") }}
+        {%- endif %}
+{% if base == "MFSimulationBase" or base == "MFModel" %}
         super().__init__(
             {%- for n, var in variables.items() if var.init_super %}
             {{ n }}={{ n }},
@@ -23,27 +30,13 @@ def __init__(
         self.name_file.{{ n }}.set_data({{ n }})
         self.{{ n }} = self.name_file.{{ n }}
         {% endif -%}
-        {%- if var.subpkg is defined %}
+        {%- if var.subpkg is defined and base != "MFModel" %}
         self.{{ var.subpkg.param }} = self._create_package(
             "{{ var.subpkg.abbr }}",
             {{ var.subpkg.param }}
         )
         {% endif -%}
         {% endfor -%}
-{% elif base == "MFModel" %}
-        super().__init__(
-            {%- for n, var in variables.items() if var.init_super %}
-            {{ n }}={{ n }},
-            {%- endfor %}
-            model_type="{{ name.l }}6",
-            **kwargs,
-        )
-        {%- for n, var in variables.items() %}
-        {%- if var.block == "options" and var.init_build %}
-        self.name_file.{{ n }}.set_data({{ n }})
-        self.{{ n }} = self.name_file.{{ n }}
-        {% endif -%}
-        {%- endfor %}
 {% elif base == "MFPackage" %}
         super().__init__(
             {%- for n, var in variables.items() if var.init_super %}

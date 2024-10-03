@@ -87,6 +87,7 @@ def compare_ast(
         assert t2 is ClassDef
         assert node1.name == node2.name
         for base1, base2 in zip(node1.bases, node2.bases):
+
             def _id(b):
                 attrs = ["id", "name", "attr"]
                 for attr in attrs:
@@ -95,6 +96,7 @@ def compare_ast(
                     except:
                         pass
                 return None
+
             assert _id(base1) == _id(base2)
 
         body1, body2 = node1.body, node2.body

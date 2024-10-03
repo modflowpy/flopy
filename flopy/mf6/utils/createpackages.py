@@ -750,7 +750,7 @@ def make_context(
             return None
         if l in ["sim", "exg", "sln"]:
             return "MFSimulation"
-        if r in ["nam"] and name.l is None:
+        if name.r is None:
             return "MFSimulation"
         if _subpkg:
             if len(_subpkg.parents) > 1:
