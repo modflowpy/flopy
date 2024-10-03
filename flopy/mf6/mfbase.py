@@ -11,7 +11,6 @@ from enum import Enum
 from pathlib import Path
 from shutil import copyfile
 from typing import Union
-from warnings import warn
 
 
 # internal handled exceptions
@@ -460,15 +459,6 @@ class PackageContainer:
         self.package_type_dict = {}
         self.package_name_dict = {}
         self.package_filename_dict = {}
-
-    @property
-    def package_key_dict(self):
-        warnings.warn(
-            "package_key_dict has been deprecated, use "
-            "package_type_dict instead",
-            category=DeprecationWarning,
-        )
-        return self.package_type_dict
 
     @staticmethod
     def package_list():

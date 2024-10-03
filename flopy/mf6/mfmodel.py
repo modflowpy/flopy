@@ -1,6 +1,7 @@
 import inspect
 import os
 import sys
+import warnings
 from typing import Optional, Union
 
 import numpy as np
@@ -240,7 +241,12 @@ class MFModel(ModelInterface):
 
     @property
     def package_key_dict(self):
-        return self._package_container.package_key_dict
+        warnings.warn(
+            "package_key_dict has been deprecated, use "
+            "package_type_dict instead",
+            category=DeprecationWarning,
+        )
+        return self._package_container.package_type_dict
 
     @property
     def package_dict(self):
@@ -251,6 +257,18 @@ class MFModel(ModelInterface):
     def package_names(self):
         """Returns a list of package names."""
         return self._package_container.package_names
+
+    @property
+    def package_type_dict(self):
+        return self._package_container.package_type_dict
+
+    @property
+    def package_name_dict(self):
+        return self._package_container.package_name_dict
+
+    @property
+    def package_filename_dict(self):
+        return self._package_container.package_filename_dict
 
     @property
     def nper(self):

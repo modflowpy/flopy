@@ -2,8 +2,9 @@ import errno
 import inspect
 import os.path
 import sys
+import warnings
 from pathlib import Path
-from typing import List, Optional, Union, cast
+from typing import List, Optional, Type, Union, cast
 
 import numpy as np
 
@@ -692,7 +693,12 @@ class MFSimulationBase:
 
     @property
     def package_key_dict(self):
-        return self._package_container.package_key_dict
+        warnings.warn(
+            "package_key_dict has been deprecated, use "
+            "package_type_dict instead",
+            category=DeprecationWarning,
+        )
+        return self._package_container.package_type_dict
 
     @property
     def package_dict(self):
@@ -704,9 +710,21 @@ class MFSimulationBase:
         """Returns a list of package names."""
         return self._package_container.package_names
 
+    @property
+    def package_type_dict(self):
+        return self._package_container.package_type_dict
+
+    @property
+    def package_name_dict(self):
+        return self._package_container.package_name_dict
+
+    @property
+    def package_filename_dict(self):
+        return self._package_container.package_filename_dict
+
     @staticmethod
     def load(
-        cls_child,
+        cls_child: Type["MFSimulationBase"],
         sim_name="modflowsim",
         version="mf6",
         exe_name: Union[str, os.PathLike] = "mf6",
@@ -774,17 +792,14 @@ class MFSimulationBase:
 
         """
         # initialize
-        instance = cast(
-            MFSimulationBase,
-            cls_child(
-                sim_name,
-                version,
-                exe_name,
-                sim_ws,
-                verbosity_level,
-                write_headers=write_headers,
-                use_pandas=use_pandas,
-            ),
+        instance = cls_child(
+            sim_name,
+            version,
+            exe_name,
+            sim_ws,
+            verbosity_level,
+            write_headers=write_headers,
+            use_pandas=use_pandas,
         )
         verbosity_level = instance.simulation_data.verbosity_level
 

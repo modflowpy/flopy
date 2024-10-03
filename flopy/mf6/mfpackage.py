@@ -4,6 +4,7 @@ import errno
 import inspect
 import os
 import sys
+import warnings
 
 import numpy as np
 
@@ -1993,7 +1994,12 @@ class MFPackage(PackageInterface):
 
     @property
     def package_key_dict(self):
-        return self._package_container.package_key_dict
+        warnings.warn(
+            "package_key_dict has been deprecated, use "
+            "package_type_dict instead",
+            category=DeprecationWarning,
+        )
+        return self._package_container.package_type_dict
 
     @property
     def package_names(self):
@@ -2003,6 +2009,18 @@ class MFPackage(PackageInterface):
     @property
     def package_dict(self):
         return self._package_container.package_dict
+
+    @property
+    def package_type_dict(self):
+        return self._package_container.package_type_dict
+
+    @property
+    def package_name_dict(self):
+        return self._package_container.package_name_dict
+
+    @property
+    def package_filename_dict(self):
+        return self._package_container.package_filename_dict
 
     def get_package(self, name=None, type_only=False, name_only=False):
         """
