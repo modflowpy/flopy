@@ -90,6 +90,7 @@ doc = [
 
 [project.scripts]
 get-modflow = "flopy.utils.get_modflow:cli_main"
+generate-mf6-classes = "flopy.mf6.utils.generate_classes:cli_main"
 
 [project.urls]
 Documentation = "https://flopy.readthedocs.io"
