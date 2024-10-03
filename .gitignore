@@ -102,5 +102,8 @@ app
 # mac files
 **.DS_Store
 
-# DFN backups
+# Generated class files and dfns
 flopy/mf6/data/dfn_backup/
+flopy/mf6/data/dfn/
+flopy/mf6/modflow/
+

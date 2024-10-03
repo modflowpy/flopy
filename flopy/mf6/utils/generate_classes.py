@@ -116,7 +116,7 @@ def generate_classes(
     branch=None,
     ref="master",
     dfnpath=None,
-    backup=True,
+    backup=False,
 ):
     """
     Generate the MODFLOW 6 flopy classes using definition files from the
@@ -143,7 +143,7 @@ def generate_classes(
         MODFLOW 6 classes.  Default is none, which means that the branch
         will be used instead.  dfnpath will take precedence over branch
         if dfnpath is specified.
-    backup : bool, default True
+    backup : bool, default False
         Keep a backup of the definition files in dfn_backup with a date and
         timestamp from when the definition files were replaced.
 
@@ -154,6 +154,7 @@ def generate_classes(
     print(72 * "*")
     print("Updating the flopy MODFLOW 6 classes")
     flopy_dfn_path = os.path.join(flopypth, "mf6", "data", "dfn")
+    os.makedirs(flopy_dfn_path, exist_ok=True)
 
     # download the dfn files and put them in flopy.mf6.data or update using
     # user provided dfnpath
@@ -225,7 +226,7 @@ def cli_main():
         "the MODFLOW 6 classes.",
     )
     parser.add_argument(
-        "--no-backup",
+        "--backup",
         action="store_true",
         help="Set to disable backup. "
         "Default behavior is to keep a backup of the definition files in "
@@ -234,8 +235,6 @@ def cli_main():
     )
 
     args = vars(parser.parse_args())
-    # Handle flipped logic
-    args["backup"] = not args.pop("no_backup")
     try:
         generate_classes(**args)
     except (EOFError, KeyboardInterrupt):
