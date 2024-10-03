@@ -24,6 +24,6 @@ class {% if base == "MFSimulationBase" %}MF{% else %}Modflow{% endif %}{{ name.t
 
     {% include "load.jinja" %}
 
-{% if subpkg %}
+{% if subpkg and name.r != "hpc" %}
 {% include "packages.jinja" %}
 {% endif %}

@@ -36,6 +36,7 @@ class {{ name.title.title() }}Packages(MFChildPackages):
         )
         self.init_package(new_package, filename)
 
+{% if name.r != "obs" %}
     def append_package(
         self,
         {%- for n, var in variables.items() if (n != "parent" and n != "loading_package" and var.init_param) %}
@@ -56,3 +57,4 @@ class {{ name.title.title() }}Packages(MFChildPackages):
             child_builder_call=True,
         )
         self._append_package(new_package, filename)
+{% endif %}

@@ -336,13 +336,17 @@ class DfnName(NamedTuple):
                     ContextName(None, self.r),  # nam pkg
                     ContextName(*self),  # simulation
                 ]
-            elif self in [("gwf", "mvr"), ("gwf", "gnc"), ("gwt", "mvt")]:
-                return [ContextName(*self), ContextName(None, self.r)]
             else:
                 return [
                     ContextName(*self),  # nam pkg
                     ContextName(self.l, None),  # model
                 ]
+        elif (self.l, self.r) in [
+            ("gwf", "mvr"),
+            ("gwf", "gnc"),
+            ("gwt", "mvt"),
+        ]:
+            return [ContextName(*self), ContextName(None, self.r)]
         return [ContextName(*self)]
 
 
@@ -423,6 +427,8 @@ def load_dfn(f, name: Optional[DfnName] = None) -> Dfn:
         key, _, value = line.partition(" ")
         if key == "default_value":
             key = "default"
+        if value in ["true", "false"]:
+            value = value == "true"
         var[key] = value
 
     # add the final parameter
@@ -786,11 +792,11 @@ def make_context(
         shape = None if shape == "" else shape
         optional = var.get("optional", True)
         in_record = var.get("in_record", False)
-        tagged = var.get("tagged, False")
+        tagged = var.get("tagged", False)
         description = var.get("description", "")
         children = None
         is_record = False
-        class_attr = False
+        class_attr = var.get("class_attr", False)
 
         def _description(descr: str) -> str:
             """
@@ -874,7 +880,7 @@ def make_context(
         # regular, inconsistent record types irregular.
         if _type.startswith("recarray"):
             # flag as a class attribute (ListTemplateGenerator etc)
-            class_attr = True
+            class_attr = var.get("class_attr", True)
 
             # make sure columns are defined
             names = _type.split()[1:]
@@ -972,7 +978,7 @@ def make_context(
         # union (product), children are record choices
         elif _type.startswith("keystring"):
             # flag as a class attribute (ListTemplateGenerator etc)
-            class_attr = True
+            class_attr = var.get("class_attr", True)
 
             names = _type.split()[1:]
             children = {n: _convert(dfn[n], wrap=True) for n in names}
@@ -981,7 +987,7 @@ def make_context(
         # record (sum) type, children are fields
         elif _type.startswith("record"):
             # flag as a class attribute (ListTemplateGenerator etc)
-            class_attr = True
+            class_attr = var.get("class_attr", True)
 
             children = _fields(_name)
             if len(children) > 1:
@@ -1022,7 +1028,7 @@ def make_context(
         # and if its item type is a string use an iterable.
         elif shape is not None:
             # flag as a class attribute (ListTemplateGenerator etc)
-            class_attr = True
+            class_attr = var.get("class_attr", True)
             scalars = list(_SCALAR_TYPES.keys())
             if in_record:
                 if _type not in scalars:
@@ -1578,7 +1584,7 @@ def make_context(
                 return v.replace("-", "_") if k == "name" else v
 
             return [
-                " ".join([k, _fmt_name(k, v)]).strip()
+                " ".join([k, str(_fmt_name(k, v))]).strip()
                 for k, v in var.items()
                 if k not in exclude
             ]
