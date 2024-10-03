@@ -62,14 +62,14 @@ def __init__(
             "{{ var.subpkg.abbr }}",
             {{ var.subpkg.val }},
             "{{ var.subpkg.param }}",
-            self.{{ var.subpkg.key }}
+            self._{{ var.subpkg.key }}
         )
         {% elif var.init_build -%}
         self.{{ n }} = self.build_mfdata("{% if n == "continue_" %}continue{% else %}{{ n }}{% endif %}", {{ n }})
         {% endif -%}
-        {%- endfor -%}
-        {% if name.l == "exg" -%}
+        {% if name.l == "exg" and n == "exgmnameb" -%}
         parent.register_exchange_file(self)
-        {%- endif %}
+        {% endif -%}
+        {%- endfor -%}
         self._init_complete = True
 {% endif %}

@@ -392,7 +392,11 @@ def load_dfn(f, name: Optional[DfnName] = None) -> Dfn:
             if sep == "flopy":
                 if meta is None:
                     meta = list()
-                meta.append(tail.strip())
+                tail = tail.strip()
+                if "solution_package" in tail:
+                    tail = tail.split()
+                    tail.pop(1)
+                meta.append(tail)
                 continue
             head, sep, tail = line.partition("package-type")
             if sep == "package-type":
@@ -400,6 +404,7 @@ def load_dfn(f, name: Optional[DfnName] = None) -> Dfn:
                     meta = list
                 meta.append(f"{sep} {tail.strip()}")
                 continue
+            head, sep, tail = line.partition("solution_package")
             continue
 
         # if we hit a newline and the parameter dict
@@ -414,6 +419,8 @@ def load_dfn(f, name: Optional[DfnName] = None) -> Dfn:
         # split the attribute's key and value and
         # store it in the parameter dictionary
         key, _, value = line.partition(" ")
+        if key == "default_value":
+            key = "default"
         var[key] = value
 
     # add the final parameter
@@ -461,10 +468,10 @@ class Subpkg:
 
         lines = {
             "subpkg": next(
-                iter(m for m in dfn.metadata if m.startswith("subpac")), None
+                iter(m for m in dfn.metadata if isinstance(m, str) and m.startswith("subpac")), None
             ),
             "parent": next(
-                iter(m for m in dfn.metadata if m.startswith("parent")), None
+                iter(m for m in dfn.metadata if isinstance(m, str) and m.startswith("parent")), None
             ),
         }
 
@@ -549,7 +556,7 @@ class Var:
     init_assign: bool = False
     init_build: bool = False
     init_super: bool = False
-    class_attr: bool = True
+    class_attr: bool = False
 
     def __init__(
         self,
@@ -568,7 +575,7 @@ class Var:
         init_assign: bool = False,
         init_build: bool = False,
         init_super: bool = False,
-        class_attr: bool = True,
+        class_attr: bool = False,
     ):
         self.name = name
         self._type = _type or Any
@@ -722,13 +729,13 @@ def make_context(
             return None
         if l in ["sim", "exg", "sln"]:
             return "MFSimulation"
-        if r == "nam":
-            return "MFModel"
+        if r in ["nam"] and name.l is None:
+            return "MFSimulation"
         if _subpkg:
             if len(_subpkg.parents) > 1:
                 return f"Union[{', '.join([_try_get_type_name(t) for t in _subpkg.parents])}]"
             return _subpkg.parents[0]
-        return "MFPackage"
+        return "MFModel"
 
     parent = _parent()
 
@@ -771,6 +778,7 @@ def make_context(
         description = var.get("description", "")
         children = None
         is_record = False
+        class_attr = False
 
         def _description(descr: str) -> str:
             """
@@ -853,6 +861,9 @@ def make_context(
         # lists which have a consistent record type are
         # regular, inconsistent record types irregular.
         if _type.startswith("recarray"):
+            # flag as a class attribute (ListTemplateGenerator etc)
+            class_attr = True
+
             # make sure columns are defined
             names = _type.split()[1:]
             n_names = len(names)
@@ -948,12 +959,18 @@ def make_context(
 
         # union (product), children are record choices
         elif _type.startswith("keystring"):
+            # flag as a class attribute (ListTemplateGenerator etc)
+            class_attr = True
+
             names = _type.split()[1:]
             children = {n: _convert(dfn[n], wrap=True) for n in names}
             type_ = Union[tuple([c._type for c in children.values()])]
 
         # record (sum) type, children are fields
         elif _type.startswith("record"):
+            # flag as a class attribute (ListTemplateGenerator etc)
+            class_attr = True
+
             children = _fields(_name)
             if len(children) > 1:
                 record_type = Tuple[
@@ -992,6 +1009,8 @@ def make_context(
         # but if it's in a record make it a variadic tuple,
         # and if its item type is a string use an iterable.
         elif shape is not None:
+            # flag as a class attribute (ListTemplateGenerator etc)
+            class_attr = True
             scalars = list(_SCALAR_TYPES.keys())
             if in_record:
                 if _type not in scalars:
@@ -1017,6 +1036,11 @@ def make_context(
 
         # keywords default to False, everything else to None
         default = var.get("default", False if type_ is bool else None)
+        if isinstance(default, str) and type_ is not str:
+            try:
+                default = eval(default)
+            except:
+                pass
         if _name in ["continue", "print_input"]:  # hack...
             default = None
 
@@ -1034,6 +1058,7 @@ def make_context(
             children=children,
             init_param=True,
             init_build=True,
+            class_attr=class_attr
         )
 
         # check if the variable references a subpackage
@@ -1189,8 +1214,8 @@ def make_context(
                     if not key:
                         continue
                     vars_[subpkg.key].init_param = False
+                    vars_[subpkg.key].init_build = True
                     vars_[subpkg.key].class_attr = True
-                    # vars_[subpkg.key].subpkg = None
                     vars_[subpkg.val] = Var(
                         name=subpkg.val,
                         description=subpkg.description,
