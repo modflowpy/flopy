@@ -52,9 +52,6 @@ def __init__(
             package_type="{{ name.r }}",
             **kwargs
         )
-        {% if name.l == "exg" -%}
-        parent.register_exchange_file(self)
-        {%- endif %}
         {% for n, var in variables.items() -%}
         {%- if var.init_assign -%}
         self.{{ n }} = {{ n }}
@@ -71,5 +68,8 @@ def __init__(
         self.{{ n }} = self.build_mfdata("{% if n == "continue_" %}continue{% else %}{{ n }}{% endif %}", {{ n }})
         {% endif -%}
         {%- endfor -%}
+        {% if name.l == "exg" -%}
+        parent.register_exchange_file(self)
+        {%- endif %}
         self._init_complete = True
 {% endif %}

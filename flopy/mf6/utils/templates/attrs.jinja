@@ -1,11 +1,11 @@
     {%- if base == "MFPackage" %}
     {% for var in variables.values() if var.class_attr %}
     {%- if var.kind == "list" or var.kind == "record" or var.kind == "union" %}
-    {{ var.name }} = ListTemplateGenerator(({% if name.l is not none and name.l != "sim" %}"{{ name.l }}6", {% endif %}"{{ name.r }}", "{{ var.block }}", "{{ var.name }}"))
+    {{ var.name }} = ListTemplateGenerator(({% if name.l is not none and name.l != "sim" and name.l != "utl" and name.l != "exg" %}"{{ name.l }}6", {% endif %}"{{ name.r }}", "{{ var.block }}", "{{ var.name }}"))
     {%- elif var.kind == "array" %}
-    {{ var.name }} = ArrayTemplateGenerator(({% if name.l is not none and name.l != "sim" %}"{{ name.l }}6", {% endif %}"{{ name.r }}", "{{ var.block }}", "{{ var.name }}"))
+    {{ var.name }} = ArrayTemplateGenerator(({% if name.l is not none and name.l != "sim" and name.l != "utl" and name.l != "exg" %}"{{ name.l }}6", {% endif %}"{{ name.r }}", "{{ var.block }}", "{{ var.name }}"))
     {%- endif -%}
-    {%- endfor %}
+    {%- endfor -%}
     {% endif -%}
     {%- if base == "MFModel" %}
     model_type = "{{ name.title }}"

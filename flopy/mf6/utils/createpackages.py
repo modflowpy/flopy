@@ -688,7 +688,7 @@ def make_context(
     _subpkg = Subpkg.from_dfn(dfn)
     records = dict()
 
-    def _nt_name(s):
+    def _nt_name(s, trims=False):
         """
         Convert a record name to the name of a corresponding named tuple.
 
@@ -698,9 +698,10 @@ def make_context(
         separated by them, and a trailing "record" is removed if present.
 
         """
-        return (
-            s.title().replace("record", "").replace("-", "_").replace("_", "")
-        )
+        s = s.title().replace("record", "").replace("-", "_").replace("_", "")
+        if trims:
+            s = s[:-1] if s.endswith("s") else s
+        return s
 
     def _parent() -> Optional[str]:
         """
@@ -896,19 +897,19 @@ def make_context(
                     children=record_fields,
                     description=description,
                 )
-                records[_nt_name(record_name)] = replace(
-                    record, name=_nt_name(record_name)
+                records[_nt_name(record_name, trims=True)] = replace(
+                    record, name=_nt_name(record_name, trims=True)
                 )
                 record_type = namedtuple(
-                    _nt_name(record_name),
+                    _nt_name(record_name, trims=True),
                     [_nt_name(k) for k in record_fields.keys()],
                 )
                 record = replace(
                     record,
                     _type=record_type,
-                    name=_nt_name(record_name).lower(),
+                    name=_nt_name(record_name, trims=True).lower(),
                 )
-                children = {_nt_name(record_name): record}
+                children = {_nt_name(record_name, trims=True): record}
                 type_ = Iterable[record_type]
             else:
                 # implicit complex record (i.e. some fields are records or unions)
@@ -1250,7 +1251,7 @@ def make_context(
             # is the path to the subpackage's
             # parent context
             subpkg = Subpkg.from_dfn(dfn)
-            if subpkg and dfn.name.l != "utl":
+            if subpkg and dfn.name.l == "utl":
                 vars_["parent_file"] = Var(
                     name="parent_file",
                     _type=Union[str, PathLike],
@@ -1535,8 +1536,14 @@ def make_context(
 
         def _fmt_var(var: Var) -> List[str]:
             exclude = ["longname", "description"]
+
+            def _fmt_name(k, v):
+                return v.replace("-", "_") if k == "name" else v
+
             return [
-                " ".join([k, v]) for k, v in var.items() if k not in exclude
+                " ".join([k, _fmt_name(k, v)]).strip()
+                for k, v in var.items()
+                if k not in exclude
             ]
 
         meta = dfn.metadata or list()

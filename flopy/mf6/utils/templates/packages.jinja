@@ -1,0 +1,58 @@
+class {{ name.title.title() }}Packages(MFChildPackages):
+    """
+    {{ name.title.title() }}Packages is a container class for the Modflow{{ name.title.title() }} class.
+
+    Methods
+    -------
+    initialize
+        Initializes a new Modflow{{ name.title.title() }} package removing any sibling child
+        packages attached to the same parent package. See Modflow{{ name.title.title() }} init
+        documentation for definition of parameters.
+    append_package
+        Adds a new Modflow{{ name.title.title() }} package to the container. See Modflow{{ name.title.title() }}
+        init documentation for definition of parameters.
+    """
+
+    package_abbr = "{{ name.title.lower() }}packages"
+
+    def initialize(
+        self,
+        {%- for n, var in variables.items() if (n != "parent" and n != "loading_package" and var.init_param) %}
+        {%- if var._type == "MFSimulation" %}
+        {{ n }} = None,
+        {%- elif var.default is defined %}
+        {{ n }}: {{ var._type }} = {{ var.default }},
+        {%- else -%}
+        {{ n }}: {{ var._type }},
+        {% endif -%}
+        {%- endfor %}
+    ):
+        new_package = Modflow{{ name.title.title() }}(
+            self._cpparent,
+            {%- for n, var in variables.items() if (n != "parent" and n != "loading_package" and var.init_param) %}
+            {{ n }}={{ n }},
+            {%- endfor %}
+            child_builder_call=True,
+        )
+        self.init_package(new_package, filename)
+
+    def append_package(
+        self,
+        {%- for n, var in variables.items() if (n != "parent" and n != "loading_package" and var.init_param) %}
+        {%- if var._type == "MFSimulation" %}
+        {{ n }} = None,
+        {%- elif var.default is defined %}
+        {{ n }}: {{ var._type }} = {{ var.default }},
+        {%- else -%}
+        {{ n }}: {{ var._type }},
+        {% endif -%}
+        {%- endfor %}
+    ):
+        new_package = Modflow{{ name.title.title() }}(
+            self._cpparent,
+            {%- for n, var in variables.items() if (n != "parent" and n != "loading_package" and var.init_param) %}
+            {{ n }}={{ n }},
+            {%- endfor %}
+            child_builder_call=True,
+        )
+        self._append_package(new_package, filename)
