@@ -83,6 +83,7 @@ files, the package classes, and updated init.py that createpackages.py created.
 
 import collections
 import os
+from ast import literal_eval
 from collections import UserDict, namedtuple
 from dataclasses import asdict, dataclass, replace
 from enum import Enum
@@ -274,7 +275,7 @@ class ContextName(NamedTuple):
     @property
     def base(self) -> str:
         """Base class from which the input context should inherit."""
-        l, r = self
+        _, r = self
         if self == ("sim", "nam"):
             return "MFSimulationBase"
         if r is None:
@@ -378,9 +379,7 @@ Dfns = Dict[str, Dfn]
 
 def load_dfn(f, name: Optional[DfnName] = None) -> Dfn:
     """
-    Load an input definition file. Returns a tuple containing
-    a dictionary of variable specifications as well as a list
-    of metadata attributes.
+    Load an input definition from a definition file.
     """
 
     meta = None
@@ -404,7 +403,7 @@ def load_dfn(f, name: Optional[DfnName] = None) -> Dfn:
                     tail.pop(1)
                 meta.append(tail)
                 continue
-            head, sep, tail = line.partition("package-type")
+            _, sep, tail = line.partition("package-type")
             if sep == "package-type":
                 if meta is None:
                     meta = list
@@ -808,7 +807,7 @@ def make_context(
             _, replace, tail = descr.strip().partition("REPLACE")
             if replace:
                 key, _, replacements = tail.strip().partition(" ")
-                replacements = eval(replacements)
+                replacements = literal_eval(replacements)
                 common_var = common.get(key, None)
                 if common_var is None:
                     raise ValueError(f"Common variable not found: {key}")
@@ -1056,7 +1055,7 @@ def make_context(
         default = var.get("default", False if type_ is bool else None)
         if isinstance(default, str) and type_ is not str:
             try:
-                default = eval(default)
+                default = literal_eval(default)
             except:
                 pass
         if _name in ["continue", "print_input"]:  # hack...
@@ -1616,7 +1615,7 @@ def make_contexts(
 
 
 _TEMPLATE_ENV = Environment(
-    loader=PackageLoader("flopy", "mf6/utils/templates/")
+    loader=PackageLoader("flopy", "mf6/utils/templates/"),
 )
 
 
