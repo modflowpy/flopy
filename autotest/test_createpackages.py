@@ -1,3 +1,10 @@
+from ast import AST, expr
+from ast import parse as parse_ast
+from itertools import zip_longest
+from pprint import pformat
+from shutil import copy, copytree
+from typing import List, Union
+
 import pytest
 from modflow_devtools.misc import run_cmd
 
@@ -11,7 +18,9 @@ from flopy.mf6.utils.createpackages import (
 )
 
 PROJ_ROOT = get_project_root_path()
-DFN_PATH = PROJ_ROOT / "flopy" / "mf6" / "data" / "dfn"
+MF6_PATH = PROJ_ROOT / "flopy" / "mf6"
+TGT_PATH = MF6_PATH / "modflow"
+DFN_PATH = MF6_PATH / "data" / "dfn"
 DFN_NAMES = [
     dfn.stem
     for dfn in DFN_PATH.glob("*.dfn")
@@ -62,5 +71,51 @@ def test_make_targets(dfn_name, function_tmpdir):
 
 def test_make_all(function_tmpdir):
     make_all(DFN_PATH, function_tmpdir, verbose=True)
-    run_cmd("ruff", "format", function_tmpdir, verbose=True)
-    run_cmd("ruff", "check", "--fix", function_tmpdir, verbose=True)
+
+
+def compare_ast(
+    node1: Union[expr, List[expr]], node2: Union[expr, List[expr]]
+) -> bool:
+    if type(node1) is not type(node2):
+        return False
+
+    if isinstance(node1, AST):
+        for k, v in vars(node1).items():
+            if k in {
+                "lineno",
+                "end_lineno",
+                "col_offset",
+                "end_col_offset",
+                "ctx",
+            }:
+                continue
+            if not compare_ast(v, getattr(node2, k)):
+                return False
+        return True
+
+    elif isinstance(node1, list) and isinstance(node2, list):
+        return all(compare_ast(n1, n2) for n1, n2 in zip_longest(node1, node2))
+    else:
+        return node1 == node2
+
+
+def test_equivalence(function_tmpdir):
+    prev_dir = function_tmpdir / "prev"
+    test_dir = function_tmpdir / "test"
+    test_dir.mkdir()
+    copytree(TGT_PATH, prev_dir)
+    make_all(DFN_PATH, test_dir, verbose=True)
+    prev_files = list(prev_dir.glob("*.py"))
+    test_files = list(test_dir.glob("*.py"))
+    prev_names = set([p.name for p in prev_files])
+    test_names = set([p.name for p in test_files])
+    diff = prev_names ^ test_names
+    assert not any(diff), (
+        f"previous files don't match test files\n"
+        f"=> symmetric difference:\n{pformat(diff)}\n"
+        f"=> prev - test:\n{pformat(prev_names - test_names)}\n"
+        f"=> test - prev:\n{pformat(test_names - prev_names)}\n"
+    )
+    for prev_file, test_file in zip(prev_files, test_files):
+        prev = parse_ast(open(prev_file).read())
+        test = parse_ast(open(test_file).read())

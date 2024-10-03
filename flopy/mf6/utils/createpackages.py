@@ -336,6 +336,8 @@ class DfnName(NamedTuple):
                     ContextName(None, self.r),  # nam pkg
                     ContextName(*self),  # simulation
                 ]
+            elif self in [("gwf", "mvr"), ("gwf", "gnc"), ("gwt", "mvt")]:
+                return [ContextName(*self), ContextName(None, self.r)]
             else:
                 return [
                     ContextName(*self),  # nam pkg
@@ -468,10 +470,20 @@ class Subpkg:
 
         lines = {
             "subpkg": next(
-                iter(m for m in dfn.metadata if isinstance(m, str) and m.startswith("subpac")), None
+                iter(
+                    m
+                    for m in dfn.metadata
+                    if isinstance(m, str) and m.startswith("subpac")
+                ),
+                None,
             ),
             "parent": next(
-                iter(m for m in dfn.metadata if isinstance(m, str) and m.startswith("parent")), None
+                iter(
+                    m
+                    for m in dfn.metadata
+                    if isinstance(m, str) and m.startswith("parent")
+                ),
+                None,
             ),
         }
 
@@ -1058,7 +1070,7 @@ def make_context(
             children=children,
             init_param=True,
             init_build=True,
-            class_attr=class_attr
+            class_attr=class_attr,
         )
 
         # check if the variable references a subpackage
