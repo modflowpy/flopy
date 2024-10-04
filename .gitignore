@@ -105,5 +105,6 @@ app
 # Generated class files and dfns
 flopy/mf6/data/dfn_backup/
 flopy/mf6/data/dfn/
-flopy/mf6/modflow/
+flopy/mf6/modflow/*
+!flopy/mf6/modflow/__init__.py
 
