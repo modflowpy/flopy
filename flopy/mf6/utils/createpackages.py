@@ -92,6 +92,7 @@ from os import PathLike
 from pathlib import Path
 from typing import (
     Any,
+    Callable,
     Dict,
     ForwardRef,
     Iterable,
@@ -155,26 +156,36 @@ def renderable(
     *,
     wrap_str: Optional[List[str]] = None,
     keep_none: Optional[List[str]] = None,
+    transform: Optional[Dict[str, Callable[[Any], Any]]] = None,
 ):
     """
     An object meant to be passed into a template
     as a "rendered" dictionary, where "rendering"
     means transforming key/value pairs to a form
-    more convenient for use within the template.
-
-    The object *must* be a dataclass.
+    appropriate for use within the template.
 
     Notes
     -----
-    Jinja supports attribute- and dictionary-
+    Transformations might be for convenience* or
+    to handle special cases where a variable has
+    edge cases or other need for alteration**.
+
+    *Jinja supports attribute- and dictionary-
     based access but no arbitrary expressions,
     and only a limited set of custom filters.
     This can make it awkward to express some
-    things, so convert the dataclasses we'll
-    pass to `template.render(...)` to dicts,
-    with a few touchups.
+    things.
 
-    These include:
+    **This is convenient for handling complexity
+    incidental to the current mf6 data framework.
+    Transforming values at render time helps to
+    isolate special cases from the more general
+    templating infrastructure, so the framework
+    can be refactored more easily over time.
+
+    The object *must* be a dataclass.
+
+    Common use cases include:
         - converting types to suitably qualified type names
         - optionally removing key/value pairs whose value is None
         - optionally quoting strings forming the RHS of an assignment or
@@ -190,22 +201,26 @@ def renderable(
             def _render_key(k):
                 return k
 
-            def _render_val(v):
-                return _try_get_type_name(_try_get_enum_value(v))
+            def _render_val(k, v):
+                v = _try_get_type_name(_try_get_enum_value(v))
+
+                def noop(v):
+                    return v
+
+                return (transform.get(k, noop) if transform else noop)(v)
 
             # drop nones except where keep requested
             _d = {
-                _render_key(k): _render_val(v)
+                _render_key(k): _render_val(k, v)
                 for k, v in d.items()
                 if (k in keep_none or v is not None)
             }
 
             # wrap string values where requested
-            if wrap_str:
-                for k in wrap_str:
-                    v = _d.get(k, None)
-                    if v is not None and isinstance(v, str):
-                        _d[k] = f'"{v}"'
+            for k in wrap_str:
+                v = _d.get(k, None)
+                if v is not None and isinstance(v, str):
+                    _d[k] = f'"{v}"'
 
             return _d
 
@@ -641,7 +656,11 @@ class Var:
 Vars = Dict[str, Var]
 
 
-@renderable(wrap_str=["default"], keep_none=["block", "default"])
+@renderable(
+    wrap_str=["default"],
+    keep_none=["block", "default"],
+    # TODO replace the flags on Var with transforms?
+)
 @dataclass
 class Context:
     """
