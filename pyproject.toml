@@ -31,6 +31,7 @@ requires-python = ">=3.9"
 dependencies = [
     "numpy>=1.20.3",
     "matplotlib >=1.4.0",
+    "modflow-devtools",
     "pandas >=2.0.0"
 ]
 dynamic = ["version", "readme"]
