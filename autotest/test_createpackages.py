@@ -1,8 +1,7 @@
-from ast import AST, Assign, ClassDef, expr
+from ast import Assign, ClassDef, expr
 from ast import parse as parse_ast
-from itertools import zip_longest
 from pprint import pformat
-from shutil import copy, copytree
+from shutil import copytree
 from typing import List, Union
 from warnings import warn
 
