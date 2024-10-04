@@ -5,14 +5,10 @@ build-backend = "hatchling.build"
 [project]
 name = "flopy"
 description = "FloPy is a Python package to create, run, and post-process MODFLOW-based models"
-authors = [
-    {name = "FloPy Team", email = "modflow@usgs.gov"},
-]
-maintainers = [
-    {name = "Joseph D. Hughes", email = "jdhughes@usgs.gov"},
-]
+authors = [{ name = "FloPy Team", email = "modflow@usgs.gov" }]
+maintainers = [{ name = "Joseph D. Hughes", email = "jdhughes@usgs.gov" }]
 keywords = ["MODFLOW", "groundwater", "hydrogeology"]
-license = {text = "CC0"}
+license = { text = "CC0" }
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
@@ -28,19 +24,14 @@ requires-python = ">=3.10"
 dependencies = [
     "numpy>=1.20.3",
     "matplotlib >=1.4.0",
+    "modflow-devtools",
     "pandas >=2.0.0",
 ]
 dynamic = ["version", "readme"]
 
 [project.optional-dependencies]
 dev = ["flopy[codegen,lint,test,optional,doc]", "tach"]
-codegen = [
-    "Jinja2>=3.0",
-    "boltons",
-    "modflow-devtools",
-    "tomli",
-    "tomli-w"
-]
+codegen = ["Jinja2>=3.0", "boltons", "tomli", "tomli-w"]
 lint = ["cffconvert", "codespell[toml] >=2.2.2", "ruff"]
 test = [
     "flopy[lint]",
@@ -61,7 +52,7 @@ test = [
     "syrupy",
     "tomli",
     "tomli-w",
-    "virtualenv"
+    "virtualenv",
 ]
 optional = [
     "affine",
@@ -109,12 +100,7 @@ Documentation = "https://flopy.readthedocs.io"
 "Source Code" = "https://github.com/modflowpy/flopy"
 
 [tool.hatch.build.targets.sdist]
-only-include = [
-    "CITATION.cff",
-    "README.md",
-    "docs",
-    "flopy",
-]
+only-include = ["CITATION.cff", "README.md", "docs", "flopy"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["flopy"]
@@ -145,14 +131,10 @@ include = [
     "scripts/**/*.py",
     ".docs/**/*.py",
 ]
-extend-include = [
-    "examples/**/*.ipynb"
-]
+extend-include = ["examples/**/*.ipynb"]
 
 [tool.ruff.format]
-exclude = [
-    "flopy/mf6/**/*.py",
-]
+exclude = ["flopy/mf6/**/*.py"]
 
 [tool.ruff.lint]
 select = [
@@ -162,19 +144,19 @@ select = [
     "F",    # Pyflakes
     "I001", # isort - unsorted-imports
     # "ISC001",  # implicitly concatenated string literals
-    "RUF",  # Ruff-specific rules
+    "RUF", # Ruff-specific rules
 ]
 ignore = [
-    "E402", # module level import not at top of file
-    "E712", # Avoid equality comparisons to `True`
-    "E722", # do not use bare `except`
-    "E721", # use `is`/`is not` for type comparisons
-    "E741", # ambiguous variable name
-    "F401", # unused import
-    "F403", # unable to detect undefined names (star imports)
-    "F524", # `.format` missing argument(s) for placeholder(s)
-    "F811", # Redefinition of unused variable
-    "F841", # local variable assigned but never used
+    "E402",   # module level import not at top of file
+    "E712",   # Avoid equality comparisons to `True`
+    "E722",   # do not use bare `except`
+    "E721",   # use `is`/`is not` for type comparisons
+    "E741",   # ambiguous variable name
+    "F401",   # unused import
+    "F403",   # unable to detect undefined names (star imports)
+    "F524",   # `.format` missing argument(s) for placeholder(s)
+    "F811",   # Redefinition of unused variable
+    "F841",   # local variable assigned but never used
     "RUF005", # collection literal concatenation
     "RUF012", # mutable class default
     "RUF017", # quadratic-list-summation
