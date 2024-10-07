@@ -30,10 +30,10 @@ def __init__(
         self.name_file.{{ n }}.set_data({{ n }})
         self.{{ n }} = self.name_file.{{ n }}
         {% endif -%}
-        {%- if var.subpkg is defined and base != "MFModel" %}
-        self.{{ var.subpkg.param }} = self._create_package(
-            "{{ var.subpkg.abbr }}",
-            {{ var.subpkg.param }}
+        {%- if var.reference is defined and base != "MFModel" %}
+        self.{{ var.reference.param }} = self._create_package(
+            "{{ var.reference.abbr }}",
+            {{ var.reference.param }}
         )
         {% endif -%}
         {% endfor -%}
@@ -48,14 +48,14 @@ def __init__(
         {% for n, var in variables.items() -%}
         {%- if var.init_assign -%}
         self.{{ n }} = {{ n }}
-        {% elif var.subpkg is defined and var.init_build -%}
+        {% elif var.reference is defined and var.init_build -%}
         self._{{ n }} = self.build_mfdata("{{ n }}", None)
-        {% elif var.subpkg is defined and name.r != "nam" -%}
-        self._{{ var.subpkg.abbr }}_package = self.build_child_package(
-            "{{ var.subpkg.abbr }}",
-            {{ var.subpkg.val }},
-            "{{ var.subpkg.param }}",
-            self._{{ var.subpkg.key }}
+        {% elif var.reference is defined and name.r != "nam" -%}
+        self._{{ var.reference.abbr }}_package = self.build_child_package(
+            "{{ var.reference.abbr }}",
+            {{ var.reference.val }},
+            "{{ var.reference.param }}",
+            self._{{ var.reference.key }}
         )
         {% elif var.init_build -%}
         self.{{ n }} = self.build_mfdata("{% if n == "continue_" %}continue{% else %}{{ n }}{% endif %}", {{ n }})

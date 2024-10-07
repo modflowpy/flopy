@@ -2,6 +2,7 @@ from ast import Assign, ClassDef, expr
 from ast import parse as parse_ast
 from pprint import pformat
 from shutil import copytree
+import traceback
 from typing import List, Union
 from warnings import warn
 
@@ -9,11 +10,13 @@ import pytest
 from modflow_devtools.misc import run_cmd
 
 from autotest.conftest import get_project_root_path
-from flopy.mf6.utils.createpackages import (
+from flopy.mf6.utils.codegen.context import get_context_names
+from flopy.mf6.utils.codegen.make import (
     DfnName,
     load_dfn,
     make_all,
     make_context,
+    make_contexts,
     make_targets,
 )
 
@@ -36,7 +39,7 @@ def test_load_dfn(dfn_name):
 
 
 @pytest.mark.parametrize(
-    "dfn_name, n_flat, n_params", [("gwf-ic", 2, 6), ("prt-prp", 40, 22)]
+    "dfn_name, n_flat, n_params", [("gwf-ic", 2, 2), ("prt-prp", 40, 18)]
 )
 def test_make_context(dfn_name, n_flat, n_params):
     with open(DFN_PATH / "common.dfn") as f:
@@ -46,11 +49,21 @@ def test_make_context(dfn_name, n_flat, n_params):
         dfn_name = DfnName(*dfn_name.split("-"))
         dfn = load_dfn(f, name=dfn_name)
 
-    ctx_name = dfn_name.contexts[0]
-    context = make_context(ctx_name, dfn, common=common)
-    assert len(dfn_name.contexts) == 1
+    context_names = get_context_names(dfn_name)
+    context_name = context_names[0]
+    context = make_context(context_name, dfn, common=common)
+    assert len(context_names) == 1
     assert len(context.variables) == n_params
     assert len(context.metadata) == n_flat + 1  # +1 for metadata
+
+
+@pytest.mark.skip(reason="TODO")
+@pytest.mark.parametrize("dfn_name", ["gwf-ic", "prt-prp", "gwf-nam"])
+def test_make_contexts(dfn_name):
+    with open(DFN_PATH / "common.dfn") as f:
+        common = load_dfn(f)
+
+    # TODO
 
 
 @pytest.mark.parametrize("dfn_name", DFN_NAMES)
@@ -63,7 +76,7 @@ def test_make_targets(dfn_name, function_tmpdir):
         dfn = load_dfn(f, name=dfn_name)
 
     make_targets(dfn, function_tmpdir, common=common)
-    for ctx_name in dfn_name.contexts:
+    for ctx_name in get_context_names(dfn_name):
         run_cmd("ruff", "format", function_tmpdir, verbose=True)
         run_cmd("ruff", "check", "--fix", function_tmpdir, verbose=True)
         assert (function_tmpdir / ctx_name.target).is_file()
@@ -135,7 +148,12 @@ def test_equivalence(function_tmpdir):
     )
     for prev_file, test_file in zip(prev_files, test_files):
         prev = parse_ast(open(prev_file).read())
-        test = parse_ast(open(test_file).read())
+        try:
+            test = parse_ast(open(test_file).read())
+        except:
+            raise ValueError(
+                f"Failed to parse {test_file}: {traceback.format_exc()}"
+            )
         prev_classes = [n for n in prev.body if isinstance(n, ClassDef)]
         test_classes = [n for n in test.body if isinstance(n, ClassDef)]
         prev_clsnames = set([c.name for c in prev_classes])
