@@ -228,3 +228,52 @@ def test_plot_limits():
         raise AssertionError("PlotMapView auto extent setting not working")
 
     plt.close(fig)
+
+
+def test_plot_centers():
+    from matplotlib.collections import PathCollection
+
+    nlay = 1
+    nrow = 10
+    ncol = 10
+
+    delc = np.ones((nrow,))
+    delr = np.ones((ncol,))
+    top = np.ones((nrow, ncol))
+    botm = np.zeros((nlay, nrow, ncol))
+    idomain = np.ones(botm.shape, dtype=int)
+
+    idomain[0, :, 0:3] = 0
+
+    grid = flopy.discretization.StructuredGrid(
+        delc=delc, delr=delr, top=top, botm=botm, idomain=idomain
+    )
+
+    line = {"line": [(0, 0), (10, 10)]}
+    active_xc_cells = 7
+
+    pxc = flopy.plot.PlotCrossSection(modelgrid=grid, line=line)
+    pc = pxc.plot_centers()
+
+    if not isinstance(pc, PathCollection):
+        raise AssertionError(
+            "plot_centers() not returning PathCollection object"
+        )
+
+    verts = pc._offsets
+    if not verts.shape[0] == active_xc_cells:
+        raise AssertionError(
+            "plot_centers() not properly masking inactive cells"
+        )
+
+    center_dict = pxc.projctr
+    edge_dict = pxc.projpts
+
+    for node, center in center_dict.items():
+        verts = np.array(edge_dict[node]).T
+        xmin = np.min(verts[0])
+        xmax = np.max(verts[0])
+        if xmax < center < xmin:
+            raise AssertionError(
+                "Cell center not properly drawn on cross-section"
+            )

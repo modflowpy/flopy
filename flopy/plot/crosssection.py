@@ -39,10 +39,13 @@ class PlotCrossSection:
         (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
         then these will be calculated based on grid, coordinates, and rotation.
     geographic_coords : bool
-        boolean flag to allow the user to plot cross section lines in
-        geographic coordinates. If False (default), cross section is plotted
-        as the distance along the cross section line.
-
+        boolean flag to allow the user to plot cross-section lines in
+        geographic coordinates. If False (default), cross-section is plotted
+        as the distance along the cross-section line.
+    min_segment_length : float
+        minimum width of a grid cell polygon to be plotted. Cells with a
+        cross-sectional width less than min_segment_length will be ignored
+        and not included in the plot. Default is 1e-02.
     """
 
     def __init__(
@@ -53,6 +56,7 @@ class PlotCrossSection:
         line=None,
         extent=None,
         geographic_coords=False,
+        min_segment_length=1e-02,
     ):
         self.ax = ax
         self.geographic_coords = geographic_coords
@@ -180,6 +184,22 @@ class PlotCrossSection:
             self.pts, self.xvertices, self.yvertices
         )
 
+        self.xypts = plotutil.UnstructuredPlotUtilities.filter_line_segments(
+            self.xypts, threshold=min_segment_length
+        )
+        # need to ensure that the ordering of verticies in xypts is correct
+        # based on the projection. In certain cases vertices need to be sorted
+        # for the specific "projection"
+        for node, points in self.xypts.items():
+            if self.direction == "y":
+                if points[0][-1] < points[1][-1]:
+                    points = points[::-1]
+            else:
+                if points[0][0] > points[1][0]:
+                    points = points[::-1]
+
+            self.xypts[node] = points
+
         if len(self.xypts) < 2:
             if len(list(self.xypts.values())[0]) < 2:
                 s = (
@@ -238,6 +258,7 @@ class PlotCrossSection:
             self.idomain = np.ones(botm.shape, dtype=int)
 
         self.projpts = self.set_zpts(None)
+        self.projctr = None
 
         # Create cross-section extent
         if extent is None:
@@ -926,6 +947,111 @@ class PlotCrossSection:
 
         return patches
 
+    def plot_centers(
+        self, a=None, s=None, masked_values=None, inactive=False, **kwargs
+    ):
+        """
+        Method to plot cell centers on cross-section using matplotlib
+        scatter. This method accepts an optional data array(s) for
+        coloring and scaling the cell centers. Cell centers in inactive
+        nodes are not plotted by default
+
+        Parameters
+        ----------
+        a : None, np.ndarray
+            optional numpy nd.array of size modelgrid.nnodes
+        s : None, float, numpy array
+            optional point size parameter
+        masked_values : None, iteratable
+            optional list, tuple, or np array of array (a) values to mask
+        inactive : bool
+            boolean flag to include inactive cell centers in the plot.
+            Default is False
+        **kwargs :
+            matplotlib ax.scatter() keyword arguments
+
+        Returns
+        -------
+            matplotlib ax.scatter() object
+        """
+        ax = kwargs.pop("ax", self.ax)
+
+        projpts = self.projpts
+        nodes = list(projpts.keys())
+        xcs = self.mg.xcellcenters.ravel()
+        ycs = self.mg.ycellcenters.ravel()
+        projctr = {}
+
+        if not self.geographic_coords:
+            xcs, ycs = geometry.transform(
+                xcs,
+                ycs,
+                self.mg.xoffset,
+                self.mg.yoffset,
+                self.mg.angrot_radians,
+                inverse=True,
+            )
+
+            for node, points in self.xypts.items():
+                projpt = projpts[node]
+                d0 = np.min(np.array(projpt).T[0])
+
+                xc_dist = geometry.project_point_onto_xc_line(
+                    points[:2], [xcs[node], ycs[node]], d0=d0, calc_dist=True
+                )
+                projctr[node] = xc_dist
+
+        else:
+            projctr = {}
+            for node in nodes:
+                if self.direction == "x":
+                    projctr[node] = xcs[node]
+                else:
+                    projctr[node] = ycs[node]
+
+        # pop off any centers that are outside the "visual field"
+        #  for a given cross-section.
+        removed = {}
+        for node, points in projpts.items():
+            center = projctr[node]
+            points = np.array(points[:2]).T
+            if np.min(points[0]) > center or np.max(points[0]) < center:
+                removed[node] = (np.min(points[0]), center, np.max(points[0]))
+                projctr.pop(node)
+
+        # filter out inactive cells
+        if not inactive:
+            idomain = self.mg.idomain.ravel()
+            for node, points in projpts.items():
+                if idomain[node] == 0:
+                    if node in projctr:
+                        projctr.pop(node)
+
+        self.projctr = projctr
+        nodes = list(projctr.keys())
+        xcenters = list(projctr.values())
+        zcenters = [np.mean(np.array(projpts[node]).T[1]) for node in nodes]
+
+        if a is not None:
+            if not isinstance(a, np.ndarray):
+                a = np.array(a)
+            a = a.ravel().astype(float)
+
+            if masked_values is not None:
+                self._masked_values.extend(list(masked_values))
+
+            for mval in self._masked_values:
+                a[a == mval] = np.nan
+
+            a = a[nodes]
+
+        if s is not None:
+            if not isinstance(s, (int, float)):
+                s = s[nodes]
+        print(len(xcenters))
+        scat = ax.scatter(xcenters, zcenters, c=a, s=s, **kwargs)
+        return scat
+
     def plot_vector(
         self,
         vx,
@@ -1350,6 +1476,7 @@ class PlotCrossSection:
             self.xvertices,
             self.yvertices,
             self.direction,
+            self._ncpl,
             method=method,
             starting=istart,
         )
@@ -1362,6 +1489,7 @@ class PlotCrossSection:
             self.xypts,
             self.direction,
             self.mg,
+            self._ncpl,
             self.geographic_coords,
             starting=istart,
         )
@@ -1369,8 +1497,8 @@ class PlotCrossSection:
         arr = []
         c = []
         for node, epl in sorted(epdict.items()):
-            c.append(cd[node])
             for xy in epl:
+                c.append(cd[node])
                 arr.append(xy)
 
         arr = np.array(arr)

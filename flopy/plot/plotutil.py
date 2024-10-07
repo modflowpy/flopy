@@ -1712,6 +1712,47 @@ class UnstructuredPlotUtilities:
         return vdict
 
     @staticmethod
+    def filter_line_segments(vdict, threshold=1e-2):
+        """
+        Method to filter out artifact intersections due to epsilon perturbation
+        of line segments. This method gets the distance of intersection
+        and then filters by a user provided threshold
+
+        Parameters
+        ----------
+        vdict : dict
+            dictionary of node number, intersection vertices (line segment)
+        threshold : float
+            user provided thresholding value
+
+        Returns
+        -------
+            vdict
+        """
+        from ..utils.geometry import distance
+
+        nodes = list(vdict.keys())
+        dists = []
+
+        for node in nodes:
+            points = vdict[node]
+            if len(points) < 2:
+                dist = 0
+            else:
+                pt0 = points[0]
+                pt1 = points[1]
+                dist = distance(pt0[0], pt0[1], pt1[0], pt1[1])
+
+            dists.append(dist)
+
+        dists = np.array(dists)
+        ixs = np.where(dists < threshold)[0]
+        for ix in ixs:
+            node = nodes[ix]
+            vdict.pop(node)
+        return vdict
+
+    @staticmethod
     def irregular_shape_patch(xverts, yverts=None):
         """
         Patch for vertex cross-section plotting when we have an irregular
@@ -2478,17 +2519,13 @@ def reproject_modpath_to_crosssection(
             line = xypts[tcell]
             if len(line) < 2:
                 continue
-            if projection == "x":
-                d0 = np.min([i[0] for i in projpts[cell]])
-            else:
-                d0 = np.max([i[0] for i in projpts[cell]])
+            d0 = np.min([i[0] for i in projpts[cell]])
             for rec in recarrays:
                 pts = list(zip(rec[xp], rec[yp]))
-                x, y = geometry.project_point_onto_xc_line(
-                    line, pts, d0, projection
+                xc_dist = geometry.project_point_onto_xc_line(
+                    line, pts, d0=d0, calc_dist=True
                 )
-                rec[xp] = x
-                rec[yp] = y
+                rec[proj] = xc_dist
                 pid = rec["particleid"][0]
                 pline = list(zip(rec[proj], rec[zp], rec["time"]))
                 if pid not in ptdict:

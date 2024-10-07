@@ -624,6 +624,67 @@ class PlotMapView:
         ax = self._set_axes_limits(ax)
         return patch_collection
 
+    def plot_centers(
+        self, a=None, s=None, masked_values=None, inactive=False, **kwargs
+    ):
+        """
+        Method to plot cell centers on cross-section using matplotlib
+        scatter. This method accepts an optional data array(s) for
+        coloring and scaling the cell centers. Cell centers in inactive
+        nodes are not plotted by default
+
+        Parameters
+        ----------
+        a : None, np.ndarray
+            optional numpy nd.array of size modelgrid.nnodes
+        s : None, float, numpy array
+            optional point size parameter
+        masked_values : None, iteratable
+            optional list, tuple, or np array of array (a) values to mask
+        inactive : bool
+            boolean flag to include inactive cell centers in the plot.
+            Default is False
+        **kwargs :
+            matplotlib ax.scatter() keyword arguments
+
+        Returns
+        -------
+            matplotlib ax.scatter() object
+        """
+        ax = kwargs.pop("ax", self.ax)
+
+        xcenters = self.mg.get_xcellcenters_for_layer(self.layer).ravel()
+        ycenters = self.mg.get_ycellcenters_for_layer(self.layer).ravel()
+        idomain = self.mg.get_plottable_layer_array(
+            self.mg.idomain, self.layer
+        ).ravel()
+
+        active_ixs = list(range(len(xcenters)))
+        if not inactive:
+            active_ixs = np.where(idomain != 0)[0]
+
+        xcenters = xcenters[active_ixs]
+        ycenters = ycenters[active_ixs]
+
+        if a is not None:
+            a = self.mg.get_plottable_layer_array(a).ravel()
+
+            if masked_values is not None:
+                self._masked_values.extend(list(masked_values))
+
+            for mval in self._masked_values:
+                a[a == mval] = np.nan
+
+            a = a[active_ixs]
+
+        if s is not None:
+            if not isinstance(s, (int, float)):
+                s = self.mg.get_plottable_layer_array(s).ravel()
+                s = s[active_ixs]
+
+        scat = ax.scatter(xcenters, ycenters, c=a, s=s, **kwargs)
+        return scat
+
     def plot_vector(
         self,
         vx,
