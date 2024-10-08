@@ -13,5 +13,5 @@
     package_abbr = "{% if name.l != "sln" and name.l != "sim" and name.l != "exg" and name.l is not none %}{{ name.l }}{% endif %}{{ name.r }}"
     _package_type = "{{ name.r }}"
     dfn_file_name = "{% if name.l is not none %}{{ name.l }}-{% elif name.l is none %}sim-{% endif %}{{ name.r }}.dfn"
-    dfn = {{ metadata|pprint|indent(10) }}
+    dfn = {{ dfn|pprint|indent(10) }}
     {% endif -%}

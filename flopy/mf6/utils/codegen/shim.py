@@ -1,10 +1,11 @@
 import os
 from os import PathLike
-from typing import Iterable, Optional, Union, get_args, get_origin
+from typing import Iterable, List, Optional, Union, get_args, get_origin
 
 from numpy.typing import ArrayLike
 from pandas import DataFrame
 
+from flopy.mf6.utils.codegen.dfn import Metadata
 from flopy.mf6.utils.codegen.spec import Var, VarKind
 
 
@@ -439,19 +440,45 @@ def _loose_type(o) -> type:
     return d["_type"]
 
 
+def _dfn(o) -> List[Metadata]:
+    """
+    Get a list of the class' original definition attributes
+    as a partial, internal reproduction of the DFN contents.
+
+    Notes
+    -----
+    Currently, generated classes have a `.dfn` property that
+    reproduces the corresponding DFN sans a few attributes.
+    This represents the DFN in raw form, before adapting to
+    Python, consolidating nested types, etc.
+    """
+
+    d = dict(o)
+    dfn = d["definition"]
+
+    def _fmt_var(var: Union[Var, List[Var]]) -> List[str]:
+        exclude = ["longname", "description"]
+
+        def _fmt_name(k, v):
+            return v.replace("-", "_") if k == "name" else v
+
+        return [
+            " ".join([k, str(_fmt_name(k, v))]).strip()
+            for k, v in var.items()
+            if k not in exclude
+        ]
+
+    meta = dfn["metadata"] or list()
+    return [["header"] + [m for m in meta]] + [
+        _fmt_var(var) for var in dfn["data"].values()
+    ]
+
+
 SHIM = {
-    "keep_none": ["default", "block"],
+    "keep_none": ["default", "block", "metadata"],
     "quote_str": ["default"],
-    "type_name": ["_type"],
-    "transform": [
-        # context-specific parameters
-        # for the `__init__()` method.
-        # do it as a `transform` (not
-        # `add_entry`) so we are able
-        # to control the param order.
-        (_is_ctx, _add_ctx_vars)
-    ],
-    "add_entry": [
+    "set_pairs": [
+        (_is_ctx, [("dfn", _dfn)]),
         (
             _is_var,
             [
@@ -464,6 +491,15 @@ SHIM = {
                 ("class_attr", _class_attr),
             ],
         ),
+    ],
+    "type_name": ["_type"],
+    "transform": [
+        # context-specific parameters
+        # for the `__init__()` method.
+        # do it as a `transform` (not
+        # `set_pairs`) so we are able
+        # to control the param order.
+        (_is_ctx, _add_ctx_vars)
     ],
 }
 """

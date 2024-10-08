@@ -170,27 +170,29 @@ class Context:
     a parent context within which it can be created (the parent then
     becomes the first `__init__` method parameter).
 
+    """
+
+    name: ContextName
+    definition: Dfn
+    variables: Vars
+    records: Vars
+    """
     A separate map of record variables is maintained because we will
     generate named tuples for record types, and complex filtering of
     e.g. nested maps of variables is awkward or impossible in Jinja.
     TODO: make this a prerendering step
-
     """
-
-    name: ContextName
-    base: Optional[type]
-    parent: Optional[Union[type, str]]
-    description: Optional[str]
-    metadata: List[Metadata]
-    variables: Vars
-    records: Vars
-    references: Refs
+    base: Optional[type] = None
+    parent: Optional[Union[type, str]] = None
+    description: Optional[str] = None
+    reference: bool = False
+    references: Optional[Refs] = None
 
 
 def make_context(
     name: ContextName,
-    dfn: Dfn,
-    common: Optional[Dfn] = None,
+    definition: Dfn,
+    commonvars: Optional[Dfn] = None,
     references: Optional[Refs] = None,
 ) -> Context:
     """
@@ -210,11 +212,11 @@ def make_context(
     is related to.
     """
 
-    common = common or dict()
+    commonvars = commonvars or dict()
+    reference = Ref.from_dfn(definition)
     references = references or dict()
-    ref = Ref.from_dfn(dfn)  # this a ref?
-    refs = dict()  # referenced contexts
-    records = dict()  # record variables
+    referenced = dict()
+    records = dict()
 
     def _ntname(s):
         """
@@ -244,17 +246,17 @@ def make_context(
         the need to import `MFSimulation` in this file (avoids
         potential for circular imports).
         """
-        l, r = dfn.name
+        l, r = definition.name
         if (l, r) == ("sim", "nam") and name == ("sim", "nam"):
             return None
         if l in ["sim", "exg", "sln"]:
             return "MFSimulation"
         if name.r is None:
             return "MFSimulation"
-        if ref:
-            if len(ref.parents) > 1:
-                return f"Union[{', '.join([_try_get_type_name(t) for t in ref.parents])}]"
-            return ref.parents[0]
+        if reference:
+            if len(reference.parents) > 1:
+                return f"Union[{', '.join([_try_get_type_name(t) for t in reference.parents])}]"
+            return reference.parents[0]
         return "MFModel"
 
     parent = _parent()
@@ -315,7 +317,7 @@ def make_context(
             if replace:
                 key, _, subs = tail.strip().partition(" ")
                 subs = literal_eval(subs)
-                cmn_var = common.get(key, None)
+                cmn_var = commonvars.get(key, None)
                 if cmn_var is None:
                     raise ValueError(f"Common variable not found: {key}")
                 descr = cmn_var.get("description", "")
@@ -328,11 +330,11 @@ def make_context(
 
         def _fields(record_name: str) -> Vars:
             """Recursively load/convert a record's fields."""
-            record = dfn[record_name]
+            record = definition[record_name]
             field_names = record["type"].split()[1:]
             fields: Dict[str, Var] = {
                 n: _convert(field, wrap=False)
-                for n, field in dfn.items()
+                for n, field in definition.items()
                 if n in field_names
             }
             field_names = list(fields.keys())
@@ -389,7 +391,7 @@ def make_context(
             # fields directly inside the recarray (implicit). list
             # data for unions/keystrings necessarily comes nested.
 
-            is_explicit_record = len(names) == 1 and dfn[names[0]][
+            is_explicit_record = len(names) == 1 and definition[names[0]][
                 "type"
             ].startswith("record")
 
@@ -398,7 +400,7 @@ def make_context(
                 # only scalar fields
                 types = [
                     _try_get_type_name(v["type"])
-                    for n, v in dfn.items()
+                    for n, v in definition.items()
                     if n in names
                 ]
                 scalar_types = list(_SCALAR_TYPES.keys())
@@ -406,7 +408,7 @@ def make_context(
 
             if is_explicit_record:
                 record_name = names[0]
-                record_spec = dfn[record_name]
+                record_spec = definition[record_name]
                 record = _convert(record_spec, wrap=False)
                 children = {_ntname(record_name).lower(): record}
                 type_ = Iterable[record._type]
@@ -438,7 +440,9 @@ def make_context(
                 type_ = Iterable[record_type]
             else:
                 # implicit complex record (i.e. some fields are records or unions)
-                fields = {n: _convert(dfn[n], wrap=False) for n in names}
+                fields = {
+                    n: _convert(definition[n], wrap=False) for n in names
+                }
                 first = list(fields.values())[0]
                 single = len(fields) == 1
                 record_name = first.name if single else _name
@@ -473,7 +477,7 @@ def make_context(
         # union (product), children are record choices
         elif _type.startswith("keystring"):
             names = _type.split()[1:]
-            children = {n: _convert(dfn[n], wrap=True) for n in names}
+            children = {n: _convert(definition[n], wrap=True) for n in names}
             type_ = Union[tuple([c._type for c in children.values()])]
 
         # record (sum) type, children are fields
@@ -565,7 +569,7 @@ def make_context(
         ref_ = references.get(_name, None)
         if ref_:
             var_.reference = ref_
-            refs[_name] = ref_
+            referenced[_name] = ref_
 
         # if the var is a record, make a named tuple for it
         if is_record:
@@ -599,7 +603,7 @@ def make_context(
         Variables may be added, depending on the context type.
         """
 
-        vars_ = dfn.copy()
+        vars_ = definition.copy()
         vars_ = {
             name: _convert(var, wrap=False)
             for name, var in vars_.items()
@@ -614,53 +618,29 @@ def make_context(
         # avoid name/reserved keyword collisions)
         return {v.name: v for v in vars_.values()}
 
-    def _metadata() -> List[Metadata]:
-        """
-        Get a list of the class' original definition attributes
-        as a partial, internal reproduction of the DFN contents.
-
-        Notes
-        -----
-        Currently, generated classes have a `.dfn` property that
-        reproduces the corresponding DFN sans a few attributes.
-        This represents the DFN in raw form, before adapting to
-        Python, consolidating nested types, etc.
-        """
-
-        def _fmt_var(var: Union[Var, List[Var]]) -> List[str]:
-            exclude = ["longname", "description"]
-
-            def _fmt_name(k, v):
-                return v.replace("-", "_") if k == "name" else v
-
-            return [
-                " ".join([k, str(_fmt_name(k, v))]).strip()
-                for k, v in var.items()
-                if k not in exclude
-            ]
-
-        meta = dfn.metadata or list()
-        return [["header"] + [m for m in meta]] + [
-            _fmt_var(var) for var in dfn.omd.values(multi=True)
-        ]
-
     return Context(
         name=name,
+        definition=definition,
+        variables=_variables(),
+        records=records,
         base=name.base,
         parent=parent,
         description=name.description,
-        metadata=_metadata(),
-        variables=_variables(),
-        records=records,
-        references=refs,
+        reference=reference,
+        references=referenced,
     )
 
 
 def make_contexts(
-    dfn: Dfn,
-    common: Optional[Dfn] = None,
-    refs: Optional[Refs] = None,
+    definition: Dfn,
+    commonvars: Optional[Dfn] = None,
+    references: Optional[Refs] = None,
 ) -> Iterator[Context]:
     """Generate one or more input contexts from the given input definition."""
-    for name in get_context_names(dfn.name):
-        yield make_context(name=name, dfn=dfn, common=common, references=refs)
+    for name in get_context_names(definition.name):
+        yield make_context(
+            name=name,
+            definition=definition,
+            commonvars=commonvars,
+            references=references,
+        )

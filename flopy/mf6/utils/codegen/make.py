@@ -13,7 +13,7 @@ from flopy.mf6.utils.codegen.context import (
     make_context,
     make_contexts,
 )
-from flopy.mf6.utils.codegen.dfn import Dfn, DfnName, Dfns, load_dfn
+from flopy.mf6.utils.codegen.dfn import Dfn, DfnName, Dfns
 from flopy.mf6.utils.codegen.ref import Ref, Refs
 
 _TEMPLATE_LOADER = PackageLoader("flopy", "mf6/utils/templates/")
@@ -31,7 +31,9 @@ def make_targets(
 ):
     """Generate Python source file(s) from the given input definition."""
 
-    for context in make_contexts(dfn=dfn, common=common, refs=refs):
+    for context in make_contexts(
+        definition=dfn, commonvars=common, references=refs
+    ):
         target = outdir / context.name.target
         with open(target, "w") as f:
             source = _TEMPLATE.render(**context.render())
@@ -55,7 +57,7 @@ def make_all(dfndir: Path, outdir: Path, verbose: bool = False):
         common = None
     else:
         with open(common_path, "r") as f:
-            common = load_dfn(f)
+            common = Dfn.load(f)
 
     # load all the input definitions before we generate input
     # contexts so we can create foreign key refs between them.
@@ -64,7 +66,7 @@ def make_all(dfndir: Path, outdir: Path, verbose: bool = False):
     for p in paths:
         name = DfnName(*p.stem.split("-"))
         with open(p) as f:
-            dfn = load_dfn(f, name=name)
+            dfn = Dfn.load(f, name=name)
             dfns[name] = dfn
             ref = Ref.from_dfn(dfn)
             if ref:

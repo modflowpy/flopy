@@ -1,8 +1,9 @@
 from collections import UserDict
+from collections.abc import MutableMapping
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Tuple
 
-from boltons.dictutils import OMD
+from boltons.dictutils import OrderedMultiDict
 
 
 class DfnName(NamedTuple):
@@ -26,7 +27,7 @@ Metadata = List[str]
 
 
 @dataclass
-class Dfn(UserDict):
+class Dfn(MutableMapping):
     """
     An MF6 input definition.
 
@@ -39,81 +40,99 @@ class Dfn(UserDict):
     This class should not be modified after loading.
     """
 
-    name: Optional[DfnName]
+    variables: OrderedMultiDict
     metadata: Optional[Metadata]
+    name: Optional[DfnName]
 
     def __init__(
         self,
         variables: Iterable[Tuple[str, Dict[str, Any]]],
-        name: Optional[DfnName] = None,
         metadata: Optional[Metadata] = None,
+        name: Optional[DfnName] = None,
     ):
-        self.omd = OMD(variables)
-        self.name = name
+        self.variables = OrderedMultiDict(variables)
         self.metadata = metadata
-        super().__init__(self.omd)
+        self.name = name
+
+    def __getitem__(self, key):
+        return self.variables.getlist(key)
+
+    def __setitem__(self, key, val):
+        self.variables.__setitem__(key, val)
+
+    def __delitem__(self, key):
+        self.variables.__delitem__(key)
+
+    def __len__(self):
+        return len(self.variables.values(multi=True))
+
+    def __iter__(self):
+        return iter(self.variables)
+
+    def __repr__(self):
+        return self.variables.__repr__()
+
+    @classmethod
+    def load(cls, f, name: Optional[DfnName] = None) -> "Dfn":
+        """
+        Load an input definition from a definition file.
+        """
+
+        meta = None
+        vars_ = list()
+        var = dict()
+
+        for line in f:
+            # remove whitespace/etc from the line
+            line = line.strip()
+
+            # record context name and flopy metadata
+            # attributes, skip all other comment lines
+            if line.startswith("#"):
+                _, sep, tail = line.partition("flopy")
+                if sep == "flopy":
+                    if meta is None:
+                        meta = list()
+                    tail = tail.strip()
+                    if "solution_package" in tail:
+                        tail = tail.split()
+                        tail.pop(1)
+                    meta.append(tail)
+                    continue
+                _, sep, tail = line.partition("package-type")
+                if sep == "package-type":
+                    if meta is None:
+                        meta = list
+                    meta.append(f"{sep} {tail.strip()}")
+                    continue
+                _, sep, tail = line.partition("solution_package")
+                continue
+
+            # if we hit a newline and the parameter dict
+            # is nonempty, we've reached the end of its
+            # block of attributes
+            if not any(line):
+                if any(var):
+                    n = var["name"]
+                    vars_.append((n, var))
+                    var = dict()
+                continue
+
+            # split the attribute's key and value and
+            # store it in the parameter dictionary
+            key, _, value = line.partition(" ")
+            if key == "default_value":
+                key = "default"
+            if value in ["true", "false"]:
+                value = value == "true"
+            var[key] = value
+
+        # add the final parameter
+        if any(var):
+            n = var["name"]
+            vars_.append((n, var))
+
+        return cls(variables=vars_, name=name, metadata=meta)
 
 
 Dfns = Dict[str, Dfn]
-
-
-def load_dfn(f, name: Optional[DfnName] = None) -> Dfn:
-    """
-    Load an input definition from a definition file.
-    """
-
-    meta = None
-    vars_ = list()
-    var = dict()
-
-    for line in f:
-        # remove whitespace/etc from the line
-        line = line.strip()
-
-        # record context name and flopy metadata
-        # attributes, skip all other comment lines
-        if line.startswith("#"):
-            _, sep, tail = line.partition("flopy")
-            if sep == "flopy":
-                if meta is None:
-                    meta = list()
-                tail = tail.strip()
-                if "solution_package" in tail:
-                    tail = tail.split()
-                    tail.pop(1)
-                meta.append(tail)
-                continue
-            _, sep, tail = line.partition("package-type")
-            if sep == "package-type":
-                if meta is None:
-                    meta = list
-                meta.append(f"{sep} {tail.strip()}")
-                continue
-            _, sep, tail = line.partition("solution_package")
-            continue
-
-        # if we hit a newline and the parameter dict
-        # is nonempty, we've reached the end of its
-        # block of attributes
-        if not any(line):
-            if any(var):
-                n = var["name"]
-                vars_.append((n, var))
-                var = dict()
-            continue
-
-        # split the attribute's key and value and
-        # store it in the parameter dictionary
-        key, _, value = line.partition(" ")
-        if key == "default_value":
-            key = "default"
-        if value in ["true", "false"]:
-            value = value == "true"
-        var[key] = value
-
-    # add the final parameter
-    if any(var):
-        n = var["name"]
-        vars_.append((n, var))
-
-    return Dfn(variables=vars_, name=name, metadata=meta)

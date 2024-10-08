@@ -1,8 +1,8 @@
+import traceback
 from ast import Assign, ClassDef, expr
 from ast import parse as parse_ast
 from pprint import pformat
 from shutil import copytree
-import traceback
 from typing import List, Union
 from warnings import warn
 
@@ -11,9 +11,9 @@ from modflow_devtools.misc import run_cmd
 
 from autotest.conftest import get_project_root_path
 from flopy.mf6.utils.codegen.context import get_context_names
+from flopy.mf6.utils.codegen.dfn import Dfn
 from flopy.mf6.utils.codegen.make import (
     DfnName,
-    load_dfn,
     make_all,
     make_context,
     make_contexts,
@@ -31,37 +31,30 @@ DFN_NAMES = [
 ]
 
 
-@pytest.mark.parametrize("dfn_name", DFN_NAMES)
-def test_load_dfn(dfn_name):
-    dfn_path = DFN_PATH / f"{dfn_name}.dfn"
-    with open(dfn_path, "r") as f:
-        dfn = load_dfn(f, name=DfnName(*dfn_name.split("-")))
-
-
 @pytest.mark.parametrize(
-    "dfn_name, n_flat, n_params", [("gwf-ic", 2, 2), ("prt-prp", 40, 18)]
+    "dfn, n_flat, n_params", [("gwf-ic", 2, 2), ("prt-prp", 40, 18)]
 )
-def test_make_context(dfn_name, n_flat, n_params):
+def test_make_context(dfn, n_flat, n_params):
     with open(DFN_PATH / "common.dfn") as f:
-        common = load_dfn(f)
+        commonvars = Dfn.load(f)
 
-    with open(DFN_PATH / f"{dfn_name}.dfn") as f:
-        dfn_name = DfnName(*dfn_name.split("-"))
-        dfn = load_dfn(f, name=dfn_name)
+    with open(DFN_PATH / f"{dfn}.dfn") as f:
+        dfn = DfnName(*dfn.split("-"))
+        definition = Dfn.load(f, name=dfn)
 
-    context_names = get_context_names(dfn_name)
+    context_names = get_context_names(dfn)
     context_name = context_names[0]
-    context = make_context(context_name, dfn, common=common)
+    context = make_context(context_name, definition, commonvars)
     assert len(context_names) == 1
     assert len(context.variables) == n_params
-    assert len(context.metadata) == n_flat + 1  # +1 for metadata
+    assert len(context.definition.metadata) == n_flat + 1  # +1 for metadata
 
 
 @pytest.mark.skip(reason="TODO")
 @pytest.mark.parametrize("dfn_name", ["gwf-ic", "prt-prp", "gwf-nam"])
 def test_make_contexts(dfn_name):
     with open(DFN_PATH / "common.dfn") as f:
-        common = load_dfn(f)
+        common = Dfn.load(f)
 
     # TODO
 
@@ -69,11 +62,11 @@ def test_make_contexts(dfn_name):
 @pytest.mark.parametrize("dfn_name", DFN_NAMES)
 def test_make_targets(dfn_name, function_tmpdir):
     with open(DFN_PATH / "common.dfn") as f:
-        common = load_dfn(f)
+        common = Dfn.load(f)
 
     with open(DFN_PATH / f"{dfn_name}.dfn", "r") as f:
         dfn_name = DfnName(*dfn_name.split("-"))
-        dfn = load_dfn(f, name=dfn_name)
+        dfn = Dfn.load(f, name=dfn_name)
 
     make_targets(dfn, function_tmpdir, common=common)
     for ctx_name in get_context_names(dfn_name):

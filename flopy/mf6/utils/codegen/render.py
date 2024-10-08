@@ -15,9 +15,9 @@ Entries = Iterable[Entry]
 def renderable(
     maybe_cls=None,
     *,
-    add_entry: Optional[Iterable[Tuple[Predicate, Entries]]] = None,
     keep_none: Optional[Iterable[str]] = None,
     quote_str: Optional[Iterable[str]] = None,
+    set_pairs: Optional[Iterable[Tuple[Predicate, Entries]]] = None,
     transform: Optional[Iterable[Tuple[Predicate, Transform]]] = None,
     type_name: Optional[Iterable[str]] = None,
 ):
@@ -110,9 +110,9 @@ def renderable(
 
     """
 
-    add_entry = add_entry or list()
     quote_str = quote_str or list()
     keep_none = keep_none or list()
+    set_pairs = set_pairs or list()
     transform = transform or list()
     type_name = type_name or list()
 
@@ -140,7 +140,7 @@ def renderable(
                 if p(o):
                     d = t(o)
 
-            for p, e in add_entry:
+            for p, e in set_pairs:
                 if not p(d):
                     continue
                 if e is None:
