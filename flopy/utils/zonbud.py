@@ -2289,7 +2289,7 @@ class ZoneFile6:
                 if method == "open/close":
                     fobj = open(os.path.join(pkg_ws, t[1]))
                 while i < ncells:
-                    t = multi_line_strip(fobj)
+                    t = multi_line_strip(fobj).split()
                     if t[0] == "open/close":
                         if fobj != foo:
                             fobj.close()
