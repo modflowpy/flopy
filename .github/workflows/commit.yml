@@ -153,7 +153,7 @@ jobs:
             python=${{ matrix.python-version }}
           init-shell: >-
             bash
-            powershell
+            pwsh
 
       - name: Install FloPy
         run: pip install .
