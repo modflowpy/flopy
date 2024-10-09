@@ -133,7 +133,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-        python-version: [ 3.8, 3.9, "3.10", "3.11", "3.12" ]
+        python-version: [ 3.9, "3.10", "3.11", "3.12" ]
     defaults:
       run:
         shell: bash -l {0}
@@ -181,9 +181,12 @@ jobs:
         working-directory: autotest
         run: |
           pytest -v -m="not example" -n=auto --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed --dist loadfile
-          coverage report
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Report coverage
+        working-directory: autotest
+        run: coverage report
 
       - name: Upload failed test outputs
         uses: actions/upload-artifact@v4

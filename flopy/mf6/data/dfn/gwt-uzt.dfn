@@ -16,6 +16,7 @@ type string
 shape (naux)
 reader urword
 optional true
+class_attr true
 longname keyword to specify aux variables
 description REPLACE auxnames {'{#1}': 'Groundwater Transport'}
 
@@ -399,7 +400,7 @@ description real or character value that defines the concentration of unsaturate
 
 block period
 name auxiliaryrecord
-type record auxiliary auxname auxval
+type record aux auxname auxval
 shape
 tagged
 in_record true
@@ -408,7 +409,7 @@ longname
 description
 
 block period
-name auxiliary
+name aux
 type keyword
 shape
 in_record true

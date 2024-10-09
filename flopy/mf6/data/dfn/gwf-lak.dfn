@@ -845,7 +845,7 @@ description real or character value that defines the bed slope for the lake outl
 
 block period
 name auxiliaryrecord
-type record auxiliary auxname auxval
+type record aux auxname auxval
 shape
 tagged
 in_record true
@@ -854,7 +854,7 @@ longname
 description
 
 block period
-name auxiliary
+name aux
 type keyword
 shape
 in_record true

@@ -42,6 +42,7 @@ name cvoptions
 type record variablecv dewatered
 reader urword
 optional true
+class_attr false
 longname vertical conductance options
 description none
 
@@ -123,6 +124,7 @@ name xt3doptions
 type record xt3d rhs
 reader urword
 optional true
+class_attr false
 longname keyword to activate XT3D
 description none
 

@@ -61,6 +61,7 @@ name cvoptions
 type record variablecv dewatered
 reader urword
 optional true
+class_attr false
 longname vertical conductance options
 description none
 
