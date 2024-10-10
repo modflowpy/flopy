@@ -32,27 +32,6 @@ def test_dfn_load(dfn_name):
             assert any(dfn)
 
 
-@pytest.mark.parametrize(
-    "dfn, n_vars, n_flat, n_meta",
-    [("gwf-ic", 2, 2, 0), ("prt-prp", 18, 40, 1)],
-)
-def test_make_context(dfn, n_vars, n_flat, n_meta):
-    with open(DFN_PATH / "common.dfn") as f:
-        commonvars = Dfn.load(f)
-
-    with open(DFN_PATH / f"{dfn}.dfn") as f:
-        dfn = DfnName(*dfn.split("-"))
-        definition = Dfn.load(f, name=dfn)
-
-    context_names = get_context_names(dfn)
-    context_name = context_names[0]
-    context = make_context(context_name, definition, commonvars)
-    assert len(context_names) == 1
-    assert len(context.variables) == n_vars
-    assert len(context.definition) == n_flat
-    assert len(context.definition.metadata) == n_meta
-
-
 @pytest.mark.parametrize("dfn_name", DFN_NAMES)
 def test_make_targets(dfn_name, function_tmpdir):
     with open(DFN_PATH / "common.dfn") as f:

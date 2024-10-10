@@ -114,6 +114,7 @@ include = ["flopy", "flopy.*"]
 
 [tool.setuptools.package-data]
 "flopy.mf6.data" = ["dfn/*.dfn"]
+"flopy.mf6.utils.codegen" = ["templates/*.jinja"]
 "flopy.plot" = ["mplstyle/*.mplstyle"]
 
 [tool.ruff]
