@@ -80,7 +80,7 @@ jobs:
           echo $GITHUB_EVENT_NAME
 
       - name: Setup Micromamba
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: etc/environment.yml
           cache-environment: true
