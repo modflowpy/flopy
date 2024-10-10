@@ -703,23 +703,43 @@ class MFSimulationBase:
     @property
     def package_dict(self):
         """Returns a copy of the package name dictionary."""
+        warnings.warn(
+            "This method is for internal use only and will be deprecated.",
+            category=DeprecationWarning,
+        )
         return self._package_container.package_dict
 
     @property
     def package_names(self):
         """Returns a list of package names."""
+        warnings.warn(
+            "This method is for internal use only and will be deprecated.",
+            category=DeprecationWarning,
+        )
         return self._package_container.package_names
 
     @property
     def package_type_dict(self):
+        warnings.warn(
+            "This method is for internal use only and will be deprecated.",
+            category=DeprecationWarning,
+        )
         return self._package_container.package_type_dict
 
     @property
     def package_name_dict(self):
+        warnings.warn(
+            "This method is for internal use only and will be deprecated.",
+            category=DeprecationWarning,
+        )
         return self._package_container.package_name_dict
 
     @property
     def package_filename_dict(self):
+        warnings.warn(
+            "This method is for internal use only and will be deprecated.",
+            category=DeprecationWarning,
+        )
         return self._package_container.package_filename_dict
 
     @staticmethod
