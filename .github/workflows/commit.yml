@@ -181,9 +181,12 @@ jobs:
         working-directory: autotest
         run: |
           pytest -v -m="not example" -n=auto --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed --dist loadfile
-          coverage report
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Report coverage
+        working-directory: autotest
+        run: coverage report
 
       - name: Upload failed test outputs
         uses: actions/upload-artifact@v4
