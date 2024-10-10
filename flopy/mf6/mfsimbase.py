@@ -21,6 +21,7 @@ from flopy.mf6.mfbase import (
     PackageContainerType,
     VerbosityLevel,
 )
+from flopy.mf6.mfmodel import MFModel
 from flopy.mf6.mfpackage import MFChildPackages, MFPackage
 from flopy.mf6.modflow import mfnam, mftdis
 from flopy.mf6.utils import binaryfile_utils, mfobservation
@@ -1871,7 +1872,7 @@ class MFSimulationBase:
         """
         return self._models.copy()
 
-    def get_model(self, model_name=None):
+    def get_model(self, model_name=None) -> Optional[MFModel]:
         """
         Returns the models in the simulation with a given model name, name
         file name, or model type.
