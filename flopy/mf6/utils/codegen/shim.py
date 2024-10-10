@@ -28,7 +28,11 @@ def _is_var(o) -> bool:
 def _is_init_param(o) -> bool:
     """Whether the object is an `__init__` method parameter."""
     d = dict(o)
-    return not d.get("ref", None)
+    if d.get("ref", None):
+        return False
+    if d["name"] in ["output"]:
+        return False
+    return True
 
 
 def _is_container_init_param(o) -> bool:
@@ -37,6 +41,9 @@ def _is_container_init_param(o) -> bool:
     package container class. This is only relevant for some
     subpackage contexts.
     """
+    d = dict(o)
+    if d["name"] in ["output"]:
+        return False
     return True
 
 
@@ -97,9 +104,11 @@ def _add_exg_params(ctx: dict) -> dict:
 
     if ctx["references"]:
         for key, ref in ctx["references"].items():
-            if key not in vars_:
+            key_var = vars_.get(key, None)
+            if not key_var:
                 continue
-            vars_[ref["val"]] = {
+            vars_[key] = {
+                **key_var,
                 "name": ref["val"],
                 "description": ref.get("description", None),
                 "reference": ref,
@@ -172,9 +181,11 @@ def _add_pkg_params(ctx: dict) -> dict:
 
     if ctx["references"]:
         for key, ref in ctx["references"].items():
-            if key not in vars_:
+            key_var = vars_.get(key, None)
+            if not key_var:
                 continue
             vars_[key] = {
+                **key_var,
                 "name": ref["val"],
                 "description": ref.get("description", None),
                 "reference": ref,
@@ -242,9 +253,11 @@ def _add_mdl_params(ctx: dict) -> dict:
 
     if ctx["references"]:
         for key, ref in ctx["references"].items():
-            if key not in vars_:
+            key_var = vars_.get(key, None)
+            if not key_var:
                 continue
             vars_[key] = {
+                **key_var,
                 "name": ref["val"],
                 "description": ref.get("description", None),
                 "reference": ref,
@@ -328,13 +341,16 @@ def _add_sim_params(ctx: dict) -> dict:
 
     if ctx["references"] and ctx["name"] != (None, "nam"):
         for key, ref in ctx["references"].items():
-            if key not in vars_:
+            key_var = vars_.get(key, None)
+            if not key_var:
                 continue
             vars_[key] = {
+                **key_var,
                 "name": ref["param"],
                 "description": ref.get("description", None),
                 "reference": ref,
                 "init_param": True,
+                "init_skip": True,
                 "default": None,
             }
 
@@ -407,6 +423,9 @@ def _var_attrs(ctx: dict) -> str:
             ctx_name.l is not None and ctx_name.r == "nam"
         ) and var_name != "packages":
             return None
+        
+        if ctx_name.r == "dis" and var_name == "packagedata":
+            return None
 
         if var_kind in [
             VarKind.List.value,
@@ -425,7 +444,7 @@ def _var_attrs(ctx: dict) -> str:
                 args.insert(0, f"'{ctx_name.l}6'")
             return f"{var_name} = ListTemplateGenerator(({', '.join(args)}))"
 
-        if var_kind == VarKind.Array.value:
+        elif var_kind == VarKind.Array.value:
             if not var_block:
                 raise ValueError("Need block")
             args = [f"'{ctx_name.r}'", f"'{var_block}'", f"'{var_name}'"]
@@ -440,7 +459,7 @@ def _var_attrs(ctx: dict) -> str:
 
         return None
 
-    attrs = [_attr(var) for var in ctx["variables"].values()]
+    attrs = [_attr(v) for v in ctx["variables"].values()]
     return "\n    ".join([a for a in attrs if a])
 
 
@@ -509,7 +528,7 @@ def _init_body(ctx: dict) -> str:
         Whether to call `build_mfdata()` on the variable.
         in the `__init__` method.
         """
-        if var.get("reference", None):
+        if var.get("reference", None) and ctx["name"] != (None, "nam"):
             return False
         name = var["name"]
         if name in [
@@ -552,18 +571,21 @@ def _init_body(ctx: dict) -> str:
             statements = []
             references = {}
             for var in ctx["variables"].values():
-                if not var.get("kind", None) or var.get("init_skip", False):
+                ref = var.get("reference", None)
+                if not var.get("kind", None):
                     continue
+
                 name = var["name"]
                 if name in kwlist:
                     name = f"{name}_"
-                ref = var.get("reference", None)
-                statements.append(f"self.name_file.{name}.set_data({name})")
-                statements.append(f"self.{name} = self.name_file.{name}")
+
+                if not var.get("init_skip", False):
+                    statements.append(f"self.name_file.{name}.set_data({name})")
+                    statements.append(f"self.{name} = self.name_file.{name}")
                 if ref and ref["key"] not in references:
                     references[ref["key"]] = ref
                     statements.append(
-                        f"self._{ref['param']} = self._create_package('{ref['abbr']}', {ref['param']})"
+                        f"self.{ref['param']} = self._create_package('{ref['abbr']}', {ref['param']})"
                     )
         else:
             statements = []
@@ -582,9 +604,14 @@ def _init_body(ctx: dict) -> str:
                         )
                 elif _should_build(var):
                     lname = name[:-1] if name.endswith("_") else name
-                    statements.append(
-                        f"self.{'_' if ref else ''}{name} = self.build_mfdata('{lname}', {name if var.get('init_param', True) else 'None'})"
-                    )
+                    if ref and ctx["name"] == (None, "nam"):
+                        statements.append(
+                            f"self.{'_' if ref else ''}{ref['key']} = self.build_mfdata('{ref['key']}', None)"
+                        )
+                    else:
+                        statements.append(
+                            f"self.{'_' if ref else ''}{name} = self.build_mfdata('{lname}', {name if var.get('init_param', True) else 'None'})"
+                        )
 
                 if (
                     ref
@@ -626,7 +653,12 @@ def _dfn(o) -> List[Metadata]:
     ctx = dict(o)
     dfn = ctx["definition"]
 
-    def _fmt_var(var: dict) -> List[str]:
+    def _meta():
+        meta = dfn.metadata or list()
+        exclude = ["subpackage", "parent_name_type"]
+        return [m for m in meta if not any(p in m for p in exclude)]
+
+    def _var(var: dict) -> List[str]:
         exclude = ["longname", "description"]
 
         def _fmt_name(k, v):
@@ -638,16 +670,18 @@ def _dfn(o) -> List[Metadata]:
             if k not in exclude
         ]
 
-    meta = dfn.metadata or list()
-    _dfn = []
-    for name, var in dfn:
-        var_ = ctx["variables"].get(name, None)
-        if var_ and "construct_package" in var_:
-            var["construct_package"] = var_["construct_package"]
-            var["construct_data"] = var_["construct_data"]
-            var["parameter_name"] = var_["parameter_name"]
-        _dfn.append((name, var))
-    return [["header"] + [m for m in meta]] + [_fmt_var(v) for k, v in _dfn]
+    def _dfn():
+        dfn_ = []
+        for name, var in dfn:
+            var_ = ctx["variables"].get(name, None)
+            if var_ and "construct_package" in var_:
+                var["construct_package"] = var_["construct_package"]
+                var["construct_data"] = var_["construct_data"]
+                var["parameter_name"] = var_["parameter_name"]
+            dfn_.append((name, var))
+        return [_var(v) for _, v in dfn_]
+
+    return [["header"] + _meta()] + _dfn()
 
 
 def _qual_base(ctx: dict):
