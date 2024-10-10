@@ -4,7 +4,7 @@ from typing import (
 )
 from warnings import warn
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, PackageLoader
 
 # noqa: F401
 from flopy.mf6.utils.codegen.context import (
@@ -15,7 +15,7 @@ from flopy.mf6.utils.codegen.context import (
 from flopy.mf6.utils.codegen.dfn import Dfn, DfnName, Dfns
 from flopy.mf6.utils.codegen.ref import Ref, Refs
 
-_TEMPLATE_LOADER = FileSystemLoader(Path(__file__).parent / "templates")
+_TEMPLATE_LOADER = PackageLoader("flopy", "mf6/utils/codegen/templates/")
 _TEMPLATE_ENV = Environment(loader=_TEMPLATE_LOADER)
 _TEMPLATE_NAME = "context.py.jinja"
 _TEMPLATE = _TEMPLATE_ENV.get_template(_TEMPLATE_NAME)
