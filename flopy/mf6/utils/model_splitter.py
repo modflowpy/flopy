@@ -372,7 +372,7 @@ class Mf6Splitter(object):
         lak_array = np.zeros((ncpl,), dtype=int)
         laks = []
         hfbs = []
-        for _, package in self._model.package_dict.items():
+        for package in self._model.get_package():
             if isinstance(
                 package,
                 (
