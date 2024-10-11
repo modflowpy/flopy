@@ -618,14 +618,17 @@ def _init_body(ctx: dict) -> str:
                             "simulation.register_exchange_file(self)"
                         )
                 elif _build(var):
-                    lname = name[:-1] if name.endswith("_") else name
                     if ref and ctx["name"] == (None, "nam"):
                         statements.append(
                             f"self.{'_' if ref else ''}{ref['key']} = self.build_mfdata('{ref['key']}', None)"
                         )
                     else:
+                        # hack...
+                        _name = name[:-1] if name.endswith("_") else name
+                        if _name == "steady_state":
+                            _name = "steady-state"
                         statements.append(
-                            f"self.{'_' if ref else ''}{name} = self.build_mfdata('{lname}', {name if var.get('init_param', True) else 'None'})"
+                            f"self.{'_' if ref else ''}{name} = self.build_mfdata('{_name}', {name if var.get('init_param', True) else 'None'})"
                         )
 
                 if (
@@ -677,7 +680,8 @@ def _dfn(o) -> List[Metadata]:
         exclude = ["longname", "description"]
 
         def _fmt_name(k, v):
-            return v.replace("-", "_") if k == "name" else v
+            return v
+            # return v.replace("-", "_") if k == "name" else v
 
         return [
             " ".join([k, str(_fmt_name(k, v))]).strip()
