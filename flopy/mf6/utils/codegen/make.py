@@ -9,7 +9,6 @@ from jinja2 import Environment, PackageLoader
 # noqa: F401
 from flopy.mf6.utils.codegen.context import (
     get_context_names,
-    make_context,
     make_contexts,
 )
 from flopy.mf6.utils.codegen.dfn import Dfn, DfnName, Dfns

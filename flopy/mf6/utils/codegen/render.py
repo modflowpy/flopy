@@ -1,6 +1,6 @@
 from dataclasses import asdict
 from enum import Enum
-from typing import Any, Callable, Dict, Iterable, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, Optional, Tuple
 
 Predicate = Callable[[Any], bool]
 Transform = Callable[[Any], Dict[str, str]]
@@ -137,10 +137,8 @@ def renderable(
                     break
 
             for p, e in set_pairs:
-                if not p(d):
+                if not (p(d) and e):
                     continue
-                if e is None:
-                    raise ValueError(f"No value for key: {k}")
                 for k, v in e:
                     if callable(v):
                         v = v(d)

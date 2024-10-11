@@ -1,5 +1,4 @@
 from collections import UserList
-from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Tuple
 
 

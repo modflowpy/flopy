@@ -306,7 +306,7 @@ def make_context(
             if _type != "string":
                 try:
                     return literal_eval(value)
-                except:
+                except SyntaxError:
                     return value
 
         def _fields(record_name: str) -> Vars:
