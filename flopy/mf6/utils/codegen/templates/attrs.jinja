@@ -1,7 +1,7 @@
     {%- if base == "MFModel" %}
     model_type = "{{ name.title }}"
     {%- elif base == "MFPackage" %}
-    {{ var_attrs }}
+    {{ class_attrs }}
     package_abbr = "{% if name.l != "sln" and name.l != "sim" and name.l != "exg" and name.l is not none %}{{ name.l }}{% endif %}{{ name.r }}"
     _package_type = "{{ name.r }}"
     dfn_file_name = "{% if name.l is not none %}{{ name.l }}-{% elif name.l is none %}sim-{% endif %}{{ name.r }}.dfn"

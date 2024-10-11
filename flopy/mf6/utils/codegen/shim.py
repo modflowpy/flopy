@@ -410,6 +410,7 @@ def _class_attrs(ctx: dict) -> str:
         var_name = var["name"]
         var_kind = var.get("kind", None)
         var_block = var.get("block", None)
+        var_ref = var.get("reference", None)
 
         if var_kind is None or var_kind == VarKind.Scalar.value:
             return None
@@ -431,7 +432,21 @@ def _class_attrs(ctx: dict) -> str:
             VarKind.Union.value,
         ]:
             if not var_block:
-                raise ValueError("Need block")
+                raise ValueError("Need block")           
+
+            if var_ref: 
+                # if the variable is a subpackage reference, use the original key
+                # (which has been replaced already with the referenced variable)
+                args = [f"'{ctx_name.r}'", f"'{var_block}'", f"'{var_ref['key']}'"]
+                if ctx_name.l is not None and ctx_name.l not in [
+                    "sim",
+                    "sln",
+                    "utl",
+                    "exg",
+                ]:
+                    args.insert(0, f"'{ctx_name.l}6'")
+                return f"{var_ref['key']} = ListTemplateGenerator(({', '.join(args)}))"
+            
             args = [f"'{ctx_name.r}'", f"'{var_block}'", f"'{var_name}'"]
             if ctx_name.l is not None and ctx_name.l not in [
                 "sim",
@@ -704,7 +719,7 @@ SHIM = {
             [
                 ("dfn", _dfn),
                 ("qual_base", _qual_base),
-                ("var_attrs", _class_attrs),
+                ("class_attrs", _class_attrs),
                 ("init_body", _init_body),
             ],
         ),
