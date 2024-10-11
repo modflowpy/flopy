@@ -120,7 +120,7 @@ def renderable(
             return {
                 k: _render_val(k, v)
                 for k, v in d.items()
-                # drop nones except where requested to keep them
+                # drop nones except where requested
                 if (k in keep_none or v is not None)
             }
 

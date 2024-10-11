@@ -20,7 +20,7 @@ def _is_ctx(o) -> bool:
 
 
 def _is_var(o) -> bool:
-    """Whether the object is a input context variable."""
+    """Whether the object is an input context variable."""
     d = dict(o)
     return "name" in d and "_type" in d
 
@@ -47,10 +47,9 @@ def _is_container_init_param(o) -> bool:
     return True
 
 
-def _add_exg_params(ctx: dict) -> dict:
+def _set_exg_vars(ctx: dict) -> dict:
     """
-    Add initializer parameters for an exchange input context.
-    Exchanges need different parameters than a typical package.
+    Modify variables for an exchange context.
     """
     vars_ = ctx["variables"].copy()
     vars_ = {
@@ -123,8 +122,8 @@ def _add_exg_params(ctx: dict) -> dict:
     return ctx
 
 
-def _add_pkg_params(ctx: dict) -> dict:
-    """Add variables for a package context."""
+def _set_pkg_vars(ctx: dict) -> dict:
+    """Modify variables for a package context."""
     vars_ = ctx["variables"].copy()
 
     if ctx["name"].r == "nam":
@@ -200,8 +199,8 @@ def _add_pkg_params(ctx: dict) -> dict:
     return ctx
 
 
-def _add_mdl_params(ctx: dict) -> dict:
-    """Add variables for a model context."""
+def _set_mdl_vars(ctx: dict) -> dict:
+    """Modify variables for a model context."""
     vars_ = ctx["variables"].copy()
     init_skip = ["packages", "export_netcdf", "nc_filerecord"]
     for k in init_skip:
@@ -270,8 +269,8 @@ def _add_mdl_params(ctx: dict) -> dict:
     return ctx
 
 
-def _add_sim_params(ctx: dict) -> dict:
-    """Add variables for a simulation context."""
+def _set_sim_vars(ctx: dict) -> dict:
+    """Modify variables for a simulation context."""
     vars_ = ctx["variables"].copy()
     init_skip = [
         "tdis6",
@@ -358,7 +357,7 @@ def _add_sim_params(ctx: dict) -> dict:
     return ctx
 
 
-def _add_parent_param(ctx: dict) -> dict:
+def _set_parent(ctx: dict) -> dict:
     vars_ = ctx["variables"]
     parent = ctx["parent"]
     if ctx.get("reference"):
@@ -375,31 +374,30 @@ def _add_parent_param(ctx: dict) -> dict:
     return ctx
 
 
-def _add_init_params(o):
-    """Add context-specific `__init__()` method parameters."""
+def _map_ctx(o):
+    """
+    Transform an input context's as needed depending on its type.
+
+    Notes
+    -----
+    This includes adding extra variables for the `__init__` method;
+    This is done as a transform instead of with `set_pairs` so we
+    can control the order they appear in the method signature.
+    """
     ctx = dict(o)
     if ctx["name"].base == "MFSimulationBase":
-        ctx = _add_sim_params(ctx)
+        ctx = _set_sim_vars(ctx)
     elif ctx["name"].base == "MFModel":
-        ctx = _add_mdl_params(ctx)
-        ctx = _add_parent_param(ctx)
+        ctx = _set_mdl_vars(ctx)
+        ctx = _set_parent(ctx)
     elif ctx["name"].base == "MFPackage":
-        if ctx["name"].l == "exg":
-            ctx = _add_exg_params(ctx)
-        else:
-            ctx = _add_pkg_params(ctx)
-        ctx = _add_parent_param(ctx)
+        ctx = (
+            _set_exg_vars(ctx)
+            if ctx["name"].l == "exg"
+            else _set_pkg_vars(ctx)
+        )
+        ctx = _set_parent(ctx)
     return ctx
-
-
-def _transform_context(o):
-    # add vars depending on the
-    # specific type of context.
-    # do this as a transform so
-    # we can control the order
-    # they appear in `__init__`
-    # or other method signatures.
-    return _add_init_params(o)
 
 
 def _var_attrs(ctx: dict) -> str:
@@ -718,7 +716,7 @@ SHIM = {
             ],
         ),
     ],
-    "transform": [(_is_ctx, _transform_context)],
+    "transform": [(_is_ctx, _map_ctx)],
 }
 """
 Arguments for `renderable` as applied to `Context`
