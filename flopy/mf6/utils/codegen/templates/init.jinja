@@ -10,9 +10,6 @@ def __init__(
         **kwargs,
     ):
         {{ init_body }}
-        {% if name.l == "exg" and n == "exgmnameb" -%}
-        parent.register_exchange_file(self)
-        {% endif -%}
         {% if base == "MFPackage" %}
         self._init_complete = True
         {% endif %}
