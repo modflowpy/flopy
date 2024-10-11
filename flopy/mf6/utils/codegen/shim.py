@@ -423,7 +423,7 @@ def _var_attrs(ctx: dict) -> str:
             ctx_name.l is not None and ctx_name.r == "nam"
         ) and var_name != "packages":
             return None
-        
+
         if ctx_name.r == "dis" and var_name == "packagedata":
             return None
 
@@ -580,7 +580,9 @@ def _init_body(ctx: dict) -> str:
                     name = f"{name}_"
 
                 if not var.get("init_skip", False):
-                    statements.append(f"self.name_file.{name}.set_data({name})")
+                    statements.append(
+                        f"self.name_file.{name}.set_data({name})"
+                    )
                     statements.append(f"self.{name} = self.name_file.{name}")
                 if ref and ref["key"] not in references:
                     references[ref["key"]] = ref

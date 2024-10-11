@@ -17,18 +17,24 @@ class Ref:
     defined in the referenced context can be provided directly
     instead of the file path (foreign key) variable.
 
+    Notes
+    -----
+    This class is used to represent subpackage references.
+
     Parameters
     ----------
     key : str
         The name of the foreign key file input variable.
     val : str
-        The name of the selected variable in the referenced context.
+        The name of the data variable in the referenced context.
     abbr : str
         An abbreviation of the referenced context's name.
     param : str
-        The subpackage parameter name. TODO: explain
-    parents : List[Union[str, type]]
-        The subpackage's supported parent types.
+        The referenced parameter name.
+    parents : List[str]
+        The referenced context's supported parents.
+    description : Optional[str]
+        The reference's description.
     """
 
     key: str
@@ -40,6 +46,17 @@ class Ref:
 
     @classmethod
     def from_dfn(cls, dfn: Dfn) -> Optional["Ref"]:
+        """
+        Try to load a reference from the definition.
+        Returns `None` if the definition cannot be
+        referenced by other contexts.
+
+        Notes
+        -----
+        Reference info is located in the definition's
+        metadata in an unstructured form. It would be
+        easier if we had a structured representation.
+        """
         if not dfn.metadata:
             return None
 
