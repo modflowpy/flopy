@@ -400,7 +400,7 @@ def _map_ctx(o):
     return ctx
 
 
-def _var_attrs(ctx: dict) -> str:
+def _class_attrs(ctx: dict) -> str:
     """
     Get class attributes for the context.
     """
@@ -466,7 +466,7 @@ def _init_body(ctx: dict) -> str:
     Get the `__init__` method body for the context.
     """
 
-    def _super_call() -> Optional[str]:
+    def _super() -> Optional[str]:
         """
         Whether to pass the variable to `super().__init__()`
         by name in the `__init__` method.
@@ -512,7 +512,7 @@ def _init_body(ctx: dict) -> str:
 
         return f"super().__init__({', '.join(args)})"
 
-    def _should_assign(var: dict) -> bool:
+    def _assign(var: dict) -> bool:
         """
         Whether to assign arguments to self in the
         `__init__` method. if this is false, assume
@@ -521,7 +521,7 @@ def _init_body(ctx: dict) -> str:
         """
         return var["name"] in ["exgtype", "exgmnamea", "exgmnameb"]
 
-    def _should_build(var: dict) -> bool:
+    def _build(var: dict) -> bool:
         """
         Whether to call `build_mfdata()` on the variable.
         in the `__init__` method.
@@ -596,13 +596,13 @@ def _init_body(ctx: dict) -> str:
                 if name in kwlist:
                     name = f"{name}_"
 
-                if _should_assign(var):
+                if _assign(var):
                     statements.append(f"self.{name} = {name}")
                     if name == "exgmnameb":
                         statements.append(
                             "simulation.register_exchange_file(self)"
                         )
-                elif _should_build(var):
+                elif _build(var):
                     lname = name[:-1] if name.endswith("_") else name
                     if ref and ctx["name"] == (None, "nam"):
                         statements.append(
@@ -632,7 +632,7 @@ def _init_body(ctx: dict) -> str:
             else "\n".join(["        " + s for s in statements])
         )
 
-    sections = [_super_call(), _body()]
+    sections = [_super(), _body()]
     sections = [s for s in sections if s]
     return "\n".join(sections)
 
@@ -704,7 +704,7 @@ SHIM = {
             [
                 ("dfn", _dfn),
                 ("qual_base", _qual_base),
-                ("var_attrs", _var_attrs),
+                ("var_attrs", _class_attrs),
                 ("init_body", _init_body),
             ],
         ),
