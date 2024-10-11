@@ -6,7 +6,7 @@ class DfnName(NamedTuple):
     """
     Uniquely identifies an input definition by its name, which
     consists of a <= 3-letter left term and an optional right
-    term, also <= 3 letters.
+    term.
     """
 
     l: str
