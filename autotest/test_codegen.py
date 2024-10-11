@@ -6,7 +6,6 @@ from flopy.mf6.utils.codegen.dfn import Dfn
 from flopy.mf6.utils.codegen.make import (
     DfnName,
     make_all,
-    make_context,
     make_targets,
 )
 
