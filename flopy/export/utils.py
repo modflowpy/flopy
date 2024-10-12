@@ -962,6 +962,12 @@ def mflist_export(f: Union[str, os.PathLike, NetCdf], mfl, **kwargs):
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
         base_name = mfl.package.name[0].lower()
+        # Skip mflist if all elements are of object type
+        if all(
+            dtype == np.object_
+            for dtype, _ in mfl.data[0].dtype.fields.values()
+        ):
+            return f
 
         for name, array in mfl.masked_4D_arrays_itr():
             var_name = f"{base_name}_{name}"
