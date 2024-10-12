@@ -1546,51 +1546,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
 
     @property
     def masked_4D_arrays(self):
-        """Returns list data as a masked 4D array."""
-        model_grid = self.data_dimensions.get_model_grid()
-        nper = self.data_dimensions.package_dim.model_dim[
-            0
-        ].simulation_time.get_num_stress_periods()
-        # get the first kper
-        arrays = self.to_array(kper=0, mask=True)
-
-        if arrays is not None:
-            # initialize these big arrays
-            if model_grid.grid_type() == DiscretizationType.DIS:
-                m4ds = {}
-                for name, array in arrays.items():
-                    m4d = np.zeros(
-                        (
-                            nper,
-                            model_grid.num_layers,
-                            model_grid.num_rows,
-                            model_grid.num_columns,
-                        )
-                    )
-                    m4d[0, :, :, :] = array
-                    m4ds[name] = m4d
-                for kper in range(1, nper):
-                    arrays = self.to_array(kper=kper, mask=True)
-                    for name, array in arrays.items():
-                        m4ds[name][kper, :, :, :] = array
-                return m4ds
-            else:
-                m3ds = {}
-                for name, array in arrays.items():
-                    m3d = np.zeros(
-                        (
-                            nper,
-                            model_grid.num_layers,
-                            model_grid.num_cells_per_layer(),
-                        )
-                    )
-                    m3d[0, :, :] = array
-                    m3ds[name] = m3d
-                for kper in range(1, nper):
-                    arrays = self.to_array(kper=kper, mask=True)
-                    for name, array in arrays.items():
-                        m3ds[name][kper, :, :] = array
-                return m3ds
+        return dict(self.masked_4D_arrays_itr())
 
     def masked_4D_arrays_itr(self):
         """Returns list data as an iterator of a masked 4D array."""
