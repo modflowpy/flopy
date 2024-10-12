@@ -500,7 +500,7 @@ class MfUsgDisU(Package):
 
     @property
     def ncpl(self):
-        return self.nodes / self.nlay
+        return self.nodes // self.nlay
 
     @classmethod
     def load(cls, f, model, ext_unit_dict=None, check=True):
