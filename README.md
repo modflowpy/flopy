@@ -32,7 +32,7 @@ Documentation
 Installation
 -----------------------------------------------
 
-FloPy requires **Python** 3.8+ with: 
+FloPy requires **Python** 3.9-3.12 with: 
 
 ```
 numpy >=1.20.3
