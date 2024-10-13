@@ -1,0 +1,68 @@
+def __init__(
+        self,
+        {% if parent and base != "MFModel" and name.l != "exg" -%}
+        {{ parent|lower|replace("mf", "")|replace("union", "")|replace("[", "")|replace("]", "")|replace(", ", "_or_") }} = None,
+        {%- endif %}
+        {%- for name, var in variables.items() if var.init_param %}
+        {%- if var._type == "MFSimulation" %}
+        {{ name }} = None,
+        {%- elif var.default is defined %}
+        {{ name }}: {{ var._type }} = {{ var.default }},
+        {%- else -%}
+        {{ name }}: {{ var._type }},
+        {% endif -%}
+        {%- endfor %}
+        **kwargs,
+    ):
+        {% if parent and base != "MFModel" and name.l != "exg" -%}
+        if {{ parent|lower|replace("mf", "")|replace("union", "")|replace("[", "")|replace("]", "")|replace(", ", "_or_") }}:
+            parent = {{ parent|lower|replace("mf", "")|replace("union", "")|replace("[", "")|replace("]", "")|replace(", ", "_or_") }}
+        {%- endif %}
+{% if base == "MFSimulationBase" or base == "MFModel" %}
+        super().__init__(
+            {%- for n, var in variables.items() if var.init_super %}
+            {{ n }}={{ n }},
+            {%- endfor %}
+            **kwargs
+        )
+        {%- for n, var in variables.items() %}
+        {%- if var.block == "options" and var.init_build %}
+        self.name_file.{{ n }}.set_data({{ n }})
+        self.{{ n }} = self.name_file.{{ n }}
+        {% endif -%}
+        {%- if var.reference is defined and base != "MFModel" %}
+        self.{{ var.reference.param }} = self._create_package(
+            "{{ var.reference.abbr }}",
+            {{ var.reference.param }}
+        )
+        {% endif -%}
+        {% endfor -%}
+{% elif base == "MFPackage" %}
+        super().__init__(
+            {%- for n, var in variables.items() if var.init_super %}
+            {{ n }}={{ n }},
+            {%- endfor %}
+            package_type="{{ name.r }}",
+            **kwargs
+        )
+        {% for n, var in variables.items() -%}
+        {%- if var.init_assign -%}
+        self.{{ n }} = {{ n }}
+        {% elif var.reference is defined and var.init_build -%}
+        self._{{ n }} = self.build_mfdata("{{ n }}", None)
+        {% elif var.reference is defined and name.r != "nam" -%}
+        self._{{ var.reference.abbr }}_package = self.build_child_package(
+            "{{ var.reference.abbr }}",
+            {{ var.reference.val }},
+            "{{ var.reference.param }}",
+            self._{{ var.reference.key }}
+        )
+        {% elif var.init_build -%}
+        self.{{ n }} = self.build_mfdata("{% if n == "continue_" %}continue{% else %}{{ n }}{% endif %}", {{ n }})
+        {% endif -%}
+        {% if name.l == "exg" and n == "exgmnameb" -%}
+        parent.register_exchange_file(self)
+        {% endif -%}
+        {%- endfor -%}
+        self._init_complete = True
+{% endif %}

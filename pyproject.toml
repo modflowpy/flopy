@@ -28,9 +28,13 @@ classifiers = [
 ]
 requires-python = ">=3.9,<3.13"
 dependencies = [
+    "boltons",
+    "Jinja2>=3.0",
     "numpy>=1.20.3",
     "matplotlib >=1.4.0",
-    "pandas >=2.0.0"
+    "pandas >=2.0.0",
+    # necessary for createpackages.py
+    "ruff"
 ]
 dynamic = ["version", "readme"]
 
@@ -38,7 +42,7 @@ dynamic = ["version", "readme"]
 dev = ["flopy[lint,test,optional,doc]"]
 lint = [
     "cffconvert",
-    "ruff"
+    # "ruff"
 ]
 test = [
     "flopy[lint]",

@@ -29,6 +29,9 @@ shape
 block_variable true
 in_record false
 reader urword
+class_attr false
+init_build false
+init_param false
 optional false
 longname
 description

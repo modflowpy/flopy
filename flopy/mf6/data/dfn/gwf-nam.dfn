@@ -38,6 +38,7 @@ name newtonoptions
 type record newton under_relaxation
 reader urword
 optional true
+class_attr false
 longname newton keyword and options
 description none
 
