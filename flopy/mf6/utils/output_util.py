@@ -112,7 +112,7 @@ class MF6Output:
                             self._methods.append(f"{rectype}()")
                             if rectype == "obs":
                                 data = None
-                                for ky in obj._simulation_data.mfdata:
+                                for ky in obj.simulation_data.mfdata:
                                     if obj.path == (ky[0:2]):
                                         if str(ky[-2]).lower() == "fileout":
                                             data = [[ky[-1]]]
@@ -122,14 +122,14 @@ class MF6Output:
                                             and str(ky[-1]) == "output"
                                         ):
                                             if (
-                                                obj._simulation_data.mfdata[
+                                                obj.simulation_data.mfdata[
                                                     ky
                                                 ].array[0][0]
                                                 == "fileout"
                                             ):
                                                 data = [
                                                     [
-                                                        obj._simulation_data.mfdata[
+                                                        obj.simulation_data.mfdata[
                                                             ky
                                                         ].array[0][-2]
                                                     ]

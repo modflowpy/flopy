@@ -4497,22 +4497,21 @@ def test006_2models_mvr(function_tmpdir, example_data_path):
     exg_pkg.exchangedata.set_data(exg_data)
 
     # test getting packages
-    pkg_dict = parent_model.package_dict
-    assert len(pkg_dict) == 6
-    pkg_names = parent_model.package_names
-    assert len(pkg_names) == 6
+    pkg_list = parent_model.get_package()
+    assert len(pkg_list) == 6
     # confirm that this is a copy of the original dictionary with references
     # to the packages
-    del pkg_dict[pkg_names[0]]
-    assert len(pkg_dict) == 5
-    pkg_dict = parent_model.package_dict
-    assert len(pkg_dict) == 6
+    del pkg_list[0]
+    assert len(pkg_list) == 5
+    pkg_list = parent_model.get_package()
+    assert len(pkg_list) == 6
 
-    old_val = pkg_dict["dis"].nlay.get_data()
-    pkg_dict["dis"].nlay = 22
-    pkg_dict = parent_model.package_dict
-    assert pkg_dict["dis"].nlay.get_data() == 22
-    pkg_dict["dis"].nlay = old_val
+    dis_pkg = parent_model.get_package("dis")
+    old_val = dis_pkg.nlay.get_data()
+    dis_pkg.nlay = 22
+    pkg_list = parent_model.get_package()
+    assert dis_pkg.nlay.get_data() == 22
+    dis_pkg.nlay = old_val
 
     # write simulation again
     save_folder = function_tmpdir / "save"
@@ -4560,8 +4559,8 @@ def test006_2models_mvr(function_tmpdir, example_data_path):
             model = sim.get_model(model_name)
             for package in model_package_check:
                 assert (
-                    package in model.package_type_dict
-                    or package in sim.package_type_dict
+                    model.get_package(package, type_only=True) is not None
+                    or sim.get_package(package, type_only=True) is not None
                 ) == (package in load_only or f"{package}6" in load_only)
         assert (len(sim._exchange_files) > 0) == (
             "gwf6-gwf6" in load_only or "gwf-gwf" in load_only
@@ -4577,10 +4576,10 @@ def test006_2models_mvr(function_tmpdir, example_data_path):
     )
     model_parent = sim.get_model("parent")
     model_child = sim.get_model("child")
-    assert "oc" not in model_parent.package_type_dict
-    assert "oc" in model_child.package_type_dict
-    assert "npf" in model_parent.package_type_dict
-    assert "npf" not in model_child.package_type_dict
+    assert model_parent.get_package("oc") is None
+    assert model_child.get_package("oc") is not None
+    assert model_parent.get_package("npf") is not None
+    assert model_child.get_package("npf") is None
 
     # test running a runnable load_only case
     sim = MFSimulation.load(
@@ -4652,9 +4651,9 @@ def test001e_uzf_3lay(function_tmpdir, example_data_path):
         sim.set_sim_path(function_tmpdir)
         model = sim.get_model()
         for package in model_package_check:
-            assert (package in model.package_type_dict) == (
-                package in load_only or f"{package}6" in load_only
-            )
+            assert (
+                model.get_package(package, type_only=True) is not None
+            ) == (package in load_only or f"{package}6" in load_only)
     # test running a runnable load_only case
     sim = MFSimulation.load(
         model_name, "mf6", "mf6", pth, load_only=load_only_lists[0]
