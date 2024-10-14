@@ -1994,16 +1994,23 @@ class MFPackage(PackageInterface):
 
     @property
     def package_key_dict(self):
+        """
+        .. deprecated:: 3.9
+            This method is for internal use only and will be deprecated.
+        """
         warnings.warn(
-            "package_key_dict has been deprecated, use "
-            "package_type_dict instead",
+            "This method is for internal use only and will be deprecated.",
             category=DeprecationWarning,
         )
         return self._package_container.package_type_dict
 
     @property
     def package_names(self):
-        """Returns a list of package names."""
+        """Returns a list of package names.
+
+        .. deprecated:: 3.9
+            This method is for internal use only and will be deprecated.
+        """
         warnings.warn(
             "This method is for internal use only and will be deprecated.",
             category=DeprecationWarning,
@@ -2012,6 +2019,10 @@ class MFPackage(PackageInterface):
 
     @property
     def package_dict(self):
+        """
+        .. deprecated:: 3.9
+            This method is for internal use only and will be deprecated.
+        """
         warnings.warn(
             "This method is for internal use only and will be deprecated.",
             category=DeprecationWarning,
@@ -2020,6 +2031,10 @@ class MFPackage(PackageInterface):
 
     @property
     def package_type_dict(self):
+        """
+        .. deprecated:: 3.9
+            This method is for internal use only and will be deprecated.
+        """
         warnings.warn(
             "This method is for internal use only and will be deprecated.",
             category=DeprecationWarning,
@@ -2028,6 +2043,10 @@ class MFPackage(PackageInterface):
 
     @property
     def package_name_dict(self):
+        """
+        .. deprecated:: 3.9
+            This method is for internal use only and will be deprecated.
+        """
         warnings.warn(
             "This method is for internal use only and will be deprecated.",
             category=DeprecationWarning,
@@ -2036,6 +2055,10 @@ class MFPackage(PackageInterface):
 
     @property
     def package_filename_dict(self):
+        """
+        .. deprecated:: 3.9
+            This method is for internal use only and will be deprecated.
+        """
         warnings.warn(
             "This method is for internal use only and will be deprecated.",
             category=DeprecationWarning,
