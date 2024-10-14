@@ -17,19 +17,15 @@ class {{ name.title.title() }}Packages(mfpackage.MFChildPackages):
 
     def initialize(
         self,
-        {%- for n, var in variables.items() if var.container_init_param and not var.init_skip %}
-        {%- if var.default is defined %}
-        {{ n }}={{ var.default }},
-        {%- else -%}
-        {{ n }},
-        {% endif -%}
+        {%- for n, var in vars.items() if var.container_init_param and not var.init_skip %}
+        {{ n }}{%- if var.default is defined %}={{ var.default }}{% endif -%},
         {%- endfor %}
         filename=None,
         pname=None,
     ):
         new_package = Modflow{{ name.title.title() }}(
             self._cpparent,
-            {%- for n, var in variables.items() if var.container_init_param and not var.init_skip %}
+            {%- for n, var in vars.items() if var.container_init_param and not var.init_skip %}
             {{ n }}={{ n }},
             {%- endfor %}
             filename=filename,
@@ -41,19 +37,15 @@ class {{ name.title.title() }}Packages(mfpackage.MFChildPackages):
 {% if name.r != "obs" %}
     def append_package(
         self,
-        {%- for n, var in variables.items() if var.container_init_param and not var.init_skip %}
-        {%- if var.default is defined %}
-        {{ n }}={{ var.default }},
-        {%- else -%}
-        {{ n }},
-        {% endif -%}
+        {%- for n, var in vars.items() if var.container_init_param and not var.init_skip %}
+        {{ n }}{%- if var.default is defined %}={{ var.default }}{% endif -%},
         {%- endfor %}
         filename=None,
         pname=None,
     ):
         new_package = Modflow{{ name.title.title() }}(
             self._cpparent,
-            {%- for n, var in variables.items() if var.container_init_param and not var.init_skip %}
+            {%- for n, var in vars.items() if var.container_init_param and not var.init_skip %}
             {{ n }}={{ n }},
             {%- endfor %}
             filename=filename,

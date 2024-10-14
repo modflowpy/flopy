@@ -41,7 +41,7 @@ class Ref:
     val: str
     abbr: str
     param: str
-    parents: List[str]
+    parent: str
     description: Optional[str]
 
     @classmethod
@@ -50,21 +50,17 @@ class Ref:
         Try to load a reference from the definition.
         Returns `None` if the definition cannot be
         referenced by other contexts.
-
-        Notes
-        -----
-        Reference info is located in the definition's
-        metadata in an unstructured form. It would be
-        easier if we had a structured representation.
         """
-        if not dfn.metadata:
+        if not dfn.meta or "dfn" not in dfn.meta:
             return None
+
+        _, meta = dfn.meta["dfn"]
 
         lines = {
             "subpkg": next(
                 iter(
                     m
-                    for m in dfn.metadata
+                    for m in meta
                     if isinstance(m, str) and m.startswith("subpac")
                 ),
                 None,
@@ -72,7 +68,7 @@ class Ref:
             "parent": next(
                 iter(
                     m
-                    for m in dfn.metadata
+                    for m in meta
                     if isinstance(m, str) and m.startswith("parent")
                 ),
                 None,
@@ -82,14 +78,14 @@ class Ref:
         def _subpkg():
             line = lines["subpkg"]
             _, key, abbr, param, val = line.split()
-            matches = [v for _, v in dfn if v["name"] == val]
+            matches = [v for v in dfn.values() if v.name == val]
             if not any(matches):
                 descr = None
             else:
                 if len(matches) > 1:
                     warn(f"Multiple matches for referenced variable {val}")
                 match = matches[0]
-                descr = match.get("description", None)
+                descr = match.description
 
             return {
                 "key": key,
@@ -99,13 +95,13 @@ class Ref:
                 "description": descr,
             }
 
-        def _parents():
+        def _parent():
             line = lines["parent"]
-            _, _, _type = line.split()
-            return [t.lower().replace("mf", "") for t in _type.split("/")]
+            _, param_name, _ = line.split()
+            return param_name
 
         return (
-            cls(**_subpkg(), parents=_parents())
+            cls(**_subpkg(), parent=_parent())
             if all(v for v in lines.values())
             else None
         )

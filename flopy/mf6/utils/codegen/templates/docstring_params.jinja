@@ -1,4 +1,4 @@
-{%- for v in variables.values() recursive %}
+{%- for v in vars.values() recursive %}
     {% if loop.depth > 1 %}* {% endif %}{{ v.name }}{% if v._type is defined and v._type is not none %} : {{ v._type }}{% endif %}
 {%- if v.description is defined and v.description is not none %}
 {{ v.description|wordwrap|indent(4 + (loop.depth * 4), first=True) }}

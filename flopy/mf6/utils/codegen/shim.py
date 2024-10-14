@@ -2,18 +2,16 @@
 The purpose of this module is to keep special handling
 necessary to support the current `flopy.mf6` generated
 classes separate from more general templating and code
-generation infrastructure.
+generation infrastructure. It has no dependency on the
+rest of the `flopy.mf6.utils.codegen` module.
 """
 
 import os
 from keyword import kwlist
 from typing import List, Optional
 
-from flopy.mf6.utils.codegen.dfn import Metadata
-from flopy.mf6.utils.codegen.var import VarKind
 
-
-def _is_ctx(o) -> bool:
+def _is_context(o) -> bool:
     """Whether the object is an input context."""
     d = dict(o)
     return "name" in d and "base" in d
@@ -22,7 +20,7 @@ def _is_ctx(o) -> bool:
 def _is_var(o) -> bool:
     """Whether the object is an input context variable."""
     d = dict(o)
-    return "name" in d and "_type" in d
+    return "name" in d and "kind" in d
 
 
 def _is_init_param(o) -> bool:
@@ -51,7 +49,7 @@ def _set_exg_vars(ctx: dict) -> dict:
     """
     Modify variables for an exchange context.
     """
-    vars_ = ctx["variables"].copy()
+    vars_ = ctx["vars"].copy()
     vars_ = {
         "loading_package": {
             "name": "loading_package",
@@ -101,8 +99,9 @@ def _set_exg_vars(ctx: dict) -> dict:
         },
     }
 
-    if ctx["references"]:
-        for key, ref in ctx["references"].items():
+    refs = ctx.get("meta", dict()).get("refs", dict())
+    if any(refs):
+        for key, ref in refs.items():
             key_var = vars_.get(key, None)
             if not key_var:
                 continue
@@ -110,7 +109,7 @@ def _set_exg_vars(ctx: dict) -> dict:
                 **key_var,
                 "name": ref["val"],
                 "description": ref.get("description", None),
-                "reference": ref,
+                "ref": ref,
                 "init_param": True,
                 "default": None,
                 "construct_package": ref["abbr"],
@@ -118,13 +117,13 @@ def _set_exg_vars(ctx: dict) -> dict:
                 "parameter_name": ref["param"],
             }
 
-    ctx["variables"] = vars_
+    ctx["vars"] = vars_
     return ctx
 
 
 def _set_pkg_vars(ctx: dict) -> dict:
     """Modify variables for a package context."""
-    vars_ = ctx["variables"].copy()
+    vars_ = ctx["vars"].copy()
 
     if ctx["name"].r == "nam":
         init_skip = ["export_netcdf", "nc_filerecord"]
@@ -178,8 +177,9 @@ def _set_pkg_vars(ctx: dict) -> dict:
             ),
         }
 
-    if ctx["references"]:
-        for key, ref in ctx["references"].items():
+    refs = ctx.get("meta", dict()).get("refs", dict())
+    if any(refs):
+        for key, ref in refs.items():
             key_var = vars_.get(key, None)
             if not key_var:
                 continue
@@ -187,7 +187,7 @@ def _set_pkg_vars(ctx: dict) -> dict:
                 **key_var,
                 "name": ref["val"],
                 "description": ref.get("description", None),
-                "reference": ref,
+                "ref": ref,
                 "init_param": ctx["name"].r != "nam",
                 "default": None,
                 "construct_package": ref["abbr"],
@@ -195,13 +195,13 @@ def _set_pkg_vars(ctx: dict) -> dict:
                 "parameter_name": ref["param"],
             }
 
-    ctx["variables"] = vars_
+    ctx["vars"] = vars_
     return ctx
 
 
 def _set_mdl_vars(ctx: dict) -> dict:
     """Modify variables for a model context."""
-    vars_ = ctx["variables"].copy()
+    vars_ = ctx["vars"].copy()
     init_skip = ["packages", "export_netcdf", "nc_filerecord"]
     for k in init_skip:
         var = vars_.get(k, None)
@@ -250,8 +250,9 @@ def _set_mdl_vars(ctx: dict) -> dict:
         **vars_,
     }
 
-    if ctx["references"]:
-        for key, ref in ctx["references"].items():
+    refs = ctx.get("meta", dict()).get("refs", dict())
+    if any(refs):
+        for key, ref in refs.items():
             key_var = vars_.get(key, None)
             if not key_var:
                 continue
@@ -259,19 +260,19 @@ def _set_mdl_vars(ctx: dict) -> dict:
                 **key_var,
                 "name": ref["val"],
                 "description": ref.get("description", None),
-                "reference": ref,
+                "ref": ref,
                 "construct_package": ref["abbr"],
                 "construct_data": ref["val"],
                 "parameter_name": ref["param"],
             }
 
-    ctx["variables"] = vars_
+    ctx["vars"] = vars_
     return ctx
 
 
 def _set_sim_vars(ctx: dict) -> dict:
     """Modify variables for a simulation context."""
-    vars_ = ctx["variables"].copy()
+    vars_ = ctx["vars"].copy()
     init_skip = [
         "tdis6",
         "models",
@@ -338,8 +339,9 @@ def _set_sim_vars(ctx: dict) -> dict:
         **vars_,
     }
 
-    if ctx["references"] and ctx["name"] != (None, "nam"):
-        for key, ref in ctx["references"].items():
+    refs = ctx.get("meta", dict()).get("refs", dict())
+    if any(refs) and ctx["name"] != (None, "nam"):
+        for key, ref in refs.items():
             key_var = vars_.get(key, None)
             if not key_var:
                 continue
@@ -347,22 +349,20 @@ def _set_sim_vars(ctx: dict) -> dict:
                 **key_var,
                 "name": ref["param"],
                 "description": ref.get("description", None),
-                "reference": ref,
+                "ref": ref,
                 "init_param": True,
                 "init_skip": True,
                 "default": None,
             }
 
-    ctx["variables"] = vars_
+    ctx["vars"] = vars_
     return ctx
 
 
 def _set_parent(ctx: dict) -> dict:
-    vars_ = ctx["variables"]
+    vars_ = ctx["vars"]
     parent = ctx["parent"]
-    if ctx.get("reference"):
-        parent = f"parent_{parent}"
-    ctx["variables"] = {
+    ctx["vars"] = {
         parent: {
             "name": parent,
             "_type": str(ctx["parent"]),
@@ -374,9 +374,9 @@ def _set_parent(ctx: dict) -> dict:
     return ctx
 
 
-def _map_ctx(o):
+def _map_context(o):
     """
-    Transform an input context's as needed depending on its type.
+    Transform an input context as needed depending on its type.
 
     Notes
     -----
@@ -384,6 +384,7 @@ def _map_ctx(o):
     This is done as a transform instead of with `set_pairs` so we
     can control the order they appear in the method signature.
     """
+
     ctx = dict(o)
     if ctx["name"].base == "MFSimulationBase":
         ctx = _set_sim_vars(ctx)
@@ -410,9 +411,9 @@ def _class_attrs(ctx: dict) -> str:
         var_name = var["name"]
         var_kind = var.get("kind", None)
         var_block = var.get("block", None)
-        var_ref = var.get("reference", None)
+        var_ref = var.get("meta", dict()).get("ref", None)
 
-        if var_kind is None or var_kind == VarKind.Scalar.value:
+        if var_kind is None or var_kind == "scalar":
             return None
 
         if var_name in ["cvoptions", "output"]:
@@ -426,11 +427,7 @@ def _class_attrs(ctx: dict) -> str:
         if ctx_name.r == "dis" and var_name == "packagedata":
             return None
 
-        if var_kind in [
-            VarKind.List.value,
-            VarKind.Record.value,
-            VarKind.Union.value,
-        ]:
+        if var_kind in ["list", "record", "union"]:
             if not var_block:
                 raise ValueError("Need block")
 
@@ -461,7 +458,7 @@ def _class_attrs(ctx: dict) -> str:
                 args.insert(0, f"'{ctx_name.l}6'")
             return f"{var_name} = ListTemplateGenerator(({', '.join(args)}))"
 
-        elif var_kind == VarKind.Array.value:
+        elif var_kind == "array":
             if not var_block:
                 raise ValueError("Need block")
             args = [f"'{ctx_name.r}'", f"'{var_block}'", f"'{var_name}'"]
@@ -476,7 +473,7 @@ def _class_attrs(ctx: dict) -> str:
 
         return None
 
-    attrs = [_attr(v) for v in ctx["variables"].values()]
+    attrs = [_attr(v) for v in ctx["vars"].values()]
     return "\n    ".join([a for a in attrs if a])
 
 
@@ -492,24 +489,20 @@ def _init_body(ctx: dict) -> str:
         """
 
         if ctx["base"] == "MFPackage":
-            parent = ctx["parent"]
-            if ctx["reference"]:
-                parent = f"parent_{parent}"
-            pkgtyp = ctx["name"].r
             args = [
-                parent,
-                f"'{pkgtyp}'",
+                ctx["parent"]
+                if ctx.get("meta", dict()).get("ref", None)
+                else ctx['parent'],
+                f"'{ctx['name'].r}'",
                 "filename",
                 "pname",
                 "loading_package",
                 "**kwargs",
             ]
         elif ctx["base"] == "MFModel":
-            parent = ctx["parent"]
-            mdltyp = ctx["name"].l
             args = [
-                parent,
-                f"'{mdltyp}6'",
+                ctx["parent"],
+                f"'{ctx['name'].l}6'",
                 "modelname=modelname",
                 "model_nam_file=model_nam_file",
                 "version=version",
@@ -545,7 +538,10 @@ def _init_body(ctx: dict) -> str:
         Whether to call `build_mfdata()` on the variable.
         in the `__init__` method.
         """
-        if var.get("reference", None) and ctx["name"] != (None, "nam"):
+        if var.get("meta", dict()).get("ref", None) and ctx["name"] != (
+            None,
+            "nam",
+        ):
             return False
         name = var["name"]
         if name in [
@@ -587,8 +583,8 @@ def _init_body(ctx: dict) -> str:
         if ctx["base"] in ["MFSimulationBase", "MFModel"]:
             statements = []
             references = {}
-            for var in ctx["variables"].values():
-                ref = var.get("reference", None)
+            for var in ctx["vars"].values():
+                ref = var.get("meta", dict()).get("ref", None)
                 if not var.get("kind", None):
                     continue
 
@@ -609,9 +605,9 @@ def _init_body(ctx: dict) -> str:
         else:
             statements = []
             references = {}
-            for var in ctx["variables"].values():
+            for var in ctx["vars"].values():
                 name = var["name"]
-                ref = var.get("reference", None)
+                ref = var.get("meta", dict()).get("ref", None)
                 if name in kwlist:
                     name = f"{name}_"
 
@@ -659,7 +655,7 @@ def _init_body(ctx: dict) -> str:
     return "\n".join(sections)
 
 
-def _dfn(o) -> List[Metadata]:
+def _dfn(o) -> List[List[str]]:
     """
     Get a list of the class' original definition attributes
     as a partial, internal reproduction of the DFN contents.
@@ -668,41 +664,33 @@ def _dfn(o) -> List[Metadata]:
     -----
     Currently, generated classes have a `.dfn` property that
     reproduces the corresponding DFN sans a few attributes.
-    This represents the DFN in raw form, before adapting to
-    Python, consolidating nested types, etc.
+    Once `mfstructure.py` etc is reworked to introspect the
+    context classes instead of this property, it can go.
     """
 
     ctx = dict(o)
-    dfn = ctx["definition"]
+    dfn, meta = ctx["meta"]["dfn"]
 
     def _meta():
-        meta = dfn.metadata or list()
         exclude = ["subpackage", "parent_name_type"]
-        return [m for m in meta if not any(p in m for p in exclude)]
-
-    def _var(var: dict) -> List[str]:
-        exclude = ["longname", "description"]
-
-        def _fmt_name(k, v):
-            return v
-            # return v.replace("-", "_") if k == "name" else v
-
-        return [
-            " ".join([k, str(_fmt_name(k, v))]).strip()
-            for k, v in var.items()
-            if k not in exclude
-        ]
+        return [v for v in meta if not any(p in v for p in exclude)]
 
     def _dfn():
-        dfn_ = []
-        for name, var in dfn:
-            var_ = ctx["variables"].get(name, None)
-            if var_ and "construct_package" in var_:
-                var["construct_package"] = var_["construct_package"]
-                var["construct_data"] = var_["construct_data"]
-                var["parameter_name"] = var_["parameter_name"]
-            dfn_.append((name, var))
-        return [_var(v) for _, v in dfn_]
+        def _var(var: dict) -> List[str]:
+            exclude = ["longname", "description"]
+            name = var["name"]
+            var_ = ctx["vars"].get(name, None)
+            keys = ["construct_package", "construct_data", "parameter_name"]
+            if var_ and keys[0] in var_:
+                for k in keys:
+                    var[k] = var_[k]
+            return [
+                " ".join([k, v]).strip()
+                for k, v in var.items()
+                if k not in exclude
+            ]
+
+        return [_var(var) for var in dfn]
 
     return [["header"] + _meta()] + _dfn()
 
@@ -723,7 +711,7 @@ SHIM = {
     "quote_str": ["default"],
     "set_pairs": [
         (
-            _is_ctx,
+            _is_context,
             [
                 ("dfn", _dfn),
                 ("qual_base", _qual_base),
@@ -739,7 +727,7 @@ SHIM = {
             ],
         ),
     ],
-    "transform": [(_is_ctx, _map_ctx)],
+    "transform": [(_is_context, _map_context)],
 }
 """
 Arguments for `renderable` as applied to `Context`

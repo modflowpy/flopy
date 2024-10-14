@@ -2,10 +2,10 @@ from dataclasses import asdict
 from enum import Enum
 from typing import Any, Callable, Dict, Iterable, Optional, Tuple
 
-Predicate = Callable[[Any], bool]
-Transform = Callable[[Any], Dict[str, str]]
-Pair = Tuple[str, Any]
-Pairs = Iterable[Pair]
+_Predicate = Callable[[Any], bool]
+_Transform = Callable[[Any], Dict[str, str]]
+_Pair = Tuple[str, Any]
+_Pairs = Iterable[_Pair]
 
 
 def _try_get_enum_value(v: Any) -> Any:
@@ -17,8 +17,8 @@ def renderable(
     *,
     keep_none: Optional[Iterable[str]] = None,
     quote_str: Optional[Iterable[str]] = None,
-    set_pairs: Optional[Iterable[Tuple[Predicate, Pairs]]] = None,
-    transform: Optional[Iterable[Tuple[Predicate, Transform]]] = None,
+    set_pairs: Optional[Iterable[Tuple[_Predicate, _Pairs]]] = None,
+    transform: Optional[Iterable[Tuple[_Predicate, _Transform]]] = None,
 ):
     """
     Decorator for dataclasses which are meant
@@ -45,40 +45,23 @@ def renderable(
     value should be wrapped with quotation
     marks, use the `quote_str` parameter.
 
-    Arbitrary transformations of the instance
-    to which the decorator is applied can be
-    specified with the `transform` parameter,
-    which accepts a set of predicate/function
-    pairs; see below for more information on
-    how to use the transformation mechanism.
+    Arbitrary transformations can be configured
+    via the `transform` parameter, which accepts
+    an iterable of predicate / function tuples.
+    Each of these specifies a condition in which
+    an instance of a context should be modified,
+    and a function to make the alteration.
 
     Notes
     -----
     This decorator is intended as a convenient
     way to modify dataclass instances to make
     them more palatable for templates. It also
-    aims to keep keep edge cases incidental to
+    keeps implementation details incidental to
     the current design of MF6 input framework
     cleanly isolated from the reimplementation
-    of which this code is a part.
-
-    The basic idea behind this decorator is for
-    the developer to specify conditions in which
-    a given dataclass instance should be altered,
-    and a function to make the alteration. These
-    are provided as a collection of `Predicate`/
-    `Transform` pairs.
-
-    Transformations might be for convenience, or
-    to handle special cases where an object has
-    some other need for modification.
-
-    Edge cases in the MF6 classes, e.g. the logic
-    determining the members of generated classes,
-    can be isolated as rendering transformations.
-    This allows keeping more general templating
-    infrastructure free of incidental complexity
-    while we move toward a leaner core framework.
+    of which this code is a part, which aims
+    for a more general approach.
 
     Jinja supports attribute- and dictionary-
     based access on arbitrary objects but does
@@ -87,10 +70,22 @@ def renderable(
     can make it awkward to express some things,
     which transformations can also remedy.
 
+    Edge cases in the MF6 classes, e.g. the logic
+    determining the contents of generated classes,
+    can also be implemented with transformations.
+    This allows keeping the templating module as
+    generic as possible and inserting "shims" to
+    incrementally rewrite the existing framework.
+
     Because a transformation function accepts an
     instance of a dataclass and converts it to a
     dictionary, only one transformation function
-    (the first predicate to match) is applied.
+    (of the first matching predicate) is applied.
+
+    References
+    ----------
+    This pattern was heavily inspired by `attrs`'
+    use of class decorators.
     """
 
     quote_str = quote_str or list()

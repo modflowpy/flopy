@@ -1,13 +1,9 @@
 import pytest
 
 from autotest.conftest import get_project_root_path
-from flopy.mf6.utils.codegen.context import get_context_names
+from flopy.mf6.utils.codegen.context import Context
 from flopy.mf6.utils.codegen.dfn import Dfn
-from flopy.mf6.utils.codegen.make import (
-    DfnName,
-    make_all,
-    make_targets,
-)
+from flopy.mf6.utils.codegen.make import make_all, make_targets
 
 PROJ_ROOT = get_project_root_path()
 MF6_PATH = PROJ_ROOT / "flopy" / "mf6"
@@ -23,8 +19,13 @@ DFN_NAMES = [
 @pytest.mark.parametrize("dfn_name", DFN_NAMES)
 def test_dfn_load(dfn_name):
     dfn_path = DFN_PATH / f"{dfn_name}.dfn"
+
+    common_path = DFN_PATH / "common.dfn"
+    with open(common_path, "r") as f:
+        common, _ = Dfn._load(f)
+
     with open(dfn_path, "r") as f:
-        dfn = Dfn.load(f, name=DfnName(*dfn_name.split("-")))
+        dfn = Dfn.load(f, name=Dfn.Name(*dfn_name.split("-")), common=common)
         if dfn_name in ["sln-ems", "exg-gwfprt", "exg-gwfgwe", "exg-gwfgwt"]:
             assert not any(dfn)
         else:
@@ -33,16 +34,17 @@ def test_dfn_load(dfn_name):
 
 @pytest.mark.parametrize("dfn_name", DFN_NAMES)
 def test_make_targets(dfn_name, function_tmpdir):
-    with open(DFN_PATH / "common.dfn") as f:
-        common = Dfn.load(f)
+    common_path = DFN_PATH / "common.dfn"
+    with open(common_path, "r") as f:
+        common, _ = Dfn._load(f)
 
     with open(DFN_PATH / f"{dfn_name}.dfn", "r") as f:
-        dfn_name = DfnName(*dfn_name.split("-"))
-        dfn = Dfn.load(f, name=dfn_name)
+        dfn = Dfn.load(f, name=Dfn.Name(*dfn_name.split("-")), common=common)
 
-    make_targets(dfn, function_tmpdir, commonvars=common)
-    for ctx_name in get_context_names(dfn_name):
-        source_path = function_tmpdir / ctx_name.target
+    make_targets(dfn, function_tmpdir, verbose=True)
+
+    for name in Context.Name.from_dfn(dfn):
+        source_path = function_tmpdir / name.target
         assert source_path.is_file()
 
 

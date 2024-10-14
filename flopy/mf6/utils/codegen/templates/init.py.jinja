@@ -1,6 +1,6 @@
 def __init__(
         self,
-        {%- for var in variables.values() if var.init_param %}
+        {%- for var in vars.values() if var.init_param %}
         {%- if var.default is defined %}
         {{ var.name }}={{ var.default }},
         {%- else %}
