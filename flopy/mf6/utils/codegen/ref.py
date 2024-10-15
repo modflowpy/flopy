@@ -103,8 +103,8 @@ class Ref:
 
         def _parent():
             line = lines["parent"]
-            _, param_name, _ = line.split()
-            return param_name
+            split = line.split()
+            return split[1]
 
         return (
             cls(**_subpkg(), parent=_parent())
