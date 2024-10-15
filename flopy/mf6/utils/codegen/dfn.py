@@ -203,7 +203,7 @@ class Dfn(UserDict):
         referenced = dict()
         vars, meta = Dfn._load(f, **kwargs)
 
-        def _map(spec: Dict[str, Any], wrap: bool = False) -> Var:
+        def _map(spec: Dict[str, Any]) -> Var:
             """
             Convert a variable specification from its representation
             in an input definition file to a Pythonic form.
@@ -217,9 +217,6 @@ class Dfn(UserDict):
             The rules for optional variable defaults are as follows:
             If a `default_value` is not provided, keywords are `False`
             by default, everything else is `None`.
-
-            If `wrap` is true, scalars will be wrapped as records.
-            This is useful to distinguish among choices in unions.
 
             Any filepath variable whose name functions as a foreign key
             for another context will be given a pointer to the context.
@@ -322,13 +319,17 @@ class Dfn(UserDict):
                     children = {names[0]: _map(record)}
                     kind = Var.Kind.List
                 elif _is_implicit_scalar_record():
+                    fields = _fields(_name)
                     children = {
                         _name: Var(
                             name=_name,
                             kind=Var.Kind.Record,
                             block=block,
-                            children=_fields(_name),
+                            children=fields,
                             description=description,
+                            meta={
+                                "type": f"[{', '.join([f.meta["type"] for f in fields.values()])}]"
+                            },
                         )
                     }
                     kind = Var.Kind.List
@@ -349,31 +350,30 @@ class Dfn(UserDict):
                             block=block,
                             children=first.children if single else fields,
                             description=description,
+                            meta={
+                                "type": f"[{', '.join([v.meta["type"] for v in fields.values()])}]"
+                            },
                         )
                     }
                     kind = Var.Kind.List
+                type_ = f"[{', '.join([v.name for v in children.values()])}]"
 
-            # union (product), children are choices.
-            # scalar choices are wrapped as records.
+            # union (product), children are choices
             elif _type.startswith("keystring"):
                 names = _type.split()[1:]
                 children = {
-                    v["name"]: _map(v, wrap=True)
+                    v["name"]: _map(v)
                     for v in vars.values(multi=True)
                     if v["name"] in names and v.get("in_record", False)
                 }
                 kind = Var.Kind.Union
+                type_ = f"[{', '.join([v.name for v in children.values()])}]"
 
             # record (sum), children are fields
             elif _type.startswith("record"):
                 children = _fields(_name)
                 kind = Var.Kind.Record
-
-            # are we wrapping a var into a record
-            # as a choice in a union?
-            elif wrap:
-                children = {_name: _map(spec)}
-                kind = Var.Kind.Record
+                type_ = f"[{', '.join([v.meta["type"] for v in children.values()])}]"
 
             # at this point, if it has a shape, it's an array
             elif shape is not None:
@@ -383,10 +383,12 @@ class Dfn(UserDict):
                     kind = Var.Kind.List
                 else:
                     kind = Var.Kind.Array
+                type_ = f"[{_type}]"
 
             # finally scalars
             else:
                 kind = Var.Kind.Scalar
+                type_ = _type
 
             # create var
             return Var(
@@ -404,7 +406,7 @@ class Dfn(UserDict):
                     else default
                 ),
                 children=children,
-                meta={"ref": ref},
+                meta={"ref": ref, "type": type_},
             )
 
         # pass the original DFN representation as
