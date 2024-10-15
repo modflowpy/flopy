@@ -110,10 +110,15 @@ class Dfn(UserDict):
     @staticmethod
     def _load(f, common: Optional[dict] = None) -> Tuple[OMD, List[str]]:
         """
-        Internal use only. Loads the DFN as an ordered multi-dictionary, and
+        Internal use only. Loads the DFN as an ordered multi-dictionary* and
         a list of string metadata. This is later parsed into more structured
         form. We also store the original representation for now so it can be
         used by the shim.
+
+        *The point of the OMD is to handle duplicate variable names; the only
+        case of this right now is 'auxiliary' which can appear in the options
+        block and again as a keyword in a record in a package data variable.
+
         """
         var = dict()
         vars = list()
@@ -211,12 +216,12 @@ class Dfn(UserDict):
             Notes
             -----
             This involves expanding nested type hierarchies, mapping
-            types to roughly equivalent Python primitives/composites,
-            and other shaping.
+            types to roughly equivalent Python primitives/composites.
+            The composite inflation step will not be necessary after
+            DFNs move to a structured format.
 
-            The rules for optional variable defaults are as follows:
-            If a `default_value` is not provided, keywords are `False`
-            by default, everything else is `None`.
+            If a variable does not have a `default` attribute, it will
+            default to `False` if it is a keyword, otherwise to `None`.
 
             Any filepath variable whose name functions as a foreign key
             for another context will be given a pointer to the context.
