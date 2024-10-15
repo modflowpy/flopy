@@ -320,6 +320,7 @@ class Dfn(UserDict):
                     kind = Var.Kind.List
                 elif _is_implicit_scalar_record():
                     fields = _fields(_name)
+                    types = [f.meta["type"] for f in fields.values()]
                     children = {
                         _name: Var(
                             name=_name,
@@ -327,9 +328,7 @@ class Dfn(UserDict):
                             block=block,
                             children=fields,
                             description=description,
-                            meta={
-                                "type": f"[{', '.join([f.meta["type"] for f in fields.values()])}]"
-                            },
+                            meta={"type": f"[{', '.join(types)}]"},
                         )
                     }
                     kind = Var.Kind.List
