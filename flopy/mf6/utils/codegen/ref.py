@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 from warnings import warn
 
 from flopy.mf6.utils.codegen.dfn import Dfn
@@ -12,10 +12,9 @@ class Ref:
     and another input definition. This allows an input context
     to refer to another input context, by including a filepath
     variable whose name acts as a foreign key for a different
-    input context. Extra parameters are added to the referring
-    context's `__init__` method so a selected "value" variable
-    defined in the referenced context can be provided directly
-    instead of the file path (foreign key) variable.
+    input context. The referring context's `__init__` method
+    is modified such that the variable named `val` replaces
+    the `key` variable.
 
     Notes
     -----

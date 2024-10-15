@@ -2,10 +2,10 @@ from dataclasses import asdict
 from enum import Enum
 from typing import Any, Callable, Dict, Iterable, Optional, Tuple
 
-_Predicate = Callable[[Any], bool]
-_Transform = Callable[[Any], Dict[str, str]]
-_Pair = Tuple[str, Any]
-_Pairs = Iterable[_Pair]
+Predicate = Callable[[Any], bool]
+Transform = Callable[[Any], Dict[str, str]]
+Pair = Tuple[str, Any]
+Pairs = Iterable[Pair]
 
 
 def _try_get_enum_value(v: Any) -> Any:
@@ -17,8 +17,8 @@ def renderable(
     *,
     keep_none: Optional[Iterable[str]] = None,
     quote_str: Optional[Iterable[str]] = None,
-    set_pairs: Optional[Iterable[Tuple[_Predicate, _Pairs]]] = None,
-    transform: Optional[Iterable[Tuple[_Predicate, _Transform]]] = None,
+    set_pairs: Optional[Iterable[Tuple[Predicate, Pairs]]] = None,
+    transform: Optional[Iterable[Tuple[Predicate, Transform]]] = None,
 ):
     """
     Decorator for dataclasses which are meant

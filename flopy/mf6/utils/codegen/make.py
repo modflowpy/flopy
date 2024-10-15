@@ -40,8 +40,7 @@ def make_all(dfndir: Path, outdir: Path, verbose: bool = False):
         with open(common_path, "r") as f:
             common, _ = Dfn._load(f)
 
-    # load subpackages first so we can pass them as references
-    # to load() for the rest of the input contexts
+    # load subpackage references first
     refs: Refs = {}
     for path in paths:
         name = Dfn.Name(*path.stem.split("-"))
@@ -51,8 +50,7 @@ def make_all(dfndir: Path, outdir: Path, verbose: bool = False):
             if ref:
                 refs[ref.key] = ref
 
-    # load all the input definitions before we generate input
-    # contexts so we can create foreign key refs between them.
+    # load all the input definitions
     dfns: Dfns = {}
     for path in paths:
         name = Dfn.Name(*path.stem.split("-"))

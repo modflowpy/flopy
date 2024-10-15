@@ -25,11 +25,7 @@ class Context:
 
     Notes
     -----
-    A context class minimally consists of a name, a definition, and a
-    map of variables. The definition and variables are redundant (the
-    latter are generated from the former) but for now, the definition
-    is needed. When generated classes no longer reproduce definitions
-    verbatim, it can be removed.
+    A context minimally consists of a name and a map of variables.
 
     The context class may inherit from a base class, and may specify
     a parent context within which it can be created (the parent then
@@ -58,6 +54,8 @@ class Context:
         - a description of the context class
         - the name of the source file to write
         - the base class the context inherits from
+        - the name of the parent parameter in the context
+        class' `__init__` method, if it can have a parent
 
         """
 
@@ -183,9 +181,7 @@ class Context:
         """
         Extract context class descriptor(s) from an input definition.
         These are structured representations of input context classes.
-
         Each input definition yields one or more input contexts.
-        The `name` parameter can be used to select the context.
         """
 
         meta = dfn.meta.copy()
