@@ -320,7 +320,6 @@ class Dfn(UserDict):
                     kind = Var.Kind.List
                 elif _is_implicit_scalar_record():
                     fields = _fields(_name)
-                    types = [f.meta["type"] for f in fields.values()]
                     children = {
                         _name: Var(
                             name=_name,
@@ -328,7 +327,9 @@ class Dfn(UserDict):
                             block=block,
                             children=fields,
                             description=description,
-                            meta={"type": f"[{', '.join(types)}]"},
+                            meta={
+                                "type": f"[{', '.join([f.meta['type'] for f in fields.values()])}]"
+                            },
                         )
                     }
                     kind = Var.Kind.List
@@ -350,7 +351,7 @@ class Dfn(UserDict):
                             children=first.children if single else fields,
                             description=description,
                             meta={
-                                "type": f"[{', '.join([v.meta["type"] for v in fields.values()])}]"
+                                "type": f"[{', '.join([v.meta['type'] for v in fields.values()])}]"
                             },
                         )
                     }
@@ -372,7 +373,7 @@ class Dfn(UserDict):
             elif _type.startswith("record"):
                 children = _fields(_name)
                 kind = Var.Kind.Record
-                type_ = f"[{', '.join([v.meta["type"] for v in children.values()])}]"
+                type_ = f"[{', '.join([v.meta['type'] for v in children.values()])}]"
 
             # at this point, if it has a shape, it's an array
             elif shape is not None:
