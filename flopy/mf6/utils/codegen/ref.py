@@ -49,7 +49,14 @@ class Ref:
         Try to load a reference from the definition.
         Returns `None` if the definition cannot be
         referenced by other contexts.
+
         """
+
+        # TODO: all this won't be necessary once we
+        # structure DFN format; we can then support
+        # subpackage references directly instead of
+        # by making assumptions about `dfn.meta`
+
         if not dfn.meta or "dfn" not in dfn.meta:
             return None
 

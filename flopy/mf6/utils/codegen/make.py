@@ -18,8 +18,7 @@ def make_targets(dfn: Dfn, outdir: Path, verbose: bool = False):
     for context in Context.from_dfn(dfn):
         target = outdir / context.name.target
         with open(target, "w") as f:
-            source = _TEMPLATE.render(**context.render())
-            f.write(source)
+            f.write(_TEMPLATE.render(**context.render()))
             if verbose:
                 print(f"Wrote {target}")
 
