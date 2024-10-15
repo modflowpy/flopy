@@ -492,7 +492,7 @@ def _init_body(ctx: dict) -> str:
             args = [
                 ctx["parent"]
                 if ctx.get("meta", dict()).get("ref", None)
-                else ctx['parent'],
+                else ctx["parent"],
                 f"'{ctx['name'].r}'",
                 "filename",
                 "pname",

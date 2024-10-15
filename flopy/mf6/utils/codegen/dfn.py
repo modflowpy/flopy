@@ -34,7 +34,7 @@ def _try_parse_bool(value):
     Try to parse a boolean from a string as represented
     in a DFN file, otherwise return the value unaltered.
     """
-    
+
     if isinstance(value, str):
         value = value.lower()
         if value in ["true", "false"]:
