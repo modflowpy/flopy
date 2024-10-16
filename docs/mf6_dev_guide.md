@@ -12,12 +12,12 @@ All meta-data can be accessed from the flopy.mf6.data.mfstructure.MFStructure cl
 
 ```mermaid
 classDiagram
-    MFStructure --* "1" MFSimulationStructure : has
-    MFSimulationStructure --* "1+" MFModelStructure : has
-    MFModelStructure --* "1" MFInputFileStructure : has
-    MFInputFileStructure --* "1+" MFBlockStructure : has
-    MFBlockStructure --* "1+" MFDataStructure : has
-    MFDataStructure --* "1+" MFDataItemStructure : has
+    MFStructure *-- "1" MFSimulationStructure : has
+    MFSimulationStructure *-- "1+" MFModelStructure : has
+    MFModelStructure *-- "1" MFInputFileStructure : has
+    MFInputFileStructure *-- "1+" MFBlockStructure : has
+    MFBlockStructure *-- "1+" MFDataStructure : has
+    MFDataStructure *-- "1+" MFDataItemStructure : has
 ```
 
 Figure 1: Generic data structure hierarchy.  Connections show composition relationships.
@@ -31,20 +31,20 @@ The package and data classes are related as shown below in figure 2.  On the top
 ```mermaid
 classDiagram
 
-MFPackage --* "1+" MFBlock : has
-MFBlock --* "1+" MFData : has
-MFPackage --* "1" MFInputFileStructure : has
-MFBlock --* "1" MFBlockStructure : has
-MFData --* "1" MFDataStructure : has
-MFData --|> MFArray
-MFArray --|> MFTransientArray
-MFData --|> MFList
-MFList --|> MFTransientList
-MFData --|> MFScalar
-MFScalar --|> MFTransientScalar
-MFTransientData --|> MFTransientArray
-MFTransientData --|> MFTransientList
-MFTransientData --|> MFTransientScalar
+MFPackage *-- "1+" MFBlock : has
+MFBlock *-- "1+" MFData : has
+MFPackage *-- "1" MFInputFileStructure : has
+MFBlock *-- "1" MFBlockStructure : has
+MFData *-- "1" MFDataStructure : has
+MFData <|-- MFArray
+MFArray <|-- MFTransientArray
+MFData <|-- MFList
+MFList <|-- MFTransientList
+MFData <|-- MFScalar
+MFScalar <|-- MFTransientScalar
+MFTransientData <|-- MFTransientArray
+MFTransientData <|-- MFTransientList
+MFTransientData <|-- MFTransientScalar
 ```
 							 
 Figure 2:  FPMF6 package and data classes.  Lines connecting classes show a relationship defined between the two connected classes.  A "*" next to the class means that the  class is a sub-class of the connected class.  A "+" next to the class means that the class is contained within the connected class.
