@@ -29,7 +29,7 @@ Vars = Dict[str, "Var"]
 Dfns = Dict[str, "Dfn"]
 
 
-def _try_parse_bool(value):
+def _try_parse_bool(value: Any) -> Any:
     """
     Try to parse a boolean from a string as represented
     in a DFN file, otherwise return the value unaltered.
