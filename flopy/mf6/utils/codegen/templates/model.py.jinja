@@ -1,0 +1,40 @@
+from os import PathLike, curdir
+from typing import Union
+
+from flopy.mf6.data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
+from flopy.mf6.mfmodel import MFModel
+
+
+class Modflow{{ name.title.title() }}(MFModel):
+    {% include "docstring.jinja" %}
+
+    model_type = "{{ name.title }}"
+
+    {% include "init.py.jinja" %}
+
+    @classmethod
+    def load(
+        cls,
+        simulation,
+        structure,
+        modelname="NewModel",
+        model_nam_file="modflowtest.nam",
+        version="mf6",
+        exe_name="mf6",
+        strict=True,
+        model_rel_path=curdir,
+        load_only=None,
+    ):
+        return MFModel.load_base(
+            cls,
+            simulation,
+            structure,
+            modelname,
+            model_nam_file,
+            "{{ name.title }}6",
+            version,
+            exe_name,
+            strict,
+            model_rel_path,
+            load_only,
+        )

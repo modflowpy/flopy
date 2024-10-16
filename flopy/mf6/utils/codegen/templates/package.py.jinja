@@ -1,0 +1,24 @@
+from os import PathLike, curdir
+from typing import Union
+
+from flopy.mf6.data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
+from flopy.mf6.mfpackage import MFPackage, MFChildPackages
+
+class Modflow{{ name.title.title() }}(MFPackage):
+    {% include "docstring.jinja" %}
+
+    {%- for item in class_attrs %}
+    {{ item }}
+    {%- endfor %}
+    package_abbr = "{{ '' if name.l in ["sln", "sim", "exg", none] else name.l }}{{ name.r }}"
+    _package_type = "{{ name.r }}"
+    dfn_file_name = "{{ name.l | default('sim', true) }}-{{ name.r }}.dfn"
+    dfn = {{ dfn|pprint|indent(10) }}
+
+    {% include "init.py.jinja" %}
+        self._init_complete = True
+
+{# TODO: cleaner way to filter out hpc subpkg? #}
+{% if "ref" in meta and name.r != "hpc" %}
+{% include "container.py.jinja" %}
+{% endif %}

@@ -474,7 +474,7 @@ def _class_attrs(ctx: dict) -> str:
         return None
 
     attrs = [_attr(v) for v in ctx["vars"].values()]
-    return "\n    ".join([a for a in attrs if a])
+    return [a for a in attrs if a]
 
 
 def _init_body(ctx: dict) -> str:
@@ -695,17 +695,6 @@ def _dfn(o) -> List[List[str]]:
     return [["header"] + _meta()] + _dfn()
 
 
-def _qual_base(ctx: dict):
-    base = ctx["base"]
-    if base == "MFSimulationBase":
-        module = "mfsimbase"
-    elif base == "MFModel":
-        module = "mfmodel"
-    else:
-        module = "mfpackage"
-    return f"{module}.{base}"
-
-
 SHIM = {
     "keep_none": ["default", "block", "metadata"],
     "quote_str": ["default"],
@@ -714,7 +703,6 @@ SHIM = {
             _is_context,
             [
                 ("dfn", _dfn),
-                ("qual_base", _qual_base),
                 ("class_attrs", _class_attrs),
                 ("init_body", _init_body),
             ],
