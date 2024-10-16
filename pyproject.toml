@@ -29,7 +29,7 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dependencies = [
-    "boltons",
+    "boltons>=1.0",
     "Jinja2>=3.0",
     "numpy>=1.20.3",
     "matplotlib >=1.4.0",

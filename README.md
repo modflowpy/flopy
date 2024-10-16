@@ -35,7 +35,7 @@ Installation
 FloPy requires **Python** 3.9+ with:
 
 ```
-boltons
+boltons >=1.0
 numpy >=1.20.3
 matplotlib >=1.4.0
 pandas >=2.0.0
