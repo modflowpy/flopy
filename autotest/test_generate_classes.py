@@ -1,3 +1,4 @@
+from platform import system
 import sys
 from os import environ
 from pathlib import Path
@@ -30,7 +31,6 @@ def pytest_generate_tests(metafunc):
     against all of the versions of mf6io flopy guarantees
     support for- maybe develop and latest release? Though
     some backwards compatibility seems ideal if possible.
-    This would need changes in GH Actions CI test matrix.
     """
 
     owner = "MODFLOW-USGS"
@@ -86,8 +86,9 @@ def test_generate_classes_from_github_refs(
 
     # create virtual environment
     venv = function_tmpdir / "venv"
-    python = venv / "bin" / "python"
-    pip = venv / "bin" / "pip"
+    bin = "Scripts" if system() == "Windows" else "bin"
+    python = venv / bin / "python"
+    pip = venv / bin / "pip"
     cli_run([str(venv)])
     print(f"Using temp venv at {venv} to test class generation from {ref}")
 
