@@ -1,6 +1,7 @@
 import sys
 from os import environ
 from pathlib import Path
+from platform import system
 from pprint import pprint
 from typing import Iterable
 from warnings import warn
@@ -30,7 +31,6 @@ def pytest_generate_tests(metafunc):
     against all of the versions of mf6io flopy guarantees
     support for- maybe develop and latest release? Though
     some backwards compatibility seems ideal if possible.
-    This would need changes in GH Actions CI test matrix.
     """
 
     owner = "MODFLOW-USGS"
@@ -86,8 +86,10 @@ def test_generate_classes_from_github_refs(
 
     # create virtual environment
     venv = function_tmpdir / "venv"
-    python = venv / "bin" / "python"
-    pip = venv / "bin" / "pip"
+    win = system() == "Windows"
+    bin = "Scripts" if win else "bin"
+    python = venv / bin / ("python" + (".exe" if win else ""))
+    pip = venv / bin / ("pip" + (".exe" if win else ""))
     cli_run([str(venv)])
     print(f"Using temp venv at {venv} to test class generation from {ref}")
 
@@ -99,11 +101,15 @@ def test_generate_classes_from_github_refs(
 
     # get creation time of files
     flopy_path = (
-        venv
-        / "lib"
-        / f"python{sys.version_info.major}.{sys.version_info.minor}"
-        / "site-packages"
-        / "flopy"
+        (venv / "Lib" / "site-packages" / "flopy")
+        if win
+        else (
+            venv
+            / "lib"
+            / f"python{sys.version_info.major}.{sys.version_info.minor}"
+            / "site-packages"
+            / "flopy"
+        )
     )
     assert flopy_path.is_dir()
     mod_files = list((flopy_path / "mf6" / "modflow").rglob("*")) + list(
