@@ -101,11 +101,15 @@ def test_generate_classes_from_github_refs(
 
     # get creation time of files
     flopy_path = (
-        venv
-        / "lib"
-        / f"python{sys.version_info.major}.{sys.version_info.minor}"
-        / "site-packages"
-        / "flopy"
+        (venv / "Lib" / "site-packages" / "flopy")
+        if win
+        else (
+            venv
+            / "lib"
+            / f"python{sys.version_info.major}.{sys.version_info.minor}"
+            / "site-packages"
+            / "flopy"
+        )
     )
     assert flopy_path.is_dir()
     mod_files = list((flopy_path / "mf6" / "modflow").rglob("*")) + list(
