@@ -374,6 +374,8 @@ def test_mf6disu(sim_disu_diff_layers):
     gwf.modelgrid.write_shapefile(fname)
     fname = ws / "model.shp"
     gwf.export(fname)
+    fname = ws / "chd.shp"
+    gwf.chd.export(fname)
 
     sim.run_simulation(silent=True)
     head = gwf.output.head().get_data()

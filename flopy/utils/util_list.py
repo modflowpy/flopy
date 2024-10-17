@@ -1106,49 +1106,23 @@ class MfList(DataInterface, DataListInterface):
 
     @property
     def masked_4D_arrays(self):
-        # get the first kper
-        arrays = self.to_array(kper=0, mask=True)
-
-        # initialize these big arrays
-        m4ds = {}
-        for name, array in arrays.items():
-            m4d = np.zeros(
-                (
-                    self._model.nper,
-                    self._model.nlay,
-                    self._model.nrow,
-                    self._model.ncol,
-                )
-            )
-            m4d[0, :, :, :] = array
-            m4ds[name] = m4d
-        for kper in range(1, self._model.nper):
-            arrays = self.to_array(kper=kper, mask=True)
-            for name, array in arrays.items():
-                m4ds[name][kper, :, :, :] = array
-        return m4ds
+        return dict(self.masked_4D_arrays_itr())
 
     def masked_4D_arrays_itr(self):
-        # get the first kper
-        arrays = self.to_array(kper=0, mask=True)
+        nper = self._model.nper
 
-        # initialize these big arrays
-        for name, array in arrays.items():
-            m4d = np.zeros(
-                (
-                    self._model.nper,
-                    self._model.nlay,
-                    self._model.nrow,
-                    self._model.ncol,
-                )
-            )
-            m4d[0, :, :, :] = array
-            for kper in range(1, self._model.nper):
-                arrays = self.to_array(kper=kper, mask=True)
-                for tname, array in arrays.items():
-                    if tname == name:
-                        m4d[kper, :, :, :] = array
-            yield name, m4d
+        # get the first kper array to extract array shape and names
+        arrays_kper_0 = self.to_array(kper=0, mask=True)
+        shape_per_spd = next(iter(arrays_kper_0.values())).shape
+
+        for name in arrays_kper_0.keys():
+            ma = np.zeros((nper, *shape_per_spd))
+            for kper in range(nper):
+                # If new_arrays is not None, overwrite arrays
+                if new_arrays := self.to_array(kper=kper, mask=True):
+                    arrays = new_arrays
+                ma[kper] = arrays[name]
+            yield name, ma
 
     @property
     def array(self):
