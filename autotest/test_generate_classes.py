@@ -1,7 +1,7 @@
-from platform import system
 import sys
 from os import environ
 from pathlib import Path
+from platform import system
 from pprint import pprint
 from typing import Iterable
 from warnings import warn
