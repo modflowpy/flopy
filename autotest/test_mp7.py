@@ -795,7 +795,7 @@ def test_mp7_output(function_tmpdir, case, array_snapshot):
         raise AssertionError(
             "plot_pathline not properly splitting particles from recarray"
         )
-    plt.show()
+    # plt.show()
     plt.close()
 
 
