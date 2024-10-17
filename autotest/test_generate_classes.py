@@ -86,9 +86,10 @@ def test_generate_classes_from_github_refs(
 
     # create virtual environment
     venv = function_tmpdir / "venv"
-    bin = "Scripts" if system() == "Windows" else "bin"
-    python = venv / bin / "python"
-    pip = venv / bin / "pip"
+    win = system() == "Windows"
+    bin = "Scripts" if win else "bin"
+    python = venv / bin / ("python" + (".exe" if win else ""))
+    pip = venv / bin / ("pip" + (".exe" if win else ""))
     cli_run([str(venv)])
     print(f"Using temp venv at {venv} to test class generation from {ref}")
 
