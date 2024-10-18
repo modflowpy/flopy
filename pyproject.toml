@@ -28,9 +28,11 @@ classifiers = [
 ]
 requires-python = ">=3.9,<3.13"
 dependencies = [
+    "boltons>=1.0",
+    "Jinja2>=3.0",
     "numpy>=1.20.3",
     "matplotlib >=1.4.0",
-    "pandas >=2.0.0"
+    "pandas >=2.0.0",
 ]
 dynamic = ["version", "readme"]
 
@@ -112,6 +114,7 @@ include = ["flopy", "flopy.*"]
 
 [tool.setuptools.package-data]
 "flopy.mf6.data" = ["dfn/*.dfn"]
+"flopy.mf6.utils.codegen" = ["templates/*.jinja"]
 "flopy.plot" = ["mplstyle/*.mplstyle"]
 
 [tool.ruff]
