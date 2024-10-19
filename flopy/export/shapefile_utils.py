@@ -380,10 +380,15 @@ def model_attributes_to_shapefile(
                     # Skip empty transientlist
                     if not a.data:
                         continue
+
+                    # Use first recarray kper to check transientlist
+                    for kper in a.data.keys():
+                        if isinstance(a.data[kper], np.recarray):
+                            break
                     # Skip transientlist if all elements are of object type
                     if all(
                         dtype == np.object_
-                        for dtype, _ in a.data[0].dtype.fields.values()
+                        for dtype, _ in a.data[kper].dtype.fields.values()
                     ):
                         continue
 
