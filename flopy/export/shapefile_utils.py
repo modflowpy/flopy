@@ -377,10 +377,6 @@ def model_attributes_to_shapefile(
                         assert arr.shape == horz_shape
                         array_dict[name] = arr
                 elif a.data_type == DataType.transientlist:
-                    try:
-                        list(a.masked_4D_arrays_itr())
-                    except:
-                        continue
                     for name, array in a.masked_4D_arrays_itr():
                         n = shape_attr_name(name, length=4)
                         for kper in range(array.shape[0]):
