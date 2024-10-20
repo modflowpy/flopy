@@ -874,8 +874,10 @@ def test_export_contours(function_tmpdir, example_data_path):
 
 
 @pytest.mark.mf6
-@requires_pkg("shapely")
-def test_mf6_grid_shp_export(function_tmpdir):
+@requires_pkg("pyshp", "shapely", name_map={"pyshp": "shapefile"})
+def test_export_mf6_shp(function_tmpdir):
+    from shapefile import Reader
+
     nlay = 2
     nrow = 10
     ncol = 10
@@ -946,9 +948,6 @@ def test_mf6_grid_shp_export(function_tmpdir):
         gwf, pname="dis", nlay=nlay, nrow=nrow, ncol=ncol, top=top, botm=botm
     )
 
-    def cellid(k, i, j, nrow, ncol):
-        return k * nrow * ncol + i * ncol + j
-
     # Riv6
     spd6 = flopy.mf6.ModflowGwfriv.stress_period_data.empty(
         gwf, maxbound=len(spd)
@@ -957,9 +956,6 @@ def test_mf6_grid_shp_export(function_tmpdir):
     for c in spd.dtype.names:
         if c in spd6[0].dtype.names:
             spd6[0][c] = spd[c]
-    # MFTransient list apparently requires entries for additional stress periods,
-    # even if they are the same
-    spd6[1] = spd6[0]
     riv6 = flopy.mf6.ModflowGwfriv(gwf, stress_period_data=spd6)
     rch6 = flopy.mf6.ModflowGwfrcha(gwf, recharge=rech)
 
@@ -971,13 +967,10 @@ def test_mf6_grid_shp_export(function_tmpdir):
         ), f"variable {k} is not equal"
         pass
 
-    if not has_pkg("shapefile"):
-        return
-
     m.export(function_tmpdir / "mfnwt.shp")
     gwf.export(function_tmpdir / "mf6.shp")
 
-    # check that the two shapefiles are the same
+    # check that the shapefiles are the same
     ra = shp2recarray(function_tmpdir / "mfnwt.shp")
     ra6 = shp2recarray(function_tmpdir / "mf6.shp")
 
@@ -1001,6 +994,28 @@ def test_mf6_grid_shp_export(function_tmpdir):
                 assert math.isnan(it6)
             else:
                 assert np.abs(it - it6) < 1e-6
+
+    # Compare exported riv shapefiles
+    riv.export(function_tmpdir / "riv.shp")
+    riv6.export(function_tmpdir / "riv6.shp")
+    with Reader(function_tmpdir / "riv.shp") as riv_shp, Reader(
+        function_tmpdir / "riv6.shp"
+    ) as riv6_shp:
+        assert list(riv_shp.shapeRecord(-1).record) == list(
+            riv6_shp.shapeRecord(-1).record
+        )
+
+    # Check wel export with timeseries
+    wel_spd_0 = flopy.mf6.ModflowGwfwel.stress_period_data.empty(
+        gwf, maxbound=1, timeseries=True
+    )
+    wel_spd_0[0][0] = ((0, 0, 0), -99.0)
+    wel = flopy.mf6.ModflowGwfwel(
+        gwf,
+        maxbound=1,
+        stress_period_data={0: wel_spd_0[0]},
+    )
+    wel.export(function_tmpdir / "wel_test.shp")
 
 
 @requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
