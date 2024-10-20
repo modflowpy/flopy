@@ -856,6 +856,54 @@ def test_mp7sim_replacement(function_tmpdir):
 
 
 @requires_exe("mf6", "mp7")
+@pytest.mark.parametrize(
+    "porosity_type", ("constant", "list", "array_1d", "array")
+)
+@pytest.mark.slow
+def test_mp7bas_porosity(ex01_mf6_model, porosity_type):
+    sim, function_tmpdir = ex01_mf6_model
+    sim.run_simulation()
+
+    mpnam = f"{ex01_mf6_model_name}_mp_forward"
+    gwf = sim.get_model(ex01_mf6_model_name)
+
+    if porosity_type == "constant":
+        porosity = 0.30
+    elif porosity_type == "list":
+        porosity = [0.35, 0.30, 0.25]  # constant per layer
+    elif porosity_type == "array_1d":
+        porosity = np.array([0.35, 0.30, 0.25])  # constant per layer
+    elif porosity_type == "array":
+        # Initialize porosity array based on dim of dis.botm
+        # lay_1=0.35, lay_2=0.30, lay_3=0.25
+        porosity = np.array([[[0.35]], [[0.30]], [[0.25]]]) * np.ones(
+            (gwf.dis.botm.array.shape)
+        )
+        # Diversify porosity values, adjust both halves of the model
+        porosity[:, :, : porosity.shape[2] // 2] -= 0.05
+        porosity[:, :, porosity.shape[2] // 2 :] += 0.05
+
+    mp = Modpath7.create_mp7(
+        modelname=mpnam,
+        trackdir="forward",
+        flowmodel=gwf,
+        exe_name="mp7",
+        model_ws=function_tmpdir,
+        rowcelldivisions=1,
+        columncelldivisions=1,
+        layercelldivisions=1,
+        porosity=porosity,
+    )
+
+    # Check mean of assigned porosity
+    assert np.isclose(np.mean(mp.get_package("MPBAS").porosity.array), 0.3)
+
+    mp.write_input()
+    success, _ = mp.run_model()
+    assert success, f"mp7 model ({mp.name}) did not run"
+
+
+@requires_exe("mf6", "mp7")
 def test_flopy_2223(function_tmpdir):
     mf6sim = Mp7Cases.mf6(function_tmpdir)
     mf6sim.get_model().get_package("ic").strt = 0
