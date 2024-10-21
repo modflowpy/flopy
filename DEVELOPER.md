@@ -53,7 +53,7 @@ GitHub's  [Guide to Installing Git](https://help.github.com/articles/set-up-git)
 
 FloPy supports several recent versions of Python, loosely following [NEP 29](https://numpy.org/neps/nep-0029-deprecation_policy.html#implementation).
 
-Install Python 3.9-3.12 via [standalone download](https://www.python.org/downloads/) or a distribution like [Anaconda](https://www.anaconda.com/products/individual) or [miniconda](https://docs.conda.io/en/latest/miniconda.html).
+Install Python >=3.9 via [standalone download](https://www.python.org/downloads/) or a distribution like [Anaconda](https://www.anaconda.com/products/individual) or [miniconda](https://docs.conda.io/en/latest/miniconda.html).
 
 Then install FloPy and core dependencies from the project root:
 
