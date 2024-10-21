@@ -24,9 +24,10 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Hydrology",
 ]
-requires-python = ">=3.9,<3.13"
+requires-python = ">=3.9"
 dependencies = [
     "numpy>=1.20.3",
     "matplotlib >=1.4.0",
@@ -69,12 +70,12 @@ optional = [
     "pymetis ; platform_system != 'Windows'",
     "pyproj",
     "pyshp",
-    "pyvista",
+    "pyvista ; python_version <'3.13'",
     "rasterio",
     "rasterstats",
     "scipy",
     "shapely >=1.8",
-    "vtk",
+    "vtk ; python_version <'3.13'",
     "xmipy",
 ]
 doc = [
