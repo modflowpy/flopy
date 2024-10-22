@@ -484,6 +484,28 @@ def test_rect_grid_linestring_starting_on_vertex():
     assert result.cellids[0] == (1, 1)
 
 
+# @requires_pkg("shapely")
+# def test_rect_grid_linestring_geomcolletion():
+#     gr = get_rect_grid()
+#     ix = GridIntersect(gr, method="structured")
+#     ls = LineString(
+#         [
+#             (20.0, 0.0),
+#             (5.0, 5.0),
+#             (15.0, 7.5),
+#             (10.0, 10.0),
+#             (5.0, 15.0),
+#             (10.0, 19.0),
+#             (10.0, 20.0),
+#         ]
+#     )
+#     result = ix.intersect(ls)
+#     assert len(result) == 3  # TODO: currently returns 4
+#     assert np.allclose(
+#         result.lengths.sum(), ls.length
+#     )  # TODO: length is 1m longer than ls
+
+
 # %% test linestring shapely
 
 
@@ -735,6 +757,26 @@ def test_tri_grid_linestring_cell_boundary_return_all_ix_shapely(rtree):
     ls = LineString(ix._vtx_grid_to_geoms_cellids()[0][0].exterior.coords)
     r = ix.intersect(ls, return_all_intersections=True)
     assert len(r) == 3
+
+
+@requires_pkg("shapely")
+def test_rect_vertex_grid_linestring_geomcollection():
+    gr = get_rect_vertex_grid()
+    ix = GridIntersect(gr, method="vertex")
+    ls = LineString(
+        [
+            (20.0, 0.0),
+            (5.0, 5.0),
+            (15.0, 7.5),
+            (10.0, 10.0),
+            (5.0, 15.0),
+            (10.0, 19.0),
+            (10.0, 20.0),
+        ]
+    )
+    result = ix.intersect(ls)
+    assert len(result) == 3
+    assert np.allclose(result.lengths.sum(), ls.length)
 
 
 # %% test polygon structured
@@ -1555,14 +1597,3 @@ def test_create_raster_from_array_transform(example_data_path):
         or not ((ymax - ymin) / (rymax - rymin)) == 2
     ):
         raise AssertionError("Transform based raster not working properly")
-
-
-if __name__ == "__main__":
-    sgr = get_rect_grid(angrot=45.0, xyoffset=10.0)
-    ls = LineString([(5, 10.0 + np.sqrt(200.0)), (15, 10.0 + np.sqrt(200.0))])
-    ix = GridIntersect(sgr, method="structured")
-    result = ix.intersect(ls)
-    assert len(result) == 2
-    ix = GridIntersect(sgr, method="structured", local=True)
-    result = ix.intersect(ls)
-    assert len(result) == 0
