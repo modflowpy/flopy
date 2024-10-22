@@ -1130,15 +1130,43 @@ class MFFileAccessList(MFFileAccess):
                 else:
                     header.append((di_struct.name, np_flt_type))
                 ext_index += 1
-            elif di_struct.name == "aux":
-                aux_var_names = (
-                    self._data_dimensions.package_dim.get_aux_variables()
-                )
-                if aux_var_names is not None:
-                    for aux_var_name in aux_var_names[0]:
-                        if aux_var_name.lower() != "auxiliary":
-                            header.append((aux_var_name, np_flt_type))
-                            ext_index += 1
+            else:
+                # optional tags
+                if di_struct.name == "aux":
+                    aux_var_names = (
+                        self._data_dimensions.package_dim.get_aux_variables()
+                    )
+                    if aux_var_names is not None:
+                        for aux_var_name in aux_var_names[0]:
+                            if aux_var_name.lower() != "auxiliary":
+                                header.append((aux_var_name, np_flt_type))
+                                ext_index += 1
+                elif di_struct.name == "petm0":
+                    for key in self._simulation_data.mfdata:
+                        if "surf_rate_specified" in key:
+                            if self._simulation_data.mfdata[key].get_data():
+                                header.append((di_struct.name, np_flt_type))
+                                ext_index += 1
+                elif di_struct.name == "pxdp" or di_struct.name == "petm":
+                    for key in self._simulation_data.mfdata:
+                        if "nseg" in key:
+                            if (
+                                self._simulation_data.mfdata[key].get_data()
+                                > 1
+                            ):
+                                for seg in range(
+                                    self._simulation_data.mfdata[
+                                        key
+                                    ].get_data()
+                                    - 1
+                                ):
+                                    header.append(
+                                        (
+                                            f"{di_struct.name}{seg+1}",
+                                            np_flt_type,
+                                        )
+                                    )
+                                    ext_index += 1
         return header, int_cellid_indexes, ext_cellid_indexes
 
     def _get_cell_header(self, data_item, data_set, index):
