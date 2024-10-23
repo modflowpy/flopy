@@ -398,42 +398,6 @@ class GridIntersect:
             ]
         return np.array(geoms), np.arange(self.mfgrid.ncpl)
 
-    def _rect_grid_to_shape_list(self):
-        """internal method, list of shapely polygons for structured grid cells.
-
-        .. deprecated:: 3.3.6
-            use _rect_grid_to_geoms_cellids() instead.
-
-        Returns
-        -------
-        list
-            list of shapely Polygons
-        """
-        warnings.warn(
-            "`_rect_grid_to_shape_list()` is deprecated, please"
-            "use `_rect_grid_to_geoms_cellids()` instead.",
-            DeprecationWarning,
-        )
-        return self._rect_grid_to_geoms_cellids()[0].tolist()
-
-    def _vtx_grid_to_shape_list(self):
-        """internal method, list of shapely polygons for vertex grids.
-
-        .. deprecated:: 3.3.6
-            use _vtx_grid_to_geoms_cellids() instead.
-
-        Returns
-        -------
-        list
-            list of shapely Polygons
-        """
-        warnings.warn(
-            "`_vtx_grid_to_shape_list()` is deprecated, please"
-            "use `_vtx_grid_to_geoms_cellids()` instead.",
-            DeprecationWarning,
-        )
-        return self._vtx_grid_to_geoms_cellids()[0].tolist()
-
     def query_grid(self, shp):
         """Perform spatial query on grid with shapely geometry. If no spatial
         query is possible returns all grid cells.
