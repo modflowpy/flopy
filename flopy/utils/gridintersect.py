@@ -1651,17 +1651,16 @@ class GridIntersect:
         return geom_list
 
     @staticmethod
-    def plot_polygon(rec, ax=None, **kwargs):
+    def plot_polygon(result, ax=None, **kwargs):
         """method to plot the polygon intersection results from the resulting
         numpy.recarray.
 
-        Note: only works when recarray has 'intersects' column!
+        Note: only works when recarray has 'ixshapes' column!
 
         Parameters
         ----------
-        rec : numpy.recarray
-            record array containing intersection results
-            (the resulting shapes)
+        result : numpy.recarray or geopandas.GeoDataFrame
+            record array or GeoDataFrame containing intersection results
         ax : matplotlib.pyplot.axes, optional
             axes to plot onto, if not provided, creates a new figure
         **kwargs:
@@ -1678,6 +1677,10 @@ class GridIntersect:
 
         if ax is None:
             _, ax = plt.subplots()
+            ax.set_aspect("equal", adjustable="box")
+            autoscale = True
+        else:
+            autoscale = False
 
         patches = []
         if "facecolor" in kwargs:
@@ -1692,7 +1695,13 @@ class GridIntersect:
             ppi = _polygon_patch(poly, facecolor=fc, **kwargs)
             patches.append(ppi)
 
-        for i, ishp in enumerate(rec.ixshapes):
+        # allow for result to be geodataframe
+        geoms = (
+            result.ixshapes
+            if isinstance(result, np.rec.recarray)
+            else result.geometry
+        )
+        for i, ishp in enumerate(geoms):
             if hasattr(ishp, "geoms"):
                 for geom in ishp.geoms:
                     add_poly_patch(geom)
@@ -1702,20 +1711,22 @@ class GridIntersect:
         pc = PatchCollection(patches, match_original=True)
         ax.add_collection(pc)
 
+        if autoscale:
+            ax.autoscale_view()
+
         return ax
 
     @staticmethod
-    def plot_linestring(rec, ax=None, cmap=None, **kwargs):
+    def plot_linestring(result, ax=None, cmap=None, **kwargs):
         """method to plot the linestring intersection results from the
         resulting numpy.recarray.
 
-        Note: only works when recarray has 'intersects' column!
+        Note: only works when recarray has 'ixshapes' column!
 
         Parameters
         ----------
-        rec : numpy.recarray
-            record array containing intersection results
-            (the resulting shapes)
+        result : numpy.recarray or geopandas.GeoDataFrame
+            record array or GeoDataFrame containing intersection results
         ax : matplotlib.pyplot.axes, optional
             axes to plot onto, if not provided, creates a new figure
         cmap : str
@@ -1732,6 +1743,7 @@ class GridIntersect:
 
         if ax is None:
             _, ax = plt.subplots()
+            ax.set_aspect("equal", adjustable="box")
 
         specified_color = True
         if "c" in kwargs:
@@ -1743,9 +1755,15 @@ class GridIntersect:
 
         if cmap is not None:
             colormap = plt.get_cmap(cmap)
-            colors = colormap(np.linspace(0, 1, rec.shape[0]))
+            colors = colormap(np.linspace(0, 1, result.shape[0]))
 
-        for i, ishp in enumerate(rec.ixshapes):
+        # allow for result to be geodataframe
+        geoms = (
+            result.ixshapes
+            if isinstance(result, np.rec.recarray)
+            else result.geometry
+        )
+        for i, ishp in enumerate(geoms):
             if not specified_color:
                 if cmap is None:
                     c = f"C{i % 10}"
@@ -1760,16 +1778,16 @@ class GridIntersect:
         return ax
 
     @staticmethod
-    def plot_point(rec, ax=None, **kwargs):
+    def plot_point(result, ax=None, **kwargs):
         """method to plot the point intersection results from the resulting
         numpy.recarray.
 
-        Note: only works when recarray has 'intersects' column!
+        Note: only works when recarray has 'ixshapes' column!
 
         Parameters
         ----------
-        rec : numpy.recarray
-            record array containing intersection results
+        result : numpy.recarray or geopandas.GeoDataFrame
+            record array or GeoDataFrame containing intersection results
         ax : matplotlib.pyplot.axes, optional
             axes to plot onto, if not provided, creates a new figure
         **kwargs:
@@ -1788,12 +1806,47 @@ class GridIntersect:
             _, ax = plt.subplots()
 
         x, y = [], []
-        geo_coll = shapely_geo.GeometryCollection(list(rec.ixshapes))
+        # allow for result to be geodataframe
+        geoms = (
+            result.ixshapes
+            if isinstance(result, np.rec.recarray)
+            else result.geometry
+        )
+        geo_coll = shapely_geo.GeometryCollection(list(geoms))
         collection = parse_shapely_ix_result([], geo_coll, ["Point"])
         for c in collection:
             x.append(c.x)
             y.append(c.y)
         ax.scatter(x, y, **kwargs)
+
+        return ax
+
+    def plot_intersection_result(
+        self, result, plot_grid=True, ax=None, **kwargs
+    ):
+        shapely = import_optional_dependency("shapely")
+
+        if plot_grid:
+            self.mfgrid.plot(ax=ax)
+
+        if np.isin(
+            shapely.get_type_id(result["ixshapes"]),
+            [shapely.GeometryType.POINT, shapely.GeometryType.MULTIPOINT],
+        ).all():
+            ax = GridIntersect.plot_point(result, ax=ax, **kwargs)
+        elif np.isin(
+            shapely.get_type_id(result["ixshapes"]),
+            [
+                shapely.GeometryType.LINESTRING,
+                shapely.GeometryType.MULTILINESTRING,
+            ],
+        ).all():
+            ax = GridIntersect.plot_linestring(result, ax=ax, **kwargs)
+        elif np.isin(
+            shapely.get_type_id(result["ixshapes"]),
+            [shapely.GeometryType.POLYGON, shapely.GeometryType.MULTIPOLYGON],
+        ).all():
+            ax = GridIntersect.plot_polygon(result, ax=ax, **kwargs)
 
         return ax
 
