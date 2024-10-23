@@ -75,7 +75,7 @@ print(f"flopy version: {flopy.__version__}")
 # time however. Setting the option to False avoids building the STR-tree but requires
 # the intersection calculation to loop through all grid cells. It is generally
 # recommended to set this option to True.
-# - `local`: either `False` (default) or `True`. When True the local model coordinates 
+# - `local`: either `False` (default) or `True`. When True the local model coordinates
 # are used. When False, real-world coordinates are used. Can be useful if shapes are
 # defined in local coordinates.
 #
