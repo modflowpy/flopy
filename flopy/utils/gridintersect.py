@@ -1,15 +1,11 @@
-import contextlib
 import warnings
-from itertools import product
 
 import numpy as np
+from pandas import DataFrame
 
 from .geometry import transform
 from .geospatial_utils import GeoSpatialUtil
-from .parse_version import Version
 from .utl_import import import_optional_dependency
-
-NUMPY_GE_121 = Version(np.__version__) >= Version("1.21")
 
 shapely = import_optional_dependency("shapely", errors="silent")
 
