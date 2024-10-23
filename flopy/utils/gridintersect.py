@@ -9,7 +9,7 @@ from .utl_import import import_optional_dependency
 
 shapely = import_optional_dependency("shapely", errors="silent")
 
-# TODO: remove the following methods and classes in version 3.9.0
+# TODO: remove the following methods and classes in version 3.10.0
 # - ModflowGridIndices
 # - GridIntersect:
 #   - remove method kwarg from __init__
@@ -94,8 +94,8 @@ class GridIntersect:
             will be the only option in the future. Method 'structured' is deprecated.
             This keyword argument will be removed in a future release.
 
-            .. deprecated:: 3.8.3
-                method="vertex" will be the only option from 3.9.0
+            .. deprecated:: 3.9.0
+                method="vertex" will be the only option from 3.10.0
 
         rtree : bool, optional
             whether to build an STR-Tree, default is True. If False no STR-tree
@@ -110,9 +110,9 @@ class GridIntersect:
         )
         self.mfgrid = mfgrid
         self.local = local
-        # TODO: remove method kwarg in version v3.9.0
-        # keep default behavior for v3.8.3, but warn if method is not vertex
-        # allow silencing of warning with method="vertex" in v3.8.3
+        # TODO: remove method kwarg in version v3.10.0
+        # keep default behavior for v3.9.0, but warn if method is not vertex
+        # allow silencing of warning with method="vertex" in v3.9.0
         if method is None:
             # determine method from grid_type
             self.method = self.mfgrid.grid_type
@@ -170,6 +170,7 @@ class GridIntersect:
         contains_centroid=False,
         min_area_fraction=None,
         geo_dataframe=False,
+        shapely2=None,
     ):
         """Method to intersect a shape with a model grid.
 
@@ -210,6 +211,11 @@ class GridIntersect:
             a record array containing information about the intersection or
             a geopandas.GeoDataFrame if geo_dataframe=True
         """
+        if shapely2 is not None:
+            warnings.warn(
+                "The shapely2 keyword argument is deprecated. "
+                "Shapely<2 support was dropped in flopy version 3.9.0."
+            )
         gu = GeoSpatialUtil(shp, shapetype=shapetype)
         shp = gu.shapely
 
@@ -729,7 +735,7 @@ class GridIntersect:
     def _intersect_point_structured(self, shp, return_all_intersections=False):
         """intersection method for intersecting points with structured grids.
 
-        .. deprecated:: 3.8.3
+        .. deprecated:: 3.9.0
             use _intersect_point_shapely() or set method="vertex" in GridIntersect.
 
         Parameters
@@ -868,7 +874,7 @@ class GridIntersect:
     ):
         """method for intersecting linestrings with structured grids.
 
-        .. deprecated:: 3.8.3
+        .. deprecated:: 3.9.0
             use _intersect_point_shapely() or set method="vertex" in GridIntersect.
 
         Parameters
@@ -1082,7 +1088,7 @@ class GridIntersect:
         and return a list of node indices and the length of the line in that
         node.
 
-        .. deprecated:: 3.8.3
+        .. deprecated:: 3.9.0
             method="structured" is deprecated.
 
         Parameters
@@ -1190,7 +1196,7 @@ class GridIntersect:
     ):
         """helper method that follows a line through a structured grid.
 
-        .. deprecated:: 3.8.3
+        .. deprecated:: 3.9.0
             method="structured" is deprecated.
 
         Parameters
@@ -1365,7 +1371,7 @@ class GridIntersect:
         """intersect a rectangle with a structured grid to retrieve node ids of
         intersecting grid cells.
 
-        .. deprecated:: 3.8.3
+        .. deprecated:: 3.9.0
             method="structured" is deprecated.
 
         Note: only works in local coordinates (i.e. non-rotated grid
@@ -1453,7 +1459,7 @@ class GridIntersect:
         """intersect polygon with a structured grid. Uses bounding box of the
         Polygon to limit search space.
 
-        .. deprecated:: 3.8.3
+        .. deprecated:: 3.9.0
             method="structured" is deprecated. Use `_intersect_polygon_shapely()`.
 
 
@@ -1602,7 +1608,7 @@ class GridIntersect:
         """Internal method, helper function to transform geometry
         __geo_interface__.
 
-        .. deprecated:: 3.8.3
+        .. deprecated:: 3.9.0
             method="structured" is deprecated. Only used by
             `_intersect_polygon_structured()`
 
@@ -1894,8 +1900,8 @@ class ModflowGridIndices:
     """Collection of methods that can be used to find cell indices for a
     structured, but irregularly spaced MODFLOW grid.
 
-    .. deprecated:: 3.8.3
-        This class is deprecated and will be removed in version 3.9.0.
+    .. deprecated:: 3.9.0
+        This class is deprecated and will be removed in version 3.10.0.
     """
 
     @staticmethod
