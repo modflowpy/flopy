@@ -12,68 +12,19 @@ from .utl_import import import_optional_dependency
 NUMPY_GE_121 = Version(np.__version__) >= Version("1.21")
 
 shapely = import_optional_dependency("shapely", errors="silent")
-if shapely is not None:
-    SHAPELY_GE_20 = Version(shapely.__version__) >= Version("2.0a1")
-    # shapely > 1.8 required
-    if Version(shapely.__version__) < Version("1.8"):
-        warnings.warn("GridIntersect requires shapely>=1.8.")
-        shapely = None
-    if SHAPELY_GE_20:
-        from shapely import unary_union
-    else:
-        from shapely.ops import unary_union
-else:
-    SHAPELY_GE_20 = False
 
-shapely_warning = None
-if shapely is not None:
-    try:
-        from shapely.errors import ShapelyDeprecationWarning as shapely_warning
-    except ImportError:
-        pass
-
-if shapely_warning is not None and not SHAPELY_GE_20:
-
-    @contextlib.contextmanager
-    def ignore_shapely_warnings_for_object_array():
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                "Iteration|The array interface|__len__",
-                shapely_warning,
-            )
-            if NUMPY_GE_121:
-                # warning from numpy for existing Shapely releases (this is
-                # fixed with Shapely 1.8)
-                warnings.filterwarnings(
-                    "ignore",
-                    "An exception was ignored while fetching",
-                    DeprecationWarning,
-                )
-            yield
-
-    @contextlib.contextmanager
-    def ignore_shapely2_strtree_warning():
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                (
-                    "STRtree will be changed in 2.0.0 and "
-                    "will not be compatible with versions < 2."
-                ),
-                shapely_warning,
-            )
-            yield
-
-else:
-
-    @contextlib.contextmanager
-    def ignore_shapely_warnings_for_object_array():
-        yield
-
-    @contextlib.contextmanager
-    def ignore_shapely2_strtree_warning():
-        yield
+# TODO: remove the following methods and classes in version 3.9.0
+# - ModflowGridIndices
+# - GridIntersect:
+#   - remove method kwarg from __init__
+#   - remove structured methods from intersect() and intersects()
+#   - _intersect_point_structured()
+#   - _intersect_linestring_structured()
+#   - _get_nodes_intersecting_linestring()
+#   - _check_adjacent_cells_intersecting_line()
+#   - _intersect_rectangle_structured()
+#   - _intersect_polygon_structured()
+#   - _transform_geo_interface_polygon()
 
 
 def parse_shapely_ix_result(collection, ix_result, shptyps=None):
@@ -1173,6 +1124,9 @@ class GridIntersect:
     def _intersect_point_structured(self, shp, return_all_intersections=False):
         """intersection method for intersecting points with structured grids.
 
+        .. deprecated:: 3.8.3
+            use _intersect_point_shapely() or set method="vertex" in GridIntersect.
+
         Parameters
         ----------
         shp : shapely.geometry.Point or MultiPoint
@@ -1309,6 +1263,9 @@ class GridIntersect:
         self, shp, keepzerolengths=False, return_all_intersections=False
     ):
         """method for intersecting linestrings with structured grids.
+
+        .. deprecated:: 3.8.3
+            use _intersect_point_shapely() or set method="vertex" in GridIntersect.
 
         Parameters
         ----------
@@ -1520,6 +1477,9 @@ class GridIntersect:
         """helper function, intersect the linestring with the a structured grid
         and return a list of node indices and the length of the line in that
         node.
+
+        .. deprecated:: 3.8.3
+            method="structured" is deprecated.
 
         Parameters
         ----------
@@ -1798,6 +1758,9 @@ class GridIntersect:
         """intersect a rectangle with a structured grid to retrieve node ids of
         intersecting grid cells.
 
+        .. deprecated:: 3.8.3
+            method="structured" is deprecated.
+
         Note: only works in local coordinates (i.e. non-rotated grid
         with origin at (0, 0))
 
@@ -1882,6 +1845,10 @@ class GridIntersect:
     ):
         """intersect polygon with a structured grid. Uses bounding box of the
         Polygon to limit search space.
+
+        .. deprecated:: 3.8.3
+            method="structured" is deprecated. Use `_intersect_polygon_shapely()`.
+
 
         Notes
         -----
@@ -2028,6 +1995,10 @@ class GridIntersect:
     def _transform_geo_interface_polygon(self, polygon):
         """Internal method, helper function to transform geometry
         __geo_interface__.
+
+        .. deprecated:: 3.8.3
+            method="structured" is deprecated. Only used by
+            `_intersect_polygon_structured()`
 
         Used for translating intersection result coordinates back into
         real-world coordinates.
@@ -2241,7 +2212,11 @@ class GridIntersect:
 
 class ModflowGridIndices:
     """Collection of methods that can be used to find cell indices for a
-    structured, but irregularly spaced MODFLOW grid."""
+    structured, but irregularly spaced MODFLOW grid.
+
+    .. deprecated:: 3.8.3
+        This class is deprecated and will be removed in version 3.9.0.
+    """
 
     @staticmethod
     def find_position_in_array(arr, x):
