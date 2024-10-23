@@ -213,7 +213,8 @@ def test_rect_grid_multipoint_in_multiple_cells():
 def test_rect_grid_point_outside_shapely(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="vertex", rtree=rtree)
-    result = ix.intersect(Point(25.0, 25.0))
+    # use GeoSpatialUtil to convert to shapely geometry
+    result = ix.intersect((25.0, 25.0), shapetype="point")
     assert len(result) == 0
 
 
@@ -594,6 +595,26 @@ def test_rect_grid_linestring_in_and_out_of_cell_shapely(rtree):
     assert result.cellids[0] == (1, 0)
     assert result.cellids[1] == (1, 1)
     assert np.allclose(result.lengths.sum(), 21.540659228538015)
+
+
+@requires_pkg("shapely")
+def test_rect_grid_linestring_in_and_out_of_cell2_shapely():
+    gr = get_rect_grid()
+    ix = GridIntersect(gr, method="vertex")
+    result = ix.intersect(
+        LineString([(5, 15), (5.0, 9), (15.0, 5.0), (5.0, 1.0)])
+    )
+    assert len(result) == 3
+
+
+@requires_pkg("shapely")
+def test_rect_grid_linestring_starting_on_vertex_shapely():
+    gr = get_rect_grid()
+    ix = GridIntersect(gr, method="vertex")
+    result = ix.intersect(LineString([(10.0, 10.0), (15.0, 5.0)]))
+    assert len(result) == 1
+    assert np.allclose(result.lengths.sum(), np.sqrt(50))
+    assert result.cellids[0] == (1, 1)
 
 
 @requires_pkg("shapely")
@@ -1021,6 +1042,24 @@ def test_rect_grid_polygon_on_outer_boundary_shapely(rtree):
         Polygon([(20.0, 5.0), (25.0, 5.0), (25.0, 15.0), (20.0, 15.0)])
     )
     assert len(result) == 0
+
+
+@requires_pkg("shapely")
+def test_rect_grid_polygon_running_along_boundary_shapely():
+    gr = get_rect_grid()
+    ix = GridIntersect(gr, method="vertex")
+    result = ix.intersect(
+        Polygon(
+            [
+                (5.0, 5.0),
+                (5.0, 10.0),
+                (9.0, 10.0),
+                (9.0, 15.0),
+                (1.0, 15.0),
+                (1.0, 5.0),
+            ]
+        )
+    )
 
 
 @requires_pkg("shapely")
