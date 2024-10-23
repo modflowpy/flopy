@@ -700,7 +700,7 @@ class GridIntersect:
 
         return rec
 
-    def intersects(self, shp, shapetype=None):
+    def intersects(self, shp, shapetype=None, dataframe=False):
         """Return cellids for grid cells that intersect with shape.
 
         Parameters
@@ -712,12 +712,14 @@ class GridIntersect:
             type of shape (i.e. "point", "linestring", "polygon" or
             their multi-variants), used by GeoSpatialUtil if shp is
             passed as a list of vertices, default is None
+        dataframe : bool, optional
+            if True, return a pandas.DataFrame, default is False
 
         Returns
         -------
-        numpy.recarray
-            a record array containing cell IDs of the gridcells
-            the shape intersects with
+        numpy.recarray or pandas.DataFrame
+            a record array or pandas.DataFrame containing cell IDs of the gridcells
+            the shape intersects with.
         """
         shp = GeoSpatialUtil(shp, shapetype=shapetype).shapely
         qfiltered = self.strtree.query(shp, predicate="intersects")
@@ -728,6 +730,9 @@ class GridIntersect:
             rec.cellids = list(zip(*self.mfgrid.get_lrc([qfiltered])[0][1:]))
         else:
             rec.cellids = qfiltered
+
+        if dataframe:
+            return DataFrame(rec)
         return rec
 
     def _intersect_point_structured(self, shp, return_all_intersections=False):
