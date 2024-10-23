@@ -155,8 +155,7 @@ class GridIntersect:
                     "shapely.strtree",
                     error_message="STRTree requires shapely",
                 )
-                with ignore_shapely2_strtree_warning():
-                    self.strtree = strtree.STRtree(self.geoms)
+                self.strtree = strtree.STRtree(self.geoms)
 
         elif self.method == "structured" and mfgrid.grid_type == "structured":
             # geoms and cellids do not need to be assigned for structured
@@ -858,8 +857,7 @@ class GridIntersect:
             len(nodelist), names=["cellids", "ixshapes"], formats=["O", "O"]
         )
         rec.cellids = nodelist
-        with ignore_shapely_warnings_for_object_array():
-            rec.ixshapes = ixshapes
+        rec.ixshapes = ixshapes
         return rec
 
     def _intersect_linestring_structured(
@@ -1069,8 +1067,7 @@ class GridIntersect:
         rec.vertices = vertices
         rec.lengths = lengths
         rec.cellids = nodelist
-        with ignore_shapely_warnings_for_object_array():
-            rec.ixshapes = ixshapes
+        rec.ixshapes = ixshapes
 
         return rec
 
@@ -1590,8 +1587,7 @@ class GridIntersect:
         rec.vertices = vertices
         rec.areas = areas
         rec.cellids = nodelist
-        with ignore_shapely_warnings_for_object_array():
-            rec.ixshapes = ixshapes
+        rec.ixshapes = ixshapes
 
         return rec
 
