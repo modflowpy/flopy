@@ -100,12 +100,14 @@ class GridIntersect:
         rtree : bool, optional
             whether to build an STR-Tree, default is True. If False no STR-tree
             is built, but intersects will loop through all model gridcells
-            (which is generally slower). Only read when `method='vertex'`.
+            (which is generally slower).
         local : bool, optional
             use local model coordinates from model grid to build grid geometries,
-            default is False and uses real-world coordinates (with offset and rotation),
-             if specified.
+            default is False and uses real-world coordinates (with offset and rotation).
         """
+        import_optional_dependency(
+            "shapely", error_message="GridIntersect requires shapely"
+        )
         self.mfgrid = mfgrid
         self.local = local
         # TODO: remove method kwarg in version v3.9.0
@@ -877,6 +879,7 @@ class GridIntersect:
         numpy.recarray
             a record array containing information about the intersection
         """
+        shapely = import_optional_dependency("shapely")
         shapely_geo = import_optional_dependency("shapely.geometry")
         affinity_loc = import_optional_dependency("shapely.affinity")
 
@@ -1041,7 +1044,7 @@ class GridIntersect:
                     tempverts.append(vertices[i])
                     ishp = ixshapes[i]
                     if isinstance(ishp, list):
-                        ishp = unary_union(ishp)
+                        ishp = shapely.unary_union(ishp)
                     tempshapes.append(ishp)
             nodelist = tempnodes
             lengths = templengths
@@ -1174,6 +1177,9 @@ class GridIntersect:
         self, linestring, i_j, nodelist
     ):
         """helper method that follows a line through a structured grid.
+
+        .. deprecated:: 3.8.3
+            method="structured" is deprecated.
 
         Parameters
         ----------
