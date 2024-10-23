@@ -179,7 +179,7 @@ class GridIntersect:
         return_all_intersections=False,
         contains_centroid=False,
         min_area_fraction=None,
-        shapely2=True,
+        geo_dataframe=False,
     ):
         """Method to intersect a shape with a model grid.
 
@@ -211,15 +211,14 @@ class GridIntersect:
             float defining minimum intersection area threshold, if intersection
             area is smaller than min_frac_area * cell_area, do not store
             intersection result, only used if shape type is "polygon"
-        shapely2 : bool, optional
-            temporary flag to determine whether to use methods optimized for
-            shapely 2.0. Useful for comparison performance between the old
-            (shapely 1.8) and new (shapely 2.0) implementations.
+        geo_dataframe : bool, optional
+            if True, return a geopandas GeoDataFrame, default is False
 
         Returns
         -------
-        numpy.recarray
-            a record array containing information about the intersection
+        numpy.recarray or gepandas.GeoDataFrame
+            a record array containing information about the intersection or
+            a geopandas.GeoDataFrame if geo_dataframe=True
         """
         gu = GeoSpatialUtil(shp, shapetype=shapetype)
         shp = gu.shapely
@@ -259,6 +258,17 @@ class GridIntersect:
                 )
         else:
             raise TypeError(f"Shapetype {gu.shapetype} is not supported")
+
+        if geo_dataframe:
+            gpd = import_optional_dependency("geopandas")
+            gdf = (
+                gpd.GeoDataFrame(rec)
+                .rename(columns={"ixshapes": "geometry"})
+                .set_geometry("geometry")
+            )
+            if self.mfgrid.crs is not None:
+                gdf = gdf.set_crs(self.mfgrid.crs)
+            return gdf
 
         return rec
 
