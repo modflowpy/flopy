@@ -520,17 +520,26 @@ class GridIntersect:
         mask_empty = shapely.is_empty(ixresult)
         # keep only Linestring and MultiLineString
         geomtype_ids = shapely.get_type_id(ixresult)
-        mask_type = np.isin(geomtype_ids, [1, 5, 7])
+        all_ids = [
+            shapely.GeometryType.LINESTRING,
+            shapely.GeometryType.MULTILINESTRING,
+            shapely.GeometryType.GEOMETRYCOLLECTION,
+        ]
+        line_ids = [
+            shapely.GeometryType.LINESTRING,
+            shapely.GeometryType.MULTILINESTRING,
+        ]
+        mask_type = np.isin(geomtype_ids, all_ids)
         ixresult = ixresult[~mask_empty & mask_type]
         qcellids = qcellids[~mask_empty & mask_type]
 
         # parse geometry collections (i.e. when part of linestring touches a cell edge,
         # resulting in a point intersection result)
-        if 7 in geomtype_ids:
+        if shapely.GeometryType.GEOMETRYCOLLECTION in geomtype_ids:
 
             def parse_linestrings_in_geom_collection(gc):
                 parts = shapely.get_parts(gc)
-                parts = parts[np.isin(shapely.get_type_id(parts), [1, 5])]
+                parts = parts[np.isin(shapely.get_type_id(parts), line_ids)]
                 if len(parts) > 1:
                     p = shapely.multilinestring(parts)
                 elif len(parts) == 0:
@@ -539,7 +548,10 @@ class GridIntersect:
                     p = parts[0]
                 return p
 
-            mask_gc = geomtype_ids[~mask_empty & mask_type] == 7
+            mask_gc = (
+                geomtype_ids[~mask_empty & mask_type]
+                == shapely.GeometryType.GEOMETRYCOLLECTION
+            )
             ixresult[mask_gc] = np.apply_along_axis(
                 parse_linestrings_in_geom_collection,
                 axis=0,
@@ -552,7 +564,7 @@ class GridIntersect:
                 shp, shapely.get_exterior_ring(self.geoms[qcellids])
             )
             mask_bnds_empty = shapely.is_empty(ixbounds)
-            mask_bnds_type = np.isin(shapely.get_type_id(ixbounds), [1, 5])
+            mask_bnds_type = np.isin(shapely.get_type_id(ixbounds), line_ids)
             # get ids of boundary intersections
             idxs = np.nonzero(~mask_bnds_empty & mask_bnds_type)[0]
 
@@ -568,7 +580,7 @@ class GridIntersect:
                 mask_bnds_empty = shapely.is_empty(
                     isect
                 )  # select boundary ix result
-                mask_overlap = np.isin(shapely.get_type_id(isect), [1, 5])
+                mask_overlap = np.isin(shapely.get_type_id(isect), line_ids)
 
                 # calculate difference between self and overlapping result
                 diff = shapely.difference(
