@@ -68,9 +68,7 @@ def parse_shapely_ix_result(collection, ix_result, shptyps=None):
 
 
 class GridIntersect:
-    """Class for intersecting shapely geometries (Point, Linestring, Polygon,
-    or their Multi variants) with MODFLOW grids. Contains optimized search
-    routines for structured grids.
+    """Class for intersecting shapely geometries with MODFLOW grids.
 
     Notes
     -----
@@ -82,11 +80,6 @@ class GridIntersect:
        with the whole collection at once.
      - Building the STR-tree can take a while for large grids. Once built the
        intersect routines (for individual shapes) should be pretty fast.
-     - The optimized routines for structured grids can outperform the shapely
-       routines for point and linestring intersections because of the reduced
-       overhead of building and parsing the STR-tree. However, for polygons
-       the STR-tree implementation is often faster than the optimized
-       structured routines, especially for larger grids.
     """
 
     def __init__(self, mfgrid, method=None, rtree=True, local=False):
