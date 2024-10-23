@@ -1,16 +1,10 @@
-import os
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from modflow_devtools.markers import requires_pkg
 from modflow_devtools.misc import has_pkg
 
-import flopy
 import flopy.discretization as fgrid
-import flopy.plot as fplot
-from flopy.modflow import Modflow
-from flopy.utils import Raster
 from flopy.utils.gridintersect import GridIntersect
 from flopy.utils.triangle import Triangle
 
