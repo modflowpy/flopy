@@ -150,10 +150,13 @@ class GridIntersect:
         mfgrid : flopy modflowgrid
             MODFLOW grid as implemented in flopy
         method : str, optional
-            Options are either 'vertex' which uses shapely intersection operations
-            or 'structured' which uses optimized methods that only work for structured
-            grids. The default is None, which determines intersection method based on
-            the grid type.
+            Method to use for intersection shapes with the grid. Method 'vertex'
+            will be the only option in the future. Method 'structured' is deprecated.
+            This keyword argument will be removed in a future release.
+
+            .. deprecated:: 3.8.3
+                method="vertex" will be the only option from 3.9.0
+
         rtree : bool, optional
             whether to build an STR-Tree, default is True. If False no STR-tree
             is built, but intersects will loop through all model gridcells
@@ -165,12 +168,25 @@ class GridIntersect:
         """
         self.mfgrid = mfgrid
         self.local = local
+        # TODO: remove method kwarg in version v3.9.0
+        # keep default behavior for v3.8.3, but warn if method is not vertex
+        # allow silencing of warning with method="vertex" in v3.8.3
         if method is None:
             # determine method from grid_type
             self.method = self.mfgrid.grid_type
         else:
             # set method
             self.method = method
+        if self.method != "vertex":
+            warnings.warn(
+                (
+                    'Note `method="structured"` is deprecated. '
+                    'Pass `method="vertex"` to silence this warning. '
+                    "This will be the new default in a future release and this "
+                    "keyword argument will be removed."
+                ),
+                category=DeprecationWarning,
+            )
         self.rtree = rtree
 
         # really only necessary for method=='vertex' as structured methods
