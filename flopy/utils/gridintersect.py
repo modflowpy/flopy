@@ -233,6 +233,10 @@ class GridIntersect:
                 )
             else:
                 rec = self._intersect_point_shapely(
+                    shp,
+                    sort_by_cellid=sort_by_cellid,
+                    return_all_intersections=return_all_intersections,
+                )
         elif gu.shapetype in ("LineString", "MultiLineString"):
             if (
                 self.method == "structured"
@@ -246,6 +250,10 @@ class GridIntersect:
             else:
                 rec = self._intersect_linestring_shapely(
                     shp,
+                    keepzerolengths,
+                    sort_by_cellid=sort_by_cellid,
+                    return_all_intersections=return_all_intersections,
+                )
         elif gu.shapetype in ("Polygon", "MultiPolygon"):
             if (
                 self.method == "structured"
@@ -253,6 +261,13 @@ class GridIntersect:
             ):
                 rec = self._intersect_polygon_structured(
                     shp,
+                    contains_centroid=contains_centroid,
+                    min_area_fraction=min_area_fraction,
+                )
+            else:
+                rec = self._intersect_polygon_shapely(
+                    shp,
+                    sort_by_cellid=sort_by_cellid,
                     contains_centroid=contains_centroid,
                     min_area_fraction=min_area_fraction,
                 )
