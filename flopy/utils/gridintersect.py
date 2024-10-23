@@ -1842,18 +1842,39 @@ class GridIntersect:
     def plot_intersection_result(
         self, result, plot_grid=True, ax=None, **kwargs
     ):
+        """Plot intersection result.
+
+        Parameters
+        ----------
+        result : numpy.rec.recarray or geopandas.GeoDataFrame
+            result of intersect()
+        plot_grid : bool, optional
+            plot model grid, by default True
+        ax : matplotlib.Axes, optional
+            axes to plot on, by default None which creates a new axis
+
+        Returns
+        -------
+        ax : matplotlib.Axes
+            returns axes handle
+        """
         shapely = import_optional_dependency("shapely")
 
         if plot_grid:
             self.mfgrid.plot(ax=ax)
 
+        geoms = (
+            result["ixshapes"]
+            if isinstance(result, np.rec.recarray)
+            else result["geometry"]
+        )
         if np.isin(
-            shapely.get_type_id(result["ixshapes"]),
+            shapely.get_type_id(geoms),
             [shapely.GeometryType.POINT, shapely.GeometryType.MULTIPOINT],
         ).all():
             ax = GridIntersect.plot_point(result, ax=ax, **kwargs)
         elif np.isin(
-            shapely.get_type_id(result["ixshapes"]),
+            shapely.get_type_id(geoms),
             [
                 shapely.GeometryType.LINESTRING,
                 shapely.GeometryType.MULTILINESTRING,
@@ -1861,7 +1882,7 @@ class GridIntersect:
         ).all():
             ax = GridIntersect.plot_linestring(result, ax=ax, **kwargs)
         elif np.isin(
-            shapely.get_type_id(result["ixshapes"]),
+            shapely.get_type_id(geoms),
             [shapely.GeometryType.POLYGON, shapely.GeometryType.MULTIPOLYGON],
         ).all():
             ax = GridIntersect.plot_polygon(result, ax=ax, **kwargs)
