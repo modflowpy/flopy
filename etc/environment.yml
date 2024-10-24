@@ -40,7 +40,7 @@ dependencies:
   - fiona
   - descartes
   - pyproj
-  - shapely>=1.8
+  - shapely>=2.0
   - geos
   - geojson
   - vtk
