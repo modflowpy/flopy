@@ -5,7 +5,7 @@ dependencies:
   - pip
 
   # required
-  - python>=3.9,<3.13
+  - python>=3.9
   - numpy>=1.20.3
   - matplotlib>=1.4.0
   - pandas>=2.0.0
@@ -40,7 +40,7 @@ dependencies:
   - fiona
   - descartes
   - pyproj
-  - shapely>=1.8
+  - shapely>=2.0
   - geos
   - geojson
   - vtk

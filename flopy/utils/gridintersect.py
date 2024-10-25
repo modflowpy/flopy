@@ -1,79 +1,26 @@
-import contextlib
 import warnings
-from itertools import product
 
 import numpy as np
+from pandas import DataFrame
 
 from .geometry import transform
 from .geospatial_utils import GeoSpatialUtil
-from .parse_version import Version
 from .utl_import import import_optional_dependency
 
-NUMPY_GE_121 = Version(np.__version__) >= Version("1.21")
-
 shapely = import_optional_dependency("shapely", errors="silent")
-if shapely is not None:
-    SHAPELY_GE_20 = Version(shapely.__version__) >= Version("2.0a1")
-    # shapely > 1.8 required
-    if Version(shapely.__version__) < Version("1.8"):
-        warnings.warn("GridIntersect requires shapely>=1.8.")
-        shapely = None
-    if SHAPELY_GE_20:
-        from shapely import unary_union
-    else:
-        from shapely.ops import unary_union
-else:
-    SHAPELY_GE_20 = False
 
-shapely_warning = None
-if shapely is not None:
-    try:
-        from shapely.errors import ShapelyDeprecationWarning as shapely_warning
-    except ImportError:
-        pass
-
-if shapely_warning is not None and not SHAPELY_GE_20:
-
-    @contextlib.contextmanager
-    def ignore_shapely_warnings_for_object_array():
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                "Iteration|The array interface|__len__",
-                shapely_warning,
-            )
-            if NUMPY_GE_121:
-                # warning from numpy for existing Shapely releases (this is
-                # fixed with Shapely 1.8)
-                warnings.filterwarnings(
-                    "ignore",
-                    "An exception was ignored while fetching",
-                    DeprecationWarning,
-                )
-            yield
-
-    @contextlib.contextmanager
-    def ignore_shapely2_strtree_warning():
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                (
-                    "STRtree will be changed in 2.0.0 and "
-                    "will not be compatible with versions < 2."
-                ),
-                shapely_warning,
-            )
-            yield
-
-else:
-
-    @contextlib.contextmanager
-    def ignore_shapely_warnings_for_object_array():
-        yield
-
-    @contextlib.contextmanager
-    def ignore_shapely2_strtree_warning():
-        yield
+# TODO: remove the following methods and classes in version 3.10.0
+# - ModflowGridIndices
+# - GridIntersect:
+#   - remove method kwarg from __init__
+#   - remove structured methods from intersect() and intersects()
+#   - _intersect_point_structured()
+#   - _intersect_linestring_structured()
+#   - _get_nodes_intersecting_linestring()
+#   - _check_adjacent_cells_intersecting_line()
+#   - _intersect_rectangle_structured()
+#   - _intersect_polygon_structured()
+#   - _transform_geo_interface_polygon()
 
 
 def parse_shapely_ix_result(collection, ix_result, shptyps=None):
@@ -121,9 +68,7 @@ def parse_shapely_ix_result(collection, ix_result, shptyps=None):
 
 
 class GridIntersect:
-    """Class for intersecting shapely geometries (Point, Linestring, Polygon,
-    or their Multi variants) with MODFLOW grids. Contains optimized search
-    routines for structured grids.
+    """Class for intersecting shapely geometries with MODFLOW grids.
 
     Notes
     -----
@@ -135,11 +80,6 @@ class GridIntersect:
        with the whole collection at once.
      - Building the STR-tree can take a while for large grids. Once built the
        intersect routines (for individual shapes) should be pretty fast.
-     - The optimized routines for structured grids can outperform the shapely
-       routines for point and linestring intersections because of the reduced
-       overhead of building and parsing the STR-tree. However, for polygons
-       the STR-tree implementation is often faster than the optimized
-       structured routines, especially for larger grids.
     """
 
     def __init__(self, mfgrid, method=None, rtree=True, local=False):
@@ -150,27 +90,45 @@ class GridIntersect:
         mfgrid : flopy modflowgrid
             MODFLOW grid as implemented in flopy
         method : str, optional
-            Options are either 'vertex' which uses shapely intersection operations
-            or 'structured' which uses optimized methods that only work for structured
-            grids. The default is None, which determines intersection method based on
-            the grid type.
+            Method to use for intersection shapes with the grid. Method 'vertex'
+            will be the only option in the future. Method 'structured' is deprecated.
+            This keyword argument will be removed in a future release.
+
+            .. deprecated:: 3.9.0
+                method="vertex" will be the only option from 3.10.0
+
         rtree : bool, optional
             whether to build an STR-Tree, default is True. If False no STR-tree
             is built, but intersects will loop through all model gridcells
-            (which is generally slower). Only read when `method='vertex'`.
+            (which is generally slower).
         local : bool, optional
             use local model coordinates from model grid to build grid geometries,
-            default is False and uses real-world coordinates (with offset and rotation),
-             if specified.
+            default is False and uses real-world coordinates (with offset and rotation).
         """
+        import_optional_dependency(
+            "shapely", error_message="GridIntersect requires shapely"
+        )
         self.mfgrid = mfgrid
         self.local = local
+        # TODO: remove method kwarg in version v3.10.0
+        # keep default behavior for v3.9.0, but warn if method is not vertex
+        # allow silencing of warning with method="vertex" in v3.9.0
         if method is None:
             # determine method from grid_type
             self.method = self.mfgrid.grid_type
         else:
             # set method
             self.method = method
+        if self.method != "vertex":
+            warnings.warn(
+                (
+                    'Note `method="structured"` is deprecated. '
+                    'Pass `method="vertex"` to silence this warning. '
+                    "This will be the new default in a future release and this "
+                    "keyword argument will be removed."
+                ),
+                category=DeprecationWarning,
+            )
         self.rtree = rtree
 
         # really only necessary for method=='vertex' as structured methods
@@ -188,8 +146,7 @@ class GridIntersect:
                     "shapely.strtree",
                     error_message="STRTree requires shapely",
                 )
-                with ignore_shapely2_strtree_warning():
-                    self.strtree = strtree.STRtree(self.geoms)
+                self.strtree = strtree.STRtree(self.geoms)
 
         elif self.method == "structured" and mfgrid.grid_type == "structured":
             # geoms and cellids do not need to be assigned for structured
@@ -212,7 +169,8 @@ class GridIntersect:
         return_all_intersections=False,
         contains_centroid=False,
         min_area_fraction=None,
-        shapely2=True,
+        geo_dataframe=False,
+        shapely2=None,
     ):
         """Method to intersect a shape with a model grid.
 
@@ -244,16 +202,20 @@ class GridIntersect:
             float defining minimum intersection area threshold, if intersection
             area is smaller than min_frac_area * cell_area, do not store
             intersection result, only used if shape type is "polygon"
-        shapely2 : bool, optional
-            temporary flag to determine whether to use methods optimized for
-            shapely 2.0. Useful for comparison performance between the old
-            (shapely 1.8) and new (shapely 2.0) implementations.
+        geo_dataframe : bool, optional
+            if True, return a geopandas GeoDataFrame, default is False
 
         Returns
         -------
-        numpy.recarray
-            a record array containing information about the intersection
+        numpy.recarray or gepandas.GeoDataFrame
+            a record array containing information about the intersection or
+            a geopandas.GeoDataFrame if geo_dataframe=True
         """
+        if shapely2 is not None:
+            warnings.warn(
+                "The shapely2 keyword argument is deprecated. "
+                "Shapely<2 support was dropped in flopy version 3.9.0."
+            )
         gu = GeoSpatialUtil(shp, shapetype=shapetype)
         shp = gu.shapely
 
@@ -266,18 +228,11 @@ class GridIntersect:
                     shp, return_all_intersections=return_all_intersections
                 )
             else:
-                if SHAPELY_GE_20 and shapely2:
-                    rec = self._intersect_point_shapely2(
-                        shp,
-                        sort_by_cellid=sort_by_cellid,
-                        return_all_intersections=return_all_intersections,
-                    )
-                else:
-                    rec = self._intersect_point_shapely(
-                        shp,
-                        sort_by_cellid=sort_by_cellid,
-                        return_all_intersections=return_all_intersections,
-                    )
+                rec = self._intersect_point_shapely(
+                    shp,
+                    sort_by_cellid=sort_by_cellid,
+                    return_all_intersections=return_all_intersections,
+                )
         elif gu.shapetype in ("LineString", "MultiLineString"):
             if (
                 self.method == "structured"
@@ -289,20 +244,12 @@ class GridIntersect:
                     return_all_intersections=return_all_intersections,
                 )
             else:
-                if SHAPELY_GE_20 and shapely2:
-                    rec = self._intersect_linestring_shapely2(
-                        shp,
-                        keepzerolengths,
-                        sort_by_cellid=sort_by_cellid,
-                        return_all_intersections=return_all_intersections,
-                    )
-                else:
-                    rec = self._intersect_linestring_shapely(
-                        shp,
-                        keepzerolengths,
-                        sort_by_cellid=sort_by_cellid,
-                        return_all_intersections=return_all_intersections,
-                    )
+                rec = self._intersect_linestring_shapely(
+                    shp,
+                    keepzerolengths,
+                    sort_by_cellid=sort_by_cellid,
+                    return_all_intersections=return_all_intersections,
+                )
         elif gu.shapetype in ("Polygon", "MultiPolygon"):
             if (
                 self.method == "structured"
@@ -314,22 +261,25 @@ class GridIntersect:
                     min_area_fraction=min_area_fraction,
                 )
             else:
-                if SHAPELY_GE_20 and shapely2:
-                    rec = self._intersect_polygon_shapely2(
-                        shp,
-                        sort_by_cellid=sort_by_cellid,
-                        contains_centroid=contains_centroid,
-                        min_area_fraction=min_area_fraction,
-                    )
-                else:
-                    rec = self._intersect_polygon_shapely(
-                        shp,
-                        sort_by_cellid=sort_by_cellid,
-                        contains_centroid=contains_centroid,
-                        min_area_fraction=min_area_fraction,
-                    )
+                rec = self._intersect_polygon_shapely(
+                    shp,
+                    sort_by_cellid=sort_by_cellid,
+                    contains_centroid=contains_centroid,
+                    min_area_fraction=min_area_fraction,
+                )
         else:
             raise TypeError(f"Shapetype {gu.shapetype} is not supported")
+
+        if geo_dataframe:
+            gpd = import_optional_dependency("geopandas")
+            gdf = (
+                gpd.GeoDataFrame(rec)
+                .rename(columns={"ixshapes": "geometry"})
+                .set_geometry("geometry")
+            )
+            if self.mfgrid.crs is not None:
+                gdf = gdf.set_crs(self.mfgrid.crs)
+            return gdf
 
         return rec
 
@@ -386,22 +336,14 @@ class GridIntersect:
             ]
         ).transpose((1, 2, 0))
 
-        if SHAPELY_GE_20:
-            # use array-based methods for speed
-            geoms = shapely.polygons(
-                shapely.linearrings(
-                    xverts.flatten(),
-                    y=yverts.flatten(),
-                    indices=np.repeat(cellids, 4),
-                )
+        # use array-based methods for speed
+        geoms = shapely.polygons(
+            shapely.linearrings(
+                xverts.flatten(),
+                y=yverts.flatten(),
+                indices=np.repeat(cellids, 4),
             )
-        else:
-            from shapely.geometry import Polygon
-
-            geoms = []
-            for i, j in product(range(nrow), range(ncol)):
-                geoms.append(Polygon(zip(xverts[i, j], yverts[i, j])))
-            geoms = np.array(geoms)
+        )
 
         return geoms, cellids
 
@@ -452,42 +394,6 @@ class GridIntersect:
             ]
         return np.array(geoms), np.arange(self.mfgrid.ncpl)
 
-    def _rect_grid_to_shape_list(self):
-        """internal method, list of shapely polygons for structured grid cells.
-
-        .. deprecated:: 3.3.6
-            use _rect_grid_to_geoms_cellids() instead.
-
-        Returns
-        -------
-        list
-            list of shapely Polygons
-        """
-        warnings.warn(
-            "`_rect_grid_to_shape_list()` is deprecated, please"
-            "use `_rect_grid_to_geoms_cellids()` instead.",
-            DeprecationWarning,
-        )
-        return self._rect_grid_to_geoms_cellids()[0].tolist()
-
-    def _vtx_grid_to_shape_list(self):
-        """internal method, list of shapely polygons for vertex grids.
-
-        .. deprecated:: 3.3.6
-            use _vtx_grid_to_geoms_cellids() instead.
-
-        Returns
-        -------
-        list
-            list of shapely Polygons
-        """
-        warnings.warn(
-            "`_vtx_grid_to_shape_list()` is deprecated, please"
-            "use `_vtx_grid_to_geoms_cellids()` instead.",
-            DeprecationWarning,
-        )
-        return self._vtx_grid_to_geoms_cellids()[0].tolist()
-
     def query_grid(self, shp):
         """Perform spatial query on grid with shapely geometry. If no spatial
         query is possible returns all grid cells.
@@ -503,10 +409,7 @@ class GridIntersect:
             array containing cellids of grid cells in query result
         """
         if self.rtree:
-            if SHAPELY_GE_20:
-                result = self.strtree.query(shp)
-            else:
-                result = np.array(self.strtree.query_items(shp))
+            result = self.strtree.query(shp)
         else:
             # no spatial query
             result = self.cellids
@@ -533,343 +436,12 @@ class GridIntersect:
             filter or generator containing polygons that intersect with shape
         """
         # get only gridcells that intersect
-        if SHAPELY_GE_20:
-            if not shapely.is_prepared(shp):
-                shapely.prepare(shp)
-            qcellids = cellids[shapely.intersects(self.geoms[cellids], shp)]
-        else:
-            # prepare shape for efficient batch intersection check
-            prepared = import_optional_dependency("shapely.prepared")
-            prepshp = prepared.prep(shp)
-            qfiltered = filter(
-                lambda tup: prepshp.intersects(tup[0]),
-                zip(self.geoms[cellids], cellids),
-            )
-            try:
-                _, qcellids = zip(*qfiltered)
-                qcellids = np.array(qcellids)
-            except ValueError:
-                # catch empty filter result (i.e. when rtree=False)
-                qcellids = np.empty(0, dtype=int)
+        if not shapely.is_prepared(shp):
+            shapely.prepare(shp)
+        qcellids = cellids[shapely.intersects(self.geoms[cellids], shp)]
         return qcellids
 
-    @staticmethod
-    def sort_gridshapes(geoms, cellids):
-        """Sort geometries (from i.e. query result) by cell id.
-
-        .. deprecated:: 3.3.6
-            sorting is now performed on cellids.
-
-        Parameters
-        ----------
-        geoms : iterable
-            list or iterable of geometries
-
-        Returns
-        -------
-        list
-            sorted list of gridcells
-        """
-        warnings.warn(
-            "`sort_gridshapes()` is deprecated, sort cellids"
-            " and use that to select geometries, i.e. "
-            "`GridIntersect.geoms[sorted_cellids]`.",
-            DeprecationWarning,
-        )
-        return [
-            igeom
-            for _, igeom in sorted(
-                zip(cellids, geoms), key=lambda pair: pair[0]
-            )
-        ]
-
     def _intersect_point_shapely(
-        self, shp, sort_by_cellid=True, return_all_intersections=False
-    ):
-        """intersect grid with Point or MultiPoint.
-
-        Parameters
-        ----------
-        shp : Point or MultiPoint
-
-            shapely Point or MultiPoint to intersect with grid. Note, it is
-            generally faster to loop over a MultiPoint and intersect per point
-            than to intersect a MultiPoint directly.
-        sort_by_cellid : bool, optional
-            flag whether to sort cells by id, used to ensure node with lowest
-            id is returned, by default True
-        return_all_intersections :  bool, optional
-            if True, return multiple intersection results for points on grid
-            cell boundaries (e.g. returns 2 intersection results if a point
-            lies on the boundary between two grid cells). The default is
-            False, which will return a single intersection result for boundary
-            cases.
-
-        Returns
-        -------
-        numpy.recarray
-            a record array containing information about the intersection
-        """
-        shapely_geo = import_optional_dependency("shapely.geometry")
-
-        # query grid
-        qcellids = self.query_grid(shp)  # returns cellids
-        if len(qcellids) > 0:
-            qfiltered = self.filter_query_result(qcellids, shp)
-        else:
-            # query result is empty
-            qfiltered = qcellids
-        # sort cells to ensure lowest cell ids are returned
-        if sort_by_cellid:
-            qfiltered.sort()
-
-        isectshp = []
-        cellids = []
-        vertices = []
-        parsed_points = []  # for keeping track of points
-
-        # loop over cells returned by filtered spatial query
-        for cid in qfiltered:
-            r = self.geoms[cid]
-            # do intersection
-            intersect = shp.intersection(r)
-            # parse result per Point
-            collection = parse_shapely_ix_result(
-                [], intersect, shptyps=["Point"]
-            )
-            # loop over intersection result and store information
-            cell_verts = []
-            cell_shps = []
-            for c in collection:
-                verts = c.__geo_interface__["coordinates"]
-                # avoid returning multiple cells for points on boundaries
-                # if return_all_intersections is False
-                if not return_all_intersections:
-                    if verts in parsed_points:
-                        continue
-                parsed_points.append(verts)
-                cell_shps.append(c)  # collect points
-                cell_verts.append(verts)
-            # if any new ix found
-            if len(cell_shps) > 0:
-                # combine new points in MultiPoint
-                isectshp.append(
-                    shapely_geo.MultiPoint(cell_shps)
-                    if len(cell_shps) > 1
-                    else cell_shps[0]
-                )
-                vertices.append(tuple(cell_verts))
-                # if structured calculated (i, j) cell address
-                if self.mfgrid.grid_type == "structured":
-                    cid = self.mfgrid.get_lrc([cid])[0][1:]
-                cellids.append(cid)
-
-        rec = np.recarray(
-            len(isectshp),
-            names=["cellids", "vertices", "ixshapes"],
-            formats=["O", "O", "O"],
-        )
-        with ignore_shapely_warnings_for_object_array():
-            rec.ixshapes = isectshp
-        rec.vertices = vertices
-        rec.cellids = cellids
-
-        return rec
-
-    def _intersect_linestring_shapely(
-        self,
-        shp,
-        keepzerolengths=False,
-        sort_by_cellid=True,
-        return_all_intersections=False,
-    ):
-        """intersect with LineString or MultiLineString.
-
-        Parameters
-        ----------
-        shp : shapely.geometry.LineString or MultiLineString
-            LineString to intersect with the grid
-        keepzerolengths : bool, optional
-            keep linestrings with length zero, default is False
-        sort_by_cellid : bool, optional
-            flag whether to sort cells by id, used to ensure node
-            with lowest id is returned, by default True
-        return_all_intersections :  bool, optional
-            if True, return multiple intersection results for linestrings on
-            grid cell boundaries (e.g. returns 2 intersection results if a
-            linestring lies on the boundary between two grid cells). The
-            default is False, which will return a single intersection result
-            for boundary cases.
-
-        Returns
-        -------
-        numpy.recarray
-            a record array containing information about the intersection
-        """
-        # query grid
-        qcellids = self.query_grid(shp)
-        if len(qcellids) > 0:
-            # filter result further if possible (only strtree and filter methods)
-            qfiltered = self.filter_query_result(qcellids, shp)
-        else:
-            # query result is empty
-            qfiltered = qcellids
-        # sort cells to ensure lowest cell ids are returned
-        if sort_by_cellid:
-            qfiltered.sort()
-
-        # initialize empty lists for storing results
-        isectshp = []
-        cellids = []
-        vertices = []
-        vertices_check = []
-        lengths = []
-
-        # loop over cells returned by filtered spatial query
-        for cid in qfiltered:
-            r = self.geoms[cid]
-            # do intersection
-            intersect = shp.intersection(r)
-            # parse result
-            collection = parse_shapely_ix_result(
-                [], intersect, shptyps=["LineString", "MultiLineString"]
-            )
-            # loop over intersection result and store information
-            for c in collection:
-                verts = c.__geo_interface__["coordinates"]
-                # test if linestring was already processed (if on boundary),
-                # ignore if return_all_intersections is True
-                if not return_all_intersections:
-                    if verts in vertices_check:
-                        continue
-                # if keep zero don't check length
-                if not keepzerolengths:
-                    if c.length == 0.0:
-                        continue
-                isectshp.append(c)
-                lengths.append(c.length)
-                vertices.append(verts)
-                # unpack mutlilinestring for checking if linestring already parsed
-                if c.geom_type.startswith("Multi"):
-                    vertices_check += [iv for iv in verts]
-                else:
-                    vertices_check.append(verts)
-                # if structured calculate (i, j) cell address
-                if self.mfgrid.grid_type == "structured":
-                    cid = self.mfgrid.get_lrc([cid])[0][1:]
-                cellids.append(cid)
-
-        rec = np.recarray(
-            len(isectshp),
-            names=["cellids", "vertices", "lengths", "ixshapes"],
-            formats=["O", "O", "f8", "O"],
-        )
-        with ignore_shapely_warnings_for_object_array():
-            rec.ixshapes = isectshp
-        rec.vertices = vertices
-        rec.lengths = lengths
-        rec.cellids = cellids
-
-        return rec
-
-    def _intersect_polygon_shapely(
-        self,
-        shp,
-        sort_by_cellid=True,
-        contains_centroid=False,
-        min_area_fraction=None,
-    ):
-        """intersect with Polygon or MultiPolygon.
-
-        Parameters
-        ----------
-        shp : shapely.geometry.Polygon or MultiPolygon
-            shape to intersect with the grid
-        sort_by_cellid : bool, optional
-            flag whether to sort cells by id, used to ensure node
-            with lowest id is returned, by default True
-        contains_centroid :  bool, optional
-            if True, only store intersection result if cell centroid is
-            contained within intersection shape
-        min_area_fraction : float, optional
-            float defining minimum intersection area threshold, if
-            intersection area is smaller than min_frac_area * cell_area, do
-            not store intersection result
-
-        Returns
-        -------
-        numpy.recarray
-            a record array containing information about the intersection
-        """
-        shapely_geo = import_optional_dependency("shapely.geometry")
-
-        # query grid
-        qcellids = self.query_grid(shp)
-        if len(qcellids) > 0:
-            # filter result further if possible (only strtree and filter methods)
-            qfiltered = self.filter_query_result(qcellids, shp)
-        else:
-            # query result is empty
-            qfiltered = qcellids
-        # sort cells to ensure lowest cell ids are returned
-        if sort_by_cellid:
-            qfiltered.sort()
-
-        isectshp = []
-        cellids = []
-        vertices = []
-        areas = []
-
-        # loop over cells returned by filtered spatial query
-        for cid in qfiltered:
-            r = self.geoms[cid]
-            # do intersection
-            intersect = shp.intersection(r)
-            # parse result
-            collection = parse_shapely_ix_result(
-                [], intersect, shptyps=["Polygon", "MultiPolygon"]
-            )
-            if len(collection) > 1:
-                collection = [shapely_geo.MultiPolygon(collection)]
-            # loop over intersection result and store information
-            for c in collection:
-                # don't store intersections with 0 area
-                if c.area == 0.0:
-                    continue
-                # option: only store result if cell centroid is contained
-                # within intersection result
-                if contains_centroid:
-                    if not c.intersects(r.centroid):
-                        continue
-                # option: min_area_fraction, only store if intersected area
-                # is larger than fraction * cell_area
-                if min_area_fraction:
-                    if c.area < (min_area_fraction * r.area):
-                        continue
-
-                verts = c.__geo_interface__["coordinates"]
-                isectshp.append(c)
-                areas.append(c.area)
-                vertices.append(verts)
-                # if structured calculate (i, j) cell address
-                if self.mfgrid.grid_type == "structured":
-                    cid = self.mfgrid.get_lrc([cid])[0][1:]
-                cellids.append(cid)
-
-        rec = np.recarray(
-            len(isectshp),
-            names=["cellids", "vertices", "areas", "ixshapes"],
-            formats=["O", "O", "f8", "O"],
-        )
-        with ignore_shapely_warnings_for_object_array():
-            rec.ixshapes = isectshp
-        rec.vertices = vertices
-        rec.areas = areas
-        rec.cellids = cellids
-
-        return rec
-
-    def _intersect_point_shapely2(
         self,
         shp,
         sort_by_cellid=True,
@@ -927,7 +499,7 @@ class GridIntersect:
 
         return rec
 
-    def _intersect_linestring_shapely2(
+    def _intersect_linestring_shapely(
         self,
         shp,
         keepzerolengths=False,
@@ -954,17 +526,26 @@ class GridIntersect:
         mask_empty = shapely.is_empty(ixresult)
         # keep only Linestring and MultiLineString
         geomtype_ids = shapely.get_type_id(ixresult)
-        mask_type = np.isin(geomtype_ids, [1, 5, 7])
+        all_ids = [
+            shapely.GeometryType.LINESTRING,
+            shapely.GeometryType.MULTILINESTRING,
+            shapely.GeometryType.GEOMETRYCOLLECTION,
+        ]
+        line_ids = [
+            shapely.GeometryType.LINESTRING,
+            shapely.GeometryType.MULTILINESTRING,
+        ]
+        mask_type = np.isin(geomtype_ids, all_ids)
         ixresult = ixresult[~mask_empty & mask_type]
         qcellids = qcellids[~mask_empty & mask_type]
 
         # parse geometry collections (i.e. when part of linestring touches a cell edge,
         # resulting in a point intersection result)
-        if 7 in geomtype_ids:
+        if shapely.GeometryType.GEOMETRYCOLLECTION in geomtype_ids:
 
             def parse_linestrings_in_geom_collection(gc):
                 parts = shapely.get_parts(gc)
-                parts = parts[np.isin(shapely.get_type_id(parts), [1, 5])]
+                parts = parts[np.isin(shapely.get_type_id(parts), line_ids)]
                 if len(parts) > 1:
                     p = shapely.multilinestrings(parts)
                 elif len(parts) == 0:
@@ -973,7 +554,10 @@ class GridIntersect:
                     p = parts[0]
                 return p
 
-            mask_gc = geomtype_ids[~mask_empty & mask_type] == 7
+            mask_gc = (
+                geomtype_ids[~mask_empty & mask_type]
+                == shapely.GeometryType.GEOMETRYCOLLECTION
+            )
             # NOTE: not working for multiple geometry collections, result is reduced
             # to a single multilinestring, which causes doubles in the result
             # ixresult[mask_gc] = np.apply_along_axis(
@@ -992,8 +576,7 @@ class GridIntersect:
                 shp, shapely.get_exterior_ring(self.geoms[qcellids])
             )
             mask_bnds_empty = shapely.is_empty(ixbounds)
-            mask_bnds_type = np.isin(shapely.get_type_id(ixbounds), [1, 5, 7])
-
+            mask_bnds_type = np.isin(shapely.get_type_id(ixbounds), all_ids)
             # get ids of boundary intersections
             idxs = np.nonzero(~mask_bnds_empty & mask_bnds_type)[0]
 
@@ -1009,7 +592,7 @@ class GridIntersect:
                 mask_bnds_empty = shapely.is_empty(
                     isect
                 )  # select boundary ix result
-                mask_overlap = np.isin(shapely.get_type_id(isect), [1, 5, 7])
+                mask_overlap = np.isin(shapely.get_type_id(isect), all_ids)
 
                 # calculate difference between self and overlapping result
                 diff = shapely.difference(
@@ -1041,7 +624,7 @@ class GridIntersect:
 
         return rec
 
-    def _intersect_polygon_shapely2(
+    def _intersect_polygon_shapely(
         self,
         shp,
         sort_by_cellid=True,
@@ -1120,7 +703,7 @@ class GridIntersect:
 
         return rec
 
-    def intersects(self, shp, shapetype=None):
+    def intersects(self, shp, shapetype=None, dataframe=False):
         """Return cellids for grid cells that intersect with shape.
 
         Parameters
@@ -1132,26 +715,17 @@ class GridIntersect:
             type of shape (i.e. "point", "linestring", "polygon" or
             their multi-variants), used by GeoSpatialUtil if shp is
             passed as a list of vertices, default is None
+        dataframe : bool, optional
+            if True, return a pandas.DataFrame, default is False
 
         Returns
         -------
-        numpy.recarray
-            a record array containing cell IDs of the gridcells
-            the shape intersects with
+        numpy.recarray or pandas.DataFrame
+            a record array or pandas.DataFrame containing cell IDs of the gridcells
+            the shape intersects with.
         """
         shp = GeoSpatialUtil(shp, shapetype=shapetype).shapely
-
-        if SHAPELY_GE_20:
-            qfiltered = self.strtree.query(shp, predicate="intersects")
-        else:
-            # query grid
-            qcellids = self.query_grid(shp)
-            if len(qcellids) > 0:
-                # filter result further if possible (only strtree and filter methods)
-                qfiltered = self.filter_query_result(qcellids, shp)
-            else:
-                # query result is empty
-                qfiltered = qcellids
+        qfiltered = self.strtree.query(shp, predicate="intersects")
 
         # build rec-array
         rec = np.recarray(len(qfiltered), names=["cellids"], formats=["O"])
@@ -1159,10 +733,16 @@ class GridIntersect:
             rec.cellids = list(zip(*self.mfgrid.get_lrc([qfiltered])[0][1:]))
         else:
             rec.cellids = qfiltered
+
+        if dataframe:
+            return DataFrame(rec)
         return rec
 
     def _intersect_point_structured(self, shp, return_all_intersections=False):
         """intersection method for intersecting points with structured grids.
+
+        .. deprecated:: 3.9.0
+            use _intersect_point_shapely() or set method="vertex" in GridIntersect.
 
         Parameters
         ----------
@@ -1292,14 +872,16 @@ class GridIntersect:
             len(nodelist), names=["cellids", "ixshapes"], formats=["O", "O"]
         )
         rec.cellids = nodelist
-        with ignore_shapely_warnings_for_object_array():
-            rec.ixshapes = ixshapes
+        rec.ixshapes = ixshapes
         return rec
 
     def _intersect_linestring_structured(
         self, shp, keepzerolengths=False, return_all_intersections=False
     ):
         """method for intersecting linestrings with structured grids.
+
+        .. deprecated:: 3.9.0
+            use _intersect_point_shapely() or set method="vertex" in GridIntersect.
 
         Parameters
         ----------
@@ -1321,6 +903,7 @@ class GridIntersect:
         numpy.recarray
             a record array containing information about the intersection
         """
+        shapely = import_optional_dependency("shapely")
         shapely_geo = import_optional_dependency("shapely.geometry")
         affinity_loc = import_optional_dependency("shapely.affinity")
 
@@ -1485,7 +1068,7 @@ class GridIntersect:
                     tempverts.append(vertices[i])
                     ishp = ixshapes[i]
                     if isinstance(ishp, list):
-                        ishp = unary_union(ishp)
+                        ishp = shapely.unary_union(ishp)
                     tempshapes.append(ishp)
             nodelist = tempnodes
             lengths = templengths
@@ -1500,8 +1083,7 @@ class GridIntersect:
         rec.vertices = vertices
         rec.lengths = lengths
         rec.cellids = nodelist
-        with ignore_shapely_warnings_for_object_array():
-            rec.ixshapes = ixshapes
+        rec.ixshapes = ixshapes
 
         return rec
 
@@ -1511,6 +1093,9 @@ class GridIntersect:
         """helper function, intersect the linestring with the a structured grid
         and return a list of node indices and the length of the line in that
         node.
+
+        .. deprecated:: 3.9.0
+            method="structured" is deprecated.
 
         Parameters
         ----------
@@ -1616,6 +1201,9 @@ class GridIntersect:
         self, linestring, i_j, nodelist
     ):
         """helper method that follows a line through a structured grid.
+
+        .. deprecated:: 3.9.0
+            method="structured" is deprecated.
 
         Parameters
         ----------
@@ -1789,6 +1377,9 @@ class GridIntersect:
         """intersect a rectangle with a structured grid to retrieve node ids of
         intersecting grid cells.
 
+        .. deprecated:: 3.9.0
+            method="structured" is deprecated.
+
         Note: only works in local coordinates (i.e. non-rotated grid
         with origin at (0, 0))
 
@@ -1873,6 +1464,10 @@ class GridIntersect:
     ):
         """intersect polygon with a structured grid. Uses bounding box of the
         Polygon to limit search space.
+
+        .. deprecated:: 3.9.0
+            method="structured" is deprecated. Use `_intersect_polygon_shapely()`.
+
 
         Notes
         -----
@@ -2011,14 +1606,17 @@ class GridIntersect:
         rec.vertices = vertices
         rec.areas = areas
         rec.cellids = nodelist
-        with ignore_shapely_warnings_for_object_array():
-            rec.ixshapes = ixshapes
+        rec.ixshapes = ixshapes
 
         return rec
 
     def _transform_geo_interface_polygon(self, polygon):
         """Internal method, helper function to transform geometry
         __geo_interface__.
+
+        .. deprecated:: 3.9.0
+            method="structured" is deprecated. Only used by
+            `_intersect_polygon_structured()`
 
         Used for translating intersection result coordinates back into
         real-world coordinates.
@@ -2083,17 +1681,16 @@ class GridIntersect:
         return geom_list
 
     @staticmethod
-    def plot_polygon(rec, ax=None, **kwargs):
+    def plot_polygon(result, ax=None, **kwargs):
         """method to plot the polygon intersection results from the resulting
         numpy.recarray.
 
-        Note: only works when recarray has 'intersects' column!
+        Note: only works when recarray has 'ixshapes' column!
 
         Parameters
         ----------
-        rec : numpy.recarray
-            record array containing intersection results
-            (the resulting shapes)
+        result : numpy.recarray or geopandas.GeoDataFrame
+            record array or GeoDataFrame containing intersection results
         ax : matplotlib.pyplot.axes, optional
             axes to plot onto, if not provided, creates a new figure
         **kwargs:
@@ -2110,6 +1707,10 @@ class GridIntersect:
 
         if ax is None:
             _, ax = plt.subplots()
+            ax.set_aspect("equal", adjustable="box")
+            autoscale = True
+        else:
+            autoscale = False
 
         patches = []
         if "facecolor" in kwargs:
@@ -2124,7 +1725,13 @@ class GridIntersect:
             ppi = _polygon_patch(poly, facecolor=fc, **kwargs)
             patches.append(ppi)
 
-        for i, ishp in enumerate(rec.ixshapes):
+        # allow for result to be geodataframe
+        geoms = (
+            result.ixshapes
+            if isinstance(result, np.rec.recarray)
+            else result.geometry
+        )
+        for i, ishp in enumerate(geoms):
             if hasattr(ishp, "geoms"):
                 for geom in ishp.geoms:
                     add_poly_patch(geom)
@@ -2134,20 +1741,22 @@ class GridIntersect:
         pc = PatchCollection(patches, match_original=True)
         ax.add_collection(pc)
 
+        if autoscale:
+            ax.autoscale_view()
+
         return ax
 
     @staticmethod
-    def plot_linestring(rec, ax=None, cmap=None, **kwargs):
+    def plot_linestring(result, ax=None, cmap=None, **kwargs):
         """method to plot the linestring intersection results from the
         resulting numpy.recarray.
 
-        Note: only works when recarray has 'intersects' column!
+        Note: only works when recarray has 'ixshapes' column!
 
         Parameters
         ----------
-        rec : numpy.recarray
-            record array containing intersection results
-            (the resulting shapes)
+        result : numpy.recarray or geopandas.GeoDataFrame
+            record array or GeoDataFrame containing intersection results
         ax : matplotlib.pyplot.axes, optional
             axes to plot onto, if not provided, creates a new figure
         cmap : str
@@ -2164,6 +1773,7 @@ class GridIntersect:
 
         if ax is None:
             _, ax = plt.subplots()
+            ax.set_aspect("equal", adjustable="box")
 
         specified_color = True
         if "c" in kwargs:
@@ -2175,9 +1785,15 @@ class GridIntersect:
 
         if cmap is not None:
             colormap = plt.get_cmap(cmap)
-            colors = colormap(np.linspace(0, 1, rec.shape[0]))
+            colors = colormap(np.linspace(0, 1, result.shape[0]))
 
-        for i, ishp in enumerate(rec.ixshapes):
+        # allow for result to be geodataframe
+        geoms = (
+            result.ixshapes
+            if isinstance(result, np.rec.recarray)
+            else result.geometry
+        )
+        for i, ishp in enumerate(geoms):
             if not specified_color:
                 if cmap is None:
                     c = f"C{i % 10}"
@@ -2192,16 +1808,16 @@ class GridIntersect:
         return ax
 
     @staticmethod
-    def plot_point(rec, ax=None, **kwargs):
+    def plot_point(result, ax=None, **kwargs):
         """method to plot the point intersection results from the resulting
         numpy.recarray.
 
-        Note: only works when recarray has 'intersects' column!
+        Note: only works when recarray has 'ixshapes' column!
 
         Parameters
         ----------
-        rec : numpy.recarray
-            record array containing intersection results
+        result : numpy.recarray or geopandas.GeoDataFrame
+            record array or GeoDataFrame containing intersection results
         ax : matplotlib.pyplot.axes, optional
             axes to plot onto, if not provided, creates a new figure
         **kwargs:
@@ -2220,7 +1836,13 @@ class GridIntersect:
             _, ax = plt.subplots()
 
         x, y = [], []
-        geo_coll = shapely_geo.GeometryCollection(list(rec.ixshapes))
+        # allow for result to be geodataframe
+        geoms = (
+            result.ixshapes
+            if isinstance(result, np.rec.recarray)
+            else result.geometry
+        )
+        geo_coll = shapely_geo.GeometryCollection(list(geoms))
         collection = parse_shapely_ix_result([], geo_coll, ["Point"])
         for c in collection:
             x.append(c.x)
@@ -2229,10 +1851,64 @@ class GridIntersect:
 
         return ax
 
+    def plot_intersection_result(
+        self, result, plot_grid=True, ax=None, **kwargs
+    ):
+        """Plot intersection result.
+
+        Parameters
+        ----------
+        result : numpy.rec.recarray or geopandas.GeoDataFrame
+            result of intersect()
+        plot_grid : bool, optional
+            plot model grid, by default True
+        ax : matplotlib.Axes, optional
+            axes to plot on, by default None which creates a new axis
+
+        Returns
+        -------
+        ax : matplotlib.Axes
+            returns axes handle
+        """
+        shapely = import_optional_dependency("shapely")
+
+        if plot_grid:
+            self.mfgrid.plot(ax=ax)
+
+        geoms = (
+            result["ixshapes"]
+            if isinstance(result, np.rec.recarray)
+            else result["geometry"]
+        )
+        if np.isin(
+            shapely.get_type_id(geoms),
+            [shapely.GeometryType.POINT, shapely.GeometryType.MULTIPOINT],
+        ).all():
+            ax = GridIntersect.plot_point(result, ax=ax, **kwargs)
+        elif np.isin(
+            shapely.get_type_id(geoms),
+            [
+                shapely.GeometryType.LINESTRING,
+                shapely.GeometryType.MULTILINESTRING,
+            ],
+        ).all():
+            ax = GridIntersect.plot_linestring(result, ax=ax, **kwargs)
+        elif np.isin(
+            shapely.get_type_id(geoms),
+            [shapely.GeometryType.POLYGON, shapely.GeometryType.MULTIPOLYGON],
+        ).all():
+            ax = GridIntersect.plot_polygon(result, ax=ax, **kwargs)
+
+        return ax
+
 
 class ModflowGridIndices:
     """Collection of methods that can be used to find cell indices for a
-    structured, but irregularly spaced MODFLOW grid."""
+    structured, but irregularly spaced MODFLOW grid.
+
+    .. deprecated:: 3.9.0
+        This class is deprecated and will be removed in version 3.10.0.
+    """
 
     @staticmethod
     def find_position_in_array(arr, x):

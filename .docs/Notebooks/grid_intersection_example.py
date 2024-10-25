@@ -60,8 +60,8 @@ from flopy.utils import GridIntersect
 print(sys.version)
 print(f"numpy version: {np.__version__}")
 print(f"matplotlib version: {mpl.__version__}")
-print(f"flopy version: {flopy.__version__}")
 print(f"shapely version: {shapely.__version__}")
+print(f"flopy version: {flopy.__version__}")
 # -
 
 # ## <a id="gridclass"></a>[GridIntersect Class](#top)
@@ -70,23 +70,14 @@ print(f"shapely version: {shapely.__version__}")
 # the constructor. There are options users can select to change how the
 # intersection is calculated.
 #
-# - `method`: derived from model grid type or defined by the user: can be either `"vertex"` or
-# `"structured"`. If `"structured"` is passed, the intersections are performed
-# using structured methods. These methods use information about the regular grid
-# to limit the search space for intersection calculations. Note that `method="vertex"`
-# also works for structured grids.
-# - `rtree`: either `True` (default) or `False`, only read when
-# `method="vertex"`. When True, an STR-tree is built, which allows for fast
-# spatial queries. Building the STR-tree does take some time however. Setting the
-# option to False avoids building the STR-tree but requires the intersection
-# calculation to loop through all grid cells.
-#
-# In general the "vertex" option is robust and fast and is therefore recommended
-# in most situations. In some rare cases building the STR-tree might not be worth
-# the time, in which case it can be avoided by passing `rtree=False`. If you are
-# working with a structured grid, then the `method="structured"` can speed up
-# intersection operations in some situations (e.g. for (multi)points) with the added
-# advantage of not having to build an STR-tree.
+# - `rtree`: either `True` (default) or `False`. When True, an STR-tree is built,
+# which allows for fast spatial queries. Building the STR-tree takes some
+# time however. Setting the option to False avoids building the STR-tree but requires
+# the intersection calculation to loop through all grid cells. It is generally
+# recommended to set this option to True.
+# - `local`: either `False` (default) or `True`. When True the local model coordinates
+# are used. When False, real-world coordinates are used. Can be useful if shapes are
+# defined in local coordinates.
 #
 # The important methods in the GridIntersect object are:
 #
@@ -96,9 +87,7 @@ print(f"shapely version: {shapely.__version__}")
 # - `intersect()`: for intersecting the modelgrid with point, linestrings, and
 # polygon geometries (accepts shapely geometry objects, flopy geometry object,
 # shapefile.Shape objects, and geojson objects)
-# - `plot_point()`: for plotting point intersection results
-# - `plot_linestring()`: for plotting linestring intersection results
-# - `plot_polygon()`: for plotting polygon intersection results
+# - `ix.plot_intersection_result()`: for plotting intersection results
 #
 # In the following sections examples of intersections are shown for structured
 # and vertex grids for different types of shapes (Polygon, LineString and Point).
@@ -133,8 +122,8 @@ p = Polygon(
     holes=[[(25, 25), (25, 45), (45, 45), (45, 25)]],
 )
 
-# Create the GridIntersect class for our modelgrid. The `method` kwarg is passed to force GridIntersect to use the `"vertex"` intersection methods.
-
+# Create the GridIntersect class for our modelgrid.
+# TODO: remove method kwarg in v3.9.0
 ix = GridIntersect(sgr, method="vertex")
 
 # Do the intersect operation for a polygon
@@ -151,7 +140,7 @@ result = ix.intersect(p)
 # Looking at the first few entries of the results of the polygon intersection (convert to pandas.DataFrame for prettier formatting)
 
 result[:5]
-# pd.DataFrame(result)  # recommended for prettier formatting and working with result
+# pd.DataFrame(result).head()
 
 # The cellids can be easily obtained
 
@@ -165,18 +154,14 @@ result.areas
 
 ix.intersects(p)
 
-# The results of an intersection can be visualized with the plotting methods in the `GridIntersect` object:
-# - `plot_polygon`
-# - `plot_linestring`
-# - `plot_point`
+# The results of an intersection can be visualized with the `GridIntersect.plot_intersection_result()` method.
 
 # +
 # create a figure and plot the grid
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
-sgr.plot(ax=ax)
 
 # the intersection object contains some helpful plotting commands
-ix.plot_polygon(result, ax=ax)
+ix.plot_intersection_result(result, ax=ax)
 
 # add black x at cell centers
 for irow, icol in result.cellids:
@@ -205,12 +190,8 @@ ax.legend([h2], [i.get_label() for i in [h2]], loc="best")
 
 result2 = ix.intersect(p, contains_centroid=True)
 
-# create a figure and plot the grid
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
-sgr.plot(ax=ax)
-
-# the intersection object contains some helpful plotting commands
-ix.plot_polygon(result2, ax=ax)
+ix.plot_intersection_result(result2, ax=ax)
 
 # add black x at cell centers
 for irow, icol in result2.cellids:
@@ -232,12 +213,8 @@ ax.legend([h2], [i.get_label() for i in [h2]], loc="best")
 
 result3 = ix.intersect(p, min_area_fraction=0.35)
 
-# create a figure and plot the grid
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
-sgr.plot(ax=ax)
-
-# the intersection object contains some helpful plotting commands
-ix.plot_polygon(result3, ax=ax)
+ix.plot_intersection_result(result3, ax=ax)
 
 # add black x at cell centers
 for irow, icol in result3.cellids:
@@ -247,35 +224,6 @@ for irow, icol in result3.cellids:
         "kx",
         label="centroids of intersected gridcells",
     )
-
-# add legend
-ax.legend([h2], [i.get_label() for i in [h2]], loc="best")
-# -
-
-# Alternatively, the intersection can be calculated using special methods optimized for structured grids. Access these methods by instantiating the GridIntersect class with the `method="structured"` keyword argument.
-
-ixs = GridIntersect(sgr, method="structured")
-result4 = ixs.intersect(p)
-
-# The result is the same as before:
-
-# +
-# create a figure and plot the grid
-fig, ax = plt.subplots(1, 1, figsize=(8, 8))
-sgr.plot(ax=ax)
-
-# the intersection object contains some helpful plotting commands
-ix.plot_polygon(result4, ax=ax)
-
-# add black x at cell centers
-for irow, icol in result4.cellids:
-    (h2,) = ax.plot(
-        sgr.xcellcenters[0, icol],
-        sgr.ycellcenters[irow, 0],
-        "kx",
-        label="centroids of intersected gridcells",
-    )
-
 # add legend
 ax.legend([h2], [i.get_label() for i in [h2]], loc="best")
 # -
@@ -295,7 +243,7 @@ result = ix.intersect(mls)
 # +
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
 sgr.plot(ax=ax)
-ix.plot_linestring(result, ax=ax, cmap="viridis")
+ix.plot_intersection_result(result, ax=ax, cmap="viridis")
 
 for irow, icol in result.cellids:
     (h2,) = ax.plot(
@@ -306,21 +254,6 @@ for irow, icol in result.cellids:
     )
 
 ax.legend([h2], [i.get_label() for i in [h2]], loc="best")
-# -
-
-# Same as before, the intersect for structured grids can also be performed with a different method optimized for structured grids
-
-ixs = GridIntersect(sgr, method="structured")
-
-# +
-result2 = ixs.intersect(mls)
-
-# ordering is different so compare sets to check equality
-check = len(set(result2.cellids) - set(result.cellids)) == 0
-print(
-    "Intersection result with method='structured' and "
-    f"method='vertex' are equal: {check}"
-)
 # -
 
 # ### [MultiPoint with regular grid](#top)<a id="rectgrid.3"></a>
@@ -368,21 +301,6 @@ for irow, icol in result_all.cellids:
 ax.legend([h2, h3], [i.get_label() for i in [h2, h3]], loc="best")
 # -
 
-# Same as before, the intersect for structured grids can also be performed with a different method written specifically for structured grids.
-
-ixs = GridIntersect(sgr, method="structured")
-
-# +
-result2 = ixs.intersect(mp, return_all_intersections=False)
-
-# ordering is different so compare sets to check equality
-check = len(set(result2.cellids) - set(result.cellids)) == 0
-print(
-    "Intersection result with method='structured' and "
-    f"method='vertex' are equal: {check}"
-)
-# -
-
 # ## <a id="trigrid"></a>[Vertex Grid](#top)
 
 cell2d = [
@@ -420,9 +338,7 @@ result = ix2.intersect(p)
 
 # +
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
-pmv = fplot.PlotMapView(ax=ax, modelgrid=tgr)
-pmv.plot_grid()
-ix.plot_polygon(result, ax=ax)
+ix.plot_intersection_result(result, ax=ax)
 
 # only cells that intersect with shape
 for cellid in result.cellids:
@@ -442,9 +358,7 @@ result = ix2.intersect(mls)
 
 # +
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
-pmv = fplot.PlotMapView(ax=ax, modelgrid=tgr)
-pmv.plot_grid()
-ix2.plot_linestring(result, ax=ax, lw=3)
+ix2.plot_intersection_result(result, ax=ax, lw=3)
 
 for cellid in result.cellids:
     (h2,) = ax.plot(
@@ -464,9 +378,7 @@ result_all = ix2.intersect(mp, return_all_intersections=True)
 
 # +
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
-pmv = fplot.PlotMapView(ax=ax, modelgrid=tgr)
-pmv.plot_grid()
-ix2.plot_point(result, ax=ax, color="k", zorder=5, s=80)
+ix2.plot_intersection_result(result, ax=ax, color="k", zorder=5, s=80)
 
 for cellid in result.cellids:
     (h2,) = ax.plot(
