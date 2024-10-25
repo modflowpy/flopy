@@ -775,6 +775,26 @@ def test_tri_grid_linestring_cell_boundary_return_all_ix_shapely(rtree):
     assert len(r) == 3
 
 
+@requires_pkg("shapely")
+def test_rect_vertex_grid_linestring_geomcollection():
+    gr = get_rect_vertex_grid()
+    ix = GridIntersect(gr, method="vertex")
+    ls = LineString(
+        [
+            (20.0, 0.0),
+            (5.0, 5.0),
+            (15.0, 7.5),
+            (10.0, 10.0),
+            (5.0, 15.0),
+            (10.0, 19.0),
+            (10.0, 20.0),
+        ]
+    )
+    result = ix.intersect(ls)
+    assert len(result) == 3
+    assert np.allclose(result.lengths.sum(), ls.length)
+
+
 # %% test polygon structured
 
 
