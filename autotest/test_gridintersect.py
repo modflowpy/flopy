@@ -501,6 +501,7 @@ def test_rect_grid_linestring_starting_on_vertex():
     assert np.allclose(result.lengths.sum(), np.sqrt(50))
     assert result.cellids[0] == (1, 1)
 
+
 # %% test linestring shapely
 
 
