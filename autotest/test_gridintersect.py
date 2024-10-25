@@ -483,29 +483,6 @@ def test_rect_grid_linestring_starting_on_vertex():
     assert np.allclose(result.lengths.sum(), np.sqrt(50))
     assert result.cellids[0] == (1, 1)
 
-
-# @requires_pkg("shapely")
-# def test_rect_grid_linestring_geomcolletion():
-#     gr = get_rect_grid()
-#     ix = GridIntersect(gr, method="structured")
-#     ls = LineString(
-#         [
-#             (20.0, 0.0),
-#             (5.0, 5.0),
-#             (15.0, 7.5),
-#             (10.0, 10.0),
-#             (5.0, 15.0),
-#             (10.0, 19.0),
-#             (10.0, 20.0),
-#         ]
-#     )
-#     result = ix.intersect(ls)
-#     assert len(result) == 3  # TODO: currently returns 4
-#     assert np.allclose(
-#         result.lengths.sum(), ls.length
-#     )  # TODO: length is 1m longer than ls
-
-
 # %% test linestring shapely
 
 
