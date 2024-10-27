@@ -8,9 +8,8 @@ from typing import (
     Optional,
 )
 
-from flopy.mf6.utils.codegen.dfn import Dfn, Vars
-from flopy.mf6.utils.codegen.ref import Ref
-from flopy.mf6.utils.codegen.render import renderable
+from flopy.mf6.utils.codegen.dfn import Dfn, Ref, Vars
+from flopy.mf6.utils.codegen.renderable import renderable
 from flopy.mf6.utils.codegen.shim import SHIM
 
 
@@ -39,7 +38,7 @@ class Context:
 
     class Name(NamedTuple):
         """
-        Uniquely identifies an input context. A context
+        Uniquely identifies an input context. The name
         consists of a left term and optional right term.
 
         Notes
@@ -50,10 +49,11 @@ class Context:
 
         From the context name several other things are derived:
 
+        - a description of the context
         - the input context class' name
-        - a description of the context class
-        - the name of the source file to write
+        - the template the context will populate
         - the base class the context inherits from
+        - the name of the source file the context is in
         - the name of the parent parameter in the context
         class' `__init__` method, if it can have a parent
 
@@ -70,7 +70,6 @@ class Context:
             remains unique. The title is substituted into
             the file name and class name.
             """
-
             l, r = self
             if self == ("sim", "nam"):
                 return "simulation"
@@ -82,7 +81,7 @@ class Context:
                 return r
             if l in ["sln", "exg"]:
                 return r
-            return f"{l}{r}"
+            return l + r
 
         @property
         def base(self) -> str:
@@ -100,6 +99,18 @@ class Context:
             return f"mf{self.title}.py"
 
         @property
+        def template(self) -> str:
+            """The template file to use."""
+            if self.base == "MFSimulationBase":
+                return "simulation.py.jinja"
+            elif self.base == "MFModel":
+                return "model.py.jinja"
+            elif self.base == "MFPackage":
+                if self.l == "exg":
+                    return "exchange.py.jinja"
+                return "package.py.jinja"
+
+        @property
         def description(self) -> str:
             """A description of the input context."""
             l, r = self
@@ -109,29 +120,11 @@ class Context:
             elif self.base == "MFModel":
                 return f"Modflow{title} defines a {l.upper()} model."
             elif self.base == "MFSimulationBase":
-                return """
-        MFSimulation is used to load, build, and/or save a MODFLOW 6 simulation.
-        A MFSimulation object must be created before creating any of the MODFLOW 6
-        model objects."""
-
-        def parent(self, ref: Optional[Ref] = None) -> Optional[str]:
-            """
-            Return the name of the parent `__init__` method parameter,
-            or `None` if the context cannot have parents. Contexts can
-            have more than one possible parent, in which case the name
-            of the parameter is of the pattern `name1_or_..._or_nameN`.
-            """
-            if ref:
-                return ref.parent
-            if self == ("sim", "nam"):
-                return None
-            elif (
-                self.l is None
-                or self.r is None
-                or self.l in ["sim", "exg", "sln"]
-            ):
-                return "simulation"
-            return "model"
+                return (
+                    "MFSimulation is used to load, build, and/or save a MODFLOW 6 simulation."
+                    " A MFSimulation object must be created before creating any of the MODFLOW"
+                    " 6 model objects."
+                )
 
         @staticmethod
         def from_dfn(dfn: Dfn) -> List["Context.Name"]:
@@ -172,7 +165,6 @@ class Context:
     name: Name
     vars: Vars
     base: Optional[type] = None
-    parent: Optional[str] = None
     description: Optional[str] = None
     meta: Optional[Dict[str, Any]] = None
 
@@ -183,18 +175,15 @@ class Context:
         These are structured representations of input context classes.
         Each input definition yields one or more input contexts.
         """
-
         meta = dfn.meta.copy()
         ref = Ref.from_dfn(dfn)
         if ref:
             meta["ref"] = ref
-
         for name in Context.Name.from_dfn(dfn):
             yield Context(
                 name=name,
                 vars=dfn.data,
                 base=name.base,
-                parent=name.parent(ref),
                 description=name.description,
                 meta=meta,
             )

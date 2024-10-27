@@ -1,9 +1,9 @@
 import pytest
 
 from autotest.conftest import get_project_root_path
+from flopy.mf6.utils.codegen import make_all, make_targets
 from flopy.mf6.utils.codegen.context import Context
 from flopy.mf6.utils.codegen.dfn import Dfn
-from flopy.mf6.utils.codegen.make import make_all, make_targets
 
 PROJ_ROOT = get_project_root_path()
 MF6_PATH = PROJ_ROOT / "flopy" / "mf6"
@@ -17,34 +17,40 @@ DFN_NAMES = [
 
 @pytest.mark.parametrize("dfn_name", DFN_NAMES)
 def test_dfn_load(dfn_name):
-    dfn_path = DFN_PATH / f"{dfn_name}.dfn"
+    with (
+        open(DFN_PATH / "common.dfn", "r") as common_file,
+        open(DFN_PATH / f"{dfn_name}.dfn", "r") as dfn_file,
+    ):
+        name = Dfn.Name.parse(dfn_name)
+        common, _ = Dfn._load(common_file)
+        dfn = Dfn.load(dfn_file, name=name, common=common)
 
-    common_path = DFN_PATH / "common.dfn"
-    with open(common_path, "r") as f:
-        common, _ = Dfn._load(f)
-
-    with open(dfn_path, "r") as f:
-        dfn = Dfn.load(f, name=Dfn.Name(*dfn_name.split("-")), common=common)
-        if dfn_name in ["sln-ems", "exg-gwfprt", "exg-gwfgwe", "exg-gwfgwt"]:
-            assert not any(dfn)
-        else:
-            assert any(dfn)
+    if name in [
+        ("sln", "ems"),
+        ("exg", "gwfprt"),
+        ("exg", "gwfgwe"),
+        ("exg", "gwfgwt"),
+    ]:
+        assert not any(dfn)
+    else:
+        assert any(dfn)
 
 
 @pytest.mark.parametrize("dfn_name", DFN_NAMES)
 def test_make_targets(dfn_name, function_tmpdir):
-    common_path = DFN_PATH / "common.dfn"
-    with open(common_path, "r") as f:
-        common, _ = Dfn._load(f)
-
-    with open(DFN_PATH / f"{dfn_name}.dfn", "r") as f:
-        dfn = Dfn.load(f, name=Dfn.Name(*dfn_name.split("-")), common=common)
+    with (
+        open(DFN_PATH / "common.dfn", "r") as common_file,
+        open(DFN_PATH / f"{dfn_name}.dfn", "r") as dfn_file,
+    ):
+        name = Dfn.Name.parse(dfn_name)
+        common, _ = Dfn._load(common_file)
+        dfn = Dfn.load(dfn_file, name=name, common=common)
 
     make_targets(dfn, function_tmpdir, verbose=True)
-
-    for name in Context.Name.from_dfn(dfn):
-        source_path = function_tmpdir / name.target
-        assert source_path.is_file()
+    assert all(
+        (function_tmpdir / name.target).is_file()
+        for name in Context.Name.from_dfn(dfn)
+    )
 
 
 def test_make_all(function_tmpdir):

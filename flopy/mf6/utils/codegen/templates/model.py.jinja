@@ -1,3 +1,5 @@
+{% import 'macros.jinja' as macros %}
+
 from os import PathLike, curdir
 from typing import Union
 
@@ -6,11 +8,71 @@ from flopy.mf6.mfmodel import MFModel
 
 
 class Modflow{{ name.title.title() }}(MFModel):
-    {% include "docstring.jinja" %}
+    """
+    {{ description }}
+
+    Parameters
+    ----------
+    {{ macros.vars_docs(vars, start_indent=4) }}
+
+    Methods
+    -------
+    load : (simulation : MFSimulationData, model_name : string,
+        namfile : string, version : string, exe_name : string,
+        model_ws : string, strict : boolean) : MFSimulation
+        a class method that loads a model from files
+    """
 
     model_type = "{{ name.title }}"
 
-    {% include "init.py.jinja" %}
+    def __init__(
+        self,
+        simulation,
+        modelname="model",
+        model_nam_file=None,
+        version="mf6",
+        exe_name="mf6",
+        model_rel_path=".",
+        {%- for n, var in vars.items() if n not in init_skip %}
+        {{ var.name }}{%- if var.default is defined %}={{ var.default }}{%- endif -%},
+        {%- endfor %}
+        **kwargs,
+    ):
+        """
+        {{ description }}
+
+        Parameters
+        ----------
+        modelname : string
+            name of the model
+        model_nam_file : string
+            relative path to the model name file from model working folder
+        version : string
+            version of modflow
+        exe_name : string
+            model executable name
+        model_ws : string
+            model working folder path
+        sim : MFSimulation
+            Simulation that this model is a part of.  Model is automatically
+            added to simulation when it is initialized.
+        {{ macros.vars_docs(vars, start_indent=8) }}
+        """
+
+        super().__init__(
+            simulation,
+            model_type="{{ name.title }}6",
+            modelname=modelname,
+            model_nam_file=model_nam_file,
+            version=version,
+            exe_name=exe_name,
+            model_rel_path=model_rel_path,
+            **kwargs,
+        )
+
+        {% for statement in init_body %}
+        {{ statement }}
+        {% endfor %}
 
     @classmethod
     def load(

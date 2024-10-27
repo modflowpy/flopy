@@ -1,9 +1,0 @@
-def __init__(
-        self,
-        {%- for var in vars.values() if var.init_param %}
-        {{ var.name }}{%- if var.default is defined %}={{ var.default }}{%- endif -%},
-        {%- endfor %}
-        **kwargs,
-    ):
-        {{ init_body }}
-        

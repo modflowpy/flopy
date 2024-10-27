@@ -83,12 +83,10 @@ files, the package classes, and updated init.py that createpackages.py created.
 
 from pathlib import Path
 
-from flopy.mf6.utils.codegen.make import make_all
+from flopy.mf6.utils.codegen import make_all
 
 _MF6_PATH = Path(__file__).parents[1]
-_DFN_PATH = _MF6_PATH / "data" / "dfn"
-_TGT_PATH = _MF6_PATH / "modflow"
 
 
 if __name__ == "__main__":
-    make_all(_DFN_PATH, _TGT_PATH)
+    make_all(dfndir=_MF6_PATH / "data" / "dfn", outdir=_MF6_PATH / "modflow")

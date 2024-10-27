@@ -1,15 +1,34 @@
+"""
+This module contains a decorator intended to
+allow modifying dataclass instances to make
+them more palatable for templates. It also
+keeps implementation details incidental to
+the current design of MF6 input framework
+cleanly isolated from the reimplementation
+of which this code is a part, which aims
+for a more general approach.
+
+Jinja supports attribute- and dictionary-
+based access on arbitrary objects but does
+not support arbitrary expressions, and has
+only a limited set of custom filters; this
+can make it awkward to express some things,
+which transformations can also remedy.
+
+Edge cases in the MF6 classes, e.g. the logic
+determining the contents of generated classes,
+can also be implemented with transformations.
+"""
+
 from dataclasses import asdict
-from enum import Enum
 from typing import Any, Callable, Dict, Iterable, Optional, Tuple
+
+from flopy.mf6.utils.codegen.utils import try_get_enum_value
 
 Predicate = Callable[[Any], bool]
 Transform = Callable[[Any], Dict[str, str]]
 Pair = Tuple[str, Any]
 Pairs = Iterable[Pair]
-
-
-def _try_get_enum_value(v: Any) -> Any:
-    return v.value if isinstance(v, Enum) else v
 
 
 def renderable(
@@ -54,38 +73,12 @@ def renderable(
 
     Notes
     -----
-    This decorator is intended as a convenient
-    way to modify dataclass instances to make
-    them more palatable for templates. It also
-    keeps implementation details incidental to
-    the current design of MF6 input framework
-    cleanly isolated from the reimplementation
-    of which this code is a part, which aims
-    for a more general approach.
-
-    Jinja supports attribute- and dictionary-
-    based access on arbitrary objects but does
-    not support arbitrary expressions, and has
-    only a limited set of custom filters; this
-    can make it awkward to express some things,
-    which transformations can also remedy.
-
-    Edge cases in the MF6 classes, e.g. the logic
-    determining the contents of generated classes,
-    can also be implemented with transformations.
-    This allows keeping the templating module as
-    generic as possible and inserting "shims" to
-    incrementally rewrite the existing framework.
-
     Because a transformation function accepts an
     instance of a dataclass and converts it to a
     dictionary, only one transformation function
     (of the first matching predicate) is applied.
 
-    References
-    ----------
-    This pattern was heavily inspired by `attrs`'
-    use of class decorators.
+    This was inspired by `attrs` class decorators.
     """
 
     quote_str = quote_str or list()
@@ -95,13 +88,8 @@ def renderable(
 
     def __renderable(cls):
         def _render(d: dict) -> dict:
-            """
-            Render the dictionary recursively,
-            with requested value modifications.
-            """
-
             def _render_val(k, v):
-                v = _try_get_enum_value(v)
+                v = try_get_enum_value(v)
                 if (
                     k in quote_str
                     and isinstance(v, str)
@@ -115,16 +103,10 @@ def renderable(
             return {
                 k: _render_val(k, v)
                 for k, v in d.items()
-                # drop nones except where requested
                 if (k in keep_none or v is not None)
             }
 
         def _dict(o):
-            """
-            Convert the dataclass instance to a dictionary,
-            applying a transformation if applicable and any
-            extra key/value pairs if provided.
-            """
             d = dict(o)
             for p, t in transform:
                 if p(o):
@@ -145,9 +127,7 @@ def renderable(
             return _render(_dict(o))
 
         def render(self) -> dict:
-            """
-            Recursively render the dataclass instance.
-            """
+            """Recursively render the dataclass instance."""
             return _render(asdict(self, dict_factory=_dict_factory))
 
         setattr(cls, "render", render)

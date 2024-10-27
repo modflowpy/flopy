@@ -3,22 +3,23 @@ from pathlib import Path
 from jinja2 import Environment, PackageLoader
 
 from flopy.mf6.utils.codegen.context import Context
-from flopy.mf6.utils.codegen.dfn import Dfn, Dfns
-from flopy.mf6.utils.codegen.ref import Ref, Refs
+from flopy.mf6.utils.codegen.dfn import Dfn, Dfns, Ref, Refs
+
+__all__ = ["make_targets", "make_all"]
 
 _TEMPLATE_LOADER = PackageLoader("flopy", "mf6/utils/codegen/templates/")
 _TEMPLATE_ENV = Environment(loader=_TEMPLATE_LOADER)
-_TEMPLATE_NAME = "context.py.jinja"
-_TEMPLATE = _TEMPLATE_ENV.get_template(_TEMPLATE_NAME)
 
 
 def make_targets(dfn: Dfn, outdir: Path, verbose: bool = False):
     """Generate Python source file(s) from the given input definition."""
 
     for context in Context.from_dfn(dfn):
-        target = outdir / context.name.target
+        name = context.name
+        target = outdir / name.target
+        template = _TEMPLATE_ENV.get_template(name.template)
         with open(target, "w") as f:
-            f.write(_TEMPLATE.render(**context.render()))
+            f.write(template.render(**context.render()))
             if verbose:
                 print(f"Wrote {target}")
 

@@ -1,0 +1,82 @@
+{% import 'macros.jinja' as macros %}
+
+from os import PathLike, curdir
+from typing import Union
+
+from flopy.mf6.data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
+from flopy.mf6.mfpackage import MFPackage
+
+class Modflow{{ name.title.title() }}(MFPackage):
+    """
+    {{ description }}
+
+    Parameters
+    ----------
+    {{ macros.vars_docs(vars, start_indent=4) }}
+    """
+
+    {%- for attr in cls_attrs %}
+    {{ attr }}
+    {%- endfor %}
+
+    def __init__(
+        self,
+        simulation,
+        loading_package=False,
+        exgtype="{{ name.r[:3].upper() }}6-{{ name.r[3:].upper() }}6",
+        exgmnamea=None,
+        exgmnameb=None,
+        {%- for n, var in vars.items() if n not in init_skip %}
+        {{ var.name }}{%- if var.default is defined %}={{ var.default }}{%- endif -%},
+        {%- endfor %}
+        filename=None,
+        pname=None,
+        **kwargs,
+    ):
+        """
+        {{ description }}
+
+        simulation : MFSimulation
+            Simulation that this package is a part of. Package is automatically
+            added to simulation when it is initialized.
+        loading_package : bool
+            Do not set this parameter. It is intended for debugging and internal
+            processing purposes only.
+        exgtype : str
+            The exchange type (GWF-GWF or GWF-GWT).
+        exgmnamea : str
+            The name of the first model that is part of this exchange.
+        exgmnameb : str
+            The name of the second model that is part of this exchange.
+        gwfmodelname1 : str
+            Name of first GWF Model. In the simulation name file, the GWE6-GWE6
+            entry contains names for GWE Models (exgmnamea and exgmnameb). The
+            GWE Model with the name exgmnamea must correspond to the GWF Model
+            with the name gwfmodelname1.
+        gwfmodelname2 : str
+            Name of second GWF Model. In the simulation name file, the GWE6-GWE6
+            entry contains names for GWE Models (exgmnamea and exgmnameb). The
+            GWE Model with the name exgmnameb must correspond to the GWF Model
+            with the name gwfmodelname2.   
+        {{ macros.vars_docs(vars, start_indent=8) }}
+        """
+
+        super().__init__(
+            {{ parent }},
+            "{{ name.r }}",
+            filename,
+            pname,
+            loading_package,
+            **kwargs
+        )
+
+        self.exgtype = exgtype
+        self.exgmnamea = exgmnamea
+        self.exgmnameb = exgmnameb
+        simulation.register_exchange_file(self)
+
+        {% for statement in init_body %}
+        {{ statement }}
+        {% endfor %}
+
+        self._init_complete = True

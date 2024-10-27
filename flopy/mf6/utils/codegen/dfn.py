@@ -17,6 +17,8 @@ from warnings import warn
 
 from boltons.dictutils import OMD
 
+from flopy.mf6.utils.codegen.utils import try_literal_eval, try_parse_bool
+
 _SCALARS = {
     "keyword",
     "integer",
@@ -27,30 +29,7 @@ _SCALARS = {
 
 Vars = Dict[str, "Var"]
 Dfns = Dict[str, "Dfn"]
-
-
-def _try_parse_bool(value: Any) -> Any:
-    """
-    Try to parse a boolean from a string as represented
-    in a DFN file, otherwise return the value unaltered.
-    """
-
-    if isinstance(value, str):
-        value = value.lower()
-        if value in ["true", "false"]:
-            return value == "true"
-    return value
-
-
-def _try_literal_eval(value: str) -> Any:
-    """
-    Try to parse a string as a literal. If this fails,
-    return the value unaltered.
-    """
-    try:
-        return literal_eval(value)
-    except (SyntaxError, ValueError):
-        return value
+Refs = Dict[str, "Ref"]
 
 
 @dataclass
@@ -87,12 +66,19 @@ class Dfn(UserDict):
 
     class Name(NamedTuple):
         """
-        Uniquely identifies an input definition. A name
-        consists of a left term and optional right term.
+        Uniquely identifies an input definition.
+        Consists of a left term and a right term.
         """
 
         l: str
         r: str
+
+        @classmethod
+        def parse(cls, v: str) -> "Dfn.Name":
+            try:
+                return cls(*v.split("-"))
+            except:
+                raise ValueError(f"Bad DFN name format: {v}")
 
     name: Optional[Name]
     meta: Optional[Dict[str, Any]]
@@ -232,9 +218,8 @@ class Dfn(UserDict):
             # stay a string except default values, which we'll
             # try to parse as arbitrary literals below, and at
             # some point types, once we introduce type hinting
-            spec = {k: _try_parse_bool(v) for k, v in spec.items()}
+            spec = {k: try_parse_bool(v) for k, v in spec.items()}
 
-            # pull off attributes we're interested in
             _name = spec["name"]
             _type = spec.get("type", None)
             block = spec.get("block", None)
@@ -406,11 +391,12 @@ class Dfn(UserDict):
                 block=block,
                 description=description,
                 default=(
-                    _try_literal_eval(default)
-                    if _type != "string"
-                    else default
+                    try_literal_eval(default) if _type != "string" else default
                 ),
                 children=children,
+                # type is a string for now, when
+                # introducing type hints make it
+                # a proper type...
                 meta={"ref": ref, "type": type_},
             )
 
@@ -439,4 +425,111 @@ class Dfn(UserDict):
                 "dfn": (_vars, meta),
                 "refs": referenced,
             },
+        )
+
+
+@dataclass
+class Ref:
+    """
+    A foreign-key-like reference between a file input variable
+    and another input definition. This allows an input context
+    to refer to another input context, by including a filepath
+    variable whose name acts as a foreign key for a different
+    input context. The referring context's `__init__` method
+    is modified such that the variable named `val` replaces
+    the `key` variable.
+
+    Notes
+    -----
+    This class is used to represent subpackage references.
+
+    Parameters
+    ----------
+    key : str
+        The name of the foreign key file input variable.
+    val : str
+        The name of the data variable in the referenced context.
+    abbr : str
+        An abbreviation of the referenced context's name.
+    param : str
+        The referenced parameter name.
+    parents : List[str]
+        The referenced context's supported parents.
+    description : Optional[str]
+        The reference's description.
+    """
+
+    key: str
+    val: str
+    abbr: str
+    param: str
+    parent: str
+    description: Optional[str]
+
+    @classmethod
+    def from_dfn(cls, dfn: Dfn) -> Optional["Ref"]:
+        """
+        Try to load a reference from the definition.
+        Returns `None` if the definition cannot be
+        referenced by other contexts.
+        """
+
+        # TODO: all this won't be necessary once we
+        # structure DFN format; we can then support
+        # subpackage references directly instead of
+        # by making assumptions about `dfn.meta`
+
+        if not dfn.meta or "dfn" not in dfn.meta:
+            return None
+
+        _, meta = dfn.meta["dfn"]
+
+        lines = {
+            "subpkg": next(
+                iter(
+                    m
+                    for m in meta
+                    if isinstance(m, str) and m.startswith("subpac")
+                ),
+                None,
+            ),
+            "parent": next(
+                iter(
+                    m
+                    for m in meta
+                    if isinstance(m, str) and m.startswith("parent")
+                ),
+                None,
+            ),
+        }
+
+        def _subpkg():
+            line = lines["subpkg"]
+            _, key, abbr, param, val = line.split()
+            matches = [v for v in dfn.values() if v.name == val]
+            if not any(matches):
+                descr = None
+            else:
+                if len(matches) > 1:
+                    warn(f"Multiple matches for referenced variable {val}")
+                match = matches[0]
+                descr = match.description
+
+            return {
+                "key": key,
+                "val": val,
+                "abbr": abbr,
+                "param": param,
+                "description": descr,
+            }
+
+        def _parent():
+            line = lines["parent"]
+            split = line.split()
+            return split[1]
+
+        return (
+            cls(**_subpkg(), parent=_parent())
+            if all(v for v in lines.values())
+            else None
         )
