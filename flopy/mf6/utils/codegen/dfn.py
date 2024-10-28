@@ -85,11 +85,11 @@ class Dfn(UserDict):
 
     def __init__(
         self,
-        vars: Optional[Vars] = None,
+        data: Optional[Vars] = None,
         name: Optional[Name] = None,
         meta: Optional[Dict[str, Any]] = None,
     ):
-        self.data = OMD(vars)
+        self.data = OMD(data)
         self.name = name
         self.meta = meta
 
@@ -107,7 +107,7 @@ class Dfn(UserDict):
 
         """
         var = dict()
-        vars = list()
+        flat = list()
         meta = list()
         common = common or dict()
 
@@ -140,7 +140,7 @@ class Dfn(UserDict):
             # block of attributes
             if not any(line):
                 if any(var):
-                    vars.append((var["name"], var))
+                    flat.append((var["name"], var))
                     var = dict()
                 continue
 
@@ -176,9 +176,9 @@ class Dfn(UserDict):
 
         # add the final parameter
         if any(var):
-            vars.append((var["name"], var))
+            flat.append((var["name"], var))
 
-        return OMD(vars), meta
+        return OMD(flat), meta
 
     @classmethod
     def load(
@@ -192,7 +192,7 @@ class Dfn(UserDict):
 
         refs = refs or dict()
         referenced = dict()
-        vars, meta = Dfn._load(f, **kwargs)
+        flat, meta = Dfn._load(f, **kwargs)
 
         def _map(spec: Dict[str, Any]) -> Var:
             """
@@ -236,12 +236,12 @@ class Dfn(UserDict):
 
             def _fields(record_name: str) -> Vars:
                 """Recursively load/convert a record's fields."""
-                record = next(iter(vars.getlist(record_name)), None)
+                record = next(iter(flat.getlist(record_name)), None)
                 assert record
                 names = _type.split()[1:]
                 fields = {
                     v["name"]: _map(v)
-                    for v in vars.values(multi=True)
+                    for v in flat.values(multi=True)
                     if v["name"] in names
                     and not v["type"].startswith("record")
                     and v.get("in_record", False)
@@ -290,7 +290,7 @@ class Dfn(UserDict):
                 # fields directly inside the recarray (implicit). list
                 # data for unions/keystrings necessarily comes nested.
 
-                is_explicit_record = n_names == 1 and vars[names[0]][
+                is_explicit_record = n_names == 1 and flat[names[0]][
                     "type"
                 ].startswith("record")
 
@@ -299,13 +299,13 @@ class Dfn(UserDict):
                     # only scalar fields
                     types = [
                         v["type"]
-                        for v in vars.values(multi=True)
+                        for v in flat.values(multi=True)
                         if v["name"] in names and v.get("in_record", False)
                     ]
                     return all(t in _SCALARS for t in types)
 
                 if is_explicit_record:
-                    record = next(iter(vars.getlist(names[0])), None)
+                    record = next(iter(flat.getlist(names[0])), None)
                     children = {names[0]: _map(record)}
                     kind = Var.Kind.List
                 elif _is_implicit_scalar_record():
@@ -327,7 +327,7 @@ class Dfn(UserDict):
                     # implicit complex record (i.e. some fields are records or unions)
                     fields = {
                         v["name"]: _map(v)
-                        for v in vars.values(multi=True)
+                        for v in flat.values(multi=True)
                         if v["name"] in names and v.get("in_record", False)
                     }
                     first = list(fields.values())[0]
@@ -353,7 +353,7 @@ class Dfn(UserDict):
                 names = _type.split()[1:]
                 children = {
                     v["name"]: _map(v)
-                    for v in vars.values(multi=True)
+                    for v in flat.values(multi=True)
                     if v["name"] in names and v.get("in_record", False)
                 }
                 kind = Var.Kind.Union
@@ -402,24 +402,24 @@ class Dfn(UserDict):
 
         # pass the original DFN representation as
         # metadata so the shim can use it for now
-        _vars = list(vars.values(multi=True))
+        _vars = list(flat.values(multi=True))
 
         # convert input variable specs to
         # structured form, descending into
         # composites recursively as needed
-        vars = {
+        flat = {
             var["name"]: _map(var)
-            for var in vars.values(multi=True)
+            for var in flat.values(multi=True)
             if not var.get("in_record", False)
         }
 
         # reset the var name. we may have altered
         # it when converting the variable e.g. to
         # avoid collision with a reserved keyword
-        vars = {v.name: v for v in vars.values()}
+        flat = {v.name: v for v in flat.values()}
 
         return cls(
-            vars,
+            flat,
             name,
             {
                 "dfn": (_vars, meta),
