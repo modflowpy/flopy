@@ -40,7 +40,8 @@ build = ["build", "twine"]
 dev = ["flopy[build,codegen,lint,test,optional,doc]", "tach"]
 codegen = [
     "boltons>=1.0",
-    "Jinja2>=3.0"
+    "Jinja2>=3.0",
+    "modflow-devtools"
 ]
 lint = ["cffconvert", "codespell[toml] >=2.2.2", "ruff"]
 test = [
