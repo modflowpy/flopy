@@ -1,18 +1,24 @@
 from pathlib import Path
+from warnings import warn
 
-from jinja2 import Environment, PackageLoader
-
-from flopy.mf6.utils.codegen.context import Context
-from flopy.mf6.utils.codegen.dfn import Dfn, Dfns, Ref, Refs
+from flopy.utils import import_optional_dependency
 
 __all__ = ["make_targets", "make_all"]
 
-_TEMPLATE_LOADER = PackageLoader("flopy", "mf6/utils/codegen/templates/")
-_TEMPLATE_ENV = Environment(loader=_TEMPLATE_LOADER)
+jinja = import_optional_dependency("jinja2", errors="ignore")
+if jinja:
+    _TEMPLATES_PATH = "mf6/utils/codegen/templates/"
+    _TEMPLATE_LOADER = jinja.PackageLoader("flopy", _TEMPLATES_PATH)
+    _TEMPLATE_ENV = jinja.Environment(loader=_TEMPLATE_LOADER)
 
 
-def make_targets(dfn: Dfn, outdir: Path, verbose: bool = False):
+def make_targets(dfn, outdir: Path, verbose: bool = False):
     """Generate Python source file(s) from the given input definition."""
+
+    from flopy.mf6.utils.codegen.context import Context
+
+    if not jinja:
+        raise RuntimeError("Jinja2 not installed, can't make targets")
 
     for context in Context.from_dfn(dfn):
         name = context.name
@@ -26,6 +32,12 @@ def make_targets(dfn: Dfn, outdir: Path, verbose: bool = False):
 
 def make_all(dfndir: Path, outdir: Path, verbose: bool = False):
     """Generate Python source files from the DFN files in the given location."""
+
+    from flopy.mf6.utils.codegen.context import Context
+    from flopy.mf6.utils.codegen.dfn import Dfn, Dfns, Ref, Refs
+
+    if not jinja:
+        raise RuntimeError("Jinja2 not installed, can't make targets")
 
     # find definition files
     paths = [
