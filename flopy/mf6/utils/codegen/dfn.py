@@ -51,9 +51,9 @@ class Var:
     name: str
     kind: Kind
     block: Optional[str] = None
-    description: Optional[str] = None
     default: Optional[Any] = None
     children: Optional[Vars] = None
+    description: Optional[str] = None
     meta: Optional[Dict[str, Any]] = None
 
 
