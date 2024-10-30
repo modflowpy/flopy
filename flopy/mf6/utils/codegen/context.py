@@ -151,7 +151,7 @@ class Context:
                         Context.Name(*dfn.name),  # nam pkg
                         Context.Name(dfn.name.l, None),  # model
                     ]
-            elif (dfn.name.l, dfn.name.r) in [
+            elif dfn.name in [
                 ("gwf", "mvr"),
                 ("gwf", "gnc"),
                 ("gwt", "mvt"),

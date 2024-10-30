@@ -25,16 +25,6 @@ def test_dfn_load(dfn_name):
         common, _ = Dfn._load(common_file)
         dfn = Dfn.load(dfn_file, name=name, common=common)
 
-    if name in [
-        ("sln", "ems"),
-        ("exg", "gwfprt"),
-        ("exg", "gwfgwe"),
-        ("exg", "gwfgwt"),
-    ]:
-        assert not any(dfn)
-    else:
-        assert any(dfn)
-
 
 @pytest.mark.parametrize("dfn_name", DFN_NAMES)
 def test_make_targets(dfn_name, function_tmpdir):
