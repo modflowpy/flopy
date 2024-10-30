@@ -45,17 +45,23 @@ class Modflow{{ name.title.title() }}(MFModel):
         ----------
         modelname : string
             name of the model
+
         model_nam_file : string
             relative path to the model name file from model working folder
+
         version : string
             version of modflow
+
         exe_name : string
             model executable name
+
         model_ws : string
             model working folder path
+
         sim : MFSimulation
             Simulation that this model is a part of.  Model is automatically
             added to simulation when it is initialized.
+
         {{ macros.vars_docs(vars, start_indent=8) }}
         """
 
@@ -72,7 +78,7 @@ class Modflow{{ name.title.title() }}(MFModel):
 
         {% for statement in init_body %}
         {{ statement }}
-        {% endfor %}
+        {%- endfor %}
 
     @classmethod
     def load(

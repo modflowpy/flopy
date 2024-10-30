@@ -45,20 +45,28 @@ class MF{{ name.title.title() }}(MFSimulationBase):
         ----------
         sim_name
             The name of the simulation
+
         version
             The simulation version
+
         exe_name
             The executable name
+
         sim_ws
             The simulation workspace
+
         verbosity_level
             The verbosity level
+
         write_headers
             Whether to write
+
         use_pandas
             Whether to use pandas
+
         lazy_io
             Whether to use lazy IO
+
         {{ macros.vars_docs(vars, start_indent=8) }}
         """
 
@@ -75,7 +83,7 @@ class MF{{ name.title.title() }}(MFSimulationBase):
 
         {% for statement in init_body %}
         {{ statement }}
-        {% endfor %}
+        {%- endfor %}
 
     @classmethod
     def load(

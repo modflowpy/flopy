@@ -15,7 +15,7 @@ class Modflow{{ name.title.title() }}(MFPackage):
     {{ macros.vars_docs(vars, start_indent=4) }}
     """
 
-    {%- for attr in cls_attrs %}
+    {% for attr in cls_attrs %}
     {{ attr }}
     {%- endfor %}
 
@@ -39,25 +39,32 @@ class Modflow{{ name.title.title() }}(MFPackage):
         simulation : MFSimulation
             Simulation that this package is a part of. Package is automatically
             added to simulation when it is initialized.
+
         loading_package : bool
             Do not set this parameter. It is intended for debugging and internal
             processing purposes only.
+
         exgtype : str
             The exchange type (GWF-GWF or GWF-GWT).
+
         exgmnamea : str
             The name of the first model that is part of this exchange.
+
         exgmnameb : str
             The name of the second model that is part of this exchange.
+
         gwfmodelname1 : str
             Name of first GWF Model. In the simulation name file, the GWE6-GWE6
             entry contains names for GWE Models (exgmnamea and exgmnameb). The
             GWE Model with the name exgmnamea must correspond to the GWF Model
             with the name gwfmodelname1.
+
         gwfmodelname2 : str
             Name of second GWF Model. In the simulation name file, the GWE6-GWE6
             entry contains names for GWE Models (exgmnamea and exgmnameb). The
             GWE Model with the name exgmnameb must correspond to the GWF Model
-            with the name gwfmodelname2.   
+            with the name gwfmodelname2. 
+
         {{ macros.vars_docs(vars, start_indent=8) }}
         """
 
@@ -77,6 +84,6 @@ class Modflow{{ name.title.title() }}(MFPackage):
 
         {% for statement in init_body %}
         {{ statement }}
-        {% endfor %}
+        {%- endfor %}
 
         self._init_complete = True

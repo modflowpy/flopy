@@ -16,7 +16,7 @@ class Modflow{{ name.title.title() }}(MFPackage):
     {{ macros.vars_docs(vars, start_indent=4) }}
     """
 
-    {%- for attr in cls_attrs %}
+    {% for attr in cls_attrs %}
     {{ attr }}
     {%- endfor %}
 
@@ -79,9 +79,11 @@ class {{ name.title.title() }}Packages(MFChildPackages):
         Initializes a new Modflow{{ name.title.title() }} package removing any sibling child
         packages attached to the same parent package. See Modflow{{ name.title.title() }} init
         documentation for definition of parameters.
+
     append_package
         Adds a new Modflow{{ name.title.title() }} package to the container. See Modflow{{ name.title.title() }}
         init documentation for definition of parameters.
+
     """
 
     package_abbr = "{{ name.title.lower() }}packages"

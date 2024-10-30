@@ -23,7 +23,7 @@ def test_dfn_load(dfn_name):
     ):
         name = Dfn.Name.parse(dfn_name)
         common, _ = Dfn._load(common_file)
-        dfn = Dfn.load(dfn_file, name=name, common=common)
+        Dfn.load(dfn_file, name=name, common=common)
 
 
 @pytest.mark.parametrize("dfn_name", DFN_NAMES)
