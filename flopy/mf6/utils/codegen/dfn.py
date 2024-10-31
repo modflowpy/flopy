@@ -49,11 +49,11 @@ class Var(TypedDict):
 
     name: str
     kind: Kind
+    type: Optional[str] = None
     block: Optional[str] = None
     default: Optional[Any] = None
     children: Optional[Vars] = None
     description: Optional[str] = None
-    meta: Optional[Dict[str, Any]] = None
 
 
 class Ref(TypedDict):
@@ -410,9 +410,7 @@ class Dfn(UserDict):
                             block=block,
                             children=fields,
                             description=description,
-                            meta={
-                                "type": f"[{', '.join([f['meta']['type'] for f in fields.values()])}]"
-                            },
+                            type=f"[{', '.join([f['type'] for f in fields.values()])}]",
                         )
                     }
                     kind = Var.Kind.List
@@ -433,9 +431,7 @@ class Dfn(UserDict):
                             block=block,
                             children=first["children"] if single else fields,
                             description=description,
-                            meta={
-                                "type": f"[{', '.join([v['meta']['type'] for v in fields.values()])}]"
-                            },
+                            type=f"[{', '.join([v['type'] for v in fields.values()])}]",
                         )
                     }
                     kind = Var.Kind.List
@@ -460,7 +456,9 @@ class Dfn(UserDict):
             elif _type.startswith("record"):
                 children = _fields(_name)
                 kind = Var.Kind.Record
-                type_ = f"[{', '.join([v['meta']['type'] for v in children.values()])}]"
+                type_ = (
+                    f"[{', '.join([v['type'] for v in children.values()])}]"
+                )
 
             # at this point, if it has a shape, it's an array
             elif shape is not None:
@@ -485,6 +483,7 @@ class Dfn(UserDict):
                     "-", "_"
                 ),
                 kind=kind,
+                type=type_,
                 block=block,
                 description=description,
                 default=(
@@ -494,7 +493,7 @@ class Dfn(UserDict):
                 # type is a string for now, when
                 # introducing type hints make it
                 # a proper type...
-                meta={"ref": ref, "type": type_},
+                meta={"ref": ref},
             )
 
         # pass the original DFN representation as

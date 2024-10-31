@@ -35,6 +35,7 @@ def renderable(
     maybe_cls=None,
     *,
     keep_none: Optional[Iterable[str]] = None,
+    drop_keys: Optional[Iterable[str]] = None,
     quote_str: Optional[Iterable[str]] = None,
     set_pairs: Optional[Iterable[Tuple[Predicate, Pairs]]] = None,
     transform: Optional[Iterable[Tuple[Predicate, Transform]]] = None,
@@ -83,6 +84,7 @@ def renderable(
 
     quote_str = quote_str or list()
     keep_none = keep_none or list()
+    drop_keys = drop_keys or list()
     set_pairs = set_pairs or list()
     transform = transform or list()
 
@@ -100,10 +102,16 @@ def renderable(
                     v = _render(v)
                 return v
 
+            def _keep(k, v):
+                return k in keep_none or (v and not isinstance(v, bool))
+
+            def _drop(k, v):
+                return k in drop_keys
+
             return {
                 k: _render_val(k, v)
                 for k, v in d.items()
-                if (k in keep_none or (v and not isinstance(v, bool)))
+                if (_keep(k, v) and not _drop(k, v))
             }
 
         def _dict(o):
