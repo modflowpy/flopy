@@ -337,7 +337,7 @@ def _transform_context(o):
 
 
 SHIM = {
-    "keep_none": ["default", "block", "metadata"],
+    "keep_none": ["default"],
     "quote_str": ["default"],
     "set_pairs": [
         (
