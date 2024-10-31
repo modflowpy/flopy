@@ -155,7 +155,11 @@ class Dfn(UserDict):
             # remove backslashes, TODO: generate/insert citations.
             descr = var.get("description", None)
             if descr:
-                descr = descr.replace("\\", "")
+                descr = (
+                    descr.replace("\\", "")
+                    .replace("``", "'")
+                    .replace("''", "'")
+                )
                 _, replace, tail = descr.strip().partition("REPLACE")
                 if replace:
                     key, _, subs = tail.strip().partition(" ")
