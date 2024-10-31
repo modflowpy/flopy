@@ -103,7 +103,7 @@ def renderable(
             return {
                 k: _render_val(k, v)
                 for k, v in d.items()
-                if (k in keep_none or v is not None)
+                if (k in keep_none or (v and not isinstance(v, bool)))
             }
 
         def _dict(o):
