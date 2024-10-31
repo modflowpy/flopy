@@ -28,8 +28,8 @@ _SCALARS = {
 
 
 Vars = Dict[str, "Var"]
-Dfns = Dict[str, "Dfn"]
 Refs = Dict[str, "Ref"]
+Dfns = Dict[str, "Dfn"]
 
 
 @dataclass
@@ -55,6 +55,96 @@ class Var:
     children: Optional[Vars] = None
     description: Optional[str] = None
     meta: Optional[Dict[str, Any]] = None
+
+
+@dataclass
+class Ref:
+    """
+    A foreign-key-like reference between a file input variable
+    and another input definition. This allows an input context
+    to refer to another input context, by including a filepath
+    variable whose name acts as a foreign key for a different
+    input context. The referring context's `__init__` method
+    is modified such that the variable named `val` replaces
+    the `key` variable.
+
+    This class is used to represent subpackage references.
+    """
+
+    key: str
+    val: str
+    abbr: str
+    param: str
+    parent: str
+    description: Optional[str]
+
+    @classmethod
+    def from_dfn(cls, dfn: "Dfn") -> Optional["Ref"]:
+        """
+        Try to load a reference from the definition.
+        Returns `None` if the definition cannot be
+        referenced by other contexts.
+        """
+
+        # TODO: all this won't be necessary once we
+        # structure DFN format; we can then support
+        # subpackage references directly instead of
+        # by making assumptions about `dfn.meta`
+
+        if not dfn.meta or "dfn" not in dfn.meta:
+            return None
+
+        _, meta = dfn.meta["dfn"]
+
+        lines = {
+            "subpkg": next(
+                iter(
+                    m
+                    for m in meta
+                    if isinstance(m, str) and m.startswith("subpac")
+                ),
+                None,
+            ),
+            "parent": next(
+                iter(
+                    m
+                    for m in meta
+                    if isinstance(m, str) and m.startswith("parent")
+                ),
+                None,
+            ),
+        }
+
+        def _subpkg():
+            line = lines["subpkg"]
+            _, key, abbr, param, val = line.split()
+            matches = [v for v in dfn.values() if v.name == val]
+            if not any(matches):
+                descr = None
+            else:
+                if len(matches) > 1:
+                    warn(f"Multiple matches for referenced variable {val}")
+                match = matches[0]
+                descr = match.description
+
+            return {
+                "key": key,
+                "val": val,
+                "abbr": abbr,
+                "param": param,
+                "description": descr,
+            }
+
+        def _parent():
+            line = lines["parent"]
+            split = line.split()
+            return split[1]
+
+        return (
+            cls(**_subpkg(), parent=_parent())
+            if all(v for v in lines.values())
+            else None
+        )
 
 
 class Dfn(UserDict):
@@ -431,109 +521,38 @@ class Dfn(UserDict):
             },
         )
 
+    @staticmethod
+    def load_all(dfndir: PathLike) -> Dict[str, "Dfn"]:
+        """Load all input definitions from the given directory."""
+        # find definition files
+        paths = [
+            p for p in dfndir.glob("*.dfn") if p.stem not in ["common", "flopy"]
+        ]
 
-@dataclass
-class Ref:
-    """
-    A foreign-key-like reference between a file input variable
-    and another input definition. This allows an input context
-    to refer to another input context, by including a filepath
-    variable whose name acts as a foreign key for a different
-    input context. The referring context's `__init__` method
-    is modified such that the variable named `val` replaces
-    the `key` variable.
+        # try to load common variables
+        common_path = dfndir / "common.dfn"
+        if not common_path.is_file:
+            common = None
+        else:
+            with open(common_path, "r") as f:
+                common, _ = Dfn._load(f)
 
-    Notes
-    -----
-    This class is used to represent subpackage references.
+        # load subpackage references first
+        refs: Refs = {}
+        for path in paths:
+            name = Dfn.Name(*path.stem.split("-"))
+            with open(path) as f:
+                dfn = Dfn.load(f, name=name, common=common)
+                ref = Ref.from_dfn(dfn)
+                if ref:
+                    refs[ref.key] = ref
 
-    Parameters
-    ----------
-    key : str
-        The name of the foreign key file input variable.
-    val : str
-        The name of the data variable in the referenced context.
-    abbr : str
-        An abbreviation of the referenced context's name.
-    param : str
-        The referenced parameter name.
-    parents : List[str]
-        The referenced context's supported parents.
-    description : Optional[str]
-        The reference's description.
-    """
+        # load all the input definitions
+        dfns: Dfns = {}
+        for path in paths:
+            name = Dfn.Name(*path.stem.split("-"))
+            with open(path) as f:
+                dfn = Dfn.load(f, name=name, refs=refs, common=common)
+                dfns[name] = dfn
 
-    key: str
-    val: str
-    abbr: str
-    param: str
-    parent: str
-    description: Optional[str]
-
-    @classmethod
-    def from_dfn(cls, dfn: Dfn) -> Optional["Ref"]:
-        """
-        Try to load a reference from the definition.
-        Returns `None` if the definition cannot be
-        referenced by other contexts.
-        """
-
-        # TODO: all this won't be necessary once we
-        # structure DFN format; we can then support
-        # subpackage references directly instead of
-        # by making assumptions about `dfn.meta`
-
-        if not dfn.meta or "dfn" not in dfn.meta:
-            return None
-
-        _, meta = dfn.meta["dfn"]
-
-        lines = {
-            "subpkg": next(
-                iter(
-                    m
-                    for m in meta
-                    if isinstance(m, str) and m.startswith("subpac")
-                ),
-                None,
-            ),
-            "parent": next(
-                iter(
-                    m
-                    for m in meta
-                    if isinstance(m, str) and m.startswith("parent")
-                ),
-                None,
-            ),
-        }
-
-        def _subpkg():
-            line = lines["subpkg"]
-            _, key, abbr, param, val = line.split()
-            matches = [v for v in dfn.values() if v.name == val]
-            if not any(matches):
-                descr = None
-            else:
-                if len(matches) > 1:
-                    warn(f"Multiple matches for referenced variable {val}")
-                match = matches[0]
-                descr = match.description
-
-            return {
-                "key": key,
-                "val": val,
-                "abbr": abbr,
-                "param": param,
-                "description": descr,
-            }
-
-        def _parent():
-            line = lines["parent"]
-            split = line.split()
-            return split[1]
-
-        return (
-            cls(**_subpkg(), parent=_parent())
-            if all(v for v in lines.values())
-            else None
-        )
+        return dfns

@@ -164,7 +164,6 @@ class Context:
 
     name: Name
     vars: Vars
-    base: Optional[type] = None
     meta: Optional[Dict[str, Any]] = None
 
     @classmethod
@@ -179,9 +178,4 @@ class Context:
         if ref:
             meta["ref"] = ref
         for name in Context.Name.from_dfn(dfn):
-            yield Context(
-                name=name,
-                vars=dfn.data,
-                base=name.base,
-                meta=meta,
-            )
+            yield Context(name=name, vars=dfn.data, meta=meta)

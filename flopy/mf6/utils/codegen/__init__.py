@@ -34,41 +34,13 @@ def make_all(dfndir: Path, outdir: Path, verbose: bool = False):
     """Generate Python source files from the DFN files in the given location."""
 
     from flopy.mf6.utils.codegen.context import Context
-    from flopy.mf6.utils.codegen.dfn import Dfn, Dfns, Ref, Refs
+    from flopy.mf6.utils.codegen.dfn import Dfn
 
     if not jinja:
         raise RuntimeError("Jinja2 not installed, can't make targets")
 
-    # find definition files
-    paths = [
-        p for p in dfndir.glob("*.dfn") if p.stem not in ["common", "flopy"]
-    ]
-
-    # try to load common variables
-    common_path = dfndir / "common.dfn"
-    if not common_path.is_file:
-        common = None
-    else:
-        with open(common_path, "r") as f:
-            common, _ = Dfn._load(f)
-
-    # load subpackage references first
-    refs: Refs = {}
-    for path in paths:
-        name = Dfn.Name(*path.stem.split("-"))
-        with open(path) as f:
-            dfn = Dfn.load(f, name=name, common=common)
-            ref = Ref.from_dfn(dfn)
-            if ref:
-                refs[ref.key] = ref
-
-    # load all the input definitions
-    dfns: Dfns = {}
-    for path in paths:
-        name = Dfn.Name(*path.stem.split("-"))
-        with open(path) as f:
-            dfn = Dfn.load(f, name=name, refs=refs, common=common)
-            dfns[name] = dfn
+    # load dfns
+    dfns = Dfn.load_all(dfndir)
 
     # make target files
     for dfn in dfns.values():

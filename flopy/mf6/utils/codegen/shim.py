@@ -101,9 +101,9 @@ def _cls_attrs(ctx: dict) -> List[str]:
 
     attrs = list(filter(None, [_attr(v) for v in ctx["vars"].values()]))
 
-    if ctx["base"] == "MFModel":
+    if ctx_name.base == "MFModel":
         attrs.append(f"model_type = {ctx_name.l}")
-    elif ctx["base"] == "MFPackage":
+    elif ctx_name.base == "MFPackage":
         attrs.extend(
             [
                 f"package_abbr = '{ctx_name.r}'"
@@ -122,7 +122,7 @@ def _cls_attrs(ctx: dict) -> List[str]:
 
 def _init_body(ctx: dict) -> List[str]:
     def _statements() -> Optional[List[str]]:
-        base = ctx["base"]
+        base = ctx["name"].base
         if base == "MFSimulationBase":
 
             def _should_set(var: dict) -> bool:
@@ -281,7 +281,7 @@ def _init_skip(ctx: dict) -> List[str]:
 
 def _is_context(o) -> bool:
     d = dict(o)
-    return "name" in d and "base" in d
+    return "name" in d and "vars" in d
 
 
 def _parent(ctx: dict) -> str:
