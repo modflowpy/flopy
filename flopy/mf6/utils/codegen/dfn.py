@@ -1,6 +1,5 @@
 from ast import literal_eval
 from collections import UserDict
-from dataclasses import dataclass
 from enum import Enum
 from keyword import kwlist
 from os import PathLike
@@ -12,7 +11,6 @@ from typing import (
     Optional,
     Tuple,
     TypedDict,
-    Union,
 )
 from warnings import warn
 
