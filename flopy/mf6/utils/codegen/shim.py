@@ -301,7 +301,7 @@ def _parent(ctx: dict) -> str:
     return "model"
 
 
-def _replace_refs_exg(ctx: dict) -> dict:
+def _replace_refs(ctx: dict, name_param: str = "val") -> dict:
     refs = ctx.get("meta", dict()).get("refs", dict())
     if any(refs):
         for key, ref in refs.items():
@@ -310,60 +310,18 @@ def _replace_refs_exg(ctx: dict) -> dict:
                 continue
             ctx["vars"][key] = {
                 **key_var,
-                "name": ref["val"],
-                "description": ref.get("description", None),
+                "name": ref[name_param],
+                "description": (
+                    f"* Contains data for the {ref['abbr']} package. Data can be "
+                    f"stored in a dictionary containing data for the {ref['abbr']} "
+                    "package with variable names as keys and package data as "
+                    f"values. Data just for the {ref['val']} variable is also "
+                    f"acceptable. See {ref['abbr']} package documentation for more "
+                    "information"
+                ),
                 "ref": ref,
                 "default": None,
-            }
-    return ctx
-
-
-def _replace_refs_pkg(ctx: dict) -> dict:
-    refs = ctx.get("meta", dict()).get("refs", dict())
-    if any(refs):
-        for key, ref in refs.items():
-            key_var = ctx["vars"].get(key, None)
-            if not key_var:
-                continue
-            ctx["vars"][key] = {
-                **key_var,
-                "name": ref["val"],
-                "description": ref.get("description", None),
-                "ref": ref,
-                "default": None,
-            }
-    return ctx
-
-
-def _replace_refs_mdl(ctx: dict) -> dict:
-    refs = ctx.get("meta", dict()).get("refs", dict())
-    if any(refs):
-        for key, ref in refs.items():
-            key_var = ctx["vars"].get(key, None)
-            if not key_var:
-                continue
-            ctx["vars"][key] = {
-                **key_var,
-                "name": ref["val"],
-                "description": ref.get("description", None),
-                "ref": ref,
-            }
-    return ctx
-
-
-def _replace_refs_sim(ctx: dict) -> dict:
-    refs = ctx.get("meta", dict()).get("refs", dict())
-    if any(refs) and ctx["name"] != (None, "nam"):
-        for key, ref in refs.items():
-            key_var = ctx["vars"].get(key, None)
-            if not key_var:
-                continue
-            ctx["vars"][key] = {
-                **key_var,
-                "name": ref["param"],
-                "description": ref.get("description", None),
-                "ref": ref,
-                "default": None,
+                "children": None,
             }
     return ctx
 
@@ -373,14 +331,9 @@ def _transform_context(o):
     ctx_name = ctx["name"]
     ctx_base = ctx_name.base
     if ctx_base == "MFSimulationBase":
-        return _replace_refs_sim(ctx)
-    elif ctx_base == "MFModel":
-        return _replace_refs_mdl(ctx)
-    elif ctx_base == "MFPackage":
-        if ctx_name.l == "exg":
-            return _replace_refs_exg(ctx)
-        else:
-            return _replace_refs_pkg(ctx)
+        return _replace_refs(ctx, name_param="param")
+    else:
+        return _replace_refs(ctx)
 
 
 SHIM = {
