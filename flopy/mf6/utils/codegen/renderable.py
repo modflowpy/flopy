@@ -20,7 +20,7 @@ determining the contents of generated classes,
 can also be implemented with transformations.
 """
 
-from dataclasses import asdict
+from dataclasses import asdict, is_dataclass
 from typing import Any, Callable, Dict, Iterable, Optional, Tuple
 
 from flopy.mf6.utils.codegen.utils import try_get_enum_value
@@ -128,7 +128,11 @@ def renderable(
 
         def render(self) -> dict:
             """Recursively render the dataclass instance."""
-            return _render(asdict(self, dict_factory=_dict_factory))
+            return _render(
+                asdict(self, dict_factory=_dict_factory)
+                if is_dataclass(self)
+                else self
+            )
 
         setattr(cls, "render", render)
         return cls

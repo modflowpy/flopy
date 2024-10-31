@@ -16,6 +16,7 @@ from warnings import warn
 
 from boltons.dictutils import OMD
 
+from flopy.mf6.utils.codegen.renderable import renderable
 from flopy.mf6.utils.codegen.utils import try_literal_eval, try_parse_bool
 
 _SCALARS = {
@@ -144,6 +145,7 @@ class Ref(TypedDict):
         )
 
 
+@renderable
 class Dfn(UserDict):
     """
     MODFLOW 6 input definition. An input definition
