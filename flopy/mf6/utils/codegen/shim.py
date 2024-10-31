@@ -9,13 +9,15 @@ from keyword import kwlist
 from pprint import pformat
 from typing import List, Optional
 
+from flopy.mf6.utils.codegen.utils import try_get_enum_value
+
 
 def _cls_attrs(ctx: dict) -> List[str]:
     ctx_name = ctx["name"]
 
     def _attr(var: dict) -> Optional[str]:
         var_name = var["name"]
-        var_kind = var.get("kind", None)
+        var_kind = try_get_enum_value(var.get("kind", None))
         var_block = var.get("block", None)
         var_ref = var.get("meta", dict()).get("ref", None)
 

@@ -11,6 +11,7 @@ from typing import (
     NamedTuple,
     Optional,
     Tuple,
+    TypedDict,
     Union,
 )
 from warnings import warn
@@ -32,8 +33,7 @@ Refs = Dict[str, "Ref"]
 Dfns = Dict[str, "Dfn"]
 
 
-@dataclass
-class Var:
+class Var(TypedDict):
     """MODFLOW 6 input variable specification."""
 
     class Kind(Enum):
@@ -57,8 +57,7 @@ class Var:
     meta: Optional[Dict[str, Any]] = None
 
 
-@dataclass
-class Ref:
+class Ref(TypedDict):
     """
     A foreign-key-like reference between a file input variable
     and another input definition. This allows an input context
@@ -118,14 +117,14 @@ class Ref:
         def _subpkg():
             line = lines["subpkg"]
             _, key, abbr, param, val = line.split()
-            matches = [v for v in dfn.values() if v.name == val]
+            matches = [v for v in dfn.values() if v["name"] == val]
             if not any(matches):
                 descr = None
             else:
                 if len(matches) > 1:
                     warn(f"Multiple matches for referenced variable {val}")
                 match = matches[0]
-                descr = match.description
+                descr = match["description"]
 
             return {
                 "key": key,
@@ -356,7 +355,7 @@ class Dfn(UserDict):
                     # set the type
                     n = list(fields.keys())[0]
                     path_field = fields[n]
-                    path_field._type = Union[str, PathLike]
+                    path_field["kind"] = Var.Kind.Scalar
                     fields[n] = path_field
 
                 # if tagged, remove the leading keyword
@@ -412,7 +411,7 @@ class Dfn(UserDict):
                             children=fields,
                             description=description,
                             meta={
-                                "type": f"[{', '.join([f.meta['type'] for f in fields.values()])}]"
+                                "type": f"[{', '.join([f['meta']['type'] for f in fields.values()])}]"
                             },
                         )
                     }
@@ -426,21 +425,23 @@ class Dfn(UserDict):
                     }
                     first = list(fields.values())[0]
                     single = len(fields) == 1
-                    name_ = first.name if single else _name
+                    name_ = first["name"] if single else _name
                     children = {
                         name_: Var(
                             name=name_,
                             kind=Var.Kind.Record,
                             block=block,
-                            children=first.children if single else fields,
+                            children=first["children"] if single else fields,
                             description=description,
                             meta={
-                                "type": f"[{', '.join([v.meta['type'] for v in fields.values()])}]"
+                                "type": f"[{', '.join([v['meta']['type'] for v in fields.values()])}]"
                             },
                         )
                     }
                     kind = Var.Kind.List
-                type_ = f"[{', '.join([v.name for v in children.values()])}]"
+                type_ = (
+                    f"[{', '.join([v['name'] for v in children.values()])}]"
+                )
 
             # union (product), children are choices
             elif _type.startswith("keystring"):
@@ -451,13 +452,15 @@ class Dfn(UserDict):
                     if v["name"] in names and v.get("in_record", False)
                 }
                 kind = Var.Kind.Union
-                type_ = f"[{', '.join([v.name for v in children.values()])}]"
+                type_ = (
+                    f"[{', '.join([v['name'] for v in children.values()])}]"
+                )
 
             # record (sum), children are fields
             elif _type.startswith("record"):
                 children = _fields(_name)
                 kind = Var.Kind.Record
-                type_ = f"[{', '.join([v.meta['type'] for v in children.values()])}]"
+                type_ = f"[{', '.join([v['meta']['type'] for v in children.values()])}]"
 
             # at this point, if it has a shape, it's an array
             elif shape is not None:
@@ -510,7 +513,7 @@ class Dfn(UserDict):
         # reset the var name. we may have altered
         # it when converting the variable e.g. to
         # avoid collision with a reserved keyword
-        flat = {v.name: v for v in flat.values()}
+        flat = {v["name"]: v for v in flat.values()}
 
         return cls(
             flat,
@@ -526,7 +529,9 @@ class Dfn(UserDict):
         """Load all input definitions from the given directory."""
         # find definition files
         paths = [
-            p for p in dfndir.glob("*.dfn") if p.stem not in ["common", "flopy"]
+            p
+            for p in dfndir.glob("*.dfn")
+            if p.stem not in ["common", "flopy"]
         ]
 
         # try to load common variables
@@ -545,7 +550,7 @@ class Dfn(UserDict):
                 dfn = Dfn.load(f, name=name, common=common)
                 ref = Ref.from_dfn(dfn)
                 if ref:
-                    refs[ref.key] = ref
+                    refs[ref["key"]] = ref
 
         # load all the input definitions
         dfns: Dfns = {}

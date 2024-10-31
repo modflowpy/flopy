@@ -156,6 +156,7 @@ class Context:
                 ("gwf", "gnc"),
                 ("gwt", "mvt"),
             ]:
+                # TODO: remove special cases, deduplicate mfmvr.py/mfgwfmvr.py etc
                 return [
                     Context.Name(*dfn.name),
                     Context.Name(None, dfn.name.r),
