@@ -1,9 +1,3 @@
-{% macro vars_params(vars, init_skip=none, start_indent=0) %}
-{%- for n, var in vars.items() if n not in init_skip %}
-{{ ""|indent(start_indent, first=true) }}{{ var.name }}{%- if var.default is defined %}={{ var.default }}{% endif -%},
-{%- endfor %}
-{% endmacro %}
-
 {% macro vars_docs(vars, start_indent=0) %}
 {%- for v in vars.values() recursive %}
 {{ ""|indent(start_indent, first=true) }}{% if loop.depth > 1 %}* {% endif %}{% if v.name|last == "_" %}{{ v.name.replace("_", "\\\_") }}{% else %}{{ v.name }}{% endif %}{% if v.meta is defined and v.meta.type is defined %} : {{ v.meta.type }}{% endif %}
