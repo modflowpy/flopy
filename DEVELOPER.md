@@ -25,6 +25,7 @@ This document describes how to set up a FloPy development environment, run the e
     - [Selecting tests with markers](#selecting-tests-with-markers)
   - [Writing tests](#writing-tests)
   - [Debugging tests](#debugging-tests)
+    - [Debugging tests in VS Code](#debugging-tests-in-vs-code)
   - [Performance testing](#performance-testing)
     - [Benchmarking](#benchmarking)
     - [Profiling](#profiling)
@@ -68,6 +69,11 @@ Alternatively, with Anaconda or Miniconda:
     conda env create -f etc/environment.yml
     conda activate flopy
 
+For the tests to work, flopy must also be installed to the "flopy" environment:
+
+    pip install -e .
+
+
 #### Python IDEs
 
 ##### Visual Studio Code
@@ -82,6 +88,10 @@ VSCode users on Windows may need to run `conda init`, then open a fresh terminal
 ```
 
 To locate a Conda environment's Python executable, run `where python` with the environment activated.
+
+The [Debugging tests in VS Code](#debugging-tests-in-vs-code) section below has additional tips for using VS Code to debug tests interactively.  
+
+See also this [VS Code Tutorial](https://doi-usgs.github.io/python-for-hydrology/latest/notebooks/part0_python_intro/07b_VSCode.html) from the USGS Python for Hydrology course.
 
 ##### PyCharm
 
@@ -284,6 +294,30 @@ To debug a failed test it can be helpful to inspect its output, which is cleaned
 This will retain any files created by the test in `exports_scratch` in the current working directory. Any tests using the function-scoped `function_tmpdir` and related fixtures (e.g. `class_tmpdir`, `module_tmpdir`) defined in `modflow_devtools/fixtures` are compatible with this mechanism.
 
 There is also a `--keep-failed <dir>` option which preserves the outputs of failed tests in the given location, however this option is only compatible with function-scoped temporary directories (the `function_tmpdir` fixture).
+
+#### Debugging tests in VS Code
+When writing tests to develop a new feature or reproduce and fix a bug, it can often be helpful to debug tests interactively in an IDE. In addition to the [documentation](https://code.visualstudio.com/docs/python/testing), the following tips might be helpful for getting test debugging to work in VS Code:
+
+* Add the following to the `settings.json` file:
+
+    ```json
+    "python.testing.pytestArgs": ["."],  
+    "python.testing.unittestEnabled": false,  
+    "python.testing.pytestEnabled": true,  
+    "python.testing.cwd": "${workspaceFolder}/autotest"  
+    ```
+    Notes:  
+        - The first three may be already set correctly by default, but the last item is needed for VS Code to discover the tests correctly and run the tests from the `autotest` folder.  
+        - The first three settings can also be set via the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) by entering `Python: Configure Tests`, and following the prompts.
+* Make sure the python interpreter is set correctly.
+* If test discovery is taking too long or not working, it may be helpful to install the [Python Tests Explorer for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=LittleFoxTeam.vscode-python-test-adapter) extension.
+* Test discovery issues can often be troubleshot by running `pytest --collect-only` at the terminal, though this may be prohibitively slow with the Flopy test suite.
+* Note that the [debug console](https://code.visualstudio.com/docs/editor/debugging#_user-interface) can also be used for interactive plotting. If plots aren't showing up, try adding a `pyplot.pause()` statement at the end. For example `import matplotlib.pyplot as plt; plt.imshow(array); plt.pause(1)`
+* The number of columns displayed for a `pandas` `DataFrame` can be adjusted by executing these lines in the debug console:
+
+    `pd.options.display.max_columns = <desired number of columns>`  
+    `pd.options.display.width = 0`
+
 
 ### Performance testing
 
