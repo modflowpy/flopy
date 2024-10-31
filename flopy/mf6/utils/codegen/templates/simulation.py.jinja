@@ -8,7 +8,7 @@ from flopy.mf6.mfsimbase import MFSimulationBase
 
 class MF{{ name.title.title() }}(MFSimulationBase):
     """
-    {{ description }}
+    {{ name.description }}
 
     Parameters
     ----------
@@ -39,7 +39,7 @@ class MF{{ name.title.title() }}(MFSimulationBase):
         {%- endfor %}
     ):
         """
-        {{ description }}
+        {{ name.description }}
 
         Parameters
         ----------

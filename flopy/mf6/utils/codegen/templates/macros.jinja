@@ -1,11 +1,11 @@
 {% macro vars_docs(vars, start_indent=0) %}
 {%- for v in vars.values() recursive %}
 {{ ""|indent(start_indent, first=true) }}{% if loop.depth > 1 %}* {% endif %}{% if v.name|last == "_" %}{{ v.name.replace("_", "\\\_") }}{% else %}{{ v.name }}{% endif %}{% if v.meta is defined and v.meta.type is defined %} : {{ v.meta.type }}{% endif %}
-    {%- if v.description is defined and v.description is not none %}
+{%- if v.description is defined and v.description is not none %}
 {{ v.description|wordwrap|indent(start_indent + (loop.depth * 4), first=true) }}
-    {%- endif %}
-    {%- if v.children is defined and v.children is not none -%}
+{%- endif %}
+{%- if v.children is defined and v.children is not none -%}
 {{ loop(v.children.values())|indent(start_indent, first=true) }}
-    {%- endif %}
+{%- endif %}
 {% endfor -%}
 {% endmacro %}

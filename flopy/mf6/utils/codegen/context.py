@@ -165,7 +165,6 @@ class Context:
     name: Name
     vars: Vars
     base: Optional[type] = None
-    description: Optional[str] = None
     meta: Optional[Dict[str, Any]] = None
 
     @classmethod
@@ -184,6 +183,5 @@ class Context:
                 name=name,
                 vars=dfn.data,
                 base=name.base,
-                description=name.description,
                 meta=meta,
             )
