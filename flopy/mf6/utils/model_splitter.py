@@ -1024,7 +1024,7 @@ class Mf6Splitter(object):
             "budgetcsv_filerecord",
             "stage_filerecord",
             "obs_filerecord",
-            "concentration_filerecord"
+            "concentration_filerecord",
         ):
             value = value.array
             if value is None:
@@ -3120,8 +3120,12 @@ class Mf6Splitter(object):
                     exchange_data = []
                     if check_multi_model:
                         if self._multimodel_exchange_gwf_names:
-                            exchange_kwargs["gwfmodelname1"] = self._multimodel_exchange_gwf_names[m0]
-                            exchange_kwargs["gwfmodelname2"] = self._multimodel_exchange_gwf_names[m1]
+                            exchange_kwargs["gwfmodelname1"] = (
+                                self._multimodel_exchange_gwf_names[m0]
+                            )
+                            exchange_kwargs["gwfmodelname2"] = (
+                                self._multimodel_exchange_gwf_names[m1]
+                            )
                     for node0, exg_list in exg_nodes.items():
                         if grid0.idomain[node0] < 1:
                             continue
@@ -3158,7 +3162,7 @@ class Mf6Splitter(object):
                             exchangedata=exchange_data,
                             filename=f"sim_{mname0}_{mname1}.{extension}",
                             pname=f"{mname0}_{mname1}",
-                            **exchange_kwargs
+                            **exchange_kwargs,
                         )
                         d[f"{mname0}_{mname1}"] = exchg
 
@@ -3184,8 +3188,12 @@ class Mf6Splitter(object):
 
                     if check_multi_model:
                         if self._multimodel_exchange_gwf_names:
-                            exchange_kwargs["gwfmodelname1"] = self._multimodel_exchange_gwf_names[m0]
-                            exchange_kwargs["gwfmodelname2"] = self._multimodel_exchange_gwf_names[m1]
+                            exchange_kwargs["gwfmodelname1"] = (
+                                self._multimodel_exchange_gwf_names[m0]
+                            )
+                            exchange_kwargs["gwfmodelname2"] = (
+                                self._multimodel_exchange_gwf_names[m1]
+                            )
 
                     modelgrid0 = model.modelgrid
                     modelgrid1 = self._model_dict[m1].modelgrid
@@ -3303,7 +3311,7 @@ class Mf6Splitter(object):
                             exchangedata=exchange_data,
                             filename=f"sim_{mname0}_{mname1}.{extension}",
                             pname=f"{mname0}_{mname1}",
-                            **exchange_kwargs
+                            **exchange_kwargs,
                         )
                         d[f"{mname0}_{mname1}"] = exchg
 
@@ -3339,7 +3347,7 @@ class Mf6Splitter(object):
         """
         exchange_classes = {
             "gwfgwt": modflow.ModflowGwfgwt,
-            "gwfgwe": modflow.ModflowGwfgwe
+            "gwfgwe": modflow.ModflowGwfgwe,
         }
         ml0 = self._new_sim.get_model(mname0)
         ml1 = self._new_sim.get_model(mname1)
@@ -3364,7 +3372,7 @@ class Mf6Splitter(object):
             self._new_sim,
             exgmnamea=mname0,
             exgmnameb=mname1,
-            filename=filename
+            filename=filename,
         )
 
     def split_model(self, array):
@@ -3462,7 +3470,9 @@ class Mf6Splitter(object):
 
         ix = model_types.index(modflow.ModflowGwf)
         if ix != 0:
-            idxs = [ix,] + [idx for idx in range(len(model_names)) if idx != ix]
+            idxs = [
+                ix,
+            ] + [idx for idx in range(len(model_names)) if idx != ix]
             model_names = [model_names[idx] for idx in idxs]
             models = [models[idx] for idx in idxs]
             model_types = [model_types[idx] for idx in idxs]
@@ -3513,7 +3523,9 @@ class Mf6Splitter(object):
 
         # register models to correct IMS package
         solution_recarray = self._sim.name_file.solutiongroup.data[0]
-        sln_mname_cols = [i for i in solution_recarray.dtype.names if "slnmnames" in i]
+        sln_mname_cols = [
+            i for i in solution_recarray.dtype.names if "slnmnames" in i
+        ]
         if len(solution_recarray) > 1:
             # need to associate solutions with solution groups
             imspkgs = []
