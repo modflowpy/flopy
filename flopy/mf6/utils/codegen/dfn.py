@@ -27,6 +27,29 @@ _SCALARS = {
 }
 
 
+def try_literal_eval(value: str) -> Any:
+    """
+    Try to parse a string as a literal. If this fails,
+    return the value unaltered.
+    """
+    try:
+        return literal_eval(value)
+    except (SyntaxError, ValueError):
+        return value
+
+
+def try_parse_bool(value: Any) -> Any:
+    """
+    Try to parse a boolean from a string as represented
+    in a DFN file, otherwise return the value unaltered.
+    """
+    if isinstance(value, str):
+        value = value.lower()
+        if value in ["true", "false"]:
+            return value == "true"
+    return value
+
+
 Vars = Dict[str, "Var"]
 Refs = Dict[str, "Ref"]
 Dfns = Dict[str, "Dfn"]

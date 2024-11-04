@@ -33,9 +33,7 @@ class Modflow{{ name.title.title() }}(MFModel):
         version="mf6",
         exe_name="mf6",
         model_rel_path=".",
-        {%- for n, var in vars.items() if n not in init_skip %}
-        {{ var.name }}{%- if var.default is defined %}={{ var.default }}{%- endif -%},
-        {%- endfor %}
+        {{ macros.init_vars(vars, skip=name|skip) }}
         **kwargs,
     ):
         """

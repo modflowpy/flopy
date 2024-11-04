@@ -1,21 +1,53 @@
+from os import PathLike
 from pathlib import Path
 
 from flopy.utils import import_optional_dependency
 
 __all__ = ["make_targets", "make_all"]
-__jinja = import_optional_dependency("jinja2", errors="ignore")
 
 
-def make_targets(dfn, outdir: Path, verbose: bool = False):
-    """Generate Python source file(s) from the given input definition."""
+def _get_template_env():
+    from flopy.mf6.utils.codegen.jinja import Filters
 
-    if not __jinja:
-        raise RuntimeError("Jinja2 not installed, can't make targets")
+    jinja = import_optional_dependency("jinja2")
+    loader = jinja.PackageLoader("flopy", "mf6/utils/codegen/templates/")
+    env = jinja.Environment(loader=loader)
+    env.filters["parent"] = Filters.parent
+    env.filters["prefix"] = Filters.prefix
+    env.filters["skip"] = Filters.skip
+    return env
+
+
+def make_init(dfns: dict, outdir: PathLike, verbose: bool = False):
+    """Generate a Python __init__.py file for the given input definitions."""
 
     from flopy.mf6.utils.codegen.context import Context
 
-    loader = __jinja.PackageLoader("flopy", "mf6/utils/codegen/templates/")
-    env = __jinja.Environment(loader=loader)
+    env = _get_template_env()
+    outdir = Path(outdir).expanduser()
+    contexts = [
+        c
+        for cc in [
+            [ctx for ctx in Context.from_dfn(dfn)] for dfn in dfns.values()
+        ]
+        for c in cc
+    ]  # ugly, but it's the fastest way to flatten the list
+    target_name = "__init__.py"
+    target = outdir / target_name
+    template = env.get_template(f"{target_name}.jinja")
+    with open(target, "w") as f:
+        f.write(template.render(contexts=contexts))
+        if verbose:
+            print(f"Wrote {target}")
+
+
+def make_targets(dfn, outdir: PathLike, verbose: bool = False):
+    """Generate Python source file(s) from the given input definition."""
+
+    from flopy.mf6.utils.codegen.context import Context
+
+    env = _get_template_env()
+    outdir = Path(outdir).expanduser()
     for context in Context.from_dfn(dfn):
         name = context.name
         target = outdir / name.target
@@ -29,25 +61,9 @@ def make_targets(dfn, outdir: Path, verbose: bool = False):
 def make_all(dfndir: Path, outdir: Path, verbose: bool = False):
     """Generate Python source files from the DFN files in the given location."""
 
-    if not __jinja:
-        raise RuntimeError("Jinja2 not installed, can't make targets")
-
-    from flopy.mf6.utils.codegen.context import Context
     from flopy.mf6.utils.codegen.dfn import Dfn
 
-    # load dfns
     dfns = Dfn.load_all(dfndir)
-
-    # make target files
+    make_init(dfns, outdir, verbose)
     for dfn in dfns.values():
         make_targets(dfn, outdir, verbose)
-
-    # make __init__.py file
-    init_path = outdir / "__init__.py"
-    with open(init_path, "w") as f:
-        for dfn in dfns.values():
-            for name in Context.Name.from_dfn(dfn):
-                prefix = "MF" if name.base == "MFSimulationBase" else "Modflow"
-                f.write(
-                    f"from .mf{name.title} import {prefix}{name.title.title()}\n"
-                )

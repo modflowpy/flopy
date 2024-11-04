@@ -7,17 +7,6 @@ the current design of MF6 input framework
 cleanly isolated from the reimplementation
 of which this code is a part, which aims
 for a more general approach.
-
-Jinja supports attribute- and dictionary-
-based access on arbitrary objects but does
-not support arbitrary expressions, and has
-only a limited set of custom filters; this
-can make it awkward to express some things,
-which transformations can also remedy.
-
-Edge cases in the MF6 classes, e.g. the logic
-determining the contents of generated classes,
-can also be implemented with transformations.
 """
 
 from dataclasses import asdict, is_dataclass
@@ -37,7 +26,6 @@ def renderable(
     keep_none: Optional[Iterable[str]] = None,
     drop_keys: Optional[Iterable[str]] = None,
     quote_str: Optional[Iterable[str]] = None,
-    set_pairs: Optional[Iterable[Tuple[Predicate, Pairs]]] = None,
     transform: Optional[Iterable[Tuple[Predicate, Transform]]] = None,
 ):
     """
@@ -85,7 +73,6 @@ def renderable(
     quote_str = quote_str or list()
     keep_none = keep_none or list()
     drop_keys = drop_keys or list()
-    set_pairs = set_pairs or list()
     transform = transform or list()
 
     def __renderable(cls):
@@ -120,15 +107,6 @@ def renderable(
                 if p(o):
                     d = t(o)
                     break
-
-            for p, e in set_pairs:
-                if not (p(d) and e):
-                    continue
-                for k, v in e:
-                    if callable(v):
-                        v = v(d)
-                    d[k] = v
-
             return d
 
         def _dict_factory(o):

@@ -26,9 +26,7 @@ class Modflow{{ name.title.title() }}(MFPackage):
         exgtype="{{ name.r[:3].upper() }}6-{{ name.r[3:].upper() }}6",
         exgmnamea=None,
         exgmnameb=None,
-        {%- for n, var in vars.items() if n not in init_skip %}
-        {{ var.name }}{%- if var.default is defined %}={{ var.default }}{%- endif -%},
-        {%- endfor %}
+        {{ macros.init_vars(vars, skip=name|skip) }}
         filename=None,
         pname=None,
         **kwargs,
@@ -69,7 +67,7 @@ class Modflow{{ name.title.title() }}(MFPackage):
         """
 
         super().__init__(
-            {{ parent }},
+            {{ name|parent }},
             "{{ name.r }}",
             filename,
             pname,
