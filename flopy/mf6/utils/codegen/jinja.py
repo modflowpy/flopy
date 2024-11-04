@@ -2,6 +2,7 @@ from enum import Enum
 from keyword import kwlist
 from pprint import pformat
 from typing import Any, List, Optional
+
 from jinja2 import pass_context
 
 
@@ -14,7 +15,6 @@ def try_get_enum_value(v: Any) -> Any:
 
 
 class Filters:
-
     @pass_context
     def cls_attrs(ctx, ctx_name) -> List[str]:
         def _attr(var: dict) -> Optional[str]:
@@ -58,7 +58,11 @@ class Filters:
                         return f"{var_ref['key']} = ListTemplateGenerator(({', '.join(args)}))"
 
                 def _args():
-                    args = [f"'{ctx_name.r}'", f"'{var_block}'", f"'{var_name}'"]
+                    args = [
+                        f"'{ctx_name.r}'",
+                        f"'{var_block}'",
+                        f"'{var_name}'",
+                    ]
                     if ctx_name.l is not None and ctx_name.l not in [
                         "sim",
                         "sln",
@@ -239,7 +243,11 @@ class Filters:
                                 f"self.{'_' if ref else ''}{name} = self.build_mfdata('{_name}', {name if var.get('init_param', True) else 'None'})"
                             )
 
-                    if ref and ref["key"] not in refs and ctx["name"].r != "nam":
+                    if (
+                        ref
+                        and ref["key"] not in refs
+                        and ctx["name"].r != "nam"
+                    ):
                         refs[ref["key"]] = ref
                         stmts.append(
                             f"self._{ref['key']} = self.build_mfdata('{ref['key']}', None)"
@@ -259,7 +267,11 @@ class Filters:
             return ref["parent"]
         if ctx_name == ("sim", "nam"):
             return None
-        elif ctx_name.l is None or ctx_name.r is None or ctx_name.l in ["sim", "exg", "sln"]:
+        elif (
+            ctx_name.l is None
+            or ctx_name.r is None
+            or ctx_name.l in ["sim", "exg", "sln"]
+        ):
             return "simulation"
         elif ref:
             if ctx_name.l == "utl" and ctx_name.r == "hpc":
