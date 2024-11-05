@@ -85,69 +85,6 @@ class Ref(TypedDict):
     parent: str
     description: Optional[str]
 
-    @classmethod
-    def from_dfn(cls, dfn: "Dfn") -> Optional["Ref"]:
-        """
-        Try to load a reference from the definition.
-        Returns `None` if the definition cannot be
-        referenced by other contexts.
-        """
-
-        if not dfn.meta or "dfn" not in dfn.meta:
-            return None
-
-        _, meta = dfn.meta["dfn"]
-
-        lines = {
-            "subpkg": next(
-                iter(
-                    m
-                    for m in meta
-                    if isinstance(m, str) and m.startswith("subpac")
-                ),
-                None,
-            ),
-            "parent": next(
-                iter(
-                    m
-                    for m in meta
-                    if isinstance(m, str) and m.startswith("parent")
-                ),
-                None,
-            ),
-        }
-
-        def _subpkg():
-            line = lines["subpkg"]
-            _, key, abbr, param, val = line.split()
-            matches = [v for v in dfn.values() if v["name"] == val]
-            if not any(matches):
-                descr = None
-            else:
-                if len(matches) > 1:
-                    warn(f"Multiple matches for referenced variable {val}")
-                match = matches[0]
-                descr = match["description"]
-
-            return {
-                "key": key,
-                "val": val,
-                "abbr": abbr,
-                "param": param,
-                "description": descr,
-            }
-
-        def _parent():
-            line = lines["parent"]
-            split = line.split()
-            return split[1]
-
-        return (
-            cls(**_subpkg(), parent=_parent())
-            if all(v for v in lines.values())
-            else None
-        )
-
 
 class Dfn(UserDict):
     """
@@ -457,12 +394,65 @@ class Dfn(UserDict):
                 default=default,
             )
 
+        vars_ = {
+            var["name"]: _map(var)
+            for var in flat.values(multi=True)
+            if not var.get("in_record", False)
+        }
+
+        def _subpkg() -> Optional["Ref"]:
+            lines = {
+                "subpkg": next(
+                    iter(
+                        m
+                        for m in meta
+                        if isinstance(m, str) and m.startswith("subpac")
+                    ),
+                    None,
+                ),
+                "parent": next(
+                    iter(
+                        m
+                        for m in meta
+                        if isinstance(m, str) and m.startswith("parent")
+                    ),
+                    None,
+                ),
+            }
+
+            def __subpkg():
+                line = lines["subpkg"]
+                _, key, abbr, param, val = line.split()
+                matches = [v for v in vars_.values() if v["name"] == val]
+                if not any(matches):
+                    descr = None
+                else:
+                    if len(matches) > 1:
+                        warn(f"Multiple matches for referenced variable {val}")
+                    match = matches[0]
+                    descr = match["description"]
+
+                return {
+                    "key": key,
+                    "val": val,
+                    "abbr": abbr,
+                    "param": param,
+                    "description": descr,
+                }
+
+            def _parent():
+                line = lines["parent"]
+                split = line.split()
+                return split[1]
+
+            return (
+                Ref(**__subpkg(), parent=_parent())
+                if all(v for v in lines.values())
+                else None
+            )
+
         return cls(
-            {
-                var["name"]: _map(var)
-                for var in flat.values(multi=True)
-                if not var.get("in_record", False)
-            },
+            vars_,
             name,
             {
                 "dfn": (
@@ -473,6 +463,7 @@ class Dfn(UserDict):
                     meta,
                 ),
                 "fkeys": fkeys,
+                "subpkg": _subpkg(),
             },
         )
 
@@ -518,7 +509,7 @@ class Dfn(UserDict):
             name = Dfn.Name(*path.stem.split("-"))
             with open(path) as f:
                 dfn = Dfn.load(f, name=name, common=common)
-                ref = Ref.from_dfn(dfn)
+                ref = dfn.meta.get("subpkg", None)
                 if ref:
                     refs[ref["key"]] = ref
 

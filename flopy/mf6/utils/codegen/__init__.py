@@ -30,7 +30,7 @@ def _get_template_env():
     env.filters["maybe_file"] = Filters.Var.maybe_file
     env.filters["type"] = Filters.Var.type
 
-    env.filters["nokw"] = Filters.nokw
+    env.filters["safe_str"] = Filters.safe_str
     env.filters["escape_trailing_underscore"] = (
         Filters.escape_trailing_underscore
     )

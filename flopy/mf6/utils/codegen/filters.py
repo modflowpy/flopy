@@ -69,9 +69,9 @@ class Filters:
 
         @pass_context
         def parent(ctx, ctx_name) -> str:
-            ref = ctx["meta"].get("ref", None)
-            if ref:
-                return ref["parent"]
+            subpkg = ctx["meta"].get("subpkg", None)
+            if subpkg:
+                return subpkg["parent"]
             if ctx_name == ("sim", "nam"):
                 return None
             elif (
@@ -80,7 +80,7 @@ class Filters:
                 or ctx_name.l in ["sim", "exg", "sln"]
             ):
                 return "simulation"
-            elif ref:
+            elif subpkg:
                 if ctx_name.l == "utl" and ctx_name.r == "hpc":
                     return "simulation"
                 return "package"
@@ -420,7 +420,7 @@ class Filters:
 
             return list(filter(None, _statements()))
 
-    def nokw(v: str) -> str:
+    def safe_str(v: str) -> str:
         return (f"{v}_" if v in kwlist else v).replace("-", "_")
 
     def escape_trailing_underscore(v: str) -> str:

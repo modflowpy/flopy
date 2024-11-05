@@ -90,9 +90,7 @@ class Context:
         These are structured representations of input context classes.
         Each input definition yields one or more input contexts.
         """
-        meta = dfn.meta.copy()
-        ref = Ref.from_dfn(dfn)
-        if ref:
-            meta["ref"] = ref
         for name in Context.Name.from_dfn(dfn):
-            yield Context(name=name, vars=dfn.data, meta=meta)
+            yield Context(
+                name=name, vars=dfn.data.copy(), meta=dfn.meta.copy()
+            )
