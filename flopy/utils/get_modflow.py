@@ -35,7 +35,15 @@ renamed_prefix = {
     "modflow6-nightly-build": "modflow6_nightly",
 }
 available_repos = list(renamed_prefix.keys())
-available_ostags = ["linux", "mac", "macarm", "win32", "win64", "win64par"]
+available_ostags = [
+    "linux",
+    "mac",
+    "macarm",
+    "win32",
+    "win64",
+    "win64ext",
+    "win64par",
+]
 max_http_tries = 3
 
 # Check if this is running from flopy
@@ -68,7 +76,7 @@ def get_ostag() -> str:
 
 
 def get_suffixes(ostag) -> Tuple[str, str]:
-    if ostag in ["win32", "win64", "win64par"]:
+    if ostag in ["win32", "win64", "win64ext", "win64par"]:
         return ".exe", ".dll"
     elif ostag == "linux":
         return "", ".so"
