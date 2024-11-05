@@ -861,11 +861,13 @@ def test_unstructured_complex_disu(function_tmpdir):
     if np.max(diff) > 1e-07:
         raise AssertionError("Reconstructed head results outside of tolerance")
 
+
 @requires_exe("mf6")
 @requires_pkg("pymetis")
 @requires_pkg("scipy")
 def test_multi_model(function_tmpdir):
     from scipy.spatial import KDTree
+
     def string2geom(geostring, conversion=None):
         if conversion is None:
             multiplier = 1.0
@@ -894,8 +896,8 @@ def test_multi_model(function_tmpdir):
 
     Lx = 180000
     Ly = 100000
-    dx = 2500.
-    dy = 2500.
+    dx = 2500.0
+    dy = 2500.0
     nrow = int(Ly / dy) + 1
     ncol = int(Lx / dx) + 1
     boundary = string2geom(geometry["boundary"])
@@ -920,7 +922,12 @@ def test_multi_model(function_tmpdir):
     )
 
     ixs = flopy.utils.GridIntersect(modelgrid, method="vertex", rtree=True)
-    result = ixs.intersect([boundary,], shapetype="Polygon")
+    result = ixs.intersect(
+        [
+            boundary,
+        ],
+        shapetype="Polygon",
+    )
     r, c = list(zip(*list(result.cellids)))
     idomain = np.zeros(modelgrid.shape, dtype=int)
     idomain[:, r, c] = 1
@@ -930,7 +937,7 @@ def test_multi_model(function_tmpdir):
         modelgrid,
         band=fine_topo.bands[0],
         method="linear",
-        extrapolate_edges=True
+        extrapolate_edges=True,
     )
     modelgrid._top = top
 
@@ -948,8 +955,8 @@ def test_multi_model(function_tmpdir):
     modelgrid._idomain = idomain
 
     nlay = 5
-    dv0 = 5.
-    hyd_cond = 10.
+    dv0 = 5.0
+    hyd_cond = 10.0
     hk = np.full((nlay, nrow, ncol), hyd_cond)
     hk[1, :, 25:] = hyd_cond * 0.001
     hk[3, :, 10:] = hyd_cond * 0.00005
@@ -972,7 +979,9 @@ def test_multi_model(function_tmpdir):
         for c in range(ncol):
             if idomain[0, r, c] == 1:
                 conductance = leakance * area
-                discharge_data.append((0, r, c, top[r, c] - 0.5, conductance, 1.0))
+                discharge_data.append(
+                    (0, r, c, top[r, c] - 0.5, conductance, 1.0)
+                )
 
     topc = np.zeros((nlay, nrow, ncol), dtype=float)
     botm = np.zeros((nlay, nrow, ncol), dtype=float)
@@ -984,7 +993,12 @@ def test_multi_model(function_tmpdir):
         botm[idx] = topc[idx] - dv0
 
     strt = np.tile([modelgrid.top], (nlay, 1, 1))
-    idomain = np.tile([modelgrid.idomain[0],], (5, 1, 1))
+    idomain = np.tile(
+        [
+            modelgrid.idomain[0],
+        ],
+        (5, 1, 1),
+    )
 
     # setup recharge
     dist_from_riv = 10000.0
@@ -1133,7 +1147,7 @@ def test_multi_model(function_tmpdir):
         filename=f"{gwfname}_gwd.drn",
     )
 
-    wel_spd = {0: [[4, 20, 30, 0.], [2, 20, 60, 0.], [2, 30, 50, 0.]]}
+    wel_spd = {0: [[4, 20, 30, 0.0], [2, 20, 60, 0.0], [2, 30, 50, 0.0]]}
 
     wel = flopy.mf6.ModflowGwfwel(
         gwf,
@@ -1184,12 +1198,14 @@ def test_multi_model(function_tmpdir):
         )
 
         # initial conditions
-        ic = flopy.mf6.ModflowGwtic(gwt, strt=conc_start,
-                                    filename=f"{gwtname}.ic")
+        ic = flopy.mf6.ModflowGwtic(
+            gwt, strt=conc_start, filename=f"{gwtname}.ic"
+        )
 
         # advection
-        adv = flopy.mf6.ModflowGwtadv(gwt, scheme="tvd",
-                                      filename=f"{gwtname}.adv")
+        adv = flopy.mf6.ModflowGwtadv(
+            gwt, scheme="tvd", filename=f"{gwtname}.adv"
+        )
 
         # dispersion
         dsp = flopy.mf6.ModflowGwtdsp(
@@ -1203,8 +1219,9 @@ def test_multi_model(function_tmpdir):
         )
 
         # mass storage and transfer
-        mst = flopy.mf6.ModflowGwtmst(gwt, porosity=porosity,
-                                      filename=f"{gwtname}.mst")
+        mst = flopy.mf6.ModflowGwtmst(
+            gwt, porosity=porosity, filename=f"{gwtname}.mst"
+        )
 
         # sources
         sourcerecarray = [
@@ -1294,12 +1311,15 @@ def test_multi_model(function_tmpdir):
 
         X_split = mfs.reconstruct_array(array_dict)
 
-        err_msg = f"Outputs from {name} and split model " \
-                  f"are not within tolerance"
+        err_msg = (
+            f"Outputs from {name} and split model " f"are not within tolerance"
+        )
         X_split[idomain == 0] = np.nan
         X[idomain == 0] = np.nan
         if name == "gwf":
-            np.testing.assert_allclose(X, X_split, equal_nan=True, err_msg=err_msg)
+            np.testing.assert_allclose(
+                X, X_split, equal_nan=True, err_msg=err_msg
+            )
         else:
             diff = np.abs(X_split - X)
             if np.nansum(diff) > 9:
