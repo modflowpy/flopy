@@ -384,6 +384,12 @@ def run_main(
     if ostag is None:
         ostag = get_ostag()
 
+    if ostag == "win64par":
+        warnings.warn(
+            "The parallel build is deprecated and will no longer "
+            "be published: 'win64ext' replaces 'win64par'."
+        )
+
     exe_suffix, lib_suffix = get_suffixes(ostag)
 
     # select bindir if path not provided
