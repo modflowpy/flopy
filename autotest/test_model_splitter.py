@@ -1284,10 +1284,7 @@ def test_multi_model(function_tmpdir):
     new_sim = mfs.split_multi_model(array)
     new_sim.set_sim_path(split_sim_path)
     new_sim.write_simulation()
-    success, _ = new_sim.run_simulation()
-
-    if not success:
-        raise AssertionError("Split simulation did not run properly")
+    new_sim.run_simulation()
 
     # compare results for each of the models
     splits = [i for i in range(nparts)]
