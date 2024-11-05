@@ -4,7 +4,7 @@ from autotest.conftest import get_project_root_path
 from flopy.mf6.utils.codegen import make_all, make_targets
 from flopy.mf6.utils.codegen.context import Context
 from flopy.mf6.utils.codegen.dfn import Dfn
-from flopy.mf6.utils.codegen.jinja import Filters
+from flopy.mf6.utils.codegen.filters import Filters
 
 PROJ_ROOT = get_project_root_path()
 MF6_PATH = PROJ_ROOT / "flopy" / "mf6"

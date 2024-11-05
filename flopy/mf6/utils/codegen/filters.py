@@ -113,6 +113,36 @@ class Filters:
                 return []
 
     class Var:
+        def maybe_file(var: dict) -> dict:
+            name = var["name"]
+            tagged = var.get("tagged", False)
+            fields = var.get("children", None)
+
+            if not fields:
+                return var
+
+            # if tagged, remove the leading keyword
+            elif tagged:
+                keyword = next(iter(fields), None)
+                if keyword:
+                    fields.pop(keyword)
+
+            # if the record represents a file...
+            elif "file" in name:
+                # remove filein/fileout
+                field_names = list(fields.keys())
+                for term in ["filein", "fileout"]:
+                    if term in field_names:
+                        fields.pop(term)
+
+                # remove leading keyword
+                keyword = next(iter(fields), None)
+                if keyword:
+                    fields.pop(keyword)
+
+            var["children"] = fields
+            return var
+
         def type(var: dict) -> str:
             _type = var["type"]
             shape = var.get("shape", None)
@@ -396,7 +426,7 @@ class Filters:
     def nokw(v: str) -> str:
         return (f"{v}_" if v in kwlist else v).replace("-", "_")
 
-    def escape_trailing(v: str) -> str:
+    def escape_trailing_underscore(v: str) -> str:
         return f"{v[:-1]}\\\\_" if v.endswith("_") else v
 
     def value(v: Any) -> str:

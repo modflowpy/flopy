@@ -1,12 +1,16 @@
 {% macro init_vars(vars, alias=false, indent=0, skip=none) %}
-{%- for n, v in vars.items() if n not in skip %}
-{{ ""|indent(indent, first=true) }}{% if alias %}{{ n|nokw }}{% else %}{{ v.name|nokw }}{% endif %}{%- if v.default is defined %}={{ v.default|value }}{%- endif -%},
+{%- for name, var in vars.items() if name not in skip %}
+{% set v = var|maybe_file %}
+{% set n = (name if alias else v.name)|nokw %}
+{{ ""|indent(indent, first=true) }}{{ n }}{%- if v.default is defined %}={{ v.default|value }}{%- endif -%},
 {%- endfor %}
 {% endmacro %}
 
 {% macro vars_docs(vars, indent=0) %}
-{%- for v in vars.values() recursive %}
-{{ ""|indent(indent, first=true) }}{% if loop.depth > 1 %}* {% endif %}{{ v.name|nokw|escape_trailing }} : {{ v|type }}
+{%- for var in vars.values() recursive %}
+{% set v = var|maybe_file %}
+{% set n = v.name|nokw|escape_trailing_underscore %}
+{{ ""|indent(indent, first=true) }}{% if loop.depth > 1 %}* {% endif %}{{ n }} : {{ v|type }}
 {%- if v.description is defined and v.description is not none %}
 {{ v.description|wordwrap|indent(indent + (loop.depth * 4), first=true) }}
 {%- endif %}

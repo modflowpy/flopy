@@ -1,6 +1,7 @@
 import argparse
-from collections.abc import Mapping
 from pathlib import Path
+
+from boltons.iterutils import remap
 
 from flopy.utils import import_optional_dependency
 
@@ -10,11 +11,7 @@ _TOML_PATH = _MF6_PATH / "data" / "toml"
 
 
 def _drop_none(d: dict) -> dict:
-    return (
-        {k: _drop_none(v) for k, v in d.items() if v is not None}
-        if isinstance(d, Mapping)
-        else d
-    )
+    return remap(d, lambda p, k, v: isinstance(v, bool) or bool(v))
 
 
 if __name__ == "__main__":

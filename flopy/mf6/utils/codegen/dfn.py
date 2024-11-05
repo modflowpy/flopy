@@ -1,7 +1,5 @@
 from ast import literal_eval
 from collections import UserDict
-from enum import Enum
-from keyword import kwlist
 from os import PathLike
 from typing import (
     Any,
@@ -53,13 +51,12 @@ Dfns = Dict[str, "Dfn"]
 
 
 class Var(TypedDict):
-    """MODFLOW 6 input variable specification."""
+    """An input variable specification."""
 
     name: str
-    type: Optional[str] = None
+    type: str
     shape: Optional[Any] = None
     block: Optional[str] = None
-    fkey: Optional["Ref"] = None
     default: Optional[Any] = None
     children: Optional[Vars] = None
     description: Optional[str] = None
@@ -184,7 +181,7 @@ class Dfn(UserDict):
         name: Optional[Name] = None,
         meta: Optional[Dict[str, Any]] = None,
     ):
-        self.data = OMD(data)
+        self.data = data or dict()
         self.name = name
         self.meta = meta
 
@@ -327,7 +324,6 @@ class Dfn(UserDict):
                 _try_literal_eval(default) if _type != "string" else default
             )
             description = spec.get("description", "")
-            tagged = spec.get("tagged", False)
             children = dict()
 
             # if var is a foreign key, register it
@@ -345,35 +341,15 @@ class Dfn(UserDict):
                 }
 
             def _fields() -> Vars:
-                """Load a record's children (fields)."""
+                """Load a record's scalar children (fields)."""
                 names = _type.split()[1:]
-                fields = {
+                return {
                     v["name"]: _map(v)
                     for v in flat.values(multi=True)
                     if v["name"] in names
-                    and not v["type"].startswith("record")
                     and v.get("in_record", False)
+                    and not v["type"].startswith("record")
                 }
-
-                # if the record represents a file...
-                if "file" in _name:
-                    # remove filein/fileout
-                    for term in ["filein", "fileout"]:
-                        if term in names:
-                            fields.pop(term)
-
-                    # remove leading keyword
-                    keyword = next(iter(fields), None)
-                    if keyword:
-                        fields.pop(keyword)
-
-                # if tagged, remove the leading keyword
-                elif tagged:
-                    keyword = next(iter(fields), None)
-                    if keyword:
-                        fields.pop(keyword)
-
-                return fields
 
             # list, child is the item type
             if _type.startswith("recarray"):

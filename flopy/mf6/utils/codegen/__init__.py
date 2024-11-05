@@ -15,7 +15,7 @@ def _get_template_env():
     loader = jinja.PackageLoader("flopy", "mf6/utils/codegen/templates/")
     env = jinja.Environment(loader=loader)
 
-    from flopy.mf6.utils.codegen.jinja import Filters
+    from flopy.mf6.utils.codegen.filters import Filters
 
     env.filters["base"] = Filters.Cls.base
     env.filters["title"] = Filters.Cls.title
@@ -27,10 +27,13 @@ def _get_template_env():
     env.filters["attrs"] = Filters.Vars.attrs
     env.filters["init"] = Filters.Vars.init
 
+    env.filters["maybe_file"] = Filters.Var.maybe_file
     env.filters["type"] = Filters.Var.type
 
     env.filters["nokw"] = Filters.nokw
-    env.filters["escape_trailing"] = Filters.escape_trailing
+    env.filters["escape_trailing_underscore"] = (
+        Filters.escape_trailing_underscore
+    )
     env.filters["value"] = Filters.value
 
     return env
@@ -65,7 +68,7 @@ def make_targets(dfn, outdir: PathLike, verbose: bool = False):
     outdir = Path(outdir).expanduser()
 
     from flopy.mf6.utils.codegen.context import Context
-    from flopy.mf6.utils.codegen.jinja import Filters
+    from flopy.mf6.utils.codegen.filters import Filters
 
     def _get_template_name(ctx_name) -> str:
         """The template file to use."""
