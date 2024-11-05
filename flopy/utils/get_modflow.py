@@ -76,7 +76,7 @@ def get_ostag() -> str:
 
 
 def get_suffixes(ostag) -> Tuple[str, str]:
-    if ostag in ["win32", "win64", "win64ext", "win64par"]:
+    if ostag.startswith("win"):
         return ".exe", ".dll"
     elif ostag == "linux":
         return "", ".so"
