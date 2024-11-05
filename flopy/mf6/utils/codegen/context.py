@@ -36,24 +36,15 @@ class Context:
     class Name(NamedTuple):
         """
         Uniquely identifies an input context. The name
-        consists of a left term and optional right term.
+        consists of a left (component) term and optional
+        right (subcomponent) term.
 
         Notes
         -----
         A single definition may be associated with one or more
         contexts. For instance, a model DFN file will produce
-        both a namefile package class and a model class.
-
-        From the context name several other things are derived:
-
-        - a description of the context
-        - the input context class' name
-        - the template the context will populate
-        - the base class the context inherits from
-        - the name of the source file the context is in
-        - the name of the parent parameter in the context
-        class' `__init__` method, if it can have a parent
-
+        both a namefile package class and a model class. These
+        share a single DFN name but have different context names.
         """
 
         l: str
@@ -63,15 +54,7 @@ class Context:
         def from_dfn(dfn: Dfn) -> List["Context.Name"]:
             """
             Returns a list of context names this definition produces.
-
-            Notes
-            -----
             An input definition may produce one or more input contexts.
-
-            Model definition files produce both a model class context and
-            a model namefile package context. The same goes for simulation
-            definition files. All other definition files produce a single
-            context.
             """
             if dfn.name.r == "nam":
                 if dfn.name.l == "sim":
