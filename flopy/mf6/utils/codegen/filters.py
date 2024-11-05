@@ -99,7 +99,7 @@ class Filters:
                 ]
             elif base == "MFModel":
                 skip = ["packages", "export_netcdf", "nc_filerecord"]
-                refs = ctx.get("meta", dict()).get("refs", dict())
+                refs = ctx.get("meta", dict()).get("fkeys", dict())
                 if any(refs) and ctx["name"] != (None, "nam"):
                     for k in refs.keys():
                         if ctx["vars"].get(k, None):
@@ -175,7 +175,7 @@ class Filters:
                 var_type = var["type"]
                 var_shape = var.get("shape", None)
                 var_block = var.get("block", None)
-                var_ref = var.get("meta", dict()).get("ref", None)
+                var_ref = var.get("fkey", None)
 
                 if (
                     (var_type in _SCALARS and not var_shape)
@@ -307,7 +307,6 @@ class Filters:
                     stmts = []
                     refs = {}
                     for var in vars.values():
-                        ref = var.get("meta", dict()).get("ref", None)
                         name = var["name"]
                         if name in kwlist:
                             name = f"{name}_"
@@ -319,10 +318,12 @@ class Filters:
                             stmts.append(
                                 f"self.{name} = self.name_file.{name}"
                             )
-                        if ref and ref["key"] not in refs:
-                            refs[ref["key"]] = ref
+
+                        fkey = var.get("fkey", None)
+                        if fkey and fkey["key"] not in refs:
+                            refs[fkey["key"]] = fkey
                             stmts.append(
-                                f"self.{ref['param']} = self._create_package('{ref['abbr']}', {ref['param']})"
+                                f"self.{fkey['param']} = self._create_package('{fkey['abbr']}', {fkey['param']})"
                             )
                 elif base == "MFModel":
 
@@ -336,7 +337,6 @@ class Filters:
                     stmts = []
                     refs = {}
                     for var in vars.values():
-                        ref = var.get("meta", dict()).get("ref", None)
                         name = var["name"]
                         if name in kwlist:
                             name = f"{name}_"
@@ -348,23 +348,22 @@ class Filters:
                             stmts.append(
                                 f"self.{name} = self.name_file.{name}"
                             )
-                        if ref and ref["key"] not in refs:
-                            refs[ref["key"]] = ref
+
+                        fkey = var.get("fkey", None)
+                        if fkey and fkey["key"] not in refs:
+                            refs[fkey["key"]] = fkey
                             stmts.append(
-                                f"self.{ref['param']} = self._create_package('{ref['abbr']}', {ref['param']})"
+                                f"self.{fkey['param']} = self._create_package('{fkey['abbr']}', {fkey['param']})"
                             )
                 elif base == "MFPackage":
 
                     def _should_build(var: dict) -> bool:
-                        if var.get("meta", dict()).get(
-                            "ref", None
-                        ) and ctx_name != (
+                        if var.get("fkey", None) and ctx_name != (
                             None,
                             "nam",
                         ):
                             return False
-                        name = var["name"]
-                        if name in [
+                        return var["name"] not in [
                             "simulation",
                             "model",
                             "package",
@@ -380,22 +379,20 @@ class Filters:
                             "interpolation_method_single",
                             "sfac",
                             "output",
-                        ]:
-                            return False
-                        return True
+                        ]
 
                     stmts = []
                     refs = {}
                     for var in vars.values():
                         name = var["name"]
-                        ref = var.get("meta", dict()).get("ref", None)
                         if name in kwlist:
                             name = f"{name}_"
 
+                        fkey = var.get("fkey", None)
                         if _should_build(var):
-                            if ref and ctx["name"] == (None, "nam"):
+                            if fkey and ctx["name"] == (None, "nam"):
                                 stmts.append(
-                                    f"self.{'_' if ref else ''}{ref['key']} = self.build_mfdata('{ref['key']}', None)"
+                                    f"self.{'_' if fkey else ''}{fkey['key']} = self.build_mfdata('{fkey['key']}', None)"
                                 )
                             else:
                                 _name = (
@@ -403,20 +400,20 @@ class Filters:
                                 )
                                 name = name.replace("-", "_")
                                 stmts.append(
-                                    f"self.{'_' if ref else ''}{name} = self.build_mfdata('{_name}', {name})"
+                                    f"self.{'_' if fkey else ''}{name} = self.build_mfdata('{_name}', {name})"
                                 )
 
                         if (
-                            ref
-                            and ref["key"] not in refs
+                            fkey
+                            and fkey["key"] not in refs
                             and ctx["name"].r != "nam"
                         ):
-                            refs[ref["key"]] = ref
+                            refs[fkey["key"]] = fkey
                             stmts.append(
-                                f"self._{ref['key']} = self.build_mfdata('{ref['key']}', None)"
+                                f"self._{fkey['key']} = self.build_mfdata('{fkey['key']}', None)"
                             )
                             stmts.append(
-                                f"self._{ref['abbr']}_package = self.build_child_package('{ref['abbr']}', {ref['val']}, '{ref['param']}', self._{ref['key']})"
+                                f"self._{fkey['abbr']}_package = self.build_child_package('{fkey['abbr']}', {fkey['val']}, '{fkey['param']}', self._{fkey['key']})"
                             )
 
                 return stmts
