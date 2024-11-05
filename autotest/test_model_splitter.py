@@ -1233,7 +1233,7 @@ def test_multi_model(function_tmpdir):
         inner_maximum=100,
         outer_dvclose=1e-4,
         inner_dvclose=1e-5,
-        filename=f"gwt.ims",
+        filename="gwt.ims",
     )
 
     gwt_mnt = build_gwt_model(sim, "gwt_mnt", "rch_mountain")
@@ -1271,7 +1271,6 @@ def test_multi_model(function_tmpdir):
 
     if not success:
         raise AssertionError("Split simulation did not run properly")
-
 
     # compare results for each of the models
     splits = [i for i in range(nparts)]
