@@ -1,14 +1,32 @@
 Introduction
 -----------------------------------------------
 
-This file provides an overview of how FloPy for MODFLOW 6 (FPMF6) works under the hood and is intended for anyone who wants to add a new package, new model type, or new features to this library.  FloPy library files that support MODFLOW 6 can be found in the flopy/mf6 folder and sub-folders. 
+This file provides an overview of how FloPy's MODFLOW 6 module `flopy.mf6` works under the hood. It is intended for anyone who wants to add a new package, new model, or new features to this library.
 
-Package Meta-Data and Package Files
+Code generation
 -----------------------------------------------
 
-FPMF6 uses meta-data files located in flopy/mf6/data/dfn to define the model and package types supported by MODFLOW 6.  When additional model and package types are added to MODFLOW 6, additional meta-data files can be added to this folder and flopy/mf6/utils/createpackages.py can be run to add new packages to the FloPy library.  createpackages.py uses flopy/mf6/data/mfstructure.py to read meta-data files (*.dfn) and use that meta-data to create the package files found in flopy/mf6/modflow (do not directly modify any of the files in this folder, they are all automatically generated).  The automatically generated package files contain an interface for accessing package data and data documentation generated from the meta-data files.  Additionally, meta-data describing package data types and shapes is stored in the dfn attribute.  flopy/mf6/data/mfstructure.py can load structure information using the dfn attribute (instead of loading it from the meta-data files).  This allows for flopy to be installed without the dfn files.
+MODFLOW 6 describes its input specification with definition files. These are currently a custom text-based format. Definition files have suffix `.dfn` by convention.
 
-All meta-data can be accessed from the flopy.mf6.data.mfstructure.MFStructure class.  This is a singleton class, meaning only one instance of this class can be created.  The class contains a sim_struct attribute (which is a flopy.mf6.data.mfstructure.MFSimulationStructure object) which contains all of the meta-data for all package files.  Meta-data is stored in a structured format. MFSimulationStructure contains MFModelStructure and MFInputFileStructure objects, which contain the meta-data for each model type and each "simulation-level" package (tdis, ims, ...).  MFModelStructure contains model specific meta-data and a MFInputFileStructure object for each package in that model.  MFInputFileStructure contains package specific meta-data and a MFBlockStructure object for each block contained in the package file.  MFBlockStructure contains block specific meta-data and a MFDataStructure object for each data structure defined in the block, and MFDataStructure contains data structure specific meta-data and a MFDataItemStructure object for each data item contained in the data structure.  Data structures define the structure of data that is naturally grouped together, for example, the data in a numpy recarray.  Data item structures define the structure of specific pieces of data, for example, a single column of a numpy recarray.  The meta-data defined in these classes provides all the information FloPy needs to read and write MODFLOW 6 package and name files, create the Flopy interface, and check the data for various constraints.
+Definition files describe components (e.g. simulations, models, packages) supported by MODFLOW 6, and are used to generate both source code and documentation.
+
+FloPy has two scripts that can be used to generate a MODFLOW 6 compatibility layer:
+
+- `flopy/mf6/utils/createpackages.py`: assumes definition files are in `flopy/mf6/data/dfn`
+- `flopy/mf6/utils/generate_classes.py`: downloads DFNs then runs `createpackages.py`
+
+The latter is typically used with e.g. `python -m flopy.mf6.utils.generate_classes --ref develop`.
+
+Generated files are created in `flopy/mf6/modflow/` and contain interface classes, one file/class per input component. These can be used to initialize and access model/package data as well as the input specification itself.
+
+**Note**: Code generation scripts previously used `flopy/mf6/data/mfstructure.py` to read and represent definition files, and wrote Python by hand. They now use the `flopy.mf6.utils.codegen` module, which uses Jinja2.
+
+**Note**: Each component's input definition is currently reproduced almost verbatim in the `dfn` class attribute. Currently, `flopy/mf6/data/mfstructure.py` is used to introspect the input specification using the `dfn` attribute. This can eventually be removed in favor of direct introspection.
+
+Input specification
+-------------------
+
+The `flopy.mf6.data.mfstructure.MFStructure` class represents an input specification. The class is a singleton, meaning only one instance of this class can be created.  The class contains a sim_struct attribute (which is a flopy.mf6.data.mfstructure.MFSimulationStructure object) which contains all of the meta-data for all package files.  Meta-data is stored in a structured format. MFSimulationStructure contains MFModelStructure and MFInputFileStructure objects, which contain the meta-data for each model type and each "simulation-level" package (tdis, ims, ...).  MFModelStructure contains model specific meta-data and a MFInputFileStructure object for each package in that model.  MFInputFileStructure contains package specific meta-data and a MFBlockStructure object for each block contained in the package file.  MFBlockStructure contains block specific meta-data and a MFDataStructure object for each data structure defined in the block, and MFDataStructure contains data structure specific meta-data and a MFDataItemStructure object for each data item contained in the data structure.  Data structures define the structure of data that is naturally grouped together, for example, the data in a numpy recarray.  Data item structures define the structure of specific pieces of data, for example, a single column of a numpy recarray.  The meta-data defined in these classes provides all the information FloPy needs to read and write MODFLOW 6 package and name files, create the Flopy interface, and check the data for various constraints.
 
 ```mermaid
 classDiagram
@@ -22,11 +40,7 @@ classDiagram
 
 Figure 1: Generic data structure hierarchy.  Connections show composition relationships.
 
-Package and Data Base Classes
------------------------------------------------
-
 The package and data classes are related as shown below in figure 2.  On the top of the figure 2 is the MFPackage class, which is the base class for all packages.  MFPackage contains generic methods for building data objects and reading and writing the package to a file.  MFPackage contains a MFInputFileStructure object that defines how the data is structured in the package file.  MFPackage also contains a dictionary of blocks (MFBlock).  The MFBlock class is a generic class used to represent a block within a package.  MFBlock contains a MFBlockStructure object that defines how the data in the block is structured.  MFBlock also contains a dictionary of data objects (subclasses of MFData) contained in the block and a list of block headers (MFBlockHeader) for that block.  Block headers contain the block's name and optionally data items (eg. iprn).
-
 
 ```mermaid
 classDiagram
