@@ -1,4 +1,5 @@
 {% import 'macros.jinja' as macros %}
+{% set title = (name|title).title() %}
 
 from os import PathLike, curdir
 from typing import Union
@@ -7,13 +8,13 @@ from flopy.mf6.data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenera
 from flopy.mf6.mfmodel import MFModel
 
 
-class Modflow{{ name.title.title() }}(MFModel):
+class Modflow{{ title }}(MFModel):
     """
-    {{ name.description }}
+    {{ name|description }}
 
     Parameters
     ----------
-    {{ macros.vars_docs(vars, start_indent=4) }}
+    {{ macros.vars_docs(vars, indent=4) }}
 
     Methods
     -------
@@ -23,7 +24,7 @@ class Modflow{{ name.title.title() }}(MFModel):
         a class method that loads a model from files
     """
 
-    model_type = "{{ name.title }}"
+    model_type = "{{ title.lower() }}"
 
     def __init__(
         self,
@@ -33,11 +34,11 @@ class Modflow{{ name.title.title() }}(MFModel):
         version="mf6",
         exe_name="mf6",
         model_rel_path=".",
-        {{ macros.init_vars(vars, skip=name|skip) }}
+        {{ macros.init_vars(vars, indent=8, skip=name|skip) }}
         **kwargs,
     ):
         """
-        {{ name.description }}
+        {{ name|description }}
 
         Parameters
         ----------
@@ -60,12 +61,12 @@ class Modflow{{ name.title.title() }}(MFModel):
             Simulation that this model is a part of.  Model is automatically
             added to simulation when it is initialized.
 
-        {{ macros.vars_docs(vars, start_indent=8) }}
+        {{ macros.vars_docs(vars, indent=8) }}
         """
 
         super().__init__(
             simulation,
-            model_type="{{ name.title }}6",
+            model_type="{{ title.lower() }}6",
             modelname=modelname,
             model_nam_file=model_nam_file,
             version=version,
@@ -74,7 +75,7 @@ class Modflow{{ name.title.title() }}(MFModel):
             **kwargs,
         )
 
-        {% for statement in init_body %}
+        {% for statement in vars|init %}
         {{ statement }}
         {%- endfor %}
 
@@ -97,7 +98,7 @@ class Modflow{{ name.title.title() }}(MFModel):
             structure,
             modelname,
             model_nam_file,
-            "{{ name.title }}6",
+            "{{ title.lower() }}6",
             version,
             exe_name,
             strict,

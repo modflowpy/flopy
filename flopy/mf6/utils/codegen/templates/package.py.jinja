@@ -1,4 +1,5 @@
 {% import 'macros.jinja' as macros %}
+{% set title = (name|title).title() %}
 
 from os import PathLike, curdir
 from typing import Union
@@ -7,16 +8,16 @@ from flopy.mf6.data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenera
 from flopy.mf6.mfpackage import MFPackage, MFChildPackages
 
 
-class Modflow{{ name.title.title() }}(MFPackage):
+class Modflow{{ title }}(MFPackage):
     """
-    {{ name.description }}
+    {{ name|description }}
 
     Parameters
     ----------
-    {{ macros.vars_docs(vars, start_indent=4) }}
+    {{ macros.vars_docs(vars, indent=4) }}
     """
 
-    {% for attr in cls_attrs %}
+    {% for attr in vars|attrs %}
     {{ attr }}
     {%- endfor %}
 
@@ -24,13 +25,13 @@ class Modflow{{ name.title.title() }}(MFPackage):
         self,
         {{ name|parent }},
         loading_package=False,
-        {{ macros.init_vars(vars, skip=name|skip) }}
+        {{ macros.init_vars(vars, indent=8, skip=name|skip) }}
         filename=None,
         pname=None,
         **kwargs,
     ):
         """
-        {{ name.description }}
+        {{ name|description }}
 
         Parameters
         ----------
@@ -42,7 +43,7 @@ class Modflow{{ name.title.title() }}(MFPackage):
             Do not set this parameter. It is intended for debugging and internal
             processing purposes only.
 
-        {{ macros.vars_docs(vars, start_indent=8) }}
+        {{ macros.vars_docs(vars, indent=8) }}
 
         filename : str
             File name for this package.
@@ -65,39 +66,39 @@ class Modflow{{ name.title.title() }}(MFPackage):
             **kwargs
         )
 
-        {% for statement in init_body %}
+        {% for statement in vars|init %}
         {{ statement }}
         {%- endfor %}
 
         self._init_complete = True
 
 {% if "ref" in meta and name.r != "hpc" %}
-class {{ name.title.title() }}Packages(MFChildPackages):
+class {{ title }}Packages(MFChildPackages):
     """
-    {{ name.title.title() }}Packages is a container class for the Modflow{{ name.title.title() }} class.
+    {{ title }}Packages is a container class for the Modflow{{ title }} class.
 
     Methods
     -------
     initialize
-        Initializes a new Modflow{{ name.title.title() }} package removing any sibling child
-        packages attached to the same parent package. See Modflow{{ name.title.title() }} init
+        Initializes a new Modflow{{ title }} package removing any sibling child
+        packages attached to the same parent package. See Modflow{{ title }} init
         documentation for definition of parameters.
 
     append_package
-        Adds a new Modflow{{ name.title.title() }} package to the container. See Modflow{{ name.title.title() }}
+        Adds a new Modflow{{ title }} package to the container. See Modflow{{ title }}
         init documentation for definition of parameters.
 
     """
 
-    package_abbr = "{{ name.title.lower() }}packages"
+    package_abbr = "{{ title.lower() }}packages"
 
     def initialize(
         self,
-        {{ macros.init_vars(vars, alias=true, skip=name|skip) }}
+        {{ macros.init_vars(vars, alias=true, indent=8, skip=name|skip) }}
         filename=None,
         pname=None,
     ):
-        new_package = Modflow{{ name.title.title() }}(
+        new_package = Modflow{{ title }}(
             self._cpparent,
             {%- for n, var in vars.items() if n not in name|skip %}
             {{ n }}={{ n }},
@@ -111,11 +112,11 @@ class {{ name.title.title() }}Packages(MFChildPackages):
     {% if name.r != "obs" %}
     def append_package(
         self,
-        {{ macros.init_vars(vars, alias=true, skip=name|skip) }}
+        {{ macros.init_vars(vars, alias=true, indent=8, skip=name|skip) }}
         filename=None,
         pname=None,
     ):
-        new_package = Modflow{{ name.title.title() }}(
+        new_package = Modflow{{ title }}(
             self._cpparent,
             {%- for n, var in vars.items() if n not in name|skip %}
             {{ n }}={{ n }},

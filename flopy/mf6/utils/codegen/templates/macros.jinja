@@ -1,17 +1,17 @@
-{% macro init_vars(vars, alias=false, skip=none) %}
-{%- for n, var in vars.items() if n not in skip %}
-{% if alias %}{{ n }}{% else %}{{ var.name }}{% endif %}{%- if var.default is defined %}={{ var.default }}{%- endif -%},
+{% macro init_vars(vars, alias=false, indent=0, skip=none) %}
+{%- for n, v in vars.items() if n not in skip %}
+{{ ""|indent(indent, first=true) }}{% if alias %}{{ n|nokw }}{% else %}{{ v.name|nokw }}{% endif %}{%- if v.default is defined %}={{ v.default|value }}{%- endif -%},
 {%- endfor %}
 {% endmacro %}
 
-{% macro vars_docs(vars, start_indent=0) %}
+{% macro vars_docs(vars, indent=0) %}
 {%- for v in vars.values() recursive %}
-{{ ""|indent(start_indent, first=true) }}{% if loop.depth > 1 %}* {% endif %}{% if v.name|last == "_" %}{{ v.name.replace("_", "\\\_") }}{% else %}{{ v.name }}{% endif %}{% if v.type is defined %} : {{ v.type }}{% endif %}
+{{ ""|indent(indent, first=true) }}{% if loop.depth > 1 %}* {% endif %}{{ v.name|nokw|escape_trailing }} : {{ v|type }}
 {%- if v.description is defined and v.description is not none %}
-{{ v.description|wordwrap|indent(start_indent + (loop.depth * 4), first=true) }}
+{{ v.description|wordwrap|indent(indent + (loop.depth * 4), first=true) }}
 {%- endif %}
 {%- if v.children is defined and v.children is not none -%}
-{{ loop(v.children.values())|indent(start_indent, first=true) }}
+{{ loop(v.children.values())|indent(indent, first=true) }}
 {%- endif %}
 {% endfor -%}
 {% endmacro %}

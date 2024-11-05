@@ -1,4 +1,5 @@
 {% import 'macros.jinja' as macros %}
+{% set title = (name|title).title() %}
 
 from os import PathLike, curdir
 from typing import Union
@@ -6,13 +7,13 @@ from typing import Union
 from flopy.mf6.data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 from flopy.mf6.mfsimbase import MFSimulationBase
 
-class MF{{ name.title.title() }}(MFSimulationBase):
+class MF{{ title }}(MFSimulationBase):
     """
-    {{ name.description }}
+    {{ name|description }}
 
     Parameters
     ----------
-    {{ macros.vars_docs(vars, start_indent=4) }}
+    {{ macros.vars_docs(vars, indent=4) }}
 
     Methods
     -------
@@ -34,10 +35,10 @@ class MF{{ name.title.title() }}(MFSimulationBase):
         write_headers: bool = True,
         use_pandas: bool = True,
         lazy_io: bool = False,
-        {{ macros.init_vars(vars, skip=name|skip) }}
+        {{ macros.init_vars(vars, indent=8, skip=name|skip) }}
     ):
         """
-        {{ name.description }}
+        {{ name|description }}
 
         Parameters
         ----------
@@ -65,7 +66,7 @@ class MF{{ name.title.title() }}(MFSimulationBase):
         lazy_io
             Whether to use lazy IO
 
-        {{ macros.vars_docs(vars, start_indent=8) }}
+        {{ macros.vars_docs(vars, indent=8) }}
         """
 
         super().__init__(
@@ -79,7 +80,7 @@ class MF{{ name.title.title() }}(MFSimulationBase):
             use_pandas=use_pandas
         )
 
-        {% for statement in init_body %}
+        {% for statement in vars|init %}
         {{ statement }}
         {%- endfor %}
 

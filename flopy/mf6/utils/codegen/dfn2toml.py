@@ -1,4 +1,5 @@
 import argparse
+from collections.abc import Mapping
 from pathlib import Path
 
 from flopy.utils import import_optional_dependency
@@ -6,6 +7,14 @@ from flopy.utils import import_optional_dependency
 _MF6_PATH = Path(__file__).parents[2]
 _DFN_PATH = _MF6_PATH / "data" / "dfn"
 _TOML_PATH = _MF6_PATH / "data" / "toml"
+
+
+def _drop_none(d: dict) -> dict:
+    return (
+        {k: _drop_none(v) for k, v in d.items() if v is not None}
+        if isinstance(d, Mapping)
+        else d
+    )
 
 
 if __name__ == "__main__":
@@ -31,5 +40,5 @@ if __name__ == "__main__":
     outdir = Path(args.outdir)
     outdir.mkdir(exist_ok=True, parents=True)
     for dfn in Dfn.load_all(dfndir).values():
-        with open(Path(outdir) / f"{'-'.join(dfn.name)}.toml", "w") as f:
-            tomlkit.dump(dfn.render(), f)
+        with open(Path(outdir) / f"{dfn.name}.toml", "w") as f:
+            tomlkit.dump(_drop_none(dfn), f)

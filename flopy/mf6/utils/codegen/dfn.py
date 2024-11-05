@@ -16,9 +16,6 @@ from warnings import warn
 
 from boltons.dictutils import OMD
 
-from flopy.mf6.utils.codegen.renderable import renderable
-from flopy.mf6.utils.codegen.utils import try_literal_eval, try_parse_bool
-
 _SCALARS = {
     "keyword",
     "integer",
@@ -27,7 +24,7 @@ _SCALARS = {
 }
 
 
-def try_literal_eval(value: str) -> Any:
+def _try_literal_eval(value: str) -> Any:
     """
     Try to parse a string as a literal. If this fails,
     return the value unaltered.
@@ -38,7 +35,7 @@ def try_literal_eval(value: str) -> Any:
         return value
 
 
-def try_parse_bool(value: Any) -> Any:
+def _try_parse_bool(value: Any) -> Any:
     """
     Try to parse a boolean from a string as represented
     in a DFN file, otherwise return the value unaltered.
@@ -58,22 +55,11 @@ Dfns = Dict[str, "Dfn"]
 class Var(TypedDict):
     """MODFLOW 6 input variable specification."""
 
-    class Kind(Enum):
-        """
-        An input variable's kind. This is an enumeration
-        of the general shapes of data MODFLOW 6 accepts.
-        """
-
-        Array = "array"
-        Scalar = "scalar"
-        Record = "record"
-        Union = "union"
-        List = "list"
-
     name: str
-    kind: Kind
     type: Optional[str] = None
+    shape: Optional[Any] = None
     block: Optional[str] = None
+    fkey: Optional["Ref"] = None
     default: Optional[Any] = None
     children: Optional[Vars] = None
     description: Optional[str] = None
@@ -106,11 +92,6 @@ class Ref(TypedDict):
         Returns `None` if the definition cannot be
         referenced by other contexts.
         """
-
-        # TODO: all this won't be necessary once we
-        # structure DFN format; we can then support
-        # subpackage references directly instead of
-        # by making assumptions about `dfn.meta`
 
         if not dfn.meta or "dfn" not in dfn.meta:
             return None
@@ -168,7 +149,6 @@ class Ref(TypedDict):
         )
 
 
-@renderable
 class Dfn(UserDict):
     """
     MODFLOW 6 input definition. An input definition
@@ -192,6 +172,9 @@ class Dfn(UserDict):
             except:
                 raise ValueError(f"Bad DFN name format: {v}")
 
+        def __str__(self) -> str:
+            return "-".join(self)
+
     name: Optional[Name]
     meta: Optional[Dict[str, Any]]
 
@@ -208,14 +191,10 @@ class Dfn(UserDict):
     @staticmethod
     def _load(f, common: Optional[dict] = None) -> Tuple[OMD, List[str]]:
         """
-        Internal use only. Loads the DFN as an ordered multi-dictionary* and
-        a list of string metadata. This is later parsed into more structured
-        form. We also store the original representation for now so it can be
-        used by the shim.
+        Internal use only. Loads the DFN as a flat multi-dictionary* with a
+        list of string metadata, which are then parsed into structured form.
 
-        *The point of the OMD is to handle duplicate variable names; the only
-        case of this right now is 'auxiliary' which can appear in the options
-        block and again as a keyword in a record in a package data variable.
+        *The point of this is to losslessly handle duplicate variable names.
 
         """
         var = dict()
@@ -304,11 +283,18 @@ class Dfn(UserDict):
         refs: Optional[Dfns] = None,
         **kwargs,
     ) -> "Dfn":
-        """Load an input definition."""
+        """
+        Load an input definition from a DFN file.
 
-        refs = refs or dict()
-        referenced = dict()
+        Notes
+        -----
+        Loads the DFN as a flat multidict with `_load()`
+        then walks composite variables and builds a tree.
+        """
+
         flat, meta = Dfn._load(f, **kwargs)
+        refs = refs or dict()
+        fkeys = dict()
 
         def _map(spec: Dict[str, Any]) -> Var:
             """
@@ -317,16 +303,11 @@ class Dfn(UserDict):
 
             Notes
             -----
-            This involves expanding nested type hierarchies, mapping
-            types to roughly equivalent Python primitives/composites.
-            The composite inflation step will not be necessary after
-            DFNs move to a structured format.
-
             If a variable does not have a `default` attribute, it will
             default to `False` if it is a keyword, otherwise to `None`.
 
-            Any filepath variable whose name functions as a foreign key
-            for another context will be given a pointer to the context.
+            A filepath variable whose name functions as a foreign key
+            for a separate context will be given a reference to it.
 
             """
 
@@ -334,7 +315,7 @@ class Dfn(UserDict):
             # stay a string except default values, which we'll
             # try to parse as arbitrary literals below, and at
             # some point types, once we introduce type hinting
-            spec = {k: try_parse_bool(v) for k, v in spec.items()}
+            spec = {k: _try_parse_bool(v) for k, v in spec.items()}
 
             _name = spec["name"]
             _type = spec.get("type", None)
@@ -342,18 +323,29 @@ class Dfn(UserDict):
             shape = spec.get("shape", None)
             shape = None if shape == "" else shape
             default = spec.get("default", None)
+            default = (
+                _try_literal_eval(default) if _type != "string" else default
+            )
             description = spec.get("description", "")
+            tagged = spec.get("tagged", False)
             children = dict()
 
-            # if var is a foreign key, register the reference
-            ref = refs.get(_name, None)
-            if ref:
-                referenced[_name] = ref
+            # if var is a foreign key, register it
+            fkey = refs.get(_name, None)
+            if fkey:
+                fkeys[_name] = fkey
 
-            def _fields(record_name: str) -> Vars:
-                """Recursively load/convert a record's fields."""
-                record = next(iter(flat.getlist(record_name)), None)
-                assert record
+            def _choices() -> Vars:
+                """Load a union's children (choices)."""
+                names = _type.split()[1:]
+                return {
+                    v["name"]: _map(v)
+                    for v in flat.values(multi=True)
+                    if v["name"] in names and v.get("in_record", False)
+                }
+
+            def _fields() -> Vars:
+                """Load a record's children (fields)."""
                 names = _type.split()[1:]
                 fields = {
                     v["name"]: _map(v)
@@ -375,14 +367,8 @@ class Dfn(UserDict):
                     if keyword:
                         fields.pop(keyword)
 
-                    # set the type
-                    n = list(fields.keys())[0]
-                    path_field = fields[n]
-                    path_field["kind"] = Var.Kind.Scalar
-                    fields[n] = path_field
-
                 # if tagged, remove the leading keyword
-                elif record.get("tagged", False):
+                elif tagged:
                     keyword = next(iter(fields), None)
                     if keyword:
                         fields.pop(keyword)
@@ -391,52 +377,48 @@ class Dfn(UserDict):
 
             # list, child is the item type
             if _type.startswith("recarray"):
-                # make sure columns are defined
                 names = _type.split()[1:]
+                types = [
+                    v["type"]
+                    for v in flat.values(multi=True)
+                    if v["name"] in names and v.get("in_record", False)
+                ]
+
                 n_names = len(names)
                 if n_names < 1:
                     raise ValueError(f"Missing recarray definition: {_type}")
 
-                # list input can have records or unions as rows.
-                # lists which have a consistent record type are
-                # regular, inconsistent record types irregular.
+                # list input can have records or unions as rows. lists
+                # that have a consistent item type can be considered
+                # tabular. lists that can possess multiple item types
+                # (unions) are considered irregular. regular lists can
+                # be defined with a nested record (explicit) or with a
+                # set of fields directly in the recarray (implicit). an
+                # irregular list is always defined with a nested union.
+                is_explicit_composite = n_names == 1 and (
+                    types[0].startswith("record")
+                    or types[0].startswith("keystring")
+                )
+                is_implicit_scalar_record = all(t in _SCALARS for t in types)
 
-                # regular tabular/columnar data (1 record type) can be
-                # defined with a nested record (i.e. explicit) or with
-                # fields directly inside the recarray (implicit). list
-                # data for unions/keystrings necessarily comes nested.
-
-                is_explicit_record = n_names == 1 and flat[names[0]][
-                    "type"
-                ].startswith("record")
-
-                def _is_implicit_scalar_record():
-                    # if the record is defined implicitly and it has
-                    # only scalar fields
-                    types = [
-                        v["type"]
-                        for v in flat.values(multi=True)
-                        if v["name"] in names and v.get("in_record", False)
-                    ]
-                    return all(t in _SCALARS for t in types)
-
-                if is_explicit_record:
-                    record = next(iter(flat.getlist(names[0])), None)
-                    children = {names[0]: _map(record)}
-                    kind = Var.Kind.List
-                elif _is_implicit_scalar_record():
-                    fields = _fields(_name)
+                if is_explicit_composite:
+                    child = next(iter(flat.getlist(names[0])))
+                    children = {names[0]: _map(child)}
+                    _type = "list"
+                elif is_implicit_scalar_record:
+                    fields = _fields()
                     children = {
                         _name: Var(
                             name=_name,
-                            kind=Var.Kind.Record,
+                            type="record",
                             block=block,
                             children=fields,
-                            description=description,
-                            type=f"[{', '.join([f['type'] for f in fields.values()])}]",
+                            description=description.replace(
+                                "is the list of", "is the record of"
+                            ),
                         )
                     }
-                    kind = Var.Kind.List
+                    _type = "list"
                 else:
                     # implicit complex record (i.e. some fields are records or unions)
                     fields = {
@@ -447,75 +429,67 @@ class Dfn(UserDict):
                     first = list(fields.values())[0]
                     single = len(fields) == 1
                     name_ = first["name"] if single else _name
+                    child_type = (
+                        "union"
+                        if single and "keystring" in first["type"]
+                        else "record"
+                    )
                     children = {
                         name_: Var(
                             name=name_,
-                            kind=Var.Kind.Record,
+                            type=child_type,
                             block=block,
                             children=first["children"] if single else fields,
-                            description=description,
-                            type=f"[{', '.join([v['type'] for v in fields.values()])}]",
+                            description=description.replace(
+                                "is the list of", f"is the {child_type} of"
+                            ),
                         )
                     }
-                    kind = Var.Kind.List
-                type_ = (
-                    f"[{', '.join([v['name'] for v in children.values()])}]"
-                )
+                    _type = "list"
 
-            # union (product), children are choices
+            # union (product) type
             elif _type.startswith("keystring"):
-                names = _type.split()[1:]
-                children = {
-                    v["name"]: _map(v)
-                    for v in flat.values(multi=True)
-                    if v["name"] in names and v.get("in_record", False)
-                }
-                kind = Var.Kind.Union
-                type_ = (
-                    f"[{', '.join([v['name'] for v in children.values()])}]"
-                )
+                children = _choices()
+                _type = "union"
 
-            # record (sum), children are fields
+            # record (sum) type
             elif _type.startswith("record"):
-                children = _fields(_name)
-                kind = Var.Kind.Record
-                type_ = (
-                    f"[{', '.join([v['type'] for v in children.values()])}]"
-                )
+                children = _fields()
+                _type = "record"
 
-            # at this point, if it has a shape, it's an array
+            # at this point, if it has a shape, it's an array. check its type
             elif shape is not None:
                 if _type not in _SCALARS:
                     raise TypeError(f"Unsupported array type: {_type}")
-                elif _type == "string":
-                    kind = Var.Kind.List
-                else:
-                    kind = Var.Kind.Array
-                type_ = f"[{_type}]"
 
-            # finally scalars
-            else:
-                kind = Var.Kind.Scalar
-                type_ = _type
-
-            # create var
+            # if the var is a foreign key, swap in the referenced variable
+            ref = refs.get(_name, None)
+            if not ref:
+                return Var(
+                    name=_name,
+                    type=_type,
+                    shape=shape,
+                    block=block,
+                    description=description,
+                    default=default,
+                    children=children,
+                    meta={"ref": fkey},
+                )
             return Var(
-                # if name is a reserved keyword, add a trailing underscore to it.
-                # convert dashes to underscores since it may become a class attr.
-                name=(f"{_name}_" if _name in kwlist else _name).replace(
-                    "-", "_"
-                ),
-                kind=kind,
-                type=type_,
+                name=ref["param" if name == ("sim", "nam") else "val"],
+                type=_type,
+                shape=shape,
                 block=block,
-                description=description,
-                default=(
-                    try_literal_eval(default) if _type != "string" else default
+                description=(
+                    f"* Contains data for the {ref['abbr']} package. Data can be "
+                    f"stored in a dictionary containing data for the {ref['abbr']} "
+                    "package with variable names as keys and package data as "
+                    f"values. Data just for the {ref['val']} variable is also "
+                    f"acceptable. See {ref['abbr']} package documentation for more "
+                    "information"
                 ),
-                children=children,
-                # type is a string for now, when
-                # introducing type hints make it
-                # a proper type...
+                default=None,
+                children=None,
                 meta={"ref": ref},
             )
 
@@ -526,29 +500,25 @@ class Dfn(UserDict):
         # convert input variable specs to
         # structured form, descending into
         # composites recursively as needed
-        flat = {
+        vars_ = {
             var["name"]: _map(var)
             for var in flat.values(multi=True)
             if not var.get("in_record", False)
         }
 
-        # reset the var name. we may have altered
-        # it when converting the variable e.g. to
-        # avoid collision with a reserved keyword
-        flat = {v["name"]: v for v in flat.values()}
-
         return cls(
-            flat,
+            vars_,
             name,
             {
                 "dfn": (_vars, meta),
-                "refs": referenced,
+                "refs": fkeys,
             },
         )
 
     @staticmethod
     def load_all(dfndir: PathLike) -> Dict[str, "Dfn"]:
         """Load all input definitions from the given directory."""
+
         # find definition files
         paths = [
             p

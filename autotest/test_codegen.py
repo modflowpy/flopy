@@ -4,6 +4,7 @@ from autotest.conftest import get_project_root_path
 from flopy.mf6.utils.codegen import make_all, make_targets
 from flopy.mf6.utils.codegen.context import Context
 from flopy.mf6.utils.codegen.dfn import Dfn
+from flopy.mf6.utils.codegen.jinja import Filters
 
 PROJ_ROOT = get_project_root_path()
 MF6_PATH = PROJ_ROOT / "flopy" / "mf6"
@@ -38,7 +39,7 @@ def test_make_targets(dfn_name, function_tmpdir):
 
     make_targets(dfn, function_tmpdir, verbose=True)
     assert all(
-        (function_tmpdir / name.target).is_file()
+        (function_tmpdir / f"mf{Filters.Cls.title(name)}.py").is_file()
         for name in Context.Name.from_dfn(dfn)
     )
 

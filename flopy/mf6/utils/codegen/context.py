@@ -9,11 +9,8 @@ from typing import (
 )
 
 from flopy.mf6.utils.codegen.dfn import Dfn, Ref, Vars
-from flopy.mf6.utils.codegen.renderable import renderable
-from flopy.mf6.utils.codegen.shim import SHIM
 
 
-@renderable(**SHIM)
 @dataclass
 class Context:
     """
@@ -61,70 +58,6 @@ class Context:
 
         l: str
         r: Optional[str]
-
-        @property
-        def title(self) -> str:
-            """
-            The input context's unique title. This is not
-            identical to `f"{l}{r}` in some cases, but it
-            remains unique. The title is substituted into
-            the file name and class name.
-            """
-            l, r = self
-            if self == ("sim", "nam"):
-                return "simulation"
-            if l is None:
-                return r
-            if r is None:
-                return l
-            if l == "sim":
-                return r
-            if l in ["sln", "exg"]:
-                return r
-            return l + r
-
-        @property
-        def base(self) -> str:
-            """Base class from which the input context should inherit."""
-            _, r = self
-            if self == ("sim", "nam"):
-                return "MFSimulationBase"
-            if r is None:
-                return "MFModel"
-            return "MFPackage"
-
-        @property
-        def target(self) -> str:
-            """The source file name to generate."""
-            return f"mf{self.title}.py"
-
-        @property
-        def template(self) -> str:
-            """The template file to use."""
-            if self.base == "MFSimulationBase":
-                return "simulation.py.jinja"
-            elif self.base == "MFModel":
-                return "model.py.jinja"
-            elif self.base == "MFPackage":
-                if self.l == "exg":
-                    return "exchange.py.jinja"
-                return "package.py.jinja"
-
-        @property
-        def description(self) -> str:
-            """A description of the input context."""
-            l, r = self
-            title = self.title.title()
-            if self.base == "MFPackage":
-                return f"Modflow{title} defines a {r.upper()} package."
-            elif self.base == "MFModel":
-                return f"Modflow{title} defines a {l.upper()} model."
-            elif self.base == "MFSimulationBase":
-                return (
-                    "MFSimulation is used to load, build, and/or save a MODFLOW 6 simulation."
-                    " A MFSimulation object must be created before creating any of the MODFLOW"
-                    " 6 model objects."
-                )
 
         @staticmethod
         def from_dfn(dfn: Dfn) -> List["Context.Name"]:

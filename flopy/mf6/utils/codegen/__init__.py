@@ -1,61 +1,93 @@
+from dataclasses import asdict
+from itertools import chain
 from os import PathLike
 from pathlib import Path
 
 from flopy.utils import import_optional_dependency
 
-__all__ = ["make_targets", "make_all"]
+__all__ = ["make_init", "make_targets", "make_all"]
 
 
 def _get_template_env():
-    from flopy.mf6.utils.codegen.jinja import Filters
-
+    # import here instead of module so we don't
+    # expect optional deps at module init time
     jinja = import_optional_dependency("jinja2")
     loader = jinja.PackageLoader("flopy", "mf6/utils/codegen/templates/")
     env = jinja.Environment(loader=loader)
-    env.filters["parent"] = Filters.parent
-    env.filters["prefix"] = Filters.prefix
-    env.filters["skip"] = Filters.skip
+
+    from flopy.mf6.utils.codegen.jinja import Filters
+
+    env.filters["base"] = Filters.Cls.base
+    env.filters["title"] = Filters.Cls.title
+    env.filters["description"] = Filters.Cls.description
+    env.filters["prefix"] = Filters.Cls.prefix
+    env.filters["parent"] = Filters.Cls.parent
+    env.filters["skip"] = Filters.Cls.skip
+
+    env.filters["attrs"] = Filters.Vars.attrs
+    env.filters["init"] = Filters.Vars.init
+
+    env.filters["type"] = Filters.Var.type
+
+    env.filters["nokw"] = Filters.nokw
+    env.filters["escape_trailing"] = Filters.escape_trailing
+    env.filters["value"] = Filters.value
+
     return env
 
 
 def make_init(dfns: dict, outdir: PathLike, verbose: bool = False):
     """Generate a Python __init__.py file for the given input definitions."""
 
-    from flopy.mf6.utils.codegen.context import Context
-
     env = _get_template_env()
     outdir = Path(outdir).expanduser()
-    contexts = [
-        c
-        for cc in [
-            [ctx for ctx in Context.from_dfn(dfn)] for dfn in dfns.values()
-        ]
-        for c in cc
-    ]  # ugly, but it's the fastest way to flatten the list
+
+    from flopy.mf6.utils.codegen.context import Context
+
+    contexts = list(
+        chain(
+            *[[ctx for ctx in Context.from_dfn(dfn)] for dfn in dfns.values()]
+        )
+    )
     target_name = "__init__.py"
-    target = outdir / target_name
+    target_path = outdir / target_name
     template = env.get_template(f"{target_name}.jinja")
-    with open(target, "w") as f:
+    with open(target_path, "w") as f:
         f.write(template.render(contexts=contexts))
         if verbose:
-            print(f"Wrote {target}")
+            print(f"Wrote {target_path}")
 
 
 def make_targets(dfn, outdir: PathLike, verbose: bool = False):
     """Generate Python source file(s) from the given input definition."""
 
-    from flopy.mf6.utils.codegen.context import Context
-
     env = _get_template_env()
     outdir = Path(outdir).expanduser()
+
+    from flopy.mf6.utils.codegen.context import Context
+    from flopy.mf6.utils.codegen.jinja import Filters
+
+    def _get_template_name(ctx_name) -> str:
+        """The template file to use."""
+        base = Filters.Cls.base(ctx_name)
+        if base == "MFSimulationBase":
+            return "simulation.py.jinja"
+        elif base == "MFModel":
+            return "model.py.jinja"
+        elif base == "MFPackage":
+            if ctx_name.l == "exg":
+                return "exchange.py.jinja"
+            return "package.py.jinja"
+
     for context in Context.from_dfn(dfn):
         name = context.name
-        target = outdir / name.target
-        template = env.get_template(name.template)
-        with open(target, "w") as f:
-            f.write(template.render(**context.render()))
+        target_path = outdir / f"mf{Filters.Cls.title(name)}.py"
+        template_name = _get_template_name(name)
+        template = env.get_template(template_name)
+        with open(target_path, "w") as f:
+            f.write(template.render(**asdict(context)))
             if verbose:
-                print(f"Wrote {target}")
+                print(f"Wrote {target_path}")
 
 
 def make_all(dfndir: Path, outdir: Path, verbose: bool = False):
