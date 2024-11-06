@@ -3016,7 +3016,10 @@ class Mf6Splitter(object):
                 elif isinstance(value, mfdatascalar.MFScalarTransient):
                     for mkey in self._model_dict.keys():
                         val_dict = {}
-                        for perkey, data_storage in value._data_storage.items():
+                        for (
+                            perkey,
+                            data_storage,
+                        ) in value._data_storage.items():
                             val_dict[perkey] = data_storage.get_data()
                         mapped_data[mkey][item] = val_dict
                 elif isinstance(value, mfdatascalar.MFScalar):
