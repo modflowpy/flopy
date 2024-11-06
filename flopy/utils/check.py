@@ -803,9 +803,9 @@ class mf6check(check):
     Check an mf6 package for common errors.
 
     .. deprecated:: 3.9
-        The MF6 check mechanism may be removed for FloPy 3.10+. The
-        checks API will remain in place, but may temporarily cease
-        to function. Checks will be reimplemented for FloPy 4.x.
+        The MF6 check mechanism is deprecated pending reimplementation
+        in a future release. While the checks API will remain in place
+        through 3.x, it may be unstable, and will likely change in 4.x.
     """
 
     def __init__(
@@ -817,9 +817,9 @@ class mf6check(check):
         property_threshold_values={},
     ):
         warn(
-            "The MF6 check mechanism may be removed for FloPy 3.10+. The "
-            "checks API will remain in place, but may temporarily cease "
-            "to function. Checks will be reimplemented for FloPy 4.x.",
+            "The MF6 check mechanism is deprecated pending reimplementation "
+            "in a future release. While the checks API will remain in place "
+            "through 3.x, it may be unstable, and will likely change in 4.x.",
             category=DeprecationWarning,
         )
         super().__init__(package, f, verbose, level, property_threshold_values)

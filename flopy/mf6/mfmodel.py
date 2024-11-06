@@ -827,9 +827,9 @@ class MFModel(ModelInterface):
 
         Warning
         -------
-        The MF6 check mechanism may be removed for FloPy 3.10+. The
-        checks API will remain in place, but may temporarily cease
-        to function. Checks will be reimplemented for FloPy 4.x.
+        The MF6 check mechanism is deprecated pending reimplementation
+        in a future release. While the checks API will remain in place
+        through 3.x, it may be unstable, and will likely change in 4.x.
 
         Parameters
         ----------
@@ -1813,9 +1813,9 @@ class MFModel(ModelInterface):
 
         Warning
         -------
-        The MF6 check mechanism may be removed for FloPy 3.10+. The
-        checks API will remain in place, but may temporarily cease
-        to function. Checks will be reimplemented for FloPy 4.x.
+        The MF6 check mechanism is deprecated pending reimplementation
+        in a future release. While the checks API will remain in place
+        through 3.x, it may be unstable, and will likely change in 4.x.
 
         Parameters
         ----------
