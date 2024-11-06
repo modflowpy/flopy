@@ -10,6 +10,13 @@ dependencies:
   - matplotlib>=1.4.0
   - pandas>=2.0.0
 
+  # codegen
+  - boltons>=1.0
+  - Jinja2>=3.0
+  - pip:
+      - git+https://github.com/MODFLOW-USGS/modflow-devtools.git
+  - tomlkit
+
   # lint
   - cffconvert
   - codespell>=2.2.2
