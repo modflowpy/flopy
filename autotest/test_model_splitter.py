@@ -571,14 +571,14 @@ def test_transient_array(function_tmpdir):
             0,
             2,
         ):
-            d[key] = g.sto.steady_state.get_data(key).get_data()
+            d[key] = g.sto.steady_state.get_data(key)
         assert d == steady, (
             "storage steady_state dictionary "
             + f"does not match for model '{name}'"
         )
         d = {}
         for key in (1,):
-            d[key] = g.sto.transient.get_data(key).get_data()
+            d[key] = g.sto.transient.get_data(key)
         assert d == transient, (
             "storage package transient dictionary "
             + f"does not match for model '{name}'"
@@ -1319,7 +1319,8 @@ def test_multi_model(function_tmpdir):
             )
         else:
             diff = np.abs(X_split - X)
-            if np.nansum(diff) > 9:
+            diff = np.nansum(diff)
+            if diff > 9:
                 raise AssertionError(
-                    "Difference between output arrays greater than tolerance"
+                    f"Difference between output arrays: {diff :.2f} greater than tolerance"
                 )
