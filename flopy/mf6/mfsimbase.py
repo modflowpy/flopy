@@ -1094,6 +1094,12 @@ class MFSimulationBase:
         """
         Check model data for common errors.
 
+        Warning
+        -------
+        The MF6 check mechanism may be removed for FloPy 3.10+. The
+        checks API will remain in place, but may temporarily cease
+        to function. Checks will be reimplemented for FloPy 4.x.
+
         Parameters
         ----------
         f : str or PathLike, optional
@@ -1120,6 +1126,7 @@ class MFSimulationBase:
         >>> m = flopy.modflow.Modflow.load('model.nam')
         >>> m.check()
         """
+
         # check instance for simulation-level check
         chk_list = []
 
@@ -1586,6 +1593,12 @@ class MFSimulationBase:
     ):
         """Sets the simulation's list and array data to be stored externally.
 
+        Warning
+        -------
+        The MF6 check mechanism may be removed for FloPy 3.10+. The
+        checks API will remain in place, but may temporarily cease
+        to function. Checks will be reimplemented for FloPy 4.x.
+
         Parameters
         ----------
             check_data: bool
@@ -1600,6 +1613,7 @@ class MFSimulationBase:
             binary: bool
                 Whether file will be stored as binary
         """
+
         # copy any files whose paths have changed
         self.simulation_data.mfpath.copy_files()
         # set data external for all packages in all models
@@ -1636,6 +1650,7 @@ class MFSimulationBase:
 
     def set_all_data_internal(self, check_data=True):
         # set data external for all packages in all models
+
         for model in self._models.values():
             model.set_all_data_internal(check_data)
         # set data external for solution packages

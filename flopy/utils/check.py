@@ -1,6 +1,6 @@
 import os
-from pathlib import Path
 from typing import Optional, Union
+from warnings import warn
 
 import numpy as np
 from numpy.lib import recfunctions
@@ -799,6 +799,15 @@ def fields_view(arr, fields):
 
 
 class mf6check(check):
+    """
+    Check an mf6 package for common errors.
+
+    .. deprecated:: 3.9
+        The MF6 check mechanism may be removed for FloPy 3.10+. The
+        checks API will remain in place, but may temporarily cease
+        to function. Checks will be reimplemented for FloPy 4.x.
+    """
+
     def __init__(
         self,
         package,
@@ -807,6 +816,12 @@ class mf6check(check):
         level=1,
         property_threshold_values={},
     ):
+        warn(
+            "The MF6 check mechanism may be removed for FloPy 3.10+. The "
+            "checks API will remain in place, but may temporarily cease "
+            "to function. Checks will be reimplemented for FloPy 4.x.",
+            category=DeprecationWarning,
+        )
         super().__init__(package, f, verbose, level, property_threshold_values)
         if hasattr(package, "model_or_sim"):
             self.model = package.model_or_sim

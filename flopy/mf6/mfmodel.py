@@ -825,6 +825,12 @@ class MFModel(ModelInterface):
         """
         Check model data for common errors.
 
+        Warning
+        -------
+        The MF6 check mechanism may be removed for FloPy 3.10+. The
+        checks API will remain in place, but may temporarily cease
+        to function. Checks will be reimplemented for FloPy 4.x.
+
         Parameters
         ----------
         f : str or file handle
@@ -850,6 +856,7 @@ class MFModel(ModelInterface):
         >>> m = flopy.modflow.Modflow.load('model.nam')
         >>> m.check()
         """
+
         # check instance for model-level check
         chk = mf6check(self, f=f, verbose=verbose, level=level)
 
@@ -1803,6 +1810,12 @@ class MFModel(ModelInterface):
         binary=False,
     ):
         """Sets the model's list and array data to be stored externally.
+
+        Warning
+        -------
+        The MF6 check mechanism may be removed for FloPy 3.10+. The
+        checks API will remain in place, but may temporarily cease
+        to function. Checks will be reimplemented for FloPy 4.x.
 
         Parameters
         ----------
