@@ -1332,6 +1332,12 @@ class MFBlock:
         base_name is external file name's prefix, check_data determines
         if data error checking is enabled during this process.
 
+        Warning
+        -------
+        The MF6 check mechanism is deprecated pending reimplementation
+        in a future release. While the checks API will remain in place
+        through 3.x, it may be unstable, and will likely change in 4.x.
+
         Parameters
         ----------
             base_name : str
@@ -1344,6 +1350,7 @@ class MFBlock:
                 Whether file will be stored as binary
 
         """
+
         for key, dataset in self.datasets.items():
             lst_data = isinstance(dataset, mfdatalist.MFList) or isinstance(
                 dataset, mfdataplist.MFPandasList
@@ -1397,12 +1404,19 @@ class MFBlock:
         check_data determines if data error checking is enabled during this
         process.
 
+        Warning
+        -------
+        The MF6 check mechanism is deprecated pending reimplementation
+        in a future release. While the checks API will remain in place
+        through 3.x, it may be unstable, and will likely change in 4.x.
+
         Parameters
         ----------
             check_data : bool
                 Whether to do data error checking.
 
         """
+
         for key, dataset in self.datasets.items():
             if (
                 isinstance(dataset, mfdataarray.MFArray)
@@ -1644,7 +1658,9 @@ class MFBlock:
         return True
 
     def is_valid(self):
-        """Returns true of the block is valid."""
+        """
+        Returns true if the block is valid.
+        """
         # check data sets
         for dataset in self.datasets.values():
             # Non-optional datasets must be enabled
@@ -2130,7 +2146,16 @@ class MFPackage(PackageInterface):
         return False
 
     def check(self, f=None, verbose=True, level=1, checktype=None):
-        """Data check, returns True on success."""
+        """
+        Data check, returns True on success.
+
+        Warning
+        -------
+        The MF6 check mechanism is deprecated pending reimplementation
+        in a future release. While the checks API will remain in place
+        through 3.x, it may be unstable, and will likely change in 4.x.
+        """
+
         if checktype is None:
             checktype = mf6check
         # do general checks
