@@ -215,6 +215,7 @@ class Dfn(UserDict):
         flat, meta = Dfn._load_v1_flat(f, **kwargs)
         refs = kwargs.pop("refs", dict())
         fkeys = dict()
+        popped = dict()
 
         def _map(spec: Dict[str, Any]) -> Var:
             """
@@ -336,15 +337,31 @@ class Dfn(UserDict):
                 }
 
             def _fields() -> Vars:
-                """Load a record's children (fields)."""
+                """
+                Load a record's children (fields).
+
+                Notes
+                -----
+                This includes a hack to handle cases where `filein` or `fileout`
+                is defined just once in a DFN file, where in the new structured
+                format it is expected wherever it appears.
+                """
                 names = _type.split()[1:]
-                return {
-                    v["name"]: _map(v)
-                    for v in flat.values(multi=True)
-                    if v["name"] in names
-                    and v.get("in_record", False)
-                    and not v["type"].startswith("record")
-                }
+                fields = dict()
+                for name in names:
+                    v = popped.get(name, None)
+                    if v:
+                        fields[name] = v
+                        continue
+                    v = flat.get(name, None)
+                    if (
+                        not v
+                        or not v.get("in_record", False)
+                        or v["type"].startswith("record")
+                    ):
+                        continue
+                    fields[name] = v
+                return fields
 
             if _type.startswith("recarray"):
                 children = _items()
