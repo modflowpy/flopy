@@ -1,4 +1,3 @@
-from dataclasses import asdict
 from itertools import chain
 from os import PathLike
 from pathlib import Path
@@ -83,12 +82,12 @@ def make_targets(dfn, outdir: PathLike, verbose: bool = False):
             return "package.py.jinja"
 
     for context in Context.from_dfn(dfn):
-        name = context.name
+        name = context["name"]
         target_path = outdir / f"mf{Filters.Cls.title(name)}.py"
         template_name = _get_template_name(name)
         template = env.get_template(template_name)
         with open(target_path, "w") as f:
-            f.write(template.render(**asdict(context)))
+            f.write(template.render(**context))
             if verbose:
                 print(f"Wrote {target_path}")
 

@@ -1,7 +1,6 @@
 import argparse
+from collections.abc import Mapping
 from pathlib import Path
-
-from boltons.iterutils import remap
 
 from flopy.utils import import_optional_dependency
 
@@ -10,8 +9,21 @@ _DFN_PATH = _MF6_PATH / "data" / "dfn"
 _TOML_PATH = _MF6_PATH / "data" / "toml"
 
 
-def _drop_none(d: dict) -> dict:
-    return remap(d, lambda p, k, v: isinstance(v, bool) or bool(v))
+def _drop_none(d):
+    if isinstance(d, Mapping):
+        return {
+            k: _drop_none(v)
+            for k, v in d.items()
+            if (v or isinstance(v, bool))
+        }
+    else:
+        return d
+
+
+def _shim(d):
+    del d["dfn"]
+    d["name"] = str(d["name"])
+    return d
 
 
 if __name__ == "__main__":
@@ -37,5 +49,5 @@ if __name__ == "__main__":
     outdir = Path(args.outdir)
     outdir.mkdir(exist_ok=True, parents=True)
     for dfn in Dfn.load_all(dfndir).values():
-        with open(Path(outdir) / f"{dfn.name}.toml", "w") as f:
-            tomlkit.dump(_drop_none(dfn), f)
+        with open(Path(outdir) / f"{dfn['name']}.toml", "w") as f:
+            tomlkit.dump(_drop_none(_shim(dfn)), f)

@@ -1,18 +1,15 @@
-from dataclasses import dataclass
 from typing import (
-    Any,
-    Dict,
     Iterator,
     List,
     NamedTuple,
     Optional,
+    TypedDict,
 )
 
-from flopy.mf6.utils.codegen.dfn import Dfn, Ref, Vars
+from flopy.mf6.utils.codegen.dfn import Dfn, Vars
 
 
-@dataclass
-class Context:
+class Context(TypedDict):
     """
     An input context. Each of these is specified by a definition file
     and becomes a generated class. A definition file may specify more
@@ -56,32 +53,32 @@ class Context:
             Returns a list of context names this definition produces.
             An input definition may produce one or more input contexts.
             """
-            if dfn.name.r == "nam":
-                if dfn.name.l == "sim":
+            name = dfn["name"]
+            if name.r == "nam":
+                if name.l == "sim":
                     return [
-                        Context.Name(None, dfn.name.r),  # nam pkg
-                        Context.Name(*dfn.name),  # simulation
+                        Context.Name(None, name.r),  # nam pkg
+                        Context.Name(*name),  # simulation
                     ]
                 else:
                     return [
-                        Context.Name(*dfn.name),  # nam pkg
-                        Context.Name(dfn.name.l, None),  # model
+                        Context.Name(*name),  # nam pkg
+                        Context.Name(name.l, None),  # model
                     ]
-            elif dfn.name in [
+            elif name in [
                 ("gwf", "mvr"),
                 ("gwf", "gnc"),
                 ("gwt", "mvt"),
             ]:
                 # TODO: remove special cases, deduplicate mfmvr.py/mfgwfmvr.py etc
                 return [
-                    Context.Name(*dfn.name),
-                    Context.Name(None, dfn.name.r),
+                    Context.Name(*name),
+                    Context.Name(None, name.r),
                 ]
-            return [Context.Name(*dfn.name)]
+            return [Context.Name(*name)]
 
     name: Name
     vars: Vars
-    meta: Optional[Dict[str, Any]] = None
 
     @classmethod
     def from_dfn(cls, dfn: Dfn) -> Iterator["Context"]:
@@ -90,7 +87,12 @@ class Context:
         These are structured representations of input context classes.
         Each input definition yields one or more input contexts.
         """
+
+        def _to_context(n, d):
+            d = d.copy()
+            d.pop("name", None)
+            vars_ = d.pop("vars", dict())
+            return Context(name=n, vars=vars_, **d)
+
         for name in Context.Name.from_dfn(dfn):
-            yield Context(
-                name=name, vars=dfn.data.copy(), meta=dfn.meta.copy()
-            )
+            yield _to_context(name, dfn)

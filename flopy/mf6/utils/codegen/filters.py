@@ -69,7 +69,7 @@ class Filters:
 
         @pass_context
         def parent(ctx, ctx_name) -> str:
-            subpkg = ctx["meta"].get("subpkg", None)
+            subpkg = ctx.get("subpackage", None)
             if subpkg:
                 return subpkg["parent"]
             if ctx_name == ("sim", "nam"):
@@ -99,7 +99,7 @@ class Filters:
                 ]
             elif base == "MFModel":
                 skip = ["packages", "export_netcdf", "nc_filerecord"]
-                refs = ctx.get("meta", dict()).get("fkeys", dict())
+                refs = ctx.get("foreign_keys", dict())
                 if any(refs) and ctx["name"] != (None, "nam"):
                     for k in refs.keys():
                         if ctx["vars"].get(k, None):
@@ -166,30 +166,31 @@ class Filters:
 
     class Vars:
         @pass_context
-        def attrs(ctx, vars) -> List[str]:
-            ctx_name = ctx["name"]
-            base = Filters.Cls.base(ctx_name)
+        def attrs(ctx, variables) -> List[str]:
+            name = ctx["name"]
+            base = Filters.Cls.base(name)
 
             def _attr(var: dict) -> Optional[str]:
                 var_name = var["name"]
                 var_type = var["type"]
                 var_shape = var.get("shape", None)
                 var_block = var.get("block", None)
-                var_ref = var.get("fkey", None)
+                var_subpkg = var.get("subpackage", None)
 
                 if (
                     (var_type in _SCALARS and not var_shape)
                     or var_name in ["cvoptions", "output"]
-                    or (ctx_name.r == "dis" and var_name == "packagedata")
+                    or (name.r == "dis" and var_name == "packagedata")
                     or (
                         var_name != "packages"
-                        and (ctx_name.l is not None and ctx_name.r == "nam")
+                        and (name.l is not None and name.r == "nam")
                     )
                 ):
                     return None
 
                 is_array = (
-                    var_type in ["integer", "double precision"] and var_shape
+                    var_type in ["string", "integer", "double precision"]
+                    and var_shape
                 )
                 is_composite = var_type in ["list", "record", "union"]
                 if is_array or is_composite:
@@ -197,36 +198,36 @@ class Filters:
                         raise ValueError("Need block")
 
                     if not is_array:
-                        if var_ref:
+                        if var_subpkg:
                             # if the variable is a subpackage reference, use the original key
                             # (which has been replaced already with the referenced variable)
                             args = [
-                                f"'{ctx_name.r}'",
+                                f"'{name.r}'",
                                 f"'{var_block}'",
-                                f"'{var_ref['key']}'",
+                                f"'{var_subpkg['key']}'",
                             ]
-                            if ctx_name.l is not None and ctx_name.l not in [
+                            if name.l is not None and name.l not in [
                                 "sim",
                                 "sln",
                                 "utl",
                                 "exg",
                             ]:
-                                args.insert(0, f"'{ctx_name.l}6'")
-                            return f"{var_ref['key']} = ListTemplateGenerator(({', '.join(args)}))"
+                                args.insert(0, f"'{name.l}6'")
+                            return f"{var_subpkg['key']} = ListTemplateGenerator(({', '.join(args)}))"
 
                     def _args():
                         args = [
-                            f"'{ctx_name.r}'",
+                            f"'{name.r}'",
                             f"'{var_block}'",
                             f"'{var_name}'",
                         ]
-                        if ctx_name.l is not None and ctx_name.l not in [
+                        if name.l is not None and name.l not in [
                             "sim",
                             "sln",
                             "utl",
                             "exg",
                         ]:
-                            args.insert(0, f"'{ctx_name.l}6'")
+                            args.insert(0, f"'{name.l}6'")
                         return args
 
                     kind = "array" if is_array else "list"
@@ -235,7 +236,7 @@ class Filters:
                 return None
 
             def _dfn() -> List[List[str]]:
-                dfn, meta = ctx["meta"]["dfn"]
+                dfn, meta = ctx["dfn"]
 
                 def _meta():
                     exclude = ["subpackage", "parent_name_type"]
@@ -247,7 +248,7 @@ class Filters:
                     def _var(var: dict) -> List[str]:
                         exclude = ["longname", "description"]
                         name = var["name"]
-                        var_ = vars.get(name, None)
+                        var_ = variables.get(name, None)
                         keys = [
                             "construct_package",
                             "construct_data",
@@ -266,20 +267,20 @@ class Filters:
 
                 return [["header"] + _meta()] + _dfn()
 
-            attrs = list(filter(None, [_attr(v) for v in vars.values()]))
+            attrs = list(filter(None, [_attr(v) for v in variables.values()]))
 
             if base == "MFModel":
-                attrs.append(f"model_type = {ctx_name.l}")
+                attrs.append(f"model_type = {name.l}")
             elif base == "MFPackage":
                 attrs.extend(
                     [
-                        f"package_abbr = '{ctx_name.r}'"
-                        if ctx_name.l == "exg"
-                        else f"package_abbr = '{'' if ctx_name.l in ['sln', 'sim', 'exg', None] else ctx_name.l}{ctx_name.r}'",
-                        f"_package_type = '{ctx_name.r}'",
-                        f"dfn_file_name = '{ctx_name.l}-{ctx_name.r}.dfn'"
-                        if ctx_name.l == "exg"
-                        else f"dfn_file_name = '{ctx_name.l or 'sim'}-{ctx_name.r}.dfn'",
+                        f"package_abbr = '{name.r}'"
+                        if name.l == "exg"
+                        else f"package_abbr = '{'' if name.l in ['sln', 'sim', 'exg', None] else name.l}{name.r}'",
+                        f"_package_type = '{name.r}'",
+                        f"dfn_file_name = '{name.l}-{name.r}.dfn'"
+                        if name.l == "exg"
+                        else f"dfn_file_name = '{name.l or 'sim'}-{name.r}.dfn'",
                         f"dfn = {pformat(_dfn(), indent=10)}",
                     ]
                 )
@@ -319,11 +320,11 @@ class Filters:
                                 f"self.{name} = self.name_file.{name}"
                             )
 
-                        fkey = var.get("fkey", None)
-                        if fkey and fkey["key"] not in refs:
-                            refs[fkey["key"]] = fkey
+                        subpkg = var.get("subpackage", None)
+                        if subpkg and subpkg["key"] not in refs:
+                            refs[subpkg["key"]] = subpkg
                             stmts.append(
-                                f"self.{fkey['param']} = self._create_package('{fkey['abbr']}', {fkey['param']})"
+                                f"self.{subpkg['param']} = self._create_package('{subpkg['abbr']}', {subpkg['param']})"
                             )
                 elif base == "MFModel":
 
@@ -349,19 +350,17 @@ class Filters:
                                 f"self.{name} = self.name_file.{name}"
                             )
 
-                        fkey = var.get("fkey", None)
-                        if fkey and fkey["key"] not in refs:
-                            refs[fkey["key"]] = fkey
+                        subpkg = var.get("subpackage", None)
+                        if subpkg and subpkg["key"] not in refs:
+                            refs[subpkg["key"]] = subpkg
                             stmts.append(
-                                f"self.{fkey['param']} = self._create_package('{fkey['abbr']}', {fkey['param']})"
+                                f"self.{subpkg['param']} = self._create_package('{subpkg['abbr']}', {subpkg['param']})"
                             )
                 elif base == "MFPackage":
 
                     def _should_build(var: dict) -> bool:
-                        if var.get("fkey", None) and ctx_name != (
-                            None,
-                            "nam",
-                        ):
+                        subpkg = var.get("subpackage", None)
+                        if subpkg and ctx_name != (None, "nam"):
                             return False
                         return var["name"] not in [
                             "simulation",
@@ -388,11 +387,11 @@ class Filters:
                         if name in kwlist:
                             name = f"{name}_"
 
-                        fkey = var.get("fkey", None)
+                        subpkg = var.get("subpackage", None)
                         if _should_build(var):
-                            if fkey and ctx["name"] == (None, "nam"):
+                            if subpkg and ctx["name"] == (None, "nam"):
                                 stmts.append(
-                                    f"self.{'_' if fkey else ''}{fkey['key']} = self.build_mfdata('{fkey['key']}', None)"
+                                    f"self.{'_' if subpkg else ''}{subpkg['key']} = self.build_mfdata('{subpkg['key']}', None)"
                                 )
                             else:
                                 _name = (
@@ -400,20 +399,20 @@ class Filters:
                                 )
                                 name = name.replace("-", "_")
                                 stmts.append(
-                                    f"self.{'_' if fkey else ''}{name} = self.build_mfdata('{_name}', {name})"
+                                    f"self.{'_' if subpkg else ''}{name} = self.build_mfdata('{_name}', {name})"
                                 )
 
                         if (
-                            fkey
-                            and fkey["key"] not in refs
+                            subpkg
+                            and subpkg["key"] not in refs
                             and ctx["name"].r != "nam"
                         ):
-                            refs[fkey["key"]] = fkey
+                            refs[subpkg["key"]] = subpkg
                             stmts.append(
-                                f"self._{fkey['key']} = self.build_mfdata('{fkey['key']}', None)"
+                                f"self._{subpkg['key']} = self.build_mfdata('{subpkg['key']}', None)"
                             )
                             stmts.append(
-                                f"self._{fkey['abbr']}_package = self.build_child_package('{fkey['abbr']}', {fkey['val']}, '{fkey['param']}', self._{fkey['key']})"
+                                f"self._{subpkg['abbr']}_package = self.build_child_package('{subpkg['abbr']}', {subpkg['val']}, '{subpkg['param']}', self._{subpkg['key']})"
                             )
 
                 return stmts
