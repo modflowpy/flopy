@@ -22,6 +22,7 @@ def _drop_none(d):
 
 def _shim(d):
     del d["dfn"]
+    del d["foreign_keys"]
     d["name"] = str(d["name"])
     return d
 

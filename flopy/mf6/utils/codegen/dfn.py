@@ -510,13 +510,13 @@ class Dfn(TypedDict):
 
         return cls(
             name=name,
-            vars=vars_,
-            dfn=dfn,
             foreign_keys=fkeys,
             package_type=package_type,
             subpackage=subpackage,
             solution=solution,
             multi=multi,
+            vars=vars_,
+            dfn=dfn,
         )
 
     @classmethod
