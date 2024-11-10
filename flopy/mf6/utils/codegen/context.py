@@ -16,18 +16,7 @@ class Context(TypedDict):
     than one input context (e.g. model DFNs yield a model class and a
     package class).
 
-    Notes
-    -----
-    A context minimally consists of a name and a map of variables.
-
-    The context class may inherit from a base class, and may specify
-    a parent context within which it can be created (the parent then
-    becomes the first `__init__` method parameter).
-
-    The context class may reference other contexts via foreign key
-    relations held by its variables, and may itself be referenced
-    by other contexts if desired.
-
+    A context consists minimally of a name and a map of variables.
     """
 
     class Name(NamedTuple):
@@ -70,7 +59,7 @@ class Context(TypedDict):
                 ("gwf", "gnc"),
                 ("gwt", "mvt"),
             ]:
-                # TODO: remove special cases, deduplicate mfmvr.py/mfgwfmvr.py etc
+                # TODO: deduplicate mfmvr.py/mfgwfmvr.py etc and remove special cases
                 return [
                     Context.Name(*name),
                     Context.Name(None, name.r),
@@ -85,14 +74,15 @@ class Context(TypedDict):
         """
         Extract context class descriptor(s) from an input definition.
         These are structured representations of input context classes.
+
         Each input definition yields one or more input contexts.
         """
 
-        def _to_context(n, d):
-            d = d.copy()
-            d.pop("name", None)
-            vars_ = d.pop("vars", dict())
-            return Context(name=n, vars=vars_, **d)
+        def _ctx(name, _dfn):
+            _dfn = _dfn.copy()
+            _dfn.pop("name", None)
+            _vars = _dfn.pop("vars", dict())
+            return Context(name=name, vars=_vars, **_dfn)
 
         for name in Context.Name.from_dfn(dfn):
-            yield _to_context(name, dfn)
+            yield _ctx(name, dfn)

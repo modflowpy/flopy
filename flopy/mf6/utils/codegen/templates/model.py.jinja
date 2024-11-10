@@ -34,7 +34,7 @@ class Modflow{{ title }}(MFModel):
         version="mf6",
         exe_name="mf6",
         model_rel_path=".",
-        {{ macros.init_vars(vars, indent=8, skip=name|skip) }}
+        {{ macros.init_vars(vars, indent=8, skip=name|skip_init) }}
         **kwargs,
     ):
         """

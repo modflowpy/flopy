@@ -25,7 +25,7 @@ class Modflow{{ title }}(MFPackage):
         self,
         {{ name|parent }},
         loading_package=False,
-        {{ macros.init_vars(vars, indent=8, skip=name|skip) }}
+        {{ macros.init_vars(vars, indent=8, skip=name|skip_init) }}
         filename=None,
         pname=None,
         **kwargs,
@@ -94,14 +94,14 @@ class {{ title }}Packages(MFChildPackages):
 
     def initialize(
         self,
-        {{ macros.init_vars(vars, alias=true, indent=8, skip=name|skip) }}
+        {{ macros.init_vars(vars, alias=true, indent=8, skip=name|skip_init) }}
         filename=None,
         pname=None,
     ):
         new_package = Modflow{{ title }}(
             self._cpparent,
-            {%- for n, var in vars.items() if n not in name|skip %}
-            {{ n|safe_str }}={{ n|safe_str }},
+            {%- for n, var in vars.items() if n not in name|skip_init %}
+            {{ n|safe_name }}={{ n|safe_name }},
             {%- endfor %}
             filename=filename,
             pname=pname,
@@ -112,14 +112,14 @@ class {{ title }}Packages(MFChildPackages):
     {% if name.r != "obs" %}
     def append_package(
         self,
-        {{ macros.init_vars(vars, alias=true, indent=8, skip=name|skip) }}
+        {{ macros.init_vars(vars, alias=true, indent=8, skip=name|skip_init) }}
         filename=None,
         pname=None,
     ):
         new_package = Modflow{{ title }}(
             self._cpparent,
-            {%- for n, var in vars.items() if n not in name|skip %}
-            {{ n|safe_str }}={{ n|safe_str }},
+            {%- for n, var in vars.items() if n not in name|skip_init %}
+            {{ n|safe_name }}={{ n|safe_name }},
             {%- endfor %}
             filename=filename,
             pname=pname,

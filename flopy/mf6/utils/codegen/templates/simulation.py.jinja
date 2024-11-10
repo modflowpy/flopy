@@ -35,7 +35,7 @@ class MF{{ title }}(MFSimulationBase):
         write_headers: bool = True,
         use_pandas: bool = True,
         lazy_io: bool = False,
-        {{ macros.init_vars(vars, indent=8, skip=name|skip) }}
+        {{ macros.init_vars(vars, indent=8, skip=name|skip_init) }}
     ):
         """
         {{ name|description }}

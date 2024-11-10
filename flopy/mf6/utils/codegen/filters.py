@@ -64,11 +64,13 @@ class Filters:
                 )
 
         def prefix(ctx_name) -> str:
+            """The input context class name prefix, e.g. 'MF' or 'Modflow'."""
             base = Filters.Cls.base(ctx_name)
             return "MF" if base == "MFSimulationBase" else "Modflow"
 
         @pass_context
         def parent(ctx, ctx_name) -> str:
+            """The input context's parent context type, if it can have a parent."""
             subpkg = ctx.get("subpackage", None)
             if subpkg:
                 return subpkg["parent"]
@@ -87,7 +89,8 @@ class Filters:
             return "model"
 
         @pass_context
-        def skip(ctx, ctx_name) -> List[str]:
+        def skip_init(ctx, ctx_name) -> List[str]:
+            """Variables to skip in input context's `__init__` method."""
             base = Filters.Cls.base(ctx_name)
             if base == "MFSimulationBase":
                 return [
@@ -113,7 +116,13 @@ class Filters:
                 return []
 
     class Var:
-        def maybe_file(var: dict) -> dict:
+        def untag(var: dict) -> dict:
+            """
+            If the variable is a tagged record, remove the leading
+            tag field. If the variable is a tagged file path input
+            record, remove both leading tag and 'filein'/'fileout'
+            keyword following it.
+            """
             name = var["name"]
             tagged = var.get("tagged", False)
             fields = var.get("children", None)
@@ -144,6 +153,15 @@ class Filters:
             return var
 
         def type(var: dict) -> str:
+            """
+            Get a readable representation of the variable's type.
+            TODO: eventually replace this with a proper `type` in
+            the variable spec when we add type hints. For now try
+            to match the existing format, with a few tweaks; e.g.
+            distinguishing lists from records by square and round
+            brackets, respectively, and separating each choice in
+            a keystring by '|'.
+            """
             _type = var["type"]
             shape = var.get("shape", None)
             children = var.get("children", None)
@@ -167,6 +185,14 @@ class Filters:
     class Vars:
         @pass_context
         def attrs(ctx, variables) -> List[str]:
+            """
+            Map the context's input variables to corresponding class attributes,
+            where applicable. TODO: this should get much simpler if we can drop
+            all the `ListTemplateGenerator`/`ArrayTemplateGenerator` attributes.
+            Ultimately I (WPB) think we can aim for context classes consisting
+            of just a class attr for each variable, with anything complicated
+            happening in a decorator or base class.
+            """
             name = ctx["name"]
             base = Filters.Cls.base(name)
 
@@ -289,6 +315,18 @@ class Filters:
 
         @pass_context
         def init(ctx, vars) -> List[str]:
+            """
+            Map the context's input variables to statements in the class'
+            `__init__` method body, if applicable. TODO: consider how we
+            can dispatch as necessary based on a variable's type instead
+            of explicitly choosing among:
+
+            - self.var = var
+            - self.var = self.build_mfdata(...)
+            - self.subppkg_var = self._create_package(...)
+            - ...
+
+            """
             ctx_name = ctx["name"]
             base = Filters.Cls.base(ctx_name)
 
@@ -323,8 +361,9 @@ class Filters:
                         subpkg = var.get("subpackage", None)
                         if subpkg and subpkg["key"] not in refs:
                             refs[subpkg["key"]] = subpkg
+                            args = f"'{subpkg['abbr']}', {subpkg['param']}"
                             stmts.append(
-                                f"self.{subpkg['param']} = self._create_package('{subpkg['abbr']}', {subpkg['param']})"
+                                f"self.{subpkg['param']} = self._create_package({args})"
                             )
                 elif base == "MFModel":
 
@@ -353,8 +392,9 @@ class Filters:
                         subpkg = var.get("subpackage", None)
                         if subpkg and subpkg["key"] not in refs:
                             refs[subpkg["key"]] = subpkg
+                            args = f"'{subpkg['abbr']}', {subpkg['param']}"
                             stmts.append(
-                                f"self.{subpkg['param']} = self._create_package('{subpkg['abbr']}', {subpkg['param']})"
+                                f"self.{subpkg['param']} = self._create_package({args})"
                             )
                 elif base == "MFPackage":
 
@@ -391,7 +431,8 @@ class Filters:
                         if _should_build(var):
                             if subpkg and ctx["name"] == (None, "nam"):
                                 stmts.append(
-                                    f"self.{'_' if subpkg else ''}{subpkg['key']} = self.build_mfdata('{subpkg['key']}', None)"
+                                    f"self.{'_' if subpkg else ''}{subpkg['key']} "
+                                    f"= self.build_mfdata('{subpkg['key']}', None)"
                                 )
                             else:
                                 _name = (
@@ -399,7 +440,8 @@ class Filters:
                                 )
                                 name = name.replace("-", "_")
                                 stmts.append(
-                                    f"self.{'_' if subpkg else ''}{name} = self.build_mfdata('{_name}', {name})"
+                                    f"self.{'_' if subpkg else ''}{name} "
+                                    f"= self.build_mfdata('{_name}', {name})"
                                 )
 
                         if (
@@ -409,23 +451,40 @@ class Filters:
                         ):
                             refs[subpkg["key"]] = subpkg
                             stmts.append(
-                                f"self._{subpkg['key']} = self.build_mfdata('{subpkg['key']}', None)"
+                                f"self._{subpkg['key']} "
+                                f"= self.build_mfdata('{subpkg['key']}', None)"
+                            )
+                            args = (
+                                f"'{subpkg['abbr']}', {subpkg['val']}, "
+                                f"'{subpkg['param']}', self._{subpkg['key']}"
                             )
                             stmts.append(
-                                f"self._{subpkg['abbr']}_package = self.build_child_package('{subpkg['abbr']}', {subpkg['val']}, '{subpkg['param']}', self._{subpkg['key']})"
+                                f"self._{subpkg['abbr']}_package "
+                                f"= self.build_child_package({args})"
                             )
 
                 return stmts
 
             return list(filter(None, _statements()))
 
-    def safe_str(v: str) -> str:
-        return (f"{v}_" if v in kwlist else v).replace("-", "_")
+    def safe_name(name: str) -> str:
+        """
+        Make sure a string is safe to use as a variable name in Python code.
+        If the string is a reserved keyword, add a trailing underscore to it.
+        Also replace any hyphens with underscores.
+        """
+        return (f"{name}_" if name in kwlist else name).replace("-", "_")
 
     def escape_trailing_underscore(v: str) -> str:
+        """If the string has a trailing underscore, escape it."""
         return f"{v[:-1]}\\\\_" if v.endswith("_") else v
 
     def value(v: Any) -> str:
+        """
+        Format a value to appear in the RHS of an assignment or argument-
+        passing expression: if it's an enum, get its value; if it's `str`,
+        quote it.
+        """
         v = try_get_enum_value(v)
         if isinstance(v, str) and v[0] not in ["'", '"']:
             v = f"'{v}'"

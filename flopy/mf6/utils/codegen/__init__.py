@@ -21,15 +21,15 @@ def _get_template_env():
     env.filters["description"] = Filters.Cls.description
     env.filters["prefix"] = Filters.Cls.prefix
     env.filters["parent"] = Filters.Cls.parent
-    env.filters["skip"] = Filters.Cls.skip
+    env.filters["skip_init"] = Filters.Cls.skip_init
 
     env.filters["attrs"] = Filters.Vars.attrs
     env.filters["init"] = Filters.Vars.init
 
-    env.filters["maybe_file"] = Filters.Var.maybe_file
+    env.filters["untag"] = Filters.Var.untag
     env.filters["type"] = Filters.Var.type
 
-    env.filters["safe_str"] = Filters.safe_str
+    env.filters["safe_name"] = Filters.safe_name
     env.filters["escape_trailing_underscore"] = (
         Filters.escape_trailing_underscore
     )
