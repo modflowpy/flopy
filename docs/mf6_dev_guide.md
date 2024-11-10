@@ -1,12 +1,23 @@
-Introduction
------------------------------------------------
+# Developing FloPy for MF6
 
-This file provides an overview of how FloPy's MODFLOW 6 module `flopy.mf6` works under the hood. It is intended for anyone who wants to add a new package, new model, or new features to this library.
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-Code generation
------------------------------------------------
+- [Introduction](#introduction)
+- [Code generation](#code-generation)
+- [Input specification](#input-specification)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Introduction
+
+This file provides an overview of how FloPy's MODFLOW 6 module `flopy.mf6` works under the hood. It is intended for FloPy maintainers, as well as anyone who wants to add a new package, new model, or new features to this library.
+
+## Code generation
 
 MODFLOW 6 describes its input specification with definition files. These are currently a custom text-based format. Definition files have suffix `.dfn` by convention.
+
+We plan to move soon to TOML definition files. More on this below.
 
 Definition files describe components (e.g. simulations, models, packages) supported by MODFLOW 6, and are used to generate both source code and documentation.
 
@@ -19,12 +30,25 @@ The latter is typically used with e.g. `python -m flopy.mf6.utils.generate_class
 
 Generated files are created in `flopy/mf6/modflow/` and contain interface classes, one file/class per input component. These can be used to initialize and access model/package data as well as the input specification itself.
 
+**Note**: Code generation requires a few extra dependencies, grouped in the `codegen` optional dependency group: `Jinja2`, `boltons`, `tomlkit` and `modflow-devtools`.
+
 **Note**: Code generation scripts previously used `flopy/mf6/data/mfstructure.py` to read and represent definition files, and wrote Python by hand. They now use the `flopy.mf6.utils.codegen` module, which uses Jinja2.
 
 **Note**: Each component's input definition is currently reproduced almost verbatim in the `dfn` class attribute. Currently, `flopy/mf6/data/mfstructure.py` is used to introspect the input specification using the `dfn` attribute. This can eventually be removed in favor of direct introspection.
 
-Input specification
--------------------
+The `flopy.mf6.utils.codegen` module is small and meant to be easy to iterate on. Its purpose is to load and convert input definition files to Python source code by way of an intermediate representation.
+
+As such, there are 2 abstractions: `Dfn` and `Context`. A `Dfn` corresponds to a definition file, and knows how to load itself from one. A `Context` corresponds to a Python source file, which it is fed to a Jinja template to create. ('Context' is a term borrowed from Jinja.) `Dfn` and `Context` typically map 1-1, but can be 1-many (e.g. a model definition file yields a model class and namefile package class).
+
+Both `Dfn` and `Context` are structured representations of an input component/block/variable hierarchy. For now, we have to infer this structure from a flat representation in the definition file. This is a bit like [object-relational impedance mismatch](https://en.wikipedia.org/wiki/Object%E2%80%93relational_impedance_mismatch) and seriously complicates the `Dfn` load routines, but happily this is temporary &mdash; once we move to TOML and define input components in structured form, we can simply load the nested variable hierarchy directly from the definition file.
+
+For now we use a data structure from the `boltons` library to maintain an unstructured (flat) map of variables before structural parsing, where variables can have duplicate names.
+
+Some quirks of the legacy framework are handled in a "shim" of Jinja filters that transform the template context, as well as some macros. These can ideally be removed as refactoring goes on. The templates should also get simpler over time.
+
+## Input specification
+
+**Note**: the following describes the legacy input specification mechanism.
 
 The `flopy.mf6.data.mfstructure.MFStructure` class represents an input specification. The class is a singleton, meaning only one instance of this class can be created.  The class contains a sim_struct attribute (which is a flopy.mf6.data.mfstructure.MFSimulationStructure object) which contains all of the meta-data for all package files.  Meta-data is stored in a structured format. MFSimulationStructure contains MFModelStructure and MFInputFileStructure objects, which contain the meta-data for each model type and each "simulation-level" package (tdis, ims, ...).  MFModelStructure contains model specific meta-data and a MFInputFileStructure object for each package in that model.  MFInputFileStructure contains package specific meta-data and a MFBlockStructure object for each block contained in the package file.  MFBlockStructure contains block specific meta-data and a MFDataStructure object for each data structure defined in the block, and MFDataStructure contains data structure specific meta-data and a MFDataItemStructure object for each data item contained in the data structure.  Data structures define the structure of data that is naturally grouped together, for example, the data in a numpy recarray.  Data item structures define the structure of specific pieces of data, for example, a single column of a numpy recarray.  The meta-data defined in these classes provides all the information FloPy needs to read and write MODFLOW 6 package and name files, create the Flopy interface, and check the data for various constraints.
 
