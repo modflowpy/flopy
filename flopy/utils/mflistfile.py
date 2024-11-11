@@ -773,7 +773,7 @@ class ListBudget:
             if line == "":
                 print(
                     "end of file found while seeking budget "
-                    "information for ts,sp: {} {}".format(ts, sp)
+                    f"information for ts,sp: {ts} {sp}"
                 )
                 return self.null_entries
 
@@ -789,7 +789,7 @@ class ListBudget:
             if line == "":
                 print(
                     "end of file found while seeking budget "
-                    "information for ts,sp: {} {}".format(ts, sp)
+                    f"information for ts,sp: {ts} {sp}"
                 )
                 return self.null_entries
             if len(re.findall("=", line)) == 2:
@@ -880,7 +880,7 @@ class ListBudget:
             if line == "":
                 print(
                     "end of file found while seeking budget "
-                    "information for ts,sp: {} {}".format(ts, sp)
+                    f"information for ts,sp: {ts} {sp}"
                 )
                 return np.nan, np.nan, np.nan
             elif (

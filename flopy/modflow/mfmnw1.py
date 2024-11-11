@@ -139,10 +139,9 @@ class ModflowMnw1(Package):
 
         # -input format checks:
         lossTypes = ["skin", "linear", "nonlinear"]
-        assert self.losstype.lower() in lossTypes, (
-            "LOSSTYPE (%s) must be one of the following: skin, linear, nonlinear"
-            % (self.losstype)
-        )
+        assert (
+            self.losstype.lower() in lossTypes
+        ), f"LOSSTYPE ({self.losstype}) must be one of the following: {lossTypes}"
         self.parent.add_package(self)
 
     @staticmethod
@@ -272,7 +271,7 @@ class ModflowMnw1(Package):
         f = open(self.fn_path, "w")
 
         # -write header
-        f.write("%s\n" % self.heading)
+        f.write(f"{self.heading}\n")
 
         # -Section 1 - MXMNW ipakcb IWELPT NOMOITER REF:kspref
         f.write(
@@ -287,7 +286,7 @@ class ModflowMnw1(Package):
         )
 
         # -Section 2 - LOSSTYPE {PLossMNW}
-        f.write("%s\n" % (self.losstype))
+        f.write(f"{self.losstype}\n")
 
         if self.wel1_bynode_qsum is not None:
             # -Section 3a - {FILE:filename WEL1:iunw1}
@@ -327,7 +326,7 @@ class ModflowMnw1(Package):
 
         # -Un-numbered section PREFIX:MNWNAME
         if self.mnwname:
-            f.write("PREFIX:%s\n" % (self.mnwname))
+            f.write(f"PREFIX:{self.mnwname}\n")
 
         f.close()
 

@@ -219,8 +219,8 @@ class NetCdf:
         self.log("initializing attributes")
         self.nc_crs_str = "epsg:4326"
         self.nc_crs_longname = "https://www.opengis.net/def/crs/EPSG/0/4326"
-        self.nc_semi_major = float(6378137.0)
-        self.nc_inverse_flat = float(298.257223563)
+        self.nc_semi_major = 6378137.0
+        self.nc_inverse_flat = 298.257223563
 
         self.global_attributes = {}
         self.global_attributes["namefile"] = self.model.namefile

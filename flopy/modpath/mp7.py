@@ -110,7 +110,7 @@ class Modpath7(BaseModel):
             raise TypeError(
                 "Modpath7: flow model is not an instance of "
                 "flopy.modflow.Modflow or flopy.mf6.MFModel. "
-                "Passed object of type {}".format(type(flowmodel))
+                f"Passed object of type {type(flowmodel)}"
             )
 
         # if a MFModel instance ensure flowmodel is a MODFLOW 6 GWF model
@@ -121,7 +121,7 @@ class Modpath7(BaseModel):
             ):
                 raise TypeError(
                     "Modpath7: flow model type must be gwf. "
-                    "Passed model_type is {}.".format(flowmodel.model_type)
+                    f"Passed model_type is {flowmodel.model_type}."
                 )
 
         # set flowmodel and flow_version attributes

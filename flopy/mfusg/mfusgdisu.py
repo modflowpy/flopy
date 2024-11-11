@@ -546,8 +546,8 @@ class MfUsgDisU(Package):
 
         if model.version != "mfusg":
             print(
-                "Warning: model version was reset from '{}' to 'mfusg' "
-                "in order to load a DISU file".format(model.version)
+                f"Warning: model version was reset from '{model.version}' "
+                "to 'mfusg' in order to load a DISU file"
             )
             model.version = "mfusg"
 

@@ -4,7 +4,7 @@ Support for MODPATH output files.
 
 import itertools
 import os
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Union
 
 import numpy as np
 from numpy.lib.recfunctions import append_fields, repack_fields
@@ -33,7 +33,7 @@ class ModpathFile(ParticleTrackFile):
     @staticmethod
     def parse(
         file_path: Union[str, os.PathLike], file_type: str
-    ) -> Tuple[bool, int, int, Optional[int]]:
+    ) -> tuple[bool, int, int, Optional[int]]:
         """
         Extract preliminary information from a MODPATH output file:
             - whether in compact format
@@ -97,7 +97,7 @@ class ModpathFile(ParticleTrackFile):
 
     def intersect(
         self, cells, to_recarray
-    ) -> Union[List[np.recarray], np.recarray]:
+    ) -> Union[list[np.recarray], np.recarray]:
         if self.version < 7:
             try:
                 raslice = self._data[["k", "i", "j"]]
@@ -239,7 +239,7 @@ class PathlineFile(ModpathFile):
         self.dtype, self._data = self._load()
         self.nid = np.unique(self._data["particleid"])
 
-    def _load(self) -> Tuple[np.dtype, np.ndarray]:
+    def _load(self) -> tuple[np.dtype, np.ndarray]:
         dtype = self.dtypes[self.version]
         if self.version == 7:
             dtyper = np.dtype(
@@ -563,7 +563,7 @@ class EndpointFile(ModpathFile):
         self.dtype, self._data = self._load()
         self.nid = np.unique(self._data["particleid"])
 
-    def _load(self) -> Tuple[np.dtype, np.ndarray]:
+    def _load(self) -> tuple[np.dtype, np.ndarray]:
         dtype = self.dtypes[self.version]
         data = loadtxt(self.fname, dtype=dtype, skiprows=self.skiprows)
 
@@ -873,7 +873,7 @@ class TimeseriesFile(ModpathFile):
         self.dtype, self._data = self._load()
         self.nid = np.unique(self._data["particleid"])
 
-    def _load(self) -> Tuple[np.dtype, np.ndarray]:
+    def _load(self) -> tuple[np.dtype, np.ndarray]:
         dtype = self.dtypes[self.version]
         if self.version in [3, 5] and not self.compact:
             dtype = np.dtype(

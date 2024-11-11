@@ -117,7 +117,7 @@ OBS_ID2_LUT = {
 }
 
 
-class Mf6Splitter(object):
+class Mf6Splitter:
     """
     A class for splitting a single model into a multi-model simulation
 
@@ -2493,7 +2493,7 @@ class Mf6Splitter(object):
                         for mkey, model in self._model_dict.items():
                             idx = np.asarray(new_model2 == mkey).nonzero()
                             tmp_node = new_node2[idx]
-                            cidx = np.asarray((tmp_node != None)).nonzero()  # noqa: E711
+                            cidx = np.asarray(tmp_node != None).nonzero()  # noqa: E711
                             tmp_cellid = model.modelgrid.get_lrc(
                                 tmp_node[cidx].to_list()
                             )

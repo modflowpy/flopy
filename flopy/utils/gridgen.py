@@ -2,7 +2,7 @@ import os
 import subprocess
 import warnings
 from pathlib import Path
-from typing import List, Union
+from typing import Union
 
 import numpy as np
 
@@ -1979,7 +1979,7 @@ class Gridgen:
 
     @staticmethod
     def read_quadtreegrid_top_dat(
-        model_ws: Union[str, os.PathLike], nodelay: List[int], lay: int
+        model_ws: Union[str, os.PathLike], nodelay: list[int], lay: int
     ):
         """Read quadtreegrid.top_.dat file
 
@@ -2002,7 +2002,7 @@ class Gridgen:
 
     @staticmethod
     def read_quadtreegrid_bot_dat(
-        model_ws: Union[str, os.PathLike], nodelay: List[int], lay: int
+        model_ws: Union[str, os.PathLike], nodelay: list[int], lay: int
     ):
         """Read quadtreegrid.bot_.dat file
 

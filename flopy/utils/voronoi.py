@@ -1,5 +1,5 @@
+from collections.abc import Iterator
 from math import sqrt
-from typing import Iterator, Tuple
 
 import numpy as np
 
@@ -10,7 +10,7 @@ from .utl_import import import_optional_dependency
 
 def get_sorted_vertices(
     icell_vertices, vertices, verbose=False
-) -> Iterator[Tuple[float, int]]:
+) -> Iterator[tuple[float, int]]:
     centroid = vertices[icell_vertices].mean(axis=0)
     tlist = []
     for i, iv in enumerate(icell_vertices):

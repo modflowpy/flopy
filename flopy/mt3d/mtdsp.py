@@ -209,8 +209,8 @@ class Mt3dDsp(Package):
                 val = kwargs.pop(name)
             else:
                 print(
-                    "DSP: setting dmcoef for component {} "
-                    "to zero, kwarg name {}".format(icomp, name)
+                    f"DSP: setting dmcoef for component {icomp} "
+                    f"to zero, kwarg name {name}"
                 )
             u2or3 = utype(
                 model,

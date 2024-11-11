@@ -14,7 +14,7 @@ import tempfile
 import warnings
 from pathlib import Path
 from shutil import move
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -1675,7 +1675,7 @@ class CellBudgetFile:
         paknam=None,
         paknam2=None,
         full3D=False,
-    ) -> Union[List, np.ndarray]:
+    ) -> Union[list, np.ndarray]:
         """
         Get data from the binary budget file.
 

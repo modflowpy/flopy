@@ -75,7 +75,7 @@ class ModflowPbc(Package):
 
         """
         f_pbc = open(self.fn_path, "w")
-        f_pbc.write("%s\n" % self.heading)
+        f_pbc.write(f"{self.heading}\n")
         f_pbc.write("%10i%10i\n" % (self.mxactp, self.mxcos))
         for n in range(self.parent.get_package("DIS").nper):
             if n < len(self.layer_row_column_data):

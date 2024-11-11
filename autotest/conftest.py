@@ -2,7 +2,6 @@ import re
 from importlib import metadata
 from pathlib import Path
 from platform import system
-from typing import List
 
 import matplotlib.pyplot as plt
 import pytest
@@ -52,7 +51,7 @@ def flopy_data_path() -> Path:
 
 
 @pytest.fixture(scope="session")
-def example_shapefiles(example_data_path) -> List[Path]:
+def example_shapefiles(example_data_path) -> list[Path]:
     return [f.resolve() for f in (example_data_path / "prj_test").glob("*")]
 
 

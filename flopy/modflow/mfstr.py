@@ -283,7 +283,7 @@ class ModflowStr(Package):
         if ntrib > 10:
             raise Exception(
                 "ModflowStr error: ntrib must be less that 10: "
-                "specified value = {}".format(ntrib)
+                f"specified value = {ntrib}"
             )
 
         if options is None:
@@ -366,8 +366,8 @@ class ModflowStr(Package):
                     d = d.to_records(index=False)
                 if isinstance(d, np.recarray):
                     e = (
-                        "ModflowStr error: recarray dtype: {} does not match "
-                        "self dtype: {}".format(d.dtype, self.dtype)
+                        f"ModflowStr error: recarray dtype: {d.dtype} "
+                        f"does not match self dtype: {self.dtype}"
                     )
                     assert d.dtype == self.dtype, e
                 elif isinstance(d, np.ndarray):
@@ -384,7 +384,7 @@ class ModflowStr(Package):
                 else:
                     raise Exception(
                         "ModflowStr error: unsupported data type: "
-                        "{} at kper {}".format(type(d), key)
+                        f"{type(d)} at kper {key}"
                     )
 
         # add stress_period_data to package
@@ -397,8 +397,8 @@ class ModflowStr(Package):
                     d = np.array(d)
                 if isinstance(d, np.recarray):
                     e = (
-                        "ModflowStr error: recarray dtype: {} does not match "
-                        "self dtype: {}".format(d.dtype, self.dtype2)
+                        f"ModflowStr error: recarray dtype: {d.dtype} "
+                        f"does not match self dtype: {self.dtype2}"
                     )
                     assert d.dtype == self.dtype2, e
                 elif isinstance(d, np.ndarray):
@@ -417,7 +417,7 @@ class ModflowStr(Package):
                 else:
                     raise Exception(
                         "ModflowStr error: unsupported data type: "
-                        "{} at kper {}".format(type(d), key)
+                        f"{type(d)} at kper {key}"
                     )
 
         # add segment_data to package

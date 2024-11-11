@@ -96,8 +96,8 @@ class Modpath7Bas(Package):
                 # check iface value
                 if value < 0 or value > 6:
                     raise ValueError(
-                        "defaultiface for package {} must be between 0 and 1 "
-                        "({} specified)".format(key, value)
+                        f"defaultiface for package {key} must be between 0 and 1 "
+                        f"({value} specified)"
                     )
 
         self.defaultifacecount = defaultifacecount

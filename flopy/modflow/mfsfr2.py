@@ -3168,9 +3168,9 @@ def _fmt_string_list(array, float_format="{!s}"):
             float_format = "{!s}"
         elif vtype == "s":
             raise ValueError(
-                "'str' type found in dtype for {!r}. "
+                f"'str' type found in dtype for {name!r}. "
                 "This gives unpredictable results when "
-                "recarray to file - change to 'object' type".format(name)
+                "recarray to file - change to 'object' type"
             )
         else:
             raise ValueError(f"unknown dtype for {name!r}: {vtype!r}")

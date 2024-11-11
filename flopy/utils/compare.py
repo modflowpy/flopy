@@ -1,6 +1,6 @@
 import os
 import textwrap
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 
@@ -85,10 +85,10 @@ def compare_budget(
     max_incpd=0.01,
     outfile: Optional[Union[str, os.PathLike]] = None,
     files1: Optional[
-        Union[str, os.PathLike, List[Union[str, os.PathLike]]]
+        Union[str, os.PathLike, list[Union[str, os.PathLike]]]
     ] = None,
     files2: Optional[
-        Union[str, os.PathLike, List[Union[str, os.PathLike]]]
+        Union[str, os.PathLike, list[Union[str, os.PathLike]]]
     ] = None,
 ):
     """Compare the budget results from two simulations.
@@ -292,10 +292,10 @@ def compare_swrbudget(
     max_incpd=0.01,
     outfile: Optional[Union[str, os.PathLike]] = None,
     files1: Optional[
-        Union[str, os.PathLike, List[Union[str, os.PathLike]]]
+        Union[str, os.PathLike, list[Union[str, os.PathLike]]]
     ] = None,
     files2: Optional[
-        Union[str, os.PathLike, List[Union[str, os.PathLike]]]
+        Union[str, os.PathLike, list[Union[str, os.PathLike]]]
     ] = None,
 ):
     """Compare the SWR budget results from two simulations.
@@ -493,10 +493,10 @@ def compare_heads(
     htol=0.001,
     outfile: Optional[Union[str, os.PathLike]] = None,
     files1: Optional[
-        Union[str, os.PathLike, List[Union[str, os.PathLike]]]
+        Union[str, os.PathLike, list[Union[str, os.PathLike]]]
     ] = None,
     files2: Optional[
-        Union[str, os.PathLike, List[Union[str, os.PathLike]]]
+        Union[str, os.PathLike, list[Union[str, os.PathLike]]]
     ] = None,
     difftol=False,
     verbose=False,
@@ -884,10 +884,10 @@ def compare_concentrations(
     ctol=0.001,
     outfile: Optional[Union[str, os.PathLike]] = None,
     files1: Optional[
-        Union[str, os.PathLike, List[Union[str, os.PathLike]]]
+        Union[str, os.PathLike, list[Union[str, os.PathLike]]]
     ] = None,
     files2: Optional[
-        Union[str, os.PathLike, List[Union[str, os.PathLike]]]
+        Union[str, os.PathLike, list[Union[str, os.PathLike]]]
     ] = None,
     difftol=False,
     verbose=False,
@@ -1115,10 +1115,10 @@ def compare_stages(
     namefile1: Union[str, os.PathLike] = None,
     namefile2: Union[str, os.PathLike] = None,
     files1: Optional[
-        Union[str, os.PathLike, List[Union[str, os.PathLike]]]
+        Union[str, os.PathLike, list[Union[str, os.PathLike]]]
     ] = None,
     files2: Optional[
-        Union[str, os.PathLike, List[Union[str, os.PathLike]]]
+        Union[str, os.PathLike, list[Union[str, os.PathLike]]]
     ] = None,
     htol=0.001,
     outfile: Optional[Union[str, os.PathLike]] = None,
@@ -1337,10 +1337,10 @@ def compare(
     outfile1: Optional[Union[str, os.PathLike]] = None,
     outfile2: Optional[Union[str, os.PathLike]] = None,
     files1: Optional[
-        Union[str, os.PathLike, List[Union[str, os.PathLike]]]
+        Union[str, os.PathLike, list[Union[str, os.PathLike]]]
     ] = None,
     files2: Optional[
-        Union[str, os.PathLike, List[Union[str, os.PathLike]]]
+        Union[str, os.PathLike, list[Union[str, os.PathLike]]]
     ] = None,
 ):
     """Compare the budget and head results for two MODFLOW-based model
