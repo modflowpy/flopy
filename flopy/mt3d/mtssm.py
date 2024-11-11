@@ -242,9 +242,7 @@ class Mt3dSsm(Package):
             if self.stress_period_data is not None:
                 for i in range(nper):
                     if i in self.stress_period_data.data:
-                        mxss_kper += np.sum(
-                            self.stress_period_data.data[i].itype == -1
-                        )
+                        mxss_kper += np.sum(self.stress_period_data.data[i].itype == -1)
                         mxss_kper += np.sum(
                             self.stress_period_data.data[i].itype == -15
                         )
@@ -307,12 +305,8 @@ class Mt3dSsm(Package):
 
         self.cevt = None
         try:
-            if cevt is None and (
-                model.mf.evt is not None or model.mf.ets is not None
-            ):
-                print(
-                    "found 'ets'/'evt' in modflow model, resetting cevt to 0.0"
-                )
+            if cevt is None and (model.mf.evt is not None or model.mf.ets is not None):
+                print("found 'ets'/'evt' in modflow model, resetting cevt to 0.0")
                 cevt = 0.0
         except:
             if model.verbose:
@@ -355,8 +349,7 @@ class Mt3dSsm(Package):
 
         if len(list(kwargs.keys())) > 0:
             raise Exception(
-                "SSM error: unrecognized kwargs: "
-                + " ".join(list(kwargs.keys()))
+                "SSM error: unrecognized kwargs: " + " ".join(list(kwargs.keys()))
             )
 
         # Add self to parent and return
@@ -548,9 +541,7 @@ class Mt3dSsm(Package):
 
         # Item D1: Dummy input line - line already read above
         if model.verbose:
-            print(
-                "   loading FWEL, FDRN, FRCH, FEVT, FRIV, FGHB, (FNEW(n), n=1,4)..."
-            )
+            print("   loading FWEL, FDRN, FRCH, FEVT, FRIV, FGHB, (FNEW(n), n=1,4)...")
         fwel = line[0:2]
         fdrn = line[2:4]
         frch = line[4:6]
@@ -728,10 +719,7 @@ class Mt3dSsm(Package):
 
             # Item D8: KSS, ISS, JSS, CSS, ITYPE, (CSSMS(n),n=1,NCOMP)
             if model.verbose:
-                print(
-                    "   loading KSS, ISS, JSS, CSS, ITYPE, "
-                    "(CSSMS(n),n=1,NCOMP)..."
-                )
+                print("   loading KSS, ISS, JSS, CSS, ITYPE, (CSSMS(n),n=1,NCOMP)...")
             if nss > 0:
                 current = np.empty((nss), dtype=dtype)
                 for ibnd in range(nss):

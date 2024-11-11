@@ -96,9 +96,7 @@ def test_get_ts_single_node(mfusg_model):
 
     # test if single node idx works
     one_hds = head_file.get_ts(idx=300)
-    assert (
-        one_hds[0, 1] == head[0][300]
-    ), "head from 'get_ts' != head from 'get_data'"
+    assert one_hds[0, 1] == head[0][300], "head from 'get_ts' != head from 'get_data'"
 
 
 @requires_exe("mfusg", "gridgen")

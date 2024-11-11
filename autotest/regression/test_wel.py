@@ -84,9 +84,7 @@ def test_binary_well(function_tmpdir):
     m.remove_package("WEL")
 
     # recreate well package with binary output
-    wel = ModflowWel(
-        m, stress_period_data=wel_data, binary=True, dtype=wd.dtype
-    )
+    wel = ModflowWel(m, stress_period_data=wel_data, binary=True, dtype=wd.dtype)
 
     # write the model to the new path
     m.write_input()
@@ -97,14 +95,10 @@ def test_binary_well(function_tmpdir):
     fn1 = os.path.join(pth, f"{mfnam}.nam")
 
     # compare the files
-    fsum = os.path.join(
-        function_tmpdir, f"{os.path.splitext(mfnam)[0]}.head.out"
-    )
+    fsum = os.path.join(function_tmpdir, f"{os.path.splitext(mfnam)[0]}.head.out")
     assert compare_heads(fn0, fn1, outfile=fsum), "head comparison failure"
 
-    fsum = os.path.join(
-        function_tmpdir, f"{os.path.splitext(mfnam)[0]}.budget.out"
-    )
+    fsum = os.path.join(function_tmpdir, f"{os.path.splitext(mfnam)[0]}.budget.out")
     assert compare_budget(
         fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
     ), "budget comparison failure"

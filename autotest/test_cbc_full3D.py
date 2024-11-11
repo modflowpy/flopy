@@ -73,14 +73,14 @@ def load_mf6(path, ws_out):
 def cbc_eval_size(cbcobj, nnodes, shape3d):
     cbc_pth = cbcobj.filename
 
-    assert cbcobj.nnodes == nnodes, (
-        f"{cbc_pth} nnodes ({cbcobj.nnodes}) " f"does not equal {nnodes}"
-    )
+    assert (
+        cbcobj.nnodes == nnodes
+    ), f"{cbc_pth} nnodes ({cbcobj.nnodes}) does not equal {nnodes}"
     a = np.squeeze(np.ones(cbcobj.shape, dtype=float))
     b = np.squeeze(np.ones(shape3d, dtype=float))
-    assert a.shape == b.shape, (
-        f"{cbc_pth} shape {cbcobj.shape} " f"does not conform to {shape3d}"
-    )
+    assert (
+        a.shape == b.shape
+    ), f"{cbc_pth} shape {cbcobj.shape} does not conform to {shape3d}"
 
 
 def cbc_eval_data(cbcobj, shape3d):
@@ -92,9 +92,7 @@ def cbc_eval_data(cbcobj, shape3d):
     times = cbcobj.get_times()
     for name in names:
         text = name.strip()
-        arr = np.squeeze(
-            cbcobj.get_data(text=text, totim=times[0], full3D=True)[0]
-        )
+        arr = np.squeeze(cbcobj.get_data(text=text, totim=times[0], full3D=True)[0])
         if text != "FLOW-JA-FACE":
             b = np.squeeze(np.ones(shape3d, dtype=float))
             assert arr.shape == b.shape, (

@@ -116,9 +116,7 @@ def sfr_data():
     r["iseg"] = sorted(list(range(1, 10)) * 3)
     r["ireach"] = [1, 2, 3] * 9
 
-    d = create_empty_recarray(
-        9, dtype=np.dtype([("nseg", int), ("outseg", int)])
-    )
+    d = create_empty_recarray(9, dtype=np.dtype([("nseg", int), ("outseg", int)]))
     d["nseg"] = range(1, 10)
     d["outseg"] = [4, 0, 6, 8, 3, 8, 1, 2, 8]
     return r, d
@@ -193,9 +191,7 @@ def test_sfr(function_tmpdir, mf2005_model_path, sfr_test_model_path):
         "UZFtest2.nam", "UZFtest2.sfr", mf2005_model_path, function_tmpdir
     )
 
-    assert isinstance(
-        sfr.plot()[0], matplotlib.axes.Axes
-    )  # test the plot() method
+    assert isinstance(sfr.plot()[0], matplotlib.axes.Axes)  # test the plot() method
     matplotlib.pyplot.close()
 
     def interpolate_to_reaches(sfr):
@@ -216,12 +212,7 @@ def test_sfr(function_tmpdir, mf2005_model_path, sfr_test_model_path):
                 ]
                 xp = [dist[0], dist[-1]]
                 assert (
-                    np.sum(
-                        np.abs(
-                            reaches[reachvar]
-                            - np.interp(dist, xp, fp).tolist()
-                        )
-                    )
+                    np.sum(np.abs(reaches[reachvar] - np.interp(dist, xp, fp).tolist()))
                     < 0.01
                 )
         return reach_data
@@ -239,15 +230,11 @@ def test_sfr(function_tmpdir, mf2005_model_path, sfr_test_model_path):
     out_inds = np.asarray(sfr.reach_data.reachID == outreach).nonzero()
     assert (
         sfr.reach_data.slope[reach_inds]
-        == (
-            sfr.reach_data.strtop[reach_inds] - sfr.reach_data.strtop[out_inds]
-        )
+        == (sfr.reach_data.strtop[reach_inds] - sfr.reach_data.strtop[out_inds])
         / sfr.reach_data.rchlen[reach_inds]
     )
     chk = sfr.check()
-    assert (
-        sfr.reach_data.slope.min() < 0.0001 and "minimum slope" in chk.warnings
-    )
+    assert sfr.reach_data.slope.min() < 0.0001 and "minimum slope" in chk.warnings
     # negative segments for lakes shouldn't be included in segment numbering order check
     assert "segment numbering order" not in chk.warnings
     sfr.reach_data.slope[0] = 1.1
@@ -456,9 +443,7 @@ def test_example(mf2005_model_path):
     nparseg = 0
     const = 1.486  # constant for manning's equation, units of cfs
     dleak = 0.0001  # closure tolerance for stream stage computation
-    ipakcb = (
-        53  # flag for writing SFR output to cell-by-cell budget (on unit 53)
-    )
+    ipakcb = 53  # flag for writing SFR output to cell-by-cell budget (on unit 53)
     istcb2 = 81  # flag for writing SFR output to text file
     dataset_5 = {0: [nss, 0, 0]}  # dataset 5 (see online guide)
 
@@ -735,9 +720,7 @@ def test_SfrFile(function_tmpdir, sfr_examples_path, mf2005_model_path):
     assert df.gradient.values[-1] == 5.502e-02
     assert df.shape == (1080, 20)
 
-    ml = Modflow.load(
-        "test1tr.nam", model_ws=mf2005_model_path, exe_name="mf2005"
-    )
+    ml = Modflow.load("test1tr.nam", model_ws=mf2005_model_path, exe_name="mf2005")
     ml.change_model_ws(function_tmpdir)
     ml.write_input()
     ml.run_model()
@@ -848,9 +831,7 @@ def test_sfrcheck(function_tmpdir, mf2005_model_path):
     # throw warning if isfropt=1 and strtop at default
     assert "maximum streambed top" in chk.warnings
     assert "minimum streambed top" in chk.warnings
-    m.sfr.reach_data["strtop"] = m.sfr._interpolate_to_reaches(
-        "elevup", "elevdn"
-    )
+    m.sfr.reach_data["strtop"] = m.sfr._interpolate_to_reaches("elevup", "elevdn")
     m.sfr.get_slopes()
     m.sfr.reach_data["strhc1"] = 1.0
     m.sfr.reach_data["strthick"] = 1.0
@@ -899,8 +880,7 @@ def test_isfropt_icalc(function_tmpdir, example_data_path, isfropt, icalc):
     success = ml.run_model()[0]
     if not success:
         raise AssertionError(
-            f"sfrtest{isfropt}{icalc}.nam "
-            "is broken, please fix SFR 6a, 6bc logic!"
+            f"sfrtest{isfropt}{icalc}.nam is broken, please fix SFR 6a, 6bc logic!"
         )
 
 
@@ -958,8 +938,6 @@ def test_mf2005(function_tmpdir, namfile):
         )
     for name in str2.dtype2.names:
         assert (
-            np.array_equal(
-                str2.segment_data[0][name], m.str.segment_data[0][name]
-            )
+            np.array_equal(str2.segment_data[0][name], m.str.segment_data[0][name])
             is True
         )

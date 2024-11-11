@@ -88,9 +88,7 @@ def test_str_fixed_free(function_tmpdir, example_data_path):
     except:
         m2 = None
 
-    assert (
-        m2 is not None
-    ), "could not load the fixed format model with aux variables"
+    assert m2 is not None, "could not load the fixed format model with aux variables"
 
     for p in function_tmpdir.glob("*"):
         p.unlink()
@@ -114,9 +112,7 @@ def test_str_fixed_free(function_tmpdir, example_data_path):
     except:
         m2 = None
 
-    assert (
-        m2 is not None
-    ), "could not load the free format model with aux variables"
+    assert m2 is not None, "could not load the free format model with aux variables"
 
     # compare the fixed and free format head files
     fn1 = function_tmpdir / "str.nam"

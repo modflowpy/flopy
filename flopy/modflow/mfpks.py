@@ -245,10 +245,7 @@ class ModflowPks(Package):
 
         # dataset 0 -- header
 
-        print(
-            "   Warning: "
-            "load method not completed. default pks object created."
-        )
+        print("   Warning: load method not completed. default pks object created.")
 
         if openfile:
             f.close()

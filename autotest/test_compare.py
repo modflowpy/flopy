@@ -26,9 +26,7 @@ def test_diffmax():
     a1 = np.array([1, 2, 3])
     a2 = np.array([4, 5, 7])
     d, indices = _diffmax(a1, a2)
-    indices = indices[
-        0
-    ]  # return value is a tuple of arrays (1 for each dimension)
+    indices = indices[0]  # return value is a tuple of arrays (1 for each dimension)
     assert d == 4
     assert list(indices) == [2]
 
@@ -37,9 +35,7 @@ def test_difftol():
     a1 = np.array([1, 2, 3])
     a2 = np.array([3, 5, 7])
     d, indices = _difftol(a1, a2, 2.5)
-    indices = indices[
-        0
-    ]  # return value is a tuple of arrays (1 for each dimension)
+    indices = indices[0]  # return value is a tuple of arrays (1 for each dimension)
     assert d == 4
     print(d, indices)
     assert list(indices) == [1, 2]
@@ -123,9 +119,7 @@ def comparison_model_1(function_tmpdir):
     m.remove_package("WEL")
 
     # recreate well package with binary output
-    wel = ModflowWel(
-        m, stress_period_data=wel_data, binary=True, dtype=wd.dtype
-    )
+    wel = ModflowWel(m, stress_period_data=wel_data, binary=True, dtype=wd.dtype)
 
     m.write_input()
 

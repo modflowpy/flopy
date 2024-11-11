@@ -67,15 +67,11 @@ class Mt3dTob(Package):
                 MaxFluxCells = MaxFluxCells + len(FluxGroup[1])
                 MaxFluxObs = MaxFluxObs + 1
         f_tob.write("%10d%10d%10d\n" % (MaxConcObs, MaxFluxObs, MaxFluxCells))
-        f_tob.write(
-            "%s%10d%10d%10d\n" % (self.outnam, inConcObs, inFluxObs, inSaveObs)
-        )
+        f_tob.write("%s%10d%10d%10d\n" % (self.outnam, inConcObs, inFluxObs, inSaveObs))
 
         if inFluxObs:
             nFluxGroup = len(self.FluxGroups)
-            f_tob.write(
-                "%10d%10f%10d\n" % (nFluxGroup, self.FScale, self.iOutFlux)
-            )
+            f_tob.write("%10d%10f%10d\n" % (nFluxGroup, self.FScale, self.iOutFlux))
             for FluxGroup in self.FluxGroups:
                 nFluxTimeObs, FluxTimeObs = self.assign_layer_row_column_data(
                     FluxGroup[0], 5, zerobase=False
@@ -94,9 +90,7 @@ class Mt3dTob(Package):
                     )
                 for c in Cells:
                     c = c[0]  # Still to fix this!
-                    f_tob.write(
-                        "%10d%10d%10d%10f\n" % (c[0], c[1], c[2], c[3])
-                    )
+                    f_tob.write("%10d%10d%10d%10f\n" % (c[0], c[1], c[2], c[3]))
 
         f_tob.close()
         return

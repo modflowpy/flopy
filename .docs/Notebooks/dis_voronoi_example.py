@@ -130,9 +130,7 @@ sim_ws = os.path.join(workspace, "flow")
 sim = flopy.mf6.MFSimulation(
     sim_name=name, version="mf6", exe_name="mf6", sim_ws=sim_ws
 )
-tdis = flopy.mf6.ModflowTdis(
-    sim, time_units="DAYS", perioddata=[[1.0, 1, 1.0]]
-)
+tdis = flopy.mf6.ModflowTdis(sim, time_units="DAYS", perioddata=[[1.0, 1, 1.0]])
 gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
 ims = flopy.mf6.ModflowIms(
     sim,
@@ -145,9 +143,7 @@ disv_gridprops = voronoi_grid.get_disv_gridprops()
 nlay = 1
 top = 1.0
 botm = [0.0]
-disv = flopy.mf6.ModflowGwfdisv(
-    gwf, nlay=nlay, **disv_gridprops, top=top, botm=botm
-)
+disv = flopy.mf6.ModflowGwfdisv(gwf, nlay=nlay, **disv_gridprops, top=top, botm=botm)
 npf = flopy.mf6.ModflowGwfnpf(
     gwf,
     xt3doptions=[(True)],
@@ -209,9 +205,7 @@ disv_gridprops = voronoi_grid.get_disv_gridprops()
 nlay = 1
 top = 1.0
 botm = [0.0]
-disv = flopy.mf6.ModflowGwtdisv(
-    gwt, nlay=nlay, **disv_gridprops, top=top, botm=botm
-)
+disv = flopy.mf6.ModflowGwtdisv(gwt, nlay=nlay, **disv_gridprops, top=top, botm=botm)
 ic = flopy.mf6.ModflowGwtic(gwt, strt=0.0)
 sto = flopy.mf6.ModflowGwtmst(gwt, porosity=0.2)
 adv = flopy.mf6.ModflowGwtadv(gwt, scheme="TVD")

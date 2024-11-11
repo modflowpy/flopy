@@ -34,11 +34,7 @@ def create_tutorials_rst():
     rst_path = project_root_path / ".docs" / "tutorials.rst"
     nbs_path = project_root_path / ".docs" / "Notebooks"
     filenames = sorted(
-        [
-            path.name
-            for path in nbs_path.rglob("*.py")
-            if "tutorial" in path.name
-        ]
+        [path.name for path in nbs_path.rglob("*.py") if "tutorial" in path.name]
     )
 
     print(f"Creating {rst_path}")
@@ -77,11 +73,7 @@ def create_examples_rst():
     rst_path = project_root_path / ".docs" / "examples.rst"
     nbs_path = project_root_path / ".docs" / "Notebooks"
     filenames = sorted(
-        [
-            path.name
-            for path in nbs_path.rglob("*.py")
-            if "example" in path.name
-        ]
+        [path.name for path in nbs_path.rglob("*.py") if "example" in path.name]
     )
 
     print(f"Creating {rst_path}")

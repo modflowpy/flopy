@@ -254,9 +254,7 @@ class ModflowStr(Package):
         self.set_cbc_output_file(ipakcb, model, filenames[1])
 
         if istcb2 is not None:
-            model.add_output_file(
-                istcb2, fname=filenames[2], package=self._ftype()
-            )
+            model.add_output_file(istcb2, fname=filenames[2], package=self._ftype())
         else:
             ipakcb = 0
 
@@ -375,10 +373,7 @@ class ModflowStr(Package):
                 elif isinstance(d, int):
                     if model.verbose:
                         if d < 0:
-                            print(
-                                "   reusing str data from previous "
-                                "stress period"
-                            )
+                            print("   reusing str data from previous stress period")
                         elif d == 0:
                             print(f"   no str data for stress period {key}")
                 else:
@@ -411,9 +406,7 @@ class ModflowStr(Package):
                                 "from previous stress period"
                             )
                         elif d == 0:
-                            print(
-                                f"   no str segment data for stress period {key}"
-                            )
+                            print(f"   no str segment data for stress period {key}")
                 else:
                     raise Exception(
                         "ModflowStr error: unsupported data type: "
@@ -612,16 +605,12 @@ class ModflowStr(Package):
                         ds9 = []
                         for idx in range(self.ntrib):
                             ds9.append(line[idx])
-                        f_str.write(
-                            write_fixed_var(ds9, length=fmt9, free=free)
-                        )
+                        f_str.write(write_fixed_var(ds9, length=fmt9, free=free))
 
                 # dataset 10
                 if self.ndiv > 0:
                     for line in sdata:
-                        f_str.write(
-                            write_fixed_var([line[-1]], length=10, free=free)
-                        )
+                        f_str.write(write_fixed_var([line[-1]], length=10, free=free))
 
         # close the str file
         f_str.close()
@@ -758,9 +747,7 @@ class ModflowStr(Package):
             dt = ModflowStr.get_empty(
                 1, aux_names=aux_names, structured=model.structured
             ).dtype
-            pak_parms = mfparbc.load(
-                f, npstr, dt, model, ext_unit_dict, model.verbose
-            )
+            pak_parms = mfparbc.load(f, npstr, dt, model, ext_unit_dict, model.verbose)
 
         if nper is None:
             nper = model.nper
@@ -834,17 +821,13 @@ class ModflowStr(Package):
                             parval = float(par_dict["parval"])
                         else:
                             try:
-                                parval = float(
-                                    model.mfpar.pval.pval_dict[pname]
-                                )
+                                parval = float(model.mfpar.pval.pval_dict[pname])
                             except:
                                 parval = float(par_dict["parval"])
 
                         # fill current parameter data (par_current)
                         for ibnd, t in enumerate(data_dict):
-                            current[ibnd] = tuple(
-                                t[: len(current.dtype.names)]
-                            )
+                            current[ibnd] = tuple(t[: len(current.dtype.names)])
 
                 else:
                     if model.verbose:
@@ -942,9 +925,7 @@ class ModflowStr(Package):
                 ext_unit_dict, filetype=ModflowStr._ftype()
             )
             if ipakcb > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=ipakcb
-                )
+                iu, filenames[1] = model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
             if abs(istcb2) > 0:
                 iu, filenames[2] = model.get_ext_dict_attr(
                     ext_unit_dict, unit=abs(istcb2)

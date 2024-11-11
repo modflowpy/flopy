@@ -384,9 +384,7 @@ for r in range(nrow):
         if idomain[r, c] < 1:
             continue
         conductance = leakance * dx * dy
-        gw_discharge_data.append(
-            (0, r, c, modelgrid.top[r, c] - 0.5, conductance, 1.0)
-        )
+        gw_discharge_data.append((0, r, c, modelgrid.top[r, c] - 0.5, conductance, 1.0))
 gw_discharge_data[:10]
 # -
 
@@ -498,9 +496,7 @@ assert success
 # Plot the model results
 
 # +
-water_table = flopy.utils.postprocessing.get_water_table(
-    gwf.output.head().get_data()
-)
+water_table = flopy.utils.postprocessing.get_water_table(gwf.output.head().get_data())
 heads = gwf.output.head().get_data()
 hmin, hmax = water_table.min(), water_table.max()
 contours = np.arange(0, 100, 10)

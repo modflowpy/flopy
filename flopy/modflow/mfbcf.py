@@ -282,9 +282,7 @@ class ModflowBcf(Package):
                 f_bcf.write(self.vcont[k].get_file_entry())
             if transient and ((self.laycon[k] == 2) or (self.laycon[k] == 3)):
                 f_bcf.write(self.sf2[k].get_file_entry())
-            if (self.iwdflg != 0) and (
-                (self.laycon[k] == 1) or (self.laycon[k] == 3)
-            ):
+            if (self.iwdflg != 0) and ((self.laycon[k] == 1) or (self.laycon[k] == 3)):
                 f_bcf.write(self.wetdry[k].get_file_entry())
         f_bcf.close()
 
@@ -402,9 +400,7 @@ class ModflowBcf(Package):
         # TRPY array
         if model.verbose:
             print("   loading TRPY...")
-        trpy = Util2d.load(
-            f, model, (nlay,), np.float32, "trpy", ext_unit_dict
-        )
+        trpy = Util2d.load(f, model, (nlay,), np.float32, "trpy", ext_unit_dict)
 
         # property data for each layer based on options
         transient = not dis.steady.all()
@@ -447,9 +443,7 @@ class ModflowBcf(Package):
             else:
                 if model.verbose:
                     print(f"   loading hy layer {k + 1:3d}...")
-                t = Util2d.load(
-                    f, model, (nrow, ncol), np.float32, "hy", ext_unit_dict
-                )
+                t = Util2d.load(f, model, (nrow, ncol), np.float32, "hy", ext_unit_dict)
                 hy[k] = t
 
             # vcont
@@ -490,9 +484,7 @@ class ModflowBcf(Package):
                 ext_unit_dict, filetype=ModflowBcf._ftype()
             )
             if ipakcb > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=ipakcb
-                )
+                iu, filenames[1] = model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
                 model.add_pop_key_list(ipakcb)
 
         # create instance of bcf object

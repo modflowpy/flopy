@@ -40,9 +40,7 @@ def export_ascii_grid(modelgrid, file_path, v, nodata=0.0):
         np.savetxt(f, v, fmt="%.4f")
 
 
-def get_lake_connection_data(
-    nrow, ncol, delr, delc, lakibd, idomain, lakebed_leakance
-):
+def get_lake_connection_data(nrow, ncol, delr, delc, lakibd, idomain, lakebed_leakance):
     # derived from original modflow6-examples function in ex-gwt-prudic2004t2
     lakeconnectiondata = []
     nlakecon = [0, 0]
@@ -262,9 +260,10 @@ def test_lake(function_tmpdir, example_data_path):
         pakdata_dict[0] == 54
     ), f"number of lake connections ({pakdata_dict[0]}) not equal to 54."
 
-    assert len(connectiondata) == 54, (
-        "number of lake connectiondata entries ({}) not equal "
-        "to 54.".format(len(connectiondata))
+    assert (
+        len(connectiondata) == 54
+    ), "number of lake connectiondata entries ({}) not equal to 54.".format(
+        len(connectiondata)
     )
 
     lak_pak_data = []
@@ -462,9 +461,10 @@ def test_embedded_lak_ex01(function_tmpdir, example_data_path):
         pakdata_dict[0] == 57
     ), f"number of lake connections ({pakdata_dict[0]}) not equal to 57."
 
-    assert len(connectiondata) == 57, (
-        "number of lake connectiondata entries ({}) not equal "
-        "to 57.".format(len(connectiondata))
+    assert (
+        len(connectiondata) == 57
+    ), "number of lake connectiondata entries ({}) not equal to 57.".format(
+        len(connectiondata)
     )
 
     lak_pak_data = []
@@ -517,10 +517,7 @@ def test_embedded_lak_prudic(example_data_path):
     bot0 = np.loadtxt(fname)
     botm = np.array(
         [bot0]
-        + [
-            np.ones(shape2d, dtype=float) * (bot0 - (delv * k))
-            for k in range(1, nlay)
-        ]
+        + [np.ones(shape2d, dtype=float) * (bot0 - (delv * k)) for k in range(1, nlay)]
     )
     fname = data_ws / "prudic2004t2_idomain1.dat"
     idomain0 = np.loadtxt(fname, dtype=np.int32)
@@ -559,9 +556,7 @@ def test_embedded_lak_prudic(example_data_path):
     for idx, nconn in enumerate(lakconn):
         assert pakdata_dict[idx] == nconn, (
             "number of connections calculated by get_lak_connections ({}) "
-            "not equal to {} for lake {}.".format(
-                pakdata_dict[idx], nconn, idx + 1
-            )
+            "not equal to {} for lake {}.".format(pakdata_dict[idx], nconn, idx + 1)
         )
 
     # compare connectiondata
@@ -584,9 +579,7 @@ def test_embedded_lak_prudic(example_data_path):
             else:
                 match = np.allclose(cd[jdx], cdbase[jdx])
             if not match:
-                print(
-                    f"connection data do match for connection {idx} for lake {cd[0]}"
-                )
+                print(f"connection data do match for connection {idx} for lake {cd[0]}")
                 break
         assert match, f"connection data do not match for connection {jdx}"
 
@@ -620,10 +613,7 @@ def test_embedded_lak_prudic_mixed(example_data_path):
     bot0 = np.loadtxt(fname)
     botm = np.array(
         [bot0]
-        + [
-            np.ones(shape2d, dtype=float) * (bot0 - (delv * k))
-            for k in range(1, nlay)
-        ]
+        + [np.ones(shape2d, dtype=float) * (bot0 - (delv * k)) for k in range(1, nlay)]
     )
     fname = data_ws / "prudic2004t2_idomain1.dat"
     idomain0 = np.loadtxt(fname, dtype=np.int32)
@@ -664,8 +654,6 @@ def test_embedded_lak_prudic_mixed(example_data_path):
     for data in connectiondata:
         lakeno, bedleak = data[0], data[4]
         if lakeno == 0:
-            assert (
-                bedleak == "none"
-            ), f"bedleak for lake 0 is not 'none' ({bedleak})"
+            assert bedleak == "none", f"bedleak for lake 0 is not 'none' ({bedleak})"
         else:
             assert bedleak == 1.0, f"bedleak for lake 1 is not 1.0 ({bedleak})"

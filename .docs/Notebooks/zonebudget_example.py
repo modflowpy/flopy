@@ -219,9 +219,7 @@ zb = flopy.utils.ZoneBudget(cbc_f, zon, totim=times, aliases=aliases)
 zb.get_budget(names=["STORAGE", "WELLS"], zones=["SURF", "UFA"], net=True)
 # -
 
-df = zb.get_dataframes(
-    names=["STORAGE", "WELLS"], zones=["SURF", "UFA"], net=True
-)
+df = zb.get_dataframes(names=["STORAGE", "WELLS"], zones=["SURF", "UFA"], net=True)
 df.head(6)
 
 
@@ -315,9 +313,7 @@ times = [2.0, 500.0, 1000.0, 1095.0]
 for idx, t in enumerate(times):
     ax = fig.add_subplot(1, len(times), idx + 1)
 
-    zb = flopy.utils.ZoneBudget(
-        cbc_f, zon, kstpkper=None, totim=t, aliases=aliases
-    )
+    zb = flopy.utils.ZoneBudget(cbc_f, zon, kstpkper=None, totim=t, aliases=aliases)
 
     recname = "STORAGE"
     values_in = zb.get_dataframes(names=f"FROM_{recname}").T.squeeze()
@@ -395,9 +391,7 @@ zonbud.get_dataframes(net=True, pivot=True)
 mt = ml.modeltime
 
 # budget recarray must be pivoted to get volumetric budget!
-zonbud.get_volumetric_budget(
-    mt, recarray=zonbud.get_budget(net=True, pivot=True)
-)
+zonbud.get_volumetric_budget(mt, recarray=zonbud.get_budget(net=True, pivot=True))
 # -
 
 try:

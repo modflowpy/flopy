@@ -38,9 +38,7 @@ def read1d(f, a):
     return a
 
 
-def features_to_shapefile(
-    features, featuretype, filename: Union[str, os.PathLike]
-):
+def features_to_shapefile(features, featuretype, filename: Union[str, os.PathLike]):
     """
     Write a shapefile for the features of type featuretype.
 
@@ -106,9 +104,7 @@ def features_to_shapefile(
     wr.close()
 
 
-def ndarray_to_asciigrid(
-    fname: Union[str, os.PathLike], a, extent, nodata=1.0e30
-):
+def ndarray_to_asciigrid(fname: Union[str, os.PathLike], a, extent, nodata=1.0e30):
     # extent info
     xmin, xmax, ymin, ymax = extent
     ncol, nrow = a.shape
@@ -238,9 +234,7 @@ class Gridgen:
             self.modelgrid = modelgrid.parent.modelgrid
 
         else:
-            raise TypeError(
-                "A StructuredGrid object must be supplied to Gridgen"
-            )
+            raise TypeError("A StructuredGrid object must be supplied to Gridgen")
 
         self.nlay = self.modelgrid.nlay
         self.nrow = self.modelgrid.nrow
@@ -269,12 +263,8 @@ class Gridgen:
         if vertical_pass_through:
             self.vertical_pass_through = "True"
 
-        self.smoothing_level_vertical = kwargs.pop(
-            "smoothing_level_vertical", 1
-        )
-        self.smoothing_level_horizontal = kwargs.pop(
-            "smoothing_level_horizontal", 1
-        )
+        self.smoothing_level_vertical = kwargs.pop("smoothing_level_vertical", 1)
+        self.smoothing_level_horizontal = kwargs.pop("smoothing_level_horizontal", 1)
         # Set up a blank _active_domain list with None for each layer
         self._addict = {}
         self._active_domain = []
@@ -289,9 +279,7 @@ class Gridgen:
         # Set up blank _elev and _elev_extent dictionaries
         self._asciigrid_dict = {}
 
-    def set_surface_interpolation(
-        self, isurf, type, elev=None, elev_extent=None
-    ):
+    def set_surface_interpolation(self, isurf, type, elev=None, elev_extent=None):
         """
         Parameters
         ----------
@@ -326,9 +314,7 @@ class Gridgen:
         if type == "ASCIIGRID":
             if isinstance(elev, np.ndarray):
                 if elev_extent is None:
-                    raise ValueError(
-                        "ASCIIGRID was specified but elev_extent was not."
-                    )
+                    raise ValueError("ASCIIGRID was specified but elev_extent was not.")
                 try:
                     xmin, xmax, ymin, ymax = elev_extent
                 except:
@@ -360,9 +346,7 @@ class Gridgen:
             return path if path.is_file() else self.model_ws / p
 
         path = _resolve(p)
-        path = (
-            path if path.is_file() else _resolve(Path(p).with_suffix(".shp"))
-        )
+        path = path if path.is_file() else _resolve(Path(p).with_suffix(".shp"))
         return path if path.is_file() else None
 
     def add_active_domain(self, feature, layers):
@@ -408,9 +392,7 @@ class Gridgen:
         ), f"Shapefile does not exist: {shapefile_path}"
 
         # store shapefile info
-        self._addict[shapefile_path.stem] = relpath_safe(
-            shapefile_path, self.model_ws
-        )
+        self._addict[shapefile_path.stem] = relpath_safe(shapefile_path, self.model_ws)
         for k in layers:
             self._active_domain[k] = shapefile_path.stem
 
@@ -593,9 +575,7 @@ class Gridgen:
         f.write("\n")
         f.write(self._grid_export_blocks())
         f.close()
-        assert os.path.isfile(
-            fname
-        ), f"Could not create export dfn file: {fname}"
+        assert os.path.isfile(fname), f"Could not create export dfn file: {fname}"
 
         # Export shapefiles
         cmds = [
@@ -815,9 +795,7 @@ class Gridgen:
         self.nodes = nodes
 
         # nodelay
-        nodelay = self.read_qtg_nodesperlay_dat(
-            model_ws=self.model_ws, nlay=nlay
-        )
+        nodelay = self.read_qtg_nodesperlay_dat(model_ws=self.model_ws, nlay=nlay)
 
         # top
         top = [0] * nlay
@@ -964,9 +942,7 @@ class Gridgen:
 
         """
         nlay = self.get_nlay()
-        nodelay = self.read_qtg_nodesperlay_dat(
-            model_ws=self.model_ws, nlay=nlay
-        )
+        nodelay = self.read_qtg_nodesperlay_dat(model_ws=self.model_ws, nlay=nlay)
         return nodelay
 
     def get_top(self):
@@ -1302,9 +1278,7 @@ class Gridgen:
         """
         from .cvfdutil import to_cvfd
 
-        verts, iverts = to_cvfd(
-            self._vertdict, nodestop=ncells, verbose=verbose
-        )
+        verts, iverts = to_cvfd(self._vertdict, nodestop=ncells, verbose=verbose)
         return verts, iverts
 
     def get_cellxy(self, ncells):
@@ -1763,9 +1737,7 @@ class Gridgen:
             if bot.min() == bot.max():
                 s += f"  BOTTOM LAYER {k + 1} = CONSTANT {bot.min()}\n"
             else:
-                s += "  BOTTOM LAYER {0} = OPEN/CLOSE bot{0}.dat\n".format(
-                    k + 1
-                )
+                s += "  BOTTOM LAYER {0} = OPEN/CLOSE bot{0}.dat\n".format(k + 1)
                 fname = os.path.join(self.model_ws, f"bot{k + 1}.dat")
                 np.savetxt(fname, bot)
 
@@ -1894,9 +1866,7 @@ class Gridgen:
             self._vertdict[nodenumber] = shapes[i].points
 
     @staticmethod
-    def read_qtg_nod(
-        model_ws: Union[str, os.PathLike], nodes_only: bool = False
-    ):
+    def read_qtg_nod(model_ws: Union[str, os.PathLike], nodes_only: bool = False):
         """Read qtg.nod file
 
         Parameters

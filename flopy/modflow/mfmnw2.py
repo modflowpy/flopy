@@ -492,9 +492,7 @@ class Mnw:
 
         """
         nnodes = self.nnodes
-        node_data = ModflowMnw2.get_empty_node_data(
-            np.abs(nnodes), aux_names=self.aux
-        )
+        node_data = ModflowMnw2.get_empty_node_data(np.abs(nnodes), aux_names=self.aux)
 
         names = Mnw.get_item2_names(self)
         for n in names:
@@ -563,8 +561,7 @@ class Mnw:
             )
         else:
             raise NotImplementedError(
-                "Mnw2: get_default_spd_dtype not implemented for "
-                "unstructured grids"
+                "Mnw2: get_default_spd_dtype not implemented for unstructured grids"
             )
 
     @staticmethod
@@ -821,9 +818,7 @@ class Mnw:
 
             def _getloc(n):
                 """Output for dataset 2d2."""
-                fmt = (
-                    indent + "{0} {0} ".format(float_format) + "{:.0f} {:.0f}"
-                )
+                fmt = indent + "{0} {0} ".format(float_format) + "{:.0f} {:.0f}"
                 return fmt.format(
                     self.node_data.ztop[n],
                     self.node_data.zbotm[n],
@@ -863,9 +858,7 @@ class Mnw:
         # dataset 2g
         if self.pumpcap > 0:
             fmt = indent + "{0} {0} {0} {0}\n".format(float_format)
-            f_mnw.write(
-                fmt.format(self.hlift, self.liftq0, self.liftqmax, self.hwtol)
-            )
+            f_mnw.write(fmt.format(self.hlift, self.liftq0, self.liftqmax, self.hwtol))
         # dataset 2h
         if self.pumpcap > 0:
             fmt = indent + "{0} {0}\n".format(float_format)
@@ -1042,18 +1035,12 @@ class ModflowMnw2(Package):
         if node_data is not None:
             if isinstance(node_data, pd.DataFrame):
                 node_data = node_data.to_records(index=False)
-            self.node_data = self.get_empty_node_data(
-                len(node_data), aux_names=aux
-            )
+            self.node_data = self.get_empty_node_data(len(node_data), aux_names=aux)
             names = [
-                n
-                for n in node_data.dtype.names
-                if n in self.node_data.dtype.names
+                n for n in node_data.dtype.names if n in self.node_data.dtype.names
             ]
             for n in names:
-                self.node_data[n] = node_data[
-                    n
-                ]  # recarray of Mnw properties by node
+                self.node_data[n] = node_data[n]  # recarray of Mnw properties by node
             self.nodtot = len(self.node_data)
             self._sort_node_data()
 
@@ -1070,15 +1057,11 @@ class ModflowMnw2(Package):
         )
         if stress_period_data is not None:
             stress_period_data = {
-                per: sp.to_records(index=False)
-                if isinstance(sp, pd.DataFrame)
-                else sp
+                per: sp.to_records(index=False) if isinstance(sp, pd.DataFrame) else sp
                 for per, sp in stress_period_data.items()
             }
             for per, data in stress_period_data.items():
-                spd = ModflowMnw2.get_empty_stress_period_data(
-                    len(data), aux_names=aux
-                )
+                spd = ModflowMnw2.get_empty_stress_period_data(len(data), aux_names=aux)
                 names = [n for n in data.dtype.names if n in spd.dtype.names]
                 for n in names:
                     spd[n] = data[n]
@@ -1155,9 +1138,7 @@ class ModflowMnw2(Package):
         dtype = ModflowMnw2.get_default_node_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        return create_empty_recarray(
-            maxnodes, dtype, default_value=default_value
-        )
+        return create_empty_recarray(maxnodes, dtype, default_value=default_value)
 
     @staticmethod
     def get_default_node_dtype(structured=True):
@@ -1348,9 +1329,7 @@ class ModflowMnw2(Package):
             )
             mnw[mnwobj.wellid] = mnwobj
             # master table with all node data
-            node_data = np.append(node_data, mnwobj.node_data).view(
-                np.recarray
-            )
+            node_data = np.append(node_data, mnwobj.node_data).view(np.recarray)
 
         stress_period_data = {}  # stress period data table for package (flopy convention)
         itmp = []
@@ -1369,9 +1348,7 @@ class ModflowMnw2(Package):
                     )
                     hlim, qcut, qfrcmn, qfrcmx = 0, 0, 0, 0
                     if mnw[wellid].qlimit < 0:
-                        hlim, qcut, qfrcmn, qfrcmx = _parse_4b(
-                            get_next_line(f)
-                        )
+                        hlim, qcut, qfrcmn, qfrcmx = _parse_4b(get_next_line(f))
                     # update package stress period data table
                     ndw = node_data[node_data.wellid == wellid]
                     kij = [ndw.k[0], ndw.i[0], ndw.j[0]]
@@ -1401,9 +1378,9 @@ class ModflowMnw2(Package):
                 pass
             else:
                 # copy pumping rates from previous stress period
-                mnw[wellid].stress_period_data[per] = mnw[
-                    wellid
-                ].stress_period_data[per - 1]
+                mnw[wellid].stress_period_data[per] = mnw[wellid].stress_period_data[
+                    per - 1
+                ]
             itmp.append(itmp_per)
 
         if openfile:
@@ -1547,9 +1524,7 @@ class ModflowMnw2(Package):
         for wellid in mnws:
             nd = node_data[node_data.wellid == wellid]
             nnodes = Mnw.get_nnodes(nd)
-            mnwspd = Mnw.get_empty_stress_period_data(
-                self.nper, aux_names=self.aux
-            )
+            mnwspd = Mnw.get_empty_stress_period_data(self.nper, aux_names=self.aux)
             for per, itmp in enumerate(self.itmp):
                 inds = stress_period_data[per].wellid == wellid
                 if itmp > 0 and np.any(inds):
@@ -1625,10 +1600,8 @@ class ModflowMnw2(Package):
         stress_period_data = {}
         for per, itmp in enumerate(self.itmp):
             if itmp > 0:
-                stress_period_data[per] = (
-                    ModflowMnw2.get_empty_stress_period_data(
-                        itmp, aux_names=self.aux
-                    )
+                stress_period_data[per] = ModflowMnw2.get_empty_stress_period_data(
+                    itmp, aux_names=self.aux
                 )
                 i = 0
                 for mnw in mnwobjs:
@@ -1643,9 +1616,9 @@ class ModflowMnw2(Package):
                         ]
                         stress_period_data[per]["wellid"][i - 1] = mnw.wellid
                         for n in names:
-                            stress_period_data[per][n][i - 1] = (
-                                mnw.stress_period_data[n][per]
-                            )
+                            stress_period_data[per][n][i - 1] = mnw.stress_period_data[
+                                n
+                            ][per]
                 stress_period_data[per].sort(order="wellid")
                 if i < itmp:
                     raise ItmpError(itmp, i)
@@ -1688,9 +1661,9 @@ class ModflowMnw2(Package):
                 for per in self.stress_period_data.data.keys():
                     for col in todrop:
                         inds = self.stress_period_data[per].wellid == wellid
-                        self.stress_period_data[per][col][inds] = (
-                            self.node_data[wellnd][col]
-                        )
+                        self.stress_period_data[per][col][inds] = self.node_data[
+                            wellnd
+                        ][col]
         self.node_data_MfList = self.node_data_MfList.drop(todrop)
         """
         todrop = {'qfrcmx', 'qfrcmn'}
@@ -1731,9 +1704,7 @@ class ModflowMnw2(Package):
                 f_mnw.write(f" aux {abc}")
         f_mnw.write("\n")
 
-    def write_file(
-        self, filename=None, float_format=" {:15.7E}", use_tables=True
-    ):
+    def write_file(self, filename=None, float_format=" {:15.7E}", use_tables=True):
         """
         Write the package file.
 
@@ -1768,9 +1739,7 @@ class ModflowMnw2(Package):
         # need a method that assigns attributes from table to objects!
         # call make_mnw_objects?? (table is definitive then)
         if use_tables:
-            mnws = np.unique(
-                self.node_data.wellid
-            ).tolist()  # preserve any order
+            mnws = np.unique(self.node_data.wellid).tolist()  # preserve any order
         else:
             mnws = self.mnw.values()
         for k in mnws:
@@ -1789,36 +1758,28 @@ class ModflowMnw2(Package):
                     if self.mnw[wellid].pumpcap > 0:
                         fmt = " " + float_format
                         f_mnw.write(
-                            fmt.format(
-                                *self.stress_period_data[per].capmult[n]
-                            )
+                            fmt.format(*self.stress_period_data[per].capmult[n])
                         )
                     if qdes > 0 and self.gwt:
-                        f_mnw.write(
-                            fmt.format(*self.stress_period_data[per].cprime[n])
-                        )
+                        f_mnw.write(fmt.format(*self.stress_period_data[per].cprime[n]))
                     if len(self.aux) > 0:
                         for var in self.aux:
                             fmt = " " + float_format
                             f_mnw.write(
-                                fmt.format(
-                                    *self.stress_period_data[per][var][n]
-                                )
+                                fmt.format(*self.stress_period_data[per][var][n])
                             )
                     f_mnw.write("\n")
                     if self.mnw[wellid].qlimit < 0:
-                        hlim, qcut = self.stress_period_data[per][
-                            ["hlim", "qcut"]
-                        ][n]
+                        hlim, qcut = self.stress_period_data[per][["hlim", "qcut"]][n]
                         fmt = float_format + " {:.0f}"
                         f_mnw.write(fmt.format(hlim, qcut))
                         if qcut != 0:
                             fmt = " {} {}".format(float_format)
                             f_mnw.write(
                                 fmt.format(
-                                    *self.stress_period_data[per][
-                                        ["qfrcmn", "qfrcmx"]
-                                    ][n]
+                                    *self.stress_period_data[per][["qfrcmn", "qfrcmx"]][
+                                        n
+                                    ]
                                 )
                             )
                         f_mnw.write("\n")
@@ -1854,9 +1815,7 @@ def _parse_1(line):
     option = []  # aux names
     if len(line) > 0:
         option += [
-            line[i]
-            for i in np.arange(1, len(line))
-            if "aux" in line[i - 1].lower()
+            line[i] for i in np.arange(1, len(line)) if "aux" in line[i - 1].lower()
         ]
     return mnwmax, nodtot, ipakcb, mnwprint, option
 
@@ -1910,9 +1869,7 @@ def _parse_2(f):
     d2dw = dict(zip(["rw", "rskin", "kskin", "B", "C", "P", "cwc"], [0] * 7))
     if losstype.lower() != "none":
         # update d2dw items
-        d2dw.update(
-            _parse_2c(get_next_line(f), losstype)
-        )  # dict of values for well
+        d2dw.update(_parse_2c(get_next_line(f), losstype))  # dict of values for well
         for k, v in d2dw.items():
             if v > 0:
                 d2d[k].append(v)
@@ -2038,9 +1995,7 @@ def _parse_2(f):
     )
 
 
-def _parse_2c(
-    line, losstype, rw=-1, rskin=-1, kskin=-1, B=-1, C=-1, P=-1, cwc=-1
-):
+def _parse_2c(line, losstype, rw=-1, rskin=-1, kskin=-1, B=-1, C=-1, P=-1, cwc=-1):
     """
 
     Parameters

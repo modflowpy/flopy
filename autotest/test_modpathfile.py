@@ -63,9 +63,7 @@ def __create_and_run_simulation(
 
     # Create the Flopy temporal discretization object
     pd = (perlen, nstp, tsmult)
-    tdis = ModflowTdis(
-        sim, pname="tdis", time_units="DAYS", nper=nper, perioddata=[pd]
-    )
+    tdis = ModflowTdis(sim, pname="tdis", time_units="DAYS", nper=nper, perioddata=[pd])
 
     # Create the Flopy groundwater flow (gwf) model object
     model_nam_file = f"{name}.nam"
@@ -238,9 +236,7 @@ def mp7_large(module_tmpdir):
 
 
 @requires_exe("mf6")
-def test_pathline_file_sorts_in_ctor(
-    function_tmpdir, module_tmpdir, mp7_small
-):
+def test_pathline_file_sorts_in_ctor(function_tmpdir, module_tmpdir, mp7_small):
     sim, forward_model_name, backward_model_name, nodew, nodesr = mp7_small
     ws = function_tmpdir / "ws"
 
@@ -252,8 +248,7 @@ def test_pathline_file_sorts_in_ctor(
 
     pathline_file = PathlineFile(forward_path)
     assert np.all(
-        pathline_file._data[:-1]["particleid"]
-        <= pathline_file._data[1:]["particleid"]
+        pathline_file._data[:-1]["particleid"] <= pathline_file._data[1:]["particleid"]
     )
 
 
@@ -339,9 +334,7 @@ def test_write_shapefile(function_tmpdir, mp7_small, longfieldname):
     fieldname = "newfield" + ("longname" if longfieldname else "")
     fieldval = "x"
     pathlines = [
-        rfn.append_fields(
-            pl, fieldname, list(repeat(fieldval, len(pl))), dtypes="|S1"
-        )
+        rfn.append_fields(pl, fieldname, list(repeat(fieldval, len(pl))), dtypes="|S1")
         for pl in pathlines
     ]
 

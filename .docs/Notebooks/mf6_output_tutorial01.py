@@ -34,9 +34,7 @@ import flopy
 exe_name = "mf6"
 project_root_path = Path.cwd().parent.parent
 ws = os.path.abspath(os.path.dirname(""))
-sim_ws = str(
-    project_root_path / "examples" / "data" / "mf6" / "test001e_UZF_3lay"
-)
+sim_ws = str(project_root_path / "examples" / "data" / "mf6" / "test001e_UZF_3lay")
 
 # load the model
 sim = flopy.mf6.MFSimulation.load(

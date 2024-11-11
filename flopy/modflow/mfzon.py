@@ -177,9 +177,7 @@ class ModflowZon(Package):
             if model.verbose:
                 print(f'   reading data for "{zonnam:<10s}" zone')
             # load data
-            t = Util2d.load(
-                f, model, (nrow, ncol), np.int32, zonnam, ext_unit_dict
-            )
+            t = Util2d.load(f, model, (nrow, ncol), np.int32, zonnam, ext_unit_dict)
             # add unit number to list of external files in ext_unit_dict
             # to remove.
             if t.locat is not None:

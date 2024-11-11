@@ -403,9 +403,7 @@ class ModflowNwt(Package):
 
         # dataset 0 -- header
         flines = [
-            line.strip()
-            for line in f.readlines()
-            if not line.strip().startswith("#")
+            line.strip() for line in f.readlines() if not line.strip().startswith("#")
         ]
 
         if openfile:

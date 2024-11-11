@@ -249,9 +249,7 @@ swi = flopy.modflow.ModflowSwi2(
     solver2params=solver2params,
 )
 oc = flopy.modflow.ModflowOc(ml, stress_period_data=ocspd)
-pcg = flopy.modflow.ModflowPcg(
-    ml, hclose=1.0e-6, rclose=3.0e-3, mxiter=100, iter1=50
-)
+pcg = flopy.modflow.ModflowPcg(ml, hclose=1.0e-6, rclose=3.0e-3, mxiter=100, iter1=50)
 
 # Write input files and run the SWI2 model.
 
@@ -382,9 +380,7 @@ lpf = flopy.modflow.ModflowLpf(
 )
 wel = flopy.modflow.ModflowWel(m, stress_period_data=well_data)
 oc = flopy.modflow.ModflowOc(m, save_every=365, save_types=["save head"])
-pcg = flopy.modflow.ModflowPcg(
-    m, hclose=1.0e-5, rclose=3.0e-3, mxiter=100, iter1=50
-)
+pcg = flopy.modflow.ModflowPcg(m, hclose=1.0e-5, rclose=3.0e-3, mxiter=100, iter1=50)
 # Create the basic MT3DMS model data
 adv = flopy.mt3d.Mt3dAdv(
     m,

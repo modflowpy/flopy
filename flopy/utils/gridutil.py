@@ -293,9 +293,7 @@ def get_disv_kwargs(
     if np.isscalar(botm):
         botm = botm * np.ones((nlay, nrow, ncol), dtype=float)
     elif isinstance(botm, list):
-        assert (
-            len(botm) == nlay
-        ), "if botm provided as a list it must have length nlay"
+        assert len(botm) == nlay, "if botm provided as a list it must have length nlay"
         b = np.empty((nlay, nrow, ncol), dtype=float)
         for k in range(nlay):
             b[k] = botm[k]

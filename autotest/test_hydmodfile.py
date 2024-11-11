@@ -55,13 +55,9 @@ def test_hydmodfile_create(function_tmpdir):
 
 def test_hydmodfile_load(function_tmpdir, hydmod_model_path):
     model = "test1tr.nam"
-    m = Modflow.load(
-        model, version="mf2005", model_ws=hydmod_model_path, verbose=True
-    )
+    m = Modflow.load(model, version="mf2005", model_ws=hydmod_model_path, verbose=True)
     hydref = m.hyd
-    assert isinstance(
-        hydref, ModflowHyd
-    ), "Did not load hydmod package...test1tr.hyd"
+    assert isinstance(hydref, ModflowHyd), "Did not load hydmod package...test1tr.hyd"
 
     m.change_model_ws(function_tmpdir)
     m.hyd.write_file()
@@ -101,9 +97,7 @@ def test_hydmodfile_read(hydmod_model_path):
 
     for label in labels:
         data = h.get_data(obsname=label)
-        assert data.shape == (
-            len(times),
-        ), f"data shape is not ({len(times)},)"
+        assert data.shape == (len(times),), f"data shape is not ({len(times)},)"
 
     data = h.get_data()
     assert data.shape == (len(times),), f"data shape is not ({len(times)},)"
@@ -137,9 +131,7 @@ def test_mf6obsfile_read(mf6_obs_model_path):
         assert isinstance(h, Mf6Obs)
 
         ntimes = h.get_ntimes()
-        assert (
-            ntimes == 3
-        ), f"Not enough times in {txt} file...{os.path.basename(pth)}"
+        assert ntimes == 3, f"Not enough times in {txt} file...{os.path.basename(pth)}"
 
         times = h.get_times()
         assert len(times) == 3, "Not enough times in {} file...{}".format(
@@ -167,14 +159,10 @@ def test_mf6obsfile_read(mf6_obs_model_path):
 
         for label in labels:
             data = h.get_data(obsname=label)
-            assert data.shape == (
-                len(times),
-            ), f"data shape is not ({len(times)},)"
+            assert data.shape == (len(times),), f"data shape is not ({len(times)},)"
 
         data = h.get_data()
-        assert data.shape == (
-            len(times),
-        ), f"data shape is not ({len(times)},)"
+        assert data.shape == (len(times),), f"data shape is not ({len(times)},)"
         assert (
             len(data.dtype.names) == nitems + 1
         ), f"data column length is not {len(nitems + 1)}"

@@ -29,32 +29,22 @@ def test_relpath_safe(function_tmpdir, scrub, use_paths):
         and splitdrive(function_tmpdir)[0] != splitdrive(getcwd())[0]
     ):
         if use_paths:
-            assert (
-                Path(relpath_safe(function_tmpdir))
-                == function_tmpdir.absolute()
-            )
+            assert Path(relpath_safe(function_tmpdir)) == function_tmpdir.absolute()
             assert relpath_safe(Path(which("mf6"))) == str(
                 Path(which("mf6")).absolute()
             )
         else:
             assert (
-                Path(relpath_safe(str(function_tmpdir)))
-                == function_tmpdir.absolute()
+                Path(relpath_safe(str(function_tmpdir))) == function_tmpdir.absolute()
             )
-            assert relpath_safe(which("mf6")) == str(
-                Path(which("mf6")).absolute()
-            )
+            assert relpath_safe(which("mf6")) == str(Path(which("mf6")).absolute())
     else:
         if use_paths:
-            assert Path(
-                relpath_safe(function_tmpdir, function_tmpdir.parent)
-            ) == Path(function_tmpdir.name)
+            assert Path(relpath_safe(function_tmpdir, function_tmpdir.parent)) == Path(
+                function_tmpdir.name
+            )
             assert (
-                Path(
-                    relpath_safe(
-                        function_tmpdir, function_tmpdir.parent.parent
-                    )
-                )
+                Path(relpath_safe(function_tmpdir, function_tmpdir.parent.parent))
                 == Path(function_tmpdir.parent.name) / function_tmpdir.name
             )
             assert relpath_safe(Path(which("mf6"))) == relpath(
@@ -73,9 +63,7 @@ def test_relpath_safe(function_tmpdir, scrub, use_paths):
                 )
                 == Path(function_tmpdir.parent.name) / function_tmpdir.name
             )
-            assert relpath_safe(which("mf6")) == relpath(
-                which("mf6"), getcwd()
-            )
+            assert relpath_safe(which("mf6")) == relpath(which("mf6"), getcwd())
 
         # test user login obfuscation
         with set_dir("/"):

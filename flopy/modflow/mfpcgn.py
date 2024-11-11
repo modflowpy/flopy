@@ -336,16 +336,12 @@ class ModflowPcgn(Package):
         else:
             # dataset 1
             sfmt = " {0:9d} {1:9d} {2:9.3g} {3:9.3g}\n"
-            line = sfmt.format(
-                self.iter_mo, self.iter_mi, self.close_r, self.close_h
-            )
+            line = sfmt.format(self.iter_mo, self.iter_mi, self.close_r, self.close_h)
             f.write(line)
 
             # dataset 2
             sfmt = " {0:9.3g} {1:9d} {2:9d} {3:9d}\n"
-            line = sfmt.format(
-                self.relax, self.ifill, self.unit_pc, self.unit_ts
-            )
+            line = sfmt.format(self.relax, self.ifill, self.unit_pc, self.unit_ts)
             f.write(line)
 
             # dataset 3
@@ -516,17 +512,11 @@ class ModflowPcgn(Package):
                 ext_unit_dict, filetype=ModflowPcgn._ftype()
             )
             if unit_pc > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=unit_pc
-                )
+                iu, filenames[1] = model.get_ext_dict_attr(ext_unit_dict, unit=unit_pc)
             if unit_ts > 0:
-                iu, filenames[2] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=unit_ts
-                )
+                iu, filenames[2] = model.get_ext_dict_attr(ext_unit_dict, unit=unit_ts)
             if ipunit > 0:
-                iu, filenames[3] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=ipunit
-                )
+                iu, filenames[3] = model.get_ext_dict_attr(ext_unit_dict, unit=ipunit)
 
         return cls(
             model,

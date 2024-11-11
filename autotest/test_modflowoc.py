@@ -20,6 +20,4 @@ def test_modflowoc_load_fails_when_wrong_nlay_nper_nstp(
     mpath = example_data_path / "mf2005_test"
     # noinspection PyTypeChecker
     with pytest.raises((ValueError, OSError)):
-        ModflowOc.load(
-            mpath / "fhb.oc", model, nper=nper, nstp=nstp, nlay=nlay
-        )
+        ModflowOc.load(mpath / "fhb.oc", model, nper=nper, nstp=nstp, nlay=nlay)

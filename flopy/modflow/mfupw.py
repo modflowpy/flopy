@@ -161,8 +161,7 @@ class ModflowUpw(Package):
     ):
         if model.version != "mfnwt":
             raise Exception(
-                "Error: model version must be mfnwt to use "
-                f"{self._ftype()} package"
+                f"Error: model version must be mfnwt to use {self._ftype()} package"
             )
 
         # set default unit number of one is not specified
@@ -452,9 +451,7 @@ class ModflowUpw(Package):
             if model.verbose:
                 print(f"   loading hk layer {k + 1:3d}...")
             if "hk" not in par_types:
-                t = Util2d.load(
-                    f, model, (nrow, ncol), np.float32, "hk", ext_unit_dict
-                )
+                t = Util2d.load(f, model, (nrow, ncol), np.float32, "hk", ext_unit_dict)
             else:
                 line = f.readline()
                 t = mfpar.parameter_fill(
@@ -489,9 +486,7 @@ class ModflowUpw(Package):
             if layvka[k] != 0:
                 key = "vani"
             if "vk" not in par_types and "vani" not in par_types:
-                t = Util2d.load(
-                    f, model, (nrow, ncol), np.float32, key, ext_unit_dict
-                )
+                t = Util2d.load(f, model, (nrow, ncol), np.float32, key, ext_unit_dict)
             else:
                 line = f.readline()
                 t = mfpar.parameter_fill(
@@ -566,9 +561,7 @@ class ModflowUpw(Package):
                 ext_unit_dict, filetype=ModflowUpw._ftype()
             )
             if ipakcb > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=ipakcb
-                )
+                iu, filenames[1] = model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
                 model.add_pop_key_list(ipakcb)
 
         # create upw object

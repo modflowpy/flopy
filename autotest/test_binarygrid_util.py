@@ -43,27 +43,20 @@ def test_mfgrddis_modelgrid(mfgrd_test_path):
     plt.close()
 
     extents = modelgrid.extent
-    errmsg = (
-        f"extents {extents} of {fn} does not equal (0.0, 8000.0, 0.0, 8000.0)"
-    )
+    errmsg = f"extents {extents} of {fn} does not equal (0.0, 8000.0, 0.0, 8000.0)"
     assert extents == (0.0, 8000.0, 0.0, 8000.0), errmsg
 
     ncpl = modelgrid.ncol * modelgrid.nrow
-    assert (
-        modelgrid.ncpl == ncpl
-    ), f"ncpl ({modelgrid.ncpl}) does not equal {ncpl}"
+    assert modelgrid.ncpl == ncpl, f"ncpl ({modelgrid.ncpl}) does not equal {ncpl}"
 
     nvert = modelgrid.nvert
     iverts = modelgrid.iverts
     maxvertex = max([max(sublist[1:]) for sublist in iverts])
-    assert (
-        maxvertex + 1 == nvert
-    ), f"nvert ({maxvertex + 1}) does not equal {nvert}"
+    assert maxvertex + 1 == nvert, f"nvert ({maxvertex + 1}) does not equal {nvert}"
     verts = modelgrid.verts
-    assert nvert == verts.shape[0], (
-        f"number of vertex (x, y) pairs ({verts.shape[0]}) "
-        f"does not equal {nvert}"
-    )
+    assert (
+        nvert == verts.shape[0]
+    ), f"number of vertex (x, y) pairs ({verts.shape[0]}) does not equal {nvert}"
 
 
 def test_mfgrddisv_MfGrdFile(mfgrd_test_path):
@@ -107,19 +100,14 @@ def test_mfgrddisv_modelgrid(mfgrd_test_path):
     nvert = mg.nvert
     iverts = mg.iverts
     maxvertex = max([max(sublist[1:]) for sublist in iverts])
-    assert (
-        maxvertex + 1 == nvert
-    ), f"nvert ({maxvertex + 1}) does not equal {nvert}"
+    assert maxvertex + 1 == nvert, f"nvert ({maxvertex + 1}) does not equal {nvert}"
     verts = mg.verts
-    assert nvert == verts.shape[0], (
-        f"number of vertex (x, y) pairs ({verts.shape[0]}) "
-        f"does not equal {nvert}"
-    )
+    assert (
+        nvert == verts.shape[0]
+    ), f"number of vertex (x, y) pairs ({verts.shape[0]}) does not equal {nvert}"
 
     cellxy = np.column_stack(mg.xyzcellcenters[:2])
-    errmsg = (
-        f"shape of flow.disv centroids {cellxy.shape} not equal to (218, 2)."
-    )
+    errmsg = f"shape of flow.disv centroids {cellxy.shape} not equal to (218, 2)."
     assert cellxy.shape == (218, 2), errmsg
 
 
@@ -166,11 +154,8 @@ def test_mfgrddisu_modelgrid(mfgrd_test_path):
     nvert = mg.nvert
     iverts = mg.iverts
     maxvertex = max([max(sublist[1:]) for sublist in iverts])
-    assert (
-        maxvertex + 1 == nvert
-    ), f"nvert ({maxvertex + 1}) does not equal {nvert}"
+    assert maxvertex + 1 == nvert, f"nvert ({maxvertex + 1}) does not equal {nvert}"
     verts = mg.verts
-    assert nvert == verts.shape[0], (
-        f"number of vertex (x, y) pairs ({verts.shape[0]}) "
-        f"does not equal {nvert}"
-    )
+    assert (
+        nvert == verts.shape[0]
+    ), f"number of vertex (x, y) pairs ({verts.shape[0]}) does not equal {nvert}"

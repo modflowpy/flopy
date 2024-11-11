@@ -81,9 +81,7 @@ ws = os.path.join(model_ws, "mp7_ex1_cs")
 nm = "ex01_mf6"
 
 # Create the Flopy simulation object
-sim = flopy.mf6.MFSimulation(
-    sim_name=nm, exe_name=mfexe, version="mf6", sim_ws=ws
-)
+sim = flopy.mf6.MFSimulation(sim_name=nm, exe_name=mfexe, version="mf6", sim_ws=ws)
 
 # Create the Flopy temporal discretization object
 pd = (perlen, nstp, tsmult)
@@ -133,9 +131,7 @@ npf = flopy.mf6.modflow.mfgwfnpf.ModflowGwfnpf(
 flopy.mf6.modflow.mfgwfrcha.ModflowGwfrcha(gwf, recharge=rch)
 # wel
 wd = [(wel_loc, wel_q)]
-flopy.mf6.modflow.mfgwfwel.ModflowGwfwel(
-    gwf, maxbound=1, stress_period_data={0: wd}
-)
+flopy.mf6.modflow.mfgwfwel.ModflowGwfwel(gwf, maxbound=1, stress_period_data={0: wd})
 # river
 rd = []
 for i in range(nrow):
@@ -258,9 +254,7 @@ riv_epd = e.get_destination_endpoint_data(dest_cells=nodesr)
 colors = ["green", "orange", "red"]
 
 # +
-f, axes = plt.subplots(
-    ncols=3, nrows=2, sharey=True, sharex=True, figsize=(15, 10)
-)
+f, axes = plt.subplots(ncols=3, nrows=2, sharey=True, sharex=True, figsize=(15, 10))
 axes = axes.flatten()
 
 idax = 0

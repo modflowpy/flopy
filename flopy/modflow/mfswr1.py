@@ -55,9 +55,7 @@ class ModflowSwr1(Package):
 
     """
 
-    def __init__(
-        self, model, extension="swr", unitnumber=None, filenames=None
-    ):
+    def __init__(self, model, extension="swr", unitnumber=None, filenames=None):
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowSwr1._defaultunit()
@@ -141,9 +139,7 @@ class ModflowSwr1(Package):
             filename = f
             f = open(filename, "r")
 
-        print(
-            "Warning: load method not completed. default swr1 object created."
-        )
+        print("Warning: load method not completed. default swr1 object created.")
 
         if openfile:
             f.close()

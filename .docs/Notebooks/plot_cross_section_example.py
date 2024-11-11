@@ -181,9 +181,7 @@ xsect = flopy.plot.PlotCrossSection(model=ml, line={"Column": 5})
 csa = xsect.plot_array(a)
 patches = xsect.plot_ibound()
 linecollection = xsect.plot_grid()
-t = ax.set_title(
-    "Column 6 Cross-Section with Horizontal hydraulic conductivity"
-)
+t = ax.set_title("Column 6 Cross-Section with Horizontal hydraulic conductivity")
 cb = plt.colorbar(csa, shrink=0.75)
 
 # + [markdown] pycharm={"name": "#%% md\n"}
@@ -459,9 +457,7 @@ xsect = flopy.plot.PlotCrossSection(model=ml6, line={"Column": 5})
 csa = xsect.plot_array(a)
 patches = xsect.plot_ibound()
 linecollection = xsect.plot_grid()
-t = ax.set_title(
-    "Column 6 Cross-Section with Horizontal hydraulic conductivity"
-)
+t = ax.set_title("Column 6 Cross-Section with Horizontal hydraulic conductivity")
 cb = plt.colorbar(csa, shrink=0.75)
 
 # + [markdown] pycharm={"name": "#%% md\n"}
@@ -479,9 +475,7 @@ head = hds.get_alldata()[0]
 cbc_file = os.path.join(modelpth, "freyberg.cbc")
 cbc = flopy.utils.CellBudgetFile(cbc_file, precision="double")
 spdis = cbc.get_data(text="SPDIS")[-1]
-qx, qy, qz = flopy.utils.postprocessing.get_specific_discharge(
-    spdis, ml6, head=head
-)
+qx, qy, qz = flopy.utils.postprocessing.get_specific_discharge(spdis, ml6, head=head)
 
 fig = plt.figure(figsize=(18, 5))
 ax = fig.add_subplot(1, 1, 1)
@@ -696,9 +690,7 @@ def run_vertex_grid_example(ws):
     # riv
     riverline = [[(Lx - 1.0, Ly), (Lx - 1.0, 0.0)]]
     rivcells = g.intersect(riverline, "line", 0)
-    rivspd = [
-        [(0, icpl), 320.0, 100000.0, 318] for icpl in rivcells["nodenumber"]
-    ]
+    rivspd = [[(0, icpl), 320.0, 100000.0, 318] for icpl in rivcells["nodenumber"]]
     riv = flopy.mf6.ModflowGwfriv(gwf, stress_period_data=rivspd)
 
     # output control
@@ -1198,9 +1190,7 @@ def build_mf6gwt(sim_folder):
         ("GWFHEAD", "../mf6gwf/flow.hds"),
         ("GWFBUDGET", "../mf6gwf/flow.bud"),
     ]
-    flopy.mf6.ModflowGwtfmi(
-        gwt, flow_imbalance_correction=True, packagedata=pd
-    )
+    flopy.mf6.ModflowGwtfmi(gwt, flow_imbalance_correction=True, packagedata=pd)
     sourcerecarray = [
         ("RCH-1", "AUX", "CONCENTRATION"),
     ]
@@ -1239,9 +1229,7 @@ def build_mf6gwt(sim_folder):
             ("obs2", "CONCENTRATION", obs2),
         ],
     }
-    flopy.mf6.ModflowUtlobs(
-        gwt, digits=10, print_input=True, continuous=obs_data
-    )
+    flopy.mf6.ModflowUtlobs(gwt, digits=10, print_input=True, continuous=obs_data)
     return sim
 
 
@@ -1322,9 +1310,7 @@ with styles.USGSMap():
     # set labels using styles
     styles.xlabel(label="x-position (m)")
     styles.ylabel(label="elevation (m)")
-    styles.heading(
-        letter="A.", heading="Simulated hydraulic head", fontsize=10
-    )
+    styles.heading(letter="A.", heading="Simulated hydraulic head", fontsize=10)
     ax.set_aspect(1.0)
 
 # + [markdown] pycharm={"name": "#%% md\n"}

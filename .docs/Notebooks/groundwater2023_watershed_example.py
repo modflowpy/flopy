@@ -70,9 +70,7 @@ def densify_geometry(line, step, keep_internal_nodes=True):
     lines_strings = []
     if keep_internal_nodes:
         for idx in range(1, len(line)):
-            lines_strings.append(
-                shapely.geometry.LineString(line[idx - 1 : idx + 1])
-            )
+            lines_strings.append(shapely.geometry.LineString(line[idx - 1 : idx + 1]))
     else:
         lines_strings = [shapely.geometry.LineString(line)]
 
@@ -262,9 +260,7 @@ dx = dy = 5000
 multiplier = 1.175
 transition = 20000.0
 ncells = 7
-smoothr = [
-    transition * (multiplier - 1.0) / (multiplier ** float(ncells) - 1.0)
-]
+smoothr = [transition * (multiplier - 1.0) / (multiplier ** float(ncells) - 1.0)]
 for i in range(ncells - 1):
     smoothr.append(smoothr[i] * multiplier)
 smooth = smoothr.copy()
@@ -326,9 +322,7 @@ pmv.plot_array(
     alpha=0.2,
     cmap="Reds_r",
 )
-cg = pmv.contour_array(
-    top_sg_vrc, levels=levels, linewidths=0.3, colors="0.75"
-)
+cg = pmv.contour_array(top_sg_vrc, levels=levels, linewidths=0.3, colors="0.75")
 pmv.plot_inactive()
 
 ax.plot(bp[:, 0], bp[:, 1], "k-")
@@ -503,9 +497,7 @@ dis6 = flopy.mf6.ModflowGwfdis(
     delc=dx,
 )
 g = Gridgen(gwf.modelgrid, model_ws=temp_path)
-adpoly = [
-    [[(1000, 1000), (3000, 1000), (3000, 2000), (1000, 2000), (1000, 1000)]]
-]
+adpoly = [[[(1000, 1000), (3000, 1000), (3000, 2000), (1000, 2000), (1000, 1000)]]]
 adpoly = boundary_polygon + [boundary_polygon[0]]
 adpoly = [[adpoly]]
 g.add_refinement_features([lgr_poly], "polygon", 2, range(1))
@@ -570,9 +562,7 @@ for x in struct_gridc.get_xvertices_for_layer(0)[0, :]:
 nodes = np.array(nodes)
 
 # +
-tri = Triangle(
-    maximum_area=5000 * 5000, angle=30, nodes=nodes, model_ws=temp_path
-)
+tri = Triangle(maximum_area=5000 * 5000, angle=30, nodes=nodes, model_ws=temp_path)
 poly = bp
 tri.add_polygon(poly)
 tri.build(verbose=False)
@@ -753,9 +743,7 @@ with styles.USGSMap():
                 gg = grids[idx]
                 tt = topo_grids[idx]
                 for g, t in zip(gg[1:], tt[1:]):
-                    pmvc = flopy.plot.PlotMapView(
-                        modelgrid=g, ax=ax, extent=extent
-                    )
+                    pmvc = flopy.plot.PlotMapView(modelgrid=g, ax=ax, extent=extent)
                     pmvc.plot_array(top_ngc, vmin=vmin, vmax=vmax)
                     pmvc.plot_grid(**grid_dict)
                     cgc = pmvc.contour_array(top_ngc, **contour_dict)
@@ -873,9 +861,7 @@ with styles.USGSMap():
         length=9,
         pad=2,
     )
-    cbar.ax.set_title(
-        "Elevation (m)", pad=2.5, loc="center", fontdict=font_dict
-    )
+    cbar.ax.set_title("Elevation (m)", pad=2.5, loc="center", fontdict=font_dict)
 # -
 
 # ### Plot the river intersection for the six grids
@@ -939,12 +925,8 @@ with styles.USGSMap():
                 gg = grids[idx]
                 tt = intersections[idx]
                 for g, t in zip(gg[1:], tt[1:]):
-                    pmvc = flopy.plot.PlotMapView(
-                        modelgrid=g, ax=ax, extent=extent
-                    )
-                    pmvc.plot_array(
-                        t, masked_values=(0,), cmap=intersection_cmap
-                    )
+                    pmvc = flopy.plot.PlotMapView(modelgrid=g, ax=ax, extent=extent)
+                    pmvc.plot_array(t, masked_values=(0,), cmap=intersection_cmap)
                     pmvc.plot_grid(**grid_dict)
 
             # plot lgr polyline

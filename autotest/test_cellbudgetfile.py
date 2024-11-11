@@ -484,15 +484,13 @@ def test_cellbudgetfile_readrecord(example_data_path):
 
     with pytest.raises(TypeError) as e:
         v.get_data()
-    assert str(e.value).startswith(
-        "get_data() missing 1 required argument"
-    ), str(e.exception)
+    assert str(e.value).startswith("get_data() missing 1 required argument"), str(
+        e.exception
+    )
 
     t = v.get_data(text="STREAM LEAKAGE")
     assert len(t) == 30, "length of stream leakage data != 30"
-    assert (
-        t[0].shape[0] == 36
-    ), "sfr budget data does not have 36 reach entries"
+    assert t[0].shape[0] == 36, "sfr budget data does not have 36 reach entries"
 
     t = v.get_data(text="STREAM LEAKAGE", full3D=True)
     assert t[0].shape == (1, 15, 10), (
@@ -597,9 +595,7 @@ def test_cellbudgetfile_reverse_mf2005(example_data_path, function_tmpdir):
     sim_name = "test1tr"
 
     # load simulation and extract tdis
-    sim = MFSimulation.load(
-        sim_name=sim_name, sim_ws=example_data_path / "mf2005_test"
-    )
+    sim = MFSimulation.load(sim_name=sim_name, sim_ws=example_data_path / "mf2005_test")
     tdis = sim.get_package("tdis")
 
     mf2005_model_path = example_data_path / sim_name

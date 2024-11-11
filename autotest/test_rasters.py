@@ -56,9 +56,7 @@ def test_rasters(example_data_path):
     if (np.max(data) - 2608.557) > 1e-4:
         raise AssertionError
 
-    data = rio.resample_to_grid(
-        ml.modelgrid, band=rio.bands[0], method="nearest"
-    )
+    data = rio.resample_to_grid(ml.modelgrid, band=rio.bands[0], method="nearest")
     if data.size != 5913:
         raise AssertionError
     if abs(np.min(data) - 1942.1735) > 1e-4:
@@ -107,15 +105,11 @@ def test_raster_sampling_methods(example_data_path):
     }
 
     for method, value in methods.items():
-        data = rio.resample_to_grid(
-            ml.modelgrid, band=rio.bands[0], method=method
-        )
+        data = rio.resample_to_grid(ml.modelgrid, band=rio.bands[0], method=method)
 
         print(data[30, 37])
         if np.abs(data[30, 37] - value) > 1e-05:
-            raise AssertionError(
-                f"{method} resampling returning incorrect values"
-            )
+            raise AssertionError(f"{method} resampling returning incorrect values")
 
 
 @requires_pkg("rasterio")
@@ -136,9 +130,7 @@ def test_raster_reprojection(example_data_path):
         raise AssertionError(f"Raster not converted to EPSG {wgs_epsg}")
 
     transform = wgs_raster._meta["transform"]
-    if not np.isclose(transform.c, wgs_xmin) and not np.isclose(
-        transform.f, wgs_ymax
-    ):
+    if not np.isclose(transform.c, wgs_xmin) and not np.isclose(transform.f, wgs_ymax):
         raise AssertionError(f"Raster not reprojected to EPSG {wgs_epsg}")
 
     raster.to_crs(epsg=wgs_epsg, inplace=True)
@@ -212,9 +204,7 @@ def test_create_raster_from_array_transform(example_data_path):
         transform.a / 2, 0, transform.c, 0, transform.e / 2, transform.f
     )
 
-    robj = Raster.raster_from_array(
-        array, crs=raster.crs, transform=new_transform
-    )
+    robj = Raster.raster_from_array(array, crs=raster.crs, transform=new_transform)
 
     rxmin, rxmax, rymin, rymax = robj.bounds
     xmin, xmax, ymin, ymax = raster.bounds

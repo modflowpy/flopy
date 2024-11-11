@@ -318,9 +318,7 @@ cb = plt.colorbar(pa, shrink=0.5, ax=ax)
 #
 # First extract the `FLOW-JA-FACE` array from the cell-by-cell budget file
 
-flowja = gwf.oc.output.budget().get_data(text="FLOW-JA-FACE", kstpkper=(0, 0))[
-    0
-]
+flowja = gwf.oc.output.budget().get_data(text="FLOW-JA-FACE", kstpkper=(0, 0))[0]
 
 # Next extract the flow residual. The MODFLOW 6 binary grid file is passed
 # into the function because it contains the ia array that defines

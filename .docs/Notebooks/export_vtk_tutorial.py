@@ -45,9 +45,7 @@ print(f"flopy version: {flopy.__version__}")
 # load model for examples
 nam_file = "freyberg.nam"
 model_ws = Path(
-    os.path.join(
-        "..", "..", "examples", "data", "freyberg_multilayer_transient"
-    )
+    os.path.join("..", "..", "examples", "data", "freyberg_multilayer_transient")
 )
 ml = flopy.modflow.Modflow.load(nam_file, model_ws=model_ws, check=False)
 
@@ -107,9 +105,7 @@ ml.rch.rech.export(model_recharge_dir, fmt="vtk", pvd=True)
 # 3D Array export
 # hk export, with points
 model_hk_dir = output_dir / "HK"
-ml.upw.hk.export(
-    model_hk_dir, smooth=True, fmt="vtk", name="HK", point_scalars=True
-)
+ml.upw.hk.export(model_hk_dir, smooth=True, fmt="vtk", name="HK", point_scalars=True)
 
 # ### Package export to .vtu files
 #
@@ -312,9 +308,7 @@ vtkobj.write(workspace / "heads_output_test" / "freyberg_head.vtu")
 
 # +
 # export heads as point scalars
-vtkobj = vtk.Vtk(
-    ml, xml=True, pvd=True, point_scalars=True, vertical_exageration=10
-)
+vtkobj = vtk.Vtk(ml, xml=True, pvd=True, point_scalars=True, vertical_exageration=10)
 
 # export heads for time step 1, stress periods 1, 50, 100, 1000
 vtkobj.add_heads(hds, kstpkper=[(0, 0), (0, 49), (0, 99), (0, 999)])
@@ -559,9 +553,7 @@ def run_vertex_grid_example(ws):
     # riv
     riverline = [[(Lx - 1.0, Ly), (Lx - 1.0, 0.0)]]
     rivcells = g.intersect(riverline, "line", 0)
-    rivspd = [
-        [(0, icpl), 320.0, 100000.0, 318] for icpl in rivcells["nodenumber"]
-    ]
+    rivspd = [[(0, icpl), 320.0, 100000.0, 318] for icpl in rivcells["nodenumber"]]
     riv = flopy.mf6.ModflowGwfriv(gwf, stress_period_data=rivspd)
 
     # output control

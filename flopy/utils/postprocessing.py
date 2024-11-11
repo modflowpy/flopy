@@ -295,9 +295,7 @@ def get_extended_budget(
         matched_name = [s for s in rec_names if budget_term in s]
         if not matched_name:
             raise RuntimeError(budget_term + err_msg)
-        frf = cbf.get_data(
-            idx=idx, kstpkper=kstpkper, totim=totim, text=budget_term
-        )
+        frf = cbf.get_data(idx=idx, kstpkper=kstpkper, totim=totim, text=budget_term)
         Qx_ext[:, :, 1:] = frf[0]
         # SWI2 package
         budget_term_swi = "SWIADDTOFRF"
@@ -315,9 +313,7 @@ def get_extended_budget(
         matched_name = [s for s in rec_names if budget_term in s]
         if not matched_name:
             raise RuntimeError(budget_term + err_msg)
-        fff = cbf.get_data(
-            idx=idx, kstpkper=kstpkper, totim=totim, text=budget_term
-        )
+        fff = cbf.get_data(idx=idx, kstpkper=kstpkper, totim=totim, text=budget_term)
         Qy_ext[:, 1:, :] = -fff[0]
         # SWI2 package
         budget_term_swi = "SWIADDTOFFF"
@@ -335,9 +331,7 @@ def get_extended_budget(
         matched_name = [s for s in rec_names if budget_term in s]
         if not matched_name:
             raise RuntimeError(budget_term + err_msg)
-        flf = cbf.get_data(
-            idx=idx, kstpkper=kstpkper, totim=totim, text=budget_term
-        )
+        flf = cbf.get_data(idx=idx, kstpkper=kstpkper, totim=totim, text=budget_term)
         Qz_ext[1:, :, :] = -flf[0]
         # SWI2 package
         budget_term_swi = "SWIADDTOFLF"
@@ -352,9 +346,7 @@ def get_extended_budget(
     if boundary_ifaces is not None:
         # need calculated heads for some stresses and to check hnoflo and hdry
         if hdsfile is None:
-            raise ValueError(
-                "hdsfile must be provided when using boundary_ifaces"
-            )
+            raise ValueError("hdsfile must be provided when using boundary_ifaces")
         if isinstance(hdsfile, (bf.HeadFile, fm.FormattedHeadFile)):
             hds = hdsfile
         else:
@@ -366,9 +358,7 @@ def get_extended_budget(
 
         # get hnoflo and hdry values
         if model is None:
-            raise ValueError(
-                "model must be provided when using boundary_ifaces"
-            )
+            raise ValueError("model must be provided when using boundary_ifaces")
         noflo_or_dry = np.logical_or(head == model.hnoflo, head == model.hdry)
 
         for budget_term, iface_info in boundary_ifaces.items():
@@ -410,9 +400,7 @@ def get_extended_budget(
                         np.logical_not(noflo_or_dry[lay, :, :]),
                         np.logical_not(already_found),
                     )
-                    already_found = np.logical_or(
-                        already_found, water_table[lay, :, :]
-                    )
+                    already_found = np.logical_or(already_found, water_table[lay, :, :])
                 Q_stress[np.logical_not(water_table)] = 0.0
 
             # case where the same iface is assigned to all cells
@@ -532,9 +520,7 @@ def get_extended_budget(
                     elif iface == 6:
                         Qz_ext[lay, row, col] -= Q_stress_cell
             else:
-                raise TypeError(
-                    "boundary_ifaces value must be either int or list."
-                )
+                raise TypeError("boundary_ifaces value must be either int or list.")
 
     return Qx_ext, Qy_ext, Qz_ext
 
@@ -652,9 +638,7 @@ def get_specific_discharge(
         if modelgrid._idomain is None:
             modelgrid._idomain = model.dis.ibound
         if head is not None:
-            noflo_or_dry = np.logical_or(
-                head == model.hnoflo, head == model.hdry
-            )
+            noflo_or_dry = np.logical_or(head == model.hnoflo, head == model.hdry)
             modelgrid._idomain[noflo_or_dry] = 0
 
         # get cross section areas along x
@@ -675,26 +659,16 @@ def get_specific_discharge(
             cross_area_x = (
                 delc[:]
                 * 0.5
-                * (
-                    saturated_thickness[:, :, :-1]
-                    + saturated_thickness[:, :, 1:]
-                )
+                * (saturated_thickness[:, :, :-1] + saturated_thickness[:, :, 1:])
             )
             cross_area_y = (
                 delr
                 * 0.5
-                * (
-                    saturated_thickness[:, 1:, :]
-                    + saturated_thickness[:, :-1, :]
-                )
+                * (saturated_thickness[:, 1:, :] + saturated_thickness[:, :-1, :])
             )
-            qx[:, :, 1:] = (
-                0.5 * (tqx[:, :, 2:] + tqx[:, :, 1:-1]) / cross_area_x
-            )
+            qx[:, :, 1:] = 0.5 * (tqx[:, :, 2:] + tqx[:, :, 1:-1]) / cross_area_x
             qx[:, :, 0] = 0.5 * tqx[:, :, 1] / cross_area_x[:, :, 0]
-            qy[:, 1:, :] = (
-                0.5 * (tqy[:, 2:, :] + tqy[:, 1:-1, :]) / cross_area_y
-            )
+            qy[:, 1:, :] = 0.5 * (tqy[:, 2:, :] + tqy[:, 1:-1, :]) / cross_area_y
             qy[:, 0, :] = 0.5 * tqy[:, 1, :] / cross_area_y[:, 0, :]
             qz = 0.5 * (tqz[1:, :, :] + tqz[:-1, :, :]) / cross_area_z
 

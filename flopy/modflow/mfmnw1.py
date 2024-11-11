@@ -117,22 +117,16 @@ class ModflowMnw1(Package):
         self.url = "mnw.html"
         self.nper = self.parent.nrow_ncol_nlay_nper[-1]
         self._generate_heading()
-        self.mxmnw = (
-            mxmnw  # -maximum number of multi-node wells to be simulated
-        )
+        self.mxmnw = mxmnw  # -maximum number of multi-node wells to be simulated
         self.iwelpt = iwelpt  # -verbosity flag
         self.nomoiter = nomoiter  # -integer indicating the number of iterations for which flow in MNW wells is calculated
         self.kspref = kspref  # -alphanumeric key indicating which set of water levels are to be used as reference values for calculating drawdown
-        self.losstype = (
-            losstype  # -string indicating head loss type for each well
-        )
+        self.losstype = losstype  # -string indicating head loss type for each well
         self.wel1_bynode_qsum = wel1_bynode_qsum  # -nested list containing file names, unit numbers, and ALLTIME flag for auxiliary output, e.g. [['test.ByNode',92,'ALLTIME']]
         if dtype is not None:
             self.dtype = dtype
         else:
-            self.dtype = self.get_default_dtype(
-                structured=self.parent.structured
-            )
+            self.dtype = self.get_default_dtype(structured=self.parent.structured)
         self.stress_period_data = MfList(self, stress_period_data)
 
         self.mnwname = mnwname  # -string prefix name of file for outputting time series data from MNW1
@@ -298,9 +292,7 @@ class ModflowMnw1(Package):
             for each in self.wel1_bynode_qsum:
                 if each[0].split(".")[1].lower() == "bynode":
                     if len(each) == 2:
-                        f.write(
-                            "FILE:%s BYNODE:%-10i\n" % (each[0], int(each[1]))
-                        )
+                        f.write("FILE:%s BYNODE:%-10i\n" % (each[0], int(each[1])))
                     elif len(each) == 3:
                         f.write(
                             "FILE:%s BYNODE:%-10i %s\n"
@@ -311,13 +303,10 @@ class ModflowMnw1(Package):
             for each in self.wel1_bynode_qsum:
                 if each[0].split(".")[1].lower() == "qsum":
                     if len(each) == 2:
-                        f.write(
-                            "FILE:%s QSUM:%-10i\n" % (each[0], int(each[1]))
-                        )
+                        f.write("FILE:%s QSUM:%-10i\n" % (each[0], int(each[1])))
                     elif len(each) == 3:
                         f.write(
-                            "FILE:%s QSUM:%-10i %s\n"
-                            % (each[0], int(each[1]), each[2])
+                            "FILE:%s QSUM:%-10i %s\n" % (each[0], int(each[1]), each[2])
                         )
 
         spd = self.stress_period_data.drop("mnw_no")
@@ -384,9 +373,7 @@ def _parse_3(line, txt):
     return items
 
 
-def _parse_5(
-    f, itmp, qfrcmn_default=None, qfrcmx_default=None, qcut_default=""
-):
+def _parse_5(f, itmp, qfrcmn_default=None, qfrcmx_default=None, qcut_default=""):
     data = []
     mnw_no = 0
     mn = False

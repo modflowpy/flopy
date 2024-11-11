@@ -248,15 +248,11 @@ class Triangle:
         vertices = self.get_vertices()
         ncpl = len(cell2d)
 
-        modelgrid = VertexGrid(
-            vertices=vertices, cell2d=cell2d, ncpl=ncpl, nlay=1
-        )
+        modelgrid = VertexGrid(vertices=vertices, cell2d=cell2d, ncpl=ncpl, nlay=1)
 
         pmv = PlotMapView(modelgrid=modelgrid, ax=ax, layer=layer)
         if a is None:
-            pc = pmv.plot_grid(
-                facecolor=facecolor, edgecolor=edgecolor, **kwargs
-            )
+            pc = pmv.plot_grid(facecolor=facecolor, edgecolor=edgecolor, **kwargs)
         else:
             pc = pmv.plot_array(
                 a,

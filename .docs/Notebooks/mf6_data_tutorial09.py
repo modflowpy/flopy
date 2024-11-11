@@ -55,9 +55,7 @@ tdis = flopy.mf6.modflow.mftdis.ModflowTdis(
 # set up first groundwater flow model
 name_1 = "ex_1_mod_1"
 model_nam_file = f"{name_1}.nam"
-gwf = flopy.mf6.ModflowGwf(
-    sim, modelname=name_1, model_nam_file=model_nam_file
-)
+gwf = flopy.mf6.ModflowGwf(sim, modelname=name_1, model_nam_file=model_nam_file)
 # create the discretization package
 bot = [-10.0, -50.0, -200.0]
 delrow = delcol = 4.0
@@ -116,9 +114,7 @@ wel = flopy.mf6.ModflowGwfwel(
 # set up second groundwater flow model with a finer grid
 name_1 = "ex_1_mod_2"
 model_nam_file = f"{name_1}.nam"
-gwf_2 = flopy.mf6.ModflowGwf(
-    sim, modelname=name_1, model_nam_file=model_nam_file
-)
+gwf_2 = flopy.mf6.ModflowGwf(sim, modelname=name_1, model_nam_file=model_nam_file)
 # create the flopy iterative model solver (ims) package object
 # by default flopy will register both models with the ims package.
 ims = flopy.mf6.modflow.mfims.ModflowIms(

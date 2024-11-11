@@ -63,11 +63,7 @@ def read_zonebudget_file(fname):
             continue
 
         # Get mass-balance information for this block
-        elif (
-            "Total" in items[0]
-            or "IN-OUT" in items[0]
-            or "Percent Error" in items[0]
-        ):
+        elif "Total" in items[0] or "IN-OUT" in items[0] or "Percent Error" in items[0]:
             continue
 
         # End of block
@@ -147,9 +143,7 @@ def test_zonbud_aliases(cbc_f, zon_f):
     """
     zon = ZoneBudget.read_zone_file(zon_f)
     aliases = {1: "Trey", 2: "Mike", 4: "Wilson", 0: "Carini"}
-    zb = ZoneBudget(
-        cbc_f, zon, kstpkper=(0, 1096), aliases=aliases, verbose=True
-    )
+    zb = ZoneBudget(cbc_f, zon, kstpkper=(0, 1096), aliases=aliases, verbose=True)
     bud = zb.get_budget()
     assert bud[bud["name"] == "FROM_Mike"].shape[0] > 0, "No records returned."
 
@@ -195,9 +189,7 @@ def test_zonbud_readwrite_zbarray(function_tmpdir):
     """
     x = np.random.randint(100, 200, size=(5, 150, 200))
     ZoneBudget.write_zone_file(function_tmpdir / "randint", x)
-    ZoneBudget.write_zone_file(
-        function_tmpdir / "randint", x, fmtin=35, iprn=2
-    )
+    ZoneBudget.write_zone_file(function_tmpdir / "randint", x, fmtin=35, iprn=2)
     z = ZoneBudget.read_zone_file(function_tmpdir / "randint")
     assert np.array_equal(x, z), "Input and output arrays do not match."
 

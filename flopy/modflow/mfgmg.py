@@ -272,13 +272,9 @@ class ModflowGmg(Package):
         f_gmg = open(self.fn_path, "w")
         f_gmg.write(f"{self.heading}\n")
         # dataset 0
-        f_gmg.write(
-            f"{self.rclose} {self.iiter} {self.hclose} {self.mxiter}\n"
-        )
+        f_gmg.write(f"{self.rclose} {self.iiter} {self.hclose} {self.mxiter}\n")
         # dataset 1
-        f_gmg.write(
-            f"{self.damp} {self.iadamp} {self.ioutgmg} {self.iunitmhc}\n"
-        )
+        f_gmg.write(f"{self.damp} {self.iadamp} {self.ioutgmg} {self.iunitmhc}\n")
         # dataset 2
         f_gmg.write(f"{self.ism} {self.isc} ")
         if self.iadamp == 2:
@@ -377,9 +373,7 @@ class ModflowGmg(Package):
                 ext_unit_dict, filetype=ModflowGmg._ftype()
             )
             if iunitmhc > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=iunitmhc
-                )
+                iu, filenames[1] = model.get_ext_dict_attr(ext_unit_dict, unit=iunitmhc)
                 model.add_pop_key_list(iunitmhc)
 
         return cls(

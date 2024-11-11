@@ -23,9 +23,7 @@ def test_model_attributes_to_shapefile(example_data_path, function_tmpdir):
     name = "freyberg"
     namfile = f"{name}.nam"
     ws = example_data_path / name
-    m = flopy.modflow.Modflow.load(
-        namfile, model_ws=ws, check=False, verbose=False
-    )
+    m = flopy.modflow.Modflow.load(namfile, model_ws=ws, check=False, verbose=False)
     shpfile_path = function_tmpdir / f"{name}.shp"
     pakg_names = ["DIS", "BAS6", "LPF", "WEL", "RIV", "RCH", "OC", "PCG"]
     model_attributes_to_shapefile(shpfile_path, m, pakg_names)
@@ -33,9 +31,7 @@ def test_model_attributes_to_shapefile(example_data_path, function_tmpdir):
 
     # freyberg mf6 model
     name = "mf6-freyberg"
-    sim = flopy.mf6.MFSimulation.load(
-        sim_name=name, sim_ws=example_data_path / name
-    )
+    sim = flopy.mf6.MFSimulation.load(sim_name=name, sim_ws=example_data_path / name)
     m = sim.get_model()
     shpfile_path = function_tmpdir / f"{name}.shp"
     pakg_names = ["dis", "bas6", "npf", "wel", "riv", "rch", "oc", "pcg"]

@@ -409,8 +409,7 @@ class Mt3dRct(Package):
         # Check to make sure that all kwargs have been consumed
         if len(list(kwargs.keys())) > 0:
             raise Exception(
-                "RCT error: unrecognized kwargs: "
-                + " ".join(list(kwargs.keys()))
+                "RCT error: unrecognized kwargs: " + " ".join(list(kwargs.keys()))
             )
 
         self.parent.add_package(self)
@@ -431,8 +430,7 @@ class Mt3dRct(Package):
         # Open file for writing
         f_rct = open(self.fn_path, "w")
         f_rct.write(
-            "%10i%10i%10i%10i\n"
-            % (self.isothm, self.ireact, self.irctop, self.igetsc)
+            "%10i%10i%10i%10i\n" % (self.isothm, self.ireact, self.irctop, self.igetsc)
         )
         if self.isothm in [1, 2, 3, 4, 6]:
             f_rct.write(self.rhob.get_file_entry())

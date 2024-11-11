@@ -352,9 +352,7 @@ class Mt3dUzt(Package):
                     incuzinf = max(incuzinf, incuzinficomp)
                     if incuzinf == 1:
                         break
-                f_uzt.write(
-                    f"{incuzinf:10d}          # INCUZINF - SP {kper + 1:5d}\n"
-                )
+                f_uzt.write(f"{incuzinf:10d}          # INCUZINF - SP {kper + 1:5d}\n")
                 if incuzinf == 1:
                     for t2d in self.cuzinf:
                         u2d = t2d[kper]
@@ -497,9 +495,7 @@ class Mt3dUzt(Package):
 
         cuzinf = None
         # At least one species being simulated, so set up a place holder
-        t2d = Transient2d(
-            model, (nrow, ncol), np.float32, 0.0, name="cuzinf", locat=0
-        )
+        t2d = Transient2d(model, (nrow, ncol), np.float32, 0.0, name="cuzinf", locat=0)
         cuzinf = {0: t2d}
         if ncomp > 1:
             for icomp in range(2, ncomp + 1):
@@ -726,9 +722,7 @@ class Mt3dUzt(Package):
                 ext_unit_dict, filetype=Mt3dUzt._ftype()
             )
             if icbcuz > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=icbcuz
-                )
+                iu, filenames[1] = model.get_ext_dict_attr(ext_unit_dict, unit=icbcuz)
                 model.add_pop_key_list(icbcuz)
 
         # Construct and return uzt package

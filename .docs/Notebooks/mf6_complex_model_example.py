@@ -112,9 +112,7 @@ dis = flopy.mf6.ModflowGwfdis(
 )
 
 # initial conditions
-ic = flopy.mf6.ModflowGwfic(
-    gwf, pname="ic", strt=50.0, filename=f"{model_name}.ic"
-)
+ic = flopy.mf6.ModflowGwfic(gwf, pname="ic", strt=50.0, filename=f"{model_name}.ic")
 
 # node property flow
 npf = flopy.mf6.ModflowGwfnpf(
@@ -143,9 +141,7 @@ sy = flopy.mf6.ModflowGwfsto.sy.empty(gwf, layered=True)
 for layer in range(0, 3):
     sy[layer]["data"] = 0.2
 
-ss = flopy.mf6.ModflowGwfsto.ss.empty(
-    gwf, layered=True, default_value=0.000001
-)
+ss = flopy.mf6.ModflowGwfsto.ss.empty(gwf, layered=True, default_value=0.000001)
 
 sto = flopy.mf6.ModflowGwfsto(
     gwf,
@@ -296,9 +292,7 @@ ghb.obs.initialize(
 
 obs_recarray = {
     "head_obs.csv": [("h1_13_8", "HEAD", (2, 12, 7))],
-    "intercell_flow_obs1.csv": [
-        ("ICF1_1.0", "FLOW-JA-FACE", (0, 4, 5), (0, 5, 5))
-    ],
+    "intercell_flow_obs1.csv": [("ICF1_1.0", "FLOW-JA-FACE", (0, 4, 5), (0, 5, 5))],
     "head-hydrographs.csv": [
         ("h3-13-9", "HEAD", (2, 12, 8)),
         ("h3-12-8", "HEAD", (2, 11, 7)),

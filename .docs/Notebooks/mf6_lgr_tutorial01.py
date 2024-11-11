@@ -577,12 +577,8 @@ pmvc = flopy.plot.PlotMapView(gwfc, ax=ax, extent=pmvp.extent)
 # pmvc.plot_array(head[1], vmin=0., vmax=1.)
 
 # contour head
-cs = pmvp.contour_array(
-    head[0], levels=np.linspace(0, 1), masked_values=[1.0e30]
-)
-cs = pmvc.contour_array(
-    head[1], levels=np.linspace(0, 1), masked_values=[1.0e30]
-)
+cs = pmvp.contour_array(head[0], levels=np.linspace(0, 1), masked_values=[1.0e30])
+cs = pmvc.contour_array(head[1], levels=np.linspace(0, 1), masked_values=[1.0e30])
 
 # color flood concentrations
 a1 = conc[0]

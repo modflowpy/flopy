@@ -129,13 +129,9 @@ class ModflowRch(Package):
         rech_u2d_shape = get_pak_vals_shape(model, rech)
         irch_u2d_shape = get_pak_vals_shape(model, irch)
 
-        self.rech = Transient2d(
-            model, rech_u2d_shape, np.float32, rech, name="rech_"
-        )
+        self.rech = Transient2d(model, rech_u2d_shape, np.float32, rech, name="rech_")
         if self.nrchop == 2:
-            self.irch = Transient2d(
-                model, irch_u2d_shape, np.int32, irch, name="irch_"
-            )
+            self.irch = Transient2d(model, irch_u2d_shape, np.int32, irch, name="irch_")
         else:
             self.irch = None
         self.np = 0
@@ -195,9 +191,7 @@ class ModflowRch(Package):
             active = np.ones(self.rech.array[0][0].shape, dtype=bool)
 
         # check for unusually high or low values of mean R/T
-        hk_package = {"UPW", "LPF"}.intersection(
-            set(self.parent.get_package_list())
-        )
+        hk_package = {"UPW", "LPF"}.intersection(set(self.parent.get_package_list()))
         if len(hk_package) > 0 and self.parent.structured:
             pkg = list(hk_package)[0]
 
@@ -214,9 +208,7 @@ class ModflowRch(Package):
                 )
                 l = 0
                 for i, cbd in enumerate(self.parent.dis.laycbd):
-                    thickness[i, :, :] = self.parent.modelgrid.cell_thickness[
-                        l, :, :
-                    ]
+                    thickness[i, :, :] = self.parent.modelgrid.cell_thickness[l, :, :]
                     if cbd > 0:
                         l += 1
                     l += 1
@@ -243,12 +235,8 @@ class ModflowRch(Package):
                         "\r    Mean R/T ratio < checker warning threshold of "
                         f"{RTmin} for {len(lessthan)} stress periods"
                     )
-                    chk._add_to_summary(
-                        type="Warning", value=R_T.min(), desc=txt
-                    )
-                    chk.remove_passed(
-                        f"Mean R/T is between {RTmin} and {RTmax}"
-                    )
+                    chk._add_to_summary(type="Warning", value=R_T.min(), desc=txt)
+                    chk.remove_passed(f"Mean R/T is between {RTmin} and {RTmax}")
 
                 if len(greaterthan) > 0:
                     txt = (
@@ -256,16 +244,10 @@ class ModflowRch(Package):
                         f"threshold of {RTmax} for "
                         f"{len(greaterthan)} stress periods"
                     )
-                    chk._add_to_summary(
-                        type="Warning", value=R_T.max(), desc=txt
-                    )
-                    chk.remove_passed(
-                        f"Mean R/T is between {RTmin} and {RTmax}"
-                    )
+                    chk._add_to_summary(type="Warning", value=R_T.max(), desc=txt)
+                    chk.remove_passed(f"Mean R/T is between {RTmin} and {RTmax}")
                 elif len(lessthan) == 0 and len(greaterthan) == 0:
-                    chk.append_passed(
-                        f"Mean R/T is between {RTmin} and {RTmax}"
-                    )
+                    chk.append_passed(f"Mean R/T is between {RTmin} and {RTmax}")
 
         # check for NRCHOP values != 3
         if self.nrchop != 3:
@@ -333,10 +315,7 @@ class ModflowRch(Package):
             )
             if not self.parent.structured:
                 mxndrch = np.max(
-                    [
-                        u2d.array.size
-                        for kper, u2d in self.irch.transient_2ds.items()
-                    ]
+                    [u2d.array.size for kper, u2d in self.irch.transient_2ds.items()]
                 )
                 f_rch.write(f"{mxndrch:10d}\n")
 
@@ -348,9 +327,7 @@ class ModflowRch(Package):
                     inirch = self.rech[kper].array.size
             else:
                 inirch = -1
-            f_rch.write(
-                f"{inrech:10d}{inirch:10d} # Stress period {kper + 1}\n"
-            )
+            f_rch.write(f"{inrech:10d}{inirch:10d} # Stress period {kper + 1}\n")
             if inrech >= 0:
                 f_rch.write(file_entry_rech)
             if self.nrchop == 2:
@@ -414,9 +391,7 @@ class ModflowRch(Package):
             npar = int(raw[1])
             if npar > 0:
                 if model.verbose:
-                    print(
-                        f"   Parameters detected. Number of parameters = {npar}"
-                    )
+                    print(f"   Parameters detected. Number of parameters = {npar}")
             line = f.readline()
         # dataset 2
         t = line_parse(line)
@@ -463,9 +438,7 @@ class ModflowRch(Package):
             if inrech >= 0:
                 if npar == 0:
                     if model.verbose:
-                        print(
-                            f"   loading rech stress period {iper + 1:3d}..."
-                        )
+                        print(f"   loading rech stress period {iper + 1:3d}...")
                     t = Util2d.load(
                         f,
                         model,
@@ -490,9 +463,7 @@ class ModflowRch(Package):
                         except:
                             iname = "static"
                         parm_dict[pname] = iname
-                    t = mfparbc.parameter_bcfill(
-                        model, u2d_shape, parm_dict, pak_parms
-                    )
+                    t = mfparbc.parameter_bcfill(model, u2d_shape, parm_dict, pak_parms)
 
                 current_rech = t
             rech[iper] = current_rech
@@ -500,9 +471,7 @@ class ModflowRch(Package):
             if nrchop == 2:
                 if inirch >= 0:
                     if model.verbose:
-                        print(
-                            f"   loading irch stress period {iper + 1:3d}..."
-                        )
+                        print(f"   loading irch stress period {iper + 1:3d}...")
                     t = Util2d.load(
                         f, model, u2d_shape, np.int32, "irch", ext_unit_dict
                     )
@@ -522,9 +491,7 @@ class ModflowRch(Package):
                 ext_unit_dict, filetype=ModflowRch._ftype()
             )
             if ipakcb > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=ipakcb
-                )
+                iu, filenames[1] = model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
                 model.add_pop_key_list(ipakcb)
 
         # create recharge package instance

@@ -60,9 +60,7 @@ def test_usg_disu_load(function_tmpdir, mfusg_01A_nestedgrid_nognc_model_path):
     ):
         if isinstance(value1, (Util2d, Util3d)):
             assert np.array_equal(value1.array, value2.array)
-        elif isinstance(
-            value1, list
-        ):  # this is for the jagged _get_neighbours list
+        elif isinstance(value1, list):  # this is for the jagged _get_neighbours list
             assert np.all([np.all(v1 == v2) for v1, v2 in zip(value1, value2)])
         elif not isinstance(value1, TemporalReference):
             assert value1 == value2
@@ -138,10 +136,7 @@ def test_usg_model(function_tmpdir):
 
 @requires_exe("mfusg")
 def test_usg_load_01B(function_tmpdir, mfusg_01A_nestedgrid_nognc_model_path):
-    print(
-        "testing 1-layer unstructured mfusg model "
-        "loading: 01A_nestedgrid_nognc.nam"
-    )
+    print("testing 1-layer unstructured mfusg model loading: 01A_nestedgrid_nognc.nam")
 
     fname = mfusg_01A_nestedgrid_nognc_model_path / "flow.nam"
     assert os.path.isfile(fname), f"nam file not found {fname}"

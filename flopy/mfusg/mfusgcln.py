@@ -273,9 +273,7 @@ class MfUsgCln(Package):
             raise Exception("mfcln: CLN-GW connections not provided")
 
         if len(cln_gwc) != nclngwc:
-            raise Exception(
-                "mfcln: Number of CLN-GW connections not equal to nclngwc"
-            )
+            raise Exception("mfcln: Number of CLN-GW connections not equal to nclngwc")
 
         structured = self.parent.structured
 
@@ -334,15 +332,12 @@ class MfUsgCln(Package):
             raise Exception("mfcln: CLN network not defined")
 
         if self.ncln < 0:
-            raise Exception(
-                "mfcln: negative number of CLN segments in CLN package"
-            )
+            raise Exception("mfcln: negative number of CLN segments in CLN package")
 
         if self.ncln > 0:  # Linear CLN segments
             if self.nndcln is None:
                 raise Exception(
-                    "mfcln: number of nodes for each CLN segment must be "
-                    "provided"
+                    "mfcln: number of nodes for each CLN segment must be provided"
                 )
             self.nndcln = Util2d(
                 model,
@@ -391,9 +386,7 @@ class MfUsgCln(Package):
             if self.ja_cln is None:
                 raise Exception("mfcln: ja_cln must be provided")
             if abs(self.ja_cln[0]) != 1:
-                raise Exception(
-                    "mfcln: first ja_cln entry (node 1) is not 1 or -1."
-                )
+                raise Exception("mfcln: first ja_cln entry (node 1) is not 1 or -1.")
             self.ja_cln = Util2d(
                 model,
                 (self.nja_cln,),
@@ -407,14 +400,10 @@ class MfUsgCln(Package):
         """Initialises CLN geometry types."""
         # Circular conduit geometry types
         if self.nconduityp <= 0 or self.cln_circ is None:
-            raise Exception(
-                "mfcln: Circular conduit properties must be provided"
-            )
+            raise Exception("mfcln: Circular conduit properties must be provided")
 
         if len(self.cln_circ) != self.nconduityp:
-            raise Exception(
-                "mfcln: Number of circular properties not equal nconduityp"
-            )
+            raise Exception("mfcln: Number of circular properties not equal nconduityp")
 
         self.cln_circ = self._make_recarray(
             self.cln_circ, dtype=MfUsgClnDtypes.get_clncirc_dtype(self.bhe)
@@ -472,13 +461,9 @@ class MfUsgCln(Package):
             f_cln.write(self.iac_cln.get_file_entry())
             f_cln.write(self.ja_cln.get_file_entry())
 
-        np.savetxt(
-            f_cln, self.node_prop, fmt=fmt_string(self.node_prop), delimiter=""
-        )
+        np.savetxt(f_cln, self.node_prop, fmt=fmt_string(self.node_prop), delimiter="")
 
-        np.savetxt(
-            f_cln, self.cln_gwc, fmt=fmt_string(self.cln_gwc), delimiter=""
-        )
+        np.savetxt(f_cln, self.cln_gwc, fmt=fmt_string(self.cln_gwc), delimiter="")
 
         if self.nconduityp > 0:
             np.savetxt(
@@ -624,15 +609,11 @@ class MfUsgCln(Package):
 
         if model.verbose:
             print("   Reading ibound...")
-        ibound = Util2d.load(
-            f, model, (nclnnds, 1), np.int32, "ibound", ext_unit_dict
-        )
+        ibound = Util2d.load(f, model, (nclnnds, 1), np.int32, "ibound", ext_unit_dict)
 
         if model.verbose:
             print("   Reading strt...")
-        strt = Util2d.load(
-            f, model, (nclnnds, 1), np.float32, "strt", ext_unit_dict
-        )
+        strt = Util2d.load(f, model, (nclnnds, 1), np.float32, "strt", ext_unit_dict)
 
         if hasattr(f, "read"):
             f.close()

@@ -51,9 +51,7 @@ def test_transient3d():
 
     # Make a transient 3d array with changing entries and then verify that
     # they can be reproduced through indexing
-    a = np.arange((nlay * nrow * ncol), dtype=np.float32).reshape(
-        (nlay, nrow, ncol)
-    )
+    a = np.arange((nlay * nrow * ncol), dtype=np.float32).reshape((nlay, nrow, ncol))
     t3d = {0: a, 2: 1025, 3: a, 4: 1000.0}
     t3d = Transient3d(ml, (nlay, nrow, ncol), np.float32, t3d, "fake")
     assert np.array_equal(t3d[0].array, a)
@@ -178,9 +176,7 @@ def stress_util2d(model_ws, ml, nlay, nrow, ncol):
         files = os.listdir(ml.model_ws)
 
     print("\n\nexternal files: " + ",".join(files) + "\n\n")
-    ml1 = Modflow.load(
-        ml.namefile, model_ws=ml.model_ws, verbose=True, forgive=False
-    )
+    ml1 = Modflow.load(ml.namefile, model_ws=ml.model_ws, verbose=True, forgive=False)
     print("testing load")
     assert not ml1.load_fail
     # check that both binary and cnstnt are being respected through
@@ -198,9 +194,7 @@ def stress_util2d(model_ws, ml, nlay, nrow, ncol):
     else:
         files = os.listdir(ml.model_ws)
     print("\n\nexternal files: " + ",".join(files) + "\n\n")
-    ml1 = Modflow.load(
-        ml.namefile, model_ws=ml.model_ws, verbose=True, forgive=False
-    )
+    ml1 = Modflow.load(ml.namefile, model_ws=ml.model_ws, verbose=True, forgive=False)
     print("testing load")
     assert not ml1.load_fail
     assert np.array_equal(ml1.lpf.vka.array, vk * 2.0)
@@ -209,9 +203,7 @@ def stress_util2d(model_ws, ml, nlay, nrow, ncol):
     # more binary testing
     ml.lpf.vka[0]._array[0, 0] *= 3.0
     ml.write_input()
-    ml1 = Modflow.load(
-        ml.namefile, model_ws=ml.model_ws, verbose=True, forgive=False
-    )
+    ml1 = Modflow.load(ml.namefile, model_ws=ml.model_ws, verbose=True, forgive=False)
     assert np.array_equal(ml.lpf.vka.array, ml1.lpf.vka.array)
     assert np.array_equal(ml.lpf.hk.array, ml1.lpf.hk.array)
 
@@ -236,9 +228,7 @@ def stress_util2d_for_joe_the_file_king(ml, nlay, nrow, ncol):
     assert np.array_equal(ml.lpf.hk.array, hk)
     assert np.array_equal(ml.lpf.vka.array, vk * 2.0)
 
-    ml1 = Modflow.load(
-        ml.namefile, model_ws=ml.model_ws, verbose=True, forgive=False
-    )
+    ml1 = Modflow.load(ml.namefile, model_ws=ml.model_ws, verbose=True, forgive=False)
     print("testing load")
     assert not ml1.load_fail
     assert np.array_equal(ml1.lpf.vka.array, vk * 2.0)
@@ -249,9 +239,7 @@ def stress_util2d_for_joe_the_file_king(ml, nlay, nrow, ncol):
     # more binary testing
     ml.lpf.vka[0]._array[0, 0] *= 3.0
     ml.write_input()
-    ml1 = Modflow.load(
-        ml.namefile, model_ws=ml.model_ws, verbose=True, forgive=False
-    )
+    ml1 = Modflow.load(ml.namefile, model_ws=ml.model_ws, verbose=True, forgive=False)
     assert np.array_equal(ml.lpf.vka.array, ml1.lpf.vka.array)
     assert np.array_equal(ml.lpf.hk.array, ml1.lpf.hk.array)
 
@@ -433,9 +421,7 @@ def test_append_mflist(function_tmpdir):
     wel2 = ModflowWel(ml, stress_period_data=sp_data2)
     wel3 = ModflowWel(
         ml,
-        stress_period_data=wel2.stress_period_data.append(
-            wel1.stress_period_data
-        ),
+        stress_period_data=wel2.stress_period_data.append(wel1.stress_period_data),
     )
     ml.write_input()
 

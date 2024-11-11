@@ -1314,9 +1314,7 @@ mx = flopy.plot.PlotCrossSection(ax=ax, model=mf, line={"row": 0})
 mx.plot_array(hk, masked_values=[hk[0, 0, 0]], alpha=0.2)
 mx.plot_ibound()
 mx.plot_grid(color="0.5", alpha=0.2)
-cs = mx.contour_array(
-    conc[3], levels=[0.05, 0.1, 0.15, 0.19], masked_values=[1.0e30]
-)
+cs = mx.contour_array(conc[3], levels=[0.05, 0.1, 0.15, 0.19], masked_values=[1.0e30])
 ax.set_title("TIME = 20 YEARS")
 
 
@@ -1525,9 +1523,7 @@ def p10(dirname, mixelm, perlen=1000, isothm=1, sp2=0.0, ttsmult=1.2):
     nrow = 61
     ncol = 40
     delr = (
-        [2000, 1600, 800, 400, 200, 100]
-        + 28 * [50]
-        + [100, 200, 400, 800, 1600, 2000]
+        [2000, 1600, 800, 400, 200, 100] + 28 * [50] + [100, 200, 400, 800, 1600, 2000]
     )
     delc = (
         [2000, 2000, 2000, 1600, 800, 400, 200, 100]
@@ -1661,9 +1657,7 @@ def p10(dirname, mixelm, perlen=1000, isothm=1, sp2=0.0, ttsmult=1.2):
     )
     dsp = flopy.mt3d.Mt3dDsp(mt, al=al, trpt=trpt, trpv=trpv)
     ssm = flopy.mt3d.Mt3dSsm(mt, crch=0.0)
-    rct = flopy.mt3d.Mt3dRct(
-        mt, isothm=isothm, igetsc=0, rhob=1.7, sp1=0.176, sp2=sp2
-    )
+    rct = flopy.mt3d.Mt3dRct(mt, isothm=isothm, igetsc=0, rhob=1.7, sp1=0.176, sp2=sp2)
     mxiter = 1
     if isothm == 4:
         mxiter = 50
@@ -1774,12 +1768,8 @@ plt.ylabel("CONCENTRATION, IN PPB")
 mf, mt, conctvd, cvttvd, mvt0 = p10("p10", 0, perlen=2000, isothm=0)
 mf, mt, conctvd, cvttvd, mvt1 = p10("p10", 0, perlen=2000, isothm=1)
 mf, mt, conctvd, cvttvd, mvt2 = p10("p10", 0, perlen=2000, isothm=4, sp2=0.1)
-mf, mt, conctvd, cvttvd, mvt3 = p10(
-    "p10", 0, perlen=2000, isothm=4, sp2=1.5e-4
-)
-mf, mt, conctvd, cvttvd, mvt4 = p10(
-    "p10", 0, perlen=2000, isothm=4, sp2=1.0e-6
-)
+mf, mt, conctvd, cvttvd, mvt3 = p10("p10", 0, perlen=2000, isothm=4, sp2=1.5e-4)
+mf, mt, conctvd, cvttvd, mvt4 = p10("p10", 0, perlen=2000, isothm=4, sp2=1.0e-6)
 
 fig = plt.figure(figsize=(10, 8))
 ax = fig.add_subplot(1, 1, 1)

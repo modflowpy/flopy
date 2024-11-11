@@ -99,9 +99,7 @@ geoms[0].plot()  # this feature requires descartes
 # +
 from pathlib import Path
 
-recarray2shp(
-    chk.summary_array, geoms, os.path.join(workspace, "test.shp"), crs=26715
-)
+recarray2shp(chk.summary_array, geoms, os.path.join(workspace, "test.shp"), crs=26715)
 shape_path = os.path.join(workspace, "test.prj")
 
 # + pycharm={"name": "#%%\n"}

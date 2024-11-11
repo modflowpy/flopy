@@ -333,9 +333,7 @@ class ModflowHyd(Package):
                 ext_unit_dict, filetype=ModflowHyd._ftype()
             )
             if ihydun > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=ihydun
-                )
+                iu, filenames[1] = model.get_ext_dict_attr(ext_unit_dict, unit=ihydun)
                 model.add_pop_key_list(ihydun)
 
         # return hyd instance

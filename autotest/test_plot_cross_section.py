@@ -9,9 +9,7 @@ from flopy.mf6 import MFSimulation
 
 
 @pytest.mark.mf6
-@pytest.mark.xfail(
-    reason="sometimes get LineCollections instead of PatchCollections"
-)
+@pytest.mark.xfail(reason="sometimes get LineCollections instead of PatchCollections")
 def test_cross_section_bc_gwfs_disv(example_data_path):
     mpath = example_data_path / "mf6" / "test003_gwfs_disv"
     sim = MFSimulation.load(sim_ws=mpath)
@@ -29,9 +27,7 @@ def test_cross_section_bc_gwfs_disv(example_data_path):
 
 
 @pytest.mark.mf6
-@pytest.mark.xfail(
-    reason="sometimes get LineCollections instead of PatchCollections"
-)
+@pytest.mark.xfail(reason="sometimes get LineCollections instead of PatchCollections")
 def test_cross_section_bc_lake2tr(example_data_path):
     mpath = example_data_path / "mf6" / "test045_lake2tr"
     sim = MFSimulation.load(sim_ws=mpath)
@@ -50,9 +46,7 @@ def test_cross_section_bc_lake2tr(example_data_path):
 
 
 @pytest.mark.mf6
-@pytest.mark.xfail(
-    reason="sometimes get LineCollections instead of PatchCollections"
-)
+@pytest.mark.xfail(reason="sometimes get LineCollections instead of PatchCollections")
 def test_cross_section_bc_2models_mvr(example_data_path):
     mpath = example_data_path / "mf6" / "test006_2models_mvr"
     sim = MFSimulation.load(sim_ws=mpath)
@@ -70,9 +64,7 @@ def test_cross_section_bc_2models_mvr(example_data_path):
 
 
 @pytest.mark.mf6
-@pytest.mark.xfail(
-    reason="sometimes get LineCollections instead of PatchCollections"
-)
+@pytest.mark.xfail(reason="sometimes get LineCollections instead of PatchCollections")
 def test_cross_section_bc_UZF_3lay(example_data_path):
     mpath = example_data_path / "mf6" / "test001e_UZF_3lay"
     sim = MFSimulation.load(sim_ws=mpath)
@@ -157,9 +149,7 @@ def test_cross_section_valid_line_representations(line):
 
     # make sure parsed points are identical for all line representations
     assert np.allclose(lxc.pts, fxc.pts) and np.allclose(lxc.pts, sxc.pts)
-    assert (
-        set(lxc.xypts.keys()) == set(fxc.xypts.keys()) == set(sxc.xypts.keys())
-    )
+    assert set(lxc.xypts.keys()) == set(fxc.xypts.keys()) == set(sxc.xypts.keys())
     for k in lxc.xypts.keys():
         assert np.allclose(lxc.xypts[k], fxc.xypts[k]) and np.allclose(
             lxc.xypts[k], sxc.xypts[k]
@@ -206,9 +196,7 @@ def test_plot_limits():
     user_extent = 0, 500, 0, 25
     ax.axis(user_extent)
 
-    pxc = flopy.plot.PlotCrossSection(
-        modelgrid=grid, ax=ax, line={"column": 4}
-    )
+    pxc = flopy.plot.PlotCrossSection(modelgrid=grid, ax=ax, line={"column": 4})
     pxc.plot_grid()
 
     lims = ax.axes.viewLim
@@ -218,9 +206,7 @@ def test_plot_limits():
     plt.close(fig)
 
     fig, ax = plt.subplots(figsize=(8, 8))
-    pxc = flopy.plot.PlotCrossSection(
-        modelgrid=grid, ax=ax, line={"column": 4}
-    )
+    pxc = flopy.plot.PlotCrossSection(modelgrid=grid, ax=ax, line={"column": 4})
     pxc.plot_grid()
 
     lims = ax.axes.viewLim
@@ -256,15 +242,11 @@ def test_plot_centers():
     pc = pxc.plot_centers()
 
     if not isinstance(pc, PathCollection):
-        raise AssertionError(
-            "plot_centers() not returning PathCollection object"
-        )
+        raise AssertionError("plot_centers() not returning PathCollection object")
 
     verts = pc._offsets
     if not verts.shape[0] == active_xc_cells:
-        raise AssertionError(
-            "plot_centers() not properly masking inactive cells"
-        )
+        raise AssertionError("plot_centers() not properly masking inactive cells")
 
     center_dict = pxc.projctr
     edge_dict = pxc.projpts
@@ -274,6 +256,4 @@ def test_plot_centers():
         xmin = np.min(verts[0])
         xmax = np.max(verts[0])
         if xmax < center < xmin:
-            raise AssertionError(
-                "Cell center not properly drawn on cross-section"
-            )
+            raise AssertionError("Cell center not properly drawn on cross-section")

@@ -103,9 +103,7 @@ for ix, line in enumerate(f):
 
 # And let's load the new UZF file
 
-uzf2 = flopy.modflow.ModflowUzf1.load(
-    os.path.join(model_ws, uzf_name), ml, check=False
-)
+uzf2 = flopy.modflow.ModflowUzf1.load(os.path.join(model_ws, uzf_name), ml, check=False)
 
 # ### Now we can look at the options object, and check if it's block or line format
 #
@@ -121,9 +119,7 @@ uzf2.options.block = True
 uzf2.write_file(os.path.join(model_ws, uzf_name))
 ml.remove_package("UZF")
 
-uzf3 = flopy.modflow.ModflowUzf1.load(
-    os.path.join(model_ws, uzf_name), ml, check=False
-)
+uzf3 = flopy.modflow.ModflowUzf1.load(os.path.join(model_ws, uzf_name), ml, check=False)
 print("\n")
 print(uzf3.options)
 print(uzf3.options.block)

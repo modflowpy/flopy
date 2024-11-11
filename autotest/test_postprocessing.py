@@ -101,9 +101,7 @@ def test_get_structured_faceflows(function_tmpdir, nlay, nrow, ncol):
     iface = 6  # top
     for i in range(0, max_dim):
         # ((layer,row,col),head,iface)
-        cell_id = (
-            (0, 0, i) if ncol > 1 else (0, i, 0) if nrow > 1 else (i, 0, 0)
-        )
+        cell_id = (0, 0, i) if ncol > 1 else (0, i, 0) if nrow > 1 else (i, 0, 0)
         chd_rec.append((cell_id, h[i], iface))
     chd = flopy.mf6.ModflowGwfchd(
         gwf,
@@ -362,12 +360,8 @@ def test_get_structured_faceflows_idomain(
     Qv_aqui = cbf0[~idx].sum()  # Flow across aquitard
 
     print(f"Total flow across bottom of upper aquifer {Qv_sum:0.2f} m^3/d")
-    print(
-        f"Flow across bottom of upper aquifer to aquitard {Qv_aqui:0.2f} m^3/d"
-    )
-    print(
-        f"Flow across bottom of upper aquifer to lower aquifer {Qv_wind:0.2f} m^3/d"
-    )
+    print(f"Flow across bottom of upper aquifer to aquitard {Qv_aqui:0.2f} m^3/d")
+    print(f"Flow across bottom of upper aquifer to lower aquifer {Qv_wind:0.2f} m^3/d")
 
     print(np.isclose(-Qwell, Qv_sum, atol=1e-3))
     assert np.isclose(-Qwell, Qv_sum, atol=1e-3)
@@ -430,14 +424,10 @@ def test_structured_faceflows_3d_shape(function_tmpdir):
     tdis = ModflowTdis(sim)
     ims = ModflowIms(sim)
     gwf = ModflowGwf(sim, modelname=name, save_flows=True)
-    dis = ModflowGwfdis(
-        gwf, nlay=3, nrow=10, ncol=10, top=0, botm=[-1, -2, -3]
-    )
+    dis = ModflowGwfdis(gwf, nlay=3, nrow=10, ncol=10, top=0, botm=[-1, -2, -3])
     ic = ModflowGwfic(gwf)
     npf = ModflowGwfnpf(gwf, save_specific_discharge=True)
-    chd = ModflowGwfchd(
-        gwf, stress_period_data=[[(0, 0, 0), 1.0], [(0, 9, 9), 0.0]]
-    )
+    chd = ModflowGwfchd(gwf, stress_period_data=[[(0, 0, 0), 1.0], [(0, 9, 9), 0.0]])
     budget_file = name + ".bud"
     head_file = name + ".hds"
     oc = ModflowGwfoc(
@@ -456,15 +446,9 @@ def test_structured_faceflows_3d_shape(function_tmpdir):
         flowja,
         grb_file=function_tmpdir / "mymodel.dis.grb",
     )
-    assert (
-        frf.shape == head.shape
-    ), f"frf.shape {frf.shape} != head.shape {head.shape}"
-    assert (
-        fff.shape == head.shape
-    ), f"frf.shape {frf.shape} != head.shape {head.shape}"
-    assert (
-        flf.shape == head.shape
-    ), f"frf.shape {frf.shape} != head.shape {head.shape}"
+    assert frf.shape == head.shape, f"frf.shape {frf.shape} != head.shape {head.shape}"
+    assert fff.shape == head.shape, f"frf.shape {frf.shape} != head.shape {head.shape}"
+    assert flf.shape == head.shape, f"frf.shape {frf.shape} != head.shape {head.shape}"
 
 
 def test_get_transmissivities(function_tmpdir):

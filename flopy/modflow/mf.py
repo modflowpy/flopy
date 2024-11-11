@@ -228,9 +228,8 @@ class Modflow(BaseModel):
     def __repr__(self):
         nrow, ncol, nlay, nper = self.get_nrow_ncol_nlay_nper()
         # structured case
-        s = (
-            "MODFLOW {} layer(s) {} row(s) {} column(s) "
-            "{} stress period(s)".format(nlay, nrow, ncol, nper)
+        s = "MODFLOW {} layer(s) {} row(s) {} column(s) {} stress period(s)".format(
+            nlay, nrow, ncol, nper
         )
         return s
 
@@ -264,11 +263,7 @@ class Modflow(BaseModel):
         else:
             ibound = None
         # take the first non-None entry
-        crs = (
-            self._modelgrid.crs
-            or self._modelgrid.proj4
-            or self._modelgrid.epsg
-        )
+        crs = self._modelgrid.crs or self._modelgrid.proj4 or self._modelgrid.epsg
         common_kwargs = {
             "crs": crs,
             "xoff": self._modelgrid.xoffset,
@@ -292,10 +287,7 @@ class Modflow(BaseModel):
                 ja=self.disu.ja.array,
                 **common_kwargs,
             )
-            print(
-                "WARNING: Model grid functionality limited for unstructured "
-                "grid."
-            )
+            print("WARNING: Model grid functionality limited for unstructured grid.")
         else:
             # build structured grid
             self._modelgrid = StructuredGrid(
@@ -483,9 +475,7 @@ class Modflow(BaseModel):
                 f_nam.write(f"DATA           {u:5d}  {f}\n")
 
         # write the output files
-        for u, f, b in zip(
-            self.output_units, self.output_fnames, self.output_binflag
-        ):
+        for u, f, b in zip(self.output_units, self.output_fnames, self.output_binflag):
             if u == 0:
                 continue
             if b:
@@ -846,15 +836,11 @@ class Modflow(BaseModel):
                                 )
                             files_successfully_loaded.append(item.filename)
                             if ml.verbose:
-                                print(
-                                    f"   {item.filetype:4s} package load...success"
-                                )
+                                print(f"   {item.filetype:4s} package load...success")
                         except Exception as e:
                             ml.load_fail = True
                             if ml.verbose:
-                                print(
-                                    f"   {item.filetype:4s} package load...failed"
-                                )
+                                print(f"   {item.filetype:4s} package load...failed")
                                 print(f"   {e!s}")
                             files_not_loaded.append(item.filename)
                     else:
@@ -873,9 +859,7 @@ class Modflow(BaseModel):
                             )
                         files_successfully_loaded.append(item.filename)
                         if ml.verbose:
-                            print(
-                                f"   {item.filetype:4s} package load...success"
-                            )
+                            print(f"   {item.filetype:4s} package load...success")
                 else:
                     if ml.verbose:
                         print(f"   {item.filetype:4s} package load...skipped")
@@ -893,9 +877,7 @@ class Modflow(BaseModel):
                     if key not in ml.external_units:
                         ml.external_fnames.append(item.filename)
                         ml.external_units.append(key)
-                        ml.external_binflag.append(
-                            "binary" in item.filetype.lower()
-                        )
+                        ml.external_binflag.append("binary" in item.filetype.lower())
                         ml.external_output.append(False)
             else:
                 raise KeyError(f"unhandled case: {key}, {item}")

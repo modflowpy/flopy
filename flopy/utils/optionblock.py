@@ -132,9 +132,7 @@ class OptionBlock:
                             if v == "None" and d[OptionBlock.optional]:
                                 pass
                             else:
-                                val.append(
-                                    str(object.__getattribute__(self, k))
-                                )
+                                val.append(str(object.__getattribute__(self, k)))
 
                 if "None" in val:
                     pass
@@ -406,7 +404,9 @@ class OptionBlock:
                                 valid = True
 
                             if not valid:
-                                err_msg = f"Invalid type set to variable {k} in option block"
+                                err_msg = (
+                                    f"Invalid type set to variable {k} in option block"
+                                )
                                 raise TypeError(err_msg)
 
                             option_line += t[ix] + " "

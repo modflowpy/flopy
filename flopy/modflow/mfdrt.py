@@ -153,9 +153,7 @@ class ModflowDrt(Package):
         if dtype is not None:
             self.dtype = dtype
         else:
-            self.dtype = self.get_default_dtype(
-                structured=self.parent.structured
-            )
+            self.dtype = self.get_default_dtype(structured=self.parent.structured)
         self.stress_period_data = MfList(self, stress_period_data)
         self.parent.add_package(self)
 

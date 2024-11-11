@@ -147,9 +147,7 @@ class Mt3dms(BaseModel):
 
         # Check whether specified ftlfile exists in model directory; if not,
         # warn user
-        if os.path.isfile(
-            os.path.join(self.model_ws, f"{modelname}.{namefile_ext}")
-        ):
+        if os.path.isfile(os.path.join(self.model_ws, f"{modelname}.{namefile_ext}")):
             with open(
                 os.path.join(self.model_ws, f"{modelname}.{namefile_ext}")
             ) as nm_file:
@@ -180,10 +178,7 @@ class Mt3dms(BaseModel):
                 ):
                     pass
                 else:
-                    print(
-                        "Specified value of ftlfree conflicts with FTL "
-                        "file format"
-                    )
+                    print("Specified value of ftlfree conflicts with FTL file format")
                     print(
                         f"Switching ftlfree from {self.ftlfree} to {not self.ftlfree}"
                     )
@@ -396,9 +391,7 @@ class Mt3dms(BaseModel):
             ftlfmt = ""
             if self.ftlfree:
                 ftlfmt = "FREE"
-            f_nam.write(
-                f"{'FTL':14s} {self.ftlunit:5d}  {self.ftlfilename} {ftlfmt}\n"
-            )
+            f_nam.write(f"{'FTL':14s} {self.ftlunit:5d}  {self.ftlfilename} {ftlfmt}\n")
         # write file entries in name file
         f_nam.write(str(self.get_name_file_entries()))
 
@@ -407,9 +400,7 @@ class Mt3dms(BaseModel):
             f_nam.write(f"DATA           {u:5d}  {f}\n")
 
         # write the output files
-        for u, f, b in zip(
-            self.output_units, self.output_fnames, self.output_binflag
-        ):
+        for u, f, b in zip(self.output_units, self.output_fnames, self.output_binflag):
             if u == 0:
                 continue
             if b:
@@ -504,9 +495,7 @@ class Mt3dms(BaseModel):
                 namefile_path, mt.mfnam_packages, verbose=verbose
             )
         except Exception as e:
-            raise Exception(
-                f"error loading name file entries from file:\n{e!s}"
-            )
+            raise Exception(f"error loading name file entries from file:\n{e!s}")
 
         if mt.verbose:
             print(
@@ -552,9 +541,7 @@ class Mt3dms(BaseModel):
             return None
 
         try:
-            pck = btn.package.load(
-                btn.filename, mt, ext_unit_dict=ext_unit_dict
-            )
+            pck = btn.package.load(btn.filename, mt, ext_unit_dict=ext_unit_dict)
         except Exception as e:
             raise Exception(f"error loading BTN: {e!s}")
         files_successfully_loaded.append(btn.filename)
@@ -608,9 +595,7 @@ class Mt3dms(BaseModel):
                             )
                             files_successfully_loaded.append(item.filename)
                             if mt.verbose:
-                                print(
-                                    f"   {pck.name[0]:4s} package load...success"
-                                )
+                                print(f"   {pck.name[0]:4s} package load...success")
                         except BaseException as o:
                             if mt.verbose:
                                 print(
@@ -624,9 +609,7 @@ class Mt3dms(BaseModel):
                         )
                         files_successfully_loaded.append(item.filename)
                         if mt.verbose:
-                            print(
-                                f"   {pck.name[0]:4s} package load...success"
-                            )
+                            print(f"   {pck.name[0]:4s} package load...success")
                 else:
                     if mt.verbose:
                         print(f"   {item.filetype:4s} package load...skipped")
@@ -651,9 +634,7 @@ class Mt3dms(BaseModel):
                 elif key not in mt.pop_key_list:
                     mt.external_fnames.append(item.filename)
                     mt.external_units.append(key)
-                    mt.external_binflag.append(
-                        "binary" in item.filetype.lower()
-                    )
+                    mt.external_binflag.append("binary" in item.filetype.lower())
                     mt.external_output.append(False)
 
         # pop binary output keys and any external file units that are now
@@ -674,8 +655,9 @@ class Mt3dms(BaseModel):
         # write message indicating packages that were successfully loaded
         if mt.verbose:
             print(
-                "\n   The following {} packages were "
-                "successfully loaded.".format(len(files_successfully_loaded))
+                "\n   The following {} packages were successfully loaded.".format(
+                    len(files_successfully_loaded)
+                )
             )
             for fname in files_successfully_loaded:
                 print(f"      {os.path.basename(fname)}")
@@ -738,7 +720,9 @@ class Mt3dms(BaseModel):
         r : np.ndarray
 
         """
-        firstline = "STEP   TOTAL TIME             LOCATION OF OBSERVATION POINTS (K,I,J)"
+        firstline = (
+            "STEP   TOTAL TIME             LOCATION OF OBSERVATION POINTS (K,I,J)"
+        )
         dtype = [("step", int), ("time", float)]
         nobs = 0
         obs = []

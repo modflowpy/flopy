@@ -31,9 +31,7 @@ print(f"flopy version: {flopy.__version__}")
 # Load our old friend...the Freyberg model
 
 nam_file = "freyberg.nam"
-model_ws = os.path.join(
-    "..", "..", "examples", "data", "freyberg_multilayer_transient"
-)
+model_ws = os.path.join("..", "..", "examples", "data", "freyberg_multilayer_transient")
 ml = flopy.modflow.Modflow.load(nam_file, model_ws=model_ws, check=False)
 
 # We can see the ``Modelgrid`` instance has generic entries, as does ``start_datetime``
@@ -44,9 +42,7 @@ ml.modeltime.start_datetime
 
 # Setting the attributes of the ``ml.modelgrid`` is easy:
 
-ml.modelgrid.set_coord_info(
-    xoff=123456.7, yoff=765432.1, angrot=15.0, crs=3070
-)
+ml.modelgrid.set_coord_info(xoff=123456.7, yoff=765432.1, angrot=15.0, crs=3070)
 ml.dis.start_datetime = "7/4/1776"
 
 ml.modeltime.start_datetime
@@ -125,9 +121,7 @@ cbc = flopy.utils.CellBudgetFile(fcbc)
 export_dict = {"hds": hds, "cbc": cbc}
 
 # export head and cell budget outputs to netcdf
-fnc = flopy.export.utils.output_helper(
-    os.path.join(pth, "output.nc"), ml, export_dict
-)
+fnc = flopy.export.utils.output_helper(os.path.join(pth, "output.nc"), ml, export_dict)
 # -
 
 try:

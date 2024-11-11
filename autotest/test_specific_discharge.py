@@ -197,9 +197,7 @@ def mf6_model(function_tmpdir):
 
     # create tdis package
     tdis_rc = [(1.0, 1, 1.0)]
-    tdis = ModflowTdis(
-        sim, pname="tdis", time_units="DAYS", perioddata=tdis_rc
-    )
+    tdis = ModflowTdis(sim, pname="tdis", time_units="DAYS", perioddata=tdis_rc)
 
     # create gwf model
     gwf = ModflowGwf(
@@ -267,8 +265,7 @@ def mf6_model(function_tmpdir):
 
     # create ghb package
     ghbspd = [
-        [(ghb_i[0], ghb_i[1], ghb_i[2]), ghb_i[3], ghb_i[4]]
-        for ghb_i in ghb_list
+        [(ghb_i[0], ghb_i[1], ghb_i[2]), ghb_i[3], ghb_i[4]] for ghb_i in ghb_list
     ]
     ghb = ModflowGwfghb(gwf, print_input=True, stress_period_data=ghbspd)
 
@@ -281,8 +278,7 @@ def mf6_model(function_tmpdir):
 
     # create drn package
     drnspd = [
-        [(drn_i[0], drn_i[1], drn_i[2]), drn_i[3], drn_i[4]]
-        for drn_i in drn_list
+        [(drn_i[0], drn_i[1], drn_i[2]), drn_i[3], drn_i[4]] for drn_i in drn_list
     ]
     drn = ModflowGwfdrn(gwf, print_input=True, stress_period_data=drnspd)
 
@@ -359,9 +355,7 @@ def test_extended_budget_default(mf2005_model):
     mf.run_model()
 
     # load and postprocess
-    Qx_ext, Qy_ext, Qz_ext = get_extended_budget(
-        function_tmpdir / "mf2005.cbc"
-    )
+    Qx_ext, Qy_ext, Qz_ext = get_extended_budget(function_tmpdir / "mf2005.cbc")
 
     # basic check
     basic_check(Qx_ext, Qy_ext, Qz_ext)
@@ -389,9 +383,7 @@ def extended_budget_comprehensive(function_tmpdir):
     basic_check(Qx_ext, Qy_ext, Qz_ext)
 
     # local balance check
-    local_balance_check(
-        Qx_ext, Qy_ext, Qz_ext, function_tmpdir / "mf2005.hds", mf
-    )
+    local_balance_check(Qx_ext, Qy_ext, Qz_ext, function_tmpdir / "mf2005.hds", mf)
 
     # overall check
     overall = np.sum(Qx_ext) + np.sum(Qy_ext) + np.sum(Qz_ext)
@@ -501,9 +493,7 @@ def test_specific_discharge_mf6(mf6_model):
     sim.run_simulation()
 
     # load and postprocess
-    sim = MFSimulation.load(
-        sim_name="mf6", sim_ws=function_tmpdir, verbosity_level=0
-    )
+    sim = MFSimulation.load(sim_name="mf6", sim_ws=function_tmpdir, verbosity_level=0)
     gwf = sim.get_model("mf6")
     hds = bf.HeadFile(function_tmpdir / "mf6.hds")
     head = hds.get_data()
@@ -528,9 +518,7 @@ def test_specific_discharge_mf6(mf6_model):
     ax = modelmap.ax
     assert len(ax.collections) != 0, "Discharge vector was not drawn"
     for col in ax.collections:
-        assert isinstance(
-            col, Quiver
-        ), f"Unexpected collection type: {type(col)}"
+        assert isinstance(col, Quiver), f"Unexpected collection type: {type(col)}"
     assert np.sum(quiver.Umask) == 1
     pos = np.sum(quiver.X) + np.sum(quiver.Y)
     assert np.allclose(pos, 1600.0)

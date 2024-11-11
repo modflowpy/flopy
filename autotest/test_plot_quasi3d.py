@@ -101,9 +101,7 @@ def quasi3d_model(function_tmpdir):
 @requires_exe("mf2005")
 def test_map_plot_with_quasi3d_layers(quasi3d_model):
     # read output
-    hf = HeadFile(
-        os.path.join(quasi3d_model.model_ws, f"{quasi3d_model.name}.hds")
-    )
+    hf = HeadFile(os.path.join(quasi3d_model.model_ws, f"{quasi3d_model.name}.hds"))
     head = hf.get_data(totim=1.0)
     cbb = CellBudgetFile(
         os.path.join(quasi3d_model.model_ws, f"{quasi3d_model.name}.cbc")
@@ -127,9 +125,7 @@ def test_map_plot_with_quasi3d_layers(quasi3d_model):
 @requires_exe("mf2005")
 def test_cross_section_with_quasi3d_layers(quasi3d_model):
     # read output
-    hf = HeadFile(
-        os.path.join(quasi3d_model.model_ws, f"{quasi3d_model.name}.hds")
-    )
+    hf = HeadFile(os.path.join(quasi3d_model.model_ws, f"{quasi3d_model.name}.hds"))
     head = hf.get_data(totim=1.0)
     cbb = CellBudgetFile(
         os.path.join(quasi3d_model.model_ws, f"{quasi3d_model.name}.cbc")

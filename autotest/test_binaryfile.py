@@ -122,9 +122,7 @@ def test_headfile_build_index(example_data_path):
     )
     # check first and last recorddict
     list_recordarray = hds.recordarray.tolist()
-    assert list_recordarray[0] == (
-        (1, 1, 1.0, 1.0, b"            HEAD", 20, 40, 1)
-    )
+    assert list_recordarray[0] == ((1, 1, 1.0, 1.0, b"            HEAD", 20, 40, 1))
     assert list_recordarray[-1] == (
         (1, 1097, 1.0, 1097.0, b"            HEAD", 20, 40, 3)
     )
@@ -179,12 +177,8 @@ def test_concentration_build_index(example_data_path):
     )
     # check first and last recorddict
     list_recordarray = ucn.recordarray.tolist()
-    assert list_recordarray[0] == (
-        (29, 1, 1, 100.0, b"CONCENTRATION   ", 21, 15, 1)
-    )
-    assert list_recordarray[-1] == (
-        (29, 1, 1, 100.0, b"CONCENTRATION   ", 21, 15, 8)
-    )
+    assert list_recordarray[0] == ((29, 1, 1, 100.0, b"CONCENTRATION   ", 21, 15, 1))
+    assert list_recordarray[-1] == ((29, 1, 1, 100.0, b"CONCENTRATION   ", 21, 15, 8))
     assert ucn.times == [np.float32(100.0)]
     assert ucn.kstpkper == [(1, 1)]
     np.testing.assert_array_equal(ucn.iposarray, np.arange(8) * 1304 + 44)
@@ -212,9 +206,7 @@ def test_concentration_build_index(example_data_path):
 
 def test_binaryfile_writeread(function_tmpdir, nwt_model_path):
     model = "Pr3_MFNWT_lower.nam"
-    ml = flopy.modflow.Modflow.load(
-        model, version="mfnwt", model_ws=nwt_model_path
-    )
+    ml = flopy.modflow.Modflow.load(model, version="mfnwt", model_ws=nwt_model_path)
     # change the model work space
     ml.change_model_ws(function_tmpdir)
     #
@@ -442,9 +434,7 @@ def test_binaryfile_read(function_tmpdir, freyberg_model_path):
     assert np.array_equal(
         h0, h1
     ), "binary head read using totim != head read using kstpkper"
-    assert np.array_equal(
-        h0, h2
-    ), "binary head read using totim != head read using idx"
+    assert np.array_equal(h0, h2), "binary head read using totim != head read using idx"
 
     ts = h.get_ts((0, 7, 5))
     expected = 26.00697135925293
@@ -478,9 +468,7 @@ def test_binaryfile_read_context(freyberg_model_path):
 
 def test_binaryfile_reverse_mf6_dis(function_tmpdir):
     name = "reverse_dis"
-    sim = flopy.mf6.MFSimulation(
-        sim_name=name, sim_ws=function_tmpdir, exe_name="mf6"
-    )
+    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=function_tmpdir, exe_name="mf6")
     tdis_rc = [(1, 1, 1.0), (1, 1, 1.0)]
     nper = len(tdis_rc)
     tdis = flopy.mf6.ModflowTdis(sim, nper=nper, perioddata=tdis_rc)
@@ -523,20 +511,14 @@ def test_binaryfile_reverse_mf6_dis(function_tmpdir):
 
     # reverse budget and write to separate file
     budget_file_rev_path = function_tmpdir / f"{budget_file}_rev"
-    budget_file = flopy.utils.CellBudgetFile(
-        function_tmpdir / budget_file, tdis=tdis
-    )
+    budget_file = flopy.utils.CellBudgetFile(function_tmpdir / budget_file, tdis=tdis)
     budget_file.reverse(budget_file_rev_path)
-    budget_file_rev = flopy.utils.CellBudgetFile(
-        budget_file_rev_path, tdis=tdis
-    )
+    budget_file_rev = flopy.utils.CellBudgetFile(budget_file_rev_path, tdis=tdis)
 
     for kper in range(nper):
         assert np.allclose(heads[kper], heads_rev[-kper + 1])
         budget = budget_file.get_data(text="FLOW-JA-FACE", totim=kper)[0]
-        budget_rev = budget_file_rev.get_data(text="FLOW-JA-FACE", totim=kper)[
-            0
-        ]
+        budget_rev = budget_file_rev.get_data(text="FLOW-JA-FACE", totim=kper)[0]
         assert budget.shape == budget_rev.shape
         assert np.allclose(budget, -budget_rev)
 
@@ -544,9 +526,7 @@ def test_binaryfile_reverse_mf6_dis(function_tmpdir):
 @requires_pkg("shapely")
 def test_binaryfile_reverse_mf6_disv(function_tmpdir):
     name = "reverse_disv"
-    sim = flopy.mf6.MFSimulation(
-        sim_name=name, sim_ws=function_tmpdir, exe_name="mf6"
-    )
+    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=function_tmpdir, exe_name="mf6")
     tdis_rc = [(1, 1, 1.0), (1, 1, 1.0)]
     nper = len(tdis_rc)
     tdis = flopy.mf6.ModflowTdis(sim, nper=nper, perioddata=tdis_rc)
@@ -583,20 +563,14 @@ def test_binaryfile_reverse_mf6_disv(function_tmpdir):
 
     # reverse budget and write to separate file
     budget_file_rev_path = function_tmpdir / f"{budget_file}_rev"
-    budget_file = flopy.utils.CellBudgetFile(
-        function_tmpdir / budget_file, tdis=tdis
-    )
+    budget_file = flopy.utils.CellBudgetFile(function_tmpdir / budget_file, tdis=tdis)
     budget_file.reverse(budget_file_rev_path)
-    budget_file_rev = flopy.utils.CellBudgetFile(
-        budget_file_rev_path, tdis=tdis
-    )
+    budget_file_rev = flopy.utils.CellBudgetFile(budget_file_rev_path, tdis=tdis)
 
     for kper in range(nper):
         assert np.allclose(heads[kper], heads_rev[-kper + 1])
         budget = budget_file.get_data(text="FLOW-JA-FACE", totim=kper)[0]
-        budget_rev = budget_file_rev.get_data(text="FLOW-JA-FACE", totim=kper)[
-            0
-        ]
+        budget_rev = budget_file_rev.get_data(text="FLOW-JA-FACE", totim=kper)[0]
         assert budget.shape == budget_rev.shape
         assert np.allclose(budget, -budget_rev)
 
@@ -609,9 +583,7 @@ def test_binaryfile_reverse_mf6_disu(example_data_path, function_tmpdir):
     )
     tdis_rc = [(1, 1, 1.0), (1, 1, 1.0)]
     nper = len(tdis_rc)
-    tdis = flopy.mf6.ModflowTdis(
-        sim, time_units="DAYS", nper=nper, perioddata=tdis_rc
-    )
+    tdis = flopy.mf6.ModflowTdis(sim, time_units="DAYS", nper=nper, perioddata=tdis_rc)
     sim.set_sim_path(function_tmpdir)
     sim.write_simulation()
     sim.run_simulation()
@@ -665,9 +637,7 @@ def test_binaryfile_reverse_mf6_disu(example_data_path, function_tmpdir):
             assert np.array_equal(f_data[0][0], rf_data[0][0])
 
         budget = budget_file.get_data(text="FLOW-JA-FACE", totim=idx)[0]
-        budget_rev = budget_file_rev.get_data(text="FLOW-JA-FACE", totim=idx)[
-            0
-        ]
+        budget_rev = budget_file_rev.get_data(text="FLOW-JA-FACE", totim=idx)[0]
         assert budget.shape == budget_rev.shape
         assert np.allclose(budget, -budget_rev)
 
