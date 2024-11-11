@@ -57,7 +57,7 @@ class Shape:
         else:
             err = (
                 "Supported shape types are Polygon, LineString, "
-                "and Point: Supplied shape type {}".format(shapetype)
+                f"and Point: Supplied shape type {shapetype}"
             )
             raise TypeError(err)
 

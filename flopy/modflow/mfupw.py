@@ -363,8 +363,8 @@ class ModflowUpw(Package):
 
         if model.version != "mfnwt":
             print(
-                "Warning: model version was reset from '{}' to 'mfnwt' "
-                "in order to load a UPW file".format(model.version)
+                f"Warning: model version was reset from '{model.version}' "
+                "to 'mfnwt' in order to load a UPW file"
             )
             model.version = "mfnwt"
 

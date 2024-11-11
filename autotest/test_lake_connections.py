@@ -503,8 +503,8 @@ def test_embedded_lak_prudic(example_data_path):
     nlay = 8  # Number of layers
     nrow = 36  # Number of rows
     ncol = 23  # Number of columns
-    delr = float(405.665)  # Column width ($ft$)
-    delc = float(403.717)  # Row width ($ft$)
+    delr = 405.665  # Column width ($ft$)
+    delc = 403.717  # Row width ($ft$)
     delv = 15.0  # Layer thickness ($ft$)
     top = 100.0  # Top of the model ($ft$)
 
@@ -606,8 +606,8 @@ def test_embedded_lak_prudic_mixed(example_data_path):
     nlay = 8  # Number of layers
     nrow = 36  # Number of rows
     ncol = 23  # Number of columns
-    delr = float(405.665)  # Column width ($ft$)
-    delc = float(403.717)  # Row width ($ft$)
+    delr = 405.665  # Column width ($ft$)
+    delc = 403.717  # Row width ($ft$)
     delv = 15.0  # Layer thickness ($ft$)
     top = 100.0  # Top of the model ($ft$)
 

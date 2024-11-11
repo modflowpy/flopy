@@ -2,7 +2,6 @@ import math
 import os
 import shutil
 from pathlib import Path
-from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -56,7 +55,7 @@ if HAS_PYPROJ:
     import pyproj
 
 
-def namfiles() -> List[Path]:
+def namfiles() -> list[Path]:
     mf2005_path = get_example_data_path() / "mf2005_test"
     return list(mf2005_path.rglob("*.nam"))
 
@@ -998,9 +997,10 @@ def test_export_mf6_shp(function_tmpdir):
     # Compare exported riv shapefiles
     riv.export(function_tmpdir / "riv.shp")
     riv6.export(function_tmpdir / "riv6.shp")
-    with Reader(function_tmpdir / "riv.shp") as riv_shp, Reader(
-        function_tmpdir / "riv6.shp"
-    ) as riv6_shp:
+    with (
+        Reader(function_tmpdir / "riv.shp") as riv_shp,
+        Reader(function_tmpdir / "riv6.shp") as riv6_shp,
+    ):
         assert list(riv_shp.shapeRecord(-1).record) == list(
             riv6_shp.shapeRecord(-1).record
         )

@@ -17,7 +17,7 @@ from datetime import datetime
 from pathlib import Path
 from shutil import which
 from subprocess import PIPE, STDOUT, Popen
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Union
 from warnings import warn
 
 import numpy as np
@@ -1395,7 +1395,7 @@ class BaseModel(ModelInterface):
         pause=False,
         report=False,
         normal_msg="normal termination",
-    ) -> Tuple[bool, List[str]]:
+    ) -> tuple[bool, list[str]]:
         """
         This method will run the model using subprocess.Popen.
 
@@ -1667,7 +1667,7 @@ def run_model(
     use_async=False,
     cargs=None,
     custom_print=None,
-) -> Tuple[bool, List[str]]:
+) -> tuple[bool, list[str]]:
     """
     Run the model using subprocess.Popen, optionally collecting stdout and printing
     timestamped progress. Model workspace, namefile, executable to use, and several

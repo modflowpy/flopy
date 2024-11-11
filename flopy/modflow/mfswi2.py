@@ -271,7 +271,7 @@ class ModflowSwi2(Package):
                 if len(obsnam) != nobs:
                     raise Exception(
                         "ModflowSwi2: obsnam must be a list with a "
-                        "length of {} not {}.".format(nobs, len(obsnam))
+                        f"length of {nobs} not {len(obsnam)}."
                     )
 
         if nobs > 0:

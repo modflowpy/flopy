@@ -10,7 +10,7 @@ import shutil
 import sys
 import warnings
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Optional, Union
 from warnings import warn
 
 import numpy as np
@@ -489,7 +489,7 @@ def shape_attr_name(name, length=6, keep_layer=False):
     return n
 
 
-def enforce_10ch_limit(names: List[str], warnings: bool = True) -> List[str]:
+def enforce_10ch_limit(names: list[str], warnings: bool = True) -> list[str]:
     """Enforce 10 character limit for fieldnames.
     Add suffix for duplicate names starting at 0.
 

@@ -106,9 +106,7 @@ def copy_files(ml, nproc):
                 os.makedirs(cf_pths[idx])
             filelist = [f for f in os.listdir(cf_pths[0])]
             sys.stdout.write(
-                "copying files from {} to {}\n".format(
-                    cf_pths[0], cf_pths[idx]
-                )
+                f"copying files from {cf_pths[0]} to {cf_pths[idx]}\n"
             )
             for f in filelist:
                 if os.path.splitext(f)[1].lower() in exclude:
@@ -179,9 +177,7 @@ def cf_model(imod, ion, nmax, k, i, j, Qt, base, hdry):
     sys.stdout.write(f"  model number {imod} working directory: {pth}\n")
     make_well(pth, k, i, j, Qt)
     success, elt = run_model(pth)
-    line = "\nModel run: {} of {} (model number {})\n".format(
-        ion + 1, nmax, imod
-    )
+    line = f"\nModel run: {ion + 1} of {nmax} (model number {imod})\n"
     line += f"  row {i + 1} - col {j + 1}\n"
     line += f"  {elt}\n"
     # get the results
@@ -211,14 +207,12 @@ def cf_model(imod, ion, nmax, k, i, j, Qt, base, hdry):
                     ]
                     v[idx] = ((v1.sum() + v2.sum() + v3.sum()) - base) / (-Qt)
         except:
-            line += " Error: Model run: {} of {} (model number {}) - ".format(
-                ion + 1, nmax, imod
-            )
+            line += f" Error: Model run: {ion + 1} of {nmax} (model number {imod}) - "
             line += "could not process model results.\n"
             v[:] = np.nan
     else:
-        line += " Error: Model run: {} of {} (model number {}) ".format(
-            ion + 1, nmax, imod
+        line += (
+            f" Error: Model run: {ion + 1} of {nmax} (model number {imod}) "
         )
         line += "did not execute successfully\n"
         v[:] = np.nan
@@ -232,15 +226,11 @@ def doit():
     ncores = mp.cpu_count()
     if nproc > ncores:
         sys.stdout.write(
-            "Requested {} cores but only {} cores are available.\n\n\n".format(
-                nproc, ncores
-            )
+            f"Requested {nproc} cores but only {ncores} cores are available.\n\n\n"
         )
     else:
         sys.stdout.write(
-            "Requested {} cores and {} cores are available.\n\n\n".format(
-                nproc, ncores
-            )
+            f"Requested {nproc} cores and {ncores} cores are available.\n\n\n"
         )
 
     # paths
@@ -275,14 +265,10 @@ def doit():
     # write some summary information
     fs.write(f"Problem size: {nrow} rows and {ncol} columns.\n")
     fs.write(
-        "Capture fraction analysis performed every {} rows and columns.\n".format(
-            nstep
-        )
+        f"Capture fraction analysis performed every {nstep} rows and columns.\n"
     )
     fs.write(
-        "Maximum number of analyses: {} rows and {} columns.\n".format(
-            nrow2, ncol2
-        )
+        f"Maximum number of analyses: {nrow2} rows and {ncol2} columns.\n"
     )
 
     # create array to store capture fraction data (subset of model)
@@ -359,9 +345,7 @@ def doit():
             f"USPB_capture_fraction_{nstep:02d}_{idx + 1:02d}.dat",
         )
         sys.stdout.write(
-            "saving capture fraction data to...{}\n".format(
-                os.path.basename(fn)
-            )
+            f"saving capture fraction data to...{os.path.basename(fn)}\n"
         )
         np.savetxt(fn, cf_array[idx, :, :], delimiter=" ")
 

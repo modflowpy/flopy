@@ -877,7 +877,7 @@ def test_mp7bas_porosity(ex01_mf6_model, porosity_type):
         # Initialize porosity array based on dim of dis.botm
         # lay_1=0.35, lay_2=0.30, lay_3=0.25
         porosity = np.array([[[0.35]], [[0.30]], [[0.25]]]) * np.ones(
-            (gwf.dis.botm.array.shape)
+            gwf.dis.botm.array.shape
         )
         # Diversify porosity values, adjust both halves of the model
         porosity[:, :, : porosity.shape[2] // 2] -= 0.05

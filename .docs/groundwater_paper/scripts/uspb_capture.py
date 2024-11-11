@@ -104,15 +104,9 @@ fs = open(os.path.join("data", "uspb", f"uspb_capture_{nstep}.out"), "w", 0)
 # write some summary information
 fs.write(f"Problem size: {nrow} rows and {ncol} columns.\n")
 fs.write(
-    "Capture fraction analysis performed every {} rows and columns.\n".format(
-        nstep
-    )
+    f"Capture fraction analysis performed every {nstep} rows and columns.\n"
 )
-fs.write(
-    "Maximum number of analyses: {} rows and {} columns.\n".format(
-        nrow2, ncol2
-    )
-)
+fs.write(f"Maximum number of analyses: {nrow2} rows and {ncol2} columns.\n")
 
 # create array to store capture fraction data (subset of model)
 cf_array = np.empty((10, nrow2, ncol2), dtype=float)
@@ -131,9 +125,7 @@ for i in range(0, nrow, nstep):
         if ibound[i, j] < 1:
             sys.stdout.write(".")
         else:
-            line = "\nrow {} of {} - col {} of {}\n".format(
-                icnt + 1, nrow2, jcnt + 1, ncol2
-            )
+            line = f"\nrow {icnt + 1} of {nrow2} - col {jcnt + 1} of {ncol2}\n"
             fs.write(line)
             sys.stdout.write(line)
             s0 = time.time()

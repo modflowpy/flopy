@@ -1,9 +1,9 @@
 import sys
+from collections.abc import Iterable
 from os import environ
 from pathlib import Path
 from platform import system
 from pprint import pprint
-from typing import Iterable
 from warnings import warn
 
 import pytest

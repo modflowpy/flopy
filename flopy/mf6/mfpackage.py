@@ -259,7 +259,7 @@ class MFBlockHeader:
             if len(self.data_items) > 1:
                 for data_item in self.data_items[1:]:
                     entry = data_item.get_file_entry(values_only=True)
-                    fd.write("%s" % (entry.rstrip()))
+                    fd.write(str(entry).rstrip())
         if self.get_comment().text:
             fd.write(" ")
             self.get_comment().write(fd)

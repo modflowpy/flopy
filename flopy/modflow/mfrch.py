@@ -241,7 +241,7 @@ class ModflowRch(Package):
                 if len(lessthan) > 0:
                     txt = (
                         "\r    Mean R/T ratio < checker warning threshold of "
-                        "{} for {} stress periods".format(RTmin, len(lessthan))
+                        f"{RTmin} for {len(lessthan)} stress periods"
                     )
                     chk._add_to_summary(
                         type="Warning", value=R_T.min(), desc=txt
@@ -253,8 +253,8 @@ class ModflowRch(Package):
                 if len(greaterthan) > 0:
                     txt = (
                         "\r    Mean R/T ratio > checker warning "
-                        "threshold of {} for "
-                        "{} stress periods".format(RTmax, len(greaterthan))
+                        f"threshold of {RTmax} for "
+                        f"{len(greaterthan)} stress periods"
                     )
                     chk._add_to_summary(
                         type="Warning", value=R_T.max(), desc=txt

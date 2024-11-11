@@ -4,7 +4,7 @@ import os.path
 import sys
 import warnings
 from pathlib import Path
-from typing import List, Optional, Union, cast
+from typing import Optional, Union, cast
 
 import numpy as np
 
@@ -1255,12 +1255,12 @@ class MFSimulationBase:
         return package
 
     def register_ims_package(
-        self, solution_file: MFPackage, model_list: Union[str, List[str]]
+        self, solution_file: MFPackage, model_list: Union[str, list[str]]
     ):
         self.register_solution_package(solution_file, model_list)
 
     def register_solution_package(
-        self, solution_file: MFPackage, model_list: Union[str, List[str]]
+        self, solution_file: MFPackage, model_list: Union[str, list[str]]
     ):
         """
         Register a solution package with the simulation.
@@ -2642,7 +2642,7 @@ class MFSimulationBase:
 
     def plot(
         self,
-        model_list: Optional[Union[str, List[str]]] = None,
+        model_list: Optional[Union[str, list[str]]] = None,
         SelPackList=None,
         **kwargs,
     ):

@@ -6,8 +6,8 @@ ParticleData, CellDataType, FaceDataType, and NodeParticleData classes.
 """
 
 from collections import namedtuple
+from collections.abc import Iterator
 from itertools import product
-from typing import Iterator, Tuple
 
 import numpy as np
 import pandas as pd
@@ -410,7 +410,7 @@ class ParticleData:
                 span = mx - mn
                 return mn + span * p
 
-            def convert(row) -> Tuple[float, float, float]:
+            def convert(row) -> tuple[float, float, float]:
                 verts = grid.get_cell_vertices(row.i, row.j)
                 xs, ys = list(zip(*verts))
                 return [
@@ -436,7 +436,7 @@ class ParticleData:
                 span = mx - mn
                 return mn + span * p
 
-            def convert(row) -> Tuple[float, float, float]:
+            def convert(row) -> tuple[float, float, float]:
                 verts = grid.get_cell_vertices(row.node)
                 xs, ys = list(zip(*verts))
                 return [
