@@ -4,6 +4,15 @@ abstract classes that should not be directly accessed.
 
 """
 
+# in LayerFile, the recordarray attribute begins its life as
+# a list, which is appended to in subclasses' build_index(),
+# then finally becomes an array, after which it's accessed
+# in this file by column name. this probably deserves some
+# attention, but in the meantime, disable the pylint rule
+# to appease codacy.
+#
+# pylint: disable=invalid-sequence-index
+
 import os
 import warnings
 from pathlib import Path
