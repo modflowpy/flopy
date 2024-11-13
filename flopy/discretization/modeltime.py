@@ -157,6 +157,21 @@ class ModelTime:
 
         return np.array(tslen)
 
+    def get_datetime_string(self, datetime_obj):
+        """
+        Method to get a standarized ISO 8601 compliant datetime string
+
+        Parameters
+        ----------
+        datetime_obj : various objects
+            user supplied datetime representation. Please see the
+            ModelTime.datetime_from_user_input documentation for a list
+            of the supported representation types
+
+        """
+        dt = self.datetime_from_user_input(datetime_obj)
+        return dt.strftime("%Y-%m-%dT%H:%M:%S")
+
     def set_start_datetime(self, datetime_obj):
         """
         Method to reset the start datetime of the ModelTime class
