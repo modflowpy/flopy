@@ -13,7 +13,6 @@ from flopy.mf6.mfpackage import MFChildPackages, MFPackage
 from flopy.mf6.mfsimbase import MFSimulationData
 from flopy.mf6.modflow.mfsimulation import MFSimulation
 from flopy.modflow import Modflow
-from flopy.utils import TemporalReference
 
 
 def get_package_list(model):
@@ -151,8 +150,6 @@ def package_is_copy(pk1, pk2):
                     # TODO: this may return False if there are nans
                     elif not np.allclose(v.array, v2.array):
                         return False
-        elif isinstance(v, TemporalReference):
-            pass
         elif isinstance(v, np.ndarray):
             if not np.allclose(v, v2):
                 return False

@@ -15,7 +15,7 @@ from flopy.modflow import (
     ModflowGhb,
     ModflowOc,
 )
-from flopy.utils import TemporalReference, Util2d, Util3d
+from flopy.utils import Util2d, Util3d
 
 
 @pytest.fixture
@@ -62,7 +62,7 @@ def test_usg_disu_load(function_tmpdir, mfusg_01A_nestedgrid_nognc_model_path):
             assert np.array_equal(value1.array, value2.array)
         elif isinstance(value1, list):  # this is for the jagged _get_neighbours list
             assert np.all([np.all(v1 == v2) for v1, v2 in zip(value1, value2)])
-        elif not isinstance(value1, TemporalReference):
+        else:
             assert value1 == value2
 
 
