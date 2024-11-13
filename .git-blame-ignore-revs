@@ -1,0 +1,20 @@
+# Introduce end-of-line normalization (#913)
+de38a5bb9559a4acb14317a9038ce8267c432c03
+
+# Initial GitHub actions for linting (#954)
+675d12b07b1c7f93c2bce9da29790cf364d52505
+
+# apply consistent multi-line string formatting (#1166)
+2912b1dfc3fbfc926128702f222b7b1ca9f15c6c
+
+# use f-strings to format str (#1212)
+5d4324ddb6ed5abad231295d63e28cdf779e5e07
+
+# consistently use relative imports (#1330)
+16b84e8e7933b98c63eaa4fbeb47f6e28a45d611
+
+# switch to ruff, ignore known test warnings, numpy compat fixes (#2124)
+b142b081516e6ac78e426257c7472dd4a9994b89
+
+# reformat codebase with longer line length (#2362)
+12a3bcd1ba8b229e00e2da8a448e7866c16fdb29
