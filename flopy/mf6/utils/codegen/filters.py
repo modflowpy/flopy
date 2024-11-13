@@ -82,10 +82,6 @@ class Filters:
                 or ctx_name.l in ["sim", "exg", "sln"]
             ):
                 return "simulation"
-            elif subpkg:
-                if ctx_name.l == "utl" and ctx_name.r == "hpc":
-                    return "simulation"
-                return "package"
             return "model"
 
         @pass_context
@@ -101,13 +97,7 @@ class Filters:
                     "solutiongroup",
                 ]
             elif base == "MFModel":
-                skip = ["packages", "export_netcdf", "nc_filerecord"]
-                refs = ctx.get("foreign_keys", dict())
-                if any(refs) and ctx["name"] != (None, "nam"):
-                    for k in refs.keys():
-                        if ctx["vars"].get(k, None):
-                            skip.append(k)
-                return skip
+                return ["packages", "export_netcdf", "nc_filerecord"]
             else:
                 if ctx_name.r == "nam":
                     return ["export_netcdf", "nc_filerecord"]
@@ -295,9 +285,7 @@ class Filters:
 
             attrs = list(filter(None, [_attr(v) for v in variables.values()]))
 
-            if base == "MFModel":
-                attrs.append(f"model_type = {name.l}")
-            elif base == "MFPackage":
+            if base == "MFPackage":
                 attrs.extend(
                     [
                         f"package_abbr = '{name.r}'"

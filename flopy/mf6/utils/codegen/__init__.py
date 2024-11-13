@@ -47,9 +47,7 @@ def make_init(dfns: dict, outdir: PathLike, verbose: bool = False):
     from flopy.mf6.utils.codegen.context import Context
 
     contexts = list(
-        chain(
-            *[[ctx for ctx in Context.from_dfn(dfn)] for dfn in dfns.values()]
-        )
+        chain.from_iterable(Context.from_dfn(dfn) for dfn in dfns.values())
     )
     target_name = "__init__.py"
     target_path = outdir / target_name

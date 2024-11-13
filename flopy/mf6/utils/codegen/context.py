@@ -69,8 +69,8 @@ class Context(TypedDict):
     name: Name
     vars: Vars
 
-    @classmethod
-    def from_dfn(cls, dfn: Dfn) -> Iterator["Context"]:
+    @staticmethod
+    def from_dfn(dfn: Dfn) -> Iterator["Context"]:
         """
         Extract context class descriptor(s) from an input definition.
         These are structured representations of input context classes.
