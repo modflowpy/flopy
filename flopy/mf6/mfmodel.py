@@ -371,17 +371,14 @@ class MFModel(ModelInterface):
         # build model time
         itmuni = tdis.time_units.get_data()
         start_date_time = tdis.start_date_time.get_data()
-        if itmuni is None:
-            itmuni = 0
-        if start_date_time is None:
-            start_date_time = "01-01-1970"
-        data_frame = {
-            "perlen": period_data["perlen"],
-            "nstp": period_data["nstp"],
-            "tsmult": period_data["tsmult"],
-        }
+
         self._model_time = ModelTime(
-            data_frame, itmuni, start_date_time, steady
+            perlen=period_data["perlen"],
+            nstp=period_data["nstp"],
+            tsmult=period_data["tsmult"],
+            time_units=itmuni,
+            start_datetime=start_date_time,
+            steady_state=steady
         )
         return self._model_time
 

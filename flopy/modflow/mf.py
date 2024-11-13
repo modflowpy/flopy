@@ -239,17 +239,14 @@ class Modflow(BaseModel):
             dis = self.disu
         else:
             dis = self.dis
-        # build model time
-        data_frame = {
-            "perlen": dis.perlen.array,
-            "nstp": dis.nstp.array,
-            "tsmult": dis.tsmult.array,
-        }
+
         self._model_time = ModelTime(
-            data_frame,
-            dis.itmuni_dict[dis.itmuni],
-            dis.start_datetime,
-            dis.steady.array,
+            perlen=dis.perlen.array,
+            nstp=dis.nstp.array,
+            tsmult=dis.tsmult.array,
+            time_units=dis.itmuni,
+            start_datetime=dis.start_datetime,
+            steady_state=dis.steady.array,
         )
         return self._model_time
 
