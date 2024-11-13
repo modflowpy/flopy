@@ -1,9 +1,9 @@
+import calendar
 import datetime
+from difflib import SequenceMatcher
+
 import numpy as np
 import pandas as pd
-import calendar
-
-from difflib import SequenceMatcher
 
 
 class ModelTime:
@@ -28,6 +28,7 @@ class ModelTime:
         optional list or numpy array of boolean flags that determine identify
         steady-state or transient stress-periods
     """
+
     def __init__(
         self,
         perlen,
@@ -204,7 +205,7 @@ class ModelTime:
             for stp in range(nstp):
                 if stp == 0:
                     if tsmult != 1.0:
-                        dt = perlen * (tsmult - 1) / ((tsmult ** nstp) - 1)
+                        dt = perlen * (tsmult - 1) / ((tsmult**nstp) - 1)
                     else:
                         dt = perlen / nstp
                 else:
@@ -241,7 +242,7 @@ class ModelTime:
             2: "minutes",
             3: "hours",
             4: "days",
-            5: "years"
+            5: "years",
         }
         valid_units_list = list(valid_units.values())
         valid_unit = None
@@ -269,9 +270,7 @@ class ModelTime:
                 valid_unit = valid_units_list[uidx]
 
         if valid_unit is None:
-            raise ValueError(
-                f"Could not determine time units from user input {units}"
-            )
+            raise ValueError(f"Could not determine time units from user input {units}")
 
         return valid_unit
 
@@ -469,7 +468,7 @@ class ModelTime:
                 self.start_datetime.day,
                 self.start_datetime.hour,
                 self.start_datetime.minute,
-                self.start_datetime.second
+                self.start_datetime.second,
             )
 
             dt += day_td
@@ -540,7 +539,7 @@ class ModelTime:
                     self.start_datetime.day,
                     self.start_datetime.hour,
                     self.start_datetime.minute,
-                    self.start_datetime.second
+                    self.start_datetime.second,
                 )
 
                 timedelta = datetime_obj - dt_iyear
@@ -560,15 +559,19 @@ class ModelTime:
             if forgrive:
                 return None
             if datetime_obj is None:
-                msg = f"supplied totim {totim} is outside of model's " \
-                      f"time domain 0 - {self.totim[-1]}"
+                msg = (
+                    f"supplied totim {totim} is outside of model's "
+                    f"time domain 0 - {self.totim[-1]}"
+                )
             else:
                 end_dt = self.get_datetime(self.nper - 1, self.nstp[-1] - 1)
-                msg = f"supplied datetime" \
-                      f" {datetime_obj.strftime(self.__str_format)} is " \
-                      f"outside of the model's time domain " \
-                      f"{self.start_datetime.strftime(self.__str_format)} - " \
-                      f"{end_dt}"
+                msg = (
+                    f"supplied datetime"
+                    f" {datetime_obj.strftime(self.__str_format)} is "
+                    f"outside of the model's time domain "
+                    f"{self.start_datetime.strftime(self.__str_format)} - "
+                    f"{end_dt}"
+                )
             raise ValueError(msg)
 
         idx = sorted(np.where(np.array(self.totim) >= totim)[0])[0]

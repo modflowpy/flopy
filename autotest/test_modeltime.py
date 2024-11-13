@@ -1,8 +1,10 @@
-from flopy.discretization.modeltime import ModelTime
-import flopy
+import datetime
+
 import numpy as np
 import pandas as pd
-import datetime
+
+import flopy
+from flopy.discretization.modeltime import ModelTime
 
 
 def test_date_userinput_parsing():
@@ -21,9 +23,7 @@ def test_date_userinput_parsing():
     for dt_rep in formats:
         dt_obj = ModelTime.datetime_from_user_input(dt_rep)
         if dt_obj != valid:
-            raise AssertionError(
-                "datetime not properly determined from user input"
-            )
+            raise AssertionError("datetime not properly determined from user input")
 
 
 def test_datetime_userinput_parsing():
@@ -42,9 +42,7 @@ def test_datetime_userinput_parsing():
     for dt_rep in formats:
         dt_obj = ModelTime.datetime_from_user_input(dt_rep)
         if dt_obj != valid:
-            raise AssertionError(
-                "datetime not properly determined from user input"
-            )
+            raise AssertionError("datetime not properly determined from user input")
 
 
 def test_timeunits_userinput_parsing():
@@ -54,7 +52,7 @@ def test_timeunits_userinput_parsing():
         "hours": ["hours", "Hour", "huors", "h", "hrs", 3],
         "minutes": ["minutes", "MinUte", "minte", "m", "min", 2],
         "seconds": ["seconds", "Second", "sedcon", "s", "sec", 1],
-        "unknown": ["unkonwn", "undefined", "u", 0]
+        "unknown": ["unkonwn", "undefined", "u", 0],
     }
 
     for unit_name, checks in formats.items():
@@ -77,43 +75,26 @@ def test_set_datetime_and_units():
     init_units = "unknown"
     new_units = "days"
 
-    mt = ModelTime(
-        perlen=perlen,
-        nstp=nstp
-    )
+    mt = ModelTime(perlen=perlen, nstp=nstp)
 
     if mt.time_units != init_units:
-        raise AssertionError(
-            "time_units None condition not being set to unknown"
-        )
+        raise AssertionError("time_units None condition not being set to unknown")
 
     if mt.start_datetime != unix_t0:
-        raise AssertionError(
-            "start_datetime None condition not being set to 1/1/1970"
-        )
+        raise AssertionError("start_datetime None condition not being set to 1/1/1970")
 
     mt.set_time_units(new_units)
     mt.set_start_datetime(new_dt)
 
     if mt.time_units != new_units:
-        raise AssertionError(
-            "time_units setting not behaving properly"
-        )
+        raise AssertionError("time_units setting not behaving properly")
 
     if mt.start_datetime != new_dt:
-        raise AssertionError(
-            "start_datetime setting not behaving properly"
-        )
+        raise AssertionError("start_datetime setting not behaving properly")
 
 
 def test_get_totim_from_kper_kstp():
-
-    validate = {
-        (0, None): 30.25,
-        (1, 3): 60.5,
-        (4, 0): 126.246,
-        (11, None): 363.00
-    }
+    validate = {(0, None): 30.25, (1, 3): 60.5, (4, 0): 126.246, (11, None): 363.00}
 
     nrec = 12
     perlen = np.full((nrec,), 30.25)
@@ -123,19 +104,13 @@ def test_get_totim_from_kper_kstp():
     time_unit = "days"
 
     mt = ModelTime(
-        perlen,
-        nstp,
-        tslen,
-        time_units=time_unit,
-        start_datetime=start_datetime
+        perlen, nstp, tslen, time_units=time_unit, start_datetime=start_datetime
     )
 
     for (kper, kstp), totim0 in validate.items():
         totim = mt.get_totim(kper, kstp=kstp)
         if np.abs(totim - totim0) > 0.01:
-            raise AssertionError(
-                "Incorrect totim calculation from get_totim()"
-            )
+            raise AssertionError("Incorrect totim calculation from get_totim()")
 
 
 def test_get_datetime_from_kper_kstp():
@@ -143,7 +118,7 @@ def test_get_datetime_from_kper_kstp():
         (0, None): datetime.datetime(2024, 1, 31, 5, 59, 59),
         (1, 3): datetime.datetime(2024, 3, 1, 11, 59, 59),
         (4, 0): datetime.datetime(2024, 5, 6, 5, 55, 6),
-        (11, None): datetime.datetime(2024, 12, 28, 23, 59, 59)
+        (11, None): datetime.datetime(2024, 12, 28, 23, 59, 59),
     }
 
     nrec = 12
@@ -154,20 +129,14 @@ def test_get_datetime_from_kper_kstp():
     time_unit = "days"
 
     mt = ModelTime(
-        perlen,
-        nstp,
-        tslen,
-        time_units=time_unit,
-        start_datetime=start_datetime
+        perlen, nstp, tslen, time_units=time_unit, start_datetime=start_datetime
     )
 
     for (kper, kstp), dt0 in validate.items():
         dt = mt.get_datetime(kper, kstp=kstp)
         td = dt - dt0
         if np.abs(td.seconds) > 2:
-            raise AssertionError(
-                "Datetime calculation incorrect for get_datetime()"
-            )
+            raise AssertionError("Datetime calculation incorrect for get_datetime()")
 
 
 def test_datetime_intersect():
@@ -175,7 +144,7 @@ def test_datetime_intersect():
         (0, None): datetime.datetime(2024, 1, 31, 5, 59, 58),
         (1, 3): datetime.datetime(2024, 3, 1, 11, 59, 58),
         (4, 0): datetime.datetime(2024, 5, 6, 5, 55, 5),
-        (11, None): datetime.datetime(2024, 12, 28, 23, 59, 58)
+        (11, None): datetime.datetime(2024, 12, 28, 23, 59, 58),
     }
 
     nrec = 12
@@ -186,20 +155,14 @@ def test_datetime_intersect():
     time_unit = "days"
 
     mt = ModelTime(
-        perlen,
-        nstp,
-        tslen,
-        time_units=time_unit,
-        start_datetime=start_datetime
+        perlen, nstp, tslen, time_units=time_unit, start_datetime=start_datetime
     )
 
     for (kper0, kstp0), dt in validate.items():
         if kstp0 is None:
             kper = mt.intersect(dt)
             if kper != kper0:
-                raise AssertionError(
-                    "intersect() not returning correct stress-period"
-                )
+                raise AssertionError("intersect() not returning correct stress-period")
 
         else:
             kper, kstp = mt.intersect(dt, kper_kstp=True)
@@ -210,12 +173,7 @@ def test_datetime_intersect():
 
 
 def test_totim_intersect():
-    validate = {
-        (0, None): 30.2,
-        (1, 3): 60.4,
-        (4, 0): 126.23,
-        (11, None): 362.9
-    }
+    validate = {(0, None): 30.2, (1, 3): 60.4, (4, 0): 126.23, (11, None): 362.9}
     nrec = 12
     perlen = np.full((nrec,), 30.25)
     nstp = np.full((nrec,), 4, dtype=int)
@@ -224,20 +182,14 @@ def test_totim_intersect():
     time_unit = "days"
 
     mt = ModelTime(
-        perlen,
-        nstp,
-        tslen,
-        time_units=time_unit,
-        start_datetime=start_datetime
+        perlen, nstp, tslen, time_units=time_unit, start_datetime=start_datetime
     )
 
     for (kper0, kstp0), totim in validate.items():
         if kstp0 is None:
             kper = mt.intersect(totim=totim)
             if kper != kper0:
-                raise AssertionError(
-                    "intersect() not returning correct stress-period"
-                )
+                raise AssertionError("intersect() not returning correct stress-period")
 
         else:
             kper, kstp = mt.intersect(totim=totim, kper_kstp=True)
@@ -280,10 +232,9 @@ def test_mf2005_modeltime():
         steady=False,
         itmuni=4,
         lenuni=2,
-        start_datetime=start_datetime_str
+        start_datetime=start_datetime_str,
     )
     bas = flopy.modflow.ModflowBas(ml, ibound=idomain, strt=strt)
-
 
     modeltime = ml.modeltime
     if modeltime.start_datetime != start_datetime:
@@ -316,7 +267,7 @@ def test_mf6_modeltime():
         time_units="days",
         start_date_time=start_datetime_str,
         nper=nper,
-        perioddata=period_data
+        perioddata=period_data,
     )
     ims = flopy.mf6.ModflowIms(sim)
     gwf = flopy.mf6.ModflowGwf(sim)
@@ -329,7 +280,7 @@ def test_mf6_modeltime():
         delr=delr,
         top=top,
         botm=botm,
-        idomain=idomain
+        idomain=idomain,
     )
 
     modeltime = gwf.modeltime
