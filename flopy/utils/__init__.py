@@ -51,7 +51,6 @@ from .optionblock import OptionBlock
 from .postprocessing import get_specific_discharge, get_transmissivities
 from .rasters import Raster
 from .recarray_utils import create_empty_recarray, ra_slice, recarray
-from .reference import TemporalReference
 from .sfroutputfile import SfrFile
 from .swroutputfile import (
     SwrBudget,

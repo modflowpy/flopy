@@ -684,8 +684,7 @@ class BaseModel(ModelInterface):
         Returns
         -------
         object, str, int or None
-            Package object of type :class:`flopy.pakbase.Package`,
-            :class:`flopy.utils.reference.TemporalReference`, str, int or None.
+            Package object of type :class:`flopy.pakbase.Package`, str, int, or None
 
         Raises
         ------
@@ -700,12 +699,6 @@ class BaseModel(ModelInterface):
         """
         if item == "output_packages" or not hasattr(self, "output_packages"):
             raise AttributeError(item)
-
-        if item == "tr":
-            if self.dis is not None:
-                return self.dis.tr
-            else:
-                return None
 
         if item == "nper":
             # most subclasses have a nper property, but ModflowAg needs this
@@ -1346,16 +1339,10 @@ class BaseModel(ModelInterface):
             self._set_name(value)
         elif key == "model_ws":
             self.change_model_ws(value)
-        elif key == "tr":
-            assert isinstance(value, discretization.reference.TemporalReference)
-            if self.dis is not None:
-                self.dis.tr = value
-            else:
-                raise Exception("cannot set TemporalReference - ModflowDis not found")
         elif key == "start_datetime":
             if self.dis is not None:
                 self.dis.start_datetime = value
-                self.tr.start_datetime = value
+                self.modeltime.set_start_datetime(value)
             else:
                 raise Exception("cannot set start_datetime - ModflowDis not found")
         else:
