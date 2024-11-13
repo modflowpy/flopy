@@ -134,9 +134,7 @@ linecollection = mapview.plot_grid()
 m.nrow_ncol_nlay_nper
 
 # +
-finf = np.loadtxt(
-    proj_root / "examples" / "data" / "uzf_examples" / "finf.dat"
-)
+finf = np.loadtxt(proj_root / "examples" / "data" / "uzf_examples" / "finf.dat")
 finf = np.reshape(finf, (m.nper, m.nrow, m.ncol))
 finf = {i: finf[i] for i in range(finf.shape[0])}
 
@@ -160,9 +158,7 @@ plt.ylabel("Average infiltration rate, inches per year")
 # Define `extwc` (extinction water content) array.
 
 # +
-extwc = np.loadtxt(
-    proj_root / "examples" / "data" / "uzf_examples" / "extwc.dat"
-)
+extwc = np.loadtxt(proj_root / "examples" / "data" / "uzf_examples" / "extwc.dat")
 
 fig = plt.figure(figsize=(8, 8))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")

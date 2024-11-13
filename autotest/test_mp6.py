@@ -57,13 +57,9 @@ def test_mpsim(function_tmpdir, mp6_test_path):
         budget_file=f"{m.name}.bud",
     )
 
-    mpb = Modpath6Bas(
-        mp, hdry=m.lpf.hdry, laytyp=m.lpf.laytyp, ibound=1, prsity=0.1
-    )
+    mpb = Modpath6Bas(mp, hdry=m.lpf.hdry, laytyp=m.lpf.laytyp, ibound=1, prsity=0.1)
 
-    sim = mp.create_mpsim(
-        trackdir="forward", simtype="endpoint", packages="RCH"
-    )
+    sim = mp.create_mpsim(trackdir="forward", simtype="endpoint", packages="RCH")
     mp.write_input()
 
     # replace the well with an mnw
@@ -105,9 +101,7 @@ def test_mpsim(function_tmpdir, mp6_test_path):
     )
     # test creation of modpath simulation file for MNW2
     # (not a very robust test)
-    sim = mp.create_mpsim(
-        trackdir="backward", simtype="pathline", packages="MNW2"
-    )
+    sim = mp.create_mpsim(trackdir="backward", simtype="pathline", packages="MNW2")
     mp.write_input()
 
     # test StartingLocationsFile._write_wo_pandas
@@ -115,9 +109,7 @@ def test_mpsim(function_tmpdir, mp6_test_path):
         sim = Modpath6Sim(model=mp)
         # starting locations file
         stl = StartingLocationsFile(model=mp, use_pandas=use_pandas)
-        stldata = StartingLocationsFile.get_empty_starting_locations_data(
-            npt=2
-        )
+        stldata = StartingLocationsFile.get_empty_starting_locations_data(npt=2)
         stldata["label"] = ["p1", "p2"]
         stldata[1]["i0"] = 5
         stldata[1]["j0"] = 6
@@ -231,9 +223,7 @@ def test_get_destination_data(function_tmpdir, mp6_test_path):
     xorig, yorig = m.modelgrid.get_coords(well_epd.x0[0], well_epd.y0[0])
     assert p3.x - xorig + p3.y - yorig < 1e-4
     xorig, yorig = mg1.xcellcenters[3, 4], mg1.ycellcenters[3, 4]
-    assert (
-        np.abs(p3.x - xorig + p3.y - yorig) < 1e-4
-    )  # this also checks for 1-based
+    assert np.abs(p3.x - xorig + p3.y - yorig) < 1e-4  # this also checks for 1-based
 
     # test that particle attribute information is consistent with pathline file
     ra = shp2recarray(function_tmpdir / "pathlines.shp")
@@ -260,12 +250,7 @@ def test_get_destination_data(function_tmpdir, mp6_test_path):
     test1 = mg1.xcellcenters[3, 4]
     test2 = mg1.ycellcenters[3, 4]
     assert (
-        np.abs(
-            p3_2.x[0]
-            - mg1.xcellcenters[3, 4]
-            + p3_2.y[0]
-            - mg1.ycellcenters[3, 4]
-        )
+        np.abs(p3_2.x[0] - mg1.xcellcenters[3, 4] + p3_2.y[0] - mg1.ycellcenters[3, 4])
         < 1e-4
     )
 
@@ -274,12 +259,7 @@ def test_get_destination_data(function_tmpdir, mp6_test_path):
     p3_2 = ra.geometry[ra.particleid == 4][0]
     mg.set_coord_info(xoff=mg.xoffset, yoff=mg.yoffset, angrot=30.0)
     assert (
-        np.abs(
-            p3_2.x[0]
-            - mg.xcellcenters[3, 4]
-            + p3_2.y[0]
-            - mg.ycellcenters[3, 4]
-        )
+        np.abs(p3_2.x[0] - mg.xcellcenters[3, 4] + p3_2.y[0] - mg.ycellcenters[3, 4])
         < 1e-4
     )
 
@@ -351,18 +331,14 @@ def test_modpath(function_tmpdir, example_data_path):
         prsity=0.2,
         prsityCB=0.2,
     )
-    sim = mp.create_mpsim(
-        trackdir="forward", simtype="endpoint", packages="RCH"
-    )
+    sim = mp.create_mpsim(trackdir="forward", simtype="endpoint", packages="RCH")
 
     # write forward particle track files
     mp.write_input()
 
     if success:
         success, buff = mp.run_model(silent=False)
-        assert (
-            success
-        ), "forward modpath model run did not terminate successfully"
+        assert success, "forward modpath model run did not terminate successfully"
 
     mpnam = "freybergmpp"
     mpp = Modpath6(
@@ -379,18 +355,14 @@ def test_modpath(function_tmpdir, example_data_path):
         prsity=0.2,
         prsityCB=0.2,
     )
-    sim = mpp.create_mpsim(
-        trackdir="backward", simtype="pathline", packages="WEL"
-    )
+    sim = mpp.create_mpsim(trackdir="backward", simtype="pathline", packages="WEL")
 
     # write backward particle track files
     mpp.write_input()
 
     if success:
         success, buff = mpp.run_model(silent=False)
-        assert (
-            success
-        ), "backward modpath model run did not terminate successfully"
+        assert success, "backward modpath model run did not terminate successfully"
 
     # load modpath output files
     if success:
@@ -411,9 +383,7 @@ def test_modpath(function_tmpdir, example_data_path):
         except:
             assert False, "could not load pathline file"
         plines = pthobj.get_alldata()
-        assert (
-            len(plines) == 576
-        ), "there are not 576 particle pathlines in file"
+        assert len(plines) == 576, "there are not 576 particle pathlines in file"
 
         # load the modflow files for model map
         mfnam = "freyberg.nam"
@@ -473,9 +443,7 @@ def test_modpath(function_tmpdir, example_data_path):
 
 def test_mp6_timeseries_load(example_data_path):
     pth = example_data_path / "mp5"
-    files = [
-        pth / name for name in sorted(os.listdir(pth)) if ".timeseries" in name
-    ]
+    files = [pth / name for name in sorted(os.listdir(pth)) if ".timeseries" in name]
     for file in files:
         print(file)
         eval_timeseries(file)
@@ -483,9 +451,9 @@ def test_mp6_timeseries_load(example_data_path):
 
 def eval_timeseries(file):
     ts = TimeseriesFile(file)
-    assert isinstance(ts, TimeseriesFile), (
-        f"{os.path.basename(file)} " "is not an instance of TimeseriesFile"
-    )
+    assert isinstance(
+        ts, TimeseriesFile
+    ), f"{os.path.basename(file)} is not an instance of TimeseriesFile"
 
     # get the all of the data
     tsd = ts.get_alldata()
@@ -536,9 +504,7 @@ def get_mf2005_model(name, ws, alt=False):
     ncol = 4
     nlay = 2
     nper = 1
-    l1_ibound = np.array(
-        [[[-1, -1, -1, -1], [-1, 1, 1, -1], [-1, -1, -1, -1]]]
-    )
+    l1_ibound = np.array([[[-1, -1, -1, -1], [-1, 1, 1, -1], [-1, -1, -1, -1]]])
     l2_ibound = np.ones((1, nrow, ncol))
     l2_ibound_alt = np.ones((1, nrow, ncol))
     l2_ibound_alt[0, 0, 0] = 0
@@ -552,9 +518,7 @@ def get_mf2005_model(name, ws, alt=False):
         l1_ibound=l1_ibound,
         l2_ibound=l2_ibound,
         l2_ibound_alt=l2_ibound_alt,
-        ibound=np.concatenate(
-            (l1_ibound, l2_ibound_alt if alt else l2_ibound), axis=0
-        ),
+        ibound=np.concatenate((l1_ibound, l2_ibound_alt if alt else l2_ibound), axis=0),
         laytype=[0, 0 if alt else 1],
         hnoflow=-888,
         hdry=-777,
@@ -623,9 +587,7 @@ def get_mf2005_model(name, ws, alt=False):
         stress_period_data={0: [[1, 1, 1, -5.0]]},
     )
 
-    flopy.modflow.ModflowPcg(
-        m, hclose=0.001, rclose=0.001, mxiter=150, iter1=30
-    )
+    flopy.modflow.ModflowPcg(m, hclose=0.001, rclose=0.001, mxiter=150, iter1=30)
 
     ocspd = {}
     for p in range(nper):
@@ -906,9 +868,7 @@ def get_mp6_model(m, ctx, name, ws, use_pandas):
     )
 
     sim = flopy.modpath.Modpath6Sim(model=mp)
-    stl = flopy.modpath.mp6sim.StartingLocationsFile(
-        model=mp, use_pandas=use_pandas
-    )
+    stl = flopy.modpath.mp6sim.StartingLocationsFile(model=mp, use_pandas=use_pandas)
     stldata = stl.get_empty_starting_locations_data(npt=2)
     stldata["label"] = ["p1", "p2"]
     stldata[1]["k0"] = 0
@@ -930,9 +890,7 @@ def test_mp_pandas(function_tmpdir):
     assert success
 
     mp_pandas = get_mp6_model(ml, ctx, name, function_tmpdir, use_pandas=True)
-    mp_no_pandas = get_mp6_model(
-        ml, ctx, name, function_tmpdir, use_pandas=False
-    )
+    mp_no_pandas = get_mp6_model(ml, ctx, name, function_tmpdir, use_pandas=False)
 
     mp_no_pandas.write_input()
     success, buff = mp_no_pandas.run_model()

@@ -116,7 +116,7 @@ include = ["flopy", "flopy.*"]
 "flopy.plot" = ["mplstyle/*.mplstyle"]
 
 [tool.ruff]
-line-length = 79
+line-length = 88
 include = [
     "pyproject.toml",
     "flopy/**/*.py",
@@ -129,12 +129,18 @@ extend-include = [
     "examples/**/*.ipynb"
 ]
 
+[tool.ruff.format]
+exclude = [
+    "flopy/mf6/**/*.py",
+]
+
 [tool.ruff.lint]
 select = [
     "D409", # pydocstyle - section-underline-matches-section-length
     "E",    # pycodestyle error
     "F",    # Pyflakes
     "I001", # isort - unsorted-imports
+    # "ISC001",  # implicitly concatenated string literals
 ]
 ignore = [
     "E402", # module level import not at top of file
@@ -150,3 +156,6 @@ ignore = [
     "F821", # undefined name TODO FIXME
     "F841", # local variable assigned but never used
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"flopy/mf6/**/*.py" = ["ISC001"]

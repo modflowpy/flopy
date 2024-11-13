@@ -160,9 +160,7 @@ def test_mf6disv(function_tmpdir):
     botm = [top - k * dz for k in range(1, nlay + 1)]
 
     # Create a dummy model and regular grid to use as the base grid for gridgen
-    sim = flopy.mf6.MFSimulation(
-        sim_name=name, sim_ws=function_tmpdir, exe_name="mf6"
-    )
+    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=function_tmpdir, exe_name="mf6")
     gwf = flopy.mf6.ModflowGwf(sim, modelname=name)
 
     dis = flopy.mf6.ModflowGwfdis(
@@ -193,17 +191,13 @@ def test_mf6disv(function_tmpdir):
 
     # build run and post-process the MODFLOW 6 model
     name = "mymodel"
-    sim = flopy.mf6.MFSimulation(
-        sim_name=name, sim_ws=function_tmpdir, exe_name="mf6"
-    )
+    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=function_tmpdir, exe_name="mf6")
     tdis = flopy.mf6.ModflowTdis(sim)
     ims = flopy.mf6.ModflowIms(sim, linear_acceleration="bicgstab")
     gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
     disv = flopy.mf6.ModflowGwfdisv(gwf, **disv_gridprops)
     ic = flopy.mf6.ModflowGwfic(gwf)
-    npf = flopy.mf6.ModflowGwfnpf(
-        gwf, xt3doptions=True, save_specific_discharge=True
-    )
+    npf = flopy.mf6.ModflowGwfnpf(gwf, xt3doptions=True, save_specific_discharge=True)
     chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chdspd)
     budget_file = f"{name}.bud"
     head_file = f"{name}.hds"
@@ -297,9 +291,7 @@ def sim_disu_diff_layers(function_tmpdir):
     botm = [top - k * dz for k in range(1, nlay + 1)]
 
     # Create a dummy model and regular grid to use as the base grid for gridgen
-    sim = flopy.mf6.MFSimulation(
-        sim_name=name, sim_ws=function_tmpdir, exe_name="mf6"
-    )
+    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=function_tmpdir, exe_name="mf6")
     gwf = flopy.mf6.ModflowGwf(sim, modelname=name)
 
     dis = flopy.mf6.ModflowGwfdis(
@@ -328,17 +320,13 @@ def sim_disu_diff_layers(function_tmpdir):
 
     # build run and post-process the MODFLOW 6 model
     name = "mymodel"
-    sim = flopy.mf6.MFSimulation(
-        sim_name=name, sim_ws=function_tmpdir, exe_name="mf6"
-    )
+    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=function_tmpdir, exe_name="mf6")
     tdis = flopy.mf6.ModflowTdis(sim)
     ims = flopy.mf6.ModflowIms(sim, linear_acceleration="bicgstab")
     gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
     disu = flopy.mf6.ModflowGwfdisu(gwf, **disu_gridprops)
     ic = flopy.mf6.ModflowGwfic(gwf)
-    npf = flopy.mf6.ModflowGwfnpf(
-        gwf, xt3doptions=True, save_specific_discharge=True
-    )
+    npf = flopy.mf6.ModflowGwfnpf(gwf, xt3doptions=True, save_specific_discharge=True)
     chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chdspd)
     budget_file = f"{name}.bud"
     head_file = f"{name}.hds"
@@ -423,9 +411,7 @@ def test_mf6disu(sim_disu_diff_layers):
                 raise AssertionError("Boundary condition was not drawn")
 
             for col in ax.collections:
-                if not isinstance(
-                    col, (QuadMesh, PathCollection, LineCollection)
-                ):
+                if not isinstance(col, (QuadMesh, PathCollection, LineCollection)):
                     raise AssertionError("Unexpected collection type")
         plt.close()
 
@@ -546,9 +532,7 @@ def test_mfusg(function_tmpdir):
         ax.set_aspect("equal")
         pmv.plot_array(head[ilay], cmap="jet", vmin=vmin, vmax=vmax)
         pmv.plot_grid(colors="k", alpha=0.1)
-        pmv.contour_array(
-            head[ilay], levels=[0.2, 0.4, 0.6, 0.8], linewidths=3.0
-        )
+        pmv.contour_array(head[ilay], levels=[0.2, 0.4, 0.6, 0.8], linewidths=3.0)
         ax.set_title(f"Layer {ilay + 1}")
         # pmv.plot_specific_discharge(spdis, color='white')
     fname = "results.png"
@@ -574,9 +558,7 @@ def test_mfusg(function_tmpdir):
                 raise AssertionError("Boundary condition was not drawn")
 
             for col in ax.collections:
-                if not isinstance(
-                    col, (QuadMesh, PathCollection, LineCollection)
-                ):
+                if not isinstance(col, (QuadMesh, PathCollection, LineCollection)):
                     raise AssertionError("Unexpected collection type")
         plt.close()
 
@@ -587,13 +569,10 @@ def test_mfusg(function_tmpdir):
     m.run_model()
 
     # also test load of unstructured LPF with keywords
-    lpf2 = flopy.mfusg.MfUsgLpf.load(
-        function_tmpdir / f"{name}.lpf", m, check=False
-    )
+    lpf2 = flopy.mfusg.MfUsgLpf.load(function_tmpdir / f"{name}.lpf", m, check=False)
     msg = "NOCVCORRECTION and NOVFC should be in lpf options but at least one is not."
     assert (
-        "NOVFC" in lpf2.options.upper()
-        and "NOCVCORRECTION" in lpf2.options.upper()
+        "NOVFC" in lpf2.options.upper() and "NOCVCORRECTION" in lpf2.options.upper()
     ), msg
 
     # test disu, bas6, lpf shapefile export for mfusg unstructured models
@@ -768,9 +747,7 @@ def test_gridgen(function_tmpdir):
     points = [(4750.0, 5250.0)]
     cells = g.intersect(points, "point", 0)
     n = cells["nodenumber"][0]
-    msg = (
-        f"gridgen point intersect did not identify the correct cell {n} <> 308"
-    )
+    msg = f"gridgen point intersect did not identify the correct cell {n} <> 308"
     assert n == 308, msg
 
     # test the gridgen line intersection
@@ -800,9 +777,8 @@ def test_gridgen(function_tmpdir):
         455,
         384,
     ]
-    msg = (
-        "gridgen line intersect did not identify the correct "
-        "cells {} <> {}".format(nlist, nlist2)
+    msg = "gridgen line intersect did not identify the correct cells {} <> {}".format(
+        nlist, nlist2
     )
     assert nlist == nlist2, msg
 
@@ -826,10 +802,7 @@ def test_gridgen(function_tmpdir):
         "be (with vertical pass through activated)."
     )
     assert (
-        len(
-            ja0[(ja0 > disu_vp.nodelay[0]) & (ja0 <= sum(disu_vp.nodelay[:2]))]
-        )
-        == 0
+        len(ja0[(ja0 > disu_vp.nodelay[0]) & (ja0 <= sum(disu_vp.nodelay[:2]))]) == 0
     ), msg
 
     # test mfusg without vertical pass-through
@@ -864,9 +837,7 @@ def test_flopy_issue_1492(function_tmpdir):
     botm = [top - k * dz for k in range(1, nlay + 1)]
 
     # Create a dummy model and regular grid to use as the base grid for gridgen
-    sim = flopy.mf6.MFSimulation(
-        sim_name=name, sim_ws=function_tmpdir, exe_name="mf6"
-    )
+    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=function_tmpdir, exe_name="mf6")
     gwf = flopy.mf6.ModflowGwf(sim, modelname=name)
     dis = flopy.mf6.ModflowGwfdis(
         gwf,
@@ -908,9 +879,7 @@ def test_flopy_issue_1492(function_tmpdir):
     gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
     disv = flopy.mf6.ModflowGwfdisv(gwf, **disv_gridprops)
     ic = flopy.mf6.ModflowGwfic(gwf)
-    npf = flopy.mf6.ModflowGwfnpf(
-        gwf, xt3doptions=True, save_specific_discharge=True
-    )
+    npf = flopy.mf6.ModflowGwfnpf(gwf, xt3doptions=True, save_specific_discharge=True)
     chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chdspd)
     budget_file = name + ".bud"
     head_file = name + ".hds"

@@ -185,9 +185,7 @@ for time in times[0:3]:
         masked_values=[-999.99],
         alpha=0.4,
     )
-    contours = xsect.contour_array(
-        head2, levels=levels, alpha=1.0, colors="blue"
-    )
+    contours = xsect.contour_array(head2, levels=levels, alpha=1.0, colors="blue")
     xsect.plot_inactive(ibound=ibound, color_noflow=(0.8, 0.8, 0.8))
     xsect.plot_grid(alpha=0.2)
     ax.set_ylim([0, 40])  # set y axis range to ignore low elevations

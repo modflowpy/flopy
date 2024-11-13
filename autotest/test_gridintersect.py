@@ -472,9 +472,7 @@ def test_rect_grid_linestring_in_and_out_of_cell2():
     # TODO: remove in 3.10.0
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect(
-        LineString([(5, 15), (5.0, 9), (15.0, 5.0), (5.0, 1.0)])
-    )
+    result = ix.intersect(LineString([(5, 15), (5.0, 9), (15.0, 5.0), (5.0, 1.0)]))
     assert len(result) == 3
 
 
@@ -601,9 +599,7 @@ def test_rect_grid_linestring_in_and_out_of_cell_shapely(rtree):
 def test_rect_grid_linestring_in_and_out_of_cell2_shapely():
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="vertex")
-    result = ix.intersect(
-        LineString([(5, 15), (5.0, 9), (15.0, 5.0), (5.0, 1.0)])
-    )
+    result = ix.intersect(LineString([(5, 15), (5.0, 9), (15.0, 5.0), (5.0, 1.0)]))
     assert len(result) == 3
 
 
@@ -812,9 +808,7 @@ def test_rect_grid_polygon_in_2cells():
     # TODO: remove in 3.10.0
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect(
-        Polygon([(2.5, 5.0), (7.5, 5.0), (7.5, 15.0), (2.5, 15.0)])
-    )
+    result = ix.intersect(Polygon([(2.5, 5.0), (7.5, 5.0), (7.5, 15.0), (2.5, 15.0)]))
     assert len(result) == 2
     assert result.areas.sum() == 50.0
 
@@ -854,9 +848,7 @@ def test_rect_grid_polygon_on_inner_boundary():
     # TODO: remove in 3.10.0
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="structured")
-    result = ix.intersect(
-        Polygon([(5.0, 10.0), (15.0, 10.0), (15.0, 5.0), (5.0, 5.0)])
-    )
+    result = ix.intersect(Polygon([(5.0, 10.0), (15.0, 10.0), (15.0, 5.0), (5.0, 5.0)]))
     assert len(result) == 2
     assert result.areas.sum() == 50.0
 
@@ -1046,9 +1038,7 @@ def test_rect_grid_polygon_outside_shapely(rtree):
 def test_rect_grid_polygon_in_2cells_shapely(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="vertex", rtree=rtree)
-    result = ix.intersect(
-        Polygon([(2.5, 5.0), (7.5, 5.0), (7.5, 15.0), (2.5, 15.0)])
-    )
+    result = ix.intersect(Polygon([(2.5, 5.0), (7.5, 5.0), (7.5, 15.0), (2.5, 15.0)]))
     assert len(result) == 2
     assert result.areas.sum() == 50.0
 
@@ -1087,9 +1077,7 @@ def test_rect_grid_polygon_running_along_boundary_shapely():
 def test_rect_grid_polygon_on_inner_boundary_shapely(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="vertex", rtree=rtree)
-    result = ix.intersect(
-        Polygon([(5.0, 10.0), (15.0, 10.0), (15.0, 5.0), (5.0, 5.0)])
-    )
+    result = ix.intersect(Polygon([(5.0, 10.0), (15.0, 10.0), (15.0, 5.0), (5.0, 5.0)]))
     assert len(result) == 2
     assert result.areas.sum() == 50.0
 
@@ -1172,9 +1160,7 @@ def test_tri_grid_polygon_in_2cells(rtree):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(
-        Polygon([(2.5, 5.0), (5.0, 5.0), (5.0, 15.0), (2.5, 15.0)])
-    )
+    result = ix.intersect(Polygon([(2.5, 5.0), (5.0, 5.0), (5.0, 15.0), (2.5, 15.0)]))
     assert len(result) == 2
     assert result.areas.sum() == 25.0
 
@@ -1199,9 +1185,7 @@ def test_tri_grid_polygon_on_inner_boundary(rtree):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(
-        Polygon([(5.0, 10.0), (15.0, 10.0), (15.0, 5.0), (5.0, 5.0)])
-    )
+    result = ix.intersect(Polygon([(5.0, 10.0), (15.0, 10.0), (15.0, 5.0), (5.0, 5.0)]))
     assert len(result) == 4
     assert result.areas.sum() == 50.0
 

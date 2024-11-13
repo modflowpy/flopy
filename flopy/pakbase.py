@@ -211,18 +211,14 @@ class PackageInterface:
                 kparams[kp] = name
         if "hk" in self.__dict__:
             if self.hk.shape[1] is None:
-                hk = np.asarray(
-                    [a.array.flatten() for a in self.hk], dtype=object
-                )
+                hk = np.asarray([a.array.flatten() for a in self.hk], dtype=object)
             else:
                 hk = self.hk.array.copy()
         else:
             hk = self.k.array.copy()
         if "vka" in self.__dict__ and self.layvka.sum() > 0:
             if self.vka.shape[1] is None:
-                vka = np.asarray(
-                    [a.array.flatten() for a in self.vka], dtype=object
-                )
+                vka = np.asarray([a.array.flatten() for a in self.vka], dtype=object)
             else:
                 vka = self.vka.array
             vka_param = kparams.pop("vka")
@@ -330,9 +326,7 @@ class PackageInterface:
         ):
             chk = self._check_oc(f, verbose, level, checktype)
         # check property values in upw and lpf packages
-        elif self.name[0] in ["UPW", "LPF"] or self.package_type.upper() in [
-            "NPF"
-        ]:
+        elif self.name[0] in ["UPW", "LPF"] or self.package_type.upper() in ["NPF"]:
             chk = self._check_flowp(f, verbose, level, checktype)
         elif self.package_type.upper() in ["STO"]:
             chk = self._get_check(f, verbose, level, checktype)
@@ -417,19 +411,14 @@ class PackageInterface:
             else:
                 iconvert = self.iconvert.array
                 inds = np.array(
-                    [
-                        True if l > 0 or l < 0 else False
-                        for l in iconvert.flatten()
-                    ]
+                    [True if l > 0 or l < 0 else False for l in iconvert.flatten()]
                 )
                 if not inds.any():
                     skip_sy_check = True
 
                 for ishape in np.ndindex(active.shape):
                     if active[ishape]:
-                        active[ishape] = (
-                            iconvert[ishape] > 0 or iconvert[ishape] < 0
-                        )
+                        active[ishape] = iconvert[ishape] > 0 or iconvert[ishape] < 0
             if not skip_sy_check:
                 chk.values(
                     sarrays["sy"],
@@ -528,21 +517,18 @@ class Package(PackageInterface):
             spd = getattr(self, "stress_period_data")
             if isinstance(item, MfList):
                 if not isinstance(item, list) and not isinstance(item, tuple):
-                    msg = (
-                        f"package.__getitem__() kper {item} not in data.keys()"
-                    )
+                    msg = f"package.__getitem__() kper {item} not in data.keys()"
                     assert item in list(spd.data.keys()), msg
                     return spd[item]
 
                 if item[1] not in self.dtype.names:
                     raise Exception(
-                        "package.__getitem(): item {} not in dtype names "
-                        "{}".format(item, self.dtype.names)
+                        "package.__getitem(): item {} not in dtype names {}".format(
+                            item, self.dtype.names
+                        )
                     )
 
-                msg = (
-                    f"package.__getitem__() kper {item[0]} not in data.keys()"
-                )
+                msg = f"package.__getitem__() kper {item[0]} not in data.keys()"
                 assert item[0] in list(spd.data.keys()), msg
 
                 if spd.vtype[item[0]] == np.recarray:
@@ -925,9 +911,7 @@ class Package(PackageInterface):
             if nppak > 0:
                 mxl = int(t[2])
                 if model.verbose:
-                    print(
-                        f"   Parameters detected. Number of parameters = {nppak}"
-                    )
+                    print(f"   Parameters detected. Number of parameters = {nppak}")
             line = f.readline()
 
         # dataset 2a
@@ -950,9 +934,7 @@ class Package(PackageInterface):
                 mxl = int(t[3])
                 imax += 1
                 if model.verbose:
-                    print(
-                        f"   Parameters detected. Number of parameters = {nppak}"
-                    )
+                    print(f"   Parameters detected. Number of parameters = {nppak}")
 
         options = []
         aux_names = []
@@ -1024,9 +1006,7 @@ class Package(PackageInterface):
             dt = pak_type.get_empty(
                 1, aux_names=aux_names, structured=model.structured
             ).dtype
-            pak_parms = mfparbc.load(
-                f, nppak, dt, model, ext_unit_dict, model.verbose
-            )
+            pak_parms = mfparbc.load(f, nppak, dt, model, ext_unit_dict, model.verbose)
 
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
@@ -1070,9 +1050,7 @@ class Package(PackageInterface):
                 current = pak_type.get_empty(
                     itmp, aux_names=aux_names, structured=model.structured
                 )
-                current = ulstrd(
-                    f, itmp, current, model, sfac_columns, ext_unit_dict
-                )
+                current = ulstrd(f, itmp, current, model, sfac_columns, ext_unit_dict)
                 if model.structured:
                     current["k"] -= 1
                     current["i"] -= 1
@@ -1126,16 +1104,12 @@ class Package(PackageInterface):
                         iname = "static"
                 except:
                     if model.verbose:
-                        print(
-                            f"  implicit static instance for parameter {pname}"
-                        )
+                        print(f"  implicit static instance for parameter {pname}")
 
                 par_dict, current_dict = pak_parms.get(pname)
                 data_dict = current_dict[iname]
 
-                par_current = pak_type.get_empty(
-                    par_dict["nlst"], aux_names=aux_names
-                )
+                par_current = pak_type.get_empty(par_dict["nlst"], aux_names=aux_names)
 
                 #  get appropriate parval
                 if model.mfpar.pval is None:
@@ -1149,9 +1123,7 @@ class Package(PackageInterface):
                 # fill current parameter data (par_current)
                 for ibnd, t in enumerate(data_dict):
                     t = tuple(t)
-                    par_current[ibnd] = tuple(
-                        t[: len(par_current.dtype.names)]
-                    )
+                    par_current[ibnd] = tuple(t[: len(par_current.dtype.names)])
 
                 if model.structured:
                     par_current["k"] -= 1
@@ -1196,9 +1168,7 @@ class Package(PackageInterface):
                 ext_unit_dict, filetype=pak_type._ftype()
             )
             if ipakcb > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=ipakcb
-                )
+                iu, filenames[1] = model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
                 model.add_pop_key_list(ipakcb)
 
         if "mfusgwel" in pak_type_str:

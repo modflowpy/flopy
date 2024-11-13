@@ -294,9 +294,7 @@ class Mt3dBtn(Package):
             if isinstance(obs, list):
                 obs = np.array(obs)
             if obs.ndim != 2:
-                raise Exception(
-                    "obs must be (or be convertible to) a 2d array"
-                )
+                raise Exception("obs must be (or be convertible to) a 2d array")
         self.obs = obs
         self.nprobs = nprobs
         self.chkmas = chkmas
@@ -331,15 +329,9 @@ class Mt3dBtn(Package):
             name="dt0",
             array_free_format=False,
         )
-        self.mxstrn = Util2d(
-            model, (self.nper,), np.int32, mxstrn, name="mxstrn"
-        )
-        self.ttsmult = Util2d(
-            model, (self.nper,), np.float32, ttsmult, name="ttmult"
-        )
-        self.ttsmax = Util2d(
-            model, (self.nper,), np.float32, ttsmax, name="ttsmax"
-        )
+        self.mxstrn = Util2d(model, (self.nper,), np.int32, mxstrn, name="mxstrn")
+        self.ttsmult = Util2d(model, (self.nper,), np.float32, ttsmult, name="ttmult")
+        self.ttsmax = Util2d(model, (self.nper,), np.float32, ttsmax, name="ttsmax")
 
         # Do some fancy stuff for multi-species concentrations
         self.sconc = []
@@ -677,9 +669,7 @@ class Mt3dBtn(Package):
 
         # A3; Keywords
         # Build a string of the active keywords
-        if (
-            self.parent.version == "mt3d-usgs"
-        ):  # Keywords not supported by MT3Dms
+        if self.parent.version == "mt3d-usgs":  # Keywords not supported by MT3Dms
             str1 = ""
             if self.MFStyleArr:
                 str1 += " MODFLOWSTYLEARRAYS"

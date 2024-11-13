@@ -166,9 +166,7 @@ def get_util2d_shape_for_layer(model, layer=0):
     return (nrow, ncol)
 
 
-def get_unitnumber_from_ext_unit_dict(
-    model, pak_class, ext_unit_dict=None, ipakcb=0
-):
+def get_unitnumber_from_ext_unit_dict(model, pak_class, ext_unit_dict=None, ipakcb=0):
     """
     For a given modflow package, defines input file unit number,
     plus package input and (optionally) output (budget) save file names.
@@ -198,9 +196,7 @@ def get_unitnumber_from_ext_unit_dict(
             ext_unit_dict, filetype=pak_class._ftype()
         )
         if ipakcb > 0:
-            _, filenames[1] = model.get_ext_dict_attr(
-                ext_unit_dict, unit=ipakcb
-            )
+            _, filenames[1] = model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
             model.add_pop_key_list(ipakcb)
 
     return unitnumber, filenames
@@ -233,9 +229,7 @@ def type_from_iterable(_iter, index=0, _type=int, default_val=0):
 
 def get_open_file_object(fname_or_fobj, read_write="rw"):
     """Returns an open file object for either a file name or open file object."""
-    openfile = not (
-        hasattr(fname_or_fobj, "read") or hasattr(fname_or_fobj, "write")
-    )
+    openfile = not (hasattr(fname_or_fobj, "read") or hasattr(fname_or_fobj, "write"))
     if openfile:
         filename = fname_or_fobj
         f_obj = open(filename, read_write)

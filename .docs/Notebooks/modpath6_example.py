@@ -146,9 +146,7 @@ mapview.plot_endpoint(well_epd, direction="starting", colorbar=True)
 
 fpth = os.path.join(model_ws, "starting_locs.shp")
 print(type(fpth))
-epobj.write_shapefile(
-    well_epd, direction="starting", shpname=fpth, mg=m.modelgrid
-)
+epobj.write_shapefile(well_epd, direction="starting", shpname=fpth, mg=m.modelgrid)
 
 # Read in the pathline file and subset to pathlines that terminated in the well  .
 
@@ -294,9 +292,7 @@ else:
 pthobj = flopy.utils.PathlineFile(os.path.join(model_ws, "ex6mnw.mppth"))
 epdobj = flopy.utils.EndpointFile(os.path.join(model_ws, "ex6mnw.mpend"))
 well_epd = epdobj.get_alldata()
-well_pathlines = (
-    pthobj.get_alldata()
-)  # returns a list of recarrays; one per pathline
+well_pathlines = pthobj.get_alldata()  # returns a list of recarrays; one per pathline
 
 # +
 fig = plt.figure(figsize=(8, 8))
@@ -311,9 +307,7 @@ contour_set = mapview.contour_array(
 )
 plt.clabel(contour_set, inline=1, fontsize=14)
 
-mapview.plot_pathline(
-    well_pathlines, travel_time="<10000", layer="all", colors="red"
-)
+mapview.plot_pathline(well_pathlines, travel_time="<10000", layer="all", colors="red")
 # -
 
 try:

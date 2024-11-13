@@ -18,9 +18,7 @@ def cf_model(model, k, i, j, base, Q=-100):
     wel.write_file()
     model.run_model(silent=True)
     # get the results
-    hedObj = flopy.utils.HeadFile(
-        os.path.join(cf_pth, "DG.hds"), precision="double"
-    )
+    hedObj = flopy.utils.HeadFile(os.path.join(cf_pth, "DG.hds"), precision="double")
     cbcObj = flopy.utils.CellBudgetFile(
         os.path.join(cf_pth, "DG.cbc"), precision="double"
     )
@@ -32,9 +30,7 @@ def cf_model(model, k, i, j, base, Q=-100):
             v[idx] = np.nan
         else:
             v1 = cbcObj.get_data(kstpkper=kon, text="DRAINS", full3D=True)[0]
-            v2 = cbcObj.get_data(
-                kstpkper=kon, text="STREAM LEAKAGE", full3D=True
-            )[0]
+            v2 = cbcObj.get_data(kstpkper=kon, text="STREAM LEAKAGE", full3D=True)[0]
             v3 = cbcObj.get_data(kstpkper=kon, text="ET", full3D=True)[0]
             v[idx] = ((v1.sum() + v2.sum() + v3.sum()) - base) / (-Q)
     return v
@@ -58,9 +54,7 @@ ml.write_input()
 ml.run_model()
 
 # get base model results
-cbcObj = flopy.utils.CellBudgetFile(
-    os.path.join(cf_pth, "DG.cbc"), precision="double"
-)
+cbcObj = flopy.utils.CellBudgetFile(os.path.join(cf_pth, "DG.cbc"), precision="double")
 v1 = cbcObj.get_data(kstpkper=(0, 0), text="DRAINS", full3D=True)[0]
 v2 = cbcObj.get_data(kstpkper=(0, 0), text="STREAM LEAKAGE", full3D=True)[0]
 v3 = cbcObj.get_data(kstpkper=(0, 0), text="ET", full3D=True)[0]
@@ -103,9 +97,7 @@ fs = open(os.path.join("data", "uspb", f"uspb_capture_{nstep}.out"), "w", 0)
 
 # write some summary information
 fs.write(f"Problem size: {nrow} rows and {ncol} columns.\n")
-fs.write(
-    f"Capture fraction analysis performed every {nstep} rows and columns.\n"
-)
+fs.write(f"Capture fraction analysis performed every {nstep} rows and columns.\n")
 fs.write(f"Maximum number of analyses: {nrow2} rows and {ncol2} columns.\n")
 
 # create array to store capture fraction data (subset of model)

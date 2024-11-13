@@ -65,10 +65,7 @@ class FormattedHeader(Header):
         arrheader = header_text.split()
 
         # Verify header exists and is in the expected format
-        if (
-            len(arrheader) >= 5
-            and arrheader[4].upper() != self.text_ident.upper()
-        ):
+        if len(arrheader) >= 5 and arrheader[4].upper() != self.text_ident.upper():
             raise Exception(
                 "Expected header not found.  Make sure the file being "
                 "processed includes headers (LABEL output control option): "
@@ -84,9 +81,7 @@ class FormattedHeader(Header):
             or not is_int(arrheader[6])
             or not is_int(arrheader[7])
         ):
-            raise Exception(
-                f"Unexpected format for FHDTextHeader: {header_text}"
-            )
+            raise Exception(f"Unexpected format for FHDTextHeader: {header_text}")
 
         headerinfo = np.empty([8], dtype=self.dtype)
         headerinfo["kstp"] = int(arrheader[0])
@@ -159,9 +154,7 @@ class FormattedLayerFile(LayerFile):
 
         # provide headers as a pandas frame
         self.headers = pd.DataFrame(self.recordarray, index=self.iposarray)
-        self.headers["text"] = self.headers["text"].str.decode(
-            "ascii", "strict"
-        )
+        self.headers["text"] = self.headers["text"].str.decode("ascii", "strict")
 
     def _store_record(self, header, ipos):
         """

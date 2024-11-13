@@ -378,9 +378,7 @@ ax.set_title("Specific discharge (" + r"$L/T$" + ")")
 mapview = flopy.plot.PlotMapView(model=ml)
 quadmesh = mapview.plot_ibound()
 quadmesh = mapview.plot_array(head, alpha=0.5)
-quiver = mapview.plot_vector(
-    sqx, sqy
-)  # include the head array for specific discharge
+quiver = mapview.plot_vector(sqx, sqy)  # include the head array for specific discharge
 linecollection = mapview.plot_grid()
 
 # + [markdown] pycharm={"name": "#%% md\n"}
@@ -570,9 +568,7 @@ patch_collection0 = mapview.plot_shapes(
 patch_collection1 = mapview.plot_shapes(cross_section, lw=3, edgecolor="red")
 
 # plot_point(s)
-patch_collection3 = mapview.plot_shapes(
-    wells, radius=100, facecolor="k", edgecolor="k"
-)
+patch_collection3 = mapview.plot_shapes(wells, radius=100, facecolor="k", edgecolor="k")
 
 # + [markdown] pycharm={"name": "#%% md\n"}
 # ## Working with MODFLOW-6 models
@@ -880,9 +876,7 @@ def run_vertex_grid_example(ws):
     # riv
     riverline = [[(Lx - 1.0, Ly), (Lx - 1.0, 0.0)]]
     rivcells = g.intersect(riverline, "line", 0)
-    rivspd = [
-        [(0, icpl), 320.0, 100000.0, 318] for icpl in rivcells["nodenumber"]
-    ]
+    rivspd = [[(0, icpl), 320.0, 100000.0, 318] for icpl in rivcells["nodenumber"]]
     riv = flopy.mf6.ModflowGwfriv(gwf, stress_period_data=rivspd)
 
     # output control
@@ -1158,9 +1152,7 @@ cb = plt.colorbar(pc, shrink=0.75, ax=ax)
 pline = mapview.plot_pathline(p0, layer="all", color="blue", lw=0.75)
 colors = ["green", "orange", "red"]
 for k in range(3):
-    tseries = mapview.plot_timeseries(
-        ts0, layer=k, marker="o", lw=0, color=colors[k]
-    )
+    tseries = mapview.plot_timeseries(ts0, layer=k, marker="o", lw=0, color=colors[k])
 
 # + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting specific discharge vectors for DISV
@@ -1171,9 +1163,7 @@ cbb = flopy.utils.CellBudgetFile(
     os.path.join(modelpth, "mp7p2.cbb"), precision="double"
 )
 spdis = cbb.get_data(text="SPDIS")[0]
-qx, qy, qz = flopy.utils.postprocessing.get_specific_discharge(
-    spdis, vertex_ml6
-)
+qx, qy, qz = flopy.utils.postprocessing.get_specific_discharge(spdis, vertex_ml6)
 
 fig = plt.figure(figsize=(12, 12))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
@@ -1202,9 +1192,7 @@ datapth = os.path.join("..", "..", "examples", "data", "unstructured")
 
 # simple functions to load vertices and incidence lists
 def load_verts(fname):
-    verts = np.genfromtxt(
-        fname, dtype=[int, float, float], names=["iv", "x", "y"]
-    )
+    verts = np.genfromtxt(fname, dtype=[int, float, float], names=["iv", "x", "y"])
     verts["iv"] -= 1  # zero based
     return verts
 
@@ -1326,9 +1314,7 @@ with styles.USGSMap():
     plt.colorbar(quadmesh, shrink=0.75)
 
     # use styles to add a heading, xlabel, ylabel
-    styles.heading(
-        letter="A.", heading="Specific Discharge (" + r"$L/T$" + ")"
-    )
+    styles.heading(letter="A.", heading="Specific Discharge (" + r"$L/T$" + ")")
     styles.xlabel(label="Easting")
     styles.ylabel(label="Northing")
 

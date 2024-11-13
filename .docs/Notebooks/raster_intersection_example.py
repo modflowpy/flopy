@@ -92,9 +92,7 @@ plt.colorbar(ax.images[0], shrink=0.7)
 
 # +
 model_ws = os.path.join("..", "..", "examples", "data", "options", "sagehen")
-ml = flopy.modflow.Modflow.load(
-    "sagehen.nam", version="mfnwt", model_ws=model_ws
-)
+ml = flopy.modflow.Modflow.load("sagehen.nam", version="mfnwt", model_ws=model_ws)
 
 xoff = 214110
 yoff = 4366620
@@ -132,9 +130,7 @@ pmv.plot_grid(ax=ax, lw=0.5, color="black")
 # + `"mean"`, `"median"`, `"min"`, `"max"`, and `"mode"` are a function of the number of grid cells.
 
 t0 = time.time()
-dem_data = rio.resample_to_grid(
-    ml.modelgrid, band=rio.bands[0], method="nearest"
-)
+dem_data = rio.resample_to_grid(ml.modelgrid, band=rio.bands[0], method="nearest")
 resample_time = time.time() - t0
 
 # +
@@ -143,9 +139,7 @@ fig = plt.figure(figsize=(12, 12))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
 
 pmv = flopy.plot.PlotMapView(modelgrid=ml.modelgrid, ax=ax)
-ax = pmv.plot_array(
-    dem_data, masked_values=rio.nodatavals, vmin=vmin, vmax=vmax
-)
+ax = pmv.plot_array(dem_data, masked_values=rio.nodatavals, vmin=vmin, vmax=vmax)
 plt.title(f"Resample time, nearest neighbor: {resample_time:.3f} sec")
 plt.colorbar(ax, shrink=0.7)
 # -
@@ -162,9 +156,7 @@ fig = plt.figure(figsize=(12, 12))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
 
 pmv = flopy.plot.PlotMapView(modelgrid=ml.modelgrid, ax=ax)
-ax = pmv.plot_array(
-    dem_data, masked_values=rio.nodatavals, vmin=vmin, vmax=vmax
-)
+ax = pmv.plot_array(dem_data, masked_values=rio.nodatavals, vmin=vmin, vmax=vmax)
 plt.title(f"Resample time, bi-linear: {resample_time:.3f} sec")
 plt.colorbar(ax, shrink=0.7)
 # -
@@ -181,9 +173,7 @@ fig = plt.figure(figsize=(12, 12))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
 
 pmv = flopy.plot.PlotMapView(modelgrid=ml.modelgrid, ax=ax)
-ax = pmv.plot_array(
-    dem_data, masked_values=rio.nodatavals, vmin=vmin, vmax=vmax
-)
+ax = pmv.plot_array(dem_data, masked_values=rio.nodatavals, vmin=vmin, vmax=vmax)
 plt.title(f"Resample time, bi-cubic: {resample_time:.3f} sec")
 plt.colorbar(ax, shrink=0.7)
 # -
@@ -203,9 +193,7 @@ fig = plt.figure(figsize=(12, 12))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
 
 pmv = flopy.plot.PlotMapView(modelgrid=ml.modelgrid, ax=ax)
-ax = pmv.plot_array(
-    dem_data, masked_values=rio.nodatavals, vmin=vmin, vmax=vmax
-)
+ax = pmv.plot_array(dem_data, masked_values=rio.nodatavals, vmin=vmin, vmax=vmax)
 plt.title(f"Resample time, median: {resample_time:.3f} sec")
 plt.colorbar(ax, shrink=0.7)
 # -
@@ -255,9 +243,7 @@ pmv.plot_grid()
 
 # +
 t0 = time.time()
-dem_data = rio.resample_to_grid(
-    mg_unstruct, band=rio.bands[0], method="nearest"
-)
+dem_data = rio.resample_to_grid(mg_unstruct, band=rio.bands[0], method="nearest")
 
 resample_time = time.time() - t0
 
@@ -279,9 +265,7 @@ plt.colorbar(ax, shrink=0.7)
 
 # +
 t0 = time.time()
-dem_data = rio.resample_to_grid(
-    mg_unstruct, band=rio.bands[0], method="linear"
-)
+dem_data = rio.resample_to_grid(mg_unstruct, band=rio.bands[0], method="linear")
 
 resample_time = time.time() - t0
 
@@ -434,9 +418,7 @@ plt.colorbar(ax.images[0], shrink=0.7)
 
 # +
 t0 = time.time()
-dem_data = rio.resample_to_grid(
-    mg_unstruct, band=rio.bands[0], method="nearest"
-)
+dem_data = rio.resample_to_grid(mg_unstruct, band=rio.bands[0], method="nearest")
 
 resample_time = time.time() - t0
 
@@ -459,9 +441,7 @@ plt.colorbar(ax, shrink=0.7)
 
 # +
 t0 = time.time()
-dem_data = rio.resample_to_grid(
-    mg_unstruct, band=rio.bands[0], method="linear"
-)
+dem_data = rio.resample_to_grid(mg_unstruct, band=rio.bands[0], method="linear")
 
 resample_time = time.time() - t0
 
@@ -563,9 +543,7 @@ ax = pmv.plot_array(
 ib = pmv.plot_ibound(ibound)
 pmv.plot_grid(linewidth=0.3)
 plt.plot(shape[0], shape[1], "r-")
-plt.title(
-    "Model top and ibound arrays created using bi-linear raster resampling"
-)
+plt.title("Model top and ibound arrays created using bi-linear raster resampling")
 plt.colorbar(ax, shrink=0.7)
 # -
 

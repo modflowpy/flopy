@@ -264,9 +264,7 @@ class GridCases:
         xmax = 2.0
         ymin = 0.0
         ymax = 1.0
-        poly = np.array(
-            ((xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax))
-        )
+        poly = np.array(((xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax)))
         max_area = 0.001
         angle = 30
 
@@ -351,9 +349,7 @@ class GridCases:
             tri.add_polygon(active_domain)
             tri.add_polygon(area1)
             tri.add_polygon(area2)
-            tri.add_region(
-                (1, 1), 0, maximum_area=100
-            )  # point inside active domain
+            tri.add_region((1, 1), 0, maximum_area=100)  # point inside active domain
             tri.add_region((11, 11), 1, maximum_area=10)  # point inside area1
             tri.add_region((61, 61), 2, maximum_area=3)  # point inside area2
             tri.build(verbose=False)
@@ -400,9 +396,7 @@ class GridCases:
             # then regions and other polygons should follow
             tri.add_polygon(area1)
             tri.add_polygon(area2)
-            tri.add_region(
-                (1, 1), 0, maximum_area=100
-            )  # point inside active domain
+            tri.add_region((1, 1), 0, maximum_area=100)  # point inside active domain
             tri.add_region((11, 11), 1, maximum_area=10)  # point inside area1
             tri.add_region((70, 70), 2, maximum_area=1)  # point inside area2
 

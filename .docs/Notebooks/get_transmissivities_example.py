@@ -76,9 +76,7 @@ temp_dir = TemporaryDirectory()
 model_ws = temp_dir.name
 
 m = flopy.modflow.Modflow("junk", version="mfnwt", model_ws=model_ws)
-dis = flopy.modflow.ModflowDis(
-    m, nlay=nl, nrow=nr, ncol=nc, botm=botm, top=top
-)
+dis = flopy.modflow.ModflowDis(m, nlay=nl, nrow=nr, ncol=nc, botm=botm, top=top)
 upw = flopy.modflow.ModflowUpw(m, hk=hk)
 # -
 
@@ -88,9 +86,7 @@ upw = flopy.modflow.ModflowUpw(m, hk=hk)
 #   (cells that are partially within the open interval have reduced thickness, cells outside of the open interval have transmissivities of 0). If no `sctop` or `scbot` arguments are supplied, trasmissivites reflect the full saturated thickness in each column of cells (see plot below, which shows different open intervals relative to the model layering)
 
 r, c = np.arange(nr), np.arange(nc)
-T = flopy.utils.get_transmissivities(
-    heads, m, r=r, c=c, sctop=sctop, scbot=scbot
-)
+T = flopy.utils.get_transmissivities(heads, m, r=r, c=c, sctop=sctop, scbot=scbot)
 np.round(T, 2)
 
 m.dis.botm.array[:, r, c]

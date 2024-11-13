@@ -155,9 +155,7 @@ class ModflowRiv(Package):
         if dtype is not None:
             self.dtype = dtype
         else:
-            self.dtype = self.get_default_dtype(
-                structured=self.parent.structured
-            )
+            self.dtype = self.get_default_dtype(structured=self.parent.structured)
         self.stress_period_data = MfList(self, stress_period_data)
         self.parent.add_package(self)
 
@@ -200,11 +198,7 @@ class ModflowRiv(Package):
                 if isinstance(data, pd.DataFrame):
                     data = data.to_records(index=False).astype(self.dtype)
                 spd = data
-                inds = (
-                    (spd.k, spd.i, spd.j)
-                    if self.parent.structured
-                    else (spd.node)
-                )
+                inds = (spd.k, spd.i, spd.j) if self.parent.structured else (spd.node)
 
                 # check that river stage and bottom are above model cell
                 # bottoms also checks for nan values

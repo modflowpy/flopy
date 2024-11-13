@@ -226,7 +226,5 @@ if __name__ == "__main__":
     else:
         update_version(
             timestamp=datetime.now(),
-            version=(
-                Version(args.version) if args.version else _current_version
-            ),
+            version=(Version(args.version) if args.version else _current_version),
         )

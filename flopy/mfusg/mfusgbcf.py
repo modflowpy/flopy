@@ -261,9 +261,7 @@ class MfUsgBcf(ModflowBcf):
         # LAYCON array
         for layer in range(nlay):
             if self.intercellt[layer] > 0:
-                f_obj.write(
-                    f"{self.intercellt[layer]:1d} {self.laycon[layer]:1d} "
-                )
+                f_obj.write(f"{self.intercellt[layer]:1d} {self.laycon[layer]:1d} ")
             else:
                 f_obj.write(f"0{self.laycon[layer]:1d} ")
         f_obj.write("\n")
@@ -384,12 +382,8 @@ class MfUsgBcf(ModflowBcf):
             int(text_list[5]),
         )
 
-        ikvflag = type_from_iterable(
-            text_list, index=6, _type=int, default_val=0
-        )
-        ikcflag = type_from_iterable(
-            text_list, index=7, _type=int, default_val=0
-        )
+        ikvflag = type_from_iterable(text_list, index=6, _type=int, default_val=0)
+        ikcflag = type_from_iterable(text_list, index=7, _type=int, default_val=0)
 
         # LAYCON array
         laycon, intercellt = cls._load_laycon(f_obj, model)
@@ -397,9 +391,7 @@ class MfUsgBcf(ModflowBcf):
         # TRPY array
         if model.verbose:
             print("   loading TRPY...")
-        trpy = Util2d.load(
-            f_obj, model, (nlay,), np.float32, "trpy", ext_unit_dict
-        )
+        trpy = Util2d.load(f_obj, model, (nlay,), np.float32, "trpy", ext_unit_dict)
 
         # property data for each layer based on options
         transient = not dis.steady.all()
@@ -430,9 +422,7 @@ class MfUsgBcf(ModflowBcf):
         if (not model.structured) and abs(ikcflag == 1):
             if model.verbose:
                 print("   loading ksat (njag)...")
-            ksat = Util2d.load(
-                f_obj, model, (njag,), np.float32, "ksat", ext_unit_dict
-            )
+            ksat = Util2d.load(f_obj, model, (njag,), np.float32, "ksat", ext_unit_dict)
 
         f_obj.close()
 

@@ -236,9 +236,7 @@ swi = flopy.modflow.ModflowSwi2(
     iswizt=55,
 )
 oc = flopy.modflow.ModflowOc(ml, stress_period_data=spd)
-pcg = flopy.modflow.ModflowPcg(
-    ml, hclose=1.0e-6, rclose=3.0e-3, mxiter=100, iter1=50
-)
+pcg = flopy.modflow.ModflowPcg(ml, hclose=1.0e-6, rclose=3.0e-3, mxiter=100, iter1=50)
 # -
 
 # Write the simulation 1 MODFLOW input files and run the model
@@ -293,9 +291,7 @@ swi = flopy.modflow.ModflowSwi2(
     iswizt=55,
 )
 oc = flopy.modflow.ModflowOc(ml2, stress_period_data=spd)
-pcg = flopy.modflow.ModflowPcg(
-    ml2, hclose=1.0e-6, rclose=3.0e-3, mxiter=100, iter1=50
-)
+pcg = flopy.modflow.ModflowPcg(ml2, hclose=1.0e-6, rclose=3.0e-3, mxiter=100, iter1=50)
 # -
 
 # Write the simulation 2 MODFLOW input files and run the model
@@ -306,34 +302,26 @@ ml2.run_model(silent=True)
 # Load the simulation 1 `ZETA` data and `ZETA` observations.
 
 # read base model zeta
-zfile = flopy.utils.CellBudgetFile(
-    os.path.join(ml.model_ws, f"{modelname}.zta")
-)
+zfile = flopy.utils.CellBudgetFile(os.path.join(ml.model_ws, f"{modelname}.zta"))
 kstpkper = zfile.get_kstpkper()
 zeta = []
 for kk in kstpkper:
     zeta.append(zfile.get_data(kstpkper=kk, text="ZETASRF  1")[0])
 zeta = np.array(zeta)
 # read swi obs
-zobs = np.genfromtxt(
-    os.path.join(ml.model_ws, f"{modelname}.zobs.out"), names=True
-)
+zobs = np.genfromtxt(os.path.join(ml.model_ws, f"{modelname}.zobs.out"), names=True)
 
 # Load the simulation 2 `ZETA` data and `ZETA` observations.
 
 # read saltwater well model zeta
-zfile2 = flopy.utils.CellBudgetFile(
-    os.path.join(ml2.model_ws, f"{modelname2}.zta")
-)
+zfile2 = flopy.utils.CellBudgetFile(os.path.join(ml2.model_ws, f"{modelname2}.zta"))
 kstpkper = zfile2.get_kstpkper()
 zeta2 = []
 for kk in kstpkper:
     zeta2.append(zfile2.get_data(kstpkper=kk, text="ZETASRF  1")[0])
 zeta2 = np.array(zeta2)
 # read swi obs
-zobs2 = np.genfromtxt(
-    os.path.join(ml2.model_ws, f"{modelname2}.zobs.out"), names=True
-)
+zobs2 = np.genfromtxt(os.path.join(ml2.model_ws, f"{modelname2}.zobs.out"), names=True)
 
 # Create arrays for the x-coordinates and the output years
 
@@ -609,9 +597,7 @@ ax = fig.add_subplot(1, 2, 1)
 modelxsect = flopy.plot.PlotCrossSection(
     model=ml, line={"Row": 30}, extent=(0, 3050, -50, -10)
 )
-modelxsect.plot_fill_between(
-    zeta[4, :, :, :], colors=colors, ax=ax, edgecolors="none"
-)
+modelxsect.plot_fill_between(zeta[4, :, :, :], colors=colors, ax=ax, edgecolors="none")
 linecollection = modelxsect.plot_grid(ax=ax)
 ax.set_title(f"Recharge year {years[4]}")
 

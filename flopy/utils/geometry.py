@@ -74,9 +74,7 @@ class Shape:
 
         if self.__type == "Polygon":
             geo_interface = {
-                "coordinates": tuple(
-                    [self.exterior] + [i for i in self.interiors]
-                ),
+                "coordinates": tuple([self.exterior] + [i for i in self.interiors]),
                 "type": self.__type,
             }
 
@@ -135,9 +133,7 @@ class Shape:
             shape = LineString(geo_interface["coordinates"])
 
         elif geo_interface["type"] == "MultiLineString":
-            geoms = [
-                LineString(coords) for coords in geo_interface["coordinates"]
-            ]
+            geoms = [LineString(coords) for coords in geo_interface["coordinates"]]
             shape = MultiLineString(geoms)
 
         elif geo_interface["type"] == "Point":
@@ -663,14 +659,10 @@ def rotate(x, y, xoff, yoff, angrot_radians):
         y = np.array(y)
 
     xrot = (
-        xoff
-        + np.cos(angrot_radians) * (x - xoff)
-        - np.sin(angrot_radians) * (y - yoff)
+        xoff + np.cos(angrot_radians) * (x - xoff) - np.sin(angrot_radians) * (y - yoff)
     )
     yrot = (
-        yoff
-        + np.sin(angrot_radians) * (x - xoff)
-        + np.cos(angrot_radians) * (y - yoff)
+        yoff + np.sin(angrot_radians) * (x - xoff) + np.cos(angrot_radians) * (y - yoff)
     )
 
     return xrot, yrot
@@ -868,9 +860,9 @@ def point_in_polygon(xc, yc, polygon):
     num = len(polygon)
     j = num - 1
     for i in range(num):
-        tmp = polygon[i][0] + (polygon[j][0] - polygon[i][0]) * (
-            yc - polygon[i][1]
-        ) / (polygon[j][1] - polygon[i][1])
+        tmp = polygon[i][0] + (polygon[j][0] - polygon[i][0]) * (yc - polygon[i][1]) / (
+            polygon[j][1] - polygon[i][1]
+        )
 
         comp = np.asarray(
             ((polygon[i][1] > yc) ^ (polygon[j][1] > yc)) & (xc < tmp)

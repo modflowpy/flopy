@@ -149,8 +149,7 @@ class SeawatVsc(Package):
     ):
         if len(list(kwargs.keys())) > 0:
             raise Exception(
-                "VSC error: unrecognized kwargs: "
-                + " ".join(list(kwargs.keys()))
+                "VSC error: unrecognized kwargs: " + " ".join(list(kwargs.keys()))
             )
 
         if unitnumber is None:

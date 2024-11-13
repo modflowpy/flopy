@@ -303,9 +303,7 @@ for k in [0, 1, 2]:  # These indices need to be adjusted for 0-based moronicism
             0, 300, 1
         ):  # These indices need to be adjusted for 0-based foolishness
             # Skipping cells not satisfying the conditions below
-            if (i == 1 and (j < 27 or j > 31)) or (
-                i == 299 and (j < 26 or j > 31)
-            ):
+            if (i == 1 and (j < 27 or j > 31)) or (i == 299 and (j < 26 or j > 31)):
                 if i % 2 == 0:
                     sp.append(
                         [
@@ -515,9 +513,7 @@ files = [
 ]
 
 numgage = len(gages)
-gage = flopy.modflow.ModflowGage(
-    mf, numgage=numgage, gage_data=gages, filenames=files
-)
+gage = flopy.modflow.ModflowGage(mf, numgage=numgage, gage_data=gages, filenames=files)
 # -
 
 # ### Instantiate Unsaturated-Zone Flow (UZF) package for MODFLOW-NWT
@@ -628,9 +624,7 @@ stress_period_data = drnElv_lst.values.tolist()
 # Create a dictionary, 1 entry for each of the two stress periods.
 stress_period_data = {0: stress_period_data, 1: stress_period_data}
 
-drn = flopy.modflow.ModflowDrn(
-    mf, ipakcb=ipakcb, stress_period_data=stress_period_data
-)
+drn = flopy.modflow.ModflowDrn(mf, ipakcb=ipakcb, stress_period_data=stress_period_data)
 # -
 
 # ### Instantiate linkage with mass transport routing (LMT) package for MODFLOW-NWT (generates linker file)
@@ -712,9 +706,7 @@ percel = 1.0000
 mxpart = 5000
 nadvfd = 1  # (1 = Upstream weighting)
 
-adv = flopy.mt3d.Mt3dAdv(
-    mt, mixelm=mixelm, percel=percel, mxpart=mxpart, nadvfd=nadvfd
-)
+adv = flopy.mt3d.Mt3dAdv(mt, mixelm=mixelm, percel=percel, mxpart=mxpart, nadvfd=nadvfd)
 # -
 
 # ### Instantiate generalized conjugate gradient solver (GCG) package for MT3D-USGS
@@ -748,9 +740,7 @@ trpt = 0.1  # ratio of the horizontal transverse dispersivity to 'AL'
 trpv = 0.1  # ratio of the vertical transverse dispersitvity to 'AL'
 dmcoef = 1.0000e-10
 
-dsp = flopy.mt3d.Mt3dDsp(
-    mt, al=al, trpt=trpt, trpv=trpv, dmcoef=dmcoef, multiDiff=True
-)
+dsp = flopy.mt3d.Mt3dDsp(mt, al=al, trpt=trpt, trpv=trpv, dmcoef=dmcoef, multiDiff=True)
 # -
 
 # ### Instantiate source-sink mixing (SSM) package for MT3D-USGS

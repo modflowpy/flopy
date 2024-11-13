@@ -121,9 +121,7 @@ def test_gage_files(function_tmpdir):
                 break
         assert found, f"{f} not in name file entries"
         iu = abs(gages[idx][1])
-        assert (
-            iu == iun
-        ), f"{f} unit not equal to {iu} - name file unit = {iun}"
+        assert iu == iun, f"{f} unit not equal to {iu} - name file unit = {iun}"
 
 
 def test_gage_filenames0(function_tmpdir):
@@ -207,6 +205,4 @@ def test_gage_filenames(function_tmpdir):
                 break
         assert found, f"{f} not in name file entries"
         iu = abs(gages[idx][1])
-        assert (
-            iu == iun
-        ), f"{f} unit not equal to {iu} - name file unit = {iun}"
+        assert iu == iun, f"{f} unit not equal to {iu} - name file unit = {iun}"

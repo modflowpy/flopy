@@ -473,9 +473,7 @@ class ModflowSub(Package):
             f"{self.ipakcb} {self.isuboc} {self.nndb} {self.ndb} {self.nmz} {self.nn} "
         )
 
-        f.write(
-            f"{self.ac1} {self.ac2} {self.itmin} {self.idsave} {self.idrest}"
-        )
+        f.write(f"{self.ac1} {self.ac2} {self.itmin} {self.idsave} {self.idrest}")
         line = ""
         if self.idbit is not None:
             line += f" {self.idbit}"
@@ -815,14 +813,10 @@ class ModflowSub(Package):
                 ext_unit_dict, filetype=ModflowSub._ftype()
             )
             if ipakcb > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=ipakcb
-                )
+                iu, filenames[1] = model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
 
             if idsave > 0:
-                iu, filenames[2] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=idsave
-                )
+                iu, filenames[2] = model.get_ext_dict_attr(ext_unit_dict, unit=idsave)
 
             if isuboc > 0:
                 ipos = 3

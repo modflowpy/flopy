@@ -42,9 +42,7 @@ cln_ws = temp_dir.name
 # A vertical conduit well is located at the center of the domain and has a radius of 0.5 m. The well pumps 62,840 m3/d and is open fully to both aquifers from top to bottom. The CLN Process was used with a circular conduit geometry type to discretize the well bore with two conduit cells, one in each layer. The WEL Package was used to pump from the bottom CLN cell.
 #
 
-model_ws = os.path.join(
-    "../../examples/data/mfusg_test", "03_conduit_confined"
-)
+model_ws = os.path.join("../../examples/data/mfusg_test", "03_conduit_confined")
 mf = flopy.mfusg.MfUsg.load(
     "ex3.nam", model_ws=model_ws, exe_name="mfusg", check=False, verbose=True
 )
@@ -58,9 +56,7 @@ for i in range(mf.nper):
     for j in range(mf.dis.nstp[i]):
         spd[(i, j)] = ["save head", "save budget"]
 
-oc = flopy.modflow.ModflowOc(
-    mf, stress_period_data=spd, unitnumber=[22, 30, 31, 50]
-)
+oc = flopy.modflow.ModflowOc(mf, stress_period_data=spd, unitnumber=[22, 30, 31, 50])
 
 # +
 model_ws = os.path.join(cln_ws, "ex03")
@@ -109,9 +105,7 @@ cbb.headers
 # +
 simflow = cbb.get_data(kstpkper=(0, 0), text="GWF")[0]
 for i in range(nper - 1):
-    simflow = np.append(
-        simflow, cbb.get_data(kstpkper=(i + 1, 0), text="GWF")[0]
-    )
+    simflow = np.append(simflow, cbb.get_data(kstpkper=(i + 1, 0), text="GWF")[0])
 simflow1 = simflow[simflow["node"] == 1]["q"]
 simflow2 = simflow[simflow["node"] == 2]["q"]
 
@@ -303,9 +297,7 @@ cbb.headers
 # +
 simflow = cbb.get_data(kstpkper=(0, 0), text="GWF")[0]
 for i in range(nper - 1):
-    simflow = np.append(
-        simflow, cbb.get_data(kstpkper=(i + 1, 0), text="GWF")[0]
-    )
+    simflow = np.append(simflow, cbb.get_data(kstpkper=(i + 1, 0), text="GWF")[0])
 
 flow_case1 = simflow
 # -
@@ -399,9 +391,7 @@ cbb.headers
 # +
 simflow = cbb.get_data(kstpkper=(0, 0), text="GWF")[0]
 for i in range(nper - 1):
-    simflow = np.append(
-        simflow, cbb.get_data(kstpkper=(i + 1, 0), text="GWF")[0]
-    )
+    simflow = np.append(simflow, cbb.get_data(kstpkper=(i + 1, 0), text="GWF")[0])
 
 flow_case2 = simflow
 # -
@@ -498,9 +488,7 @@ cbb.headers
 # +
 simflow = cbb.get_data(kstpkper=(0, 0), text="GWF")[0]
 for i in range(nper - 1):
-    simflow = np.append(
-        simflow, cbb.get_data(kstpkper=(i + 1, 0), text="GWF")[0]
-    )
+    simflow = np.append(simflow, cbb.get_data(kstpkper=(i + 1, 0), text="GWF")[0])
 
 flow_case3 = simflow
 # -
@@ -584,9 +572,7 @@ cbb.headers
 # +
 simflow = cbb.get_data(kstpkper=(0, 0), text="GWF")[0]
 for i in range(nper - 1):
-    simflow = np.append(
-        simflow, cbb.get_data(kstpkper=(i + 1, 0), text="GWF")[0]
-    )
+    simflow = np.append(simflow, cbb.get_data(kstpkper=(i + 1, 0), text="GWF")[0])
 
 flow_case4 = simflow
 # -

@@ -109,21 +109,15 @@ assert success, pformat(buff)
 # +
 hedObj = flopy.utils.HeadFile(os.path.join(ws, "DG.hds"), precision="double")
 h = hedObj.get_data(kstpkper=(0, 0))
-cbcObj = flopy.utils.CellBudgetFile(
-    os.path.join(ws, "DG.cbc"), precision="double"
-)
+cbcObj = flopy.utils.CellBudgetFile(os.path.join(ws, "DG.cbc"), precision="double")
 
 frf = cbcObj.get_data(kstpkper=(0, 0), text="FLOW RIGHT FACE")[0]
 fff = cbcObj.get_data(kstpkper=(0, 0), text="FLOW FRONT FACE")[0]
-qx, qy, qz = flopy.utils.postprocessing.get_specific_discharge(
-    (frf, fff, None), ml
-)
+qx, qy, qz = flopy.utils.postprocessing.get_specific_discharge((frf, fff, None), ml)
 
 # +
 cnt = np.arange(1200, 1700, 100)
-f, (ax1, ax2) = plt.subplots(
-    1, 2, figsize=(6.75, 4.47), constrained_layout=True
-)
+f, (ax1, ax2) = plt.subplots(1, 2, figsize=(6.75, 4.47), constrained_layout=True)
 ax1.set_xlim(0, xmax)
 ax1.set_ylim(0, ymax)
 ax2.set_xlim(0, xmax)
@@ -177,9 +171,7 @@ ax3 = f.add_axes([0.08, 0.125, 0.01, 0.15])
 cb = plt.colorbar(h2, cax=ax3)
 cb.ax.set_ylabel("Simulated head, m")
 
-ax1.plot(
-    [-10000, 0], [-10000, 0], color="purple", lw=0.75, label="STR reaches"
-)
+ax1.plot([-10000, 0], [-10000, 0], color="purple", lw=0.75, label="STR reaches")
 ax1.plot(
     [-10000],
     [-10000],
@@ -193,9 +185,7 @@ ax1.plot(
 leg = ax1.legend(loc="upper left", numpoints=1, prop={"size": 6})
 leg.draw_frame(False)
 
-ax1.text(
-    0.0, 1.01, "Model layer 4", ha="left", va="bottom", transform=ax1.transAxes
-)
+ax1.text(0.0, 1.01, "Model layer 4", ha="left", va="bottom", transform=ax1.transAxes)
 ax2.text(
     0.98,
     0.02,
@@ -204,9 +194,7 @@ ax2.text(
     va="bottom",
     transform=ax2.transAxes,
 )
-ax2.text(
-    0.0, 1.01, "Model layer 5", ha="left", va="bottom", transform=ax2.transAxes
-)
+ax2.text(0.0, 1.01, "Model layer 5", ha="left", va="bottom", transform=ax2.transAxes)
 
 plt.savefig(os.path.join(ws, "uspb_heads.png"), dpi=300)
 # -

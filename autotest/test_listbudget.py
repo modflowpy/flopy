@@ -68,9 +68,7 @@ def test_mflist_reducedpumping(example_data_path):
     """
     test reading reduced pumping data from list file
     """
-    pth = (
-        example_data_path / "mfusg_test" / "03B_conduit_unconfined" / "output"
-    )
+    pth = example_data_path / "mfusg_test" / "03B_conduit_unconfined" / "output"
     list_file = pth / "ex3B.lst"
     mflist = MfusgListBudget(list_file)
     assert isinstance(mflist.get_reduced_pumping(), np.recarray)
@@ -99,9 +97,7 @@ def test_mflist_reducedpumping_fail(example_data_path):
     """
     test failure for reading reduced pumping data from list file
     """
-    pth = (
-        example_data_path / "mfusg_test" / "03A_conduit_unconfined" / "output"
-    )
+    pth = example_data_path / "mfusg_test" / "03A_conduit_unconfined" / "output"
     list_file = pth / "ex3A.lst"
     # Catch before flopy to avoid masking file not found assert
     if not os.path.isfile(list_file):

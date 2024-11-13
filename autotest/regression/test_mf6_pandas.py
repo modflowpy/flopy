@@ -81,9 +81,7 @@ def test_pandas_001(function_tmpdir, example_data_path):
     assert sim.simulation_data.use_pandas
 
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
-    tdis_package = ModflowTdis(
-        sim, time_units="DAYS", nper=2, perioddata=tdis_rc
-    )
+    tdis_package = ModflowTdis(sim, time_units="DAYS", nper=2, perioddata=tdis_rc)
     # replace with real ims file
     ims_package = ModflowIms(
         sim,
@@ -101,9 +99,7 @@ def test_pandas_001(function_tmpdir, example_data_path):
         preconditioner_drop_tolerance=0.01,
         number_orthogonalizations=2,
     )
-    model = ModflowGwf(
-        sim, modelname=model_name, model_nam_file=f"{model_name}.nam"
-    )
+    model = ModflowGwf(sim, modelname=model_name, model_nam_file=f"{model_name}.nam")
     top = {"filename": "top.txt", "data": 100.0}
     botm = {"filename": "botm.txt", "data": 50.0}
     dis_package = ModflowGwfdis(

@@ -140,9 +140,7 @@ def import_optional_dependency(
         module_to_get = sys.modules[install_name]
     else:
         module_to_get = module
-    minimum_version = (
-        min_version if min_version is not None else VERSIONS.get(parent)
-    )
+    minimum_version = min_version if min_version is not None else VERSIONS.get(parent)
     if minimum_version:
         version = get_version(module_to_get)
         if Version(version) < Version(minimum_version):

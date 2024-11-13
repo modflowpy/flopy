@@ -72,9 +72,7 @@ def test_get_entries_from_namefile_mf2005(path):
             id="freyberg",
         ),
         pytest.param(
-            _example_data_path
-            / "freyberg_multilayer_transient"
-            / "freyberg.nam",
+            _example_data_path / "freyberg_multilayer_transient" / "freyberg.nam",
             {
                 "crs": "+proj=utm +zone=14 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
                 "rotation": 15.0,

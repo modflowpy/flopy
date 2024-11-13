@@ -39,11 +39,7 @@ def get_nn(grid: StructuredGrid, k, i, j):
 
 def flatten(a):
     return [
-        [
-            *chain.from_iterable(
-                xx if isinstance(xx, tuple) else [xx] for xx in x
-            )
-        ]
+        [*chain.from_iterable(xx if isinstance(xx, tuple) else [xx] for xx in x)]
         for x in a
     ]
 
@@ -57,9 +53,7 @@ def test_get_extent_structured_multilayer():
     for k in range(grid.nlay):
         extent = get_extent(grid, k=k, i=i, j=j)
         assert extent.minz == grid.botm[k, i, j]
-        assert extent.maxz == (
-            grid.top[i, j] if k == 0 else grid.botm[k - 1, i, j]
-        )
+        assert extent.maxz == (grid.top[i, j] if k == 0 else grid.botm[k - 1, i, j])
 
 
 # test initializers
@@ -296,9 +290,7 @@ def test_particledata_to_prp_dis_9():
 
 @pytest.mark.parametrize("lx", [None, 0.5, 0.25])  # local x coord
 @pytest.mark.parametrize("ly", [None, 0.5, 0.25])  # local y coord
-@pytest.mark.parametrize(
-    "localz", [False, True]
-)  # whether to return local z coords
+@pytest.mark.parametrize("localz", [False, True])  # whether to return local z coords
 def test_particledata_to_prp_disv_1(lx, ly, localz):
     """
     1 particle in bottom left cell, testing with default
@@ -356,9 +348,7 @@ def test_particledata_to_prp_disv_1(lx, ly, localz):
     # plt.show()
 
 
-@pytest.mark.parametrize(
-    "localz", [False, True]
-)  # whether to return local z coords
+@pytest.mark.parametrize("localz", [False, True])  # whether to return local z coords
 def test_particledata_to_prp_disv_9(localz):
     # minimal vertex grid
     grid = GridCases().vertex_small()
@@ -403,23 +393,17 @@ def test_particledata_to_prp_disv_9(localz):
     assert np.allclose(rpts_prt, rpts_exp, atol=1e-3)
 
 
-@pytest.mark.parametrize(
-    "localz", [False, True]
-)  # whether to return local z coords
+@pytest.mark.parametrize("localz", [False, True])  # whether to return local z coords
 def test_lrcparticledata_to_prp_divisions_defaults(localz, array_snapshot):
     sd_data = CellDataType()
     regions = [[0, 0, 1, 0, 1, 1]]
-    part_data = LRCParticleData(
-        subdivisiondata=[sd_data], lrcregions=[regions]
-    )
+    part_data = LRCParticleData(subdivisiondata=[sd_data], lrcregions=[regions])
     grid = GridCases().structured_small()
     rpts_prt = flatten(list(part_data.to_prp(grid, localz=localz)))
     num_cells = reduce(
         sum,
         [
-            (lrc[3] - lrc[0] + 1)
-            * (lrc[4] - lrc[1] + 1)
-            * (lrc[5] - lrc[2] + 1)
+            (lrc[3] - lrc[0] + 1) * (lrc[4] - lrc[1] + 1) * (lrc[5] - lrc[2] + 1)
             for lrc in regions
         ],
     )
@@ -568,9 +552,7 @@ def test_lrcparticledata_to_prp_1_per_face(array_snapshot):
     assert rpts_prt == array_snapshot
 
 
-@pytest.mark.parametrize(
-    "localz", [False, True]
-)  # whether to return local z coords
+@pytest.mark.parametrize("localz", [False, True])  # whether to return local z coords
 def test_nodeparticledata_to_prp_disv_defaults(
     function_tmpdir, example_data_path, localz
 ):
@@ -585,9 +567,7 @@ def test_nodeparticledata_to_prp_disv_defaults(
     pdat = NodeParticleData()
 
     # load gwf simulation, switch workspace, write input files, and run
-    sim = MFSimulation.load(
-        sim_ws=example_data_path / "mf6" / "test003_gwfs_disv"
-    )
+    sim = MFSimulation.load(sim_ws=example_data_path / "mf6" / "test003_gwfs_disv")
     gwf = sim.get_model("gwf_1")
     grid = gwf.modelgrid
     gwf_name = "gwf"
@@ -635,8 +615,7 @@ def test_nodeparticledata_to_prp_disv_defaults(
     mp7_pls = pd.concat([pd.DataFrame(ra) for ra in pldata])
     mp7_pls = mp7_pls.sort_values(by=["time", "particleid"]).head(27)
     mp7_rpts = [
-        [0, r.k, r.x, r.y, r.zloc if localz else r.z]
-        for r in mp7_pls.itertuples()
+        [0, r.k, r.x, r.y, r.zloc if localz else r.z] for r in mp7_pls.itertuples()
     ]  # omit rpt index
     mp7_rpts.sort()
 
@@ -750,9 +729,7 @@ def test_nodeparticledata_prp_disv_big(function_tmpdir):
         rowdivisions6=4,
         columndivisions6=4,
     )
-    pgdata = flopy.modpath.NodeParticleData(
-        subdivisiondata=facedata, nodes=nodew
-    )
+    pgdata = flopy.modpath.NodeParticleData(subdivisiondata=facedata, nodes=nodew)
 
     # convert to PRP package data
     rpts_prt = flatten(list(pgdata.to_prp(grid)))
@@ -804,9 +781,7 @@ def test_lrcparticledata_write(function_tmpdir):
 @pytest.fixture
 def mf6_sim(function_tmpdir):
     name = "tiny-gwf"
-    sim = flopy.mf6.MFSimulation(
-        sim_name=name, sim_ws=function_tmpdir, exe_name="mf6"
-    )
+    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=function_tmpdir, exe_name="mf6")
     tdis = flopy.mf6.ModflowTdis(sim)
     ims = flopy.mf6.ModflowIms(sim)
     gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)

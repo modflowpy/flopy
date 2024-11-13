@@ -42,9 +42,7 @@ class PlotMapView:
 
     """
 
-    def __init__(
-        self, model=None, modelgrid=None, ax=None, layer=0, extent=None
-    ):
+    def __init__(self, model=None, modelgrid=None, ax=None, layer=0, extent=None):
         self.model = model
         self.layer = layer
         self.mg = None
@@ -149,9 +147,7 @@ class PlotMapView:
             return
 
         if not isinstance(polygons[0], Path):
-            collection = ax.pcolormesh(
-                self.mg.xvertices, self.mg.yvertices, plotarray
-            )
+            collection = ax.pcolormesh(self.mg.xvertices, self.mg.yvertices, plotarray)
 
         else:
             plotarray = plotarray.ravel()
@@ -506,15 +502,11 @@ class PlotMapView:
                     try:
                         mflist = pp.stress_period_data.array[kper]
                     except Exception as e:
-                        raise Exception(
-                            f"Not a list-style boundary package: {e!s}"
-                        )
+                        raise Exception(f"Not a list-style boundary package: {e!s}")
                     if mflist is None:
                         return
 
-                    t = np.array(
-                        [list(i) for i in mflist["cellid"]], dtype=int
-                    ).T
+                    t = np.array([list(i) for i in mflist["cellid"]], dtype=int).T
 
                 if len(idx) == 0:
                     idx = np.copy(t)
@@ -529,9 +521,7 @@ class PlotMapView:
                 try:
                     mflist = p.stress_period_data[kper]
                 except Exception as e:
-                    raise Exception(
-                        f"Not a list-style boundary package: {e!s}"
-                    )
+                    raise Exception(f"Not a list-style boundary package: {e!s}")
                 if mflist is None:
                     return
                 if len(self.mg.shape) == 3:
@@ -655,9 +645,7 @@ class PlotMapView:
 
         xcenters = self.mg.get_xcellcenters_for_layer(self.layer).ravel()
         ycenters = self.mg.get_ycellcenters_for_layer(self.layer).ravel()
-        idomain = self.mg.get_plottable_layer_array(
-            self.mg.idomain, self.layer
-        ).ravel()
+        idomain = self.mg.get_plottable_layer_array(self.mg.idomain, self.layer).ravel()
 
         active_ixs = list(range(len(xcenters)))
         if not inactive:

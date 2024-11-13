@@ -231,18 +231,10 @@ class ModflowFlwob(Package):
         self.factor = factor
 
         # -create empty arrays of the correct size
-        self.layer = np.zeros(
-            (self.nqfb, max(np.abs(self.nqclfb))), dtype="int32"
-        )
-        self.row = np.zeros(
-            (self.nqfb, max(np.abs(self.nqclfb))), dtype="int32"
-        )
-        self.column = np.zeros(
-            (self.nqfb, max(np.abs(self.nqclfb))), dtype="int32"
-        )
-        self.factor = np.zeros(
-            (self.nqfb, max(np.abs(self.nqclfb))), dtype="float32"
-        )
+        self.layer = np.zeros((self.nqfb, max(np.abs(self.nqclfb))), dtype="int32")
+        self.row = np.zeros((self.nqfb, max(np.abs(self.nqclfb))), dtype="int32")
+        self.column = np.zeros((self.nqfb, max(np.abs(self.nqclfb))), dtype="int32")
+        self.factor = np.zeros((self.nqfb, max(np.abs(self.nqclfb))), dtype="float32")
         self.nqobfb = np.zeros((self.nqfb), dtype="int32")
         self.nqclfb = np.zeros((self.nqfb), dtype="int32")
         self.irefsp = np.zeros((self.nqtfb), dtype="int32")
@@ -503,9 +495,7 @@ class ModflowFlwob(Package):
                 ext_unit_dict, filetype=ftype.upper()
             )
             if iufbobsv > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=iufbobsv
-                )
+                iu, filenames[1] = model.get_ext_dict_attr(ext_unit_dict, unit=iufbobsv)
                 model.add_pop_key_list(iufbobsv)
 
         # create ModflowFlwob object instance

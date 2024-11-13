@@ -658,23 +658,17 @@ class ModflowSwt(Package):
         # read dataset 4
         if model.verbose:
             print("  loading swt dataset 4")
-        gl0 = Util2d.load(
-            f, model, (nrow, ncol), np.float32, "gl0", ext_unit_dict
-        )
+        gl0 = Util2d.load(f, model, (nrow, ncol), np.float32, "gl0", ext_unit_dict)
 
         # read dataset 5
         if model.verbose:
             print("  loading swt dataset 5")
-        sgm = Util2d.load(
-            f, model, (nrow, ncol), np.float32, "sgm", ext_unit_dict
-        )
+        sgm = Util2d.load(f, model, (nrow, ncol), np.float32, "sgm", ext_unit_dict)
 
         # read dataset 6
         if model.verbose:
             print("  loading swt dataset 6")
-        sgs = Util2d.load(
-            f, model, (nrow, ncol), np.float32, "sgs", ext_unit_dict
-        )
+        sgs = Util2d.load(f, model, (nrow, ncol), np.float32, "sgs", ext_unit_dict)
 
         # read datasets 7 to 13
         thick = [0] * nsystm
@@ -842,9 +836,7 @@ class ModflowSwt(Package):
                 ext_unit_dict, filetype=ModflowSwt._ftype()
             )
             if ipakcb > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=ipakcb
-                )
+                iu, filenames[1] = model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
 
             if iswtoc > 0:
                 ipos = 2

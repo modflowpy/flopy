@@ -91,9 +91,7 @@ class ModflowPbc(Package):
             f_pbc.write(f"{itmp:10d}{ctmp:10d}{self.np:10d}\n")
             if n < len(self.layer_row_column_data):
                 for b in a:
-                    f_pbc.write(
-                        f"{b[0]:10d}{b[1]:10d}{b[2]:10d}{b[3]:10d}{b[4]:10d}\n"
-                    )
+                    f_pbc.write(f"{b[0]:10d}{b[1]:10d}{b[2]:10d}{b[3]:10d}{b[4]:10d}\n")
             if n < len(self.cosines):
                 for d in c:
                     f_pbc.write(f"{d[0]:10g}{d[1]:10g}{d[2]:10g}\n")

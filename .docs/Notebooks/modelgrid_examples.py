@@ -54,9 +54,7 @@ gridgen_exe = "gridgen"
 
 # +
 # set paths to each of our model types for this example notebook
-spth = os.path.join(
-    "..", "..", "examples", "data", "freyberg_multilayer_transient"
-)
+spth = os.path.join("..", "..", "examples", "data", "freyberg_multilayer_transient")
 spth6 = os.path.join("..", "..", "examples", "data", "mf6-freyberg")
 vpth = os.path.join("..", "..", "examples", "data")
 upth = os.path.join("..", "..", "examples", "data")
@@ -137,9 +135,7 @@ angrot = modelgrid.angrot
 epsg = modelgrid.epsg
 proj4 = modelgrid.proj4
 
-print(
-    f"xoff: {xoff}\nyoff: {yoff}\nangrot: {angrot}\nepsg: {epsg}\nproj4: {proj4}"
-)
+print(f"xoff: {xoff}\nyoff: {yoff}\nangrot: {angrot}\nepsg: {epsg}\nproj4: {proj4}")
 # -
 
 # #### Setting modelgrid reference information
@@ -422,9 +418,7 @@ plt.title("Cross-Section of VertexGrid")
 # +
 # simple functions to load vertices and indice lists
 def load_verts(fname):
-    verts = np.genfromtxt(
-        fname, dtype=[int, float, float], names=["iv", "x", "y"]
-    )
+    verts = np.genfromtxt(fname, dtype=[int, float, float], names=["iv", "x", "y"])
     verts["iv"] -= 1  # zero based
     return verts
 
@@ -554,9 +548,7 @@ plt.title("Cross-Section of UnstructuredGrid")
 
 # +
 # load a modflow-6 freyberg simulation
-sim = flopy.mf6.MFSimulation.load(
-    sim_ws=spth6, verbosity_level=0, exe_name=mf6_exe
-)
+sim = flopy.mf6.MFSimulation.load(sim_ws=spth6, verbosity_level=0, exe_name=mf6_exe)
 
 # get a model object from the simulation
 ml = sim.get_model("freyberg")
@@ -679,9 +671,7 @@ labels = ["top", "botm", "thickness"]
 # plot arrays
 for ix, ax in enumerate(axs):
     pmv = flopy.plot.PlotMapView(modelgrid=modelgrid, ax=ax)
-    pc = pmv.plot_array(
-        arrays[ix], masked_values=[1e30], vmin=0, vmax=35, alpha=0.5
-    )
+    pc = pmv.plot_array(arrays[ix], masked_values=[1e30], vmin=0, vmax=35, alpha=0.5)
     pmv.plot_grid()
     pmv.plot_inactive()
     ax.set_title(f"Modelgrid: {labels[ix]}")
@@ -818,9 +808,7 @@ ml.remove_package("wel_0")
 
 # create a mf6 WEL package and add it to the existing model
 stress_period_data = {0: pdata}
-wel = flopy.mf6.modflow.ModflowGwfwel(
-    ml, stress_period_data=stress_period_data
-)
+wel = flopy.mf6.modflow.ModflowGwfwel(ml, stress_period_data=stress_period_data)
 
 # plot the locations from the new WEL package on the modelgrid
 fig, ax = plt.subplots(figsize=(10, 10), subplot_kw={"aspect": "equal"})

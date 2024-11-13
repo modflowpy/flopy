@@ -376,7 +376,7 @@ class ModflowLak(Package):
         if self.dis.steady[0]:
             if stage_range.shape != (nlakes, 2):
                 raise Exception(
-                    "stages shape should be ({},2) but is only " "{}.".format(
+                    "stages shape should be ({},2) but is only {}.".format(
                         nlakes, stage_range.shape
                     )
                 )
@@ -514,15 +514,9 @@ class ModflowLak(Package):
             if self.tabdata:
                 ipos.append(5)
                 t.append(self.iunit_tab[n])
-            f.write(
-                write_fixed_var(
-                    t, ipos=ipos, free=self.parent.free_format_input
-                )
-            )
+            f.write(write_fixed_var(t, ipos=ipos, free=self.parent.free_format_input))
 
-        ds8_keys = (
-            list(self.sill_data.keys()) if self.sill_data is not None else []
-        )
+        ds8_keys = list(self.sill_data.keys()) if self.sill_data is not None else []
         ds9_keys = list(self.flux_data.keys())
         nper = self.dis.steady.shape[0]
         for kper in range(nper):
@@ -541,9 +535,7 @@ class ModflowLak(Package):
             t = [itmp, itmp2, tmplwrt]
             comment = f"Stress period {kper + 1}"
             f.write(
-                write_fixed_var(
-                    t, free=self.parent.free_format_input, comment=comment
-                )
+                write_fixed_var(t, free=self.parent.free_format_input, comment=comment)
             )
 
             if itmp > 0:
@@ -730,9 +722,7 @@ class ModflowLak(Package):
         lwrt = []
         for iper in range(nper):
             if model.verbose:
-                print(
-                    f"   reading lak dataset 4 - for stress period {iper + 1}"
-                )
+                print(f"   reading lak dataset 4 - for stress period {iper + 1}")
             line = f.readline().rstrip()
             if model.array_free_format:
                 t = line.split()
@@ -743,17 +733,13 @@ class ModflowLak(Package):
 
             if itmp > 0:
                 if model.verbose:
-                    print(
-                        f"   reading lak dataset 5 - for stress period {iper + 1}"
-                    )
+                    print(f"   reading lak dataset 5 - for stress period {iper + 1}")
                 name = f"LKARR_StressPeriod_{iper}"
                 lakarr = Util3d.load(
                     f, model, (nlay, nrow, ncol), np.int32, name, ext_unit_dict
                 )
                 if model.verbose:
-                    print(
-                        f"   reading lak dataset 6 - for stress period {iper + 1}"
-                    )
+                    print(f"   reading lak dataset 6 - for stress period {iper + 1}")
                 name = f"BDLKNC_StressPeriod_{iper}"
                 bdlknc = Util3d.load(
                     f,
@@ -768,9 +754,7 @@ class ModflowLak(Package):
                 lake_lknc[iper] = bdlknc
 
                 if model.verbose:
-                    print(
-                        f"   reading lak dataset 7 - for stress period {iper + 1}"
-                    )
+                    print(f"   reading lak dataset 7 - for stress period {iper + 1}")
                 line = f.readline().rstrip()
                 t = line.split()
                 nslms = int(t[0])
@@ -803,9 +787,7 @@ class ModflowLak(Package):
                     sill_data[iper] = ds8
             if itmp1 >= 0:
                 if model.verbose:
-                    print(
-                        f"   reading lak dataset 9 - for stress period {iper + 1}"
-                    )
+                    print(f"   reading lak dataset 9 - for stress period {iper + 1}")
                 ds9 = {}
                 for n in range(nlakes):
                     line = f.readline().rstrip()
@@ -853,9 +835,7 @@ class ModflowLak(Package):
                 ext_unit_dict, filetype=ModflowLak._ftype()
             )
             if ipakcb > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=ipakcb
-                )
+                iu, filenames[1] = model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
                 model.add_pop_key_list(ipakcb)
 
             ipos = 2

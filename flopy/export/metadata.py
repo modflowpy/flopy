@@ -64,20 +64,14 @@ class acdd:
         self.naming_authority = "ScienceBase"  # org. that provides the id
         # Well-behaved generic netCDF applications should append a line containing:
         # date, time of day, user name, program name and command arguments.
-        self.source = (
-            model.model_ws
-        )  # The method of production of the original data.
+        self.source = model.model_ws  # The method of production of the original data.
         # If it was model-generated, source should name the model and its version.
         # This attribute is defined in the CF Conventions.
         self.acknowledgement = self._get_xml_attribute("datacred")
-        self.date_created = self.sb["provenance"]["linkProcess"].get(
-            "dateCreated"
-        )
+        self.date_created = self.sb["provenance"]["linkProcess"].get("dateCreated")
         self.creator_name = self.creator.get("name")
         self.creator_email = self.creator.get("email")
-        self.creator_institution = self.creator["organization"].get(
-            "displayText"
-        )
+        self.creator_institution = self.creator["organization"].get("displayText")
         self.institution = (
             self.creator_institution
         )  # also in CF convention for global attributes
@@ -87,9 +81,7 @@ class acdd:
             for d in self.sb["contacts"]
             if "publisher" in d.get("type").lower()
         ][0]
-        self.publisher_email = self.sb["provenance"]["linkProcess"].get(
-            "processedBy"
-        )
+        self.publisher_email = self.sb["provenance"]["linkProcess"].get("processedBy")
         self.publisher_url = "https://www2.usgs.gov/water/"  # self.sb['provenance']['linkProcess'].get('linkReference')
         self.geospatial_bounds_crs = "EPSG:4326"
         self.geospatial_lat_min = self.bounds.get("minY")
@@ -122,9 +114,7 @@ class acdd:
     @property
     def creator(self):
         return [
-            d
-            for d in self.sb["contacts"]
-            if "point of contact" in d["type"].lower()
+            d for d in self.sb["contacts"] if "point of contact" in d["type"].lower()
         ][0]
 
     @property
@@ -172,9 +162,7 @@ class acdd:
         """
         r = [self.citation]
         links = [
-            d.get("uri")
-            for d in self.sb["webLinks"]
-            if "link" in d.get("type").lower()
+            d.get("uri") for d in self.sb["webLinks"] if "link" in d.get("type").lower()
         ]
         return r + links
 
@@ -190,9 +178,7 @@ class acdd:
         l = self.sb["dates"]
         tc = {}
         for t in ["start", "end"]:
-            tc[t] = [d.get("dateString") for d in l if t in d["type"].lower()][
-                0
-            ]
+            tc[t] = [d.get("dateString") for d in l if t in d["type"].lower()][0]
         if not np.all(self.model_time.steady_state) and pd is not None:
             # replace with times from model reference
             tc["start"] = self.model_time.start_datetime

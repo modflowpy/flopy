@@ -87,9 +87,7 @@ def test_rotation():
 
     mg2 = StructuredGrid(delc=m.dis.delc.array, delr=m.dis.delr.array)
     mg2._angrot = -45.0
-    mg2.set_coord_info(
-        mg2._xul_to_xll(xul), mg2._yul_to_yll(yul), angrot=-45.0
-    )
+    mg2.set_coord_info(mg2._xul_to_xll(xul), mg2._yul_to_yll(yul), angrot=-45.0)
 
     xll2, yll2 = mg2.xoffset, mg2.yoffset
     assert np.abs(mg2.xvertices[0, 0] - xul) < 1e-4
@@ -178,9 +176,7 @@ def test_get_lrc_get_node():
     nlay, nrow, ncol = 3, 4, 5
     nnodes = nlay * nrow * ncol
     ml = Modflow()
-    dis = ModflowDis(
-        ml, nlay=nlay, nrow=nrow, ncol=ncol, top=50, botm=[0, -1, -2]
-    )
+    dis = ModflowDis(ml, nlay=nlay, nrow=nrow, ncol=ncol, top=50, botm=[0, -1, -2])
     nodes = list(range(nnodes))
     indices = np.indices((nlay, nrow, ncol))
     layers = indices[0].flatten()
@@ -236,9 +232,7 @@ def test_get_rc_from_node_coordinates():
 
 
 def load_verts(fname):
-    verts = np.genfromtxt(
-        fname, dtype=[int, float, float], names=["iv", "x", "y"]
-    )
+    verts = np.genfromtxt(fname, dtype=[int, float, float], names=["iv", "x", "y"])
     verts["iv"] -= 1  # zero based
     return verts
 
@@ -303,16 +297,12 @@ def test_intersection(dis_model, disv_model):
         else:
             print("In real_world coordinates:")
         try:
-            row, col = dis_model.modelgrid.intersect(
-                x, y, local=local, forgive=forgive
-            )
+            row, col = dis_model.modelgrid.intersect(x, y, local=local, forgive=forgive)
             cell2d_disv = disv_model.modelgrid.intersect(
                 x, y, local=local, forgive=forgive
             )
         except Exception as e:
-            if not forgive and any(
-                ["outside of the model area" in k for k in e.args]
-            ):
+            if not forgive and any(["outside of the model area" in k for k in e.args]):
                 pass
             else:  # should be forgiving x,y out of grid
                 raise e
@@ -352,9 +342,7 @@ def test_structured_xyz_intersect(example_data_path):
 
 
 def test_vertex_xyz_intersect(example_data_path):
-    sim = MFSimulation.load(
-        sim_ws=example_data_path / "mf6" / "test003_gwfs_disv"
-    )
+    sim = MFSimulation.load(sim_ws=example_data_path / "mf6" / "test003_gwfs_disv")
     ml = sim.get_model(list(sim.model_names)[0])
     mg = ml.modelgrid
 
@@ -457,21 +445,16 @@ def test_structured_from_gridspec(example_data_path, spc_file):
     ), errmsg
 
     ncpl = modelgrid.ncol * modelgrid.nrow
-    assert (
-        modelgrid.ncpl == ncpl
-    ), f"ncpl ({modelgrid.ncpl}) does not equal {ncpl}"
+    assert modelgrid.ncpl == ncpl, f"ncpl ({modelgrid.ncpl}) does not equal {ncpl}"
 
     nvert = modelgrid.nvert
     iverts = modelgrid.iverts
     maxvertex = max([max(sublist[1:]) for sublist in iverts])
-    assert (
-        maxvertex + 1 == nvert
-    ), f"nvert ({maxvertex + 1}) does not equal {nvert}"
+    assert maxvertex + 1 == nvert, f"nvert ({maxvertex + 1}) does not equal {nvert}"
     verts = modelgrid.verts
-    assert nvert == verts.shape[0], (
-        f"number of vertex (x, y) pairs ({verts.shape[0]}) "
-        f"does not equal {nvert}"
-    )
+    assert (
+        nvert == verts.shape[0]
+    ), f"number of vertex (x, y) pairs ({verts.shape[0]}) does not equal {nvert}"
 
 
 @requires_pkg("shapely")
@@ -485,17 +468,13 @@ def test_unstructured_from_argus_mesh(example_data_path):
         print(f"  Number of nodes: {g.nnodes}")
 
 
-def test_unstructured_from_verts_and_iverts(
-    function_tmpdir, example_data_path
-):
+def test_unstructured_from_verts_and_iverts(function_tmpdir, example_data_path):
     datapth = example_data_path / "unstructured"
 
     # simple functions to load vertices and incidence lists
     def load_verts(fname):
         print(f"Loading vertices from: {fname}")
-        verts = np.genfromtxt(
-            fname, dtype=[int, float, float], names=["iv", "x", "y"]
-        )
+        verts = np.genfromtxt(fname, dtype=[int, float, float], names=["iv", "x", "y"])
         verts["iv"] -= 1  # zero based
         return verts
 
@@ -553,8 +532,7 @@ def unstructured_from_gridspec_driver(example_data_path, gsf_file):
 
         # check vertices
         expected_verts = [
-            (float(s[0]), float(s[1]), float(s[2]))
-            for s in split[3 : (3 + nverts)]
+            (float(s[0]), float(s[1]), float(s[2])) for s in split[3 : (3 + nverts)]
         ]
         for i, ev in enumerate(expected_verts[:10]):
             assert grid.verts[i][0] == ev[0]
@@ -608,9 +586,7 @@ def test_unstructured_from_gridspec_comments(example_data_path):
         pytest.param(4269, None, marks=pytest.mark.xfail),
     ),
 )
-def test_grid_crs(
-    minimal_unstructured_grid_info, crs, expected_srs, function_tmpdir
-):
+def test_grid_crs(minimal_unstructured_grid_info, crs, expected_srs, function_tmpdir):
     expected_epsg = None
     if match := re.findall(r"epsg:([\d]+)", expected_srs or "", re.IGNORECASE):
         expected_epsg = int(match[0])
@@ -636,9 +612,7 @@ def test_grid_crs(
     do_checks(VertexGrid(vertices=d["vertices"], crs=crs))
 
     # only check deprecations if pyproj is available
-    pyproj_avail_context = (
-        pytest.deprecated_call() if HAS_PYPROJ else nullcontext()
-    )
+    pyproj_avail_context = pytest.deprecated_call() if HAS_PYPROJ else nullcontext()
 
     # test deprecated 'epsg' parameter
     if isinstance(crs, int):
@@ -722,9 +696,7 @@ def test_grid_set_crs(crs, expected_srs, function_tmpdir):
     do_checks(sg, exp_srs="EPSG:26915", exp_epsg=26915)
 
     # only check deprecations if pyproj is available
-    pyproj_avail_context = (
-        pytest.deprecated_call() if HAS_PYPROJ else nullcontext()
-    )
+    pyproj_avail_context = pytest.deprecated_call() if HAS_PYPROJ else nullcontext()
 
     # test deprecated 'epsg' parameter
     if isinstance(crs, int):
@@ -923,9 +895,7 @@ def test_tocvfd3():
     bt = -100.0 * np.ones((nlay, nrow, ncol))
     idomain = np.ones((nlay, nrow, ncol))
     idomain[:, 2:5, 2:5] = 0
-    sg1 = StructuredGrid(
-        delr=delr, delc=delc, top=tp, botm=bt, idomain=idomain
-    )
+    sg1 = StructuredGrid(delr=delr, delc=delc, top=tp, botm=bt, idomain=idomain)
     # inner grid
     nlay = 1
     nrow = ncol = 9
@@ -979,9 +949,7 @@ def test_area_centroid_polygon():
     xc, yc = centroid_of_polygon(pts)
     result = np.array([xc, yc])
     answer = np.array((685055.1035824707, 6295543.12059913))
-    assert np.allclose(
-        result, answer
-    ), "cvfdutil centroid of polygon incorrect"
+    assert np.allclose(result, answer), "cvfdutil centroid of polygon incorrect"
     x, y = list(zip(*pts))
     result = area_of_polygon(x, y)
     answer = 11.228131838368032
@@ -1035,9 +1003,7 @@ def test_unstructured_minimal_grid_ctor(minimal_unstructured_grid_info):
         [(2.0, 1), (2.0, 0.0)],
         [(2.0, 0), (1.0, 0.0)],
     ]
-    assert (
-        g.grid_lines == grid_lines
-    ), f"\n{g.grid_lines} \n /=   \n{grid_lines}"
+    assert g.grid_lines == grid_lines, f"\n{g.grid_lines} \n /=   \n{grid_lines}"
     assert g.extent == (0, 2, 0, 1)
     xv, yv, zv = g.xyzvertices
     assert xv == [[0, 1, 1, 0], [1, 2, 2, 1]]
@@ -1082,9 +1048,7 @@ def test_unstructured_complete_grid_ctor(minimal_unstructured_grid_info):
         ],
     }
     assert isinstance(g.grid_lines, dict)
-    assert (
-        g.grid_lines == grid_lines
-    ), f"\n{g.grid_lines} \n /=   \n{grid_lines}"
+    assert g.grid_lines == grid_lines, f"\n{g.grid_lines} \n /=   \n{grid_lines}"
     assert g.extent == (0, 2, 0, 1)
     xv, yv, zv = g.xyzvertices
     assert xv == [[0, 1, 1, 0], [1, 2, 2, 1]]
@@ -1172,11 +1136,7 @@ def test_voronoi_vertex_grid(function_tmpdir):
     ),
 )
 def test_voronoi_grid(request, function_tmpdir, grid_info):
-    name = (
-        request.node.name.replace("/", "_")
-        .replace("\\", "_")
-        .replace(":", "_")
-    )
+    name = request.node.name.replace("/", "_").replace("\\", "_").replace(":", "_")
     ncpl, vor, gridprops, grid = grid_info
 
     # TODO: debug off-by-3 issue
@@ -1228,9 +1188,7 @@ def test_structured_thickness(structured_grid):
     thickness = structured_grid.cell_thickness
     assert np.allclose(thickness, 5.0), "thicknesses != 5."
 
-    sat_thick = structured_grid.saturated_thickness(
-        structured_grid.botm + 10.0
-    )
+    sat_thick = structured_grid.saturated_thickness(structured_grid.botm + 10.0)
     assert np.allclose(sat_thick, thickness), "saturated thicknesses != 5."
 
     sat_thick = structured_grid.saturated_thickness(structured_grid.botm + 5.0)
@@ -1242,9 +1200,7 @@ def test_structured_thickness(structured_grid):
     sat_thick = structured_grid.saturated_thickness(structured_grid.botm)
     assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
 
-    sat_thick = structured_grid.saturated_thickness(
-        structured_grid.botm - 100.0
-    )
+    sat_thick = structured_grid.saturated_thickness(structured_grid.botm - 100.0)
     assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
 
 
@@ -1272,27 +1228,19 @@ def test_unstructured_thickness(unstructured_grid):
     thickness = unstructured_grid.cell_thickness
     assert np.allclose(thickness, 5.0), "thicknesses != 5."
 
-    sat_thick = unstructured_grid.saturated_thickness(
-        unstructured_grid.botm + 10.0
-    )
+    sat_thick = unstructured_grid.saturated_thickness(unstructured_grid.botm + 10.0)
     assert np.allclose(sat_thick, thickness), "saturated thicknesses != 5."
 
-    sat_thick = unstructured_grid.saturated_thickness(
-        unstructured_grid.botm + 5.0
-    )
+    sat_thick = unstructured_grid.saturated_thickness(unstructured_grid.botm + 5.0)
     assert np.allclose(sat_thick, thickness), "saturated thicknesses != 5."
 
-    sat_thick = unstructured_grid.saturated_thickness(
-        unstructured_grid.botm + 2.5
-    )
+    sat_thick = unstructured_grid.saturated_thickness(unstructured_grid.botm + 2.5)
     assert np.allclose(sat_thick, 2.5), "saturated thicknesses != 2.5"
 
     sat_thick = unstructured_grid.saturated_thickness(unstructured_grid.botm)
     assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
 
-    sat_thick = unstructured_grid.saturated_thickness(
-        unstructured_grid.botm - 100.0
-    )
+    sat_thick = unstructured_grid.saturated_thickness(unstructured_grid.botm - 100.0)
     assert np.allclose(sat_thick, 0.0), "saturated thicknesses != 0."
 
 
@@ -1316,9 +1264,7 @@ def test_unstructured_neighbors(unstructured_grid):
     rook_neighbors = unstructured_grid.neighbors(5)
     assert np.allclose(rook_neighbors, [0, 10, 1, 6, 11, 2, 7, 12])
 
-    queen_neighbors = unstructured_grid.neighbors(
-        5, method="queen", reset=True
-    )
+    queen_neighbors = unstructured_grid.neighbors(5, method="queen", reset=True)
     assert np.allclose(queen_neighbors, [0, 10, 1, 6, 11, 2, 3, 7, 8, 12, 13])
 
 
@@ -1331,9 +1277,7 @@ def test_structured_ncb_thickness():
     ), "grid cell_thickness attribute returns incorrect shape"
 
     thickness = grid.remove_confining_beds(grid.cell_thickness)
-    assert (
-        thickness.shape == grid.shape
-    ), "quasi3d confining beds not properly removed"
+    assert thickness.shape == grid.shape, "quasi3d confining beds not properly removed"
 
     sat_thick = grid.saturated_thickness(grid.cell_thickness)
     assert (
@@ -1447,9 +1391,7 @@ def test_geo_dataframe(structured_grid, vertex_grid, unstructured_grid):
             cv = grid.get_cell_vertices(node)
             for coord in coords:
                 if coord not in cv:
-                    raise AssertionError(
-                        f"Cell vertices incorrect for node={node}"
-                    )
+                    raise AssertionError(f"Cell vertices incorrect for node={node}")
 
 
 def test_unstructured_iverts_cleanup():
@@ -1508,6 +1450,4 @@ def test_unstructured_iverts_cleanup():
     clean_ugrid = ugrid.clean_iverts()
 
     if clean_ugrid.nvert != cleaned_vert_num:
-        raise AssertionError(
-            "Improper number of vertices for cleaned 'shared' iverts"
-        )
+        raise AssertionError("Improper number of vertices for cleaned 'shared' iverts")

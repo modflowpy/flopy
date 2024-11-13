@@ -16,9 +16,7 @@ def swi_path(example_data_path):
 @requires_exe("mf2005")
 @pytest.mark.slow
 @pytest.mark.regression
-@pytest.mark.parametrize(
-    "namfile", ["swiex1.nam", "swiex2_strat.nam", "swiex3.nam"]
-)
+@pytest.mark.parametrize("namfile", ["swiex1.nam", "swiex2_strat.nam", "swiex3.nam"])
 def test_mf2005swi2(function_tmpdir, swi_path, namfile):
     name = namfile.replace(".nam", "")
     ws = function_tmpdir / "ws"
@@ -47,8 +45,6 @@ def test_mf2005swi2(function_tmpdir, swi_path, namfile):
     fn1 = os.path.join(model_ws2, namfile)
 
     fsum = os.path.join(ws, f"{os.path.splitext(namfile)[0]}.budget.out")
-    success = compare_budget(
-        fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
-    )
+    success = compare_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum)
 
     assert success, "budget comparison failure"

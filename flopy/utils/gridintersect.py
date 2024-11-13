@@ -220,10 +220,7 @@ class GridIntersect:
         shp = gu.shapely
 
         if gu.shapetype in ("Point", "MultiPoint"):
-            if (
-                self.method == "structured"
-                and self.mfgrid.grid_type == "structured"
-            ):
+            if self.method == "structured" and self.mfgrid.grid_type == "structured":
                 rec = self._intersect_point_structured(
                     shp, return_all_intersections=return_all_intersections
                 )
@@ -234,10 +231,7 @@ class GridIntersect:
                     return_all_intersections=return_all_intersections,
                 )
         elif gu.shapetype in ("LineString", "MultiLineString"):
-            if (
-                self.method == "structured"
-                and self.mfgrid.grid_type == "structured"
-            ):
+            if self.method == "structured" and self.mfgrid.grid_type == "structured":
                 rec = self._intersect_linestring_structured(
                     shp,
                     keepzerolengths,
@@ -251,10 +245,7 @@ class GridIntersect:
                     return_all_intersections=return_all_intersections,
                 )
         elif gu.shapetype in ("Polygon", "MultiPolygon"):
-            if (
-                self.method == "structured"
-                and self.mfgrid.grid_type == "structured"
-            ):
+            if self.method == "structured" and self.mfgrid.grid_type == "structured":
                 rec = self._intersect_polygon_structured(
                     shp,
                     contains_centroid=contains_centroid,
@@ -378,9 +369,7 @@ class GridIntersect:
                     list(
                         zip(
                             *self.mfgrid.get_local_coords(
-                                *np.array(
-                                    self.mfgrid.get_cell_vertices(node)
-                                ).T
+                                *np.array(self.mfgrid.get_cell_vertices(node)).T
                             )
                         )
                     )
@@ -566,8 +555,7 @@ class GridIntersect:
             #     arr=ixresult[mask_gc],
             # )
             ixresult[mask_gc] = [
-                parse_linestrings_in_geom_collection(gc)
-                for gc in ixresult[mask_gc]
+                parse_linestrings_in_geom_collection(gc) for gc in ixresult[mask_gc]
             ]
 
         if not return_all_intersections:
@@ -589,9 +577,7 @@ class GridIntersect:
 
                 # masks to obtain overlapping intersection result
                 mask_self = idxs == i  # select not self
-                mask_bnds_empty = shapely.is_empty(
-                    isect
-                )  # select boundary ix result
+                mask_bnds_empty = shapely.is_empty(isect)  # select boundary ix result
                 mask_overlap = np.isin(shapely.get_type_id(isect), all_ids)
 
                 # calculate difference between self and overlapping result
@@ -673,9 +659,9 @@ class GridIntersect:
         # check centroids
         if contains_centroid:
             centroids = shapely.centroid(self.geoms[qcellids])
-            mask_centroid = shapely.contains(
+            mask_centroid = shapely.contains(ixresult, centroids) | shapely.touches(
                 ixresult, centroids
-            ) | shapely.touches(ixresult, centroids)
+            )
             ixresult = ixresult[mask_centroid]
             qcellids = qcellids[mask_centroid]
 
@@ -861,9 +847,7 @@ class GridIntersect:
                     tempnodes.append(node)
                     tempshapes.append(ixs)
                 else:
-                    tempshapes[-1] = shapely_geo.MultiPoint(
-                        [tempshapes[-1], ixs]
-                    )
+                    tempshapes[-1] = shapely_geo.MultiPoint([tempshapes[-1], ixs])
 
             ixshapes = tempshapes
             nodelist = tempnodes
@@ -929,9 +913,7 @@ class GridIntersect:
                 shp, xoff=-self.mfgrid.xoffset, yoff=-self.mfgrid.yoffset
             )
         if self.mfgrid.angrot != 0.0 and not self.local:
-            shp = affinity_loc.rotate(
-                shp, -self.mfgrid.angrot, origin=(0.0, 0.0)
-            )
+            shp = affinity_loc.rotate(shp, -self.mfgrid.angrot, origin=(0.0, 0.0))
 
         # clip line to mfgrid bbox
         lineclip = shp.intersection(pl)
@@ -1042,9 +1024,7 @@ class GridIntersect:
                 templengths.append(
                     sum([l for l, i in zip(lengths, nodelist) if i == inode])
                 )
-                tempverts.append(
-                    [v for v, i in zip(vertices, nodelist) if i == inode]
-                )
+                tempverts.append([v for v, i in zip(vertices, nodelist) if i == inode])
                 tempshapes.append(
                     [ix for ix, i in zip(ixshapes, nodelist) if i == inode]
                 )
@@ -1197,9 +1177,7 @@ class GridIntersect:
 
         return nodelist, lengths, vertices, ixshapes
 
-    def _check_adjacent_cells_intersecting_line(
-        self, linestring, i_j, nodelist
-    ):
+    def _check_adjacent_cells_intersecting_line(self, linestring, i_j, nodelist):
         """helper method that follows a line through a structured grid.
 
         .. deprecated:: 3.9.0
@@ -1509,9 +1487,7 @@ class GridIntersect:
                 shp, xoff=-self.mfgrid.xoffset, yoff=-self.mfgrid.yoffset
             )
         if self.mfgrid.angrot != 0.0 and not self.local:
-            shp = affinity_loc.rotate(
-                shp, -self.mfgrid.angrot, origin=(0.0, 0.0)
-            )
+            shp = affinity_loc.rotate(shp, -self.mfgrid.angrot, origin=(0.0, 0.0))
 
         # use the bounds of the polygon to restrict the cell search
         minx, miny, maxx, maxy = shp.bounds
@@ -1559,9 +1535,7 @@ class GridIntersect:
                 # option: min_area_fraction, only store if intersected area
                 # is larger than fraction * cell_area
                 if min_area_fraction:
-                    if intersect.area < (
-                        min_area_fraction * cell_polygon.area
-                    ):
+                    if intersect.area < (min_area_fraction * cell_polygon.area):
                         continue
 
                 nodelist.append((i, j))
@@ -1577,13 +1551,9 @@ class GridIntersect:
                     v_realworld = []
                     if intersect.geom_type.startswith("Multi"):
                         for ipoly in intersect.geoms:
-                            v_realworld += (
-                                self._transform_geo_interface_polygon(ipoly)
-                            )
+                            v_realworld += self._transform_geo_interface_polygon(ipoly)
                     else:
-                        v_realworld += self._transform_geo_interface_polygon(
-                            intersect
-                        )
+                        v_realworld += self._transform_geo_interface_polygon(intersect)
                     intersect_realworld = affinity_loc.rotate(
                         intersect, self.mfgrid.angrot, origin=(0.0, 0.0)
                     )
@@ -1727,9 +1697,7 @@ class GridIntersect:
 
         # allow for result to be geodataframe
         geoms = (
-            result.ixshapes
-            if isinstance(result, np.rec.recarray)
-            else result.geometry
+            result.ixshapes if isinstance(result, np.rec.recarray) else result.geometry
         )
         for i, ishp in enumerate(geoms):
             if hasattr(ishp, "geoms"):
@@ -1789,9 +1757,7 @@ class GridIntersect:
 
         # allow for result to be geodataframe
         geoms = (
-            result.ixshapes
-            if isinstance(result, np.rec.recarray)
-            else result.geometry
+            result.ixshapes if isinstance(result, np.rec.recarray) else result.geometry
         )
         for i, ishp in enumerate(geoms):
             if not specified_color:
@@ -1838,9 +1804,7 @@ class GridIntersect:
         x, y = [], []
         # allow for result to be geodataframe
         geoms = (
-            result.ixshapes
-            if isinstance(result, np.rec.recarray)
-            else result.geometry
+            result.ixshapes if isinstance(result, np.rec.recarray) else result.geometry
         )
         geo_coll = shapely_geo.GeometryCollection(list(geoms))
         collection = parse_shapely_ix_result([], geo_coll, ["Point"])
@@ -1851,9 +1815,7 @@ class GridIntersect:
 
         return ax
 
-    def plot_intersection_result(
-        self, result, plot_grid=True, ax=None, **kwargs
-    ):
+    def plot_intersection_result(self, result, plot_grid=True, ax=None, **kwargs):
         """Plot intersection result.
 
         Parameters
@@ -2049,10 +2011,7 @@ def _polygon_patch(polygon, **kwargs):
     patch = PathPatch(
         Path.make_compound_path(
             Path(np.asarray(polygon.exterior.coords)[:, :2]),
-            *[
-                Path(np.asarray(ring.coords)[:, :2])
-                for ring in polygon.interiors
-            ],
+            *[Path(np.asarray(ring.coords)[:, :2]) for ring in polygon.interiors],
         ),
         **kwargs,
     )

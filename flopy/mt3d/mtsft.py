@@ -445,9 +445,7 @@ class Mt3dSft(Package):
         return
 
     @classmethod
-    def load(
-        cls, f, model, nsfinit=None, nper=None, ncomp=None, ext_unit_dict=None
-    ):
+    def load(cls, f, model, nsfinit=None, nper=None, ncomp=None, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -606,15 +604,9 @@ class Mt3dSft(Package):
             print("   loading COLDSF...")
 
             if model.free_format:
-                print(
-                    "   Using MODFLOW style array reader utilities to "
-                    "read COLDSF"
-                )
+                print("   Using MODFLOW style array reader utilities to read COLDSF")
             elif model.array_format == "mt3d":
-                print(
-                    "   Using historic MT3DMS array reader utilities to "
-                    "read COLDSF"
-                )
+                print("   Using historic MT3DMS array reader utilities to read COLDSF")
 
         coldsf = Util2d.load(
             f,
@@ -646,15 +638,9 @@ class Mt3dSft(Package):
         # Item 4 (DISPSF(NRCH)) Reach-by-reach dispersion
         if model.verbose:
             if model.free_format:
-                print(
-                    "   Using MODFLOW style array reader utilities to "
-                    "read DISPSF"
-                )
+                print("   Using MODFLOW style array reader utilities to read DISPSF")
             elif model.array_format == "mt3d":
-                print(
-                    "   Using historic MT3DMS array reader utilities to "
-                    "read DISPSF"
-                )
+                print("   Using historic MT3DMS array reader utilities to read DISPSF")
 
         dispsf = Util2d.load(
             f,

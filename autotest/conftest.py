@@ -156,7 +156,5 @@ def pytest_report_header(config):
         if installed:
             lines.append(f"{optional} packages: {', '.join(installed)}")
         if not_found:
-            lines.append(
-                f"{optional} packages not found: {', '.join(not_found)}"
-            )
+            lines.append(f"{optional} packages not found: {', '.join(not_found)}")
     return "\n".join(lines)

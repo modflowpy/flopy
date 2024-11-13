@@ -315,16 +315,12 @@ class ModflowPar:
                         if mltarr.lower() == "none":
                             mult = np.ones(shape, dtype=dtype)
                         else:
-                            mult = model.mfpar.mult.mult_dict[mltarr.lower()][
-                                :, :
-                            ]
+                            mult = model.mfpar.mult.mult_dict[mltarr.lower()][:, :]
                         if zonarr.lower() == "all":
                             cluster_data = pv * mult
                         else:
                             mult_save = np.copy(mult)
-                            za = model.mfpar.zone.zone_dict[zonarr.lower()][
-                                :, :
-                            ]
+                            za = model.mfpar.zone.zone_dict[zonarr.lower()][:, :]
                             # build a multiplier for all of the izones
                             mult = np.zeros(shape, dtype=dtype)
                             for iz in izones:

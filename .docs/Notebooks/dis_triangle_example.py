@@ -198,9 +198,7 @@ name = "mf"
 sim = flopy.mf6.MFSimulation(
     sim_name=name, version="mf6", exe_name="mf6", sim_ws=workspace
 )
-tdis = flopy.mf6.ModflowTdis(
-    sim, time_units="DAYS", perioddata=[[1.0, 1, 1.0]]
-)
+tdis = flopy.mf6.ModflowTdis(sim, time_units="DAYS", perioddata=[[1.0, 1, 1.0]])
 gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
 ims = flopy.mf6.ModflowIms(
     sim,
@@ -227,9 +225,7 @@ dis = flopy.mf6.ModflowGwfdisv(
     vertices=vertices,
     cell2d=cell2d,
 )
-npf = flopy.mf6.ModflowGwfnpf(
-    gwf, xt3doptions=[(True)], save_specific_discharge=None
-)
+npf = flopy.mf6.ModflowGwfnpf(gwf, xt3doptions=[(True)], save_specific_discharge=None)
 ic = flopy.mf6.ModflowGwfic(gwf)
 
 

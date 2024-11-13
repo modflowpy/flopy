@@ -130,9 +130,9 @@ lrchc[:, 2] = np.arange(0, 30)
 
 # Define SWI2 data.
 
-zini = np.hstack(
-    (-9 * np.ones(24), np.arange(-9, -50, -0.5), -50 * np.ones(94))
-)[np.newaxis, :]
+zini = np.hstack((-9 * np.ones(24), np.arange(-9, -50, -0.5), -50 * np.ones(94)))[
+    np.newaxis, :
+]
 iso = np.zeros((1, 200), dtype=int)
 iso[:, :30] = -2
 
@@ -247,9 +247,7 @@ p = (zr < -9.0) & (zr > -50.0)
 ax.plot(x[p], zr[p], color=cc[0], linewidth=lw, drawstyle="steps-mid")
 #
 for i in range(5):
-    zt = MergeData(
-        ncol, [zeta[i, 0, 0, :], zeta[i, 1, 0, :], zeta[i, 2, 0, :]], zedge
-    )
+    zt = MergeData(ncol, [zeta[i, 0, 0, :], zeta[i, 1, 0, :], zeta[i, 2, 0, :]], zedge)
     dr = zt.copy()
     ax.plot(x, dr, color=cc[i + 1], linewidth=lw, drawstyle="steps-mid")
 # Manufacture a legend bar
@@ -278,9 +276,7 @@ ax.fill(
 )
 #
 for i in range(4, 10):
-    zt = MergeData(
-        ncol, [zeta[i, 0, 0, :], zeta[i, 1, 0, :], zeta[i, 2, 0, :]], zedge
-    )
+    zt = MergeData(ncol, [zeta[i, 0, 0, :], zeta[i, 1, 0, :], zeta[i, 2, 0, :]], zedge)
     dr = zt.copy()
     ax.plot(x, dr, color=cc[i + 1], linewidth=lw, drawstyle="steps-mid")
 # Manufacture a legend bar
@@ -308,9 +304,7 @@ ax.fill(
     ec=[0.8, 0.8, 0.8],
 )
 #
-zt = MergeData(
-    ncol, [zeta[4, 0, 0, :], zeta[4, 1, 0, :], zeta[4, 2, 0, :]], zedge
-)
+zt = MergeData(ncol, [zeta[4, 0, 0, :], zeta[4, 1, 0, :], zeta[4, 2, 0, :]], zedge)
 ax.plot(
     x,
     zt,

@@ -79,9 +79,7 @@ class ParticleTrackFile(ABC):
         """
         return self._data["time"].max()
 
-    def get_data(
-        self, partid=0, totim=None, ge=True, minimal=False
-    ) -> np.recarray:
+    def get_data(self, partid=0, totim=None, ge=True, minimal=False) -> np.recarray:
         """
         Get a single particle track, optionally filtering by time.
 
@@ -153,9 +151,7 @@ class ParticleTrackFile(ABC):
                 data = data[idx]
         return [data[data["particleid"] == i] for i in nids]
 
-    def get_destination_data(
-        self, dest_cells, to_recarray=True
-    ) -> np.recarray:
+    def get_destination_data(self, dest_cells, to_recarray=True) -> np.recarray:
         """
         Get data for set of destination cells.
 
@@ -318,9 +314,7 @@ class ParticleTrackFile(ABC):
                     x, y = geometry.transform(ra.x, ra.y, 0, 0, 0)
                 z = ra.z
                 geoms += [
-                    LineString(
-                        [(x[i - 1], y[i - 1], z[i - 1]), (x[i], y[i], z[i])]
-                    )
+                    LineString([(x[i - 1], y[i - 1], z[i - 1]), (x[i], y[i], z[i])])
                     for i in np.arange(1, (len(ra)))
                 ]
                 sdata += ra[1:].tolist()

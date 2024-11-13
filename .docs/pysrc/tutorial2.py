@@ -108,9 +108,7 @@ for kper in range(nper):
             "print head",
             "print budget",
         ]
-oc = flopy.modflow.ModflowOc(
-    mf, stress_period_data=stress_period_data, compact=True
-)
+oc = flopy.modflow.ModflowOc(mf, stress_period_data=stress_period_data, compact=True)
 
 # Write the model input files
 mf.write_input()

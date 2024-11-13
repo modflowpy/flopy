@@ -128,9 +128,7 @@ class MfUsgGnc(Package):
         if 0 < numalphaj < 6:
             self.numalphaj = numalphaj
         else:
-            raise Exception(
-                "mfgnc: incorrect number of adjacent contributing nodes"
-            )
+            raise Exception("mfgnc: incorrect number of adjacent contributing nodes")
 
         self.i2kn = i2kn
         self.isymgncn = isymgncn
@@ -140,9 +138,7 @@ class MfUsgGnc(Package):
             raise Exception("mfgnc: GNC data must be provided")
 
         if len(gncdata) != self.numgnc:
-            raise Exception(
-                "mfgnc: Length of GNC data must equal number of GNC nodes"
-            )
+            raise Exception("mfgnc: Length of GNC data must equal number of GNC nodes")
 
         self.dtype = MfUsgGnc.get_default_dtype(self.numalphaj, self.iflalphan)
 

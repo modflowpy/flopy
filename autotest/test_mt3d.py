@@ -290,9 +290,7 @@ def test_mf2000_zeroth(function_tmpdir, mf2kmt3d_model_path):
 @pytest.mark.slow
 @flaky(max_runs=3)
 @requires_exe("mfnwt", "mt3dms")
-@excludes_platform(
-    "Windows", ci_only=True
-)  # TODO remove once fixed in MT3D-USGS
+@excludes_platform("Windows", ci_only=True)  # TODO remove once fixed in MT3D-USGS
 def test_mfnwt_CrnkNic(function_tmpdir, mfnwtmt3d_model_path):
     pth = mfnwtmt3d_model_path / "sft_crnkNic"
     namefile = "CrnkNic.nam"
@@ -489,9 +487,7 @@ def test_mt3d_create_woutmfmodel(function_tmpdir):
                     break
 
         assert ipos >= 0, f"'{wrn_msg}' warning message not issued"
-        assert (
-            w[ipos].category == UserWarning
-        ), f"Warning category: {w[0].category}"
+        assert w[ipos].category == UserWarning, f"Warning category: {w[0].category}"
 
     gcg = Mt3dRct(mt)
     rct = Mt3dGcg(mt)
@@ -501,27 +497,13 @@ def test_mt3d_create_woutmfmodel(function_tmpdir):
     mt.write_input()
 
     # confirm that MT3D files exist
-    assert os.path.isfile(
-        os.path.join(model_ws, f"{mt.name}.{btn.extension[0]}")
-    )
-    assert os.path.isfile(
-        os.path.join(model_ws, f"{mt.name}.{adv.extension[0]}")
-    )
-    assert os.path.isfile(
-        os.path.join(model_ws, f"{mt.name}.{dsp.extension[0]}")
-    )
-    assert os.path.isfile(
-        os.path.join(model_ws, f"{mt.name}.{ssm.extension[0]}")
-    )
-    assert os.path.isfile(
-        os.path.join(model_ws, f"{mt.name}.{gcg.extension[0]}")
-    )
-    assert os.path.isfile(
-        os.path.join(model_ws, f"{mt.name}.{rct.extension[0]}")
-    )
-    assert os.path.isfile(
-        os.path.join(model_ws, f"{mt.name}.{tob.extension[0]}")
-    )
+    assert os.path.isfile(os.path.join(model_ws, f"{mt.name}.{btn.extension[0]}"))
+    assert os.path.isfile(os.path.join(model_ws, f"{mt.name}.{adv.extension[0]}"))
+    assert os.path.isfile(os.path.join(model_ws, f"{mt.name}.{dsp.extension[0]}"))
+    assert os.path.isfile(os.path.join(model_ws, f"{mt.name}.{ssm.extension[0]}"))
+    assert os.path.isfile(os.path.join(model_ws, f"{mt.name}.{gcg.extension[0]}"))
+    assert os.path.isfile(os.path.join(model_ws, f"{mt.name}.{rct.extension[0]}"))
+    assert os.path.isfile(os.path.join(model_ws, f"{mt.name}.{tob.extension[0]}"))
 
 
 def test_mt3d_pht3d(function_tmpdir):
@@ -536,9 +518,7 @@ def test_mt3d_pht3d(function_tmpdir):
     mt.write_input()
 
     # confirm that MT3D files exist
-    assert os.path.isfile(
-        os.path.join(model_ws, f"{mt.name}.{phc.extension[0]}")
-    )
+    assert os.path.isfile(os.path.join(model_ws, f"{mt.name}.{phc.extension[0]}"))
 
 
 def test_mt3d_multispecies(function_tmpdir):
@@ -567,9 +547,7 @@ def test_mt3d_multispecies(function_tmpdir):
         verbose=True,
     )
     sconc3 = np.random.random((nrow, ncol))
-    btn = Mt3dBtn(
-        mt, ncomp=ncomp, sconc=1.0, sconc2=2.0, sconc3=sconc3, sconc5=5.0
-    )
+    btn = Mt3dBtn(mt, ncomp=ncomp, sconc=1.0, sconc2=2.0, sconc3=sconc3, sconc5=5.0)
     # check obs I/O
     mt.btn.obs = np.array([[0, 2, 300], [0, 1, 250]])
     crch32 = np.random.random((nrow, ncol))
@@ -17799,9 +17777,7 @@ def test_lkt_with_multispecies(function_tmpdir):
     mxpart = 5000
     nadvfd = 1  # (1 = Upstream weighting)
 
-    adv = Mt3dAdv(
-        mt, mixelm=mixelm, percel=percel, mxpart=mxpart, nadvfd=nadvfd
-    )
+    adv = Mt3dAdv(mt, mixelm=mixelm, percel=percel, mxpart=mxpart, nadvfd=nadvfd)
 
     ## Instantiate generalized conjugate gradient solver (GCG)
     # package for MT3D-USGS
@@ -17970,9 +17946,7 @@ def test_mt3d_ssm_with_nodata_in_1st_sp(function_tmpdir):
     assert success, "MT3D did not run"
 
     ws = function_tmpdir / "ws2"
-    mf2 = Modflow.load(
-        "model_mf.nam", model_ws=function_tmpdir, exe_name="mf2005"
-    )
+    mf2 = Modflow.load("model_mf.nam", model_ws=function_tmpdir, exe_name="mf2005")
     mf2.change_model_ws(ws)
     mt2 = Mt3dms.load(
         "model_mt.nam",
@@ -18007,9 +17981,7 @@ def test_none_spdtype(function_tmpdir):
     wel = ModflowWel(mf, stress_period_data=spd)
     pcg = ModflowPcg(mf)
     mf.write_input()
-    mf2 = Modflow.load(
-        "modflowtest.nam", model_ws=function_tmpdir, verbose=True
-    )
+    mf2 = Modflow.load("modflowtest.nam", model_ws=function_tmpdir, verbose=True)
     success, buff = mf.run_model(report=True)
     assert success
 

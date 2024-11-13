@@ -229,9 +229,7 @@ class MfUsgWel(ModflowWel):
         if dtype is not None:
             self.dtype = dtype
         else:
-            self.dtype = self.get_default_dtype(
-                structured=self.parent.structured
-            )
+            self.dtype = self.get_default_dtype(structured=self.parent.structured)
 
         # determine if any aux variables in dtype
         options = self._check_for_aux(options)
@@ -239,9 +237,7 @@ class MfUsgWel(ModflowWel):
         self.options = options
 
         # initialize MfList
-        self.stress_period_data = MfList(
-            self, stress_period_data, binary=binary
-        )
+        self.stress_period_data = MfList(self, stress_period_data, binary=binary)
 
         if add_package:
             self.parent.add_package(self)
@@ -297,9 +293,7 @@ class MfUsgWel(ModflowWel):
 
         f_wel.write(f"{self.heading}\n")
 
-        mxact = (
-            self.stress_period_data.mxact + self.cln_stress_period_data.mxact
-        )
+        mxact = self.stress_period_data.mxact + self.cln_stress_period_data.mxact
 
         line = f" {mxact:9d} {self.ipakcb:9d} "
         if self.options is None:

@@ -111,9 +111,7 @@ class ModflowAg(Package):
                     OptionBlock.dtype: np.bool_,
                     OptionBlock.nested: True,
                     OptionBlock.n_nested: 1,
-                    OptionBlock.vars: dict(
-                        [("nummaxwell", OptionBlock.simple_int)]
-                    ),
+                    OptionBlock.vars: dict([("nummaxwell", OptionBlock.simple_int)]),
                 },
             ),
             ("tabfiles", OptionBlock.simple_tabfile),
@@ -155,9 +153,7 @@ class ModflowAg(Package):
                     OptionBlock.dtype: np.bool_,
                     OptionBlock.nested: True,
                     OptionBlock.n_nested: 1,
-                    OptionBlock.vars: dict(
-                        [("unit_welllist", OptionBlock.simple_int)]
-                    ),
+                    OptionBlock.vars: dict([("unit_welllist", OptionBlock.simple_int)]),
                 },
             ),
             (
@@ -188,9 +184,7 @@ class ModflowAg(Package):
                     OptionBlock.dtype: np.bool_,
                     OptionBlock.nested: True,
                     OptionBlock.n_nested: 1,
-                    OptionBlock.vars: dict(
-                        [("unitcbc", OptionBlock.simple_int)]
-                    ),
+                    OptionBlock.vars: dict([("unitcbc", OptionBlock.simple_int)]),
                 },
             ),
         ]
@@ -211,9 +205,7 @@ class ModflowAg(Package):
         nper=0,
     ):
         if "nwt" not in model.version:
-            raise AssertionError(
-                "Model version must be mfnwt to use the AG package"
-            )
+            raise AssertionError("Model version must be mfnwt to use the AG package")
 
         # setup the package parent class
         if unitnumber is None:
@@ -357,9 +349,7 @@ class ModflowAg(Package):
                 foo.write("TIME SERIES \n")
                 for record in self.time_series:
                     if record["keyword"] in ("welletall", "wellall"):
-                        foo.write(
-                            f"{record['keyword']}   {record['unit']}\n".upper()
-                        )
+                        foo.write(f"{record['keyword']}   {record['unit']}\n".upper())
                     else:
                         foo.write(fmt.format(*record).upper())
 
@@ -450,9 +440,7 @@ class ModflowAg(Package):
                                     )
                                 else:
                                     foo.write(
-                                        fmt20.format(
-                                            rec["segid"], rec["numcell"]
-                                        )
+                                        fmt20.format(rec["segid"], rec["numcell"])
                                     )
 
                                 for i in range(num):
@@ -503,9 +491,7 @@ class ModflowAg(Package):
                                     )
                                 else:
                                     foo.write(
-                                        fmt24.format(
-                                            rec["wellid"] + 1, rec["numcell"]
-                                        )
+                                        fmt24.format(rec["wellid"] + 1, rec["numcell"])
                                     )
 
                                 for i in range(num):
@@ -540,9 +526,7 @@ class ModflowAg(Package):
                                 num = rec["numcell"]
 
                                 foo.write(
-                                    fmt28.format(
-                                        rec["wellid"] + 1, rec["numcell"]
-                                    )
+                                    fmt28.format(rec["wellid"] + 1, rec["numcell"])
                                 )
 
                                 for i in range(num):

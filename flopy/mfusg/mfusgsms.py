@@ -463,10 +463,7 @@ class MfUsgSms(Package):
 
         # Record 1b -- line will have already been read
         if model.verbose:
-            print(
-                "   loading HCLOSE HICLOSE MXITER ITER1 "
-                "IPRSMS NONLINMETH LINMETH..."
-            )
+            print("   loading HCLOSE HICLOSE MXITER ITER1 IPRSMS NONLINMETH LINMETH...")
         ll = line_parse(line)
         hclose = float(ll.pop(0))
         hiclose = float(ll.pop(0))

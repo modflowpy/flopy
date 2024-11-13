@@ -150,9 +150,7 @@ else:
 hfile = flopy.utils.HeadFile(os.path.join(ml.model_ws, f"{modelname}.hds"))
 head = hfile.get_alldata()
 # read model zeta
-zfile = flopy.utils.CellBudgetFile(
-    os.path.join(ml.model_ws, f"{modelname}.zta")
-)
+zfile = flopy.utils.CellBudgetFile(os.path.join(ml.model_ws, f"{modelname}.zta"))
 kstpkper = zfile.get_kstpkper()
 zeta = []
 for kk in kstpkper:

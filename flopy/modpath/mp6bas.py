@@ -181,9 +181,7 @@ class Modpath6Bas(Package):
         else:  # no user passed layertype
             have_layertype = False
             if self.parent.getmf() is None:
-                raise ValueError(
-                    "if modflowmodel is None then laytype must be passed"
-                )
+                raise ValueError("if modflowmodel is None then laytype must be passed")
 
             # run though flow packages
             flow_package = self.parent.getmf().get_package("BCF6")

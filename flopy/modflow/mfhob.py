@@ -614,9 +614,7 @@ class HeadObservation:
                 raise ValueError(
                     "sum of dataset 4 proportions must equal 1.0 - "
                     "sum of dataset 4 proportions = {tot} for "
-                    "observation name {obsname}.".format(
-                        tot=tot, obsname=self.obsname
-                    )
+                    "observation name {obsname}.".format(tot=tot, obsname=self.obsname)
                 )
 
         # convert passed time_series_data to a numpy array
@@ -652,8 +650,7 @@ class HeadObservation:
                 names = [names]
             elif not isinstance(names, list):
                 raise ValueError(
-                    "HeadObservation names must be a "
-                    "string or a list of strings"
+                    "HeadObservation names must be a string or a list of strings"
                 )
             if len(names) < self.nobs:
                 raise ValueError(

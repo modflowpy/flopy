@@ -352,13 +352,9 @@ class ModflowSwi2(Package):
 
         # Create arrays so that they have the correct size
         if self.istrat == 1:
-            self.nu = Util2d(
-                model, (self.nsrf + 1,), np.float32, nu, name="nu"
-            )
+            self.nu = Util2d(model, (self.nsrf + 1,), np.float32, nu, name="nu")
         else:
-            self.nu = Util2d(
-                model, (self.nsrf + 2,), np.float32, nu, name="nu"
-            )
+            self.nu = Util2d(model, (self.nsrf + 2,), np.float32, nu, name="nu")
         self.zeta = []
         for i in range(self.nsrf):
             self.zeta.append(
@@ -370,9 +366,7 @@ class ModflowSwi2(Package):
                     name=f"zeta_{i + 1}",
                 )
             )
-        self.ssz = Util3d(
-            model, (nlay, nrow, ncol), np.float32, ssz, name="ssz"
-        )
+        self.ssz = Util3d(model, (nlay, nrow, ncol), np.float32, ssz, name="ssz")
         self.isource = Util3d(
             model, (nlay, nrow, ncol), np.int32, isource, name="isource"
         )
@@ -451,9 +445,7 @@ class ModflowSwi2(Package):
         # write dataset 3b
         if self.adaptive is True:
             f.write("# Dataset 3b\n")
-            f.write(
-                f"{self.nadptmx:10d}{self.nadptmn:10d}{self.adptfct:14.6g}\n"
-            )
+            f.write(f"{self.nadptmx:10d}{self.nadptmn:10d}{self.adptfct:14.6g}\n")
         # write dataset 4
         f.write("# Dataset 4\n")
         f.write(self.nu.get_file_entry())
@@ -723,13 +715,9 @@ class ModflowSwi2(Package):
                 ext_unit_dict, filetype=ModflowSwi2._ftype()
             )
             if iswizt > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=iswizt
-                )
+                iu, filenames[1] = model.get_ext_dict_attr(ext_unit_dict, unit=iswizt)
             if ipakcb > 0:
-                iu, filenames[2] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=ipakcb
-                )
+                iu, filenames[2] = model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
             if abs(iswiobs) > 0:
                 iu, filenames[3] = model.get_ext_dict_attr(
                     ext_unit_dict, unit=abs(iswiobs)

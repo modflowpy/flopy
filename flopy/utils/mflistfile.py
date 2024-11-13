@@ -197,9 +197,7 @@ class ListBudget:
         if not self._isvalid:
             return None
         kstpkper = []
-        for kstp, kper in zip(
-            self.inc["time_step"], self.inc["stress_period"]
-        ):
+        for kstp, kper in zip(self.inc["time_step"], self.inc["stress_period"]):
             kstpkper.append((kstp, kper))
         return kstpkper
 
@@ -301,11 +299,7 @@ class ListBudget:
         # reopen the file
         self.f = open(self.file_name, "r", encoding="ascii", errors="replace")
         units = units.lower()
-        if (
-            not units == "seconds"
-            and not units == "minutes"
-            and not units == "hours"
-        ):
+        if not units == "seconds" and not units == "minutes" and not units == "hours":
             raise AssertionError(
                 '"units" input variable must be "minutes", "hours", '
                 f'or "seconds": {units} was specified'
@@ -429,16 +423,12 @@ class ListBudget:
             try:
                 ipos = self.get_kstpkper().index(kstpkper)
             except:
-                print(
-                    f"   could not retrieve kstpkper {kstpkper} from the lst file"
-                )
+                print(f"   could not retrieve kstpkper {kstpkper} from the lst file")
         elif totim is not None:
             try:
                 ipos = self.get_times().index(totim)
             except:
-                print(
-                    f"   could not retrieve totime {totim} from the lst file"
-                )
+                print(f"   could not retrieve totime {totim} from the lst file")
         elif idx is not None:
             ipos = idx
         else:
@@ -456,9 +446,7 @@ class ListBudget:
         else:
             t = self.cum[ipos]
 
-        dtype = np.dtype(
-            [("index", np.int32), ("value", np.float32), ("name", "|S25")]
-        )
+        dtype = np.dtype([("index", np.int32), ("value", np.float32), ("name", "|S25")])
         v = np.recarray(shape=(len(self.inc.dtype.names[3:])), dtype=dtype)
         for i, name in enumerate(self.inc.dtype.names[3:]):
             mult = 1.0
@@ -695,8 +683,7 @@ class ListBudget:
             )
         except:
             raise Exception(
-                "unable to read budget information from first "
-                "entry in list file"
+                "unable to read budget information from first entry in list file"
             )
         self.entries = incdict.keys()
         null_entries = {}
@@ -885,14 +872,10 @@ class ListBudget:
                 return np.nan, np.nan, np.nan
             elif (
                 ihead == 2
-                and "SECONDS     MINUTES      HOURS       DAYS        YEARS"
-                not in line
+                and "SECONDS     MINUTES      HOURS       DAYS        YEARS" not in line
             ):
                 break
-            elif (
-                "-----------------------------------------------------------"
-                in line
-            ):
+            elif "-----------------------------------------------------------" in line:
                 line = self.f.readline()
                 break
 

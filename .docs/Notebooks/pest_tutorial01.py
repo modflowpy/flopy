@@ -69,9 +69,7 @@ lbound = 0.001
 ubound = 1000.0
 transform = "log"
 
-p = flopy.pest.Params(
-    mfpackage, partype, parname, startvalue, lbound, ubound, span
-)
+p = flopy.pest.Params(mfpackage, partype, parname, startvalue, lbound, ubound, span)
 # -
 
 # At this point, we have enough information to the write a PEST template file for the LPF package.  We can do this using the following statement:
@@ -101,9 +99,7 @@ lbound = 0.001
 ubound = 1000.0
 transform = "log"
 
-p = flopy.pest.Params(
-    mfpackage, partype, parname, startvalue, lbound, ubound, span
-)
+p = flopy.pest.Params(mfpackage, partype, parname, startvalue, lbound, ubound, span)
 tw = flopy.pest.templatewriter.TemplateWriter(m, [p])
 tw.write_template()
 # -
@@ -193,9 +189,7 @@ transform = None
 # For a recharge multiplier, span['idx'] must be None
 idx = None
 span = {"kpers": [0, 1, 2], "idx": idx}
-p = flopy.pest.Params(
-    mfpackage, partype, parname, startvalue, lbound, ubound, span
-)
+p = flopy.pest.Params(mfpackage, partype, parname, startvalue, lbound, ubound, span)
 plist.append(p)
 # -
 
@@ -224,9 +218,7 @@ transform = None
 
 # For a recharge multiplier, span['idx'] must be None
 span = {"kpers": [1, 2], "idx": None}
-p = flopy.pest.Params(
-    mfpackage, partype, parname, startvalue, lbound, ubound, span
-)
+p = flopy.pest.Params(mfpackage, partype, parname, startvalue, lbound, ubound, span)
 plist.append(p)
 
 # +
@@ -243,9 +235,7 @@ transform = None
 idx = np.empty((nrow, ncol), dtype=bool)
 idx[0:3, 0:3] = True
 span = {"kpers": [1], "idx": idx}
-p = flopy.pest.Params(
-    mfpackage, partype, parname, startvalue, lbound, ubound, span
-)
+p = flopy.pest.Params(mfpackage, partype, parname, startvalue, lbound, ubound, span)
 plist.append(p)
 
 # +

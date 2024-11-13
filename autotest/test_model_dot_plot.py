@@ -14,9 +14,7 @@ def test_vertex_model_dot_plot(example_data_path):
     rcParams["figure.max_open_warning"] = 36
 
     # load up the vertex example problem
-    sim = MFSimulation.load(
-        sim_ws=example_data_path / "mf6" / "test003_gwftri_disv"
-    )
+    sim = MFSimulation.load(sim_ws=example_data_path / "mf6" / "test003_gwftri_disv")
     disv_ml = sim.get_model("gwf_1")
     ax = disv_ml.plot()
     assert isinstance(ax, list)
@@ -44,9 +42,7 @@ def test_dataset_dot_plot(function_tmpdir, example_data_path):
     assert len(ax) == 2, f"number of hy axes ({len(ax)}) is not equal to 2"
 
 
-def test_dataset_dot_plot_nlay_ne_plottable(
-    function_tmpdir, example_data_path
-):
+def test_dataset_dot_plot_nlay_ne_plottable(function_tmpdir, example_data_path):
     import matplotlib.pyplot as plt
 
     loadpth = example_data_path / "mf2005_test"
@@ -66,9 +62,7 @@ def test_model_dot_plot_export(function_tmpdir, example_data_path):
     ml.plot(mflay=0, filename_base=fh, file_extension="png")
     files = [f for f in listdir(function_tmpdir) if f.endswith(".png")]
     if len(files) < 10:
-        raise AssertionError(
-            "ml.plot did not properly export all supported data types"
-        )
+        raise AssertionError("ml.plot did not properly export all supported data types")
 
     for f in files:
         t = f.split("_")

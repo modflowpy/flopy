@@ -242,18 +242,14 @@ sfrleak[sfrleak == 0] = np.nan  # remove zero values
 
 # ### Plot leakage in plan view
 
-im = plt.imshow(
-    sfrleak[0], interpolation="none", cmap="coolwarm", vmin=-3, vmax=3
-)
+im = plt.imshow(sfrleak[0], interpolation="none", cmap="coolwarm", vmin=-3, vmax=3)
 cb = plt.colorbar(im, label="SFR Leakage, in cubic feet per second")
 
 # ### Plot total streamflow
 
 sfrQ = sfrleak[0].copy()
 sfrQ[sfrQ == 0] = np.nan
-sfrQ[df.row.values - 1, df.column.values - 1] = (
-    df[["Qin", "Qout"]].mean(axis=1).values
-)
+sfrQ[df.row.values - 1, df.column.values - 1] = df[["Qin", "Qout"]].mean(axis=1).values
 im = plt.imshow(sfrQ, interpolation="none")
 plt.colorbar(im, label="Streamflow, in cubic feet per second")
 

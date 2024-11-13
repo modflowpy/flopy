@@ -236,9 +236,7 @@ def test_save_load_node_mapping(function_tmpdir):
     for k, v1 in original_node_map.items():
         v2 = saved_node_map[k]
         if not v1 == v2:
-            raise AssertionError(
-                "Node map read/write not returning proper values"
-            )
+            raise AssertionError("Node map read/write not returning proper values")
 
     array_dict = {}
     for model in range(nparts):
@@ -345,23 +343,17 @@ def test_control_records(function_tmpdir):
         raise AssertionError("Constants not being preserved for MFArray")
 
     if kls[1].data_storage_type.value != 3 or kls[1].binary:
-        raise AssertionError(
-            "External ascii files not being preserved for MFArray"
-        )
+        raise AssertionError("External ascii files not being preserved for MFArray")
 
     k33ls = ml1.npf.k33._data_storage.layer_storage.multi_dim_list
     if k33ls[1].data_storage_type.value != 3 or not k33ls[1].binary:
-        raise AssertionError(
-            "Binary file input not being preserved for MFArray"
-        )
+        raise AssertionError("Binary file input not being preserved for MFArray")
 
     spd_ls1 = ml1.wel.stress_period_data.get_record(1)
     spd_ls2 = ml1.wel.stress_period_data.get_record(2)
 
     if spd_ls1["filename"] is None or spd_ls1["binary"]:
-        raise AssertionError(
-            "External ascii files not being preserved for MFList"
-        )
+        raise AssertionError("External ascii files not being preserved for MFList")
 
     if spd_ls2["filename"] is None or not spd_ls2["binary"]:
         raise AssertionError(
@@ -573,8 +565,7 @@ def test_transient_array(function_tmpdir):
         ):
             d[key] = g.sto.steady_state.get_data(key)
         assert d == steady, (
-            "storage steady_state dictionary "
-            + f"does not match for model '{name}'"
+            "storage steady_state dictionary " + f"does not match for model '{name}'"
         )
         d = {}
         for key in (1,):
@@ -682,11 +673,7 @@ def test_idomain_none(function_tmpdir):
     head_dict = {}
     for idx, modelname in enumerate(new_sim.model_names):
         mnum = int(modelname.split("_")[-1])
-        h = (
-            new_sim.get_model(modelname)
-            .output.head()
-            .get_data(kstpkper=kstpkper)
-        )
+        h = new_sim.get_model(modelname).output.head().get_data(kstpkper=kstpkper)
         head_dict[mnum] = h
     new_head = ms.reconstruct_array(head_dict)
 
@@ -830,9 +817,7 @@ def test_unstructured_complex_disu(function_tmpdir):
     chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=spd)
 
     spd = {0: [("HEAD", "LAST")]}
-    oc = flopy.mf6.ModflowGwfoc(
-        gwf, head_filerecord=f"{mname}.hds", saverecord=spd
-    )
+    oc = flopy.mf6.ModflowGwfoc(gwf, head_filerecord=f"{mname}.hds", saverecord=spd)
 
     sim.write_simulation()
     sim.run_simulation()
@@ -979,9 +964,7 @@ def test_multi_model(function_tmpdir):
         for c in range(ncol):
             if idomain[0, r, c] == 1:
                 conductance = leakance * area
-                discharge_data.append(
-                    (0, r, c, top[r, c] - 0.5, conductance, 1.0)
-                )
+                discharge_data.append((0, r, c, top[r, c] - 0.5, conductance, 1.0))
 
     topc = np.zeros((nlay, nrow, ncol), dtype=float)
     botm = np.zeros((nlay, nrow, ncol), dtype=float)
@@ -1198,14 +1181,10 @@ def test_multi_model(function_tmpdir):
         )
 
         # initial conditions
-        ic = flopy.mf6.ModflowGwtic(
-            gwt, strt=conc_start, filename=f"{gwtname}.ic"
-        )
+        ic = flopy.mf6.ModflowGwtic(gwt, strt=conc_start, filename=f"{gwtname}.ic")
 
         # advection
-        adv = flopy.mf6.ModflowGwtadv(
-            gwt, scheme="tvd", filename=f"{gwtname}.adv"
-        )
+        adv = flopy.mf6.ModflowGwtadv(gwt, scheme="tvd", filename=f"{gwtname}.adv")
 
         # dispersion
         dsp = flopy.mf6.ModflowGwtdsp(
@@ -1219,9 +1198,7 @@ def test_multi_model(function_tmpdir):
         )
 
         # mass storage and transfer
-        mst = flopy.mf6.ModflowGwtmst(
-            gwt, porosity=porosity, filename=f"{gwtname}.mst"
-        )
+        mst = flopy.mf6.ModflowGwtmst(gwt, porosity=porosity, filename=f"{gwtname}.mst")
 
         # sources
         sourcerecarray = [
@@ -1308,15 +1285,11 @@ def test_multi_model(function_tmpdir):
 
         X_split = mfs.reconstruct_array(array_dict)
 
-        err_msg = (
-            f"Outputs from {name} and split model " f"are not within tolerance"
-        )
+        err_msg = f"Outputs from {name} and split model are not within tolerance"
         X_split[idomain == 0] = np.nan
         X[idomain == 0] = np.nan
         if name == "gwf":
-            np.testing.assert_allclose(
-                X, X_split, equal_nan=True, err_msg=err_msg
-            )
+            np.testing.assert_allclose(X, X_split, equal_nan=True, err_msg=err_msg)
         else:
             diff = np.abs(X_split - X)
             diff = np.nansum(diff)

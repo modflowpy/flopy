@@ -172,9 +172,7 @@ layer_storage_types = [
     flopy.mf6.data.mfdatastorage.DataStorageType.internal_array,
     flopy.mf6.data.mfdatastorage.DataStorageType.internal_constant,
 ]
-k_template = flopy.mf6.ModflowGwfnpf.k.empty(
-    model, True, layer_storage_types, 100.0
-)
+k_template = flopy.mf6.ModflowGwfnpf.k.empty(model, True, layer_storage_types, 100.0)
 # change the value of the second layer to 50.0
 k_template[0]["data"] = [
     65.0,
@@ -392,9 +390,7 @@ stress_period_data = {
     0: {"filename": "chd_sp1.dat", "data": [[(0, 0, 0), 70.0]]},
     1: [[(0, 0, 0), 60.0]],
 }
-chd = flopy.mf6.ModflowGwfchd(
-    model, maxbound=1, stress_period_data=stress_period_data
-)
+chd = flopy.mf6.ModflowGwfchd(model, maxbound=1, stress_period_data=stress_period_data)
 
 # ## Packages that Support both List-based and Array-based Data
 #
@@ -568,9 +564,7 @@ print(f"Data with new factor:\n{hk.array}\n")
 # Data can be modified in several ways.  One way is to set data for a given layer within a LayerStorage object, like the one accessed in the code above.  Another way is to set the data attribute to the new data.  Yet another way is to call the data object's set_data method.
 
 # set data within a LayerStorage object
-hk_layer_one.set_data(
-    [120.0, 100.0, 80.0, 70.0, 60.0, 50.0, 40.0, 30.0, 25.0, 20.0]
-)
+hk_layer_one.set_data([120.0, 100.0, 80.0, 70.0, 60.0, 50.0, 40.0, 30.0, 25.0, 20.0])
 print(f"New HK data no factor:\n{hk.get_data()}\n")
 # set data attribute to new data
 ic_package.strt = 150.0

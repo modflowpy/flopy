@@ -58,9 +58,7 @@ def test_modflow_unstructured(function_tmpdir):
     wel = flopy.mfusg.MfUsgWel(mf, stress_period_data={0: [[0, -100]]})
     assert isinstance(wel, flopy.mfusg.MfUsgWel)
 
-    ghb = flopy.modflow.ModflowGhb(
-        mf, stress_period_data={0: [[1, 5.9, 1000.0]]}
-    )
+    ghb = flopy.modflow.ModflowGhb(mf, stress_period_data={0: [[1, 5.9, 1000.0]]})
     assert isinstance(ghb, flopy.modflow.ModflowGhb)
 
     oc = flopy.modflow.ModflowOc(mf)
@@ -141,9 +139,7 @@ def test_mflist_reference(function_tmpdir):
     # assert shp.numRecords == nrow * ncol
 
 
-def test_pyinstaller_flopy_runs_without_dfn_folder(
-    flopy_data_path, example_data_path
-):
+def test_pyinstaller_flopy_runs_without_dfn_folder(flopy_data_path, example_data_path):
     """
     Test to ensure that flopy can load a modflow 6 simulation without dfn
     files being present.

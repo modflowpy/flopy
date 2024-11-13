@@ -422,9 +422,7 @@ def test_point_collection(point, multipoint):
             is_equal = gi == gi1[ix]
 
             if not is_equal:
-                raise AssertionError(
-                    "GeoSpatialCollection Point conversion error"
-                )
+                raise AssertionError("GeoSpatialCollection Point conversion error")
 
 
 @requires_pkg("shapely", "geojson", "geopandas")
@@ -452,9 +450,7 @@ def test_linestring_collection(linestring, multilinestring):
             is_equal = gi == gi1[ix]
 
             if not is_equal:
-                raise AssertionError(
-                    "GeoSpatialCollection Linestring conversion error"
-                )
+                raise AssertionError("GeoSpatialCollection Linestring conversion error")
 
 
 @requires_pkg("shapely", "geojson", "geopandas")

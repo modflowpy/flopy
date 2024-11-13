@@ -281,9 +281,7 @@ class VoronoiGrid:
         if isinstance(tri, Triangle):
             verts, iverts, points = tri2vor(tri, **kwargs)
         else:
-            raise TypeError(
-                "The tri argument must be of type flopy.utils.Triangle"
-            )
+            raise TypeError("The tri argument must be of type flopy.utils.Triangle")
         self.points = points
         self.verts = verts
         self.iverts = iverts
@@ -303,9 +301,7 @@ class VoronoiGrid:
             flopy.mf6.ModflowGwfdisv constructor
 
         """
-        disv_gridprops = get_disv_gridprops(
-            self.verts, self.iverts, xcyc=self.points
-        )
+        disv_gridprops = get_disv_gridprops(self.verts, self.iverts, xcyc=self.points)
         return disv_gridprops
 
     def get_disu5_gridprops(self):

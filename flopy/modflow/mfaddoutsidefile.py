@@ -8,9 +8,7 @@ class mfaddoutsidefile(Package):
 
     def __init__(self, model, name, extension, unitnumber):
         # call base package constructor
-        super().__init__(
-            model, extension, name, unitnumber, allowDuplicates=True
-        )
+        super().__init__(model, extension, name, unitnumber, allowDuplicates=True)
         self.parent.add_package(self)
 
     def __repr__(self):

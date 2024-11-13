@@ -95,9 +95,7 @@ class styles:
         if letter is None and idx is not None:
             letter = chr(ord("A") + idx)
 
-        font = styles.__set_fontspec(
-            bold=True, italic=False, fontsize=fontsize
-        )
+        font = styles.__set_fontspec(bold=True, italic=False, fontsize=fontsize)
 
         if letter is not None:
             if heading is None:
@@ -148,9 +146,7 @@ class styles:
         if ax is None:
             ax = plt.gca()
         fontsize = kwargs.pop("fontsize", 9)
-        fontspec = styles.__set_fontspec(
-            bold=bold, italic=italic, fontsize=fontsize
-        )
+        fontspec = styles.__set_fontspec(bold=bold, italic=italic, fontsize=fontsize)
         ax.set_xlabel(label, fontdict=fontspec, **kwargs)
 
     @classmethod
@@ -178,9 +174,7 @@ class styles:
             ax = plt.gca()
 
         fontsize = kwargs.pop("fontsize", 9)
-        fontspec = styles.__set_fontspec(
-            bold=bold, italic=italic, fontsize=fontsize
-        )
+        fontspec = styles.__set_fontspec(bold=bold, italic=italic, fontsize=fontsize)
         ax.set_ylabel(label, fontdict=fontspec, **kwargs)
 
     @classmethod
@@ -311,9 +305,7 @@ class styles:
         else:
             transform = ax.transData
 
-        font = styles.__set_fontspec(
-            bold=bold, italic=italic, fontsize=fontsize
-        )
+        font = styles.__set_fontspec(bold=bold, italic=italic, fontsize=fontsize)
 
         text_obj = ax.text(
             x,
@@ -381,9 +373,7 @@ class styles:
         if xytext is None:
             xytext = (0.0, 0.0)
 
-        fontspec = styles.__set_fontspec(
-            bold=bold, italic=italic, fontsize=fontsize
-        )
+        fontspec = styles.__set_fontspec(bold=bold, italic=italic, fontsize=fontsize)
         # add font information to kwargs
         if kwargs is None:
             kwargs = fontspec

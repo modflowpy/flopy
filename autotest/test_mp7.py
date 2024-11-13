@@ -75,9 +75,7 @@ def ex01b_mf6_model(function_tmpdir):
 
     # Create the Flopy temporal discretization object
     pd = (perlen, nstp, tsmult)
-    tdis = ModflowTdis(
-        sim, pname="tdis", time_units="DAYS", nper=nper, perioddata=[pd]
-    )
+    tdis = ModflowTdis(sim, pname="tdis", time_units="DAYS", nper=nper, perioddata=[pd])
 
     # Create the Flopy groundwater flow (gwf) model object
     model_nam_file = f"{ex01b_mf6_model_name}.nam"
@@ -292,9 +290,7 @@ def test_faceparticles_is1(ex01b_mf6_model):
         locs, structured=False, drape=0, localx=localx, localy=localy, localz=1
     )
     fpth = f"{mpnam}.sloc"
-    pg = ParticleGroup(
-        particlegroupname="T1NODEPG", particledata=p, filename=fpth
-    )
+    pg = ParticleGroup(particlegroupname="T1NODEPG", particledata=p, filename=fpth)
     build_modpath(
         function_tmpdir,
         mpnam,
@@ -459,9 +455,7 @@ def test_cellparticles_is1(ex01b_mf6_model):
         locs, structured=False, drape=0, localx=0.5, localy=0.5, localz=0.5
     )
     fpth = f"{mpnam}.sloc"
-    pg = ParticleGroup(
-        particlegroupname="T1NODEPG", particledata=p, filename=fpth
-    )
+    pg = ParticleGroup(particlegroupname="T1NODEPG", particledata=p, filename=fpth)
     build_modpath(
         function_tmpdir,
         mpnam,
@@ -496,13 +490,9 @@ def test_cellparticleskij_is1(ex01b_mf6_model):
         for i in range(grid.nrow):
             for j in range(grid.ncol):
                 locs.append((k, i, j))
-    p = ParticleData(
-        locs, structured=True, drape=0, localx=0.5, localy=0.5, localz=0.5
-    )
+    p = ParticleData(locs, structured=True, drape=0, localx=0.5, localy=0.5, localz=0.5)
     fpth = f"{mpnam}.sloc"
-    pg = ParticleGroup(
-        particlegroupname="T1KIJPG", particledata=p, filename=fpth
-    )
+    pg = ParticleGroup(particlegroupname="T1KIJPG", particledata=p, filename=fpth)
     build_modpath(
         function_tmpdir,
         mpnam,
@@ -576,9 +566,7 @@ def test_cellnode_is3a(ex01b_mf6_model):
         rowcelldivisions=1,
         layercelldivisions=1,
     )
-    p = NodeParticleData(
-        subdivisiondata=[sd, sd, sd], nodes=[locsa, locsb, locsc]
-    )
+    p = NodeParticleData(subdivisiondata=[sd, sd, sd], nodes=[locsa, locsb, locsc])
     fpth = f"{mpnam}.sloc"
     pg = ParticleGroupNodeTemplate(
         particlegroupname="T3ACELLPG", particledata=p, filename=fpth
@@ -655,9 +643,7 @@ def ex01_mf6_model(function_tmpdir):
 
     # Create the Flopy temporal discretization object
     pd = (perlen, nstp, tsmult)
-    tdis = ModflowTdis(
-        sim, pname="tdis", time_units="DAYS", nper=nper, perioddata=[pd]
-    )
+    tdis = ModflowTdis(sim, pname="tdis", time_units="DAYS", nper=nper, perioddata=[pd])
 
     # Create the Flopy groundwater flow (gwf) model object
     model_nam_file = f"{ex01_mf6_model_name}.nam"
@@ -856,9 +842,7 @@ def test_mp7sim_replacement(function_tmpdir):
 
 
 @requires_exe("mf6", "mp7")
-@pytest.mark.parametrize(
-    "porosity_type", ("constant", "list", "array_1d", "array")
-)
+@pytest.mark.parametrize("porosity_type", ("constant", "list", "array_1d", "array"))
 @pytest.mark.slow
 def test_mp7bas_porosity(ex01_mf6_model, porosity_type):
     sim, function_tmpdir = ex01_mf6_model

@@ -114,9 +114,7 @@ class Raster:
 
         self._meta = meta
         self._dataset = None
-        self.__arr_dict = {
-            self._bands[b]: arr for b, arr in enumerate(self._array)
-        }
+        self.__arr_dict = {self._bands[b]: arr for b, arr in enumerate(self._array)}
 
         self.__xcenters = None
         self.__ycenters = None
@@ -946,9 +944,7 @@ class Raster:
                 crs = modelgrid.crs
 
             if modelgrid.grid_type != "structured":
-                raise TypeError(
-                    f"{type(modelgrid)} discretizations are not supported"
-                )
+                raise TypeError(f"{type(modelgrid)} discretizations are not supported")
 
             if not np.all(modelgrid.delc == modelgrid.delc[0]):
                 raise AssertionError("DELC must have a uniform spacing")
@@ -959,9 +955,7 @@ class Raster:
             yul = modelgrid.yvertices[0, 0]
             xul = modelgrid.xvertices[0, 0]
             angrot = modelgrid.angrot
-            transform = Affine(
-                modelgrid.delr[0], 0, xul, 0, -modelgrid.delc[0], yul
-            )
+            transform = Affine(modelgrid.delr[0], 0, xul, 0, -modelgrid.delc[0], yul)
 
             if angrot != 0:
                 transform *= Affine.rotation(angrot)

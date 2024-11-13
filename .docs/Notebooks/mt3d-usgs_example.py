@@ -389,9 +389,7 @@ files = [
     "CrnkNic.gag5",
     "CrnkNic.gag6",
 ]
-gage = flopy.modflow.ModflowGage(
-    mf, numgage=6, gage_data=gages, filenames=files
-)
+gage = flopy.modflow.ModflowGage(mf, numgage=6, gage_data=gages, filenames=files)
 
 # Instantiate linkage with mass transport routing (LMT) package for MODFLOW-NWT (generates linker file)
 
@@ -589,7 +587,9 @@ ts4_mt3d = load_ts_from_SFT_output(fname_SFTout, nd=433)
 ts5_mt3d = load_ts_from_SFT_output(fname_SFTout, nd=619)
 
 # OTIS results located here
-fname_OTIS = "../../examples/data/mt3d_test/mfnwt_mt3dusgs/sft_crnkNic/OTIS_solution.out"
+fname_OTIS = (
+    "../../examples/data/mt3d_test/mfnwt_mt3dusgs/sft_crnkNic/OTIS_solution.out"
+)
 
 # Loading OTIS output
 ts1_Otis = load_ts_from_otis(fname_OTIS, 1)

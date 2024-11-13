@@ -222,11 +222,7 @@ class StructuredGrid(Grid):
 
     @property
     def is_complete(self):
-        if (
-            self.__delc is not None
-            and self.__delr is not None
-            and super().is_complete
-        ):
+        if self.__delc is not None and self.__delr is not None and super().is_complete:
             return True
         return False
 
@@ -353,9 +349,7 @@ class StructuredGrid(Grid):
                 pass
             xgrid, ygrid = self.get_coords(xgrid, ygrid)
             if zgrid is not None:
-                self._cache_dict[cache_index] = CachedData(
-                    [xgrid, ygrid, zgrid]
-                )
+                self._cache_dict[cache_index] = CachedData([xgrid, ygrid, zgrid])
             else:
                 self._cache_dict[cache_index] = CachedData([xgrid, ygrid])
 
@@ -397,9 +391,7 @@ class StructuredGrid(Grid):
             cache_index not in self._cache_dict
             or self._cache_dict[cache_index].out_of_date
         ):
-            zedges = np.concatenate(
-                (np.array([self.top[0, 0]]), self.botm[:, 0, 0])
-            )
+            zedges = np.concatenate((np.array([self.top[0, 0]]), self.botm[:, 0, 0]))
             self._cache_dict[cache_index] = CachedData(zedges)
         if self._copy_cache:
             return self._cache_dict[cache_index].data
@@ -480,9 +472,7 @@ class StructuredGrid(Grid):
                 if np.any(quasi3d):
                     ibs[1:] = ibs[1:] + np.cumsum(quasi3d)[: self.__nlay - 1]
                 for l, ib in enumerate(ibs[1:], 1):
-                    z[l, :, :] = (
-                        self._botm[ib - 1, :, :] + self._botm[ib, :, :]
-                    ) / 2.0
+                    z[l, :, :] = (self._botm[ib - 1, :, :] + self._botm[ib, :, :]) / 2.0
             else:
                 z = None
             if self._has_ref_coordinates:
@@ -531,9 +521,7 @@ class StructuredGrid(Grid):
         if self._has_ref_coordinates:
             lines_trans = []
             for ln in lines:
-                lines_trans.append(
-                    [self.get_coords(*ln[0]), self.get_coords(*ln[1])]
-                )
+                lines_trans.append([self.get_coords(*ln[0]), self.get_coords(*ln[1])])
             return lines_trans
         return lines
 
@@ -597,15 +585,15 @@ class StructuredGrid(Grid):
             rel_tol = 1.0e-5
 
             # regularity test in z direction
-            rel_diff_thick0 = (
-                self.delz[0, :, :] - self.delz[0, 0, 0]
-            ) / self.delz[0, 0, 0]
+            rel_diff_thick0 = (self.delz[0, :, :] - self.delz[0, 0, 0]) / self.delz[
+                0, 0, 0
+            ]
             failed = np.abs(rel_diff_thick0) > rel_tol
             is_regular_z = np.count_nonzero(failed) == 0
             for k in range(1, self.nlay):
-                rel_diff_zk = (
-                    self.delz[k, :, :] - self.delz[0, :, :]
-                ) / self.delz[0, :, :]
+                rel_diff_zk = (self.delz[k, :, :] - self.delz[0, :, :]) / self.delz[
+                    0, :, :
+                ]
                 failed = np.abs(rel_diff_zk) > rel_tol
                 is_regular_z = is_regular_z and np.count_nonzero(failed) == 0
 
@@ -633,9 +621,7 @@ class StructuredGrid(Grid):
             first_equal = np.abs(rel_diff_0) <= rel_tol
 
             # combine with regularity tests in x and z directions
-            is_regular_xy = (
-                first_equal and self.is_regular_x and self.is_regular_y
-            )
+            is_regular_xy = first_equal and self.is_regular_x and self.is_regular_y
 
             self._cache_dict[cache_index] = CachedData(is_regular_xy)
         if self._copy_cache:
@@ -661,9 +647,7 @@ class StructuredGrid(Grid):
             first_equal = np.abs(rel_diff_0) <= rel_tol
 
             # combine with regularity tests in x and z directions
-            is_regular_xz = (
-                first_equal and self.is_regular_x and self.is_regular_z
-            )
+            is_regular_xz = first_equal and self.is_regular_x and self.is_regular_z
 
             self._cache_dict[cache_index] = CachedData(is_regular_xz)
         if self._copy_cache:
@@ -689,9 +673,7 @@ class StructuredGrid(Grid):
             first_equal = np.abs(rel_diff_0) <= rel_tol
 
             # combine with regularity tests in x and y directions
-            is_regular_yz = (
-                first_equal and self.is_regular_y and self.is_regular_z
-            )
+            is_regular_yz = first_equal and self.is_regular_y and self.is_regular_z
 
             self._cache_dict[cache_index] = CachedData(is_regular_yz)
         if self._copy_cache:
@@ -717,9 +699,7 @@ class StructuredGrid(Grid):
             first_equal = np.abs(rel_diff_0) <= rel_tol
 
             # combine with regularity tests in x, y and z directions
-            is_regular = (
-                first_equal and self.is_regular_z and self.is_regular_xy
-            )
+            is_regular = first_equal and self.is_regular_z and self.is_regular_xy
 
             self._cache_dict[cache_index] = CachedData(is_regular)
         if self._copy_cache:
@@ -744,9 +724,9 @@ class StructuredGrid(Grid):
             # rectilinearity test in z direction
             is_rect_z = True
             for k in range(self.nlay):
-                rel_diff_zk = (
-                    self.delz[k, :, :] - self.delz[k, 0, 0]
-                ) / self.delz[k, 0, 0]
+                rel_diff_zk = (self.delz[k, :, :] - self.delz[k, 0, 0]) / self.delz[
+                    k, 0, 0
+                ]
                 failed = np.abs(rel_diff_zk) > rel_tol
                 is_rect_z = is_rect_z and np.count_nonzero(failed) == 0
 
@@ -815,9 +795,7 @@ class StructuredGrid(Grid):
                 angrot=self.angrot,
             )
         else:
-            raise AssertionError(
-                "Grid is not complete and cannot be converted"
-            )
+            raise AssertionError("Grid is not complete and cannot be converted")
 
     ###############
     ### Methods ###
@@ -930,9 +908,7 @@ class StructuredGrid(Grid):
             if forgive:
                 col = np.nan
             else:
-                raise Exception(
-                    "x, y point given is outside of the model area"
-                )
+                raise Exception("x, y point given is outside of the model area")
         else:
             col = np.asarray(xcomp).nonzero()[0][-1]
 
@@ -941,9 +917,7 @@ class StructuredGrid(Grid):
             if forgive:
                 row = np.nan
             else:
-                raise Exception(
-                    "x, y point given is outside of the model area"
-                )
+                raise Exception("x, y point given is outside of the model area")
         else:
             row = np.asarray(ycomp).nonzero()[0][-1]
         if np.any(np.isnan([row, col])):
@@ -1022,9 +996,7 @@ class StructuredGrid(Grid):
         """
         if kwargs:
             if args:
-                raise TypeError(
-                    "mixed positional and keyword arguments not supported"
-                )
+                raise TypeError("mixed positional and keyword arguments not supported")
             elif "node" in kwargs:
                 _, i, j = self.get_lrc(kwargs.pop("node"))[0]
             elif "i" in kwargs and "j" in kwargs:
@@ -1229,10 +1201,7 @@ class StructuredGrid(Grid):
         zcenters = self.zcellcenters
         if self._idomain is not None:
             zcenters = np.where(inactive, np.nan, zcenters)
-        if (
-            not self.is_rectilinear
-            or np.count_nonzero(np.isnan(zcenters)) != 0
-        ):
+        if not self.is_rectilinear or np.count_nonzero(np.isnan(zcenters)) != 0:
             zedges = np.nanmean(self.top_botm_withnan, axis=(1, 2))
         else:
             zedges = self.top_botm_withnan[:, 0, 0]
@@ -1289,9 +1258,7 @@ class StructuredGrid(Grid):
                     xyoutput[:, 0] = youtput[0, :, :].ravel()
                     xyoutput[:, 1] = xoutput[0, :, :].ravel()
                     averts2d = interp_func(xyoutput)
-                    averts2d = averts2d.reshape(
-                        (1, self.nrow + 1, self.ncol + 1)
-                    )
+                    averts2d = averts2d.reshape((1, self.nrow + 1, self.ncol + 1))
                     averts = averts2d * np.ones(shape_verts)
                 elif self.nrow == 1:
                     # in this case we need a 2d interpolation in the x, z plane
@@ -1307,9 +1274,7 @@ class StructuredGrid(Grid):
                     xzoutput[:, 0] = zoutput[:, 0, :].ravel()
                     xzoutput[:, 1] = xoutput[:, 0, :].ravel()
                     averts2d = interp_func(xzoutput)
-                    averts2d = averts2d.reshape(
-                        (self.nlay + 1, 1, self.ncol + 1)
-                    )
+                    averts2d = averts2d.reshape((self.nlay + 1, 1, self.ncol + 1))
                     averts = averts2d * np.ones(shape_verts)
                 elif self.ncol == 1:
                     # in this case we need a 2d interpolation in the y, z plane
@@ -1325,9 +1290,7 @@ class StructuredGrid(Grid):
                     yzoutput[:, 0] = zoutput[:, :, 0].ravel()
                     yzoutput[:, 1] = youtput[:, :, 0].ravel()
                     averts2d = interp_func(yzoutput)
-                    averts2d = averts2d.reshape(
-                        (self.nlay + 1, self.nrow + 1, 1)
-                    )
+                    averts2d = averts2d.reshape((self.nlay + 1, self.nrow + 1, 1))
                     averts = averts2d * np.ones(shape_verts)
                 else:
                     # 3d interpolation

@@ -47,10 +47,7 @@ def parameters_model_path(example_data_path):
 @pytest.mark.parametrize(
     "namfile",
     [Path("freyberg") / "freyberg.nam"]
-    + [
-        Path("parameters") / f"{nf}.nam"
-        for nf in ["Oahu_01", "twrip", "twrip_upw"]
-    ],
+    + [Path("parameters") / f"{nf}.nam" for nf in ["Oahu_01", "twrip", "twrip_upw"]],
 )
 def test_modflow_load(namfile, example_data_path):
     mpath = Path(example_data_path / namfile).parent
@@ -95,9 +92,7 @@ def test_modflow_load(namfile, example_data_path):
             id="freyberg",
         ),
         pytest.param(
-            _example_data_path
-            / "freyberg_multilayer_transient"
-            / "freyberg.nam",
+            _example_data_path / "freyberg_multilayer_transient" / "freyberg.nam",
             {
                 "proj4": "+proj=utm +zone=14 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
                 "angrot": 15.0,
@@ -144,9 +139,7 @@ def test_modflow_load_when_nam_dne():
 
 
 def test_mbase_modelgrid(function_tmpdir):
-    ml = Modflow(
-        modelname="test", xll=500.0, rotation=12.5, start_datetime="1/1/2016"
-    )
+    ml = Modflow(modelname="test", xll=500.0, rotation=12.5, start_datetime="1/1/2016")
     try:
         print(ml.modelgrid.xcentergrid)
     except:
@@ -216,12 +209,8 @@ def test_mt_modelgrid(function_tmpdir):
         verbose=True,
     )
 
-    assert (
-        swt.modelgrid.xoffset == mt.modelgrid.xoffset == ml.modelgrid.xoffset
-    )
-    assert (
-        swt.modelgrid.yoffset == mt.modelgrid.yoffset == ml.modelgrid.yoffset
-    )
+    assert swt.modelgrid.xoffset == mt.modelgrid.xoffset == ml.modelgrid.xoffset
+    assert swt.modelgrid.yoffset == mt.modelgrid.yoffset == ml.modelgrid.yoffset
     assert mt.modelgrid.crs == ml.modelgrid.crs == swt.modelgrid.crs
     assert mt.modelgrid.angrot == ml.modelgrid.angrot == swt.modelgrid.angrot
     assert np.array_equal(mt.modelgrid.idomain, ml.modelgrid.idomain)
@@ -250,12 +239,8 @@ def test_mt_modelgrid(function_tmpdir):
         verbose=True,
     )
 
-    assert (
-        ml.modelgrid.xoffset == mt.modelgrid.xoffset == swt.modelgrid.xoffset
-    )
-    assert (
-        mt.modelgrid.yoffset == ml.modelgrid.yoffset == swt.modelgrid.yoffset
-    )
+    assert ml.modelgrid.xoffset == mt.modelgrid.xoffset == swt.modelgrid.xoffset
+    assert mt.modelgrid.yoffset == ml.modelgrid.yoffset == swt.modelgrid.yoffset
     assert mt.modelgrid.crs == ml.modelgrid.crs == swt.modelgrid.crs
     assert mt.modelgrid.angrot == ml.modelgrid.angrot == swt.modelgrid.angrot
     assert np.array_equal(mt.modelgrid.idomain, ml.modelgrid.idomain)
@@ -272,14 +257,11 @@ def test_exe_selection(example_data_path, function_tmpdir):
     assert Path(Modflow().exe_name).stem == exe_name
     assert Path(Modflow(exe_name=None).exe_name).stem == exe_name
     assert (
-        Path(Modflow.load(namfile_path, model_ws=model_path).exe_name).stem
-        == exe_name
+        Path(Modflow.load(namfile_path, model_ws=model_path).exe_name).stem == exe_name
     )
     assert (
         Path(
-            Modflow.load(
-                namfile_path, exe_name=None, model_ws=model_path
-            ).exe_name
+            Modflow.load(namfile_path, exe_name=None, model_ws=model_path).exe_name
         ).stem
         == exe_name
     )
@@ -290,9 +272,7 @@ def test_exe_selection(example_data_path, function_tmpdir):
     assert Path(Modflow(exe_name=exe_name).exe_name).stem == exe_name
     assert (
         Path(
-            Modflow.load(
-                namfile_path, exe_name=exe_name, model_ws=model_path
-            ).exe_name
+            Modflow.load(namfile_path, exe_name=exe_name, model_ws=model_path).exe_name
         ).stem
         == exe_name
     )
@@ -420,13 +400,9 @@ def test_load_twri_grid(example_data_path):
     name = "twri.nam"
     ml = Modflow.load(name, model_ws=mpath, check=False)
     mg = ml.modelgrid
-    assert isinstance(
-        mg, StructuredGrid
-    ), "modelgrid is not an StructuredGrid instance"
+    assert isinstance(mg, StructuredGrid), "modelgrid is not an StructuredGrid instance"
     shape = (3, 15, 15)
-    assert (
-        mg.shape == shape
-    ), f"modelgrid shape {mg.shape} not equal to {shape}"
+    assert mg.shape == shape, f"modelgrid shape {mg.shape} not equal to {shape}"
     thickness = mg.cell_thickness
     shape = (5, 15, 15)
     assert (
@@ -484,9 +460,7 @@ def test_mg(function_tmpdir):
 
     # test that transform for arbitrary coordinates
     # is working in same as transform for model grid
-    mg2 = StructuredGrid(
-        delc=ms.dis.delc.array, delr=ms.dis.delr.array, lenuni=2
-    )
+    mg2 = StructuredGrid(delc=ms.dis.delc.array, delr=ms.dis.delr.array, lenuni=2)
     x = mg2.xcellcenters[0]
     y = mg2.ycellcenters[0]
     mg2.set_coord_info(xoff=xll, yoff=yll, angrot=angrot)
@@ -522,9 +496,7 @@ def test_dynamic_xll_yll():
     xll, yll = 286.80, 29.03
     # test scaling of length units
     ms2 = Modflow()
-    dis = ModflowDis(
-        ms2, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr, delc=delc
-    )
+    dis = ModflowDis(ms2, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr, delc=delc)
 
     ms2.modelgrid.set_coord_info(xoff=xll, yoff=yll, angrot=30.0)
     xll1, yll1 = ms2.modelgrid.xoffset, ms2.modelgrid.yoffset
@@ -976,10 +948,7 @@ def test_properties_check(function_tmpdir):
     )
     ind3_errors = chk.summary_array[ind3]["desc"]
 
-    assert (
-        "zero or negative horizontal hydraulic conductivity values"
-        in ind1_errors
-    )
+    assert "zero or negative horizontal hydraulic conductivity values" in ind1_errors
     assert (
         "horizontal hydraulic conductivity values below checker threshold of 1e-11"
         in ind1_errors
@@ -993,10 +962,7 @@ def test_properties_check(function_tmpdir):
         "horizontal hydraulic conductivity values above checker threshold of 100000.0"
         in ind2_errors
     )
-    assert (
-        "zero or negative vertical hydraulic conductivity values"
-        in ind2_errors
-    )
+    assert "zero or negative vertical hydraulic conductivity values" in ind2_errors
     assert (
         "vertical hydraulic conductivity values above checker threshold of 100000.0"
         in ind3_errors
@@ -1042,9 +1008,7 @@ def test_rchload(function_tmpdir):
     m1 = Modflow("rchload1", model_ws=ws)
     dis1 = ModflowDis(m1, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper)
     a = np.random.random((nrow, ncol))
-    rech1 = Util2d(
-        m1, (nrow, ncol), np.float32, a, "rech", cnstnt=1.0, how="openclose"
-    )
+    rech1 = Util2d(m1, (nrow, ncol), np.float32, a, "rech", cnstnt=1.0, how="openclose")
     rch1 = ModflowRch(m1, rech={0: rech1})
     m1.write_input()
 
@@ -1059,9 +1023,7 @@ def test_rchload(function_tmpdir):
     m2 = Modflow("rchload2", model_ws=ws)
     dis2 = ModflowDis(m2, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper)
     a = np.random.random((nrow, ncol))
-    rech2 = Util2d(
-        m2, (nrow, ncol), np.float32, a, "rech", cnstnt=2.0, how="openclose"
-    )
+    rech2 = Util2d(m2, (nrow, ncol), np.float32, a, "rech", cnstnt=2.0, how="openclose")
     rch2 = ModflowRch(m2, rech={0: rech2})
     m2.write_input()
 
@@ -1349,9 +1311,7 @@ def get_perftest_model(ws, name):
         botm=list(range(nlay)),
     )
 
-    rch = ModflowRch(
-        m, rech={k: 0.001 - np.cos(k) * 0.001 for k in range(nper)}
-    )
+    rch = ModflowRch(m, rech={k: 0.001 - np.cos(k) * 0.001 for k in range(nper)})
 
     ra = ModflowWel.get_empty(size**2)
     well_spd = {}
@@ -1359,10 +1319,7 @@ def get_perftest_model(ws, name):
         ra_per = ra.copy()
         ra_per["k"] = 1
         ra_per["i"] = (
-            (np.ones((size, size)) * np.arange(size))
-            .transpose()
-            .ravel()
-            .astype(int)
+            (np.ones((size, size)) * np.arange(size)).transpose().ravel().astype(int)
         )
         ra_per["j"] = list(range(size)) * size
         well_spd[kper] = ra
@@ -1398,7 +1355,5 @@ def test_model_load_time(function_tmpdir, benchmark):
     model = get_perftest_model(ws=function_tmpdir, name=name)
     model.write_input()
     benchmark(
-        lambda: Modflow.load(
-            f"{name}.nam", model_ws=function_tmpdir, check=False
-        )
+        lambda: Modflow.load(f"{name}.nam", model_ws=function_tmpdir, check=False)
     )

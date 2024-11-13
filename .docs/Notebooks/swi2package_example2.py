@@ -291,9 +291,7 @@ discret = flopy.modflow.ModflowDis(
     steady=False,
 )
 bas = flopy.modflow.ModflowBas(m, ibound=swt_ibound, strt=0.05)
-lpf = flopy.modflow.ModflowLpf(
-    m, hk=2.0, vka=2.0, ss=0.0, sy=0.0, laytyp=0, layavg=0
-)
+lpf = flopy.modflow.ModflowLpf(m, hk=2.0, vka=2.0, ss=0.0, sy=0.0, laytyp=0, layavg=0)
 oc = flopy.modflow.ModflowOc(m, save_every=1, save_types=["save head"])
 pcg = flopy.modflow.ModflowPcg(m)
 # Create the MT3DMS model files
@@ -331,9 +329,7 @@ btn = flopy.mt3d.Mt3dBtn(
     mxstrn=1e8,
 )
 dsp = flopy.mt3d.Mt3dDsp(m, al=0.0, trpt=1.0, trpv=1.0, dmcoef=0.0)
-gcg = flopy.mt3d.Mt3dGcg(
-    m, mxiter=1, iter1=50, isolve=3, cclose=1e-6, iprgcg=5
-)
+gcg = flopy.mt3d.Mt3dGcg(m, mxiter=1, iter1=50, isolve=3, cclose=1e-6, iprgcg=5)
 ssm = flopy.mt3d.Mt3dSsm(m, stress_period_data=ssm_data)
 # Create the SEAWAT model files
 vdf = flopy.seawat.SeawatVdf(

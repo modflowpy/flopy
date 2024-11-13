@@ -17,9 +17,7 @@ from ..utils.flopy_io import loadtxt
 class ModpathFile(ParticleTrackFile):
     """Provides MODPATH output file support."""
 
-    def __init__(
-        self, filename: Union[str, os.PathLike], verbose: bool = False
-    ):
+    def __init__(self, filename: Union[str, os.PathLike], verbose: bool = False):
         super().__init__(filename, verbose)
         self.output_type = self.__class__.__name__.lower().replace("file", "")
         (
@@ -67,10 +65,7 @@ class ModpathFile(ParticleTrackFile):
                 if skiprows < 1:
                     if f"MODPATH_{file_type.upper()}_FILE 6" in line.upper():
                         version = 6
-                    elif (
-                        f"MODPATH_{file_type.upper()}_FILE         7"
-                        in line.upper()
-                    ):
+                    elif f"MODPATH_{file_type.upper()}_FILE         7" in line.upper():
                         version = 7
                     elif "MODPATH 5.0" in line.upper():
                         version = 5
@@ -95,16 +90,15 @@ class ModpathFile(ParticleTrackFile):
 
         return modpath, compact, skiprows, version, direction
 
-    def intersect(
-        self, cells, to_recarray
-    ) -> Union[list[np.recarray], np.recarray]:
+    def intersect(self, cells, to_recarray) -> Union[list[np.recarray], np.recarray]:
         if self.version < 7:
             try:
                 raslice = self._data[["k", "i", "j"]]
             except (KeyError, ValueError):
                 raise KeyError(
-                    "could not extract 'k', 'i', and 'j' keys "
-                    "from {} data".format(self.output_type.lower())
+                    "could not extract 'k', 'i', and 'j' keys from {} data".format(
+                        self.output_type.lower()
+                    )
                 )
         else:
             try:
@@ -232,9 +226,7 @@ class PathlineFile(ModpathFile):
         "sequencenumber",
     ]
 
-    def __init__(
-        self, filename: Union[str, os.PathLike], verbose: bool = False
-    ):
+    def __init__(self, filename: Union[str, os.PathLike], verbose: bool = False):
         super().__init__(filename, verbose=verbose)
         self.dtype, self._data = self._load()
         self.nid = np.unique(self._data["particleid"])
@@ -278,9 +270,7 @@ class PathlineFile(ModpathFile):
                     sequencenumber, group, particleid, pathlinecount = t[0:4]
                     nrows += pathlinecount
                     # read in the particle data
-                    d = np.loadtxt(
-                        itertools.islice(f, 0, pathlinecount), dtype=dtyper
-                    )
+                    d = np.loadtxt(itertools.islice(f, 0, pathlinecount), dtype=dtyper)
                     key = (
                         idx,
                         sequencenumber,
@@ -297,9 +287,7 @@ class PathlineFile(ModpathFile):
             # fill data
             ipos0 = 0
             for key, value in particle_pathlines.items():
-                idx, sequencenumber, group, particleid, pathlinecount = key[
-                    0:5
-                ]
+                idx, sequencenumber, group, particleid, pathlinecount = key[0:5]
                 ipos1 = ipos0 + pathlinecount
                 # fill constant items for particle
                 # particleid is not necessarily unique for all pathlines - use
@@ -556,9 +544,7 @@ class EndpointFile(ModpathFile):
         "zone",
     ]
 
-    def __init__(
-        self, filename: Union[str, os.PathLike], verbose: bool = False
-    ):
+    def __init__(self, filename: Union[str, os.PathLike], verbose: bool = False):
         super().__init__(filename, verbose)
         self.dtype, self._data = self._load()
         self.nid = np.unique(self._data["particleid"])
@@ -665,9 +651,7 @@ class EndpointFile(ModpathFile):
                 raslice = repack_fields(data[keys])
             except (KeyError, ValueError):
                 raise KeyError(
-                    "could not extract "
-                    + "', '".join(keys)
-                    + " from endpoint data."
+                    "could not extract " + "', '".join(keys) + " from endpoint data."
                 )
         else:
             if source:
@@ -754,8 +738,7 @@ class EndpointFile(ModpathFile):
             xcol, ycol, zcol = "x0", "y0", "z0"
         else:
             raise Exception(
-                'flopy.map.plot_endpoint direction must be "ending" '
-                'or "starting".'
+                'flopy.map.plot_endpoint direction must be "ending" or "starting".'
             )
         if mg is None:
             raise ValueError("A modelgrid object was not provided.")
