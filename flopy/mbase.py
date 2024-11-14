@@ -46,8 +46,9 @@ iprn = -1
 
 def resolve_exe(exe_name: Union[str, os.PathLike], forgive: bool = False) -> str:
     """
-    Resolves the absolute path of the executable, raising FileNotFoundError if the executable
-    cannot be found (set forgive to True to return None and warn instead of raising an error).
+    Resolves the absolute path of the executable, raising FileNotFoundError
+    if the executable cannot be found (set forgive to True to return None
+    and warn instead of raising an error).
 
     Parameters
     ----------
@@ -1274,7 +1275,8 @@ class BaseModel(ModelInterface):
         if not os.path.exists(new_pth):
             try:
                 print(
-                    f"\ncreating model workspace...\n   {flopy_io.relpath_safe(new_pth)}"
+                    "\ncreating model workspace...\n   "
+                    + flopy_io.relpath_safe(new_pth)
                 )
                 os.makedirs(new_pth)
             except:
@@ -1704,7 +1706,8 @@ def run_model(
     exe_path = resolve_exe(exe_name)
     if not silent:
         print(
-            f"FloPy is using the following executable to run the model: {flopy_io.relpath_safe(exe_path, model_ws)}"
+            "FloPy is using the following executable to run the model: "
+            + flopy_io.relpath_safe(exe_path, model_ws)
         )
 
     # make sure namefile exists

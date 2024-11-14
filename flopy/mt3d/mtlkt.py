@@ -422,7 +422,8 @@ class Mt3dLkt(Package):
                     print("   ntmp < 0 not allowed for first stress period   ")
                 if (iper > 0) and (ntmp < 0):
                     print(
-                        "   use lkt boundary conditions specified in last stress period   "
+                        "   use lkt boundary conditions "
+                        "specified in last stress period   "
                     )
 
             # Item 4: Read ntmp boundary conditions

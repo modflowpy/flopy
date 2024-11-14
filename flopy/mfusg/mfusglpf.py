@@ -197,7 +197,8 @@ class MfUsgLpf(ModflowLpf):
     >>> import flopy
     >>> m = flopy.mfusg.MfUsg()
     >>> disu = flopy.mfusg.MfUsgDisU(
-        model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
+    ...     model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]),
+    ...     fahl=[1.0], cl12=[1.0])
     >>> lpf = flopy.mfusg.MfUsgLpf(m)
     """
 
@@ -440,7 +441,8 @@ class MfUsgLpf(ModflowLpf):
         >>> import flopy
         >>> m = flopy.mfusg.MfUsg()
         >>> disu = flopy.mfusg.MfUsgDisU(
-            model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
+        ...     model=m, nlay=1, nodes=1, iac=[1], njag=1,
+        ...     ja=np.array([0]), fahl=[1.0], cl12=[1.0])
         >>> lpf = flopy.mfusg.MfUsgLpf.load('test.lpf', m)
         """
         msg = (

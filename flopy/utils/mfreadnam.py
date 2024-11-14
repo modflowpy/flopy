@@ -299,7 +299,8 @@ def get_entries_from_namefile(
     unit: int = None,
     extension: str = None,
 ) -> list[tuple]:
-    """Get entries from an MF6 namefile. Can select using FTYPE, UNIT, or file extension.
+    """Get entries from an MF6 namefile. Can select using FTYPE, UNIT, or file
+    extension.
     This function only supports MF6 namefiles.
 
     Parameters

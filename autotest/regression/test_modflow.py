@@ -377,7 +377,8 @@ def test_mf2005_lake(function_tmpdir, namfile, mf2005_test_path):
 
     fn0 = join(ws, Path(namfile).name)
 
-    # write free format files - won't run without resetting to free format - evt external file issue
+    # write free format files -
+    # won't run without resetting to free format - evt external file issue
     m.free_format_input = True
 
     # rewrite files

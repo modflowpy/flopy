@@ -1177,7 +1177,8 @@ class UnstructuredGrid(Grid):
                 verts_provided = len(line) - 6
                 if verts_declared != verts_provided:
                     raise ValueError(
-                        f"Cell {nn} declares {verts_declared} vertices but provides {verts_provided}"
+                        f"Cell {nn} declares {verts_declared} vertices "
+                        f"but provides {verts_provided}"
                     )
 
                 verts = [int(vert) - 1 for vert in line[6 : 6 + verts_declared]]

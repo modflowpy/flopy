@@ -301,7 +301,8 @@ def output_helper(
     Parameters
     ----------
     f : str or PathLike or NetCdf or dict
-        filepath to write output to (must have .shp or .nc extension), NetCDF object, or dictionary
+        filepath to write output to (must have .shp or .nc extension),
+        NetCDF object, or dictionary
     ml : flopy.mbase.ModelInterface derived type
     oudic : dict
         output_filename,flopy datafile/cellbudgetfile instance
@@ -574,7 +575,8 @@ def model_export(f: Union[str, os.PathLike, NetCdf, dict], ml, fmt=None, **kwarg
     Parameters
     ----------
     f : str or PathLike or NetCdf or dict
-        file path (".nc" for netcdf or ".shp" for shapefile) or NetCDF object or dictionary
+        file path (".nc" for netcdf or ".shp" for shapefile),
+        NetCDF object, or dictionary
     ml : flopy.modflow.mbase.ModelInterface object
         flopy model object
     fmt : str
@@ -661,7 +663,8 @@ def package_export(
     Parameters
     ----------
     f : str or PathLike or NetCdf or dict
-        output file path (extension .shp for shapefile or .nc for netcdf) or NetCDF object or dictionary
+        output file path (extension .shp for shapefile or .nc for netcdf),
+        NetCDF object, or dictionary
     pak : flopy.pakbase.Package object
         package to export
     fmt : str

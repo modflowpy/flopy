@@ -34,7 +34,8 @@ class Modpath6Bas(Package):
     def_iface : int or list of ints
         Cell face (iface) on which to assign flows from MODFLOW budget file.
     laytyp : None, int or list of ints
-        MODFLOW layer type (0 is convertible, 1 is confined). If None, read from modflow model
+        MODFLOW layer type (0 is convertible, 1 is confined).
+        If None, read from modflow model
     ibound : None or array of ints, optional
         The ibound array (the default is 1). If None, pull from parent modflow model
     prsity : array of ints, optional

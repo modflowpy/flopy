@@ -388,7 +388,8 @@ class PackageInterface:
                 )
                 if inds.any():
                     if self.sy.shape[1] is None:
-                        # unstructured; build flat nodal property array slicers (by layer)
+                        # unstructured;
+                        # build flat nodal property array slicers (by layer)
                         node_to = np.cumsum([s.array.size for s in self.ss])
                         node_from = np.array([0] + list(node_to[:-1]))
                         node_k_slices = np.array(

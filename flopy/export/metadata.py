@@ -82,7 +82,10 @@ class acdd:
             if "publisher" in d.get("type").lower()
         ][0]
         self.publisher_email = self.sb["provenance"]["linkProcess"].get("processedBy")
-        self.publisher_url = "https://www2.usgs.gov/water/"  # self.sb['provenance']['linkProcess'].get('linkReference')
+        # TODO: should publisher_url be obtained from linkReference?
+        # publisher_url = self.sb['provenance']['linkProcess'].get('linkReference')
+        publisher_url = "https://www2.usgs.gov/water/"
+        self.publisher_url = publisher_url
         self.geospatial_bounds_crs = "EPSG:4326"
         self.geospatial_lat_min = self.bounds.get("minY")
         self.geospatial_lat_max = self.bounds.get("maxY")

@@ -248,7 +248,8 @@ def get_bindir_options(previous=None) -> Dict[str, Tuple[Path, str]]:
 
 
 def select_bindir(bindir, previous=None, quiet=False, is_cli=False) -> Path:
-    """Resolve an install location if provided, or prompt interactive user to select one."""
+    """Resolve an install location if provided, or prompt interactive user to
+    select one."""
     options = get_bindir_options(previous)
 
     if len(bindir) > 1:  # auto-select mode

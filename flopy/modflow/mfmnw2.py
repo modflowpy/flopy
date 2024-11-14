@@ -168,8 +168,8 @@ class Mnw:
         When writing non-dataset 2d variables to MNW2 input, the first value
         for the well will be used.
 
-        Other variables (e.g. hlim) can be entered here as
-        constant for all stress periods, or by stress period below in stress_period_data.
+        Other variables (e.g. hlim) can be entered here as constant for all
+        stress periods, or by stress period below in stress_period_data.
         See MNW2 input instructions for more details.
 
         Columns are:
@@ -1331,7 +1331,8 @@ class ModflowMnw2(Package):
             # master table with all node data
             node_data = np.append(node_data, mnwobj.node_data).view(np.recarray)
 
-        stress_period_data = {}  # stress period data table for package (flopy convention)
+        # stress period data table for package (flopy convention)
+        stress_period_data = {}
         itmp = []
         for per in range(0, nper):
             # dataset 3
@@ -1668,7 +1669,9 @@ class ModflowMnw2(Package):
         """
         todrop = {'qfrcmx', 'qfrcmn'}
         names = list(set(self.stress_period_data.dtype.names).difference(todrop))
-        dtype = np.dtype([(k, d) for k, d in self.stress_period_data.dtype.descr if k not in todrop])
+        dtype = np.dtype(
+            [(k, d) for k, d in self.stress_period_data.dtype.descr if k not in todrop]
+        )
         spd = {}
         for k, v in self.stress_period_data.data.items():
             newarr = np.array(np.zeros_like(self.stress_period_data[k][names]),

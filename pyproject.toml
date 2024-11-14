@@ -144,7 +144,6 @@ select = [
 ]
 ignore = [
     "E402", # module level import not at top of file
-    "E501", # line too long TODO FIXME
     "E712", # Avoid equality comparisons to `True`
     "E722", # do not use bare `except`
     "E721", # use `is`/`is not` for type comparisons
@@ -158,4 +157,5 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"flopy/mf6/**/*.py" = ["ISC001"]
+".docs/**/*.py" = ["E501"]
+"flopy/mf6/**/*.py" = ["E501", "ISC001"]

@@ -319,7 +319,8 @@ class Gridgen:
                     xmin, xmax, ymin, ymax = elev_extent
                 except:
                     raise ValueError(
-                        f"Cannot unpack elev_extent as tuple (xmin, xmax, ymin, ymax): {elev_extent}"
+                        "Cannot unpack elev_extent as tuple (xmin, xmax, ymin, ymax): "
+                        f"{elev_extent}"
                     )
 
                 nm = f"_gridgen.lay{isurf}.asc"
@@ -335,7 +336,8 @@ class Gridgen:
                 self._asciigrid_dict[isurf] = elev
             else:
                 raise ValueError(
-                    "ASCIIGRID was specified but elevation was not provided as a numpy ndarray or asciigrid file."
+                    "ASCIIGRID was specified but elevation was not provided "
+                    "as a numpy ndarray or asciigrid file."
                 )
 
     def resolve_shapefile_path(self, p):

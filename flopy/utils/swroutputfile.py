@@ -746,7 +746,8 @@ class SwrFlow(SwrFile):
 
 class SwrExchange(SwrFile):
     """
-    Read binary SWR surface-water groundwater exchange output from MODFLOW SWR Process binary output files
+    Read binary SWR surface-water groundwater exchange output from
+    MODFLOW SWR Process binary output files
 
     Parameters
     ----------

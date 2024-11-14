@@ -475,7 +475,8 @@ class BinaryLayerFile(LayerFile):
         warn_threshold = 10000000
         if self.nrow > 1 and self.nrow * self.ncol > warn_threshold:
             warnings.warn(
-                f"Very large grid, ncol ({self.ncol}) * nrow ({self.nrow}) > {warn_threshold}"
+                f"Very large grid, ncol ({self.ncol}) * nrow ({self.nrow})"
+                f" > {warn_threshold}"
             )
         self.file.seek(0, 2)
         self.totalbytes = self.file.tell()

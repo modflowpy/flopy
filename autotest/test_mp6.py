@@ -682,7 +682,8 @@ def test_data_pass_no_modflow(function_tmpdir, alt):
 @pytest.mark.parametrize("alt", [True, False])
 def test_data_pass_with_modflow(function_tmpdir, alt):
     """
-    test that user specified head files etc. are preferred over files from the modflow model
+    test that user specified head files etc. are preferred
+    over files from the modflow model
     """
 
     ml, ctx = get_mf2005_model("data_pass", function_tmpdir, alt)
@@ -760,7 +761,8 @@ def test_data_pass_with_modflow(function_tmpdir, alt):
 @pytest.mark.parametrize("alt", [True, False])
 def test_just_from_model(function_tmpdir, alt):
     """
-    test that user specified head files etc. are preferred over files from the modflow model
+    test that user specified head files etc. are preferred
+    over files from the modflow model
     """
 
     ml, ctx = get_mf2005_model("data_pass", function_tmpdir, alt)

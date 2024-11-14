@@ -33,6 +33,12 @@ if HAS_PYPROJ:
     import pyproj
 
 
+epsg_3070_proj4_str = (
+    "+proj=tmerc +lat_0=0 +lon_0=-90 +k=0.9996 +x_0=520000 "
+    "+y_0=-4480000 +datum=NAD83 +units=m +no_defs "
+)
+
+
 @pytest.fixture
 def minimal_unstructured_grid_info():
     d = {
@@ -579,10 +585,7 @@ def test_unstructured_from_gridspec_comments(example_data_path):
         (None, None),
         (26916, "EPSG:26916"),
         ("epsg:5070", "EPSG:5070"),
-        (
-            "+proj=tmerc +lat_0=0 +lon_0=-90 +k=0.9996 +x_0=520000 +y_0=-4480000 +datum=NAD83 +units=m +no_defs ",
-            "EPSG:3070",
-        ),
+        (epsg_3070_proj4_str, "EPSG:3070"),
         pytest.param(4269, None, marks=pytest.mark.xfail),
     ),
 )
@@ -649,10 +652,7 @@ def test_grid_crs(minimal_unstructured_grid_info, crs, expected_srs, function_tm
         (None, None),
         (26916, "EPSG:26916"),
         ("epsg:5070", "EPSG:5070"),
-        (
-            "+proj=tmerc +lat_0=0 +lon_0=-90 +k=0.9996 +x_0=520000 +y_0=-4480000 +datum=NAD83 +units=m +no_defs ",
-            "EPSG:3070",
-        ),
+        (epsg_3070_proj4_str, "EPSG:3070"),
         ("ESRI:102733", "ESRI:102733"),
         pytest.param(4269, None, marks=pytest.mark.xfail),
     ),

@@ -734,7 +734,8 @@ class Modflow(BaseModel):
         # DEPRECATED since version 3.3.4
         if ml.version == "mfusg":
             raise ValueError(
-                "flopy.modflow.Modflow no longer supports mfusg; use flopy.mfusg.MfUsg() instead"
+                "flopy.modflow.Modflow no longer supports mfusg; "
+                "use flopy.mfusg.MfUsg() instead"
             )
 
         # reset unit number for glo file

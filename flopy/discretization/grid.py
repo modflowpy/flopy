@@ -871,7 +871,7 @@ class Grid:
 
     def get_lni(self, nodes):
         """
-        Get the layer index and within-layer node index (both 0-based) for the given nodes
+        Get the 0-based layer index and within-layer node index for the given nodes
 
         Parameters
         ----------

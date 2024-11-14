@@ -204,7 +204,8 @@ class Modpath6Sim(Package):
         None
 
         """
-        # item numbers and CamelCase variable names correspond to Modpath 6 documentation
+        # item numbers and CamelCase variable names correspond to
+        # Modpath 6 documentation
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
 
         f_sim = open(self.fn_path, "w")
@@ -395,7 +396,8 @@ class StartingLocationsFile(Package):
         The model object (of type :class:`flopy.modpath.mp.Modpath`) to which
         this package will be added.
     inputstyle : 1
-        Input style described in MODPATH6 manual (currently only input style 1 is supported)
+        Input style described in MODPATH6 manual
+        (currently only input style 1 is supported)
     extension : string
         Filename extension (default is 'loc')
     use_pandas: bool, default True
@@ -456,7 +458,8 @@ class StartingLocationsFile(Package):
         Parameters
         ----------
         npt : int
-            Number of particles. Particles in array will be numbered consecutively from 1 to npt.
+            Number of particles.
+            Particles in array will be numbered consecutively from 1 to npt.
 
         """
         dtype = StartingLocationsFile.get_dtypes()
@@ -494,7 +497,7 @@ class StartingLocationsFile(Package):
                           'initialtime', 'label']
         :param save_group_mapper bool, if true, save a groupnumber to group name mapper as well.
         :return:
-        """
+        """  # noqa
         # convert float format string to pandas float format
         float_format = float_format.replace("{", "").replace("}", "").replace(":", "%")
         data = pd.DataFrame(data)
@@ -507,7 +510,8 @@ class StartingLocationsFile(Package):
             data.loc[:, "groupname"] = data.groupname.str.decode("UTF-8")
 
         # write loc file with pandas to save time
-        # simple speed test writing particles with flopy and running model took 30 min, writing with pandas took __min
+        # simple speed test writing particles with flopy and running model took 30 min,
+        # writing with pandas took __min
         loc_path = self.fn_path
         # write groups
         group_dict = dict(data[["particlegroup", "groupname"]].itertuples(False, None))

@@ -428,10 +428,12 @@ class ModflowSfr2(Package):
         else:
             pass
         # use atleast_1d for length since segment_data might be a 0D array
-        # this seems to be OK, because self.segment_data is produced by the constructor (never 0D)
+        # this seems to be OK, because self.segment_data is produced by the
+        # constructor (never 0D)
         self.nsfrpar = nsfrpar
         self.nparseg = nparseg
-        # conversion factor used in calculating stream depth for stream reach (icalc = 1 or 2)
+        # conversion factor used in calculating stream depth for stream reach
+        # (icalc = 1 or 2)
         self._const = const if const is not None else None
         self.dleak = dleak  # tolerance level of stream depth used in computing leakage
 
@@ -439,7 +441,8 @@ class ModflowSfr2(Package):
         self.istcb2 = istcb2
 
         # if nstrm < 0
-        # defines the format of the input data and whether or not unsaturated flow is simulated
+        # defines the format of the input data and whether or not unsaturated
+        # flow is simulated
         self.isfropt = isfropt
 
         # if isfropt > 1
@@ -893,7 +896,8 @@ class ModflowSfr2(Package):
                 )
                 # container to hold any auxiliary variables
                 current_aux = {}
-                # these could also be implemented as structured arrays with a column for segment number
+                # these could also be implemented as structured arrays with
+                # a column for segment number
                 current_6d = {}
                 current_6e = {}
                 for j in range(itmp):
@@ -932,8 +936,9 @@ class ModflowSfr2(Package):
 
                     if icalc == 2:
                         # ATL: not sure exactly how isfropt logic functions for this
-                        # dataset 6d description suggests that this line isn't read for isfropt > 1
-                        # but description of icalc suggest that icalc=2 (8-point channel) can be used with any isfropt
+                        # dataset 6d description suggests that this line isn't read for
+                        # isfropt > 1 but description of icalc suggest that icalc=2
+                        # (8-point channel) can be used with any isfropt
                         if i == 0 or nstrm > 0 and not reachinput or isfropt <= 1:
                             dataset_6d = []
                             for _ in range(2):
@@ -2037,12 +2042,14 @@ class check:
 
     Daniel Feinstein's top 10 SFR problems (7/16/2014):
     1) cell gaps btw adjacent reaches in a single segment
-    2) cell gaps btw routed segments. possibly because of re-entry problems at domain edge
+    2) cell gaps btw routed segments. possibly because of re-entry problems at
+       domain edge
     3) adjacent reaches with STOP sloping the wrong way
     4) routed segments with end/start sloping the wrong way
     5) STOP>TOP1 violations, i.e.,floaters
     6) STOP<<TOP1 violations, i.e., exaggerated incisions
-    7) segments that end within one diagonal cell distance from another segment, inviting linkage
+    7) segments that end within one diagonal cell distance from another
+       segment, inviting linkage
     8) circular routing of segments
     9) multiple reaches with non-zero conductance in a single cell
     10) reaches in inactive cells
@@ -2243,8 +2250,9 @@ class check:
 
         if len(txt) == 0 and np.any(inds):
             decreases = np.array(sd[inds])[["nseg", "outseg"]]
-            txt += "Found {} segment numbers decreasing in the downstream direction.\n".format(
-                len(decreases)
+            txt += (
+                f"Found {len(decreases)} segment numbers decreasing "
+                "in the downstream direction.\n"
             )
             txt += "MODFLOW will run but convergence may be slowed:\n"
             if self.level == 1:
@@ -2271,8 +2279,9 @@ class check:
         # simpler check method using paths from routing graph
         circular_segs = [k for k, v in self.sfr.paths.items() if v is None]
         if len(circular_segs) > 0:
-            txt += "{} instances where an outlet was not found after {} consecutive segments!\n".format(
-                len(circular_segs), self.sfr.nss
+            txt += (
+                f"{len(circular_segs)} instances where an outlet was "
+                f"not found after {self.sfr.nss} consecutive segments!\n"
             )
             if self.level == 1:
                 txt += " ".join(map(str, circular_segs)) + "\n"
@@ -2633,8 +2642,9 @@ class check:
             reach_data = (
                 self.sfr.reach_data
             )  # inconsistent with other checks that work with
-            # reach_data attribute of check class. Want to have get_outreaches as a method of sfr class
-            # (for other uses). Not sure if other check methods should also copy reach_data directly from
+            # reach_data attribute of check class. Want to have get_outreaches
+            # as a method of sfr class (for other uses). Not sure if other
+            # check methods should also copy reach_data directly from
             # SFR package instance for consistency.
 
             rd = recfunctions.append_fields(
@@ -2661,19 +2671,20 @@ class check:
                 ],
                 col1="d_strtop",
                 col2=np.zeros(len(rd)),
-                level0txt="{} reaches encountered with strtop < strtop of downstream reach.",
+                level0txt="{} reaches encountered with strtop < strtop of downstream reach.",  # noqa
                 level1txt="Elevation rises:",
             )
             if len(txt) == 0:
                 passed = True
         else:
-            txt += "Reach strtop not specified for nstrm={}, reachinput={} and isfropt={}\n".format(
-                self.sfr.nstrm, self.sfr.reachinput, self.sfr.isfropt
+            txt += (
+                f"Reach strtop not specified for nstrm={self.sfr.nstrm}, "
+                f"reachinput={self.sfr.reachinput} and isfropt={self.sfr.isfropt}\n"
             )
             passed = True
         self._txt_footer(headertxt, txt, "reach elevations", passed)
 
-        headertxt = "Checking reach_data for inconsistencies between streambed elevations and the model grid...\n"
+        headertxt = "Checking reach_data for inconsistencies between streambed elevations and the model grid...\n"  # noqa
         if self.verbose:
             print(headertxt.strip())
         txt = ""
@@ -2719,7 +2730,7 @@ class check:
                 ],
                 col1="layerbot",
                 col2="strbot",
-                level0txt="{} reaches encountered with streambed bottom below layer bottom.",
+                level0txt="{} reaches encountered with streambed bottom below layer bottom.",  # noqa
                 level1txt="Layer bottom violations:",
             )
             if len(txt) > 0:
@@ -2757,8 +2768,9 @@ class check:
             if len(txt) == 0:
                 passed = True
         else:
-            txt += "Reach strtop, strthick not specified for nstrm={}, reachinput={} and isfropt={}\n".format(
-                self.sfr.nstrm, self.sfr.reachinput, self.sfr.isfropt
+            txt += (
+                f"Reach strtop, strthick not specified for nstrm={self.sfr.nstrm}, "
+                f"reachinput={self.sfr.reachinput} and isfropt={self.sfr.isfropt}\n"
             )
             passed = True
         self._txt_footer(
@@ -2844,16 +2856,17 @@ class check:
             if len(txt) == 0:
                 passed = True
         else:
-            txt += "Segment elevup and elevdn not specified for nstrm={} and isfropt={}\n".format(
-                self.sfr.nstrm, self.sfr.isfropt
+            txt += (
+                f"Segment elevup and elevdn not specified for nstrm={self.sfr.nstrm} "
+                f"and isfropt={self.sfr.isfropt}\n"
             )
             passed = True
         self._txt_footer(headertxt, txt, "segment elevations vs. model grid", passed)
 
     def slope(self, minimum_slope=1e-4, maximum_slope=1.0):
-        """Checks that streambed slopes are greater than or equal to a specified minimum value.
-        Low slope values can cause "backup" or unrealistic stream stages with icalc options
-        where stage is computed.
+        """Checks that streambed slopes are greater than or equal to a
+        specified minimum value.  Low slope values can cause "backup" or
+        unrealistic stream stages with icalc options where stage is computed.
         """
         headertxt = f"Checking for streambed slopes of less than {minimum_slope}...\n"
         txt = ""
@@ -2868,8 +2881,9 @@ class check:
                 is_less = self.reach_data.slope < minimum_slope
                 if np.any(is_less):
                     below_minimum = self.reach_data[is_less]
-                    txt += "{} instances of streambed slopes below minimum found.\n".format(
-                        len(below_minimum)
+                    txt += (
+                        f"{len(below_minimum)} instances of streambed slopes "
+                        "below minimum found.\n"
                     )
                     if self.level == 1:
                         txt += "Reaches with low slopes:\n"
@@ -2897,8 +2911,9 @@ class check:
 
                 if np.any(is_greater):
                     above_max = self.reach_data[is_greater]
-                    txt += "{} instances of streambed slopes above maximum found.\n".format(
-                        len(above_max)
+                    txt += (
+                        f"{len(above_max)} instances of streambed slopes "
+                        "above maximum found.\n"
                     )
                     if self.level == 1:
                         txt += "Reaches with high slopes:\n"
@@ -3284,8 +3299,8 @@ def _parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
             thickm = line.pop(0)
             elevupdn = line.pop(0)
             if isfropt in [4, 5] and per == 0:
-                # table in online guide suggests that the following items should be present in this case
-                # but in the example
+                # table in online guide suggests that the following items
+                # should be present in this case but in the example
                 thts = _pop_item(line)
                 thti = _pop_item(line)
                 eps = _pop_item(line)

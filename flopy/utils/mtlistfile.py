@@ -466,5 +466,6 @@ class MtListBudget:
             return extracted_number
         else:
             raise Exception(
-                f"Error extracting number between {start_string} and {end_string} in {input_string}"
+                "Error extracting number between "
+                f"{start_string} and {end_string} in {input_string}"
             )

@@ -1295,5 +1295,6 @@ def test_multi_model(function_tmpdir):
             diff = np.nansum(diff)
             if diff > 10.25:
                 raise AssertionError(
-                    f"Difference between output arrays: {diff :.2f} greater than tolerance"
+                    "Difference between output arrays: "
+                    f"{diff :.2f} greater than tolerance"
                 )

@@ -94,7 +94,7 @@ def test_modflow_load(namfile, example_data_path):
         pytest.param(
             _example_data_path / "freyberg_multilayer_transient" / "freyberg.nam",
             {
-                "proj4": "+proj=utm +zone=14 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
+                "proj4": "+proj=utm +zone=14 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",  # noqa
                 "angrot": 15.0,
                 "xoffset": 622241.1904510253,
                 "yoffset": 3343617.741737109,
@@ -1225,7 +1225,8 @@ def test_load_with_list_reader(function_tmpdir):
     ["recarray", "dataframe", "dict_of_recarray", "dict_of_dataframe"],
 )
 def test_pkg_data_containers(function_tmpdir, container):
-    """Test various containers for package data (list, ndarray, recarray, dataframe, dict of such)"""
+    """Test various containers for package data
+    (list, ndarray, recarray, dataframe, dict of such)"""
 
     nlay = 1
     nrow = 10

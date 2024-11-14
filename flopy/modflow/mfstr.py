@@ -219,7 +219,7 @@ class ModflowStr(Package):
     >>>                                         #applied to all stress periods
     >>> str = flopy.modflow.ModflowStr(m, stress_period_data=strd)
 
-    """
+    """  # noqa
 
     def __init__(
         self,

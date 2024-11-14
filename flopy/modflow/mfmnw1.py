@@ -119,17 +119,24 @@ class ModflowMnw1(Package):
         self._generate_heading()
         self.mxmnw = mxmnw  # -maximum number of multi-node wells to be simulated
         self.iwelpt = iwelpt  # -verbosity flag
-        self.nomoiter = nomoiter  # -integer indicating the number of iterations for which flow in MNW wells is calculated
-        self.kspref = kspref  # -alphanumeric key indicating which set of water levels are to be used as reference values for calculating drawdown
+        # integer indicating the number of iterations for which flow in MNW wells
+        # is calculated
+        self.nomoiter = nomoiter
+        # alphanumeric key indicating which set of water levels are to be used as
+        # reference values for calculating drawdown
+        self.kspref = kspref
         self.losstype = losstype  # -string indicating head loss type for each well
-        self.wel1_bynode_qsum = wel1_bynode_qsum  # -nested list containing file names, unit numbers, and ALLTIME flag for auxiliary output, e.g. [['test.ByNode',92,'ALLTIME']]
+        # nested list containing file names, unit numbers, and ALLTIME flag for
+        # auxiliary output, e.g. [['test.ByNode',92,'ALLTIME']]
+        self.wel1_bynode_qsum = wel1_bynode_qsum
         if dtype is not None:
             self.dtype = dtype
         else:
             self.dtype = self.get_default_dtype(structured=self.parent.structured)
         self.stress_period_data = MfList(self, stress_period_data)
 
-        self.mnwname = mnwname  # -string prefix name of file for outputting time series data from MNW1
+        # string prefix name of file for outputting time series data from MNW1
+        self.mnwname = mnwname
 
         # -input format checks:
         lossTypes = ["skin", "linear", "nonlinear"]
@@ -310,7 +317,8 @@ class ModflowMnw1(Package):
                         )
 
         spd = self.stress_period_data.drop("mnw_no")
-        # force write_transient to keep the list arrays internal because MNW1 doesn't allow open/close
+        # force write_transient to keep the list arrays internal because MNW1
+        # doesn't allow open/close
         spd.write_transient(f, forceInternal=True)
 
         # -Un-numbered section PREFIX:MNWNAME

@@ -1155,7 +1155,7 @@ class Mt3dBtn(Package):
 
         if model.verbose:
             print(
-                "   loading PERLEN, NSTP, TSMULT, TSLNGH, DT0, MXSTRN, TTSMULT, TTSMAX..."
+                "   loading PERLEN, NSTP, TSMULT, TSLNGH, DT0, MXSTRN, TTSMULT, TTSMAX..."  # noqa
             )
         dt0, mxstrn, ttsmult, ttsmax = [], [], [], []
         perlen = []
