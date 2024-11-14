@@ -50,6 +50,12 @@ To develop FloPy you must have the following software installed on your machine:
 You will need [Git](https://git-scm.com) and/or the **GitHub app** (for [Mac](https://mac.github.com) or [Windows](https://windows.github.com)).
 GitHub's  [Guide to Installing Git](https://help.github.com/articles/set-up-git) is a good source of information.
 
+Optionally, the [`git blame`](https://git-scm.com/docs/git-blame) tool can be configured to work locally using:
+
+```shell
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
+
 ### Python
 
 FloPy supports several recent versions of Python, loosely following [NEP 29](https://numpy.org/neps/nep-0029-deprecation_policy.html#implementation).
