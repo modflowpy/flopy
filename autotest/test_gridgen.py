@@ -714,7 +714,7 @@ def test_gridgen(function_tmpdir):
     g6.add_refinement_features(rfpoly, "polygon", 3, range(nlay))
     gu.add_refinement_features(rfpoly, "polygon", 3, range(nlay))
 
-    # inactivate parts of mfusg layer 2 to test vertical-pass-through option
+    # deactivate parts of mfusg layer 2 to test vertical-pass-through option
     xmin = 0 * delr
     xmax = 18 * delr
     ymin = 0 * delc

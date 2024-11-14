@@ -277,14 +277,14 @@ def test_exe_selection(example_data_path, function_tmpdir):
         == exe_name
     )
 
-    # init/load should warn if exe DNE
+    # init/load should warn if exe does not exist
     exe_name = "not_an_exe"
     with pytest.warns(UserWarning):
         ml = Modflow(exe_name=exe_name)
     with pytest.warns(UserWarning):
         ml = Modflow.load(namfile_path, exe_name=exe_name, model_ws=model_path)
 
-    # run should error if exe DNE
+    # run should error if exe does not exist
     ml = Modflow.load(namfile_path, exe_name=exe_name, model_ws=model_path)
     ml.change_model_ws(function_tmpdir)
     ml.write_input()

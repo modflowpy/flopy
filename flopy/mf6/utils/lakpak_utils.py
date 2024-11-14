@@ -40,7 +40,7 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
     Returns
     -------
     idomain : ndarry
-        idomain adjusted to inactivate cells with lakes
+        idomain adjusted to deactivate cells with lakes
     connection_dict : dict
         dictionary with the zero-based lake number keys and number of
         connections in a lake values

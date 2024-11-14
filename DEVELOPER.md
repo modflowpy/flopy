@@ -215,7 +215,7 @@ The `section` attribute assigns the example to a group within the rendered docum
 
 **Note**: Examples are rendered into a thumbnail gallery view by [nbsphinx](https://github.com/spatialaudio/nbsphinx) when the [online documentation](https://flopy.readthedocs.io/en/latest/) is built. At least one plot/visualization is recommended in order to provide a thumbnail for each example notebook in the [Examples gallery](https://flopy.readthedocs.io/en/latest/notebooks.html)gallery.
 
-**Note**: Thumbnails for the examples gallery are generated automatically from the notebook header (typically the first line, begining with a single '#'), and by default, the last plot generated. Thumbnails can be customized to use any plot in the notebook, or an external image, as described [here](https://nbsphinx.readthedocs.io/en/0.9.1/subdir/gallery.html).
+**Note**: Thumbnails for the examples gallery are generated automatically from the notebook header (typically the first line, beginning with a single '#'), and by default, the last plot generated. Thumbnails can be customized to use any plot in the notebook, or an external image, as described [here](https://nbsphinx.readthedocs.io/en/0.9.1/subdir/gallery.html).
 
 Each example should create and (attempt to) dispose of its own isolated temporary workspace. On Windows, Python's `TemporaryDirectory` can raise permissions errors, so cleanup is trapped with `try/except`. Some scripts also accept a `--quiet` flag, curtailing verbose output, and a `--keep` option to specify a working directory of the user's choice.
 
@@ -283,7 +283,7 @@ This should complete in under a minute on most machines. Smoke testing aims to c
 
 ### Writing tests
 
-Test functions and files should be named informatively, with related tests grouped in the same file. The test suite runs on GitHub Actions in parallel, so tests should not access the working space of other tests, example scripts, tutorials or notebooks. A number of shared test fixtures are [imported](conftest.py) from [`modflow-devtools`](https://github.com/MODFLOW-USGS/modflow-devtools). These include keepable temporary directory fixtures and miscellanous utilities (see `modflow-devtools` repository README for more information on fixture usage). New tests should use these facilities where possible. See also the [contribution guidelines](CONTRIBUTING.md) before submitting a pull request.
+Test functions and files should be named informatively, with related tests grouped in the same file. The test suite runs on GitHub Actions in parallel, so tests should not access the working space of other tests, example scripts, tutorials or notebooks. A number of shared test fixtures are [imported](conftest.py) from [`modflow-devtools`](https://github.com/MODFLOW-USGS/modflow-devtools). These include keepable temporary directory fixtures and miscellaneous utilities (see `modflow-devtools` repository README for more information on fixture usage). New tests should use these facilities where possible. See also the [contribution guidelines](CONTRIBUTING.md) before submitting a pull request.
 
 ### Debugging tests
 

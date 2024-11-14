@@ -589,7 +589,7 @@ class Lgr:
         used to create a disv grid (instead of a separate parent
         and child representation).  The gridprops dictionary can
         be unpacked into the flopy.mf6.Modflowdisv() constructor
-        and flopy.discretization.VertexGrid() contructor.
+        and flopy.discretization.VertexGrid() constructor.
 
         Note that export capability will only work if the parent
         and child models have corresponding layers.
@@ -964,7 +964,7 @@ class LgrToDisv:
         used to create a disv grid (instead of a separate parent
         and child representation).  The gridprops dictionary can
         be unpacked into the flopy.mf6.Modflowdisv() constructor
-        and flopy.discretization.VertexGrid() contructor.
+        and flopy.discretization.VertexGrid() constructor.
 
         Note that export capability will only work if the parent
         and child models have corresponding layers.

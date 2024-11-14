@@ -39,6 +39,8 @@ dynamic = ["version", "readme"]
 dev = ["flopy[lint,test,optional,doc]"]
 lint = [
     "cffconvert",
+    "codespell",
+    "tomli ; python_version <'3.11'",
     "ruff"
 ]
 test = [
@@ -159,3 +161,28 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 ".docs/**/*.py" = ["E501"]
 "flopy/mf6/**/*.py" = ["E501", "ISC001"]
+
+[tool.codespell]
+skip = "cliff.toml,./examples/data/*"
+ignore-words-list = [
+    "alltime",
+    "dum",
+    "inout",
+    "intot",
+    "delt",
+    "gage",
+    "gages",
+    "datbase",
+    "wel",
+    "nam",
+    "lke",
+    "ist",
+    "ninj",
+    "drob",
+    "thck",
+    "vor",
+    "yur",
+    "localy",
+    "vertx",
+    "nd",
+]

@@ -185,7 +185,7 @@ class PlotCrossSection:
         self.xypts = plotutil.UnstructuredPlotUtilities.filter_line_segments(
             self.xypts, threshold=min_segment_length
         )
-        # need to ensure that the ordering of verticies in xypts is correct
+        # need to ensure that the ordering of vertices in xypts is correct
         # based on the projection. In certain cases vertices need to be sorted
         # for the specific "projection"
         for node, points in self.xypts.items():
@@ -933,7 +933,7 @@ class PlotCrossSection:
             optional numpy nd.array of size modelgrid.nnodes
         s : None, float, numpy array
             optional point size parameter
-        masked_values : None, iteratable
+        masked_values : None, iterable
             optional list, tuple, or np array of array (a) values to mask
         inactive : bool
             boolean flag to include inactive cell centers in the plot.
