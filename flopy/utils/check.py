@@ -579,7 +579,7 @@ class check:
             print("Errors and/or Warnings encountered.")
             if self.f is not None:
                 print(
-                    f"  see {relpath_safe(self.summaryfile, scrub=scrub)} for details.\n"
+                    f"  see {relpath_safe(self.summaryfile, scrub=scrub)} for details.\n"  # noqa
                 )
 
     # start of older model specific code

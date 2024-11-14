@@ -92,8 +92,8 @@ class ModflowDrn(Package):
     Notes
     -----
     Parameters are not supported in FloPy.
-    If "RETURNFLOW" in passed in options, the drain return package (DRT) activated, which expects
-    a different (longer) dtype for stress_period_data
+    If "RETURNFLOW" in passed in options, the drain return package (DRT)
+    activated, which expects a different (longer) dtype for stress_period_data
 
     Examples
     --------

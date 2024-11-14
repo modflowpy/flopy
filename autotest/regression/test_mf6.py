@@ -4085,7 +4085,8 @@ def test006_gwf3(function_tmpdir, example_data_path):
     save_folder.mkdir()
     sim.set_sim_path(save_folder)
 
-    # write with "copy_external_files" turned off so external files do not get copied to new location
+    # write with "copy_external_files" turned off so external files
+    # do not get copied to new location
     sim.write_simulation(ext_file_action=ExtFileAction.copy_none)
 
     # store strt in an external binary file

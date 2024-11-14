@@ -882,7 +882,8 @@ class ModflowOc(Package):
                 if line[0] == "#":
                     continue
 
-                # added by JJS 12/12/14 to avoid error when there is a blank line in the OC file
+                # added by JJS 12/12/14 to avoid error when there is a
+                # blank line in the OC file
                 if lnlst == []:
                     continue
                 # end add

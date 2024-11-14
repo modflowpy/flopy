@@ -284,8 +284,8 @@ class ModflowPar:
 
         for lpf and upw:
 
-        >>> data = flopy.modflow.mfpar.ModflowPar.parameter_fill(m, (nrow, ncol), 'vkcb',
-        >>> .....................................................parm_dict, findlayer=1)
+        >>> data = flopy.modflow.mfpar.ModflowPar.parameter_fill(
+        ...             m, (nrow, ncol), 'vkcb', parm_dict, findlayer=1)
 
 
         """

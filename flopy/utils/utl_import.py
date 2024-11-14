@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 # Vendored from https://github.com/pandas-dev/pandas/blob/master/pandas/compat/_optional.py
 # changeset d30aeeba0c79fb8e4b651a8f528e87c3de8cb898
 # 10/11/2021

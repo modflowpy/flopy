@@ -98,8 +98,8 @@ class ModflowDrt(Package):
 
     >>> import flopy
     >>> ml = flopy.modflow.Modflow()
-    >>> lrcec = {0:[2, 3, 4, 10., 100., 1 ,1 ,1, 1.0]}  #this drain will be applied to all
-    >>>                                   #stress periods
+    >>> # this drain will be applied to all stress periods
+    >>> lrcec = {0:[2, 3, 4, 10., 100., 1 ,1 ,1, 1.0]}
     >>> drt = flopy.modflow.ModflowDrt(ml, stress_period_data=lrcec)
 
     """

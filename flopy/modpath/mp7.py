@@ -372,7 +372,7 @@ class Modpath7(BaseModel):
             f.write(f"DIS        {self.dis_file}\n")
         if self.grbdis_file is not None:
             f.write(
-                f"{self.grbtag:10s} {os.path.join(self._flowmodel_ws, self.grbdis_file)}\n"
+                f"{self.grbtag:10s} {os.path.join(self._flowmodel_ws, self.grbdis_file)}\n"  # noqa
             )
         if self.tdis_file is not None:
             f.write(f"TDIS       {os.path.join(self._flowmodel_ws, self.tdis_file)}\n")

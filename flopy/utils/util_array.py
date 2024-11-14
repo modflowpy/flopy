@@ -2341,7 +2341,8 @@ class Util2d(DataInterface):
 
         Note:
             the string representation DOES NOT include the effects of the control
-            record multiplier - this method is used primarily for writing model input files
+            record multiplier - this method is used primarily for writing model
+            input files
 
         """
         # convert array to string with specified format
@@ -2388,9 +2389,9 @@ class Util2d(DataInterface):
         if value is a string or a constant, the array is loaded/built only once
 
         Note:
-            the return array representation DOES NOT include the effect of the multiplier
-            in the control record.  To get the array as the model sees it (with the multiplier applied),
-            use the Util2d.array method.
+            the return array representation DOES NOT include the effect of the
+            multiplier in the control record.  To get the array as the model
+            sees it (with the multiplier applied), use the Util2d.array method.
         """
         if self.vtype == str:
             if self.__value_built is None:

@@ -485,7 +485,7 @@ def specific_discharge_comprehensive(function_tmpdir):
 
 @pytest.mark.mf6
 @pytest.mark.xfail(
-    reason="occasional Unexpected collection type: <class 'matplotlib.collections.LineCollection'>"
+    reason="occasional Unexpected collection type: <class 'matplotlib.collections.LineCollection'>"  # noqa
 )
 def test_specific_discharge_mf6(mf6_model):
     # build and run MODFLOW 6 model

@@ -190,7 +190,8 @@ class ParticleData:
                 partlocs = unstructured_to_structured(partlocs, dtype=dtype)
         else:
             raise ValueError(
-                f"{self.name}: partlocs must be a list or tuple with lists or tuples, or an ndarray"
+                f"{self.name}: partlocs must be a list or tuple with lists or "
+                "tuples, or an ndarray"
             )
 
         # localx
@@ -826,7 +827,8 @@ def get_extent(grid, k=None, i=None, j=None, nn=None, localz=False) -> Extent:
             )
     else:
         raise ValueError(
-            "A cell (node) must be specified by indices (for structured grids) or node number (for vertex/unstructured)"
+            "A cell (node) must be specified by indices (for structured grids) "
+            "or node number (for vertex/unstructured)"
         )
     xs, ys = list(zip(*verts))
     minx, maxx = min(xs), max(xs)
@@ -990,7 +992,8 @@ def get_release_points(
 
     if nn is None and (k is None or i is None or j is None):
         raise ValueError(
-            "A cell (node) must be specified by indices (for structured grids) or node number (for vertex/unstructured)"
+            "A cell (node) must be specified by indices (for structured grids) "
+            "or node number (for vertex/unstructured)"
         )
 
     cellid = [k, i, j] if nn is None else [nn]

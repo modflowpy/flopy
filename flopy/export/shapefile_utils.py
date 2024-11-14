@@ -326,7 +326,8 @@ def model_attributes_to_shapefile(
                     if a.array.shape == horz_shape:
                         if hasattr(a, "shape"):
                             if a.shape[1] is None:  # usg unstructured Util3d
-                                # return a flattened array, with a.name[0] (a per-layer list)
+                                # return a flattened array,
+                                # with a.name[0] (a per-layer list)
                                 array_dict[a.name[0]] = a.array
                             else:
                                 array_dict[a.name] = a.array

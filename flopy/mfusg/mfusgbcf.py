@@ -342,7 +342,8 @@ class MfUsgBcf(ModflowBcf):
         >>> import flopy
         >>> m = flopy.mfusg.MfUsg()
         >>> disu = flopy.mfusg.MfUsgDisU(
-            model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
+        ...     model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]),
+        ...     fahl=[1.0], cl12=[1.0])
         >>> bcf = flopy.mfusg.MfUsgBcf.load('test.bcf', m)
         """
         msg = (

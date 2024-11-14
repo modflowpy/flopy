@@ -838,9 +838,10 @@ def test_binary_read(function_tmpdir):
             bf, data_shape, data_size, np.float64, modelgrid
         )[0]
 
-        assert np.allclose(
-            arr, arr2
-        ), f"Binary read for layered structured failed with {'Path' if isinstance(binfile, Path) else 'str'}"
+        assert np.allclose(arr, arr2), (
+            "Binary read for layered structured failed with "
+            + ("Path" if isinstance(binfile, Path) else "str")
+        )
 
     binfile = function_tmpdir / "structured_flat.hds"
     with open(binfile, "wb") as foo:
@@ -2335,7 +2336,8 @@ def test_remove_model(function_tmpdir, example_data_path):
     files = list(function_tmpdir.glob("*"))
     assert not any("model2" in f.name for f in files)
 
-    # there should be no model or solver entry for the child model in the simulation namefile
+    # there should be no model or solver entry for the child model
+    # in the simulation namefile
     lines = open(function_tmpdir / "mfsim.nam").readlines()
     lines = [l.lower().strip() for l in lines]
     assert not any("model2" in l for l in lines)

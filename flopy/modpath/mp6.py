@@ -152,7 +152,8 @@ class Modpath6(BaseModel):
             )
 
         if self.__mf is None:
-            # read from nper, lay, nrow, ncol from dis file, Item 1: NLAY, NROW, NCOL, NPER, ITMUNI, LENUNI
+            # read from nper, lay, nrow, ncol from dis file,
+            # Item 1: NLAY, NROW, NCOL, NPER, ITMUNI, LENUNI
             read_dis = dis_file
             if not os.path.exists(read_dis):
                 # path doesn't exist, probably relative to model_ws
@@ -263,14 +264,17 @@ class Modpath6(BaseModel):
             (default is 'WEL').
         start_time : float or tuple
             Sets the value of MODPATH reference time relative to MODFLOW time.
-            float : value of MODFLOW simulation time at which to start the particle tracking simulation.
+            float : value of MODFLOW simulation time at which to start the
+                    particle tracking simulation.
                     Sets the value of MODPATH ReferenceTimeOption to 1.
-            tuple : (period, step, time fraction) MODFLOW stress period, time step and fraction
+            tuple : (period, step, time fraction) MODFLOW stress period,
+                    time step and fraction
                     between 0 and 1 at which to start the particle tracking simulation.
                     Sets the value of MODPATH ReferenceTimeOption to 2.
         default_ifaces : list
-            List of cell faces (1-6; see MODPATH6 manual, fig. 7) on which to start particles.
-            (default is None, meaning ifaces will vary depending on packages argument above)
+            List of cell faces (1-6; see MODPATH6 manual, fig. 7) on which to
+            start particles. (default is None, meaning ifaces will vary
+            depending on packages argument above)
         ParticleRowCount : int
             Rows of particles to start on each cell index face (iface).
         ParticleColumnCount : int
@@ -297,7 +301,8 @@ class Modpath6(BaseModel):
         ref_time = 0
         ref_time_per_stp = (0, 0, 1.0)
         if isinstance(start_time, tuple):
-            ReferenceTimeOption = 2  # 1: specify value for ref. time, 2: specify kper, kstp, rel. time pos
+            # 1: specify value for ref. time, 2: specify kper, kstp, rel. time pos
+            ReferenceTimeOption = 2
             ref_time_per_stp = start_time
         else:
             ref_time = start_time

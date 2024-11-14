@@ -84,7 +84,8 @@ def test_cross_section_bc_UZF_3lay(example_data_path):
 
 def structured_square_grid(side: int = 10, thick: int = 10):
     """
-    Creates a basic 1-layer structured grid with the given thickness and number of cells per side
+    Creates a basic 1-layer structured grid with the given thickness and number of
+    cells per side
     Parameters
     ----------
     side : The number of cells per side

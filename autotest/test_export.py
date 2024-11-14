@@ -1600,7 +1600,8 @@ def test_vtk_pathline(function_tmpdir, example_data_path):
 
 
 def grid2disvgrid(nrow, ncol):
-    """Simple function to create disv verts and iverts for a regular grid of size nrow, ncol"""
+    """Simple function to create disv verts and iverts for a regular grid of
+    size nrow, ncol"""
 
     def lower_left_point(i, j, ncol):
         return i * (ncol + 1) + j

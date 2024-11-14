@@ -428,7 +428,8 @@ class Mt3dSft(Package):
                 f.write(line)
 
         # Items 7, 8
-        # Loop through each stress period and assign source & sink concentrations to stream features
+        # Loop through each stress period and assign source & sink
+        # concentrations to stream features
         nper = self.parent.nper
         for kper in range(nper):
             if f.closed:

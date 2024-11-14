@@ -877,7 +877,8 @@ class NetCdf:
                 delc.comments = (
                     "This is the row spacing that applied to the UNROTATED grid. "
                     "This grid HAS been rotated before being saved to NetCDF. "
-                    "To compute the unrotated grid, use the origin point and this array."
+                    "To compute the unrotated grid, use the origin point and "
+                    "this array."
                 )
 
             # delr
@@ -893,7 +894,8 @@ class NetCdf:
                 delr.comments = (
                     "This is the col spacing that applied to the UNROTATED grid. "
                     "This grid HAS been rotated before being saved to NetCDF. "
-                    "To compute the unrotated grid, use the origin point and this array."
+                    "To compute the unrotated grid, use the origin point and "
+                    "this array."
                 )
 
         # Workaround for CF/CDM.
@@ -1267,7 +1269,8 @@ class NetCdf:
             return md
 
     def _check_vs_sciencebase(self, md):
-        """Check that model bounds read from flopy are consistent with those in ScienceBase."""
+        """Check that model bounds read from flopy are consistent with
+        those in ScienceBase."""
         xmin, ymin, xmax, ymax = self.bounds
         tol = 1e-5
         assert md.geospatial_lon_min - xmin < tol

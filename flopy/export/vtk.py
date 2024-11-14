@@ -1128,7 +1128,8 @@ class Vtk:
                 raise ValueError("Unrecognized pathline dtype")
         else:
             raise ValueError(
-                "Unsupported pathline format, expected array, recarray, dataframe, or list"
+                "Unsupported pathline format, expected array, recarray, "
+                "dataframe, or list"
             )
 
         if not timeseries:
