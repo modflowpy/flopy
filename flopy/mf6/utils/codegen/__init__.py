@@ -12,7 +12,13 @@ def _get_template_env():
     # expect optional deps at module init time
     jinja = import_optional_dependency("jinja2")
     loader = jinja.PackageLoader("flopy", "mf6/utils/codegen/templates/")
-    env = jinja.Environment(loader=loader)
+    env = jinja.Environment(
+        loader=loader,
+        trim_blocks=True,
+        lstrip_blocks=True,
+        line_statement_prefix="_",
+        keep_trailing_newline=True,
+    )
 
     from flopy.mf6.utils.codegen.filters import Filters
 

@@ -146,17 +146,16 @@ class Filters:
             """
             Get a readable representation of the variable's type.
             TODO: eventually replace this with a proper `type` in
-            the variable spec when we add type hints. For now try
-            to match the existing format, with a few tweaks; e.g.
-            distinguishing lists from records by square and round
-            brackets, respectively, and separating each choice in
-            a keystring by '|'.
+            the variable spec when we add type hints
             """
             _type = var["type"]
             shape = var.get("shape", None)
             children = var.get("children", None)
             if children:
                 if _type == "list":
+                    import pdb; pdb.set_trace()
+                    if len(children) == 1 and (first := list(children.values())[0])["type"] == "record":
+                        return f"{Filters.Var.type(first)}"
                     children = ", ".join(
                         [v["name"] for v in children.values()]
                     )

@@ -82,7 +82,7 @@ class MF{{ title }}(MFSimulationBase):
 
         {% for statement in vars|init %}
         {{ statement }}
-        {%- endfor %}
+        {% endfor %}
 
     @classmethod
     def load(

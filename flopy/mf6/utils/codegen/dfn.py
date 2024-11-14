@@ -396,7 +396,7 @@ class Dfn(TypedDict):
                     block=block,
                     children=None,
                     description=(
-                        f"* Contains data for the {ref['abbr']} package. Data can be "
+                        f"Contains data for the {ref['abbr']} package. Data can be "
                         f"stored in a dictionary containing data for the {ref['abbr']} "
                         "package with variable names as keys and package data as "
                         f"values. Data just for the {ref['val']} variable is also "

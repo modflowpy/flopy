@@ -18,7 +18,7 @@ class Modflow{{ title }}(MFPackage):
 
     {% for attr in vars|attrs %}
     {{ attr }}
-    {%- endfor %}
+    {% endfor %}
 
     def __init__(
         self,
@@ -83,6 +83,6 @@ class Modflow{{ title }}(MFPackage):
 
         {% for statement in vars|init %}
         {{ statement }}
-        {%- endfor %}
+        {% endfor %}
 
         self._init_complete = True

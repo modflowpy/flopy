@@ -14,12 +14,12 @@ class Modflow{{ title }}(MFPackage):
 
     Parameters
     ----------
-    {{ macros.vars_docs(vars, indent=4) }}
+{{ macros.vars_docs(vars, indent=4) }}
     """
 
     {% for attr in vars|attrs %}
     {{ attr }}
-    {%- endfor %}
+    {% endfor %}
 
     def __init__(
         self,
@@ -68,7 +68,7 @@ class Modflow{{ title }}(MFPackage):
 
         {% for statement in vars|init %}
         {{ statement }}
-        {%- endfor %}
+        {% endfor %}
 
         self._init_complete = True
 
@@ -100,9 +100,9 @@ class {{ title }}Packages(MFChildPackages):
     ):
         new_package = Modflow{{ title }}(
             self._cpparent,
-            {%- for n, var in vars.items() if n not in name|skip_init %}
+            {% for n, var in vars.items() if n not in name|skip_init %}
             {{ n|safe_name }}={{ n|safe_name }},
-            {%- endfor %}
+            {% endfor %}
             filename=filename,
             pname=pname,
             child_builder_call=True,
@@ -118,9 +118,9 @@ class {{ title }}Packages(MFChildPackages):
     ):
         new_package = Modflow{{ title }}(
             self._cpparent,
-            {%- for n, var in vars.items() if n not in name|skip_init %}
+            {% for n, var in vars.items() if n not in name|skip_init %}
             {{ n|safe_name }}={{ n|safe_name }},
-            {%- endfor %}
+            {% endfor %}
             filename=filename,
             pname=pname,
             child_builder_call=True,

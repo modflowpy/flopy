@@ -77,7 +77,7 @@ class Modflow{{ title }}(MFModel):
 
         {% for statement in vars|init %}
         {{ statement }}
-        {%- endfor %}
+        {% endfor %}
 
     @classmethod
     def load(
