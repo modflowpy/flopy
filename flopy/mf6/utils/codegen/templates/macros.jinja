@@ -2,11 +2,11 @@
 {% for name, var in vars.items() if name not in skip %}
 {% set v = var|untag %}
 {% set n = (name if alias else v.name)|safe_name %}
-{{ ""|indent(indent, first=false) }}{{ n }}{% if v.default is defined %}={{ v.default|value }}{% endif %},
+{{ ""|indent(indent, first=true) }}{{ n }}{% if v.default is defined %}={{ v.default|value }}{% endif %},
 {% endfor %}
 {% endmacro %}
 
-{% macro vars_docs(vars, indent=0) %}
+{% macro vars_docs(vars, indent=0, recurse=true) %}
 {% for var in vars.values() recursive %}
 {% set v = var|untag %}
 {% set n = v.name|safe_name|escape_trailing_underscore %}
@@ -14,8 +14,8 @@
 {% if v.description is defined and v.description is not none %}
 {{ v.description|wordwrap|indent(indent + (loop.depth * 4), first=true) }}
 {% endif %}
-{% if v.children is defined and v.children is not none %}
-{% if v.type == "list" and v.childen|length == 1 and (v.children.values()|first).type == "record" %}
+{% if recurse and v.children is defined and v.children is not none %}
+{% if v.type == "list" and v.children|length == 1 and (v.children.values()|first).type == "record" %}
 {{ loop((v.children.values()|first).children.values())|indent(indent, first=true) }} 
 {% else %}
 {{ loop(v.children.values())|indent(indent, first=true) }}

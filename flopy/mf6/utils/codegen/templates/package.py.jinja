@@ -25,7 +25,7 @@ class Modflow{{ title }}(MFPackage):
         self,
         {{ name|parent }},
         loading_package=False,
-        {{ macros.init_vars(vars, indent=8, skip=name|skip_init) }}
+{{ macros.init_vars(vars, indent=8, skip=name|skip_init) }}
         filename=None,
         pname=None,
         **kwargs,
@@ -43,7 +43,7 @@ class Modflow{{ title }}(MFPackage):
             Do not set this parameter. It is intended for debugging and internal
             processing purposes only.
 
-        {{ macros.vars_docs(vars, indent=8) }}
+{{ macros.vars_docs(vars, indent=8) }}
 
         filename : str
             File name for this package.
@@ -94,7 +94,7 @@ class {{ title }}Packages(MFChildPackages):
 
     def initialize(
         self,
-        {{ macros.init_vars(vars, alias=true, indent=8, skip=name|skip_init) }}
+{{ macros.init_vars(vars, alias=true, indent=8, skip=name|skip_init) }}
         filename=None,
         pname=None,
     ):
@@ -112,7 +112,7 @@ class {{ title }}Packages(MFChildPackages):
     {% if name.r != "obs" %}
     def append_package(
         self,
-        {{ macros.init_vars(vars, alias=true, indent=8, skip=name|skip_init) }}
+{{ macros.init_vars(vars, alias=true, indent=8, skip=name|skip_init) }}
         filename=None,
         pname=None,
     ):

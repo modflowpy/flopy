@@ -153,9 +153,10 @@ class Filters:
             children = var.get("children", None)
             if children:
                 if _type == "list":
-                    import pdb; pdb.set_trace()
-                    if len(children) == 1 and (first := list(children.values())[0])["type"] == "record":
-                        return f"{Filters.Var.type(first)}"
+                    if len(children) == 1:
+                        first = list(children.values())[0]
+                        if first["type"] in ["record", "union"]:
+                            return f"[{Filters.Var.type(first)}]"
                     children = ", ".join(
                         [v["name"] for v in children.values()]
                     )
