@@ -8,9 +8,7 @@ PROJ_ROOT = get_project_root_path()
 MF6_PATH = PROJ_ROOT / "flopy" / "mf6"
 DFN_PATH = MF6_PATH / "data" / "dfn"
 DFN_NAMES = [
-    dfn.stem
-    for dfn in DFN_PATH.glob("*.dfn")
-    if dfn.stem not in ["common", "flopy"]
+    dfn.stem for dfn in DFN_PATH.glob("*.dfn") if dfn.stem not in ["common", "flopy"]
 ]
 
 
