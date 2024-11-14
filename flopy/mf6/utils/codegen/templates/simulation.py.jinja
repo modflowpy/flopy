@@ -13,7 +13,7 @@ class MF{{ title }}(MFSimulationBase):
 
     Parameters
     ----------
-{{ macros.vars_docs(vars, indent=4) }}
+{{ macros.vars_docs(vars)|indent(4, first=true) }}
 
     Methods
     -------
@@ -35,7 +35,7 @@ class MF{{ title }}(MFSimulationBase):
         write_headers: bool = True,
         use_pandas: bool = True,
         lazy_io: bool = False,
-{{ macros.init_vars(vars, indent=8, skip=name|skip_init) }}
+{{ macros.init_vars(vars, skip=name|skip_init)|indent(8, first=true) }}
     ):
         """
         {{ name|description }}
@@ -66,7 +66,7 @@ class MF{{ title }}(MFSimulationBase):
         lazy_io
             Whether to use lazy IO
 
-{{ macros.vars_docs(vars, indent=8) }}
+{{ macros.vars_docs(vars)|indent(8, first=true) }}
         """
 
         super().__init__(

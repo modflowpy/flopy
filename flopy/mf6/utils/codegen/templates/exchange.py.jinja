@@ -13,7 +13,7 @@ class Modflow{{ title }}(MFPackage):
 
     Parameters
     ----------
-{{ macros.vars_docs(vars, indent=4) }}
+{{ macros.vars_docs(vars)|indent(4, first=true) }}
     """
 
     {% for attr in vars|attrs %}
@@ -27,7 +27,7 @@ class Modflow{{ title }}(MFPackage):
         exgtype="{{ name.r[:3].upper() }}6-{{ name.r[3:].upper() }}6",
         exgmnamea=None,
         exgmnameb=None,
-{{ macros.init_vars(vars, indent=8, skip=name|skip_init) }}
+{{ macros.init_vars(vars, skip=name|skip_init)|indent(8, first=true) }}
         filename=None,
         pname=None,
         **kwargs,
@@ -64,7 +64,7 @@ class Modflow{{ title }}(MFPackage):
             GWE Model with the name exgmnameb must correspond to the GWF Model
             with the name gwfmodelname2. 
 
-{{ macros.vars_docs(vars, indent=8) }}
+{{ macros.vars_docs(vars)|indent(8, first=true) }}
         """
 
         super().__init__(

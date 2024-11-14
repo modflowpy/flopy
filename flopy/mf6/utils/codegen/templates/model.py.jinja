@@ -14,7 +14,7 @@ class Modflow{{ title }}(MFModel):
 
     Parameters
     ----------
-{{ macros.vars_docs(vars, indent=4) }}
+{{ macros.vars_docs(vars)|indent(4, first=true) }}
 
     Methods
     -------
@@ -34,7 +34,7 @@ class Modflow{{ title }}(MFModel):
         version="mf6",
         exe_name="mf6",
         model_rel_path=".",
-{{ macros.init_vars(vars, indent=8, skip=name|skip_init) }}
+{{ macros.init_vars(vars, skip=name|skip_init)|indent(8, first=true) }}
         **kwargs,
     ):
         """
@@ -61,7 +61,7 @@ class Modflow{{ title }}(MFModel):
             Simulation that this model is a part of.  Model is automatically
             added to simulation when it is initialized.
 
-{{ macros.vars_docs(vars, indent=8) }}
+{{ macros.vars_docs(vars)|indent(8, first=true) }}
         """
 
         super().__init__(
