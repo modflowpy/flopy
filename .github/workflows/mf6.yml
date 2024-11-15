@@ -80,7 +80,7 @@ jobs:
     - name: Upload coverage to Codecov
       if:
         github.repository_owner == 'modflowpy' && (github.event_name == 'push' || github.event_name == 'pull_request')
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
         files: ./modflow6/autotest/coverage.xml
 
