@@ -15,7 +15,7 @@ dependencies:
   - ruff
 
   # test
-  - coverage<=7.6.4
+  - coverage!=7.6.5
   - flaky
   - filelock
   - jupyter
