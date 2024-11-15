@@ -625,15 +625,15 @@ def test_uzf_negative_iuzfopt(function_tmpdir):
 
 
 def test_optionsblock_auxillary_typo():
-    # Incorrect: auxillary
+    # Incorrect: auxillary  # codespell:ignore
     #   Correct: auxiliary
     options = OptionBlock("", ModflowWel, block=True)
     assert options.auxiliary == []
     with pytest.deprecated_call():
-        assert options.auxillary == []
+        assert options.auxillary == []  # codespell:ignore
     with pytest.deprecated_call():
-        options.auxillary = ["aux", "iface"]
+        options.auxillary = ["aux", "iface"]  # codespell:ignore
     assert options.auxiliary == ["aux", "iface"]
     options.auxiliary = []
     with pytest.deprecated_call():
-        assert options.auxillary == []
+        assert options.auxillary == []  # codespell:ignore

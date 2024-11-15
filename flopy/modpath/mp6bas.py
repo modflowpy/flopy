@@ -28,7 +28,7 @@ class Modpath6Bas(Package):
     hdry : float
         Head value assigned to dry cells (default is -8888.).
     def_face_ct : int
-        Number fo default iface codes to read (default is 0).
+        Number of default iface codes to read (default is 0).
     bud_label : str or list of strs
         MODFLOW budget item to which a default iface is assigned.
     def_iface : int or list of ints

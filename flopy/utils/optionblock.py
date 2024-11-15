@@ -59,10 +59,10 @@ class OptionBlock:
         self._set_attributes()
 
     def __getattr__(self, key):
-        if key == "auxillary":  # catch typo from older version
+        if key == "auxillary":  # catch typo from older version - codespell:ignore
             key = "auxiliary"
             warnings.warn(
-                "the atttribute 'auxillary' is deprecated, use 'auxiliary' instead",
+                "the attribute 'auxillary' is deprecated, use 'auxiliary' instead",
                 category=DeprecationWarning,
             )
         return super().__getattribute__(key)
@@ -159,10 +159,10 @@ class OptionBlock:
                 is consistent with the attribute data type
 
         """
-        if key == "auxillary":  # catch typo from older version
+        if key == "auxillary":  # catch typo from older version - codespell:ignore
             key = "auxiliary"
             warnings.warn(
-                "the atttribute 'auxillary' is deprecated, use 'auxiliary' instead",
+                "the attribute 'auxillary' is deprecated, use 'auxiliary' instead",
                 category=DeprecationWarning,
             )
 

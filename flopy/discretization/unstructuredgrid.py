@@ -618,12 +618,12 @@ class UnstructuredGrid(Grid):
         reset = kwargs.pop("reset", False)
         if method == "iac":
             if self._neighbors is None or reset:
-                neighors = {}
+                neighbors = {}
                 idx0 = 0
                 for node, ia in enumerate(self._iac):
                     idx1 = idx0 + ia
-                    neighors[node] = list(self._ja[idx0 + 1 : idx1])
-                self._neighbors = neighors
+                    neighbors[node] = list(self._ja[idx0 + 1 : idx1])
+                self._neighbors = neighbors
             if node is not None:
                 return self._neighbors[node]
             else:

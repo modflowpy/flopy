@@ -70,6 +70,9 @@ jobs:
       - name: Check format
         run: ruff format . --check
 
+      - name: Check spelling
+        run: codespell
+
       - name: Check CITATION.cff
         run: |
           cffconvert --validate
