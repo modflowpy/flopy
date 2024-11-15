@@ -39,8 +39,7 @@ dynamic = ["version", "readme"]
 dev = ["flopy[lint,test,optional,doc]"]
 lint = [
     "cffconvert",
-    "codespell",
-    "tomli ; python_version <'3.11'",
+    "codespell[toml] >=2.2.2",
     "ruff"
 ]
 test = [
