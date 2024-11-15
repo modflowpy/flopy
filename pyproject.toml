@@ -43,7 +43,7 @@ lint = [
 ]
 test = [
     "flopy[lint]",
-    "coverage",
+    "coverage <=7.6.4",
     "flaky",
     "filelock",
     "jupyter",
