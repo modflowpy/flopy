@@ -321,7 +321,7 @@ p.close()
 # Show the GIF.
 
 # +
-from IPython.core.display import Image
+from IPython.display import Image, display
 
 display(Image(data=open(gif_path, "rb").read(), format="gif"))
 # -
