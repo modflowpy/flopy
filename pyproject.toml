@@ -153,13 +153,12 @@ ignore = [
     "F403", # unable to detect undefined names (star imports)
     "F524", # `.format` missing argument(s) for placeholder(s)
     "F811", # Redefinition of unused variable
-    "F821", # undefined name TODO FIXME
     "F841", # local variable assigned but never used
 ]
 
 [tool.ruff.lint.per-file-ignores]
 ".docs/**/*.py" = ["E501"]
-"flopy/mf6/**/*.py" = ["E501", "ISC001"]
+"flopy/mf6/**/*.py" = ["E501", "F821", "ISC001"]
 
 [tool.codespell]
 skip = "cliff.toml,./examples/data/*"
