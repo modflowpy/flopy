@@ -192,8 +192,8 @@ class MtListBudget:
             else:
                 out_base_mapped.append(base)
         out_base = out_base_mapped
-        in_dict = {ib: ic for ib, ic in zip(in_base, in_cols)}
-        out_dict = {ib: ic for ib, ic in zip(out_base, out_cols)}
+        in_dict = dict(zip(in_base, in_cols))
+        out_dict = dict(zip(out_base, out_cols))
         in_base = set(in_base)
         out_base = set(out_base)
         out_base.update(in_base)

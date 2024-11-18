@@ -269,40 +269,29 @@ class ModflowSfr2(Package):
 
     """
 
-    _options = dict(
-        [
-            ("reachinput", OptionBlock.simple_flag),
-            ("transroute", OptionBlock.simple_flag),
-            ("tabfiles", OptionBlock.simple_tabfile),
-            (
-                "lossfactor",
-                {
-                    OptionBlock.dtype: np.bool_,
-                    OptionBlock.nested: True,
-                    OptionBlock.n_nested: 1,
-                    OptionBlock.vars: {"factor": OptionBlock.simple_float},
-                },
-            ),
-            (
-                "strhc1kh",
-                {
-                    OptionBlock.dtype: np.bool_,
-                    OptionBlock.nested: True,
-                    OptionBlock.n_nested: 1,
-                    OptionBlock.vars: {"factorkh": OptionBlock.simple_float},
-                },
-            ),
-            (
-                "strhc1kv",
-                {
-                    OptionBlock.dtype: np.bool_,
-                    OptionBlock.nested: True,
-                    OptionBlock.n_nested: 1,
-                    OptionBlock.vars: {"factorkv": OptionBlock.simple_float},
-                },
-            ),
-        ]
-    )
+    _options = {
+        "reachinput": OptionBlock.simple_flag,
+        "transroute": OptionBlock.simple_flag,
+        "tabfiles": OptionBlock.simple_tabfile,
+        "lossfactor": {
+            OptionBlock.dtype: np.bool_,
+            OptionBlock.nested: True,
+            OptionBlock.n_nested: 1,
+            OptionBlock.vars: {"factor": OptionBlock.simple_float},
+        },
+        "strhc1kh": {
+            OptionBlock.dtype: np.bool_,
+            OptionBlock.nested: True,
+            OptionBlock.n_nested: 1,
+            OptionBlock.vars: {"factorkh": OptionBlock.simple_float},
+        },
+        "strhc1kv": {
+            OptionBlock.dtype: np.bool_,
+            OptionBlock.nested: True,
+            OptionBlock.n_nested: 1,
+            OptionBlock.vars: {"factorkv": OptionBlock.simple_float},
+        },
+    }
 
     nsfrpar = 0
     default_value = 0.0
@@ -625,7 +614,7 @@ class ModflowSfr2(Package):
         nseg = np.array(sorted(self._paths.keys()), dtype=int)
         nseg = nseg[nseg > 0].copy()
         outseg = np.array([self._paths[k][1] for k in nseg])
-        existing_nseg = sorted(list(self.graph.keys()))
+        existing_nseg = sorted(self.graph.keys())
         existing_outseg = [self.graph[k] for k in existing_nseg]
         if not np.array_equal(nseg, existing_nseg) or not np.array_equal(
             outseg, existing_outseg
@@ -1362,7 +1351,7 @@ class ModflowSfr2(Package):
         r : dictionary mapping old segment numbers to new
         """
 
-        nseg = sorted(list(self.graph.keys()))
+        nseg = sorted(self.graph.keys())
         outseg = [self.graph[k] for k in nseg]
 
         # explicitly fix any gaps in the numbering
@@ -3357,7 +3346,7 @@ def _find_path(graph, start, end=0, path=None):
     dictionary (graph) so that the recursion works.
     """
     if path is None:
-        path = list()
+        path = []
     path = path + [start]
     if start == end:
         return path

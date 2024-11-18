@@ -29,22 +29,17 @@ class OptionBlock:
     vars = "vars"
     optional = "optional"
 
-    simple_flag = dict([(dtype, np.bool_), (nested, False), (optional, False)])
-    simple_str = dict([(dtype, str), (nested, False), (optional, False)])
-    simple_float = dict([(dtype, float), (nested, False), (optional, False)])
-    simple_int = dict([(dtype, int), (nested, False), (optional, False)])
+    simple_flag = {dtype: np.bool_, nested: False, optional: False}
+    simple_str = {dtype: str, nested: False, optional: False}
+    simple_float = {dtype: float, nested: False, optional: False}
+    simple_int = {dtype: int, nested: False, optional: False}
 
-    simple_tabfile = dict(
-        [
-            (dtype, np.bool_),
-            (nested, True),
-            (n_nested, 2),
-            (
-                vars,
-                dict([("numtab", simple_int), ("maxval", simple_int)]),
-            ),
-        ]
-    )
+    simple_tabfile = {
+        dtype: np.bool_,
+        nested: True,
+        n_nested: 2,
+        vars: {"numtab": simple_int, "maxval": simple_int},
+    }
 
     def __init__(self, options_line, package, block=True):
         self._context = package._options

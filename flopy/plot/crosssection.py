@@ -174,7 +174,7 @@ class PlotCrossSection:
                 xp[idx2] += 1e-03
                 self.direction = "y"
 
-            pts = [(xt, yt) for xt, yt in zip(xp, yp)]
+            pts = list(zip(xp, yp))
 
         self.pts = np.array(pts)
 
@@ -221,7 +221,7 @@ class PlotCrossSection:
                     self.mg.yoffset,
                     self.mg.angrot_radians,
                 )
-                xypts[nn] = [(xt, yt) for xt, yt in zip(xp, yp)]
+                xypts[nn] = list(zip(xp, yp))
 
             self.xypts = xypts
 

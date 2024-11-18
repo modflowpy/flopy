@@ -287,7 +287,7 @@ class GridCases:
         radius = 100.0
         x = radius * np.cos(theta)
         y = radius * np.sin(theta)
-        poly = [(x, y) for x, y in zip(x, y)]
+        poly = list(zip(x, y))
         max_area = 50
         angle = 30
 
@@ -311,13 +311,13 @@ class GridCases:
         radius = 100.0
         x = radius * np.cos(theta)
         y = radius * np.sin(theta)
-        circle_poly = [(x, y) for x, y in zip(x, y)]
+        circle_poly = list(zip(x, y))
 
         theta = np.arange(0.0, 2 * np.pi, 0.2)
         radius = 30.0
         x = radius * np.cos(theta) + 25.0
         y = radius * np.sin(theta) + 25.0
-        inner_circle_poly = [(x, y) for x, y in zip(x, y)]
+        inner_circle_poly = list(zip(x, y))
 
         polys = [circle_poly, inner_circle_poly]
         max_area = 100
@@ -377,7 +377,7 @@ class GridCases:
             radius = 10.0
             x = radius * np.cos(theta) + 50.0
             y = radius * np.sin(theta) + 70.0
-            circle_poly0 = [(x, y) for x, y in zip(x, y)]
+            circle_poly0 = list(zip(x, y))
             tri.add_polygon(circle_poly0)
             tri.add_hole((50, 70))
 
@@ -386,7 +386,7 @@ class GridCases:
             radius = 10.0
             x = radius * np.cos(theta) + 70.0
             y = radius * np.sin(theta) + 20.0
-            circle_poly1 = [(x, y) for x, y in zip(x, y)]
+            circle_poly1 = list(zip(x, y))
             tri.add_polygon(circle_poly1)
 
             # add line through domain to force conforming cells

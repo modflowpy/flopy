@@ -472,7 +472,7 @@ mnw2 103 mymnw2.mnw2"""
     wellids = ["eb-33", "eb-35", "eb-36"]
     rates = [np.float32(-11229.2), np.float32(-534.72), np.float32(-534.72)]
 
-    wellids2 = sorted(list(mnw2.mnw.keys()))
+    wellids2 = sorted(mnw2.mnw.keys())
     emsg = "incorrect keys returned from load mnw2"
     assert wellids2 == wellids, emsg
 

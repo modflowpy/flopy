@@ -243,7 +243,7 @@ def test_seawat_load_only(function_tmpdir):
     m = Seawat.load(
         model_name, model_ws=function_tmpdir, load_only=load_only, verbose=True
     )
-    assert set([pkg.upper() for pkg in load_only]) == set(m.get_package_list())
+    assert {pkg.upper() for pkg in load_only} == set(m.get_package_list())
 
 
 def test_vdf_vsc(function_tmpdir):

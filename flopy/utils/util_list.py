@@ -447,9 +447,7 @@ class MfList(DataInterface, DataListInterface):
         # may have to iterate over the first stress period
         for per in range(self._model.nper):
             if hasattr(self.data[per], "dtype"):
-                varnames = list(
-                    [n for n in self.data[per].dtype.names if n not in names]
-                )
+                varnames = [n for n in self.data[per].dtype.names if n not in names]
                 break
 
         # create list of dataframes for each stress period

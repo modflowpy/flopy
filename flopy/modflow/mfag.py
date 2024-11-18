@@ -60,135 +60,91 @@ class ModflowAg(Package):
 
     """
 
-    _options = dict(
-        [
-            ("noprint", OptionBlock.simple_flag),
-            (
-                "irrigation_diversion",
-                {
-                    OptionBlock.dtype: np.bool_,
-                    OptionBlock.nested: True,
-                    OptionBlock.n_nested: 2,
-                    OptionBlock.vars: dict(
-                        [
-                            ("numirrdiversions", OptionBlock.simple_int),
-                            ("maxcellsdiversion", OptionBlock.simple_int),
-                        ]
-                    ),
-                },
-            ),
-            (
-                "irrigation_well",
-                {
-                    OptionBlock.dtype: np.bool_,
-                    OptionBlock.nested: True,
-                    OptionBlock.n_nested: 2,
-                    OptionBlock.vars: dict(
-                        [
-                            ("numirrwells", OptionBlock.simple_int),
-                            ("maxcellswell", OptionBlock.simple_int),
-                        ]
-                    ),
-                },
-            ),
-            (
-                "supplemental_well",
-                {
-                    OptionBlock.dtype: np.bool_,
-                    OptionBlock.nested: True,
-                    OptionBlock.n_nested: 2,
-                    OptionBlock.vars: dict(
-                        [
-                            ("numsupwells", OptionBlock.simple_int),
-                            ("maxdiversions", OptionBlock.simple_int),
-                        ]
-                    ),
-                },
-            ),
-            (
-                "maxwells",
-                {
-                    OptionBlock.dtype: np.bool_,
-                    OptionBlock.nested: True,
-                    OptionBlock.n_nested: 1,
-                    OptionBlock.vars: dict([("nummaxwell", OptionBlock.simple_int)]),
-                },
-            ),
-            ("tabfiles", OptionBlock.simple_tabfile),
-            ("phiramp", OptionBlock.simple_flag),
-            (
-                "etdemand",
-                {
-                    OptionBlock.dtype: np.bool_,
-                    OptionBlock.nested: True,
-                    OptionBlock.n_nested: 1,
-                    OptionBlock.vars: {
-                        "accel": {
-                            OptionBlock.dtype: float,
-                            OptionBlock.nested: False,
-                            OptionBlock.optional: True,
-                        }
-                    },
-                },
-            ),
-            ("trigger", OptionBlock.simple_flag),
-            ("timeseries_diversion", OptionBlock.simple_flag),
-            ("timeseries_well", OptionBlock.simple_flag),
-            ("timeseries_diversionet", OptionBlock.simple_flag),
-            ("timeseries_wellet", OptionBlock.simple_flag),
-            (
-                "diversionlist",
-                {
-                    OptionBlock.dtype: np.bool_,
-                    OptionBlock.nested: True,
-                    OptionBlock.n_nested: 1,
-                    OptionBlock.vars: dict(
-                        [("unit_diversionlist", OptionBlock.simple_int)]
-                    ),
-                },
-            ),
-            (
-                "welllist",
-                {
-                    OptionBlock.dtype: np.bool_,
-                    OptionBlock.nested: True,
-                    OptionBlock.n_nested: 1,
-                    OptionBlock.vars: dict([("unit_welllist", OptionBlock.simple_int)]),
-                },
-            ),
-            (
-                "wellirrlist",
-                {
-                    OptionBlock.dtype: np.bool_,
-                    OptionBlock.nested: True,
-                    OptionBlock.n_nested: 1,
-                    OptionBlock.vars: dict(
-                        [("unit_wellirrlist", OptionBlock.simple_int)]
-                    ),
-                },
-            ),
-            (
-                "diversionirrlist",
-                {
-                    OptionBlock.dtype: np.bool_,
-                    OptionBlock.nested: True,
-                    OptionBlock.n_nested: 1,
-                    OptionBlock.vars: dict(
-                        [("unit_diversionirrlist", OptionBlock.simple_int)]
-                    ),
-                },
-            ),
-            (
-                "wellcbc",
-                {
-                    OptionBlock.dtype: np.bool_,
-                    OptionBlock.nested: True,
-                    OptionBlock.n_nested: 1,
-                    OptionBlock.vars: dict([("unitcbc", OptionBlock.simple_int)]),
-                },
-            ),
-        ]
-    )
+    _options = {
+        "noprint": OptionBlock.simple_flag,
+        "irrigation_diversion": {
+            OptionBlock.dtype: np.bool_,
+            OptionBlock.nested: True,
+            OptionBlock.n_nested: 2,
+            OptionBlock.vars: {
+                "numirrdiversions": OptionBlock.simple_int,
+                "maxcellsdiversion": OptionBlock.simple_int,
+            },
+        },
+        "irrigation_well": {
+            OptionBlock.dtype: np.bool_,
+            OptionBlock.nested: True,
+            OptionBlock.n_nested: 2,
+            OptionBlock.vars: {
+                "numirrwells": OptionBlock.simple_int,
+                "maxcellswell": OptionBlock.simple_int,
+            },
+        },
+        "supplemental_well": {
+            OptionBlock.dtype: np.bool_,
+            OptionBlock.nested: True,
+            OptionBlock.n_nested: 2,
+            OptionBlock.vars: {
+                "numsupwells": OptionBlock.simple_int,
+                "maxdiversions": OptionBlock.simple_int,
+            },
+        },
+        "maxwells": {
+            OptionBlock.dtype: np.bool_,
+            OptionBlock.nested: True,
+            OptionBlock.n_nested: 1,
+            OptionBlock.vars: {"nummaxwell": OptionBlock.simple_int},
+        },
+        "tabfiles": OptionBlock.simple_tabfile,
+        "phiramp": OptionBlock.simple_flag,
+        "etdemand": {
+            OptionBlock.dtype: np.bool_,
+            OptionBlock.nested: True,
+            OptionBlock.n_nested: 1,
+            OptionBlock.vars: {
+                "accel": {
+                    OptionBlock.dtype: float,
+                    OptionBlock.nested: False,
+                    OptionBlock.optional: True,
+                }
+            },
+        },
+        "trigger": OptionBlock.simple_flag,
+        "timeseries_diversion": OptionBlock.simple_flag,
+        "timeseries_well": OptionBlock.simple_flag,
+        "timeseries_diversionet": OptionBlock.simple_flag,
+        "timeseries_wellet": OptionBlock.simple_flag,
+        "diversionlist": {
+            OptionBlock.dtype: np.bool_,
+            OptionBlock.nested: True,
+            OptionBlock.n_nested: 1,
+            OptionBlock.vars: {"unit_diversionlist": OptionBlock.simple_int},
+        },
+        "welllist": {
+            OptionBlock.dtype: np.bool_,
+            OptionBlock.nested: True,
+            OptionBlock.n_nested: 1,
+            OptionBlock.vars: {"unit_welllist": OptionBlock.simple_int},
+        },
+        "wellirrlist": {
+            OptionBlock.dtype: np.bool_,
+            OptionBlock.nested: True,
+            OptionBlock.n_nested: 1,
+            OptionBlock.vars: {"unit_wellirrlist": OptionBlock.simple_int},
+        },
+        "diversionirrlist": {
+            OptionBlock.dtype: np.bool_,
+            OptionBlock.nested: True,
+            OptionBlock.n_nested: 1,
+            OptionBlock.vars: {"unit_diversionirrlist": OptionBlock.simple_int},
+        },
+        "wellcbc": {
+            OptionBlock.dtype: np.bool_,
+            OptionBlock.nested: True,
+            OptionBlock.n_nested: 1,
+            OptionBlock.vars: {"unitcbc": OptionBlock.simple_int},
+        },
+    }
 
     def __init__(
         self,

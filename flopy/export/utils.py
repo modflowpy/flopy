@@ -399,7 +399,7 @@ def output_helper(
             logger.warn(msg)
         elif verbose:
             print(msg)
-    times = [t for t in common_times[::stride]]
+    times = list(common_times[::stride])
     if (isinstance(f, str) or isinstance(f, Path)) and Path(f).suffix.lower() == ".nc":
         f = NetCdf(f, ml, time_values=times, logger=logger, forgive=forgive, **kwargs)
     elif isinstance(f, NetCdf):
@@ -1112,7 +1112,7 @@ def transient2d_export(f: Union[str, os.PathLike], t2d, fmt=None, **kwargs):
             if hasattr(t2d, "transient_2ds"):
                 d = t2d.transient_2ds
             else:
-                d = {ix: i for ix, i in enumerate(t2d.array)}
+                d = dict(enumerate(t2d.array))
         else:
             raise AssertionError("No data available to export")
 
