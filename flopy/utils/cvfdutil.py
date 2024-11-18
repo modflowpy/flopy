@@ -369,9 +369,7 @@ def get_disv_gridprops(verts, iverts, xcyc=None):
         vertices.append((i, verts[i, 0], verts[i, 1]))
     cell2d = []
     for i in range(ncpl):
-        cell2d.append(
-            [i, xcyc[i, 0], xcyc[i, 1], len(iverts[i])] + [iv for iv in iverts[i]]
-        )
+        cell2d.append([i, xcyc[i, 0], xcyc[i, 1], len(iverts[i])] + list(iverts[i]))
     gridprops = {}
     gridprops["ncpl"] = ncpl
     gridprops["nvert"] = nvert

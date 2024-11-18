@@ -169,8 +169,8 @@ def list_is_copy(mflist1, mflist2):
     if mflist2 is mflist1:
         return False
     if isinstance(mflist1, MFTransientList):
-        data1 = {per: ra for per, ra in enumerate(mflist1.array)}
-        data2 = {per: ra for per, ra in enumerate(mflist2.array)}
+        data1 = dict(enumerate(mflist1.array))
+        data2 = dict(enumerate(mflist2.array))
     elif isinstance(mflist1, MFList):
         data1 = {0: mflist1.array}
         data2 = {0: mflist2.array}

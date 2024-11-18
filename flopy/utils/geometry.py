@@ -36,9 +36,7 @@ class Shape:
         if shapetype == "Polygon":
             self.exterior = tuple(map(tuple, exterior))
             self.interiors = (
-                tuple()
-                if interiors is None
-                else (tuple(map(tuple, i)) for i in interiors)
+                () if interiors is None else (tuple(map(tuple, i)) for i in interiors)
             )
             self.interiors = tuple(self.interiors)
 
@@ -74,7 +72,7 @@ class Shape:
 
         if self.__type == "Polygon":
             geo_interface = {
-                "coordinates": tuple([self.exterior] + [i for i in self.interiors]),
+                "coordinates": tuple([self.exterior] + list(self.interiors)),
                 "type": self.__type,
             }
 

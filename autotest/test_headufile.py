@@ -143,9 +143,9 @@ def test_get_lni(mfusg_model):
     head = head_file.get_data()
 
     def get_expected():
-        exp = dict()
+        exp = {}
         for l, ncpl in enumerate(list(grid.ncpl)):
-            exp[l] = dict()
+            exp[l] = {}
             for nn in range(ncpl):
                 exp[l][nn] = head[l][nn]
         return exp

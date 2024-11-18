@@ -244,7 +244,7 @@ class Mp7Cases:
         # recharge
         ModflowRch(m, ipakcb=iu_cbc, rech=Mp7Cases.rch, nrchop=1)
         # wel
-        wd = [i for i in Mp7Cases.wel_loc] + [Mp7Cases.wel_q]
+        wd = list(Mp7Cases.wel_loc) + [Mp7Cases.wel_q]
         ModflowWel(m, ipakcb=iu_cbc, stress_period_data={0: wd})
         # river
         rd = []

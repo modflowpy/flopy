@@ -94,7 +94,7 @@ def densify_geometry(line, step, keep_internal_nodes=True):
 def set_idomain(grid, boundary):
     ix = GridIntersect(grid, method="vertex", rtree=True)
     result = ix.intersect(Polygon(boundary))
-    idx = [coords for coords in result.cellids]
+    idx = list(result.cellids)
     idx = np.array(idx, dtype=int)
     nr = idx.shape[0]
     if idx.ndim == 1:

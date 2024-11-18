@@ -1253,7 +1253,7 @@ class NetCdf:
                 "get_sciencebase_xml_metadata",
                 "get_sciencebase_metadata",
             }
-            towrite = sorted(list(attr.difference(skip)))
+            towrite = sorted(attr.difference(skip))
             for k in towrite:
                 v = md.__getattribute__(k)
                 if v is not None:

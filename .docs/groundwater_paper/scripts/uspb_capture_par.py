@@ -98,7 +98,7 @@ def copy_files(ml, nproc):
         else:
             if not os.path.exists(cf_pths[idx]):
                 os.makedirs(cf_pths[idx])
-            filelist = [f for f in os.listdir(cf_pths[0])]
+            filelist = list(os.listdir(cf_pths[0]))
             sys.stdout.write(f"copying files from {cf_pths[0]} to {cf_pths[idx]}\n")
             for f in filelist:
                 if os.path.splitext(f)[1].lower() in exclude:
@@ -314,7 +314,7 @@ def doit():
 
     # clean up working directories
     for idx in range(nproc):
-        filelist = [f for f in os.listdir(cf_pths[idx])]
+        filelist = list(os.listdir(cf_pths[idx]))
         for f in filelist:
             os.remove(os.path.join(cf_pths[idx], f))
 

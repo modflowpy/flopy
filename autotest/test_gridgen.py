@@ -753,7 +753,7 @@ def test_gridgen(function_tmpdir):
     # test the gridgen line intersection
     line = [[(Lx, Ly), (Lx, 0.0)]]
     cells = g.intersect(line, "line", 0)
-    nlist = [n for n in cells["nodenumber"]]
+    nlist = list(cells["nodenumber"])
     nlist2 = [
         19,
         650,

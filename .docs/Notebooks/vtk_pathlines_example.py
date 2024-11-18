@@ -221,7 +221,7 @@ print("Model grid has", grid.n_arrays, "arrays")
 # +
 tracks = {}
 particle_ids = set()
-release_locs = list()
+release_locs = []
 
 for i, t in enumerate(pathlines["time"]):
     pid = str(round(float(pathlines["particleid"][i])))

@@ -169,7 +169,7 @@ class ModflowPval(Package):
             print(f'   reading parameter values from "{filename}"')
 
         # read PVAL data
-        pval_dict = dict()
+        pval_dict = {}
         for n in range(npval):
             line = f.readline()
             t = line.strip().split()

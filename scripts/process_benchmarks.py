@@ -19,7 +19,7 @@ print(f"Found {len(json_paths)} JSON files")
 
 
 def get_benchmarks(paths):
-    benchmarks = list()
+    benchmarks = []
     num_benchmarks = 0
 
     for path in paths:

@@ -301,7 +301,7 @@ class Raster:
 
                     self.__xcenters = None
                     self.__ycenters = None
-                    self._meta.update({k: v for k, v in kwargs.items()})
+                    self._meta.update(dict(kwargs.items()))
                     self._dataset = None
 
                 else:

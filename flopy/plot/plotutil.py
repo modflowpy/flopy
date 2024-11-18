@@ -1654,10 +1654,7 @@ class UnstructuredPlotUtilities:
             for iix, cell in enumerate(cells):
                 xc = x[cell]
                 yc = y[cell]
-                verts = [
-                    (xt, yt)
-                    for xt, yt in zip(xc[cell_vertex_ix[iix]], yc[cell_vertex_ix[iix]])
-                ]
+                verts = list(zip(xc[cell_vertex_ix[iix]], yc[cell_vertex_ix[iix]]))
 
                 if cell in vdict:
                     for i in verts:
@@ -2576,7 +2573,7 @@ def parse_modpath_selection_options(
     # selection of endpoints
     if selection is not None:
         if isinstance(selection, int):
-            selection = tuple((selection,))
+            selection = (selection,)
         try:
             if len(selection) == 1:
                 node = selection[0]

@@ -308,7 +308,7 @@ def test_intersection(dis_model, disv_model):
                 x, y, local=local, forgive=forgive
             )
         except Exception as e:
-            if not forgive and any(["outside of the model area" in k for k in e.args]):
+            if not forgive and any("outside of the model area" in k for k in e.args):
                 pass
             else:  # should be forgiving x,y out of grid
                 raise e
@@ -447,7 +447,7 @@ def test_structured_from_gridspec(example_data_path, spc_file):
     )  # ymax
     errmsg = f"extents {extents} of {fn} does not equal {rotated_extents}"
     assert all(
-        [np.isclose(x, x0) for x, x0 in zip(modelgrid.extent, rotated_extents)]
+        np.isclose(x, x0) for x, x0 in zip(modelgrid.extent, rotated_extents)
     ), errmsg
 
     ncpl = modelgrid.ncol * modelgrid.nrow

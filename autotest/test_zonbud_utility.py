@@ -115,8 +115,8 @@ def test_compare2zonebudget(cbc_f, zon_f, zbud_f, rtol):
                 continue
             if r1[0].shape[0] != r2[0].shape[0]:
                 continue
-            a1 = np.array([v for v in zb_arr[zonenames][r1[0]][0]])
-            a2 = np.array([v for v in fp_arr[zonenames][r2[0]][0]])
+            a1 = np.array(list(zb_arr[zonenames][r1[0]][0]))
+            a2 = np.array(list(fp_arr[zonenames][r2[0]][0]))
             allclose = np.allclose(a1, a2, rtol)
 
             mxdiff = np.abs(a1 - a2).max()

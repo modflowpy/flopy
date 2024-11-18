@@ -10,4 +10,4 @@ def test_split_data_line():
     assert len(spl) == len(exp)
     # whitespace is not removed, todo: can it be?
     # or is it needed to support Modflow input file format?
-    assert all(any([e in s for s in spl]) for e in exp)
+    assert all(any(e in s for s in spl) for e in exp)

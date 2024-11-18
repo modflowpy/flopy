@@ -151,7 +151,7 @@ sys.stdout.write(line)
 fs.close()
 
 # clean up working directory
-filelist = [f for f in os.listdir(cf_pth)]
+filelist = list(os.listdir(cf_pth))
 for f in filelist:
     os.remove(os.path.join(cf_pth, f))
 

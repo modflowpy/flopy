@@ -143,14 +143,14 @@ def tri2vor(tri, **kwargs):
     nvertices = vor.vertices.shape[0]
     xc = vor.vertices[:, 0].reshape((nvertices, 1))
     yc = vor.vertices[:, 1].reshape((nvertices, 1))
-    domain_polygon = [(x, y) for x, y in tri._polygons[0]]
+    domain_polygon = list(tri._polygons[0])
     vor_vert_indomain = point_in_polygon(xc, yc, domain_polygon)
     vor_vert_indomain = vor_vert_indomain.flatten()
     nholes = len(tri._holes)
     if nholes > 0:
         for ihole in range(nholes):
             ipolygon = ihole + 1
-            polygon = [(x, y) for x, y in tri._polygons[ipolygon]]
+            polygon = list(tri._polygons[ipolygon])
             vor_vert_notindomain = point_in_polygon(xc, yc, polygon)
             vor_vert_notindomain = vor_vert_notindomain.flatten()
             idx = np.asarray(vor_vert_notindomain == True).nonzero()
@@ -165,7 +165,7 @@ def tri2vor(tri, **kwargs):
     # Create new lists for the voronoi grid vertices and the
     # voronoi grid incidence list.  There should be one voronoi
     # cell for each vertex point in the triangular grid
-    vor_verts = [(x, y) for x, y in vor.vertices[idx_filtered]]
+    vor_verts = list(vor.vertices[idx_filtered])
     vor_iverts = [[] for i in range(npoints)]
 
     # step 1 -- go through voronoi ridge vertices

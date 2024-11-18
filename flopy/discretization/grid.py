@@ -642,8 +642,8 @@ class Grid:
         """
         if self._neighbors is None or reset:
             node_num = 0
-            neighbors = {i: list() for i in range(len(self.iverts))}
-            edge_set = {i: list() for i in range(len(self.iverts))}
+            neighbors = {i: [] for i in range(len(self.iverts))}
+            edge_set = {i: [] for i in range(len(self.iverts))}
             geoms = []
             node_nums = []
             if method == "rook":

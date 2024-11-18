@@ -53,7 +53,7 @@ theta = np.arange(0.0, 2 * np.pi, 0.2)
 radius = 100.0
 x = radius * np.cos(theta)
 y = radius * np.sin(theta)
-circle_poly = [(x, y) for x, y in zip(x, y)]
+circle_poly = list(zip(x, y))
 fig = plt.figure(figsize=(10, 10))
 ax = plt.subplot(1, 1, 1, aspect="equal")
 ax.plot(x, y, "bo-")
@@ -94,7 +94,7 @@ theta = np.arange(0.0, 2 * np.pi, 0.2)
 radius = 30.0
 x = radius * np.cos(theta) + 25.0
 y = radius * np.sin(theta) + 25.0
-inner_circle_poly = [(x, y) for x, y in zip(x, y)]
+inner_circle_poly = list(zip(x, y))
 
 # The hole is created by passing in another polygon and
 # then passing a point inside the hole polygon with the

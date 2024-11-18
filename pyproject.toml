@@ -133,6 +133,7 @@ exclude = [
 
 [tool.ruff.lint]
 select = [
+    "C4",   # flake8 comprehensions
     "D409", # pydocstyle - section-underline-matches-section-length
     "E",    # pycodestyle error
     "F",    # Pyflakes
@@ -154,7 +155,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 ".docs/**/*.py" = ["E501"]
-"flopy/mf6/**/*.py" = ["E501", "F821", "ISC001"]
+"flopy/mf6/**/*.py" = ["C4", "E501", "F821", "ISC001"]
 
 [tool.codespell]
 skip = "cliff.toml,./examples/data/*"
