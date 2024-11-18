@@ -3,7 +3,7 @@ Module spatial referencing for flopy model objects
 
 .. deprecated:: 3.9
     This module will be removed in FloPy 3.10+. Use
-    the `flopy.discretization` module instead.
+    the :mod:`flopy.discretization` module instead.
 
 """
 
@@ -16,7 +16,8 @@ class StructuredSpatialReference:
 
     .. deprecated:: 3.9
         This class will be removed in FloPy 3.10+. Use
-        `StructuredGrid` instead.
+        :class:`~flopy.discretization.structuredgrid.StructuredGrid`
+        instead.
 
     Parameters
     ----------
@@ -554,7 +555,8 @@ class VertexSpatialReference:
 
     .. deprecated:: 3.9
         This class will be removed in FloPy 3.10+. Use
-        `VertexGrid` instead.
+        :class:`~flopy.discretization.vertexgrid.VertexGrid`
+        instead.
 
     Parameters
     ----------
