@@ -96,7 +96,7 @@ def make_targets(dfn, outdir: PathLike, verbose: bool = False):
                 print(f"Wrote {target_path}")
 
 
-def make_all(dfndir: Path, outdir: Path, verbose: bool = False):
+def make_all(dfndir: Path, outdir: PathLike, verbose: bool = False):
     """Generate Python source files from the DFN files in the given location."""
 
     from flopy.mf6.utils.codegen.dfn import Dfn
