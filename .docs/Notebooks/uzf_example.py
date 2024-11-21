@@ -19,7 +19,7 @@
 
 # # Unsaturated Zone Flow (UZF) Package demo
 # Demonstrates functionality of the flopy UZF module using the example from [Niswonger and others (2006)](https://pubs.usgs.gov/tm/2006/tm6a19/). This is the same as the SFR example problem from Prudic and others (2004;
-# p. 13–19), except the UZF package replaces the ET and RCH packages.
+# p. 13-19), except the UZF package replaces the ET and RCH packages.
 #
 # #### Problem description:
 #

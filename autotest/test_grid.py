@@ -349,7 +349,7 @@ def test_structured_xyz_intersect(example_data_path):
 
 def test_vertex_xyz_intersect(example_data_path):
     sim = MFSimulation.load(sim_ws=example_data_path / "mf6" / "test003_gwfs_disv")
-    ml = sim.get_model(list(sim.model_names)[0])
+    ml = sim.get_model(next(iter(sim.model_names)))
     mg = ml.modelgrid
 
     assert mg.size == np.prod((mg.nlay, mg.ncpl))

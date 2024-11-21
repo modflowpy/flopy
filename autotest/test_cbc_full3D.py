@@ -130,7 +130,7 @@ def test_cbc_full3D_mf6(function_tmpdir, path):
     sim.run_simulation()
 
     # get the groundwater model and determine the size of the model grid
-    gwf_name = list(sim.model_names)[0]
+    gwf_name = next(iter(sim.model_names))
     gwf = sim.get_model(gwf_name)
     nnodes, shape3d = gwf.modelgrid.nnodes, gwf.modelgrid.shape
 

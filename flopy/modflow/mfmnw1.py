@@ -447,11 +447,11 @@ def _parse_5(f, itmp, qfrcmn_default=None, qfrcmx_default=None, qcut_default="")
         qfrcmn = 0.0
         qfrcmx = 0.0
         if "qcut" in linetxt:
-            txt = [t for t in line if "qcut" in t][0]
+            txt = next(t for t in line if "qcut" in t)
             qcut = txt
             line.remove(txt)
         elif "%cut" in linetxt:
-            txt = [t for t in line if "%cut" in t][0]
+            txt = next(t for t in line if "%cut" in t)
             qcut = txt
             line.remove(txt)
         if "qcut" in linetxt or "%cut" in linetxt:

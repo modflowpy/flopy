@@ -193,7 +193,7 @@ class ModflowRch(Package):
         # check for unusually high or low values of mean R/T
         hk_package = {"UPW", "LPF"}.intersection(set(self.parent.get_package_list()))
         if len(hk_package) > 0 and self.parent.structured:
-            pkg = list(hk_package)[0]
+            pkg = next(iter(hk_package))
 
             # handle quasi-3D layers
             # (ugly, would be nice to put this else where in a general function)
