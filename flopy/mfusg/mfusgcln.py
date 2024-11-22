@@ -196,6 +196,7 @@ class MfUsgCln(Package):
         ),
         unitnumber=None,
         filenames=None,
+        **kwargs,
     ):
         """Package constructor."""
         msg = (
@@ -310,6 +311,98 @@ class MfUsgCln(Package):
             name="strt",
             locat=self.unit_number[0],
         )
+
+        # Transport parameters
+        bct = model.get_package("BCT")
+        if bct is not None:
+            if bct.icbndflg == 0:
+                icbund = kwargs.pop("icbund", None)
+                self.icbund = Util2d(
+                    model,
+                    (self.nclnnds,),
+                    np.int32,
+                    icbund,
+                    name="icbund",
+                    locat=self.unit_number[0],
+                )
+            if bct.idisp:
+                dll = kwargs.pop("dll", None)
+                self.dll = Util2d(
+                    model,
+                    (self.nclnnds,),
+                    np.float32,
+                    dll,
+                    name="dll",
+                    locat=self.unit_number[0],
+                )
+                dlm = kwargs.pop("dlm", None)
+                self.dlm = Util2d(
+                    model,
+                    (self.nclnnds,),
+                    np.float32,
+                    dlm,
+                    name="dlm",
+                    locat=self.unit_number[0],
+                )
+
+            mcomp = bct.mcomp
+            self.sptlrct = [0] * mcomp
+            self.zodrw = [0] * mcomp
+            self.fodrw = [0] * mcomp
+            self.conc = [0] * mcomp
+
+            if bct.spatialreact:
+                sptlrct = kwargs.pop("sptlrct", None)
+                if isinstance(sptlrct, (int, float)):
+                    sptlrct = [sptlrct] * mcomp
+            if bct.izod:
+                zodrw = kwargs.pop("zodrw", None)
+                if isinstance(zodrw, (int, float)):
+                    zodrw = [zodrw] * mcomp
+            if bct.ifod:
+                fodrw = kwargs.pop("fodrw", None)
+                if isinstance(fodrw, (int, float)):
+                    fodrw = [fodrw] * mcomp
+            conc = kwargs.pop("conc", None)
+            if isinstance(conc, (int, float)):
+                conc = [conc] * mcomp
+
+            for icomp in range(mcomp):
+                if bct.spatialreact:
+                    self.sptlrct[icomp] = Util2d(
+                        model,
+                        (self.nclnnds,),
+                        np.float32,
+                        sptlrct[icomp],
+                        name="sptlrct",
+                        locat=self.unit_number[0],
+                    )
+                if bct.izod:
+                    self.zodrw[icomp] = Util2d(
+                        model,
+                        (self.nclnnds,),
+                        np.float32,
+                        zodrw[icomp],
+                        name="zodrw",
+                        locat=self.unit_number[0],
+                    )
+                if bct.ifod:
+                    self.fodrw[icomp] = Util2d(
+                        model,
+                        (self.nclnnds,),
+                        np.float32,
+                        fodrw[icomp],
+                        name="fodrw",
+                        locat=self.unit_number[0],
+                    )
+                self.conc[icomp] = Util2d(
+                    model,
+                    (self.nclnnds,),
+                    np.float32,
+                    conc[icomp],
+                    name="conc",
+                    locat=self.unit_number[0],
+                )
 
         self.parent.add_package(self)
 
@@ -484,6 +577,8 @@ class MfUsgCln(Package):
         f_cln.write(self.ibound.get_file_entry())
         f_cln.write(self.strt.get_file_entry())
 
+        self._write_transport(f_cln)
+
         f_cln.close()
 
     def _write_items_0_1(self, f_cln):
@@ -503,18 +598,36 @@ class MfUsgCln(Package):
         )
 
         if self.nrectyp > 0:
-            f_cln.write(f"RECTANGULAR {self.nrectyp:d}")
+            f_cln.write(f" RECTANGULAR {self.nrectyp:d}")
         if self.bhe:
-            f_cln.write("BHEDETAIL ")
+            f_cln.write(" BHEDETAIL ")
         if self.iclncn != 0:
-            f_cln.write(f"SAVECLNCON {self.iclncn:d}")
+            f_cln.write(f" SAVECLNCON {self.iclncn:d}")
         if self.iclnmb != 0:
-            f_cln.write(f"SAVECLNMAS {self.iclnmb:d}")
+            f_cln.write(f" SAVECLNMAS {self.iclnmb:d}")
         if self.grav is not None:
-            f_cln.write(f"GRAVITY {self.grav:f}")
+            f_cln.write(f" GRAVITY {self.grav:f}")
         if self.visk is not None:
-            f_cln.write(f"VISCOSITY {self.visk:f}")
+            f_cln.write(f" VISCOSITY {self.visk:f}")
         f_cln.write("\n")
+
+    def _write_transport(self, f_cln):
+        bct = self.parent.get_package("BCT")
+
+        if bct is not None:
+            if bct.icbndflg == 0:
+                f_cln.write(self.icbund.get_file_entry())
+            if bct.idisp:
+                f_cln.write(self.dll.get_file_entry())
+                f_cln.write(self.dlm.get_file_entry())
+            for icomp in range(bct.mcomp):
+                if bct.spatialreact:
+                    f_cln.write(self.sptlrct[icomp].get_file_entry())
+                if bct.izod:
+                    f_cln.write(self.zodrw[icomp].get_file_entry())
+                if bct.ifod:
+                    f_cln.write(self.fodrw[icomp].get_file_entry())
+                f_cln.write(self.conc[icomp].get_file_entry())
 
     @classmethod
     def load(cls, f, model, pak_type="cln", ext_unit_dict=None, **kwargs):
@@ -615,6 +728,20 @@ class MfUsgCln(Package):
             print("   Reading strt...")
         strt = Util2d.load(f, model, (nclnnds, 1), np.float32, "strt", ext_unit_dict)
 
+        bct = model.get_package("BCT")
+        if bct is not None:
+            if model.verbose:
+                print("loading transport parameters...")
+            (
+                kwargs["icbund"],
+                kwargs["dll"],
+                kwargs["dlm"],
+                kwargs["sptlrct"],
+                kwargs["zodrw"],
+                kwargs["fodrw"],
+                kwargs["conc"],
+            ) = cls._load_transport(f, model, nclnnds, bct, ext_unit_dict)
+
         if hasattr(f, "read"):
             f.close()
 
@@ -662,6 +789,7 @@ class MfUsgCln(Package):
             bhe=bhe,
             unitnumber=unitnumber,
             filenames=filenames,
+            **kwargs,
         )
 
         # return dis object instance
@@ -807,6 +935,51 @@ class MfUsgCln(Package):
             raise Exception("mfcln: negative number of CLN segments")
 
         return nndcln, clncon, nja_cln, iac_cln, ja_cln, nclnnds
+
+    def _load_transport(f_obj, model, nclnnds, bct, ext_unit_dict):
+        """Loads cln items 3, or 4,5,6 from filehandle f."""
+
+        icbund = None
+        if bct.icbndflg == 0:
+            icbund = Util2d.load(
+                f_obj, model, (nclnnds, 1), np.int32, "icbund", ext_unit_dict
+            )
+
+        dll = None
+        dlm = None
+        if bct.idisp:
+            dll = Util2d.load(
+                f_obj, model, (nclnnds, 1), np.float32, "dll", ext_unit_dict
+            )
+            dlm = Util2d.load(
+                f_obj, model, (nclnnds, 1), np.float32, "dlm", ext_unit_dict
+            )
+
+        mcomp = bct.mcomp
+
+        sptlrct = [0] * mcomp
+        zodrw = [0] * mcomp
+        fodrw = [0] * mcomp
+        conc = [0] * mcomp
+
+        for icomp in range(mcomp):
+            if bct.spatialreact:
+                sptlrct[icomp] = Util2d.load(
+                    f_obj, model, (nclnnds, 1), np.float32, "sptlrct", ext_unit_dict
+                )
+            if bct.izod:
+                zodrw[icomp] = Util2d.load(
+                    f_obj, model, (nclnnds, 1), np.float32, "zodrw", ext_unit_dict
+                )
+            if bct.ifod:
+                fodrw[icomp] = Util2d.load(
+                    f_obj, model, (nclnnds, 1), np.float32, "fodrw", ext_unit_dict
+                )
+            conc[icomp] = Util2d.load(
+                f_obj, model, (nclnnds, 1), np.float32, "conc", ext_unit_dict
+            )
+
+        return icbund, dll, dlm, sptlrct, zodrw, fodrw, conc
 
     @staticmethod
     def _ftype():

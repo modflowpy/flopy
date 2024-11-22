@@ -3,10 +3,6 @@ Mfusgwel module.
 
 Contains the MfUsgWel class. Note that the user can access
 the MfUsgWel class as `flopy.mfusg.MfUsgWel`.
-
-Additional information for this MODFLOW package can be found at the `Online
-MODFLOW Guide
-<https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/wel.html>`_.
 """
 
 from ..modflow.mfwel import ModflowWel

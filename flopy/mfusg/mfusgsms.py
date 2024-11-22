@@ -313,12 +313,21 @@ class MfUsgSms(Package):
         self.rrctol = rrctol
         self.idroptol = idroptol
         self.epsrn = epsrn
-        self.clin = clin
+
+        if clin is None:
+            self.clin = "CG"
+        else:
+            self.clin = clin
+
+        if relaxpcgu is None:
+            self.relaxpcgu = 0.97
+        else:
+            self.relaxpcgu = relaxpcgu
+
         self.ipc = ipc
         self.iscl = iscl
         self.iord = iord
         self.rclosepcgu = rclosepcgu
-        self.relaxpcgu = relaxpcgu
         if options is None:
             self.options = []
         else:
@@ -343,52 +352,27 @@ class MfUsgSms(Package):
         if nopt > 0:
             f.write(" ".join(self.options) + "\n")
         f.write(
-            "{} {} {} {} {} {} {}\n".format(
-                self.hclose,
-                self.hiclose,
-                self.mxiter,
-                self.iter1,
-                self.iprsms,
-                self.nonlinmeth,
-                self.linmeth,
-            )
+            f" {self.hclose:9.2e} {self.hiclose:9.2e} {self.mxiter:9d} {self.iter1:9d}"
+            f" {self.iprsms:9d} {self.nonlinmeth:9d} {self.linmeth:9d}\n"
         )
+
         if self.nonlinmeth != 0 and nopt == 0:
             f.write(
-                "{} {} {} {} {} {} {} {}\n".format(
-                    self.theta,
-                    self.akappa,
-                    self.gamma,
-                    self.amomentum,
-                    self.numtrack,
-                    self.btol,
-                    self.breduc,
-                    self.reslim,
-                )
+                f" {self.theta:9.2e} {self.akappa:9.2e} {self.gamma:9.2e}"
+                f" {self.amomentum:9.2e} {self.numtrack:9d} {self.btol:9.2e}"
+                f" {self.breduc:9.2e} {self.reslim:9.2e}\n"
             )
+
         if self.linmeth == 1 and nopt == 0:
             f.write(
-                "{} {} {} {} {} {} {} {}\n".format(
-                    self.iacl,
-                    self.norder,
-                    self.level,
-                    self.north,
-                    self.iredsys,
-                    self.rrctol,
-                    self.idroptol,
-                    self.epsrn,
-                )
+                f" {self.iacl:9d} {self.norder:9d} {self.level:9d} {self.north:9d}"
+                f" {self.iredsys:9d} {self.rrctol:9.2e} {self.idroptol:9d}"
+                f" {self.epsrn:9.2e}\n"
             )
         if self.linmeth == 2 and nopt == 0:
             f.write(
-                "{} {} {} {} {} {}\n".format(
-                    self.clin,
-                    self.ipc,
-                    self.iscl,
-                    self.iord,
-                    self.rclosepcgu,
-                    self.relaxpcgu,
-                )
+                f" {self.clin:9s} {self.ipc:9d} {self.iscl:9d} {self.iord:9d}"
+                f" {self.rclosepcgu:9.2e} {self.relaxpcgu:9.2e}\n"
             )
         f.write("\n")
         f.close()
@@ -473,13 +457,10 @@ class MfUsgSms(Package):
         nonlinmeth = int(ll.pop(0))
         linmeth = int(ll.pop(0))
         if model.verbose:
-            print(f"   HCLOSE {hclose}")
-            print(f"   HICLOSE {hiclose}")
-            print(f"   MXITER {mxiter}")
-            print(f"   ITER1 {iter1}")
-            print(f"   IPRSMS {iprsms}")
-            print(f"   NONLINMETH {nonlinmeth}")
-            print(f"   LINMETH {linmeth}")
+            print(
+                f"   HCLOSE {hclose} HICLOSE {hiclose} MXITER {mxiter} ITER1 {iter1}"
+                f" IPRSMS {iprsms} NONLINMETH {nonlinmeth} LINMETH {linmeth}"
+            )
 
         # Record 2
         theta = None
@@ -510,14 +491,10 @@ class MfUsgSms(Package):
             breduc = float(ll.pop(0))
             reslim = float(ll.pop(0))
             if model.verbose:
-                print(f"   THETA {theta}")
-                print(f"   AKAPPA {akappa}")
-                print(f"   GAMMA {gamma}")
-                print(f"   AMOMENTUM {amomentum}")
-                print(f"   NUMTRACK {numtrack}")
-                print(f"   BTOL {btol}")
-                print(f"   BREDUC {breduc}")
-                print(f"   RESLIM {reslim}")
+                print(
+                    f" THETA {theta} AKAPPA{akappa} GAMMA{gamma} AMOMENTUM{amomentum}"
+                    f" NUMTRACK {numtrack} BTOL {btol} BREDUC {breduc} RESLIM {reslim}"
+                )
 
         iacl = None
         norder = None
@@ -547,14 +524,11 @@ class MfUsgSms(Package):
             idroptol = int(ll.pop(0))
             epsrn = float(ll.pop(0))
             if model.verbose:
-                print(f"   IACL {iacl}")
-                print(f"   NORDER {norder}")
-                print(f"   LEVEL {level}")
-                print(f"   NORTH {north}")
-                print(f"   IREDSYS {iredsys}")
-                print(f"   RRCTOL {rrctol}")
-                print(f"   IDROPTOL {idroptol}")
-                print(f"   EPSRN {epsrn}")
+                print(
+                    f" IACL {iacl} NORDER {norder} LEVEL {level} NORTH {north}"
+                    f" IREDSYS{iredsys} RRCTOL{rrctol} IDROPTOL{idroptol}"
+                    f" EPSRN{epsrn}"
+                )
 
         clin = None
         ipc = None
@@ -579,12 +553,10 @@ class MfUsgSms(Package):
             if len(ll) > 0:
                 relaxpcgu = float(ll.pop(0))
             if model.verbose:
-                print(f"   CLIN {clin}")
-                print(f"   IPC {ipc}")
-                print(f"   ISCL {iscl}")
-                print(f"   IORD {iord}")
-                print(f"   RCLOSEPCGU {rclosepcgu}")
-                print(f"   RELAXPCGU {relaxpcgu}")
+                print(
+                    f"   CLIN {clin} IPC {ipc} ISCL {iscl} IORD {iord} "
+                    f"   RCLOSEPCGU {rclosepcgu}  RELAXPCGU {relaxpcgu}"
+                )
 
         if openfile:
             f.close()

@@ -91,6 +91,11 @@ class MfUsg(Modflow):
             verbose=self.verbose,
             **kwargs,
         )
+
+        self.mcomp = 0  # number of chemical components
+        self.iheat = 0  # flag for heat transport
+        self.idpf = 0  # flag for dual porosity flow
+
         # Create a dictionary to map package with package object.
         # This is used for loading models.
         self.mfnam_packages = {
@@ -104,15 +109,12 @@ class MfUsg(Modflow):
             "fhb": flopy.modflow.ModflowFhb,
             "drn": flopy.modflow.ModflowDrn,
             "drt": flopy.modflow.ModflowDrt,
-            "rch": flopy.modflow.ModflowRch,
             "evt": flopy.modflow.ModflowEvt,
             "ghb": flopy.modflow.ModflowGhb,
             "riv": flopy.modflow.ModflowRiv,
             "str": flopy.modflow.ModflowStr,
             "sfr": flopy.modflow.ModflowSfr2,
-            "lak": flopy.modflow.ModflowLak,
             "gage": flopy.modflow.ModflowGage,
-            "oc": flopy.modflow.ModflowOc,
             "sub": flopy.modflow.ModflowSub,
             "swt": flopy.modflow.ModflowSwt,
             "disu": flopy.mfusg.MfUsgDisU,
@@ -122,6 +124,15 @@ class MfUsg(Modflow):
             "lpf": flopy.mfusg.MfUsgLpf,
             "cln": flopy.mfusg.MfUsgCln,
             "gnc": flopy.mfusg.MfUsgGnc,
+            "bct": flopy.mfusg.MfUsgBct,
+            "pcb": flopy.mfusg.MfUsgPcb,
+            "ddf": flopy.mfusg.MfUsgDdf,
+            "mdt": flopy.mfusg.MfUsgMdt,
+            "dpf": flopy.mfusg.MfUsgDpf,
+            "dpt": flopy.mfusg.MfUsgDpt,
+            "rch": flopy.mfusg.MfUsgRch,
+            "oc": flopy.mfusg.MfUsgOc,
+            "lak": flopy.mfusg.MfUsgLak,
         }
 
     def __repr__(self):
@@ -529,7 +540,7 @@ def fmt_string(array):
         if vtype in ("i", "b"):
             fmts.append("%10d")
         elif vtype == "f":
-            fmts.append("%14.6g")
+            fmts.append("%10.2g")
         elif vtype == "o":
             fmts.append("%10s")
         elif vtype == "s":

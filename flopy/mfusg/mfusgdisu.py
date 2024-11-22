@@ -251,6 +251,8 @@ class MfUsgDisU(Package):
         # Set values of all parameters
         self._generate_heading()
 
+        model.structured = False
+
         self.nodes = nodes
         self.nlay = nlay
         self.njag = njag

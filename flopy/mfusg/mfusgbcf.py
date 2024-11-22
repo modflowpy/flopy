@@ -138,6 +138,12 @@ class MfUsgBcf(ModflowBcf):
         ihdwet=0,
         ikvflag=0,
         ikcflag=0,
+        tabrich=False,
+        nuzones=0,
+        nutabrows=0,
+        bubblept=False,
+        fullydry=False,
+        altsto=False,
         tran=1.0,
         hy=1.0,
         vcont=1.0,
@@ -194,6 +200,13 @@ class MfUsgBcf(ModflowBcf):
 
         self.ikvflag = ikvflag
         self.ikcflag = ikcflag
+        self.tabrich = tabrich
+        self.nuzones = nuzones
+        self.nutabrows = nutabrows
+        self.bubblept = bubblept
+        self.fullydry = fullydry
+        self.altsto = altsto
+
         self.kv = kv
         self.anglex = anglex
         self.ksat = ksat
@@ -255,8 +268,18 @@ class MfUsgBcf(ModflowBcf):
         f_obj.write(
             f" {self.ipakcb:9d} {self.hdry:9.3G} {self.iwdflg:9d}"
             f" {self.wetfct:9.3G} {self.iwetit:9d} {self.ihdwet:9d}"
-            f" {self.ikvflag:9d} {self.ikcflag:9d}\n"
+            f" {self.ikvflag:9d} {self.ikcflag:9d}"
         )
+
+        if self.tabrich:
+            f_obj.write(f" TABRICH {self.nuzones:9d} {self.nutabrows:9d}")
+        if self.bubblept:
+            f_obj.write(" BUBBLEPT")
+        if self.fullydry:
+            f_obj.write(" FULLYDRY")
+        if self.altsto:
+            f_obj.write(" ALTSTO")
+        f_obj.write("\n")
 
         # LAYCON array
         for layer in range(nlay):
@@ -386,6 +409,37 @@ class MfUsgBcf(ModflowBcf):
         ikvflag = type_from_iterable(text_list, index=6, _type=int, default_val=0)
         ikcflag = type_from_iterable(text_list, index=7, _type=int, default_val=0)
 
+        # options
+        if "TABRICH" in text_list:
+            idx = text_list.index("TABRICH")
+            tabrich = True
+            nuzones = float(text_list[idx + 1])
+            nutabrows = float(text_list[idx + 2])
+        else:
+            tabrich = False
+            nuzones = None
+            nutabrows = None
+
+        if "BUBBLEPT" in text_list:
+            bubblept = True
+        else:
+            bubblept = False
+
+        if "FULLYDRY" in text_list:
+            fullydry = True
+        else:
+            fullydry = False
+
+        if "ALTSTO" in text_list:
+            altsto = True
+        else:
+            altsto = False
+
+        # item 1c and d  -- Not implemented
+        if tabrich:
+            iuzontab = []
+            retcrvs = []
+
         # LAYCON array
         laycon, intercellt = cls._load_laycon(f_obj, model)
 
@@ -446,6 +500,12 @@ class MfUsgBcf(ModflowBcf):
             ihdwet=ihdwet,
             ikvflag=ikvflag,
             ikcflag=ikcflag,
+            tabrich=tabrich,
+            nuzones=nuzones,
+            nutabrows=nutabrows,
+            bubblept=bubblept,
+            fullydry=fullydry,
+            altsto=altsto,
             tran=tran,
             hy=hy,
             vcont=vcont,
