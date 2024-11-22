@@ -1085,7 +1085,7 @@ class ModflowMnw2(Package):
             if (
                 "k"
                 not in stress_period_data[
-                    list(stress_period_data.keys())[0]
+                    next(iter(stress_period_data.keys()))
                 ].dtype.names
             ):
                 self._add_kij_to_stress_period_data()

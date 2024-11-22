@@ -93,7 +93,7 @@ class PlotCrossSection:
         else:
             self.ax = ax
 
-        onkey = list(line.keys())[0]
+        onkey = next(iter(line.keys()))
         self.__geographic_xpts = None
 
         # un-translate model grid into model coordinates
@@ -199,7 +199,7 @@ class PlotCrossSection:
             self.xypts[node] = points
 
         if len(self.xypts) < 2:
-            if len(list(self.xypts.values())[0]) < 2:
+            if len(next(iter(self.xypts.values()))) < 2:
                 s = (
                     "cross-section cannot be created\n."
                     " less than 2 points intersect the model grid\n"

@@ -320,7 +320,7 @@ def test_zonebudget_6(function_tmpdir, example_data_path):
 
     df = zb.get_dataframes()
 
-    assert list(df)[0] == "test_alias", "Alias testing failed"
+    assert next(iter(df)) == "test_alias", "Alias testing failed"
 
 
 @pytest.mark.mf6

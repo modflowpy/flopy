@@ -13,7 +13,7 @@ Panday, S., 2021; USG-Transport Version 1.7.0: The Block-Centered Transport
 Process for MODFLOW-USG, GSI Environmental, March, 2021
 
 Panday, Sorab, Langevin, C.D., Niswonger, R.G., Ibaraki, Motomu, and Hughes,
-J.D., 2013, MODFLOW–USG version 1: An unstructured grid version of MODFLOW
+J.D., 2013, MODFLOW-USG version 1: An unstructured grid version of MODFLOW
 for simulating groundwater flow and tightly coupled processes using a control
 volume finite-difference formulation: U.S. Geological Survey Techniques and
 Methods, book 6, chap. A45, 66 p.

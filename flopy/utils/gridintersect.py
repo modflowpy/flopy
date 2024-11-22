@@ -459,9 +459,10 @@ class GridIntersect:
             for ishp, cid in zip(ixresult, qcellids):
                 points = []
                 for pnt in shapely.get_parts(ishp):
-                    if tuple(pnt.coords)[0] not in parsed:
+                    next_pnt = next(iter(pnt.coords))
+                    if next_pnt not in parsed:
                         points.append(pnt)
-                    parsed.append(tuple(pnt.coords)[0])
+                    parsed.append(next_pnt)
 
                 if len(points) > 1:
                     keep_pts.append(shapely.MultiPoint(points))

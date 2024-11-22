@@ -1554,9 +1554,9 @@ class BaseModel(ModelInterface):
                 if p.unit_number[i] != 0:
                     if p.unit_number[i] in package_units.values():
                         duplicate_units[p.name[i]] = p.unit_number[i]
-                        otherpackage = [
+                        otherpackage = next(
                             k for k, v in package_units.items() if v == p.unit_number[i]
-                        ][0]
+                        )
                         duplicate_units[otherpackage] = p.unit_number[i]
         if len(duplicate_units) > 0:
             for k, v in duplicate_units.items():
