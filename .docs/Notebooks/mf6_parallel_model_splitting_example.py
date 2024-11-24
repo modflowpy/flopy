@@ -328,14 +328,7 @@ with styles.USGSMap():
     pmv = flopy.plot.PlotMapView(modelgrid=modelgrid)
     ax.set_aspect("equal")
     pmv.plot_array(modelgrid.top)
-    pmv.plot_array(
-        intersection_rg,
-        masked_values=[
-            0,
-        ],
-        alpha=0.2,
-        cmap="Reds_r",
-    )
+    pmv.plot_array(intersection_rg, masked_values=[0], alpha=0.2, cmap="Reds_r")
     pmv.plot_inactive()
     ax.plot(bp[:, 0], bp[:, 1], "r-")
     for seg in segs:
@@ -513,11 +506,7 @@ with styles.USGSMap():
     pmv = flopy.plot.PlotMapView(modelgrid=gwf.modelgrid, ax=ax)
     h = pmv.plot_array(heads, vmin=hmin, vmax=hmax)
     c = pmv.contour_array(
-        water_table,
-        levels=contours,
-        colors="white",
-        linewidths=0.75,
-        linestyles=":",
+        water_table, levels=contours, colors="white", linewidths=0.75, linestyles=":"
     )
     plt.clabel(c, fontsize=8)
     pmv.plot_inactive()
@@ -633,11 +622,7 @@ with styles.USGSMap():
         h = pmv.plot_array(hv[idx], vmin=vmin, vmax=vmax)
         if levels is not None:
             c = pmv.contour_array(
-                hv[idx],
-                levels=levels,
-                colors="white",
-                linewidths=0.75,
-                linestyles=":",
+                hv[idx], levels=levels, colors="white", linewidths=0.75, linestyles=":"
             )
             plt.clabel(c, fontsize=8)
         pmv.plot_inactive()
@@ -716,11 +701,7 @@ with styles.USGSMap():
         h = pmv.plot_array(hv[idx], vmin=vmin, vmax=vmax)
         if levels is not None:
             c = pmv.contour_array(
-                hv[idx],
-                levels=levels,
-                colors="white",
-                linewidths=0.75,
-                linestyles=":",
+                hv[idx], levels=levels, colors="white", linewidths=0.75, linestyles=":"
             )
             plt.clabel(c, fontsize=8)
         pmv.plot_inactive()

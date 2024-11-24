@@ -139,13 +139,7 @@ grndElv = np.loadtxt(elv_pth)
 
 # Bottom of layer 1 elevation also determined from use of GUI and stored locally
 bt1_pth = os.path.join(
-    "..",
-    "..",
-    "examples",
-    "data",
-    "mt3d_example_sft_lkt_uzt",
-    "dis_arrays",
-    "bot1.txt",
+    "..", "..", "examples", "data", "mt3d_example_sft_lkt_uzt", "dis_arrays", "bot1.txt"
 )
 bot1Elv = np.loadtxt(bt1_pth)
 
@@ -295,34 +289,16 @@ elev_slp = (308.82281 - 298.83649) / (ncol - 1)
 
 sp = []
 for k in [0, 1, 2]:  # These indices need to be adjusted for 0-based moronicism
-    for i in [
-        0,
-        299,
-    ]:  # These indices need to be adjusted for 0-based silliness
-        for j in np.arange(
-            0, 300, 1
-        ):  # These indices need to be adjusted for 0-based foolishness
-            # Skipping cells not satisfying the conditions below
+    for i in [0, 299]:  # These indices need to be adjusted for 0-based silliness
+        # These indices need to be adjusted for 0-based foolishness
+        # Skipping cells not satisfying the conditions below
+        for j in np.arange(0, 300, 1):
             if (i == 1 and (j < 27 or j > 31)) or (i == 299 and (j < 26 or j > 31)):
                 if i % 2 == 0:
-                    sp.append(
-                        [
-                            k,
-                            i,
-                            j,
-                            elev_stpt_row1 - (elev_slp * (j - 1)),
-                            11.3636,
-                        ]
-                    )
+                    sp.append([k, i, j, elev_stpt_row1 - (elev_slp * (j - 1)), 11.3636])
                 else:
                     sp.append(
-                        [
-                            k,
-                            i,
-                            j,
-                            elev_stpt_row300 - (elev_slp * (j - 1)),
-                            11.3636,
-                        ]
+                        [k, i, j, elev_stpt_row300 - (elev_slp * (j - 1)), 11.3636]
                     )
 
 
@@ -586,22 +562,10 @@ uzf = flopy.modflow.ModflowUzf1(
 
 # +
 fname_drnElv = os.path.join(
-    "..",
-    "..",
-    "examples",
-    "data",
-    "mt3d_example_sft_lkt_uzt",
-    "drn_arrays",
-    "elv.txt",
+    "..", "..", "examples", "data", "mt3d_example_sft_lkt_uzt", "drn_arrays", "elv.txt"
 )
 fname_drnCond = os.path.join(
-    "..",
-    "..",
-    "examples",
-    "data",
-    "mt3d_example_sft_lkt_uzt",
-    "drn_arrays",
-    "cond.txt",
+    "..", "..", "examples", "data", "mt3d_example_sft_lkt_uzt", "drn_arrays", "cond.txt"
 )
 
 drnElv = np.loadtxt(fname_drnElv)

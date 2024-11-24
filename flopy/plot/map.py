@@ -1032,11 +1032,7 @@ class PlotMapView:
 
         # transform data!
         x0r, y0r = geometry.transform(
-            tep[xp],
-            tep[yp],
-            self.mg.xoffset,
-            self.mg.yoffset,
-            self.mg.angrot_radians,
+            tep[xp], tep[yp], self.mg.xoffset, self.mg.yoffset, self.mg.angrot_radians
         )
         # build array to plot
         arr = np.vstack((x0r, y0r)).T

@@ -667,11 +667,7 @@ def test_SfrFile(function_tmpdir, sfr_examples_path, mf2005_model_path):
     ]
     sfrout = SfrFile(sfr_examples_path / "sfroutput2.txt")
     assert sfrout.ncol == 18, sfrout.ncol
-    assert sfrout.names == common_names + [
-        "Qwt",
-        "delUzstor",
-        "gw_head",
-    ], sfrout.names
+    assert sfrout.names == common_names + ["Qwt", "delUzstor", "gw_head"], sfrout.names
     assert sfrout.times == [(0, 0), (49, 1)], sfrout.times
 
     df = sfrout.get_dataframe()
@@ -798,9 +794,8 @@ def test_sfrcheck(function_tmpdir, mf2005_model_path):
     chk.routing()
     assert "circular routing" in chk.passed
     chk.overlapping_conductance()
-    assert (
-        "overlapping conductance" in chk.warnings
-    )  # this example model has overlapping conductance
+    # this example model has overlapping conductance
+    assert "overlapping conductance" in chk.warnings
     chk.elevations()
     for test in [
         "segment elevations",

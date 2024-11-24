@@ -169,10 +169,7 @@ def write_grid_shapefile(
             ).transpose()
         else:
             names = ["node", "layer"] + list(array_dict.keys())
-            dtypes = [
-                ("node", np.dtype("int")),
-                ("layer", np.dtype("int")),
-            ] + [
+            dtypes = [("node", np.dtype("int")), ("layer", np.dtype("int"))] + [
                 (enforce_10ch_limit([name])[0], array_dict[name].dtype)
                 for name in names[2:]
             ]

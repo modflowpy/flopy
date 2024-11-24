@@ -38,18 +38,8 @@ class GridCases:
         laycbd = np.array([1, 2, 0], dtype=int)
         ncb = np.count_nonzero(laycbd)
         dx = dy = 150
-        delc = np.array(
-            [
-                dy,
-            ]
-            * nrow
-        )
-        delr = np.array(
-            [
-                dx,
-            ]
-            * ncol
-        )
+        delc = np.array([dy] * nrow)
+        delr = np.array([dx] * ncol)
         top = np.ones((15, 15))
         botm = np.ones((nlay + ncb, nrow, ncol))
         elevations = np.array([-10, -20, -40, -50, -70])[:, np.newaxis]
@@ -139,20 +129,8 @@ class GridCases:
             [4, 5, 8, 7],
             [6, 7, 10, 9],
         ]
-        xcenters = [
-            0.5,
-            1.5,
-            0.5,
-            1.5,
-            0.5,
-        ]
-        ycenters = [
-            2.5,
-            2.5,
-            1.5,
-            1.5,
-            0.5,
-        ]
+        xcenters = [0.5, 1.5, 0.5, 1.5, 0.5]
+        ycenters = [2.5, 2.5, 1.5, 1.5, 0.5]
         idomain = np.ones((nlay, 5), dtype=int)
         top = np.ones((nlay, 5), dtype=float)
         top[0, :] = 10.0

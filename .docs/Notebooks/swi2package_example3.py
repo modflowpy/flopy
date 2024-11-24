@@ -224,15 +224,7 @@ fig.subplots_adjust(
 )
 
 ax = fig.add_subplot(311)
-ax.text(
-    -0.075,
-    1.05,
-    "A",
-    transform=ax.transAxes,
-    va="center",
-    ha="center",
-    size="8",
-)
+ax.text(-0.075, 1.05, "A", transform=ax.transAxes, va="center", ha="center", size="8")
 # confining unit
 ax.fill(
     [-600, 3400, 3400, -600],
@@ -258,15 +250,7 @@ ax.set_ylabel("Elevation, in meters")
 ax.set_xlim(-250.0, 2500.0)
 
 ax = fig.add_subplot(312)
-ax.text(
-    -0.075,
-    1.05,
-    "B",
-    transform=ax.transAxes,
-    va="center",
-    ha="center",
-    size="8",
-)
+ax.text(-0.075, 1.05, "B", transform=ax.transAxes, va="center", ha="center", size="8")
 # confining unit
 ax.fill(
     [-600, 3400, 3400, -600],
@@ -287,15 +271,7 @@ ax.set_ylabel("Elevation, in meters")
 ax.set_xlim(-250.0, 2500.0)
 
 ax = fig.add_subplot(313)
-ax.text(
-    -0.075,
-    1.05,
-    "C",
-    transform=ax.transAxes,
-    va="center",
-    ha="center",
-    size="8",
-)
+ax.text(-0.075, 1.05, "C", transform=ax.transAxes, va="center", ha="center", size="8")
 # confining unit
 ax.fill(
     [-600, 3400, 3400, -600],

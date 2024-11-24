@@ -158,24 +158,12 @@ def test_base_run(function_tmpdir, example_data_path):
     # export bottom, water levels, and k11 as ascii raster files
     # for interpolation in test_lake()
     bot = gwf.dis.botm.array.squeeze()
-    export_ascii_grid(
-        gwf.modelgrid,
-        function_tmpdir / "bot.asc",
-        bot,
-    )
+    export_ascii_grid(gwf.modelgrid, function_tmpdir / "bot.asc", bot)
     top = gwf.output.head().get_data().squeeze() + 2.0
     top = np.where(gwf.dis.idomain.array.squeeze() < 1.0, 0.0, top)
-    export_ascii_grid(
-        gwf.modelgrid,
-        function_tmpdir / "top.asc",
-        top,
-    )
+    export_ascii_grid(gwf.modelgrid, function_tmpdir / "top.asc", top)
     k11 = gwf.npf.k.array.squeeze()
-    export_ascii_grid(
-        gwf.modelgrid,
-        function_tmpdir / "k11.asc",
-        k11,
-    )
+    export_ascii_grid(gwf.modelgrid, function_tmpdir / "k11.asc", k11)
 
 
 @requires_exe("mf6")
@@ -322,13 +310,7 @@ def test_embedded_lak_ex01(function_tmpdir, example_data_path):
     )
     delc = delr
     top = 500.0
-    botm = (
-        107.0,
-        97.0,
-        87.0,
-        77.0,
-        67.0,
-    )
+    botm = (107.0, 97.0, 87.0, 77.0, 67.0)
     lake_map = np.ones(shape3d, dtype=np.int32) * -1
     lake_map[0, 6:11, 6:11] = 0
     lake_map[1, 7:10, 7:10] = 0
@@ -337,13 +319,7 @@ def test_embedded_lak_ex01(function_tmpdir, example_data_path):
     strt = 115.0
 
     k11 = 30
-    k33 = (
-        1179.0,
-        30.0,
-        30.0,
-        30.0,
-        30.0,
-    )
+    k33 = (1179.0, 30.0, 30.0, 30.0, 30.0)
 
     mpath = example_data_path / "mf2005_test"
     ml = Modflow.load(
@@ -561,19 +537,9 @@ def test_embedded_lak_prudic(example_data_path):
 
     # compare connectiondata
     for idx, (cd, cdbase) in enumerate(zip(connectiondata, cdata)):
-        for jdx in (
-            0,
-            1,
-            2,
-            3,
-            7,
-            8,
-        ):
+        for jdx in (0, 1, 2, 3, 7, 8):
             match = True
-            if jdx not in (
-                7,
-                8,
-            ):
+            if jdx not in (7, 8):
                 if cd[jdx] != cdbase[jdx]:
                     match = False
             else:

@@ -350,13 +350,7 @@ def test_budgetfile_detect_precision_single(path):
 
 @pytest.mark.parametrize(
     "path",
-    [
-        _example_data_path
-        / "mf6"
-        / "test006_gwf3"
-        / "expected_output"
-        / "flow_adj.cbc",
-    ],
+    [_example_data_path / "mf6" / "test006_gwf3" / "expected_output" / "flow_adj.cbc"],
 )
 def test_budgetfile_detect_precision_double(path):
     file = CellBudgetFile(path, precision="auto")

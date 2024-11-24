@@ -676,37 +676,17 @@ ax.plot(ts4_Otis[:, 0], ts4_Otis[:, 1], "g-", linewidth=1.0)
 ax.plot(ts5_Otis[:, 0], ts5_Otis[:, 1], "c-", linewidth=1.0)
 
 ax.plot(
-    (ts1_mt3d[:, 0]) / 3600,
-    ts1_mt3d[:, 1],
-    "kD",
-    markersize=2.0,
-    mfc="none",
-    mec="k",
+    (ts1_mt3d[:, 0]) / 3600, ts1_mt3d[:, 1], "kD", markersize=2.0, mfc="none", mec="k"
 )
 ax.plot(
-    (ts2_mt3d[:, 0]) / 3600,
-    ts2_mt3d[:, 1],
-    "b*",
-    markersize=3.0,
-    mfc="none",
-    mec="b",
+    (ts2_mt3d[:, 0]) / 3600, ts2_mt3d[:, 1], "b*", markersize=3.0, mfc="none", mec="b"
 )
 ax.plot((ts3_mt3d[:, 0]) / 3600, ts3_mt3d[:, 1], "r+", markersize=3.0)
 ax.plot(
-    (ts4_mt3d[:, 0]) / 3600,
-    ts4_mt3d[:, 1],
-    "g^",
-    markersize=2.0,
-    mfc="none",
-    mec="g",
+    (ts4_mt3d[:, 0]) / 3600, ts4_mt3d[:, 1], "g^", markersize=2.0, mfc="none", mec="g"
 )
 ax.plot(
-    (ts5_mt3d[:, 0]) / 3600,
-    ts5_mt3d[:, 1],
-    "co",
-    markersize=2.0,
-    mfc="none",
-    mec="c",
+    (ts5_mt3d[:, 0]) / 3600, ts5_mt3d[:, 1], "co", markersize=2.0, mfc="none", mec="c"
 )
 
 # customize plot

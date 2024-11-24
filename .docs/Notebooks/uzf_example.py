@@ -310,8 +310,7 @@ if avail:
 
 if avail:
     df3 = pd.DataFrame(
-        data,
-        columns=["layer", "time", "head", "uzthick", "depth", "watercontent"],
+        data, columns=["layer", "time", "head", "uzthick", "depth", "watercontent"]
     )
     df3.head(41)
 

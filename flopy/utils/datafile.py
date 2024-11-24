@@ -221,9 +221,7 @@ class LayerFile:
         if self.mg is None:
             self.mg = StructuredGrid(
                 delc=np.ones((self.nrow,)),
-                delr=np.ones(
-                    self.ncol,
-                ),
+                delr=np.ones(self.ncol),
                 nlay=self.nlay,
                 xoff=0.0,
                 yoff=0.0,

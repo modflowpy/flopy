@@ -430,12 +430,7 @@ class SeawatVsc(Package):
                 if invisc > 0:
                     name = f"VISC_StressPeriod_{iper}"
                     t = Util3d.load(
-                        f,
-                        model,
-                        (nlay, nrow, ncol),
-                        np.float32,
-                        name,
-                        ext_unit_dict,
+                        f, model, (nlay, nrow, ncol), np.float32, name, ext_unit_dict
                     )
                     if invisc == 2:
                         t = t.array

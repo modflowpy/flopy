@@ -594,55 +594,19 @@ ax.legend()
 # +
 fig = plt.figure(figsize=(8, 11), dpi=150)
 ax1 = fig.add_subplot(211)
-ax1.plot(
-    simtimes,
-    flow_case1[::2,]["q"],
-    label="Case A",
-)
-ax1.plot(
-    simtimes,
-    flow_case2[::2,]["q"],
-    label="Case B",
-)
-ax1.plot(
-    simtimes,
-    flow_case3[::2,]["q"],
-    dashes=[6, 2],
-    label="Case C",
-)
-ax1.plot(
-    simtimes,
-    flow_case4[::2,]["q"],
-    dashes=[6, 2],
-    label="Case D",
-)
+ax1.plot(simtimes, flow_case1[::2,]["q"], label="Case A")
+ax1.plot(simtimes, flow_case2[::2,]["q"], label="Case B")
+ax1.plot(simtimes, flow_case3[::2,]["q"], dashes=[6, 2], label="Case C")
+ax1.plot(simtimes, flow_case4[::2,]["q"], dashes=[6, 2], label="Case D")
 ax1.set_xlabel("Time, in days")
 ax1.set_ylabel("Layer 1 flow to well")
 ax1.legend()
 
 ax2 = fig.add_subplot(212)
-ax2.plot(
-    simtimes,
-    flow_case1[1::2,]["q"],
-    label="Case A",
-)
-ax2.plot(
-    simtimes,
-    flow_case2[1::2,]["q"],
-    label="Case B",
-)
-ax2.plot(
-    simtimes,
-    flow_case3[1::2,]["q"],
-    dashes=[6, 2],
-    label="Case C",
-)
-ax2.plot(
-    simtimes,
-    flow_case4[1::2,]["q"],
-    dashes=[6, 2],
-    label="Case D",
-)
+ax2.plot(simtimes, flow_case1[1::2,]["q"], label="Case A")
+ax2.plot(simtimes, flow_case2[1::2,]["q"], label="Case B")
+ax2.plot(simtimes, flow_case3[1::2,]["q"], dashes=[6, 2], label="Case C")
+ax2.plot(simtimes, flow_case4[1::2,]["q"], dashes=[6, 2], label="Case D")
 ax2.set_xlabel("Time, in days")
 ax2.set_ylabel("Layer 2 flow to well")
 ax2.legend()

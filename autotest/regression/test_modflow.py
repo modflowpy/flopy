@@ -383,9 +383,8 @@ def test_mf2005_lake(function_tmpdir, namfile, mf2005_test_path):
 
     # rewrite files
     model_ws2 = join(ws, "external")
-    m.change_model_ws(
-        model_ws2, reset_external=True
-    )  # l1b2k_bath won't run without this
+    # l1b2k_bath won't run without this
+    m.change_model_ws(model_ws2, reset_external=True)
     m.write_input()
 
     success, buff = m.run_model()

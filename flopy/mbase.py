@@ -311,10 +311,7 @@ class ModelInterface:
         for p in self.packagelist:
             if chk.package_check_levels.get(p.name[0].lower(), 0) <= level:
                 results[p.name[0]] = p.check(
-                    f=None,
-                    verbose=False,
-                    level=level - 1,
-                    checktype=chk.__class__,
+                    f=None, verbose=False, level=level - 1, checktype=chk.__class__
                 )
 
         # model level checks
@@ -339,9 +336,8 @@ class ModelInterface:
 
         # add package check results to model level check summary
         for r in results.values():
-            if (
-                r is not None and r.summary_array is not None
-            ):  # currently SFR doesn't have one
+            if r is not None and r.summary_array is not None:
+                # currently SFR doesn't have one
                 chk.summary_array = np.append(chk.summary_array, r.summary_array).view(
                     np.recarray
                 )
@@ -434,10 +430,7 @@ class BaseModel(ModelInterface):
         self._start_datetime = kwargs.pop("start_datetime", "1-1-1970")
 
         if kwargs:
-            warn(
-                f"unhandled keywords: {kwargs}",
-                category=UserWarning,
-            )
+            warn(f"unhandled keywords: {kwargs}", category=UserWarning)
 
         # build model discretization objects
         self._modelgrid = Grid(

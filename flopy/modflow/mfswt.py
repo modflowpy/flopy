@@ -631,18 +631,7 @@ class ModflowSwt(Package):
             print("  loading swt dataset 3")
         line = f.readline()
         t = line.strip().split()
-        (
-            iizcfl,
-            izcfm,
-            iglfl,
-            iglfm,
-            iestfl,
-            iestfm,
-            ipcsfl,
-            ipcsfm,
-            istfl,
-            istfm,
-        ) = (
+        (iizcfl, izcfm, iglfl, iglfm, iestfl, iestfm, ipcsfl, ipcsfm, istfl, istfm) = (
             int(t[0]),
             int(t[1]),
             int(t[2]),
@@ -691,12 +680,7 @@ class ModflowSwt(Package):
             if model.verbose:
                 print(f"  loading swt dataset 7 for layer {kk}")
             t = Util2d.load(
-                f,
-                model,
-                (nrow, ncol),
-                np.float32,
-                f"thick layer {kk}",
-                ext_unit_dict,
+                f, model, (nrow, ncol), np.float32, f"thick layer {kk}", ext_unit_dict
             )
             thick[k] = t
             if icrcc != 0:
@@ -704,24 +688,14 @@ class ModflowSwt(Package):
                 if model.verbose:
                     print(f"  loading swt dataset 8 for layer {kk}")
                 t = Util2d.load(
-                    f,
-                    model,
-                    (nrow, ncol),
-                    np.float32,
-                    f"sse layer {kk}",
-                    ext_unit_dict,
+                    f, model, (nrow, ncol), np.float32, f"sse layer {kk}", ext_unit_dict
                 )
                 sse[k] = t
                 # ssv
                 if model.verbose:
                     print(f"  loading swt dataset 9 for layer {kk}")
                 t = Util2d.load(
-                    f,
-                    model,
-                    (nrow, ncol),
-                    np.float32,
-                    f"sse layer {kk}",
-                    ext_unit_dict,
+                    f, model, (nrow, ncol), np.float32, f"sse layer {kk}", ext_unit_dict
                 )
                 ssv[k] = t
             else:
@@ -729,48 +703,28 @@ class ModflowSwt(Package):
                 if model.verbose:
                     print(f"  loading swt dataset 10 for layer {kk}")
                 t = Util2d.load(
-                    f,
-                    model,
-                    (nrow, ncol),
-                    np.float32,
-                    f"cr layer {kk}",
-                    ext_unit_dict,
+                    f, model, (nrow, ncol), np.float32, f"cr layer {kk}", ext_unit_dict
                 )
                 cr[k] = t
                 # cc
                 if model.verbose:
                     print(f"  loading swt dataset 11 for layer {kk}")
                 t = Util2d.load(
-                    f,
-                    model,
-                    (nrow, ncol),
-                    np.float32,
-                    f"cc layer {kk}",
-                    ext_unit_dict,
+                    f, model, (nrow, ncol), np.float32, f"cc layer {kk}", ext_unit_dict
                 )
                 cc[k] = t
             # void
             if model.verbose:
                 print(f"  loading swt dataset 12 for layer {kk}")
             t = Util2d.load(
-                f,
-                model,
-                (nrow, ncol),
-                np.float32,
-                f"void layer {kk}",
-                ext_unit_dict,
+                f, model, (nrow, ncol), np.float32, f"void layer {kk}", ext_unit_dict
             )
             void[k] = t
             # sub
             if model.verbose:
                 print(f"  loading swt dataset 13 for layer {kk}")
             t = Util2d.load(
-                f,
-                model,
-                (nrow, ncol),
-                np.float32,
-                f"sub layer {kk}",
-                ext_unit_dict,
+                f, model, (nrow, ncol), np.float32, f"sub layer {kk}", ext_unit_dict
             )
             sub[k] = t
 

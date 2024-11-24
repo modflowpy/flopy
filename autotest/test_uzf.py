@@ -589,10 +589,7 @@ def test_uzf_negative_iuzfopt(function_tmpdir):
         steady=[False, False],
     )
     bas = ModflowBas(ml, strt=9, ibound=1)
-    upw = ModflowUpw(
-        ml,
-        vka=0.1,
-    )
+    upw = ModflowUpw(ml, vka=0.1)
     oc = ModflowOc(ml)
     nwt = ModflowNwt(ml, options="SIMPLE")
 

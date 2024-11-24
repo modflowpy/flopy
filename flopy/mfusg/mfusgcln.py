@@ -355,9 +355,8 @@ class MfUsgCln(Package):
             # Node number provided for each segment to simulate CLN networks
             elif self.iclnnds > 0:
                 self.nclnnds = self.iclnnds
-                self.nodeno = (
-                    np.asarray(set(self.clncon), dtype=object) + 1
-                )  # can be jagged
+                # can be jagged
+                self.nodeno = np.asarray(set(self.clncon), dtype=object) + 1
             else:
                 raise Exception("mfcln: Node number = 0")
 
@@ -467,18 +466,12 @@ class MfUsgCln(Package):
 
         if self.nconduityp > 0:
             np.savetxt(
-                f_cln,
-                self.cln_circ,
-                fmt=fmt_string(self.cln_circ),
-                delimiter="",
+                f_cln, self.cln_circ, fmt=fmt_string(self.cln_circ), delimiter=""
             )
 
         if self.nrectyp > 0:
             np.savetxt(
-                f_cln,
-                self.cln_rect,
-                fmt=fmt_string(self.cln_rect),
-                delimiter="",
+                f_cln, self.cln_rect, fmt=fmt_string(self.cln_rect), delimiter=""
             )
 
         f_cln.write(self.ibound.get_file_entry())
@@ -581,14 +574,9 @@ class MfUsgCln(Package):
         ) = cls._load_items_0_1(f, model)
 
         # Items 3, or 4/5/6
-        (
-            nndcln,
-            clncon,
-            nja_cln,
-            iac_cln,
-            ja_cln,
-            nclnnds,
-        ) = cls._load_items_3to6(f, model, ncln, iclnnds, ext_unit_dict)
+        (nndcln, clncon, nja_cln, iac_cln, ja_cln, nclnnds) = cls._load_items_3to6(
+            f, model, ncln, iclnnds, ext_unit_dict
+        )
 
         if model.verbose:
             print("  Reading node_prop...")
@@ -630,10 +618,9 @@ class MfUsgCln(Package):
             funcs = [abs] + [int] * 3 + [abs] * 2
             for idx, (item, func) in enumerate(zip(file_unit_items, funcs)):
                 if item > 0:
-                    (
-                        unitnumber[idx + 1],
-                        filenames[idx + 1],
-                    ) = model.get_ext_dict_attr(ext_unit_dict, unit=func(item))
+                    (unitnumber[idx + 1], filenames[idx + 1]) = model.get_ext_dict_attr(
+                        ext_unit_dict, unit=func(item)
+                    )
                     model.add_pop_key_list(func(item))
 
         # create dis object instance
@@ -685,16 +672,9 @@ class MfUsgCln(Package):
         line_text = line.strip().split()
 
         line_text[:8] = [int(item) for item in line_text[:8]]
-        (
-            ncln,
-            iclnnds,
-            iclncb,
-            iclnhd,
-            iclndd,
-            iclnib,
-            nclngwc,
-            nconduityp,
-        ) = line_text[:8]
+        (ncln, iclnnds, iclncb, iclnhd, iclndd, iclnib, nclngwc, nconduityp) = (
+            line_text[:8]
+        )
 
         # Options keywords
         nrectyp = 0

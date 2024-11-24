@@ -529,9 +529,7 @@ linecollection = mapview.plot_grid(alpha=0.1)
 # lets extract some shapes from our shapefiles
 shp = os.path.join(loadpth, "gis", "bedrock_outcrop_hole_rotate14")
 with shapefile.Reader(shp) as r:
-    polygon_w_hole = [
-        r.shape(0),
-    ]
+    polygon_w_hole = [r.shape(0)]
 
 shp = os.path.join(loadpth, "gis", "cross_section_rotate14")
 with shapefile.Reader(shp) as r:
@@ -735,17 +733,7 @@ def run_vertex_grid_example(ws):
     xmax = 12 * delr
     ymin = 8 * delc
     ymax = 13 * delc
-    rfpoly = [
-        [
-            [
-                (xmin, ymin),
-                (xmax, ymin),
-                (xmax, ymax),
-                (xmin, ymax),
-                (xmin, ymin),
-            ]
-        ]
-    ]
+    rfpoly = [[[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]]]
     g.add_refinement_features(rfpoly, "polygon", 1, range(nlay))
 
     rf1shp = os.path.join(gridgen_ws, "rf1")
@@ -753,17 +741,7 @@ def run_vertex_grid_example(ws):
     xmax = 11 * delr
     ymin = 9 * delc
     ymax = 12 * delc
-    rfpoly = [
-        [
-            [
-                (xmin, ymin),
-                (xmax, ymin),
-                (xmax, ymax),
-                (xmin, ymax),
-                (xmin, ymin),
-            ]
-        ]
-    ]
+    rfpoly = [[[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]]]
     g.add_refinement_features(rfpoly, "polygon", 2, range(nlay))
 
     rf2shp = os.path.join(gridgen_ws, "rf2")
@@ -771,17 +749,7 @@ def run_vertex_grid_example(ws):
     xmax = 10 * delr
     ymin = 10 * delc
     ymax = 11 * delc
-    rfpoly = [
-        [
-            [
-                (xmin, ymin),
-                (xmax, ymin),
-                (xmax, ymax),
-                (xmin, ymax),
-                (xmin, ymin),
-            ]
-        ]
-    ]
+    rfpoly = [[[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]]]
     g.add_refinement_features(rfpoly, "polygon", 3, range(nlay))
 
     g.build(verbose=False)

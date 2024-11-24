@@ -255,10 +255,7 @@ class ZoneBudget:
             C-----FLOW.  STORE CONSTANT-HEAD LOCATIONS IN ICH ARRAY.
             """
             chd = self.cbc.get_data(
-                text="CONSTANT HEAD",
-                full3D=True,
-                kstpkper=kstpkper,
-                totim=totim,
+                text="CONSTANT HEAD", full3D=True, kstpkper=kstpkper, totim=totim
             )[0]
             ich[np.ma.where(chd != 0.0)] = 1
         if "FLOW RIGHT FACE" in self.record_names:
@@ -366,10 +363,7 @@ class ZoneBudget:
         for recname in self.ssst_record_names:
             if recname != "STORAGE":
                 recordarray = self._add_empty_record(
-                    recordarray,
-                    "FROM_" + "_".join(recname.split()),
-                    kstpkper,
-                    totim,
+                    recordarray, "FROM_" + "_".join(recname.split()), kstpkper, totim
                 )
 
         for z, n in self._zonenamedict.items():
@@ -393,10 +387,7 @@ class ZoneBudget:
         for recname in self.ssst_record_names:
             if recname != "STORAGE":
                 recordarray = self._add_empty_record(
-                    recordarray,
-                    "TO_" + "_".join(recname.split()),
-                    kstpkper,
-                    totim,
+                    recordarray, "TO_" + "_".join(recname.split()), kstpkper, totim
                 )
 
         for z, n in self._zonenamedict.items():
@@ -2274,9 +2265,7 @@ def _recarray_to_dataframe(
     df = pd.DataFrame().from_records(recarray)
     if start_datetime is not None and "totim" in list(df):
         totim = totim_to_datetime(
-            df.totim,
-            start=pd.to_datetime(start_datetime),
-            timeunit=timeunit,
+            df.totim, start=pd.to_datetime(start_datetime), timeunit=timeunit
         )
         df["datetime"] = totim
         if pivot:
@@ -2976,13 +2965,7 @@ def dataframe_to_netcdf_fmt(df, zone_array, flux=True):
             data[col] = np.zeros((totim.size, zones.size), dtype=float)
 
     for i, time in enumerate(totim):
-        tdf = df.loc[
-            df.totim.isin(
-                [
-                    time,
-                ]
-            )
-        ]
+        tdf = df.loc[df.totim.isin([time])]
         tdf = tdf.sort_values(by=["zone"])
 
         for col in df.columns:

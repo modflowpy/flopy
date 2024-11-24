@@ -498,8 +498,7 @@ class ModflowAg(Package):
                                     else:
                                         foo.write(
                                             "{:d}   {:f}\n".format(
-                                                rec[f"segid{i}"],
-                                                rec[f"fracsup{i}"],
+                                                rec[f"segid{i}"], rec[f"fracsup{i}"]
                                             )
                                         )
 
@@ -563,21 +562,10 @@ class ModflowAg(Package):
             dtype : (list, tuple)
         """
         if block == "well":
-            dtype = [
-                ("k", int),
-                ("i", int),
-                ("j", int),
-                ("flux", float),
-            ]
+            dtype = [("k", int), ("i", int), ("j", int), ("flux", float)]
 
         elif block == "tabfile_well":
-            dtype = [
-                ("unit", int),
-                ("tabval", int),
-                ("k", int),
-                ("i", int),
-                ("j", int),
-            ]
+            dtype = [("unit", int), ("tabval", int), ("k", int), ("i", int), ("j", int)]
 
         elif block == "time series":
             dtype = [("keyword", object), ("id", int), ("unit", int)]

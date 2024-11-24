@@ -653,9 +653,7 @@ ax.plot(
     label="Grid cell centers",
     ms=4,
 )
-plt.legend(
-    loc=0,
-)
+plt.legend(loc=0)
 plt.title("modelgrid cell vertices and centers")
 
 # +

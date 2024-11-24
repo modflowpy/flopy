@@ -145,12 +145,7 @@ class ModflowBcf(Package):
             locat=self.unit_number[0],
         )
         self.laycon = Util2d(
-            model,
-            (nlay,),
-            np.int32,
-            laycon,
-            name="laycon",
-            locat=self.unit_number[0],
+            model, (nlay,), np.int32, laycon, name="laycon", locat=self.unit_number[0]
         )
         self.trpy = Util2d(
             model,

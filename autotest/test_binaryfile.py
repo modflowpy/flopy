@@ -761,9 +761,7 @@ def test_read_mf6_2sp(mf6_gwf_2sp_st_tr):
 
 @pytest.mark.parametrize("compact", [True, False])
 def test_read_mf2005_freyberg(example_data_path, function_tmpdir, compact):
-    m = flopy.modflow.Modflow.load(
-        example_data_path / "freyberg" / "freyberg.nam",
-    )
+    m = flopy.modflow.Modflow.load(example_data_path / "freyberg" / "freyberg.nam")
     m.change_model_ws(function_tmpdir)
     oc = m.get_package("OC")
     oc.compact = compact

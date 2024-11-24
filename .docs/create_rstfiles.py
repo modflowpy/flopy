@@ -90,10 +90,7 @@ def create_examples_rst():
             "flopy": {"title": "Other FloPy features", "files": []},
             "mf6": {"title": "MODFLOW 6 examples", "files": []},
             "mfusg": {"title": "MODFLOW USG examples", "files": []},
-            "mf2005": {
-                "title": "MODFLOW-2005/MODFLOW-NWT examples",
-                "files": [],
-            },
+            "mf2005": {"title": "MODFLOW-2005/MODFLOW-NWT examples", "files": []},
             "modpath": {"title": "MODPATH examples", "files": []},
             "mt3d": {"title": "MT3D and SEAWAT examples", "files": []},
             "2016gw-paper": {

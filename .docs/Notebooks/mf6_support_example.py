@@ -174,18 +174,7 @@ layer_storage_types = [
 ]
 k_template = flopy.mf6.ModflowGwfnpf.k.empty(model, True, layer_storage_types, 100.0)
 # change the value of the second layer to 50.0
-k_template[0]["data"] = [
-    65.0,
-    60.0,
-    55.0,
-    50.0,
-    45.0,
-    40.0,
-    35.0,
-    30.0,
-    25.0,
-    20.0,
-]
+k_template[0]["data"] = [65.0, 60.0, 55.0, 50.0, 45.0, 40.0, 35.0, 30.0, 25.0, 20.0]
 k_template[0]["factor"] = 1.5
 print(k_template)
 # create npf package using the k template to define k

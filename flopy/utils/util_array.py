@@ -581,8 +581,7 @@ class Util3d(DataInterface):
             for k in range(shape[0]):
                 self.ext_filename_base.append(
                     os.path.join(
-                        model.external_path,
-                        self.name_base[k].replace(" ", "_"),
+                        model.external_path, self.name_base[k].replace(" ", "_")
                     )
                 )
         else:
@@ -606,9 +605,7 @@ class Util3d(DataInterface):
         elif hasattr(self, "util_2ds") and key == "fmtin":
             for u2d in self.util_2ds:
                 u2d.format = ArrayFormat(
-                    u2d,
-                    fortran=value,
-                    array_free_format=self.array_free_format,
+                    u2d, fortran=value, array_free_format=self.array_free_format
                 )
             super().__setattr__("fmtin", value)
         elif hasattr(self, "util_2ds") and key == "how":
@@ -1555,8 +1552,7 @@ class Transient2d(DataInterface):
     @property
     def array(self):
         arr = np.zeros(
-            (self._model.nper, 1, self.shape[0], self.shape[1]),
-            dtype=self._dtype,
+            (self._model.nper, 1, self.shape[0], self.shape[1]), dtype=self._dtype
         )
         for kper in range(self._model.nper):
             u2d = self[kper]
@@ -1843,12 +1839,7 @@ class Util2d(DataInterface):
         self.ext_filename = ext_filename
         self._ext_filename = self._name.replace(" ", "_") + ".ref"
 
-        self._acceptable_hows = [
-            "constant",
-            "internal",
-            "external",
-            "openclose",
-        ]
+        self._acceptable_hows = ["constant", "internal", "external", "openclose"]
 
         if how is not None:
             how = how.lower()
@@ -1978,9 +1969,7 @@ class Util2d(DataInterface):
 
     def set_fmtin(self, fmtin):
         self._format = ArrayFormat(
-            self,
-            fortran=fmtin,
-            array_free_format=self.format.array_free_format,
+            self, fortran=fmtin, array_free_format=self.format.array_free_format
         )
 
     def get_value(self):
@@ -2220,11 +2209,7 @@ class Util2d(DataInterface):
         self._model.add_external(self.model_file_path, locat, self.format.binary)
         if self.format.array_free_format:
             cr = "EXTERNAL  {:>30d} {:15} {:>10s} {:2.0f} {:<30s}\n".format(
-                locat,
-                self.cnstnt_str,
-                self.format.fortran,
-                self.iprn,
-                self._name,
+                locat, self.cnstnt_str, self.format.fortran, self.iprn, self._name
             )
             return cr
         else:
@@ -2279,10 +2264,7 @@ class Util2d(DataInterface):
             if self.vtype != str:
                 if self.format.binary:
                     self.write_bin(
-                        self.shape,
-                        self.python_file_path,
-                        self._array,
-                        bintype="head",
+                        self.shape, self.python_file_path, self._array, bintype="head"
                     )
                 else:
                     self.write_txt(
@@ -2548,10 +2530,7 @@ class Util2d(DataInterface):
             file_out = open(file_out, "w")
         file_out.write(
             Util2d.array2string(
-                shape,
-                data,
-                fortran_format=fortran_format,
-                python_format=python_format,
+                shape, data, fortran_format=fortran_format, python_format=python_format
             )
         )
 
@@ -2572,22 +2551,16 @@ class Util2d(DataInterface):
             ncol = shape[0]
         data = np.atleast_2d(data)
         if python_format is None:
-            (
-                column_length,
-                fmt,
-                width,
-                decimal,
-            ) = ArrayFormat.decode_fortran_descriptor(fortran_format)
+            (column_length, fmt, width, decimal) = (
+                ArrayFormat.decode_fortran_descriptor(fortran_format)
+            )
             if decimal is None:
                 output_fmt = f"{{0:{width}d}}"
             else:
                 output_fmt = f"{{0:{width}.{decimal}{fmt}}}"
         else:
             try:
-                column_length, output_fmt = (
-                    int(python_format[0]),
-                    python_format[1],
-                )
+                column_length, output_fmt = (int(python_format[0]), python_format[1])
             except:
                 raise Exception(
                     "Util2d.write_txt: \nunable to parse "

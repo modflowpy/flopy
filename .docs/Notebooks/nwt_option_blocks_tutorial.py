@@ -189,10 +189,7 @@ options.auxiliary = ["aux", "iface"]
 
 # +
 wel3 = flopy.modflow.ModflowWel(
-    ml,
-    stress_period_data=wel.stress_period_data,
-    options=options,
-    unitnumber=99,
+    ml, stress_period_data=wel.stress_period_data, options=options, unitnumber=99
 )
 
 wel3.write_file(os.path.join(model_ws, wel_name))

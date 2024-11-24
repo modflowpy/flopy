@@ -153,10 +153,7 @@ def test_swr_binary_qm(swr_test_path, ipos):
     assert nrecords == (40, 18), "SwrFlow records does not equal (40, 18)"
 
     connect = sobj.get_connectivity()
-    assert connect.shape == (
-        40,
-        3,
-    ), "SwrFlow connectivity shape does not equal (40, 3)"
+    assert connect.shape == (40, 3), "SwrFlow connectivity shape does not equal (40, 3)"
 
     ntimes = sobj.get_ntimes()
     assert ntimes == 336, "SwrFlow ntimes does not equal 336"

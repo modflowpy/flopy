@@ -195,12 +195,7 @@ class MfUsgGnc(Package):
     @staticmethod
     def get_default_dtype(numalphaj, iflalphan):
         """Returns default GNC dtypes."""
-        dtype = np.dtype(
-            [
-                ("NodeN", int),
-                ("NodeM", int),
-            ]
-        ).descr
+        dtype = np.dtype([("NodeN", int), ("NodeM", int)]).descr
 
         for idx in range(numalphaj):
             dtype.append((f"Node{idx:d}", "<i4"))

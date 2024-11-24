@@ -549,17 +549,7 @@ def run_vertex_grid_example(ws):
     xmax = 12 * delr
     ymin = 8 * delc
     ymax = 13 * delc
-    rfpoly = [
-        [
-            [
-                (xmin, ymin),
-                (xmax, ymin),
-                (xmax, ymax),
-                (xmin, ymax),
-                (xmin, ymin),
-            ]
-        ]
-    ]
+    rfpoly = [[[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]]]
     g.add_refinement_features(rfpoly, "polygon", 1, range(nlay))
 
     rf1shp = os.path.join(gridgen_ws, "rf1")
@@ -567,17 +557,7 @@ def run_vertex_grid_example(ws):
     xmax = 11 * delr
     ymin = 9 * delc
     ymax = 12 * delc
-    rfpoly = [
-        [
-            [
-                (xmin, ymin),
-                (xmax, ymin),
-                (xmax, ymax),
-                (xmin, ymax),
-                (xmin, ymin),
-            ]
-        ]
-    ]
+    rfpoly = [[[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]]]
     g.add_refinement_features(rfpoly, "polygon", 2, range(nlay))
 
     rf2shp = os.path.join(gridgen_ws, "rf2")
@@ -585,17 +565,7 @@ def run_vertex_grid_example(ws):
     xmax = 10 * delr
     ymin = 10 * delc
     ymax = 11 * delc
-    rfpoly = [
-        [
-            [
-                (xmin, ymin),
-                (xmax, ymin),
-                (xmax, ymax),
-                (xmin, ymax),
-                (xmin, ymin),
-            ]
-        ]
-    ]
+    rfpoly = [[[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]]]
     g.add_refinement_features(rfpoly, "polygon", 3, range(nlay))
 
     g.build(verbose=False)
@@ -676,10 +646,7 @@ def run_vertex_grid_example(ws):
     # welspd = flopy.mf6.ModflowGwfwel.stress_period_data.empty(gwf, maxbound=1, aux_vars=['iface'])
     welspd = [[(2, icpl), -150000, 0] for icpl in welcells["nodenumber"]]
     wel = flopy.mf6.ModflowGwfwel(
-        gwf,
-        print_input=True,
-        auxiliary=[("iface",)],
-        stress_period_data=welspd,
+        gwf, print_input=True, auxiliary=[("iface",)], stress_period_data=welspd
     )
 
     # rch
@@ -1122,10 +1089,7 @@ def build_mf6gwf(sim_folder):
         pname="CHD-1",
     )
     flopy.mf6.ModflowGwfrch(
-        gwf,
-        stress_period_data=rchspd,
-        auxiliary=["concentration"],
-        pname="RCH-1",
+        gwf, stress_period_data=rchspd, auxiliary=["concentration"], pname="RCH-1"
     )
 
     head_filerecord = f"{name}.hds"
@@ -1217,10 +1181,7 @@ def build_mf6gwt(sim_folder):
         saverecord=saverecord,
         printrecord=[
             ("CONCENTRATION", "LAST"),
-            (
-                "BUDGET",
-                "ALL",
-            ),
+            ("BUDGET", "ALL"),
         ],
     )
     obs_data = {

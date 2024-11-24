@@ -34,10 +34,7 @@ def get_benchmarks(paths):
             for benchmark in bmarks:
                 num_benchmarks += 1
                 fullname = benchmark["fullname"]
-                included = [
-                    "min",
-                    "mean",
-                ]
+                included = ["min", "mean"]
                 for stat, value in benchmark["stats"].items():
                     if stat not in included:
                         continue
@@ -90,12 +87,7 @@ def matplotlib_plot(stats):
                 psub = ssub[ssub["python"] == python]
                 color = colors[python]
                 ax.scatter(psub["time"], psub["value"], color=color, marker=marker)
-                ax.plot(
-                    psub["time"],
-                    psub["value"],
-                    linestyle="dotted",
-                    color=color,
-                )
+                ax.plot(psub["time"], psub["value"], linestyle="dotted", color=color)
 
     # configure legend
     patches = []

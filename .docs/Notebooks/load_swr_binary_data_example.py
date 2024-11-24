@@ -182,10 +182,7 @@ for idx, v in enumerate([19, 29, 34, 39, 44, 49, 54, 59]):
     stage = np.extract(iprof, s["stage"])
     xs = flopy.plot.PlotCrossSection(model=ml, line={"Row": 0})
     xs.plot_fill_between(
-        stage.reshape(1, 1, 12),
-        colors=["none", "blue"],
-        ax=ax,
-        edgecolors="none",
+        stage.reshape(1, 1, 12), colors=["none", "blue"], ax=ax, edgecolors="none"
     )
     linecollection = xs.plot_grid(ax=ax, zorder=10)
     ax.fill_between(

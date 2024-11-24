@@ -681,9 +681,7 @@ class UnstructuredGrid(Grid):
                 if vert in vset:
                     vset[vert].add(rec[0])
                 else:
-                    vset[vert] = {
-                        rec[0],
-                    }
+                    vset[vert] = {rec[0]}
 
             cnt = 0
             ivert_remap = {}

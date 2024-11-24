@@ -32,12 +32,7 @@ def test_hob_simple(function_tmpdir):
     shape2d = (nrow, ncol)
     ib = np.ones(shape3d, dtype=int)
     ib[0, 0, 0] = -1
-    m = Modflow(
-        modelname=modelname,
-        model_ws=ws,
-        verbose=False,
-        exe_name="mf2005",
-    )
+    m = Modflow(modelname=modelname, model_ws=ws, verbose=False, exe_name="mf2005")
     dis = ModflowDis(m, nlay=1, nrow=11, ncol=11, nper=2, perlen=[1, 1])
 
     bas = ModflowBas(m, ibound=ib, strt=10.0)

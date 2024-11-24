@@ -7,11 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from flaky import flaky
-from modflow_devtools.markers import (
-    excludes_platform,
-    requires_exe,
-    requires_pkg,
-)
+from modflow_devtools.markers import excludes_platform, requires_exe, requires_pkg
 from modflow_devtools.misc import has_pkg
 
 import flopy
@@ -97,25 +93,8 @@ def disu_sim(name, tmpdir, missing_arrays=False):
     xmax = 12 * delr
     ymin = 8 * delc
     ymax = 13 * delc
-    rfpoly = [
-        [
-            [
-                (xmin, ymin),
-                (xmax, ymin),
-                (xmax, ymax),
-                (xmin, ymax),
-                (xmin, ymin),
-            ]
-        ]
-    ]
-    g.add_refinement_features(
-        rfpoly,
-        "polygon",
-        2,
-        [
-            0,
-        ],
-    )
+    rfpoly = [[[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]]]
+    g.add_refinement_features(rfpoly, "polygon", 2, [0])
     g.build(verbose=False)
 
     gridprops = g.get_gridprops_disu6()
@@ -187,11 +166,7 @@ def test_output_helper_shapefile_export(pathlike, function_tmpdir, example_data_
     else:
         outpath = os.path.join(function_tmpdir, "test.shp")
     flopy.export.utils.output_helper(
-        outpath,
-        ml,
-        {"HDS": head, "cbc": cbc},
-        mflay=1,
-        kper=10,
+        outpath, ml, {"HDS": head, "cbc": cbc}, mflay=1, kper=10
     )
 
 
@@ -632,10 +607,7 @@ def test_array3d_export_structured(function_tmpdir):
     ncol = int((xur - xll) / spacing)
     nrow = int((yur - yll) / spacing)
     sim = flopy.mf6.MFSimulation("sim", sim_ws=function_tmpdir)
-    gwf = flopy.mf6.ModflowGwf(
-        sim,
-        modelname="array3d_export_unstructured",
-    )
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="array3d_export_unstructured")
     flopy.mf6.ModflowGwfdis(
         gwf,
         nlay=3,
@@ -1878,12 +1850,7 @@ def test_vtk_export_disu1_grid(function_tmpdir, example_data_path):
     )
 
     outfile = function_tmpdir / "disu_grid.vtu"
-    vtkobj = Vtk(
-        modelgrid=modelgrid,
-        vertical_exageration=2,
-        binary=True,
-        smooth=False,
-    )
+    vtkobj = Vtk(modelgrid=modelgrid, vertical_exageration=2, binary=True, smooth=False)
     vtkobj.add_array(modelgrid.top, "top")
     vtkobj.add_array(modelgrid.botm, "botm")
     vtkobj.write(outfile)
@@ -1959,12 +1926,7 @@ def test_vtk_export_disu2_grid(function_tmpdir, example_data_path):
     )
 
     outfile = function_tmpdir / "disu_grid.vtu"
-    vtkobj = Vtk(
-        modelgrid=modelgrid,
-        vertical_exageration=2,
-        binary=True,
-        smooth=False,
-    )
+    vtkobj = Vtk(modelgrid=modelgrid, vertical_exageration=2, binary=True, smooth=False)
     vtkobj.add_array(modelgrid.top, "top")
     vtkobj.add_array(modelgrid.botm, "botm")
     vtkobj.write(outfile)
