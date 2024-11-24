@@ -923,7 +923,7 @@ class ModflowSfr2(Package):
                         # dataset 6d description suggests that this line isn't read for
                         # isfropt > 1 but description of icalc suggest that icalc=2
                         # (8-point channel) can be used with any isfropt
-                        if i == 0 or nstrm > 0 and not reachinput or isfropt <= 1:
+                        if i == 0 or (nstrm > 0 and not reachinput) or isfropt <= 1:
                             dataset_6d = []
                             for _ in range(2):
                                 dataset_6d.append(_get_dataset(f.readline(), [0.0] * 8))
@@ -1848,8 +1848,7 @@ class ModflowSfr2(Package):
                         # or isfropt <= 1:
                         if (
                             i == 0
-                            or self.nstrm > 0
-                            and not self.reachinput
+                            or (self.nstrm > 0 and not self.reachinput)
                             or self.isfropt <= 1
                         ):
                             for k in range(2):
@@ -2582,7 +2581,9 @@ class check:
         if self.verbose:
             print(headertxt.strip())
         passed = False
-        if self.sfr.nstrm < 0 or self.sfr.reachinput and self.sfr.isfropt in [1, 2, 3]:
+        if self.sfr.nstrm < 0 or (
+            self.sfr.reachinput and self.sfr.isfropt in [1, 2, 3]
+        ):
             # see SFR input instructions
             # compute outreaches if they aren't there already
             if np.diff(self.sfr.reach_data.outreach).max() == 0:
@@ -2659,7 +2660,9 @@ class check:
             return
         passed = False
         warning = True
-        if self.sfr.nstrm < 0 or self.sfr.reachinput and self.sfr.isfropt in [1, 2, 3]:
+        if self.sfr.nstrm < 0 or (
+            self.sfr.reachinput and self.sfr.isfropt in [1, 2, 3]
+        ):
             # see SFR input instructions
             reach_data = np.array(self.reach_data)
             i, j, k = reach_data["i"], reach_data["j"], reach_data["k"]

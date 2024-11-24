@@ -16,11 +16,11 @@ from collections.abc import Iterator
 from typing import Callable, SupportsInt, Union
 
 __all__ = [
-    "parse",
-    "Version",
-    "LegacyVersion",
-    "InvalidVersion",
     "VERSION_PATTERN",
+    "InvalidVersion",
+    "LegacyVersion",
+    "Version",
+    "parse",
 ]
 
 

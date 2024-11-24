@@ -376,7 +376,7 @@ class PackageInterface:
                     [
                         (
                             True
-                            if l > 0 or l < 0 and "THICKSTRT" in self.options
+                            if l > 0 or (l < 0 and "THICKSTRT" in self.options)
                             else False
                         )
                         for l in self.laytyp
@@ -739,7 +739,7 @@ class Package(PackageInterface):
             if option.lower() == "thickstrt":
                 thickstrt = True
         for i, l in enumerate(self.laytyp.array.tolist()):
-            if l == 0 or l < 0 and thickstrt:
+            if l == 0 or (l < 0 and thickstrt):
                 confined = True
                 continue
             if confined and l > 0:
