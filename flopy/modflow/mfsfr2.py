@@ -355,10 +355,7 @@ class ModflowSfr2(Package):
                 if fname is None:
                     fname = f"{model.name}.sfr.{ext}"
                 model.add_output_file(
-                    abs(istcb2),
-                    fname=fname,
-                    binflag=binflag,
-                    package=self._ftype(),
+                    abs(istcb2), fname=fname, binflag=binflag, package=self._ftype()
                 )
         else:
             istcb2 = 0
@@ -769,9 +766,8 @@ class ModflowSfr2(Package):
         structured = model.structured
         if nper is None:
             nper = model.nper
-            nper = (
-                1 if nper == 0 else nper
-            )  # otherwise iterations from 0, nper won't run
+            nper = 1 if nper == 0 else nper
+            # otherwise iterations from 0, nper won't run
 
         openfile = not hasattr(f, "read")
         if openfile:
@@ -859,9 +855,8 @@ class ModflowSfr2(Package):
         # initialize full reach_data array with all possible columns
         reach_data = ModflowSfr2.get_empty_reach_data(len(lines))
         for n in names:
-            reach_data[n] = tmp[
-                n
-            ]  # not sure if there's a way to assign multiple columns
+            # not sure if there's a way to assign multiple columns
+            reach_data[n] = tmp[n]
 
         # zero-based convention
         inds = ["k", "i", "j"] if structured else ["node"]
@@ -928,7 +923,7 @@ class ModflowSfr2(Package):
                         # dataset 6d description suggests that this line isn't read for
                         # isfropt > 1 but description of icalc suggest that icalc=2
                         # (8-point channel) can be used with any isfropt
-                        if i == 0 or nstrm > 0 and not reachinput or isfropt <= 1:
+                        if i == 0 or (nstrm > 0 and not reachinput) or isfropt <= 1:
                             dataset_6d = []
                             for _ in range(2):
                                 dataset_6d.append(_get_dataset(f.readline(), [0.0] * 8))
@@ -1292,9 +1287,8 @@ class ModflowSfr2(Package):
                 for o in np.unique(segment_data.outseg)
             }
 
-            outsegs = [
-                k for k in list(upsegs.keys()) if k > 0
-            ]  # exclude 0, which is the outlet designator
+            # exclude 0, which is the outlet designator
+            outsegs = [k for k in list(upsegs.keys()) if k > 0]
 
             # for each outseg key, for each upseg, check for more upsegs,
             # append until headwaters has been reached
@@ -1611,9 +1605,8 @@ class ModflowSfr2(Package):
             )
         )
         if self.reachinput:
-            self.nstrm = abs(
-                self.nstrm
-            )  # see explanation for dataset 1c in online guide
+            # see explanation for dataset 1c in online guide
+            self.nstrm = abs(self.nstrm)
             f_sfr.write(f"{self.isfropt:.0f} ")
             if self.isfropt > 1:
                 f_sfr.write(f"{self.nstrail:.0f} {self.isuzn:.0f} {self.nsfrsets:.0f} ")
@@ -1635,10 +1628,7 @@ class ModflowSfr2(Package):
 
         # decide which columns to write
         columns = _get_item2_names(
-            self.nstrm,
-            self.reachinput,
-            self.isfropt,
-            structured=self.parent.structured,
+            self.nstrm, self.reachinput, self.isfropt, structured=self.parent.structured
         )
 
         # --make copy of data for multiple calls
@@ -1858,8 +1848,7 @@ class ModflowSfr2(Package):
                         # or isfropt <= 1:
                         if (
                             i == 0
-                            or self.nstrm > 0
-                            and not self.reachinput
+                            or (self.nstrm > 0 and not self.reachinput)
                             or self.isfropt <= 1
                         ):
                             for k in range(2):
@@ -1938,11 +1927,7 @@ class ModflowSfr2(Package):
 
         # append connection lengths for filtering in GIS
         rd = recfunctions.append_fields(
-            rd,
-            names=["length"],
-            data=[lengths],
-            usemask=False,
-            asrecarray=True,
+            rd, names=["length"], data=[lengths], usemask=False, asrecarray=True
         )
         recarray2shp(rd, geoms, f, **kwargs)
 
@@ -2334,8 +2319,7 @@ class check:
                     txt += " ".join(map(str, segments_with_breaks)) + "\n"
                 else:
                     fpath = os.path.join(
-                        self.sfr.parent._model_ws,
-                        "reach_connection_gaps.chk.csv",
+                        self.sfr.parent._model_ws, "reach_connection_gaps.chk.csv"
                     )
                     with open(fpath, "w") as fp:
                         fp.write(",".join(rd.dtype.names) + "\n")
@@ -2530,10 +2514,7 @@ class check:
                 # enforce consecutive increasing segment numbers (for indexing)
                 segment_data.sort(order="nseg")
                 t = _check_numbers(
-                    len(segment_data),
-                    segment_data.nseg,
-                    level=1,
-                    datatype="Segment",
+                    len(segment_data), segment_data.nseg, level=1, datatype="Segment"
                 )
                 if len(t) > 0:
                     txt += "Elevation check requires consecutive segment numbering."
@@ -2573,13 +2554,7 @@ class check:
 
                 txt += self._boolean_compare(
                     non_outlets_seg_data[
-                        [
-                            "nseg",
-                            "outseg",
-                            "elevdn",
-                            "outseg_elevup",
-                            "d_elev2",
-                        ]
+                        ["nseg", "outseg", "elevdn", "outseg_elevup", "d_elev2"]
                     ],
                     col1="d_elev2",
                     col2=np.zeros(len(non_outlets_seg_data)),
@@ -2606,9 +2581,10 @@ class check:
         if self.verbose:
             print(headertxt.strip())
         passed = False
-        if (
-            self.sfr.nstrm < 0 or self.sfr.reachinput and self.sfr.isfropt in [1, 2, 3]
-        ):  # see SFR input instructions
+        if self.sfr.nstrm < 0 or (
+            self.sfr.reachinput and self.sfr.isfropt in [1, 2, 3]
+        ):
+            # see SFR input instructions
             # compute outreaches if they aren't there already
             if np.diff(self.sfr.reach_data.outreach).max() == 0:
                 self.sfr.set_outreaches()
@@ -2628,13 +2604,12 @@ class check:
                 ]
             )
 
-            reach_data = (
-                self.sfr.reach_data
-            )  # inconsistent with other checks that work with
+            # inconsistent with other checks that work with
             # reach_data attribute of check class. Want to have get_outreaches
             # as a method of sfr class (for other uses). Not sure if other
             # check methods should also copy reach_data directly from
             # SFR package instance for consistency.
+            reach_data = self.sfr.reach_data
 
             rd = recfunctions.append_fields(
                 rd,
@@ -2685,9 +2660,10 @@ class check:
             return
         passed = False
         warning = True
-        if (
-            self.sfr.nstrm < 0 or self.sfr.reachinput and self.sfr.isfropt in [1, 2, 3]
-        ):  # see SFR input instructions
+        if self.sfr.nstrm < 0 or (
+            self.sfr.reachinput and self.sfr.isfropt in [1, 2, 3]
+        ):
+            # see SFR input instructions
             reach_data = np.array(self.reach_data)
             i, j, k = reach_data["i"], reach_data["j"], reach_data["k"]
 
@@ -2727,11 +2703,7 @@ class check:
             # check streambed elevations in relation to model top
             tops = self.sfr.parent.dis.top.array[i, j]
             reach_data = recfunctions.append_fields(
-                reach_data,
-                names="modeltop",
-                data=tops,
-                usemask=False,
-                asrecarray=False,
+                reach_data, names="modeltop", data=tops, usemask=False, asrecarray=False
             )
 
             txt += self._boolean_compare(
@@ -2792,10 +2764,7 @@ class check:
                 # enforce consecutive increasing segment numbers (for indexing)
                 segment_data.sort(order="nseg")
                 t = _check_numbers(
-                    len(segment_data),
-                    segment_data.nseg,
-                    level=1,
-                    datatype="Segment",
+                    len(segment_data), segment_data.nseg, level=1, datatype="Segment"
                 )
                 if len(t) > 0:
                     raise Exception(
@@ -2825,16 +2794,7 @@ class check:
 
             txt += self._boolean_compare(
                 segment_ends[
-                    [
-                        "k",
-                        "i",
-                        "j",
-                        "iseg",
-                        "strtop",
-                        "modeltop",
-                        "diff",
-                        "reachID",
-                    ]
+                    ["k", "i", "j", "iseg", "strtop", "modeltop", "diff", "reachID"]
                 ].copy(),
                 col1=np.zeros(len(segment_ends)),
                 col2="diff",
@@ -2995,9 +2955,8 @@ def _get_duplicates(a):
     method https://stackoverflow.com/q/11528078/
     """
     s = np.sort(a, axis=None)
-    equal_to_previous_item = np.append(
-        s[1:] == s[:-1], False
-    )  # maintain same dimension for boolean array
+    # maintain same dimension for boolean array
+    equal_to_previous_item = np.append(s[1:] == s[:-1], False)
     return np.unique(s[equal_to_previous_item])
 
 

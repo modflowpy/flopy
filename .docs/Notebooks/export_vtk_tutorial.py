@@ -216,13 +216,7 @@ vtkobj = vtk.Vtk(ml, xml=True, pvd=True, vertical_exageration=10)
 
 ## add recharge to the VTK object
 recharge = ml.rch.rech.transient_2ds
-vtkobj.add_transient_array(
-    recharge,
-    "recharge",
-    masked_values=[
-        0,
-    ],
-)
+vtkobj.add_transient_array(recharge, "recharge", masked_values=[0])
 
 ## write vtk files
 vtkobj.write(output_dir / "tr_array_example" / "recharge.vtu")
@@ -242,12 +236,7 @@ vtkobj = vtk.Vtk(ml, xml=True, pvd=True, vertical_exageration=10)
 
 ## add well fluxes to the VTK object
 spd = ml.wel.stress_period_data
-vtkobj.add_transient_list(
-    spd,
-    masked_values=[
-        0,
-    ],
-)
+vtkobj.add_transient_list(spd, masked_values=[0])
 
 ## write vtk files
 vtkobj.write(output_dir / "tr_list_example" / "wel_flux.vtu")
@@ -412,17 +401,7 @@ def run_vertex_grid_example(ws):
     xmax = 12 * delr
     ymin = 8 * delc
     ymax = 13 * delc
-    rfpoly = [
-        [
-            [
-                (xmin, ymin),
-                (xmax, ymin),
-                (xmax, ymax),
-                (xmin, ymax),
-                (xmin, ymin),
-            ]
-        ]
-    ]
+    rfpoly = [[[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]]]
     g.add_refinement_features(rfpoly, "polygon", 1, range(nlay))
 
     rf1shp = os.path.join(gridgen_ws, "rf1")
@@ -430,17 +409,7 @@ def run_vertex_grid_example(ws):
     xmax = 11 * delr
     ymin = 9 * delc
     ymax = 12 * delc
-    rfpoly = [
-        [
-            [
-                (xmin, ymin),
-                (xmax, ymin),
-                (xmax, ymax),
-                (xmin, ymax),
-                (xmin, ymin),
-            ]
-        ]
-    ]
+    rfpoly = [[[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]]]
     g.add_refinement_features(rfpoly, "polygon", 2, range(nlay))
 
     rf2shp = os.path.join(gridgen_ws, "rf2")
@@ -448,17 +417,7 @@ def run_vertex_grid_example(ws):
     xmax = 10 * delr
     ymin = 10 * delc
     ymax = 11 * delc
-    rfpoly = [
-        [
-            [
-                (xmin, ymin),
-                (xmax, ymin),
-                (xmax, ymax),
-                (xmin, ymax),
-                (xmin, ymin),
-            ]
-        ]
-    ]
+    rfpoly = [[[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]]]
     g.add_refinement_features(rfpoly, "polygon", 3, range(nlay))
 
     g.build(verbose=False)

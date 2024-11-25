@@ -253,11 +253,7 @@ class Raster:
         """
         import rasterio
         from rasterio.io import MemoryFile
-        from rasterio.warp import (
-            Resampling,
-            calculate_default_transform,
-            reproject,
-        )
+        from rasterio.warp import Resampling, calculate_default_transform, reproject
 
         height = self._meta["height"]
         width = self._meta["width"]
@@ -536,12 +532,7 @@ class Raster:
             arr = arr.flatten()
 
             # step 3: use griddata interpolation to snap to grid
-            data = griddata(
-                (rxc, ryc),
-                arr,
-                (xc, yc),
-                method=method,
-            )
+            data = griddata((rxc, ryc), arr, (xc, yc), method=method)
 
         elif method in ("median", "mean", "min", "max", "mode"):
             # these methods are slow and could use speed ups
@@ -589,12 +580,7 @@ class Raster:
                 ryc = ryc[idx]
                 arr = arr[idx]
 
-            extrapolate = griddata(
-                (rxc, ryc),
-                arr,
-                (xc, yc),
-                method="nearest",
-            )
+            extrapolate = griddata((rxc, ryc), arr, (xc, yc), method="nearest")
             data = np.where(np.isnan(data), extrapolate, data)
 
         # step 4: return grid to user in shape provided
@@ -696,12 +682,7 @@ class Raster:
             self._meta["width"] = crp_mask.shape[1]
             transform = self._meta["transform"]
             self._meta["transform"] = self._affine.Affine(
-                transform[0],
-                transform[1],
-                xmin,
-                transform[3],
-                transform[4],
-                ymax,
+                transform[0], transform[1], xmin, transform[3], transform[4], ymax
             )
             self.__xcenters = None
             self.__ycenters = None
@@ -1011,12 +992,7 @@ class Raster:
         from rasterio.plot import show
 
         if self._dataset is not None:
-            ax = show(
-                self._dataset,
-                ax=ax,
-                contour=contour,
-                **kwargs,
-            )
+            ax = show(self._dataset, ax=ax, contour=contour, **kwargs)
 
         else:
             d0 = len(self.__arr_dict)

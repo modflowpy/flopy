@@ -233,14 +233,7 @@ ax = fig.add_subplot()
 pmv = flopy.plot.PlotMapView(modelgrid=struct_grid)
 ax.set_aspect("equal")
 pmv.plot_array(top_sg)
-pmv.plot_array(
-    intersection_sg,
-    masked_values=[
-        0,
-    ],
-    alpha=0.2,
-    cmap="Reds_r",
-)
+pmv.plot_array(intersection_sg, masked_values=[0], alpha=0.2, cmap="Reds_r")
 pmv.plot_grid(lw=0.25, color="0.5")
 cg = pmv.contour_array(top_sg, levels=levels, linewidths=0.3, colors="0.75")
 pmv.plot_inactive()
@@ -314,14 +307,7 @@ ax = fig.add_subplot()
 pmv = flopy.plot.PlotMapView(modelgrid=struct_vrc_grid)
 ax.set_aspect("equal")
 pmv.plot_array(top_sg_vrc)
-pmv.plot_array(
-    intersection_sg_vrc,
-    masked_values=[
-        0,
-    ],
-    alpha=0.2,
-    cmap="Reds_r",
-)
+pmv.plot_array(intersection_sg_vrc, masked_values=[0], alpha=0.2, cmap="Reds_r")
 cg = pmv.contour_array(top_sg_vrc, levels=levels, linewidths=0.3, colors="0.75")
 pmv.plot_inactive()
 
@@ -437,14 +423,7 @@ ax = fig.add_subplot()
 pmv = flopy.plot.PlotMapView(modelgrid=struct_gridp, extent=extent)
 pmv.plot_inactive()
 pmv.plot_array(top_ngp, vmin=vmin, vmax=vmax)
-pmv.plot_array(
-    intersection_nested_grid[0],
-    masked_values=[
-        0,
-    ],
-    alpha=0.2,
-    cmap="Reds_r",
-)
+pmv.plot_array(intersection_nested_grid[0], masked_values=[0], alpha=0.2, cmap="Reds_r")
 cgp = pmv.contour_array(top_ngp, levels=levels, linewidths=0.3, colors="0.75")
 pmv.plot_inactive(zorder=100)
 ax.set_aspect("equal")
@@ -453,12 +432,7 @@ pmvc = flopy.plot.PlotMapView(modelgrid=struct_gridc, ax=ax, extent=extent)
 # pmvc.plot_grid()
 pmvc.plot_array(top_ngc, vmin=vmin, vmax=vmax)
 pmvc.plot_array(
-    intersection_nested_grid[1],
-    masked_values=[
-        0,
-    ],
-    alpha=0.2,
-    cmap="Reds_r",
+    intersection_nested_grid[1], masked_values=[0], alpha=0.2, cmap="Reds_r"
 )
 cgc = pmvc.contour_array(top_ngc, levels=levels, linewidths=0.3, colors="0.75")
 
@@ -532,14 +506,7 @@ fig = plt.figure(figsize=figsize)
 ax = fig.add_subplot()
 pmv = flopy.plot.PlotMapView(modelgrid=quadtree_grid)
 pmv.plot_array(top_qg, ec="0.75")
-pmv.plot_array(
-    intersection_qg,
-    masked_values=[
-        0,
-    ],
-    alpha=0.2,
-    cmap="Reds_r",
-)
+pmv.plot_array(intersection_qg, masked_values=[0], alpha=0.2, cmap="Reds_r")
 cg = pmv.contour_array(top_qg, levels=levels, linewidths=0.3, colors="white")
 pmv.plot_inactive(zorder=100)
 ax.set_aspect("equal")
@@ -615,14 +582,7 @@ ax.set_aspect("equal")
 pmv = flopy.plot.PlotMapView(modelgrid=triangular_grid)
 
 pmv.plot_array(top_tg, ec="0.75")
-pmv.plot_array(
-    intersection_tg,
-    masked_values=[
-        0,
-    ],
-    alpha=0.2,
-    cmap="Reds_r",
-)
+pmv.plot_array(intersection_tg, masked_values=[0], alpha=0.2, cmap="Reds_r")
 cg = pmv.contour_array(top_tg, levels=levels, linewidths=0.3, colors="white")
 ax.clabel(cg, cg.levels, inline=True, fmt="%1.0f", fontsize=10)
 
@@ -670,14 +630,7 @@ ax = fig.add_subplot()
 pmv = flopy.plot.PlotMapView(modelgrid=voronoi_grid)
 ax.set_aspect("equal")
 pmv.plot_array(top_vg)
-pmv.plot_array(
-    intersection_vg,
-    masked_values=[
-        0,
-    ],
-    alpha=0.2,
-    cmap="Reds_r",
-)
+pmv.plot_array(intersection_vg, masked_values=[0], alpha=0.2, cmap="Reds_r")
 pmv.plot_inactive()
 ax.plot(bp[:, 0], bp[:, 1], "k-")
 for sg in sgs:
@@ -789,29 +742,10 @@ with styles.USGSMap():
     ax.set_ylim(0, 1)
     ax.set_axis_off()
 
-    ax.axhline(
-        xy0[0],
-        color="black",
-        lw=2,
-        label="Basin boundary",
-    )
-    ax.axhline(
-        xy0[0],
-        **river_dict,
-        label="River",
-    )
-    ax.axhline(
-        xy0[0],
-        color=contour_color,
-        lw=0.5,
-        ls="--",
-        label="Elevation contour",
-    )
-    ax.axhline(
-        xy0[0],
-        label="Grid refinement area",
-        **refinement_dict,
-    )
+    ax.axhline(xy0[0], color="black", lw=2, label="Basin boundary")
+    ax.axhline(xy0[0], **river_dict, label="River")
+    ax.axhline(xy0[0], color=contour_color, lw=0.5, ls="--", label="Elevation contour")
+    ax.axhline(xy0[0], label="Grid refinement area", **refinement_dict)
     ax.axhline(
         xy0[0],
         marker="s",
@@ -844,23 +778,10 @@ with styles.USGSMap():
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.set_axis_off()
-    cax = ax.inset_axes(
-        cbar_axis,
-    )
+    cax = ax.inset_axes(cbar_axis)
     #     cax.set_axisbelow(False)
-    cbar = plt.colorbar(
-        v,
-        orientation="vertical",
-        cax=cax,
-        ticks=[25, 50, 75, 100],
-    )
-    cbar.ax.tick_params(
-        labelsize=5,
-        labelcolor="black",
-        color="black",
-        length=9,
-        pad=2,
-    )
+    cbar = plt.colorbar(v, orientation="vertical", cax=cax, ticks=[25, 50, 75, 100])
+    cbar.ax.tick_params(labelsize=5, labelcolor="black", color="black", length=9, pad=2)
     cbar.ax.set_title("Elevation (m)", pad=2.5, loc="center", fontdict=font_dict)
 # -
 
@@ -971,11 +892,7 @@ with styles.USGSMap():
     ax.set_axis_off()
 
     ax.axhline(xy0[0], **river_dict, label="River")
-    ax.axhline(
-        xy0[0],
-        label="Grid refinement area",
-        **refinement_dict,
-    )
+    ax.axhline(xy0[0], label="Grid refinement area", **refinement_dict)
     ax.axhline(
         xy0[0],
         marker="s",

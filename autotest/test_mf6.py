@@ -72,13 +72,7 @@ from flopy.mf6.modflow import (
     mfims,
     mftdis,
 )
-from flopy.utils import (
-    CellBudgetFile,
-    HeadFile,
-    Mf6ListBudget,
-    Mf6Obs,
-    ZoneBudget6,
-)
+from flopy.utils import CellBudgetFile, HeadFile, Mf6ListBudget, Mf6Obs, ZoneBudget6
 from flopy.utils.observationfile import CsvFile
 from flopy.utils.triangle import Triangle
 from flopy.utils.voronoi import VoronoiGrid
@@ -314,15 +308,13 @@ def test_load_sim_when_namefile_uses_rel_paths(function_tmpdir, example_data_pat
                     if sep == "win":
                         l = to_win_sep(
                             l.replace(
-                                pattern,
-                                "../" + workspace.name + "/" + model_name + ".",
+                                pattern, "../" + workspace.name + "/" + model_name + "."
                             )
                         )
                     else:
                         l = to_posix_sep(
                             l.replace(
-                                pattern,
-                                "../" + workspace.name + "/" + model_name + ".",
+                                pattern, "../" + workspace.name + "/" + model_name + "."
                             )
                         )
                 f.write(l)
@@ -361,15 +353,13 @@ def test_write_simulation_always_writes_posix_path_separators(
                     if sep == "win":
                         l = to_win_sep(
                             l.replace(
-                                pattern,
-                                "../" + workspace.name + "/" + model_name + ".",
+                                pattern, "../" + workspace.name + "/" + model_name + "."
                             )
                         )
                     else:
                         l = to_posix_sep(
                             l.replace(
-                                pattern,
-                                "../" + workspace.name + "/" + model_name + ".",
+                                pattern, "../" + workspace.name + "/" + model_name + "."
                             )
                         )
                 f.write(l)
@@ -1130,18 +1120,7 @@ def test_create_and_run_model(function_tmpdir, use_paths):
     )
     ic_package = mfgwfic.ModflowGwfic(
         model,
-        strt=[
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-        ],
+        strt=[100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0],
         filename=f"{model_name}.ic",
     )
     npf_package = mfgwfnpf.ModflowGwfnpf(model, save_flows=True, icelltype=1, k=100.0)

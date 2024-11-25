@@ -82,13 +82,7 @@ def test_modflow_load(namfile, example_data_path):
     [
         pytest.param(
             _example_data_path / "freyberg" / "freyberg.nam",
-            {
-                "crs": None,
-                "epsg": None,
-                "angrot": 0.0,
-                "xoffset": 0.0,
-                "yoffset": 0.0,
-            },
+            {"crs": None, "epsg": None, "angrot": 0.0, "xoffset": 0.0, "yoffset": 0.0},
             id="freyberg",
         ),
         pytest.param(
@@ -107,12 +101,7 @@ def test_modflow_load(namfile, example_data_path):
             / "mfnwt_mt3dusgs"
             / "sft_crnkNic"
             / "CrnkNic.nam",
-            {
-                "epsg": 26916,
-                "angrot": 0.0,
-                "xoffset": 0.0,
-                "yoffset": 0.0,
-            },
+            {"epsg": 26916, "angrot": 0.0, "xoffset": 0.0, "yoffset": 0.0},
             id="CrnkNic",
         ),
     ],
@@ -1183,14 +1172,7 @@ def test_load_with_list_reader(function_tmpdir):
 
     # create the wells, but use an all float dtype to write a binary file
     # use one-based values
-    weldt = np.dtype(
-        [
-            ("k", "<f4"),
-            ("i", "<f4"),
-            ("j", "<f4"),
-            ("q", "<f4"),
-        ]
-    )
+    weldt = np.dtype([("k", "<f4"), ("i", "<f4"), ("j", "<f4"), ("q", "<f4")])
     welra = np.recarray(2, dtype=weldt)
     welra[0] = (1, 2, 2, -5.0)
     welra[1] = (1, nrow - 2, ncol - 2, -10.0)
@@ -1251,14 +1233,7 @@ def test_pkg_data_containers(function_tmpdir, container):
     wel_ra = ModflowWel.get_empty(2)
     wel_ra[0] = (0, 1, 1, -5.0)
     wel_ra[1] = (0, nrow - 3, ncol - 3, -10.0)
-    wel_dtype = np.dtype(
-        [
-            ("k", int),
-            ("i", int),
-            ("j", int),
-            ("q", np.float32),
-        ]
-    )
+    wel_dtype = np.dtype([("k", int), ("i", int), ("j", int), ("q", np.float32)])
     df_per = pd.DataFrame(wel_ra)
     if "dict_of_recarray" in container:
         wel_spd = {0: wel_ra}

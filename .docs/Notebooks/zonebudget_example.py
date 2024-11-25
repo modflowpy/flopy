@@ -268,12 +268,7 @@ def volumetric_budget_bar_plot(values_in, values_out, labels, **kwargs):
         vertical_alignment = "bottom"
         horizontal_alignment = "center"
         ax.text(
-            x,
-            y,
-            label,
-            ha=horizontal_alignment,
-            va=vertical_alignment,
-            rotation=90,
+            x, y, label, ha=horizontal_alignment, va=vertical_alignment, rotation=90
         )
 
     for i, rect in enumerate(rects_out):
@@ -284,12 +279,7 @@ def volumetric_budget_bar_plot(values_in, values_out, labels, **kwargs):
         vertical_alignment = "top"
         horizontal_alignment = "center"
         ax.text(
-            x,
-            y,
-            label,
-            ha=horizontal_alignment,
-            va=vertical_alignment,
-            rotation=90,
+            x, y, label, ha=horizontal_alignment, va=vertical_alignment, rotation=90
         )
 
     # horizontal line indicating zero

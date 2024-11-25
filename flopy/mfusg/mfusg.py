@@ -330,17 +330,16 @@ class MfUsg(Modflow):
         # try loading packages in ext_unit_dict
         for key, item in ext_unit_dict.items():
             if item.package is not None:
-                (
-                    files_successfully_loaded,
-                    files_not_loaded,
-                ) = cls._load_ext_unit_dict_paks(
-                    model,
-                    ext_unit_dict,
-                    load_only,
-                    item,
-                    forgive,
-                    files_successfully_loaded,
-                    files_not_loaded,
+                (files_successfully_loaded, files_not_loaded) = (
+                    cls._load_ext_unit_dict_paks(
+                        model,
+                        ext_unit_dict,
+                        load_only,
+                        item,
+                        forgive,
+                        files_successfully_loaded,
+                        files_not_loaded,
+                    )
                 )
             elif "data" not in item.filetype.lower():
                 files_not_loaded.append(item.filename)

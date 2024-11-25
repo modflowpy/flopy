@@ -146,11 +146,7 @@ def update_citation_cff(timestamp: datetime, version: Version):
     # write CITATION.cff
     with open(fpth, "w") as f:
         yaml.safe_dump(
-            citation,
-            f,
-            allow_unicode=True,
-            default_flow_style=False,
-            sort_keys=False,
+            citation, f, allow_unicode=True, default_flow_style=False, sort_keys=False
         )
 
     print(f"Updated {fpth} to version {version}")

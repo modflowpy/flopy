@@ -234,10 +234,7 @@ class ModflowSwi2(Package):
         # update external file information with zeta output, if necessary
         if iswizt is not None:
             model.add_output_file(
-                iswizt,
-                fname=filenames[1],
-                extension="zta",
-                package=self._ftype(),
+                iswizt, fname=filenames[1], extension="zta", package=self._ftype()
             )
         else:
             iswizt = 0
@@ -359,11 +356,7 @@ class ModflowSwi2(Package):
         for i in range(self.nsrf):
             self.zeta.append(
                 Util3d(
-                    model,
-                    (nlay, nrow, ncol),
-                    np.float32,
-                    zeta[i],
-                    name=f"zeta_{i + 1}",
+                    model, (nlay, nrow, ncol), np.float32, zeta[i], name=f"zeta_{i + 1}"
                 )
             )
         self.ssz = Util3d(model, (nlay, nrow, ncol), np.float32, ssz, name="ssz")
@@ -645,12 +638,7 @@ class ModflowSwi2(Package):
             ctxt = f"zeta_surf{n + 1:02d}"
             zeta.append(
                 Util3d.load(
-                    f,
-                    model,
-                    (nlay, nrow, ncol),
-                    np.float32,
-                    ctxt,
-                    ext_unit_dict,
+                    f, model, (nlay, nrow, ncol), np.float32, ctxt, ext_unit_dict
                 )
             )
 

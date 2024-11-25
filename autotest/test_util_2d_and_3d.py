@@ -443,18 +443,8 @@ def test_mflist(function_tmpdir, example_data_path):
     for per, data in spd.data.items():
         dfdata = (
             df.xs(per, level="per")
-            .dropna(
-                subset=[
-                    "flux",
-                ],
-                axis=0,
-            )
-            .loc[
-                :,
-                [
-                    "flux",
-                ],
-            ]
+            .dropna(subset=["flux"], axis=0)
+            .loc[:, ["flux"]]
             .to_records(index=True)
             .astype(data.dtype)
         )
@@ -603,12 +593,7 @@ def test_mflist_fromfile(function_tmpdir):
         [(0, 1, 2, -50.0), (0, 5, 5, -50.0)], columns=["k", "i", "j", "flux"]
     )
     wpth = os.path.join(function_tmpdir, "wel_000.dat")
-    wel_data.to_csv(
-        wpth,
-        index=False,
-        sep=" ",
-        header=False,
-    )
+    wel_data.to_csv(wpth, index=False, sep=" ", header=False)
 
     nwt_model = Modflow(
         "nwt_testmodel",

@@ -28,9 +28,7 @@ bindir_options = {
     "python": Path(sys.prefix) / ("Scripts" if system() == "Windows" else "bin"),
     "home": Path.home() / ".local" / "bin",
 }
-owner_options = [
-    "MODFLOW-USGS",
-]
+owner_options = ["MODFLOW-USGS"]
 repo_options = {
     "executables": [
         "crt",
@@ -250,13 +248,7 @@ def test_script_valid_options(function_tmpdir, downloads_dir):
 def test_script(function_tmpdir, owner, repo, downloads_dir):
     bindir = str(function_tmpdir)
     stdout, stderr, returncode = run_get_modflow_script(
-        bindir,
-        "--owner",
-        owner,
-        "--repo",
-        repo,
-        "--downloads-dir",
-        downloads_dir,
+        bindir, "--owner", owner, "--repo", repo, "--downloads-dir", downloads_dir
     )
     if rate_limit_msg in stderr:
         pytest.skip(f"GitHub {rate_limit_msg}")

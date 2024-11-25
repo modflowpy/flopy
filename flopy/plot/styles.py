@@ -112,13 +112,7 @@ class styles:
             return
 
         text = ax.text(
-            x,
-            y,
-            text,
-            va="bottom",
-            ha="left",
-            fontdict=font,
-            transform=ax.transAxes,
+            x, y, text, va="bottom", ha="left", fontdict=font, transform=ax.transAxes
         )
         return text
 
@@ -308,14 +302,7 @@ class styles:
         font = styles.__set_fontspec(bold=bold, italic=italic, fontsize=fontsize)
 
         text_obj = ax.text(
-            x,
-            y,
-            text,
-            va=va,
-            ha=ha,
-            fontdict=font,
-            transform=transform,
-            **kwargs,
+            x, y, text, va=va, ha=ha, fontdict=font, transform=transform, **kwargs
         )
         return text_obj
 

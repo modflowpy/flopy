@@ -107,11 +107,7 @@ class ModflowMnw1(Package):
 
         # call base package constructor
         super().__init__(
-            model,
-            extension,
-            self._ftype(),
-            unitnumber,
-            filenames=filenames[0],
+            model, extension, self._ftype(), unitnumber, filenames=filenames[0]
         )
 
         self.url = "mnw.html"
@@ -187,9 +183,8 @@ class ModflowMnw1(Package):
         structured = model.structured
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
-            nper = (
-                1 if nper == 0 else nper
-            )  # otherwise iterations from 0, nper won't run
+            nper = 1 if nper == 0 else nper
+            # otherwise iterations from 0, nper won't run
 
         openfile = not hasattr(f, "read")
         if openfile:
@@ -277,13 +272,7 @@ class ModflowMnw1(Package):
         # -Section 1 - MXMNW ipakcb IWELPT NOMOITER REF:kspref
         f.write(
             "%10i%10i%10i%10i REF = %s\n"
-            % (
-                self.mxmnw,
-                self.ipakcb,
-                self.iwelpt,
-                self.nomoiter,
-                self.kspref,
-            )
+            % (self.mxmnw, self.ipakcb, self.iwelpt, self.nomoiter, self.kspref)
         )
 
         # -Section 2 - LOSSTYPE {PLossMNW}

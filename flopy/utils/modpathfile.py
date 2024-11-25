@@ -20,13 +20,9 @@ class ModpathFile(ParticleTrackFile):
     def __init__(self, filename: Union[str, os.PathLike], verbose: bool = False):
         super().__init__(filename, verbose)
         self.output_type = self.__class__.__name__.lower().replace("file", "")
-        (
-            self.modpath,
-            self.compact,
-            self.skiprows,
-            self.version,
-            self.direction,
-        ) = self.parse(filename, self.output_type)
+        (self.modpath, self.compact, self.skiprows, self.version, self.direction) = (
+            self.parse(filename, self.output_type)
+        )
 
     @staticmethod
     def parse(
@@ -271,13 +267,7 @@ class PathlineFile(ModpathFile):
                     nrows += pathlinecount
                     # read in the particle data
                     d = np.loadtxt(itertools.islice(f, 0, pathlinecount), dtype=dtyper)
-                    key = (
-                        idx,
-                        sequencenumber,
-                        group,
-                        particleid,
-                        pathlinecount,
-                    )
+                    key = (idx, sequencenumber, group, particleid, pathlinecount)
                     particle_pathlines[key] = d.copy()
                     idx += 1
 

@@ -180,10 +180,7 @@ plt.colorbar(ax, shrink=0.7)
 
 t0 = time.time()
 dem_data = rio.resample_to_grid(
-    ml.modelgrid,
-    band=rio.bands[0],
-    method="median",
-    extrapolate_edges=True,
+    ml.modelgrid, band=rio.bands[0], method="median", extrapolate_edges=True
 )
 resample_time = time.time() - t0
 
@@ -254,11 +251,7 @@ ax = fig.add_subplot(1, 1, 1, aspect="equal")
 
 pmv = flopy.plot.PlotMapView(modelgrid=mg_unstruct, ax=ax)
 ax = pmv.plot_array(
-    dem_data,
-    masked_values=rio.nodatavals,
-    cmap="viridis",
-    vmin=vmin,
-    vmax=vmax,
+    dem_data, masked_values=rio.nodatavals, cmap="viridis", vmin=vmin, vmax=vmax
 )
 plt.title(f"Resample time, nearest neighbor: {resample_time:.3f} sec")
 plt.colorbar(ax, shrink=0.7)
@@ -276,22 +269,14 @@ ax = fig.add_subplot(1, 1, 1, aspect="equal")
 
 pmv = flopy.plot.PlotMapView(modelgrid=mg_unstruct, ax=ax)
 ax = pmv.plot_array(
-    dem_data,
-    masked_values=rio.nodatavals,
-    cmap="viridis",
-    vmin=vmin,
-    vmax=vmax,
+    dem_data, masked_values=rio.nodatavals, cmap="viridis", vmin=vmin, vmax=vmax
 )
 plt.title(f"Resample time, bi-linear: {resample_time:.3f} sec")
 plt.colorbar(ax, shrink=0.7)
 
 # +
 t0 = time.time()
-dem_data = rio.resample_to_grid(
-    mg_unstruct,
-    band=rio.bands[0],
-    method="median",
-)
+dem_data = rio.resample_to_grid(mg_unstruct, band=rio.bands[0], method="median")
 
 resample_time = time.time() - t0
 
@@ -302,11 +287,7 @@ ax = fig.add_subplot(1, 1, 1, aspect="equal")
 
 pmv = flopy.plot.PlotMapView(modelgrid=mg_unstruct, ax=ax)
 ax = pmv.plot_array(
-    dem_data,
-    masked_values=rio.nodatavals,
-    cmap="viridis",
-    vmin=vmin,
-    vmax=vmax,
+    dem_data, masked_values=rio.nodatavals, cmap="viridis", vmin=vmin, vmax=vmax
 )
 plt.title(f"Resample time, median: {resample_time:.3f} sec")
 plt.colorbar(ax, shrink=0.7)
@@ -429,11 +410,7 @@ ax = fig.add_subplot(1, 1, 1, aspect="equal")
 
 pmv = flopy.plot.PlotMapView(modelgrid=mg_unstruct, ax=ax)
 ax = pmv.plot_array(
-    dem_data,
-    masked_values=rio.nodatavals,
-    cmap="viridis",
-    vmin=vmin,
-    vmax=vmax,
+    dem_data, masked_values=rio.nodatavals, cmap="viridis", vmin=vmin, vmax=vmax
 )
 plt.plot(shape.T[0], shape.T[1], "r-")
 plt.title(f"Resample time, nearest neighbor: {resample_time:.3f} sec")
@@ -452,11 +429,7 @@ ax = fig.add_subplot(1, 1, 1, aspect="equal")
 
 pmv = flopy.plot.PlotMapView(modelgrid=mg_unstruct, ax=ax)
 ax = pmv.plot_array(
-    dem_data,
-    masked_values=rio.nodatavals,
-    cmap="viridis",
-    vmin=vmin,
-    vmax=vmax,
+    dem_data, masked_values=rio.nodatavals, cmap="viridis", vmin=vmin, vmax=vmax
 )
 plt.plot(shape.T[0], shape.T[1], "r-")
 plt.title(f"Resample time, bi-linear: {resample_time:.3f} sec")
@@ -531,15 +504,7 @@ fig = plt.figure(figsize=(12, 12))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
 
 pmv = flopy.plot.PlotMapView(modelgrid=mg_unstruct, ax=ax)
-ax = pmv.plot_array(
-    top,
-    masked_values=[
-        3500,
-    ],
-    cmap="viridis",
-    vmin=vmin,
-    vmax=vmax,
-)
+ax = pmv.plot_array(top, masked_values=[3500], cmap="viridis", vmin=vmin, vmax=vmax)
 ib = pmv.plot_ibound(ibound)
 pmv.plot_grid(linewidth=0.3)
 plt.plot(shape[0], shape[1], "r-")

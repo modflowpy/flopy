@@ -331,12 +331,7 @@ class MfUsgDisU(Package):
         if iac is None:
             raise Exception("iac must be provided")
         self.iac = Util2d(
-            model,
-            (self.nodes,),
-            np.int32,
-            iac,
-            name="iac",
-            locat=self.unit_number[0],
+            model, (self.nodes,), np.int32, iac, name="iac", locat=self.unit_number[0]
         )
         assert self.iac.array.sum() == njag, "The sum of iac must equal njag."
         if ja is None:
@@ -345,12 +340,7 @@ class MfUsgDisU(Package):
             # convert from zero-based to one-based
             ja += 1
         self.ja = Util2d(
-            model,
-            (self.njag,),
-            np.int32,
-            ja,
-            name="ja",
-            locat=self.unit_number[0],
+            model, (self.njag,), np.int32, ja, name="ja", locat=self.unit_number[0]
         )
         self.ivc = None
         if self.ivsd == 1:
@@ -373,20 +363,10 @@ class MfUsgDisU(Package):
             if cl2 is None:
                 raise Exception("idsymrd is 1 but cl2 was not specified.")
             self.cl1 = Util2d(
-                model,
-                (njags,),
-                np.float32,
-                cl1,
-                name="cl1",
-                locat=self.unit_number[0],
+                model, (njags,), np.float32, cl1, name="cl1", locat=self.unit_number[0]
             )
             self.cl2 = Util2d(
-                model,
-                (njags,),
-                np.float32,
-                cl2,
-                name="cl2",
-                locat=self.unit_number[0],
+                model, (njags,), np.float32, cl2, name="cl2", locat=self.unit_number[0]
             )
 
         if idsymrd == 0:
@@ -409,12 +389,7 @@ class MfUsgDisU(Package):
         elif idsymrd == 0:
             n = self.njag
         self.fahl = Util2d(
-            model,
-            (n,),
-            np.float32,
-            fahl,
-            name="fahl",
-            locat=self.unit_number[0],
+            model, (n,), np.float32, fahl, name="fahl", locat=self.unit_number[0]
         )
 
         # Stress period information

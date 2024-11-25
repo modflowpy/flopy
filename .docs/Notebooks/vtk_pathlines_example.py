@@ -261,11 +261,7 @@ for pid, track in tracks.items():
         start_labels.append(f"Particle {pid}")
 
 p.add_point_labels(
-    label_coords,
-    start_labels,
-    font_size=10,
-    point_size=15,
-    point_color="black",
+    label_coords, start_labels, font_size=10, point_size=15, point_color="black"
 )
 
 # zoom in and show the plot

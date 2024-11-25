@@ -74,16 +74,10 @@ def test_add_active_domain(function_tmpdir, grid_type):
         "ad0",
     ]:
         print(
-            "Testing add_active_domain() for",
-            grid_type,
-            "grid with features",
-            feature,
+            "Testing add_active_domain() for", grid_type, "grid with features", feature
         )
         gridgen = Gridgen(bgrid, model_ws=function_tmpdir)
-        gridgen.add_active_domain(
-            feature,
-            range(bgrid.nlay),
-        )
+        gridgen.add_active_domain(feature, range(bgrid.nlay))
         gridgen.build()
         grid = (
             VertexGrid(**gridgen.get_gridprops_vertexgrid())
@@ -122,12 +116,7 @@ def test_add_refinement_feature(function_tmpdir, grid_type):
             features,
         )
         gridgen = Gridgen(bgrid, model_ws=function_tmpdir)
-        gridgen.add_refinement_features(
-            features,
-            "polygon",
-            1,
-            range(bgrid.nlay),
-        )
+        gridgen.add_refinement_features(features, "polygon", 1, range(bgrid.nlay))
         gridgen.build()
         grid = (
             VertexGrid(**gridgen.get_gridprops_vertexgrid())
@@ -380,11 +369,7 @@ def test_mf6disu(sim_disu_diff_layers):
         pmv.plot_array(head.flatten(), cmap="jet", vmin=vmin, vmax=vmax)
         pmv.plot_grid(colors="k", alpha=0.1)
         pmv.contour_array(
-            head,
-            levels=[0.2, 0.4, 0.6, 0.8],
-            linewidths=3.0,
-            vmin=vmin,
-            vmax=vmax,
+            head, levels=[0.2, 0.4, 0.6, 0.8], linewidths=3.0, vmin=vmin, vmax=vmax
         )
         ax.set_title(f"Layer {ilay + 1}")
         pmv.plot_vector(spdis["qx"], spdis["qy"], color="white")
@@ -659,17 +644,7 @@ def test_gridgen(function_tmpdir):
     xmax = 12 * delr
     ymin = 8 * delc
     ymax = 13 * delc
-    rfpoly = [
-        [
-            [
-                (xmin, ymin),
-                (xmax, ymin),
-                (xmax, ymax),
-                (xmin, ymax),
-                (xmin, ymin),
-            ]
-        ]
-    ]
+    rfpoly = [[[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]]]
     g.add_refinement_features(rfpoly, "polygon", 1, range(nlay))
     g6.add_refinement_features(rfpoly, "polygon", 1, range(nlay))
     gu.add_refinement_features(rfpoly, "polygon", 1, range(nlay))
@@ -679,17 +654,7 @@ def test_gridgen(function_tmpdir):
     xmax = 11 * delr
     ymin = 9 * delc
     ymax = 12 * delc
-    rfpoly = [
-        [
-            [
-                (xmin, ymin),
-                (xmax, ymin),
-                (xmax, ymax),
-                (xmin, ymax),
-                (xmin, ymin),
-            ]
-        ]
-    ]
+    rfpoly = [[[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]]]
     g.add_refinement_features(rfpoly, "polygon", 2, range(nlay))
     g6.add_refinement_features(rfpoly, "polygon", 2, range(nlay))
     gu.add_refinement_features(rfpoly, "polygon", 2, range(nlay))
@@ -699,17 +664,7 @@ def test_gridgen(function_tmpdir):
     xmax = 10 * delr
     ymin = 10 * delc
     ymax = 11 * delc
-    rfpoly = [
-        [
-            [
-                (xmin, ymin),
-                (xmax, ymin),
-                (xmax, ymax),
-                (xmin, ymax),
-                (xmin, ymin),
-            ]
-        ]
-    ]
+    rfpoly = [[[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]]]
     g.add_refinement_features(rfpoly, "polygon", 3, range(nlay))
     g6.add_refinement_features(rfpoly, "polygon", 3, range(nlay))
     gu.add_refinement_features(rfpoly, "polygon", 3, range(nlay))
@@ -719,17 +674,7 @@ def test_gridgen(function_tmpdir):
     xmax = 18 * delr
     ymin = 0 * delc
     ymax = 18 * delc
-    adpoly2 = [
-        [
-            [
-                (xmin, ymin),
-                (xmax, ymin),
-                (xmax, ymax),
-                (xmin, ymax),
-                (xmin, ymin),
-            ]
-        ]
-    ]
+    adpoly2 = [[[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]]]
     gu.add_active_domain(adpoly2, layers=[1])
     adpoly1_3 = [[[(0.0, 0.0), (Lx, 0.0), (Lx, Ly), (0.0, Ly), (0.0, 0.0)]]]
     gu.add_active_domain(adpoly1_3, layers=[0, 2])

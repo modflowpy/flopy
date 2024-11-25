@@ -441,16 +441,12 @@ class Modflow(BaseModel):
             if self.glo.unit_number[0] > 0:
                 f_nam.write(
                     "{:14s} {:5d}  {}\n".format(
-                        self.glo.name[0],
-                        self.glo.unit_number[0],
-                        self.glo.file_name[0],
+                        self.glo.name[0], self.glo.unit_number[0], self.glo.file_name[0]
                     )
                 )
         f_nam.write(
             "{:14s} {:5d}  {}\n".format(
-                self.lst.name[0],
-                self.lst.unit_number[0],
-                self.lst.file_name[0],
+                self.lst.name[0], self.lst.unit_number[0], self.lst.file_name[0]
             )
         )
         f_nam.write(str(self.get_name_file_entries()))
@@ -831,9 +827,7 @@ class Modflow(BaseModel):
                                 )
                             else:
                                 item.package.load(
-                                    item.filehandle,
-                                    ml,
-                                    ext_unit_dict=ext_unit_dict,
+                                    item.filehandle, ml, ext_unit_dict=ext_unit_dict
                                 )
                             files_successfully_loaded.append(item.filename)
                             if ml.verbose:
@@ -854,9 +848,7 @@ class Modflow(BaseModel):
                             )
                         else:
                             item.package.load(
-                                item.filehandle,
-                                ml,
-                                ext_unit_dict=ext_unit_dict,
+                                item.filehandle, ml, ext_unit_dict=ext_unit_dict
                             )
                         files_successfully_loaded.append(item.filename)
                         if ml.verbose:

@@ -89,18 +89,7 @@ def write_budget(
         ndim2 = 1
         ndim3 = -1
         h = np.array(
-            (
-                kstp,
-                kper,
-                text,
-                ndim1,
-                ndim2,
-                ndim3,
-                imeth,
-                delt,
-                pertim,
-                totim,
-            ),
+            (kstp, kper, text, ndim1, ndim2, ndim3, imeth, delt, pertim, totim),
             dtype=dt,
         )
         h.tofile(fbin)
@@ -111,18 +100,7 @@ def write_budget(
         ndim2 = 1
         ndim3 = -1
         h = np.array(
-            (
-                kstp,
-                kper,
-                text,
-                ndim1,
-                ndim2,
-                ndim3,
-                imeth,
-                delt,
-                pertim,
-                totim,
-            ),
+            (kstp, kper, text, ndim1, ndim2, ndim3, imeth, delt, pertim, totim),
             dtype=dt,
         )
         h.tofile(fbin)
@@ -2324,14 +2302,7 @@ class CellBudgetFile:
                 h.tofile(f)
                 if header["imeth"] == 6:
                     # Write additional header information to the backward budget file
-                    h = header[
-                        [
-                            "modelnam",
-                            "paknam",
-                            "modelnam2",
-                            "paknam2",
-                        ]
-                    ]
+                    h = header[["modelnam", "paknam", "modelnam2", "paknam2"]]
                     h = np.array(h, dtype=dt2)
                     h.tofile(f)
                     # Load data

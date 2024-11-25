@@ -601,11 +601,7 @@ class ModflowDis(Package):
 
         """
         if check:  # allows turning off package checks when writing files at model level
-            self.check(
-                f=f"{self.name[0]}.chk",
-                verbose=self.parent.verbose,
-                level=1,
-            )
+            self.check(f=f"{self.name[0]}.chk", verbose=self.parent.verbose, level=1)
         # Open file for writing
         f_dis = open(self.fn_path, "w")
         # Item 0: heading
@@ -613,12 +609,7 @@ class ModflowDis(Package):
         # Item 1: NLAY, NROW, NCOL, NPER, ITMUNI, LENUNI
         f_dis.write(
             "{:10d}{:10d}{:10d}{:10d}{:10d}{:10d}\n".format(
-                self.nlay,
-                self.nrow,
-                self.ncol,
-                self.nper,
-                self.itmuni,
-                self.lenuni,
+                self.nlay, self.nrow, self.ncol, self.nper, self.itmuni, self.lenuni
             )
         )
         # Item 2: LAYCBD
@@ -685,10 +676,7 @@ class ModflowDis(Package):
             thickness = np.ma.array(thickness, mask=non_finite)
 
         chk.values(
-            thickness,
-            active & (thickness <= 0),
-            "zero or negative thickness",
-            "Error",
+            thickness, active & (thickness <= 0), "zero or negative thickness", "Error"
         )
         thin_cells = (thickness < chk.thin_cell_threshold) & (thickness > 0)
         chk.values(
@@ -877,11 +865,7 @@ class ModflowDis(Package):
             filenames=filenames,
         )
         if check:
-            dis.check(
-                f=f"{dis.name[0]}.chk",
-                verbose=dis.parent.verbose,
-                level=0,
-            )
+            dis.check(f=f"{dis.name[0]}.chk", verbose=dis.parent.verbose, level=0)
         # return dis object instance
         return dis
 

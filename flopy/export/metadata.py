@@ -72,9 +72,8 @@ class acdd:
         self.creator_name = self.creator.get("name")
         self.creator_email = self.creator.get("email")
         self.creator_institution = self.creator["organization"].get("displayText")
-        self.institution = (
-            self.creator_institution
-        )  # also in CF convention for global attributes
+        # also in CF convention for global attributes
+        self.institution = self.creator_institution
         self.project = self.sb["title"]
         self.publisher_name = next(
             d.get("name")

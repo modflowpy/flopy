@@ -356,10 +356,7 @@ class PlotUtilities:
                     if defaults["key"] is None:
                         names = [
                             "{} {} location stress period {} layer {}".format(
-                                model_name,
-                                package.name[0],
-                                defaults["kper"] + 1,
-                                k + 1,
+                                model_name, package.name[0], defaults["kper"] + 1, k + 1
                             )
                             for k in range(package.parent.modelgrid.nlay)
                         ]
@@ -623,11 +620,7 @@ class PlotUtilities:
             else:
                 names = [
                     "{}{} {} stress period: {} layer: {}".format(
-                        model_name,
-                        mflist.package.name[0],
-                        key,
-                        kper + 1,
-                        k + 1,
+                        model_name, mflist.package.name[0], key, kper + 1, k + 1
                     )
                     for k in range(mflist.model.modelgrid.nlay)
                 ]
@@ -1278,11 +1271,7 @@ class PlotUtilities:
             pmv = PlotMapView(ax=axes[idx], model=model, layer=k)
             fig = plt.figure(num=fignum[idx])
             pmv.plot_bc(
-                ftype=ftype,
-                package=package,
-                kper=kper,
-                ax=axes[idx],
-                color=color,
+                ftype=ftype, package=package, kper=kper, ax=axes[idx], color=color
             )
 
             if defaults["grid"]:
@@ -2371,9 +2360,7 @@ def intersect_modpath_with_crosssection(
         xp, yp, zp = "x0", "y0", "z0"
 
     if not isinstance(recarrays, list):
-        recarrays = [
-            recarrays,
-        ]
+        recarrays = [recarrays]
 
     if projection == "x":
         v_opp = yvertices

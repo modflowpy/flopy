@@ -192,10 +192,7 @@ class ModflowPval(Package):
             )
 
         return cls(
-            model,
-            pval_dict=pval_dict,
-            unitnumber=unitnumber,
-            filenames=filenames,
+            model, pval_dict=pval_dict, unitnumber=unitnumber, filenames=filenames
         )
 
     @staticmethod

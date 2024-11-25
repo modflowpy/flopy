@@ -349,11 +349,7 @@ class ModflowLpf(Package):
         """
         # allows turning off package checks when writing files at model level
         if check:
-            self.check(
-                f=f"{self.name[0]}.chk",
-                verbose=self.parent.verbose,
-                level=1,
-            )
+            self.check(f=f"{self.name[0]}.chk", verbose=self.parent.verbose, level=1)
 
         # get model information
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
@@ -372,11 +368,7 @@ class ModflowLpf(Package):
         if self.parent.version == "mfusg" and not self.parent.structured:
             f.write(
                 "{:10d}{:10.6G}{:10d}{:10d} {:s}\n".format(
-                    self.ipakcb,
-                    self.hdry,
-                    self.nplpf,
-                    self.ikcflag,
-                    self.options,
+                    self.ipakcb, self.hdry, self.nplpf, self.ikcflag, self.options
                 )
             )
         else:
@@ -580,12 +572,7 @@ class ModflowLpf(Package):
                     print(f"   loading hani layer {k + 1:3d}...")
                 if "hani" not in par_types:
                     t = Util2d.load(
-                        f,
-                        model,
-                        (nrow, ncol),
-                        np.float32,
-                        "hani",
-                        ext_unit_dict,
+                        f, model, (nrow, ncol), np.float32, "hani", ext_unit_dict
                     )
                 else:
                     line = f.readline()
@@ -634,12 +621,7 @@ class ModflowLpf(Package):
                         print(f"   loading sy layer {k + 1:3d}...")
                     if "sy" not in par_types:
                         t = Util2d.load(
-                            f,
-                            model,
-                            (nrow, ncol),
-                            np.float32,
-                            "sy",
-                            ext_unit_dict,
+                            f, model, (nrow, ncol), np.float32, "sy", ext_unit_dict
                         )
                     else:
                         line = f.readline()
@@ -654,12 +636,7 @@ class ModflowLpf(Package):
                     print(f"   loading vkcb layer {k + 1:3d}...")
                 if "vkcb" not in par_types:
                     t = Util2d.load(
-                        f,
-                        model,
-                        (nrow, ncol),
-                        np.float32,
-                        "vkcb",
-                        ext_unit_dict,
+                        f, model, (nrow, ncol), np.float32, "vkcb", ext_unit_dict
                     )
                 else:
                     line = f.readline()
@@ -721,11 +698,7 @@ class ModflowLpf(Package):
             filenames=filenames,
         )
         if check:
-            lpf.check(
-                f=f"{lpf.name[0]}.chk",
-                verbose=lpf.parent.verbose,
-                level=0,
-            )
+            lpf.check(f=f"{lpf.name[0]}.chk", verbose=lpf.parent.verbose, level=0)
         return lpf
 
     @staticmethod

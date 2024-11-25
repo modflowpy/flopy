@@ -174,11 +174,7 @@ class ModflowEvt(Package):
             for kper, u2d in self.ievt.transient_2ds.items():
                 ievt[kper] = u2d.array + 1
             ievt = Transient2d(
-                self.parent,
-                self.ievt.shape,
-                self.ievt.dtype,
-                ievt,
-                self.ievt.name,
+                self.parent, self.ievt.shape, self.ievt.dtype, ievt, self.ievt.name
             )
             if not self.parent.structured:
                 mxndevt = np.max(
@@ -323,12 +319,7 @@ class ModflowEvt(Package):
                     if model.verbose:
                         print(f"   loading evtr stress period {iper + 1:3d}...")
                     t = Util2d.load(
-                        f,
-                        model,
-                        u2d_shape,
-                        np.float32,
-                        "evtr",
-                        ext_unit_dict,
+                        f, model, u2d_shape, np.float32, "evtr", ext_unit_dict
                     )
                 else:
                     parm_dict = {}
