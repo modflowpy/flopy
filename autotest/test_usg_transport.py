@@ -59,44 +59,6 @@ def mfusg_transport_Ex8_Lake_model_path(example_data_path: Path):
 def mfusg_transport_Ex9_PFAS_model_path(example_data_path: Path):
     return example_data_path / "mfusg_transport" / "Ex9_PFAS"
 
-# @requires_exe("mfusg_gsi")
-# def test_usg_transport(function_tmpdir):
-#     mf = MfUsg(
-#         version="mfusg",
-#         structured=True,
-#         model_ws=function_tmpdir,
-#         modelname="simple",
-#         exe_name="mfusg_gsi",
-#     )
-#     dis = ModflowDis(mf, nlay=1, nrow=11, ncol=11)
-#     bas = ModflowBas(mf)
-#     lpf = MfUsgLpf(mf)
-#     wel = MfUsgWel(mf, stress_period_data={0: [[0, 5, 5, -1.0]]})
-#     ghb = ModflowGhb(
-#         mf,
-#         stress_period_data={
-#             0: [
-#                 [0, 0, 0, 1.0, 1000.0],
-#                 [0, 9, 9, 0.0, 1000.0],
-#             ]
-#         },
-#     )
-#     oc = MfUsgOc(mf)
-#     sms = MfUsgSms(mf, options="complex")
-
-#     # run with defaults
-#     mf.write_input()
-#     success, buff = mf.run_model()
-#     assert success
-
-#     # try different complexity options; all should run successfully
-#     for complexity in ["simple", "moderate", "complex"]:
-#         print(f"testing MFUSG with sms complexity: {complexity}")
-#         sms = MfUsgSms(mf, options=complexity)
-#         sms.write_file()
-#         success, buff = mf.run_model()
-#         assert success, f"{mf.name} did not run"
-
 
 @requires_exe("mfusg_gsi")
 def test_usg_load_Ex1_1D(function_tmpdir, mfusg_transport_Ex1_1D_model_path):
@@ -206,7 +168,7 @@ def test_usg_load_Ex3_CLN_Conduit(function_tmpdir, mfusg_transport_Ex3_CLN_Condu
     msg = "flopy failed on loading modflow chd package"
     assert isinstance(m.chd, ModflowChd), msg
     msg = "flopy failed on loading mfusg bcf package"
-    assert isinstance(m.bcf, MfUsgBcf), msg
+    assert isinstance(m.bcf6, MfUsgBcf), msg
     msg = "flopy failed on loading mfusg oc package"
     assert isinstance(m.oc, MfUsgOc), msg
     msg = "flopy failed on loading mfusg sms package"
@@ -248,7 +210,7 @@ def test_usg_load_Ex3_CLN_Conduit_Dispersion(function_tmpdir, mfusg_transport_Ex
     msg = "flopy failed on loading modflow chd package"
     assert isinstance(m.chd, ModflowChd), msg
     msg = "flopy failed on loading mfusg bcf package"
-    assert isinstance(m.bcf, MfUsgBcf), msg
+    assert isinstance(m.bcf6, MfUsgBcf), msg
     msg = "flopy failed on loading mfusg oc package"
     assert isinstance(m.oc, MfUsgOc), msg
     msg = "flopy failed on loading mfusg sms package"
@@ -283,14 +245,14 @@ def test_usg_load_Ex3_CLN_Conduit_Nest(function_tmpdir, mfusg_transport_Ex3_CLN_
     m = m.load(fname, check=True, model_ws=function_tmpdir)
 
     # assert disu, lpf, bas packages have been loaded
-    msg = "flopy failed on loading modflow dis package"
-    assert isinstance(m.dis, ModflowDis), msg
+    msg = "flopy failed on loading mfusg dis package"
+    assert isinstance(m.disu, MfUsgDisU), msg
     msg = "flopy failed on loading modflow bas package"
     assert isinstance(m.bas6, ModflowBas), msg
     msg = "flopy failed on loading modflow chd package"
     assert isinstance(m.chd, ModflowChd), msg
     msg = "flopy failed on loading mfusg bcf package"
-    assert isinstance(m.bcf, MfUsgBcf), msg
+    assert isinstance(m.bcf6, MfUsgBcf), msg
     msg = "flopy failed on loading mfusg oc package"
     assert isinstance(m.oc, MfUsgOc), msg
     msg = "flopy failed on loading mfusg sms package"
@@ -332,7 +294,7 @@ def test_usg_load_Ex4_Dual_Domain(function_tmpdir, mfusg_transport_Ex4_Dual_Doma
     msg = "flopy failed on loading modflow chd package"
     assert isinstance(m.chd, ModflowChd), msg
     msg = "flopy failed on loading mfusg bcf package"
-    assert isinstance(m.bcf, MfUsgBcf), msg
+    assert isinstance(m.bcf6, MfUsgBcf), msg
     msg = "flopy failed on loading mfusg oc package"
     assert isinstance(m.oc, MfUsgOc), msg
     msg = "flopy failed on loading mfusg sms package"
@@ -368,7 +330,7 @@ def test_usg_load_Ex5_Henry(function_tmpdir, mfusg_transport_Ex5_Henry_model_pat
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
-    assert isinstance(m.dis, MfUsgDisU), msg
+    assert isinstance(m.disu, MfUsgDisU), msg
     msg = "flopy failed on loading modflow bas package"
     assert isinstance(m.bas6, ModflowBas), msg
     msg = "flopy failed on loading modflow chd package"
@@ -412,7 +374,7 @@ def test_usg_load_Ex6_Stallman_Heat(function_tmpdir, mfusg_transport_Ex6_Stallma
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
-    assert isinstance(m.dis, MfUsgDisU), msg
+    assert isinstance(m.disu, MfUsgDisU), msg
     msg = "flopy failed on loading modflow bas package"
     assert isinstance(m.bas6, ModflowBas), msg
     msg = "flopy failed on loading modflow chd package"
@@ -452,7 +414,7 @@ def test_usg_load_Ex6_Stallman_Solute(function_tmpdir, mfusg_transport_Ex6_Stall
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
-    assert isinstance(m.dis, MfUsgDisU), msg
+    assert isinstance(m.disu, MfUsgDisU), msg
     msg = "flopy failed on loading modflow bas package"
     assert isinstance(m.bas6, ModflowBas), msg
     msg = "flopy failed on loading modflow chd package"
@@ -492,7 +454,7 @@ def test_usg_load_Ex6_Stallman_Solute_Heat(function_tmpdir, mfusg_transport_Ex6_
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
-    assert isinstance(m.dis, MfUsgDisU), msg
+    assert isinstance(m.disu, MfUsgDisU), msg
     msg = "flopy failed on loading modflow bas package"
     assert isinstance(m.bas6, ModflowBas), msg
     msg = "flopy failed on loading modflow chd package"
@@ -532,7 +494,7 @@ def test_usg_load_Ex7_Multispecies_DiscreteFracture(function_tmpdir, mfusg_trans
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
-    assert isinstance(m.dis, MfUsgDisU), msg
+    assert isinstance(m.disu, MfUsgDisU), msg
     msg = "flopy failed on loading modflow bas package"
     assert isinstance(m.bas6, ModflowBas), msg
     msg = "flopy failed on loading modflow chd package"
@@ -574,7 +536,7 @@ def test_usg_load_Ex7_Multispecies(function_tmpdir, mfusg_transport_Ex7_Multispe
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
-    assert isinstance(m.dis, MfUsgDisU), msg
+    assert isinstance(m.disu, MfUsgDisU), msg
     msg = "flopy failed on loading modflow bas package"
     assert isinstance(m.bas6, ModflowBas), msg
     msg = "flopy failed on loading modflow chd package"
@@ -616,7 +578,7 @@ def test_usg_load_Ex7_SandTank(function_tmpdir, mfusg_transport_Ex7_Multispecies
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
-    assert isinstance(m.dis, MfUsgDisU), msg
+    assert isinstance(m.disu, MfUsgDisU), msg
     msg = "flopy failed on loading modflow bas package"
     assert isinstance(m.bas6, ModflowBas), msg
     msg = "flopy failed on loading modflow chd package"
@@ -660,13 +622,13 @@ def test_usg_load_Ex8_Lake(function_tmpdir, mfusg_transport_Ex8_Lake_model_path)
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
-    assert isinstance(m.dis, MfUsgDisU), msg
+    assert isinstance(m.disu, MfUsgDisU), msg
     msg = "flopy failed on loading modflow bas package"
     assert isinstance(m.bas6, ModflowBas), msg
     msg = "flopy failed on loading modflow fhb package"
     assert isinstance(m.fhb, ModflowFhb), msg
     msg = "flopy failed on loading mfusg bcf package"
-    assert isinstance(m.bcf, MfUsgBcf), msg
+    assert isinstance(m.bcf6, MfUsgBcf), msg
     msg = "flopy failed on loading mfusg oc package"
     assert isinstance(m.oc, MfUsgOc), msg
     msg = "flopy failed on loading mfusg sms package"
@@ -706,7 +668,7 @@ def test_usg_load_Ex9_PFAS(function_tmpdir, mfusg_transport_Ex9_PFAS_model_path)
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
-    assert isinstance(m.dis, MfUsgDisU), msg
+    assert isinstance(m.disu, MfUsgDisU), msg
     msg = "flopy failed on loading modflow bas package"
     assert isinstance(m.bas6, ModflowBas), msg
     msg = "flopy failed on loading mfusg lpf package"
