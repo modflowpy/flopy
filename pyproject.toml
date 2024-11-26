@@ -67,12 +67,12 @@ optional = [
     "pymetis ; platform_system != 'Windows'",
     "pyproj",
     "pyshp",
-    "pyvista ; python_version <'3.13'",
+    "pyvista",
     "rasterio",
     "rasterstats",
     "scipy",
     "shapely >=2.0",
-    "vtk ; python_version <'3.13'",
+    "vtk",
     "xmipy",
 ]
 doc = [
