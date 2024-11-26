@@ -2259,7 +2259,7 @@ class CellBudgetFile:
             header["kper"] = maxkper - kper + 1
 
             if kper != prev_kper:
-                perlen = header["pertim"]
+                perlen = header["pertim"] - 1
             prev_kper = kper
 
             # reverse totim and pertim headers
