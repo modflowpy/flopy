@@ -14,8 +14,8 @@ from warnings import warn
 import numpy as np
 
 from ..datbase import DataInterface, DataType
-from ..utils.binaryfile import BinaryHeader
 from ..utils.flopy_io import line_parse
+from .binaryfile import BinaryHeader
 
 
 class ArrayFormat:

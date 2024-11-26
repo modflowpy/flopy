@@ -19,8 +19,8 @@ from typing import Optional, Union
 import numpy as np
 import pandas as pd
 
-from ..utils.datafile import Header, LayerFile
-from .gridutil import get_lni
+from ..datafile import Header, LayerFile
+from ..gridutil import get_lni
 
 HEAD_TEXT = "            HEAD"
 
@@ -663,28 +663,15 @@ class HeadFile(BinaryLayerFile):
                     kstp[header["kper"]] = 0
             return kper, kstp, tsim
 
-        # get max period and time from the head file
         maxkper, maxkstp, maxtsim = get_max_kper_kstp_tsim()
-        # if we have tdis, get max period number and simulation time from it
-        tdis_maxkper, tdis_maxtsim = None, None
-        if self.tdis is not None:
-            pd = self.tdis.perioddata.get_data()
-            if any(pd):
-                tdis_maxkper = len(pd) - 1
-                tdis_maxtsim = sum([p[0] for p in pd])
-        # if we have both, check them against each other
-        if tdis_maxkper is not None:
-            assert maxkper == tdis_maxkper, (
-                f"Max stress period in binary head file ({maxkper}) != "
-                f"max stress period in provided tdis ({tdis_maxkper})"
-            )
-            assert maxtsim == tdis_maxtsim, (
-                f"Max simulation time in binary head file ({maxtsim}) != "
-                f"max simulation time in provided tdis ({tdis_maxtsim})"
-            )
+        prev_kper = None
+        perlen = None
 
         def reverse_header(header):
             """Reverse period, step and time fields in the record header"""
+
+            nonlocal prev_kper
+            nonlocal perlen
 
             # reverse kstp and kper headers
             kstp = header["kstp"] - 1
@@ -692,9 +679,12 @@ class HeadFile(BinaryLayerFile):
             header["kstp"] = maxkstp[kper] - kstp + 1
             header["kper"] = maxkper - kper + 1
 
+            if kper != prev_kper:
+                perlen = header["pertim"]
+            prev_kper = kper
+
             # reverse totim and pertim headers
             header["totim"] = maxtsim - header["totim"]
-            perlen = pd[kper][0]
             header["pertim"] = perlen - header["pertim"]
             return header
 
@@ -1022,7 +1012,6 @@ class CellBudgetFile:
         self.paknamlist_from = []
         self.paknamlist_to = []
         self.compact = True  # compact budget file flag
-
         self.dis = None
         self.modelgrid = None
         if "model" in kwargs.keys():
@@ -2237,24 +2226,46 @@ class CellBudgetFile:
             ]
         )
 
-        # make sure we have tdis
-        if self.tdis is None or not any(self.tdis.perioddata.get_data()):
-            raise ValueError("tdis must be known to reverse a cell budget file")
-
-        # extract perioddata
-        pd = self.tdis.perioddata.get_data()
-
-        # get maximum period number and total simulation time
-        nper = len(pd)
-        kpermx = nper - 1
-        tsimtotal = 0.0
-        for tpd in pd:
-            tsimtotal += tpd[0]
-
-        # get number of records
         nrecords = len(self)
-
         target = filename
+
+        def get_max_kper_kstp_tsim():
+            header = self.recordarray[-1]
+            kper = header["kper"] - 1
+            tsim = header["totim"]
+            kstp = {0: 0}
+            for i in range(len(self) - 1, -1, -1):
+                header = self.recordarray[i]
+                if header["kper"] in kstp and header["kstp"] > kstp[header["kper"]]:
+                    kstp[header["kper"]] += 1
+                else:
+                    kstp[header["kper"]] = 0
+            return kper, kstp, tsim
+
+        maxkper, maxkstp, maxtsim = get_max_kper_kstp_tsim()
+        prev_kper = None
+        perlen = None
+
+        def reverse_header(header):
+            """Reverse period, step and time fields in the record header"""
+
+            nonlocal prev_kper
+            nonlocal perlen
+
+            # reverse kstp and kper headers
+            kstp = header["kstp"] - 1
+            kper = header["kper"] - 1
+            header["kstp"] = maxkstp[kper] - kstp + 1
+            header["kper"] = maxkper - kper + 1
+
+            if kper != prev_kper:
+                perlen = header["pertim"]
+            prev_kper = kper
+
+            # reverse totim and pertim headers
+            header["totim"] = maxtsim - header["totim"]
+            header["pertim"] = perlen - header["pertim"]
+            return header
 
         # if rewriting the same file, write
         # temp file then copy it into place
@@ -2269,18 +2280,7 @@ class CellBudgetFile:
             for idx in range(nrecords - 1, -1, -1):
                 # load header array
                 header = self.recordarray[idx]
-
-                # reverse kstp and kper in the header array
-                (kstp, kper) = (header["kstp"] - 1, header["kper"] - 1)
-                kstpmx = pd[kper][1] - 1
-                kstpb = kstpmx - kstp
-                kperb = kpermx - kper
-                (header["kstp"], header["kper"]) = (kstpb + 1, kperb + 1)
-
-                # reverse totim and pertim in the header array
-                header["totim"] = tsimtotal - header["totim"]
-                perlen = pd[kper][0]
-                header["pertim"] = perlen - header["pertim"]
+                header = reverse_header(header)
 
                 # Write main header information to backward budget file
                 h = header[
