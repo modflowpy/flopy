@@ -18,6 +18,7 @@ from .mfusgpcb import MfUsgPcb
 from .mfusgrch import MfUsgRch
 from .mfusgsms import MfUsgSms
 from .mfusgwel import MfUsgWel
+from .mfusgevt import MfUsgEvt
 
 __all__ = [
     "MfUsg",
@@ -38,4 +39,5 @@ __all__ = [
     "MfUsgRch",
     "MfUsgOc",
     "MfUsgLak",
+    "MfUsgEvt",
 ]

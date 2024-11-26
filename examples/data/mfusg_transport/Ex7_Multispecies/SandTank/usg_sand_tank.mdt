@@ -1,0 +1,11 @@
+    0     0                              #  1. IMDTCB IMDTCF [OPTIONS]
+CONSTANT 2                               #  2. MDFLAG(NDSLAY) Layer 1
+CONSTANT 0.711                           #  3. VOLFRACMD(NDSLAY) Layer 1
+CONSTANT 0.6                             #  4. PORMD(NDSLAY) Layer 1
+CONSTANT 1.6                             #  5. RHOBMD(NDSLAY) Layer 1
+CONSTANT 0.0405                          #  6. DIFFLENMD(NDSLAY) Layer 1
+CONSTANT 0.3                             #  7. TORTMD(NDSLAY) Layer 1
+CONSTANT 0.0                             #  8. KDMD(NDSLAY) Layer 1 Species 1
+CONSTANT 0.0                             #  9. DECAYMD(NDSLAY) Layer 1 Species 1
+CONSTANT 0.0                             # 10. YIELDMD(NDSLAY) Layer 1 Species 1
+CONSTANT 0.0173                          # 11. DIFFMD(NDSLAY) Layer 1 Species 1

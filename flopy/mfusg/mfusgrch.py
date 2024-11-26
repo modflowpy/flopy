@@ -180,11 +180,6 @@ class MfUsgRch(ModflowRch):
         if self.parent.iheat > 0:
             mcomp = mcomp + 1
 
-        if self.iconc:
-            for icomp in range(mcomp):
-                f_rch.write(f"{self.irchconc[icomp]:10.0f}")
-            f_rch.write("\n")
-
         if self.nrchop == 2:
             irch = {}
             for kper, u2d in self.irch.transient_2ds.items():
@@ -201,6 +196,11 @@ class MfUsgRch(ModflowRch):
                     [u2d.array.size for kper, u2d in self.irch.transient_2ds.items()]
                 )
                 f_rch.write(f"{mxndrch:10d}\n")
+
+        if self.iconc:
+            for icomp in range(mcomp):
+                f_rch.write(f"{self.irchconc[icomp]:10.0f}")
+            f_rch.write("\n")
 
         for kper in range(nper):
             inrech, file_entry_rech = self.rech.get_kper_entry(kper)

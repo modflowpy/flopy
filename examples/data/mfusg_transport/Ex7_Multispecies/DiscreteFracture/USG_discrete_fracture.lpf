@@ -1,0 +1,8 @@
+41 -1.0e+30 0 0 CONSTANTCV NOVFC         # 1b. ILPFCB HDRY NPLPF IKCFLAG [Options]
+0                                        #  2. Ltype(NLAY)
+0                                        #  3. LAYAVG(NLAY)
+1.0                                      #  4. CHANI(NLAY)
+0                                        #  5. LAYVKA(NLAY)
+0                                        #  6. LAYWET(NLAY)
+CONSTANT 2190.0                          # 11. HK(NDSLAY)        LAY 1
+CONSTANT 2190.0                          # 13. VKA(NDSLAY)       LAY 1

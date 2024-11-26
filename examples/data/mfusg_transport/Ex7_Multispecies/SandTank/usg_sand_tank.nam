@@ -1,0 +1,14 @@
+LIST                7         usg_sand_tank.out     
+DISU                26        usg_sand_tank.disu    
+BAS6                1         usg_sand_tank.ba6     
+LPF                 25        usg_sand_tank.lpf     
+OC                  22        usg_sand_tank.oc      
+WEL                 12        usg_sand_tank.wel     
+CHD                 199       usg_sand_tank.chd     
+SMS                 23        usg_sand_tank.sms     
+BCT                 27        usg_sand_tank.bct     
+MDT                 2         usg_sand_tank.mdt     
+PCB                 39        usg_sand_tank.pcb     
+DATA(BINARY)        30        usg_sand_tank.hed     
+DATA(BINARY)        31        usg_sand_tank.drw     
+DATA(BINARY)        132       usg_sand_tank001.con  

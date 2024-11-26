@@ -1,0 +1,17 @@
+LIST   7 lak_usg_01.lst
+BAS6   1 lak_usg_01.bas
+SMS   13 lak_usg_01.sms
+DISU  14 lak_usg_01.dis
+OC    22 lak_usg_01.oc
+BCF6  10 lak_usg_01.bcf
+BCT   23 lak_usg_01.BCT
+RCH   18 lak_usg_01.rch
+EVT   20 lak_usg_01.evt
+#CHD 199 lak_usg_01.chd
+PCB   24 lak_usg_01.PCB
+FHB   21 lak_usg_01.fhb
+LAK   44 lak_usg_01.lak
+GAGE  33 lak_usg_01.gag
+DATA(BINARY) 31 lak_usg_01.hds
+DATA(BINARY) 50 lak_usg_01.cbb
+DATA         37 lak_usg_01.got

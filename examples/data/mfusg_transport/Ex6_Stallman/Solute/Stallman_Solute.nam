@@ -1,0 +1,15 @@
+# MODFLOW-USG name file written by Groundwater Vistas
+#xll:0.000000; yll:0.000000; rotation:0.000000;
+LIST   7 Stallman_Solute.lst
+BAS6   1 Stallman_Solute.bas
+SMS   19 Stallman_Solute.sms
+DISU  29 Stallman_Solute.dis
+OC    22 Stallman_Solute.oc
+CHD   40 Stallman_Solute.chd
+LPF   11 Stallman_Solute.lpf
+BCT  120 Stallman_Solute.bct
+PCB  121 Stallman_Solute.pcb
+DATA(BINARY) 132 Stallman_Solute.con
+DATA(BINARY) 50 Stallman_Solute.cbb
+DATA(BINARY) 30 Stallman_Solute.hds
+DATA(BINARY) 31 Stallman_Solute.ddn

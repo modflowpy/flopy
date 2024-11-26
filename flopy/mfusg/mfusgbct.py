@@ -271,6 +271,7 @@ class MfUsgBct(Package):
         self.idispcln = idispcln
         self.nseqitr = nseqitr
 
+        model.itrnsp = itrnsp
         model.mcomp = mcomp
         model.iheat = iheat
 
@@ -649,8 +650,59 @@ class MfUsgBct(Package):
         # close the file
         f_obj.close()
 
+    # Not implemented yet
+    def check(
+        self,
+        f=None,
+        verbose=True,
+        level=1,
+        checktype=None,
+    ):
+        """
+        Check package data for common errors.
+
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a string is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        Unstructured models not checked for extreme recharge transmissivity
+        ratios.
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('model.nam')
+        >>> m.rch.check()
+
+        """
+        chk = self._get_check(f, verbose, level, checktype)
+        if self.parent.bas6 is not None:
+            active = self.parent.bas6.ibound.array.sum(axis=0) != 0
+        else:
+            active = np.ones(self.rech.array[0][0].shape, dtype=bool)
+
+        chk.summarize()
+        return chk
+
     @classmethod
-    def load(cls, f, model, ext_unit_dict=None):
+    def load(cls, f, model, ext_unit_dict=None, check=False):
         """
         Load an existing package.
 
@@ -1045,13 +1097,15 @@ class MfUsgBct(Package):
         # reset unit numbers
         unitnumber = cls._defaultunit()
         filenames = [None] * 6
-        unitnumber[0], filenames[0] = model.get_ext_dict_attr(
-            ext_unit_dict, filetype=cls._ftype()
-        )
-        if kwargs["ipakcb"] > 0:
-            unitnumber[1], filenames[1] = model.get_ext_dict_attr(
-                ext_unit_dict, unit=kwargs["ipakcb"]
+        if ext_unit_dict is not None:
+            unitnumber, filenames[0] = model.get_ext_dict_attr(
+                ext_unit_dict, filetype=cls._ftype()
             )
+            if kwargs["ipakcb"] > 0:
+                iu, filenames[1] = model.get_ext_dict_attr(
+                    ext_unit_dict, unit=kwargs["ipakcb"])
+                model.add_pop_key_list(kwargs["ipakcb"])        
+        
         if kwargs["mbegwunf"] > 0:
             unitnumber[2], filenames[2] = model.get_ext_dict_attr(
                 ext_unit_dict, unit=kwargs["mbegwunf"]
@@ -1069,7 +1123,16 @@ class MfUsgBct(Package):
                 ext_unit_dict, unit=kwargs["mbeclnunt"]
             )
 
-        return cls(model, unitnumber=unitnumber, filenames=filenames, **kwargs)
+        bct = cls(model, unitnumber=unitnumber, filenames=filenames, **kwargs)
+        
+        if check:
+            bct.check(
+                f=f"{bct.name[0]}.chk",
+                verbose=bct.parent.verbose,
+                level=0,
+            )
+
+        return bct
 
     @staticmethod
     def _load_prop_arrays(f_obj, model, nlay, dtype, name, ext_unit_dict):

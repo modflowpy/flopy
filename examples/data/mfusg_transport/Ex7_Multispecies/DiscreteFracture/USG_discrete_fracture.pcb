@@ -1,0 +1,6 @@
+#
+    1    27                              #  2. MXPCB IPCBCB [Option]
+    1     0                              #  5. ITMP NP          Stress Period   1
+    1     1           1.0                # 6b. Node Species_No Conc [xyz]
+    1     0                              #  5. ITMP NP          Stress Period   2
+    1     1           0.0                # 6b. Node Species_No Conc [xyz]

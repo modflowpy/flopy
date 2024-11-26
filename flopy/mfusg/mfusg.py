@@ -56,45 +56,36 @@ class MfUsg(Modflow):
 
     def __init__(
         self,
-        modelname="modflowusgtest",
+        modelname="mfusgtest",
+        namefile_ext="nam",
+        version="mfusg",
+        exe_name: Union[str, os.PathLike] = "mfusg",
         structured=True,
+        listunit = 2,
         model_ws: Union[str, os.PathLike] = os.curdir,
+        external_path = None,
+        verbose= False,
         **kwargs,
     ):
-        """Constructs the MfUsg object. Overrides the parent Modflow object."""
-        valid_args_defaults = {
-            "namefile_ext": "nam",
-            "exe_name": "mfusg",
-            "listunit": 2,
-            "external_path": None,
-            "verbose": False,
-        }
-
-        for arg, default_value in valid_args_defaults.items():
-            setattr(self, arg, kwargs.pop(arg, default_value))
-
-        # remove "version" from kwarg if inadvertently provided
-        try:
-            kwargs.pop("version")
-        except KeyError:
-            pass
 
         super().__init__(
             modelname,
-            self.namefile_ext,
-            version="mfusg",
-            exe_name=self.exe_name,
-            structured=structured,
-            listunit=self.listunit,
-            model_ws=model_ws,
-            external_path=self.external_path,
-            verbose=self.verbose,
+            namefile_ext,
+            version,
+            exe_name,
+            structured,
+            listunit,
+            model_ws,
+            external_path,
+            verbose,
             **kwargs,
         )
 
+        self.itrnsp = 0 # transport simulation flag
         self.mcomp = 0  # number of chemical components
         self.iheat = 0  # flag for heat transport
         self.idpf = 0  # flag for dual porosity flow
+        self.icln = 0   # flag for CLN package
 
         # Create a dictionary to map package with package object.
         # This is used for loading models.
@@ -105,11 +96,9 @@ class MfUsg(Modflow):
             "bas6": flopy.modflow.ModflowBas,
             "dis": flopy.modflow.ModflowDis,
             "hfb6": flopy.modflow.ModflowHfb,
-            "chd": flopy.modflow.ModflowChd,
             "fhb": flopy.modflow.ModflowFhb,
             "drn": flopy.modflow.ModflowDrn,
             "drt": flopy.modflow.ModflowDrt,
-            "evt": flopy.modflow.ModflowEvt,
             "ghb": flopy.modflow.ModflowGhb,
             "riv": flopy.modflow.ModflowRiv,
             "str": flopy.modflow.ModflowStr,
@@ -117,6 +106,7 @@ class MfUsg(Modflow):
             "gage": flopy.modflow.ModflowGage,
             "sub": flopy.modflow.ModflowSub,
             "swt": flopy.modflow.ModflowSwt,
+            "chd": flopy.modflow.ModflowChd,
             "disu": flopy.mfusg.MfUsgDisU,
             "sms": flopy.mfusg.MfUsgSms,
             "wel": flopy.mfusg.MfUsgWel,
@@ -133,6 +123,7 @@ class MfUsg(Modflow):
             "rch": flopy.mfusg.MfUsgRch,
             "oc": flopy.mfusg.MfUsgOc,
             "lak": flopy.mfusg.MfUsgLak,
+            "evt": flopy.mfusg.MfUsgEvt,
         }
 
     def __repr__(self):
@@ -245,6 +236,12 @@ class MfUsg(Modflow):
         if "DISU" in ext_pkg_d:
             model.structured = False
 
+        if "DPF" in ext_pkg_d:
+            model.idpf = 1
+
+        if "CLN" in ext_pkg_d:
+            model.icln = 1
+
         # reset unit number for list file
         if "LIST" in ext_pkg_d:
             unitnumber = ext_pkg_d["LIST"]
@@ -265,9 +262,6 @@ class MfUsg(Modflow):
             bas.filehandle.seek(start)
         if verbose:
             print(f"ModflowBas6 free format:{model.free_format_input}\n")
-
-        # set mfpar / pval
-        cls._set_mfpar_pval(model, ext_unit_dict, ext_pkg_d)
 
         files_successfully_loaded, files_not_loaded = cls._load_packages(
             model, ext_unit_dict, ext_pkg_d, load_only, forgive
@@ -336,6 +330,24 @@ class MfUsg(Modflow):
 
         dis.start_datetime = model.start_datetime
 
+        # BCT has to be loaded before other transport packages for MFUSG-TRANSPORT
+        bct_key = ext_pkg_d.get("BCT")
+        if bct_key is not None:
+            bctnamdata = ext_unit_dict[bct_key]
+            bct = bctnamdata.package.load(
+                bctnamdata.filehandle,
+                model,
+                ext_unit_dict=ext_unit_dict,
+                check=False,
+            )
+            files_successfully_loaded.append(bctnamdata.filename)
+            if model.verbose:
+                print(f"   {bct.name[0]:4s} package load...success")
+            ext_unit_dict.pop(bct_key).filehandle.close()
+
+        # set mfpar / pval
+        cls._set_mfpar_pval(model, ext_unit_dict, ext_pkg_d)
+        
         load_only = cls._prepare_load_only(load_only, ext_pkg_d)
 
         # try loading packages in ext_unit_dict

@@ -1,0 +1,6 @@
+# MODFLOW2000 Constant-Head Boundary Package (CHD)
+       2
+         2         0
+         1         1         1       10.       10.
+         1         1       300        9.        9.
+        -1
