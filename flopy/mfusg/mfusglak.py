@@ -478,7 +478,7 @@ class MfUsgLak(Package):
         f = open(self.fn_path, "w")
         # dataset 0
         if self.parent.version != "mf2k":
-            f.write(f"{self.heading}\n")
+            f.write(f"{self.heading}\n\n")
 
         # dataset 1a
         if len(self.options) > 0:
@@ -675,6 +675,11 @@ class MfUsgLak(Package):
         if model.verbose:
             print("   reading lak dataset 1b")
         t = line.strip().split()
+        # avoid error when there is a blank line
+        if t == []:
+            line = f.readline()
+            t = line.strip().split()
+
         nlakes = int(t[0])
         ipakcb = 0
         try:

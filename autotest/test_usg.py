@@ -7,13 +7,14 @@ from flaky import flaky
 from modflow_devtools.markers import requires_exe
 
 from autotest.conftest import get_example_data_path
-from flopy.mfusg import MfUsg, MfUsgDisU, MfUsgLpf, MfUsgSms, MfUsgWel
+from flopy.mfusg import (
+    MfUsg, MfUsgDisU, MfUsgLpf, MfUsgSms, MfUsgWel,MfUsgOc
+)
 from flopy.modflow import (
     ModflowBas,
     ModflowDis,
     ModflowDrn,
     ModflowGhb,
-    ModflowOc,
 )
 from flopy.utils import TemporalReference, Util2d, Util3d
 
@@ -117,7 +118,7 @@ def test_usg_model(function_tmpdir):
             ]
         },
     )
-    oc = ModflowOc(mf)
+    oc = MfUsgOc(mf)
     sms = MfUsgSms(mf, options="complex")
 
     # run with defaults
@@ -159,7 +160,7 @@ def test_usg_load_01B(function_tmpdir, mfusg_01A_nestedgrid_nognc_model_path):
     msg = "flopy failed on loading mfusg bas package"
     assert isinstance(m.bas6, ModflowBas), msg
     msg = "flopy failed on loading mfusg oc package"
-    assert isinstance(m.oc, ModflowOc), msg
+    assert isinstance(m.oc, MfUsgOc), msg
     msg = "flopy failed on loading mfusg sms package"
     assert isinstance(m.sms, MfUsgSms), msg
 
@@ -186,7 +187,7 @@ def test_usg_load_45usg(function_tmpdir, example_data_path):
     msg = "flopy failed on loading mfusg bas package"
     assert isinstance(m.bas6, ModflowBas), msg
     msg = "flopy failed on loading mfusg oc package"
-    assert isinstance(m.oc, ModflowOc), msg
+    assert isinstance(m.oc, MfUsgOc), msg
     msg = "flopy failed on loading mfusg sms package"
     assert isinstance(m.sms, MfUsgSms), msg
     msg = "flopy failed on loading mfusg drn package"

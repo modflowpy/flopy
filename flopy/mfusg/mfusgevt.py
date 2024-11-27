@@ -329,6 +329,7 @@ class MfUsgEvt(Package):
             mxndevt = int(t[0])
 
         # dataset 2c for mfusg
+        etfactor= None
         mcomp = model.mcomp
         if mcomp > 0:
             etfactor = np.zeros(model.mcomp)
