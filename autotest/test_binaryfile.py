@@ -502,7 +502,7 @@ def test_binaryfile_reverse_mf6_dis(function_tmpdir):
     assert success, pformat(buff)
 
     # reverse head file in place and check reversal
-    head_file = flopy.utils.HeadFile(function_tmpdir / head_file, tdis=tdis)
+    head_file = flopy.utils.HeadFile(function_tmpdir / head_file)
     heads = head_file.get_alldata()
     assert heads.shape == (nper, 2, 10, 10)
     head_file.reverse()
@@ -511,9 +511,9 @@ def test_binaryfile_reverse_mf6_dis(function_tmpdir):
 
     # reverse budget and write to separate file
     budget_file_rev_path = function_tmpdir / f"{budget_file}_rev"
-    budget_file = flopy.utils.CellBudgetFile(function_tmpdir / budget_file, tdis=tdis)
+    budget_file = flopy.utils.CellBudgetFile(function_tmpdir / budget_file)
     budget_file.reverse(budget_file_rev_path)
-    budget_file_rev = flopy.utils.CellBudgetFile(budget_file_rev_path, tdis=tdis)
+    budget_file_rev = flopy.utils.CellBudgetFile(budget_file_rev_path)
 
     for kper in range(nper):
         assert np.allclose(heads[kper], heads_rev[-kper + 1])
@@ -554,7 +554,7 @@ def test_binaryfile_reverse_mf6_disv(function_tmpdir):
     assert success, pformat(buff)
 
     # reverse head file in place and check reversal
-    head_file = flopy.utils.HeadFile(function_tmpdir / head_file, tdis=tdis)
+    head_file = flopy.utils.HeadFile(function_tmpdir / head_file)
     heads = head_file.get_alldata()
     assert heads.shape == (nper, 2, 1, 100)
     head_file.reverse()
@@ -563,7 +563,7 @@ def test_binaryfile_reverse_mf6_disv(function_tmpdir):
 
     # reverse budget and write to separate file
     budget_file_rev_path = function_tmpdir / f"{budget_file}_rev"
-    budget_file = flopy.utils.CellBudgetFile(function_tmpdir / budget_file, tdis=tdis)
+    budget_file = flopy.utils.CellBudgetFile(function_tmpdir / budget_file)
     budget_file.reverse(budget_file_rev_path)
     budget_file_rev = flopy.utils.CellBudgetFile(budget_file_rev_path, tdis=tdis)
 
@@ -595,7 +595,7 @@ def test_binaryfile_reverse_mf6_disu(example_data_path, function_tmpdir):
     # reverse and write to a separate file
     head_file_rev_path = function_tmpdir / "flow_rev.hds"
     head_file.reverse(filename=head_file_rev_path)
-    head_file_rev = HeadFile(head_file_rev_path, tdis=tdis)
+    head_file_rev = HeadFile(head_file_rev_path)
 
     # load budget file
     file_path = function_tmpdir / "flow.cbc"
@@ -604,7 +604,7 @@ def test_binaryfile_reverse_mf6_disu(example_data_path, function_tmpdir):
     # reverse and write to a separate file
     budget_file_rev_path = function_tmpdir / "flow_rev.cbc"
     budget_file.reverse(filename=budget_file_rev_path)
-    budget_file_rev = CellBudgetFile(budget_file_rev_path, tdis=tdis)
+    budget_file_rev = CellBudgetFile(budget_file_rev_path)
 
     # check that data from both files have the same shape
     assert head_file.get_alldata().shape == (nper, 1, 1, 121)
