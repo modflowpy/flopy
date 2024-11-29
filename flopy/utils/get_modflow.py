@@ -644,7 +644,8 @@ def _generate_mf6_classes(download_url: str, subset: Set[str]) -> None:
     # So we take MODFLOW-USGS as owner, modflow6 as repo, and 6.5.0 as ref
     path_parts = urlparse(download_url).path.split("/")
     # TODO: When dfn files are included in executables,
-    # we can take the dfns directly from that path and we could set dfnpath directly to the downloaded bin folder.
+    # we can take the dfns directly from that path
+    # and we could set dfnpath directly to the downloaded bin folder.
     generate_classes(owner=path_parts[1], repo=path_parts[2], ref=path_parts[-2])
 
 
