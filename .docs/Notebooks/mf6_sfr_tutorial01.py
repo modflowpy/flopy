@@ -21,6 +21,8 @@ import os
 # +
 import sys
 
+import pooch
+
 import flopy
 
 print(sys.version)

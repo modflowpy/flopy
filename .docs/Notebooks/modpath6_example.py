@@ -33,6 +33,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import pooch
 
 import flopy
 
@@ -50,14 +51,73 @@ from pathlib import Path
 
 # temporary directory
 temp_dir = TemporaryDirectory()
-model_ws = temp_dir.name
+model_ws = Path(temp_dir.name)
+file_names = {
+    "EXAMPLE-1.endpoint": None,
+    "EXAMPLE-1.mpsim": None,
+    "EXAMPLE-2.endpoint": None,
+    "EXAMPLE-2.mplist": None,
+    "EXAMPLE-2.mpsim": None,
+    "EXAMPLE-3.endpoint": None,
+    "EXAMPLE-3.mplist": None,
+    "EXAMPLE-3.mpsim": None,
+    "EXAMPLE-3.pathline": None,
+    "EXAMPLE-4.endpoint": None,
+    "EXAMPLE-4.mplist": None,
+    "EXAMPLE-4.mpsim": None,
+    "EXAMPLE-4.timeseries": None,
+    "EXAMPLE-5.endpoint": None,
+    "EXAMPLE-5.mplist": None,
+    "EXAMPLE-5.mpsim": None,
+    "EXAMPLE-6.endpoint": None,
+    "EXAMPLE-6.mplist": None,
+    "EXAMPLE-6.mpsim": None,
+    "EXAMPLE-6.timeseries": None,
+    "EXAMPLE-7.endpoint": None,
+    "EXAMPLE-7.mplist": None,
+    "EXAMPLE-7.mpsim": None,
+    "EXAMPLE-7.timeseries": None,
+    "EXAMPLE-8.endpoint": None,
+    "EXAMPLE-8.mplist": None,
+    "EXAMPLE-8.mpsim": None,
+    "EXAMPLE-8.timeseries": None,
+    "EXAMPLE-9.endpoint": None,
+    "EXAMPLE-9.mplist": None,
+    "EXAMPLE-9.mpsim": None,
+    "EXAMPLE.BA6": None,
+    "EXAMPLE.BUD": None,
+    "EXAMPLE.DIS": None,
+    "EXAMPLE.DIS.metadata": None,
+    "EXAMPLE.HED": None,
+    "EXAMPLE.LPF": None,
+    "EXAMPLE.LST": None,
+    "EXAMPLE.MPBAS": None,
+    "EXAMPLE.OC": None,
+    "EXAMPLE.PCG": None,
+    "EXAMPLE.RCH": None,
+    "EXAMPLE.RIV": None,
+    "EXAMPLE.WEL": None,
+    "EXAMPLE.mpnam": None,
+    "EXAMPLE.nam": None,
+    "example-1.mplist": None,
+    "example-6.locations": None,
+    "example-7.locations": None,
+    "example-8.locations": None,
+    "example.basemap": None,
+}
+for fname, fhash in file_names.items():
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/mp6/{fname}",
+        fname=fname,
+        path=model_ws,
+        known_hash=fhash,
+    )
 
-model_path = Path.cwd().parent.parent / "examples" / "data" / "mp6"
-mffiles = list(model_path.glob("EXAMPLE.*"))
+mffiles = list(model_ws.glob("EXAMPLE.*"))
 
-m = flopy.modflow.Modflow.load("EXAMPLE.nam", model_ws=model_path)
+m = flopy.modflow.Modflow.load("EXAMPLE.nam", model_ws=model_ws)
 
-hdsfile = flopy.utils.HeadFile(os.path.join(model_path, "EXAMPLE.HED"))
+hdsfile = flopy.utils.HeadFile(os.path.join(model_ws, "EXAMPLE.HED"))
 hdsfile.get_kstpkper()
 
 hds = hdsfile.get_data(kstpkper=(0, 2))
@@ -93,7 +153,7 @@ mp = flopy.modpath.Modpath6(
     modelname="ex6",
     exe_name="mp6",
     modflowmodel=m,
-    model_ws=str(model_path),
+    model_ws=str(model_ws),
 )
 
 mpb = flopy.modpath.Modpath6Bas(
@@ -108,10 +168,6 @@ sim = mp.create_mpsim(
     packages="RCH",
     start_time=(2, 0, 1.0),
 )
-
-shutil.copy(model_path / "EXAMPLE.DIS", join(model_ws, "EXAMPLE.DIS"))
-shutil.copy(model_path / "EXAMPLE.HED", join(model_ws, "EXAMPLE.HED"))
-shutil.copy(model_path / "EXAMPLE.BUD", join(model_ws, "EXAMPLE.BUD"))
 
 mp.change_model_ws(model_ws)
 mp.write_name_file()
@@ -203,7 +259,7 @@ pthobj.write_shapefile(
 # Replace WEL package with MNW2, and create backward tracking simulation using particles released at MNW well.
 
 m2 = flopy.modflow.Modflow.load(
-    "EXAMPLE.nam", model_ws=str(model_path), exe_name="mf2005"
+    "EXAMPLE.nam", model_ws=str(model_ws), exe_name="mf2005"
 )
 m2.get_package_list()
 
