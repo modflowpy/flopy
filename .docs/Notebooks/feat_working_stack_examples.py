@@ -23,6 +23,7 @@ from pathlib import Path
 from pprint import pformat
 from tempfile import TemporaryDirectory
 
+import git
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -30,13 +31,6 @@ import pandas as pd
 import pooch
 from IPython.display import clear_output, display
 
-# First create a temporary workspace.
-
-# create a temporary workspace
-temp_dir = TemporaryDirectory()
-workspace = Path(temp_dir.name)
-
-# run installed version of flopy or add local path
 import flopy
 
 print(sys.version)
@@ -44,13 +38,24 @@ print(f"numpy version: {np.__version__}")
 print(f"matplotlib version: {mpl.__version__}")
 print(f"pandas version: {pd.__version__}")
 print(f"flopy version: {flopy.__version__}")
-# -
 
-# ### Model Inputs
-
-# first lets load an existing model
+# First create a temporary workspace.
 
 sim_name = "freyberg_multilayer_transient"
+temp_dir = TemporaryDirectory()
+workspace = Path(temp_dir.name)
+
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+
+# Download files if needed.
+
 file_names = {
     "freyberg.bas": "781585c140d40a27bce9369baee262c621bcf969de82361ad8d6b4d8c253ee02",
     "freyberg.cbc": "d4e18e968cabde8470fcb7cb8a1c4cc57fcd643bd63b23e7751460bfdb651ea4",
@@ -70,13 +75,16 @@ for fname, fhash in file_names.items():
     pooch.retrieve(
         url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{sim_name}/{fname}",
         fname=fname,
-        path=workspace,
+        path=data_path / sim_name,
         known_hash=fhash,
     )
 
+# -
+# ### Model Inputs
+
 ml = flopy.modflow.Modflow.load(
     "freyberg.nam",
-    model_ws=workspace,
+    model_ws=data_path / sim_name,
     verbose=False,
     check=False,
     exe_name="mfnwt",

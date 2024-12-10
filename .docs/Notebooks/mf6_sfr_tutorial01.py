@@ -17,10 +17,12 @@
 # # SFR2 package loading and querying
 
 import os
-
-# +
 import sys
 
+# +
+from pathlib import Path
+
+import git
 import pooch
 
 import flopy
@@ -33,17 +35,34 @@ print(f"flopy version: {flopy.__version__}")
 
 m = flopy.modflow.Modflow()
 
+
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+
+# Retrieve the SFR2 file
+sim_name = "mf2005_test"
+fname = "testsfr2_tab_ICALC2.sfr"
+fpath = pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{sim_name}/{fname}",
+    fname=fname,
+    path=data_path / sim_name,
+    known_hash=None,
+)
+
 # Read the SFR2 file
 
-f = os.path.join(
-    "..", "..", "examples", "data", "mf2005_test", "testsfr2_tab_ICALC2.sfr"
-)
-stuff = open(f).readlines()
+stuff = open(fpath).readlines()
 stuff
 
 # Load the SFR2 file
 
-sfr = flopy.modflow.ModflowSfr2.load(f, m, nper=50)
+sfr = flopy.modflow.ModflowSfr2.load(fpath, m, nper=50)
 
 sfr.segment_data.keys()
 

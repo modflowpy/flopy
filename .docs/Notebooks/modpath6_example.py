@@ -29,6 +29,7 @@ import sys
 from pprint import pformat
 from tempfile import TemporaryDirectory
 
+import git
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -49,9 +50,19 @@ print(f"flopy version: {flopy.__version__}")
 # +
 from pathlib import Path
 
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+
 # temporary directory
 temp_dir = TemporaryDirectory()
 model_ws = Path(temp_dir.name)
+
 file_names = {
     "EXAMPLE-1.endpoint": None,
     "EXAMPLE-1.mpsim": None,
@@ -109,9 +120,11 @@ for fname, fhash in file_names.items():
     pooch.retrieve(
         url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/mp6/{fname}",
         fname=fname,
-        path=model_ws,
+        path=data_path / "mp6",
         known_hash=fhash,
     )
+
+shutil.copytree(data_path / "mp6", model_ws, dirs_exist_ok=True)
 
 mffiles = list(model_ws.glob("EXAMPLE.*"))
 

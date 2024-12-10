@@ -24,19 +24,31 @@ from pathlib import Path
 from shutil import copytree
 from tempfile import TemporaryDirectory
 
+import git
 import numpy as np
 import pooch
 
-# ## Package import
 import flopy
 
-# ## Load a simple demonstration model
+# ## Loading a model
+
+# Start by creating a temporary workspace and defining some names.
 
 exe_name = "mf6"
 sim_name = "test001e_UZF_3lay"
-
 temp_dir = TemporaryDirectory()
 sim_ws = Path(temp_dir.name)
+
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+
+# Download files if needed.
 
 files = {
     "chd_spd.txt": "4d87f60022832372981caa2bd162681d5c4b8b3fcf8bc7f5de533c96ad1ed03c",
@@ -59,13 +71,13 @@ for fname, fhash in files.items():
     pooch.retrieve(
         url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/mf6/{sim_name}/{fname}",
         fname=fname,
-        path=sim_ws,
+        path=data_path / "mf6" / sim_name,
         known_hash=fhash,
     )
 
 # load the model
 sim = flopy.mf6.MFSimulation.load(
-    sim_ws=sim_ws,
+    sim_ws=data_path / "mf6" / sim_name,
     exe_name=exe_name,
     verbosity_level=0,
 )

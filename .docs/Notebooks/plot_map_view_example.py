@@ -30,8 +30,10 @@ import os
 import sys
 from pathlib import Path
 from pprint import pformat
+from shutil import copytree
 from tempfile import TemporaryDirectory
 
+import git
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -59,6 +61,15 @@ sim_name = "freyberg"
 tempdir = TemporaryDirectory()
 modelpth = Path(tempdir.name)
 
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+
 # + [markdown] pycharm={"name": "#%% md\n"}
 # ### Load and Run an Existing MODFLOW-2005 Model
 # A model called the "Freyberg Model" is located in the modelpth folder.  In the following code block, we load that model, then change into a new workspace (modelpth) where we recreate and run the model.  For this to work properly, the MODFLOW-2005 executable (mf2005) must be in the path.  We verify that it worked correctly by checking for the presence of freyberg.hds and freyberg.cbc.
@@ -80,14 +91,15 @@ for fname, fhash in file_names.items():
     pooch.retrieve(
         url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{sim_name}/{fname}",
         fname=fname,
-        path=modelpth,
+        path=data_path / sim_name,
         known_hash=fhash,
     )
 
 # +
 ml = flopy.modflow.Modflow.load(
-    "freyberg.nam", model_ws=modelpth, exe_name=exe_name_2005, version=v2005
+    "freyberg.nam", model_ws=data_path / sim_name, exe_name=exe_name_2005, version=v2005
 )
+ml.change_model_ws(modelpth)
 ml.write_input()
 success, buff = ml.run_model(silent=True, report=True)
 assert success, pformat(buff)
@@ -502,9 +514,11 @@ for fname, fhash in file_names.items():
     pooch.retrieve(
         url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{sim_name}/gis/{fname}",
         fname=fname,
-        path=modelpth / "gis",
+        path=data_path / sim_name / "gis",
         known_hash=fhash,
     )
+
+copytree(data_path / sim_name / "gis", modelpth / "gis")
 
 # + pycharm={"name": "#%%\n"}
 # Setup the figure and PlotMapView. Show a very faint map of ibound and
@@ -678,14 +692,17 @@ for fname, fhash in file_names.items():
     pooch.retrieve(
         url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{sim_name}/{fname}",
         fname=fname,
-        path=sim_path,
+        path=data_path / sim_name,
         known_hash=fhash,
     )
 
 sim = flopy.mf6.MFSimulation.load(
-    sim_name="mfsim.nam", version=vmf6, exe_name=exe_name_mf6, sim_ws=sim_path
+    sim_name="mfsim.nam",
+    version=vmf6,
+    exe_name=exe_name_mf6,
+    sim_ws=data_path / sim_name,
 )
-
+sim.set_sim_path(sim_path)
 sim.write_simulation()
 success, buff = sim.run_simulation()
 if not success:
@@ -1270,9 +1287,11 @@ for fname, fhash in file_names.items():
     pooch.retrieve(
         url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/unstructured/{fname}",
         fname=fname,
-        path=datapth,
+        path=data_path / "unstructured",
         known_hash=fhash,
     )
+
+copytree(data_path / "unstructured", datapth, dirs_exist_ok=True)
 
 
 # simple functions to load vertices and incidence lists

@@ -22,8 +22,10 @@
 
 import sys
 from pathlib import Path
+from shutil import copy, copytree
 from tempfile import TemporaryDirectory
 
+import git
 import matplotlib.pyplot as plt
 import numpy as np
 import pooch
@@ -58,6 +60,15 @@ def string2geom(geostring, conversion=None):
 
 temp_dir = TemporaryDirectory()
 workspace = Path(temp_dir.name)
+
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
 
 # Download and load geometries.
 
@@ -99,15 +110,18 @@ for fname, fhash in file_names.items():
     pooch.retrieve(
         url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{sim_name}/{fname}",
         fname=fname,
-        path=workspace,
+        path=data_path / sim_name,
         known_hash=fhash,
     )
 
-# Load and run the simulation.
+copytree(data_path / sim_name, workspace / sim_name)
 
-sim = flopy.mf6.MFSimulation.load(sim_ws=workspace)
-success, buff = sim.run_simulation(silent=True)
-assert success
+# Load the simulation, switch the workspace, and run the simulation.
+
+sim = flopy.mf6.MFSimulation.load(sim_ws=data_path / sim_name)
+sim.set_sim_path(workspace / sim_name)
+success, buff = sim.run_simulation(silent=True, report=True)
+assert success, buff
 
 # Visualize the head results and boundary conditions from this model.
 
@@ -271,10 +285,12 @@ plt.show()
 ascii_file_name = "fine_topo.asc"
 ascii_file = pooch.retrieve(
     url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/geospatial/{ascii_file_name}",
-    fname=fname,
-    path=workspace,
+    fname=ascii_file_name,
+    path=data_path / "geospatial",
     known_hash=None,
 )
+
+copy(data_path / "geospatial" / ascii_file_name, workspace / ascii_file_name)
 
 fine_topo = flopy.utils.Raster.load(ascii_file)
 fine_topo.plot()
