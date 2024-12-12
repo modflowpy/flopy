@@ -22,11 +22,14 @@
 # +
 import os
 import sys
+from pathlib import Path
 from pprint import pformat
 
+import git
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import pooch
 import scipy.ndimage
 
 import flopy
@@ -41,9 +44,23 @@ ws = os.path.join("temp")
 if not os.path.exists(ws):
     os.makedirs(ws)
 
-fn = os.path.join(
-    "..", "groundwater_paper", "uspb", "results", "USPB_capture_fraction_04_01.dat"
+    # Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / ".docs" / "groundwater_paper" if root else Path.cwd()
+
+fname = "USPB_capture_fraction_04_01.dat"
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/.docs/groundwater_paper/uspb/results/{fname}",
+    fname=fname,
+    path=data_path / "uspb" / "results",
+    known_hash=None,
 )
+fn = data_path / "uspb" / "results" / fname
 cf = np.loadtxt(fn)
 print(cf.shape)
 
@@ -53,7 +70,7 @@ print(cf2.shape)
 c = plt.imshow(cf2, cmap="jet")
 plt.colorbar(c)
 
-wsl = os.path.join("..", "groundwater_paper", "uspb", "flopy")
+wsl = data_path / "uspb" / "flopy"
 ml = flopy.modflow.Modflow.load("DG.nam", model_ws=wsl, verbose=False)
 
 nlay, nrow, ncol = ml.nlay, ml.dis.nrow, ml.dis.ncol
@@ -191,9 +208,14 @@ ax2.text(0.0, 1.01, "Model layer 5", ha="left", va="bottom", transform=ax2.trans
 plt.savefig(os.path.join(ws, "uspb_heads.png"), dpi=300)
 # -
 
-fn = os.path.join(
-    "..", "groundwater_paper", "uspb", "results", "USPB_capture_fraction_04_10.dat"
+fname = "USPB_capture_fraction_04_10.dat"
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/.docs/groundwater_paper/uspb/results/{fname}",
+    fname=fname,
+    path=data_path / "uspb" / "results",
+    known_hash=None,
 )
+fn = data_path / "uspb" / "results" / fname
 cf = np.loadtxt(fn)
 cf2 = scipy.ndimage.zoom(cf, 4, order=0)
 
