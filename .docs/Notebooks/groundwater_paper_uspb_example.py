@@ -44,7 +44,7 @@ ws = os.path.join("temp")
 if not os.path.exists(ws):
     os.makedirs(ws)
 
-    # Check if we are in the repository and define the data path.
+# Check if we are in the repository and define the data path.
 
 try:
     root = Path(git.Repo(".", search_parent_directories=True).working_dir)
