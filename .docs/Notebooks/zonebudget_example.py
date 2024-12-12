@@ -28,10 +28,12 @@ import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import git
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import pooch
 
 proj_root = Path.cwd().parent.parent
 
@@ -48,9 +50,28 @@ print(f"flopy version: {flopy.__version__}")
 temp_dir = TemporaryDirectory()
 workspace = Path(temp_dir.name)
 
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+
+folder_name = "zonbud_examples"
+
+fname = "freyberg.gitcbc"
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{folder_name}/{fname}",
+    fname=fname,
+    path=data_path / folder_name,
+    known_hash=None,
+)
+
 # Set path to example datafiles
-loadpth = proj_root / "examples" / "data" / "zonbud_examples"
-cbc_f = loadpth / "freyberg.gitcbc"
+loadpth = data_path / "zonbud_examples"
+cbc_f = loadpth / fname
 # -
 
 # ### Read File Containing Zones
@@ -58,6 +79,14 @@ cbc_f = loadpth / "freyberg.gitcbc"
 
 # +
 from flopy.utils import ZoneBudget
+
+fname = "zonef_mlt.zbr"
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{folder_name}/{fname}",
+    fname=fname,
+    path=data_path / folder_name,
+    known_hash=None,
+)
 
 zone_file = loadpth / "zonef_mlt.zbr"
 zon = ZoneBudget.read_zone_file(zone_file)
@@ -331,7 +360,39 @@ plt.show()
 mf6_exe = "mf6"
 zb6_exe = "zbud6"
 
-sim_ws = proj_root / "examples" / "data" / "mf6-freyberg"
+sim_name = "mf6-freyberg"
+sim_ws = data_path / sim_name
+file_names = {
+    "bot.asc": "3107f907cb027460fd40ffc16cb797a78babb31988c7da326c9f500fba855b62",
+    "description.txt": "94093335eec6a24711f86d4d217ccd5a7716dd9e01cb6b732bc7757d41675c09",
+    "freyberg.cbc": "c8ad843b1da753eb58cf6c462ac782faf0ca433d6dcb067742d8bd698db271e3",
+    "freyberg.chd": "d8b8ada8d3978daea1758b315be983b5ca892efc7d69bf6b367ceec31e0dd156",
+    "freyberg.dis": "cac230a207cc8483693f7ba8ae29ce40c049036262eac4cebe17a4e2347a8b30",
+    "freyberg.dis.grb": "c8c26fb1fa4b210208134b286d895397cf4b3131f66e1d9dda76338502c7e96a",
+    "freyberg.hds": "926a06411ca658a89db6b5686f51ddeaf5b74ced81239cab1d43710411ba5f5b",
+    "freyberg.ic": "6efb56ee9cdd704b9a76fb9efd6dae750facc5426b828713f2d2cf8d35194120",
+    "freyberg.ims": "6dddae087d85417e3cdaa13e7b24165afb7f9575ab68586f3adb6c1b2d023781",
+    "freyberg.nam": "cee9b7b000fe35d2df26e878d09d465250a39504f87516c897e3fa14dcda081e",
+    "freyberg.npf": "81104d3546045fff0eddf5059465e560b83b492fa5a5acad1907ce18c2b9c15f",
+    "freyberg.oc": "c0715acd75eabcc42c8c47260a6c1abd6c784350983f7e2e6009ddde518b80b8",
+    "freyberg.rch": "a6ec1e0eda14fd2cdf618a5c0243a9caf82686c69242b783410d5abbcf971954",
+    "freyberg.riv": "a8cafc8c317cbe2acbb43e2f0cfe1188cb2277a7a174aeb6f3e6438013de8088",
+    "freyberg.sto": "74d748c2f0adfa0a32ee3f2912115c8f35b91011995b70c1ec6ae1c627242c41",
+    "freyberg.tdis": "9965cbb17caf5b865ea41a4ec04bcb695fe15a38cb539425fdc00abbae385cbe",
+    "freyberg.wel": "f19847de455598de52c05a4be745698c8cb589e5acfb0db6ab1f06ded5ff9310",
+    "k11.asc": "b6a8aa46ef17f7f096d338758ef46e32495eb9895b25d687540d676744f02af5",
+    "mfsim.nam": "6b8d6d7a56c52fb2bff884b3979e3d2201c8348b4bbfd2b6b9752863cbc9975e",
+    "top.asc": "3ad2b131671b9faca7f74c1dd2b2f41875ab0c15027764021a89f9c95dccaa6a",
+}
+for fname, fhash in file_names.items():
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{sim_name}/{fname}",
+        fname=fname,
+        path=sim_ws,
+        known_hash=fhash,
+    )
+
+
 cpth = workspace / "zbud6"
 cpth.mkdir()
 
