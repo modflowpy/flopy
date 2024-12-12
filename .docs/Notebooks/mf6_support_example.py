@@ -54,7 +54,19 @@ from pathlib import Path
 from shutil import copyfile
 from tempfile import TemporaryDirectory
 
+import git
+import pooch
+
 proj_root = Path.cwd().parent.parent
+
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
 
 import flopy
 
@@ -244,9 +256,14 @@ ic_package = flopy.mf6.ModflowGwfic(
     model, pname="ic", strt=strt, filename=f"{model_name}.ic"
 )
 # move external file data into model folder
-icv_data_path = os.path.join(
-    "..", "..", "examples", "data", "mf6", "notebooks", "iconvert.txt"
+fname = "iconvert.txt"
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/mf6/notebooks/{fname}",
+    fname=fname,
+    path=data_path / "mf6" / "notebooks",
+    known_hash=None,
 )
+icv_data_path = data_path / "mf6" / "notebooks" / fname
 copyfile(icv_data_path, os.path.join(sim_path, "iconvert.txt"))
 # create storage package
 sto_package = flopy.mf6.ModflowGwfsto(

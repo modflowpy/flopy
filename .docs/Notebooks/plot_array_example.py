@@ -79,9 +79,35 @@ for fname, fhash in file_names.items():
         known_hash=None,
     )
 
+file_names = {
+    "HK1.DAT": None,
+    "HK10.DAT": None,
+    "HK11.DAT": None,
+    "HK12.DAT": None,
+    "HK13.DAT": None,
+    "HK14.DAT": None,
+    "HK15.DAT": None,
+    "HK16.DAT": None,
+    "HK2.DAT": None,
+    "HK3.DAT": None,
+    "HK4.DAT": None,
+    "HK5.DAT": None,
+    "HK6.DAT": None,
+    "HK7.DAT": None,
+    "HK8.DAT": None,
+    "HK9.DAT": None,
+}
+for fname, fhash in file_names.items():
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/secp/ref/{fname}",
+        fname=fname,
+        path=data_path / "secp" / "ref",
+        known_hash=None,
+    )
+
 # temporary directory
 temp_dir = TemporaryDirectory()
-modelpth = temp_dir.name
+modelpth = Path(temp_dir.name)
 
 # make sure modelpth directory exists
 if not os.path.isdir(modelpth):

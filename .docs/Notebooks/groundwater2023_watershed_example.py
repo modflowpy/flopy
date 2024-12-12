@@ -119,7 +119,7 @@ data_path = root / "examples" / "data" if root else pl.Path.cwd()
 folder_name = "groundwater2023"
 fname = "geometries.yml"
 pooch.retrieve(
-    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/mf6//{fname}",
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{folder_name}/{fname}",
     fname=fname,
     path=data_path / folder_name,
     known_hash=None,

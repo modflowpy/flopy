@@ -71,6 +71,14 @@ data_path = root / "examples" / "data" if root else Path.cwd()
 raster_ws = data_path / "options" / "dem"
 raster_name = "dem.img"
 
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/options/dem/{raster_name}",
+    fname=raster_name,
+    path=raster_ws,
+    known_hash=None,
+)
+
+
 rio = Raster.load(os.path.join(raster_ws, raster_name))
 # -
 
@@ -476,6 +484,23 @@ plt.colorbar(ax, shrink=0.7)
 
 # +
 rio = Raster.load(os.path.join(raster_ws, raster_name))
+
+file_names = [
+    "model_boundary.CPG",
+    "model_boundary.dbf",
+    "model_boundary.prj",
+    "model_boundary.sbn",
+    "model_boundary.sbx",
+    "model_boundary.shp",
+    "model_boundary.shx",
+]
+for fname in file_names:
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/options/dem/{fname}",
+        fname=fname,
+        path=data_path / "options" / "dem",
+        known_hash=None,
+    )
 
 shp_name = os.path.join(raster_ws, "model_boundary.shp")
 

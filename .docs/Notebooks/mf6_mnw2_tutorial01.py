@@ -17,13 +17,16 @@
 # # Working with the Multi-node Well (MNW2) Package
 
 import os
+import sys
 
 # +
-import sys
+from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import git
 import numpy as np
 import pandas as pd
+import pooch
 
 import flopy
 
@@ -32,6 +35,15 @@ print(f"numpy version: {np.__version__}")
 print(f"pandas version: {pd.__version__}")
 print(f"flopy version: {flopy.__version__}")
 # -
+
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
 
 # ### Make an MNW2 package from scratch
 
@@ -181,7 +193,30 @@ junk = [
 
 # ### Load some example MNW2 packages
 
-path = os.path.join("..", "..", "examples", "data", "mnw2_examples")
+folder_name = "mnw2_examples"
+
+file_names = {
+    "BadRiver_cal.mnw2": None,
+    "MNW2-Fig28.bas": None,
+    "MNW2-Fig28.dis": None,
+    "MNW2-Fig28.lpf": None,
+    "MNW2-Fig28.mnw2": None,
+    "MNW2-Fig28.mnwi": None,
+    "MNW2-Fig28.nam": None,
+    "MNW2-Fig28.oc": None,
+    "MNW2-Fig28.pcg": None,
+    "MNW2-Fig28.rch": None,
+    "MNW2-Fig28.wel": None,
+}
+for fname, fhash in file_names.items():
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{folder_name}/{fname}",
+        fname=fname,
+        path=data_path / folder_name,
+        known_hash=fhash,
+    )
+
+path = data_path / folder_name
 m = flopy.modflow.Modflow("MNW2-Fig28", model_ws=model_ws)
 dis = flopy.modflow.ModflowDis.load(os.path.join(path, "MNW2-Fig28.dis"), m)
 
@@ -198,7 +233,7 @@ mnw2.mnw
 
 pd.DataFrame(mnw2.mnw["well-a"].stress_period_data)
 
-path = os.path.join("..", "..", "examples", "data", "mnw2_examples")
+path = data_path / "mnw2_examples"
 m = flopy.modflow.Modflow("br", model_ws=model_ws)
 mnw2 = flopy.modflow.ModflowMnw2.load(os.path.join(path, "BadRiver_cal.mnw2"), m)
 
