@@ -33,7 +33,9 @@ from pathlib import Path
 from pprint import pformat
 from tempfile import TemporaryDirectory
 
+import git
 import numpy as np
+import pooch
 
 import flopy
 from flopy.export import vtk
@@ -42,11 +44,39 @@ print(sys.version)
 print(f"flopy version: {flopy.__version__}")
 # -
 
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+sim_name = "freyberg_multilayer_transient"
+file_names = {
+    "freyberg.bas": None,
+    "freyberg.cbc": None,
+    "freyberg.ddn": None,
+    "freyberg.dis": None,
+    "freyberg.drn": None,
+    "freyberg.hds": None,
+    "freyberg.list": None,
+    "freyberg.nam": None,
+    "freyberg.nwt": None,
+    "freyberg.oc": None,
+    "freyberg.rch": None,
+    "freyberg.upw": None,
+    "freyberg.wel": None,
+}
+for fname, fhash in file_names.items():
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{sim_name}/{fname}",
+        fname=fname,
+        path=data_path / sim_name,
+        known_hash=fhash,
+    )
+
 # load model for examples
 nam_file = "freyberg.nam"
-model_ws = Path(
-    os.path.join("..", "..", "examples", "data", "freyberg_multilayer_transient")
-)
+model_ws = data_path / sim_name
 ml = flopy.modflow.Modflow.load(nam_file, model_ws=model_ws, check=False)
 
 # Create a temporary workspace.
