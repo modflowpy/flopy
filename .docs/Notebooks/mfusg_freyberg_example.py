@@ -28,10 +28,47 @@ from pathlib import Path
 # +
 from pprint import pformat
 
+import git
+import pooch
+
 import flopy
 
 root_name = "freyberg.usg"
-model_ws = Path.cwd().parent / "../examples/data" / root_name.replace(".", "_")
+
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+
+file_names = {
+    "freyberg.usg.bas": None,
+    "freyberg.usg.disu": None,
+    "freyberg.usg.ghb": None,
+    "freyberg.usg.gnc": None,
+    "freyberg.usg.gsf": None,
+    "freyberg.usg.gsf.with_comment": None,
+    "freyberg.usg.lpf": None,
+    "freyberg.usg.nam": None,
+    "freyberg.usg.oc": None,
+    "freyberg.usg.rch": None,
+    "freyberg.usg.sfr": None,
+    "freyberg.usg.sms": None,
+    "freyberg.usg.wel": None,
+}
+for fname, fhash in file_names.items():
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{root_name.replace('.', '_')}/{fname}",
+        fname=fname,
+        path=data_path / root_name.replace(".", "_"),
+        known_hash=None,
+    )
+
+
+model_ws = data_path / root_name.replace(".", "_")
 # -
 
 # Now construct an `UnstructuredGrid` from a grid specification file.

@@ -29,12 +29,15 @@
 import os
 import sys
 import time
+from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import git
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import pooch
 import shapefile
 import shapely
 
@@ -53,11 +56,28 @@ print(f"flopy version: {flopy.__version__}")
 temp_dir = TemporaryDirectory()
 workspace = temp_dir.name
 
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+
 # ### Raster files can be loaded using the `Raster.load` method
 
 # +
-raster_ws = os.path.join("..", "..", "examples", "data", "options", "dem")
+raster_ws = data_path / "options" / "dem"
 raster_name = "dem.img"
+
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/options/dem/{raster_name}",
+    fname=raster_name,
+    path=raster_ws,
+    known_hash=None,
+)
+
 
 rio = Raster.load(os.path.join(raster_ws, raster_name))
 # -
@@ -91,8 +111,28 @@ plt.colorbar(ax.images[0], shrink=0.7)
 # The structured grid example uses the DIS file from the GSFLOW Sagehen example problem to create a modelgrid
 
 # +
-model_ws = os.path.join("..", "..", "examples", "data", "options", "sagehen")
-ml = flopy.modflow.Modflow.load("sagehen.nam", version="mfnwt", model_ws=model_ws)
+file_names = {
+    "sagehen.bas": None,
+    "sagehen.dis": None,
+    "sagehen.lpf": None,
+    "sagehen.nam": None,
+    "sagehen.nwt": None,
+    "sagehen.oc": None,
+    "sagehen.sfr": None,
+    "sagehen.uzf": None,
+    "sagehen.wel": None,
+}
+for fname, fhash in file_names.items():
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/options/sagehen/{fname}",
+        fname=fname,
+        path=data_path / "options" / "sagehen",
+        known_hash=None,
+    )
+
+ml = flopy.modflow.Modflow.load(
+    "sagehen.nam", version="mfnwt", model_ws=data_path / "options" / "sagehen"
+)
 
 xoff = 214110
 yoff = 4366620
@@ -444,6 +484,23 @@ plt.colorbar(ax, shrink=0.7)
 
 # +
 rio = Raster.load(os.path.join(raster_ws, raster_name))
+
+file_names = [
+    "model_boundary.CPG",
+    "model_boundary.dbf",
+    "model_boundary.prj",
+    "model_boundary.sbn",
+    "model_boundary.sbx",
+    "model_boundary.shp",
+    "model_boundary.shx",
+]
+for fname in file_names:
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/options/dem/{fname}",
+        fname=fname,
+        path=data_path / "options" / "dem",
+        known_hash=None,
+    )
 
 shp_name = os.path.join(raster_ws, "model_boundary.shp")
 

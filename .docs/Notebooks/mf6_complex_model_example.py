@@ -21,15 +21,18 @@
 # ### Setup the Notebook Environment
 
 import os
+import sys
 
 # +
-import sys
+from pathlib import Path
 from pprint import pformat
 from tempfile import TemporaryDirectory
 
+import git
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import pooch
 
 import flopy
 
@@ -39,13 +42,63 @@ print(f"matplotlib version: {mpl.__version__}")
 print(f"flopy version: {flopy.__version__}")
 # -
 
+
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+sim_name = "test005_advgw_tidal"
+file_names = [
+    "AdvGW_tidal.dis",
+    "AdvGW_tidal.evt",
+    "AdvGW_tidal.ghb",
+    "AdvGW_tidal.ghb.obs",
+    "AdvGW_tidal.head.cont.opncls",
+    "AdvGW_tidal.ic",
+    "AdvGW_tidal.nam",
+    "AdvGW_tidal.npf",
+    "AdvGW_tidal.obs",
+    "AdvGW_tidal.oc",
+    "AdvGW_tidal.riv",
+    "AdvGW_tidal.riv.obs",
+    "AdvGW_tidal.riv.single.opncls",
+    "AdvGW_tidal.sto",
+    "AdvGW_tidal.wel",
+    "AdvGW_tidal_1.rch",
+    "AdvGW_tidal_2.rch",
+    "AdvGW_tidal_3.rch",
+    "advgw_tidal.dis.grb",
+    "mfsim.nam",
+    "model.ims",
+    "recharge_rates.ts",
+    "recharge_rates_1.ts",
+    "recharge_rates_2.ts",
+    "recharge_rates_3.ts",
+    "river_stages.ts",
+    "simulation.tdis",
+    "tides.ts",
+    "tides.txt",
+    "well_rates.ts",
+]
+for fname in file_names:
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/mf6/{sim_name}/{fname}",
+        fname=fname,
+        path=data_path / "mf6" / sim_name,
+        known_hash=None,
+    )
+
 # For this example, we will set up a temporary workspace.
 # Model input files and output files will reside here.
 temp_dir = TemporaryDirectory()
 model_name = "advgw_tidal"
 workspace = os.path.join(temp_dir.name, model_name)
 
-data_pth = os.path.join("..", "..", "examples", "data", "mf6", "test005_advgw_tidal")
+data_pth = data_path / "mf6" / sim_name
 assert os.path.isdir(data_pth)
 
 # +

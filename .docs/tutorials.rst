@@ -3,6 +3,11 @@ Tutorials
 
 The following tutorials demonstrate basic FloPy features and usage with MODFLOW 2005, MODFLOW 6, and related programs.
 
+The basic set of MODFLOW executables as well as the `optional` dependency group are both required to run the tutorials.
+
+If the tutorial/example scripts detect that they are running within the repository, they will use local example data.
+Otherwise they will download example data files where necessary from GitHub.
+
 FloPy
 -----
 

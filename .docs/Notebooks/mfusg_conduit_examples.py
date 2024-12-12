@@ -20,11 +20,14 @@
 # +
 import os
 import shutil
+from pathlib import Path
 from pprint import pformat
 from tempfile import TemporaryDirectory
 
+import git
 import matplotlib.pyplot as plt
 import numpy as np
+import pooch
 
 import flopy
 
@@ -42,7 +45,35 @@ cln_ws = temp_dir.name
 # A vertical conduit well is located at the center of the domain and has a radius of 0.5 m. The well pumps 62,840 m3/d and is open fully to both aquifers from top to bottom. The CLN Process was used with a circular conduit geometry type to discretize the well bore with two conduit cells, one in each layer. The WEL Package was used to pump from the bottom CLN cell.
 #
 
-model_ws = os.path.join("../../examples/data/mfusg_test", "03_conduit_confined")
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+
+file_names = [
+    "ex3.bas",
+    "ex3.bcf",
+    "ex3.cln",
+    "ex3.dis",
+    "ex3.nam",
+    "ex3.oc",
+    "ex3.sms",
+    "ex3.wel",
+    "run.bat",
+]
+for fname in file_names:
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/mfusg_test/03_conduit_confined/{fname}",
+        fname=fname,
+        path=data_path / "mfusg_test" / "03_conduit_confined",
+        known_hash=None,
+    )
+
+model_ws = data_path / "mfusg_test" / "03_conduit_confined"
 mf = flopy.mfusg.MfUsg.load(
     "ex3.nam", model_ws=model_ws, exe_name="mfusg", check=False, verbose=True
 )
