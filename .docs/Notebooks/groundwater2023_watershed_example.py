@@ -25,10 +25,12 @@ import os
 import pathlib as pl
 import sys
 
+import git
 import matplotlib as mpl
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
+import pooch
 import shapely
 import yaml
 from shapely.geometry import LineString, Polygon
@@ -106,9 +108,24 @@ def set_idomain(grid, boundary):
     grid.idomain = idomain
 
 
-geometries = yaml.safe_load(
-    open(pl.Path("../../examples/data/groundwater2023/geometries.yml"))
+# Check if we are in the repository and define the data path.
+
+try:
+    root = pl.Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else pl.Path.cwd()
+folder_name = "groundwater2023"
+fname = "geometries.yml"
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/mf6//{fname}",
+    fname=fname,
+    path=data_path / folder_name,
+    known_hash=None,
 )
+
+geometries = yaml.safe_load(open(data_path / folder_name / fname))
 
 # basic figure size
 figwidth = 180  # 90 # mm
@@ -161,7 +178,13 @@ if not os.path.isdir(temp_path):
     os.mkdir(temp_path)
 
 # Load the fine topography that will be sampled
-ascii_file = pl.Path("../../examples/data/geospatial/fine_topo.asc")
+fname = "fine_topo.asc"
+ascii_file = pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/geospatial/{fname}",
+    fname=fname,
+    path=data_path / "geospatial",
+    known_hash=None,
+)
 fine_topo = flopy.utils.Raster.load(ascii_file)
 
 # Define the problem size and extents

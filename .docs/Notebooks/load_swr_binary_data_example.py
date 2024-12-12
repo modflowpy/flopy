@@ -20,10 +20,13 @@
 
 import os
 import sys
+from pathlib import Path
 
+import git
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import pooch
 
 # +
 from IPython.display import Image
@@ -35,9 +38,37 @@ print(f"numpy version: {np.__version__}")
 print(f"matplotlib version: {mpl.__version__}")
 print(f"flopy version: {flopy.__version__}")
 
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+folder_name = "swr_test"
+
 # +
 # Set the paths
-datapth = os.path.join("..", "..", "examples", "data", "swr_test")
+datapth = data_path / folder_name
+
+file_names = [
+    "SWR004.dis.ref",
+    "SWR004.flow",
+    "SWR004.obs",
+    "SWR004.stg",
+    "SWR004.str",
+    "SWR004.vel",
+    "swr005.qaq",
+    "swr005.str",
+]
+for fname in file_names:
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{folder_name}/{fname}",
+        fname=fname,
+        path=datapth,
+        known_hash=None,
+    )
 
 # SWR Process binary files
 files = ("SWR004.obs", "SWR004.vel", "SWR004.str", "SWR004.stg", "SWR004.flow")
