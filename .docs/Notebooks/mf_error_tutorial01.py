@@ -19,7 +19,11 @@
 # +
 import os
 import sys
+from pathlib import Path
 from tempfile import TemporaryDirectory
+
+import git
+import pooch
 
 import flopy
 
@@ -27,9 +31,35 @@ print(sys.version)
 print(f"flopy version: {flopy.__version__}")
 # -
 
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+
+file_names = [
+    "bcf2ss.ba6",
+    "bcf2ss.bc6",
+    "bcf2ss.dis",
+    "bcf2ss.nam",
+    "bcf2ss.oc",
+    "bcf2ss.pcg",
+    "bcf2ss.rch",
+    "bcf2ss.riv",
+    "bcf2ss.wel",
+]
+for fname in file_names:
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/mf2005_test/{fname}",
+        fname=fname,
+        path=data_path / "mf2005_test",
+        known_hash=None,
+    )
+
 # #### Set the working directory
 
-path = os.path.join("..", "..", "examples", "data", "mf2005_test")
+path = data_path / "mf2005_test"
 
 # #### Load example dataset and change the model work space
 
