@@ -20,11 +20,12 @@ import zipfile
 from importlib.util import find_spec
 from pathlib import Path
 from platform import processor
+from urllib.parse import urlparse
 
 __all__ = ["run_main"]
 __license__ = "CC0"
 
-from typing import Dict, List, Tuple
+from typing import Dict, List, Set, Tuple
 
 default_owner = "MODFLOW-USGS"
 default_repo = "executables"
@@ -545,6 +546,10 @@ def run_main(
                     ):
                         add_item(key, fname, do_chmod=True)
 
+            # generate flopy mf6 dfn classes
+            if "mf6" in code:
+                _generate_mf6_classes(code["mf6"]["url"], subset)
+
         else:
             # releases without code.json
             for fname in sorted(files):
@@ -556,6 +561,10 @@ def run_main(
                     items.append(fname)
                     if not fname.endswith(lib_suffix):
                         chmod.add(fname)
+
+            if repo == "modflow6":
+                # generate flopy mf6 dfn classes
+                _generate_mf6_classes(download_url, subset)
         if not quiet:
             print(
                 f"extracting {len(extract)} "
@@ -622,6 +631,22 @@ def run_main(
                 print(f"updated flopy metadata file: '{meta_path}'")
             else:
                 print(f"wrote new flopy metadata file: '{meta_path}'")
+
+
+def _generate_mf6_classes(download_url: str, subset: Set[str]) -> None:
+    # skip if mf6 was not in the subset
+    if len(subset) != 0 and "mf6" not in subset:
+        return
+
+    from flopy.mf6.utils.generate_classes import generate_classes
+
+    # The release urls are in the form: https://github.com/MODFLOW-USGS/modflow6/releases/download/6.5.0/mf6.5.0_linux.zip
+    # So we take MODFLOW-USGS as owner, modflow6 as repo, and 6.5.0 as ref
+    path_parts = urlparse(download_url).path.split("/")
+    # TODO: When dfn files are included in executables,
+    # we can take the dfns directly from that path
+    # and we could set dfnpath directly to the downloaded bin folder.
+    generate_classes(owner=path_parts[1], repo=path_parts[2], ref=path_parts[-2])
 
 
 def cli_main():

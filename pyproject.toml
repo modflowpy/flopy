@@ -31,6 +31,7 @@ requires-python = ">=3.9"
 dependencies = [
     "numpy>=1.20.3",
     "matplotlib >=1.4.0",
+    "modflow-devtools",
     "pandas >=2.0.0"
 ]
 dynamic = ["version", "readme"]
@@ -92,6 +93,7 @@ doc = [
 
 [project.scripts]
 get-modflow = "flopy.utils.get_modflow:cli_main"
+generate-mf6-classes = "flopy.mf6.utils.generate_classes:cli_main"
 
 [project.urls]
 Documentation = "https://flopy.readthedocs.io"
