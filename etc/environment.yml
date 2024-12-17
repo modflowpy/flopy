@@ -15,7 +15,6 @@ dependencies:
   - Jinja2>=3.0
   - pip:
       - git+https://github.com/MODFLOW-USGS/modflow-devtools.git
-  - tomlkit
 
   # lint
   - cffconvert

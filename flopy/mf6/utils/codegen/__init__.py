@@ -28,13 +28,10 @@ def _get_template_env():
     env.filters["prefix"] = Filters.Cls.prefix
     env.filters["parent"] = Filters.Cls.parent
     env.filters["skip_init"] = Filters.Cls.skip_init
-
     env.filters["attrs"] = Filters.Vars.attrs
     env.filters["init"] = Filters.Vars.init
-
     env.filters["untag"] = Filters.Var.untag
     env.filters["type"] = Filters.Var.type
-
     env.filters["safe_name"] = Filters.safe_name
     env.filters["escape_trailing_underscore"] = (
         Filters.escape_trailing_underscore
@@ -84,7 +81,7 @@ def make_targets(dfn, outdir: PathLike, verbose: bool = False):
             if ctx_name.l == "exg":
                 return "exchange.py.jinja"
             return "package.py.jinja"
-
+        
     for context in Context.from_dfn(dfn):
         name = context["name"]
         target_path = outdir / f"mf{Filters.Cls.title(name)}.py"
@@ -96,12 +93,12 @@ def make_targets(dfn, outdir: PathLike, verbose: bool = False):
                 print(f"Wrote {target_path}")
 
 
-def make_all(dfndir: Path, outdir: PathLike, verbose: bool = False):
+def make_all(dfndir: Path, outdir: PathLike, verbose: bool = False, version: int = 1):
     """Generate Python source files from the DFN files in the given location."""
 
-    from flopy.mf6.utils.codegen.dfn import Dfn
+    from modflow_devtools.dfn import Dfn
 
-    dfns = Dfn.load_all(dfndir)
+    dfns = Dfn.load_all(dfndir, version=version)
     make_init(dfns, outdir, verbose)
     for dfn in dfns.values():
         make_targets(dfn, outdir, verbose)

@@ -5,8 +5,6 @@ from typing import Any, List, Optional
 
 from jinja2 import pass_context
 
-from flopy.mf6.utils.codegen.dfn import _SCALARS
-
 
 def try_get_enum_value(v: Any) -> Any:
     """
@@ -77,9 +75,9 @@ class Filters:
             if ctx_name == ("sim", "nam"):
                 return None
             elif (
-                ctx_name.l is None
-                or ctx_name.r is None
-                or ctx_name.l in ["sim", "exg", "sln"]
+                ctx_name[0] is None
+                or ctx_name[1] is None
+                or ctx_name[0] in ["sim", "exg", "sln"]
             ):
                 return "simulation"
             return "model"
@@ -99,7 +97,7 @@ class Filters:
             elif base == "MFModel":
                 return ["packages", "export_netcdf", "nc_filerecord"]
             else:
-                if ctx_name.r == "nam":
+                if ctx_name[1] == "nam":
                     return ["export_netcdf", "nc_filerecord"]
                 elif ctx_name == ("utl", "ts"):
                     return ["method", "interpolation_method_single", "sfac"]
@@ -183,6 +181,8 @@ class Filters:
             of just a class attr for each variable, with anything complicated
             happening in a decorator or base class.
             """
+            from modflow_devtools.dfn import _MF6_SCALARS
+
             name = ctx["name"]
             base = Filters.Cls.base(name)
 
@@ -194,12 +194,12 @@ class Filters:
                 var_subpkg = var.get("subpackage", None)
 
                 if (
-                    (var_type in _SCALARS and not var_shape)
+                    (var_type in _MF6_SCALARS and not var_shape)
                     or var_name in ["cvoptions", "output"]
-                    or (name.r == "dis" and var_name == "packagedata")
+                    or (name[1] == "dis" and var_name == "packagedata")
                     or (
                         var_name != "packages"
-                        and (name.l is not None and name.r == "nam")
+                        and (name[0] is not None and name[1] == "nam")
                     )
                 ):
                     return None
@@ -218,32 +218,32 @@ class Filters:
                             # if the variable is a subpackage reference, use the original key
                             # (which has been replaced already with the referenced variable)
                             args = [
-                                f"'{name.r}'",
+                                f"'{name[1]}'",
                                 f"'{var_block}'",
                                 f"'{var_subpkg['key']}'",
                             ]
-                            if name.l is not None and name.l not in [
+                            if name[0] is not None and name[0] not in [
                                 "sim",
                                 "sln",
                                 "utl",
                                 "exg",
                             ]:
-                                args.insert(0, f"'{name.l}6'")
+                                args.insert(0, f"'{name[0]}6'")
                             return f"{var_subpkg['key']} = ListTemplateGenerator(({', '.join(args)}))"
 
                     def _args():
                         args = [
-                            f"'{name.r}'",
+                            f"'{name[1]}'",
                             f"'{var_block}'",
                             f"'{var_name}'",
                         ]
-                        if name.l is not None and name.l not in [
+                        if name[0] is not None and name[0] not in [
                             "sim",
                             "sln",
                             "utl",
                             "exg",
                         ]:
-                            args.insert(0, f"'{name.l}6'")
+                            args.insert(0, f"'{name[0]}6'")
                         return args
 
                     kind = "array" if is_array else "list"
@@ -251,51 +251,18 @@ class Filters:
 
                 return None
 
-            def _dfn() -> List[List[str]]:
-                dfn, meta = ctx["dfn"]
-
-                def _meta():
-                    exclude = ["subpackage", "parent_name_type"]
-                    return [
-                        v for v in meta if not any(p in v for p in exclude)
-                    ]
-
-                def _dfn():
-                    def _var(var: dict) -> List[str]:
-                        exclude = ["longname", "description"]
-                        name = var["name"]
-                        var_ = variables.get(name, None)
-                        keys = [
-                            "construct_package",
-                            "construct_data",
-                            "parameter_name",
-                        ]
-                        if var_ and keys[0] in var_:
-                            for k in keys:
-                                var[k] = var_[k]
-                        return [
-                            " ".join([k, v]).strip()
-                            for k, v in var.items()
-                            if k not in exclude
-                        ]
-
-                    return [_var(var) for var in dfn]
-
-                return [["header"] + _meta()] + _dfn()
-
             attrs = list(filter(None, [_attr(v) for v in variables.values()]))
 
             if base == "MFPackage":
                 attrs.extend(
                     [
-                        f"package_abbr = '{name.r}'"
-                        if name.l == "exg"
-                        else f"package_abbr = '{'' if name.l in ['sln', 'sim', 'exg', None] else name.l}{name.r}'",
-                        f"_package_type = '{name.r}'",
-                        f"dfn_file_name = '{name.l}-{name.r}.dfn'"
-                        if name.l == "exg"
-                        else f"dfn_file_name = '{name.l or 'sim'}-{name.r}.dfn'",
-                        f"dfn = {pformat(_dfn(), indent=10)}",
+                        f"package_abbr = '{name[1]}'"
+                        if name[0] == "exg"
+                        else f"package_abbr = '{'' if name[0] in ['sln', 'sim', 'exg', None] else name[0]}{name[1]}'",
+                        f"_package_type = '{name[1]}'",
+                        f"dfn_file_name = '{name[0]}-{name[1]}.dfn'"
+                        if name[0] == "exg"
+                        else f"dfn_file_name = '{name[0] or 'sim'}-{name[1]}.dfn'",
                     ]
                 )
 
@@ -435,7 +402,7 @@ class Filters:
                         if (
                             subpkg
                             and subpkg["key"] not in refs
-                            and ctx["name"].r != "nam"
+                            and ctx["name"][1] != "nam"
                         ):
                             refs[subpkg["key"]] = subpkg
                             stmts.append(

@@ -30,7 +30,7 @@ The latter is typically used with e.g. `python -m flopy.mf6.utils.generate_class
 
 Generated files are created in `flopy/mf6/modflow/` and contain interface classes, one file/class per input component. These can be used to initialize and access model/package data as well as the input specification itself.
 
-**Note**: Code generation requires a few extra dependencies, grouped in the `codegen` optional dependency group: `Jinja2`, `boltons`, `tomlkit` and `modflow-devtools`.
+**Note**: Code generation requires a few extra dependencies, grouped in the `codegen` optional dependency group: `Jinja2` and `modflow-devtools`.
 
 **Note**: Code generation scripts previously used `flopy/mf6/data/mfstructure.py` to read and represent definition files, and wrote Python by hand. They now use the `flopy.mf6.utils.codegen` module, which uses Jinja2.
 
