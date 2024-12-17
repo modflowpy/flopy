@@ -83,8 +83,8 @@ def test_set_datetime_and_units():
     if mt.start_datetime != unix_t0:
         raise AssertionError("start_datetime None condition not being set to 1/1/1970")
 
-    mt.set_units(new_units)
-    mt.set_start_datetime(new_dt)
+    mt.time_units = new_units
+    mt.start_datetime = new_dt
 
     if mt.time_units != new_units:
         raise AssertionError("time_units setting not behaving properly")

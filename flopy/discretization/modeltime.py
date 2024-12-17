@@ -64,12 +64,42 @@ class ModelTime:
         """
         return self._time_units
 
+    @time_units.setter
+    def time_units(self, units):
+        """
+        Method to reset the time units of the ModelTime class
+
+        Parameters
+        ----------
+        units : str or int
+            string or pre-mf6 integer representation (ITMUNI) of time units
+
+        """
+        units = self.timeunits_from_user_input(units)
+        self._time_units = units
+
     @property
     def start_datetime(self):
         """
         Returns a datetime.datetime object of the model start time
         """
         return self._start_datetime
+
+    @start_datetime.setter
+    def start_datetime(self, datetime_obj):
+        """
+        Property setter method to reset the start datetime of the ModelTime class
+
+        Parameters
+        ----------
+        datetime_obj : various objects
+            user-supplied datetime representation. Please see the
+            ModelTime.parse_datetime documentation for a list
+            of the supported representation types
+
+        """
+        start_dt = self.parse_datetime(datetime_obj)
+        self._start_datetime = start_dt
 
     @property
     def perlen(self):
@@ -139,6 +169,13 @@ class ModelTime:
         return list(self._totim_dict.keys())
 
     @property
+    def datetimes(self):
+        """
+        Returns a list of datetime objects for all time steps
+        """
+        return [self.get_datetime(per, stp) for per, stp in self.kper_kstp]
+
+    @property
     def tslen(self):
         """
         Method to get a list of time step lengths for all time steps
@@ -172,34 +209,6 @@ class ModelTime:
         """
         dt = ModelTime.parse_datetime(datetime_obj)
         return dt.strftime("%Y-%m-%dT%H:%M:%S")
-
-    def set_start_datetime(self, datetime_obj):
-        """
-        Method to reset the start datetime of the ModelTime class
-
-        Parameters
-        ----------
-        datetime_obj : various objects
-            user-supplied datetime representation. Please see the
-            ModelTime.parse_datetime documentation for a list
-            of the supported representation types
-
-        """
-        start_dt = self.parse_datetime(datetime_obj)
-        self._start_datetime = start_dt
-
-    def set_units(self, units):
-        """
-        Method to reset the time units of the ModelTime class
-
-        Parameters
-        ----------
-        units : str or int
-            string or pre-mf6 integer representation (ITMUNI) of time units
-
-        """
-        units = self.timeunits_from_user_input(units)
-        self._time_units = units
 
     def _set_totim_dict(self):
         """
