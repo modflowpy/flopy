@@ -21,7 +21,7 @@ def test_date_userinput_parsing():
     valid = datetime.datetime(2024, 11, 12)
 
     for dt_rep in formats:
-        dt_obj = ModelTime.datetime_from_user_input(dt_rep)
+        dt_obj = ModelTime.parse_datetime(dt_rep)
         if dt_obj != valid:
             raise AssertionError("datetime not properly determined from user input")
 
@@ -40,7 +40,7 @@ def test_datetime_userinput_parsing():
     valid = datetime.datetime(2024, 11, 12, 14, 31, 29)
 
     for dt_rep in formats:
-        dt_obj = ModelTime.datetime_from_user_input(dt_rep)
+        dt_obj = ModelTime.parse_datetime(dt_rep)
         if dt_obj != valid:
             raise AssertionError("datetime not properly determined from user input")
 
@@ -83,7 +83,7 @@ def test_set_datetime_and_units():
     if mt.start_datetime != unix_t0:
         raise AssertionError("start_datetime None condition not being set to 1/1/1970")
 
-    mt.set_time_units(new_units)
+    mt.set_units(new_units)
     mt.set_start_datetime(new_dt)
 
     if mt.time_units != new_units:
@@ -160,12 +160,12 @@ def test_datetime_intersect():
 
     for (kper0, kstp0), dt in validate.items():
         if kstp0 is None:
-            kper = mt.intersect(dt)
+            kper, _ = mt.intersect(dt)
             if kper != kper0:
                 raise AssertionError("intersect() not returning correct stress-period")
 
         else:
-            kper, kstp = mt.intersect(dt, kper_kstp=True)
+            kper, kstp = mt.intersect(dt)
             if kper != kper0 or kstp != kstp0:
                 raise AssertionError(
                     "intersect() not returning correct stress-period and timestep"
@@ -187,12 +187,12 @@ def test_totim_intersect():
 
     for (kper0, kstp0), totim in validate.items():
         if kstp0 is None:
-            kper = mt.intersect(totim=totim)
+            kper, _ = mt.intersect(totim=totim)
             if kper != kper0:
                 raise AssertionError("intersect() not returning correct stress-period")
 
         else:
-            kper, kstp = mt.intersect(totim=totim, kper_kstp=True)
+            kper, kstp = mt.intersect(totim=totim)
             if kper != kper0 or kstp != kstp0:
                 raise AssertionError(
                     "intersect() not returning correct stress-period and timestep"
@@ -240,7 +240,7 @@ def test_mf2005_modeltime():
     if modeltime.start_datetime != start_datetime:
         raise AssertionError("start_datetime improperly stored")
 
-    result = modeltime.intersect("3/06/2024 23:59:59", kper_kstp=True)
+    result = modeltime.intersect("3/06/2024 23:59:59")
     if result != (2, 0):
         raise AssertionError("ModelTime intersect not working correctly")
 
@@ -287,6 +287,6 @@ def test_mf6_modeltime():
     if modeltime.start_datetime != start_datetime:
         raise AssertionError("start_datetime improperly stored")
 
-    result = modeltime.intersect("3/06/2024 23:59:59", kper_kstp=True)
+    result = modeltime.intersect("3/06/2024 23:59:59")
     if result != (2, 0):
         raise AssertionError("ModelTime intersect not working correctly")

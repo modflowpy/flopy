@@ -13,20 +13,20 @@ class ModelTime:
     Parameters
     ----------
     perlen : list, np.ndarray
-        list or numpy array of stress-period lengths
+        list or numpy array of stress period lengths
     nstp : list, np.ndarray
-        list or numpy array of number of time-steps per stress period
+        list or numpy array of number of time steps per stress period
     tsmult : list, np.ndarray
-        list or numpy array of timestep mult infomation
+        list or numpy array of time-step mult infomation
     time_units : int or str
         string or pre-mf6 integer representation (ITMUNI) of time units
     start_datetime : various objects
-        user supplied datetime representation. Please see the
-        ModelTime.datetime_from_user_input documentation for a list
+        user-supplied starting datetime representation. Please see the
+        ModelTime.parse_datetime documentation for a list
         of the supported representation types
     steady_state : list, np.ndarray
-        optional list or numpy array of boolean flags that determine identify
-        steady-state or transient stress-periods
+        optional list or numpy array of boolean flags that indicate if
+        stress periods are steady-state or transient
     """
 
     def __init__(
@@ -52,7 +52,7 @@ class ModelTime:
         self._nstp = nstp
         self._tsmult = tsmult
         self._time_units = self.timeunits_from_user_input(time_units)
-        self._start_datetime = self.datetime_from_user_input(start_datetime)
+        self._start_datetime = self.parse_datetime(start_datetime)
         self._steady_state = steady_state
         self._totim_dict = {}
         self.__str_format = "%Y-%m-%dt%H:%M:%S"
@@ -74,7 +74,7 @@ class ModelTime:
     @property
     def perlen(self):
         """
-        Returns a list or array of stress-period lengths
+        Returns a list or array of stress period lengths
 
         """
         return self._perlen.copy()
@@ -102,7 +102,7 @@ class ModelTime:
         return self._tsmult.copy()
 
     @property
-    def period_data(self):
+    def perioddata(self):
         """
         Returns a tuple of period data for the MF6 TDIS package containing records
         of [(perlen, nstp, tsmult), ....] for each stress period
@@ -120,7 +120,7 @@ class ModelTime:
     @property
     def totim(self):
         """
-        Returns a list of totim values at the end of each time-step
+        Returns a list of totim values at the end of each time step
 
         """
         if not self._totim_dict:
@@ -131,7 +131,7 @@ class ModelTime:
     @property
     def kper_kstp(self):
         """
-        Returns a list of kper, kstp tuples that correspond to totim
+        Returns a list of kper, kstp tuples for all time steps
 
         """
         if not self._totim_dict:
@@ -141,7 +141,7 @@ class ModelTime:
     @property
     def tslen(self):
         """
-        Method to get a list of time step lengths for the entire model period
+        Method to get a list of time step lengths for all time steps
 
         """
         n = 0
@@ -157,19 +157,20 @@ class ModelTime:
 
         return np.array(tslen)
 
-    def get_datetime_string(self, datetime_obj):
+    @staticmethod
+    def get_datetime_string(datetime_obj):
         """
         Method to get a standarized ISO 8601 compliant datetime string
 
         Parameters
         ----------
         datetime_obj : various objects
-            user supplied datetime representation. Please see the
-            ModelTime.datetime_from_user_input documentation for a list
+            user-supplied datetime representation. Please see the
+            ModelTime.parse_datetime documentation for a list
             of the supported representation types
 
         """
-        dt = self.datetime_from_user_input(datetime_obj)
+        dt = ModelTime.parse_datetime(datetime_obj)
         return dt.strftime("%Y-%m-%dT%H:%M:%S")
 
     def set_start_datetime(self, datetime_obj):
@@ -179,15 +180,15 @@ class ModelTime:
         Parameters
         ----------
         datetime_obj : various objects
-            user supplied datetime representation. Please see the
-            ModelTime.datetime_from_user_input documentation for a list
+            user-supplied datetime representation. Please see the
+            ModelTime.parse_datetime documentation for a list
             of the supported representation types
 
         """
-        start_dt = self.datetime_from_user_input(datetime_obj)
+        start_dt = self.parse_datetime(datetime_obj)
         self._start_datetime = start_dt
 
-    def set_time_units(self, units):
+    def set_units(self, units):
         """
         Method to reset the time units of the ModelTime class
 
@@ -300,7 +301,7 @@ class ModelTime:
         ----------
         str_datetime : str
             string representation of date time. See the
-            ModelTime.datetime_from_user_input documentation for supported
+            ModelTime.parse_datetime documentation for supported
             formats
 
         Returns
@@ -348,7 +349,7 @@ class ModelTime:
         return str_rep
 
     @staticmethod
-    def datetime_from_user_input(datetime_obj):
+    def parse_datetime(datetime_obj):
         """
         Method to create a datetime.datetime object from a variety of user
         inputs including the following:
@@ -381,7 +382,7 @@ class ModelTime:
         Parameters
         ----------
         datetime_obj : various formats
-            a user supplied representation of date or datetime
+            a user-supplied representation of date or datetime
 
         Returns
         -------
@@ -412,12 +413,12 @@ class ModelTime:
     def get_totim(self, kper, kstp=None):
         """
         Method to get the total simulation time at the end of a given
-        stress-period or stress-period and time-step combination
+        stress period or stress period and time step combination
 
         Parameters
         ----------
         kper : int
-            zero based stress-period number
+            zero based stress period number
         kstp : int or None
             optional zero based time-step number
 
@@ -449,7 +450,7 @@ class ModelTime:
         kper : int
             zero based modflow stress period number
         kstp : int
-            zero based timestep number
+            zero based time-step number
 
         Returns
         -------
@@ -494,33 +495,30 @@ class ModelTime:
 
         return dt
 
-    def intersect(self, datetime_obj=None, totim=None, kper_kstp=False, forgrive=False):
+    def intersect(self, datetime_obj=None, totim=None, forgive=False):
         """
         Method to intersect a datetime or totim value with the model and
-        get the model stress-period and optional time-step associated with that
+        get the model stress period and optional time-step associated with that
         time.
 
         Parameters
         ----------
         datetime_obj : various objects
-            user supplied datetime representation. Please see the
-            ModelTime.datetime_from_user_input documentation for a list
+            user-supplied starting datetime representation. Please see the
+            ModelTime.parse_datetime documentation for a list
             of the supported representation types
         totim : float
             optional total time elapsed from the beginning of the model
-        kper_kstp : bool
-            flag to return a tuple of zero based stress-period and time-step.
-            Default is False and returns the stress-period only
         forgive : bool
             optional flag to forgive time intersections that are outside of
             the model time domain. Default is False
 
         Returns
         -------
-            int or tuple: kper or (kper, kstp)
+            tuple: (kper, kstp)
         """
         if datetime_obj is not None:
-            datetime_obj = self.datetime_from_user_input(datetime_obj)
+            datetime_obj = self.parse_datetime(datetime_obj)
             timedelta = datetime_obj - self.start_datetime
 
             if self.time_units == "unknown":
@@ -571,7 +569,7 @@ class ModelTime:
             )
 
         if totim > self.totim[-1] or totim <= 0:
-            if forgrive:
+            if forgive:
                 return None
             if datetime_obj is None:
                 msg = (
@@ -592,7 +590,4 @@ class ModelTime:
         idx = sorted(np.where(np.array(self.totim) >= totim)[0])[0]
         per, stp = self.kper_kstp[idx]
 
-        if kper_kstp:
-            return per, stp
-
-        return per
+        return per, stp
