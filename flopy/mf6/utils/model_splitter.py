@@ -1025,6 +1025,7 @@ class Mf6Splitter:
             "stage_filerecord",
             "obs_filerecord",
             "concentration_filerecord",
+            "ts_filerecord"
         ):
             value = value.array
             if value is None:
@@ -2111,6 +2112,33 @@ class Mf6Splitter:
 
         return mapped_data
 
+    def _remap_buy(self, package, mapped_data):
+        """
+        Method to remap a Buoyancy package
+
+        Parameters
+        ----------
+        package : ModflowGwfbuy
+        mapped_data : dict
+            dictionary of remapped package data
+
+        Returns
+        -------
+            dict
+        """
+        recarray = package.packagedata.array
+        mnames = [i for i in recarray["modelname"]]
+
+        for mkey in mapped_data.keys():
+            new_recarray = recarray.copy()
+            new_mnames = [
+                f"{mn}_{mkey :0{self._fdigits}d}" for mn in mnames
+            ]
+            new_recarray["modelname"] = new_mnames
+            mapped_data[mkey]["packagedata"] = new_recarray
+
+        return mapped_data
+
     def _set_boundname_remaps(self, recarray, obs_map, variables, mkey):
         """
 
@@ -2235,18 +2263,19 @@ class Mf6Splitter:
             dict
         """
         packagedata = package.packagedata.array
-        fnames = packagedata.fname
+        if packagedata is not None:
+            fnames = packagedata.fname
 
-        for mkey in self._model_dict.keys():
-            new_fnames = []
-            for fname in fnames:
-                new_val = fname.split(".")
-                new_val = f"{'.'.join(new_val[0:-1])}_{mkey :0{self._fdigits}d}.{new_val[-1]}"
-                new_fnames.append(new_val)
+            for mkey in self._model_dict.keys():
+                new_fnames = []
+                for fname in fnames:
+                    new_val = fname.split(".")
+                    new_val = f"{'.'.join(new_val[0:-1])}_{mkey :0{self._fdigits}d}.{new_val[-1]}"
+                    new_fnames.append(new_val)
 
-            new_packagedata = packagedata.copy()
-            new_packagedata["fname"] = new_fnames
-            mapped_data[mkey]["packagedata"] = new_packagedata
+                new_packagedata = packagedata.copy()
+                new_packagedata["fname"] = new_fnames
+                mapped_data[mkey]["packagedata"] = new_packagedata
 
         return mapped_data
 
@@ -2888,6 +2917,9 @@ class Mf6Splitter:
         elif isinstance(package, modflow.ModflowGwfcsub):
             mapped_data = self._remap_csub(package, mapped_data)
 
+        elif isinstance(package, modflow.ModflowGwfbuy):
+            mapped_data = self._remap_buy(package, mapped_data)
+
         elif isinstance(
             package, (modflow.ModflowGwfuzf, modflow.ModflowGwtuzt)
         ):
@@ -3025,6 +3057,20 @@ class Mf6Splitter:
                 elif isinstance(value, mfdatascalar.MFScalar):
                     for mkey in self._model_dict.keys():
                         mapped_data[mkey][item] = value.data
+                elif isinstance(value, modflow.mfutlts.UtltsPackages):
+                    if value._filerecord.array is None:
+                        continue
+                    tspkg = value._packages[0]
+                    for mkey in self._model_dict.keys():
+                        new_fname = tspkg.filename.split(".")
+                        new_fname = f"{'.'.join(new_fname[0:-1])}_{mkey :0{self._fdigits}d}.{new_fname[-1]}"
+                        tsdict = {
+                            "filename": new_fname,
+                            "timeseries": tspkg.timeseries.array,
+                            "time_series_namerecord": tspkg.time_series_namerecord.array["time_series_names"][0],
+                            "interpolation_methodrecord": tspkg.interpolation_methodrecord.array["interpolation_method"][0]
+                        }
+                        mapped_data[mkey]["timeseries"] = tsdict
                 else:
                     pass
 
