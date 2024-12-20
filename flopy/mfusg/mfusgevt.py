@@ -50,6 +50,10 @@ class MfUsgEvt(Package):
         0 = chemical component left behind in groundwater
         1 = chemical component leaves with water
         between 0 and 1 = fraction of mass of the component leaves
+    iznevt : float of array (mcomp) (default is 1.0)
+        array of zonal indices for applying a PET time series to zones. 
+        This PET input is independent of the stress period input, which 
+        is ignored when the zonal time series are provided.
     extension : string
         Filename extension (default is 'evt')
     unitnumber : int
@@ -101,7 +105,7 @@ class MfUsgEvt(Package):
         ietfactor = 0,
         etfactor = 0.0,
         inznevt = 0,
-        iznevt = [],
+        iznevt = 0,
         extension="evt",
         unitnumber=None,
         filenames=None,
@@ -134,8 +138,6 @@ class MfUsgEvt(Package):
         self.mxetzones = mxetzones
         self.ietfactor = ietfactor
         self.etfactor = etfactor
-        self.inznevt = inznevt
-        self.iznevt = iznevt
 
         self.external = external
         if self.external is False:
@@ -143,7 +145,7 @@ class MfUsgEvt(Package):
         else:
             load = model.load
 
-        surf_u2d_shape = get_pak_vals_shape(model, evtr)
+        surf_u2d_shape = get_pak_vals_shape(model, surf)
         evtr_u2d_shape = get_pak_vals_shape(model, evtr)
         exdp_u2d_shape = get_pak_vals_shape(model, exdp)
         ievt_u2d_shape = get_pak_vals_shape(model, ievt)
@@ -153,9 +155,10 @@ class MfUsgEvt(Package):
         self.exdp = Transient2d(model, exdp_u2d_shape, np.float32, exdp, name="exdp")
         self.ievt = Transient2d(model, ievt_u2d_shape, np.int32, ievt, name="ievt")
 
-        iznevt_u2d_shape = get_pak_vals_shape(model, iznevt)
-
-        self.iznevt = Transient2d(model, iznevt_u2d_shape, np.int32, surf, name="iznevt")
+        # self.inznevt = [inznevt]*nper
+        # self.iznevt = iznevt
+        # iznevt_u2d_shape = get_pak_vals_shape(model, iznevt)
+        # self.iznevt = Transient2d(model, iznevt_u2d_shape, np.int32, iznevt, name="iznevt")
 
         self.np = 0
         self.parent.add_package(self)
@@ -224,7 +227,7 @@ class MfUsgEvt(Package):
             insurf, surf = self.surf.get_kper_entry(n)
             inevtr, evtr = self.evtr.get_kper_entry(n)
             inexdp, exdp = self.exdp.get_kper_entry(n)
-            inievt = 0
+            inievt = -1
             if self.nevtop == 2:
                 inievt, file_entry_ievt = ievt.get_kper_entry(n)
                 if inievt >= 0 and not self.parent.structured:
@@ -233,8 +236,8 @@ class MfUsgEvt(Package):
             f_evt.write(
                 f"{insurf:10d}{inevtr:10d}{inexdp:10d}{inievt:10d} "
             )
-            if self.inznevt[n] > 0:
-                f_evt.write(f"INEVTZONES {self.inznevt[n]:10d}\n")
+            # if self.inznevt[n] > 0:
+            #     f_evt.write(f"INEVTZONES {self.inznevt[n]:10d}\n")
             f_evt.write(f"#{comment}\n")
 
             if insurf >= 0:
@@ -246,9 +249,9 @@ class MfUsgEvt(Package):
             if self.nevtop == 2 and inievt >= 0:
                 f_evt.write(file_entry_ievt)
             
-            if self.inznevt[n] > 0:
-                iznevt = self.iznevt.get_kper_entry(n)
-                f_evt.write(iznevt)
+            # if self.inznevt[n] > 0:
+            #     iznevt = self.iznevt.get_kper_entry(n)
+            #     f_evt.write(iznevt)
 
         f_evt.close()
 
@@ -314,8 +317,6 @@ class MfUsgEvt(Package):
         ipakcb = int(t[1])
         ietfactor = type_from_iterable(t, 2)
 
-        print(f"nevtop: {nevtop}, ipakcb: {ipakcb}, ietfactor: {ietfactor}")
-
         # Options
         mxetzones = 0
         if "ETS" in t:
@@ -359,13 +360,13 @@ class MfUsgEvt(Package):
         evtr = {}
         exdp = {}
         ievt = {}
-        iznevt = {}
+        # iznevt = {}
         current_surf = []
         current_evtr = []
         current_exdp = []
         current_ievt = []
         current_iznevt = []
-        inznevt = [0] * nper
+        # inznevt = [0] * nper
         for iper in range(nper):
             line = f.readline()
             t = line.strip().split()
@@ -380,9 +381,9 @@ class MfUsgEvt(Package):
             elif not model.structured:
                 u2d_shape = (1, ncol[0])
 
-            if "INEVTZONES" in t:
-                idx = t.index("INEVTZONES")
-                inznevt[iper] = int(t[idx + 1])
+            # if "INEVTZONES" in t:
+            #     idx = t.index("INEVTZONES")
+            #     inznevt[iper] = int(t[idx + 1])
             
             if insurf >= 0:
                 if model.verbose:
@@ -443,11 +444,11 @@ class MfUsgEvt(Package):
                         model, u2d_shape, np.int32, t.array - 1, "ievt"
                     )
                 ievt[iper] = current_ievt
-            if inznevt[iper] > 0:
-                if model.verbose:
-                    print(f"   loading iznevt stress period {iper + 1:3d}...")
-                current_iznevt = Util2d.load(f, model, (inznevt[iper],), np.int32, "iznevt", ext_unit_dict)
-            iznevt[iper] = current_iznevt
+            # if inznevt[iper] > 0:
+            #     if model.verbose:
+            #         print(f"   loading iznevt stress period {iper + 1:3d}...")
+            #     current_iznevt = Util2d.load(f, model, (inznevt[iper],), np.int32, "iznevt", ext_unit_dict)
+            # iznevt[iper] = current_iznevt
 
         if openfile:
             f.close()
@@ -463,28 +464,20 @@ class MfUsgEvt(Package):
 
         args["mxetzones"] = mxetzones
         args["etfactor"] = etfactor
-        args["inznevt"] = inznevt
-        args["iznevt"] = iznevt
+        # args["inznevt"] = inznevt
+        # args["iznevt"] = iznevt
 
         # determine specified unit number
         unitnumber = None
         filenames = [None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=MfUsgEvt._ftype()
+                ext_unit_dict, filetype=cls._ftype()
             )
-            if ipakcb > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
-                model.add_pop_key_list(ipakcb)
-
-        # set args for unitnumber and filenames
-        args["unitnumber"] = unitnumber
-        args["filenames"] = filenames
-
-        evt = cls(model, **args)
+            _, filenames[1] = model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
 
         # return evt object
-        return evt
+        return cls(model, unitnumber=unitnumber, filenames=filenames, **args)
 
     @staticmethod
     def _ftype():

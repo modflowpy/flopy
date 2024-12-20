@@ -48,8 +48,8 @@ def mfusg_transport_Ex6_Stallman_model_path(example_data_path: Path):
     return example_data_path / "mfusg_transport" / "Ex6_Stallman"
 
 @pytest.fixture
-def mfusg_transport_Ex7_Multispecies_model_path(example_data_path: Path):
-    return example_data_path / "mfusg_transport" / "Ex7_Multispecies"
+def mfusg_transport_Ex7_Matrix_Diffusion_model_path(example_data_path: Path):
+    return example_data_path / "mfusg_transport" / "Ex7_Matrix_Diffusion"
 
 @pytest.fixture
 def mfusg_transport_Ex8_Lake_model_path(example_data_path: Path):
@@ -485,10 +485,10 @@ def test_usg_load_Ex6_Stallman_Solute_Heat(function_tmpdir, mfusg_transport_Ex6_
     assert success, msg
 
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex7_Multispecies_DiscreteFracture(function_tmpdir, mfusg_transport_Ex7_Multispecies_model_path):
+def test_usg_load_Ex7_Matrix_Diffusion_DiscreteFracture(function_tmpdir, mfusg_transport_Ex7_Matrix_Diffusion_model_path):
     print("testing mfusg transport model loading: USG_discrete_fracture.nam")
 
-    fname = mfusg_transport_Ex7_Multispecies_model_path / "DiscreteFracture/USG_discrete_fracture.nam"
+    fname = mfusg_transport_Ex7_Matrix_Diffusion_model_path / "DiscreteFracture/USG_discrete_fracture.nam"
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
@@ -525,10 +525,10 @@ def test_usg_load_Ex7_Multispecies_DiscreteFracture(function_tmpdir, mfusg_trans
     assert success, msg
 
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex7_Multispecies(function_tmpdir, mfusg_transport_Ex7_Multispecies_model_path):
+def test_usg_load_Ex7_Matrix_Diffusion(function_tmpdir, mfusg_transport_Ex7_Matrix_Diffusion_model_path):
     print("testing mfusg transport model loading: USG_Multispecies.nam")
 
-    fname = mfusg_transport_Ex7_Multispecies_model_path / "Multispecies/USG_Multispecies.nam"
+    fname = mfusg_transport_Ex7_Matrix_Diffusion_model_path / "Multispecies/USG_Multispecies.nam"
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
@@ -565,10 +565,10 @@ def test_usg_load_Ex7_Multispecies(function_tmpdir, mfusg_transport_Ex7_Multispe
     assert success, msg
 
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex7_SandTank(function_tmpdir, mfusg_transport_Ex7_Multispecies_model_path):
+def test_usg_load_Ex7_SandTank(function_tmpdir, mfusg_transport_Ex7_Matrix_Diffusion_model_path):
     print("testing mfusg transport model loading: usg_sand_tank.nam")
 
-    fname = mfusg_transport_Ex7_Multispecies_model_path / "SandTank/usg_sand_tank.nam"
+    fname = mfusg_transport_Ex7_Matrix_Diffusion_model_path / "SandTank/usg_sand_tank.nam"
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model

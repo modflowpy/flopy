@@ -153,7 +153,7 @@ class MfUsgOc(Package):
                 if isinstance(save_types, str):
                     save_types = [save_types]
             else:
-                save_types = ["save head", "print budget"]
+                save_types = ["save head", "save budget"]
             if "save_conc" in kwargs:
                 save_types.append("save conc")
             if "save_start" in kwargs:

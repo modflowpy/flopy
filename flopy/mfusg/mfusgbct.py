@@ -152,14 +152,14 @@ class MfUsgBct(Package):
         ipakcb=0,
         mcomp=1,
         icbndflg=1,
-        itvd=3,
+        itvd=1,
         iadsorb=0,
         ict=0,
-        cinact=-1.0,
-        ciclose=1e-6,
+        cinact=-999.0,
+        ciclose=1.0e-6,
         idisp=1,
         ixdisp=0,
-        diffnc=0.57024,
+        diffnc=0.0,
         izod=0,
         ifod=0,
         ifmbc=0,
@@ -167,34 +167,10 @@ class MfUsgBct(Package):
         imcomp=0,
         idispcln=0,
         nseqitr=0,
-        timeweight=None,
-        chaindecay=False,
-        nparent=0,
-        jparent=0,
-        stotio=0,
-        sptlrct=0,
-        only_satadsorb=False,
-        spatialreact=False,
-        solubility=False,
-        aw_adsorb=False,
-        iarea_fn=None,
-        ikawi_fn=None,
-        imasswr=None,
-        crootname=None,
-        mbegwunf=0,
-        mbegwunt=0,
-        mbeclnunf=0,
-        mbeclnunt=0,
-        htcondw=0,
-        rhow=0,
-        htcapw=0,
-        htcaps=0,
-        htconds=0,
-        heat=0.0,
         icbund=1,
         prsity=0.15,
-        bulkd=157.0,
-        anglex=None,
+        bulkd=1.0,
+        anglex=0.0,
         dl=1.0,
         dt=0.1,
         dlx=1.0,
@@ -203,24 +179,12 @@ class MfUsgBct(Package):
         dtxy=0.1,
         dtyz=0.1,
         dtxz=0.1,
-        sollim=0.0,
-        solslope=0.0,
-        alangaw=0.0,
-        blangaw=0.0,
-        adsorb=0,
-        flich=0,
-        zodrw=0,
-        zodrs=0,
-        zodraw=0,
-        fodrw=0,
-        fodrs=0,
-        fodraw=0,
         conc=0.0,
-        imconc=0.0,
         extension=["bct", "cbt", "mbegwf", "mbegwt", "mbeclnf", "mbeclnt"],
         unitnumber=None,
         filenames=None,
         add_package=True,
+        **kwargs,
     ):
         """Constructs the MfUsgBct object."""
         msg = (
@@ -273,234 +237,201 @@ class MfUsgBct(Package):
 
         model.itrnsp = itrnsp
         model.mcomp = mcomp
-        model.iheat = iheat
+        model.iheat = self.iheat
 
-        self.timeweight = timeweight
-        self.chaindecay = chaindecay
-        self.only_satadsorb = only_satadsorb
-        self.spatialreact = spatialreact
-        self.solubility = solubility
-        self.aw_adsorb = aw_adsorb
-        self.iarea_fn = iarea_fn
-        self.ikawi_fn = ikawi_fn
-        self.imasswr = imasswr
-        self.crootname = crootname
-
-        self.mbegwunf = mbegwunf
-        self.mbegwunt = mbegwunt
-        self.mbeclnunf = mbeclnunf
-        self.mbeclnunt = mbeclnunt
-
-        self.htcondw = htcondw
-        self.rhow = rhow
-        self.htcapw = htcapw
-
+        structured = self.parent.structured
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
+        shape_3d = (nlay, nrow, ncol)
+
+        ## Options 
+        opts = []
+        self.timeweight = None
+        if "timeweight" in kwargs:
+            self.timeweight = float(kwargs.pop("timeweight"))
+            opts.append(f" TIMEWEIGHT {self.timeweight} ")
+        
+        self.chaindecay = None
+        if "chaindecay" in kwargs and kwargs["chaindecay"]:
+            self.chaindecay = 1
+            opts.append(" CHAINDECAY ")
+            
+        self.only_satadsorb = None
+        if "only_satadsorb" in kwargs and kwargs["only_satadsorb"]:
+            self.only_satadsorb = 1
+            opts.append(" ONLY_SATADSORB ")
+
+        self.spatialreact = None
+        if "spatialreact" in kwargs and kwargs["spatialreact"]:
+            self.spatialreact = 1
+            opts.append(" SPATIALREACT ")
+
+        if self.chaindecay:
+            if "nparent" in kwargs and len(kwargs["nparent"]) == mcomp:
+                self.nparent = kwargs["nparent"]
+            jparent = kwargs["jparent"]
+            stotio = kwargs["stotio"]
+            self.jparent = [0] * mcomp
+            self.stotio = [0] * mcomp
+            # sptlrct = kwargs["sptlrct"]
+            self.sptlrct = [0] * mcomp
+            for icomp in range(mcomp):
+                if self.nparent[icomp] > 0:
+                    self.jparent[icomp] = Util2d(
+                        model, (mcomp,), np.int32, jparent[icomp], name="jparent"
+                    )
+                    self.stotio[icomp] = Util2d(
+                        model, (mcomp,), np.float32, stotio[icomp], name="stotio"
+                    )
+                    # if self.spatialreact :
+                    # self.sptlrct[icomp] = Util2d(
+                    #     model, (mcomp,), np.float32, sptlrct[icomp], name="sptlrct"
+                    # )
+        
+        self.solubility = None
+        if "solubility" in kwargs and kwargs["solubility"]:
+            self.sollim = Util2d(model, (mcomp,), np.float32, kwargs["sollim"], name="sollim")
+            self.solslope = Util2d(
+                model, (mcomp,), np.float32, kwargs["solslope"], name="solslope"
+            )
+            self.solubility = 1
+            opts.append(" SOLUBILITY ")
+        
+        self.aw_adsorb = None
+        if "aw_adsorb" in kwargs and kwargs["aw_adsorb"]:
+            self.iarea_fn = kwargs["iarea_fn"]
+            self.ikawi_fn = kwargs["ikawi_fn"]
+            self.aw_adsorb = 1
+            opts.append(f" A-W_ADSORB {self.iarea_fn} {self.ikawi_fn}")
+        
+        if "imasswr" in kwargs and kwargs["imasswr"]:
+            opts.append(f" WRITE_GWMASS {kwargs["imasswr"]} ")
+        
+        if "crootname" in kwargs:
+            opts.append(f" MULTIFILE {kwargs["crootname"]} ")
+        
+        self.options = " ".join(opts)
+
+        ## Assign input parameter array values
+        if self.iheat:
+            self.htcondw = kwargs["htcondw"]
+            self.rhow = kwargs["rhow"]
+            self.htcapw = kwargs["htcapw"]
+            self.htcaps = Util3d(
+                model, shape_3d, np.float32, kwargs["htcaps"], name="htcaps"
+            )
+            self.htconds = Util3d(
+                model, shape_3d, np.float32, kwargs["htconds"], name="htconds"
+            )
+            self.heat = Util3d(
+                model, shape_3d, np.float32, kwargs["heat"], name="heat"
+            )
 
         if self.icbndflg == 0:
-            if icbund is None:
-                icbund = 1
-            self.icbund = Util3d(
-                model, (nlay, nrow, ncol), np.int32, icbund, name="icbund"
-            )
+            self.icbund = Util3d(model, shape_3d, np.int32, icbund, name="icbund")
 
-        self.prsity = Util3d(
-            model, (nlay, nrow, ncol), np.float32, prsity, name="prsity"
-        )
+        self.prsity = Util3d(model, shape_3d, np.float32, prsity, name="prsity")
 
         if self.iadsorb or self.iheat:
-            if bulkd is None:
-                bulkd = 157.0
-            self.bulkd = Util3d(
-                model, (nlay, nrow, ncol), np.float32, bulkd, name="bulkd"
-            )
+            self.bulkd = Util3d(model, shape_3d, np.float32, bulkd, name="bulkd")
 
-        if anglex is not None:
+        if not structured and self.idisp:
             njag = self.parent.get_package("DISU").njag
             self.anglex = Util2d(model, (njag,), np.float32, anglex, name="anglex")
 
         if self.idisp == 1:
-            self.dl = Util3d(model, (nlay, nrow, ncol), np.float32, dl, name="dl")
-            self.dt = Util3d(model, (nlay, nrow, ncol), np.float32, dt, name="dt")
+            self.dl = Util3d(model, shape_3d, np.float32, dl, name="dl")
+            self.dt = Util3d(model, shape_3d, np.float32, dt, name="dt")
 
         if self.idisp == 2:
-            self.dlx = Util3d(model, (nlay, nrow, ncol), np.float32, dlx, name="dlx")
-            self.dly = Util3d(model, (nlay, nrow, ncol), np.float32, dly, name="dly")
-            self.dlz = Util3d(model, (nlay, nrow, ncol), np.float32, dlz, name="dlz")
-            self.dtxy = Util3d(model, (nlay, nrow, ncol), np.float32, dtxy, name="dtxy")
-            self.dtyz = Util3d(model, (nlay, nrow, ncol), np.float32, dtyz, name="dtyz")
-            self.dtxz = Util3d(model, (nlay, nrow, ncol), np.float32, dtxz, name="dtxz")
-        if self.iheat == 1:
-            self.htcaps = Util3d(
-                model, (nlay, nrow, ncol), np.float32, htcaps, name="htcaps"
-            )
-            self.htconds = Util3d(
-                model, (nlay, nrow, ncol), np.float32, htconds, name="htconds"
-            )
-        if self.solubility == 1:
-            self.sollim = Util2d(model, (mcomp,), np.float32, sollim, name="sollim")
-            self.solslope = Util2d(
-                model, (mcomp,), np.float32, solslope, name="solslope"
-            )
+            self.dlx = Util3d(model, shape_3d, np.float32, dlx, name="dlx")
+            self.dly = Util3d(model, shape_3d, np.float32, dly, name="dly")
+            self.dlz = Util3d(model, shape_3d, np.float32, dlz, name="dlz")
+            self.dtxy = Util3d(model, shape_3d, np.float32, dtxy, name="dtxy")
+            self.dtyz = Util3d(model, shape_3d, np.float32, dtyz, name="dtyz")
+            self.dtxz = Util3d(model, shape_3d, np.float32, dtxz, name="dtxz")
+        
+        if self.iadsorb:
+            adsorb = kwargs["adsorb"]
+            self.adsorb = self.mcomp_Util3d(
+                model,shape_3d,np.float32,adsorb,"adsorb", mcomp)
+        
+        if self.iadsorb == 2 or self.iadsorb == 3:
+            flich = kwargs["flich"]
+            self.flich = self.mcomp_Util3d(
+                model,shape_3d,np.float32,flich,"flich", mcomp)
+        
+        if self.izod in (1,3,4):
+            zodrw = kwargs["zodrw"]
+            self.zodrw = self.mcomp_Util3d(
+                model,shape_3d,np.float32,zodrw,"zodrw", mcomp)
 
-        if isinstance(adsorb, (int, float)):
-            adsorb = [adsorb] * mcomp
-        if isinstance(flich, (int, float)):
-            flich = [flich] * mcomp
-        if isinstance(zodrw, (int, float)):
-            zodrw = [zodrw] * mcomp
-        if isinstance(zodrs, (int, float)):
-            zodrs = [zodrs] * mcomp
-        if isinstance(zodraw, (int, float)):
-            zodraw = [zodraw] * mcomp
-        if isinstance(fodrw, (int, float)):
-            fodrw = [fodrw] * mcomp
-        if isinstance(fodrs, (int, float)):
-            fodrs = [fodrs] * mcomp
-        if isinstance(fodraw, (int, float)):
-            fodraw = [fodraw] * mcomp
-        if isinstance(conc, (int, float)):
-            conc = [conc] * mcomp
+        if self.iadsorb and self.izod in (2,3,4):
+            zodrs = kwargs["zodrs"]
+            self.zodrs = self.mcomp_Util3d(
+                model,shape_3d,np.float32,zodrs,"zodrs", mcomp)
 
-        self.adsorb = [0] * mcomp
-        self.flich = [0] * mcomp
-        self.zodrw = [0] * mcomp
-        self.zodrs = [0] * mcomp
-        self.zodraw = [0] * mcomp
-        self.fodrw = [0] * mcomp
-        self.fodrs = [0] * mcomp
-        self.fodraw = [0] * mcomp
-        self.conc = [0] * mcomp
+        if self.aw_adsorb and self.izod == 4:
+            zodraw = kwargs["zodraw"]
+            self.zodraw = self.mcomp_Util3d(
+                model,shape_3d,np.float32,zodraw,"zodraw", mcomp)
 
-        self.nparent = nparent
-        self.jparent = [0] * mcomp
-        self.stotio = [0] * mcomp
-        self.sptlrct = [0] * mcomp
+        if self.ifod in (1,3,4):
+            fodrw = kwargs["fodrw"]
+            self.fodrw = self.mcomp_Util3d(
+                model,shape_3d,np.float32,fodrw,"fodrw", mcomp)
 
-        if isinstance(alangaw, (int, float)):
-            alangaw = [alangaw] * mcomp
-        if isinstance(blangaw, (int, float)):
-            blangaw = [blangaw] * mcomp
-        self.alangaw = [0] * mcomp
-        self.blangaw = [0] * mcomp
+        if self.iadsorb and self.ifod in (2,3,4):
+            fodrs = kwargs["fodrs"]
+            self.fodrs = self.mcomp_Util3d(
+                model,shape_3d,np.float32,fodrs,"fodrs", mcomp)
 
-        for icomp in range(mcomp):
-            if self.chaindecay and self.nparent[icomp] > 0:
-                self.jparent[icomp] = Util2d(
-                    model, (mcomp,), np.float32, jparent[icomp], name="jparent"
-                )
-                self.stotio[icomp] = Util2d(
-                    model, (mcomp,), np.float32, stotio[icomp], name="stotio"
-                )
-                # Not tested
-                if self.spatialreact:
-                    self.sptlrct[icomp] = Util3d(
-                        model,
-                        (nlay, nrow, ncol),
-                        np.float32,
-                        sptlrct[icomp],
-                        name="sptlrct",
-                    )
+        if self.aw_adsorb and self.ifod == 4:
+            fodraw = kwargs["fodraw"]
+            self.fodraw = self.mcomp_Util3d(
+                model,shape_3d,np.float32,fodraw,"fodraw", mcomp)
 
-            if self.aw_adsorb and self.iarea_fn in (1, 2, 3):
-                self.alangaw[icomp] = Util3d(
-                    model,
-                    (nlay, nrow, ncol),
-                    np.float32,
-                    alangaw[icomp],
-                    name="alangaw species {icomp+1}",
-                )
-                self.blangaw[icomp] = Util3d(
-                    model,
-                    (nlay, nrow, ncol),
-                    np.float32,
-                    blangaw[icomp],
-                    name="blangaw species {icomp+1}",
-                )
-
-            self.adsorb[icomp] = Util3d(
-                model,
-                (nlay, nrow, ncol),
-                np.float32,
-                adsorb[icomp],
-                name=f"adsorb species {icomp+1}",
-            )
-            self.flich[icomp] = Util3d(
-                model,
-                (nlay, nrow, ncol),
-                np.float32,
-                flich[icomp],
-                name=f"flich species {icomp+1}",
-            )
-            self.zodrw[icomp] = Util3d(
-                model,
-                (nlay, nrow, ncol),
-                np.float32,
-                zodrw[icomp],
-                name=f"zodrw species {icomp+1}",
-            )
-            self.zodrs[icomp] = Util3d(
-                model,
-                (nlay, nrow, ncol),
-                np.float32,
-                zodrs[icomp],
-                name=f"zodrs species {icomp+1}",
-            )
-            self.zodraw[icomp] = Util3d(
-                model,
-                (nlay, nrow, ncol),
-                np.float32,
-                zodraw[icomp],
-                name=f"zodraw species {icomp+1}",
-            )
-            self.fodrw[icomp] = Util3d(
-                model,
-                (nlay, nrow, ncol),
-                np.float32,
-                fodrw[icomp],
-                name=f"fodrw species {icomp+1}",
-            )
-            self.fodrs[icomp] = Util3d(
-                model,
-                (nlay, nrow, ncol),
-                np.float32,
-                fodrs[icomp],
-                name=f"fodrs species {icomp+1}",
-            )
-            self.fodraw[icomp] = Util3d(
-                model,
-                (nlay, nrow, ncol),
-                np.float32,
-                fodraw[icomp],
-                name=f"fodraw species {icomp+1}",
-            )
-            self.conc[icomp] = Util3d(
-                model,
-                (nlay, nrow, ncol),
-                np.float32,
-                conc[icomp],
-                name=f"conc species {icomp+1}",
-            )
-
-        if self.iheat == 1:
-            self.heat = Util3d(model, (nlay, nrow, ncol), np.float32, heat, name="heat")
+        if self.aw_adsorb and self.iarea_fn == 1:
+            self.awamax = Util3d(
+                model, shape_3d, np.float32, kwargs["awamax"], name="awamax")
+        
+        if self.aw_adsorb and self.iarea_fn == 2:
+            self.grain_dia = Util3d(
+                model, shape_3d, np.float32, kwargs["grain_dia"], name="grain_dia")
+        
+        if self.aw_adsorb and self.iarea_fn in (1, 2, 3):
+            alangaw = kwargs["alangaw"]
+            self.alangaw = self.mcomp_Util3d(
+                model,shape_3d,np.float32,alangaw,"alangaw", mcomp)
+            blangaw = kwargs["blangaw"]
+            self.blangaw = self.mcomp_Util3d(
+                model,shape_3d,np.float32,blangaw,"blangaw", mcomp)
+        
+        self.conc = self.mcomp_Util3d(
+            model,shape_3d,np.float32,conc,"conc", mcomp)
 
         if self.imcomp > 0:
-            if isinstance(imconc, (int, float)):
-                imconc = [imconc] * mcomp
-            self.imconc = [0] * mcomp
-            for icomp in range(self.imcomp):
-                self.imconc[icomp] = Util3d(
-                    model,
-                    (nlay, nrow, ncol),
-                    np.float32,
-                    imconc[icomp],
-                    name=f"imconc species {icomp+1}",
-                )
+            imconc = kwargs["imconc"]
+            self.imconc = self.mcomp_Util3d(
+                model,shape_3d,np.float32,imconc,"imconc", mcomp)
 
         if add_package:
             self.parent.add_package(self)
-
+    
+    @staticmethod
+    def mcomp_Util3d(model,shape,dtype,value,name, mcomp):
+        if isinstance(value, (int, float)):
+            value = [value] * mcomp
+        mcomp3D = [0] * mcomp
+        for icomp in range(mcomp):
+            mcomp3D[icomp] = Util3d(
+                model,
+                shape,
+                dtype,
+                value[icomp],
+                f"{name} of comp {icomp+1}",
+            )
+        return mcomp3D
+    
     def write_file(self, f=None):
         """
         Write the BCT package file.
@@ -519,37 +450,29 @@ class MfUsgBct(Package):
         # Item 1: ITRNSP ipakcb MCOMP ICBNDFLG ITVD IADSORB ICT CINACT CICLOSE
         # IDISP IXDISP DIFFNC IZOD IFOD IFMBC IHEAT IMCOMP IDISPCLN NSEQITR
         f_obj.write(f"{self.heading}\n")
-        f_obj.write(
-            f" {self.itrnsp:9d} {self.ipakcb:9d} {self.mcomp:9d} {self.icbndflg:9d} "
-            f"{self.itvd:9d} {self.iadsorb:9d} {self.ict:9d} {self.cinact:9.2f} "
-            f"{self.ciclose:9.2e} {self.idisp:9d} {self.ixdisp:9d} {self.diffnc:9.2f} "
-            f"{self.izod:9d} {self.ifod:9d} {self.ifmbc:9d} {self.iheat:9d} "
-            f"{self.imcomp:9d} {self.idispcln:9d} {self.nseqitr:9d}"
-        )
 
-        # Options: TIMEWEIGHT CHAINDECAY ONLY_SATADSORB SPATIALREACT SOLUBILITY
-        # A-W_ADSORB WRITE_GWMASS MULTIFILE
-        if self.chaindecay:
-            f_obj.write(" CHAINDECAY")
-        if self.only_satadsorb:
-            f_obj.write(" ONLY_SATADSORB")
-        if self.spatialreact:
-            f_obj.write(" SPATIALREACT")
-        if self.solubility:
-            f_obj.write(" SOLUBILITY")
-        if self.timeweight is not None:
-            f_obj.write(f" TIMEWEIGHT {self.timeweight:9.2f}")
-        if self.aw_adsorb:
-            f_obj.write(f" A-W_ADSORB {self.iarea_fn:9d} {self.ikawi_fn:9d}")
-        if self.imasswr is not None:
-            f_obj.write(f" WRITE_GWMASS {self.imasswr:9d}")
-        if self.crootname is not None:
-            f_obj.write(f" MULTIFILE {self.crootname}")
+        print(self.parent.free_format_input)
 
-        f_obj.write("\n")
+        if self.parent.free_format_input:
+            f_obj.write(
+                f" {self.itrnsp:3d} {self.ipakcb:3d} {self.mcomp:3d} {self.icbndflg:3d} "
+                f"{self.itvd:3d} {self.iadsorb:3d} {self.ict:3d} {self.cinact:14.6e} "
+                f"{self.ciclose:14.6e} {self.idisp:3d} {self.ixdisp:3d} {self.diffnc:14.6e} "
+                f"{self.izod:3d} {self.ifod:3d} {self.ifmbc:3d} {self.iheat:3d} "
+                f"{self.imcomp:3d} {self.idispcln:3d} {self.nseqitr:3d} "
+            )
+        else :
+            f_obj.write(
+                f" {self.itrnsp:9d} {self.ipakcb:9d} {self.mcomp:9d} {self.icbndflg:9d} "
+                f"{self.itvd:9d} {self.iadsorb:9d} {self.ict:9d} {self.cinact:9.2e} "
+                f"{self.ciclose:9.2e} {self.idisp:9d} {self.ixdisp:9d} {self.diffnc:9.2e} "
+                f"{self.izod:9d} {self.ifod:9d} {self.ifmbc:9d} {self.iheat:9d} "
+                f"{self.imcomp:9d} {self.idispcln:9d} {self.nseqitr:9d} "
+            )
 
-        # Item 1b: IFMBC == 1
-        if self.ifmbc == 1:
+        f_obj.write(self.options + "\n")
+
+        if self.ifmbc:
             f_obj.write(
                 f" {self.unit_number[1]:9d} {self.unit_number[2]:9d}"
                 f" {self.unit_number[3]:9d} {self.unit_number[4]:9d}\n"
@@ -605,6 +528,10 @@ class MfUsgBct(Package):
             f_obj.write(self.htcaps.get_file_entry())
             f_obj.write(self.htconds.get_file_entry())
 
+        if self.aw_adsorb and self.iarea_fn==1:
+            f_obj.write(self.awamax.get_file_entry())
+        if self.aw_adsorb and self.iarea_fn==2:
+            f_obj.write(self.grain_dia.get_file_entry())
         for icomp in range(self.mcomp):
             if self.chaindecay:
                 f_obj.write(f"{self.nparent[icomp]:9d}\n")
@@ -764,7 +691,7 @@ class MfUsgBct(Package):
         # item 1a
         vars = {
             "itrnsp": int,
-            "ipakcb": int,
+            "ibctcb": int,
             "mcomp": int,
             "icbndflg": int,
             "itvd": int,
@@ -780,6 +707,8 @@ class MfUsgBct(Package):
         for i, (v, c) in enumerate(vars.items()):
             kwargs[v] = c(t[i].strip())
             print(f"{v}={kwargs[v]}")
+
+        ibctcb=kwargs["ibctcb"]
 
         vars = {
             "izod": int,
@@ -799,68 +728,37 @@ class MfUsgBct(Package):
         if "TIMEWEIGHT" in t:
             idx = t.index("TIMEWEIGHT")
             kwargs["timeweight"] = float(t[idx + 1])
-        else:
-            kwargs["timeweight"] = None
 
-        if "CHAINDECAY" in t:
-            kwargs["chaindecay"] = 1
-        else:
-            kwargs["chaindecay"] = 0
-
-        if "ONLY_SATADSORB" in t:
-            kwargs["only_satadsorb"] = 1
-        else:
-            kwargs["only_satadsorb"] = 0
-
-        if "SPATIALREACT" in t:
-            kwargs["spatialreact"] = 1
-        else:
-            kwargs["spatialreact"] = 0
-
-        if "SOLUBILITY" in t:
-            kwargs["solubility"] = 1
-        else:
-            kwargs["solubility"] = 0
+        kwargs["chaindecay"] = "CHAINDECAY" in t
+        kwargs["only_satadsorb"] = "ONLY_SATADSORB" in t
+        kwargs["spatialreact"] = "SPATIALREACT" in t
+        kwargs["solubility"] = "SOLUBILITY" in t
+        kwargs["chaindecay"] = "CHAINDECAY" in t
+        kwargs["chaindecay"] = "CHAINDECAY" in t
 
         if "A-W_ADSORB" in t:
             idx = t.index("A-W_ADSORB")
             kwargs["aw_adsorb"] = 1
             kwargs["iarea_fn"] = int(t[idx + 1])
             kwargs["ikawi_fn"] = int(t[idx + 2])
-        else:
-            kwargs["aw_adsorb"] = 0
-            kwargs["iarea_fn"] = None
-            kwargs["ikawi_fn"] = None
+        else :
+            kwargs["aw_adsorb"] = None
 
         if "WRITE_GWMASS" in t:
             idx = t.index("WRITE_GWMASS")
             kwargs["imasswr"] = int(t[idx + 1])
-        else:
-            kwargs["imasswr"] = None
 
         if "MULTIFILE" in t:
             idx = t.index("MULTIFILE")
             kwargs["crootname"] = str(t[idx + 1])
-        else:
-            kwargs["crootname"] = None
 
         # item 1b ifmbc == 1
+        mbegwunf, mbegwunt, mbeclnunf, mbeclnunt = 0, 0, 0, 0
         if kwargs["ifmbc"] == 1:
-            vars = {
-                "mbegwunf": int,
-                "mbegwunt": int,
-                "mbeclnunf": int,
-                "mbeclnunt": int,
-            }
             line = f_obj.readline().upper()
             t = line.split()
-            for i, (v, c) in enumerate(vars.items()):
-                kwargs[v] = c(t[i].strip())
-        else:
-            kwargs["mbegwunf"] = 0
-            kwargs["mbegwunt"] = 0
-            kwargs["mbeclnunf"] = 0
-            kwargs["mbeclnunt"] = 0
+            mbegwunf, mbegwunt, mbeclnunf, mbeclnunt = (
+                int(t[0]), int(t[1]), int(t[2]), int(t[3]))
 
         # item 1c iheat == 1
         if kwargs["iheat"]:
@@ -903,6 +801,7 @@ class MfUsgBct(Package):
                 f_obj, model, nlay, np.float32, "bulkd", ext_unit_dict
             )
 
+        mcomp = kwargs["mcomp"]
         # item 5 ANGLEX
         if (not model.structured) and kwargs["idisp"]:
             if model.verbose:
@@ -950,9 +849,27 @@ class MfUsgBct(Package):
                 f_obj, model, nlay, np.float32, "rhow", ext_unit_dict
             )
 
-        # Not implemented item A1  - A5 if AW_ADSORB option is on
-
-        mcomp = kwargs["mcomp"]
+        # Read item A1  - A5 if AW_ADSORB option is on
+        if kwargs["aw_adsorb"]:
+            if  kwargs["iarea_fn"] == 1:
+                kwargs["awamax"] = cls._load_prop_arrays(
+                    f_obj, model, nlay, np.float32, "awamax", ext_unit_dict
+                )
+            if  kwargs["iarea_fn"] == 2:
+                kwargs["grain_dia"] = cls._load_prop_arrays(
+                    f_obj, model, nlay, np.float32, "grain_dia", ext_unit_dict
+                )
+            # Not implemented if AW_ADSORB option is on and iarea_fn = 4
+            # if  kwargs["iarea_fn"] == 4:
+            #     kwargs["awarea_x2"] = cls._load_prop_arrays(
+            #         f_obj, model, nlay, np.float32, "awarea_x2", ext_unit_dict
+            #     )
+            #     kwargs["awarea_x1"] = cls._load_prop_arrays(
+            #         f_obj, model, nlay, np.float32, "awarea_x1", ext_unit_dict
+            #     )
+            #     kwargs["awarea_x0"] = cls._load_prop_arrays(
+            #         f_obj, model, nlay, np.float32, "awarea_x0", ext_unit_dict
+            #     )
 
         adsorb = [0] * mcomp
         flich = [0] * mcomp
@@ -1005,7 +922,7 @@ class MfUsgBct(Package):
                             f_obj, model, (nlay,), np.float32, "sptlrct", ext_unit_dict
                         )
 
-            # item A6  - A7 if AW_ADSORB option is on
+            # item A6  - A8 if AW_ADSORB option is on
             if kwargs["aw_adsorb"] == 1 and kwargs["iarea_fn"] in (1, 2, 3):
                 alangaw[icomp] = cls._load_prop_arrays(
                     f_obj, model, nlay, np.float32, "alangaw", ext_unit_dict
@@ -1095,33 +1012,19 @@ class MfUsgBct(Package):
 
         # set package unit number
         # reset unit numbers
-        unitnumber = cls._defaultunit()
+
+        unitnumber = [None] * 6
         filenames = [None] * 6
         if ext_unit_dict is not None:
-            unitnumber, filenames[0] = model.get_ext_dict_attr(
+            unitnumber[0], filenames[0] = model.get_ext_dict_attr(
                 ext_unit_dict, filetype=cls._ftype()
             )
-            if kwargs["ipakcb"] > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=kwargs["ipakcb"])
-                model.add_pop_key_list(kwargs["ipakcb"])        
-        
-        if kwargs["mbegwunf"] > 0:
-            unitnumber[2], filenames[2] = model.get_ext_dict_attr(
-                ext_unit_dict, unit=kwargs["mbegwunf"]
-            )
-        if kwargs["mbegwunt"] > 0:
-            unitnumber[3], filenames[3] = model.get_ext_dict_attr(
-                ext_unit_dict, unit=kwargs["mbegwunt"]
-            )
-        if kwargs["mbeclnunf"] > 0:
-            unitnumber[4], filenames[4] = model.get_ext_dict_attr(
-                ext_unit_dict, unit=kwargs["mbeclnunf"]
-            )
-        if kwargs["mbeclnunt"] > 0:
-            unitnumber[5], filenames[5] = model.get_ext_dict_attr(
-                ext_unit_dict, unit=kwargs["mbeclnunt"]
-            )
+            file_unit_items = [ibctcb, mbegwunf, mbegwunt, mbeclnunf, mbeclnunt]
+            for idx, item in enumerate(file_unit_items):
+                unitnumber[idx+1] = item
+                _, filenames[idx+1] = model.get_ext_dict_attr(
+                                ext_unit_dict, unit=abs(item))
+                model.add_pop_key_list(abs(item))
 
         bct = cls(model, unitnumber=unitnumber, filenames=filenames, **kwargs)
         
@@ -1145,7 +1048,7 @@ class MfUsgBct(Package):
                 f_obj, model, util2d_shape, dtype, name, ext_unit_dict
             )
         return prop_array
-
+    
     @staticmethod
     def _ftype():
         return "BCT"

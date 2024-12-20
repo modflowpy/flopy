@@ -131,6 +131,9 @@ class ModflowChd(Package):
             self.dtype = dtype
         else:
             self.dtype = self.get_default_dtype(structured=self.parent.structured)
+        
+        options = self._check_for_aux(options)
+        
         self.stress_period_data = MfList(self, stress_period_data)
 
         self.np = 0
@@ -138,6 +141,34 @@ class ModflowChd(Package):
             options = []
         self.options = options
         self.parent.add_package(self)
+
+    def _check_for_aux(self, options):
+        """Check dtype for auxiliary variables, and add to options.
+
+        Parameters
+        ----------
+        options: list
+            package options
+
+        Returns
+        -------
+            options: list
+                Package options strings
+
+        """
+        dt = self.get_default_dtype(structured=self.parent.structured)
+
+        if len(self.dtype.names) > len(dt.names):
+            for name in self.dtype.names[len(dt.names) :]:
+                ladd = True
+                for option in options:
+                    if name.lower() in option.lower():
+                        ladd = False
+                        break
+                if ladd:
+                    options.append(f"aux {name} ")
+
+        return options
 
     def _ncells(self):
         """Maximum number of cells that have constant heads (developed for

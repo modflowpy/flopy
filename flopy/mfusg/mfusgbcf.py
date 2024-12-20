@@ -266,8 +266,8 @@ class MfUsgBcf(ModflowBcf):
 
         # Item 1: ipakcb, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET, IKVFLAG, IKCFLAG
         f_obj.write(
-            f" {self.ipakcb:9d} {self.hdry:9.3G} {self.iwdflg:9d}"
-            f" {self.wetfct:9.3G} {self.iwetit:9d} {self.ihdwet:9d}"
+            f" {self.ipakcb:9d} {self.hdry:9.3e} {self.iwdflg:9d}"
+            f" {self.wetfct:9.3e} {self.iwetit:9d} {self.ihdwet:9d}"
             f" {self.ikvflag:9d} {self.ikcflag:9d}"
         )
 

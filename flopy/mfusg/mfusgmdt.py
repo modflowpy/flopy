@@ -125,16 +125,16 @@ class MfUsgMdt(Package):
         )
         assert isinstance(model, MfUsg), msg
 
-        # set default unit number of one is not specified
         if unitnumber is None:
-            self.unitnumber = self._defaultunit()
+            unitnumber = self._defaultunit()
 
+        # call base package constructor
         super().__init__(
             model,
-            extension,
-            self._ftype(),
-            unitnumber,
-            self._prepare_filenames(filenames),
+            extension=extension,
+            name=self._ftype(),
+            unit_number=unitnumber,
+            filenames=self._prepare_filenames(filenames),
         )
 
         self._generate_heading()
@@ -166,6 +166,18 @@ class MfUsgMdt(Package):
         )
 
         mcomp = model.mcomp
+        if isinstance(kdmd, (int, float)):
+            kdmd = [kdmd] * mcomp
+        if isinstance(decaymd, (int, float)):
+            decaymd = [decaymd] * mcomp
+        if isinstance(yieldmd, (int, float)):
+            yieldmd = [yieldmd] * mcomp
+        if isinstance(diffmd, (int, float)):
+            diffmd = [diffmd] * mcomp
+        if isinstance(aiold1md, (int, float)):
+            aiold1md = [aiold1md] * mcomp
+        if isinstance(aiold2md, (int, float)):
+            aiold2md = [aiold2md] * mcomp
 
         self.kdmd = [0] * mcomp
         self.decaymd = [0] * mcomp
@@ -327,7 +339,6 @@ class MfUsgMdt(Package):
 
         for i, (v, c) in enumerate(vars.items()):
             kwargs[v] = c(t[i].strip())
-            # print(f"{v}={kwargs[v]}\n")
 
         # item 1a - options
         if "frahk" in t:

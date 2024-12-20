@@ -166,7 +166,7 @@ class MfUsgLak(Package):
                 Values are entered for each sublake in the order the sublakes
                 are listed in the previous record.
     flux_data : dict
-        (dataset 9 in documentation)
+        (dataset 9a in documentation)
         Dict of lists keyed by stress period. The list for each stress period
         is a list of lists, with each list containing the variables
         PRCPLK EVAPLK RNF WTHDRW [SSMN] [SSMX] from the documentation.
@@ -209,7 +209,18 @@ class MfUsgLak(Package):
             SSMX : float
                 SSMX Maximum stage allowed for each lake in steady-state
                 solution.
-
+    conc_data : dict
+        (dataset 9b in documentation)
+        Dict of lists keyed by stress period. The list for each stress period
+        is a list of lists, with each list containing the variables
+        CPPT CRNF [CAUG] from the documentation.
+            CPPT : float
+                concentration of solute in precipitation onto the lake surface
+            CRNF : float
+                concentration of solute in overland runoff directly into the lake
+            CAUG : float
+                concentration of solute in water used to augment the lake volume
+        if 
     options : list of strings
         Package options. (default is None).
     extension : string
@@ -268,6 +279,7 @@ class MfUsgLak(Package):
         bdlknc=None,
         sill_data=None,
         flux_data=None,
+        transportboundary=False,
         conc_data=None,
         extension="lak",
         unitnumber=None,
@@ -446,7 +458,21 @@ class MfUsgLak(Package):
         self.flux_data = flux_data
         self.sill_data = sill_data
 
-        self.clake = clake
+        self.transportboundary = transportboundary
+
+        mcomp = model.mcomp
+        if isinstance(clake, (int, float)):
+            self.clake = [[clake] * mcomp for _ in range(self.nlakes)]
+        else :
+            self.clake = clake
+
+        if conc_data is not None:
+            if not isinstance(conc_data, dict):
+                try:
+                    conc_data = {0: sill_data}
+                except:
+                    err = "conc_data must be a dictionary"
+                    raise Exception(err)
         self.conc_data = conc_data
 
         self.parent.add_package(self)
@@ -477,14 +503,13 @@ class MfUsgLak(Package):
         """
         f = open(self.fn_path, "w")
         # dataset 0
-        if self.parent.version != "mf2k":
-            f.write(f"{self.heading}\n\n")
+        f.write(f"{self.heading}\n")
 
         # dataset 1a
         if len(self.options) > 0:
             for option in self.options:
                 f.write(f"{option} ")
-            f.write("\n")
+        f.write("\n")
 
         # dataset 1b
         f.write(
@@ -664,11 +689,19 @@ class MfUsgLak(Package):
 
         options = []
         tabdata = False
+        newline = False
+        transportboundary = False
         if "TABLEINPUT" in line.upper():
             if model.verbose:
                 print("   reading lak dataset 1a")
             options.append("TABLEINPUT")
             tabdata = True
+            newline = True
+        if "TRANSPORTBOUNDARY" in line.upper():
+            options.append("TRANSPORTBOUNDARY")
+            transportboundary = True
+            newline = True
+        if newline:
             line = f.readline()
 
         # read dataset 1b
@@ -848,7 +881,7 @@ class MfUsgLak(Package):
                         tds.append(0.0)
                     ds9[n] = tds
 
-                    if mcomp > 0:
+                    if mcomp > 0 and not transportboundary:
                         for icomp in range(mcomp):
                             line = f.readline().rstrip()
                             if model.array_free_format:
@@ -861,6 +894,14 @@ class MfUsgLak(Package):
                             if wthdrw < 0:
                                 tds.append(float(t[2]))  # CAUG
                             ds9b[(n, icomp)] = tds
+
+                    if mcomp > 0 and transportboundary:
+                        ## CLAKBC–The concentration of solute for lake boundary
+                        line = f.readline().rstrip()
+                        t = line.split()
+                        for icomp in range(mcomp):
+                            ds9b[(n, icomp)] = t[icomp]
+
                 flux_data[iper] = ds9
                 conc_data[iper] = ds9b
 
@@ -915,6 +956,7 @@ class MfUsgLak(Package):
             bdlknc=lake_lknc,
             sill_data=sill_data,
             flux_data=flux_data,
+            transportboundary=transportboundary,
             conc_data=conc_data,
             unitnumber=unitnumber,
             filenames=filenames,

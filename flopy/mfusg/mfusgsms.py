@@ -267,6 +267,7 @@ class MfUsgSms(Package):
         relaxpcgu=1.0,
         extension="sms",
         options=None,
+        options2=None,
         unitnumber=None,
         filenames=None,
     ):
@@ -334,6 +335,14 @@ class MfUsgSms(Package):
             if not isinstance(options, list):
                 options = [options]
             self.options = options
+        
+        if options2 is None:
+            self.options2 = []
+        else:
+            if not isinstance(options2, list):
+                options2 = [options2]
+            self.options2 = options2
+        
         self.parent.add_package(self)
         return
 
@@ -353,8 +362,11 @@ class MfUsgSms(Package):
             f.write(" ".join(self.options) + "\n")
         f.write(
             f" {self.hclose:9.2e} {self.hiclose:9.2e} {self.mxiter:9d} {self.iter1:9d}"
-            f" {self.iprsms:9d} {self.nonlinmeth:9d} {self.linmeth:9d}\n"
+            f" {self.iprsms:9d} {self.nonlinmeth:9d} {self.linmeth:9d} "
         )
+        if len(self.options2) > 0:
+            f.write(" ".join(self.options2))
+        f.write("\n")
 
         if self.nonlinmeth != 0 and nopt == 0:
             f.write(
@@ -443,7 +455,7 @@ class MfUsgSms(Package):
         nopt = len(options)
 
         if nopt > 0:
-            line = f.readline()
+            line = f.readline().upper()
 
         # Record 1b -- line will have already been read
         if model.verbose:
@@ -461,6 +473,21 @@ class MfUsgSms(Package):
                 f"   HCLOSE {hclose} HICLOSE {hiclose} MXITER {mxiter} ITER1 {iter1}"
                 f" IPRSMS {iprsms} NONLINMETH {nonlinmeth} LINMETH {linmeth}"
             )
+
+        # OPTIONS2
+        options2 = []
+        if "SOLVEACTIVE" in ll:
+            options2.append(' SOLVEACTIVE')
+        if "DAMPBOT" in ll:
+            options2.append(' DAMPBOT')
+        if "SHIFT" in ll:
+            options2.append(' DAMPBOT')
+        if "TRUNCATEDNEWTON" in ll:
+            options2.append(' TRUNCATEDNEWTON')
+        if "TRUNCATEDNEWTONCUTOFF" in ll:
+            idx = ll.index("TRUNCATEDNEWTONCUTOFF")
+            val = float(ll[idx + 1])
+            options2.append(f' TRUNCATEDNEWTONCUTOFF {val}')
 
         # Record 2
         theta = None
@@ -600,6 +627,7 @@ class MfUsgSms(Package):
             iord=iord,
             rclosepcgu=rclosepcgu,
             options=options,
+            options2=options2,
             relaxpcgu=relaxpcgu,
             unitnumber=unitnumber,
             filenames=filenames,
