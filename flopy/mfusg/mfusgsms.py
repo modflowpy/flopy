@@ -434,8 +434,8 @@ class MfUsgSms(Package):
 
         if model.version != "mfusg":
             print(
-                "Warning: model version was reset from '{}' to 'mfusg' "
-                "in order to load a SMS file".format(model.version)
+                f"Warning: model version was reset from '{model.version}' "
+                "to 'mfusg' in order to load a SMS file"
             )
             model.version = "mfusg"
 
@@ -463,10 +463,7 @@ class MfUsgSms(Package):
 
         # Record 1b -- line will have already been read
         if model.verbose:
-            print(
-                "   loading HCLOSE HICLOSE MXITER ITER1 "
-                "IPRSMS NONLINMETH LINMETH..."
-            )
+            print("   loading HCLOSE HICLOSE MXITER ITER1 IPRSMS NONLINMETH LINMETH...")
         ll = line_parse(line)
         hclose = float(ll.pop(0))
         hiclose = float(ll.pop(0))

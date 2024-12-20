@@ -234,10 +234,7 @@ class ModflowSwi2(Package):
         # update external file information with zeta output, if necessary
         if iswizt is not None:
             model.add_output_file(
-                iswizt,
-                fname=filenames[1],
-                extension="zta",
-                package=self._ftype(),
+                iswizt, fname=filenames[1], extension="zta", package=self._ftype()
             )
         else:
             iswizt = 0
@@ -271,7 +268,7 @@ class ModflowSwi2(Package):
                 if len(obsnam) != nobs:
                     raise Exception(
                         "ModflowSwi2: obsnam must be a list with a "
-                        "length of {} not {}.".format(nobs, len(obsnam))
+                        f"length of {nobs} not {len(obsnam)}."
                     )
 
         if nobs > 0:
@@ -352,27 +349,17 @@ class ModflowSwi2(Package):
 
         # Create arrays so that they have the correct size
         if self.istrat == 1:
-            self.nu = Util2d(
-                model, (self.nsrf + 1,), np.float32, nu, name="nu"
-            )
+            self.nu = Util2d(model, (self.nsrf + 1,), np.float32, nu, name="nu")
         else:
-            self.nu = Util2d(
-                model, (self.nsrf + 2,), np.float32, nu, name="nu"
-            )
+            self.nu = Util2d(model, (self.nsrf + 2,), np.float32, nu, name="nu")
         self.zeta = []
         for i in range(self.nsrf):
             self.zeta.append(
                 Util3d(
-                    model,
-                    (nlay, nrow, ncol),
-                    np.float32,
-                    zeta[i],
-                    name=f"zeta_{i + 1}",
+                    model, (nlay, nrow, ncol), np.float32, zeta[i], name=f"zeta_{i + 1}"
                 )
             )
-        self.ssz = Util3d(
-            model, (nlay, nrow, ncol), np.float32, ssz, name="ssz"
-        )
+        self.ssz = Util3d(model, (nlay, nrow, ncol), np.float32, ssz, name="ssz")
         self.isource = Util3d(
             model, (nlay, nrow, ncol), np.int32, isource, name="isource"
         )
@@ -451,9 +438,7 @@ class ModflowSwi2(Package):
         # write dataset 3b
         if self.adaptive is True:
             f.write("# Dataset 3b\n")
-            f.write(
-                f"{self.nadptmx:10d}{self.nadptmn:10d}{self.adptfct:14.6g}\n"
-            )
+            f.write(f"{self.nadptmx:10d}{self.nadptmn:10d}{self.adptfct:14.6g}\n")
         # write dataset 4
         f.write("# Dataset 4\n")
         f.write(self.nu.get_file_entry())
@@ -653,12 +638,7 @@ class ModflowSwi2(Package):
             ctxt = f"zeta_surf{n + 1:02d}"
             zeta.append(
                 Util3d.load(
-                    f,
-                    model,
-                    (nlay, nrow, ncol),
-                    np.float32,
-                    ctxt,
-                    ext_unit_dict,
+                    f, model, (nlay, nrow, ncol), np.float32, ctxt, ext_unit_dict
                 )
             )
 
@@ -723,13 +703,9 @@ class ModflowSwi2(Package):
                 ext_unit_dict, filetype=ModflowSwi2._ftype()
             )
             if iswizt > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=iswizt
-                )
+                iu, filenames[1] = model.get_ext_dict_attr(ext_unit_dict, unit=iswizt)
             if ipakcb > 0:
-                iu, filenames[2] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=ipakcb
-                )
+                iu, filenames[2] = model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
             if abs(iswiobs) > 0:
                 iu, filenames[3] = model.get_ext_dict_attr(
                     ext_unit_dict, unit=abs(iswiobs)

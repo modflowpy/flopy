@@ -92,8 +92,8 @@ class ModflowDrn(Package):
     Notes
     -----
     Parameters are not supported in FloPy.
-    If "RETURNFLOW" in passed in options, the drain return package (DRT) activated, which expects
-    a different (longer) dtype for stress_period_data
+    If "RETURNFLOW" in passed in options, the drain return package (DRT)
+    activated, which expects a different (longer) dtype for stress_period_data
 
     Examples
     --------
@@ -224,11 +224,7 @@ class ModflowDrn(Package):
 
         """
         if check:  # allows turning off package checks when writing files at model level
-            self.check(
-                f=f"{self.name[0]}.chk",
-                verbose=self.parent.verbose,
-                level=1,
-            )
+            self.check(f=f"{self.name[0]}.chk", verbose=self.parent.verbose, level=1)
         f_drn = open(self.fn_path, "w")
         f_drn.write(f"{self.heading}\n")
         line = f"{self.stress_period_data.mxact:10d}{self.ipakcb:10d}"
@@ -251,9 +247,7 @@ class ModflowDrn(Package):
     @staticmethod
     def get_empty(ncells=0, aux_names=None, structured=True, is_drt=False):
         # get an empty recarray that corresponds to dtype
-        dtype = ModflowDrn.get_default_dtype(
-            structured=structured, is_drt=is_drt
-        )
+        dtype = ModflowDrn.get_default_dtype(structured=structured, is_drt=is_drt)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
         return create_empty_recarray(ncells, dtype, default_value=-1.0e10)

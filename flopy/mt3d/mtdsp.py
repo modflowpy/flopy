@@ -209,8 +209,8 @@ class Mt3dDsp(Package):
                 val = kwargs.pop(name)
             else:
                 print(
-                    "DSP: setting dmcoef for component {} "
-                    "to zero, kwarg name {}".format(icomp, name)
+                    f"DSP: setting dmcoef for component {icomp} "
+                    f"to zero, kwarg name {name}"
                 )
             u2or3 = utype(
                 model,
@@ -225,8 +225,7 @@ class Mt3dDsp(Package):
 
         if len(list(kwargs.keys())) > 0:
             raise Exception(
-                "DSP error: unrecognized kwargs: "
-                + " ".join(list(kwargs.keys()))
+                "DSP error: unrecognized kwargs: " + " ".join(list(kwargs.keys()))
             )
         self.parent.add_package(self)
         return
@@ -271,9 +270,7 @@ class Mt3dDsp(Package):
         return
 
     @classmethod
-    def load(
-        cls, f, model, nlay=None, nrow=None, ncol=None, ext_unit_dict=None
-    ):
+    def load(cls, f, model, nlay=None, nrow=None, ncol=None, ext_unit_dict=None):
         """
         Load an existing package.
 

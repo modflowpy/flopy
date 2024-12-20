@@ -53,8 +53,7 @@ def test_load(function_tmpdir, mnw2_examples_path):
     ).max() < 0.01
     assert (
         np.abs(
-            mnw2_2.stress_period_data[0].qdes
-            - mnw2_3.stress_period_data[0].qdes
+            mnw2_2.stress_period_data[0].qdes - mnw2_3.stress_period_data[0].qdes
         ).min()
         < 0.01
     )
@@ -104,57 +103,9 @@ def test_make_package(function_tmpdir, dataframe):
     # make the package from the tables (ztop, zbotm format)
     node_data = np.array(
         [
-            (
-                0,
-                1,
-                1,
-                9.5,
-                7.1,
-                "well1",
-                "skin",
-                -1,
-                0,
-                0,
-                0,
-                1.0,
-                2.0,
-                5.0,
-                6.2,
-            ),
-            (
-                1,
-                1,
-                1,
-                7.1,
-                5.1,
-                "well1",
-                "skin",
-                -1,
-                0,
-                0,
-                0,
-                0.5,
-                2.0,
-                5.0,
-                6.2,
-            ),
-            (
-                2,
-                3,
-                3,
-                9.1,
-                3.7,
-                "well2",
-                "skin",
-                -1,
-                0,
-                0,
-                0,
-                1.0,
-                2.0,
-                5.0,
-                4.1,
-            ),
+            (0, 1, 1, 9.5, 7.1, "well1", "skin", -1, 0, 0, 0, 1.0, 2.0, 5.0, 6.2),
+            (1, 1, 1, 7.1, 5.1, "well1", "skin", -1, 0, 0, 0, 0.5, 2.0, 5.0, 6.2),
+            (2, 3, 3, 9.1, 3.7, "well2", "skin", -1, 0, 0, 0, 1.0, 2.0, 5.0, 4.1),
         ],
         dtype=[
             ("index", "<i8"),
@@ -178,21 +129,11 @@ def test_make_package(function_tmpdir, dataframe):
     stress_period_data = {
         0: np.array(
             [(0, 0, "well1", 0), (1, 0, "well2", 0)],
-            dtype=[
-                ("index", "<i8"),
-                ("per", "<i8"),
-                ("wellid", "O"),
-                ("qdes", "<i8"),
-            ],
+            dtype=[("index", "<i8"), ("per", "<i8"), ("wellid", "O"), ("qdes", "<i8")],
         ).view(np.recarray),
         1: np.array(
             [(2, 1, "well1", 100), (3, 1, "well2", 1000)],
-            dtype=[
-                ("index", "<i8"),
-                ("per", "<i8"),
-                ("wellid", "O"),
-                ("qdes", "<i8"),
-            ],
+            dtype=[("index", "<i8"), ("per", "<i8"), ("wellid", "O"), ("qdes", "<i8")],
         ).view(np.recarray),
     }
 
@@ -243,21 +184,11 @@ def test_make_package(function_tmpdir, dataframe):
     stress_period_data = {
         0: np.array(
             [(0, 0, "well1", 0), (1, 0, "well2", 0)],
-            dtype=[
-                ("index", "<i8"),
-                ("per", "<i8"),
-                ("wellid", "O"),
-                ("qdes", "<i8"),
-            ],
+            dtype=[("index", "<i8"), ("per", "<i8"), ("wellid", "O"), ("qdes", "<i8")],
         ).view(np.recarray),
         1: np.array(
             [(2, 1, "well1", 100), (3, 1, "well2", 1000)],
-            dtype=[
-                ("index", "<i8"),
-                ("per", "<i8"),
-                ("wellid", "O"),
-                ("qdes", "<i8"),
-            ],
+            dtype=[("index", "<i8"), ("per", "<i8"), ("wellid", "O"), ("qdes", "<i8")],
         ).view(np.recarray),
     }
 
@@ -278,16 +209,12 @@ def test_make_package(function_tmpdir, dataframe):
     assert np.all(np.diff(well1["k"]) > 0)
     spd = m4.mnw2.stress_period_data[0]
     inds = spd.k, spd.i, spd.j
-    assert np.array_equal(
-        np.array(inds).transpose(), np.array([(2, 1, 1), (1, 3, 3)])
-    )
+    assert np.array_equal(np.array(inds).transpose(), np.array([(2, 1, 1), (1, 3, 3)]))
     m4.write_input()
 
     # make the package from the objects
     # reuse second per pumping for last stress period
-    mnw2fromobj = ModflowMnw2(
-        model=m4, mnwmax=2, mnw=mnw2_4.mnw, itmp=[2, 2, -1]
-    )
+    mnw2fromobj = ModflowMnw2(model=m4, mnwmax=2, mnw=mnw2_4.mnw, itmp=[2, 2, -1])
     # verify that the two input methods produce the same results
     assert np.array_equal(
         mnw2_4.stress_period_data[1], mnw2fromobj.stress_period_data[1]
@@ -296,9 +223,7 @@ def test_make_package(function_tmpdir, dataframe):
     m5 = Modflow("mnw2example", model_ws=ws)
     dis = ModflowDis(nrow=5, ncol=5, nlay=3, nper=3, top=10, botm=0, model=m5)
     mnw2_5 = ModflowMnw2.load(mnw2_4.fn_path, m5)
-    assert np.array_equal(
-        mnw2_4.stress_period_data[1], mnw2_5.stress_period_data[1]
-    )
+    assert np.array_equal(mnw2_4.stress_period_data[1], mnw2_5.stress_period_data[1])
 
 
 @pytest.mark.parametrize("dataframe", [True, False])
@@ -350,9 +275,7 @@ def test_mnw2_create_file(function_tmpdir, dataframe):
             nnodes=nlayers[i],
             nper=len(stress_period_data.index),
             node_data=(
-                node_data.to_records(index=False)
-                if not dataframe
-                else node_data
+                node_data.to_records(index=False) if not dataframe else node_data
             ),
             stress_period_data=(
                 stress_period_data.to_records(index=False)
@@ -367,9 +290,7 @@ def test_mnw2_create_file(function_tmpdir, dataframe):
         model=mf,
         mnwmax=len(wells),
         mnw=wells,
-        itmp=list(
-            (np.ones(len(stress_period_data.index)) * len(wellids)).astype(int)
-        ),
+        itmp=list((np.ones(len(stress_period_data.index)) * len(wellids)).astype(int)),
     )
 
     if len(mnw2.node_data) != 6:
@@ -483,7 +404,7 @@ mnw2 103 mymnw2.mnw2"""
     wellids = ["eb-33", "eb-35", "eb-36"]
     rates = [np.float32(-11229.2), np.float32(-534.72), np.float32(-534.72)]
 
-    wellids2 = sorted(list(mnw2.mnw.keys()))
+    wellids2 = sorted(mnw2.mnw.keys())
     emsg = "incorrect keys returned from load mnw2"
     assert wellids2 == wellids, emsg
 
@@ -504,9 +425,7 @@ mnw2 103 mymnw2.mnw2"""
 
 def test_make_well():
     w1 = Mnw(wellid="Case-1")
-    assert (
-        w1.wellid == "case-1"
-    ), "did not correctly convert well id to lower case"
+    assert w1.wellid == "case-1", "did not correctly convert well id to lower case"
 
 
 def test_checks(mnw2_examples_path):

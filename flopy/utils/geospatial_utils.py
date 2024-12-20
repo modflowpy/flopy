@@ -49,9 +49,7 @@ class GeoSpatialUtil:
     """
 
     def __init__(self, obj, shapetype=None):
-        self.__shapefile = import_optional_dependency(
-            "shapefile", errors="silent"
-        )
+        self.__shapefile = import_optional_dependency("shapefile", errors="silent")
         self.__obj = obj
         self.__geo_interface = {}
         self._geojson = None
@@ -212,9 +210,7 @@ class GeoSpatialUtil:
         """
         if self.__shapefile is not None:
             if self._shape is None:
-                self._shape = self.__shapefile.Shape._from_geojson(
-                    self.__geo_interface
-                )
+                self._shape = self.__shapefile.Shape._from_geojson(self.__geo_interface)
             return self._shape
 
     @property
@@ -260,14 +256,10 @@ class GeoSpatialCollection:
     """
 
     def __init__(self, obj, shapetype=None):
-        self.__shapefile = import_optional_dependency(
-            "shapefile", errors="silent"
-        )
+        self.__shapefile = import_optional_dependency("shapefile", errors="silent")
         gpd = import_optional_dependency("geopandas", errors="silent")
 
-        shapely_geo = import_optional_dependency(
-            "shapely.geometry", errors="silent"
-        )
+        shapely_geo = import_optional_dependency("shapely.geometry", errors="silent")
 
         self.__obj = obj
         self.__collection = []
@@ -317,9 +309,7 @@ class GeoSpatialCollection:
                     shapetype = [shapetype] * len(obj)
 
                 for ix, geom in enumerate(obj):
-                    self.__collection.append(
-                        GeoSpatialUtil(geom, shapetype[ix])
-                    )
+                    self.__collection.append(GeoSpatialUtil(geom, shapetype[ix]))
 
         elif self.__shapefile is not None:
             if isinstance(obj, (str, os.PathLike)):

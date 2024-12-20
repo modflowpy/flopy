@@ -14,13 +14,13 @@ import tempfile
 import warnings
 from pathlib import Path
 from shutil import move
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
 
-from ..utils.datafile import Header, LayerFile
-from .gridutil import get_lni
+from ..datafile import Header, LayerFile
+from ..gridutil import get_lni
 
 HEAD_TEXT = "            HEAD"
 
@@ -89,18 +89,7 @@ def write_budget(
         ndim2 = 1
         ndim3 = -1
         h = np.array(
-            (
-                kstp,
-                kper,
-                text,
-                ndim1,
-                ndim2,
-                ndim3,
-                imeth,
-                delt,
-                pertim,
-                totim,
-            ),
+            (kstp, kper, text, ndim1, ndim2, ndim3, imeth, delt, pertim, totim),
             dtype=dt,
         )
         h.tofile(fbin)
@@ -111,18 +100,7 @@ def write_budget(
         ndim2 = 1
         ndim3 = -1
         h = np.array(
-            (
-                kstp,
-                kper,
-                text,
-                ndim1,
-                ndim2,
-                ndim3,
-                imeth,
-                delt,
-                pertim,
-                totim,
-            ),
+            (kstp, kper, text, ndim1, ndim2, ndim3, imeth, delt, pertim, totim),
             dtype=dt,
         )
         h.tofile(fbin)
@@ -209,19 +187,13 @@ class BinaryHeader(Header):
                 try:
                     self.header[0][k] = int(kwargs[k])
                 except:
-                    print(
-                        f"{k} key not available in {self.header_type} "
-                        "header dtype"
-                    )
+                    print(f"{k} key not available in {self.header_type} header dtype")
         for k in fkey:
             if k in kwargs.keys():
                 try:
                     self.header[0][k] = float(kwargs[k])
                 except:
-                    print(
-                        f"{k} key not available "
-                        f"in {self.header_type} header dtype"
-                    )
+                    print(f"{k} key not available in {self.header_type} header dtype")
         for k in ckey:
             if k in kwargs.keys():
                 # Convert to upper case to be consistent case used by MODFLOW
@@ -460,9 +432,7 @@ class BinaryLayerFile(LayerFile):
     pointing to the 1st byte of data for the corresponding data arrays.
     """
 
-    def __init__(
-        self, filename: Union[str, os.PathLike], precision, verbose, **kwargs
-    ):
+    def __init__(self, filename: Union[str, os.PathLike], precision, verbose, **kwargs):
         super().__init__(filename, precision, verbose, **kwargs)
 
     def _build_index(self):
@@ -483,7 +453,8 @@ class BinaryLayerFile(LayerFile):
         warn_threshold = 10000000
         if self.nrow > 1 and self.nrow * self.ncol > warn_threshold:
             warnings.warn(
-                f"Very large grid, ncol ({self.ncol}) * nrow ({self.nrow}) > {warn_threshold}"
+                f"Very large grid, ncol ({self.ncol}) * nrow ({self.nrow})"
+                f" > {warn_threshold}"
             )
         self.file.seek(0, 2)
         self.totalbytes = self.file.tell()
@@ -590,9 +561,7 @@ class BinaryLayerFile(LayerFile):
         for k, i, j in kijlist:
             ioffset = (i * self.ncol + j) * self.realtype(1).nbytes
             for irec, header in enumerate(self.recordarray):
-                ilay = (
-                    header["ilay"] - 1
-                )  # change ilay from header to zero-based
+                ilay = header["ilay"] - 1  # change ilay from header to zero-based
                 if ilay != k:
                     continue
                 ipos = self.iposarray[irec].item()
@@ -659,9 +628,7 @@ class HeadFile(BinaryLayerFile):
                 s = f"Error. Precision could not be determined for {filename}"
                 print(s)
                 raise Exception()
-        self.header_dtype = BinaryHeader.set_dtype(
-            bintype="Head", precision=precision
-        )
+        self.header_dtype = BinaryHeader.set_dtype(bintype="Head", precision=precision)
         super().__init__(filename, precision, verbose, **kwargs)
 
     def reverse(self, filename: Optional[os.PathLike] = None):
@@ -690,37 +657,21 @@ class HeadFile(BinaryLayerFile):
             kstp = {0: 0}
             for i in range(len(self) - 1, -1, -1):
                 header = self.recordarray[i]
-                if (
-                    header["kper"] in kstp
-                    and header["kstp"] > kstp[header["kper"]]
-                ):
+                if header["kper"] in kstp and header["kstp"] > kstp[header["kper"]]:
                     kstp[header["kper"]] += 1
                 else:
                     kstp[header["kper"]] = 0
             return kper, kstp, tsim
 
-        # get max period and time from the head file
         maxkper, maxkstp, maxtsim = get_max_kper_kstp_tsim()
-        # if we have tdis, get max period number and simulation time from it
-        tdis_maxkper, tdis_maxtsim = None, None
-        if self.tdis is not None:
-            pd = self.tdis.perioddata.get_data()
-            if any(pd):
-                tdis_maxkper = len(pd) - 1
-                tdis_maxtsim = sum([p[0] for p in pd])
-        # if we have both, check them against each other
-        if tdis_maxkper is not None:
-            assert maxkper == tdis_maxkper, (
-                f"Max stress period in binary head file ({maxkper}) != "
-                f"max stress period in provided tdis ({tdis_maxkper})"
-            )
-            assert maxtsim == tdis_maxtsim, (
-                f"Max simulation time in binary head file ({maxtsim}) != "
-                f"max simulation time in provided tdis ({tdis_maxtsim})"
-            )
+        prev_kper = None
+        perlen = None
 
         def reverse_header(header):
             """Reverse period, step and time fields in the record header"""
+
+            nonlocal prev_kper
+            nonlocal perlen
 
             # reverse kstp and kper headers
             kstp = header["kstp"] - 1
@@ -728,9 +679,12 @@ class HeadFile(BinaryLayerFile):
             header["kstp"] = maxkstp[kper] - kstp + 1
             header["kper"] = maxkper - kper + 1
 
+            if kper != prev_kper:
+                perlen = header["pertim"]
+            prev_kper = kper
+
             # reverse totim and pertim headers
             header["totim"] = maxtsim - header["totim"]
-            perlen = pd[kper][0]
             header["pertim"] = perlen - header["pertim"]
             return header
 
@@ -828,9 +782,7 @@ class UcnFile(BinaryLayerFile):
             s = f"Error. Precision could not be determined for {filename}"
             print(s)
             raise Exception()
-        self.header_dtype = BinaryHeader.set_dtype(
-            bintype="Ucn", precision=precision
-        )
+        self.header_dtype = BinaryHeader.set_dtype(bintype="Ucn", precision=precision)
         super().__init__(filename, precision, verbose, **kwargs)
         return
 
@@ -898,9 +850,7 @@ class HeadUFile(BinaryLayerFile):
                 s = f"Error. Precision could not be determined for {filename}"
                 print(s)
                 raise Exception()
-        self.header_dtype = BinaryHeader.set_dtype(
-            bintype="Head", precision=precision
-        )
+        self.header_dtype = BinaryHeader.set_dtype(bintype="Head", precision=precision)
         super().__init__(filename, precision, verbose, **kwargs)
 
     def _get_data_array(self, totim=0.0):
@@ -911,9 +861,7 @@ class HeadUFile(BinaryLayerFile):
         """
 
         if totim >= 0.0:
-            keyindices = np.asarray(
-                self.recordarray["totim"] == totim
-            ).nonzero()[0]
+            keyindices = np.asarray(self.recordarray["totim"] == totim).nonzero()[0]
             if len(keyindices) == 0:
                 msg = f"totim value ({totim}) not found in file..."
                 raise Exception(msg)
@@ -1064,7 +1012,6 @@ class CellBudgetFile:
         self.paknamlist_from = []
         self.paknamlist_to = []
         self.compact = True  # compact budget file flag
-
         self.dis = None
         self.modelgrid = None
         if "model" in kwargs.keys():
@@ -1317,9 +1264,7 @@ class CellBudgetFile:
                 ipos  # store the position right after header2
             )
             self.recordarray.append(header)
-            self.iposarray.append(
-                ipos
-            )  # store the position right after header2
+            self.iposarray.append(ipos)  # store the position right after header2
 
             # skip over the data to the next record and set ipos
             self._skip_record(header)
@@ -1348,9 +1293,7 @@ class CellBudgetFile:
             dtype = self.header_dtype[name]
             if np.issubdtype(dtype, bytes):  # convert to str
                 self.headers[name] = (
-                    self.headers[name]
-                    .str.decode("ascii", "strict")
-                    .str.strip()
+                    self.headers[name].str.decode("ascii", "strict").str.strip()
                 )
 
     def _skip_record(self, header):
@@ -1476,8 +1419,7 @@ class CellBudgetFile:
                     break
             if paknam16 is None:
                 raise Exception(
-                    "The specified package name string is not "
-                    "in the budget file."
+                    "The specified package name string is not in the budget file."
                 )
         return paknam16
 
@@ -1630,9 +1572,7 @@ class CellBudgetFile:
         # check and make sure that text is in file
         if text is not None:
             text16 = self._find_text(text)
-            select_indices = np.asarray(
-                self.recordarray["text"] == text16
-            ).nonzero()
+            select_indices = np.asarray(self.recordarray["text"] == text16).nonzero()
             if isinstance(select_indices, tuple):
                 select_indices = select_indices[0]
         else:
@@ -1675,7 +1615,7 @@ class CellBudgetFile:
         paknam=None,
         paknam2=None,
         full3D=False,
-    ) -> Union[List, np.ndarray]:
+    ) -> Union[list, np.ndarray]:
         """
         Get data from the binary budget file.
 
@@ -1755,22 +1695,14 @@ class CellBudgetFile:
         if kstpkper is not None:
             kstp1 = kstpkper[0] + 1
             kper1 = kstpkper[1] + 1
-            select_indices = select_indices & (
-                self.recordarray["kstp"] == kstp1
-            )
-            select_indices = select_indices & (
-                self.recordarray["kper"] == kper1
-            )
+            select_indices = select_indices & (self.recordarray["kstp"] == kstp1)
+            select_indices = select_indices & (self.recordarray["kper"] == kper1)
             selected = True
         if text16 is not None:
-            select_indices = select_indices & (
-                self.recordarray["text"] == text16
-            )
+            select_indices = select_indices & (self.recordarray["text"] == text16)
             selected = True
         if paknam16 is not None:
-            select_indices = select_indices & (
-                self.recordarray["paknam"] == paknam16
-            )
+            select_indices = select_indices & (self.recordarray["paknam"] == paknam16)
             selected = True
         if paknam16_2 is not None:
             select_indices = select_indices & (
@@ -1832,8 +1764,7 @@ class CellBudgetFile:
         # issue exception if text not provided
         if text is None:
             raise Exception(
-                "text keyword must be provided to CellBudgetFile "
-                "get_ts() method."
+                "text keyword must be provided to CellBudgetFile get_ts() method."
             )
 
         kijlist = self._build_kijlist(idx)
@@ -1883,8 +1814,7 @@ class CellBudgetFile:
 
                     if self.modelgrid.grid_type == "structured":
                         ndx = [
-                            lrc[0]
-                            * (self.modelgrid.nrow * self.modelgrid.ncol)
+                            lrc[0] * (self.modelgrid.nrow * self.modelgrid.ncol)
                             + lrc[1] * self.modelgrid.ncol
                             + (lrc[2] + 1)
                             for lrc in kijlist
@@ -1923,8 +1853,9 @@ class CellBudgetFile:
                 fail = True
             if fail:
                 raise Exception(
-                    "Invalid cell index. Cell {} not within model grid: "
-                    "{}".format((k, i, j), (self.nlay, self.nrow, self.ncol))
+                    "Invalid cell index. Cell {} not within model grid: {}".format(
+                        (k, i, j), (self.nlay, self.nrow, self.ncol)
+                    )
                 )
         return kijlist
 
@@ -1936,9 +1867,7 @@ class CellBudgetFile:
 
     def _init_result(self, nstation):
         # Initialize result array and put times in first column
-        result = np.empty(
-            (len(self.kstpkper), nstation + 1), dtype=self.realtype
-        )
+        result = np.empty((len(self.kstpkper), nstation + 1), dtype=self.realtype)
         result[:, :] = np.nan
         if len(self.times) == result.shape[0]:
             result[:, 0] = np.array(self.times)
@@ -1998,17 +1927,13 @@ class CellBudgetFile:
             if self.verbose:
                 s += f"an array of shape {(nlay, nrow, ncol)}"
                 print(s)
-            return binaryread(
-                self.file, self.realtype(1), shape=(nlay, nrow, ncol)
-            )
+            return binaryread(self.file, self.realtype(1), shape=(nlay, nrow, ncol))
         # imeth 1
         elif imeth == 1:
             if self.verbose:
                 s += f"an array of shape {(nlay, nrow, ncol)}"
                 print(s)
-            return binaryread(
-                self.file, self.realtype(1), shape=(nlay, nrow, ncol)
-            )
+            return binaryread(self.file, self.realtype(1), shape=(nlay, nrow, ncol))
 
         # imeth 2
         elif imeth == 2:
@@ -2016,10 +1941,7 @@ class CellBudgetFile:
             dtype = np.dtype([("node", np.int32), ("q", self.realtype)])
             if self.verbose:
                 if full3D:
-                    s += (
-                        f"a numpy masked array of "
-                        f"size ({nlay}, {nrow}, {ncol})"
-                    )
+                    s += f"a numpy masked array of size ({nlay}, {nrow}, {ncol})"
                 else:
                     s += f"a numpy recarray of size ({nlist}, 2)"
                 print(s)
@@ -2035,10 +1957,7 @@ class CellBudgetFile:
             data = binaryread(self.file, self.realtype(1), shape=(nrow, ncol))
             if self.verbose:
                 if full3D:
-                    s += (
-                        "a numpy masked array of size "
-                        f"({nlay}, {nrow}, {ncol})"
-                    )
+                    s += f"a numpy masked array of size ({nlay}, {nrow}, {ncol})"
                 else:
                     s += (
                         "a list of two 2D numpy arrays. The first is an "
@@ -2204,9 +2123,7 @@ class CellBudgetFile:
         residual = np.zeros((nlay, nrow, ncol), dtype=float)
         if scaled:
             inflow = np.zeros((nlay, nrow, ncol), dtype=float)
-        select_indices = np.asarray(
-            self.recordarray["totim"] == totim
-        ).nonzero()[0]
+        select_indices = np.asarray(self.recordarray["totim"] == totim).nonzero()[0]
 
         for i in select_indices:
             text = self.recordarray[i]["text"].decode()
@@ -2309,26 +2226,46 @@ class CellBudgetFile:
             ]
         )
 
-        # make sure we have tdis
-        if self.tdis is None or not any(self.tdis.perioddata.get_data()):
-            raise ValueError(
-                "tdis must be known to reverse a cell budget file"
-            )
-
-        # extract perioddata
-        pd = self.tdis.perioddata.get_data()
-
-        # get maximum period number and total simulation time
-        nper = len(pd)
-        kpermx = nper - 1
-        tsimtotal = 0.0
-        for tpd in pd:
-            tsimtotal += tpd[0]
-
-        # get number of records
         nrecords = len(self)
-
         target = filename
+
+        def get_max_kper_kstp_tsim():
+            header = self.recordarray[-1]
+            kper = header["kper"] - 1
+            tsim = header["totim"]
+            kstp = {0: 0}
+            for i in range(len(self) - 1, -1, -1):
+                header = self.recordarray[i]
+                if header["kper"] in kstp and header["kstp"] > kstp[header["kper"]]:
+                    kstp[header["kper"]] += 1
+                else:
+                    kstp[header["kper"]] = 0
+            return kper, kstp, tsim
+
+        maxkper, maxkstp, maxtsim = get_max_kper_kstp_tsim()
+        prev_kper = None
+        perlen = None
+
+        def reverse_header(header):
+            """Reverse period, step and time fields in the record header"""
+
+            nonlocal prev_kper
+            nonlocal perlen
+
+            # reverse kstp and kper headers
+            kstp = header["kstp"] - 1
+            kper = header["kper"] - 1
+            header["kstp"] = maxkstp[kper] - kstp + 1
+            header["kper"] = maxkper - kper + 1
+
+            if kper != prev_kper:
+                perlen = header["pertim"] - 1
+            prev_kper = kper
+
+            # reverse totim and pertim headers
+            header["totim"] = maxtsim - header["totim"]
+            header["pertim"] = perlen - header["pertim"]
+            return header
 
         # if rewriting the same file, write
         # temp file then copy it into place
@@ -2343,18 +2280,7 @@ class CellBudgetFile:
             for idx in range(nrecords - 1, -1, -1):
                 # load header array
                 header = self.recordarray[idx]
-
-                # reverse kstp and kper in the header array
-                (kstp, kper) = (header["kstp"] - 1, header["kper"] - 1)
-                kstpmx = pd[kper][1] - 1
-                kstpb = kstpmx - kstp
-                kperb = kpermx - kper
-                (header["kstp"], header["kper"]) = (kstpb + 1, kperb + 1)
-
-                # reverse totim and pertim in the header array
-                header["totim"] = tsimtotal - header["totim"]
-                perlen = pd[kper][0]
-                header["pertim"] = perlen - header["pertim"]
+                header = reverse_header(header)
 
                 # Write main header information to backward budget file
                 h = header[
@@ -2376,14 +2302,7 @@ class CellBudgetFile:
                 h.tofile(f)
                 if header["imeth"] == 6:
                     # Write additional header information to the backward budget file
-                    h = header[
-                        [
-                            "modelnam",
-                            "paknam",
-                            "modelnam2",
-                            "paknam2",
-                        ]
-                    ]
+                    h = header[["modelnam", "paknam", "modelnam2", "paknam2"]]
                     h = np.array(h, dtype=dt2)
                     h.tofile(f)
                     # Load data
@@ -2400,13 +2319,9 @@ class CellBudgetFile:
                     # Write auxiliary column names
                     naux = ndat - 1
                     if naux > 0:
-                        auxtxt = [
-                            "{:16}".format(colname) for colname in colnames[3:]
-                        ]
+                        auxtxt = ["{:16}".format(colname) for colname in colnames[3:]]
                         auxtxt = tuple(auxtxt)
-                        dt = np.dtype(
-                            [(colname, "S16") for colname in colnames[3:]]
-                        )
+                        dt = np.dtype([(colname, "S16") for colname in colnames[3:]])
                         h = np.array(auxtxt, dtype=dt)
                         h.tofile(f)
                     # Write nlist

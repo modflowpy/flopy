@@ -425,9 +425,7 @@ class Grid:
     def thick(self):
         """Raises AttributeError, use :meth:`cell_thickness`."""
         # DEPRECATED since version 3.4.0
-        raise AttributeError(
-            "'thick' has been removed; use 'cell_thickness()'"
-        )
+        raise AttributeError("'thick' has been removed; use 'cell_thickness()'")
 
     def saturated_thickness(self, array, mask=None):
         """
@@ -563,8 +561,7 @@ class Grid:
     @property
     def xyzcellcenters(self):
         raise NotImplementedError(
-            "must define get_cellcenters in child "
-            "class to use this base class"
+            "must define get_cellcenters in child class to use this base class"
         )
 
     @property
@@ -626,9 +623,7 @@ class Grid:
         -------
             Grid object
         """
-        raise NotImplementedError(
-            "convert_grid must be defined in the child class"
-        )
+        raise NotImplementedError("convert_grid must be defined in the child class")
 
     def _set_neighbors(self, reset=False, method="rook"):
         """
@@ -647,8 +642,8 @@ class Grid:
         """
         if self._neighbors is None or reset:
             node_num = 0
-            neighbors = {i: list() for i in range(len(self.iverts))}
-            edge_set = {i: list() for i in range(len(self.iverts))}
+            neighbors = {i: [] for i in range(len(self.iverts))}
+            edge_set = {i: [] for i in range(len(self.iverts))}
             geoms = []
             node_nums = []
             if method == "rook":
@@ -686,9 +681,7 @@ class Grid:
                             pass
 
             # convert use dict to create a set that preserves insertion order
-            self._neighbors = {
-                i: list(dict.fromkeys(v)) for i, v in neighbors.items()
-            }
+            self._neighbors = {i: list(dict.fromkeys(v)) for i, v in neighbors.items()}
             self._edge_set = edge_set
 
     def neighbors(self, node=None, **kwargs):
@@ -878,7 +871,7 @@ class Grid:
 
     def get_lni(self, nodes):
         """
-        Get the layer index and within-layer node index (both 0-based) for the given nodes
+        Get the 0-based layer index and within-layer node index for the given nodes
 
         Parameters
         ----------
@@ -939,9 +932,7 @@ class Grid:
 
         x += self._xoff
         y += self._yoff
-        return geometry.rotate(
-            x, y, self._xoff, self._yoff, self.angrot_radians
-        )
+        return geometry.rotate(x, y, self._xoff, self._yoff, self.angrot_radians)
 
     def get_local_coords(self, x, y):
         """
@@ -1218,9 +1209,7 @@ class Grid:
         if self.top is not None and self.botm is not None:
             zcenters = []
             top_3d = np.expand_dims(self.top, 0)
-            zbdryelevs = np.concatenate(
-                (top_3d, np.atleast_2d(self.botm)), axis=0
-            )
+            zbdryelevs = np.concatenate((top_3d, np.atleast_2d(self.botm)), axis=0)
 
             for ix in range(1, len(zbdryelevs)):
                 zcenters.append((zbdryelevs[ix - 1] + zbdryelevs[ix]) / 2.0)
@@ -1230,9 +1219,7 @@ class Grid:
         return zbdryelevs, zcenters
 
     # Exporting
-    def write_shapefile(
-        self, filename="grid.shp", crs=None, prjfile=None, **kwargs
-    ):
+    def write_shapefile(self, filename="grid.shp", crs=None, prjfile=None, **kwargs):
         """
         Write a shapefile of the grid with just the row and column attributes.
 
@@ -1262,6 +1249,4 @@ class Grid:
     # initialize grid from a grb file
     @classmethod
     def from_binary_grid_file(cls, file_path, verbose=False):
-        raise NotImplementedError(
-            "must define from_binary_grid_file in child class"
-        )
+        raise NotImplementedError("must define from_binary_grid_file in child class")

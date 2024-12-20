@@ -52,18 +52,10 @@ def test_create_uzf(function_tmpdir, mf2005_test_path, uzf_test_path):
         verbose=True,
     )
     rm = [True if ".uz" in f else False for f in m.external_fnames]
-    m.external_fnames = [
-        f for i, f in enumerate(m.external_fnames) if not rm[i]
-    ]
-    m.external_binflag = [
-        f for i, f in enumerate(m.external_binflag) if not rm[i]
-    ]
-    m.external_output = [
-        f for i, f in enumerate(m.external_output) if not rm[i]
-    ]
-    m.external_units = [
-        f for i, f in enumerate(m.external_output) if not rm[i]
-    ]
+    m.external_fnames = [f for i, f in enumerate(m.external_fnames) if not rm[i]]
+    m.external_binflag = [f for i, f in enumerate(m.external_binflag) if not rm[i]]
+    m.external_output = [f for i, f in enumerate(m.external_output) if not rm[i]]
+    m.external_units = [f for i, f in enumerate(m.external_output) if not rm[i]]
 
     datpth = uzf_test_path
     irnbndpth = os.path.join(datpth, "irunbnd.dat")
@@ -198,16 +190,11 @@ def test_create_uzf(function_tmpdir, mf2005_test_path, uzf_test_path):
     assert np.abs(np.sum(uzf.vks.array) / uzf.vks.cnstnt - 116.0) < 1e-5
     assert uzf.eps._Util2d__value == 3.5
     assert np.abs(uzf.thts._Util2d__value - 0.30) < 1e-5
-    assert (
-        np.abs(np.sum(uzf.extwc[0].array) / uzf.extwc[0].cnstnt - 176.0) < 1e4
-    )
+    assert np.abs(np.sum(uzf.extwc[0].array) / uzf.extwc[0].cnstnt - 176.0) < 1e4
     for per in [0, 1]:
         assert np.abs(uzf.pet[per]._Util2d__value - 5e-8) < 1e-10
     for per in range(m.nper):
-        assert (
-            np.abs(np.sum(uzf.finf[per].array) / uzf.finf[per].cnstnt - 339.0)
-            < 1e4
-        )
+        assert np.abs(np.sum(uzf.finf[per].array) / uzf.finf[per].cnstnt - 339.0) < 1e4
         assert True
     uzf.write_file()
     m2 = Modflow("UZFtest2_2", model_ws=ws)
@@ -226,20 +213,16 @@ def test_create_uzf(function_tmpdir, mf2005_test_path, uzf_test_path):
                 for i, a in enumerate(a1):
                     assert a == l2[i]
 
-    # load uzf test problem for nwt model with 'nwt_11_fmt'-style options and 'open/close' array types
+    # load uzf test problem for nwt model with 'nwt_11_fmt'-style options
+    # and 'open/close' array types
     tpth = uzf_test_path / "load_uzf_for_nwt"
-    [
-        shutil.copy(os.path.join(tpth, f), os.path.join(ws, f))
-        for f in os.listdir(tpth)
-    ]
+    [shutil.copy(os.path.join(tpth, f), os.path.join(ws, f)) for f in os.listdir(tpth)]
     m3 = Modflow("UZFtest3", version="mfnwt", verbose=True)
     m3.model_ws = ws
     dis = ModflowDis.load(os.path.join(tpth, "UZFtest3.dis"), m3)
     uzf = ModflowUzf1.load(os.path.join(tpth, "UZFtest3.uzf"), m3)
     assert np.sum(uzf.iuzfbnd.array) == 28800
-    assert np.isclose(
-        np.sum(uzf.finf.array) / uzf.finf[per].cnstnt, 13.7061, atol=1e-4
-    )
+    assert np.isclose(np.sum(uzf.finf.array) / uzf.finf[per].cnstnt, 13.7061, atol=1e-4)
 
 
 @requires_exe("mfnwt")
@@ -301,18 +284,10 @@ def test_read_write_nwt_options(function_tmpdir):
     uzfopt.write_options(os.path.join(ws, "uzfopt.txt"))
     sfropt.write_options(os.path.join(ws, "sfropt.txt"))
 
-    welopt = OptionBlock.load_options(
-        os.path.join(ws, "welopt.txt"), ModflowWel
-    )
-    welopt2 = OptionBlock.load_options(
-        os.path.join(ws, "welopt2.txt"), ModflowWel
-    )
-    uzfopt = OptionBlock.load_options(
-        os.path.join(ws, "uzfopt.txt"), ModflowUzf1
-    )
-    sfropt = OptionBlock.load_options(
-        os.path.join(ws, "sfropt.txt"), ModflowSfr2
-    )
+    welopt = OptionBlock.load_options(os.path.join(ws, "welopt.txt"), ModflowWel)
+    welopt2 = OptionBlock.load_options(os.path.join(ws, "welopt2.txt"), ModflowWel)
+    uzfopt = OptionBlock.load_options(os.path.join(ws, "uzfopt.txt"), ModflowUzf1)
+    sfropt = OptionBlock.load_options(os.path.join(ws, "sfropt.txt"), ModflowSfr2)
 
     assert repr(welopt) == welstr
     assert repr(welopt2) == welstr2
@@ -473,9 +448,7 @@ def test_load_write_uzf_option_block(function_tmpdir, options_path):
     uzf2.write_file(os.path.join(function_tmpdir, uzf_name2))
     ml.remove_package("UZF")
 
-    uzf3 = ModflowUzf1.load(
-        os.path.join(function_tmpdir, uzf_name2), ml, check=False
-    )
+    uzf3 = ModflowUzf1.load(os.path.join(function_tmpdir, uzf_name2), ml, check=False)
 
     assert uzf3.options.smoothfact == 0.4
     assert uzf3.smoothfact == 0.4
@@ -507,9 +480,7 @@ def test_load_write_uzf_option_line(function_tmpdir, options_path):
     uzf.write_file(os.path.join(function_tmpdir, uzf_name2))
     ml.remove_package("UZF")
 
-    uzf2 = ModflowUzf1.load(
-        os.path.join(function_tmpdir, uzf_name2), ml, check=False
-    )
+    uzf2 = ModflowUzf1.load(os.path.join(function_tmpdir, uzf_name2), ml, check=False)
 
     assert uzf2.nosurfleak
     assert uzf2.etsquare
@@ -618,10 +589,7 @@ def test_uzf_negative_iuzfopt(function_tmpdir):
         steady=[False, False],
     )
     bas = ModflowBas(ml, strt=9, ibound=1)
-    upw = ModflowUpw(
-        ml,
-        vka=0.1,
-    )
+    upw = ModflowUpw(ml, vka=0.1)
     oc = ModflowOc(ml)
     nwt = ModflowNwt(ml, options="SIMPLE")
 
@@ -643,9 +611,7 @@ def test_uzf_negative_iuzfopt(function_tmpdir):
     success, buff = ml.run_model()
     assert success, "UZF model with -1 iuzfopt failed to run"
 
-    ml2 = Modflow.load(
-        "uzf_neg.nam", version="mfnwt", model_ws=function_tmpdir
-    )
+    ml2 = Modflow.load("uzf_neg.nam", version="mfnwt", model_ws=function_tmpdir)
 
     np.testing.assert_array_equal(
         ml2.uzf.pet.array, np.full((2, 1, 10, 10), 0.1, np.float32)
@@ -656,15 +622,15 @@ def test_uzf_negative_iuzfopt(function_tmpdir):
 
 
 def test_optionsblock_auxillary_typo():
-    # Incorrect: auxillary
+    # Incorrect: auxillary  # codespell:ignore
     #   Correct: auxiliary
     options = OptionBlock("", ModflowWel, block=True)
     assert options.auxiliary == []
     with pytest.deprecated_call():
-        assert options.auxillary == []
+        assert options.auxillary == []  # codespell:ignore
     with pytest.deprecated_call():
-        options.auxillary = ["aux", "iface"]
+        options.auxillary = ["aux", "iface"]  # codespell:ignore
     assert options.auxiliary == ["aux", "iface"]
     options.auxiliary = []
     with pytest.deprecated_call():
-        assert options.auxillary == []
+        assert options.auxillary == []  # codespell:ignore

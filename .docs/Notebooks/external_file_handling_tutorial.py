@@ -100,11 +100,7 @@ ml.write_input()
 # list the files in model_ws that have 'hk' in the name
 print(
     "\n".join(
-        [
-            name
-            for name in os.listdir(ml.model_ws)
-            if "hk" in name or "impor" in name
-        ]
+        [name for name in os.listdir(ml.model_ws) if "hk" in name or "impor" in name]
     )
 )
 

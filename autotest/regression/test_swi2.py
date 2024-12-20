@@ -16,9 +16,7 @@ def swi_path(example_data_path):
 @requires_exe("mf2005")
 @pytest.mark.slow
 @pytest.mark.regression
-@pytest.mark.parametrize(
-    "namfile", ["swiex1.nam", "swiex2_strat.nam", "swiex3.nam"]
-)
+@pytest.mark.parametrize("namfile", ["swiex1.nam", "swiex2_strat.nam", "swiex3.nam"])
 def test_mf2005swi2(function_tmpdir, swi_path, namfile):
     name = namfile.replace(".nam", "")
     ws = function_tmpdir / "ws"
@@ -37,9 +35,8 @@ def test_mf2005swi2(function_tmpdir, swi_path, namfile):
 
     # rewrite files
     model_ws2 = os.path.join(ws, "flopy")
-    m.change_model_ws(
-        model_ws2, reset_external=True
-    )  # l1b2k_bath won't run without this
+    # l1b2k_bath won't run without this
+    m.change_model_ws(model_ws2, reset_external=True)
     m.write_input()
 
     success, buff = m.run_model()
@@ -47,8 +44,6 @@ def test_mf2005swi2(function_tmpdir, swi_path, namfile):
     fn1 = os.path.join(model_ws2, namfile)
 
     fsum = os.path.join(ws, f"{os.path.splitext(namfile)[0]}.budget.out")
-    success = compare_budget(
-        fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
-    )
+    success = compare_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum)
 
     assert success, "budget comparison failure"

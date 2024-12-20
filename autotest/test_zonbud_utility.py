@@ -39,11 +39,7 @@ def read_zonebudget_file(fname):
 
         # Read time step information for this block
         if "Time Step" in line:
-            kstp, kper, totim = (
-                int(items[1]) - 1,
-                int(items[3]) - 1,
-                float(items[5]),
-            )
+            kstp, kper, totim = (int(items[1]) - 1, int(items[3]) - 1, float(items[5]))
             continue
 
         # Get names of zones
@@ -63,11 +59,7 @@ def read_zonebudget_file(fname):
             continue
 
         # Get mass-balance information for this block
-        elif (
-            "Total" in items[0]
-            or "IN-OUT" in items[0]
-            or "Percent Error" in items[0]
-        ):
+        elif "Total" in items[0] or "IN-OUT" in items[0] or "Percent Error" in items[0]:
             continue
 
         # End of block
@@ -78,12 +70,7 @@ def read_zonebudget_file(fname):
         if record.startswith(("FROM_", "TO_")):
             record = "_".join(record.split("_")[1:])
         vals = [float(i) for i in items[1:-1]]
-        row = (
-            totim,
-            kstp,
-            kper,
-            record,
-        ) + tuple(v for v in vals)
+        row = (totim, kstp, kper, record) + tuple(v for v in vals)
         rows.append(row)
     dtype_list = [
         ("totim", float),
@@ -119,8 +106,8 @@ def test_compare2zonebudget(cbc_f, zon_f, zbud_f, rtol):
                 continue
             if r1[0].shape[0] != r2[0].shape[0]:
                 continue
-            a1 = np.array([v for v in zb_arr[zonenames][r1[0]][0]])
-            a2 = np.array([v for v in fp_arr[zonenames][r2[0]][0]])
+            a1 = np.array(list(zb_arr[zonenames][r1[0]][0]))
+            a2 = np.array(list(fp_arr[zonenames][r2[0]][0]))
             allclose = np.allclose(a1, a2, rtol)
 
             mxdiff = np.abs(a1 - a2).max()
@@ -147,9 +134,7 @@ def test_zonbud_aliases(cbc_f, zon_f):
     """
     zon = ZoneBudget.read_zone_file(zon_f)
     aliases = {1: "Trey", 2: "Mike", 4: "Wilson", 0: "Carini"}
-    zb = ZoneBudget(
-        cbc_f, zon, kstpkper=(0, 1096), aliases=aliases, verbose=True
-    )
+    zb = ZoneBudget(cbc_f, zon, kstpkper=(0, 1096), aliases=aliases, verbose=True)
     bud = zb.get_budget()
     assert bud[bud["name"] == "FROM_Mike"].shape[0] > 0, "No records returned."
 
@@ -195,9 +180,7 @@ def test_zonbud_readwrite_zbarray(function_tmpdir):
     """
     x = np.random.randint(100, 200, size=(5, 150, 200))
     ZoneBudget.write_zone_file(function_tmpdir / "randint", x)
-    ZoneBudget.write_zone_file(
-        function_tmpdir / "randint", x, fmtin=35, iprn=2
-    )
+    ZoneBudget.write_zone_file(function_tmpdir / "randint", x, fmtin=35, iprn=2)
     z = ZoneBudget.read_zone_file(function_tmpdir / "randint")
     assert np.array_equal(x, z), "Input and output arrays do not match."
 
@@ -328,7 +311,7 @@ def test_zonebudget_6(function_tmpdir, example_data_path):
 
     df = zb.get_dataframes()
 
-    assert list(df)[0] == "test_alias", "Alias testing failed"
+    assert next(iter(df)) == "test_alias", "Alias testing failed"
 
 
 @pytest.mark.mf6

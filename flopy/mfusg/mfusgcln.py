@@ -13,7 +13,7 @@ Panday, S., 2021; USG-Transport Version 1.7.0: The Block-Centered Transport
 Process for MODFLOW-USG, GSI Environmental, March, 2021
 
 Panday, Sorab, Langevin, C.D., Niswonger, R.G., Ibaraki, Motomu, and Hughes,
-J.D., 2013, MODFLOW–USG version 1: An unstructured grid version of MODFLOW
+J.D., 2013, MODFLOW-USG version 1: An unstructured grid version of MODFLOW
 for simulating groundwater flow and tightly coupled processes using a control
 volume finite-difference formulation: U.S. Geological Survey Techniques and
 Methods, book 6, chap. A45, 66 p.
@@ -273,9 +273,7 @@ class MfUsgCln(Package):
             raise Exception("mfcln: CLN-GW connections not provided")
 
         if len(cln_gwc) != nclngwc:
-            raise Exception(
-                "mfcln: Number of CLN-GW connections not equal to nclngwc"
-            )
+            raise Exception("mfcln: Number of CLN-GW connections not equal to nclngwc")
 
         structured = self.parent.structured
 
@@ -334,15 +332,12 @@ class MfUsgCln(Package):
             raise Exception("mfcln: CLN network not defined")
 
         if self.ncln < 0:
-            raise Exception(
-                "mfcln: negative number of CLN segments in CLN package"
-            )
+            raise Exception("mfcln: negative number of CLN segments in CLN package")
 
         if self.ncln > 0:  # Linear CLN segments
             if self.nndcln is None:
                 raise Exception(
-                    "mfcln: number of nodes for each CLN segment must be "
-                    "provided"
+                    "mfcln: number of nodes for each CLN segment must be provided"
                 )
             self.nndcln = Util2d(
                 model,
@@ -360,9 +355,8 @@ class MfUsgCln(Package):
             # Node number provided for each segment to simulate CLN networks
             elif self.iclnnds > 0:
                 self.nclnnds = self.iclnnds
-                self.nodeno = (
-                    np.asarray(set(self.clncon), dtype=object) + 1
-                )  # can be jagged
+                # can be jagged
+                self.nodeno = np.asarray(set(self.clncon), dtype=object) + 1
             else:
                 raise Exception("mfcln: Node number = 0")
 
@@ -391,9 +385,7 @@ class MfUsgCln(Package):
             if self.ja_cln is None:
                 raise Exception("mfcln: ja_cln must be provided")
             if abs(self.ja_cln[0]) != 1:
-                raise Exception(
-                    "mfcln: first ja_cln entry (node 1) is not 1 or -1."
-                )
+                raise Exception("mfcln: first ja_cln entry (node 1) is not 1 or -1.")
             self.ja_cln = Util2d(
                 model,
                 (self.nja_cln,),
@@ -407,14 +399,10 @@ class MfUsgCln(Package):
         """Initialises CLN geometry types."""
         # Circular conduit geometry types
         if self.nconduityp <= 0 or self.cln_circ is None:
-            raise Exception(
-                "mfcln: Circular conduit properties must be provided"
-            )
+            raise Exception("mfcln: Circular conduit properties must be provided")
 
         if len(self.cln_circ) != self.nconduityp:
-            raise Exception(
-                "mfcln: Number of circular properties not equal nconduityp"
-            )
+            raise Exception("mfcln: Number of circular properties not equal nconduityp")
 
         self.cln_circ = self._make_recarray(
             self.cln_circ, dtype=MfUsgClnDtypes.get_clncirc_dtype(self.bhe)
@@ -472,28 +460,18 @@ class MfUsgCln(Package):
             f_cln.write(self.iac_cln.get_file_entry())
             f_cln.write(self.ja_cln.get_file_entry())
 
-        np.savetxt(
-            f_cln, self.node_prop, fmt=fmt_string(self.node_prop), delimiter=""
-        )
+        np.savetxt(f_cln, self.node_prop, fmt=fmt_string(self.node_prop), delimiter="")
 
-        np.savetxt(
-            f_cln, self.cln_gwc, fmt=fmt_string(self.cln_gwc), delimiter=""
-        )
+        np.savetxt(f_cln, self.cln_gwc, fmt=fmt_string(self.cln_gwc), delimiter="")
 
         if self.nconduityp > 0:
             np.savetxt(
-                f_cln,
-                self.cln_circ,
-                fmt=fmt_string(self.cln_circ),
-                delimiter="",
+                f_cln, self.cln_circ, fmt=fmt_string(self.cln_circ), delimiter=""
             )
 
         if self.nrectyp > 0:
             np.savetxt(
-                f_cln,
-                self.cln_rect,
-                fmt=fmt_string(self.cln_rect),
-                delimiter="",
+                f_cln, self.cln_rect, fmt=fmt_string(self.cln_rect), delimiter=""
             )
 
         f_cln.write(self.ibound.get_file_entry())
@@ -596,14 +574,9 @@ class MfUsgCln(Package):
         ) = cls._load_items_0_1(f, model)
 
         # Items 3, or 4/5/6
-        (
-            nndcln,
-            clncon,
-            nja_cln,
-            iac_cln,
-            ja_cln,
-            nclnnds,
-        ) = cls._load_items_3to6(f, model, ncln, iclnnds, ext_unit_dict)
+        (nndcln, clncon, nja_cln, iac_cln, ja_cln, nclnnds) = cls._load_items_3to6(
+            f, model, ncln, iclnnds, ext_unit_dict
+        )
 
         if model.verbose:
             print("  Reading node_prop...")
@@ -624,15 +597,11 @@ class MfUsgCln(Package):
 
         if model.verbose:
             print("   Reading ibound...")
-        ibound = Util2d.load(
-            f, model, (nclnnds, 1), np.int32, "ibound", ext_unit_dict
-        )
+        ibound = Util2d.load(f, model, (nclnnds, 1), np.int32, "ibound", ext_unit_dict)
 
         if model.verbose:
             print("   Reading strt...")
-        strt = Util2d.load(
-            f, model, (nclnnds, 1), np.float32, "strt", ext_unit_dict
-        )
+        strt = Util2d.load(f, model, (nclnnds, 1), np.float32, "strt", ext_unit_dict)
 
         if hasattr(f, "read"):
             f.close()
@@ -649,10 +618,9 @@ class MfUsgCln(Package):
             funcs = [abs] + [int] * 3 + [abs] * 2
             for idx, (item, func) in enumerate(zip(file_unit_items, funcs)):
                 if item > 0:
-                    (
-                        unitnumber[idx + 1],
-                        filenames[idx + 1],
-                    ) = model.get_ext_dict_attr(ext_unit_dict, unit=func(item))
+                    (unitnumber[idx + 1], filenames[idx + 1]) = model.get_ext_dict_attr(
+                        ext_unit_dict, unit=func(item)
+                    )
                     model.add_pop_key_list(func(item))
 
         # create dis object instance
@@ -704,16 +672,9 @@ class MfUsgCln(Package):
         line_text = line.strip().split()
 
         line_text[:8] = [int(item) for item in line_text[:8]]
-        (
-            ncln,
-            iclnnds,
-            iclncb,
-            iclnhd,
-            iclndd,
-            iclnib,
-            nclngwc,
-            nconduityp,
-        ) = line_text[:8]
+        (ncln, iclnnds, iclncb, iclnhd, iclndd, iclnib, nclngwc, nconduityp) = (
+            line_text[:8]
+        )
 
         # Options keywords
         nrectyp = 0

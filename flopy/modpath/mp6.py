@@ -102,9 +102,7 @@ class Modpath6(BaseModel):
             # ensure that user-specified files are used
             iu = self.__mf.oc.iuhead
             head_file = (
-                self.__mf.get_output(unit=iu)
-                if head_file is None
-                else head_file
+                self.__mf.get_output(unit=iu) if head_file is None else head_file
             )
             p = self.__mf.get_package("LPF")
             if p is None:
@@ -118,13 +116,9 @@ class Modpath6(BaseModel):
                 )
             iu = p.ipakcb
             budget_file = (
-                self.__mf.get_output(unit=iu)
-                if budget_file is None
-                else budget_file
+                self.__mf.get_output(unit=iu) if budget_file is None else budget_file
             )
-            dis_file = (
-                self.__mf.dis.file_name[0] if dis_file is None else dis_file
-            )
+            dis_file = self.__mf.dis.file_name[0] if dis_file is None else dis_file
 
             dis_unit = self.__mf.dis.unit_number[0]
             nper = self.__mf.dis.nper
@@ -158,7 +152,8 @@ class Modpath6(BaseModel):
             )
 
         if self.__mf is None:
-            # read from nper, lay, nrow, ncol from dis file, Item 1: NLAY, NROW, NCOL, NPER, ITMUNI, LENUNI
+            # read from nper, lay, nrow, ncol from dis file,
+            # Item 1: NLAY, NROW, NCOL, NPER, ITMUNI, LENUNI
             read_dis = dis_file
             if not os.path.exists(read_dis):
                 # path doesn't exist, probably relative to model_ws
@@ -168,12 +163,7 @@ class Modpath6(BaseModel):
                 while line[0] == "#":
                     line = f.readline()
                 nlay, nrow, ncol, nper, itmuni, lennuni = line.split()
-                self.nrow_ncol_nlay_nper = (
-                    int(nrow),
-                    int(ncol),
-                    int(nlay),
-                    int(nper),
-                )
+                self.nrow_ncol_nlay_nper = (int(nrow), int(ncol), int(nlay), int(nper))
 
         # set the rest of the attributes
         self.__sim = None
@@ -187,9 +177,7 @@ class Modpath6(BaseModel):
         self.load = load
         self.__next_ext_unit = 500
         if external_path is not None:
-            assert os.path.exists(
-                external_path
-            ), "external_path does not exist"
+            assert os.path.exists(external_path), "external_path does not exist"
             self.external = True
 
     def __repr__(self):
@@ -271,14 +259,17 @@ class Modpath6(BaseModel):
             (default is 'WEL').
         start_time : float or tuple
             Sets the value of MODPATH reference time relative to MODFLOW time.
-            float : value of MODFLOW simulation time at which to start the particle tracking simulation.
+            float : value of MODFLOW simulation time at which to start the
+                    particle tracking simulation.
                     Sets the value of MODPATH ReferenceTimeOption to 1.
-            tuple : (period, step, time fraction) MODFLOW stress period, time step and fraction
+            tuple : (period, step, time fraction) MODFLOW stress period,
+                    time step and fraction
                     between 0 and 1 at which to start the particle tracking simulation.
                     Sets the value of MODPATH ReferenceTimeOption to 2.
         default_ifaces : list
-            List of cell faces (1-6; see MODPATH6 manual, fig. 7) on which to start particles.
-            (default is None, meaning ifaces will vary depending on packages argument above)
+            List of cell faces (1-6; see MODPATH6 manual, fig. 7) on which to
+            start particles. (default is None, meaning ifaces will vary
+            depending on packages argument above)
         ParticleRowCount : int
             Rows of particles to start on each cell index face (iface).
         ParticleColumnCount : int
@@ -305,7 +296,8 @@ class Modpath6(BaseModel):
         ref_time = 0
         ref_time_per_stp = (0, 0, 1.0)
         if isinstance(start_time, tuple):
-            ReferenceTimeOption = 2  # 1: specify value for ref. time, 2: specify kper, kstp, rel. time pos
+            # 1: specify value for ref. time, 2: specify kper, kstp, rel. time pos
+            ReferenceTimeOption = 2
             ref_time_per_stp = start_time
         else:
             ref_time = start_time
@@ -342,9 +334,7 @@ class Modpath6(BaseModel):
             if package.upper() == "WEL":
                 ParticleGenerationOption = 1
                 if "WEL" not in pak_list:
-                    raise Exception(
-                        "Error: no well package in the passed model"
-                    )
+                    raise Exception("Error: no well package in the passed model")
                 for kper in range(nper):
                     mflist = self.__mf.wel.stress_period_data[kper]
                     idx = (mflist["k"], mflist["i"], mflist["j"])
@@ -369,9 +359,7 @@ class Modpath6(BaseModel):
                             )
                             group_region.append([k, i, j, k, i, j])
                             if default_ifaces is None:
-                                ifaces.append(
-                                    side_faces + [top_face, botm_face]
-                                )
+                                ifaces.append(side_faces + [top_face, botm_face])
                                 face_ct.append(6)
                             else:
                                 ifaces.append(default_ifaces)
@@ -381,9 +369,7 @@ class Modpath6(BaseModel):
             elif "MNW" in package.upper():
                 ParticleGenerationOption = 1
                 if "MNW2" not in pak_list:
-                    raise Exception(
-                        "Error: no MNW2 package in the passed model"
-                    )
+                    raise Exception("Error: no MNW2 package in the passed model")
                 node_data = self.__mf.mnw2.get_allnode_data()
                 node_data.sort(order=["wellid", "k"])
                 wellids = np.unique(node_data.wellid)
@@ -414,27 +400,15 @@ class Modpath6(BaseModel):
                     k, i, j = nd.k[0], nd.i[0], nd.j[0]
                     if len(nd) == 1:
                         append_node(
-                            side_faces + [top_face, botm_face],
-                            wellid,
-                            0,
-                            k,
-                            i,
-                            j,
+                            side_faces + [top_face, botm_face], wellid, 0, k, i, j
                         )
                     else:
-                        append_node(
-                            side_faces + [top_face], wellid, 0, k, i, j
-                        )
+                        append_node(side_faces + [top_face], wellid, 0, k, i, j)
                         for n in range(len(nd))[1:]:
                             k, i, j = nd.k[n], nd.i[n], nd.j[n]
                             if n == len(nd) - 1:
                                 append_node(
-                                    side_faces + [botm_face],
-                                    wellid,
-                                    n,
-                                    k,
-                                    i,
-                                    j,
+                                    side_faces + [botm_face], wellid, n, k, i, j
                                 )
                             else:
                                 append_node(side_faces, wellid, n, k, i, j)
@@ -464,9 +438,7 @@ class Modpath6(BaseModel):
                 if self.__mf is not None:
                     model_ws = self.__mf.model_ws
                 if os.path.exists(os.path.join(model_ws, package)):
-                    print(
-                        "detected a particle starting locations file in packages"
-                    )
+                    print("detected a particle starting locations file in packages")
                     assert len(packages) == 1, (
                         "if a particle starting locations file is passed, "
                         "other packages cannot be specified"

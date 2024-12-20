@@ -167,16 +167,12 @@ class VertexGrid(Grid):
     @property
     def cell1d(self):
         if self._cell1d is not None:
-            return [
-                [ivt for ivt in t if ivt is not None] for t in self._cell1d
-            ]
+            return [[ivt for ivt in t if ivt is not None] for t in self._cell1d]
 
     @property
     def cell2d(self):
         if self._cell2d is not None:
-            return [
-                [ivt for ivt in t if ivt is not None] for t in self._cell2d
-            ]
+            return [[ivt for ivt in t if ivt is not None] for t in self._cell2d]
 
     @property
     def verts(self):
@@ -226,7 +222,7 @@ class VertexGrid(Grid):
         if self.cell1d is not None:
             close_cell = False
 
-        # go through each cell and create a line segement for each face
+        # go through each cell and create a line segment for each face
         lines = []
         ncpl = len(xgrid)
         for icpl in range(ncpl):
@@ -241,9 +237,7 @@ class VertexGrid(Grid):
                     ]
                 )
             if close_cell:
-                lines.append(
-                    [(xcoords[-1], ycoords[-1]), (xcoords[0], ycoords[0])]
-                )
+                lines.append([(xcoords[-1], ycoords[-1]), (xcoords[0], ycoords[0])])
 
         self._copy_cache = True
         return lines
@@ -336,13 +330,9 @@ class VertexGrid(Grid):
         """
         if self.is_complete:
             return VertexGrid(
-                vertices=[
-                    [i[0], i[1] * factor, i[2] * factor]
-                    for i in self._vertices
-                ],
+                vertices=[[i[0], i[1] * factor, i[2] * factor] for i in self._vertices],
                 cell2d=[
-                    [i[0], i[1] * factor, i[2] * factor] + i[3:]
-                    for i in self._cell2d
+                    [i[0], i[1] * factor, i[2] * factor] + i[3:] for i in self._cell2d
                 ],
                 top=self.top * factor,
                 botm=self.botm * factor,
@@ -352,9 +342,7 @@ class VertexGrid(Grid):
                 angrot=self.angrot,
             )
         else:
-            raise AssertionError(
-                "Grid is not complete and cannot be converted"
-            )
+            raise AssertionError("Grid is not complete and cannot be converted")
 
     def intersect(self, x, y, z=None, local=False, forgive=False):
         """

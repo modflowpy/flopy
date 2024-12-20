@@ -39,10 +39,13 @@ class PlotCrossSection:
         (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
         then these will be calculated based on grid, coordinates, and rotation.
     geographic_coords : bool
-        boolean flag to allow the user to plot cross section lines in
-        geographic coordinates. If False (default), cross section is plotted
-        as the distance along the cross section line.
-
+        boolean flag to allow the user to plot cross-section lines in
+        geographic coordinates. If False (default), cross-section is plotted
+        as the distance along the cross-section line.
+    min_segment_length : float
+        minimum width of a grid cell polygon to be plotted. Cells with a
+        cross-sectional width less than min_segment_length will be ignored
+        and not included in the plot. Default is 1e-02.
     """
 
     def __init__(
@@ -53,6 +56,7 @@ class PlotCrossSection:
         line=None,
         extent=None,
         geographic_coords=False,
+        min_segment_length=1e-02,
     ):
         self.ax = ax
         self.geographic_coords = geographic_coords
@@ -89,7 +93,7 @@ class PlotCrossSection:
         else:
             self.ax = ax
 
-        onkey = list(line.keys())[0]
+        onkey = next(iter(line.keys()))
         self.__geographic_xpts = None
 
         # un-translate model grid into model coordinates
@@ -107,9 +111,7 @@ class PlotCrossSection:
         (
             xverts,
             yverts,
-        ) = plotutil.UnstructuredPlotUtilities.irregular_shape_patch(
-            xverts, yverts
-        )
+        ) = plotutil.UnstructuredPlotUtilities.irregular_shape_patch(xverts, yverts)
 
         self.xvertices, self.yvertices = geometry.transform(
             xverts,
@@ -172,7 +174,7 @@ class PlotCrossSection:
                 xp[idx2] += 1e-03
                 self.direction = "y"
 
-            pts = [(xt, yt) for xt, yt in zip(xp, yp)]
+            pts = list(zip(xp, yp))
 
         self.pts = np.array(pts)
 
@@ -180,8 +182,24 @@ class PlotCrossSection:
             self.pts, self.xvertices, self.yvertices
         )
 
+        self.xypts = plotutil.UnstructuredPlotUtilities.filter_line_segments(
+            self.xypts, threshold=min_segment_length
+        )
+        # need to ensure that the ordering of vertices in xypts is correct
+        # based on the projection. In certain cases vertices need to be sorted
+        # for the specific "projection"
+        for node, points in self.xypts.items():
+            if self.direction == "y":
+                if points[0][-1] < points[1][-1]:
+                    points = points[::-1]
+            else:
+                if points[0][0] > points[1][0]:
+                    points = points[::-1]
+
+            self.xypts[node] = points
+
         if len(self.xypts) < 2:
-            if len(list(self.xypts.values())[0]) < 2:
+            if len(next(iter(self.xypts.values()))) < 2:
                 s = (
                     "cross-section cannot be created\n."
                     " less than 2 points intersect the model grid\n"
@@ -197,13 +215,9 @@ class PlotCrossSection:
                 xp = [t[0] for t in pt]
                 yp = [t[1] for t in pt]
                 xp, yp = geometry.transform(
-                    xp,
-                    yp,
-                    self.mg.xoffset,
-                    self.mg.yoffset,
-                    self.mg.angrot_radians,
+                    xp, yp, self.mg.xoffset, self.mg.yoffset, self.mg.angrot_radians
                 )
-                xypts[nn] = [(xt, yt) for xt, yt in zip(xp, yp)]
+                xypts[nn] = list(zip(xp, yp))
 
             self.xypts = xypts
 
@@ -224,9 +238,7 @@ class PlotCrossSection:
         else:
             self.active = np.ones(self.mg.nlay, dtype=int)
 
-        self._nlay, self._ncpl, self.ncb = self.mg.cross_section_lay_ncpl_ncb(
-            self.ncb
-        )
+        self._nlay, self._ncpl, self.ncb = self.mg.cross_section_lay_ncpl_ncb(self.ncb)
 
         top = self.mg.top.reshape(1, self._ncpl)
         botm = self.mg.botm.reshape(self._nlay + self.ncb, self._ncpl)
@@ -238,6 +250,7 @@ class PlotCrossSection:
             self.idomain = np.ones(botm.shape, dtype=int)
 
         self.projpts = self.set_zpts(None)
+        self.projctr = None
 
         # Create cross-section extent
         if extent is None:
@@ -271,24 +284,11 @@ class PlotCrossSection:
     def _is_valid(line):
         shapely_geo = import_optional_dependency("shapely.geometry")
 
-        if isinstance(
-            line,
-            (
-                list,
-                tuple,
-                np.ndarray,
-            ),
-        ):
+        if isinstance(line, (list, tuple, np.ndarray)):
             a = np.array(line)
             if (len(a.shape) < 2 or a.shape[0] < 2) or a.shape[1] != 2:
                 return False
-        elif not isinstance(
-            line,
-            (
-                geometry.LineString,
-                shapely_geo.LineString,
-            ),
-        ):
+        elif not isinstance(line, (geometry.LineString, shapely_geo.LineString)):
             return False
 
         return True
@@ -329,9 +329,7 @@ class PlotCrossSection:
                     if cell not in self._polygons:
                         self._polygons[cell] = [Polygon(verts, closed=True)]
                     else:
-                        self._polygons[cell].append(
-                            Polygon(verts, closed=True)
-                        )
+                        self._polygons[cell].append(Polygon(verts, closed=True))
 
         return copy.copy(self._polygons)
 
@@ -476,9 +474,7 @@ class PlotCrossSection:
             elif a[cell] is np.ma.masked:
                 continue
             else:
-                line = ax.plot(
-                    d[cell], [a[cell], a[cell]], color=color, **kwargs
-                )
+                line = ax.plot(d[cell], [a[cell], a[cell]], color=color, **kwargs)
                 surface.append(line)
 
         ax = self._set_axes_limits(ax)
@@ -534,9 +530,7 @@ class PlotCrossSection:
         else:
             projpts = self.projpts
 
-        pc = self.get_grid_patch_collection(
-            a, projpts, fill_between=True, **kwargs
-        )
+        pc = self.get_grid_patch_collection(a, projpts, fill_between=True, **kwargs)
         if pc is not None:
             ax.add_collection(pc)
             ax = self._set_axes_limits(ax)
@@ -578,13 +572,10 @@ class PlotCrossSection:
         xcenters = self.xcenters
         plotarray = np.array([a[cell] for cell in sorted(self.projpts)])
 
-        (
-            plotarray,
-            xcenters,
-            zcenters,
-            mplcontour,
-        ) = self.mg.cross_section_set_contour_arrays(
-            plotarray, xcenters, head, self.elev, self.projpts
+        (plotarray, xcenters, zcenters, mplcontour) = (
+            self.mg.cross_section_set_contour_arrays(
+                plotarray, xcenters, head, self.elev, self.projpts
+            )
         )
 
         if not mplcontour:
@@ -592,10 +583,7 @@ class PlotCrossSection:
                 zcenters = self.set_zcentergrid(np.ravel(head))
             else:
                 zcenters = np.array(
-                    [
-                        np.mean(np.array(v).T[1])
-                        for i, v in sorted(self.projpts.items())
-                    ]
+                    [np.mean(np.array(v).T[1]) for i, v in sorted(self.projpts.items())]
                 )
 
         # work around for tri-contour ignore vmin & vmax
@@ -645,13 +633,9 @@ class PlotCrossSection:
         if mplcontour:
             plotarray = np.ma.masked_array(plotarray, ismasked)
             if filled:
-                contour_set = ax.contourf(
-                    xcenters, zcenters, plotarray, **kwargs
-                )
+                contour_set = ax.contourf(xcenters, zcenters, plotarray, **kwargs)
             else:
-                contour_set = ax.contour(
-                    xcenters, zcenters, plotarray, **kwargs
-                )
+                contour_set = ax.contour(xcenters, zcenters, plotarray, **kwargs)
         else:
             triang = tri.Triangulation(xcenters, zcenters)
             analyze = tri.TriAnalyzer(triang)
@@ -762,19 +746,12 @@ class PlotCrossSection:
         plotarray[idx1] = 1
         plotarray[idx2] = 2
         plotarray = np.ma.masked_equal(plotarray, 0)
-        cmap = matplotlib.colors.ListedColormap(
-            ["none", color_noflow, color_ch]
-        )
+        cmap = matplotlib.colors.ListedColormap(["none", color_noflow, color_ch])
         bounds = [0, 1, 2, 3]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
         # mask active cells
         patches = self.plot_array(
-            plotarray,
-            masked_values=[0],
-            head=head,
-            cmap=cmap,
-            norm=norm,
-            **kwargs,
+            plotarray, masked_values=[0], head=head, cmap=cmap, norm=norm, **kwargs
         )
         return patches
 
@@ -799,9 +776,7 @@ class PlotCrossSection:
             ax.add_collection(col)
         return col
 
-    def plot_bc(
-        self, name=None, package=None, kper=0, color=None, head=None, **kwargs
-    ):
+    def plot_bc(self, name=None, package=None, kper=0, color=None, head=None, **kwargs):
         """
         Plot boundary conditions locations for a specific boundary
         type from a flopy model
@@ -857,15 +832,11 @@ class PlotCrossSection:
                     try:
                         mflist = pp.stress_period_data.array[kper]
                     except Exception as e:
-                        raise Exception(
-                            f"Not a list-style boundary package: {e!s}"
-                        )
+                        raise Exception(f"Not a list-style boundary package: {e!s}")
                     if mflist is None:
                         return
 
-                    t = np.array(
-                        [list(i) for i in mflist["cellid"]], dtype=int
-                    ).T
+                    t = np.array([list(i) for i in mflist["cellid"]], dtype=int).T
 
                 if len(idx) == 0:
                     idx = np.copy(t)
@@ -880,9 +851,7 @@ class PlotCrossSection:
                 try:
                     mflist = p.stress_period_data[kper]
                 except Exception as e:
-                    raise Exception(
-                        f"Not a list-style boundary package: {e!s}"
-                    )
+                    raise Exception(f"Not a list-style boundary package: {e!s}")
                 if mflist is None:
                     return
                 if len(self.mg.shape) == 3:
@@ -891,9 +860,7 @@ class PlotCrossSection:
                     idx = mflist["node"]
 
         if len(self.mg.shape) == 3:
-            plotarray = np.zeros(
-                (self.mg.nlay, self.mg.nrow, self.mg.ncol), dtype=int
-            )
+            plotarray = np.zeros((self.mg.nlay, self.mg.nrow, self.mg.ncol), dtype=int)
             plotarray[idx[0], idx[1], idx[2]] = 1
         elif len(self.mg.shape) == 2:
             plotarray = np.zeros((self._nlay, self._ncpl), dtype=int)
@@ -916,15 +883,115 @@ class PlotCrossSection:
         bounds = [0, 1, 2]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
         patches = self.plot_array(
-            plotarray,
-            masked_values=[0],
-            head=head,
-            cmap=cmap,
-            norm=norm,
-            **kwargs,
+            plotarray, masked_values=[0], head=head, cmap=cmap, norm=norm, **kwargs
         )
 
         return patches
+
+    def plot_centers(
+        self, a=None, s=None, masked_values=None, inactive=False, **kwargs
+    ):
+        """
+        Method to plot cell centers on cross-section using matplotlib
+        scatter. This method accepts an optional data array(s) for
+        coloring and scaling the cell centers. Cell centers in inactive
+        nodes are not plotted by default
+
+        Parameters
+        ----------
+        a : None, np.ndarray
+            optional numpy nd.array of size modelgrid.nnodes
+        s : None, float, numpy array
+            optional point size parameter
+        masked_values : None, iterable
+            optional list, tuple, or np array of array (a) values to mask
+        inactive : bool
+            boolean flag to include inactive cell centers in the plot.
+            Default is False
+        **kwargs :
+            matplotlib ax.scatter() keyword arguments
+
+        Returns
+        -------
+            matplotlib ax.scatter() object
+        """
+        ax = kwargs.pop("ax", self.ax)
+
+        projpts = self.projpts
+        nodes = list(projpts.keys())
+        xcs = self.mg.xcellcenters.ravel()
+        ycs = self.mg.ycellcenters.ravel()
+        projctr = {}
+
+        if not self.geographic_coords:
+            xcs, ycs = geometry.transform(
+                xcs,
+                ycs,
+                self.mg.xoffset,
+                self.mg.yoffset,
+                self.mg.angrot_radians,
+                inverse=True,
+            )
+
+            for node, points in self.xypts.items():
+                projpt = projpts[node]
+                d0 = np.min(np.array(projpt).T[0])
+
+                xc_dist = geometry.project_point_onto_xc_line(
+                    points[:2], [xcs[node], ycs[node]], d0=d0, calc_dist=True
+                )
+                projctr[node] = xc_dist
+
+        else:
+            projctr = {}
+            for node in nodes:
+                if self.direction == "x":
+                    projctr[node] = xcs[node]
+                else:
+                    projctr[node] = ycs[node]
+
+        # pop off any centers that are outside the "visual field"
+        #  for a given cross-section.
+        removed = {}
+        for node, points in projpts.items():
+            center = projctr[node]
+            points = np.array(points[:2]).T
+            if np.min(points[0]) > center or np.max(points[0]) < center:
+                removed[node] = (np.min(points[0]), center, np.max(points[0]))
+                projctr.pop(node)
+
+        # filter out inactive cells
+        if not inactive:
+            idomain = self.mg.idomain.ravel()
+            for node, points in projpts.items():
+                if idomain[node] == 0:
+                    if node in projctr:
+                        projctr.pop(node)
+
+        self.projctr = projctr
+        nodes = list(projctr.keys())
+        xcenters = list(projctr.values())
+        zcenters = [np.mean(np.array(projpts[node]).T[1]) for node in nodes]
+
+        if a is not None:
+            if not isinstance(a, np.ndarray):
+                a = np.array(a)
+            a = a.ravel().astype(float)
+
+            if masked_values is not None:
+                self._masked_values.extend(list(masked_values))
+
+            for mval in self._masked_values:
+                a[a == mval] = np.nan
+
+            a = a[nodes]
+
+        if s is not None:
+            if not isinstance(s, (int, float)):
+                s = s[nodes]
+        print(len(xcenters))
+        scat = ax.scatter(xcenters, zcenters, c=a, s=s, **kwargs)
+        return scat
 
     def plot_vector(
         self,
@@ -984,19 +1051,16 @@ class PlotCrossSection:
         arbitrary = False
         pts = self.pts
         xuniform = [
-            True if abs(pts.T[0, 0] - i) < self.mean_dy else False
-            for i in pts.T[0]
+            True if abs(pts.T[0, 0] - i) < self.mean_dy else False for i in pts.T[0]
         ]
         yuniform = [
-            True if abs(pts.T[1, 0] - i) < self.mean_dx else False
-            for i in pts.T[1]
+            True if abs(pts.T[1, 0] - i) < self.mean_dx else False for i in pts.T[1]
         ]
         if not np.all(xuniform) and not np.all(yuniform):
             arbitrary = True
         if arbitrary:
             err_msg = (
-                "plot_specific_discharge() does not "
-                "support arbitrary cross-sections"
+                "plot_specific_discharge() does not support arbitrary cross-sections"
             )
             raise AssertionError(err_msg)
 
@@ -1024,9 +1088,7 @@ class PlotCrossSection:
             zcenters = self.set_zcentergrid(np.ravel(head), kstep=kstep)
 
         else:
-            zcenters = [
-                np.mean(np.array(v).T[1]) for i, v in sorted(projpts.items())
-            ]
+            zcenters = [np.mean(np.array(v).T[1]) for i, v in sorted(projpts.items())]
 
         xcenters = np.array(
             [np.mean(np.array(v).T[0]) for i, v in sorted(projpts.items())]
@@ -1067,9 +1129,7 @@ class PlotCrossSection:
 
         return quiver
 
-    def plot_pathline(
-        self, pl, travel_time=None, method="cell", head=None, **kwargs
-    ):
+    def plot_pathline(self, pl, travel_time=None, method="cell", head=None, **kwargs):
         """
         Plot particle pathlines. Compatible with MODFLOW 6 PRT particle track
         data format, or MODPATH 6 or 7 pathline data format.
@@ -1209,9 +1269,7 @@ class PlotCrossSection:
 
         return lc
 
-    def plot_timeseries(
-        self, ts, travel_time=None, method="cell", head=None, **kwargs
-    ):
+    def plot_timeseries(self, ts, travel_time=None, method="cell", head=None, **kwargs):
         """
         Plot the MODPATH timeseries. Not compatible with MODFLOW 6 PRT.
 
@@ -1350,6 +1408,7 @@ class PlotCrossSection:
             self.xvertices,
             self.yvertices,
             self.direction,
+            self._ncpl,
             method=method,
             starting=istart,
         )
@@ -1362,6 +1421,7 @@ class PlotCrossSection:
             self.xypts,
             self.direction,
             self.mg,
+            self._ncpl,
             self.geographic_coords,
             starting=istart,
         )
@@ -1369,8 +1429,8 @@ class PlotCrossSection:
         arr = []
         c = []
         for node, epl in sorted(epdict.items()):
-            c.append(cd[node])
             for xy in epl:
+                c.append(cd[node])
                 arr.append(xy)
 
         arr = np.array(arr)
@@ -1404,9 +1464,7 @@ class PlotCrossSection:
         facecolor = kwargs.pop("facecolor", "none")
         facecolor = kwargs.pop("fc", facecolor)
 
-        polygons = [
-            p for _, polys in sorted(self.polygons.items()) for p in polys
-        ]
+        polygons = [p for _, polys in sorted(self.polygons.items()) for p in polys]
         if len(polygons) > 0:
             patches = PatchCollection(
                 polygons, edgecolor=edgecolor, facecolor=facecolor, **kwargs
@@ -1643,9 +1701,7 @@ class PlotCrossSection:
                 data.append(plotarray[cell])
 
         if len(rectcol) > 0:
-            patches = PatchCollection(
-                rectcol, match_original=match_original, **kwargs
-            )
+            patches = PatchCollection(rectcol, match_original=match_original, **kwargs)
             if not fill_between:
                 patches.set_array(np.array(data))
                 patches.set_clim(vmin, vmax)

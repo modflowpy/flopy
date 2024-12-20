@@ -140,9 +140,7 @@ class Mt3dCts(Package):
 
     """
 
-    def __init__(
-        self,
-    ):
+    def __init__(self):
         raise NotImplementedError()
 
     @classmethod

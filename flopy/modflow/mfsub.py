@@ -259,10 +259,7 @@ class ModflowSub(Package):
 
         if idsave is not None:
             model.add_output_file(
-                idsave,
-                fname=filenames[2],
-                extension="rst",
-                package=self._ftype(),
+                idsave, fname=filenames[2], extension="rst", package=self._ftype()
             )
         else:
             idsave = 0
@@ -473,9 +470,7 @@ class ModflowSub(Package):
             f"{self.ipakcb} {self.isuboc} {self.nndb} {self.ndb} {self.nmz} {self.nn} "
         )
 
-        f.write(
-            f"{self.ac1} {self.ac2} {self.itmin} {self.idsave} {self.idrest}"
-        )
+        f.write(f"{self.ac1} {self.ac2} {self.itmin} {self.idsave} {self.idrest}")
         line = ""
         if self.idbit is not None:
             line += f" {self.idbit}"
@@ -654,48 +649,28 @@ class ModflowSub(Package):
                 if model.verbose:
                     print(f"  loading sub dataset 5 for layer {kk}")
                 t = Util2d.load(
-                    f,
-                    model,
-                    (nrow, ncol),
-                    np.float32,
-                    f"hc layer {kk}",
-                    ext_unit_dict,
+                    f, model, (nrow, ncol), np.float32, f"hc layer {kk}", ext_unit_dict
                 )
                 hc[k] = t
                 # sfe
                 if model.verbose:
                     print(f"  loading sub dataset 6 for layer {kk}")
                 t = Util2d.load(
-                    f,
-                    model,
-                    (nrow, ncol),
-                    np.float32,
-                    f"sfe layer {kk}",
-                    ext_unit_dict,
+                    f, model, (nrow, ncol), np.float32, f"sfe layer {kk}", ext_unit_dict
                 )
                 sfe[k] = t
                 # sfv
                 if model.verbose:
                     print(f"  loading sub dataset 7 for layer {kk}")
                 t = Util2d.load(
-                    f,
-                    model,
-                    (nrow, ncol),
-                    np.float32,
-                    f"sfv layer {kk}",
-                    ext_unit_dict,
+                    f, model, (nrow, ncol), np.float32, f"sfv layer {kk}", ext_unit_dict
                 )
                 sfv[k] = t
                 # com
                 if model.verbose:
                     print(f"  loading sub dataset 8 for layer {kk}")
                 t = Util2d.load(
-                    f,
-                    model,
-                    (nrow, ncol),
-                    np.float32,
-                    f"com layer {kk}",
-                    ext_unit_dict,
+                    f, model, (nrow, ncol), np.float32, f"com layer {kk}", ext_unit_dict
                 )
                 com[k] = t
 
@@ -739,12 +714,7 @@ class ModflowSub(Package):
                 if model.verbose:
                     print(f"  loading sub dataset 11 for layer {kk}")
                 t = Util2d.load(
-                    f,
-                    model,
-                    (nrow, ncol),
-                    np.float32,
-                    f"dhc layer {kk}",
-                    ext_unit_dict,
+                    f, model, (nrow, ncol), np.float32, f"dhc layer {kk}", ext_unit_dict
                 )
                 dhc[k] = t
                 # dcom
@@ -763,24 +733,14 @@ class ModflowSub(Package):
                 if model.verbose:
                     print(f"  loading sub dataset 13 for layer {kk}")
                 t = Util2d.load(
-                    f,
-                    model,
-                    (nrow, ncol),
-                    np.float32,
-                    f"dz layer {kk}",
-                    ext_unit_dict,
+                    f, model, (nrow, ncol), np.float32, f"dz layer {kk}", ext_unit_dict
                 )
                 dz[k] = t
                 # nz
                 if model.verbose:
                     print(f"  loading sub dataset 14 for layer {kk}")
                 t = Util2d.load(
-                    f,
-                    model,
-                    (nrow, ncol),
-                    np.int32,
-                    f"nz layer {kk}",
-                    ext_unit_dict,
+                    f, model, (nrow, ncol), np.int32, f"nz layer {kk}", ext_unit_dict
                 )
                 nz[k] = t
 
@@ -815,14 +775,10 @@ class ModflowSub(Package):
                 ext_unit_dict, filetype=ModflowSub._ftype()
             )
             if ipakcb > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=ipakcb
-                )
+                iu, filenames[1] = model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
 
             if idsave > 0:
-                iu, filenames[2] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=idsave
-                )
+                iu, filenames[2] = model.get_ext_dict_attr(ext_unit_dict, unit=idsave)
 
             if isuboc > 0:
                 ipos = 3

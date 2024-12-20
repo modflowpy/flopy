@@ -249,10 +249,7 @@ class ModflowLgr(BaseModel):
             rpth = fpth
         else:
             rpth = os.path.join(rpth, fpth)
-            msg = (
-                "namefiles must be in the same directory as "
-                "the lgr control file\n"
-            )
+            msg = "namefiles must be in the same directory as the lgr control file\n"
             msg += f"Control file path: {lpth}\n"
             msg += f"Namefile path: {mpth}\n"
             msg += f"Relative path: {rpth}\n"
@@ -321,9 +318,7 @@ class ModflowLgr(BaseModel):
             zip(self.children_models, self.children_data)
         ):
             # dataset 6
-            pth = self._get_path(
-                self._model_ws, child._model_ws, fpth=child.namefile
-            )
+            pth = self._get_path(self._model_ws, child._model_ws, fpth=child.namefile)
             comment = f"data set 6 - child {idx + 1} namefile"
             line = self._padline(pth, comment=comment)
             f.write(line)
@@ -340,9 +335,7 @@ class ModflowLgr(BaseModel):
                 child_data.iucbhsv,
                 child_data.iucbfsv,
             )
-            comment = (
-                f"data set 8 - child {idx + 1} ishflg, ibflg, iucbhsv, iucbfsv"
-            )
+            comment = f"data set 8 - child {idx + 1} ishflg, ibflg, iucbhsv, iucbfsv"
             line = self._padline(line, comment=comment)
             f.write(line)
 
@@ -366,9 +359,7 @@ class ModflowLgr(BaseModel):
 
             # dataset 12
             line = "{} {} {}".format(
-                child_data.nplbeg + 1,
-                child_data.nprbeg + 1,
-                child_data.npcbeg + 1,
+                child_data.nplbeg + 1, child_data.nprbeg + 1, child_data.npcbeg + 1
             )
             comment = f"data set 12 - child {idx + 1} nplbeg, nprbeg, npcbeg"
             line = self._padline(line, comment=comment)
@@ -376,9 +367,7 @@ class ModflowLgr(BaseModel):
 
             # dataset 13
             line = "{} {} {}".format(
-                child_data.nplend + 1,
-                child_data.nprend + 1,
-                child_data.npcend + 1,
+                child_data.nplend + 1, child_data.nprend + 1, child_data.npcend + 1
             )
             comment = f"data set 13 - child {idx + 1} nplend, nprend, npcend"
             line = self._padline(line, comment=comment)
@@ -429,8 +418,9 @@ class ModflowLgr(BaseModel):
                 not_valid = new_pth
                 new_pth = os.getcwd()
                 print(
-                    "\n{} not valid, workspace-folder was changed to {}"
-                    "\n".format(not_valid, new_pth)
+                    "\n{} not valid, workspace-folder was changed to {}\n".format(
+                        not_valid, new_pth
+                    )
                 )
         # --reset the model workspace
         old_pth = self._model_ws
@@ -446,9 +436,7 @@ class ModflowLgr(BaseModel):
             npth = new_pth
         else:
             npth = os.path.join(new_pth, rpth)
-        self.parent.change_model_ws(
-            new_pth=npth, reset_external=reset_external
-        )
+        self.parent.change_model_ws(new_pth=npth, reset_external=reset_external)
         # reset model_ws for the children
         for child in self.children_models:
             lpth = os.path.abspath(old_pth)
@@ -619,20 +607,12 @@ class ModflowLgr(BaseModel):
             # dataset 12
             line = f.readline()
             t = line.split()
-            nplbeg, nprbeg, npcbeg = (
-                int(t[0]) - 1,
-                int(t[1]) - 1,
-                int(t[2]) - 1,
-            )
+            nplbeg, nprbeg, npcbeg = (int(t[0]) - 1, int(t[1]) - 1, int(t[2]) - 1)
 
             # dataset 13
             line = f.readline()
             t = line.split()
-            nplend, nprend, npcend = (
-                int(t[0]) - 1,
-                int(t[1]) - 1,
-                int(t[2]) - 1,
-            )
+            nplend, nprend, npcend = (int(t[0]) - 1, int(t[1]) - 1, int(t[2]) - 1)
 
             # dataset 14
             line = f.readline()

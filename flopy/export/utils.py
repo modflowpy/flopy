@@ -47,9 +47,7 @@ def ensemble_helper(
     """
     f_in, f_out = None, None
     for m in models[1:]:
-        assert (
-            m.get_nrow_ncol_nlay_nper() == models[0].get_nrow_ncol_nlay_nper()
-        )
+        assert m.get_nrow_ncol_nlay_nper() == models[0].get_nrow_ncol_nlay_nper()
     if inputs_filename is not None:
         f_in = models[0].export(inputs_filename, **kwargs)
         vdict = {}
@@ -129,9 +127,7 @@ def ensemble_helper(
         if i >= 2:
             if not add_reals:
                 f_out.write()
-                f_out = NetCdf.empty_like(
-                    mean, output_filename=outputs_filename
-                )
+                f_out = NetCdf.empty_like(mean, output_filename=outputs_filename)
                 f_out.append(mean, suffix="**mean**")
                 f_out.append(stdev, suffix="**stdev**")
 
@@ -156,9 +152,7 @@ def _add_output_nc_variable(
     if logger:
         logger.log(f"creating array for {var_name}")
 
-    array = np.zeros(
-        (len(times), shape3d[0], shape3d[1], shape3d[2]), dtype=np.float32
-    )
+    array = np.zeros((len(times), shape3d[0], shape3d[1], shape3d[2]), dtype=np.float32)
     array[:] = np.nan
 
     if isinstance(out_obj, ZBNetOutput):
@@ -229,10 +223,7 @@ def _add_output_nc_variable(
     try:
         dim_tuple = ("time",) + nc.dimension_names
         var = nc.create_variable(
-            var_name,
-            attribs,
-            precision_str=precision_str,
-            dimensions=dim_tuple,
+            var_name, attribs, precision_str=precision_str, dimensions=dim_tuple
         )
     except Exception as e:
         estr = f"error creating variable {var_name}:\n{e!s}"
@@ -307,7 +298,8 @@ def output_helper(
     Parameters
     ----------
     f : str or PathLike or NetCdf or dict
-        filepath to write output to (must have .shp or .nc extension), NetCDF object, or dictionary
+        filepath to write output to (must have .shp or .nc extension),
+        NetCDF object, or dictionary
     ml : flopy.mbase.ModelInterface derived type
     oudic : dict
         output_filename,flopy datafile/cellbudgetfile instance
@@ -404,13 +396,9 @@ def output_helper(
             logger.warn(msg)
         elif verbose:
             print(msg)
-    times = [t for t in common_times[::stride]]
-    if (isinstance(f, str) or isinstance(f, Path)) and Path(
-        f
-    ).suffix.lower() == ".nc":
-        f = NetCdf(
-            f, ml, time_values=times, logger=logger, forgive=forgive, **kwargs
-        )
+    times = list(common_times[::stride])
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(f).suffix.lower() == ".nc":
+        f = NetCdf(f, ml, time_values=times, logger=logger, forgive=forgive, **kwargs)
     elif isinstance(f, NetCdf):
         otimes = list(f.nc.variables["time"][:])
         assert otimes == times
@@ -500,9 +488,7 @@ def output_helper(
                 pass
 
             for text, array in zonebud.arrays.items():
-                _add_output_nc_zonebudget_variable(
-                    f, array, text, zonebud.flux, logger
-                )
+                _add_output_nc_zonebudget_variable(f, array, text, zonebud.flux, logger)
 
             # write the zone array to standard output
             _add_output_nc_variable(
@@ -530,9 +516,7 @@ def output_helper(
                     attrib_name = "conc"
                 else:
                     attrib_name = "head"
-                plotarray = np.atleast_3d(
-                    out_obj.get_alldata().transpose()
-                ).transpose()
+                plotarray = np.atleast_3d(out_obj.get_alldata().transpose()).transpose()
 
                 for per in range(plotarray.shape[0]):
                     for k in range(plotarray.shape[1]):
@@ -581,16 +565,15 @@ def output_helper(
     return f
 
 
-def model_export(
-    f: Union[str, os.PathLike, NetCdf, dict], ml, fmt=None, **kwargs
-):
+def model_export(f: Union[str, os.PathLike, NetCdf, dict], ml, fmt=None, **kwargs):
     """
     Method to export a model to a shapefile or netcdf file
 
     Parameters
     ----------
     f : str or PathLike or NetCdf or dict
-        file path (".nc" for netcdf or ".shp" for shapefile) or NetCDF object or dictionary
+        file path (".nc" for netcdf or ".shp" for shapefile),
+        NetCDF object, or dictionary
     ml : flopy.modflow.mbase.ModelInterface object
         flopy model object
     fmt : str
@@ -616,14 +599,10 @@ def model_export(
     if package_names is None:
         package_names = [pak.name[0] for pak in ml.packagelist]
 
-    if (isinstance(f, str) or isinstance(f, Path)) and Path(
-        f
-    ).suffix.lower() == ".nc":
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(f).suffix.lower() == ".nc":
         f = NetCdf(f, ml, **kwargs)
 
-    if (isinstance(f, str) or isinstance(f, Path)) and Path(
-        f
-    ).suffix.lower() == ".shp":
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(f).suffix.lower() == ".shp":
         shapefile_utils.model_attributes_to_shapefile(
             f, ml, package_names=package_names, **kwargs
         )
@@ -661,9 +640,7 @@ def model_export(
             smooth=smooth,
             point_scalars=point_scalars,
         )
-        vtkobj.add_model(
-            ml, masked_values=masked_values, selpaklist=package_names
-        )
+        vtkobj.add_model(ml, masked_values=masked_values, selpaklist=package_names)
         vtkobj.write(os.path.join(f, name), kpers)
 
     else:
@@ -683,7 +660,8 @@ def package_export(
     Parameters
     ----------
     f : str or PathLike or NetCdf or dict
-        output file path (extension .shp for shapefile or .nc for netcdf) or NetCDF object or dictionary
+        output file path (extension .shp for shapefile or .nc for netcdf),
+        NetCDF object, or dictionary
     pak : flopy.pakbase.Package object
         package to export
     fmt : str
@@ -710,14 +688,10 @@ def package_export(
     """
     assert isinstance(pak, PackageInterface)
 
-    if (isinstance(f, str) or isinstance(f, Path)) and Path(
-        f
-    ).suffix.lower() == ".nc":
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(f).suffix.lower() == ".nc":
         f = NetCdf(f, pak.parent, **kwargs)
 
-    if (isinstance(f, str) or isinstance(f, Path)) and Path(
-        f
-    ).suffix.lower() == ".shp":
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(f).suffix.lower() == ".shp":
         shapefile_utils.model_attributes_to_shapefile(
             f, pak.parent, package_names=pak.name, verbose=verbose, **kwargs
         )
@@ -808,9 +782,7 @@ def generic_array_export(
             flopy model object
 
     """
-    if (isinstance(f, str) or isinstance(f, Path)) and Path(
-        f
-    ).suffix.lower() == ".nc":
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(f).suffix.lower() == ".nc":
         assert "model" in kwargs.keys(), (
             "creating a new netCDF using generic_array_helper requires a "
             "'model' kwarg"
@@ -833,8 +805,7 @@ def generic_array_export(
     long_name = kwargs.pop("long_name", var_name)
     if len(kwargs) > 0:
         f.logger.warn(
-            "generic_array_helper(): unrecognized kwargs:"
-            + ",".join(kwargs.keys())
+            "generic_array_helper(): unrecognized kwargs:" + ",".join(kwargs.keys())
         )
     attribs = {"long_name": long_name}
     attribs["coordinates"] = coords
@@ -845,10 +816,7 @@ def generic_array_export(
         raise Exception(f"error processing {var_name}: all NaNs")
     try:
         var = f.create_variable(
-            var_name,
-            attribs,
-            precision_str=precision_str,
-            dimensions=dimensions,
+            var_name, attribs, precision_str=precision_str, dimensions=dimensions
         )
     except Exception as e:
         estr = f"error creating variable {var_name}:\n{e!s}"
@@ -887,24 +855,17 @@ def mflist_export(f: Union[str, os.PathLike, NetCdf], mfl, **kwargs):
 
     """
     if not isinstance(mfl, (DataListInterface, DataInterface)):
-        err = (
-            "mflist_helper only helps instances that support "
-            "DataListInterface"
-        )
+        err = "mflist_helper only helps instances that support DataListInterface"
         raise AssertionError(err)
 
     modelgrid = mfl.model.modelgrid
     if "modelgrid" in kwargs:
         modelgrid = kwargs.pop("modelgrid")
 
-    if (isinstance(f, str) or isinstance(f, Path)) and Path(
-        f
-    ).suffix.lower() == ".nc":
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(f).suffix.lower() == ".nc":
         f = NetCdf(f, mfl.model, **kwargs)
 
-    if (isinstance(f, str) or isinstance(f, Path)) and Path(
-        f
-    ).suffix.lower() == ".shp":
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(f).suffix.lower() == ".shp":
         sparse = kwargs.get("sparse", False)
         kper = kwargs.get("kper", 0)
         squeeze = kwargs.get("squeeze", True)
@@ -952,16 +913,20 @@ def mflist_export(f: Union[str, os.PathLike, NetCdf], mfl, **kwargs):
             prjfile = kwargs.get("prjfile", None)
             polys = np.array([Polygon(v) for v in verts])
             recarray2shp(
-                ra,
-                geoms=polys,
-                shpname=f,
-                mg=modelgrid,
-                crs=crs,
-                prjfile=prjfile,
+                ra, geoms=polys, shpname=f, mg=modelgrid, crs=crs, prjfile=prjfile
             )
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
         base_name = mfl.package.name[0].lower()
+        # Use first recarray kper to check mflist
+        for kper in mfl.data.keys():
+            if isinstance(mfl.data[kper], np.recarray):
+                break
+        # Skip mflist if all elements are of object type
+        if all(
+            dtype == np.object_ for dtype, _ in mfl.data[kper].dtype.fields.values()
+        ):
+            return f
 
         for name, array in mfl.masked_4D_arrays_itr():
             var_name = f"{base_name}_{name}"
@@ -972,9 +937,7 @@ def mflist_export(f: Union[str, os.PathLike, NetCdf], mfl, **kwargs):
 
             units = None
             if var_name in NC_UNITS_FORMAT:
-                units = NC_UNITS_FORMAT[var_name].format(
-                    f.grid_units, f.time_units
-                )
+                units = NC_UNITS_FORMAT[var_name].format(f.grid_units, f.time_units)
             precision_str = NC_PRECISION_TYPE[mfl.dtype[name].type]
             if var_name in NC_LONG_NAMES:
                 attribs = {"long_name": NC_LONG_NAMES[var_name]}
@@ -991,10 +954,7 @@ def mflist_export(f: Union[str, os.PathLike, NetCdf], mfl, **kwargs):
             try:
                 dim_tuple = ("time",) + f.dimension_names
                 var = f.create_variable(
-                    var_name,
-                    attribs,
-                    precision_str=precision_str,
-                    dimensions=dim_tuple,
+                    var_name, attribs, precision_str=precision_str, dimensions=dim_tuple
                 )
             except Exception as e:
                 estr = f"error creating variable {var_name}:\n{e!s}"
@@ -1036,10 +996,7 @@ def transient2d_export(f: Union[str, os.PathLike], t2d, fmt=None, **kwargs):
     """
 
     if not isinstance(t2d, DataInterface):
-        err = (
-            "transient2d_helper only helps instances that support "
-            "DataInterface"
-        )
+        err = "transient2d_helper only helps instances that support DataInterface"
         raise AssertionError(err)
 
     min_valid = kwargs.get("min_valid", -1.0e9)
@@ -1049,14 +1006,10 @@ def transient2d_export(f: Union[str, os.PathLike], t2d, fmt=None, **kwargs):
     if "modelgrid" in kwargs:
         modelgrid = kwargs.pop("modelgrid")
 
-    if (isinstance(f, str) or isinstance(f, Path)) and Path(
-        f
-    ).suffix.lower() == ".nc":
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(f).suffix.lower() == ".nc":
         f = NetCdf(f, t2d.model, **kwargs)
 
-    if (isinstance(f, str) or isinstance(f, Path)) and Path(
-        f
-    ).suffix.lower() == ".shp":
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(f).suffix.lower() == ".shp":
         array_dict = {}
         for kper in range(t2d.model.modeltime.nper):
             u2d = t2d[kper]
@@ -1095,9 +1048,7 @@ def transient2d_export(f: Union[str, os.PathLike], t2d, fmt=None, **kwargs):
         units = "unitless"
 
         if var_name in NC_UNITS_FORMAT:
-            units = NC_UNITS_FORMAT[var_name].format(
-                f.grid_units, f.time_units
-            )
+            units = NC_UNITS_FORMAT[var_name].format(f.grid_units, f.time_units)
         try:
             precision_str = NC_PRECISION_TYPE[t2d.dtype]
         except:
@@ -1115,10 +1066,7 @@ def transient2d_export(f: Union[str, os.PathLike], t2d, fmt=None, **kwargs):
         try:
             dim_tuple = ("time",) + f.dimension_names
             var = f.create_variable(
-                var_name,
-                attribs,
-                precision_str=precision_str,
-                dimensions=dim_tuple,
+                var_name, attribs, precision_str=precision_str, dimensions=dim_tuple
             )
         except Exception as e:
             estr = f"error creating variable {var_name}:\n{e!s}"
@@ -1147,7 +1095,7 @@ def transient2d_export(f: Union[str, os.PathLike], t2d, fmt=None, **kwargs):
             if hasattr(t2d, "transient_2ds"):
                 d = t2d.transient_2ds
             else:
-                d = {ix: i for ix, i in enumerate(t2d.array)}
+                d = dict(enumerate(t2d.array))
         else:
             raise AssertionError("No data available to export")
 
@@ -1198,14 +1146,10 @@ def array3d_export(f: Union[str, os.PathLike], u3d, fmt=None, **kwargs):
     if "modelgrid" in kwargs:
         modelgrid = kwargs.pop("modelgrid")
 
-    if (isinstance(f, str) or isinstance(f, Path)) and Path(
-        f
-    ).suffix.lower() == ".nc":
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(f).suffix.lower() == ".nc":
         f = NetCdf(f, u3d.model, **kwargs)
 
-    if (isinstance(f, str) or isinstance(f, Path)) and Path(
-        f
-    ).suffix.lower() == ".shp":
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(f).suffix.lower() == ".shp":
         array_dict = {}
         array_shape = u3d.array.shape
 
@@ -1267,9 +1211,7 @@ def array3d_export(f: Union[str, os.PathLike], u3d, fmt=None, **kwargs):
         array[np.isnan(array)] = f.fillvalue
         units = "unitless"
         if var_name in NC_UNITS_FORMAT:
-            units = NC_UNITS_FORMAT[var_name].format(
-                f.grid_units, f.time_units
-            )
+            units = NC_UNITS_FORMAT[var_name].format(f.grid_units, f.time_units)
         precision_str = NC_PRECISION_TYPE[u3d.dtype]
         if var_name in NC_LONG_NAMES:
             attribs = {"long_name": NC_LONG_NAMES[var_name]}
@@ -1328,9 +1270,7 @@ def array3d_export(f: Union[str, os.PathLike], u3d, fmt=None, **kwargs):
         raise NotImplementedError(f"unrecognized export argument:{f}")
 
 
-def array2d_export(
-    f: Union[str, os.PathLike], u2d, fmt=None, verbose=False, **kwargs
-):
+def array2d_export(f: Union[str, os.PathLike], u2d, fmt=None, verbose=False, **kwargs):
     """
     export helper for Util2d instances
 
@@ -1363,14 +1303,10 @@ def array2d_export(
     if "modelgrid" in kwargs:
         modelgrid = kwargs.pop("modelgrid")
 
-    if (isinstance(f, str) or isinstance(f, Path)) and Path(
-        f
-    ).suffix.lower() == ".nc":
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(f).suffix.lower() == ".nc":
         f = NetCdf(f, u2d.model, **kwargs)
 
-    if (isinstance(f, str) or isinstance(f, Path)) and Path(
-        f
-    ).suffix.lower() == ".shp":
+    if (isinstance(f, str) or isinstance(f, Path)) and Path(f).suffix.lower() == ".shp":
         name = shapefile_utils.shape_attr_name(u2d.name, keep_layer=True)
         shapefile_utils.write_grid_shapefile(
             f, modelgrid, {name: u2d.array}, verbose=verbose
@@ -1418,9 +1354,7 @@ def array2d_export(
         units = "unitless"
 
         if var_name in NC_UNITS_FORMAT:
-            units = NC_UNITS_FORMAT[var_name].format(
-                f.grid_units, f.time_units
-            )
+            units = NC_UNITS_FORMAT[var_name].format(f.grid_units, f.time_units)
         precision_str = NC_PRECISION_TYPE[u2d.dtype]
         if var_name in NC_LONG_NAMES:
             attribs = {"long_name": NC_LONG_NAMES[var_name]}
@@ -1533,9 +1467,7 @@ def export_array(
     filename = str(filename)
     if filename.lower().endswith(".asc"):
         if (
-            len(np.unique(modelgrid.delr))
-            != len(np.unique(modelgrid.delc))
-            != 1
+            len(np.unique(modelgrid.delr)) != len(np.unique(modelgrid.delc)) != 1
             or modelgrid.delr[0] != modelgrid.delc[0]
         ):
             raise ValueError("Arc ascii arrays require a uniform grid.")
@@ -1559,9 +1491,7 @@ def export_array(
             cellsize = np.max((dx, dy))
             xoffset, yoffset = xmin, ymin
 
-        filename = (
-            ".".join(filename.split(".")[:-1]) + ".asc"
-        )  # enforce .asc ending
+        filename = ".".join(filename.split(".")[:-1]) + ".asc"  # enforce .asc ending
         nrow, ncol = a.shape
         a[np.isnan(a)] = nodata
         txt = f"ncols  {ncol}\n"
@@ -1580,9 +1510,7 @@ def export_array(
 
     elif filename.lower().endswith(".tif"):
         if (
-            len(np.unique(modelgrid.delr))
-            != len(np.unique(modelgrid.delc))
-            != 1
+            len(np.unique(modelgrid.delr)) != len(np.unique(modelgrid.delc)) != 1
             or modelgrid.delr[0] != modelgrid.delc[0]
         ):
             raise ValueError("GeoTIFF export require a uniform grid.")
@@ -1643,11 +1571,7 @@ def export_array(
         except ImportError:
             crs = None
         write_grid_shapefile(
-            filename,
-            modelgrid,
-            array_dict={fieldname: a},
-            nan_val=nodata,
-            crs=crs,
+            filename, modelgrid, array_dict={fieldname: a}, nan_val=nodata, crs=crs
         )
 
 
@@ -1750,9 +1674,7 @@ def export_contours(
     recarray2shp(ra, geoms, filename, **kwargs)
 
 
-def export_contourf(
-    filename, contours, fieldname="level", verbose=False, **kwargs
-):
+def export_contourf(filename, contours, fieldname="level", verbose=False, **kwargs):
     """
     Write matplotlib filled contours to shapefile.
 

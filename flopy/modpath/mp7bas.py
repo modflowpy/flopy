@@ -38,9 +38,7 @@ class Modpath7Bas(Package):
 
     """
 
-    def __init__(
-        self, model, porosity=0.30, defaultiface=None, extension="mpbas"
-    ):
+    def __init__(self, model, porosity=0.30, defaultiface=None, extension="mpbas"):
         unitnumber = model.next_unit()
 
         super().__init__(model, extension, "MPBAS", unitnumber)
@@ -96,8 +94,8 @@ class Modpath7Bas(Package):
                 # check iface value
                 if value < 0 or value > 6:
                     raise ValueError(
-                        "defaultiface for package {} must be between 0 and 1 "
-                        "({} specified)".format(key, value)
+                        f"defaultiface for package {key} must be between 0 and 1 "
+                        f"({value} specified)"
                     )
 
         self.defaultifacecount = defaultifacecount

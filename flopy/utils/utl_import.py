@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 # Vendored from https://github.com/pandas-dev/pandas/blob/master/pandas/compat/_optional.py
 # changeset d30aeeba0c79fb8e4b651a8f528e87c3de8cb898
 # 10/11/2021
@@ -140,9 +141,7 @@ def import_optional_dependency(
         module_to_get = sys.modules[install_name]
     else:
         module_to_get = module
-    minimum_version = (
-        min_version if min_version is not None else VERSIONS.get(parent)
-    )
+    minimum_version = min_version if min_version is not None else VERSIONS.get(parent)
     if minimum_version:
         version = get_version(module_to_get)
         if Version(version) < Version(minimum_version):

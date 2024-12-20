@@ -155,9 +155,7 @@ class ModflowRiv(Package):
         if dtype is not None:
             self.dtype = dtype
         else:
-            self.dtype = self.get_default_dtype(
-                structured=self.parent.structured
-            )
+            self.dtype = self.get_default_dtype(structured=self.parent.structured)
         self.stress_period_data = MfList(self, stress_period_data)
         self.parent.add_package(self)
 
@@ -200,11 +198,7 @@ class ModflowRiv(Package):
                 if isinstance(data, pd.DataFrame):
                     data = data.to_records(index=False).astype(self.dtype)
                 spd = data
-                inds = (
-                    (spd.k, spd.i, spd.j)
-                    if self.parent.structured
-                    else (spd.node)
-                )
+                inds = (spd.k, spd.i, spd.j) if self.parent.structured else (spd.node)
 
                 # check that river stage and bottom are above model cell
                 # bottoms also checks for nan values
@@ -300,11 +294,7 @@ class ModflowRiv(Package):
         """
         # allows turning off package checks when writing files at model level
         if check:
-            self.check(
-                f=f"{self.name[0]}.chk",
-                verbose=self.parent.verbose,
-                level=1,
-            )
+            self.check(f=f"{self.name[0]}.chk", verbose=self.parent.verbose, level=1)
         f_riv = open(self.fn_path, "w")
         f_riv.write(f"{self.heading}\n")
         line = f"{self.stress_period_data.mxact:10d}{self.ipakcb:10d}"

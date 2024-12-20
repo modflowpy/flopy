@@ -188,9 +188,7 @@ class NetCdf:
             self.dimension_names = ("layer", "y", "x")
             STANDARD_VARS.extend(["delc", "delr"])
         else:
-            raise Exception(
-                f"Grid type {self.model_grid.grid_type} not supported."
-            )
+            raise Exception(f"Grid type {self.model_grid.grid_type} not supported.")
         self.shape = self.model_grid.shape
 
         parser = import_optional_dependency("dateutil.parser")
@@ -201,9 +199,7 @@ class NetCdf:
 
         crs = get_authority_crs(self.model_grid.crs)
         if crs is None:
-            self.logger.warn(
-                "model has no coordinate reference system specified. "
-            )
+            self.logger.warn("model has no coordinate reference system specified. ")
         self.model_crs = crs
         self.transformer = None
         self.grid_units = self.model_grid.units
@@ -219,8 +215,8 @@ class NetCdf:
         self.log("initializing attributes")
         self.nc_crs_str = "epsg:4326"
         self.nc_crs_longname = "https://www.opengis.net/def/crs/EPSG/0/4326"
-        self.nc_semi_major = float(6378137.0)
-        self.nc_inverse_flat = float(298.257223563)
+        self.nc_semi_major = 6378137.0
+        self.nc_inverse_flat = 298.257223563
 
         self.global_attributes = {}
         self.global_attributes["namefile"] = self.model.namefile
@@ -247,9 +243,7 @@ class NetCdf:
         }
         for n, v in spatial_attribs.items():
             self.global_attributes["flopy_sr_" + n] = v
-        self.global_attributes["start_datetime"] = (
-            self.model_time.start_datetime
-        )
+        self.global_attributes["start_datetime"] = self.model_time.start_datetime
 
         self.fillvalue = FILLVALUE
 
@@ -279,18 +273,14 @@ class NetCdf:
         new_net = NetCdf.zeros_like(self)
         if np.isscalar(other) or isinstance(other, np.ndarray):
             for vname in self.var_attr_dict.keys():
-                new_net.nc.variables[vname][:] = (
-                    self.nc.variables[vname][:] + other
-                )
+                new_net.nc.variables[vname][:] = self.nc.variables[vname][:] + other
         elif isinstance(other, NetCdf):
             for vname in self.var_attr_dict.keys():
                 new_net.nc.variables[vname][:] = (
                     self.nc.variables[vname][:] + other.nc.variables[vname][:]
                 )
         else:
-            raise Exception(
-                f"NetCdf.__add__(): unrecognized other:{type(other)}"
-            )
+            raise Exception(f"NetCdf.__add__(): unrecognized other:{type(other)}")
         new_net.nc.sync()
         return new_net
 
@@ -298,18 +288,14 @@ class NetCdf:
         new_net = NetCdf.zeros_like(self)
         if np.isscalar(other) or isinstance(other, np.ndarray):
             for vname in self.var_attr_dict.keys():
-                new_net.nc.variables[vname][:] = (
-                    self.nc.variables[vname][:] - other
-                )
+                new_net.nc.variables[vname][:] = self.nc.variables[vname][:] - other
         elif isinstance(other, NetCdf):
             for vname in self.var_attr_dict.keys():
                 new_net.nc.variables[vname][:] = (
                     self.nc.variables[vname][:] - other.nc.variables[vname][:]
                 )
         else:
-            raise Exception(
-                f"NetCdf.__sub__(): unrecognized other:{type(other)}"
-            )
+            raise Exception(f"NetCdf.__sub__(): unrecognized other:{type(other)}")
         new_net.nc.sync()
         return new_net
 
@@ -317,18 +303,14 @@ class NetCdf:
         new_net = NetCdf.zeros_like(self)
         if np.isscalar(other) or isinstance(other, np.ndarray):
             for vname in self.var_attr_dict.keys():
-                new_net.nc.variables[vname][:] = (
-                    self.nc.variables[vname][:] * other
-                )
+                new_net.nc.variables[vname][:] = self.nc.variables[vname][:] * other
         elif isinstance(other, NetCdf):
             for vname in self.var_attr_dict.keys():
                 new_net.nc.variables[vname][:] = (
                     self.nc.variables[vname][:] * other.nc.variables[vname][:]
                 )
         else:
-            raise Exception(
-                f"NetCdf.__mul__(): unrecognized other:{type(other)}"
-            )
+            raise Exception(f"NetCdf.__mul__(): unrecognized other:{type(other)}")
         new_net.nc.sync()
         return new_net
 
@@ -340,19 +322,14 @@ class NetCdf:
         with np.errstate(invalid="ignore"):
             if np.isscalar(other) or isinstance(other, np.ndarray):
                 for vname in self.var_attr_dict.keys():
-                    new_net.nc.variables[vname][:] = (
-                        self.nc.variables[vname][:] / other
-                    )
+                    new_net.nc.variables[vname][:] = self.nc.variables[vname][:] / other
             elif isinstance(other, NetCdf):
                 for vname in self.var_attr_dict.keys():
                     new_net.nc.variables[vname][:] = (
-                        self.nc.variables[vname][:]
-                        / other.nc.variables[vname][:]
+                        self.nc.variables[vname][:] / other.nc.variables[vname][:]
                     )
             else:
-                raise Exception(
-                    f"NetCdf.__sub__(): unrecognized other:{type(other)}"
-                )
+                raise Exception(f"NetCdf.__sub__(): unrecognized other:{type(other)}")
         new_net.nc.sync()
         return new_net
 
@@ -420,21 +397,14 @@ class NetCdf:
         return get_authority_crs(self.nc_crs_str)
 
     @classmethod
-    def zeros_like(
-        cls, other, output_filename=None, verbose=None, logger=None
-    ):
+    def zeros_like(cls, other, output_filename=None, verbose=None, logger=None):
         new_net = NetCdf.empty_like(
-            other,
-            output_filename=output_filename,
-            verbose=verbose,
-            logger=logger,
+            other, output_filename=output_filename, verbose=verbose, logger=logger
         )
         # add the vars to the instance
         for vname in other.var_attr_dict.keys():
             if new_net.nc.variables.get(vname) is not None:
-                new_net.logger.warn(
-                    f"variable {vname} already defined, skipping"
-                )
+                new_net.logger.warn(f"variable {vname} already defined, skipping")
                 continue
             new_net.log(f"adding variable {vname}")
             var = other.nc.variables[vname]
@@ -447,10 +417,7 @@ class NetCdf:
             new_data = np.zeros_like(data)
             new_data[mask] = FILLVALUE
             new_var = new_net.create_variable(
-                vname,
-                other.var_attr_dict[vname],
-                var.dtype,
-                dimensions=var.dimensions,
+                vname, other.var_attr_dict[vname], var.dtype, dimensions=var.dimensions
             )
             new_var[:] = new_data
             new_net.log(f"adding variable {vname}")
@@ -463,19 +430,13 @@ class NetCdf:
         return new_net
 
     @classmethod
-    def empty_like(
-        cls, other, output_filename=None, verbose=None, logger=None
-    ):
+    def empty_like(cls, other, output_filename=None, verbose=None, logger=None):
         if output_filename is None:
-            output_filename = (
-                str(time.mktime(datetime.now().timetuple())) + ".nc"
-            )
+            output_filename = str(time.mktime(datetime.now().timetuple())) + ".nc"
 
         while os.path.exists(output_filename):
             print(f"{output_filename}...already exists")
-            output_filename = (
-                str(time.mktime(datetime.now().timetuple())) + ".nc"
-            )
+            output_filename = str(time.mktime(datetime.now().timetuple())) + ".nc"
             print("creating temporary netcdf file..." + output_filename)
 
         new_net = cls(
@@ -487,9 +448,7 @@ class NetCdf:
         )
         return new_net
 
-    def difference(
-        self, other, minuend="self", mask_zero_diff=True, onlydiff=True
-    ):
+    def difference(self, other, minuend="self", mask_zero_diff=True, onlydiff=True):
         """
         make a new NetCDF instance that is the difference with another
         netcdf file
@@ -540,8 +499,7 @@ class NetCdf:
         diff = self_vars.symmetric_difference(other_vars)
         if len(diff) > 0:
             self.logger.warn(
-                "variables are not the same between the two nc files: "
-                + ",".join(diff)
+                "variables are not the same between the two nc files: " + ",".join(diff)
             )
             return
 
@@ -607,9 +565,7 @@ class NetCdf:
 
             # check for non-zero diffs
             if onlydiff and d_data.sum() == 0.0:
-                self.logger.warn(
-                    f"var {vname} has zero differences, skipping..."
-                )
+                self.logger.warn(f"var {vname} has zero differences, skipping...")
                 continue
 
             self.logger.warn(
@@ -645,9 +601,7 @@ class NetCdf:
     def write(self):
         """write the nc object to disk"""
         self.log("writing nc file")
-        assert (
-            self.nc is not None
-        ), "netcdf.write() error: nc file not initialized"
+        assert self.nc is not None, "netcdf.write() error: nc file not initialized"
 
         # write any new attributes that have been set since
         # initializing the file
@@ -671,9 +625,7 @@ class NetCdf:
 
         # Check if using newer pyproj version conventions
         if version.parse(pyproj.__version__) < version.parse("2.2"):
-            raise ValueError(
-                "The FloPy NetCDF module requires pyproj >= 2.2.0."
-            )
+            raise ValueError("The FloPy NetCDF module requires pyproj >= 2.2.0.")
 
         print("initialize_geometry::")
 
@@ -705,9 +657,7 @@ class NetCdf:
             self.xs, self.ys = self.transformer.transform(xs, ys)
 
             # get transformed bounds and record to check against ScienceBase later
-            bbox = np.array(
-                [[xmin, ymin], [xmin, ymax], [xmax, ymax], [xmax, ymin]]
-            )
+            bbox = np.array([[xmin, ymin], [xmin, ymax], [xmax, ymax], [xmax, ymin]])
             x, y = self.transformer.transform(*bbox.transpose())
             self.bounds = x.min(), y.min(), x.max(), y.max()
         else:
@@ -747,10 +697,7 @@ class NetCdf:
         # write some attributes
         self.log("setting standard attributes")
 
-        self.nc.setncattr(
-            "Conventions",
-            f"CF-1.6, ACDD-1.3, flopy {version}",
-        )
+        self.nc.setncattr("Conventions", f"CF-1.6, ACDD-1.3, flopy {version}")
         self.nc.setncattr(
             "date_created", datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
         )
@@ -812,10 +759,7 @@ class NetCdf:
             "positive": self.z_positive,
         }
         elev = self.create_variable(
-            "elevation",
-            attribs,
-            precision_str="f8",
-            dimensions=self.dimension_names,
+            "elevation", attribs, precision_str="f8", dimensions=self.dimension_names
         )
         elev[:] = self.zs
 
@@ -846,10 +790,7 @@ class NetCdf:
             "_CoordinateAxisType": "Lat",
         }
         lat = self.create_variable(
-            "latitude",
-            attribs,
-            precision_str="f8",
-            dimensions=self.dimension_names[1:],
+            "latitude", attribs, precision_str="f8", dimensions=self.dimension_names[1:]
         )
         lat[:] = self.ys
 
@@ -862,10 +803,7 @@ class NetCdf:
             "axis": "X",
         }
         x = self.create_variable(
-            "x_proj",
-            attribs,
-            precision_str="f8",
-            dimensions=self.dimension_names[1:],
+            "x_proj", attribs, precision_str="f8", dimensions=self.dimension_names[1:]
         )
         x[:] = self.model_grid.xyzcellcenters[0]
 
@@ -878,10 +816,7 @@ class NetCdf:
             "axis": "Y",
         }
         y = self.create_variable(
-            "y_proj",
-            attribs,
-            precision_str="f8",
-            dimensions=self.dimension_names[1:],
+            "y_proj", attribs, precision_str="f8", dimensions=self.dimension_names[1:]
         )
         y[:] = self.model_grid.xyzcellcenters[1]
 
@@ -921,7 +856,8 @@ class NetCdf:
                 delc.comments = (
                     "This is the row spacing that applied to the UNROTATED grid. "
                     "This grid HAS been rotated before being saved to NetCDF. "
-                    "To compute the unrotated grid, use the origin point and this array."
+                    "To compute the unrotated grid, use the origin point and "
+                    "this array."
                 )
 
             # delr
@@ -937,7 +873,8 @@ class NetCdf:
                 delr.comments = (
                     "This is the col spacing that applied to the UNROTATED grid. "
                     "This grid HAS been rotated before being saved to NetCDF. "
-                    "To compute the unrotated grid, use the origin point and this array."
+                    "To compute the unrotated grid, use the origin point and "
+                    "this array."
                 )
 
         # Workaround for CF/CDM.
@@ -1010,9 +947,7 @@ class NetCdf:
                         f"{dim} information must be supplied to dimension data"
                     )
                 else:
-                    self.nc.groups[group].createDimension(
-                        dim, len(dimension_data[dim])
-                    )
+                    self.nc.groups[group].createDimension(dim, len(dimension_data[dim]))
 
         self.log(f"created {group} group dimensions")
 
@@ -1020,9 +955,7 @@ class NetCdf:
         for dim in dimensions:
             if dim.lower() == "time":
                 if "time" not in attributes:
-                    unit_value = (
-                        f"{self.time_units} since {self.start_datetime}"
-                    )
+                    unit_value = f"{self.time_units} since {self.start_datetime}"
                     attribs = {
                         "units": unit_value,
                         "standard_name": "time",
@@ -1035,11 +968,7 @@ class NetCdf:
                     attribs = attributes["time"]
 
                 time = self.create_group_variable(
-                    group,
-                    "time",
-                    attribs,
-                    precision_str="f8",
-                    dimensions=("time",),
+                    group, "time", attribs, precision_str="f8", dimensions=("time",)
                 )
 
                 time[:] = np.asarray(time_values)
@@ -1058,22 +987,14 @@ class NetCdf:
                     attribs = attributes["zone"]
 
                 zone = self.create_group_variable(
-                    group,
-                    "zone",
-                    attribs,
-                    precision_str="i4",
-                    dimensions=("zone",),
+                    group, "zone", attribs, precision_str="i4", dimensions=("zone",)
                 )
                 zone[:] = np.asarray(dimension_data["zone"])
 
             else:
                 attribs = attributes[dim]
                 var = self.create_group_variable(
-                    group,
-                    dim,
-                    attribs,
-                    precision_str="f8",
-                    dimensions=dim_names,
+                    group, dim, attribs, precision_str="f8", dimensions=dim_names
                 )
                 var[:] = np.asarray(dimension_data[dim])
         self.nc.sync()
@@ -1116,22 +1037,15 @@ class NetCdf:
         """
         name = self.normalize_name(name)
 
-        if (
-            name in STANDARD_VARS
-            and name in self.nc.groups[group].variables.keys()
-        ):
+        if name in STANDARD_VARS and name in self.nc.groups[group].variables.keys():
             return
 
         if name in self.nc.groups[group].variables.keys():
             if self.forgive:
-                self.logger.warn(
-                    f"skipping duplicate {group} group variable: {name}"
-                )
+                self.logger.warn(f"skipping duplicate {group} group variable: {name}")
                 return
             else:
-                raise Exception(
-                    f"duplicate {group} group variable name: {name}"
-                )
+                raise Exception(f"duplicate {group} group variable name: {name}")
 
         self.log(f"creating group {group} variable: {name}")
 
@@ -1150,11 +1064,7 @@ class NetCdf:
         self.var_attr_dict[f"{group}/{name}"] = attributes
 
         var = self.nc.groups[group].createVariable(
-            name,
-            precision_str,
-            dimensions,
-            fill_value=self.fillvalue,
-            zlib=True,
+            name, precision_str, dimensions, fill_value=self.fillvalue, zlib=True
         )
 
         for k, v in attributes.items():
@@ -1213,10 +1123,7 @@ class NetCdf:
         # long_name = attributes.pop("long_name",name)
         if name in STANDARD_VARS and name in self.nc.variables.keys():
             return
-        if (
-            name not in self.var_attr_dict.keys()
-            and name in self.nc.variables.keys()
-        ):
+        if name not in self.var_attr_dict.keys() and name in self.nc.variables.keys():
             if self.forgive:
                 self.logger.warn(f"skipping duplicate variable: {name}")
                 return
@@ -1238,11 +1145,7 @@ class NetCdf:
         self.var_attr_dict[name] = attributes
 
         var = self.nc.createVariable(
-            name,
-            precision_str,
-            dimensions,
-            fill_value=self.fillvalue,
-            zlib=True,
+            name, precision_str, dimensions, fill_value=self.fillvalue, zlib=True
         )
         for k, v in attributes.items():
             try:
@@ -1309,7 +1212,7 @@ class NetCdf:
                 "get_sciencebase_xml_metadata",
                 "get_sciencebase_metadata",
             }
-            towrite = sorted(list(attr.difference(skip)))
+            towrite = sorted(attr.difference(skip))
             for k in towrite:
                 v = md.__getattribute__(k)
                 if v is not None:
@@ -1325,7 +1228,8 @@ class NetCdf:
             return md
 
     def _check_vs_sciencebase(self, md):
-        """Check that model bounds read from flopy are consistent with those in ScienceBase."""
+        """Check that model bounds read from flopy are consistent with
+        those in ScienceBase."""
         xmin, ymin, xmax, ymax = self.bounds
         tol = 1e-5
         assert md.geospatial_lon_min - xmin < tol

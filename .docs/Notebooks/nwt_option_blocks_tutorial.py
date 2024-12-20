@@ -26,7 +26,11 @@
 # +
 import os
 import sys
+from pathlib import Path
 from tempfile import TemporaryDirectory
+
+import git
+import pooch
 
 import flopy
 from flopy.utils import OptionBlock
@@ -35,12 +39,39 @@ print(sys.version)
 print(f"flopy version: {flopy.__version__}")
 
 # +
-load_ws = os.path.join("..", "..", "examples", "data", "options", "sagehen")
 
 # temporary directory
 temp_dir = TemporaryDirectory()
 model_ws = os.path.join(temp_dir.name, "nwt_options", "output")
 # -
+
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+
+file_names = {
+    "sagehen.bas": None,
+    "sagehen.dis": None,
+    "sagehen.lpf": None,
+    "sagehen.nam": None,
+    "sagehen.nwt": None,
+    "sagehen.oc": None,
+    "sagehen.sfr": None,
+    "sagehen.uzf": None,
+    "sagehen.wel": None,
+}
+for fname, fhash in file_names.items():
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/options/sagehen/{fname}",
+        fname=fname,
+        path=data_path / "options" / "sagehen",
+        known_hash=None,
+    )
 
 # ## Loading a MODFLOW-NWT model that has option block options
 #
@@ -52,7 +83,10 @@ model_ws = os.path.join(temp_dir.name, "nwt_options", "output")
 mfexe = "mfnwt"
 
 ml = flopy.modflow.Modflow.load(
-    "sagehen.nam", model_ws=load_ws, exe_name=mfexe, version="mfnwt"
+    "sagehen.nam",
+    model_ws=data_path / "options" / "sagehen",
+    exe_name=mfexe,
+    version="mfnwt",
 )
 ml.change_model_ws(new_pth=model_ws)
 ml.write_input()
@@ -103,9 +137,7 @@ for ix, line in enumerate(f):
 
 # And let's load the new UZF file
 
-uzf2 = flopy.modflow.ModflowUzf1.load(
-    os.path.join(model_ws, uzf_name), ml, check=False
-)
+uzf2 = flopy.modflow.ModflowUzf1.load(os.path.join(model_ws, uzf_name), ml, check=False)
 
 # ### Now we can look at the options object, and check if it's block or line format
 #
@@ -121,9 +153,7 @@ uzf2.options.block = True
 uzf2.write_file(os.path.join(model_ws, uzf_name))
 ml.remove_package("UZF")
 
-uzf3 = flopy.modflow.ModflowUzf1.load(
-    os.path.join(model_ws, uzf_name), ml, check=False
-)
+uzf3 = flopy.modflow.ModflowUzf1.load(os.path.join(model_ws, uzf_name), ml, check=False)
 print("\n")
 print(uzf3.options)
 print(uzf3.options.block)
@@ -193,10 +223,7 @@ options.auxiliary = ["aux", "iface"]
 
 # +
 wel3 = flopy.modflow.ModflowWel(
-    ml,
-    stress_period_data=wel.stress_period_data,
-    options=options,
-    unitnumber=99,
+    ml, stress_period_data=wel.stress_period_data, options=options, unitnumber=99
 )
 
 wel3.write_file(os.path.join(model_ws, wel_name))

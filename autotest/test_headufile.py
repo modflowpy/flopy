@@ -5,13 +5,7 @@ from modflow_devtools.markers import requires_exe, requires_pkg
 
 from flopy.discretization import UnstructuredGrid
 from flopy.mfusg import MfUsg, MfUsgDisU, MfUsgLpf, MfUsgSms
-from flopy.modflow import (
-    Modflow,
-    ModflowBas,
-    ModflowChd,
-    ModflowDis,
-    ModflowOc,
-)
+from flopy.modflow import Modflow, ModflowBas, ModflowChd, ModflowDis, ModflowOc
 from flopy.utils import HeadUFile
 from flopy.utils.gridgen import Gridgen
 from flopy.utils.gridutil import get_lni
@@ -96,9 +90,7 @@ def test_get_ts_single_node(mfusg_model):
 
     # test if single node idx works
     one_hds = head_file.get_ts(idx=300)
-    assert (
-        one_hds[0, 1] == head[0][300]
-    ), "head from 'get_ts' != head from 'get_data'"
+    assert one_hds[0, 1] == head[0][300], "head from 'get_ts' != head from 'get_data'"
 
 
 @requires_exe("mfusg", "gridgen")
@@ -145,9 +137,9 @@ def test_get_lni(mfusg_model):
     head = head_file.get_data()
 
     def get_expected():
-        exp = dict()
+        exp = {}
         for l, ncpl in enumerate(list(grid.ncpl)):
-            exp[l] = dict()
+            exp[l] = {}
             for nn in range(ncpl):
                 exp[l][nn] = head[l][nn]
         return exp

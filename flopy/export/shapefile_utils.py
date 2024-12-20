@@ -10,7 +10,7 @@ import shutil
 import sys
 import warnings
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Optional, Union
 from warnings import warn
 
 import numpy as np
@@ -114,9 +114,7 @@ def write_grid_shapefile(
         )
     elif mg.grid_type == "structured":
         verts = [
-            mg.get_cell_vertices(i, j)
-            for i in range(mg.nrow)
-            for j in range(mg.ncol)
+            mg.get_cell_vertices(i, j) for i in range(mg.nrow) for j in range(mg.ncol)
         ]
     elif mg.grid_type == "vertex":
         verts = [mg.get_cell_vertices(cellid) for cellid in range(mg.ncpl)]
@@ -171,10 +169,7 @@ def write_grid_shapefile(
             ).transpose()
         else:
             names = ["node", "layer"] + list(array_dict.keys())
-            dtypes = [
-                ("node", np.dtype("int")),
-                ("layer", np.dtype("int")),
-            ] + [
+            dtypes = [("node", np.dtype("int")), ("layer", np.dtype("int"))] + [
                 (enforce_10ch_limit([name])[0], array_dict[name].dtype)
                 for name in names[2:]
             ]
@@ -184,9 +179,7 @@ def write_grid_shapefile(
                 istart, istop = mg.get_layer_node_range(ilay)
                 layer[istart:istop] = ilay + 1
             at = np.vstack(
-                [node]
-                + [layer]
-                + [array_dict[name].ravel() for name in names[2:]]
+                [node] + [layer] + [array_dict[name].ravel() for name in names[2:]]
             ).transpose()
 
         names = enforce_10ch_limit(names)
@@ -197,9 +190,7 @@ def write_grid_shapefile(
     at = np.array([tuple(i) for i in at], dtype=dtypes)
 
     # write field information
-    fieldinfo = {
-        name: get_pyshp_field_info(dtype.name) for name, dtype in dtypes
-    }
+    fieldinfo = {name: get_pyshp_field_info(dtype.name) for name, dtype in dtypes}
     for n in names:
         w.field(n, *fieldinfo[n])
 
@@ -308,11 +299,7 @@ def model_attributes_to_shapefile(
                 attrs.remove("start_datetime")
             for attr in attrs:
                 a = pak.__getattribute__(attr)
-                if (
-                    a is None
-                    or not hasattr(a, "data_type")
-                    or a.name == "thickness"
-                ):
+                if a is None or not hasattr(a, "data_type") or a.name == "thickness":
                     continue
                 if a.data_type == DataType.array2d:
                     if a.array is None or a.array.shape != horz_shape:
@@ -336,7 +323,8 @@ def model_attributes_to_shapefile(
                     if a.array.shape == horz_shape:
                         if hasattr(a, "shape"):
                             if a.shape[1] is None:  # usg unstructured Util3d
-                                # return a flattened array, with a.name[0] (a per-layer list)
+                                # return a flattened array,
+                                # with a.name[0] (a per-layer list)
                                 array_dict[a.name[0]] = a.array
                             else:
                                 array_dict[a.name] = a.array
@@ -377,14 +365,36 @@ def model_attributes_to_shapefile(
                         assert arr.shape == horz_shape
                         array_dict[name] = arr
                 elif a.data_type == DataType.transientlist:
-                    try:
-                        list(a.masked_4D_arrays_itr())
-                    except:
+                    # Skip empty transientlist
+                    if not a.data:
                         continue
+
+                    # Use first recarray kper to check transientlist
+                    for kper in a.data.keys():
+                        if isinstance(a.data[kper], np.recarray):
+                            break
+                    # Skip transientlist if all elements are of object type
+                    if all(
+                        dtype == np.object_
+                        for dtype, _ in a.data[kper].dtype.fields.values()
+                    ):
+                        continue
+
                     for name, array in a.masked_4D_arrays_itr():
+                        n = shape_attr_name(name, length=4)
                         for kper in range(array.shape[0]):
+                            # guard clause for disu case
+                            # array is (kper, node) only
+                            if len(array.shape) == 2:
+                                aname = f"{n}{kper + 1}"
+                                arr = array[kper]
+                                assert arr.shape == horz_shape
+                                if np.all(np.isnan(arr)):
+                                    continue
+                                array_dict[aname] = arr
+                                continue
+                            # non-disu case
                             for k in range(array.shape[1]):
-                                n = shape_attr_name(name, length=4)
                                 aname = f"{n}{k + 1}{kper + 1}"
                                 arr = array[kper][k]
                                 assert arr.shape == horz_shape
@@ -399,9 +409,7 @@ def model_attributes_to_shapefile(
                         ):
                             for ilay in range(a.model.modelgrid.nlay):
                                 u2d = a[ilay]
-                                name = (
-                                    f"{shape_attr_name(u2d.name)}_{ilay + 1}"
-                                )
+                                name = f"{shape_attr_name(u2d.name)}_{ilay + 1}"
                                 arr = u2d.array
                                 assert arr.shape == horz_shape
                                 array_dict[name] = arr
@@ -467,7 +475,7 @@ def shape_attr_name(name, length=6, keep_layer=False):
     return n
 
 
-def enforce_10ch_limit(names: List[str], warnings: bool = True) -> List[str]:
+def enforce_10ch_limit(names: list[str], warnings: bool = True) -> list[str]:
     """Enforce 10 character limit for fieldnames.
     Add suffix for duplicate names starting at 0.
 
@@ -545,14 +553,10 @@ def shp2recarray(shpname: Union[str, os.PathLike]):
     sf = import_optional_dependency("shapefile")
 
     sfobj = sf.Reader(str(shpname))
-    dtype = [
-        (str(f[0]), get_pyshp_field_dtypes(f[1])) for f in sfobj.fields[1:]
-    ]
+    dtype = [(str(f[0]), get_pyshp_field_dtypes(f[1])) for f in sfobj.fields[1:]]
 
     geoms = GeoSpatialCollection(sfobj).flopy_geometry
-    records = [
-        tuple(r) + (geoms[i],) for i, r in enumerate(sfobj.iterRecords())
-    ]
+    records = [tuple(r) + (geoms[i],) for i, r in enumerate(sfobj.iterRecords())]
     dtype += [("geometry", object)]
 
     recarray = np.array(records, dtype=dtype).view(np.recarray)
@@ -614,9 +618,7 @@ def recarray2shp(
     from ..utils.geospatial_utils import GeoSpatialCollection
 
     if len(recarray) != len(geoms):
-        raise IndexError(
-            "Number of geometries must equal the number of records!"
-        )
+        raise IndexError("Number of geometries must equal the number of records!")
 
     if len(recarray) == 0:
         raise Exception("Recarray is empty")

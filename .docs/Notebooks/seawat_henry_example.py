@@ -185,9 +185,7 @@ import matplotlib.pyplot as plt
 
 fig = plt.figure(figsize=(10, 10))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
-ax.imshow(
-    concentration[:, 0, :], interpolation="nearest", extent=(0, Lx, 0, Lz)
-)
+ax.imshow(concentration[:, 0, :], interpolation="nearest", extent=(0, Lx, 0, Lz))
 y, x, z = dis.get_node_coordinates()
 X, Z = np.meshgrid(x, z[:, 0, 0])
 iskip = 3

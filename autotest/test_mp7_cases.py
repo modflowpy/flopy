@@ -83,9 +83,7 @@ class Mp7Cases:
         nm = "ex01_mf6"
 
         # Create the Flopy simulation object
-        sim = MFSimulation(
-            sim_name=nm, exe_name="mf6", version="mf6", sim_ws=ws
-        )
+        sim = MFSimulation(sim_name=nm, exe_name="mf6", version="mf6", sim_ws=ws)
 
         # Create the Flopy temporal discretization object
         pd = (Mp7Cases.perlen, Mp7Cases.nstp, Mp7Cases.tsmult)
@@ -246,7 +244,7 @@ class Mp7Cases:
         # recharge
         ModflowRch(m, ipakcb=iu_cbc, rech=Mp7Cases.rch, nrchop=1)
         # wel
-        wd = [i for i in Mp7Cases.wel_loc] + [Mp7Cases.wel_q]
+        wd = list(Mp7Cases.wel_loc) + [Mp7Cases.wel_q]
         ModflowWel(m, ipakcb=iu_cbc, stress_period_data={0: wd})
         # river
         rd = []
@@ -265,9 +263,7 @@ class Mp7Cases:
         # output control
         ModflowOc(
             m,
-            stress_period_data={
-                (0, 0): ["save head", "save budget", "print head"]
-            },
+            stress_period_data={(0, 0): ["save head", "save budget", "print head"]},
         )
         ModflowPcg(m, hclose=1e-6, rclose=1e-3, iter1=100, mxiter=50)
 

@@ -114,9 +114,7 @@ class Raster:
 
         self._meta = meta
         self._dataset = None
-        self.__arr_dict = {
-            self._bands[b]: arr for b, arr in enumerate(self._array)
-        }
+        self.__arr_dict = {self._bands[b]: arr for b, arr in enumerate(self._array)}
 
         self.__xcenters = None
         self.__ycenters = None
@@ -255,11 +253,7 @@ class Raster:
         """
         import rasterio
         from rasterio.io import MemoryFile
-        from rasterio.warp import (
-            Resampling,
-            calculate_default_transform,
-            reproject,
-        )
+        from rasterio.warp import Resampling, calculate_default_transform, reproject
 
         height = self._meta["height"]
         width = self._meta["width"]
@@ -303,7 +297,7 @@ class Raster:
 
                     self.__xcenters = None
                     self.__ycenters = None
-                    self._meta.update({k: v for k, v in kwargs.items()})
+                    self._meta.update(dict(kwargs.items()))
                     self._dataset = None
 
                 else:
@@ -537,20 +531,8 @@ class Raster:
                 arr = self.get_array(band, masked=True)
             arr = arr.flatten()
 
-            # filter out nan values from the original dataset
-            if np.isnan(np.sum(arr)):
-                idx = np.isfinite(arr)
-                rxc = rxc[idx]
-                ryc = ryc[idx]
-                arr = arr[idx]
-
             # step 3: use griddata interpolation to snap to grid
-            data = griddata(
-                (rxc, ryc),
-                arr,
-                (xc, yc),
-                method=method,
-            )
+            data = griddata((rxc, ryc), arr, (xc, yc), method=method)
 
         elif method in ("median", "mean", "min", "max", "mode"):
             # these methods are slow and could use speed ups
@@ -574,7 +556,7 @@ class Raster:
         else:
             raise TypeError(f"{method} method not supported")
 
-        if extrapolate_edges and method != "nearest":
+        if extrapolate_edges:
             xc = modelgrid.xcellcenters
             yc = modelgrid.ycellcenters
 
@@ -598,12 +580,7 @@ class Raster:
                 ryc = ryc[idx]
                 arr = arr[idx]
 
-            extrapolate = griddata(
-                (rxc, ryc),
-                arr,
-                (xc, yc),
-                method="nearest",
-            )
+            extrapolate = griddata((rxc, ryc), arr, (xc, yc), method="nearest")
             data = np.where(np.isnan(data), extrapolate, data)
 
         # step 4: return grid to user in shape provided
@@ -705,12 +682,7 @@ class Raster:
             self._meta["width"] = crp_mask.shape[1]
             transform = self._meta["transform"]
             self._meta["transform"] = self._affine.Affine(
-                transform[0],
-                transform[1],
-                xmin,
-                transform[3],
-                transform[4],
-                ymax,
+                transform[0], transform[1], xmin, transform[3], transform[4], ymax
             )
             self.__xcenters = None
             self.__ycenters = None
@@ -953,9 +925,7 @@ class Raster:
                 crs = modelgrid.crs
 
             if modelgrid.grid_type != "structured":
-                raise TypeError(
-                    f"{type(modelgrid)} discretizations are not supported"
-                )
+                raise TypeError(f"{type(modelgrid)} discretizations are not supported")
 
             if not np.all(modelgrid.delc == modelgrid.delc[0]):
                 raise AssertionError("DELC must have a uniform spacing")
@@ -966,9 +936,7 @@ class Raster:
             yul = modelgrid.yvertices[0, 0]
             xul = modelgrid.xvertices[0, 0]
             angrot = modelgrid.angrot
-            transform = Affine(
-                modelgrid.delr[0], 0, xul, 0, -modelgrid.delc[0], yul
-            )
+            transform = Affine(modelgrid.delr[0], 0, xul, 0, -modelgrid.delc[0], yul)
 
             if angrot != 0:
                 transform *= Affine.rotation(angrot)
@@ -1024,12 +992,7 @@ class Raster:
         from rasterio.plot import show
 
         if self._dataset is not None:
-            ax = show(
-                self._dataset,
-                ax=ax,
-                contour=contour,
-                **kwargs,
-            )
+            ax = show(self._dataset, ax=ax, contour=contour, **kwargs)
 
         else:
             d0 = len(self.__arr_dict)

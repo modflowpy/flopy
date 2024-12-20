@@ -3,7 +3,6 @@ import inspect
 import os
 import shutil
 from pathlib import Path
-from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -48,10 +47,7 @@ def parameters_model_path(example_data_path):
 @pytest.mark.parametrize(
     "namfile",
     [Path("freyberg") / "freyberg.nam"]
-    + [
-        Path("parameters") / f"{nf}.nam"
-        for nf in ["Oahu_01", "twrip", "twrip_upw"]
-    ],
+    + [Path("parameters") / f"{nf}.nam" for nf in ["Oahu_01", "twrip", "twrip_upw"]],
 )
 def test_modflow_load(namfile, example_data_path):
     mpath = Path(example_data_path / namfile).parent
@@ -86,21 +82,13 @@ def test_modflow_load(namfile, example_data_path):
     [
         pytest.param(
             _example_data_path / "freyberg" / "freyberg.nam",
-            {
-                "crs": None,
-                "epsg": None,
-                "angrot": 0.0,
-                "xoffset": 0.0,
-                "yoffset": 0.0,
-            },
+            {"crs": None, "epsg": None, "angrot": 0.0, "xoffset": 0.0, "yoffset": 0.0},
             id="freyberg",
         ),
         pytest.param(
-            _example_data_path
-            / "freyberg_multilayer_transient"
-            / "freyberg.nam",
+            _example_data_path / "freyberg_multilayer_transient" / "freyberg.nam",
             {
-                "proj4": "+proj=utm +zone=14 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
+                "proj4": "+proj=utm +zone=14 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",  # noqa
                 "angrot": 15.0,
                 "xoffset": 622241.1904510253,
                 "yoffset": 3343617.741737109,
@@ -113,12 +101,7 @@ def test_modflow_load(namfile, example_data_path):
             / "mfnwt_mt3dusgs"
             / "sft_crnkNic"
             / "CrnkNic.nam",
-            {
-                "epsg": 26916,
-                "angrot": 0.0,
-                "xoffset": 0.0,
-                "yoffset": 0.0,
-            },
+            {"epsg": 26916, "angrot": 0.0, "xoffset": 0.0, "yoffset": 0.0},
             id="CrnkNic",
         ),
     ],
@@ -145,9 +128,7 @@ def test_modflow_load_when_nam_dne():
 
 
 def test_mbase_modelgrid(function_tmpdir):
-    ml = Modflow(
-        modelname="test", xll=500.0, rotation=12.5, start_datetime="1/1/2016"
-    )
+    ml = Modflow(modelname="test", xll=500.0, rotation=12.5, start_datetime="1/1/2016")
     try:
         print(ml.modelgrid.xcentergrid)
     except:
@@ -217,12 +198,8 @@ def test_mt_modelgrid(function_tmpdir):
         verbose=True,
     )
 
-    assert (
-        swt.modelgrid.xoffset == mt.modelgrid.xoffset == ml.modelgrid.xoffset
-    )
-    assert (
-        swt.modelgrid.yoffset == mt.modelgrid.yoffset == ml.modelgrid.yoffset
-    )
+    assert swt.modelgrid.xoffset == mt.modelgrid.xoffset == ml.modelgrid.xoffset
+    assert swt.modelgrid.yoffset == mt.modelgrid.yoffset == ml.modelgrid.yoffset
     assert mt.modelgrid.crs == ml.modelgrid.crs == swt.modelgrid.crs
     assert mt.modelgrid.angrot == ml.modelgrid.angrot == swt.modelgrid.angrot
     assert np.array_equal(mt.modelgrid.idomain, ml.modelgrid.idomain)
@@ -251,12 +228,8 @@ def test_mt_modelgrid(function_tmpdir):
         verbose=True,
     )
 
-    assert (
-        ml.modelgrid.xoffset == mt.modelgrid.xoffset == swt.modelgrid.xoffset
-    )
-    assert (
-        mt.modelgrid.yoffset == ml.modelgrid.yoffset == swt.modelgrid.yoffset
-    )
+    assert ml.modelgrid.xoffset == mt.modelgrid.xoffset == swt.modelgrid.xoffset
+    assert mt.modelgrid.yoffset == ml.modelgrid.yoffset == swt.modelgrid.yoffset
     assert mt.modelgrid.crs == ml.modelgrid.crs == swt.modelgrid.crs
     assert mt.modelgrid.angrot == ml.modelgrid.angrot == swt.modelgrid.angrot
     assert np.array_equal(mt.modelgrid.idomain, ml.modelgrid.idomain)
@@ -273,14 +246,11 @@ def test_exe_selection(example_data_path, function_tmpdir):
     assert Path(Modflow().exe_name).stem == exe_name
     assert Path(Modflow(exe_name=None).exe_name).stem == exe_name
     assert (
-        Path(Modflow.load(namfile_path, model_ws=model_path).exe_name).stem
-        == exe_name
+        Path(Modflow.load(namfile_path, model_ws=model_path).exe_name).stem == exe_name
     )
     assert (
         Path(
-            Modflow.load(
-                namfile_path, exe_name=None, model_ws=model_path
-            ).exe_name
+            Modflow.load(namfile_path, exe_name=None, model_ws=model_path).exe_name
         ).stem
         == exe_name
     )
@@ -291,21 +261,19 @@ def test_exe_selection(example_data_path, function_tmpdir):
     assert Path(Modflow(exe_name=exe_name).exe_name).stem == exe_name
     assert (
         Path(
-            Modflow.load(
-                namfile_path, exe_name=exe_name, model_ws=model_path
-            ).exe_name
+            Modflow.load(namfile_path, exe_name=exe_name, model_ws=model_path).exe_name
         ).stem
         == exe_name
     )
 
-    # init/load should warn if exe DNE
+    # init/load should warn if exe does not exist
     exe_name = "not_an_exe"
     with pytest.warns(UserWarning):
         ml = Modflow(exe_name=exe_name)
     with pytest.warns(UserWarning):
         ml = Modflow.load(namfile_path, exe_name=exe_name, model_ws=model_path)
 
-    # run should error if exe DNE
+    # run should error if exe does not exist
     ml = Modflow.load(namfile_path, exe_name=exe_name, model_ws=model_path)
     ml.change_model_ws(function_tmpdir)
     ml.write_input()
@@ -421,13 +389,9 @@ def test_load_twri_grid(example_data_path):
     name = "twri.nam"
     ml = Modflow.load(name, model_ws=mpath, check=False)
     mg = ml.modelgrid
-    assert isinstance(
-        mg, StructuredGrid
-    ), "modelgrid is not an StructuredGrid instance"
+    assert isinstance(mg, StructuredGrid), "modelgrid is not an StructuredGrid instance"
     shape = (3, 15, 15)
-    assert (
-        mg.shape == shape
-    ), f"modelgrid shape {mg.shape} not equal to {shape}"
+    assert mg.shape == shape, f"modelgrid shape {mg.shape} not equal to {shape}"
     thickness = mg.cell_thickness
     shape = (5, 15, 15)
     assert (
@@ -485,9 +449,7 @@ def test_mg(function_tmpdir):
 
     # test that transform for arbitrary coordinates
     # is working in same as transform for model grid
-    mg2 = StructuredGrid(
-        delc=ms.dis.delc.array, delr=ms.dis.delr.array, lenuni=2
-    )
+    mg2 = StructuredGrid(delc=ms.dis.delc.array, delr=ms.dis.delr.array, lenuni=2)
     x = mg2.xcellcenters[0]
     y = mg2.ycellcenters[0]
     mg2.set_coord_info(xoff=xll, yoff=yll, angrot=angrot)
@@ -523,9 +485,7 @@ def test_dynamic_xll_yll():
     xll, yll = 286.80, 29.03
     # test scaling of length units
     ms2 = Modflow()
-    dis = ModflowDis(
-        ms2, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr, delc=delc
-    )
+    dis = ModflowDis(ms2, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr, delc=delc)
 
     ms2.modelgrid.set_coord_info(xoff=xll, yoff=yll, angrot=30.0)
     xll1, yll1 = ms2.modelgrid.xoffset, ms2.modelgrid.yoffset
@@ -977,10 +937,7 @@ def test_properties_check(function_tmpdir):
     )
     ind3_errors = chk.summary_array[ind3]["desc"]
 
-    assert (
-        "zero or negative horizontal hydraulic conductivity values"
-        in ind1_errors
-    )
+    assert "zero or negative horizontal hydraulic conductivity values" in ind1_errors
     assert (
         "horizontal hydraulic conductivity values below checker threshold of 1e-11"
         in ind1_errors
@@ -994,10 +951,7 @@ def test_properties_check(function_tmpdir):
         "horizontal hydraulic conductivity values above checker threshold of 100000.0"
         in ind2_errors
     )
-    assert (
-        "zero or negative vertical hydraulic conductivity values"
-        in ind2_errors
-    )
+    assert "zero or negative vertical hydraulic conductivity values" in ind2_errors
     assert (
         "vertical hydraulic conductivity values above checker threshold of 100000.0"
         in ind3_errors
@@ -1043,9 +997,7 @@ def test_rchload(function_tmpdir):
     m1 = Modflow("rchload1", model_ws=ws)
     dis1 = ModflowDis(m1, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper)
     a = np.random.random((nrow, ncol))
-    rech1 = Util2d(
-        m1, (nrow, ncol), np.float32, a, "rech", cnstnt=1.0, how="openclose"
-    )
+    rech1 = Util2d(m1, (nrow, ncol), np.float32, a, "rech", cnstnt=1.0, how="openclose")
     rch1 = ModflowRch(m1, rech={0: rech1})
     m1.write_input()
 
@@ -1060,9 +1012,7 @@ def test_rchload(function_tmpdir):
     m2 = Modflow("rchload2", model_ws=ws)
     dis2 = ModflowDis(m2, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper)
     a = np.random.random((nrow, ncol))
-    rech2 = Util2d(
-        m2, (nrow, ncol), np.float32, a, "rech", cnstnt=2.0, how="openclose"
-    )
+    rech2 = Util2d(m2, (nrow, ncol), np.float32, a, "rech", cnstnt=2.0, how="openclose")
     rch2 = ModflowRch(m2, rech={0: rech2})
     m2.write_input()
 
@@ -1222,14 +1172,7 @@ def test_load_with_list_reader(function_tmpdir):
 
     # create the wells, but use an all float dtype to write a binary file
     # use one-based values
-    weldt = np.dtype(
-        [
-            ("k", "<f4"),
-            ("i", "<f4"),
-            ("j", "<f4"),
-            ("q", "<f4"),
-        ]
-    )
+    weldt = np.dtype([("k", "<f4"), ("i", "<f4"), ("j", "<f4"), ("q", "<f4")])
     welra = np.recarray(2, dtype=weldt)
     welra[0] = (1, 2, 2, -5.0)
     welra[1] = (1, nrow - 2, ncol - 2, -10.0)
@@ -1264,7 +1207,8 @@ def test_load_with_list_reader(function_tmpdir):
     ["recarray", "dataframe", "dict_of_recarray", "dict_of_dataframe"],
 )
 def test_pkg_data_containers(function_tmpdir, container):
-    """Test various containers for package data (list, ndarray, recarray, dataframe, dict of such)"""
+    """Test various containers for package data
+    (list, ndarray, recarray, dataframe, dict of such)"""
 
     nlay = 1
     nrow = 10
@@ -1289,14 +1233,7 @@ def test_pkg_data_containers(function_tmpdir, container):
     wel_ra = ModflowWel.get_empty(2)
     wel_ra[0] = (0, 1, 1, -5.0)
     wel_ra[1] = (0, nrow - 3, ncol - 3, -10.0)
-    wel_dtype = np.dtype(
-        [
-            ("k", int),
-            ("i", int),
-            ("j", int),
-            ("q", np.float32),
-        ]
-    )
+    wel_dtype = np.dtype([("k", int), ("i", int), ("j", int), ("q", np.float32)])
     df_per = pd.DataFrame(wel_ra)
     if "dict_of_recarray" in container:
         wel_spd = {0: wel_ra}
@@ -1350,9 +1287,7 @@ def get_perftest_model(ws, name):
         botm=list(range(nlay)),
     )
 
-    rch = ModflowRch(
-        m, rech={k: 0.001 - np.cos(k) * 0.001 for k in range(nper)}
-    )
+    rch = ModflowRch(m, rech={k: 0.001 - np.cos(k) * 0.001 for k in range(nper)})
 
     ra = ModflowWel.get_empty(size**2)
     well_spd = {}
@@ -1360,10 +1295,7 @@ def get_perftest_model(ws, name):
         ra_per = ra.copy()
         ra_per["k"] = 1
         ra_per["i"] = (
-            (np.ones((size, size)) * np.arange(size))
-            .transpose()
-            .ravel()
-            .astype(int)
+            (np.ones((size, size)) * np.arange(size)).transpose().ravel().astype(int)
         )
         ra_per["j"] = list(range(size)) * size
         well_spd[kper] = ra
@@ -1399,7 +1331,5 @@ def test_model_load_time(function_tmpdir, benchmark):
     model = get_perftest_model(ws=function_tmpdir, name=name)
     model.write_input()
     benchmark(
-        lambda: Modflow.load(
-            f"{name}.nam", model_ws=function_tmpdir, check=False
-        )
+        lambda: Modflow.load(f"{name}.nam", model_ws=function_tmpdir, check=False)
     )

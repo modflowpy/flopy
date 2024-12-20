@@ -2,15 +2,15 @@
 Grid utilities
 """
 
+from collections.abc import Collection, Iterable, Sequence
 from math import floor
-from typing import Collection, Iterable, List, Sequence, Tuple, Union
 
 import numpy as np
 
 from .cvfdutil import centroid_of_polygon, get_disv_gridprops
 
 
-def get_lni(ncpl, nodes) -> List[Tuple[int, int]]:
+def get_lni(ncpl, nodes) -> list[tuple[int, int]]:
     """
     Get layer index and within-layer node index (both 0-based).
 
@@ -292,10 +292,8 @@ def get_disv_kwargs(
     # botm check
     if np.isscalar(botm):
         botm = botm * np.ones((nlay, nrow, ncol), dtype=float)
-    elif isinstance(botm, List):
-        assert (
-            len(botm) == nlay
-        ), "if botm provided as a list it must have length nlay"
+    elif isinstance(botm, list):
+        assert len(botm) == nlay, "if botm provided as a list it must have length nlay"
         b = np.empty((nlay, nrow, ncol), dtype=float)
         for k in range(nlay):
             b[k] = botm[k]

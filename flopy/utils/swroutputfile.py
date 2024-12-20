@@ -41,9 +41,7 @@ class SwrFile(FlopyBinaryData):
 
     """
 
-    def __init__(
-        self, filename, swrtype="stage", precision="double", verbose=False
-    ):
+    def __init__(self, filename, swrtype="stage", precision="double", verbose=False):
         """
         Class constructor.
 
@@ -327,9 +325,7 @@ class SwrFile(FlopyBinaryData):
         return gage_record
 
     def _read_connectivity(self):
-        self.conn_dtype = np.dtype(
-            [("reach", "i4"), ("from", "i4"), ("to", "i4")]
-        )
+        self.conn_dtype = np.dtype([("reach", "i4"), ("from", "i4"), ("to", "i4")])
         conn = np.zeros((self.nrecord, 3), int)
         icount = 0
         for nrg in range(self.flowitems):
@@ -607,9 +603,7 @@ class SwrFile(FlopyBinaryData):
             totim, dt, kper, kstp, kswr, success = self._read_header()
             if success:
                 if self.type == "exchange":
-                    bytes = self.nitems * (
-                        self.integerbyte + 8 * self.realbyte
-                    )
+                    bytes = self.nitems * (self.integerbyte + 8 * self.realbyte)
                 elif self.type == "structure":
                     bytes = self.nitems * (5 * self.realbyte)
                 else:
@@ -626,9 +620,7 @@ class SwrFile(FlopyBinaryData):
             else:
                 if self.verbose:
                     print()
-                self._recordarray = np.array(
-                    self._recordarray, dtype=self.header_dtype
-                )
+                self._recordarray = np.array(self._recordarray, dtype=self.header_dtype)
                 self._times = np.array(self._times)
                 self._kswrkstpkper = np.array(self._kswrkstpkper)
                 return
@@ -748,15 +740,14 @@ class SwrFlow(SwrFile):
     """
 
     def __init__(self, filename, precision="double", verbose=False):
-        super().__init__(
-            filename, swrtype="flow", precision=precision, verbose=verbose
-        )
+        super().__init__(filename, swrtype="flow", precision=precision, verbose=verbose)
         return
 
 
 class SwrExchange(SwrFile):
     """
-    Read binary SWR surface-water groundwater exchange output from MODFLOW SWR Process binary output files
+    Read binary SWR surface-water groundwater exchange output from
+    MODFLOW SWR Process binary output files
 
     Parameters
     ----------

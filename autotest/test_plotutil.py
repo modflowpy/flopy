@@ -329,15 +329,11 @@ MP7_TEST_ENDPOINTS = pd.DataFrame.from_records(
 @pytest.mark.parametrize("dataframe", [True, False])
 def test_to_mp7_pathlines(dataframe):
     prt_pls = (
-        PRT_TEST_PATHLINES
-        if dataframe
-        else PRT_TEST_PATHLINES.to_records(index=False)
+        PRT_TEST_PATHLINES if dataframe else PRT_TEST_PATHLINES.to_records(index=False)
     )
     mp7_pls = to_mp7_pathlines(prt_pls)
     assert (
-        type(prt_pls)
-        == type(mp7_pls)
-        == (pd.DataFrame if dataframe else np.recarray)
+        type(prt_pls) == type(mp7_pls) == (pd.DataFrame if dataframe else np.recarray)
     )
     assert len(mp7_pls) == 10
     assert set(
@@ -361,15 +357,11 @@ def test_to_mp7_pathlines_empty(dataframe):
 @pytest.mark.parametrize("dataframe", [True, False])
 def test_to_mp7_pathlines_noop(dataframe):
     prt_pls = (
-        MP7_TEST_PATHLINES
-        if dataframe
-        else MP7_TEST_PATHLINES.to_records(index=False)
+        MP7_TEST_PATHLINES if dataframe else MP7_TEST_PATHLINES.to_records(index=False)
     )
     mp7_pls = to_mp7_pathlines(prt_pls)
     assert (
-        type(prt_pls)
-        == type(mp7_pls)
-        == (pd.DataFrame if dataframe else np.recarray)
+        type(prt_pls) == type(mp7_pls) == (pd.DataFrame if dataframe else np.recarray)
     )
     assert len(mp7_pls) == 2
     assert set(
@@ -383,9 +375,7 @@ def test_to_mp7_pathlines_noop(dataframe):
 @pytest.mark.parametrize("dataframe", [True, False])
 def test_to_mp7_endpoints(dataframe):
     mp7_eps = to_mp7_endpoints(
-        PRT_TEST_PATHLINES
-        if dataframe
-        else PRT_TEST_PATHLINES.to_records(index=False)
+        PRT_TEST_PATHLINES if dataframe else PRT_TEST_PATHLINES.to_records(index=False)
     )
     assert len(mp7_eps) == 1
     assert np.isclose(mp7_eps.time[0], PRT_TEST_PATHLINES.t.max())
@@ -411,9 +401,7 @@ def test_to_mp7_endpoints_empty(dataframe):
 def test_to_mp7_endpoints_noop(dataframe):
     """Test a recarray or dataframe which already contains MP7 endpoint data"""
     mp7_eps = to_mp7_endpoints(
-        MP7_TEST_ENDPOINTS
-        if dataframe
-        else MP7_TEST_ENDPOINTS.to_records(index=False)
+        MP7_TEST_ENDPOINTS if dataframe else MP7_TEST_ENDPOINTS.to_records(index=False)
     )
     assert np.array_equal(
         mp7_eps if dataframe else pd.DataFrame(mp7_eps), MP7_TEST_ENDPOINTS
@@ -423,9 +411,7 @@ def test_to_mp7_endpoints_noop(dataframe):
 @pytest.mark.parametrize("dataframe", [True, False])
 def test_to_prt_pathlines_roundtrip(dataframe):
     mp7_pls = to_mp7_pathlines(
-        PRT_TEST_PATHLINES
-        if dataframe
-        else PRT_TEST_PATHLINES.to_records(index=False)
+        PRT_TEST_PATHLINES if dataframe else PRT_TEST_PATHLINES.to_records(index=False)
     )
     prt_pls = to_prt_pathlines(mp7_pls)
     if not dataframe:

@@ -68,9 +68,7 @@ def test_subwt(function_tmpdir, ibound_path):
     sp2_wells.append([1, 8, 9, -72000.0])
     sp2_wells.append([3, 11, 6, -72000.0])
 
-    ModflowWel(
-        ml, stress_period_data={0: sp1_wells, 1: sp2_wells, 2: sp1_wells}
-    )
+    ModflowWel(ml, stress_period_data={0: sp1_wells, 1: sp2_wells, 2: sp1_wells})
 
     ModflowSwt(
         ml,

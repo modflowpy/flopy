@@ -55,9 +55,7 @@ if gridgen_exe is None:
     )
     print(msg)
 else:
-    print(
-        f"gridgen executable was found at: {flopy_io.relpath_safe(gridgen_exe)}"
-    )
+    print(f"gridgen executable was found at: {flopy_io.relpath_safe(gridgen_exe)}")
 
 # +
 # temporary directory
@@ -264,9 +262,7 @@ ims = flopy.mf6.ModflowIms(sim, linear_acceleration="bicgstab")
 gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
 disv = flopy.mf6.ModflowGwfdisv(gwf, **disv_gridprops)
 ic = flopy.mf6.ModflowGwfic(gwf)
-npf = flopy.mf6.ModflowGwfnpf(
-    gwf, xt3doptions=True, save_specific_discharge=True
-)
+npf = flopy.mf6.ModflowGwfnpf(gwf, xt3doptions=True, save_specific_discharge=True)
 chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chdspd)
 budget_file = f"{name}.bud"
 head_file = f"{name}.hds"
@@ -367,9 +363,7 @@ ims = flopy.mf6.ModflowIms(sim, linear_acceleration="bicgstab")
 gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
 disu = flopy.mf6.ModflowGwfdisu(gwf, **disu_gridprops)
 ic = flopy.mf6.ModflowGwfic(gwf)
-npf = flopy.mf6.ModflowGwfnpf(
-    gwf, xt3doptions=True, save_specific_discharge=True
-)
+npf = flopy.mf6.ModflowGwfnpf(gwf, xt3doptions=True, save_specific_discharge=True)
 chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chdspd)
 budget_file = f"{name}.bud"
 head_file = f"{name}.hds"

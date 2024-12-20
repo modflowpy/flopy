@@ -6,8 +6,8 @@ ParticleData, CellDataType, FaceDataType, and NodeParticleData classes.
 """
 
 from collections import namedtuple
+from collections.abc import Iterator
 from itertools import product
-from typing import Iterator, Tuple
 
 import numpy as np
 import pandas as pd
@@ -153,8 +153,7 @@ class ParticleData:
                     )
             else:
                 allint = all(
-                    isinstance(el, (int, np.int32, np.int64))
-                    for el in partlocs
+                    isinstance(el, (int, np.int32, np.int64)) for el in partlocs
                 )
                 # convert to a list of tuples
                 if allint:
@@ -162,9 +161,7 @@ class ParticleData:
                     for el in partlocs:
                         t.append((el,))
                     partlocs = t
-                    alllsttup = all(
-                        isinstance(el, (list, tuple)) for el in partlocs
-                    )
+                    alllsttup = all(isinstance(el, (list, tuple)) for el in partlocs)
                 if alllsttup:
                     alllen1 = all(len(el) == 1 for el in partlocs)
                     if not alllen1:
@@ -183,9 +180,7 @@ class ParticleData:
             partlocs = np.array(partlocs)
             if len(partlocs.shape) == 1:
                 partlocs = partlocs.reshape(len(partlocs), 1)
-            partlocs = unstructured_to_structured(
-                np.array(partlocs), dtype=dtype
-            )
+            partlocs = unstructured_to_structured(np.array(partlocs), dtype=dtype)
         elif isinstance(partlocs, np.ndarray):
             # reshape and convert dtype if needed
             if len(partlocs.shape) == 1:
@@ -195,7 +190,8 @@ class ParticleData:
                 partlocs = unstructured_to_structured(partlocs, dtype=dtype)
         else:
             raise ValueError(
-                f"{self.name}: partlocs must be a list or tuple with lists or tuples, or an ndarray"
+                f"{self.name}: partlocs must be a list or tuple with lists or "
+                "tuples, or an ndarray"
             )
 
         # localx
@@ -253,9 +249,7 @@ class ParticleData:
             timeoffset = 0.0
         else:
             if isinstance(timeoffset, (float, int)):
-                timeoffset = (
-                    np.ones(partlocs.shape[0], dtype=np.float32) * timeoffset
-                )
+                timeoffset = np.ones(partlocs.shape[0], dtype=np.float32) * timeoffset
             elif isinstance(timeoffset, (list, tuple)):
                 timeoffset = np.array(timeoffset, dtype=np.float32)
             if isinstance(timeoffset, np.ndarray):
@@ -313,9 +307,7 @@ class ParticleData:
         # create empty particle
         ncells = partlocs.shape[0]
         self.dtype = self._get_dtype(structured, particleid)
-        particledata = create_empty_recarray(
-            ncells, self.dtype, default_value=0
-        )
+        particledata = create_empty_recarray(ncells, self.dtype, default_value=0)
 
         # fill particle
         if structured:
@@ -358,12 +350,7 @@ class ParticleData:
         d = np.recarray.copy(self.particledata.to_records(index=False))
         lnames = [name.lower() for name in d.dtype.names]
         # Add one to the kij and node indices
-        for idx in (
-            "k",
-            "i",
-            "j",
-            "node",
-        ):
+        for idx in ("k", "i", "j", "node"):
             if idx in lnames:
                 d[idx] += 1
         # Add one to the particle id if required
@@ -410,15 +397,13 @@ class ParticleData:
                 span = mx - mn
                 return mn + span * p
 
-            def convert(row) -> Tuple[float, float, float]:
+            def convert(row) -> tuple[float, float, float]:
                 verts = grid.get_cell_vertices(row.i, row.j)
                 xs, ys = list(zip(*verts))
                 return [
                     cvt_xy(row.localx, xs),
                     cvt_xy(row.localy, ys),
-                    row.localz
-                    if localz
-                    else cvt_z(row.localz, row.k, row.i, row.j),
+                    row.localz if localz else cvt_z(row.localz, row.k, row.i, row.j),
                 ]
 
         else:
@@ -436,7 +421,7 @@ class ParticleData:
                 span = mx - mn
                 return mn + span * p
 
-            def convert(row) -> Tuple[float, float, float]:
+            def convert(row) -> tuple[float, float, float]:
                 verts = grid.get_cell_vertices(row.node)
                 xs, ys = list(zip(*verts))
                 return [
@@ -782,26 +767,14 @@ class CellDataType:
         # item 5
         fmt = " {} {} {}\n"
         line = fmt.format(
-            self.columncelldivisions,
-            self.rowcelldivisions,
-            self.layercelldivisions,
+            self.columncelldivisions, self.rowcelldivisions, self.layercelldivisions
         )
         f.write(line)
 
 
 Extent = namedtuple(
     "Extent",
-    [
-        "minx",
-        "maxx",
-        "miny",
-        "maxy",
-        "minz",
-        "maxz",
-        "xspan",
-        "yspan",
-        "zspan",
-    ],
+    ["minx", "maxx", "miny", "maxy", "minz", "maxz", "xspan", "yspan", "zspan"],
 )
 
 
@@ -837,7 +810,8 @@ def get_extent(grid, k=None, i=None, j=None, nn=None, localz=False) -> Extent:
             )
     else:
         raise ValueError(
-            "A cell (node) must be specified by indices (for structured grids) or node number (for vertex/unstructured)"
+            "A cell (node) must be specified by indices (for structured grids) "
+            "or node number (for vertex/unstructured)"
         )
     xs, ys = list(zip(*verts))
     minx, maxx = min(xs), max(xs)
@@ -848,9 +822,7 @@ def get_extent(grid, k=None, i=None, j=None, nn=None, localz=False) -> Extent:
     return Extent(minx, maxx, miny, maxy, minz, maxz, xspan, yspan, zspan)
 
 
-def get_face_release_points(
-    subdivisiondata, cellid, extent
-) -> Iterator[tuple]:
+def get_face_release_points(subdivisiondata, cellid, extent) -> Iterator[tuple]:
     """
     Get release points for MODPATH 7 input style 2, template
     subdivision style 1, i.e. face (2D) subdivision, for the
@@ -934,10 +906,7 @@ def get_face_release_points(
             yield cellid + [p[0], extent.maxy, p[1]]
 
     # z1 (bottom)
-    if (
-        subdivisiondata.rowdivisions5 > 0
-        and subdivisiondata.columndivisions5 > 0
-    ):
+    if subdivisiondata.rowdivisions5 > 0 and subdivisiondata.columndivisions5 > 0:
         xincr = extent.xspan / subdivisiondata.columndivisions5
         xlocs = [
             (extent.minx + (xincr * 0.5) + (xincr * rd))
@@ -952,10 +921,7 @@ def get_face_release_points(
             yield cellid + [p[0], p[1], extent.minz]
 
     # z2 (top)
-    if (
-        subdivisiondata.rowdivisions6 > 0
-        and subdivisiondata.columndivisions6 > 0
-    ):
+    if subdivisiondata.rowdivisions6 > 0 and subdivisiondata.columndivisions6 > 0:
         xincr = extent.xspan / subdivisiondata.columndivisions6
         xlocs = [
             (extent.minx + (xincr * 0.5) + (xincr * rd))
@@ -970,9 +936,7 @@ def get_face_release_points(
             yield cellid + [p[0], p[1], extent.maxz]
 
 
-def get_cell_release_points(
-    subdivisiondata, cellid, extent
-) -> Iterator[tuple]:
+def get_cell_release_points(subdivisiondata, cellid, extent) -> Iterator[tuple]:
     """
     Get release points for MODPATH 7 input style 2, template
     subdivision type 2, i.e. cell (3D) subdivision, for the
@@ -1011,7 +975,8 @@ def get_release_points(
 
     if nn is None and (k is None or i is None or j is None):
         raise ValueError(
-            "A cell (node) must be specified by indices (for structured grids) or node number (for vertex/unstructured)"
+            "A cell (node) must be specified by indices (for structured grids) "
+            "or node number (for vertex/unstructured)"
         )
 
     cellid = [k, i, j] if nn is None else [nn]
@@ -1022,9 +987,7 @@ def get_release_points(
     elif isinstance(subdivisiondata, CellDataType):
         return get_cell_release_points(subdivisiondata, cellid, extent)
     else:
-        raise ValueError(
-            f"Unsupported subdivision data type: {type(subdivisiondata)}"
-        )
+        raise ValueError(f"Unsupported subdivision data type: {type(subdivisiondata)}")
 
 
 class LRCParticleData:
@@ -1150,9 +1113,7 @@ class LRCParticleData:
 
         for sd, region in zip(self.subdivisiondata, self.lrcregions):
             # item 3
-            f.write(
-                f"{sd.templatesubdivisiontype} {region.shape[0]} {sd.drape}\n"
-            )
+            f.write(f"{sd.templatesubdivisiontype} {region.shape[0]} {sd.drape}\n")
 
             # item 4 or 5
             sd.write(f)
@@ -1215,9 +1176,7 @@ class LRCParticleData:
         """
 
         if grid.grid_type != "structured":
-            raise ValueError(
-                "Particle representation is structured but grid is not"
-            )
+            raise ValueError("Particle representation is structured but grid is not")
 
         irpt_offset = 0
         for region in self.lrcregions:
@@ -1228,9 +1187,7 @@ class LRCParticleData:
                         for j in range(minj, maxj + 1):
                             for sd in self.subdivisiondata:
                                 for irpt, rpt in enumerate(
-                                    get_release_points(
-                                        sd, grid, k, i, j, localz=localz
-                                    )
+                                    get_release_points(sd, grid, k, i, j, localz=localz)
                                 ):
                                     assert rpt[0] == k
                                     assert rpt[1] == i
@@ -1310,8 +1267,7 @@ class NodeParticleData:
                 nodes = nodes.reshape(1, nodes.shape[0])
             # convert to a list of numpy arrays
             nodes = [
-                np.array(nodes[i, :], dtype=np.int32)
-                for i in range(nodes.shape[0])
+                np.array(nodes[i, :], dtype=np.int32) for i in range(nodes.shape[0])
             ]
         elif isinstance(nodes, (list, tuple)):
             # convert a single list/tuple to a list of tuples if only one
@@ -1320,9 +1276,7 @@ class NodeParticleData:
                 if len(nodes) > 1:
                     nodes = [tuple(nodes)]
             # determine if the list or tuple contains lists or tuples
-            alllsttup = all(
-                isinstance(el, (list, tuple, np.ndarray)) for el in nodes
-            )
+            alllsttup = all(isinstance(el, (list, tuple, np.ndarray)) for el in nodes)
             if not alllsttup:
                 raise TypeError(
                     "{}: nodes should be "
@@ -1380,9 +1334,7 @@ class NodeParticleData:
 
         for sd, nodes in zip(self.subdivisiondata, self.nodedata):
             # item 3
-            f.write(
-                f"{sd.templatesubdivisiontype} {nodes.shape[0]} {sd.drape}\n"
-            )
+            f.write(f"{sd.templatesubdivisiontype} {nodes.shape[0]} {sd.drape}\n")
 
             # item 4 or 5
             sd.write(f)
@@ -1417,9 +1369,7 @@ class NodeParticleData:
 
         for sd in self.subdivisiondata:
             for nd in self.nodedata:
-                for rpt in get_release_points(
-                    sd, grid, nn=int(nd[0]), localz=localz
-                ):
+                for rpt in get_release_points(sd, grid, nn=int(nd[0]), localz=localz):
                     yield (*rpt[1:4],)
 
     def to_prp(self, grid, localz=False) -> Iterator[tuple]:

@@ -222,8 +222,7 @@ class Mt3dLkt(Package):
         # Check to make sure that all kwargs have been consumed
         if len(list(kwargs.keys())) > 0:
             raise Exception(
-                "LKT error: unrecognized kwargs: "
-                + " ".join(list(kwargs.keys()))
+                "LKT error: unrecognized kwargs: " + " ".join(list(kwargs.keys()))
             )
 
         self.parent.add_package(self)
@@ -265,9 +264,7 @@ class Mt3dLkt(Package):
             # (Evap, precip, specified runoff into the lake, specified
             # withdrawal directly from the lake
             if self.lk_stress_period_data is not None:
-                self.lk_stress_period_data.write_transient(
-                    f_lkt, single_per=kper
-                )
+                self.lk_stress_period_data.write_transient(f_lkt, single_per=kper)
             else:
                 f_lkt.write("0\n")
 
@@ -275,9 +272,7 @@ class Mt3dLkt(Package):
         return
 
     @classmethod
-    def load(
-        cls, f, model, nlak=None, nper=None, ncomp=None, ext_unit_dict=None
-    ):
+    def load(cls, f, model, nlak=None, nper=None, ncomp=None, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -366,23 +361,15 @@ class Mt3dLkt(Package):
                     "   Mass does not exit the model via simulated lake evaporation   "
                 )
             else:
-                print(
-                    "   Mass exits the lake via simulated lake evaporation   "
-                )
+                print("   Mass exits the lake via simulated lake evaporation   ")
 
         # Item 2 (COLDLAK - Initial concentration in this instance)
         if model.verbose:
             print("   loading initial concentration (COLDLAK)  ")
             if model.free_format:
-                print(
-                    "   Using MODFLOW style array reader utilities to "
-                    "read COLDLAK"
-                )
+                print("   Using MODFLOW style array reader utilities to read COLDLAK")
             elif model.array_format == "mt3d":
-                print(
-                    "   Using historic MT3DMS array reader utilities to "
-                    "read COLDLAK"
-                )
+                print("   Using historic MT3DMS array reader utilities to read COLDLAK")
 
         kwargs = {}
         coldlak = Util2d.load(
@@ -419,9 +406,7 @@ class Mt3dLkt(Package):
 
         for iper in range(nper):
             if model.verbose:
-                print(
-                    f"   loading lkt boundary condition data for kper {iper + 1:5d}"
-                )
+                print(f"   loading lkt boundary condition data for kper {iper + 1:5d}")
 
             # Item 3: NTMP: An integer value corresponding to the number of
             #         specified lake boundary conditions to follow.
@@ -437,7 +422,8 @@ class Mt3dLkt(Package):
                     print("   ntmp < 0 not allowed for first stress period   ")
                 if (iper > 0) and (ntmp < 0):
                     print(
-                        "   use lkt boundary conditions specified in last stress period   "
+                        "   use lkt boundary conditions "
+                        "specified in last stress period   "
                     )
 
             # Item 4: Read ntmp boundary conditions
@@ -453,9 +439,7 @@ class Mt3dLkt(Package):
                     if cbclk > 0:
                         for ilkvar in range(cbclk):
                             t.append(m_arr[ilkvar + 2])
-                    current_lk[ilkbnd] = tuple(
-                        t[: len(current_lk.dtype.names)]
-                    )
+                    current_lk[ilkbnd] = tuple(t[: len(current_lk.dtype.names)])
                 # Convert ILKBC (node) index to zero-based
                 current_lk["node"] -= 1
                 current_lk = current_lk.view(np.recarray)
@@ -478,9 +462,7 @@ class Mt3dLkt(Package):
                 ext_unit_dict, filetype=Mt3dLkt._ftype()
             )
             if icbclk > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=icbclk
-                )
+                iu, filenames[1] = model.get_ext_dict_attr(ext_unit_dict, unit=icbclk)
                 model.add_pop_key_list(icbclk)
 
         # Construct and return LKT package

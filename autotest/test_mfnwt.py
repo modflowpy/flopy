@@ -30,9 +30,7 @@ def analytical_water_table_solution(h1, h2, z, R, K, L, x):
 
 def fnwt_model_files(pattern):
     path = get_example_data_path() / "nwt_test"
-    return [
-        os.path.join(path, f) for f in os.listdir(path) if f.endswith(pattern)
-    ]
+    return [os.path.join(path, f) for f in os.listdir(path) if f.endswith(pattern)]
 
 
 @pytest.mark.parametrize("nwtfile", fnwt_model_files(".nwt"))
@@ -59,9 +57,7 @@ def test_nwt_pack_load(function_tmpdir, nwtfile):
     ml2 = Modflow(model_ws=function_tmpdir, version="mfnwt")
     nwt2 = ModflowNwt.load(fn, ml2)
     lst = [
-        a
-        for a in dir(nwt)
-        if not a.startswith("__") and not callable(getattr(nwt, a))
+        a for a in dir(nwt) if not a.startswith("__") and not callable(getattr(nwt, a))
     ]
     for l in lst:
         msg = (
@@ -91,9 +87,7 @@ def test_nwt_model_load(function_tmpdir, namfile):
         p = ml.get_package(pn)
         p2 = ml2.get_package(pn)
         lst = [
-            a
-            for a in dir(p)
-            if not a.startswith("__") and not callable(getattr(p, a))
+            a for a in dir(p) if not a.startswith("__") and not callable(getattr(p, a))
         ]
         for l in lst:
             msg = (
@@ -229,9 +223,7 @@ def test_mfnwt_run(function_tmpdir):
         ax.set_ylabel("Error, in m")
 
         ax = fig.add_subplot(1, 3, 3)
-        ax.plot(
-            x, 100.0 * (head[0, 0, :] - hac) / hac, linewidth=1, color="blue"
-        )
+        ax.plot(x, 100.0 * (head[0, 0, :] - hac) / hac, linewidth=1, color="blue")
         ax.set_xlabel("Horizontal distance, in m")
         ax.set_ylabel("Percent Error")
 

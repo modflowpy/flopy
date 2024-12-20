@@ -34,15 +34,18 @@
 # 10. Three-Dimensional Field Case Study
 
 import os
+import sys
 
 # +
-import sys
+from pathlib import Path
 from pprint import pformat
 from tempfile import TemporaryDirectory
 
+import git
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import pooch
 
 import flopy
 from flopy.utils.util_array import read1d
@@ -51,7 +54,6 @@ mpl.rcParams["figure.figsize"] = (8, 8)
 
 exe_name_mf = "mf2005"
 exe_name_mt = "mt3dms"
-datadir = os.path.join("..", "..", "examples", "data", "mt3d_test", "mt3dms")
 
 # temporary directory
 temp_dir = TemporaryDirectory()
@@ -62,6 +64,28 @@ print(f"numpy version: {np.__version__}")
 print(f"matplotlib version: {mpl.__version__}")
 print(f"flopy version: {flopy.__version__}")
 
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+datadir = data_path / "mt3d_test" / "mt3dms"
+
+file_names = {
+    "p08shead.dat": None,
+    "p10cinit.dat": None,
+    "p10shead.dat": None,
+}
+for fname, fhash in file_names.items():
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/mt3d_test/mt3dms/{fname}",
+        fname=fname,
+        path=data_path / "mt3d_test" / "mt3dms",
+        known_hash=None,
+    )
 
 # -
 
@@ -1314,9 +1338,7 @@ mx = flopy.plot.PlotCrossSection(ax=ax, model=mf, line={"row": 0})
 mx.plot_array(hk, masked_values=[hk[0, 0, 0]], alpha=0.2)
 mx.plot_ibound()
 mx.plot_grid(color="0.5", alpha=0.2)
-cs = mx.contour_array(
-    conc[3], levels=[0.05, 0.1, 0.15, 0.19], masked_values=[1.0e30]
-)
+cs = mx.contour_array(conc[3], levels=[0.05, 0.1, 0.15, 0.19], masked_values=[1.0e30])
 ax.set_title("TIME = 20 YEARS")
 
 
@@ -1525,9 +1547,7 @@ def p10(dirname, mixelm, perlen=1000, isothm=1, sp2=0.0, ttsmult=1.2):
     nrow = 61
     ncol = 40
     delr = (
-        [2000, 1600, 800, 400, 200, 100]
-        + 28 * [50]
-        + [100, 200, 400, 800, 1600, 2000]
+        [2000, 1600, 800, 400, 200, 100] + 28 * [50] + [100, 200, 400, 800, 1600, 2000]
     )
     delc = (
         [2000, 2000, 2000, 1600, 800, 400, 200, 100]
@@ -1661,9 +1681,7 @@ def p10(dirname, mixelm, perlen=1000, isothm=1, sp2=0.0, ttsmult=1.2):
     )
     dsp = flopy.mt3d.Mt3dDsp(mt, al=al, trpt=trpt, trpv=trpv)
     ssm = flopy.mt3d.Mt3dSsm(mt, crch=0.0)
-    rct = flopy.mt3d.Mt3dRct(
-        mt, isothm=isothm, igetsc=0, rhob=1.7, sp1=0.176, sp2=sp2
-    )
+    rct = flopy.mt3d.Mt3dRct(mt, isothm=isothm, igetsc=0, rhob=1.7, sp1=0.176, sp2=sp2)
     mxiter = 1
     if isothm == 4:
         mxiter = 50
@@ -1774,12 +1792,8 @@ plt.ylabel("CONCENTRATION, IN PPB")
 mf, mt, conctvd, cvttvd, mvt0 = p10("p10", 0, perlen=2000, isothm=0)
 mf, mt, conctvd, cvttvd, mvt1 = p10("p10", 0, perlen=2000, isothm=1)
 mf, mt, conctvd, cvttvd, mvt2 = p10("p10", 0, perlen=2000, isothm=4, sp2=0.1)
-mf, mt, conctvd, cvttvd, mvt3 = p10(
-    "p10", 0, perlen=2000, isothm=4, sp2=1.5e-4
-)
-mf, mt, conctvd, cvttvd, mvt4 = p10(
-    "p10", 0, perlen=2000, isothm=4, sp2=1.0e-6
-)
+mf, mt, conctvd, cvttvd, mvt3 = p10("p10", 0, perlen=2000, isothm=4, sp2=1.5e-4)
+mf, mt, conctvd, cvttvd, mvt4 = p10("p10", 0, perlen=2000, isothm=4, sp2=1.0e-6)
 
 fig = plt.figure(figsize=(10, 8))
 ax = fig.add_subplot(1, 1, 1)

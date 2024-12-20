@@ -273,18 +273,14 @@ class UnstructuredGrid(Grid):
     @property
     def iverts(self):
         if self._iverts is not None:
-            return [
-                [ivt for ivt in t if ivt is not None] for t in self._iverts
-            ]
+            return [[ivt for ivt in t if ivt is not None] for t in self._iverts]
 
     @property
     def verts(self):
         if self._vertices is None:
             return self._vertices
         else:
-            verts = np.array(
-                [list(t)[1:] for t in self._vertices], dtype=float
-            ).T
+            verts = np.array([list(t)[1:] for t in self._vertices], dtype=float).T
             x, y = transform(
                 verts[0],
                 verts[1],
@@ -578,8 +574,7 @@ class UnstructuredGrid(Grid):
                     self._polygons[ilay].append(p)
             else:
                 self._polygons = [
-                    Path(self.get_cell_vertices(nn))
-                    for nn in range(self.ncpl[0])
+                    Path(self.get_cell_vertices(nn)) for nn in range(self.ncpl[0])
                 ]
 
         return copy.copy(self._polygons)
@@ -623,12 +618,12 @@ class UnstructuredGrid(Grid):
         reset = kwargs.pop("reset", False)
         if method == "iac":
             if self._neighbors is None or reset:
-                neighors = {}
+                neighbors = {}
                 idx0 = 0
                 for node, ia in enumerate(self._iac):
                     idx1 = idx0 + ia
-                    neighors[node] = list(self._ja[idx0 + 1 : idx1])
-                self._neighbors = neighors
+                    neighbors[node] = list(self._ja[idx0 + 1 : idx1])
+                self._neighbors = neighbors
             if node is not None:
                 return self._neighbors[node]
             else:
@@ -650,10 +645,7 @@ class UnstructuredGrid(Grid):
         """
         if self.is_complete:
             return UnstructuredGrid(
-                vertices=[
-                    [i[0], i[1] * factor, i[2] * factor]
-                    for i in self._vertices
-                ],
+                vertices=[[i[0], i[1] * factor, i[2] * factor] for i in self._vertices],
                 iverts=self._iverts,
                 xcenters=self._xc * factor,
                 ycenters=self._yc * factor,
@@ -665,9 +657,7 @@ class UnstructuredGrid(Grid):
                 angrot=self.angrot,
             )
         else:
-            raise AssertionError(
-                "Grid is not complete and cannot be converted"
-            )
+            raise AssertionError("Grid is not complete and cannot be converted")
 
     def clean_iverts(self, inplace=False):
         """
@@ -691,9 +681,7 @@ class UnstructuredGrid(Grid):
                 if vert in vset:
                     vset[vert].add(rec[0])
                 else:
-                    vset[vert] = {
-                        rec[0],
-                    }
+                    vset[vert] = {rec[0]}
 
             cnt = 0
             ivert_remap = {}
@@ -877,9 +865,7 @@ class UnstructuredGrid(Grid):
             xvertices = xvertxform
             yvertices = yvertxform
 
-        self._cache_dict[cache_index_cc] = CachedData(
-            [xcenters, ycenters, zcenters]
-        )
+        self._cache_dict[cache_index_cc] = CachedData([xcenters, ycenters, zcenters])
         self._cache_dict[cache_index_vert] = CachedData(
             [xvertices, yvertices, zvertices]
         )
@@ -1149,9 +1135,7 @@ class UnstructuredGrid(Grid):
         with open(file_path) as file:
 
             def split_line():
-                return [
-                    head.upper() for head in file.readline().strip().split()
-                ]
+                return [head.upper() for head in file.readline().strip().split()]
 
             header = split_line()
             while header[0][0] == "#":
@@ -1191,16 +1175,12 @@ class UnstructuredGrid(Grid):
                 verts_provided = len(line) - 6
                 if verts_declared != verts_provided:
                     raise ValueError(
-                        f"Cell {nn} declares {verts_declared} vertices but provides {verts_provided}"
+                        f"Cell {nn} declares {verts_declared} vertices "
+                        f"but provides {verts_provided}"
                     )
 
-                verts = [
-                    int(vert) - 1 for vert in line[6 : 6 + verts_declared]
-                ]
-                elevs = [
-                    zverts[int(line[i]) - 1]
-                    for i in range(6, 6 + verts_declared)
-                ]
+                verts = [int(vert) - 1 for vert in line[6 : 6 + verts_declared]]
+                elevs = [zverts[int(line[i]) - 1] for i in range(6, 6 + verts_declared)]
 
                 xcenters.append(xc)
                 ycenters.append(yc)

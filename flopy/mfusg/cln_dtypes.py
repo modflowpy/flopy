@@ -58,10 +58,7 @@ class MfUsgClnDtypes:
                     ("ifcon", int),  # index of connectivity equation
                     ("fskin", np.float32),  # leakance across a skin
                     ("flengw", np.float32),  # length of connection
-                    (
-                        "faniso",
-                        np.float32,
-                    ),  # anisotropy or thickness of sediments
+                    ("faniso", np.float32),  # anisotropy or thickness of sediments
                     ("icgwadi", int),  # flag of vertical flow correction
                 ]
             )
@@ -73,10 +70,7 @@ class MfUsgClnDtypes:
                     ("ifcon", int),  # index of connectivity equation
                     ("fskin", np.float32),  # leakance across a skin
                     ("flengw", np.float32),  # length of connection
-                    (
-                        "faniso",
-                        np.float32,
-                    ),  # anisotropy or thickness of sediments
+                    ("faniso", np.float32),  # anisotropy or thickness of sediments
                     ("icgwadi", int),  # flag of vertical flow correction
                 ]
             )
@@ -100,16 +94,10 @@ class MfUsgClnDtypes:
                 [
                     ("iconduityp", int),  # index of circular conduit type
                     ("frad", np.float32),  # radius
-                    (
-                        "conduitk",
-                        np.float32,
-                    ),  # conductivity or resistance factor
+                    ("conduitk", np.float32),  # conductivity or resistance factor
                     ("tcond", np.float32),  # thermal conductivity of bhe tube
                     ("tthk", np.float32),  # thickness
-                    (
-                        "tcfluid",
-                        np.float32,
-                    ),  # thermal conductivity of the fluid
+                    ("tcfluid", np.float32),  # thermal conductivity of the fluid
                     ("tconv", np.float32),  # thermal convective coefficient
                 ]
             )
@@ -118,10 +106,7 @@ class MfUsgClnDtypes:
                 [
                     ("iconduityp", int),  # index of circular conduit type
                     ("frad", np.float32),  # radius
-                    (
-                        "conduitk",
-                        np.float32,
-                    ),  # conductivity or resistance factor
+                    ("conduitk", np.float32),  # conductivity or resistance factor
                 ]
             )
         return dtype
@@ -145,10 +130,7 @@ class MfUsgClnDtypes:
                     ("irectyp", int),  # index of rectangular conduit type
                     ("flength", np.float32),  # width
                     ("fheight", np.float32),  # height
-                    (
-                        "conduitk",
-                        np.float32,
-                    ),  # conductivity or resistance factor
+                    ("conduitk", np.float32),  # conductivity or resistance factor
                     ("tcond", np.float32),  # thermal conductivity of bhe tube
                     ("tthk", np.float32),  # thickness of bhe tube
                     ("tcfluid", np.float32),  # thermal conductivity of fluid
@@ -161,10 +143,7 @@ class MfUsgClnDtypes:
                     ("irectyp", int),  # index of rectangular conduit type
                     ("flength", np.float32),  # width
                     ("fheight", np.float32),  # height
-                    (
-                        "conduitk",
-                        np.float32,
-                    ),  # conductivity or resistance factor
+                    ("conduitk", np.float32),  # conductivity or resistance factor
                 ]
             )
         return dtype

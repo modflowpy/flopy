@@ -2,7 +2,6 @@ import re
 from importlib import metadata
 from pathlib import Path
 from platform import system
-from typing import List
 
 import matplotlib.pyplot as plt
 import pytest
@@ -52,7 +51,7 @@ def flopy_data_path() -> Path:
 
 
 @pytest.fixture(scope="session")
-def example_shapefiles(example_data_path) -> List[Path]:
+def example_shapefiles(example_data_path) -> list[Path]:
     return [f.resolve() for f in (example_data_path / "prj_test").glob("*")]
 
 
@@ -72,8 +71,8 @@ def close_plot(request):
 
 @pytest.fixture(scope="session", autouse=True)
 def patch_macos_ci_matplotlib():
-    # use noninteractive matplotlib backend if in Mac OS CI to avoid pytest-xdist node failure
-    # e.g. https://github.com/modflowpy/flopy/runs/7748574375?check_suite_focus=true#step:9:57
+    # use noninteractive matplotlib backend if in Mac OS CI to avoid pytest-xdist
+    # node failure
     if is_in_ci() and system().lower() == "darwin":
         import matplotlib
 
@@ -87,7 +86,7 @@ def patch_macos_ci_matplotlib():
 def pytest_runtest_makereport(item, call):
     # this is necessary so temp dir fixtures can
     # inspect test results and check for failure
-    # (see https://doc.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures)
+    # (see https://doc.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures)  # noqa
 
     outcome = yield
     rep = outcome.get_result()
@@ -102,8 +101,9 @@ def pytest_addoption(parser):
         "--show-plots",
         action="store_true",
         default=False,
-        help="Show any figure windows created by test cases. (Useful to display plots for visual inspection, "
-        "but automated tests should probably also check patch collections or figure & axis properties.)",
+        help="Show any figure windows created by test cases. (Useful to display "
+        "plots for visual inspection, but automated tests should probably also "
+        "check patch collections or figure & axis properties.)",
     )
 
     # for test_generate_classes.py
@@ -111,7 +111,8 @@ def pytest_addoption(parser):
         "--ref",
         action="append",
         type=str,
-        help="Include extra refs to test. Useful for testing branches on a fork, e.g. <your GitHub username>/modflow6/<your branch>.",
+        help="Include extra refs to test. Useful for testing branches on a fork, "
+        "e.g. <your GitHub username>/modflow6/<your branch>.",
     )
 
 
@@ -157,7 +158,5 @@ def pytest_report_header(config):
         if installed:
             lines.append(f"{optional} packages: {', '.join(installed)}")
         if not_found:
-            lines.append(
-                f"{optional} packages not found: {', '.join(not_found)}"
-            )
+            lines.append(f"{optional} packages not found: {', '.join(not_found)}")
     return "\n".join(lines)

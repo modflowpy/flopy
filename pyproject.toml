@@ -20,14 +20,14 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Hydrology",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "numpy>=1.20.3",
     "matplotlib >=1.4.0",
@@ -36,14 +36,11 @@ dependencies = [
 dynamic = ["version", "readme"]
 
 [project.optional-dependencies]
-dev = ["flopy[lint,test,optional,doc]"]
-lint = [
-    "cffconvert",
-    "ruff"
-]
+dev = ["flopy[lint,test,optional,doc]", "tach"]
+lint = ["cffconvert", "codespell[toml] >=2.2.2", "ruff"]
 test = [
     "flopy[lint]",
-    "coverage",
+    "coverage !=7.6.5",
     "flaky",
     "filelock",
     "jupyter",
@@ -65,8 +62,10 @@ optional = [
     "fiona",
     "geojson",
     "geopandas",
+    "GitPython",
     "imageio",
     "netcdf4",
+    "pooch",
     "pymetis ; platform_system != 'Windows'",
     "pyproj",
     "pyshp",
@@ -74,7 +73,7 @@ optional = [
     "rasterio",
     "rasterstats",
     "scipy",
-    "shapely >=1.8",
+    "shapely >=2.0",
     "vtk",
     "xmipy",
 ]
@@ -116,8 +115,7 @@ include = ["flopy", "flopy.*"]
 "flopy.plot" = ["mplstyle/*.mplstyle"]
 
 [tool.ruff]
-line-length = 79
-target-version = "py38"
+line-length = 88
 include = [
     "pyproject.toml",
     "flopy/**/*.py",
@@ -130,16 +128,23 @@ extend-include = [
     "examples/**/*.ipynb"
 ]
 
+[tool.ruff.format]
+exclude = [
+    "flopy/mf6/**/*.py",
+]
+
 [tool.ruff.lint]
 select = [
+    "C4",   # flake8 comprehensions
     "D409", # pydocstyle - section-underline-matches-section-length
     "E",    # pycodestyle error
     "F",    # Pyflakes
     "I001", # isort - unsorted-imports
+    # "ISC001",  # implicitly concatenated string literals
+    "RUF",  # Ruff-specific rules
 ]
 ignore = [
     "E402", # module level import not at top of file
-    "E501", # line too long TODO FIXME
     "E712", # Avoid equality comparisons to `True`
     "E722", # do not use bare `except`
     "E721", # use `is`/`is not` for type comparisons
@@ -148,6 +153,37 @@ ignore = [
     "F403", # unable to detect undefined names (star imports)
     "F524", # `.format` missing argument(s) for placeholder(s)
     "F811", # Redefinition of unused variable
-    "F821", # undefined name TODO FIXME
     "F841", # local variable assigned but never used
+    "RUF005", # collection literal concatenation
+    "RUF012", # mutable class default
+    "RUF017", # quadratic-list-summation
+]
+
+[tool.ruff.lint.per-file-ignores]
+".docs/**/*.py" = ["E501"]
+"flopy/mf6/**/*.py" = ["C4", "E", "F", "ISC", "RUF"]
+
+[tool.codespell]
+skip = "cliff.toml,./examples/data/*"
+ignore-words-list = [
+    "alltime",
+    "dum",
+    "inout",
+    "intot",
+    "delt",
+    "gage",
+    "gages",
+    "datbase",
+    "wel",
+    "nam",
+    "lke",
+    "ist",
+    "ninj",
+    "drob",
+    "thck",
+    "vor",
+    "yur",
+    "localy",
+    "vertx",
+    "nd",
 ]

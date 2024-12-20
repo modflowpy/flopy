@@ -65,16 +65,12 @@ def test_resolve_exe_by_rel_path(function_tmpdir, use_ext, forgive):
         assert actual.lower() == expected
         assert which(actual)
 
-        # check behavior if exe DNE
-        with pytest.warns(UserWarning) if forgive else pytest.raises(
-            FileNotFoundError
-        ):
+        # check behavior if exe does not exist
+        with pytest.warns(UserWarning) if forgive else pytest.raises(FileNotFoundError):
             assert not resolve_exe("../bin/mf2005", forgive)
 
 
-def test_run_model_when_namefile_not_in_model_ws(
-    mf6_model_path, function_tmpdir
-):
+def test_run_model_when_namefile_not_in_model_ws(mf6_model_path, function_tmpdir):
     # copy input files to temp workspace
     ws = function_tmpdir / "ws"
     copytree(mf6_model_path, ws)
@@ -171,9 +167,7 @@ def test_run_model_exe_rel_path(mf6_model_path, function_tmpdir, use_ext):
         relpath_safe(Path(which("mf6") or "")),
     ],
 )
-def test_run_model_custom_print(
-    mf6_model_path, function_tmpdir, use_paths, exe
-):
+def test_run_model_custom_print(mf6_model_path, function_tmpdir, use_paths, exe):
     ws = function_tmpdir / "ws"
     copytree(mf6_model_path, ws)
 

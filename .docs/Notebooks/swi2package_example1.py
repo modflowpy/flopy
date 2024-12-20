@@ -150,9 +150,7 @@ else:
 hfile = flopy.utils.HeadFile(os.path.join(ml.model_ws, f"{modelname}.hds"))
 head = hfile.get_alldata()
 # read model zeta
-zfile = flopy.utils.CellBudgetFile(
-    os.path.join(ml.model_ws, f"{modelname}.zta")
-)
+zfile = flopy.utils.CellBudgetFile(os.path.join(ml.model_ws, f"{modelname}.zta"))
 kstpkper = zfile.get_kstpkper()
 zeta = []
 for kk in kstpkper:
@@ -164,12 +162,7 @@ zeta = np.array(zeta)
 plt.figure(figsize=(16, 6))
 # define x-values of xcells and plot interface
 x = np.arange(0, ncol * delr, delr) + delr / 2.0
-label = [
-    "SWI2",
-    "_",
-    "_",
-    "_",
-]  # labels with an underscore are not added to legend
+label = ["SWI2", "_", "_", "_"]  # labels with an underscore are not added to legend
 for i in range(4):
     zt = np.ma.masked_outside(zeta[i, 0, 0, :], -39.99999, -0.00001)
     plt.plot(x, zt, "r-", lw=1, zorder=10, label=label[i])
@@ -212,11 +205,7 @@ modelxsect = flopy.plot.PlotCrossSection(model=ml, line={"Row": 0})
 label = ["SWI2", "_", "_", "_"]
 for k in range(zeta.shape[0]):
     modelxsect.plot_surface(
-        zeta[k, :, :, :],
-        masked_values=[0, -40.0],
-        color="red",
-        lw=1,
-        label=label[k],
+        zeta[k, :, :, :], masked_values=[0, -40.0], color="red", lw=1, label=label[k]
     )
 linecollection = modelxsect.plot_grid()
 ax.set_title("ModelCrossSection.plot_surface()")

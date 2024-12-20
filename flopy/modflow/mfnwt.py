@@ -136,8 +136,8 @@ class ModflowNwt(Package):
         (GMRES) is the number of iterations between restarts of the GMRES
         Solver. (default is 15).
     iacl : int
-        (XMD) is a flag for the acceleration method: 0 is conjugate gradient, 1 is ORTHOMIN,
-        2 is Bi-CGSTAB. (default is 2).
+        (XMD) is a flag for the acceleration method: 0 is conjugate gradient,
+        1 is ORTHOMIN, 2 is Bi-CGSTAB. (default is 2).
     norder : int
         (XMD) is a flag for the scheme of ordering the unknowns: 0 is original
         ordering, 1 is RCM ordering, 2 is Minimum Degree ordering.
@@ -403,9 +403,7 @@ class ModflowNwt(Package):
 
         # dataset 0 -- header
         flines = [
-            line.strip()
-            for line in f.readlines()
-            if not line.strip().startswith("#")
+            line.strip() for line in f.readlines() if not line.strip().startswith("#")
         ]
 
         if openfile:

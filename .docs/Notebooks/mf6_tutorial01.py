@@ -126,11 +126,7 @@ ic = flopy.mf6.ModflowGwfic(gwf, pname="ic", strt=start)
 
 # ### Create the node property flow (`NPF`) Package
 
-npf = flopy.mf6.ModflowGwfnpf(
-    gwf,
-    icelltype=1,
-    k=k,
-)
+npf = flopy.mf6.ModflowGwfnpf(gwf, icelltype=1, k=k)
 
 # ### Create the constant head (`CHD`) Package
 #
@@ -147,10 +143,7 @@ for row_col in range(0, N):
     if row_col != 0 and row_col != N - 1:
         chd_rec.append(((layer, 0, row_col), h1))
         chd_rec.append(((layer, N - 1, row_col), h1))
-chd = flopy.mf6.ModflowGwfchd(
-    gwf,
-    stress_period_data=chd_rec,
-)
+chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chd_rec)
 
 # The `CHD` Package stored the constant heads in a structured array,
 # also called a `numpy.recarray`. We can get a pointer to the recarray
@@ -165,10 +158,7 @@ ra
 # Add a well in model layer 10.
 
 wel_rec = [(Nlay - 1, int(N / 4), int(N / 4), q)]
-wel = flopy.mf6.ModflowGwfwel(
-    gwf,
-    stress_period_data=wel_rec,
-)
+wel = flopy.mf6.ModflowGwfwel(gwf, stress_period_data=wel_rec)
 
 # ### Create the output control (`OC`) Package
 #
@@ -263,11 +253,7 @@ modelmap = flopy.plot.PlotMapView(model=gwf, ax=ax)
 pa = modelmap.plot_array(h, vmin=vmin, vmax=vmax)
 quadmesh = modelmap.plot_bc("CHD")
 linecollection = modelmap.plot_grid(lw=0.5, color="0.5")
-contours = modelmap.contour_array(
-    h,
-    levels=contour_intervals,
-    colors="black",
-)
+contours = modelmap.contour_array(h, levels=contour_intervals, colors="black")
 ax.clabel(contours, fmt="%2.1f")
 cb = plt.colorbar(pa, shrink=0.5, ax=ax)
 # second subplot
@@ -277,11 +263,7 @@ modelmap = flopy.plot.PlotMapView(model=gwf, ax=ax, layer=Nlay - 1)
 linecollection = modelmap.plot_grid(lw=0.5, color="0.5")
 pa = modelmap.plot_array(h, vmin=vmin, vmax=vmax)
 quadmesh = modelmap.plot_bc("CHD")
-contours = modelmap.contour_array(
-    h,
-    levels=contour_intervals,
-    colors="black",
-)
+contours = modelmap.contour_array(h, levels=contour_intervals, colors="black")
 ax.clabel(contours, fmt="%2.1f")
 cb = plt.colorbar(pa, shrink=0.5, ax=ax)
 
@@ -292,19 +274,11 @@ cb = plt.colorbar(pa, shrink=0.5, ax=ax)
 fig, ax = plt.subplots(1, 1, figsize=(9, 3), constrained_layout=True)
 # first subplot
 ax.set_title("Row 25")
-modelmap = flopy.plot.PlotCrossSection(
-    model=gwf,
-    ax=ax,
-    line={"row": int(N / 4)},
-)
+modelmap = flopy.plot.PlotCrossSection(model=gwf, ax=ax, line={"row": int(N / 4)})
 pa = modelmap.plot_array(h, vmin=vmin, vmax=vmax)
 quadmesh = modelmap.plot_bc("CHD")
 linecollection = modelmap.plot_grid(lw=0.5, color="0.5")
-contours = modelmap.contour_array(
-    h,
-    levels=contour_intervals,
-    colors="black",
-)
+contours = modelmap.contour_array(h, levels=contour_intervals, colors="black")
 ax.clabel(contours, fmt="%2.1f")
 cb = plt.colorbar(pa, shrink=0.5, ax=ax)
 
@@ -318,9 +292,7 @@ cb = plt.colorbar(pa, shrink=0.5, ax=ax)
 #
 # First extract the `FLOW-JA-FACE` array from the cell-by-cell budget file
 
-flowja = gwf.oc.output.budget().get_data(text="FLOW-JA-FACE", kstpkper=(0, 0))[
-    0
-]
+flowja = gwf.oc.output.budget().get_data(text="FLOW-JA-FACE", kstpkper=(0, 0))[0]
 
 # Next extract the flow residual. The MODFLOW 6 binary grid file is passed
 # into the function because it contains the ia array that defines
@@ -337,11 +309,7 @@ modelmap = flopy.plot.PlotMapView(model=gwf, ax=ax, layer=Nlay - 1)
 pa = modelmap.plot_array(residual)
 quadmesh = modelmap.plot_bc("CHD")
 linecollection = modelmap.plot_grid(lw=0.5, color="0.5")
-contours = modelmap.contour_array(
-    h,
-    levels=contour_intervals,
-    colors="black",
-)
+contours = modelmap.contour_array(h, levels=contour_intervals, colors="black")
 ax.clabel(contours, fmt="%2.1f")
 plt.colorbar(pa, shrink=0.5)
 

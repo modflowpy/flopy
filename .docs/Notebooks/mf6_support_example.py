@@ -54,7 +54,19 @@ from pathlib import Path
 from shutil import copyfile
 from tempfile import TemporaryDirectory
 
+import git
+import pooch
+
 proj_root = Path.cwd().parent.parent
+
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
 
 import flopy
 
@@ -172,22 +184,9 @@ layer_storage_types = [
     flopy.mf6.data.mfdatastorage.DataStorageType.internal_array,
     flopy.mf6.data.mfdatastorage.DataStorageType.internal_constant,
 ]
-k_template = flopy.mf6.ModflowGwfnpf.k.empty(
-    model, True, layer_storage_types, 100.0
-)
+k_template = flopy.mf6.ModflowGwfnpf.k.empty(model, True, layer_storage_types, 100.0)
 # change the value of the second layer to 50.0
-k_template[0]["data"] = [
-    65.0,
-    60.0,
-    55.0,
-    50.0,
-    45.0,
-    40.0,
-    35.0,
-    30.0,
-    25.0,
-    20.0,
-]
+k_template[0]["data"] = [65.0, 60.0, 55.0, 50.0, 45.0, 40.0, 35.0, 30.0, 25.0, 20.0]
 k_template[0]["factor"] = 1.5
 print(k_template)
 # create npf package using the k template to define k
@@ -257,9 +256,14 @@ ic_package = flopy.mf6.ModflowGwfic(
     model, pname="ic", strt=strt, filename=f"{model_name}.ic"
 )
 # move external file data into model folder
-icv_data_path = os.path.join(
-    "..", "..", "examples", "data", "mf6", "notebooks", "iconvert.txt"
+fname = "iconvert.txt"
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/mf6/notebooks/{fname}",
+    fname=fname,
+    path=data_path / "mf6" / "notebooks",
+    known_hash=None,
 )
+icv_data_path = data_path / "mf6" / "notebooks" / fname
 copyfile(icv_data_path, os.path.join(sim_path, "iconvert.txt"))
 # create storage package
 sto_package = flopy.mf6.ModflowGwfsto(
@@ -392,9 +396,7 @@ stress_period_data = {
     0: {"filename": "chd_sp1.dat", "data": [[(0, 0, 0), 70.0]]},
     1: [[(0, 0, 0), 60.0]],
 }
-chd = flopy.mf6.ModflowGwfchd(
-    model, maxbound=1, stress_period_data=stress_period_data
-)
+chd = flopy.mf6.ModflowGwfchd(model, maxbound=1, stress_period_data=stress_period_data)
 
 # ## Packages that Support both List-based and Array-based Data
 #
@@ -568,9 +570,7 @@ print(f"Data with new factor:\n{hk.array}\n")
 # Data can be modified in several ways.  One way is to set data for a given layer within a LayerStorage object, like the one accessed in the code above.  Another way is to set the data attribute to the new data.  Yet another way is to call the data object's set_data method.
 
 # set data within a LayerStorage object
-hk_layer_one.set_data(
-    [120.0, 100.0, 80.0, 70.0, 60.0, 50.0, 40.0, 30.0, 25.0, 20.0]
-)
+hk_layer_one.set_data([120.0, 100.0, 80.0, 70.0, 60.0, 50.0, 40.0, 30.0, 25.0, 20.0])
 print(f"New HK data no factor:\n{hk.get_data()}\n")
 # set data attribute to new data
 ic_package.strt = 150.0

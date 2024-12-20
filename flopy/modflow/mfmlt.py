@@ -204,10 +204,7 @@ class ModflowMlt(Package):
             )
 
         return cls(
-            model,
-            mult_dict=mult_dict,
-            unitnumber=unitnumber,
-            filenames=filenames,
+            model, mult_dict=mult_dict, unitnumber=unitnumber, filenames=filenames
         )
 
     @staticmethod

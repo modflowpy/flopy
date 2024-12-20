@@ -338,9 +338,7 @@ class ModflowOc(Package):
         if dis is None:
             dis = self.parent.get_package("DISU")
         if dis is None:
-            chk._add_to_summary(
-                "Error", package="OC", desc="DIS package not available"
-            )
+            chk._add_to_summary("Error", package="OC", desc="DIS package not available")
         else:
             # generate possible actions expected
             expected_actions = []
@@ -569,9 +567,7 @@ class ModflowOc(Package):
         for pp in self.parent.packagelist:
             if hasattr(pp, "ipakcb"):
                 pp.ipakcb = self.iubud
-                self.parent.add_output_file(
-                    pp.ipakcb, fname=fname, package=pp.name
-                )
+                self.parent.add_output_file(pp.ipakcb, fname=fname, package=pp.name)
 
         return
 
@@ -689,9 +685,7 @@ class ModflowOc(Package):
         return ihedun, fhead, iddnun, fddn
 
     @classmethod
-    def load(
-        cls, f, model, nper=None, nstp=None, nlay=None, ext_unit_dict=None
-    ):
+    def load(cls, f, model, nper=None, nstp=None, nlay=None, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -888,7 +882,8 @@ class ModflowOc(Package):
                 if line[0] == "#":
                     continue
 
-                # added by JJS 12/12/14 to avoid error when there is a blank line in the OC file
+                # added by JJS 12/12/14 to avoid error when there is a
+                # blank line in the OC file
                 if lnlst == []:
                     continue
                 # end add

@@ -70,6 +70,9 @@ jobs:
       - name: Check format
         run: ruff format . --check
 
+      - name: Check spelling
+        run: codespell
+
       - name: Check CITATION.cff
         run: |
           cffconvert --validate
@@ -121,7 +124,7 @@ jobs:
       
       - name: Upload coverage
         if: github.repository_owner == 'modflowpy' && (github.event_name == 'push' || github.event_name == 'pull_request')
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           files: autotest/coverage.xml
 
@@ -133,11 +136,11 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-        python-version: [ 3.8, 3.9, "3.10", "3.11", "3.12" ]
+        python-version: [ 3.9, "3.10", "3.11", "3.12" ]
     defaults:
       run:
         shell: bash -l {0}
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
 
       - name: Checkout repo
@@ -181,9 +184,12 @@ jobs:
         working-directory: autotest
         run: |
           pytest -v -m="not example" -n=auto --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed --dist loadfile
-          coverage report
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Report coverage
+        working-directory: autotest
+        run: coverage report
 
       - name: Upload failed test outputs
         uses: actions/upload-artifact@v4
@@ -194,6 +200,6 @@ jobs:
 
       - name: Upload coverage
         if: github.repository_owner == 'modflowpy' && (github.event_name == 'push' || github.event_name == 'pull_request')
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           files: autotest/coverage.xml

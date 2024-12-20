@@ -302,41 +302,31 @@ class ModflowUzf1(Package):
 
     """
 
-    _options = dict(
-        [
-            ("specifythtr", OptionBlock.simple_flag),
-            ("specifythti", OptionBlock.simple_flag),
-            ("nosurfleak", OptionBlock.simple_flag),
-            ("specifysurfk", OptionBlock.simple_flag),
-            ("rejectsurfk", OptionBlock.simple_flag),
-            ("seepsurfk", OptionBlock.simple_flag),
-            ("capillaryuzet", OptionBlock.simple_flag),
-            (
-                "etsquare",
-                {
-                    OptionBlock.dtype: np.bool_,
-                    OptionBlock.nested: True,
-                    OptionBlock.n_nested: 1,
-                    OptionBlock.vars: {"smoothfact": OptionBlock.simple_float},
-                },
-            ),
-            (
-                "netflux",
-                {
-                    OptionBlock.dtype: np.bool_,
-                    OptionBlock.nested: True,
-                    OptionBlock.n_nested: 2,
-                    OptionBlock.vars: dict(
-                        [
-                            ("unitrech", OptionBlock.simple_int),
-                            ("unitdis", OptionBlock.simple_int),
-                        ]
-                    ),
-                },
-            ),
-            ("savefinf", OptionBlock.simple_flag),
-        ]
-    )
+    _options = {
+        "specifythtr": OptionBlock.simple_flag,
+        "specifythti": OptionBlock.simple_flag,
+        "nosurfleak": OptionBlock.simple_flag,
+        "specifysurfk": OptionBlock.simple_flag,
+        "rejectsurfk": OptionBlock.simple_flag,
+        "seepsurfk": OptionBlock.simple_flag,
+        "capillaryuzet": OptionBlock.simple_flag,
+        "etsquare": {
+            OptionBlock.dtype: np.bool_,
+            OptionBlock.nested: True,
+            OptionBlock.n_nested: 1,
+            OptionBlock.vars: {"smoothfact": OptionBlock.simple_float},
+        },
+        "netflux": {
+            OptionBlock.dtype: np.bool_,
+            OptionBlock.nested: True,
+            OptionBlock.n_nested: 2,
+            OptionBlock.vars: {
+                "unitrech": OptionBlock.simple_int,
+                "unitdis": OptionBlock.simple_int,
+            },
+        },
+        "savefinf": OptionBlock.simple_flag,
+    }
 
     def __init__(
         self,
@@ -521,9 +511,7 @@ class ModflowUzf1(Package):
 
         # Data Set 2
         # IUZFBND (NCOL, NROW) -- U2DINT
-        self.iuzfbnd = Util2d(
-            model, (nrow, ncol), np.int32, iuzfbnd, name="iuzfbnd"
-        )
+        self.iuzfbnd = Util2d(model, (nrow, ncol), np.int32, iuzfbnd, name="iuzfbnd")
 
         # If IRUNFLG > 0: Read item 3
         # Data Set 3
@@ -540,9 +528,7 @@ class ModflowUzf1(Package):
             self.vks = Util2d(model, (nrow, ncol), np.float32, vks, name="vks")
 
         if seepsurfk or specifysurfk:
-            self.surfk = Util2d(
-                model, (nrow, ncol), np.float32, surfk, name="surfk"
-            )
+            self.surfk = Util2d(model, (nrow, ncol), np.float32, surfk, name="surfk")
 
         if iuzfopt > 0:
             # Data Set 5
@@ -550,20 +536,14 @@ class ModflowUzf1(Package):
             self.eps = Util2d(model, (nrow, ncol), np.float32, eps, name="eps")
             # Data Set 6a
             # THTS (NCOL, NROW) -- U2DREL
-            self.thts = Util2d(
-                model, (nrow, ncol), np.float32, thts, name="thts"
-            )
+            self.thts = Util2d(model, (nrow, ncol), np.float32, thts, name="thts")
             # Data Set 6b
             # THTS (NCOL, NROW) -- U2DREL
             if self.specifythtr > 0:
-                self.thtr = Util2d(
-                    model, (nrow, ncol), np.float32, thtr, name="thtr"
-                )
+                self.thtr = Util2d(model, (nrow, ncol), np.float32, thtr, name="thtr")
             # Data Set 7
             # [THTI (NCOL, NROW)] -- U2DREL
-            self.thti = Util2d(
-                model, (nrow, ncol), np.float32, thti, name="thti"
-            )
+            self.thti = Util2d(model, (nrow, ncol), np.float32, thti, name="thti")
 
         # Data Set 8
         # {IFTUNIT: [IUZROW, IUZCOL, IUZOPT]}
@@ -572,15 +552,11 @@ class ModflowUzf1(Package):
         # Dataset 9, 11, 13 and 15 will be written automatically in the
         # write_file function
         # Data Set 10
-        # [FINF (NCOL, NROW)] – U2DREL
+        # [FINF (NCOL, NROW)] - U2DREL
 
-        self.finf = Transient2d(
-            model, (nrow, ncol), np.float32, finf, name="finf"
-        )
+        self.finf = Transient2d(model, (nrow, ncol), np.float32, finf, name="finf")
         if ietflg > 0:
-            self.pet = Transient2d(
-                model, (nrow, ncol), np.float32, pet, name="pet"
-            )
+            self.pet = Transient2d(model, (nrow, ncol), np.float32, pet, name="pet")
             self.extdp = Transient2d(
                 model, (nrow, ncol), np.float32, extdp, name="extdp"
             )
@@ -696,10 +672,7 @@ class ModflowUzf1(Package):
         f_uzf.write(f"{self.heading}\n")
 
         # Dataset 1a
-        if (
-            isinstance(self.options, OptionBlock)
-            and self.parent.version == "mfnwt"
-        ):
+        if isinstance(self.options, OptionBlock) and self.parent.version == "mfnwt":
             self.options.update_from_package(self)
             self.options.write_options(f_uzf)
 
@@ -708,7 +681,9 @@ class ModflowUzf1(Package):
 
         # Dataset 1b
         if self.iuzfopt > 0:
-            comment = " #NUZTOP IUZFOPT IRUNFLG IETFLG ipakcb IUZFCB2 NTRAIL NSETS NUZGAGES"
+            comment = (
+                " #NUZTOP IUZFOPT IRUNFLG IETFLG ipakcb IUZFCB2 NTRAIL NSETS NUZGAGES"
+            )
             f_uzf.write(
                 "{:10d}{:10d}{:10d}{:10d}{:10d}{:10d}{:10d}{:10d}{:10d}{:15.6E}{:100s}\n".format(
                     self.nuztop,
@@ -765,10 +740,7 @@ class ModflowUzf1(Package):
                 f_uzf.write(self.thtr.get_file_entry())
             # Data Set 7
             # [THTI (NCOL, NROW)] -- U2DREL
-            if (
-                not self.parent.get_package("DIS").steady[0]
-                or self.specifythti > 0.0
-            ):
+            if not self.parent.get_package("DIS").steady[0] or self.specifythti > 0.0:
                 f_uzf.write(self.thti.get_file_entry())
         # If NUZGAG>0: Item 8 is repeated NUZGAG times
         # Data Set 8
@@ -803,11 +775,7 @@ class ModflowUzf1(Package):
                 write_transient("extdp")
                 if self.iuzfopt > 0:
                     write_transient("extwc")
-            if (
-                self.capillaryuzet
-                and "nwt" in self.parent.version
-                and self.iuzfopt > 0
-            ):
+            if self.capillaryuzet and "nwt" in self.parent.version and self.iuzfopt > 0:
                 write_transient("air_entry")
                 write_transient("hroot")
                 write_transient("rootact")

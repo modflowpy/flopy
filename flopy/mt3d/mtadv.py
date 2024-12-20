@@ -232,27 +232,17 @@ class Mt3dAdv(Package):
         """
         f_adv = open(self.fn_path, "w")
         f_adv.write(
-            "%10i%10f%10i%10i\n"
-            % (self.mixelm, self.percel, self.mxpart, self.nadvfd)
+            "%10i%10f%10i%10i\n" % (self.mixelm, self.percel, self.mxpart, self.nadvfd)
         )
         if self.mixelm > 0:
             f_adv.write("%10i%10f\n" % (self.itrack, self.wd))
         if (self.mixelm == 1) or (self.mixelm == 3):
             f_adv.write(
                 "%10.4e%10i%10i%10i%10i%10i\n"
-                % (
-                    self.dceps,
-                    self.nplane,
-                    self.npl,
-                    self.nph,
-                    self.npmin,
-                    self.npmax,
-                )
+                % (self.dceps, self.nplane, self.npl, self.nph, self.npmin, self.npmax)
             )
         if (self.mixelm == 2) or (self.mixelm == 3):
-            f_adv.write(
-                "%10i%10i%10i\n" % (self.interp, self.nlsink, self.npsink)
-            )
+            f_adv.write("%10i%10i%10i\n" % (self.interp, self.nlsink, self.npsink))
         if self.mixelm == 3:
             f_adv.write("%10f\n" % (self.dchmoc))
         f_adv.close()

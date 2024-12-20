@@ -284,14 +284,11 @@ class SeawatVdf(Package):
 
         elif self.mtdnconc == -1:
             f_vdf.write(
-                "%10.4f%10.4f%10.4f\n"
-                % (self.denseref, self.drhodprhd, self.prhdref)
+                "%10.4f%10.4f%10.4f\n" % (self.denseref, self.drhodprhd, self.prhdref)
             )
             f_vdf.write("%10i\n" % self.nsrhoeos)
             if self.nsrhoeos == 1:
-                f_vdf.write(
-                    "%10i%10.4f%10.4f\n" % (1, self.denseslp, self.crhoref)
-                )
+                f_vdf.write("%10i%10.4f%10.4f\n" % (1, self.denseslp, self.crhoref))
             else:
                 for i in range(self.nsrhoeos):
                     mtrhospec = 1 + i
@@ -467,9 +464,7 @@ class SeawatVdf(Package):
 
             for iper in range(nper):
                 if model.verbose:
-                    print(
-                        f"   loading INDENSE for stress period {iper + 1}..."
-                    )
+                    print(f"   loading INDENSE for stress period {iper + 1}...")
                 line = f.readline()
                 t = line.strip().split()
                 indense = int(t[0])
@@ -477,12 +472,7 @@ class SeawatVdf(Package):
                 if indense > 0:
                     name = f"DENSE_StressPeriod_{iper}"
                     t = Util3d.load(
-                        f,
-                        model,
-                        (nlay, nrow, ncol),
-                        np.float32,
-                        name,
-                        ext_unit_dict,
+                        f, model, (nlay, nrow, ncol), np.float32, name, ext_unit_dict
                     )
                     if indense == 2:
                         t = t.array

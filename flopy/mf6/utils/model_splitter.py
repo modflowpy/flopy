@@ -117,7 +117,7 @@ OBS_ID2_LUT = {
 }
 
 
-class Mf6Splitter(object):
+class Mf6Splitter:
     """
     A class for splitting a single model into a multi-model simulation
 
@@ -172,6 +172,9 @@ class Mf6Splitter(object):
         self._allow_splitting = True
 
         self._fdigits = 1
+
+        # multi-model splitting attr
+        self._multimodel_exchange_gwf_names = {}
 
     @property
     def new_simulation(self):
@@ -372,7 +375,7 @@ class Mf6Splitter(object):
         lak_array = np.zeros((ncpl,), dtype=int)
         laks = []
         hfbs = []
-        for _, package in self._model.package_dict.items():
+        for package in self._model.get_package():
             if isinstance(
                 package,
                 (
@@ -941,6 +944,8 @@ class Mf6Splitter(object):
             new_sim : MFSimulation object
         """
         for pak in self._sim.sim_package_list:
+            if pak.package_abbr in ("gwfgwt", "gwfgwf", "gwfgwe"):
+                continue
             pak_cls = PackageContainer.package_factory(pak.package_abbr, "")
             signature = inspect.signature(pak_cls)
             d = {"simulation": self._new_sim, "loading_package": False}
@@ -1019,6 +1024,7 @@ class Mf6Splitter(object):
             "budgetcsv_filerecord",
             "stage_filerecord",
             "obs_filerecord",
+            "concentration_filerecord",
         ):
             value = value.array
             if value is None:
@@ -2487,7 +2493,7 @@ class Mf6Splitter(object):
                         for mkey, model in self._model_dict.items():
                             idx = np.asarray(new_model2 == mkey).nonzero()
                             tmp_node = new_node2[idx]
-                            cidx = np.asarray((tmp_node != None)).nonzero()  # noqa: E711
+                            cidx = np.asarray(tmp_node != None).nonzero()  # noqa: E711
                             tmp_cellid = model.modelgrid.get_lrc(
                                 tmp_node[cidx].to_list()
                             )
@@ -3009,7 +3015,13 @@ class Mf6Splitter(object):
 
                 elif isinstance(value, mfdatascalar.MFScalarTransient):
                     for mkey in self._model_dict.keys():
-                        mapped_data[mkey][item] = value._data_storage
+                        val_dict = {}
+                        for (
+                            perkey,
+                            data_storage,
+                        ) in value._data_storage.items():
+                            val_dict[perkey] = data_storage.get_data()
+                        mapped_data[mkey][item] = val_dict
                 elif isinstance(value, mfdatascalar.MFScalar):
                     for mkey in self._model_dict.keys():
                         mapped_data[mkey][item] = value.data
@@ -3072,28 +3084,29 @@ class Mf6Splitter(object):
             dict
         """
         d = {}
+        exchange_kwargs = {}
         built = []
         nmodels = list(self._model_dict.keys())
-        if self._model.name_file.newtonoptions is not None:
-            newton = self._model.name_file.newtonoptions.array
-            if isinstance(newton, list):
-                newton = True
-        else:
-            newton = None
+        if hasattr(self._model.name_file, "newtonoptions"):
+            if self._model.name_file.newtonoptions is not None:
+                newton = self._model.name_file.newtonoptions.array
+                if isinstance(newton, list):
+                    exchange_kwargs["newton"] = True
 
-        if self._model.npf.xt3doptions is not None:
-            xt3d = self._model.npf.xt3doptions.array
-            if isinstance(xt3d, list):
-                xt3d = True
-        else:
-            xt3d = None
+        if hasattr(self._model, "npf"):
+            if self._model.npf.xt3doptions is not None:
+                xt3d = self._model.npf.xt3doptions.array
+                if isinstance(xt3d, list):
+                    exchange_kwargs["xt3d"] = True
 
         if self._model_type.lower() == "gwf":
             extension = "gwfgwf"
             exchgcls = modflow.ModflowGwfgwf
+            check_multi_model = False
         elif self._model_type.lower() == "gwt":
             extension = "gwtgwt"
             exchgcls = modflow.ModflowGwtgwt
+            check_multi_model = True
         else:
             raise NotImplementedError()
 
@@ -3111,6 +3124,14 @@ class Mf6Splitter(object):
                     if m1 == m0:
                         continue
                     exchange_data = []
+                    if check_multi_model:
+                        if self._multimodel_exchange_gwf_names:
+                            exchange_kwargs["gwfmodelname1"] = (
+                                self._multimodel_exchange_gwf_names[m0]
+                            )
+                            exchange_kwargs["gwfmodelname2"] = (
+                                self._multimodel_exchange_gwf_names[m1]
+                            )
                     for node0, exg_list in exg_nodes.items():
                         if grid0.idomain[node0] < 1:
                             continue
@@ -3145,9 +3166,9 @@ class Mf6Splitter(object):
                             exgmnameb=mname1,
                             nexg=len(exchange_data),
                             exchangedata=exchange_data,
-                            filename=f"sim_{m0 :0{self._fdigits}d}_{m1 :0{self._fdigits}d}.{extension}",
-                            newton=newton,
-                            xt3d=xt3d,
+                            filename=f"sim_{mname0}_{mname1}.{extension}",
+                            pname=f"{mname0}_{mname1}",
+                            **exchange_kwargs,
                         )
                         d[f"{mname0}_{mname1}"] = exchg
 
@@ -3155,7 +3176,8 @@ class Mf6Splitter(object):
 
             for _, model in self._model_dict.items():
                 # turn off save_specific_discharge if it's on
-                model.npf.save_specific_discharge = None
+                if hasattr(model, "npf"):
+                    model.npf.save_specific_discharge = None
 
         else:
             xc = self._modelgrid.xcellcenters.ravel()
@@ -3164,17 +3186,27 @@ class Mf6Splitter(object):
             for m0, model in self._model_dict.items():
                 exg_nodes = self._new_connections[m0]["external"]
                 for m1 in nmodels:
+                    exchange_data = []
                     if m1 in built:
                         continue
                     if m1 == m0:
                         continue
+
+                    if check_multi_model:
+                        if self._multimodel_exchange_gwf_names:
+                            exchange_kwargs["gwfmodelname1"] = (
+                                self._multimodel_exchange_gwf_names[m0]
+                            )
+                            exchange_kwargs["gwfmodelname2"] = (
+                                self._multimodel_exchange_gwf_names[m1]
+                            )
+
                     modelgrid0 = model.modelgrid
                     modelgrid1 = self._model_dict[m1].modelgrid
                     ncpl0 = modelgrid0.ncpl
                     ncpl1 = modelgrid1.ncpl
                     idomain0 = modelgrid0.idomain
                     idomain1 = modelgrid1.idomain
-                    exchange_data = []
                     for node0, exg_list in exg_nodes.items():
                         for exg in exg_list:
                             if exg[0] != m1:
@@ -3283,9 +3315,9 @@ class Mf6Splitter(object):
                             auxiliary=["ANGLDEGX", "CDIST"],
                             nexg=len(exchange_data),
                             exchangedata=exchange_data,
-                            filename=f"sim_{m0 :0{self._fdigits}d}_{m1 :0{self._fdigits}d}.{extension}",
-                            newton=newton,
-                            xt3d=xt3d,
+                            filename=f"sim_{mname0}_{mname1}.{extension}",
+                            pname=f"{mname0}_{mname1}",
+                            **exchange_kwargs,
                         )
                         d[f"{mname0}_{mname1}"] = exchg
 
@@ -3300,11 +3332,54 @@ class Mf6Splitter(object):
                                 filename=f"{mname0}_{mname1}.mvr",
                             )
 
-                        d[f"{mname0}_{mname1}_mvr"] = exchg
+                            d[f"{mname0}_{mname1}_mvr"] = mvr
 
                 built.append(m0)
 
         return d
+
+    def create_multi_model_exchanges(self, mname0, mname1):
+        """
+        Method to create multi-model exchange packages, e.g., GWF-GWT
+
+        Parameters
+        ----------
+        mname0 :
+        mname1 :
+
+        Returns
+        -------
+
+        """
+        exchange_classes = {
+            "gwfgwt": modflow.ModflowGwfgwt,
+            "gwfgwe": modflow.ModflowGwfgwe,
+        }
+        ml0 = self._new_sim.get_model(mname0)
+        ml1 = self._new_sim.get_model(mname1)
+
+        mtype0 = ml0.model_type[:3]
+        mtype1 = ml1.model_type[:3]
+
+        if mtype0.lower() != "gwf":
+            raise AssertionError(
+                f"GWF must be the first specified type for multimodel "
+                f"exchanges: type supplied {mtype1.upper()} "
+            )
+
+        if mtype1.lower() not in ("gwt", "gwe"):
+            raise NotImplementedError(
+                f"Unsupported exchange type GWF-{mtype1.upper()}"
+            )
+
+        exchangecls = exchange_classes[f"{mtype0}{mtype1}"]
+        filename = f"{mname0}_{mname1}.exg"
+        exchangecls(
+            self._new_sim,
+            exgmnamea=mname0,
+            exgmnameb=mname1,
+            filename=filename,
+        )
 
     def split_model(self, array):
         """
@@ -3364,5 +3439,121 @@ class Mf6Splitter(object):
             self._remap_package(mover, ismvr=True)
 
         epaks = self._create_exchanges()
+
+        return self._new_sim
+
+    def split_multi_model(self, array):
+        """
+        Method to split integrated models such as GWF-GWT or GWF-GWE models.
+        Note: this method will not work to split multiple connected GWF models
+
+        Parameters
+        ----------
+        array : np.ndarray
+            integer array of new model numbers. Array must either be of
+            dimension (NROW, NCOL), (NCPL), or (NNODES for unstructured grid
+            models).
+
+        Returns
+        -------
+            MFSimulation object
+        """
+        if not self._allow_splitting:
+            raise AssertionError(
+                "Mf6Splitter cannot split a model that "
+                "is part of a split simulation"
+            )
+
+        # set number formatting string for file paths
+        array = np.array(array).astype(int)
+        s = str(np.max(array))
+        self._fdigits = len(s)
+
+        # get model names and types, assert that first model is a GWF model
+        model_names = self._sim.model_names
+        models = [self._sim.get_model(mn) for mn in model_names]
+        model_types = [type(ml) for ml in models]
+
+        ix = model_types.index(modflow.ModflowGwf)
+        if ix != 0:
+            idxs = [
+                ix,
+            ] + [idx for idx in range(len(model_names)) if idx != ix]
+            model_names = [model_names[idx] for idx in idxs]
+            models = [models[idx] for idx in idxs]
+            model_types = [model_types[idx] for idx in idxs]
+            self.switch_models(modelname=model_names[0], remap_nodes=True)
+
+        #  assert consistent idomain and modelgrid shapes!
+        shapes = [ml.modelgrid.shape for ml in models]
+        idomains = [ml.modelgrid.idomain for ml in models]
+        gwf_shape = shapes.pop(0)
+        gwf_idomain = idomains.pop(0)
+
+        for ix, shape in enumerate(shapes):
+            idomain = idomains[ix]
+            mname = model_names[ix + 1]
+            if shape != gwf_shape:
+                raise AssertionError(
+                    f"Model {mname} shape {shape} is not consistent with GWF "
+                    f"model shape {gwf_shape}"
+                )
+
+            gwf_inactive = np.where(gwf_idomain == 0)
+            inactive = np.where(idomain == 0)
+            if not np.allclose(inactive, gwf_inactive):
+                raise AssertionError(
+                    f"Model {mname} idomain is not consistent with GWF "
+                    f"model idomain"
+                )
+
+        gwf_base = model_names[0]
+        model_labels = [
+            f"{i :{self._fdigits}d}" for i in sorted(np.unique(array))
+        ]
+
+        self._multimodel_exchange_gwf_names = {
+            int(i): f"{gwf_base}_{i}" for i in model_labels
+        }
+
+        new_sim = self.split_model(array)
+        for mname in model_names[1:]:
+            self.switch_models(modelname=mname, remap_nodes=False)
+            new_sim = self.split_model(array)
+
+        for mbase in model_names[1:]:
+            for label in model_labels:
+                mname0 = f"{gwf_base}_{label}"
+                mname1 = f"{mbase}_{label}"
+                self.create_multi_model_exchanges(mname0, mname1)
+
+        # register models to correct IMS package
+        solution_recarray = self._sim.name_file.solutiongroup.data[0]
+        sln_mname_cols = [
+            i for i in solution_recarray.dtype.names if "slnmnames" in i
+        ]
+        if len(solution_recarray) > 1:
+            # need to associate solutions with solution groups
+            imspkgs = []
+            imspkg_names = []
+            for pkg in new_sim.sim_package_list:
+                if isinstance(pkg, modflow.ModflowIms):
+                    imspkgs.append(pkg)
+                    imspkg_names.append(pkg.filename)
+
+            for record in solution_recarray:
+                fname = record.slnfname
+                ims_ix = imspkg_names.index(fname)
+                ims_obj = imspkgs[ims_ix]
+                mnames = []
+                for col in sln_mname_cols:
+                    mbase = record[col]
+                    if mbase is None:
+                        continue
+
+                    for label in model_labels:
+                        mnames.append(f"{mbase}_{label}")
+
+                new_sim.register_ims_package(ims_obj, mnames)
 
         return self._new_sim

@@ -25,10 +25,12 @@ import os
 import pathlib as pl
 import sys
 
+import git
 import matplotlib as mpl
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
+import pooch
 import shapely
 import yaml
 from shapely.geometry import LineString, Polygon
@@ -70,9 +72,7 @@ def densify_geometry(line, step, keep_internal_nodes=True):
     lines_strings = []
     if keep_internal_nodes:
         for idx in range(1, len(line)):
-            lines_strings.append(
-                shapely.geometry.LineString(line[idx - 1 : idx + 1])
-            )
+            lines_strings.append(shapely.geometry.LineString(line[idx - 1 : idx + 1]))
     else:
         lines_strings = [shapely.geometry.LineString(line)]
 
@@ -96,7 +96,7 @@ def densify_geometry(line, step, keep_internal_nodes=True):
 def set_idomain(grid, boundary):
     ix = GridIntersect(grid, method="vertex", rtree=True)
     result = ix.intersect(Polygon(boundary))
-    idx = [coords for coords in result.cellids]
+    idx = list(result.cellids)
     idx = np.array(idx, dtype=int)
     nr = idx.shape[0]
     if idx.ndim == 1:
@@ -108,9 +108,24 @@ def set_idomain(grid, boundary):
     grid.idomain = idomain
 
 
-geometries = yaml.safe_load(
-    open(pl.Path("../../examples/data/groundwater2023/geometries.yml"))
+# Check if we are in the repository and define the data path.
+
+try:
+    root = pl.Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else pl.Path.cwd()
+folder_name = "groundwater2023"
+fname = "geometries.yml"
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{folder_name}/{fname}",
+    fname=fname,
+    path=data_path / folder_name,
+    known_hash=None,
 )
+
+geometries = yaml.safe_load(open(data_path / folder_name / fname))
 
 # basic figure size
 figwidth = 180  # 90 # mm
@@ -163,7 +178,13 @@ if not os.path.isdir(temp_path):
     os.mkdir(temp_path)
 
 # Load the fine topography that will be sampled
-ascii_file = pl.Path("../../examples/data/geospatial/fine_topo.asc")
+fname = "fine_topo.asc"
+ascii_file = pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/geospatial/{fname}",
+    fname=fname,
+    path=data_path / "geospatial",
+    known_hash=None,
+)
 fine_topo = flopy.utils.Raster.load(ascii_file)
 
 # Define the problem size and extents
@@ -235,14 +256,7 @@ ax = fig.add_subplot()
 pmv = flopy.plot.PlotMapView(modelgrid=struct_grid)
 ax.set_aspect("equal")
 pmv.plot_array(top_sg)
-pmv.plot_array(
-    intersection_sg,
-    masked_values=[
-        0,
-    ],
-    alpha=0.2,
-    cmap="Reds_r",
-)
+pmv.plot_array(intersection_sg, masked_values=[0], alpha=0.2, cmap="Reds_r")
 pmv.plot_grid(lw=0.25, color="0.5")
 cg = pmv.contour_array(top_sg, levels=levels, linewidths=0.3, colors="0.75")
 pmv.plot_inactive()
@@ -262,9 +276,7 @@ dx = dy = 5000
 multiplier = 1.175
 transition = 20000.0
 ncells = 7
-smoothr = [
-    transition * (multiplier - 1.0) / (multiplier ** float(ncells) - 1.0)
-]
+smoothr = [transition * (multiplier - 1.0) / (multiplier ** float(ncells) - 1.0)]
 for i in range(ncells - 1):
     smoothr.append(smoothr[i] * multiplier)
 smooth = smoothr.copy()
@@ -318,17 +330,8 @@ ax = fig.add_subplot()
 pmv = flopy.plot.PlotMapView(modelgrid=struct_vrc_grid)
 ax.set_aspect("equal")
 pmv.plot_array(top_sg_vrc)
-pmv.plot_array(
-    intersection_sg_vrc,
-    masked_values=[
-        0,
-    ],
-    alpha=0.2,
-    cmap="Reds_r",
-)
-cg = pmv.contour_array(
-    top_sg_vrc, levels=levels, linewidths=0.3, colors="0.75"
-)
+pmv.plot_array(intersection_sg_vrc, masked_values=[0], alpha=0.2, cmap="Reds_r")
+cg = pmv.contour_array(top_sg_vrc, levels=levels, linewidths=0.3, colors="0.75")
 pmv.plot_inactive()
 
 ax.plot(bp[:, 0], bp[:, 1], "k-")
@@ -443,14 +446,7 @@ ax = fig.add_subplot()
 pmv = flopy.plot.PlotMapView(modelgrid=struct_gridp, extent=extent)
 pmv.plot_inactive()
 pmv.plot_array(top_ngp, vmin=vmin, vmax=vmax)
-pmv.plot_array(
-    intersection_nested_grid[0],
-    masked_values=[
-        0,
-    ],
-    alpha=0.2,
-    cmap="Reds_r",
-)
+pmv.plot_array(intersection_nested_grid[0], masked_values=[0], alpha=0.2, cmap="Reds_r")
 cgp = pmv.contour_array(top_ngp, levels=levels, linewidths=0.3, colors="0.75")
 pmv.plot_inactive(zorder=100)
 ax.set_aspect("equal")
@@ -459,12 +455,7 @@ pmvc = flopy.plot.PlotMapView(modelgrid=struct_gridc, ax=ax, extent=extent)
 # pmvc.plot_grid()
 pmvc.plot_array(top_ngc, vmin=vmin, vmax=vmax)
 pmvc.plot_array(
-    intersection_nested_grid[1],
-    masked_values=[
-        0,
-    ],
-    alpha=0.2,
-    cmap="Reds_r",
+    intersection_nested_grid[1], masked_values=[0], alpha=0.2, cmap="Reds_r"
 )
 cgc = pmvc.contour_array(top_ngc, levels=levels, linewidths=0.3, colors="0.75")
 
@@ -503,9 +494,7 @@ dis6 = flopy.mf6.ModflowGwfdis(
     delc=dx,
 )
 g = Gridgen(gwf.modelgrid, model_ws=temp_path)
-adpoly = [
-    [[(1000, 1000), (3000, 1000), (3000, 2000), (1000, 2000), (1000, 1000)]]
-]
+adpoly = [[[(1000, 1000), (3000, 1000), (3000, 2000), (1000, 2000), (1000, 1000)]]]
 adpoly = boundary_polygon + [boundary_polygon[0]]
 adpoly = [[adpoly]]
 g.add_refinement_features([lgr_poly], "polygon", 2, range(1))
@@ -540,14 +529,7 @@ fig = plt.figure(figsize=figsize)
 ax = fig.add_subplot()
 pmv = flopy.plot.PlotMapView(modelgrid=quadtree_grid)
 pmv.plot_array(top_qg, ec="0.75")
-pmv.plot_array(
-    intersection_qg,
-    masked_values=[
-        0,
-    ],
-    alpha=0.2,
-    cmap="Reds_r",
-)
+pmv.plot_array(intersection_qg, masked_values=[0], alpha=0.2, cmap="Reds_r")
 cg = pmv.contour_array(top_qg, levels=levels, linewidths=0.3, colors="white")
 pmv.plot_inactive(zorder=100)
 ax.set_aspect("equal")
@@ -570,9 +552,7 @@ for x in struct_gridc.get_xvertices_for_layer(0)[0, :]:
 nodes = np.array(nodes)
 
 # +
-tri = Triangle(
-    maximum_area=5000 * 5000, angle=30, nodes=nodes, model_ws=temp_path
-)
+tri = Triangle(maximum_area=5000 * 5000, angle=30, nodes=nodes, model_ws=temp_path)
 poly = bp
 tri.add_polygon(poly)
 tri.build(verbose=False)
@@ -625,14 +605,7 @@ ax.set_aspect("equal")
 pmv = flopy.plot.PlotMapView(modelgrid=triangular_grid)
 
 pmv.plot_array(top_tg, ec="0.75")
-pmv.plot_array(
-    intersection_tg,
-    masked_values=[
-        0,
-    ],
-    alpha=0.2,
-    cmap="Reds_r",
-)
+pmv.plot_array(intersection_tg, masked_values=[0], alpha=0.2, cmap="Reds_r")
 cg = pmv.contour_array(top_tg, levels=levels, linewidths=0.3, colors="white")
 ax.clabel(cg, cg.levels, inline=True, fmt="%1.0f", fontsize=10)
 
@@ -680,14 +653,7 @@ ax = fig.add_subplot()
 pmv = flopy.plot.PlotMapView(modelgrid=voronoi_grid)
 ax.set_aspect("equal")
 pmv.plot_array(top_vg)
-pmv.plot_array(
-    intersection_vg,
-    masked_values=[
-        0,
-    ],
-    alpha=0.2,
-    cmap="Reds_r",
-)
+pmv.plot_array(intersection_vg, masked_values=[0], alpha=0.2, cmap="Reds_r")
 pmv.plot_inactive()
 ax.plot(bp[:, 0], bp[:, 1], "k-")
 for sg in sgs:
@@ -753,9 +719,7 @@ with styles.USGSMap():
                 gg = grids[idx]
                 tt = topo_grids[idx]
                 for g, t in zip(gg[1:], tt[1:]):
-                    pmvc = flopy.plot.PlotMapView(
-                        modelgrid=g, ax=ax, extent=extent
-                    )
+                    pmvc = flopy.plot.PlotMapView(modelgrid=g, ax=ax, extent=extent)
                     pmvc.plot_array(top_ngc, vmin=vmin, vmax=vmax)
                     pmvc.plot_grid(**grid_dict)
                     cgc = pmvc.contour_array(top_ngc, **contour_dict)
@@ -801,29 +765,10 @@ with styles.USGSMap():
     ax.set_ylim(0, 1)
     ax.set_axis_off()
 
-    ax.axhline(
-        xy0[0],
-        color="black",
-        lw=2,
-        label="Basin boundary",
-    )
-    ax.axhline(
-        xy0[0],
-        **river_dict,
-        label="River",
-    )
-    ax.axhline(
-        xy0[0],
-        color=contour_color,
-        lw=0.5,
-        ls="--",
-        label="Elevation contour",
-    )
-    ax.axhline(
-        xy0[0],
-        label="Grid refinement area",
-        **refinement_dict,
-    )
+    ax.axhline(xy0[0], color="black", lw=2, label="Basin boundary")
+    ax.axhline(xy0[0], **river_dict, label="River")
+    ax.axhline(xy0[0], color=contour_color, lw=0.5, ls="--", label="Elevation contour")
+    ax.axhline(xy0[0], label="Grid refinement area", **refinement_dict)
     ax.axhline(
         xy0[0],
         marker="s",
@@ -856,26 +801,11 @@ with styles.USGSMap():
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.set_axis_off()
-    cax = ax.inset_axes(
-        cbar_axis,
-    )
+    cax = ax.inset_axes(cbar_axis)
     #     cax.set_axisbelow(False)
-    cbar = plt.colorbar(
-        v,
-        orientation="vertical",
-        cax=cax,
-        ticks=[25, 50, 75, 100],
-    )
-    cbar.ax.tick_params(
-        labelsize=5,
-        labelcolor="black",
-        color="black",
-        length=9,
-        pad=2,
-    )
-    cbar.ax.set_title(
-        "Elevation (m)", pad=2.5, loc="center", fontdict=font_dict
-    )
+    cbar = plt.colorbar(v, orientation="vertical", cax=cax, ticks=[25, 50, 75, 100])
+    cbar.ax.tick_params(labelsize=5, labelcolor="black", color="black", length=9, pad=2)
+    cbar.ax.set_title("Elevation (m)", pad=2.5, loc="center", fontdict=font_dict)
 # -
 
 # ### Plot the river intersection for the six grids
@@ -939,12 +869,8 @@ with styles.USGSMap():
                 gg = grids[idx]
                 tt = intersections[idx]
                 for g, t in zip(gg[1:], tt[1:]):
-                    pmvc = flopy.plot.PlotMapView(
-                        modelgrid=g, ax=ax, extent=extent
-                    )
-                    pmvc.plot_array(
-                        t, masked_values=(0,), cmap=intersection_cmap
-                    )
+                    pmvc = flopy.plot.PlotMapView(modelgrid=g, ax=ax, extent=extent)
+                    pmvc.plot_array(t, masked_values=(0,), cmap=intersection_cmap)
                     pmvc.plot_grid(**grid_dict)
 
             # plot lgr polyline
@@ -989,11 +915,7 @@ with styles.USGSMap():
     ax.set_axis_off()
 
     ax.axhline(xy0[0], **river_dict, label="River")
-    ax.axhline(
-        xy0[0],
-        label="Grid refinement area",
-        **refinement_dict,
-    )
+    ax.axhline(xy0[0], label="Grid refinement area", **refinement_dict)
     ax.axhline(
         xy0[0],
         marker="s",

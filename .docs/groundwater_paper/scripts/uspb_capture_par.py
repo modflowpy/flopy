@@ -43,9 +43,7 @@ def load_base_model(klay):
 
 
 def get_baseQ(model):
-    sys.stdout.write(
-        "\nrunning base model to get base head-dependent flow\n\n"
-    )
+    sys.stdout.write("\nrunning base model to get base head-dependent flow\n\n")
     success, report = model.run_model(silent=True, report=True)
     sys.stdout.write(f"Base model run: {report[-3]}\n")
 
@@ -54,9 +52,7 @@ def get_baseQ(model):
         os.path.join(model.model_ws, "DG.cbc"), precision=precision
     )
     v1 = cbcObj.get_data(kstpkper=(0, 0), text="DRAINS", full3D=True)[0]
-    v2 = cbcObj.get_data(kstpkper=(0, 0), text="STREAM LEAKAGE", full3D=True)[
-        0
-    ]
+    v2 = cbcObj.get_data(kstpkper=(0, 0), text="STREAM LEAKAGE", full3D=True)[0]
     v3 = cbcObj.get_data(kstpkper=(0, 0), text="ET", full3D=True)[0]
     return v1.sum() + v2.sum() + v3.sum()
 
@@ -96,20 +92,14 @@ def copy_files(ml, nproc):
                 (1, 99): ["save head", "save budget", "print budget"],
                 (1, 100): [],
             }
-            oc = flopy.modflow.ModflowOc(
-                ml, stress_period_data=stress_period_data
-            )
+            oc = flopy.modflow.ModflowOc(ml, stress_period_data=stress_period_data)
             # write the input files
             ml.write_input()
         else:
             if not os.path.exists(cf_pths[idx]):
                 os.makedirs(cf_pths[idx])
-            filelist = [f for f in os.listdir(cf_pths[0])]
-            sys.stdout.write(
-                "copying files from {} to {}\n".format(
-                    cf_pths[0], cf_pths[idx]
-                )
-            )
+            filelist = list(os.listdir(cf_pths[0]))
+            sys.stdout.write(f"copying files from {cf_pths[0]} to {cf_pths[idx]}\n")
             for f in filelist:
                 if os.path.splitext(f)[1].lower() in exclude:
                     continue
@@ -179,9 +169,7 @@ def cf_model(imod, ion, nmax, k, i, j, Qt, base, hdry):
     sys.stdout.write(f"  model number {imod} working directory: {pth}\n")
     make_well(pth, k, i, j, Qt)
     success, elt = run_model(pth)
-    line = "\nModel run: {} of {} (model number {})\n".format(
-        ion + 1, nmax, imod
-    )
+    line = f"\nModel run: {ion + 1} of {nmax} (model number {imod})\n"
     line += f"  row {i + 1} - col {j + 1}\n"
     line += f"  {elt}\n"
     # get the results
@@ -200,26 +188,18 @@ def cf_model(imod, ion, nmax, k, i, j, Qt, base, hdry):
                 if h[idx, 1] == hdry:
                     v[idx] = np.nan
                 else:
-                    v1 = cbcObj.get_data(
-                        kstpkper=kon, text="DRAINS", full3D=True
-                    )[0]
+                    v1 = cbcObj.get_data(kstpkper=kon, text="DRAINS", full3D=True)[0]
                     v2 = cbcObj.get_data(
                         kstpkper=kon, text="STREAM LEAKAGE", full3D=True
                     )[0]
-                    v3 = cbcObj.get_data(kstpkper=kon, text="ET", full3D=True)[
-                        0
-                    ]
+                    v3 = cbcObj.get_data(kstpkper=kon, text="ET", full3D=True)[0]
                     v[idx] = ((v1.sum() + v2.sum() + v3.sum()) - base) / (-Qt)
         except:
-            line += " Error: Model run: {} of {} (model number {}) - ".format(
-                ion + 1, nmax, imod
-            )
+            line += f" Error: Model run: {ion + 1} of {nmax} (model number {imod}) - "
             line += "could not process model results.\n"
             v[:] = np.nan
     else:
-        line += " Error: Model run: {} of {} (model number {}) ".format(
-            ion + 1, nmax, imod
-        )
+        line += f" Error: Model run: {ion + 1} of {nmax} (model number {imod}) "
         line += "did not execute successfully\n"
         v[:] = np.nan
     sys.stdout.write(line)
@@ -232,15 +212,11 @@ def doit():
     ncores = mp.cpu_count()
     if nproc > ncores:
         sys.stdout.write(
-            "Requested {} cores but only {} cores are available.\n\n\n".format(
-                nproc, ncores
-            )
+            f"Requested {nproc} cores but only {ncores} cores are available.\n\n\n"
         )
     else:
         sys.stdout.write(
-            "Requested {} cores and {} cores are available.\n\n\n".format(
-                nproc, ncores
-            )
+            f"Requested {nproc} cores and {ncores} cores are available.\n\n\n"
         )
 
     # paths
@@ -266,24 +242,12 @@ def doit():
     ncol2 = ncol // nstep
 
     # open summary file
-    fs = open(
-        os.path.join("data", "uspb", f"uspb_capture_{nstep}.out"),
-        "w",
-        0,
-    )
+    fs = open(os.path.join("data", "uspb", f"uspb_capture_{nstep}.out"), "w", 0)
 
     # write some summary information
     fs.write(f"Problem size: {nrow} rows and {ncol} columns.\n")
-    fs.write(
-        "Capture fraction analysis performed every {} rows and columns.\n".format(
-            nstep
-        )
-    )
-    fs.write(
-        "Maximum number of analyses: {} rows and {} columns.\n".format(
-            nrow2, ncol2
-        )
-    )
+    fs.write(f"Capture fraction analysis performed every {nstep} rows and columns.\n")
+    fs.write(f"Maximum number of analyses: {nrow2} rows and {ncol2} columns.\n")
 
     # create array to store capture fraction data (subset of model)
     cf_array = np.empty((10, nrow2, ncol2), dtype=float)
@@ -346,7 +310,7 @@ def doit():
 
     # clean up working directories
     for idx in range(nproc):
-        filelist = [f for f in os.listdir(cf_pths[idx])]
+        filelist = list(os.listdir(cf_pths[idx]))
         for f in filelist:
             os.remove(os.path.join(cf_pths[idx], f))
 
@@ -355,14 +319,9 @@ def doit():
         os.makedirs(res_pth)
     for idx in range(10):
         fn = os.path.join(
-            res_pth,
-            f"USPB_capture_fraction_{nstep:02d}_{idx + 1:02d}.dat",
+            res_pth, f"USPB_capture_fraction_{nstep:02d}_{idx + 1:02d}.dat"
         )
-        sys.stdout.write(
-            "saving capture fraction data to...{}\n".format(
-                os.path.basename(fn)
-            )
-        )
+        sys.stdout.write(f"saving capture fraction data to...{os.path.basename(fn)}\n")
         np.savetxt(fn, cf_array[idx, :, :], delimiter=" ")
 
 

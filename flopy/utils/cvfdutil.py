@@ -360,9 +360,7 @@ def get_disv_gridprops(verts, iverts, xcyc=None):
     if xcyc is None:
         xcyc = np.empty((ncpl, 2), dtype=float)
         for icell in range(ncpl):
-            vlist = [
-                (verts[ivert, 0], verts[ivert, 1]) for ivert in iverts[icell]
-            ]
+            vlist = [(verts[ivert, 0], verts[ivert, 1]) for ivert in iverts[icell]]
             xcyc[icell, 0], xcyc[icell, 1] = centroid_of_polygon(vlist)
     else:
         assert xcyc.shape == (ncpl, 2)
@@ -371,10 +369,7 @@ def get_disv_gridprops(verts, iverts, xcyc=None):
         vertices.append((i, verts[i, 0], verts[i, 1]))
     cell2d = []
     for i in range(ncpl):
-        cell2d.append(
-            [i, xcyc[i, 0], xcyc[i, 1], len(iverts[i])]
-            + [iv for iv in iverts[i]]
-        )
+        cell2d.append([i, xcyc[i, 0], xcyc[i, 1], len(iverts[i])] + list(iverts[i]))
     gridprops = {}
     gridprops["ncpl"] = ncpl
     gridprops["nvert"] = nvert

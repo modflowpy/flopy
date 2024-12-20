@@ -2278,47 +2278,22 @@ class MFPandasTransientList(
 
     def masked_4D_arrays_itr(self):
         """Returns list data as an iterator of a masked 4D array."""
-        model_grid = self.data_dimensions.get_model_grid()
         nper = self.data_dimensions.package_dim.model_dim[
             0
         ].simulation_time.get_num_stress_periods()
-        # get the first kper
-        arrays = self.to_array(kper=0, mask=True)
 
-        if arrays is not None:
-            # initialize these big arrays
-            for name, array in arrays.items():
-                if model_grid.grid_type() == DiscretizationType.DIS:
-                    m4d = np.zeros(
-                        (
-                            nper,
-                            model_grid.num_layers(),
-                            model_grid.num_rows(),
-                            model_grid.num_columns(),
-                        )
-                    )
-                    m4d[0, :, :, :] = array
-                    for kper in range(1, nper):
-                        arrays = self.to_array(kper=kper, mask=True)
-                        for tname, array in arrays.items():
-                            if tname == name:
-                                m4d[kper, :, :, :] = array
-                    yield name, m4d
-                else:
-                    m3d = np.zeros(
-                        (
-                            nper,
-                            model_grid.num_layers(),
-                            model_grid.num_cells_per_layer(),
-                        )
-                    )
-                    m3d[0, :, :] = array
-                    for kper in range(1, nper):
-                        arrays = self.to_array(kper=kper, mask=True)
-                        for tname, array in arrays.items():
-                            if tname == name:
-                                m3d[kper, :, :] = array
-                    yield name, m3d
+        # get the first kper array to extract array shape and names
+        arrays_kper_0 = self.to_array(kper=0, mask=True)
+        shape_per_spd = next(iter(arrays_kper_0.values())).shape
+
+        for name in arrays_kper_0.keys():
+            ma = np.zeros((nper, *shape_per_spd))
+            for kper in range(nper):
+                # If new_arrays is not None, overwrite arrays
+                if new_arrays := self.to_array(kper=kper, mask=True):
+                    arrays = new_arrays
+                ma[kper] = arrays[name]
+            yield name, ma
 
     def _set_data_record(
         self,

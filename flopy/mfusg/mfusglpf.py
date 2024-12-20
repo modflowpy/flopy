@@ -197,7 +197,8 @@ class MfUsgLpf(ModflowLpf):
     >>> import flopy
     >>> m = flopy.mfusg.MfUsg()
     >>> disu = flopy.mfusg.MfUsgDisU(
-        model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
+    ...     model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]),
+    ...     fahl=[1.0], cl12=[1.0])
     >>> lpf = flopy.mfusg.MfUsgLpf(m)
     """
 
@@ -299,23 +300,13 @@ class MfUsgLpf(ModflowLpf):
         if not structured:
             njag = dis.njag
             self.anglex = Util2d(
-                model,
-                (njag,),
-                np.float32,
-                anglex,
-                "anglex",
-                locat=self.unit_number[0],
+                model, (njag,), np.float32, anglex, "anglex", locat=self.unit_number[0]
             )
 
         if not structured:
             njag = dis.njag
             self.ksat = Util2d(
-                model,
-                (njag,),
-                np.float32,
-                ksat,
-                "ksat",
-                locat=self.unit_number[0],
+                model, (njag,), np.float32, ksat, "ksat", locat=self.unit_number[0]
             )
 
         if add_package:
@@ -337,11 +328,7 @@ class MfUsgLpf(ModflowLpf):
         """
         # allows turning off package checks when writing files at model level
         if check:
-            self.check(
-                f=f"{self.name[0]}.chk",
-                verbose=self.parent.verbose,
-                level=1,
-            )
+            self.check(f=f"{self.name[0]}.chk", verbose=self.parent.verbose, level=1)
 
         # get model information
         nlay = self.parent.nlay
@@ -379,9 +366,7 @@ class MfUsgLpf(ModflowLpf):
         # Item 7: WETFCT, IWETIT, IHDWET
         iwetdry = self.laywet.sum()
         if iwetdry > 0:
-            f_obj.write(
-                f"{self.wetfct:10f}{self.iwetit:10d}{self.ihdwet:10d}\n"
-            )
+            f_obj.write(f"{self.wetfct:10f}{self.iwetit:10d}{self.ihdwet:10d}\n")
 
         transient = not dis.steady.all()
         structured = self.parent.structured
@@ -442,7 +427,8 @@ class MfUsgLpf(ModflowLpf):
         >>> import flopy
         >>> m = flopy.mfusg.MfUsg()
         >>> disu = flopy.mfusg.MfUsgDisU(
-            model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
+        ...     model=m, nlay=1, nodes=1, iac=[1], njag=1,
+        ...     ja=np.array([0]), fahl=[1.0], cl12=[1.0])
         >>> lpf = flopy.mfusg.MfUsgLpf.load('test.lpf', m)
         """
         msg = (
@@ -480,17 +466,9 @@ class MfUsgLpf(ModflowLpf):
             novfc,
         ) = cls._load_item1(line, model)
 
-        (
-            laytyp,
-            layavg,
-            chani,
-            layvka,
-            laywet,
-            wetfct,
-            iwetit,
-            ihdwet,
-            iwetdry,
-        ) = cls._load_items_2_to_7(f_obj, model)
+        (laytyp, layavg, chani, layvka, laywet, wetfct, iwetit, ihdwet, iwetdry) = (
+            cls._load_items_2_to_7(f_obj, model)
+        )
 
         # ANGLEX for unstructured grid with anisotropy
         anis = any(ch != 1 for ch in chani)
@@ -522,9 +500,7 @@ class MfUsgLpf(ModflowLpf):
         if abs(ikcflag) == 1:
             if model.verbose:
                 print("   loading ksat...")
-            ksat = Util2d.load(
-                f_obj, model, (njag,), np.float32, "ksat", ext_unit_dict
-            )
+            ksat = Util2d.load(f_obj, model, (njag,), np.float32, "ksat", ext_unit_dict)
 
         f_obj.close()
 
@@ -566,11 +542,7 @@ class MfUsgLpf(ModflowLpf):
             filenames=filenames,
         )
         if check:
-            lpf.check(
-                f=f"{lpf.name[0]}.chk",
-                verbose=lpf.parent.verbose,
-                level=0,
-            )
+            lpf.check(f=f"{lpf.name[0]}.chk", verbose=lpf.parent.verbose, level=0)
         return lpf
 
     @staticmethod
@@ -593,9 +565,7 @@ class MfUsgLpf(ModflowLpf):
         ]
         constantcv = "CONSTANTCV" in [item.upper() for item in text_list]
         thickstrt = "THICKSTRT" in [item.upper() for item in text_list]
-        nocvcorrection = "NOCVCORRECTION" in [
-            item.upper() for item in text_list
-        ]
+        nocvcorrection = "NOCVCORRECTION" in [item.upper() for item in text_list]
         novfc = "NOVFC" in [item.upper() for item in text_list]
 
         return (
@@ -659,17 +629,7 @@ class MfUsgLpf(ModflowLpf):
                 int(text_list[2]),
             )
 
-        return (
-            laytyp,
-            layavg,
-            chani,
-            layvka,
-            laywet,
-            wetfct,
-            iwetit,
-            ihdwet,
-            iwetdry,
-        )
+        return (laytyp, layavg, chani, layvka, laywet, wetfct, iwetit, ihdwet, iwetdry)
 
     @staticmethod
     def _load_hy_tran_kv_vcont(
@@ -723,12 +683,7 @@ class MfUsgLpf(ModflowLpf):
                 print(f"   loading hani layer {layer + 1:3d}...")
             if "hani" not in par_types:
                 hani_k = Util2d.load(
-                    f_obj,
-                    model,
-                    util2d_shape,
-                    np.float32,
-                    "hani",
-                    ext_unit_dict,
+                    f_obj, model, util2d_shape, np.float32, "hani", ext_unit_dict
                 )
             else:
                 f_obj.readline()
@@ -793,18 +748,10 @@ class MfUsgLpf(ModflowLpf):
             util2d_shape = get_util2d_shape_for_layer(model, layer=layer)
 
             if ikcflag == 0:
-                (
-                    hk[layer],
-                    hani[layer],
-                    vka[layer],
-                ) = self._load_hy_tran_kv_vcont(
+                (hk[layer], hani[layer], vka[layer]) = self._load_hy_tran_kv_vcont(
                     f_obj,
                     model,
-                    {
-                        "layer": layer,
-                        "layvka": layvka[layer],
-                        "chani": chani[layer],
-                    },
+                    {"layer": layer, "layvka": layvka[layer], "chani": chani[layer]},
                     ext_unit_dict,
                     (par_types, parm_dict),
                 )
@@ -825,12 +772,7 @@ class MfUsgLpf(ModflowLpf):
                     print(f"   loading vkcb layer {layer + 1:3d}...")
                 if "vkcb" not in par_types:
                     vkcb[layer] = Util2d.load(
-                        f_obj,
-                        model,
-                        util2d_shape,
-                        np.float32,
-                        "vkcb",
-                        ext_unit_dict,
+                        f_obj, model, util2d_shape, np.float32, "vkcb", ext_unit_dict
                     )
                 else:
                     _ = f_obj.readline()
@@ -843,20 +785,13 @@ class MfUsgLpf(ModflowLpf):
                 if model.verbose:
                     print(f"   loading wetdry layer {layer + 1:3d}...")
                 wetdry[layer] = Util2d.load(
-                    f_obj,
-                    model,
-                    util2d_shape,
-                    np.float32,
-                    "wetdry",
-                    ext_unit_dict,
+                    f_obj, model, util2d_shape, np.float32, "wetdry", ext_unit_dict
                 )
 
         return hk, hani, vka, ss, sy, vkcb, wetdry
 
     @staticmethod
-    def _load_storage(
-        f_obj, model, layer_vars, ext_unit_dict, par_types_parm_dict
-    ):
+    def _load_storage(f_obj, model, layer_vars, ext_unit_dict, par_types_parm_dict):
         """
         Loads ss, sy file entries.
 
@@ -902,12 +837,7 @@ class MfUsgLpf(ModflowLpf):
                 print(f"   loading sy layer {layer + 1:3d}...")
             if "sy" not in par_types:
                 sy_k = Util2d.load(
-                    f_obj,
-                    model,
-                    util2d_shape,
-                    np.float32,
-                    "sy",
-                    ext_unit_dict,
+                    f_obj, model, util2d_shape, np.float32, "sy", ext_unit_dict
                 )
             else:
                 f_obj.readline()

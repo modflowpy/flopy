@@ -151,20 +151,12 @@ class ModflowMnwi(Package):
         self.mnwobs = mnwobs
         # list of lists containing wells and related information to be
         # output (length = [MNWOBS][4or5])
-        self.wellid_unit_qndflag_qhbflag_concflag = (
-            wellid_unit_qndflag_qhbflag_concflag
-        )
+        self.wellid_unit_qndflag_qhbflag_concflag = wellid_unit_qndflag_qhbflag_concflag
 
         # -input format checks:
-        assert (
-            self.wel1flag >= 0
-        ), "WEL1flag must be greater than or equal to zero."
-        assert (
-            self.qsumflag >= 0
-        ), "QSUMflag must be greater than or equal to zero."
-        assert (
-            self.byndflag >= 0
-        ), "BYNDflag must be greater than or equal to zero."
+        assert self.wel1flag >= 0, "WEL1flag must be greater than or equal to zero."
+        assert self.qsumflag >= 0, "QSUMflag must be greater than or equal to zero."
+        assert self.byndflag >= 0, "BYNDflag must be greater than or equal to zero."
 
         if len(self.wellid_unit_qndflag_qhbflag_concflag) != self.mnwobs:
             print(
@@ -234,22 +226,14 @@ class ModflowMnwi(Package):
                 ext_unit_dict, filetype=ModflowMnwi._ftype()
             )
             if wel1flag > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=wel1flag
-                )
+                iu, filenames[1] = model.get_ext_dict_attr(ext_unit_dict, unit=wel1flag)
             if qsumflag > 0:
-                iu, filenames[2] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=qsumflag
-                )
+                iu, filenames[2] = model.get_ext_dict_attr(ext_unit_dict, unit=qsumflag)
             if byndflag > 0:
-                iu, filenames[3] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=byndflag
-                )
+                iu, filenames[3] = model.get_ext_dict_attr(ext_unit_dict, unit=byndflag)
             idx = 4
             for unit in unique_units:
-                iu, filenames[idx] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=unit
-                )
+                iu, filenames[idx] = model.get_ext_dict_attr(ext_unit_dict, unit=unit)
                 idx += 1
 
         return cls(
@@ -331,12 +315,8 @@ class ModflowMnwi(Package):
             unit = t[1]
             qndflag = t[2]
             qhbflag = t[3]
-            assert (
-                qndflag >= 0
-            ), "QNDflag must be greater than or equal to zero."
-            assert (
-                qhbflag >= 0
-            ), "QHBflag must be greater than or equal to zero."
+            assert qndflag >= 0, "QNDflag must be greater than or equal to zero."
+            assert qhbflag >= 0, "QHBflag must be greater than or equal to zero."
             line = f"{wellid:20s} "
             line += f"{unit:5d} "
             line += f"{qndflag:5d} "

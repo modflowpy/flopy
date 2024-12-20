@@ -130,9 +130,7 @@ sim_ws = os.path.join(workspace, "flow")
 sim = flopy.mf6.MFSimulation(
     sim_name=name, version="mf6", exe_name="mf6", sim_ws=sim_ws
 )
-tdis = flopy.mf6.ModflowTdis(
-    sim, time_units="DAYS", perioddata=[[1.0, 1, 1.0]]
-)
+tdis = flopy.mf6.ModflowTdis(sim, time_units="DAYS", perioddata=[[1.0, 1, 1.0]])
 gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
 ims = flopy.mf6.ModflowIms(
     sim,
@@ -145,9 +143,7 @@ disv_gridprops = voronoi_grid.get_disv_gridprops()
 nlay = 1
 top = 1.0
 botm = [0.0]
-disv = flopy.mf6.ModflowGwfdisv(
-    gwf, nlay=nlay, **disv_gridprops, top=top, botm=botm
-)
+disv = flopy.mf6.ModflowGwfdisv(gwf, nlay=nlay, **disv_gridprops, top=top, botm=botm)
 npf = flopy.mf6.ModflowGwfnpf(
     gwf,
     xt3doptions=[(True)],
@@ -209,9 +205,7 @@ disv_gridprops = voronoi_grid.get_disv_gridprops()
 nlay = 1
 top = 1.0
 botm = [0.0]
-disv = flopy.mf6.ModflowGwtdisv(
-    gwt, nlay=nlay, **disv_gridprops, top=top, botm=botm
-)
+disv = flopy.mf6.ModflowGwtdisv(gwt, nlay=nlay, **disv_gridprops, top=top, botm=botm)
 ic = flopy.mf6.ModflowGwtic(gwt, strt=0.0)
 sto = flopy.mf6.ModflowGwtmst(gwt, porosity=0.2)
 adv = flopy.mf6.ModflowGwtadv(gwt, scheme="TVD")
@@ -320,7 +314,7 @@ theta = np.arange(0.0, 2 * np.pi, 0.2)
 radius = 100.0
 x = radius * np.cos(theta)
 y = radius * np.sin(theta)
-circle_poly = [(x, y) for x, y in zip(x, y)]
+circle_poly = list(zip(x, y))
 tri = Triangle(maximum_area=5, angle=30, model_ws=workspace)
 tri.add_polygon(circle_poly)
 tri.build(verbose=False)
@@ -342,7 +336,7 @@ theta = np.arange(0.0, 2 * np.pi, 0.2)
 radius = 30.0
 x = radius * np.cos(theta) + 25.0
 y = radius * np.sin(theta) + 25.0
-inner_circle_poly = [(x, y) for x, y in zip(x, y)]
+inner_circle_poly = list(zip(x, y))
 
 tri = Triangle(maximum_area=10, angle=30, model_ws=workspace)
 tri.add_polygon(circle_poly)
@@ -402,7 +396,7 @@ theta = np.arange(0.0, 2 * np.pi, 0.2)
 radius = 10.0
 x = radius * np.cos(theta) + 50.0
 y = radius * np.sin(theta) + 70.0
-circle_poly0 = [(x, y) for x, y in zip(x, y)]
+circle_poly0 = list(zip(x, y))
 tri.add_polygon(circle_poly0)
 tri.add_hole((50, 70))
 
@@ -411,7 +405,7 @@ theta = np.arange(0.0, 2 * np.pi, 0.2)
 radius = 10.0
 x = radius * np.cos(theta) + 70.0
 y = radius * np.sin(theta) + 20.0
-circle_poly1 = [(x, y) for x, y in zip(x, y)]
+circle_poly1 = list(zip(x, y))
 tri.add_polygon(circle_poly1)
 # tri.add_hole((70, 20))
 

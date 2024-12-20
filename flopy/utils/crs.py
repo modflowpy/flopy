@@ -132,7 +132,8 @@ def get_crs(prjfile=None, crs=None, **kwargs):
             raise ValueError(
                 "Different coordinate reference systems "
                 f"in crs argument and supplied projection file: {prjfile}\n"
-                f"\nuser supplied crs: {crs}  !=\ncrs from projection file: {prjfile_crs}"
+                f"\nuser supplied crs: {crs}  !=\n"
+                f"crs from projection file: {prjfile_crs}"
             )
         else:
             crs = prjfile_crs

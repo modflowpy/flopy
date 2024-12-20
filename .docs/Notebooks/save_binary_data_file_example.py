@@ -51,9 +51,7 @@ precision = "single"  # or 'double'
 dtype = np.float32  # or np.float64
 
 mf = flopy.modflow.Modflow(model_ws=model_ws)
-dis = flopy.modflow.ModflowDis(
-    mf, nlay=nlay, nrow=nrow, ncol=ncol, delr=20, delc=10
-)
+dis = flopy.modflow.ModflowDis(mf, nlay=nlay, nrow=nrow, ncol=ncol, delr=20, delc=10)
 # -
 
 # Create a linear data array

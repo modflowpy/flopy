@@ -148,9 +148,7 @@ class ModflowGhb(Package):
         if dtype is not None:
             self.dtype = dtype
         else:
-            self.dtype = self.get_default_dtype(
-                structured=self.parent.structured
-            )
+            self.dtype = self.get_default_dtype(structured=self.parent.structured)
         self.stress_period_data = MfList(self, stress_period_data)
 
     def _ncells(self):
@@ -180,11 +178,7 @@ class ModflowGhb(Package):
 
         """
         if check:  # allows turning off package checks when writing files at model level
-            self.check(
-                f=f"{self.name[0]}.chk",
-                verbose=self.parent.verbose,
-                level=1,
-            )
+            self.check(f=f"{self.name[0]}.chk", verbose=self.parent.verbose, level=1)
         f_ghb = open(self.fn_path, "w")
         f_ghb.write(f"{self.heading}\n")
         f_ghb.write(f"{self.stress_period_data.mxact:10d}{self.ipakcb:10d}")

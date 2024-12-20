@@ -315,9 +315,7 @@ class Modpath7Sim(Package):
         except:
             sim_enum_error("weaksourceoption", weaksourceoption, weakOpt)
         try:
-            self.budgetoutputoption = budgetOpt[
-                budgetoutputoption.lower()
-            ].value
+            self.budgetoutputoption = budgetOpt[budgetoutputoption.lower()].value
         except:
             sim_enum_error("budgetoutputoption", budgetoutputoption, budgetOpt)
         # tracemode
@@ -520,16 +518,9 @@ class Modpath7Sim(Package):
                 )
             self.stopzone = stopzone
             if zones is None:
-                raise ValueError(
-                    "zones must be specified if zonedataoption='on'."
-                )
+                raise ValueError("zones must be specified if zonedataoption='on'.")
             self.zones = Util3d(
-                model,
-                shape3d,
-                np.int32,
-                zones,
-                name="zones",
-                locat=self.unit_number[0],
+                model, shape3d, np.int32, zones, name="zones", locat=self.unit_number[0]
             )
 
         # retardationfactoroption
@@ -538,14 +529,11 @@ class Modpath7Sim(Package):
                 retardationfactoroption.lower()
             ].value
         except:
-            sim_enum_error(
-                "retardationfactoroption", retardationfactoroption, onoffOpt
-            )
+            sim_enum_error("retardationfactoroption", retardationfactoroption, onoffOpt)
         if self.retardationfactoroption == 2:
             if retardation is None:
                 raise ValueError(
-                    "retardation must be specified if "
-                    "retardationfactoroption='on'."
+                    "retardation must be specified if retardationfactoroption='on'."
                 )
             self.retardation = Util3d(
                 model,
@@ -560,11 +548,7 @@ class Modpath7Sim(Package):
             particlegroups = [ParticleGroup()]
         elif isinstance(
             particlegroups,
-            (
-                ParticleGroup,
-                ParticleGroupLRCTemplate,
-                ParticleGroupNodeTemplate,
-            ),
+            (ParticleGroup, ParticleGroupLRCTemplate, ParticleGroupNodeTemplate),
         ):
             particlegroups = [particlegroups]
         self.particlegroups = particlegroups
@@ -615,9 +599,7 @@ class Modpath7Sim(Package):
         # item 7 and 8
         if self.tracemode == 1:
             f.write(f"{self.tracefilename}\n")
-            f.write(
-                f"{self.traceparticlegroup + 1} {self.traceparticleid + 1}\n"
-            )
+            f.write(f"{self.traceparticlegroup + 1} {self.traceparticleid + 1}\n")
         # item 9
         f.write(f"{self.BudgetCellCount}\n")
         # item 10
@@ -657,9 +639,7 @@ class Modpath7Sim(Package):
             f.write(f"{self.timepointoption}\n")
             if self.timepointoption == 1:
                 # item 17
-                f.write(
-                    f"{self.timepointdata[0]} {self.timepointdata[1][0]}\n"
-                )
+                f.write(f"{self.timepointdata[0]} {self.timepointdata[1][0]}\n")
             elif self.timepointoption == 2:
                 # item 18
                 f.write(f"{self.timepointdata[0]}\n")

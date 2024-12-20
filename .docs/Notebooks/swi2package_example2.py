@@ -291,9 +291,7 @@ discret = flopy.modflow.ModflowDis(
     steady=False,
 )
 bas = flopy.modflow.ModflowBas(m, ibound=swt_ibound, strt=0.05)
-lpf = flopy.modflow.ModflowLpf(
-    m, hk=2.0, vka=2.0, ss=0.0, sy=0.0, laytyp=0, layavg=0
-)
+lpf = flopy.modflow.ModflowLpf(m, hk=2.0, vka=2.0, ss=0.0, sy=0.0, laytyp=0, layavg=0)
 oc = flopy.modflow.ModflowOc(m, save_every=1, save_types=["save head"])
 pcg = flopy.modflow.ModflowPcg(m)
 # Create the MT3DMS model files
@@ -331,9 +329,7 @@ btn = flopy.mt3d.Mt3dBtn(
     mxstrn=1e8,
 )
 dsp = flopy.mt3d.Mt3dDsp(m, al=0.0, trpt=1.0, trpv=1.0, dmcoef=0.0)
-gcg = flopy.mt3d.Mt3dGcg(
-    m, mxiter=1, iter1=50, isolve=3, cclose=1e-6, iprgcg=5
-)
+gcg = flopy.mt3d.Mt3dGcg(m, mxiter=1, iter1=50, isolve=3, cclose=1e-6, iprgcg=5)
 ssm = flopy.mt3d.Mt3dSsm(m, stress_period_data=ssm_data)
 # Create the SEAWAT model files
 vdf = flopy.seawat.SeawatVdf(
@@ -386,15 +382,7 @@ xsf.subplots_adjust(
 )
 # plot initial conditions
 ax = axes[0]
-ax.text(
-    -0.075,
-    1.05,
-    "A",
-    transform=ax.transAxes,
-    va="center",
-    ha="center",
-    size="8",
-)
+ax.text(-0.075, 1.05, "A", transform=ax.transAxes, va="center", ha="center", size="8")
 # text(.975, .1, '(a)', transform = ax.transAxes, va = 'center', ha = 'center')
 ax.plot([110, 150], [0, -40], "k")
 ax.plot([150, 190], [0, -40], "k")
@@ -407,15 +395,7 @@ ax.text(250, -20, "fresh", va="center", ha="center")
 ax.set_ylabel("Elevation, in meters")
 # plot stratified swi2 and seawat results
 ax = axes[1]
-ax.text(
-    -0.075,
-    1.05,
-    "B",
-    transform=ax.transAxes,
-    va="center",
-    ha="center",
-    size="8",
-)
+ax.text(-0.075, 1.05, "B", transform=ax.transAxes, va="center", ha="center", size="8")
 #
 zp = zeta[0, 0, :]
 p = (zp < 0.0) & (zp > -40.0)
@@ -447,15 +427,7 @@ ax.set_yticks(np.arange(-40, 1, 10))
 ax.set_ylabel("Elevation, in meters")
 # plot vd model
 ax = axes[2]
-ax.text(
-    -0.075,
-    1.05,
-    "C",
-    transform=ax.transAxes,
-    va="center",
-    ha="center",
-    size="8",
-)
+ax.text(-0.075, 1.05, "C", transform=ax.transAxes, va="center", ha="center", size="8")
 dr = zeta[0, 0, :]
 ax.plot(x, dr, "b", linewidth=1.5, drawstyle="steps-mid")
 dr = zeta2[0, 0, :]
@@ -466,18 +438,10 @@ dr = zetavd2[0, 0, :]
 ax.plot(x, dr, "r", linewidth=0.75, drawstyle="steps-mid")
 # fake figures
 ax.plot(
-    [-100.0, -100],
-    [-100.0, -100],
-    "b",
-    linewidth=1.5,
-    label="SWI2 stratified option",
+    [-100.0, -100], [-100.0, -100], "b", linewidth=1.5, label="SWI2 stratified option"
 )
 ax.plot(
-    [-100.0, -100],
-    [-100.0, -100],
-    "r",
-    linewidth=0.75,
-    label="SWI2 continuous option",
+    [-100.0, -100], [-100.0, -100], "r", linewidth=0.75, label="SWI2 continuous option"
 )
 # legend
 leg = ax.legend(loc="lower left", numpoints=1)

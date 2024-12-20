@@ -32,12 +32,7 @@ def test_hob_simple(function_tmpdir):
     shape2d = (nrow, ncol)
     ib = np.ones(shape3d, dtype=int)
     ib[0, 0, 0] = -1
-    m = Modflow(
-        modelname=modelname,
-        model_ws=ws,
-        verbose=False,
-        exe_name="mf2005",
-    )
+    m = Modflow(modelname=modelname, model_ws=ws, verbose=False, exe_name="mf2005")
     dis = ModflowDis(m, nlay=1, nrow=11, ncol=11, nper=2, perlen=[1, 1])
 
     bas = ModflowBas(m, ibound=ib, strt=10.0)
@@ -124,9 +119,7 @@ def test_obs_load_and_write(function_tmpdir, example_data_path):
         shutil.copyfile(src, dst)
 
     # load the modflow model
-    mf = Modflow.load(
-        "tc1-true.nam", verbose=True, model_ws=ws, exe_name="mf2005"
-    )
+    mf = Modflow.load("tc1-true.nam", verbose=True, model_ws=ws, exe_name="mf2005")
 
     # run the modflow-2005 model
     success, buff = mf.run_model(silent=False)
@@ -164,9 +157,7 @@ def test_obs_load_and_write(function_tmpdir, example_data_path):
         raise ValueError("could not load new HOB output file")
 
     # load the modflow model
-    m = Modflow.load(
-        "tc1-true.nam", verbose=True, model_ws=ws, exe_name="mf2005"
-    )
+    m = Modflow.load("tc1-true.nam", verbose=True, model_ws=ws, exe_name="mf2005")
 
     model_ws2 = os.path.join(ws, "flwob")
     m.change_model_ws(new_pth=model_ws2, reset_external=True)
@@ -237,9 +228,7 @@ def test_obs_load_and_write(function_tmpdir, example_data_path):
     s = f"nqtfb loaded from {m.drob.fn_path} read incorrectly"
     assert drob.nqtfb == m.drob.nqtfb, s
     s = f"obsnam loaded from {m.drob.fn_path} read incorrectly"
-    assert list([n for n in drob.obsnam]) == list(
-        [n for n in m.drob.obsnam]
-    ), s
+    assert list(drob.obsnam) == list(m.drob.obsnam), s
     s = f"flwobs loaded from {m.drob.fn_path} read incorrectly"
     assert np.array_equal(drob.flwobs, m.drob.flwobs), s
     s = f"layer loaded from {m.drob.fn_path} read incorrectly"
@@ -419,12 +408,10 @@ def test_multilayerhob_pr_multiline():
     problem_hob = [
         "2 4 7",
         "1 1",
-        "A19E1_1 -2 140 91 1 1 -0.28321 -0.05389"
-        " 69 1 1 1  # A19E1 8/13/1975",
+        "A19E1_1 -2 140 91 1 1 -0.28321 -0.05389 69 1 1 1  # A19E1 8/13/1975",
         "3 0.954",
         "4 0.046",
-        "A19E1_2 -2 140 91 1 1 -0.28321 -0.05389"
-        " 72 1 1 1  # A19E1 10/9/1975",
+        "A19E1_2 -2 140 91 1 1 -0.28321 -0.05389 72 1 1 1  # A19E1 10/9/1975",
         "3 0.954",
         "4 0.046",
     ]

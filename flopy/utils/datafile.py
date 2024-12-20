@@ -4,6 +4,15 @@ abstract classes that should not be directly accessed.
 
 """
 
+# in LayerFile, the recordarray attribute begins its life as
+# a list, which is appended to in subclasses' build_index(),
+# then finally becomes an array, after which it's accessed
+# in this file by column name. this probably deserves some
+# attention, but in the meantime, disable the pylint rule
+# to appease codacy.
+#
+# pylint: disable=invalid-sequence-index
+
 import os
 import warnings
 from pathlib import Path
@@ -120,8 +129,9 @@ class Header:
             self.dtype = None
             self.header = None
             print(
-                "Specified {} type is not available. "
-                "Available types are:".format(self.header_type)
+                "Specified {} type is not available. Available types are:".format(
+                    self.header_type
+                )
             )
             for idx, t in enumerate(self.header_types):
                 print(f"  {idx + 1} {t}")
@@ -156,9 +166,7 @@ class LayerFile:
 
     """
 
-    def __init__(
-        self, filename: Union[str, os.PathLike], precision, verbose, **kwargs
-    ):
+    def __init__(self, filename: Union[str, os.PathLike], precision, verbose, **kwargs):
         from ..discretization.structuredgrid import StructuredGrid
 
         self.filename = Path(filename).expanduser().absolute()
@@ -213,9 +221,7 @@ class LayerFile:
         if self.mg is None:
             self.mg = StructuredGrid(
                 delc=np.ones((self.nrow,)),
-                delr=np.ones(
-                    self.ncol,
-                ),
+                delr=np.ones(self.ncol),
                 nlay=self.nlay,
                 xoff=0.0,
                 yoff=0.0,
@@ -283,9 +289,7 @@ class LayerFile:
         """
 
         plotarray = np.atleast_3d(
-            self.get_data(
-                kstpkper=kstpkper, totim=totim, mflay=mflay
-            ).transpose()
+            self.get_data(kstpkper=kstpkper, totim=totim, mflay=mflay).transpose()
         ).transpose()
         if mflay is not None:
             attrib_dict = {f"{attrib_name}{mflay}": plotarray[0, :, :]}
@@ -394,15 +398,11 @@ class LayerFile:
             else:
                 i0 = 0
                 i1 = self.nlay
-            filenames = [
-                f"{filename_base}_Layer{k + 1}.{fext}" for k in range(i0, i1)
-            ]
+            filenames = [f"{filename_base}_Layer{k + 1}.{fext}" for k in range(i0, i1)]
 
         # make sure we have a (lay,row,col) shape plotarray
         plotarray = np.atleast_3d(
-            self.get_data(
-                kstpkper=kstpkper, totim=totim, mflay=mflay
-            ).transpose()
+            self.get_data(kstpkper=kstpkper, totim=totim, mflay=mflay).transpose()
         ).transpose()
 
         from ..plot.plotutil import PlotUtilities
@@ -463,9 +463,7 @@ class LayerFile:
         """
 
         if totim >= 0.0:
-            keyindices = np.asarray(
-                self.recordarray["totim"] == totim
-            ).nonzero()[0]
+            keyindices = np.asarray(self.recordarray["totim"] == totim).nonzero()[0]
             if len(keyindices) == 0:
                 msg = f"totim value ({totim}) not found in file..."
                 raise Exception(msg)
@@ -552,9 +550,7 @@ class LayerFile:
                 & (self.recordarray["kper"] == kper1)
             ).nonzero()
             if idx[0].shape[0] == 0:
-                raise Exception(
-                    f"get_data() error: kstpkper not found:{kstpkper}"
-                )
+                raise Exception(f"get_data() error: kstpkper not found:{kstpkper}")
             totim1 = self.recordarray[idx]["totim"][0]
         elif totim is not None:
             totim1 = totim
@@ -637,8 +633,9 @@ class LayerFile:
                 fail = True
             if fail:
                 raise Exception(
-                    "Invalid cell index. Cell {} not within model grid: "
-                    "{}".format((k, i, j), (self.nlay, self.nrow, self.ncol))
+                    "Invalid cell index. Cell {} not within model grid: {}".format(
+                        (k, i, j), (self.nlay, self.nrow, self.ncol)
+                    )
                 )
         return kijlist
 

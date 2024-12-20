@@ -352,9 +352,7 @@ class Mt3dUzt(Package):
                     incuzinf = max(incuzinf, incuzinficomp)
                     if incuzinf == 1:
                         break
-                f_uzt.write(
-                    f"{incuzinf:10d}          # INCUZINF - SP {kper + 1:5d}\n"
-                )
+                f_uzt.write(f"{incuzinf:10d}          # INCUZINF - SP {kper + 1:5d}\n")
                 if incuzinf == 1:
                     for t2d in self.cuzinf:
                         u2d = t2d[kper]
@@ -497,9 +495,7 @@ class Mt3dUzt(Package):
 
         cuzinf = None
         # At least one species being simulated, so set up a place holder
-        t2d = Transient2d(
-            model, (nrow, ncol), np.float32, 0.0, name="cuzinf", locat=0
-        )
+        t2d = Transient2d(model, (nrow, ncol), np.float32, 0.0, name="cuzinf", locat=0)
         cuzinf = {0: t2d}
         if ncomp > 1:
             for icomp in range(2, ncomp + 1):
@@ -520,12 +516,7 @@ class Mt3dUzt(Package):
                 for icomp in range(2, ncomp + 1):
                     name = f"cuzet{icomp}"
                     t2d = Transient2d(
-                        model,
-                        (nrow, ncol),
-                        np.float32,
-                        0.0,
-                        name=name,
-                        locat=0,
+                        model, (nrow, ncol), np.float32, 0.0, name=name, locat=0
                     )
                     kwargs[name] = {0: t2d}
 
@@ -539,12 +530,7 @@ class Mt3dUzt(Package):
                 for icomp in range(2, ncomp + 1):
                     name = f"cgwet{icomp}"
                     t2d = Transient2d(
-                        model,
-                        (nrow, ncol),
-                        np.float32,
-                        0.0,
-                        name=name,
-                        locat=0,
+                        model, (nrow, ncol), np.float32, 0.0, name=name, locat=0
                     )
                     kwargs[name] = {0: t2d}
         elif iet == 0:
@@ -577,12 +563,7 @@ class Mt3dUzt(Package):
                         if model.verbose:
                             print(f"   loading {name}...")
                         t = Util2d.load(
-                            f,
-                            model,
-                            (nrow, ncol),
-                            np.float32,
-                            name,
-                            ext_unit_dict,
+                            f, model, (nrow, ncol), np.float32, name, ext_unit_dict
                         )
                         cuzinficomp = kwargs[name]
                         cuzinficomp[iper] = t
@@ -617,12 +598,7 @@ class Mt3dUzt(Package):
                     if model.verbose:
                         print(f"   Reading CUZET array for kper {iper + 1:5d}")
                     t = Util2d.load(
-                        f,
-                        model,
-                        (nrow, ncol),
-                        np.float32,
-                        "cuzet",
-                        ext_unit_dict,
+                        f, model, (nrow, ncol), np.float32, "cuzet", ext_unit_dict
                     )
                     cuzet[iper] = t
 
@@ -633,12 +609,7 @@ class Mt3dUzt(Package):
                             if model.verbose:
                                 print(f"   loading {name}")
                             t = Util2d.load(
-                                f,
-                                model,
-                                (nrow, ncol),
-                                np.float32,
-                                name,
-                                ext_unit_dict,
+                                f, model, (nrow, ncol), np.float32, name, ext_unit_dict
                             )
                             cuzeticomp = kwargs[name]
                             cuzeticomp[iper] = t
@@ -671,12 +642,7 @@ class Mt3dUzt(Package):
                     if incuzet >= 0:
                         print(f"   Reading CGWET array for kper {iper + 1:5d}")
                     t = Util2d.load(
-                        f,
-                        model,
-                        (nrow, ncol),
-                        np.float32,
-                        "cgwet",
-                        ext_unit_dict,
+                        f, model, (nrow, ncol), np.float32, "cgwet", ext_unit_dict
                     )
                     cgwet[iper] = t
 
@@ -687,12 +653,7 @@ class Mt3dUzt(Package):
                             if model.verbose:
                                 print(f"   loading {name}...")
                             t = Util2d.load(
-                                f,
-                                model,
-                                (nrow, ncol),
-                                np.float32,
-                                name,
-                                ext_unit_dict,
+                                f, model, (nrow, ncol), np.float32, name, ext_unit_dict
                             )
                             cgweticomp = kwargs[name]
                             cgweticomp[iper] = t
@@ -726,9 +687,7 @@ class Mt3dUzt(Package):
                 ext_unit_dict, filetype=Mt3dUzt._ftype()
             )
             if icbcuz > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=icbcuz
-                )
+                iu, filenames[1] = model.get_ext_dict_attr(ext_unit_dict, unit=icbcuz)
                 model.add_pop_key_list(icbcuz)
 
         # Construct and return uzt package

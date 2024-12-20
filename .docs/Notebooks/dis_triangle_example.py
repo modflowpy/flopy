@@ -53,7 +53,7 @@ theta = np.arange(0.0, 2 * np.pi, 0.2)
 radius = 100.0
 x = radius * np.cos(theta)
 y = radius * np.sin(theta)
-circle_poly = [(x, y) for x, y in zip(x, y)]
+circle_poly = list(zip(x, y))
 fig = plt.figure(figsize=(10, 10))
 ax = plt.subplot(1, 1, 1, aspect="equal")
 ax.plot(x, y, "bo-")
@@ -94,7 +94,7 @@ theta = np.arange(0.0, 2 * np.pi, 0.2)
 radius = 30.0
 x = radius * np.cos(theta) + 25.0
 y = radius * np.sin(theta) + 25.0
-inner_circle_poly = [(x, y) for x, y in zip(x, y)]
+inner_circle_poly = list(zip(x, y))
 
 # The hole is created by passing in another polygon and
 # then passing a point inside the hole polygon with the
@@ -198,9 +198,7 @@ name = "mf"
 sim = flopy.mf6.MFSimulation(
     sim_name=name, version="mf6", exe_name="mf6", sim_ws=workspace
 )
-tdis = flopy.mf6.ModflowTdis(
-    sim, time_units="DAYS", perioddata=[[1.0, 1, 1.0]]
-)
+tdis = flopy.mf6.ModflowTdis(sim, time_units="DAYS", perioddata=[[1.0, 1, 1.0]])
 gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
 ims = flopy.mf6.ModflowIms(
     sim,
@@ -227,9 +225,7 @@ dis = flopy.mf6.ModflowGwfdisv(
     vertices=vertices,
     cell2d=cell2d,
 )
-npf = flopy.mf6.ModflowGwfnpf(
-    gwf, xt3doptions=[(True)], save_specific_discharge=None
-)
+npf = flopy.mf6.ModflowGwfnpf(gwf, xt3doptions=[(True)], save_specific_discharge=None)
 ic = flopy.mf6.ModflowGwfic(gwf)
 
 

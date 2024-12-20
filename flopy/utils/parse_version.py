@@ -12,14 +12,15 @@ import collections
 import itertools
 import re
 import warnings
-from typing import Callable, Iterator, SupportsInt, Tuple, Union
+from collections.abc import Iterator
+from typing import Callable, SupportsInt, Union
 
 __all__ = [
-    "parse",
-    "Version",
-    "LegacyVersion",
-    "InvalidVersion",
     "VERSION_PATTERN",
+    "InvalidVersion",
+    "LegacyVersion",
+    "Version",
+    "parse",
 ]
 
 
@@ -88,28 +89,28 @@ NegativeInfinity = NegativeInfinityType()
 
 
 InfiniteTypes = Union[InfinityType, NegativeInfinityType]
-PrePostDevType = Union[InfiniteTypes, Tuple[str, int]]
+PrePostDevType = Union[InfiniteTypes, tuple[str, int]]
 SubLocalType = Union[InfiniteTypes, int, str]
 LocalType = Union[
     NegativeInfinityType,
-    Tuple[
+    tuple[
         Union[
             SubLocalType,
-            Tuple[SubLocalType, str],
-            Tuple[NegativeInfinityType, SubLocalType],
+            tuple[SubLocalType, str],
+            tuple[NegativeInfinityType, SubLocalType],
         ],
         ...,
     ],
 ]
-CmpKey = Tuple[
+CmpKey = tuple[
     int,
-    Tuple[int, ...],
+    tuple[int, ...],
     PrePostDevType,
     PrePostDevType,
     PrePostDevType,
     LocalType,
 ]
-LegacyCmpKey = Tuple[int, Tuple[str, ...]]
+LegacyCmpKey = tuple[int, tuple[str, ...]]
 VersionComparisonMethod = Callable[
     [Union[CmpKey, LegacyCmpKey], Union[CmpKey, LegacyCmpKey]], bool
 ]
@@ -245,9 +246,7 @@ class LegacyVersion(_BaseVersion):
         return False
 
 
-_legacy_version_component_re = re.compile(
-    r"(\d+ | [a-z]+ | \.| -)", re.VERBOSE
-)
+_legacy_version_component_re = re.compile(r"(\d+ | [a-z]+ | \.| -)", re.VERBOSE)
 
 _legacy_version_replacement_map = {
     "pre": "c",
@@ -336,9 +335,7 @@ VERSION_PATTERN = r"""
 
 
 class Version(_BaseVersion):
-    _regex = re.compile(
-        r"^\s*" + VERSION_PATTERN + r"\s*$", re.VERBOSE | re.IGNORECASE
-    )
+    _regex = re.compile(r"^\s*" + VERSION_PATTERN + r"\s*$", re.VERBOSE | re.IGNORECASE)
 
     def __init__(self, version: str) -> None:
         # Validate the version and parse it into pieces
@@ -350,16 +347,11 @@ class Version(_BaseVersion):
         self._version = _Version(
             epoch=int(match.group("epoch")) if match.group("epoch") else 0,
             release=tuple(int(i) for i in match.group("release").split(".")),
-            pre=_parse_letter_version(
-                match.group("pre_l"), match.group("pre_n")
-            ),
+            pre=_parse_letter_version(match.group("pre_l"), match.group("pre_n")),
             post=_parse_letter_version(
-                match.group("post_l"),
-                match.group("post_n1") or match.group("post_n2"),
+                match.group("post_l"), match.group("post_n1") or match.group("post_n2")
             ),
-            dev=_parse_letter_version(
-                match.group("dev_l"), match.group("dev_n")
-            ),
+            dev=_parse_letter_version(match.group("dev_l"), match.group("dev_n")),
             local=_parse_local_version(match.group("local")),
         )
 
@@ -540,9 +532,7 @@ def _cmpkey(
     # re-reverse it back into the correct order and make it a tuple and use
     # that for our sorting key.
     _release = tuple(
-        reversed(
-            list(itertools.dropwhile(lambda x: x == 0, reversed(release)))
-        )
+        reversed(list(itertools.dropwhile(lambda x: x == 0, reversed(release))))
     )
 
     # We need to "trick" the sorting algorithm to put 1.0.dev0 before 1.0a0.
@@ -584,8 +574,7 @@ def _cmpkey(
         # - Shorter versions sort before longer versions when the prefixes
         #   match exactly
         _local = tuple(
-            (i, "") if isinstance(i, int) else (NegativeInfinity, i)
-            for i in local
+            (i, "") if isinstance(i, int) else (NegativeInfinity, i) for i in local
         )
 
     return epoch, _release, _pre, _post, _dev, _local

@@ -62,9 +62,7 @@ def case_disv():
         [icpl, cellxy[icpl, 0], cellxy[icpl, 1], 4] + iverts[icpl]
         for icpl in range(ncpl)
     ]
-    vertices = [
-        [ivert, verts[ivert, 0], verts[ivert, 1]] for ivert in range(nvert)
-    ]
+    vertices = [[ivert, verts[ivert, 0], verts[ivert, 1]] for ivert in range(nvert)]
     xorigin = 3000
     yorigin = 1000
     angrot = 10

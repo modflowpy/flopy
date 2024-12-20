@@ -195,9 +195,7 @@ def test_seawat2_henry(function_tmpdir):
 
 
 def swt4_namfiles():
-    return [
-        str(p) for p in (get_example_data_path() / "swtv4_test").rglob("*.nam")
-    ]
+    return [str(p) for p in (get_example_data_path() / "swtv4_test").rglob("*.nam")]
 
 
 @requires_exe("swtv4")
@@ -245,7 +243,7 @@ def test_seawat_load_only(function_tmpdir):
     m = Seawat.load(
         model_name, model_ws=function_tmpdir, load_only=load_only, verbose=True
     )
-    assert set([pkg.upper() for pkg in load_only]) == set(m.get_package_list())
+    assert {pkg.upper() for pkg in load_only} == set(m.get_package_list())
 
 
 def test_vdf_vsc(function_tmpdir):

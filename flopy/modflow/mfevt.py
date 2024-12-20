@@ -132,18 +132,10 @@ class ModflowEvt(Package):
         exdp_u2d_shape = get_pak_vals_shape(model, exdp)
         ievt_u2d_shape = get_pak_vals_shape(model, ievt)
 
-        self.surf = Transient2d(
-            model, surf_u2d_shape, np.float32, surf, name="surf"
-        )
-        self.evtr = Transient2d(
-            model, evtr_u2d_shape, np.float32, evtr, name="evtr"
-        )
-        self.exdp = Transient2d(
-            model, exdp_u2d_shape, np.float32, exdp, name="exdp"
-        )
-        self.ievt = Transient2d(
-            model, ievt_u2d_shape, np.int32, ievt, name="ievt"
-        )
+        self.surf = Transient2d(model, surf_u2d_shape, np.float32, surf, name="surf")
+        self.evtr = Transient2d(model, evtr_u2d_shape, np.float32, evtr, name="evtr")
+        self.exdp = Transient2d(model, exdp_u2d_shape, np.float32, exdp, name="exdp")
+        self.ievt = Transient2d(model, ievt_u2d_shape, np.int32, ievt, name="ievt")
         self.np = 0
         self.parent.add_package(self)
 
@@ -182,18 +174,11 @@ class ModflowEvt(Package):
             for kper, u2d in self.ievt.transient_2ds.items():
                 ievt[kper] = u2d.array + 1
             ievt = Transient2d(
-                self.parent,
-                self.ievt.shape,
-                self.ievt.dtype,
-                ievt,
-                self.ievt.name,
+                self.parent, self.ievt.shape, self.ievt.dtype, ievt, self.ievt.name
             )
             if not self.parent.structured:
                 mxndevt = np.max(
-                    [
-                        u2d.array.size
-                        for kper, u2d in self.ievt.transient_2ds.items()
-                    ]
+                    [u2d.array.size for kper, u2d in self.ievt.transient_2ds.items()]
                 )
                 f_evt.write(f"{mxndevt:10d}\n")
 
@@ -274,9 +259,7 @@ class ModflowEvt(Package):
             npar = int(raw[1])
             if npar > 0:
                 if model.verbose:
-                    print(
-                        "  Parameters detected. Number of parameters = ", npar
-                    )
+                    print("  Parameters detected. Number of parameters = ", npar)
             line = f.readline()
         # Dataset 2
         t = line.strip().split()
@@ -327,25 +310,16 @@ class ModflowEvt(Package):
             if insurf >= 0:
                 if model.verbose:
                     print(f"   loading surf stress period {iper + 1:3d}...")
-                t = Util2d.load(
-                    f, model, u2d_shape, np.float32, "surf", ext_unit_dict
-                )
+                t = Util2d.load(f, model, u2d_shape, np.float32, "surf", ext_unit_dict)
                 current_surf = t
             surf[iper] = current_surf
 
             if inevtr >= 0:
                 if npar == 0:
                     if model.verbose:
-                        print(
-                            f"   loading evtr stress period {iper + 1:3d}..."
-                        )
+                        print(f"   loading evtr stress period {iper + 1:3d}...")
                     t = Util2d.load(
-                        f,
-                        model,
-                        u2d_shape,
-                        np.float32,
-                        "evtr",
-                        ext_unit_dict,
+                        f, model, u2d_shape, np.float32, "evtr", ext_unit_dict
                     )
                 else:
                     parm_dict = {}
@@ -366,26 +340,20 @@ class ModflowEvt(Package):
                         except:
                             iname = "static"
                         parm_dict[pname] = iname
-                    t = mfparbc.parameter_bcfill(
-                        model, u2d_shape, parm_dict, pak_parms
-                    )
+                    t = mfparbc.parameter_bcfill(model, u2d_shape, parm_dict, pak_parms)
 
                 current_evtr = t
             evtr[iper] = current_evtr
             if inexdp >= 0:
                 if model.verbose:
                     print(f"   loading exdp stress period {iper + 1:3d}...")
-                t = Util2d.load(
-                    f, model, u2d_shape, np.float32, "exdp", ext_unit_dict
-                )
+                t = Util2d.load(f, model, u2d_shape, np.float32, "exdp", ext_unit_dict)
                 current_exdp = t
             exdp[iper] = current_exdp
             if nevtop == 2:
                 if inievt >= 0:
                     if model.verbose:
-                        print(
-                            f"   loading ievt stress period {iper + 1:3d}..."
-                        )
+                        print(f"   loading ievt stress period {iper + 1:3d}...")
                     t = Util2d.load(
                         f, model, u2d_shape, np.int32, "ievt", ext_unit_dict
                     )
@@ -419,9 +387,7 @@ class ModflowEvt(Package):
                 ext_unit_dict, filetype=ModflowEvt._ftype()
             )
             if ipakcb > 0:
-                iu, filenames[1] = model.get_ext_dict_attr(
-                    ext_unit_dict, unit=ipakcb
-                )
+                iu, filenames[1] = model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
                 model.add_pop_key_list(ipakcb)
 
         # set args for unitnumber and filenames

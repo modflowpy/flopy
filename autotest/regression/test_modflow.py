@@ -74,9 +74,7 @@ def test_uzf_unit_numbers(function_tmpdir, uzf_example_path):
 
     # compare budget terms
     fsum = join(function_tmpdir, f"{splitext(mfnam)[0]}.budget.out")
-    success = compare_budget(
-        fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
-    )
+    success = compare_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum)
     assert success, "budget comparison failure"
 
 
@@ -92,10 +90,12 @@ def test_unitnums(function_tmpdir, mf2005_test_path):
     assert m.load_fail is False, "failed to load all packages"
 
     v = (m.nlay, m.nrow, m.ncol, m.nper)
-    assert v == (1, 7, 100, 50), (
-        "modflow-2005 testsfr2_tab does not have "
-        "1 layer, 7 rows, and 100 columns"
-    )
+    assert v == (
+        1,
+        7,
+        100,
+        50,
+    ), "modflow-2005 testsfr2_tab does not have 1 layer, 7 rows, and 100 columns"
 
     success, buff = m.run_model(silent=False)
     assert success, "base model run did not terminate successfully"
@@ -112,9 +112,7 @@ def test_unitnums(function_tmpdir, mf2005_test_path):
     fn1 = join(model_ws2, mfnam)
 
     fsum = join(ws, f"{splitext(mfnam)[0]}.budget.out")
-    success = compare_budget(
-        fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
-    )
+    success = compare_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum)
     assert success, "budget comparison failure"
 
 
@@ -131,9 +129,7 @@ def test_gage(function_tmpdir, example_data_path):
     copytree(pth, ws)
 
     # load the modflow model
-    mf = Modflow.load(
-        "testsfr2_tab.nam", verbose=True, model_ws=ws, exe_name="mf2005"
-    )
+    mf = Modflow.load("testsfr2_tab.nam", verbose=True, model_ws=ws, exe_name="mf2005")
 
     # run the modflow-2005 model
     success, buff = mf.run_model()
@@ -168,10 +164,7 @@ __example_data_path = get_example_data_path()
 @pytest.mark.regression
 @pytest.mark.parametrize(
     "namfile",
-    [
-        __example_data_path / "pcgn_test" / nf
-        for nf in ["twri.nam", "MNW2.nam"]
-    ],
+    [__example_data_path / "pcgn_test" / nf for nf in ["twri.nam", "MNW2.nam"]],
 )
 def test_mf2005pcgn(function_tmpdir, namfile):
     ws = function_tmpdir / "ws"
@@ -208,9 +201,7 @@ def test_mf2005pcgn(function_tmpdir, namfile):
     assert success, "head comparison failure"
 
     fsum = function_tmpdir / f"{Path(namfile).stem}.budget.out"
-    success = compare_budget(
-        fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
-    )
+    success = compare_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum)
     assert success, "budget comparison failure"
 
 
@@ -250,9 +241,7 @@ def test_mf2005gmg(function_tmpdir, namfile):
     assert success, "head comparison failure"
 
     fsum = function_tmpdir / f"{Path(namfile).stem}.budget.out"
-    success = compare_budget(
-        fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
-    )
+    success = compare_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum)
     assert success, "budget comparison failure"
 
 
@@ -318,9 +307,7 @@ def test_mf2005(function_tmpdir, namfile):
 
     # compare budgets
     fsum = ws / f"{Path(namfile).stem}.budget.out"
-    success = compare_budget(
-        fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
-    )
+    success = compare_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum)
     assert success, "budget comparison failure"
 
 
@@ -344,9 +331,7 @@ def test_mf2005fhb(function_tmpdir, namfile):
     ws = function_tmpdir / "ws"
     copytree(Path(namfile).parent, ws)
 
-    m = Modflow.load(
-        Path(namfile).name, model_ws=ws, verbose=True, exe_name="mf2005"
-    )
+    m = Modflow.load(Path(namfile).name, model_ws=ws, verbose=True, exe_name="mf2005")
     assert m.load_fail is False
 
     success, buff = m.run_model(silent=False)
@@ -366,9 +351,7 @@ def test_mf2005fhb(function_tmpdir, namfile):
     assert success, "head comparison failure"
 
     fsum = join(ws, f"{Path(namfile).stem}.budget.out")
-    success = compare_budget(
-        fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
-    )
+    success = compare_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum)
     assert success, "budget comparison failure"
 
 
@@ -394,14 +377,14 @@ def test_mf2005_lake(function_tmpdir, namfile, mf2005_test_path):
 
     fn0 = join(ws, Path(namfile).name)
 
-    # write free format files - won't run without resetting to free format - evt external file issue
+    # write free format files -
+    # won't run without resetting to free format - evt external file issue
     m.free_format_input = True
 
     # rewrite files
     model_ws2 = join(ws, "external")
-    m.change_model_ws(
-        model_ws2, reset_external=True
-    )  # l1b2k_bath won't run without this
+    # l1b2k_bath won't run without this
+    m.change_model_ws(model_ws2, reset_external=True)
     m.write_input()
 
     success, buff = m.run_model()
@@ -410,7 +393,5 @@ def test_mf2005_lake(function_tmpdir, namfile, mf2005_test_path):
 
     fsum = join(ws, f"{Path(namfile).stem}.budget.out")
 
-    success = compare_budget(
-        fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
-    )
+    success = compare_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum)
     assert success, "budget comparison failure"

@@ -46,8 +46,8 @@ class TemplateWriter:
                 # Check to make sure pak has p.type as an attribute
                 if not hasattr(pak, p.type.lower()):
                     msg = (
-                        "Parameter named {} of type {} not found in "
-                        "package {}".format(p.name, p.type.lower(), ftype)
+                        f"Parameter named {p.name} of type {p.type.lower()} "
+                        f"not found in package {ftype}"
                     )
                     raise Exception(msg)
 
@@ -85,9 +85,8 @@ class TemplateWriter:
             # Write the file
             paktpl.heading = "ptf ~\n" + paktpl.heading
             paktpl.fn_path += ".tpl"
-            paktpl.write_file(
-                check=False
-            )  # for now, turn off checks for template files
+            # for now, turn off checks for template files
+            paktpl.write_file(check=False)
 
             # Destroy the template version of the package
             paktpl = None

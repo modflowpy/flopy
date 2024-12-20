@@ -44,7 +44,8 @@ def test_pgroup_release_data():
     )
     assert type(pgrd2.releaseinterval) == type(ripg2), (
         f"mp7: pgroup with releaseoption 2 returned "
-        f"type(releaseinterval)={type(pgrd2.releaseinterval)}. Should remain as {type(ripg2)}"
+        f"type(releaseinterval)={type(pgrd2.releaseinterval)}. "
+        f"Should remain as {type(ripg2)}"
     )
     assert len(pgrd3.releasetimes) == nripg3, (
         f"mp7: pgroup with releaseoption 3 returned "

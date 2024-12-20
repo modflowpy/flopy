@@ -20,16 +20,15 @@ rate_limit_msg = "rate limit exceeded"
 flopy_dir = get_project_root_path()
 get_modflow_script = flopy_dir / "flopy" / "utils" / "get_modflow.py"
 bindir_options = {
-    "flopy": Path(expandvars(r"%LOCALAPPDATA%\flopy")) / "bin"
-    if system() == "Windows"
-    else Path.home() / ".local" / "share" / "flopy" / "bin",
-    "python": Path(sys.prefix)
-    / ("Scripts" if system() == "Windows" else "bin"),
+    "flopy": (
+        Path(expandvars(r"%LOCALAPPDATA%\flopy")) / "bin"
+        if system() == "Windows"
+        else Path.home() / ".local" / "share" / "flopy" / "bin"
+    ),
+    "python": Path(sys.prefix) / ("Scripts" if system() == "Windows" else "bin"),
     "home": Path.home() / ".local" / "bin",
 }
-owner_options = [
-    "MODFLOW-USGS",
-]
+owner_options = ["MODFLOW-USGS"]
 repo_options = {
     "executables": [
         "crt",
@@ -128,9 +127,7 @@ def test_get_release(repo):
         }
     else:
         for ostag in expected_ostags:
-            assert any(
-                ostag in a for a in actual_assets
-            ), f"dist not found for {ostag}"
+            assert any(ostag in a for a in actual_assets), f"dist not found for {ostag}"
 
 
 @pytest.mark.parametrize("bindir", bindir_options.keys())
@@ -251,13 +248,7 @@ def test_script_valid_options(function_tmpdir, downloads_dir):
 def test_script(function_tmpdir, owner, repo, downloads_dir):
     bindir = str(function_tmpdir)
     stdout, stderr, returncode = run_get_modflow_script(
-        bindir,
-        "--owner",
-        owner,
-        "--repo",
-        repo,
-        "--downloads-dir",
-        downloads_dir,
+        bindir, "--owner", owner, "--repo", repo, "--downloads-dir", downloads_dir
     )
     if rate_limit_msg in stderr:
         pytest.skip(f"GitHub {rate_limit_msg}")
@@ -276,9 +267,7 @@ def test_script(function_tmpdir, owner, repo, downloads_dir):
 def test_python_api(function_tmpdir, owner, repo, downloads_dir):
     bindir = str(function_tmpdir)
     try:
-        get_modflow(
-            bindir, owner=owner, repo=repo, downloads_dir=downloads_dir
-        )
+        get_modflow(bindir, owner=owner, repo=repo, downloads_dir=downloads_dir)
     except HTTPError as err:
         if err.code == 403:
             pytest.skip(f"GitHub {rate_limit_msg}")

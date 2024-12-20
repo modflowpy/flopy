@@ -551,10 +551,7 @@ assert success, "Model did not run to completion."
 # +
 # load and store the head arrays from the parent and child models
 head = [gwfp.output.head().get_data(), gwfc.output.head().get_data()]
-conc = [
-    gwtp.output.concentration().get_data(),
-    gwtc.output.concentration().get_data(),
-]
+conc = [gwtp.output.concentration().get_data(), gwtc.output.concentration().get_data()]
 
 # load and store the specific discharge results for the parent and child models
 bud = gwfp.output.budget()
@@ -577,12 +574,8 @@ pmvc = flopy.plot.PlotMapView(gwfc, ax=ax, extent=pmvp.extent)
 # pmvc.plot_array(head[1], vmin=0., vmax=1.)
 
 # contour head
-cs = pmvp.contour_array(
-    head[0], levels=np.linspace(0, 1), masked_values=[1.0e30]
-)
-cs = pmvc.contour_array(
-    head[1], levels=np.linspace(0, 1), masked_values=[1.0e30]
-)
+cs = pmvp.contour_array(head[0], levels=np.linspace(0, 1), masked_values=[1.0e30])
+cs = pmvc.contour_array(head[1], levels=np.linspace(0, 1), masked_values=[1.0e30])
 
 # color flood concentrations
 a1 = conc[0]

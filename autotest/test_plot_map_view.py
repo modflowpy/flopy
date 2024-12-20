@@ -215,9 +215,7 @@ def test_map_view_contour_array_structured(function_tmpdir, ndim, rng):
         elif ndim == 2:
             # 1 layer as 2D
             pmv = PlotMapView(modelgrid=grid, layer=l)
-            contours = pmv.contour_array(
-                a=arr.reshape(nlay, nrow, ncol)[l, :, :]
-            )
+            contours = pmv.contour_array(a=arr.reshape(nlay, nrow, ncol)[l, :, :])
             plt.savefig(function_tmpdir / f"map_view_contour_{ndim}d_l{l}.png")
             plt.clf()
         elif ndim == 3:
@@ -276,3 +274,40 @@ def test_plot_limits():
         raise AssertionError("PlotMapView auto extent setting not working")
 
     plt.close(fig)
+
+
+def test_plot_centers():
+    nlay = 1
+    nrow = 10
+    ncol = 10
+
+    delc = np.ones((nrow,))
+    delr = np.ones((ncol,))
+    top = np.ones((nrow, ncol))
+    botm = np.zeros((nlay, nrow, ncol))
+    idomain = np.ones(botm.shape, dtype=int)
+
+    idomain[0, :, 0:3] = 0
+    active_cells = np.count_nonzero(idomain)
+
+    grid = flopy.discretization.StructuredGrid(
+        delc=delc, delr=delr, top=top, botm=botm, idomain=idomain
+    )
+
+    xcenters = grid.xcellcenters.ravel()
+    ycenters = grid.ycellcenters.ravel()
+    xycenters = list(zip(xcenters, ycenters))
+
+    pmv = flopy.plot.PlotMapView(modelgrid=grid)
+    pc = pmv.plot_centers()
+    if not isinstance(pc, PathCollection):
+        raise AssertionError("plot_centers() not returning PathCollection object")
+
+    verts = pc._offsets
+    if not verts.shape[0] == active_cells:
+        raise AssertionError("plot_centers() not properly masking inactive cells")
+
+    for vert in verts:
+        vert = tuple(vert)
+        if vert not in xycenters:
+            raise AssertionError("center location not properly plotted")
