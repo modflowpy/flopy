@@ -87,11 +87,12 @@ description name of the comma-separated value (CSV) output file to write budget 
 
 block options
 name sorption
-type keyword
+type string
+valid linear freundlich langmuir
 reader urword
 optional true
 longname activate sorption
-description is a text keyword to indicate that sorption will be activated.  Use of this keyword requires that BULK\_DENSITY and DISTCOEF are specified in the GRIDDATA block.  The linear sorption isotherm is the only isotherm presently supported in the IST Package.
+description is a text keyword to indicate that sorption will be activated.  Valid sorption options include LINEAR, FREUNDLICH, and LANGMUIR.  Use of this keyword requires that BULK\_DENSITY and DISTCOEF are specified in the GRIDDATA block.  If sorption is specified as FREUNDLICH or LANGMUIR then SP2 is also required in the GRIDDATA block.
 
 block options
 name first_order_decay
@@ -217,6 +218,39 @@ optional false
 longname write format
 description write format can be EXPONENTIAL, FIXED, GENERAL, or SCIENTIFIC.
 
+block options
+name sorbate_filerecord
+type record sorbate fileout sorbatefile
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name sorbate
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname sorbate keyword
+description keyword to specify that record corresponds to immobile sorbate concentration.
+
+block options
+name sorbatefile
+type string
+preserve_case true
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname file keyword
+description name of the output file to write immobile sorbate concentration information.  Immobile sorbate concentrations will be written whenever aqueous immobile concentrations are saved, as determined by settings in the Output Control option.
+
 # --------------------- gwt ist griddata ---------------------
 
 block griddata
@@ -296,3 +330,12 @@ layered true
 longname distribution coefficient
 description is the distribution coefficient for the equilibrium-controlled linear sorption isotherm in dimensions of length cubed per mass.  distcoef is not required unless the SORPTION keyword is specified in the options block.  If the SORPTION keyword is not specified in the options block, distcoef will have no effect on simulation results. 
 
+block griddata
+name sp2
+type double precision
+shape (nodes)
+reader readarray
+layered true
+optional true
+longname second sorption parameter
+description is the exponent for the Freundlich isotherm and the sorption capacity for the Langmuir isotherm.  sp2 is not required unless the SORPTION keyword is specified in the options block and sorption is specified as FREUNDLICH or LANGMUIR. If the SORPTION keyword is not specified in the options block, or if sorption is specified as LINEAR, sp2 will have no effect on simulation results. 

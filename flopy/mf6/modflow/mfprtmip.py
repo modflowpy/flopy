@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on May 23, 2024 14:30:07 UTC
+# FILE created on December 20, 2024 02:43:08 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator
 
@@ -50,80 +50,40 @@ class ModflowPrtmip(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have
+        utility packages (mfutl*). For example, mfutllaktab package must have 
         a mfgwflak package parent_file.
 
     """
-
-    porosity = ArrayTemplateGenerator(("prt6", "mip", "griddata", "porosity"))
-    retfactor = ArrayTemplateGenerator(
-        ("prt6", "mip", "griddata", "retfactor")
-    )
-    izone = ArrayTemplateGenerator(("prt6", "mip", "griddata", "izone"))
+    porosity = ArrayTemplateGenerator(('prt6', 'mip', 'griddata',
+                                       'porosity'))
+    retfactor = ArrayTemplateGenerator(('prt6', 'mip', 'griddata',
+                                        'retfactor'))
+    izone = ArrayTemplateGenerator(('prt6', 'mip', 'griddata', 'izone'))
     package_abbr = "prtmip"
     _package_type = "mip"
     dfn_file_name = "prt-mip.dfn"
 
     dfn = [
-        [
-            "header",
-        ],
-        [
-            "block options",
-            "name export_array_ascii",
-            "type keyword",
-            "reader urword",
-            "optional true",
-            "mf6internal export_ascii",
-        ],
-        [
-            "block griddata",
-            "name porosity",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "layered true",
-        ],
-        [
-            "block griddata",
-            "name retfactor",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "layered true",
-            "optional true",
-        ],
-        [
-            "block griddata",
-            "name izone",
-            "type integer",
-            "shape (nodes)",
-            "reader readarray",
-            "layered true",
-            "optional true",
-        ],
-    ]
+           ["header", ],
+           ["block options", "name export_array_ascii", "type keyword",
+            "reader urword", "optional true", "mf6internal export_ascii"],
+           ["block griddata", "name porosity", "type double precision",
+            "shape (nodes)", "reader readarray", "layered true"],
+           ["block griddata", "name retfactor", "type double precision",
+            "shape (nodes)", "reader readarray", "layered true",
+            "optional true"],
+           ["block griddata", "name izone", "type integer", "shape (nodes)",
+            "reader readarray", "layered true", "optional true"]]
 
-    def __init__(
-        self,
-        model,
-        loading_package=False,
-        export_array_ascii=None,
-        porosity=None,
-        retfactor=None,
-        izone=None,
-        filename=None,
-        pname=None,
-        **kwargs,
-    ):
-        super().__init__(
-            model, "mip", filename, pname, loading_package, **kwargs
-        )
+    def __init__(self, model, loading_package=False, export_array_ascii=None,
+                 porosity=None, retfactor=None, izone=None, filename=None,
+                 pname=None, **kwargs):
+        super().__init__(model, "mip", filename, pname,
+                         loading_package, **kwargs)
 
         # set up variables
-        self.export_array_ascii = self.build_mfdata(
-            "export_array_ascii", export_array_ascii
-        )
+        self.export_array_ascii = self.build_mfdata("export_array_ascii",
+                                                    export_array_ascii)
         self.porosity = self.build_mfdata("porosity", porosity)
         self.retfactor = self.build_mfdata("retfactor", retfactor)
         self.izone = self.build_mfdata("izone", izone)

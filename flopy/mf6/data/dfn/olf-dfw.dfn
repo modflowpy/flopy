@@ -1,0 +1,143 @@
+# --------------------- olf dfw options ---------------------
+
+block options
+name central_in_space
+type keyword
+reader urword
+optional true
+longname use central in space weighting
+description keyword to indicate conductance should be calculated using central-in-space weighting instead of the default upstream weighting approach.  This option should be used with caution as it does not work well unless all of the stream reaches are saturated.  With this option, there is no way for water to flow into a dry reach from connected reaches.
+mf6internal icentral
+
+block options
+name length_conversion
+type double precision
+reader urword
+optional true
+longname length conversion factor
+description real value that is used to convert user-specified Manning's roughness coefficients from meters to model length units. LENGTH\_CONVERSION should be set to 3.28081, 1.0, and 100.0 when using length units (LENGTH\_UNITS) of feet, meters, or centimeters in the simulation, respectively. LENGTH\_CONVERSION does not need to be specified if LENGTH\_UNITS are meters.
+mf6internal lengthconv
+
+block options
+name time_conversion
+type double precision
+reader urword
+optional true
+longname time conversion factor
+description real value that is used to convert user-specified Manning's roughness coefficients from seconds to model time units. TIME\_CONVERSION should be set to 1.0, 60.0, 3,600.0, 86,400.0, and 31,557,600.0 when using time units (TIME\_UNITS) of seconds, minutes, hours, days, or years in the simulation, respectively. TIME\_CONVERSION does not need to be specified if TIME\_UNITS are seconds.
+mf6internal timeconv
+
+block options
+name save_flows
+type keyword
+reader urword
+optional true
+longname keyword to save DFW flows
+description keyword to indicate that budget flow terms will be written to the file specified with ``BUDGET SAVE FILE'' in Output Control.
+mf6internal ipakcb
+
+block options
+name print_flows
+type keyword
+reader urword
+optional true
+longname keyword to print DFW flows to listing file
+description keyword to indicate that calculated flows between cells will be printed to the listing file for every stress period time step in which ``BUDGET PRINT'' is specified in Output Control. If there is no Output Control option and ``PRINT\_FLOWS'' is specified, then flow rates are printed for the last time step of each stress period.  This option can produce extremely large list files because all cell-by-cell flows are printed.  It should only be used with the DFW Package for models that have a small number of cells.
+mf6internal iprflow
+
+block options
+name save_velocity
+type keyword
+reader urword
+optional true
+longname keyword to save velocity
+description keyword to indicate that x, y, and z components of velocity will be calculated at cell centers and written to the budget file, which is specified with ``BUDGET SAVE FILE'' in Output Control.  If this option is activated, then additional information may be required in the discretization packages and the GWF Exchange package (if GWF models are coupled).  Specifically, ANGLDEGX must be specified in the CONNECTIONDATA block of the DISU Package; ANGLDEGX must also be specified for the GWF Exchange as an auxiliary variable.
+mf6internal isavvelocity
+
+block options
+name obs_filerecord
+type record obs6 filein obs6_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name obs6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname obs keyword
+description keyword to specify that record corresponds to an observations file.
+
+block options
+name filein
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an input filename is expected next.
+
+block options
+name obs6_filename
+type string
+preserve_case true
+in_record true
+tagged false
+reader urword
+optional false
+longname obs6 input filename
+description REPLACE obs6_filename {'{#1}': 'DFW'}
+
+block options
+name export_array_ascii
+type keyword
+reader urword
+optional true
+mf6internal export_ascii
+longname export array variables to layered ascii files.
+description keyword that specifies input griddata arrays should be written to layered ascii output files.
+
+# dev options
+
+block options
+name dev_swr_conductance
+type keyword
+reader urword
+optional true
+longname use SWR conductance formulation
+description use the conductance formulation in the Surface Water Routing (SWR) Process for MODFLOW-2005.
+mf6internal iswrcond
+
+# --------------------- olf dfw griddata ---------------------
+
+block griddata
+name manningsn
+type double precision
+shape (nodes)
+valid
+reader readarray
+layered false
+optional
+longname mannings roughness coefficient
+description mannings roughness coefficient
+
+block griddata
+name idcxs
+type integer
+shape (nodes)
+valid
+reader readarray
+layered false
+optional true
+longname cross section number
+description integer value indication the cross section identifier in the Cross Section Package that applies to the reach.  If not provided then reach will be treated as hydraulically wide.
+numeric_index true

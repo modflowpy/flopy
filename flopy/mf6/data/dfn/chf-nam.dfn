@@ -1,0 +1,99 @@
+# --------------------- chf nam options ---------------------
+
+block options
+name list
+type string
+reader urword
+optional true
+preserve_case true
+longname name of listing file
+description is name of the listing file to create for this CHF model.  If not specified, then the name of the list file will be the basename of the CHF model name file and the '.lst' extension.  For example, if the CHF name file is called ``my.model.nam'' then the list file will be called ``my.model.lst''.
+
+block options
+name print_input
+type keyword
+reader urword
+optional true
+longname print input to listing file
+description REPLACE print_input {'{#1}': 'all model stress package'}
+
+block options
+name print_flows
+type keyword
+reader urword
+optional true
+longname print calculated flows to listing file
+description REPLACE print_flows {'{#1}': 'all model package'}
+
+block options
+name save_flows
+type keyword
+reader urword
+optional true
+longname save flows for all packages to budget file
+description REPLACE save_flows {'{#1}': 'all model package'}
+
+block options
+name newtonoptions
+type record newton under_relaxation
+reader urword
+optional true
+longname newton keyword and options
+description none
+
+block options
+name newton
+in_record true
+type keyword
+reader urword
+longname keyword to activate Newton-Raphson formulation
+description keyword that activates the Newton-Raphson formulation for surface water flow between connected reaches and stress packages that support calculation of Newton-Raphson terms. 
+
+block options
+name under_relaxation
+in_record true
+type keyword
+reader urword
+optional true
+longname keyword to activate Newton-Raphson UNDER_RELAXATION option
+description keyword that indicates whether the surface water stage in a reach will be under-relaxed when water levels fall below the bottom of the model below any given cell. By default, Newton-Raphson UNDER\_RELAXATION is not applied.
+
+# --------------------- chf nam packages ---------------------
+
+block packages
+name packages
+type recarray ftype fname pname
+reader urword
+optional false
+longname package list
+description
+
+block packages
+name ftype
+in_record true
+type string
+tagged false
+reader urword
+longname package type
+description is the file type, which must be one of the following character values shown in table~\ref{table:ftype-chf}. Ftype may be entered in any combination of uppercase and lowercase.
+
+block packages
+name fname
+in_record true
+type string
+preserve_case true
+tagged false
+reader urword
+longname file name
+description is the name of the file containing the package input.  The path to the file should be included if the file is not located in the folder where the program was run.
+
+block packages
+name pname
+in_record true
+type string
+tagged false
+reader urword
+optional true
+longname user name for package
+description is the user-defined name for the package. PNAME is restricted to 16 characters.  No spaces are allowed in PNAME.  PNAME character values are read and stored by the program for stress packages only.  These names may be useful for labeling purposes when multiple stress packages of the same type are located within a single CHF Model.  If PNAME is specified for a stress package, then PNAME will be used in the flow budget table in the listing file; it will also be used for the text entry in the cell-by-cell budget file.  PNAME is case insensitive and is stored in all upper case letters.
+

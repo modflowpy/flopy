@@ -3,6 +3,14 @@
 # package-type advanced-stress-package
 
 block options
+name storage
+type keyword
+reader urword
+optional true
+longname activate reach storage
+description keyword that activates storage contributions to the stream-flow routing package continuity equation.
+
+block options
 name auxiliary
 type string
 shape (naux)
@@ -327,6 +335,14 @@ optional true
 longname time conversion factor
 description real value that is used to convert user-specified Manning's roughness coefficients from seconds to model time units. TIME\_CONVERSION should be set to 1.0, 60.0, 3,600.0, 86,400.0, and 31,557,600.0 when using time units (TIME\_UNITS) of seconds, minutes, hours, days, or years in the simulation, respectively. TIME\_CONVERSION does not need to be specified if TIME\_UNITS are seconds.
 
+block options
+name dev_storage_weight
+type double precision
+reader urword
+optional true
+longname reach storage time weighting
+description real number value that defines the time weighting factor used to calculate the change in channel storage. STORAGE\_WEIGHT must have a value between 0.5 and 1. Default STORAGE\_WEIGHT value is 1.
+
 
 # --------------------- gwf sfr dimensions ---------------------
 
@@ -641,6 +657,41 @@ reader urword
 longname iprior code
 description character string value that defines the the prioritization system for the diversion, such as when insufficient water is available to meet all diversion stipulations, and is used in conjunction with the value of FLOW value specified in the STRESS\_PERIOD\_DATA section. Available diversion options include:  (1) CPRIOR = `FRACTION', then the amount of the diversion is computed as a fraction of the streamflow leaving reach IFNO ($Q_{DS}$); in this case, 0.0 $\le$ DIVFLOW $\le$ 1.0.  (2) CPRIOR = `EXCESS', a diversion is made only if $Q_{DS}$ for reach IFNO exceeds the value of DIVFLOW. If this occurs, then the quantity of water diverted is the excess flow ($Q_{DS} -$ DIVFLOW) and $Q_{DS}$ from reach IFNO is set equal to DIVFLOW. This represents a flood-control type of diversion, as described by Danskin and Hanson (2002). (3) CPRIOR = `THRESHOLD', then if $Q_{DS}$ in reach IFNO is less than the specified diversion flow DIVFLOW, no water is diverted from reach IFNO. If $Q_{DS}$ in reach IFNO is greater than or equal to DIVFLOW, DIVFLOW is diverted and $Q_{DS}$ is set to the remainder ($Q_{DS} -$ DIVFLOW)). This approach assumes that once flow in the stream is sufficiently low, diversions from the stream cease, and is the `priority' algorithm that originally was programmed into the STR1 Package (Prudic, 1989).  (4) CPRIOR = `UPTO' -- if $Q_{DS}$ in reach IFNO is greater than or equal to the specified diversion flow DIVFLOW, $Q_{DS}$ is reduced by DIVFLOW. If $Q_{DS}$ in reach IFNO is less than DIVFLOW, DIVFLOW is set to $Q_{DS}$ and there will be no flow available for reaches connected to downstream end of reach IFNO.
 
+# --------------------- gwf initial stages ---------------------
+
+block initialstages
+name initialstages
+type recarray ifno initialstage
+shape (maxbound)
+valid
+optional false
+reader urword
+longname
+description
+
+block initialstages
+name ifno
+type integer
+shape
+tagged false
+in_record true
+optional false
+reader urword
+longname reach number for this entry
+description integer value that defines the feature (reach) number associated with the specified initial stage. Initial stage data must be specified for every reach or the program will terminate with an error. The program will also terminate with a error if IFNO is less than one or greater than NREACHES. 
+numeric_index true
+
+block initialstages
+name initialstage
+type double precision
+shape
+tagged false
+in_record true
+optional false
+reader urword
+longname initial reach stage
+description real value that defines the initial stage for the reach. The program will terminate with an error if INITIALSTAGE is less than the RTP value for reach IFNO defined in the PACKAGEDATA block.  INITIALSTAGE data are used only if STORAGE is specified in the Options block and the first stress period is transient or for reaches defined to use the SIMPLE STATUS in the Period block.
+
 
 # --------------------- gwf sfr period ---------------------
 
@@ -693,7 +744,7 @@ shape
 tagged true
 in_record true
 reader urword
-longname well status
+longname reach status
 description keyword option to define stream reach status.  STATUS can be ACTIVE, INACTIVE, or SIMPLE. The SIMPLE STATUS option simulates streamflow using a user-specified stage for a reach or a stage set to the top of the reach (depth = 0). In cases where the simulated leakage calculated using the specified stage exceeds the sum of inflows to the reach, the stage is set to the top of the reach and leakage is set equal to the sum of inflows. Upstream fractions should be changed using the UPSTREAM\_FRACTION SFRSETTING if the status for one or more reaches is changed to ACTIVE or INACTIVE. For example, if one of two downstream connections for a reach is inactivated, the upstream fraction for the active and inactive downstream reach should be changed to 1.0 and 0.0, respectively, to ensure that the active reach receives all of the downstream outflow from the upstream reach. By default, STATUS is ACTIVE.
 
 block period

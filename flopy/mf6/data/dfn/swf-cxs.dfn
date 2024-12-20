@@ -1,0 +1,100 @@
+# --------------------- swf cxs options ---------------------
+
+block options
+name print_input
+type keyword
+reader urword
+optional true
+longname print input to listing file
+description REPLACE print_input {'{#1}': 'stream reach'}
+mf6internal iprpak
+
+# --------------------- swf cxs dimensions ---------------------
+
+block dimensions
+name nsections
+type integer
+reader urword
+optional false
+longname number of reaches
+description integer value specifying the number of cross sections that will be defined.  There must be NSECTIONS entries in the PACKAGEDATA block.
+
+block dimensions
+name npoints
+type integer
+reader urword
+optional false
+longname total number of points defined for all reaches
+description integer value specifying the total number of cross-section points defined for all reaches.  There must be NPOINTS entries in the CROSSSECTIONDATA block.
+
+# --------------------- swf cxs packagedata ---------------------
+
+block packagedata
+name packagedata
+type recarray idcxs nxspoints
+shape (nsections)
+reader urword
+longname
+description
+
+block packagedata
+name idcxs
+type integer
+shape
+tagged false
+in_record true
+reader urword
+longname reach number for this entry
+description integer value that defines the cross section number associated with the specified PACKAGEDATA data on the line. IDCXS must be greater than zero and less than or equal to NSECTIONS. Information must be specified for every section or the program will terminate with an error.  The program will also terminate with an error if information for a section is specified more than once.
+numeric_index true
+
+block packagedata
+name nxspoints
+type integer
+shape
+tagged false
+in_record true
+reader urword
+longname number of points used to define cross section
+description integer value that defines the number of points used to define the define the shape of a section.  NXSPOINTS must be greater than zero or the program will terminate with an error.  NXSPOINTS defines the number of points that must be entered for the reach in the CROSSSECTIONDATA block.  The sum of NXSPOINTS for all sections must equal the NPOINTS dimension.
+
+# --------------------- swf cxs crosssectiondata ---------------------
+
+block crosssectiondata
+name crosssectiondata
+type recarray xfraction height manfraction
+shape (npoints)
+reader urword
+longname
+description
+
+block crosssectiondata
+name xfraction
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+longname fractional width
+description real value that defines the station (x) data for the cross-section as a fraction of the width (WIDTH) of the reach. XFRACTION must be greater than or equal to zero but can be greater than one. XFRACTION values can be used to decrease or increase the width of a reach from the specified reach width (WIDTH).
+
+block crosssectiondata
+name height
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+longname depth
+description real value that is the height relative to the top of the lowest elevation of the streambed (ELEVATION) and corresponding to the station data on the same line. HEIGHT must be greater than or equal to zero and at least one cross-section height must be equal to zero.
+
+block crosssectiondata
+name manfraction
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+optional false
+longname Manning's roughness coefficient
+description real value that defines the Manning's roughness coefficient data for the cross-section as a fraction of the Manning's roughness coefficient for the reach (MANNINGSN) and corresponding to the station data on the same line. MANFRACTION must be greater than zero. MANFRACTION is applied from the XFRACTION value on the same line to the XFRACTION value on the next line.

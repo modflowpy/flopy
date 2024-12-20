@@ -1,0 +1,22 @@
+# --------------------- swf ic options ---------------------
+
+block options
+name export_array_ascii
+type keyword
+reader urword
+optional true
+mf6internal export_ascii
+longname export array variables to layered ascii files.
+description keyword that specifies input griddata arrays should be written to layered ascii output files.
+
+# --------------------- swf ic griddata ---------------------
+
+block griddata
+name strt
+type double precision
+shape (nodes)
+reader readarray
+layered true
+longname starting concentration
+description is the initial (starting) stage---that is, stage at the beginning of the SWF Model simulation.  STRT must be specified for all SWF Model simulations. One value is read for every model reach.
+default_value 0.0

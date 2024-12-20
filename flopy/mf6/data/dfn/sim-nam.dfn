@@ -61,6 +61,7 @@ tagged true
 optional false
 longname head keyword
 description keyword to specify that record corresponds to a hpc file.
+extended true
 
 block options
 name filein
@@ -83,6 +84,7 @@ optional false
 tagged false
 longname file name of time series information
 description name of input file to define HPC file settings for the HPC package. See the ``HPC File'' section for instructions for preparing HPC input files.
+extended true
 
 
 # --------------------- sim nam timing ---------------------

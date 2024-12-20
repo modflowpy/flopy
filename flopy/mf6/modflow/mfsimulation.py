@@ -1,16 +1,15 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on May 23, 2024 14:30:07 UTC
+# FILE created on December 20, 2024 02:43:08 UTC
 import os
 from typing import Union
-
 from .. import mfsimbase
 
 
 class MFSimulation(mfsimbase.MFSimulationBase):
     """
-    MFSimulation is used to load, build, and/or save a MODFLOW 6 simulation.
-    A MFSimulation object must be created before creating any of the MODFLOW 6
+    MFSimulation is used to load, build, and/or save a MODFLOW 6 simulation. 
+    A MFSimulation object must be created before creating any of the MODFLOW 6 
     model objects.
 
     Parameters
@@ -84,34 +83,22 @@ class MFSimulation(mfsimbase.MFSimulationBase):
         ) : MFSimulation
         a class method that loads a simulation from files
     """
-
-    def __init__(
-        self,
-        sim_name="sim",
-        version="mf6",
-        exe_name: Union[str, os.PathLike] = "mf6",
-        sim_ws: Union[str, os.PathLike] = os.curdir,
-        verbosity_level=1,
-        write_headers=True,
-        use_pandas=True,
-        lazy_io=False,
-        continue_=None,
-        nocheck=None,
-        memory_print_option=None,
-        maxerrors=None,
-        print_input=None,
-        hpc_data=None,
-    ):
-        super().__init__(
-            sim_name=sim_name,
-            version=version,
-            exe_name=exe_name,
-            sim_ws=sim_ws,
-            verbosity_level=verbosity_level,
-            write_headers=write_headers,
-            lazy_io=lazy_io,
-            use_pandas=use_pandas,
-        )
+    def __init__(self, sim_name='sim', version='mf6',
+                 exe_name: Union[str, os.PathLike] = "mf6",
+                 sim_ws: Union[str, os.PathLike] = os.curdir,
+                 verbosity_level=1, write_headers=True, use_pandas=True,
+                 lazy_io=False, continue_=None, nocheck=None,
+                 memory_print_option=None, maxerrors=None, print_input=None,
+                 hpc_data=None):
+        super().__init__(sim_name=sim_name,
+                         version=version,
+                         exe_name=exe_name,
+                         sim_ws=sim_ws,
+                         verbosity_level=verbosity_level,
+                         write_headers=write_headers,
+                         lazy_io=lazy_io,
+                         use_pandas=use_pandas,
+                         )
 
         self.name_file.continue_.set_data(continue_)
         self.name_file.nocheck.set_data(nocheck)
@@ -124,34 +111,17 @@ class MFSimulation(mfsimbase.MFSimulationBase):
         self.memory_print_option = self.name_file.memory_print_option
         self.maxerrors = self.name_file.maxerrors
         self.print_input = self.name_file.print_input
-        self.hpc_data = self._create_package("hpc", hpc_data)
+        self.hpc_data = self._create_package('hpc', hpc_data)
 
     @classmethod
-    def load(
-        cls,
-        sim_name="modflowsim",
-        version="mf6",
-        exe_name: Union[str, os.PathLike] = "mf6",
-        sim_ws: Union[str, os.PathLike] = os.curdir,
-        strict=True,
-        verbosity_level=1,
-        load_only=None,
-        verify_data=False,
-        write_headers=True,
-        lazy_io=False,
-        use_pandas=True,
-    ):
-        return mfsimbase.MFSimulationBase.load(
-            cls,
-            sim_name,
-            version,
-            exe_name,
-            sim_ws,
-            strict,
-            verbosity_level,
-            load_only,
-            verify_data,
-            write_headers,
-            lazy_io,
-            use_pandas,
-        )
+    def load(cls, sim_name='modflowsim', version='mf6',
+             exe_name: Union[str, os.PathLike] = 'mf6',
+             sim_ws: Union[str, os.PathLike] = os.curdir,
+             strict=True, verbosity_level=1, load_only=None,
+             verify_data=False, write_headers=True,
+             lazy_io=False, use_pandas=True):
+        return mfsimbase.MFSimulationBase.load(cls, sim_name, version, 
+                                               exe_name, sim_ws, strict,
+                                               verbosity_level, load_only,
+                                               verify_data, write_headers, 
+                                               lazy_io, use_pandas)
