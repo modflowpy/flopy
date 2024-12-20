@@ -31,11 +31,14 @@
 # +
 import os
 import sys
+from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import git
 import matplotlib as mpl
 import numpy as np
 import pandas as pd
+import pooch
 
 import flopy
 
@@ -54,6 +57,15 @@ print(f"flopy version: {flopy.__version__}")
 # temporary directory
 temp_dir = TemporaryDirectory()
 model_ws = temp_dir.name
+
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
 
 modelpth = os.path.join(model_ws, "no3")
 modelname = "no3"
@@ -124,29 +136,29 @@ nwt = flopy.modflow.ModflowNwt(
 # ### Instantiate discretization (DIS) package for MODFLOW-NWT
 
 # +
-elv_pth = os.path.join(
-    "..",
-    "..",
-    "examples",
-    "data",
-    "mt3d_example_sft_lkt_uzt",
-    "dis_arrays",
-    "grnd_elv.txt",
-)
 
 # Top of Layer 1 elevation determined using GW Vistas and stored locally
+fname = "grnd_elv.txt"
+folder_name = "mt3d_example_sft_lkt_uzt"
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{folder_name}/dis_arrays/{fname}",
+    fname=fname,
+    path=data_path / folder_name / "dis_arrays",
+    known_hash=None,
+)
+elv_pth = data_path / folder_name / "dis_arrays" / fname
 grndElv = np.loadtxt(elv_pth)
 
 # Bottom of layer 1 elevation also determined from use of GUI and stored locally
-bt1_pth = os.path.join(
-    "..",
-    "..",
-    "examples",
-    "data",
-    "mt3d_example_sft_lkt_uzt",
-    "dis_arrays",
-    "bot1.txt",
+fname = "bot1.txt"
+folder_name = "mt3d_example_sft_lkt_uzt"
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{folder_name}/dis_arrays/{fname}",
+    fname=fname,
+    path=data_path / folder_name / "dis_arrays",
+    known_hash=None,
 )
+bt1_pth = data_path / folder_name / "dis_arrays" / fname
 bot1Elv = np.loadtxt(bt1_pth)
 
 bot2Elv = np.ones(bot1Elv.shape) * 100
@@ -226,14 +238,13 @@ upw = flopy.modflow.ModflowUpw(
 # ### Instantiate basic (BAS or BA6) package for MODFLOW-NWT
 
 # +
-ibnd1_pth = os.path.join(
-    "..",
-    "..",
-    "examples",
-    "data",
-    "mt3d_example_sft_lkt_uzt",
-    "bas_arrays",
-    "ibnd_lay1.txt",
+fname = "ibnd_lay1.txt"
+ibnd1_pth = data_path / folder_name / "bas_arrays" / fname
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{folder_name}/bas_arrays/{fname}",
+    fname=fname,
+    path=data_path / folder_name / "bas_arrays",
+    known_hash=None,
 )
 ibnd1 = np.loadtxt(ibnd1_pth)
 ibnd2 = np.ones(ibnd1.shape)
@@ -242,36 +253,33 @@ ibnd3 = np.ones(ibnd2.shape)
 ibnd = [ibnd1, ibnd2, ibnd3]
 ibnd = np.array(ibnd)
 
-StHd1_pth = os.path.join(
-    "..",
-    "..",
-    "examples",
-    "data",
-    "mt3d_example_sft_lkt_uzt",
-    "bas_arrays",
-    "strthd1.txt",
+fname = "strthd1.txt"
+StHd1_pth = data_path / folder_name / "bas_arrays" / fname
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{folder_name}/bas_arrays/{fname}",
+    fname=fname,
+    path=data_path / folder_name / "bas_arrays",
+    known_hash=None,
 )
 StHd1 = np.loadtxt(StHd1_pth)
 
-StHd2_pth = os.path.join(
-    "..",
-    "..",
-    "examples",
-    "data",
-    "mt3d_example_sft_lkt_uzt",
-    "bas_arrays",
-    "strthd2.txt",
+fname = "strthd2.txt"
+StHd2_pth = data_path / folder_name / "bas_arrays" / fname
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{folder_name}/bas_arrays/{fname}",
+    fname=fname,
+    path=data_path / folder_name / "bas_arrays",
+    known_hash=None,
 )
 StHd2 = np.loadtxt(StHd2_pth)
 
-StHd3_pth = os.path.join(
-    "..",
-    "..",
-    "examples",
-    "data",
-    "mt3d_example_sft_lkt_uzt",
-    "bas_arrays",
-    "strthd3.txt",
+fname = "strthd3.txt"
+StHd3_pth = data_path / folder_name / "bas_arrays" / fname
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{folder_name}/bas_arrays/{fname}",
+    fname=fname,
+    path=data_path / folder_name / "bas_arrays",
+    known_hash=None,
 )
 StHd3 = np.loadtxt(StHd3_pth)
 
@@ -295,34 +303,16 @@ elev_slp = (308.82281 - 298.83649) / (ncol - 1)
 
 sp = []
 for k in [0, 1, 2]:  # These indices need to be adjusted for 0-based moronicism
-    for i in [
-        0,
-        299,
-    ]:  # These indices need to be adjusted for 0-based silliness
-        for j in np.arange(
-            0, 300, 1
-        ):  # These indices need to be adjusted for 0-based foolishness
-            # Skipping cells not satisfying the conditions below
+    for i in [0, 299]:  # These indices need to be adjusted for 0-based silliness
+        # These indices need to be adjusted for 0-based foolishness
+        # Skipping cells not satisfying the conditions below
+        for j in np.arange(0, 300, 1):
             if (i == 1 and (j < 27 or j > 31)) or (i == 299 and (j < 26 or j > 31)):
                 if i % 2 == 0:
-                    sp.append(
-                        [
-                            k,
-                            i,
-                            j,
-                            elev_stpt_row1 - (elev_slp * (j - 1)),
-                            11.3636,
-                        ]
-                    )
+                    sp.append([k, i, j, elev_stpt_row1 - (elev_slp * (j - 1)), 11.3636])
                 else:
                     sp.append(
-                        [
-                            k,
-                            i,
-                            j,
-                            elev_stpt_row300 - (elev_slp * (j - 1)),
-                            11.3636,
-                        ]
+                        [k, i, j, elev_stpt_row300 - (elev_slp * (j - 1)), 11.3636]
                     )
 
 
@@ -340,28 +330,26 @@ ghb = flopy.modflow.ModflowGhb(mf, stress_period_data=sp)
 # Remember that the cell indices stored in the pre-prepared NO3_ReachInput.csv file are based on 0-based indexing.
 # Flopy will convert to 1-based when it writes the files
 
-rpth = os.path.join(
-    "..",
-    "..",
-    "examples",
-    "data",
-    "mt3d_example_sft_lkt_uzt",
-    "sfr_data",
-    "no3_reachinput.csv",
+fname = "no3_reachinput.csv"
+rpth = data_path / folder_name / "sfr_data" / fname
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{folder_name}/sfr_data/{fname}",
+    fname=fname,
+    path=data_path / folder_name / "sfr_data",
+    known_hash=None,
 )
 reach_data = np.genfromtxt(rpth, delimiter=",", names=True)
 reach_data
 
 # Read pre-prepared segment data into numpy recarrays using numpy.genfromtxt()
 
-spth = os.path.join(
-    "..",
-    "..",
-    "examples",
-    "data",
-    "mt3d_example_sft_lkt_uzt",
-    "sfr_data",
-    "no3_segmentdata.csv",
+fname = "no3_segmentdata.csv"
+spth = data_path / folder_name / "sfr_data" / fname
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{folder_name}/sfr_data/{fname}",
+    fname=fname,
+    path=data_path / folder_name / "sfr_data",
+    known_hash=None,
 )
 ss_segment_data = np.genfromtxt(spth, delimiter=",", names=True)
 segment_data = {0: ss_segment_data, 1: ss_segment_data}
@@ -402,14 +390,13 @@ sfr = flopy.modflow.ModflowSfr2(
 
 # +
 # Read pre-prepared lake arrays
-LakArr_pth = os.path.join(
-    "..",
-    "..",
-    "examples",
-    "data",
-    "mt3d_example_sft_lkt_uzt",
-    "lak_arrays",
-    "lakarr1.txt",
+fname = "lakarr1.txt"
+LakArr_pth = data_path / folder_name / "lak_arrays" / fname
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{folder_name}/lak_arrays/{fname}",
+    fname=fname,
+    path=data_path / folder_name / "lak_arrays",
+    known_hash=None,
 )
 LakArr_lyr1 = np.loadtxt(LakArr_pth)
 LakArr_lyr2 = np.zeros(LakArr_lyr1.shape)
@@ -421,7 +408,7 @@ LakArr = np.array(LakArr)
 nlakes = int(np.max(LakArr))
 ipakcb = ipakcb  # From above
 theta = -1.0  # Implicit
-nssitr = 10  # Maximum number of iterations for Newton’s method
+nssitr = 10  # Maximum number of iterations for Newton's method
 sscncr = 1.000e-03  # Convergence criterion for equilibrium lake stage solution
 surfdep = 2.000e00  # Height of small topological variations in lake-bottom
 stages = 268.00  # Initial stage of each lake at the beginning of the run
@@ -534,23 +521,21 @@ eps = 3.0
 thts = 0.30
 thti = 0.13079
 
-fname_uzbnd = os.path.join(
-    "..",
-    "..",
-    "examples",
-    "data",
-    "mt3d_example_sft_lkt_uzt",
-    "uzf_arrays",
-    "iuzbnd.txt",
+fname = "iuzbnd.txt"
+fname_uzbnd = data_path / folder_name / "uzf_arrays" / fname
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{folder_name}/uzf_arrays/{fname}",
+    fname=fname,
+    path=data_path / folder_name / "uzf_arrays",
+    known_hash=None,
 )
-fname_runbnd = os.path.join(
-    "..",
-    "..",
-    "examples",
-    "data",
-    "mt3d_example_sft_lkt_uzt",
-    "uzf_arrays",
-    "irunbnd.txt",
+fname = "irunbnd.txt"
+fname_runbnd = data_path / folder_name / "uzf_arrays" / fname
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{folder_name}/uzf_arrays/{fname}",
+    fname=fname,
+    path=data_path / folder_name / "uzf_arrays",
+    known_hash=None,
 )
 
 iuzfbnd = np.loadtxt(fname_uzbnd)
@@ -585,23 +570,21 @@ uzf = flopy.modflow.ModflowUzf1(
 # ### Instantiate Drain (DRN) package for MODFLOW-NWT
 
 # +
-fname_drnElv = os.path.join(
-    "..",
-    "..",
-    "examples",
-    "data",
-    "mt3d_example_sft_lkt_uzt",
-    "drn_arrays",
-    "elv.txt",
+fname = "elv.txt"
+fname_drnElv = data_path / folder_name / "drn_arrays" / fname
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{folder_name}/drn_arrays/{fname}",
+    fname=fname,
+    path=data_path / folder_name / "drn_arrays",
+    known_hash=None,
 )
-fname_drnCond = os.path.join(
-    "..",
-    "..",
-    "examples",
-    "data",
-    "mt3d_example_sft_lkt_uzt",
-    "drn_arrays",
-    "cond.txt",
+fname = "cond.txt"
+fname_drnCond = data_path / folder_name / "drn_arrays" / fname
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{folder_name}/drn_arrays/{fname}",
+    fname=fname,
+    path=data_path / folder_name / "drn_arrays",
+    known_hash=None,
 )
 
 drnElv = np.loadtxt(fname_drnElv)

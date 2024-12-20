@@ -150,10 +150,7 @@ def test_generate_classes_from_github_refs(
     modified_files = [
         mod_files[i]
         for i, (before, after) in enumerate(
-            zip(
-                mod_file_times,
-                [get_mtime(f) for f in mod_files],
-            )
+            zip(mod_file_times, [get_mtime(f) for f in mod_files])
         )
         if after > 0 and after > before
     ]

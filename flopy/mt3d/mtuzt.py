@@ -516,12 +516,7 @@ class Mt3dUzt(Package):
                 for icomp in range(2, ncomp + 1):
                     name = f"cuzet{icomp}"
                     t2d = Transient2d(
-                        model,
-                        (nrow, ncol),
-                        np.float32,
-                        0.0,
-                        name=name,
-                        locat=0,
+                        model, (nrow, ncol), np.float32, 0.0, name=name, locat=0
                     )
                     kwargs[name] = {0: t2d}
 
@@ -535,12 +530,7 @@ class Mt3dUzt(Package):
                 for icomp in range(2, ncomp + 1):
                     name = f"cgwet{icomp}"
                     t2d = Transient2d(
-                        model,
-                        (nrow, ncol),
-                        np.float32,
-                        0.0,
-                        name=name,
-                        locat=0,
+                        model, (nrow, ncol), np.float32, 0.0, name=name, locat=0
                     )
                     kwargs[name] = {0: t2d}
         elif iet == 0:
@@ -573,12 +563,7 @@ class Mt3dUzt(Package):
                         if model.verbose:
                             print(f"   loading {name}...")
                         t = Util2d.load(
-                            f,
-                            model,
-                            (nrow, ncol),
-                            np.float32,
-                            name,
-                            ext_unit_dict,
+                            f, model, (nrow, ncol), np.float32, name, ext_unit_dict
                         )
                         cuzinficomp = kwargs[name]
                         cuzinficomp[iper] = t
@@ -613,12 +598,7 @@ class Mt3dUzt(Package):
                     if model.verbose:
                         print(f"   Reading CUZET array for kper {iper + 1:5d}")
                     t = Util2d.load(
-                        f,
-                        model,
-                        (nrow, ncol),
-                        np.float32,
-                        "cuzet",
-                        ext_unit_dict,
+                        f, model, (nrow, ncol), np.float32, "cuzet", ext_unit_dict
                     )
                     cuzet[iper] = t
 
@@ -629,12 +609,7 @@ class Mt3dUzt(Package):
                             if model.verbose:
                                 print(f"   loading {name}")
                             t = Util2d.load(
-                                f,
-                                model,
-                                (nrow, ncol),
-                                np.float32,
-                                name,
-                                ext_unit_dict,
+                                f, model, (nrow, ncol), np.float32, name, ext_unit_dict
                             )
                             cuzeticomp = kwargs[name]
                             cuzeticomp[iper] = t
@@ -667,12 +642,7 @@ class Mt3dUzt(Package):
                     if incuzet >= 0:
                         print(f"   Reading CGWET array for kper {iper + 1:5d}")
                     t = Util2d.load(
-                        f,
-                        model,
-                        (nrow, ncol),
-                        np.float32,
-                        "cgwet",
-                        ext_unit_dict,
+                        f, model, (nrow, ncol), np.float32, "cgwet", ext_unit_dict
                     )
                     cgwet[iper] = t
 
@@ -683,12 +653,7 @@ class Mt3dUzt(Package):
                             if model.verbose:
                                 print(f"   loading {name}...")
                             t = Util2d.load(
-                                f,
-                                model,
-                                (nrow, ncol),
-                                np.float32,
-                                name,
-                                ext_unit_dict,
+                                f, model, (nrow, ncol), np.float32, name, ext_unit_dict
                             )
                             cgweticomp = kwargs[name]
                             cgweticomp[iper] = t

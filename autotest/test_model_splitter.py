@@ -306,9 +306,7 @@ def test_control_records(function_tmpdir):
             ],
         )
 
-        wel_rec = [
-            ((0, 4, 5), -10),
-        ]
+        wel_rec = [((0, 4, 5), -10)]
 
         spd = {
             0: wel_rec,
@@ -382,22 +380,8 @@ def test_empty_packages(function_tmpdir):
         k33=20.0,
     )
     ic = flopy.mf6.ModflowGwfic(gwf, strt=0.0)
-    chd = flopy.mf6.ModflowGwfchd(
-        gwf,
-        stress_period_data={
-            0: [
-                ((0, 0, 13), 0.0),
-            ]
-        },
-    )
-    wel = flopy.mf6.ModflowGwfwel(
-        gwf,
-        stress_period_data={
-            0: [
-                ((0, 0, 0), 1.0),
-            ]
-        },
-    )
+    chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data={0: [((0, 0, 13), 0.0)]})
+    wel = flopy.mf6.ModflowGwfwel(gwf, stress_period_data={0: [((0, 0, 0), 1.0)]})
 
     # Build SFR records
     packagedata = [
@@ -445,11 +429,7 @@ def test_empty_packages(function_tmpdir):
         nreaches=14,
         packagedata=packagedata,
         connectiondata=connectiondata,
-        perioddata={
-            0: [
-                (0, "INFLOW", 1.0),
-            ]
-        },
+        perioddata={0: [(0, "INFLOW", 1.0)]},
     )
 
     array = np.zeros((nrow, ncol), dtype=int)
@@ -559,10 +539,7 @@ def test_transient_array(function_tmpdir):
     for name in new_sim.model_names:
         g = new_sim.get_model(name)
         d = {}
-        for key in (
-            0,
-            2,
-        ):
+        for key in (0, 2):
             d[key] = g.sto.steady_state.get_data(key)
         assert d == steady, (
             "storage steady_state dictionary " + f"does not match for model '{name}'"
@@ -715,39 +692,11 @@ def test_unstructured_complex_disu(function_tmpdir):
     iac, ja, ihc, cl12, hwva, angldegx = [], [], [], [], [], []
     for cell, neigh in neighbors.items():
         iac.append(len(neigh) + 1)
-        ihc.extend(
-            [
-                1,
-            ]
-            * (len(neigh) + 1)
-        )
-        ja.extend(
-            [
-                cell,
-            ]
-            + neigh
-        )
-        cl12.extend(
-            [
-                0,
-            ]
-            + [
-                1,
-            ]
-            * len(neigh)
-        )
-        hwva.extend(
-            [
-                0,
-            ]
-            + [
-                1,
-            ]
-            * len(neigh)
-        )
-        adx = [
-            0,
-        ]
+        ihc.extend([1] * (len(neigh) + 1))
+        ja.extend([cell] + neigh)
+        cl12.extend([0] + [1] * len(neigh))
+        hwva.extend([0] + [1] * len(neigh))
+        adx = [0]
         for n in neigh:
             ev = cell - n
             if ev == -1 * ncol:
@@ -907,12 +856,7 @@ def test_multi_model(function_tmpdir):
     )
 
     ixs = flopy.utils.GridIntersect(modelgrid, method="vertex", rtree=True)
-    result = ixs.intersect(
-        [
-            boundary,
-        ],
-        shapetype="Polygon",
-    )
+    result = ixs.intersect([boundary], shapetype="Polygon")
     r, c = list(zip(*list(result.cellids)))
     idomain = np.zeros(modelgrid.shape, dtype=int)
     idomain[:, r, c] = 1
@@ -976,12 +920,7 @@ def test_multi_model(function_tmpdir):
         botm[idx] = topc[idx] - dv0
 
     strt = np.tile([modelgrid.top], (nlay, 1, 1))
-    idomain = np.tile(
-        [
-            modelgrid.idomain[0],
-        ],
-        (5, 1, 1),
-    )
+    idomain = np.tile([modelgrid.idomain[0]], (5, 1, 1))
 
     # setup recharge
     dist_from_riv = 10000.0

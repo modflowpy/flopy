@@ -349,7 +349,7 @@ def test_structured_xyz_intersect(example_data_path):
 
 def test_vertex_xyz_intersect(example_data_path):
     sim = MFSimulation.load(sim_ws=example_data_path / "mf6" / "test003_gwfs_disv")
-    ml = sim.get_model(list(sim.model_names)[0])
+    ml = sim.get_model(next(iter(sim.model_names)))
     mg = ml.modelgrid
 
     assert mg.size == np.prod((mg.nlay, mg.ncpl))
@@ -379,12 +379,8 @@ def test_unstructured_xyz_intersect(example_data_path):
     ncpl = np.array(3 * [len(iverts)])
     nnodes = np.sum(ncpl)
 
-    top = np.ones(
-        (nnodes),
-    )
-    botm = np.ones(
-        (nnodes),
-    )
+    top = np.ones((nnodes))
+    botm = np.ones((nnodes))
 
     # set top and botm elevations
     i0 = 0
@@ -443,8 +439,8 @@ def test_structured_from_gridspec(example_data_path, spc_file):
         0,  # xmin
         8000 * np.sin(theta) + 8000 * np.cos(theta),  # xmax
         8000 * np.sin(theta) * np.tan(theta / 2),  # ymin
-        8000 + 8000 * np.sin(theta),
-    )  # ymax
+        8000 + 8000 * np.sin(theta),  # ymax
+    )
     errmsg = f"extents {extents} of {fn} does not equal {rotated_extents}"
     assert all(
         np.isclose(x, x0) for x, x0 in zip(modelgrid.extent, rotated_extents)
@@ -550,14 +546,7 @@ def unstructured_from_gridspec_driver(example_data_path, gsf_file):
 
         # check nodes
         expected_nodes = [
-            (
-                int(s[0]),
-                float(s[1]),
-                float(s[2]),
-                float(s[3]),
-                int(s[4]),
-                int(s[5]),
-            )
+            (int(s[0]), float(s[1]), float(s[2]), float(s[3]), int(s[4]), int(s[5]))
             for s in split[(3 + nverts) : -1]
         ]
         for i, en in enumerate(expected_nodes):
@@ -1156,11 +1145,7 @@ def test_voronoi_grid(request, function_tmpdir, grid_info):
     ax = fig.add_subplot()
     ax.set_aspect("equal")
     grid.plot(ax=ax)
-    ax.plot(
-        grid.xcellcenters[invalid_cells],
-        grid.ycellcenters[invalid_cells],
-        "ro",
-    )
+    ax.plot(grid.xcellcenters[invalid_cells], grid.ycellcenters[invalid_cells], "ro")
     plt.savefig(function_tmpdir / f"{name}.png")
 
     assert ncpl == gridprops["ncpl"] or almost_right
@@ -1407,12 +1392,7 @@ def test_unstructured_iverts_cleanup():
     iac, ja = [], []
     for cell, neigh in neighbors.items():
         iac.append(len(neigh) + 1)
-        ja.extend(
-            [
-                cell,
-            ]
-            + neigh
-        )
+        ja.extend([cell] + neigh)
 
     # build iverts and verts without using shared vertices
     verts, iverts = [], []

@@ -261,11 +261,7 @@ class ModflowBas(Package):
         """
         # allows turning off package checks when writing files at model level
         if check:
-            self.check(
-                f=f"{self.name[0]}.chk",
-                verbose=self.parent.verbose,
-                level=1,
-            )
+            self.check(f=f"{self.name[0]}.chk", verbose=self.parent.verbose, level=1)
         # Open file for writing
         f_bas = open(self.fn_path, "w")
         # First line: heading
@@ -424,9 +420,5 @@ class ModflowBas(Package):
             **args,
         )
         if check:
-            bas.check(
-                f=f"{bas.name[0]}.chk",
-                verbose=bas.parent.verbose,
-                level=0,
-            )
+            bas.check(f=f"{bas.name[0]}.chk", verbose=bas.parent.verbose, level=0)
         return bas

@@ -1083,8 +1083,8 @@ def compare_concentrations(
 
 
 def compare_stages(
-    namefile1: Union[str, os.PathLike] = None,
-    namefile2: Union[str, os.PathLike] = None,
+    namefile1: Optional[Union[str, os.PathLike]] = None,
+    namefile2: Optional[Union[str, os.PathLike]] = None,
     files1: Optional[Union[str, os.PathLike, list[Union[str, os.PathLike]]]] = None,
     files2: Optional[Union[str, os.PathLike, list[Union[str, os.PathLike]]]] = None,
     htol=0.001,
@@ -1295,8 +1295,8 @@ def compare_stages(
 
 
 def compare(
-    namefile1: Union[str, os.PathLike] = None,
-    namefile2: Union[str, os.PathLike] = None,
+    namefile1: Optional[Union[str, os.PathLike]] = None,
+    namefile2: Optional[Union[str, os.PathLike]] = None,
     precision="auto",
     max_cumpd=0.01,
     max_incpd=0.01,

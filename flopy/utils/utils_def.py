@@ -123,10 +123,10 @@ def get_pak_vals_shape(model, vals):
     if nrow is None:  # unstructured
         if isinstance(vals, dict):
             try:  # check for iterable
-                _ = (v for v in list(vals.values())[0])
+                _ = (v for v in next(iter(vals.values())))
             except:
                 return (1, ncol[0])  # default to layer 1 node count
-            return np.array(list(vals.values())[0], ndmin=2).shape
+            return np.array(next(iter(vals.values())), ndmin=2).shape
         else:
             # check for single iterable
             try:

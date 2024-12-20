@@ -350,12 +350,7 @@ class ParticleData:
         d = np.recarray.copy(self.particledata.to_records(index=False))
         lnames = [name.lower() for name in d.dtype.names]
         # Add one to the kij and node indices
-        for idx in (
-            "k",
-            "i",
-            "j",
-            "node",
-        ):
+        for idx in ("k", "i", "j", "node"):
             if idx in lnames:
                 d[idx] += 1
         # Add one to the particle id if required
@@ -772,26 +767,14 @@ class CellDataType:
         # item 5
         fmt = " {} {} {}\n"
         line = fmt.format(
-            self.columncelldivisions,
-            self.rowcelldivisions,
-            self.layercelldivisions,
+            self.columncelldivisions, self.rowcelldivisions, self.layercelldivisions
         )
         f.write(line)
 
 
 Extent = namedtuple(
     "Extent",
-    [
-        "minx",
-        "maxx",
-        "miny",
-        "maxy",
-        "minz",
-        "maxz",
-        "xspan",
-        "yspan",
-        "zspan",
-    ],
+    ["minx", "maxx", "miny", "maxy", "minz", "maxz", "xspan", "yspan", "zspan"],
 )
 
 

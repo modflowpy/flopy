@@ -552,7 +552,7 @@ class ModflowUzf1(Package):
         # Dataset 9, 11, 13 and 15 will be written automatically in the
         # write_file function
         # Data Set 10
-        # [FINF (NCOL, NROW)] – U2DREL
+        # [FINF (NCOL, NROW)] - U2DREL
 
         self.finf = Transient2d(model, (nrow, ncol), np.float32, finf, name="finf")
         if ietflg > 0:

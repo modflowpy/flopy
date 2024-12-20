@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on May 23, 2024 14:30:07 UTC
+# FILE created on December 20, 2024 02:43:08 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -43,6 +43,13 @@ class ModflowGwfnam(mfpackage.MFPackage):
           groundwater head in a cell will be under-relaxed when water levels
           fall below the bottom of the model below any given cell. By default,
           Newton-Raphson UNDER_RELAXATION is not applied.
+    nc_mesh2d_filerecord : [ncmesh2dfile]
+        * ncmesh2dfile (string) name of the netcdf ugrid layered mesh output
+          file.
+    nc_structured_filerecord : [ncstructfile]
+        * ncstructfile (string) name of the netcdf structured output file.
+    nc_filerecord : [netcdf_filename]
+        * netcdf_filename (string) defines a netcdf input file.
     packages : [ftype, fname, pname]
         * ftype (string) is the file type, which must be one of the following
           character values shown in table ref{table:ftype-gwf}. Ftype may be
@@ -65,123 +72,93 @@ class ModflowGwfnam(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have
+        utility packages (mfutl*). For example, mfutllaktab package must have 
         a mfgwflak package parent_file.
 
     """
-
-    packages = ListTemplateGenerator(("gwf6", "nam", "packages", "packages"))
+    nc_mesh2d_filerecord = ListTemplateGenerator(('gwf6', 'nam',
+                                                  'options',
+                                                  'nc_mesh2d_filerecord'))
+    nc_structured_filerecord = ListTemplateGenerator((
+        'gwf6', 'nam', 'options', 'nc_structured_filerecord'))
+    nc_filerecord = ListTemplateGenerator(('gwf6', 'nam', 'options',
+                                           'nc_filerecord'))
+    packages = ListTemplateGenerator(('gwf6', 'nam', 'packages',
+                                      'packages'))
     package_abbr = "gwfnam"
     _package_type = "nam"
     dfn_file_name = "gwf-nam.dfn"
 
     dfn = [
-        [
-            "header",
-        ],
-        [
-            "block options",
-            "name list",
-            "type string",
-            "reader urword",
-            "optional true",
-            "preserve_case true",
-        ],
-        [
-            "block options",
-            "name print_input",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name print_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name save_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name newtonoptions",
-            "type record newton under_relaxation",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name newton",
-            "in_record true",
-            "type keyword",
-            "reader urword",
-        ],
-        [
-            "block options",
-            "name under_relaxation",
-            "in_record true",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block packages",
-            "name packages",
-            "type recarray ftype fname pname",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block packages",
-            "name ftype",
-            "in_record true",
-            "type string",
-            "tagged false",
-            "reader urword",
-        ],
-        [
-            "block packages",
-            "name fname",
-            "in_record true",
-            "type string",
-            "preserve_case true",
-            "tagged false",
-            "reader urword",
-        ],
-        [
-            "block packages",
-            "name pname",
-            "in_record true",
-            "type string",
-            "tagged false",
-            "reader urword",
-            "optional true",
-        ],
-    ]
+           ["header", ],
+           ["block options", "name list", "type string", "reader urword",
+            "optional true", "preserve_case true"],
+           ["block options", "name print_input", "type keyword",
+            "reader urword", "optional true"],
+           ["block options", "name print_flows", "type keyword",
+            "reader urword", "optional true"],
+           ["block options", "name save_flows", "type keyword",
+            "reader urword", "optional true"],
+           ["block options", "name newtonoptions",
+            "type record newton under_relaxation", "reader urword",
+            "optional true"],
+           ["block options", "name newton", "in_record true",
+            "type keyword", "reader urword"],
+           ["block options", "name under_relaxation", "in_record true",
+            "type keyword", "reader urword", "optional true"],
+           ["block options", "name nc_mesh2d_filerecord",
+            "type record netcdf_mesh2d fileout ncmesh2dfile", "shape",
+            "reader urword", "tagged true", "optional true",
+            "mf6internal ncmesh2drec"],
+           ["block options", "name netcdf_mesh2d", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
+            "optional false", "extended true"],
+           ["block options", "name nc_structured_filerecord",
+            "type record netcdf_structured fileout ncstructfile", "shape",
+            "reader urword", "tagged true", "optional true",
+            "mf6internal ncstructrec"],
+           ["block options", "name netcdf_structured", "type keyword",
+            "shape", "in_record true", "reader urword", "tagged true",
+            "optional false", "mf6internal netcdf_struct", "extended true"],
+           ["block options", "name fileout", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name ncmesh2dfile", "type string",
+            "preserve_case true", "shape", "in_record true", "reader urword",
+            "tagged false", "optional false", "extended true"],
+           ["block options", "name ncstructfile", "type string",
+            "preserve_case true", "shape", "in_record true", "reader urword",
+            "tagged false", "optional false", "extended true"],
+           ["block options", "name nc_filerecord",
+            "type record netcdf filein netcdf_filename", "reader urword",
+            "tagged true", "optional true"],
+           ["block options", "name netcdf", "type keyword",
+            "in_record true", "reader urword", "tagged true",
+            "optional false", "extended true"],
+           ["block options", "name filein", "type keyword",
+            "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name netcdf_filename", "type string",
+            "preserve_case true", "in_record true", "reader urword",
+            "optional false", "tagged false", "mf6internal netcdf_fname",
+            "extended true"],
+           ["block packages", "name packages",
+            "type recarray ftype fname pname", "reader urword",
+            "optional false"],
+           ["block packages", "name ftype", "in_record true", "type string",
+            "tagged false", "reader urword"],
+           ["block packages", "name fname", "in_record true", "type string",
+            "preserve_case true", "tagged false", "reader urword"],
+           ["block packages", "name pname", "in_record true", "type string",
+            "tagged false", "reader urword", "optional true"]]
 
-    def __init__(
-        self,
-        model,
-        loading_package=False,
-        list=None,
-        print_input=None,
-        print_flows=None,
-        save_flows=None,
-        newtonoptions=None,
-        packages=None,
-        filename=None,
-        pname=None,
-        **kwargs,
-    ):
-        super().__init__(
-            model, "nam", filename, pname, loading_package, **kwargs
-        )
+    def __init__(self, model, loading_package=False, list=None,
+                 print_input=None, print_flows=None, save_flows=None,
+                 newtonoptions=None, nc_mesh2d_filerecord=None,
+                 nc_structured_filerecord=None, nc_filerecord=None,
+                 packages=None, filename=None, pname=None, **kwargs):
+        super().__init__(model, "nam", filename, pname,
+                         loading_package, **kwargs)
 
         # set up variables
         self.list = self.build_mfdata("list", list)
@@ -189,5 +166,10 @@ class ModflowGwfnam(mfpackage.MFPackage):
         self.print_flows = self.build_mfdata("print_flows", print_flows)
         self.save_flows = self.build_mfdata("save_flows", save_flows)
         self.newtonoptions = self.build_mfdata("newtonoptions", newtonoptions)
+        self.nc_mesh2d_filerecord = self.build_mfdata("nc_mesh2d_filerecord",
+                                                      nc_mesh2d_filerecord)
+        self.nc_structured_filerecord = self.build_mfdata(
+            "nc_structured_filerecord", nc_structured_filerecord)
+        self.nc_filerecord = self.build_mfdata("nc_filerecord", nc_filerecord)
         self.packages = self.build_mfdata("packages", packages)
         self._init_complete = True

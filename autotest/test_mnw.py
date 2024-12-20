@@ -103,57 +103,9 @@ def test_make_package(function_tmpdir, dataframe):
     # make the package from the tables (ztop, zbotm format)
     node_data = np.array(
         [
-            (
-                0,
-                1,
-                1,
-                9.5,
-                7.1,
-                "well1",
-                "skin",
-                -1,
-                0,
-                0,
-                0,
-                1.0,
-                2.0,
-                5.0,
-                6.2,
-            ),
-            (
-                1,
-                1,
-                1,
-                7.1,
-                5.1,
-                "well1",
-                "skin",
-                -1,
-                0,
-                0,
-                0,
-                0.5,
-                2.0,
-                5.0,
-                6.2,
-            ),
-            (
-                2,
-                3,
-                3,
-                9.1,
-                3.7,
-                "well2",
-                "skin",
-                -1,
-                0,
-                0,
-                0,
-                1.0,
-                2.0,
-                5.0,
-                4.1,
-            ),
+            (0, 1, 1, 9.5, 7.1, "well1", "skin", -1, 0, 0, 0, 1.0, 2.0, 5.0, 6.2),
+            (1, 1, 1, 7.1, 5.1, "well1", "skin", -1, 0, 0, 0, 0.5, 2.0, 5.0, 6.2),
+            (2, 3, 3, 9.1, 3.7, "well2", "skin", -1, 0, 0, 0, 1.0, 2.0, 5.0, 4.1),
         ],
         dtype=[
             ("index", "<i8"),
@@ -177,21 +129,11 @@ def test_make_package(function_tmpdir, dataframe):
     stress_period_data = {
         0: np.array(
             [(0, 0, "well1", 0), (1, 0, "well2", 0)],
-            dtype=[
-                ("index", "<i8"),
-                ("per", "<i8"),
-                ("wellid", "O"),
-                ("qdes", "<i8"),
-            ],
+            dtype=[("index", "<i8"), ("per", "<i8"), ("wellid", "O"), ("qdes", "<i8")],
         ).view(np.recarray),
         1: np.array(
             [(2, 1, "well1", 100), (3, 1, "well2", 1000)],
-            dtype=[
-                ("index", "<i8"),
-                ("per", "<i8"),
-                ("wellid", "O"),
-                ("qdes", "<i8"),
-            ],
+            dtype=[("index", "<i8"), ("per", "<i8"), ("wellid", "O"), ("qdes", "<i8")],
         ).view(np.recarray),
     }
 
@@ -242,21 +184,11 @@ def test_make_package(function_tmpdir, dataframe):
     stress_period_data = {
         0: np.array(
             [(0, 0, "well1", 0), (1, 0, "well2", 0)],
-            dtype=[
-                ("index", "<i8"),
-                ("per", "<i8"),
-                ("wellid", "O"),
-                ("qdes", "<i8"),
-            ],
+            dtype=[("index", "<i8"), ("per", "<i8"), ("wellid", "O"), ("qdes", "<i8")],
         ).view(np.recarray),
         1: np.array(
             [(2, 1, "well1", 100), (3, 1, "well2", 1000)],
-            dtype=[
-                ("index", "<i8"),
-                ("per", "<i8"),
-                ("wellid", "O"),
-                ("qdes", "<i8"),
-            ],
+            dtype=[("index", "<i8"), ("per", "<i8"), ("wellid", "O"), ("qdes", "<i8")],
         ).view(np.recarray),
     }
 

@@ -327,12 +327,7 @@ ax.set_title("Well recharge area")
 mm = flopy.plot.PlotMapView(model=gwf, ax=ax)
 mm.plot_grid(lw=0.5)
 mm.plot_pathline(
-    pwb,
-    layer="all",
-    colors="blue",
-    lw=0.5,
-    linestyle=":",
-    label="captured by wells",
+    pwb, layer="all", colors="blue", lw=0.5, linestyle=":", label="captured by wells"
 )
 mm.plot_endpoint(ewb, direction="ending")  # , colorbar=True, shrink=0.5);
 
@@ -342,12 +337,7 @@ ax.set_title("River recharge area")
 mm = flopy.plot.PlotMapView(model=gwf, ax=ax)
 mm.plot_grid(lw=0.5)
 mm.plot_pathline(
-    prb,
-    layer="all",
-    colors="green",
-    lw=0.5,
-    linestyle=":",
-    label="captured by rivers",
+    prb, layer="all", colors="green", lw=0.5, linestyle=":", label="captured by rivers"
 )
 
 plt.tight_layout()

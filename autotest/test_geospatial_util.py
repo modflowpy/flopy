@@ -147,10 +147,7 @@ def multilinestring():
 
 
 def test_import_geospatial_utils():
-    from flopy.utils.geospatial_utils import (
-        GeoSpatialCollection,
-        GeoSpatialUtil,
-    )
+    from flopy.utils.geospatial_utils import GeoSpatialCollection, GeoSpatialUtil
 
 
 @requires_pkg("pyshp", "shapely", name_map={"pyshp": "shapefile"})

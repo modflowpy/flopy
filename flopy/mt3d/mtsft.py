@@ -382,11 +382,7 @@ class Mt3dSft(Package):
         # Item 1
         f.write(
             "{:10d}{:10d}{:10d}{:10d}{:10d}".format(
-                self.nsfinit,
-                self.mxsfbc,
-                self.icbcsf,
-                self.ioutobs,
-                self.ietsfr,
+                self.nsfinit, self.mxsfbc, self.icbcsf, self.ioutobs, self.ietsfr
             )
             + 30 * " "
             + "# nsfinit, mxsfbc, icbcsf, ioutobs, ietsfr\n"

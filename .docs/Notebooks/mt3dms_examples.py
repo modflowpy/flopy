@@ -34,15 +34,18 @@
 # 10. Three-Dimensional Field Case Study
 
 import os
+import sys
 
 # +
-import sys
+from pathlib import Path
 from pprint import pformat
 from tempfile import TemporaryDirectory
 
+import git
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import pooch
 
 import flopy
 from flopy.utils.util_array import read1d
@@ -51,7 +54,6 @@ mpl.rcParams["figure.figsize"] = (8, 8)
 
 exe_name_mf = "mf2005"
 exe_name_mt = "mt3dms"
-datadir = os.path.join("..", "..", "examples", "data", "mt3d_test", "mt3dms")
 
 # temporary directory
 temp_dir = TemporaryDirectory()
@@ -62,6 +64,28 @@ print(f"numpy version: {np.__version__}")
 print(f"matplotlib version: {mpl.__version__}")
 print(f"flopy version: {flopy.__version__}")
 
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+datadir = data_path / "mt3d_test" / "mt3dms"
+
+file_names = {
+    "p08shead.dat": None,
+    "p10cinit.dat": None,
+    "p10shead.dat": None,
+}
+for fname, fhash in file_names.items():
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/mt3d_test/mt3dms/{fname}",
+        fname=fname,
+        path=data_path / "mt3d_test" / "mt3dms",
+        known_hash=None,
+    )
 
 # -
 

@@ -492,24 +492,10 @@ xsf.subplots_adjust(
 # withdrawal and recovery titles
 ax = axes.flatten()[0]
 ax.text(
-    0.0,
-    1.03,
-    "Withdrawal",
-    transform=ax.transAxes,
-    va="bottom",
-    ha="left",
-    size="8",
+    0.0, 1.03, "Withdrawal", transform=ax.transAxes, va="bottom", ha="left", size="8"
 )
 ax = axes.flatten()[1]
-ax.text(
-    0.0,
-    1.03,
-    "Recovery",
-    transform=ax.transAxes,
-    va="bottom",
-    ha="left",
-    size="8",
-)
+ax.text(0.0, 1.03, "Recovery", transform=ax.transAxes, va="bottom", ha="left", size="8")
 # dummy items for legend
 ax = axes.flatten()[2]
 ax.plot(
@@ -604,11 +590,7 @@ for itime in range(0, nswi_times):
         zorder=30,
     )
     cc = ax.contourf(
-        X,
-        Z,
-        conc[itime, :, :],
-        levels=[0.0, 1.75, 33.250],
-        colors=["w", "0.75", "w"],
+        X, Z, conc[itime, :, :], levels=[0.0, 1.75, 33.250], colors=["w", "0.75", "w"]
     )
     # set graph limits
     ax.set_xlim(0, 500)
@@ -637,15 +619,7 @@ for itime in range(0, nswi_times):
         ctxt = f"{iyr} years"
     else:
         ctxt = f"{iyr} year"
-    ax.text(
-        0.95,
-        0.925,
-        ctxt,
-        transform=ax.transAxes,
-        va="top",
-        ha="right",
-        size="8",
-    )
+    ax.text(0.95, 0.925, ctxt, transform=ax.transAxes, va="top", ha="right", size="8")
 
 plt.show()
 # -

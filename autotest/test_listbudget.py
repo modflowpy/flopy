@@ -7,12 +7,7 @@ import pytest
 from modflow_devtools.markers import requires_pkg
 from modflow_devtools.misc import has_pkg
 
-from flopy.utils import (
-    Mf6ListBudget,
-    MfListBudget,
-    MfusgListBudget,
-    MtListBudget,
-)
+from flopy.utils import Mf6ListBudget, MfListBudget, MfusgListBudget, MtListBudget
 
 
 def test_mflistfile(example_data_path):
@@ -80,14 +75,7 @@ def test_mf6listfile(example_data_path):
     assert os.path.exists(list_file)
     mflist = Mf6ListBudget(list_file)
     names = mflist.get_record_names()
-    for item in [
-        "RCH_IN",
-        "RCH2_IN",
-        "RCH3_IN",
-        "RCH_OUT",
-        "RCH2_OUT",
-        "RCH3_OUT",
-    ]:
+    for item in ["RCH_IN", "RCH2_IN", "RCH3_IN", "RCH_OUT", "RCH2_OUT", "RCH3_OUT"]:
         assert item in names, f"{item} not found in names"
     assert len(names) == 26
     inc = mflist.get_incremental()

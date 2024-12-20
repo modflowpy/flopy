@@ -232,10 +232,7 @@ class check:
                 # currently failed_info[cols] results in a warning. Not sure
                 # how to do this properly with a recarray.
                 failed_info = recfunctions.append_fields(
-                    failed_info[cols].copy(),
-                    names="diff",
-                    data=diff,
-                    asrecarray=True,
+                    failed_info[cols].copy(), names="diff", data=diff, asrecarray=True
                 )
                 failed_info.sort(order="diff", axis=0)
                 if not sort_ascending:
@@ -322,10 +319,7 @@ class check:
 
             if np.any(ibnd == 0):
                 sa = self._list_spd_check_violations(
-                    stress_period_data,
-                    ibnd == 0,
-                    error_name=msg,
-                    error_type="Warning",
+                    stress_period_data, ibnd == 0, error_name=msg, error_type="Warning"
                 )
                 self.summary_array = np.append(self.summary_array, sa).view(np.recarray)
                 self.remove_passed(f"{msg}s")
@@ -670,9 +664,9 @@ class check:
                     tmp[1:-1, 0:-2, 1:-1].ravel(),  # i-1
                     tmp[1:-1, 2:, 1:-1].ravel(),  # i+1
                     tmp[1:-1, 1:-1, :-2].ravel(),  # j-1
-                    tmp[1:-1, 1:-1, 2:].ravel(),
+                    tmp[1:-1, 1:-1, 2:].ravel(),  # j+1
                 ]
-            )  # j+1
+            )
             return neighbors.reshape(6, nk, ni, nj)
         else:
             if "DISU" in self.model.get_package_list():

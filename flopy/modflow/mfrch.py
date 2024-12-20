@@ -193,17 +193,13 @@ class ModflowRch(Package):
         # check for unusually high or low values of mean R/T
         hk_package = {"UPW", "LPF"}.intersection(set(self.parent.get_package_list()))
         if len(hk_package) > 0 and self.parent.structured:
-            pkg = list(hk_package)[0]
+            pkg = next(iter(hk_package))
 
             # handle quasi-3D layers
             # (ugly, would be nice to put this else where in a general function)
             if self.parent.dis.laycbd.sum() != 0:
                 thickness = np.empty(
-                    (
-                        self.parent.dis.nlay,
-                        self.parent.dis.nrow,
-                        self.parent.dis.ncol,
-                    ),
+                    (self.parent.dis.nlay, self.parent.dis.nrow, self.parent.dis.ncol),
                     dtype=float,
                 )
                 l = 0
@@ -288,11 +284,7 @@ class ModflowRch(Package):
         """
         # allows turning off package checks when writing files at model level
         if check:
-            self.check(
-                f=f"{self.name[0]}.chk",
-                verbose=self.parent.verbose,
-                level=1,
-            )
+            self.check(f=f"{self.name[0]}.chk", verbose=self.parent.verbose, level=1)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Open file for writing
         if f is not None:
@@ -307,11 +299,7 @@ class ModflowRch(Package):
             for kper, u2d in self.irch.transient_2ds.items():
                 irch[kper] = u2d.array + 1
             irch = Transient2d(
-                self.parent,
-                self.irch.shape,
-                self.irch.dtype,
-                irch,
-                self.irch.name,
+                self.parent, self.irch.shape, self.irch.dtype, irch, self.irch.name
             )
             if not self.parent.structured:
                 mxndrch = np.max(
@@ -440,12 +428,7 @@ class ModflowRch(Package):
                     if model.verbose:
                         print(f"   loading rech stress period {iper + 1:3d}...")
                     t = Util2d.load(
-                        f,
-                        model,
-                        u2d_shape,
-                        np.float32,
-                        "rech",
-                        ext_unit_dict,
+                        f, model, u2d_shape, np.float32, "rech", ext_unit_dict
                     )
                 else:
                     parm_dict = {}
@@ -505,11 +488,7 @@ class ModflowRch(Package):
             filenames=filenames,
         )
         if check:
-            rch.check(
-                f=f"{rch.name[0]}.chk",
-                verbose=rch.parent.verbose,
-                level=0,
-            )
+            rch.check(f=f"{rch.name[0]}.chk", verbose=rch.parent.verbose, level=0)
         return rch
 
     @staticmethod

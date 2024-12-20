@@ -216,9 +216,8 @@ def test_particledata_to_prp_dis_1():
 
     # check conversion
     assert len(rpts_prt) == len(cells)
-    assert all(
-        len(c) == 7 for c in rpts_prt
-    )  # each coord should be a tuple (irpt, k, i, j, x, y, z)
+    # each coord should be a tuple (irpt, k, i, j, x, y, z)
+    assert all(len(c) == 7 for c in rpts_prt)
 
     # expected
     exp = np.rec.fromrecords(
@@ -320,9 +319,8 @@ def test_particledata_to_prp_disv_1(lx, ly, localz):
 
     # check conversion succeeded
     assert len(rpts_prt) == len(locs)
-    assert all(
-        len(c) == 6 for c in rpts_prt
-    )  # each coord should be a tuple (irpt, k, j, x, y, z)
+    # each coord should be a tuple (irpt, k, j, x, y, z)
+    assert all(len(c) == 6 for c in rpts_prt)
     for rpt in rpts_prt:
         assert np.isclose(rpt[3], lx[0] if lx else 0.5)  # check x
         assert np.isclose(rpt[4], ly[0] if ly else 0.5)  # check y
@@ -507,9 +505,8 @@ def test_lrcparticledata_to_prp_top_bottom():
             for lrc in lrcregions
         ]
     )
-    assert (
-        len(rpts_prt) == num_cells * rd * cd * 2
-    )  # 1 particle each on top and bottom faces
+    # 1 particle each on top and bottom faces
+    assert len(rpts_prt) == num_cells * rd * cd * 2
 
     # particle should be centered on each face
     verts = grid.get_cell_vertices(1, 1)

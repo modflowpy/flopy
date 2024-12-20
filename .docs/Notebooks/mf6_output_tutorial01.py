@@ -20,31 +20,68 @@
 # by using the built in `.output` attribute on any MODFLOW 6 model or
 # package object
 
-import os
 from pathlib import Path
+from shutil import copytree
 from tempfile import TemporaryDirectory
 
+import git
 import numpy as np
+import pooch
 
-# ## Package import
 import flopy
 
-# ## Load a simple demonstration model
+# ## Loading a model
+
+# Start by creating a temporary workspace and defining some names.
 
 exe_name = "mf6"
-project_root_path = Path.cwd().parent.parent
-ws = os.path.abspath(os.path.dirname(""))
-sim_ws = str(project_root_path / "examples" / "data" / "mf6" / "test001e_UZF_3lay")
+sim_name = "test001e_UZF_3lay"
+temp_dir = TemporaryDirectory()
+sim_ws = Path(temp_dir.name)
+
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+
+# Download files if needed.
+
+files = {
+    "chd_spd.txt": "4d87f60022832372981caa2bd162681d5c4b8b3fcf8bc7f5de533c96ad1ed03c",
+    "mfsim.nam": "2f7889dedb9e7befb45251f08f015bd5531a4952f4141295ebad9e550be365fd",
+    "simulation.tdis": "d466787698c88b7f229cf244f2c9f226a87628c0a5748819e4e34fd4edc48d4c",
+    "test001e_UZF_3lay.chd": "96a00121e7004b152a03d0759bf4abfd70f8a1ea21cbce6b9441f18ce4d89b45",
+    "test001e_UZF_3lay.dis": "d2f879dcba84ec4be8883d6e29ea9197dd0e67c4058fdde7b9e1de737d1e0639",
+    "test001e_UZF_3lay.ic": "6e434a9d42ffe1b126b26890476f6893e9ab526f3a4ee96e63d443fd9008e1df",
+    "test001e_UZF_3lay.ims": "c4ef9ebe359def38f0e9ed810b61af0aae9a437c57d54b1db00b8dda20e5b67d",
+    "test001e_UZF_3lay.nam": "078ea7b0a774546a93c2cedfb98dc686395332ece7df6493653b072d43b4b834",
+    "test001e_UZF_3lay.npf": "89181af1fd91fe59ea931aae02fe64f855f27c705ee9200c8a9c23831aa7bace",
+    "test001e_UZF_3lay.obs": "b9857f604c0594a466255f040bd5a47a1687a69ae3be749488bd8736ead7d106",
+    "test001e_UZF_3lay.oc": "5eb327ead17588a1faa8b5c7dd37844f7a63d98351ef8bb41df1162c87a94d02",
+    "test001e_UZF_3lay.sto": "8d808d0c2ae4edc114455db3f1766446f9f9d6d3775c46a70369a57509bff811",
+    "test001e_UZF_3lay.uzf": "97624f1102abef4985bb40f432523df76bd94e069ac8a4aa17455d0d5b8f146e",
+    "test001e_UZF_3lay_obs.hed": "78c67035fc6f0c5c1d6090c1ce1e50dcab75b361e4ed44dc951f11fd3915a388",
+}
+
+for fname, fhash in files.items():
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/mf6/{sim_name}/{fname}",
+        fname=fname,
+        path=data_path / "mf6" / sim_name,
+        known_hash=fhash,
+    )
 
 # load the model
 sim = flopy.mf6.MFSimulation.load(
-    sim_ws=sim_ws,
+    sim_ws=data_path / "mf6" / sim_name,
     exe_name=exe_name,
     verbosity_level=0,
 )
 # change the simulation path, rewrite the files, and run the model
-temp_dir = TemporaryDirectory()
-sim_ws = temp_dir.name
 sim.set_sim_path(sim_ws)
 sim.write_simulation(silent=True)
 sim.run_simulation(silent=True)

@@ -23,10 +23,13 @@
 
 import os
 import sys
+from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import git
 import matplotlib as mpl
 import numpy as np
+import pooch
 
 # +
 from IPython.display import Image
@@ -44,12 +47,67 @@ print(f"flopy version: {flopy.__version__}")
 version = "mf2005"
 exe_name = "mf2005"
 
-# Set the paths
-loadpth = os.path.join("..", "..", "examples", "data", "secp")
+
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+
+file_names = {
+    "secp.ba6": None,
+    "secp.chd": None,
+    "secp.dis": None,
+    "secp.gmg": None,
+    "secp.lpf": None,
+    "secp.mlt": None,
+    "secp.nam": None,
+    "secp.oc": None,
+    "secp.rch": None,
+    "secp.riv": None,
+    "secp.wel": None,
+    "secp.zon": None,
+}
+for fname, fhash in file_names.items():
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/secp/{fname}",
+        fname=fname,
+        path=data_path / "secp",
+        known_hash=None,
+    )
+
+file_names = {
+    "HK1.DAT": None,
+    "HK10.DAT": None,
+    "HK11.DAT": None,
+    "HK12.DAT": None,
+    "HK13.DAT": None,
+    "HK14.DAT": None,
+    "HK15.DAT": None,
+    "HK16.DAT": None,
+    "HK2.DAT": None,
+    "HK3.DAT": None,
+    "HK4.DAT": None,
+    "HK5.DAT": None,
+    "HK6.DAT": None,
+    "HK7.DAT": None,
+    "HK8.DAT": None,
+    "HK9.DAT": None,
+}
+for fname, fhash in file_names.items():
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/secp/ref/{fname}",
+        fname=fname,
+        path=data_path / "secp" / "ref",
+        known_hash=None,
+    )
 
 # temporary directory
 temp_dir = TemporaryDirectory()
-modelpth = temp_dir.name
+modelpth = Path(temp_dir.name)
 
 # make sure modelpth directory exists
 if not os.path.isdir(modelpth):
@@ -63,14 +121,13 @@ files = ["secp.hds"]
 
 # +
 ml = flopy.modflow.Modflow.load(
-    "secp.nam", model_ws=loadpth, exe_name=exe_name, version=version
+    "secp.nam", model_ws=data_path / "secp", exe_name=exe_name, version=version
 )
 ml.change_model_ws(new_pth=modelpth)
 ml.write_input()
 
 success, buff = ml.run_model(silent=True)
-if not success:
-    print("Something bad happened.")
+assert success
 
 # confirm that the model files have been created
 for f in files:

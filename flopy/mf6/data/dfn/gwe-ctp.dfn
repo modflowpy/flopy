@@ -139,7 +139,7 @@ type integer
 reader urword
 optional false
 longname maximum number of constant temperatures
-description REPLACE maxbound {'{#1}': 'constant temperatures'}
+description REPLACE maxbound {'{#1}': 'constant temperature'}
 
 
 # --------------------- gwe ctp period ---------------------

@@ -359,9 +359,7 @@ class ModflowLgr(BaseModel):
 
             # dataset 12
             line = "{} {} {}".format(
-                child_data.nplbeg + 1,
-                child_data.nprbeg + 1,
-                child_data.npcbeg + 1,
+                child_data.nplbeg + 1, child_data.nprbeg + 1, child_data.npcbeg + 1
             )
             comment = f"data set 12 - child {idx + 1} nplbeg, nprbeg, npcbeg"
             line = self._padline(line, comment=comment)
@@ -369,9 +367,7 @@ class ModflowLgr(BaseModel):
 
             # dataset 13
             line = "{} {} {}".format(
-                child_data.nplend + 1,
-                child_data.nprend + 1,
-                child_data.npcend + 1,
+                child_data.nplend + 1, child_data.nprend + 1, child_data.npcend + 1
             )
             comment = f"data set 13 - child {idx + 1} nplend, nprend, npcend"
             line = self._padline(line, comment=comment)
@@ -611,20 +607,12 @@ class ModflowLgr(BaseModel):
             # dataset 12
             line = f.readline()
             t = line.split()
-            nplbeg, nprbeg, npcbeg = (
-                int(t[0]) - 1,
-                int(t[1]) - 1,
-                int(t[2]) - 1,
-            )
+            nplbeg, nprbeg, npcbeg = (int(t[0]) - 1, int(t[1]) - 1, int(t[2]) - 1)
 
             # dataset 13
             line = f.readline()
             t = line.split()
-            nplend, nprend, npcend = (
-                int(t[0]) - 1,
-                int(t[1]) - 1,
-                int(t[2]) - 1,
-            )
+            nplend, nprend, npcend = (int(t[0]) - 1, int(t[1]) - 1, int(t[2]) - 1)
 
             # dataset 14
             line = f.readline()

@@ -34,13 +34,16 @@ import glob
 import os
 import shutil
 import sys
+from pathlib import Path
 from pprint import pformat
 from tempfile import TemporaryDirectory
 
+import git
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import pooch
 
 import flopy
 import flopy.utils.binaryfile as bf
@@ -59,19 +62,58 @@ print(f"flopy version: {flopy.__version__}")
 #  assumes executable is in users path statement
 exe_name = "mf2005"
 
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+
 # # #### copy over the example files to the working directory
 
 # +
 # temporary directory
 temp_dir = TemporaryDirectory()
-path = temp_dir.name
+workspace = Path(temp_dir.name)
 
-gpth = os.path.join("..", "..", "examples", "data", "mf2005_test", "test1ss.*")
-for f in glob.glob(gpth):
-    shutil.copy(f, path)
-gpth = os.path.join("..", "..", "examples", "data", "mf2005_test", "test1tr.*")
-for f in glob.glob(gpth):
-    shutil.copy(f, path)
+file_names = [
+    "test1ss.ba6",
+    "test1ss.dis",
+    "test1ss.evt",
+    "test1ss.gag",
+    "test1ss.ghb",
+    "test1ss.lpf",
+    "test1ss.nam",
+    "test1ss.oc",
+    "test1ss.rch",
+    "test1ss.sfr",
+    "test1ss.sip",
+    "test1tr.ba6",
+    "test1tr.dis",
+    "test1tr.evt",
+    "test1tr.gag",
+    "test1tr.ghb",
+    "test1tr.gitcbc",
+    "test1tr.githds",
+    "test1tr.lpf",
+    "test1tr.nam",
+    "test1tr.oc",
+    "test1tr.rch",
+    "test1tr.sfr",
+    "test1tr.sip",
+    "test1tr.wel",
+]
+for fname in file_names:
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/mf2005_test/{fname}",
+        fname=fname,
+        path=data_path / "mf2005_test",
+        known_hash=None,
+    )
+
+shutil.copytree(data_path / "mf2005_test", workspace, dirs_exist_ok=True)
 # -
 
 # ### Load example dataset, skipping the SFR package
@@ -80,7 +122,7 @@ m = flopy.modflow.Modflow.load(
     "test1ss.nam",
     version="mf2005",
     exe_name=exe_name,
-    model_ws=path,
+    model_ws=workspace,
     load_only=["ghb", "evt", "rch", "dis", "bas6", "oc", "sip", "lpf"],
 )
 
@@ -95,18 +137,23 @@ oc.stress_period_data
 # For more information on Item 2, see the Online Guide to MODFLOW:
 # <https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/sfr.html>
 
-rpth = os.path.join(
-    "..", "..", "examples", "data", "sfr_examples", "test1ss_reach_data.csv"
-)
+file_names = ["test1ss_reach_data.csv", "test1ss_segment_data.csv", "test1ss.flw"]
+for fname in file_names:
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/sfr_examples/{fname}",
+        fname=fname,
+        path=data_path / "sfr_examples",
+        known_hash=None,
+    )
+
+rpth = data_path / "sfr_examples" / file_names[0]
 reach_data = np.genfromtxt(rpth, delimiter=",", names=True)
 reach_data
 
 # ### Segment Data structure
 # Segment data are input and stored in a dictionary of record arrays, which
 
-spth = os.path.join(
-    "..", "..", "examples", "data", "sfr_examples", "test1ss_segment_data.csv"
-)
+spth = data_path / "sfr_examples" / file_names[1]
 ss_segment_data = np.genfromtxt(spth, delimiter=",", names=True)
 segment_data = {0: ss_segment_data}
 segment_data[0][0:1]["width1"]
@@ -200,9 +247,7 @@ assert success, pformat(buff)
 
 # ### Load SFR formated water balance output into pandas dataframe using the `SfrFile` class
 
-sfr_outfile = os.path.join(
-    "..", "..", "examples", "data", "sfr_examples", "test1ss.flw"
-)
+sfr_outfile = data_path / "sfr_examples" / file_names[2]
 sfrout = SfrFile(sfr_outfile)
 df = sfrout.get_dataframe()
 df.head()
@@ -233,7 +278,7 @@ plt.legend()
 
 # ### Get SFR leakage results from cell budget file
 
-bpth = os.path.join(path, "test1ss.cbc")
+bpth = os.path.join(workspace, "test1ss.cbc")
 cbbobj = bf.CellBudgetFile(bpth)
 cbbobj.headers
 
@@ -263,9 +308,9 @@ plt.colorbar(im, label="Streamflow, in cubic feet per second")
 # >mf2005 test1tr.nam
 # ```
 
-flopy.run_model(exe_name, "test1tr.nam", model_ws=path, silent=True)
+flopy.run_model(exe_name, "test1tr.nam", model_ws=workspace, silent=True)
 
-sfrout_tr = SfrFile(os.path.join(path, "test1tr.flw"))
+sfrout_tr = SfrFile(os.path.join(workspace, "test1tr.flw"))
 dftr = sfrout_tr.get_dataframe()
 dftr.head()
 

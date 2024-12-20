@@ -243,10 +243,7 @@ sim.write_simulation()
 # These options can also be turned off when loading an existing simulation
 # or creating a new simulation by setting lazy_io to True.
 
-sim2 = flopy.mf6.MFSimulation.load(
-    sim_ws=workspace,
-    lazy_io=True,
-)
+sim2 = flopy.mf6.MFSimulation.load(sim_ws=workspace, lazy_io=True)
 
 sim3 = flopy.mf6.MFSimulation(lazy_io=True)
 

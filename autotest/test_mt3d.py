@@ -528,10 +528,7 @@ def test_mt3d_multispecies(function_tmpdir):
     nrow = 20
     ncol = 20
     nper = 10
-    mf = Modflow(
-        modelname=modelname,
-        model_ws=function_tmpdir,
-    )
+    mf = Modflow(modelname=modelname, model_ws=function_tmpdir)
     dis = ModflowDis(mf, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper)
     lpf = ModflowLpf(mf)
     rch = ModflowRch(mf)
@@ -571,10 +568,7 @@ def test_mt3d_multispecies(function_tmpdir):
 
     # Create a second MODFLOW model
     modelname2 = "multispecies2"
-    mf2 = Modflow(
-        modelname=modelname2,
-        model_ws=function_tmpdir,
-    )
+    mf2 = Modflow(modelname=modelname2, model_ws=function_tmpdir)
     dis2 = ModflowDis(mf2, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper)
 
     # Load the MT3D model into mt2 and then write it out

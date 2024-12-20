@@ -106,11 +106,7 @@ for i, l in enumerate(m.dis.botm.array[:, r, c]):
 plt.plot(heads[0], label="piezometric surface", color="b", linestyle=":")
 for iw in range(len(sctop)):
     ax.fill_between(
-        [iw - 0.25, iw + 0.25],
-        scbot[iw],
-        sctop[iw],
-        facecolor="None",
-        edgecolor="k",
+        [iw - 0.25, iw + 0.25], scbot[iw], sctop[iw], facecolor="None", edgecolor="k"
     )
 ax.legend(loc=2)
 

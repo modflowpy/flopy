@@ -11,7 +11,7 @@ MODFLOW Guide
 import os
 from os import PathLike
 from pathlib import Path, PurePosixPath, PureWindowsPath
-from typing import Union
+from typing import Optional, Union
 
 
 class NamData:
@@ -295,9 +295,9 @@ def attribs_from_namfile_header(namefile):
 
 def get_entries_from_namefile(
     path: Union[str, PathLike],
-    ftype: str = None,
-    unit: int = None,
-    extension: str = None,
+    ftype: Optional[str] = None,
+    unit: Optional[int] = None,
+    extension: Optional[str] = None,
 ) -> list[tuple]:
     """Get entries from an MF6 namefile. Can select using FTYPE, UNIT, or file
     extension.
@@ -481,7 +481,7 @@ def get_mf6_nper(tdisfile):
     """
     with open(tdisfile) as f:
         lines = f.readlines()
-    line = [line for line in lines if "NPER" in line.upper()][0]
+    line = next(line for line in lines if "NPER" in line.upper())
     nper = line.strip().split()[1]
     return nper
 

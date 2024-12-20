@@ -1,4 +1,40 @@
 # Changelog
+### Version 3.9.1
+
+#### Mf6
+
+* [mf6](https://github.com/modflowpy/flopy/commit/4952f81f3b4935c51513593011166fbd88dfd85c): Update dfns and mf6 module (#2399). Committed by wpbonelli on 2024-12-20.
+
+### Version 3.9.0
+
+#### New features
+
+* [feat(plot_centers)](https://github.com/modflowpy/flopy/commit/c6a41abb496039b65fbe52fd6c3f2df011e492be): Add plot_centers support to PlotMapView and PlotCrossSection (#2318). Committed by Joshua Larsen on 2024-10-07.
+* [feat(get-modflow)](https://github.com/modflowpy/flopy/commit/d800ce5638e7a0983985881f2fa5d37207e3560b): Support windows extended build (#2356). Committed by mjreno on 2024-11-06.
+* [feat(binaryfile)](https://github.com/modflowpy/flopy/commit/4eac63176f1328a22a55e1cf131db55b8ca929a8): Add head/budget file reversal script (#2383). Committed by wpbonelli on 2024-11-27.
+
+#### Bug fixes
+
+* [fix(ZoneFile6.load)](https://github.com/modflowpy/flopy/commit/99d57e6fd0d0d41c364f9c76f7800ec3be0d179a): Add split statement to input read (#2330). Committed by Joshua Larsen on 2024-10-09.
+* [fix(resample_to_grid)](https://github.com/modflowpy/flopy/commit/15f1b94a45487e42aa36afdd2abb2b111c2197a6): Fix unintended extrapolation  (#2331). Committed by Joshua Larsen on 2024-10-09.
+* [fix(utils)](https://github.com/modflowpy/flopy/commit/558f4a8c9d17241e21e7d41c3a75a9a6380a9fb1): Exclude ncf from mf6 output utils (#2336). Committed by mjreno on 2024-10-16.
+* [fix(masked_4D_arrays)](https://github.com/modflowpy/flopy/commit/332a310ef0b43130fd2f37cf7cd4abe954484524): Allow re-use of preceding spd data if empty (#2314). Committed by martclanor on 2024-10-20.
+* [fix(gridintersect)](https://github.com/modflowpy/flopy/commit/34043ab58eb254feee0c2f47cb63e057905b49d7): Fix multiple issues (#2343). Committed by Davíd Brakenhoff on 2024-10-25.
+
+#### Refactoring
+
+* [refactor(PackageContainer)](https://github.com/modflowpy/flopy/commit/f378f84a5677b99191ce178bb1c5b67ac1d1bd66): Compose not inherit, deprecate methods (#2324). Committed by Marnix on 2024-10-14.
+* [refactor(Modpath7.create_mp7)](https://github.com/modflowpy/flopy/commit/3a2c4946a047e20e35341d7e4266f8dae3ac5316): Expose porosity parameter of Modpath7Bas (#2340). Committed by martclanor on 2024-10-20.
+* [refactor(gridintersect)](https://github.com/modflowpy/flopy/commit/f8810c20097004a940e96ee0f2bc0229366a3899): Clean up gridintersect (#2346). Committed by Davíd Brakenhoff on 2024-10-24.
+* [refactor(Mf6Splitter)](https://github.com/modflowpy/flopy/commit/acc5a5b6580bdd6e93a24970db7d0b62d54e2485): Added split_multi_model method (#2352). Committed by Joshua Larsen on 2024-11-06.
+* [refactor(mf6)](https://github.com/modflowpy/flopy/commit/4e0906426ef70235a7546c31d263904fa3249a9d): Deprecate mf6 checks (#2357). Committed by wpbonelli on 2024-11-06.
+* [refactor](https://github.com/modflowpy/flopy/commit/a5545c6fc23c2ea1476f5b5650ce294ae9d2509f): Apply suggestions from pyupgrade (#2361). Committed by Mike Taves on 2024-11-11.
+* [refactor](https://github.com/modflowpy/flopy/commit/bb9824e8aaea04a43d911724445cf0610301d236): Fix long lines to resolve check E501 (#2368). Committed by Mike Taves on 2024-11-14.
+* [refactor](https://github.com/modflowpy/flopy/commit/373b82d3b864fe54bf5675e2a1aabbe4b6eee58e): Resolve ruff check F821 for undefined names (#2374). Committed by Mike Taves on 2024-11-18.
+* [refactor](https://github.com/modflowpy/flopy/commit/22b5992ccd0e8280ee831611e8823bdb0d22ae3b): Apply fixes for flake8 comprehensions (C4) (#2376). Committed by Mike Taves on 2024-11-18.
+* [refactor(deprecations)](https://github.com/modflowpy/flopy/commit/1993af155f9db97f5e4fb1a0090926e4cb65cf19): Deprecate flopy.mf6.utils.reference module (#2375). Committed by wpbonelli on 2024-11-19.
+* [refactor](https://github.com/modflowpy/flopy/commit/4c1bf6cb486f8bd5bd9d25c5c7cf159fc65ecd4b): Apply Ruff-specific rule checks (#2377). Committed by Mike Taves on 2024-11-22.
+
 ### Version 3.8.2
 
 #### Bug fixes

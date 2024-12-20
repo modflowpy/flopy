@@ -399,10 +399,7 @@ class NetCdf:
     @classmethod
     def zeros_like(cls, other, output_filename=None, verbose=None, logger=None):
         new_net = NetCdf.empty_like(
-            other,
-            output_filename=output_filename,
-            verbose=verbose,
-            logger=logger,
+            other, output_filename=output_filename, verbose=verbose, logger=logger
         )
         # add the vars to the instance
         for vname in other.var_attr_dict.keys():
@@ -420,10 +417,7 @@ class NetCdf:
             new_data = np.zeros_like(data)
             new_data[mask] = FILLVALUE
             new_var = new_net.create_variable(
-                vname,
-                other.var_attr_dict[vname],
-                var.dtype,
-                dimensions=var.dimensions,
+                vname, other.var_attr_dict[vname], var.dtype, dimensions=var.dimensions
             )
             new_var[:] = new_data
             new_net.log(f"adding variable {vname}")
@@ -703,10 +697,7 @@ class NetCdf:
         # write some attributes
         self.log("setting standard attributes")
 
-        self.nc.setncattr(
-            "Conventions",
-            f"CF-1.6, ACDD-1.3, flopy {version}",
-        )
+        self.nc.setncattr("Conventions", f"CF-1.6, ACDD-1.3, flopy {version}")
         self.nc.setncattr(
             "date_created", datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
         )
@@ -768,10 +759,7 @@ class NetCdf:
             "positive": self.z_positive,
         }
         elev = self.create_variable(
-            "elevation",
-            attribs,
-            precision_str="f8",
-            dimensions=self.dimension_names,
+            "elevation", attribs, precision_str="f8", dimensions=self.dimension_names
         )
         elev[:] = self.zs
 
@@ -802,10 +790,7 @@ class NetCdf:
             "_CoordinateAxisType": "Lat",
         }
         lat = self.create_variable(
-            "latitude",
-            attribs,
-            precision_str="f8",
-            dimensions=self.dimension_names[1:],
+            "latitude", attribs, precision_str="f8", dimensions=self.dimension_names[1:]
         )
         lat[:] = self.ys
 
@@ -818,10 +803,7 @@ class NetCdf:
             "axis": "X",
         }
         x = self.create_variable(
-            "x_proj",
-            attribs,
-            precision_str="f8",
-            dimensions=self.dimension_names[1:],
+            "x_proj", attribs, precision_str="f8", dimensions=self.dimension_names[1:]
         )
         x[:] = self.model_grid.xyzcellcenters[0]
 
@@ -834,10 +816,7 @@ class NetCdf:
             "axis": "Y",
         }
         y = self.create_variable(
-            "y_proj",
-            attribs,
-            precision_str="f8",
-            dimensions=self.dimension_names[1:],
+            "y_proj", attribs, precision_str="f8", dimensions=self.dimension_names[1:]
         )
         y[:] = self.model_grid.xyzcellcenters[1]
 
@@ -989,11 +968,7 @@ class NetCdf:
                     attribs = attributes["time"]
 
                 time = self.create_group_variable(
-                    group,
-                    "time",
-                    attribs,
-                    precision_str="f8",
-                    dimensions=("time",),
+                    group, "time", attribs, precision_str="f8", dimensions=("time",)
                 )
 
                 time[:] = np.asarray(time_values)
@@ -1012,22 +987,14 @@ class NetCdf:
                     attribs = attributes["zone"]
 
                 zone = self.create_group_variable(
-                    group,
-                    "zone",
-                    attribs,
-                    precision_str="i4",
-                    dimensions=("zone",),
+                    group, "zone", attribs, precision_str="i4", dimensions=("zone",)
                 )
                 zone[:] = np.asarray(dimension_data["zone"])
 
             else:
                 attribs = attributes[dim]
                 var = self.create_group_variable(
-                    group,
-                    dim,
-                    attribs,
-                    precision_str="f8",
-                    dimensions=dim_names,
+                    group, dim, attribs, precision_str="f8", dimensions=dim_names
                 )
                 var[:] = np.asarray(dimension_data[dim])
         self.nc.sync()
@@ -1097,11 +1064,7 @@ class NetCdf:
         self.var_attr_dict[f"{group}/{name}"] = attributes
 
         var = self.nc.groups[group].createVariable(
-            name,
-            precision_str,
-            dimensions,
-            fill_value=self.fillvalue,
-            zlib=True,
+            name, precision_str, dimensions, fill_value=self.fillvalue, zlib=True
         )
 
         for k, v in attributes.items():
@@ -1182,11 +1145,7 @@ class NetCdf:
         self.var_attr_dict[name] = attributes
 
         var = self.nc.createVariable(
-            name,
-            precision_str,
-            dimensions,
-            fill_value=self.fillvalue,
-            zlib=True,
+            name, precision_str, dimensions, fill_value=self.fillvalue, zlib=True
         )
         for k, v in attributes.items():
             try:

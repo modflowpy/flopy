@@ -93,7 +93,7 @@ class PlotCrossSection:
         else:
             self.ax = ax
 
-        onkey = list(line.keys())[0]
+        onkey = next(iter(line.keys()))
         self.__geographic_xpts = None
 
         # un-translate model grid into model coordinates
@@ -199,7 +199,7 @@ class PlotCrossSection:
             self.xypts[node] = points
 
         if len(self.xypts) < 2:
-            if len(list(self.xypts.values())[0]) < 2:
+            if len(next(iter(self.xypts.values()))) < 2:
                 s = (
                     "cross-section cannot be created\n."
                     " less than 2 points intersect the model grid\n"
@@ -215,11 +215,7 @@ class PlotCrossSection:
                 xp = [t[0] for t in pt]
                 yp = [t[1] for t in pt]
                 xp, yp = geometry.transform(
-                    xp,
-                    yp,
-                    self.mg.xoffset,
-                    self.mg.yoffset,
-                    self.mg.angrot_radians,
+                    xp, yp, self.mg.xoffset, self.mg.yoffset, self.mg.angrot_radians
                 )
                 xypts[nn] = list(zip(xp, yp))
 
@@ -288,24 +284,11 @@ class PlotCrossSection:
     def _is_valid(line):
         shapely_geo = import_optional_dependency("shapely.geometry")
 
-        if isinstance(
-            line,
-            (
-                list,
-                tuple,
-                np.ndarray,
-            ),
-        ):
+        if isinstance(line, (list, tuple, np.ndarray)):
             a = np.array(line)
             if (len(a.shape) < 2 or a.shape[0] < 2) or a.shape[1] != 2:
                 return False
-        elif not isinstance(
-            line,
-            (
-                geometry.LineString,
-                shapely_geo.LineString,
-            ),
-        ):
+        elif not isinstance(line, (geometry.LineString, shapely_geo.LineString)):
             return False
 
         return True
@@ -589,13 +572,10 @@ class PlotCrossSection:
         xcenters = self.xcenters
         plotarray = np.array([a[cell] for cell in sorted(self.projpts)])
 
-        (
-            plotarray,
-            xcenters,
-            zcenters,
-            mplcontour,
-        ) = self.mg.cross_section_set_contour_arrays(
-            plotarray, xcenters, head, self.elev, self.projpts
+        (plotarray, xcenters, zcenters, mplcontour) = (
+            self.mg.cross_section_set_contour_arrays(
+                plotarray, xcenters, head, self.elev, self.projpts
+            )
         )
 
         if not mplcontour:
@@ -771,12 +751,7 @@ class PlotCrossSection:
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
         # mask active cells
         patches = self.plot_array(
-            plotarray,
-            masked_values=[0],
-            head=head,
-            cmap=cmap,
-            norm=norm,
-            **kwargs,
+            plotarray, masked_values=[0], head=head, cmap=cmap, norm=norm, **kwargs
         )
         return patches
 
@@ -908,12 +883,7 @@ class PlotCrossSection:
         bounds = [0, 1, 2]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
         patches = self.plot_array(
-            plotarray,
-            masked_values=[0],
-            head=head,
-            cmap=cmap,
-            norm=norm,
-            **kwargs,
+            plotarray, masked_values=[0], head=head, cmap=cmap, norm=norm, **kwargs
         )
 
         return patches

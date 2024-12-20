@@ -39,11 +39,7 @@ def read_zonebudget_file(fname):
 
         # Read time step information for this block
         if "Time Step" in line:
-            kstp, kper, totim = (
-                int(items[1]) - 1,
-                int(items[3]) - 1,
-                float(items[5]),
-            )
+            kstp, kper, totim = (int(items[1]) - 1, int(items[3]) - 1, float(items[5]))
             continue
 
         # Get names of zones
@@ -74,12 +70,7 @@ def read_zonebudget_file(fname):
         if record.startswith(("FROM_", "TO_")):
             record = "_".join(record.split("_")[1:])
         vals = [float(i) for i in items[1:-1]]
-        row = (
-            totim,
-            kstp,
-            kper,
-            record,
-        ) + tuple(v for v in vals)
+        row = (totim, kstp, kper, record) + tuple(v for v in vals)
         rows.append(row)
     dtype_list = [
         ("totim", float),
@@ -320,7 +311,7 @@ def test_zonebudget_6(function_tmpdir, example_data_path):
 
     df = zb.get_dataframes()
 
-    assert list(df)[0] == "test_alias", "Alias testing failed"
+    assert next(iter(df)) == "test_alias", "Alias testing failed"
 
 
 @pytest.mark.mf6

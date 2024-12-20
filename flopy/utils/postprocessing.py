@@ -586,16 +586,13 @@ def get_specific_discharge(
 
         if vectors[ix].shape == modelgrid.shape:
             tqx = np.zeros(
-                (modelgrid.nlay, modelgrid.nrow, modelgrid.ncol + 1),
-                dtype=np.float32,
+                (modelgrid.nlay, modelgrid.nrow, modelgrid.ncol + 1), dtype=np.float32
             )
             tqy = np.zeros(
-                (modelgrid.nlay, modelgrid.nrow + 1, modelgrid.ncol),
-                dtype=np.float32,
+                (modelgrid.nlay, modelgrid.nrow + 1, modelgrid.ncol), dtype=np.float32
             )
             tqz = np.zeros(
-                (modelgrid.nlay + 1, modelgrid.nrow, modelgrid.ncol),
-                dtype=np.float32,
+                (modelgrid.nlay + 1, modelgrid.nrow, modelgrid.ncol), dtype=np.float32
             )
             if vectors[0] is not None:
                 tqx[:, :, 1:] = vectors[0]

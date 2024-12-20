@@ -72,15 +72,14 @@ class acdd:
         self.creator_name = self.creator.get("name")
         self.creator_email = self.creator.get("email")
         self.creator_institution = self.creator["organization"].get("displayText")
-        self.institution = (
-            self.creator_institution
-        )  # also in CF convention for global attributes
+        # also in CF convention for global attributes
+        self.institution = self.creator_institution
         self.project = self.sb["title"]
-        self.publisher_name = [
+        self.publisher_name = next(
             d.get("name")
             for d in self.sb["contacts"]
             if "publisher" in d.get("type").lower()
-        ][0]
+        )
         self.publisher_email = self.sb["provenance"]["linkProcess"].get("processedBy")
         # TODO: should publisher_url be obtained from linkReference?
         # publisher_url = self.sb['provenance']['linkProcess'].get('linkReference')
@@ -106,7 +105,7 @@ class acdd:
 
     def _get_xml_attribute(self, attr):
         try:
-            return list(self.xmlroot.iter(attr))[0].text
+            return next(iter(self.xmlroot.iter(attr))).text
         except:
             return None
 
@@ -116,9 +115,9 @@ class acdd:
 
     @property
     def creator(self):
-        return [
+        return next(
             d for d in self.sb["contacts"] if "point of contact" in d["type"].lower()
-        ][0]
+        )
 
     @property
     def creator_url(self):
@@ -181,7 +180,7 @@ class acdd:
         l = self.sb["dates"]
         tc = {}
         for t in ["start", "end"]:
-            tc[t] = [d.get("dateString") for d in l if t in d["type"].lower()][0]
+            tc[t] = next(d.get("dateString") for d in l if t in d["type"].lower())
         if not np.all(self.model_time.steady_state) and pd is not None:
             # replace with times from model reference
             tc["start"] = self.model_time.start_datetime

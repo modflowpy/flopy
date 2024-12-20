@@ -35,12 +35,15 @@ import string
 
 # +
 import sys
+from pathlib import Path
 from pprint import pformat
 from tempfile import TemporaryDirectory
 
+import git
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import pooch
 
 import flopy
 
@@ -55,6 +58,15 @@ modelpth = temp_dir.name
 modelname = "CrnkNic"
 mfexe = "mfnwt"
 mtexe = "mt3dusgs"
+
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
 
 # Make sure modelpth directory exists
 if not os.path.isdir(modelpth):
@@ -587,8 +599,13 @@ ts4_mt3d = load_ts_from_SFT_output(fname_SFTout, nd=433)
 ts5_mt3d = load_ts_from_SFT_output(fname_SFTout, nd=619)
 
 # OTIS results located here
-fname_OTIS = (
-    "../../examples/data/mt3d_test/mfnwt_mt3dusgs/sft_crnkNic/OTIS_solution.out"
+fname = "OTIS_solution.out"
+fname_OTIS = data_path / "mt3d_test" / "mfnwt_mt3dusgs" / "sft_crnkNic" / fname
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/mt3d_test/mfnwt_mt3dusgs/sft_crnkNic/{fname}",
+    fname=fname,
+    path=data_path / "mt3d_test" / "mfnwt_mt3dusgs" / "sft_crnkNic",
+    known_hash=None,
 )
 
 # Loading OTIS output
@@ -676,37 +693,17 @@ ax.plot(ts4_Otis[:, 0], ts4_Otis[:, 1], "g-", linewidth=1.0)
 ax.plot(ts5_Otis[:, 0], ts5_Otis[:, 1], "c-", linewidth=1.0)
 
 ax.plot(
-    (ts1_mt3d[:, 0]) / 3600,
-    ts1_mt3d[:, 1],
-    "kD",
-    markersize=2.0,
-    mfc="none",
-    mec="k",
+    (ts1_mt3d[:, 0]) / 3600, ts1_mt3d[:, 1], "kD", markersize=2.0, mfc="none", mec="k"
 )
 ax.plot(
-    (ts2_mt3d[:, 0]) / 3600,
-    ts2_mt3d[:, 1],
-    "b*",
-    markersize=3.0,
-    mfc="none",
-    mec="b",
+    (ts2_mt3d[:, 0]) / 3600, ts2_mt3d[:, 1], "b*", markersize=3.0, mfc="none", mec="b"
 )
 ax.plot((ts3_mt3d[:, 0]) / 3600, ts3_mt3d[:, 1], "r+", markersize=3.0)
 ax.plot(
-    (ts4_mt3d[:, 0]) / 3600,
-    ts4_mt3d[:, 1],
-    "g^",
-    markersize=2.0,
-    mfc="none",
-    mec="g",
+    (ts4_mt3d[:, 0]) / 3600, ts4_mt3d[:, 1], "g^", markersize=2.0, mfc="none", mec="g"
 )
 ax.plot(
-    (ts5_mt3d[:, 0]) / 3600,
-    ts5_mt3d[:, 1],
-    "co",
-    markersize=2.0,
-    mfc="none",
-    mec="c",
+    (ts5_mt3d[:, 0]) / 3600, ts5_mt3d[:, 1], "co", markersize=2.0, mfc="none", mec="c"
 )
 
 # customize plot
