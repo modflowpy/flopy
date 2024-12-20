@@ -1,4 +1,5 @@
 # --------------------- gwf disv options ---------------------
+# mf6 subpackage utl-ncf
 
 block options
 name length_units
@@ -47,7 +48,59 @@ reader urword
 optional true
 mf6internal export_ascii
 longname export array variables to layered ascii files.
-description keyword that specifies input griddata arrays should be written to layered ascii output files. 
+description keyword that specifies input griddata arrays should be written to layered ascii output files.
+
+block options
+name export_array_netcdf
+type keyword
+reader urword
+optional true
+mf6internal export_nc
+longname export array variables to netcdf output files.
+description keyword that specifies input griddata arrays should be written to the model output netcdf file.
+extended true
+
+block options
+name ncf_filerecord
+type record ncf6 filein ncf6_filename
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name ncf6
+type keyword
+in_record true
+reader urword
+tagged true
+optional false
+longname ncf keyword
+description keyword to specify that record corresponds to a netcdf configuration (NCF) file.
+extended true
+
+block options
+name filein
+type keyword
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an input filename is expected next.
+
+block options
+name ncf6_filename
+type string
+preserve_case true
+in_record true
+reader urword
+optional false
+tagged false
+longname file name of NCF information
+description defines a netcdf configuration (NCF) input file.
+extended true
 
 # --------------------- gwf disv dimensions ---------------------
 
@@ -82,6 +135,7 @@ name top
 type double precision
 shape (ncpl)
 reader readarray
+netcdf true
 longname model top elevation
 description is the top elevation for each cell in the top model layer.
 
@@ -91,6 +145,7 @@ type double precision
 shape (ncpl, nlay)
 reader readarray
 layered true
+netcdf true
 longname model bottom elevation
 description is the bottom elevation for each cell.
 
@@ -100,6 +155,7 @@ type integer
 shape (ncpl, nlay)
 reader readarray
 layered true
+netcdf true
 optional true
 longname idomain existence array
 description is an optional array that characterizes the existence status of a cell.  If the IDOMAIN array is not specified, then all model cells exist within the solution.  If the IDOMAIN value for a cell is 0, the cell does not exist in the simulation.  Input and output values will be read and written for the cell, but internal to the program, the cell is excluded from the solution.  If the IDOMAIN value for a cell is 1 or greater, the cell exists in the simulation.  If the IDOMAIN value for a cell is -1, the cell does not exist in the simulation.  Furthermore, the first existing cell above will be connected to the first existing cell below.  This type of cell is referred to as a ``vertical pass through'' cell.

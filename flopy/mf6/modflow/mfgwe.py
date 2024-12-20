@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on May 23, 2024 14:30:07 UTC
+# FILE created on December 20, 2024 02:43:08 UTC
 from .. import mfmodel
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -45,6 +45,13 @@ class ModflowGwe(mfmodel.MFModel):
         * save_flows (boolean) keyword to indicate that all model package flow
           terms will be written to the file specified with "BUDGET FILEOUT" in
           Output Control.
+    nc_mesh2d_filerecord : [ncmesh2dfile]
+        * ncmesh2dfile (string) name of the netcdf ugrid layered mesh output
+          file.
+    nc_structured_filerecord : [ncstructfile]
+        * ncstructfile (string) name of the netcdf structured output file.
+    nc_filerecord : [netcdf_filename]
+        * netcdf_filename (string) defines a netcdf input file.
     packages : [ftype, fname, pname]
         * ftype (string) is the file type, which must be one of the following
           character values shown in table ref{table:ftype-gwe}. Ftype may be
@@ -69,67 +76,42 @@ class ModflowGwe(mfmodel.MFModel):
         model_ws : string, strict : boolean) : MFSimulation
         a class method that loads a model from files
     """
+    model_type = 'gwe'
 
-    model_type = "gwe"
-
-    def __init__(
-        self,
-        simulation,
-        modelname="model",
-        model_nam_file=None,
-        version="mf6",
-        exe_name="mf6",
-        model_rel_path=".",
-        list=None,
-        print_input=None,
-        print_flows=None,
-        save_flows=None,
-        **kwargs,
-    ):
-        super().__init__(
-            simulation,
-            model_type="gwe6",
-            modelname=modelname,
-            model_nam_file=model_nam_file,
-            version=version,
-            exe_name=exe_name,
-            model_rel_path=model_rel_path,
-            **kwargs,
-        )
+    def __init__(self, simulation, modelname='model', model_nam_file=None,
+                 version='mf6', exe_name='mf6', model_rel_path='.', list=None,
+                 print_input=None, print_flows=None, save_flows=None,
+                 nc_mesh2d_filerecord=None, nc_structured_filerecord=None,
+                 nc_filerecord=None, **kwargs,):
+        super().__init__(simulation, model_type='gwe6',
+                         modelname=modelname,
+                         model_nam_file=model_nam_file,
+                         version=version, exe_name=exe_name,
+                         model_rel_path=model_rel_path,
+                         **kwargs,)
 
         self.name_file.list.set_data(list)
         self.name_file.print_input.set_data(print_input)
         self.name_file.print_flows.set_data(print_flows)
         self.name_file.save_flows.set_data(save_flows)
+        self.name_file.nc_mesh2d_filerecord.set_data(nc_mesh2d_filerecord)
+        self.name_file.nc_structured_filerecord.set_data(nc_structured_filerecord)
+        self.name_file.nc_filerecord.set_data(nc_filerecord)
 
         self.list = self.name_file.list
         self.print_input = self.name_file.print_input
         self.print_flows = self.name_file.print_flows
         self.save_flows = self.name_file.save_flows
+        self.nc_mesh2d_filerecord = self.name_file.nc_mesh2d_filerecord
+        self.nc_structured_filerecord = self.name_file.nc_structured_filerecord
+        self.nc_filerecord = self.name_file.nc_filerecord
 
     @classmethod
-    def load(
-        cls,
-        simulation,
-        structure,
-        modelname="NewModel",
-        model_nam_file="modflowtest.nam",
-        version="mf6",
-        exe_name="mf6",
-        strict=True,
-        model_rel_path=".",
-        load_only=None,
-    ):
-        return mfmodel.MFModel.load_base(
-            cls,
-            simulation,
-            structure,
-            modelname,
-            model_nam_file,
-            "gwe6",
-            version,
-            exe_name,
-            strict,
-            model_rel_path,
-            load_only,
-        )
+    def load(cls, simulation, structure, modelname='NewModel',
+             model_nam_file='modflowtest.nam', version='mf6',
+             exe_name='mf6', strict=True, model_rel_path='.',
+             load_only=None):
+        return mfmodel.MFModel.load_base(cls, simulation, structure, modelname,
+                                         model_nam_file, 'gwe6', version,
+                                         exe_name, strict, model_rel_path,
+                                         load_only)
