@@ -1,4 +1,10 @@
 # Changelog
+### Version 3.9.1
+
+#### Mf6
+
+* [mf6](https://github.com/modflowpy/flopy/commit/4952f81f3b4935c51513593011166fbd88dfd85c): Update dfns and mf6 module (#2399). Committed by wpbonelli on 2024-12-20.
+
 ### Version 3.9.0
 
 #### New features
