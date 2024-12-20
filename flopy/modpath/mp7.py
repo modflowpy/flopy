@@ -137,20 +137,14 @@ class Modpath7(BaseModel):
                 )
             else:
                 if dis.package_name.lower() == "dis":
-                    nlay, nrow, ncol = (
-                        dis.nlay.array,
-                        dis.nrow.array,
-                        dis.ncol.array,
-                    )
+                    nlay, nrow, ncol = (dis.nlay.array, dis.nrow.array, dis.ncol.array)
                     shape = (nlay, nrow, ncol)
                 elif dis.package_name.lower() == "disv":
                     nlay, ncpl = dis.nlay.array, dis.ncpl.array
                     shape = (nlay, ncpl)
                 elif dis.package_name.lower() == "disu":
                     nodes = dis.nodes.array
-                    shape = tuple(
-                        nodes,
-                    )
+                    shape = tuple(nodes)
                 else:
                     raise TypeError(
                         "DIS, DISV, or DISU packages must be "

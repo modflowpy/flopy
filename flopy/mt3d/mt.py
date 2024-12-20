@@ -382,9 +382,7 @@ class Mt3dms(BaseModel):
         f_nam.write(f"{self.heading}\n")
         f_nam.write(
             "{:14s} {:5d}  {}\n".format(
-                self.lst.name[0],
-                self.lst.unit_number[0],
-                self.lst.file_name[0],
+                self.lst.name[0], self.lst.unit_number[0], self.lst.file_name[0]
             )
         )
         if self.ftlfilename is not None:
@@ -589,9 +587,7 @@ class Mt3dms(BaseModel):
                     if forgive:
                         try:
                             pck = item.package.load(
-                                item.filehandle,
-                                mt,
-                                ext_unit_dict=ext_unit_dict,
+                                item.filehandle, mt, ext_unit_dict=ext_unit_dict
                             )
                             files_successfully_loaded.append(item.filename)
                             if mt.verbose:

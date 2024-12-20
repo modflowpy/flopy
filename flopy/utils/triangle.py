@@ -255,11 +255,7 @@ class Triangle:
             pc = pmv.plot_grid(facecolor=facecolor, edgecolor=edgecolor, **kwargs)
         else:
             pc = pmv.plot_array(
-                a,
-                masked_values=masked_values,
-                cmap=cmap,
-                edgecolor=edgecolor,
-                **kwargs,
+                a, masked_values=masked_values, cmap=cmap, edgecolor=edgecolor, **kwargs
             )
 
         return pc

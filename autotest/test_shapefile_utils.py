@@ -7,10 +7,7 @@ from modflow_devtools.markers import requires_pkg
 
 import flopy
 from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
-from flopy.export.shapefile_utils import (
-    model_attributes_to_shapefile,
-    shp2recarray,
-)
+from flopy.export.shapefile_utils import model_attributes_to_shapefile, shp2recarray
 from flopy.utils.crs import get_shapefile_crs
 
 from .test_export import disu_sim

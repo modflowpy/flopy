@@ -259,11 +259,7 @@ class PackageInterface:
                 for l in range(vka.shape[0]):
                     vka[l] *= hk[l] if self.layvka.array[l] != 0 else 1
             self._check_thresholds(
-                chk,
-                vka,
-                active,
-                chk.property_threshold_values["vka"],
-                vka_param,
+                chk, vka, active, chk.property_threshold_values["vka"], vka_param
             )
 
         for kp, name in kparams.items():
@@ -380,7 +376,7 @@ class PackageInterface:
                     [
                         (
                             True
-                            if l > 0 or l < 0 and "THICKSTRT" in self.options
+                            if l > 0 or (l < 0 and "THICKSTRT" in self.options)
                             else False
                         )
                         for l in self.laytyp
@@ -743,7 +739,7 @@ class Package(PackageInterface):
             if option.lower() == "thickstrt":
                 thickstrt = True
         for i, l in enumerate(self.laytyp.array.tolist()):
-            if l == 0 or l < 0 and thickstrt:
+            if l == 0 or (l < 0 and thickstrt):
                 confined = True
                 continue
             if confined and l > 0:
@@ -1075,12 +1071,7 @@ class Package(PackageInterface):
                     itmp_cln, aux_names=aux_names, structured=False
                 )
                 current_cln = ulstrd(
-                    f,
-                    itmp_cln,
-                    current_cln,
-                    model,
-                    sfac_columns,
-                    ext_unit_dict,
+                    f, itmp_cln, current_cln, model, sfac_columns, ext_unit_dict
                 )
                 current_cln["node"] -= 1
                 bnd_output_cln = np.recarray.copy(current_cln)
@@ -1198,11 +1189,7 @@ class Package(PackageInterface):
                 filenames=filenames,
             )
         if check:
-            pak.check(
-                f=f"{pak.name[0]}.chk",
-                verbose=pak.parent.verbose,
-                level=0,
-            )
+            pak.check(f=f"{pak.name[0]}.chk", verbose=pak.parent.verbose, level=0)
         return pak
 
     def set_cbc_output_file(self, ipakcb, model, fname):

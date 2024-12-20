@@ -719,7 +719,7 @@ shape
 tagged true
 in_record true
 reader urword
-longname well status
+longname lake status
 description keyword option to define lake status.  STATUS can be ACTIVE, INACTIVE, or CONSTANT. By default, STATUS is ACTIVE.
 
 block period

@@ -787,7 +787,7 @@ class Vtk:
         if not self._vtk_geometry_set:
             self._set_vtk_grid_geometry()
 
-        k = list(d.keys())[0]
+        k = next(iter(d.keys()))
         transient = {}
         if isinstance(d[k], DataInterface):
             if d[k].data_type in (DataType.array2d, DataType.array3d):
@@ -937,7 +937,7 @@ class Vtk:
             self._set_vtk_grid_geometry()
 
         if self.__transient_data:
-            k = list(self.__transient_data.keys())[0]
+            k = next(iter(self.__transient_data.keys()))
             if len(d) != len(self.__transient_data[k]):
                 print(
                     "Transient vector not same size as transient arrays time "

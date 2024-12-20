@@ -19,7 +19,7 @@
 
 # # Unsaturated Zone Flow (UZF) Package demo
 # Demonstrates functionality of the flopy UZF module using the example from [Niswonger and others (2006)](https://pubs.usgs.gov/tm/2006/tm6a19/). This is the same as the SFR example problem from Prudic and others (2004;
-# p. 13–19), except the UZF package replaces the ET and RCH packages.
+# p. 13-19), except the UZF package replaces the ET and RCH packages.
 #
 # #### Problem description:
 #
@@ -41,10 +41,12 @@ import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import git
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import pooch
 
 proj_root = Path.cwd().parent.parent
 
@@ -62,13 +64,42 @@ print(f"flopy version: {flopy.__version__}")
 #  assumes executable is in users path statement
 exe_name = "mf2005"
 
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+
 # Set up a temporary workspace.
 
 # +
 temp_dir = TemporaryDirectory()
 path = Path(temp_dir.name)
 
-gpth = proj_root / "examples" / "data" / "mf2005_test" / "UZFtest2.*"
+file_names = [
+    "UZFtest2.ba6",
+    "UZFtest2.dis",
+    "UZFtest2.gag",
+    "UZFtest2.ghb",
+    "UZFtest2.lpf",
+    "UZFtest2.nam",
+    "UZFtest2.oc",
+    "UZFtest2.sfr",
+    "UZFtest2.sip",
+    "UZFtest2.uzf",
+    "UZFtest2.wel",
+]
+for fname in file_names:
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/mf2005_test/{fname}",
+        fname=fname,
+        path=data_path / "mf2005_test",
+        known_hash=None,
+    )
+gpth = data_path / "mf2005_test" / "UZFtest2.*"
 for f in glob.glob(str(gpth)):
     shutil.copy(f, path)
 # -
@@ -102,7 +133,14 @@ linecollection = mapview.plot_grid()
 # Read the ```irunbnd``` array from an external file.
 
 # +
-irnbndpth = proj_root / "examples" / "data" / "uzf_examples" / "irunbnd.dat"
+fname = "irunbnd.dat"
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/uzf_examples/{fname}",
+    fname=fname,
+    path=data_path / "uzf_examples",
+    known_hash=None,
+)
+irnbndpth = data_path / "uzf_examples" / fname
 irunbnd = np.loadtxt(irnbndpth)
 
 fig = plt.figure(figsize=(8, 8))
@@ -116,7 +154,14 @@ linecollection = mapview.plot_grid()
 # Define the ``vks`` (unsaturated zone vertical hydraulic conductivity) array.
 
 # +
-vksbndpth = proj_root / "examples" / "data" / "uzf_examples" / "vks.dat"
+fname = "vks.dat"
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/uzf_examples/{fname}",
+    fname=fname,
+    path=data_path / "uzf_examples",
+    known_hash=None,
+)
+vksbndpth = data_path / "uzf_examples" / fname
 vks = np.loadtxt(vksbndpth)
 
 fig = plt.figure(figsize=(8, 8))
@@ -134,7 +179,14 @@ linecollection = mapview.plot_grid()
 m.nrow_ncol_nlay_nper
 
 # +
-finf = np.loadtxt(proj_root / "examples" / "data" / "uzf_examples" / "finf.dat")
+fname = "finf.dat"
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/uzf_examples/{fname}",
+    fname=fname,
+    path=data_path / "uzf_examples",
+    known_hash=None,
+)
+finf = np.loadtxt(data_path / "uzf_examples" / "finf.dat")
 finf = np.reshape(finf, (m.nper, m.nrow, m.ncol))
 finf = {i: finf[i] for i in range(finf.shape[0])}
 
@@ -158,7 +210,14 @@ plt.ylabel("Average infiltration rate, inches per year")
 # Define `extwc` (extinction water content) array.
 
 # +
-extwc = np.loadtxt(proj_root / "examples" / "data" / "uzf_examples" / "extwc.dat")
+fname = "extwc.dat"
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/uzf_examples/{fname}",
+    fname=fname,
+    path=data_path / "uzf_examples",
+    known_hash=None,
+)
+extwc = np.loadtxt(data_path / "uzf_examples" / "extwc.dat")
 
 fig = plt.figure(figsize=(8, 8))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
@@ -310,8 +369,7 @@ if avail:
 
 if avail:
     df3 = pd.DataFrame(
-        data,
-        columns=["layer", "time", "head", "uzthick", "depth", "watercontent"],
+        data, columns=["layer", "time", "head", "uzthick", "depth", "watercontent"]
     )
     df3.head(41)
 

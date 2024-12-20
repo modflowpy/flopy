@@ -606,14 +606,7 @@ class Mnw:
             names += ["k"]
         if nnodes < 0:
             names += ["ztop", "zbotm"]
-        names += [
-            "wellid",
-            "losstype",
-            "pumploc",
-            "qlimit",
-            "ppflag",
-            "pumpcap",
-        ]
+        names += ["wellid", "losstype", "pumploc", "qlimit", "ppflag", "pumpcap"]
         if losstype.lower() == "thiem":
             names += ["rw"]
         elif losstype.lower() == "skin":
@@ -765,11 +758,7 @@ class Mnw:
         fmt = indent + "{} {:.0f} {:.0f} {:.0f} {:.0f}\n"
         f_mnw.write(
             fmt.format(
-                self.losstype,
-                self.pumploc,
-                self.qlimit,
-                self.ppflag,
-                self.pumpcap,
+                self.losstype, self.pumploc, self.qlimit, self.ppflag, self.pumpcap
             )
         )
 
@@ -1014,9 +1003,8 @@ class ModflowMnw2(Package):
 
         self.url = "mnw2.html"
         self.nper = self.parent.nrow_ncol_nlay_nper[-1]
-        self.nper = (
-            1 if self.nper == 0 else self.nper
-        )  # otherwise iterations from 0, nper won't run
+        self.nper = 1 if self.nper == 0 else self.nper
+        # otherwise iterations from 0, nper won't run
         self.structured = self.parent.structured
 
         # Dataset 0
@@ -1085,7 +1073,7 @@ class ModflowMnw2(Package):
             if (
                 "k"
                 not in stress_period_data[
-                    list(stress_period_data.keys())[0]
+                    next(iter(stress_period_data.keys()))
                 ].dtype.names
             ):
                 self._add_kij_to_stress_period_data()
@@ -1300,9 +1288,8 @@ class ModflowMnw2(Package):
         structured = model.structured
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
-            nper = (
-                1 if nper == 0 else nper
-            )  # otherwise iterations from 0, nper won't run
+            nper = 1 if nper == 0 else nper
+            # otherwise iterations from 0, nper won't run
 
         openfile = not hasattr(f, "read")
         if openfile:
@@ -1355,16 +1342,7 @@ class ModflowMnw2(Package):
                     kij = [ndw.k[0], ndw.i[0], ndw.j[0]]
                     current_4[i] = tuple(
                         kij
-                        + [
-                            wellid,
-                            qdes,
-                            capmult,
-                            cprime,
-                            hlim,
-                            qcut,
-                            qfrcmn,
-                            qfrcmx,
-                        ]
+                        + [wellid, qdes, capmult, cprime, hlim, qcut, qfrcmn, qfrcmx]
                         + xyz
                     )
                     # update well stress period data table
@@ -1458,9 +1436,7 @@ class ModflowMnw2(Package):
         if np.any(invalid_itmp):
             for v in np.array(self.itmp)[invalid_itmp]:
                 chk._add_to_summary(
-                    type="Error",
-                    value=v,
-                    desc="Itmp value greater than MNWMAX",
+                    type="Error", value=v, desc="Itmp value greater than MNWMAX"
                 )
 
         chk.summarize()

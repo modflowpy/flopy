@@ -592,10 +592,8 @@ def get_mf2005_model(name, ws, alt=False):
     ocspd = {}
     for p in range(nper):
         ocspd[(p, 0)] = ["save head", "save budget"]
-    ocspd[(0, 0)] = [
-        "save head",
-        "save budget",
-    ]  # pretty sure it just uses the last for everything
+    # pretty sure it just uses the last for everything
+    ocspd[(0, 0)] = ["save head", "save budget"]
     flopy.modflow.ModflowOc(m, stress_period_data=ocspd)
 
     return m, ctx
@@ -637,12 +635,7 @@ def test_data_pass_no_modflow(function_tmpdir, alt):
     assert mp.head_file == hd_file
     assert mp.budget_file == bud_file
     assert mp.dis_file == dis_file
-    assert mp.nrow_ncol_nlay_nper == (
-        ctx.nrow,
-        ctx.ncol,
-        ctx.nlay,
-        ctx.nper,
-    )
+    assert mp.nrow_ncol_nlay_nper == (ctx.nrow, ctx.ncol, ctx.nlay, ctx.nper)
 
     mpbas = flopy.modpath.Modpath6Bas(
         mp,
@@ -715,12 +708,7 @@ def test_data_pass_with_modflow(function_tmpdir, alt):
     assert mp.head_file == hd_file
     assert mp.budget_file == bud_file
     assert mp.dis_file == dis_file
-    assert mp.nrow_ncol_nlay_nper == (
-        ctx.nrow,
-        ctx.ncol,
-        ctx.nlay,
-        ctx.nper,
-    )
+    assert mp.nrow_ncol_nlay_nper == (ctx.nrow, ctx.ncol, ctx.nlay, ctx.nper)
 
     mpbas = flopy.modpath.Modpath6Bas(
         mp,
@@ -794,12 +782,7 @@ def test_just_from_model(function_tmpdir, alt):
     assert mp.head_file == hd_file
     assert mp.budget_file == bud_file
     assert mp.dis_file == dis_file
-    assert mp.nrow_ncol_nlay_nper == (
-        ctx.nrow,
-        ctx.ncol,
-        ctx.nlay,
-        ctx.nper,
-    )
+    assert mp.nrow_ncol_nlay_nper == (ctx.nrow, ctx.ncol, ctx.nlay, ctx.nper)
 
     mpbas = flopy.modpath.Modpath6Bas(
         mp,

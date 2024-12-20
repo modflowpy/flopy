@@ -159,9 +159,6 @@ for f in filelist:
 if not os.path.exists(res_pth):
     os.makedirs(res_pth)
 for idx in range(10):
-    fn = os.path.join(
-        res_pth,
-        f"USPB_capture_fraction_{nstep:02d}_{idx + 1:02d}.dat",
-    )
+    fn = os.path.join(res_pth, f"USPB_capture_fraction_{nstep:02d}_{idx + 1:02d}.dat")
     print(f"saving capture fraction data to...{os.path.basename(fn)}")
     np.savetxt(fn, cf_array[idx, :, :], delimiter=" ")

@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on May 23, 2024 14:30:07 UTC
+# FILE created on December 20, 2024 02:43:08 UTC
 from .. import mfmodel
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -69,33 +69,18 @@ class ModflowPrt(mfmodel.MFModel):
         model_ws : string, strict : boolean) : MFSimulation
         a class method that loads a model from files
     """
+    model_type = 'prt'
 
-    model_type = "prt"
-
-    def __init__(
-        self,
-        simulation,
-        modelname="model",
-        model_nam_file=None,
-        version="mf6",
-        exe_name="mf6",
-        model_rel_path=".",
-        list=None,
-        print_input=None,
-        print_flows=None,
-        save_flows=None,
-        **kwargs,
-    ):
-        super().__init__(
-            simulation,
-            model_type="prt6",
-            modelname=modelname,
-            model_nam_file=model_nam_file,
-            version=version,
-            exe_name=exe_name,
-            model_rel_path=model_rel_path,
-            **kwargs,
-        )
+    def __init__(self, simulation, modelname='model', model_nam_file=None,
+                 version='mf6', exe_name='mf6', model_rel_path='.', list=None,
+                 print_input=None, print_flows=None, save_flows=None,
+                 **kwargs,):
+        super().__init__(simulation, model_type='prt6',
+                         modelname=modelname,
+                         model_nam_file=model_nam_file,
+                         version=version, exe_name=exe_name,
+                         model_rel_path=model_rel_path,
+                         **kwargs,)
 
         self.name_file.list.set_data(list)
         self.name_file.print_input.set_data(print_input)
@@ -108,28 +93,11 @@ class ModflowPrt(mfmodel.MFModel):
         self.save_flows = self.name_file.save_flows
 
     @classmethod
-    def load(
-        cls,
-        simulation,
-        structure,
-        modelname="NewModel",
-        model_nam_file="modflowtest.nam",
-        version="mf6",
-        exe_name="mf6",
-        strict=True,
-        model_rel_path=".",
-        load_only=None,
-    ):
-        return mfmodel.MFModel.load_base(
-            cls,
-            simulation,
-            structure,
-            modelname,
-            model_nam_file,
-            "prt6",
-            version,
-            exe_name,
-            strict,
-            model_rel_path,
-            load_only,
-        )
+    def load(cls, simulation, structure, modelname='NewModel',
+             model_nam_file='modflowtest.nam', version='mf6',
+             exe_name='mf6', strict=True, model_rel_path='.',
+             load_only=None):
+        return mfmodel.MFModel.load_base(cls, simulation, structure, modelname,
+                                         model_nam_file, 'prt6', version,
+                                         exe_name, strict, model_rel_path,
+                                         load_only)

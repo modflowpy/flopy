@@ -29,12 +29,15 @@
 import os
 import sys
 import time
+from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import git
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import pooch
 import shapefile
 import shapely
 
@@ -53,11 +56,28 @@ print(f"flopy version: {flopy.__version__}")
 temp_dir = TemporaryDirectory()
 workspace = temp_dir.name
 
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+
 # ### Raster files can be loaded using the `Raster.load` method
 
 # +
-raster_ws = os.path.join("..", "..", "examples", "data", "options", "dem")
+raster_ws = data_path / "options" / "dem"
 raster_name = "dem.img"
+
+pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/options/dem/{raster_name}",
+    fname=raster_name,
+    path=raster_ws,
+    known_hash=None,
+)
+
 
 rio = Raster.load(os.path.join(raster_ws, raster_name))
 # -
@@ -91,8 +111,28 @@ plt.colorbar(ax.images[0], shrink=0.7)
 # The structured grid example uses the DIS file from the GSFLOW Sagehen example problem to create a modelgrid
 
 # +
-model_ws = os.path.join("..", "..", "examples", "data", "options", "sagehen")
-ml = flopy.modflow.Modflow.load("sagehen.nam", version="mfnwt", model_ws=model_ws)
+file_names = {
+    "sagehen.bas": None,
+    "sagehen.dis": None,
+    "sagehen.lpf": None,
+    "sagehen.nam": None,
+    "sagehen.nwt": None,
+    "sagehen.oc": None,
+    "sagehen.sfr": None,
+    "sagehen.uzf": None,
+    "sagehen.wel": None,
+}
+for fname, fhash in file_names.items():
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/options/sagehen/{fname}",
+        fname=fname,
+        path=data_path / "options" / "sagehen",
+        known_hash=None,
+    )
+
+ml = flopy.modflow.Modflow.load(
+    "sagehen.nam", version="mfnwt", model_ws=data_path / "options" / "sagehen"
+)
 
 xoff = 214110
 yoff = 4366620
@@ -180,10 +220,7 @@ plt.colorbar(ax, shrink=0.7)
 
 t0 = time.time()
 dem_data = rio.resample_to_grid(
-    ml.modelgrid,
-    band=rio.bands[0],
-    method="median",
-    extrapolate_edges=True,
+    ml.modelgrid, band=rio.bands[0], method="median", extrapolate_edges=True
 )
 resample_time = time.time() - t0
 
@@ -254,11 +291,7 @@ ax = fig.add_subplot(1, 1, 1, aspect="equal")
 
 pmv = flopy.plot.PlotMapView(modelgrid=mg_unstruct, ax=ax)
 ax = pmv.plot_array(
-    dem_data,
-    masked_values=rio.nodatavals,
-    cmap="viridis",
-    vmin=vmin,
-    vmax=vmax,
+    dem_data, masked_values=rio.nodatavals, cmap="viridis", vmin=vmin, vmax=vmax
 )
 plt.title(f"Resample time, nearest neighbor: {resample_time:.3f} sec")
 plt.colorbar(ax, shrink=0.7)
@@ -276,22 +309,14 @@ ax = fig.add_subplot(1, 1, 1, aspect="equal")
 
 pmv = flopy.plot.PlotMapView(modelgrid=mg_unstruct, ax=ax)
 ax = pmv.plot_array(
-    dem_data,
-    masked_values=rio.nodatavals,
-    cmap="viridis",
-    vmin=vmin,
-    vmax=vmax,
+    dem_data, masked_values=rio.nodatavals, cmap="viridis", vmin=vmin, vmax=vmax
 )
 plt.title(f"Resample time, bi-linear: {resample_time:.3f} sec")
 plt.colorbar(ax, shrink=0.7)
 
 # +
 t0 = time.time()
-dem_data = rio.resample_to_grid(
-    mg_unstruct,
-    band=rio.bands[0],
-    method="median",
-)
+dem_data = rio.resample_to_grid(mg_unstruct, band=rio.bands[0], method="median")
 
 resample_time = time.time() - t0
 
@@ -302,11 +327,7 @@ ax = fig.add_subplot(1, 1, 1, aspect="equal")
 
 pmv = flopy.plot.PlotMapView(modelgrid=mg_unstruct, ax=ax)
 ax = pmv.plot_array(
-    dem_data,
-    masked_values=rio.nodatavals,
-    cmap="viridis",
-    vmin=vmin,
-    vmax=vmax,
+    dem_data, masked_values=rio.nodatavals, cmap="viridis", vmin=vmin, vmax=vmax
 )
 plt.title(f"Resample time, median: {resample_time:.3f} sec")
 plt.colorbar(ax, shrink=0.7)
@@ -429,11 +450,7 @@ ax = fig.add_subplot(1, 1, 1, aspect="equal")
 
 pmv = flopy.plot.PlotMapView(modelgrid=mg_unstruct, ax=ax)
 ax = pmv.plot_array(
-    dem_data,
-    masked_values=rio.nodatavals,
-    cmap="viridis",
-    vmin=vmin,
-    vmax=vmax,
+    dem_data, masked_values=rio.nodatavals, cmap="viridis", vmin=vmin, vmax=vmax
 )
 plt.plot(shape.T[0], shape.T[1], "r-")
 plt.title(f"Resample time, nearest neighbor: {resample_time:.3f} sec")
@@ -452,11 +469,7 @@ ax = fig.add_subplot(1, 1, 1, aspect="equal")
 
 pmv = flopy.plot.PlotMapView(modelgrid=mg_unstruct, ax=ax)
 ax = pmv.plot_array(
-    dem_data,
-    masked_values=rio.nodatavals,
-    cmap="viridis",
-    vmin=vmin,
-    vmax=vmax,
+    dem_data, masked_values=rio.nodatavals, cmap="viridis", vmin=vmin, vmax=vmax
 )
 plt.plot(shape.T[0], shape.T[1], "r-")
 plt.title(f"Resample time, bi-linear: {resample_time:.3f} sec")
@@ -471,6 +484,23 @@ plt.colorbar(ax, shrink=0.7)
 
 # +
 rio = Raster.load(os.path.join(raster_ws, raster_name))
+
+file_names = [
+    "model_boundary.CPG",
+    "model_boundary.dbf",
+    "model_boundary.prj",
+    "model_boundary.sbn",
+    "model_boundary.sbx",
+    "model_boundary.shp",
+    "model_boundary.shx",
+]
+for fname in file_names:
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/options/dem/{fname}",
+        fname=fname,
+        path=data_path / "options" / "dem",
+        known_hash=None,
+    )
 
 shp_name = os.path.join(raster_ws, "model_boundary.shp")
 
@@ -531,15 +561,7 @@ fig = plt.figure(figsize=(12, 12))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
 
 pmv = flopy.plot.PlotMapView(modelgrid=mg_unstruct, ax=ax)
-ax = pmv.plot_array(
-    top,
-    masked_values=[
-        3500,
-    ],
-    cmap="viridis",
-    vmin=vmin,
-    vmax=vmax,
-)
+ax = pmv.plot_array(top, masked_values=[3500], cmap="viridis", vmin=vmin, vmax=vmax)
 ib = pmv.plot_ibound(ibound)
 pmv.plot_grid(linewidth=0.3)
 plt.plot(shape[0], shape[1], "r-")

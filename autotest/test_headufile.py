@@ -5,13 +5,7 @@ from modflow_devtools.markers import requires_exe, requires_pkg
 
 from flopy.discretization import UnstructuredGrid
 from flopy.mfusg import MfUsg, MfUsgDisU, MfUsgLpf, MfUsgSms
-from flopy.modflow import (
-    Modflow,
-    ModflowBas,
-    ModflowChd,
-    ModflowDis,
-    ModflowOc,
-)
+from flopy.modflow import Modflow, ModflowBas, ModflowChd, ModflowDis, ModflowOc
 from flopy.utils import HeadUFile
 from flopy.utils.gridgen import Gridgen
 from flopy.utils.gridutil import get_lni

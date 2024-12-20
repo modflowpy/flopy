@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on May 23, 2024 14:30:07 UTC
+# FILE created on December 20, 2024 02:43:08 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -60,99 +60,41 @@ class ModflowPrtnam(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have
+        utility packages (mfutl*). For example, mfutllaktab package must have 
         a mfgwflak package parent_file.
 
     """
-
-    packages = ListTemplateGenerator(("prt6", "nam", "packages", "packages"))
+    packages = ListTemplateGenerator(('prt6', 'nam', 'packages',
+                                      'packages'))
     package_abbr = "prtnam"
     _package_type = "nam"
     dfn_file_name = "prt-nam.dfn"
 
     dfn = [
-        [
-            "header",
-        ],
-        [
-            "block options",
-            "name list",
-            "type string",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name print_input",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name print_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name save_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block packages",
-            "name packages",
-            "type recarray ftype fname pname",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block packages",
-            "name ftype",
-            "in_record true",
-            "type string",
-            "tagged false",
-            "reader urword",
-        ],
-        [
-            "block packages",
-            "name fname",
-            "in_record true",
-            "type string",
-            "preserve_case true",
-            "tagged false",
-            "reader urword",
-        ],
-        [
-            "block packages",
-            "name pname",
-            "in_record true",
-            "type string",
-            "tagged false",
-            "reader urword",
-            "optional true",
-        ],
-    ]
+           ["header", ],
+           ["block options", "name list", "type string", "reader urword",
+            "optional true"],
+           ["block options", "name print_input", "type keyword",
+            "reader urword", "optional true"],
+           ["block options", "name print_flows", "type keyword",
+            "reader urword", "optional true"],
+           ["block options", "name save_flows", "type keyword",
+            "reader urword", "optional true"],
+           ["block packages", "name packages",
+            "type recarray ftype fname pname", "reader urword",
+            "optional false"],
+           ["block packages", "name ftype", "in_record true", "type string",
+            "tagged false", "reader urword"],
+           ["block packages", "name fname", "in_record true", "type string",
+            "preserve_case true", "tagged false", "reader urword"],
+           ["block packages", "name pname", "in_record true", "type string",
+            "tagged false", "reader urword", "optional true"]]
 
-    def __init__(
-        self,
-        model,
-        loading_package=False,
-        list=None,
-        print_input=None,
-        print_flows=None,
-        save_flows=None,
-        packages=None,
-        filename=None,
-        pname=None,
-        **kwargs,
-    ):
-        super().__init__(
-            model, "nam", filename, pname, loading_package, **kwargs
-        )
+    def __init__(self, model, loading_package=False, list=None,
+                 print_input=None, print_flows=None, save_flows=None,
+                 packages=None, filename=None, pname=None, **kwargs):
+        super().__init__(model, "nam", filename, pname,
+                         loading_package, **kwargs)
 
         # set up variables
         self.list = self.build_mfdata("list", list)

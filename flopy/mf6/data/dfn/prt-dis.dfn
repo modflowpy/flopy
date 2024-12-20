@@ -49,6 +49,55 @@ mf6internal export_ascii
 longname export array variables to layered ascii files.
 description keyword that specifies input griddata arrays should be written to layered ascii output files.
 
+block options
+name export_array_netcdf
+type keyword
+reader urword
+optional true
+mf6internal export_nc
+longname export array variables to netcdf output files.
+description keyword that specifies input griddata arrays should be written to the model output netcdf file.
+
+block options
+name ncf_filerecord
+type record ncf6 filein ncf6_filename
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name ncf6
+type keyword
+in_record true
+reader urword
+tagged true
+optional false
+longname ncf keyword
+description keyword to specify that record corresponds to a netcdf configuration (NCF) file.
+
+block options
+name filein
+type keyword
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an input filename is expected next.
+
+block options
+name ncf6_filename
+type string
+preserve_case true
+in_record true
+reader urword
+optional false
+tagged false
+longname file name of NCF information
+description defines a netcdf configuration (NCF) input file.
+
 # --------------------- prt dis dimensions ---------------------
 
 block dimensions

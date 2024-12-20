@@ -79,14 +79,7 @@ def package_is_copy(pk1, pk2):
     """
     for k, v in pk1.__dict__.items():
         v2 = pk2.__dict__[k]
-        if v2 is v and type(v) not in [
-            bool,
-            str,
-            type(None),
-            float,
-            int,
-            tuple,
-        ]:
+        if v2 is v and type(v) not in [bool, str, type(None), float, int, tuple]:
             # Deep copy doesn't work for ModflowUtltas
             if not inspect.isclass(v):
                 return False
@@ -181,14 +174,7 @@ def list_is_copy(mflist1, mflist2):
         if k not in data2:
             return False
         v2 = data2[k]
-        if v2 is v and type(v) not in [
-            bool,
-            str,
-            type(None),
-            float,
-            int,
-            tuple,
-        ]:
+        if v2 is v and type(v) not in [bool, str, type(None), float, int, tuple]:
             return False
         if v is None and v2 is None:
             continue

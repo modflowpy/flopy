@@ -163,12 +163,7 @@ class Modpath6(BaseModel):
                 while line[0] == "#":
                     line = f.readline()
                 nlay, nrow, ncol, nper, itmuni, lennuni = line.split()
-                self.nrow_ncol_nlay_nper = (
-                    int(nrow),
-                    int(ncol),
-                    int(nlay),
-                    int(nper),
-                )
+                self.nrow_ncol_nlay_nper = (int(nrow), int(ncol), int(nlay), int(nper))
 
         # set the rest of the attributes
         self.__sim = None
@@ -405,12 +400,7 @@ class Modpath6(BaseModel):
                     k, i, j = nd.k[0], nd.i[0], nd.j[0]
                     if len(nd) == 1:
                         append_node(
-                            side_faces + [top_face, botm_face],
-                            wellid,
-                            0,
-                            k,
-                            i,
-                            j,
+                            side_faces + [top_face, botm_face], wellid, 0, k, i, j
                         )
                     else:
                         append_node(side_faces + [top_face], wellid, 0, k, i, j)
@@ -418,12 +408,7 @@ class Modpath6(BaseModel):
                             k, i, j = nd.k[n], nd.i[n], nd.j[n]
                             if n == len(nd) - 1:
                                 append_node(
-                                    side_faces + [botm_face],
-                                    wellid,
-                                    n,
-                                    k,
-                                    i,
-                                    j,
+                                    side_faces + [botm_face], wellid, n, k, i, j
                                 )
                             else:
                                 append_node(side_faces, wellid, n, k, i, j)

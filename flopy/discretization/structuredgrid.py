@@ -1760,11 +1760,7 @@ class StructuredGrid(Grid):
         yorigin = grb_obj.yorigin
         angrot = grb_obj.angrot
 
-        nlay, nrow, ncol = (
-            grb_obj.nlay,
-            grb_obj.nrow,
-            grb_obj.ncol,
-        )
+        nlay, nrow, ncol = (grb_obj.nlay, grb_obj.nrow, grb_obj.ncol)
         delr, delc = grb_obj.delr, grb_obj.delc
         top, botm = grb_obj.top, grb_obj.bot
         top.shape = (nrow, ncol)

@@ -7,11 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from flaky import flaky
-from modflow_devtools.markers import (
-    excludes_platform,
-    requires_exe,
-    requires_pkg,
-)
+from modflow_devtools.markers import excludes_platform, requires_exe, requires_pkg
 from modflow_devtools.misc import has_pkg
 
 import flopy
@@ -97,25 +93,8 @@ def disu_sim(name, tmpdir, missing_arrays=False):
     xmax = 12 * delr
     ymin = 8 * delc
     ymax = 13 * delc
-    rfpoly = [
-        [
-            [
-                (xmin, ymin),
-                (xmax, ymin),
-                (xmax, ymax),
-                (xmin, ymax),
-                (xmin, ymin),
-            ]
-        ]
-    ]
-    g.add_refinement_features(
-        rfpoly,
-        "polygon",
-        2,
-        [
-            0,
-        ],
-    )
+    rfpoly = [[[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]]]
+    g.add_refinement_features(rfpoly, "polygon", 2, [0])
     g.build(verbose=False)
 
     gridprops = g.get_gridprops_disu6()
@@ -187,11 +166,7 @@ def test_output_helper_shapefile_export(pathlike, function_tmpdir, example_data_
     else:
         outpath = os.path.join(function_tmpdir, "test.shp")
     flopy.export.utils.output_helper(
-        outpath,
-        ml,
-        {"HDS": head, "cbc": cbc},
-        mflay=1,
-        kper=10,
+        outpath, ml, {"HDS": head, "cbc": cbc}, mflay=1, kper=10
     )
 
 
@@ -632,10 +607,7 @@ def test_array3d_export_structured(function_tmpdir):
     ncol = int((xur - xll) / spacing)
     nrow = int((yur - yll) / spacing)
     sim = flopy.mf6.MFSimulation("sim", sim_ws=function_tmpdir)
-    gwf = flopy.mf6.ModflowGwf(
-        sim,
-        modelname="array3d_export_unstructured",
-    )
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="array3d_export_unstructured")
     flopy.mf6.ModflowGwfdis(
         gwf,
         nlay=3,
@@ -1146,6 +1118,30 @@ def count_lines_in_file(filepath):
     return n
 
 
+def get_vtk_xml_info(filepath):
+    """Read VTK XML file, return dict of basic information."""
+    import xml.etree.ElementTree as ET
+
+    tree = ET.parse(filepath)
+    root = tree.getroot()
+    assert root.tag == "VTKFile"
+    grid_type = root.get("type")
+    grid = root.find(grid_type)
+    assert len(grid) == 1
+    piece = grid[0]
+    assert piece.tag == "Piece"
+    info = {
+        "type": grid_type,
+        "version": root.get("version"),
+        "number_of_cells": int(piece.get("NumberOfCells")),
+        "number_of_points": int(piece.get("NumberOfPoints")),
+    }
+    for elem in piece:
+        names = [subelem.get("Name") for subelem in elem]
+        info[elem.tag.lower() + "_names"] = names
+    return info
+
+
 def is_binary_file(filepath):
     is_binary = False
     with open(filepath) as f:
@@ -1232,14 +1228,25 @@ def test_vtk_transient_array_2d(function_tmpdir, example_data_path):
 
     # export and check
     m.rch.rech.export(ws, fmt="vtk", kpers=kpers, binary=False, xml=True)
-    assert count_lines_in_file(function_tmpdir / "rech_000001.vtk") == 26837
-    assert count_lines_in_file(function_tmpdir / "rech_001096.vtk") == 26837
+    found_fnames = [pth.name for pth in function_tmpdir.iterdir()]
+    expected_fnames = [f"rech_{kper:06d}.vtk" for kper in kpers]
+    assert set(found_fnames) == set(expected_fnames)
+    for fname in expected_fnames:
+        filetocheck = function_tmpdir / fname
+        info = get_vtk_xml_info(filetocheck)
+        assert info["number_of_cells"] == 2400
+        assert info["number_of_points"] == 19200
+        assert info["celldata_names"] == ["rech_"]
+        assert info["pointdata_names"] == []
+        filetocheck.unlink()
 
     # with binary
-
     m.rch.rech.export(ws, fmt="vtk", binary=True, kpers=kpers)
-    assert is_binary_file(function_tmpdir / "rech_000001.vtk")
-    assert is_binary_file(function_tmpdir / "rech_001096.vtk")
+    found_fnames = [pth.name for pth in function_tmpdir.iterdir()]
+    expected_fnames = [f"rech_{kper:06d}.vtk" for kper in kpers]
+    assert set(found_fnames) == set(expected_fnames)
+    for fname in expected_fnames:
+        assert is_binary_file(function_tmpdir / fname)
 
 
 @requires_pkg("vtk")
@@ -1259,12 +1266,19 @@ def test_vtk_add_packages(function_tmpdir, example_data_path):
     # dis export and check
     # todo: pakbase.export() for vtk!!!!
     m.dis.export(ws, fmt="vtk", xml=True, binary=False)
-    filetocheck = function_tmpdir / "DIS.vtk"
-    assert count_lines_in_file(filetocheck) == 27239
+    info = get_vtk_xml_info(function_tmpdir / "DIS.vtk")
+    assert info["number_of_cells"] == 2400
+    assert info["number_of_points"] == 19200
+    assert info["celldata_names"] == ["top", "botm"]
+    assert info["pointdata_names"] == []
 
     # upw with point scalar output
     m.upw.export(ws, fmt="vtk", xml=True, binary=False, point_scalars=True)
-    assert count_lines_in_file(function_tmpdir / "UPW.vtk") == 42445
+    info = get_vtk_xml_info(function_tmpdir / "UPW.vtk")
+    assert info["number_of_cells"] == 2400
+    assert info["number_of_points"] == 19200
+    assert info["celldata_names"] == []
+    assert info["pointdata_names"] == ["hk", "hani", "vka", "ss", "sy"]
 
     # bas with smoothing on
     m.bas6.export(ws, fmt="vtk", binary=False, smooth=True)
@@ -1272,9 +1286,14 @@ def test_vtk_add_packages(function_tmpdir, example_data_path):
 
     # transient package drain
     kpers = [0, 1, 1096]
+    expected_fnames = [f"DRN_{kper:06d}.vtu" for kper in kpers]
     m.drn.export(ws, fmt="vtk", binary=False, xml=True, kpers=kpers, pvd=True)
-    assert count_lines_in_file(function_tmpdir / "DRN_000001.vtu") == 27239
-    assert count_lines_in_file(function_tmpdir / "DRN_001096.vtu") == 27239
+    for fname in expected_fnames:
+        info = get_vtk_xml_info(function_tmpdir / fname)
+        assert info["number_of_cells"] == 2400
+        assert info["number_of_points"] == 19200
+        assert info["celldata_names"] == ["DRN_elev", "DRN_cond"]
+        assert info["pointdata_names"] == []
 
     # dis with binary
     m.dis.export(ws, fmt="vtk", binary=True)
@@ -1330,7 +1349,11 @@ def test_vtk_binary_head_export(function_tmpdir, example_data_path):
     vtkobj.add_heads(heads, kstpkper=[(0, 0), (0, 199), (0, 354), (0, 454), (0, 1089)])
     vtkobj.write(function_tmpdir / "freyberg_head")
 
-    assert count_lines_in_file(filetocheck) == 34
+    info = get_vtk_xml_info(filetocheck)
+    assert info["number_of_cells"] == 2400
+    assert info["number_of_points"] == 19200
+    assert info["celldata_names"] == ["head"]
+    assert info["pointdata_names"] == []
     filetocheck.unlink()
 
     # with point scalars
@@ -1339,7 +1362,11 @@ def test_vtk_binary_head_export(function_tmpdir, example_data_path):
     vtkobj.add_heads(heads, kstpkper=[(0, 0), (0, 199), (0, 354), (0, 454), (0, 1089)])
     vtkobj.write(function_tmpdir / "freyberg_head")
 
-    assert count_lines_in_file(filetocheck) == 34
+    info = get_vtk_xml_info(filetocheck)
+    assert info["number_of_cells"] == 2400
+    assert info["number_of_points"] == 19200
+    assert info["celldata_names"] == []
+    assert info["pointdata_names"] == ["head"]
     filetocheck.unlink()
 
     # with smoothing
@@ -1348,7 +1375,11 @@ def test_vtk_binary_head_export(function_tmpdir, example_data_path):
     vtkobj.add_heads(heads, kstpkper=[(0, 0), (0, 199), (0, 354), (0, 454), (0, 1089)])
     vtkobj.write(function_tmpdir / "freyberg_head")
 
-    assert count_lines_in_file(filetocheck) == 34
+    info = get_vtk_xml_info(filetocheck)
+    assert info["number_of_cells"] == 2400
+    assert info["number_of_points"] == 19200
+    assert info["celldata_names"] == ["head"]
+    assert info["pointdata_names"] == []
 
 
 @requires_pkg("vtk")
@@ -1367,13 +1398,28 @@ def test_vtk_cbc(function_tmpdir, example_data_path):
     vtkobj.add_cell_budget(cbc, kstpkper=[(0, 0), (0, 1), (0, 2)])
     vtkobj.write(function_tmpdir / "freyberg_CBC")
 
-    assert count_lines_in_file(function_tmpdir / "freyberg_CBC_000000.vtu") == 39243
+    info = get_vtk_xml_info(function_tmpdir / "freyberg_CBC_000000.vtu")
+    assert info["number_of_cells"] == 2400
+    assert info["number_of_points"] == 19200
+    assert info["celldata_names"] == []
+    expected_pointdata_names = [
+        "   CONSTANT HEAD",
+        "FLOW RIGHT FACE ",
+        "FLOW FRONT FACE ",
+        "FLOW LOWER FACE ",
+    ]
+    assert info["pointdata_names"] == expected_pointdata_names
 
     # with point scalars and binary
     vtkobj = Vtk(m, xml=True, pvd=True, point_scalars=True)
     vtkobj.add_cell_budget(cbc, kstpkper=[(0, 0), (0, 1), (0, 2)])
     vtkobj.write(function_tmpdir / "freyberg_CBC")
-    assert count_lines_in_file(function_tmpdir / "freyberg_CBC_000000.vtu") == 28
+
+    info = get_vtk_xml_info(function_tmpdir / "freyberg_CBC_000000.vtu")
+    assert info["number_of_cells"] == 2400
+    assert info["number_of_points"] == 19200
+    assert info["celldata_names"] == []
+    assert info["pointdata_names"] == expected_pointdata_names
 
 
 @requires_pkg("vtk")
@@ -1401,7 +1447,11 @@ def test_vtk_vector(function_tmpdir, example_data_path):
     vtkobj.add_vector(q, "discharge")
     vtkobj.write(filenametocheck)
 
-    assert count_lines_in_file(filenametocheck) == 36045
+    info = get_vtk_xml_info(filenametocheck)
+    assert info["number_of_cells"] == 2400
+    assert info["number_of_points"] == 19200
+    assert info["celldata_names"] == []
+    assert info["pointdata_names"] == ["discharge"]
 
     # with point scalars and binary
     vtkobj = Vtk(m, point_scalars=True)
@@ -1418,14 +1468,22 @@ def test_vtk_vector(function_tmpdir, example_data_path):
     vtkobj.add_vector(q, "discharge")
     vtkobj.write(filenametocheck)
 
-    assert count_lines_in_file(filenametocheck) == 27645
+    info = get_vtk_xml_info(filenametocheck)
+    assert info["number_of_cells"] == 2400
+    assert info["number_of_points"] == 19200
+    assert info["celldata_names"] == ["discharge"]
+    assert info["pointdata_names"] == []
 
     # with values directly given at vertices and binary
     vtkobj = Vtk(m, xml=True, binary=True)
     vtkobj.add_vector(q, "discharge")
     vtkobj.write(filenametocheck)
 
-    assert count_lines_in_file(filenametocheck) == 25
+    info = get_vtk_xml_info(filenametocheck)
+    assert info["number_of_cells"] == 2400
+    assert info["number_of_points"] == 19200
+    assert info["celldata_names"] == ["discharge"]
+    assert info["pointdata_names"] == []
 
 
 @requires_pkg("vtk")
@@ -1878,12 +1936,7 @@ def test_vtk_export_disu1_grid(function_tmpdir, example_data_path):
     )
 
     outfile = function_tmpdir / "disu_grid.vtu"
-    vtkobj = Vtk(
-        modelgrid=modelgrid,
-        vertical_exageration=2,
-        binary=True,
-        smooth=False,
-    )
+    vtkobj = Vtk(modelgrid=modelgrid, vertical_exageration=2, binary=True, smooth=False)
     vtkobj.add_array(modelgrid.top, "top")
     vtkobj.add_array(modelgrid.botm, "botm")
     vtkobj.write(outfile)
@@ -1959,12 +2012,7 @@ def test_vtk_export_disu2_grid(function_tmpdir, example_data_path):
     )
 
     outfile = function_tmpdir / "disu_grid.vtu"
-    vtkobj = Vtk(
-        modelgrid=modelgrid,
-        vertical_exageration=2,
-        binary=True,
-        smooth=False,
-    )
+    vtkobj = Vtk(modelgrid=modelgrid, vertical_exageration=2, binary=True, smooth=False)
     vtkobj.add_array(modelgrid.top, "top")
     vtkobj.add_array(modelgrid.botm, "botm")
     vtkobj.write(outfile)

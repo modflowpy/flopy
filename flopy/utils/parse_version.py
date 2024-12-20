@@ -16,11 +16,11 @@ from collections.abc import Iterator
 from typing import Callable, SupportsInt, Union
 
 __all__ = [
-    "parse",
-    "Version",
-    "LegacyVersion",
-    "InvalidVersion",
     "VERSION_PATTERN",
+    "InvalidVersion",
+    "LegacyVersion",
+    "Version",
+    "parse",
 ]
 
 
@@ -349,8 +349,7 @@ class Version(_BaseVersion):
             release=tuple(int(i) for i in match.group("release").split(".")),
             pre=_parse_letter_version(match.group("pre_l"), match.group("pre_n")),
             post=_parse_letter_version(
-                match.group("post_l"),
-                match.group("post_n1") or match.group("post_n2"),
+                match.group("post_l"), match.group("post_n1") or match.group("post_n2")
             ),
             dev=_parse_letter_version(match.group("dev_l"), match.group("dev_n")),
             local=_parse_local_version(match.group("local")),

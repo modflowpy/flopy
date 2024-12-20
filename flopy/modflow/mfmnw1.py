@@ -107,11 +107,7 @@ class ModflowMnw1(Package):
 
         # call base package constructor
         super().__init__(
-            model,
-            extension,
-            self._ftype(),
-            unitnumber,
-            filenames=filenames[0],
+            model, extension, self._ftype(), unitnumber, filenames=filenames[0]
         )
 
         self.url = "mnw.html"
@@ -187,9 +183,8 @@ class ModflowMnw1(Package):
         structured = model.structured
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
-            nper = (
-                1 if nper == 0 else nper
-            )  # otherwise iterations from 0, nper won't run
+            nper = 1 if nper == 0 else nper
+            # otherwise iterations from 0, nper won't run
 
         openfile = not hasattr(f, "read")
         if openfile:
@@ -277,13 +272,7 @@ class ModflowMnw1(Package):
         # -Section 1 - MXMNW ipakcb IWELPT NOMOITER REF:kspref
         f.write(
             "%10i%10i%10i%10i REF = %s\n"
-            % (
-                self.mxmnw,
-                self.ipakcb,
-                self.iwelpt,
-                self.nomoiter,
-                self.kspref,
-            )
+            % (self.mxmnw, self.ipakcb, self.iwelpt, self.nomoiter, self.kspref)
         )
 
         # -Section 2 - LOSSTYPE {PLossMNW}
@@ -447,11 +436,11 @@ def _parse_5(f, itmp, qfrcmn_default=None, qfrcmx_default=None, qcut_default="")
         qfrcmn = 0.0
         qfrcmx = 0.0
         if "qcut" in linetxt:
-            txt = [t for t in line if "qcut" in t][0]
+            txt = next(t for t in line if "qcut" in t)
             qcut = txt
             line.remove(txt)
         elif "%cut" in linetxt:
-            txt = [t for t in line if "%cut" in t][0]
+            txt = next(t for t in line if "%cut" in t)
             qcut = txt
             line.remove(txt)
         if "qcut" in linetxt or "%cut" in linetxt:

@@ -482,14 +482,7 @@ class MfList(DataInterface, DataListInterface):
 
         df = df.reset_index()
         df.loc[:, "node"] = df.loc[:, "i"] * self._model.ncol + df.loc[:, "j"]
-        df = df.loc[
-            :,
-            names
-            + [
-                "node",
-            ]
-            + [v for v in varnames if not v == "node"],
-        ]
+        df = df.loc[:, names + ["node"] + [v for v in varnames if not v == "node"]]
         return df
 
     def add_record(self, kper, index, values):
@@ -1040,8 +1033,7 @@ class MfList(DataInterface, DataListInterface):
                 cnt = np.zeros((self._model.nlay * self._model.ncpl,), dtype=float)
             else:
                 cnt = np.zeros(
-                    (self._model.nlay, self._model.nrow, self._model.ncol),
-                    dtype=float,
+                    (self._model.nlay, self._model.nrow, self._model.ncol), dtype=float
                 )
             for rec in sarr:
                 if unstructured:

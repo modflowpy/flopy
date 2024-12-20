@@ -22,11 +22,14 @@
 # +
 import os
 import sys
+from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import git
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import pooch
 
 import flopy
 import flopy.utils.binaryfile as bf
@@ -43,19 +46,89 @@ print(f"flopy version: {flopy.__version__}")
 
 # +
 mfnam = "EXAMPLE.nam"
-model_ws = "../../examples/data/mp6/"
 heads_file = "EXAMPLE.HED"
 
 # temporary directory
 temp_dir = TemporaryDirectory()
 workspace = temp_dir.name
+
+
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+file_names = {
+    "EXAMPLE-1.endpoint": None,
+    "EXAMPLE-1.mpsim": None,
+    "EXAMPLE-2.endpoint": None,
+    "EXAMPLE-2.mplist": None,
+    "EXAMPLE-2.mpsim": None,
+    "EXAMPLE-3.endpoint": None,
+    "EXAMPLE-3.mplist": None,
+    "EXAMPLE-3.mpsim": None,
+    "EXAMPLE-3.pathline": None,
+    "EXAMPLE-4.endpoint": None,
+    "EXAMPLE-4.mplist": None,
+    "EXAMPLE-4.mpsim": None,
+    "EXAMPLE-4.timeseries": None,
+    "EXAMPLE-5.endpoint": None,
+    "EXAMPLE-5.mplist": None,
+    "EXAMPLE-5.mpsim": None,
+    "EXAMPLE-6.endpoint": None,
+    "EXAMPLE-6.mplist": None,
+    "EXAMPLE-6.mpsim": None,
+    "EXAMPLE-6.timeseries": None,
+    "EXAMPLE-7.endpoint": None,
+    "EXAMPLE-7.mplist": None,
+    "EXAMPLE-7.mpsim": None,
+    "EXAMPLE-7.timeseries": None,
+    "EXAMPLE-8.endpoint": None,
+    "EXAMPLE-8.mplist": None,
+    "EXAMPLE-8.mpsim": None,
+    "EXAMPLE-8.timeseries": None,
+    "EXAMPLE-9.endpoint": None,
+    "EXAMPLE-9.mplist": None,
+    "EXAMPLE-9.mpsim": None,
+    "EXAMPLE.BA6": None,
+    "EXAMPLE.BUD": None,
+    "EXAMPLE.DIS": None,
+    "EXAMPLE.DIS.metadata": None,
+    "EXAMPLE.HED": None,
+    "EXAMPLE.LPF": None,
+    "EXAMPLE.LST": None,
+    "EXAMPLE.MPBAS": None,
+    "EXAMPLE.OC": None,
+    "EXAMPLE.PCG": None,
+    "EXAMPLE.RCH": None,
+    "EXAMPLE.RIV": None,
+    "EXAMPLE.WEL": None,
+    "EXAMPLE.mpnam": None,
+    "EXAMPLE.nam": None,
+    "example-1.mplist": None,
+    "example-6.locations": None,
+    "example-7.locations": None,
+    "example-8.locations": None,
+    "example.basemap": None,
+}
+for fname, fhash in file_names.items():
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/mp6/{fname}",
+        fname=fname,
+        path=data_path / "mp6",
+        known_hash=fhash,
+    )
+
 # -
 
 # ### Load example model and head results
 
-m = flopy.modflow.Modflow.load(mfnam, model_ws=model_ws)
+m = flopy.modflow.Modflow.load(mfnam, model_ws=data_path / "mp6")
 
-hdsobj = bf.HeadFile(model_ws + heads_file)
+hdsobj = bf.HeadFile(data_path / "mp6" / heads_file)
 hds = hdsobj.get_data(kstpkper=(0, 2))
 hds.shape
 

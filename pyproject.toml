@@ -62,17 +62,19 @@ optional = [
     "fiona",
     "geojson",
     "geopandas",
+    "GitPython",
     "imageio",
     "netcdf4",
+    "pooch",
     "pymetis ; platform_system != 'Windows'",
     "pyproj",
     "pyshp",
-    "pyvista ; python_version <'3.13'",
+    "pyvista",
     "rasterio",
     "rasterstats",
     "scipy",
     "shapely >=2.0",
-    "vtk ; python_version <'3.13'",
+    "vtk",
     "xmipy",
 ]
 doc = [
@@ -139,6 +141,7 @@ select = [
     "F",    # Pyflakes
     "I001", # isort - unsorted-imports
     # "ISC001",  # implicitly concatenated string literals
+    "RUF",  # Ruff-specific rules
 ]
 ignore = [
     "E402", # module level import not at top of file
@@ -151,11 +154,14 @@ ignore = [
     "F524", # `.format` missing argument(s) for placeholder(s)
     "F811", # Redefinition of unused variable
     "F841", # local variable assigned but never used
+    "RUF005", # collection literal concatenation
+    "RUF012", # mutable class default
+    "RUF017", # quadratic-list-summation
 ]
 
 [tool.ruff.lint.per-file-ignores]
 ".docs/**/*.py" = ["E501"]
-"flopy/mf6/**/*.py" = ["C4", "E501", "F821", "ISC001"]
+"flopy/mf6/**/*.py" = ["C4", "E", "F", "ISC", "RUF"]
 
 [tool.codespell]
 skip = "cliff.toml,./examples/data/*"

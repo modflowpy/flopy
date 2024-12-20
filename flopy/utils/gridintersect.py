@@ -459,9 +459,10 @@ class GridIntersect:
             for ishp, cid in zip(ixresult, qcellids):
                 points = []
                 for pnt in shapely.get_parts(ishp):
-                    if tuple(pnt.coords)[0] not in parsed:
+                    next_pnt = next(iter(pnt.coords))
+                    if next_pnt not in parsed:
                         points.append(pnt)
-                    parsed.append(tuple(pnt.coords)[0])
+                    parsed.append(next_pnt)
 
                 if len(points) > 1:
                     keep_pts.append(shapely.MultiPoint(points))
@@ -651,9 +652,7 @@ class GridIntersect:
 
             mask_gc = geomtype_ids[~mask_empty & mask_type] == 7
             ixresult[mask_gc] = np.apply_along_axis(
-                parse_polygons_in_geom_collection,
-                axis=0,
-                arr=ixresult[mask_gc],
+                parse_polygons_in_geom_collection, axis=0, arr=ixresult[mask_gc]
             )
 
         # check centroids
@@ -958,9 +957,7 @@ class GridIntersect:
                             ix, self.mfgrid.angrot, origin=(0.0, 0.0)
                         )
                         ix_realworld = affinity_loc.translate(
-                            ix_realworld,
-                            self.mfgrid.xoffset,
-                            self.mfgrid.yoffset,
+                            ix_realworld, self.mfgrid.xoffset, self.mfgrid.yoffset
                         )
                         ixs_realworld.append(ix_realworld)
                 else:
@@ -969,13 +966,10 @@ class GridIntersect:
                 vertices += v_realworld
                 ixshapes += ixs_realworld
         else:  # linestring is fully within grid
-            (
-                nodelist,
-                lengths,
-                vertices,
-                ixshapes,
-            ) = self._get_nodes_intersecting_linestring(
-                lineclip, return_all_intersections=return_all_intersections
+            (nodelist, lengths, vertices, ixshapes) = (
+                self._get_nodes_intersecting_linestring(
+                    lineclip, return_all_intersections=return_all_intersections
+                )
             )
             # if necessary, transform coordinates back to real
             # world coordinates
@@ -1148,13 +1142,10 @@ class GridIntersect:
         n = 0
         while True:
             (i, j) = nodelist[n]
-            (
-                node,
-                length,
-                verts,
-                ixshape,
-            ) = self._check_adjacent_cells_intersecting_line(
-                linestring, (i, j), nodelist
+            (node, length, verts, ixshape) = (
+                self._check_adjacent_cells_intersecting_line(
+                    linestring, (i, j), nodelist
+                )
             )
 
             for inode, ilength, ivert, ix in zip(node, length, verts, ixshape):
@@ -1503,10 +1494,7 @@ class GridIntersect:
                 cell_coords = [
                     (self.mfgrid.xyedges[0][j], self.mfgrid.xyedges[1][i]),
                     (self.mfgrid.xyedges[0][j + 1], self.mfgrid.xyedges[1][i]),
-                    (
-                        self.mfgrid.xyedges[0][j + 1],
-                        self.mfgrid.xyedges[1][i + 1],
-                    ),
+                    (self.mfgrid.xyedges[0][j + 1], self.mfgrid.xyedges[1][i + 1]),
                     (self.mfgrid.xyedges[0][j], self.mfgrid.xyedges[1][i + 1]),
                 ]
             else:
@@ -1558,9 +1546,7 @@ class GridIntersect:
                         intersect, self.mfgrid.angrot, origin=(0.0, 0.0)
                     )
                     intersect_realworld = affinity_loc.translate(
-                        intersect_realworld,
-                        self.mfgrid.xoffset,
-                        self.mfgrid.yoffset,
+                        intersect_realworld, self.mfgrid.xoffset, self.mfgrid.yoffset
                     )
                 else:
                     v_realworld = intersect.__geo_interface__["coordinates"]

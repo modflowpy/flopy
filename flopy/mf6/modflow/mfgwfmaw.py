@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on May 23, 2024 14:30:07 UTC
+# FILE created on December 20, 2024 02:43:08 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -173,7 +173,7 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           the Multi-Node Well (MNW2) package for MODFLOW-2005. The program will
           terminate with an error condition if CONDEQN is SKIN or CUMULATIVE
           and the calculated saturated conductance is less than zero; if an
-          error condition occurs, it is suggested that the THEIM or MEAN
+          error condition occurs, it is suggested that the THIEM or MEAN
           conductance equations be used for these multi-aquifer wells.
         * ngwfnodes (integer) integer value that defines the number of GWF
           nodes connected to this (IFNO) multi-aquifer well. NGWFNODES must be
@@ -252,7 +252,7 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           thicknesses) must be greater than one in node CELLID or the program
           will terminate with an error condition; if an error condition occurs,
           it is suggested that the HK_SKIN be reduced to a value less than K11
-          and K22 in node CELLID or the THEIM or MEAN conductance equations be
+          and K22 in node CELLID or the THIEM or MEAN conductance equations be
           used for these multi-aquifer wells.
         * radius_skin (double) real value that defines the skin radius (filter
           pack radius) for the multi-aquifer well. RADIUS_SKIN can be any value
@@ -359,759 +359,249 @@ class ModflowGwfmaw(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have
+        utility packages (mfutl*). For example, mfutllaktab package must have 
         a mfgwflak package parent_file.
 
     """
-
-    auxiliary = ListTemplateGenerator(("gwf6", "maw", "options", "auxiliary"))
-    head_filerecord = ListTemplateGenerator(
-        ("gwf6", "maw", "options", "head_filerecord")
-    )
-    budget_filerecord = ListTemplateGenerator(
-        ("gwf6", "maw", "options", "budget_filerecord")
-    )
-    budgetcsv_filerecord = ListTemplateGenerator(
-        ("gwf6", "maw", "options", "budgetcsv_filerecord")
-    )
-    mfrcsv_filerecord = ListTemplateGenerator(
-        ("gwf6", "maw", "options", "mfrcsv_filerecord")
-    )
-    ts_filerecord = ListTemplateGenerator(
-        ("gwf6", "maw", "options", "ts_filerecord")
-    )
-    obs_filerecord = ListTemplateGenerator(
-        ("gwf6", "maw", "options", "obs_filerecord")
-    )
-    packagedata = ListTemplateGenerator(
-        ("gwf6", "maw", "packagedata", "packagedata")
-    )
-    connectiondata = ListTemplateGenerator(
-        ("gwf6", "maw", "connectiondata", "connectiondata")
-    )
-    perioddata = ListTemplateGenerator(("gwf6", "maw", "period", "perioddata"))
+    auxiliary = ListTemplateGenerator(('gwf6', 'maw', 'options',
+                                       'auxiliary'))
+    head_filerecord = ListTemplateGenerator(('gwf6', 'maw', 'options',
+                                             'head_filerecord'))
+    budget_filerecord = ListTemplateGenerator(('gwf6', 'maw', 'options',
+                                               'budget_filerecord'))
+    budgetcsv_filerecord = ListTemplateGenerator(('gwf6', 'maw',
+                                                  'options',
+                                                  'budgetcsv_filerecord'))
+    mfrcsv_filerecord = ListTemplateGenerator(('gwf6', 'maw', 'options',
+                                               'mfrcsv_filerecord'))
+    ts_filerecord = ListTemplateGenerator(('gwf6', 'maw', 'options',
+                                           'ts_filerecord'))
+    obs_filerecord = ListTemplateGenerator(('gwf6', 'maw', 'options',
+                                            'obs_filerecord'))
+    packagedata = ListTemplateGenerator(('gwf6', 'maw', 'packagedata',
+                                         'packagedata'))
+    connectiondata = ListTemplateGenerator(('gwf6', 'maw',
+                                            'connectiondata',
+                                            'connectiondata'))
+    perioddata = ListTemplateGenerator(('gwf6', 'maw', 'period',
+                                        'perioddata'))
     package_abbr = "gwfmaw"
     _package_type = "maw"
     dfn_file_name = "gwf-maw.dfn"
 
     dfn = [
-        ["header", "multi-package", "package-type advanced-stress-package"],
-        [
-            "block options",
-            "name auxiliary",
-            "type string",
-            "shape (naux)",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name boundnames",
-            "type keyword",
-            "shape",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name print_input",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name print_head",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name print_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name save_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name head_filerecord",
-            "type record head fileout headfile",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name head",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name headfile",
-            "type string",
-            "preserve_case true",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged false",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name budget_filerecord",
-            "type record budget fileout budgetfile",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name budget",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name fileout",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name budgetfile",
-            "type string",
-            "preserve_case true",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged false",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name budgetcsv_filerecord",
-            "type record budgetcsv fileout budgetcsvfile",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name budgetcsv",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name budgetcsvfile",
-            "type string",
-            "preserve_case true",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged false",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name no_well_storage",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name flow_correction",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name flowing_wells",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name shutdown_theta",
-            "type double precision",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name shutdown_kappa",
-            "type double precision",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name mfrcsv_filerecord",
-            "type record maw_flow_reduce_csv fileout mfrcsvfile",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name maw_flow_reduce_csv",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name mfrcsvfile",
-            "type string",
-            "preserve_case true",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged false",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name ts_filerecord",
-            "type record ts6 filein ts6_filename",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-            "construct_package ts",
-            "construct_data timeseries",
-            "parameter_name timeseries",
-        ],
-        [
-            "block options",
-            "name ts6",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name filein",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name ts6_filename",
-            "type string",
-            "preserve_case true",
-            "in_record true",
-            "reader urword",
-            "optional false",
-            "tagged false",
-        ],
-        [
-            "block options",
-            "name obs_filerecord",
-            "type record obs6 filein obs6_filename",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-            "construct_package obs",
-            "construct_data continuous",
-            "parameter_name observations",
-        ],
-        [
-            "block options",
-            "name obs6",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name obs6_filename",
-            "type string",
-            "preserve_case true",
-            "in_record true",
-            "tagged false",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name mover",
-            "type keyword",
-            "tagged true",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block dimensions",
-            "name nmawwells",
-            "type integer",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block packagedata",
-            "name packagedata",
+           ["header", 
+            "multi-package", 
+            "package-type advanced-stress-package"],
+           ["block options", "name auxiliary", "type string",
+            "shape (naux)", "reader urword", "optional true"],
+           ["block options", "name boundnames", "type keyword", "shape",
+            "reader urword", "optional true"],
+           ["block options", "name print_input", "type keyword",
+            "reader urword", "optional true"],
+           ["block options", "name print_head", "type keyword",
+            "reader urword", "optional true"],
+           ["block options", "name print_flows", "type keyword",
+            "reader urword", "optional true"],
+           ["block options", "name save_flows", "type keyword",
+            "reader urword", "optional true"],
+           ["block options", "name head_filerecord",
+            "type record head fileout headfile", "shape", "reader urword",
+            "tagged true", "optional true"],
+           ["block options", "name head", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name headfile", "type string",
+            "preserve_case true", "shape", "in_record true", "reader urword",
+            "tagged false", "optional false"],
+           ["block options", "name budget_filerecord",
+            "type record budget fileout budgetfile", "shape", "reader urword",
+            "tagged true", "optional true"],
+           ["block options", "name budget", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name fileout", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name budgetfile", "type string",
+            "preserve_case true", "shape", "in_record true", "reader urword",
+            "tagged false", "optional false"],
+           ["block options", "name budgetcsv_filerecord",
+            "type record budgetcsv fileout budgetcsvfile", "shape",
+            "reader urword", "tagged true", "optional true"],
+           ["block options", "name budgetcsv", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name budgetcsvfile", "type string",
+            "preserve_case true", "shape", "in_record true", "reader urword",
+            "tagged false", "optional false"],
+           ["block options", "name no_well_storage", "type keyword",
+            "reader urword", "optional true"],
+           ["block options", "name flow_correction", "type keyword",
+            "reader urword", "optional true"],
+           ["block options", "name flowing_wells", "type keyword",
+            "reader urword", "optional true"],
+           ["block options", "name shutdown_theta", "type double precision",
+            "reader urword", "optional true"],
+           ["block options", "name shutdown_kappa", "type double precision",
+            "reader urword", "optional true"],
+           ["block options", "name mfrcsv_filerecord",
+            "type record maw_flow_reduce_csv fileout mfrcsvfile", "shape",
+            "reader urword", "tagged true", "optional true"],
+           ["block options", "name maw_flow_reduce_csv", "type keyword",
+            "shape", "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name mfrcsvfile", "type string",
+            "preserve_case true", "shape", "in_record true", "reader urword",
+            "tagged false", "optional false"],
+           ["block options", "name ts_filerecord",
+            "type record ts6 filein ts6_filename", "shape", "reader urword",
+            "tagged true", "optional true", "construct_package ts",
+            "construct_data timeseries", "parameter_name timeseries"],
+           ["block options", "name ts6", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name filein", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name ts6_filename", "type string",
+            "preserve_case true", "in_record true", "reader urword",
+            "optional false", "tagged false"],
+           ["block options", "name obs_filerecord",
+            "type record obs6 filein obs6_filename", "shape", "reader urword",
+            "tagged true", "optional true", "construct_package obs",
+            "construct_data continuous", "parameter_name observations"],
+           ["block options", "name obs6", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name obs6_filename", "type string",
+            "preserve_case true", "in_record true", "tagged false",
+            "reader urword", "optional false"],
+           ["block options", "name mover", "type keyword", "tagged true",
+            "reader urword", "optional true"],
+           ["block dimensions", "name nmawwells", "type integer",
+            "reader urword", "optional false"],
+           ["block packagedata", "name packagedata",
             "type recarray ifno radius bottom strt condeqn ngwfnodes aux "
             "boundname",
-            "shape (nmawwells)",
-            "reader urword",
-        ],
-        [
-            "block packagedata",
-            "name ifno",
-            "type integer",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-            "numeric_index true",
-        ],
-        [
-            "block packagedata",
-            "name radius",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block packagedata",
-            "name bottom",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block packagedata",
-            "name strt",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block packagedata",
-            "name condeqn",
-            "type string",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block packagedata",
-            "name ngwfnodes",
-            "type integer",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block packagedata",
-            "name aux",
-            "type double precision",
-            "in_record true",
-            "tagged false",
-            "shape (naux)",
-            "reader urword",
-            "time_series true",
-            "optional true",
-        ],
-        [
-            "block packagedata",
-            "name boundname",
-            "type string",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block connectiondata",
-            "name connectiondata",
+            "shape (nmawwells)", "reader urword"],
+           ["block packagedata", "name ifno", "type integer", "shape",
+            "tagged false", "in_record true", "reader urword",
+            "numeric_index true"],
+           ["block packagedata", "name radius", "type double precision",
+            "shape", "tagged false", "in_record true", "reader urword"],
+           ["block packagedata", "name bottom", "type double precision",
+            "shape", "tagged false", "in_record true", "reader urword"],
+           ["block packagedata", "name strt", "type double precision",
+            "shape", "tagged false", "in_record true", "reader urword"],
+           ["block packagedata", "name condeqn", "type string", "shape",
+            "tagged false", "in_record true", "reader urword"],
+           ["block packagedata", "name ngwfnodes", "type integer", "shape",
+            "tagged false", "in_record true", "reader urword"],
+           ["block packagedata", "name aux", "type double precision",
+            "in_record true", "tagged false", "shape (naux)", "reader urword",
+            "time_series true", "optional true"],
+           ["block packagedata", "name boundname", "type string", "shape",
+            "tagged false", "in_record true", "reader urword",
+            "optional true"],
+           ["block connectiondata", "name connectiondata",
             "type recarray ifno icon cellid scrn_top scrn_bot hk_skin "
             "radius_skin",
-            "reader urword",
-        ],
-        [
-            "block connectiondata",
-            "name ifno",
-            "type integer",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-            "numeric_index true",
-        ],
-        [
-            "block connectiondata",
-            "name icon",
-            "type integer",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-            "numeric_index true",
-        ],
-        [
-            "block connectiondata",
-            "name cellid",
-            "type integer",
-            "shape (ncelldim)",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block connectiondata",
-            "name scrn_top",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block connectiondata",
-            "name scrn_bot",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block connectiondata",
-            "name hk_skin",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block connectiondata",
-            "name radius_skin",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name iper",
-            "type integer",
-            "block_variable True",
-            "in_record true",
-            "tagged false",
-            "shape",
-            "valid",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block period",
-            "name perioddata",
-            "type recarray ifno mawsetting",
-            "shape",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name ifno",
-            "type integer",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-            "numeric_index true",
-        ],
-        [
-            "block period",
-            "name mawsetting",
+            "reader urword"],
+           ["block connectiondata", "name ifno", "type integer", "shape",
+            "tagged false", "in_record true", "reader urword",
+            "numeric_index true"],
+           ["block connectiondata", "name icon", "type integer", "shape",
+            "tagged false", "in_record true", "reader urword",
+            "numeric_index true"],
+           ["block connectiondata", "name cellid", "type integer",
+            "shape (ncelldim)", "tagged false", "in_record true",
+            "reader urword"],
+           ["block connectiondata", "name scrn_top",
+            "type double precision", "shape", "tagged false",
+            "in_record true", "reader urword"],
+           ["block connectiondata", "name scrn_bot",
+            "type double precision", "shape", "tagged false",
+            "in_record true", "reader urword"],
+           ["block connectiondata", "name hk_skin", "type double precision",
+            "shape", "tagged false", "in_record true", "reader urword"],
+           ["block connectiondata", "name radius_skin",
+            "type double precision", "shape", "tagged false",
+            "in_record true", "reader urword"],
+           ["block period", "name iper", "type integer",
+            "block_variable True", "in_record true", "tagged false", "shape",
+            "valid", "reader urword", "optional false"],
+           ["block period", "name perioddata",
+            "type recarray ifno mawsetting", "shape", "reader urword"],
+           ["block period", "name ifno", "type integer", "shape",
+            "tagged false", "in_record true", "reader urword",
+            "numeric_index true"],
+           ["block period", "name mawsetting",
             "type keystring status flowing_wellrecord rate well_head "
             "head_limit shutoffrecord rate_scalingrecord auxiliaryrecord",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name status",
-            "type string",
-            "shape",
-            "tagged true",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name flowing_wellrecord",
-            "type record flowing_well fwelev fwcond fwrlen",
-            "shape",
-            "tagged",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name flowing_well",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name fwelev",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name fwcond",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name fwrlen",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name rate",
-            "type double precision",
-            "shape",
-            "tagged true",
-            "in_record true",
-            "reader urword",
-            "time_series true",
-        ],
-        [
-            "block period",
-            "name well_head",
-            "type double precision",
-            "shape",
-            "tagged true",
-            "in_record true",
-            "reader urword",
-            "time_series true",
-        ],
-        [
-            "block period",
-            "name head_limit",
-            "type string",
-            "shape",
-            "tagged true",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name shutoffrecord",
-            "type record shut_off minrate maxrate",
-            "shape",
-            "tagged",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name shut_off",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name minrate",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name maxrate",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name rate_scalingrecord",
-            "type record rate_scaling pump_elevation scaling_length",
-            "shape",
-            "tagged",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name rate_scaling",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name pump_elevation",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name scaling_length",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name auxiliaryrecord",
-            "type record auxiliary auxname auxval",
-            "shape",
-            "tagged",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name auxiliary",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name auxname",
-            "type string",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name auxval",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-            "time_series true",
-        ],
-    ]
+            "shape", "tagged false", "in_record true", "reader urword"],
+           ["block period", "name status", "type string", "shape",
+            "tagged true", "in_record true", "reader urword"],
+           ["block period", "name flowing_wellrecord",
+            "type record flowing_well fwelev fwcond fwrlen", "shape",
+            "tagged", "in_record true", "reader urword"],
+           ["block period", "name flowing_well", "type keyword", "shape",
+            "in_record true", "reader urword"],
+           ["block period", "name fwelev", "type double precision", "shape",
+            "tagged false", "in_record true", "reader urword"],
+           ["block period", "name fwcond", "type double precision", "shape",
+            "tagged false", "in_record true", "reader urword"],
+           ["block period", "name fwrlen", "type double precision", "shape",
+            "tagged false", "in_record true", "reader urword"],
+           ["block period", "name rate", "type double precision", "shape",
+            "tagged true", "in_record true", "reader urword",
+            "time_series true"],
+           ["block period", "name well_head", "type double precision",
+            "shape", "tagged true", "in_record true", "reader urword",
+            "time_series true"],
+           ["block period", "name head_limit", "type string", "shape",
+            "tagged true", "in_record true", "reader urword"],
+           ["block period", "name shutoffrecord",
+            "type record shut_off minrate maxrate", "shape", "tagged",
+            "in_record true", "reader urword"],
+           ["block period", "name shut_off", "type keyword", "shape",
+            "in_record true", "reader urword"],
+           ["block period", "name minrate", "type double precision",
+            "shape", "tagged false", "in_record true", "reader urword"],
+           ["block period", "name maxrate", "type double precision",
+            "shape", "tagged false", "in_record true", "reader urword"],
+           ["block period", "name rate_scalingrecord",
+            "type record rate_scaling pump_elevation scaling_length", "shape",
+            "tagged", "in_record true", "reader urword"],
+           ["block period", "name rate_scaling", "type keyword", "shape",
+            "in_record true", "reader urword"],
+           ["block period", "name pump_elevation", "type double precision",
+            "shape", "tagged false", "in_record true", "reader urword"],
+           ["block period", "name scaling_length", "type double precision",
+            "shape", "tagged false", "in_record true", "reader urword"],
+           ["block period", "name auxiliaryrecord",
+            "type record auxiliary auxname auxval", "shape", "tagged",
+            "in_record true", "reader urword"],
+           ["block period", "name auxiliary", "type keyword", "shape",
+            "in_record true", "reader urword"],
+           ["block period", "name auxname", "type string", "shape",
+            "tagged false", "in_record true", "reader urword"],
+           ["block period", "name auxval", "type double precision", "shape",
+            "tagged false", "in_record true", "reader urword",
+            "time_series true"]]
 
-    def __init__(
-        self,
-        model,
-        loading_package=False,
-        auxiliary=None,
-        boundnames=None,
-        print_input=None,
-        print_head=None,
-        print_flows=None,
-        save_flows=None,
-        head_filerecord=None,
-        budget_filerecord=None,
-        budgetcsv_filerecord=None,
-        no_well_storage=None,
-        flow_correction=None,
-        flowing_wells=None,
-        shutdown_theta=None,
-        shutdown_kappa=None,
-        mfrcsv_filerecord=None,
-        timeseries=None,
-        observations=None,
-        mover=None,
-        nmawwells=None,
-        packagedata=None,
-        connectiondata=None,
-        perioddata=None,
-        filename=None,
-        pname=None,
-        **kwargs,
-    ):
-        super().__init__(
-            model, "maw", filename, pname, loading_package, **kwargs
-        )
+    def __init__(self, model, loading_package=False, auxiliary=None,
+                 boundnames=None, print_input=None, print_head=None,
+                 print_flows=None, save_flows=None, head_filerecord=None,
+                 budget_filerecord=None, budgetcsv_filerecord=None,
+                 no_well_storage=None, flow_correction=None,
+                 flowing_wells=None, shutdown_theta=None, shutdown_kappa=None,
+                 mfrcsv_filerecord=None, timeseries=None, observations=None,
+                 mover=None, nmawwells=None, packagedata=None,
+                 connectiondata=None, perioddata=None, filename=None,
+                 pname=None, **kwargs):
+        super().__init__(model, "maw", filename, pname,
+                         loading_package, **kwargs)
 
         # set up variables
         self.auxiliary = self.build_mfdata("auxiliary", auxiliary)
@@ -1120,44 +610,37 @@ class ModflowGwfmaw(mfpackage.MFPackage):
         self.print_head = self.build_mfdata("print_head", print_head)
         self.print_flows = self.build_mfdata("print_flows", print_flows)
         self.save_flows = self.build_mfdata("save_flows", save_flows)
-        self.head_filerecord = self.build_mfdata(
-            "head_filerecord", head_filerecord
-        )
-        self.budget_filerecord = self.build_mfdata(
-            "budget_filerecord", budget_filerecord
-        )
-        self.budgetcsv_filerecord = self.build_mfdata(
-            "budgetcsv_filerecord", budgetcsv_filerecord
-        )
-        self.no_well_storage = self.build_mfdata(
-            "no_well_storage", no_well_storage
-        )
-        self.flow_correction = self.build_mfdata(
-            "flow_correction", flow_correction
-        )
+        self.head_filerecord = self.build_mfdata("head_filerecord",
+                                                 head_filerecord)
+        self.budget_filerecord = self.build_mfdata("budget_filerecord",
+                                                   budget_filerecord)
+        self.budgetcsv_filerecord = self.build_mfdata("budgetcsv_filerecord",
+                                                      budgetcsv_filerecord)
+        self.no_well_storage = self.build_mfdata("no_well_storage",
+                                                 no_well_storage)
+        self.flow_correction = self.build_mfdata("flow_correction",
+                                                 flow_correction)
         self.flowing_wells = self.build_mfdata("flowing_wells", flowing_wells)
-        self.shutdown_theta = self.build_mfdata(
-            "shutdown_theta", shutdown_theta
-        )
-        self.shutdown_kappa = self.build_mfdata(
-            "shutdown_kappa", shutdown_kappa
-        )
-        self.mfrcsv_filerecord = self.build_mfdata(
-            "mfrcsv_filerecord", mfrcsv_filerecord
-        )
-        self._ts_filerecord = self.build_mfdata("ts_filerecord", None)
-        self._ts_package = self.build_child_package(
-            "ts", timeseries, "timeseries", self._ts_filerecord
-        )
-        self._obs_filerecord = self.build_mfdata("obs_filerecord", None)
-        self._obs_package = self.build_child_package(
-            "obs", observations, "continuous", self._obs_filerecord
-        )
+        self.shutdown_theta = self.build_mfdata("shutdown_theta",
+                                                shutdown_theta)
+        self.shutdown_kappa = self.build_mfdata("shutdown_kappa",
+                                                shutdown_kappa)
+        self.mfrcsv_filerecord = self.build_mfdata("mfrcsv_filerecord",
+                                                   mfrcsv_filerecord)
+        self._ts_filerecord = self.build_mfdata("ts_filerecord",
+                                                None)
+        self._ts_package = self.build_child_package("ts", timeseries,
+                                                    "timeseries",
+                                                    self._ts_filerecord)
+        self._obs_filerecord = self.build_mfdata("obs_filerecord",
+                                                 None)
+        self._obs_package = self.build_child_package("obs", observations,
+                                                     "continuous",
+                                                     self._obs_filerecord)
         self.mover = self.build_mfdata("mover", mover)
         self.nmawwells = self.build_mfdata("nmawwells", nmawwells)
         self.packagedata = self.build_mfdata("packagedata", packagedata)
-        self.connectiondata = self.build_mfdata(
-            "connectiondata", connectiondata
-        )
+        self.connectiondata = self.build_mfdata("connectiondata",
+                                                connectiondata)
         self.perioddata = self.build_mfdata("perioddata", perioddata)
         self._init_complete = True

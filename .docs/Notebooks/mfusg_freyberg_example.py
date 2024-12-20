@@ -28,10 +28,47 @@ from pathlib import Path
 # +
 from pprint import pformat
 
+import git
+import pooch
+
 import flopy
 
 root_name = "freyberg.usg"
-model_ws = Path.cwd().parent / "../examples/data" / root_name.replace(".", "_")
+
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+
+file_names = {
+    "freyberg.usg.bas": None,
+    "freyberg.usg.disu": None,
+    "freyberg.usg.ghb": None,
+    "freyberg.usg.gnc": None,
+    "freyberg.usg.gsf": None,
+    "freyberg.usg.gsf.with_comment": None,
+    "freyberg.usg.lpf": None,
+    "freyberg.usg.nam": None,
+    "freyberg.usg.oc": None,
+    "freyberg.usg.rch": None,
+    "freyberg.usg.sfr": None,
+    "freyberg.usg.sms": None,
+    "freyberg.usg.wel": None,
+}
+for fname, fhash in file_names.items():
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{root_name.replace('.', '_')}/{fname}",
+        fname=fname,
+        path=data_path / root_name.replace(".", "_"),
+        known_hash=None,
+    )
+
+
+model_ws = data_path / root_name.replace(".", "_")
 # -
 
 # Now construct an `UnstructuredGrid` from a grid specification file.
@@ -144,21 +181,13 @@ for i, line in enumerate(lines):
     ax = fig.add_subplot(1, len(lines), i + 1)
     ax.set_title(f"Freyberg head cross-section (line {i})")
     xsect = flopy.plot.PlotCrossSection(
-        modelgrid=mfgrid,
-        ax=ax,
-        line={"line": lines[i]},
-        geographic_coords=True,
+        modelgrid=mfgrid, ax=ax, line={"line": lines[i]}, geographic_coords=True
     )
     xsect.plot_array(head, head=head, alpha=0.4)
     xsect.plot_ibound(ibound=ibound, head=head)
     xsect.plot_inactive(ibound=ibound)
     contours = xsect.contour_array(
-        head,
-        masked_values=[999.0],
-        head=head,
-        levels=levels,
-        alpha=1.0,
-        colors="blue",
+        head, masked_values=[999.0], head=head, levels=levels, alpha=1.0, colors="blue"
     )
     plt.clabel(contours, fmt="%.0f", colors="blue", fontsize=12)
     xsect.plot_grid(alpha=0.2)
@@ -180,11 +209,7 @@ for time in times[0:3]:
     xsect = flopy.plot.PlotCrossSection(
         modelgrid=mfgrid, ax=ax, line={"line": line}, geographic_coords=True
     )
-    cmap = xsect.plot_array(
-        head2,
-        masked_values=[-999.99],
-        alpha=0.4,
-    )
+    cmap = xsect.plot_array(head2, masked_values=[-999.99], alpha=0.4)
     contours = xsect.contour_array(head2, levels=levels, alpha=1.0, colors="blue")
     xsect.plot_inactive(ibound=ibound, color_noflow=(0.8, 0.8, 0.8))
     xsect.plot_grid(alpha=0.2)
@@ -197,12 +222,7 @@ for time in times[0:3]:
     xsect = flopy.plot.PlotCrossSection(
         modelgrid=mfgrid, ax=ax, line={"line": line}, geographic_coords=True
     )
-    cmap = xsect.plot_array(
-        head,
-        masked_values=[-999.99],
-        head=head,
-        alpha=0.4,
-    )
+    cmap = xsect.plot_array(head, masked_values=[-999.99], head=head, alpha=0.4)
     contours = xsect.contour_array(
         head, head=head, levels=levels, alpha=1.0, colors="blue"
     )
@@ -217,12 +237,7 @@ for time in times[0:3]:
     xsect = flopy.plot.PlotCrossSection(
         modelgrid=mfgrid, ax=ax, line={"line": line}, geographic_coords=True
     )
-    cmap = xsect.plot_array(
-        head2,
-        masked_values=[-999.99],
-        head=head2,
-        alpha=0.4,
-    )
+    cmap = xsect.plot_array(head2, masked_values=[-999.99], head=head2, alpha=0.4)
     contours = xsect.contour_array(
         head2, head=head2, levels=levels, alpha=1.0, colors="blue"
     )

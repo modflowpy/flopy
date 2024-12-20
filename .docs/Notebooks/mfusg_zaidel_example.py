@@ -21,7 +21,7 @@
 #
 # One of the most challenging numerical cases for MODFLOW arises from drying-rewetting problems often associated with abrupt changes in the elevations of impervious base of a thin unconfined aquifer. This problem simulates a discontinuous water table configuration over a stairway impervious base and flow between constant-head boundaries in column 1 and 200. This problem is based on
 #
-# [Zaidel, J. (2013), Discontinuous Steady-State Analytical Solutions of the Boussinesq Equation and Their Numerical Representation by Modflow. Groundwater, 51: 952–959. doi: 10.1111/gwat.12019](https://doi.org/10.1111/gwat.12019)
+# [Zaidel, J. (2013), Discontinuous Steady-State Analytical Solutions of the Boussinesq Equation and Their Numerical Representation by Modflow. Groundwater, 51: 952-959. doi: 10.1111/gwat.12019](https://doi.org/10.1111/gwat.12019)
 #
 # The model consistes of a grid of 200 columns, 1 row, and 1 layer; a bottom altitude of ranging from 20 to 0 m; constant heads of 23 and 5 m in column 1 and 200, respectively; and a horizontal hydraulic conductivity of $1x10^{-4}$ m/d.  The discretization is 5 m in the row direction for all cells.
 #

@@ -142,9 +142,7 @@ class _Modpath7ParticleGroup:
             # item 29
             fp.write(
                 "{} {} {}\n".format(
-                    self.releasetimecount,
-                    self.releasetimes[0],
-                    self.releaseinterval,
+                    self.releasetimecount, self.releasetimes[0], self.releaseinterval
                 )
             )
         elif self.releaseoption == 3:

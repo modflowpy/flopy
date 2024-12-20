@@ -223,10 +223,7 @@ def _add_output_nc_variable(
     try:
         dim_tuple = ("time",) + nc.dimension_names
         var = nc.create_variable(
-            var_name,
-            attribs,
-            precision_str=precision_str,
-            dimensions=dim_tuple,
+            var_name, attribs, precision_str=precision_str, dimensions=dim_tuple
         )
     except Exception as e:
         estr = f"error creating variable {var_name}:\n{e!s}"
@@ -819,10 +816,7 @@ def generic_array_export(
         raise Exception(f"error processing {var_name}: all NaNs")
     try:
         var = f.create_variable(
-            var_name,
-            attribs,
-            precision_str=precision_str,
-            dimensions=dimensions,
+            var_name, attribs, precision_str=precision_str, dimensions=dimensions
         )
     except Exception as e:
         estr = f"error creating variable {var_name}:\n{e!s}"
@@ -919,12 +913,7 @@ def mflist_export(f: Union[str, os.PathLike, NetCdf], mfl, **kwargs):
             prjfile = kwargs.get("prjfile", None)
             polys = np.array([Polygon(v) for v in verts])
             recarray2shp(
-                ra,
-                geoms=polys,
-                shpname=f,
-                mg=modelgrid,
-                crs=crs,
-                prjfile=prjfile,
+                ra, geoms=polys, shpname=f, mg=modelgrid, crs=crs, prjfile=prjfile
             )
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
@@ -965,10 +954,7 @@ def mflist_export(f: Union[str, os.PathLike, NetCdf], mfl, **kwargs):
             try:
                 dim_tuple = ("time",) + f.dimension_names
                 var = f.create_variable(
-                    var_name,
-                    attribs,
-                    precision_str=precision_str,
-                    dimensions=dim_tuple,
+                    var_name, attribs, precision_str=precision_str, dimensions=dim_tuple
                 )
             except Exception as e:
                 estr = f"error creating variable {var_name}:\n{e!s}"
@@ -1080,10 +1066,7 @@ def transient2d_export(f: Union[str, os.PathLike], t2d, fmt=None, **kwargs):
         try:
             dim_tuple = ("time",) + f.dimension_names
             var = f.create_variable(
-                var_name,
-                attribs,
-                precision_str=precision_str,
-                dimensions=dim_tuple,
+                var_name, attribs, precision_str=precision_str, dimensions=dim_tuple
             )
         except Exception as e:
             estr = f"error creating variable {var_name}:\n{e!s}"
@@ -1588,11 +1571,7 @@ def export_array(
         except ImportError:
             crs = None
         write_grid_shapefile(
-            filename,
-            modelgrid,
-            array_dict={fieldname: a},
-            nan_val=nodata,
-            crs=crs,
+            filename, modelgrid, array_dict={fieldname: a}, nan_val=nodata, crs=crs
         )
 
 

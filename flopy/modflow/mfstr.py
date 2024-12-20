@@ -833,10 +833,7 @@ class ModflowStr(Package):
                     if model.verbose:
                         print("   reading str dataset 6")
                     current, current_seg = ModflowStr.get_empty(
-                        itmp,
-                        nss,
-                        aux_names=aux_names,
-                        structured=model.structured,
+                        itmp, nss, aux_names=aux_names, structured=model.structured
                     )
                     for ibnd in range(itmp):
                         line = f.readline()

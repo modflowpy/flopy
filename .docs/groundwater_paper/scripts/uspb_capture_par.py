@@ -242,11 +242,7 @@ def doit():
     ncol2 = ncol // nstep
 
     # open summary file
-    fs = open(
-        os.path.join("data", "uspb", f"uspb_capture_{nstep}.out"),
-        "w",
-        0,
-    )
+    fs = open(os.path.join("data", "uspb", f"uspb_capture_{nstep}.out"), "w", 0)
 
     # write some summary information
     fs.write(f"Problem size: {nrow} rows and {ncol} columns.\n")
@@ -323,8 +319,7 @@ def doit():
         os.makedirs(res_pth)
     for idx in range(10):
         fn = os.path.join(
-            res_pth,
-            f"USPB_capture_fraction_{nstep:02d}_{idx + 1:02d}.dat",
+            res_pth, f"USPB_capture_fraction_{nstep:02d}_{idx + 1:02d}.dat"
         )
         sys.stdout.write(f"saving capture fraction data to...{os.path.basename(fn)}\n")
         np.savetxt(fn, cf_array[idx, :, :], delimiter=" ")

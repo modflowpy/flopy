@@ -47,10 +47,7 @@ from flopy.modflow import (
     ModflowWel,
 )
 from flopy.plot import PlotCrossSection, PlotMapView
-from flopy.utils.postprocessing import (
-    get_extended_budget,
-    get_specific_discharge,
-)
+from flopy.utils.postprocessing import get_extended_budget, get_specific_discharge
 
 # model domain, grid definition and properties
 Lx = 100.0

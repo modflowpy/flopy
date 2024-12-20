@@ -94,12 +94,11 @@ from .mftdis import ModflowTdis
 from .mfutlats import ModflowUtlats
 from .mfutlhpc import ModflowUtlhpc
 from .mfutllaktab import ModflowUtllaktab
+from .mfutlncf import ModflowUtlncf
 from .mfutlobs import ModflowUtlobs
 from .mfutlsfrtab import ModflowUtlsfrtab
 from .mfutlspc import ModflowUtlspc
 from .mfutlspca import ModflowUtlspca
-from .mfutlspt import ModflowUtlspt
-from .mfutlspta import ModflowUtlspta
 from .mfutltas import ModflowUtltas
 from .mfutlts import ModflowUtlts
 from .mfutltvk import ModflowUtltvk

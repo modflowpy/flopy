@@ -232,9 +232,7 @@ def test_get_structured_faceflows_freyberg(
 
 @pytest.mark.mf6
 @requires_exe("mf6")
-def test_get_structured_faceflows_idomain(
-    function_tmpdir,
-):
+def test_get_structured_faceflows_idomain(function_tmpdir):
     name = "gsffi"
 
     Lx = 1000

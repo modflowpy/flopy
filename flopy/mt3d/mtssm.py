@@ -205,9 +205,8 @@ class Mt3dSsm(Package):
             for i, label in enumerate(SsmLabels):
                 mfpack = mf.get_package(label)
                 ssmpack = SsmPackage(label, mfpack, (i < 6))
-                self.__SsmPackages.append(
-                    ssmpack
-                )  # First 6 need T/F flag in file line 1
+                # First 6 need T/F flag in file line 1
+                self.__SsmPackages.append(ssmpack)
 
         if dtype is not None:
             self.dtype = dtype
@@ -218,10 +217,7 @@ class Mt3dSsm(Package):
             self.stress_period_data = None
         else:
             self.stress_period_data = MfList(
-                self,
-                model=model,
-                data=stress_period_data,
-                list_free_format=False,
+                self, model=model, data=stress_period_data, list_free_format=False
             )
 
         if mxss is None and mf is None:

@@ -385,22 +385,10 @@ plt.legend(loc="lower left")
 ax.set_xlabel("Horizontal distance, in meters")
 ax.set_ylabel("Elevation, in meters")
 ax.text(
-    0.025,
-    0.55,
-    "Layer 1",
-    transform=ax.transAxes,
-    va="center",
-    ha="left",
-    size="7",
+    0.025, 0.55, "Layer 1", transform=ax.transAxes, va="center", ha="left", size="7"
 )
 ax.text(
-    0.025,
-    0.45,
-    "Layer 2",
-    transform=ax.transAxes,
-    va="center",
-    ha="left",
-    size="7",
+    0.025, 0.45, "Layer 2", transform=ax.transAxes, va="center", ha="left", size="7"
 )
 ax.text(
     0.975,
@@ -443,22 +431,10 @@ plt.legend(loc="lower left")
 ax.set_xlabel("Horizontal distance, in meters")
 ax.set_ylabel("Elevation, in meters")
 ax.text(
-    0.025,
-    0.55,
-    "Layer 1",
-    transform=ax.transAxes,
-    va="center",
-    ha="left",
-    size="7",
+    0.025, 0.55, "Layer 1", transform=ax.transAxes, va="center", ha="left", size="7"
 )
 ax.text(
-    0.025,
-    0.45,
-    "Layer 2",
-    transform=ax.transAxes,
-    va="center",
-    ha="left",
-    size="7",
+    0.025, 0.45, "Layer 2", transform=ax.transAxes, va="center", ha="left", size="7"
 )
 ax.text(
     0.975,
@@ -501,22 +477,10 @@ plt.legend(loc="lower left")
 ax.set_xlabel("Horizontal distance, in meters")
 ax.set_ylabel("Elevation, in meters")
 ax.text(
-    0.025,
-    0.55,
-    "Layer 1",
-    transform=ax.transAxes,
-    va="center",
-    ha="left",
-    size="7",
+    0.025, 0.55, "Layer 1", transform=ax.transAxes, va="center", ha="left", size="7"
 )
 ax.text(
-    0.025,
-    0.45,
-    "Layer 2",
-    transform=ax.transAxes,
-    va="center",
-    ha="left",
-    size="7",
+    0.025, 0.45, "Layer 2", transform=ax.transAxes, va="center", ha="left", size="7"
 )
 ax.text(
     0.975,
@@ -541,14 +505,7 @@ for i in range(len(t)):
         tz2[i] = zobs["layer2_001"][i + 999]
     if zobs2["layer2_001"][i + 999] < 20.0 - 0.1:
         tz3[i] = zobs2["layer2_001"][i + 999]
-ax.plot(
-    t,
-    tz2,
-    linestyle="solid",
-    color="r",
-    linewidth=0.75,
-    label="Freshwater well",
-)
+ax.plot(t, tz2, linestyle="solid", color="r", linewidth=0.75, label="Freshwater well")
 ax.plot(
     t,
     tz3,
@@ -564,22 +521,10 @@ leg = plt.legend(loc="lower right", numpoints=1)
 ax.set_xlabel("Time, in years")
 ax.set_ylabel("Elevation, in meters")
 ax.text(
-    0.025,
-    0.55,
-    "Layer 1",
-    transform=ax.transAxes,
-    va="center",
-    ha="left",
-    size="7",
+    0.025, 0.55, "Layer 1", transform=ax.transAxes, va="center", ha="left", size="7"
 )
 ax.text(
-    0.025,
-    0.45,
-    "Layer 2",
-    transform=ax.transAxes,
-    va="center",
-    ha="left",
-    size="7",
+    0.025, 0.45, "Layer 2", transform=ax.transAxes, va="center", ha="left", size="7"
 )
 # -
 
