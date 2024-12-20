@@ -40,4 +40,5 @@ __all__ = [
     "MfUsgOc",
     "MfUsgLak",
     "MfUsgEvt",
+    "MfUsgWel",
 ]
