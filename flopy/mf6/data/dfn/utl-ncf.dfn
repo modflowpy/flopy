@@ -1,0 +1,108 @@
+# flopy subpackage ncf_filerecord ncf packagedata packagedata
+# flopy parent_name_type parent_package MFPackage
+
+# --------------------- utl ncf options ---------------------
+
+block options
+name wkt
+type string
+shape lenbigline
+reader urword
+optional true
+longname CRS well-known text (WKT) string
+description is the CRS well-known text (WKT) string.
+
+block options
+name deflate
+type integer
+reader urword
+optional true
+longname variable compression deflate level
+description is the variable deflate level (0=min, 9=max) in the netcdf file. Defining this parameter activates per-variable compression at the level specified.
+
+block options
+name shuffle
+type keyword
+reader urword
+optional true
+longname
+description is the keyword used to turn on the netcdf variable shuffle filter when the deflate option is also set. The shuffle filter has the effect of storing the first byte of all of a variable's values in a chunk contiguously, followed by all the second bytes, etc. This can be an optimization for compression with certain types of data.
+
+block options
+name chunk_time
+type integer
+reader urword
+optional true
+longname chunking parameter for the time dimension
+description is the keyword used to provide a data chunk size for the time dimension in a NETCDF\_MESH2D or NETCDF\_STRUCTURED output file. Must be used in combination with the the chunk\_face parameter (NETCDF\_MESH2D) or the chunk\_z, chunk\_y, and chunk\_x parameter set (NETCDF\_STRUCTURED) to have an effect.
+
+block options
+name chunk_face
+type integer
+reader urword
+optional true
+longname chunking parameter for the mesh face dimension
+description is the keyword used to provide a data chunk size for the face dimension in a NETCDF\_MESH2D output file. Must be used in combination with the the chunk\_time parameter to have an effect.
+
+block options
+name chunk_z
+type integer
+reader urword
+optional true
+longname chunking parameter for structured z
+description is the keyword used to provide a data chunk size for the z dimension in a NETCDF\_STRUCTURED output file. Must be used in combination with the the chunk\_time, chunk\_x and chunk\_y parameter set to have an effect.
+
+block options
+name chunk_y
+type integer
+reader urword
+optional true
+longname chunking parameter for structured y
+description is the keyword used to provide a data chunk size for the y dimension in a NETCDF\_STRUCTURED output file. Must be used in combination with the the chunk\_time, chunk\_x and chunk\_z parameter set to have an effect.
+
+block options
+name chunk_x
+type integer
+reader urword
+optional true
+longname chunking parameter for structured x
+description is the keyword used to provide a data chunk size for the x dimension in a NETCDF\_STRUCTURED output file. Must be used in combination with the the chunk\_time, chunk\_y and chunk\_z parameter set to have an effect.
+
+block options
+name modflow6_attr_off
+type keyword
+reader urword
+optional true
+longname
+description is the keyword used to turn off internal input tagging in the model netcdf file. Tagging adds internal modflow 6 attribute(s) to variables which facilitate identification. Currently this applies to gridded arrays.
+mf6internal attr_off
+
+# --------------------- utl ncf dimensions ---------------------
+
+block dimensions
+name ncpl
+type integer
+optional true
+reader urword
+longname number of cells in layer
+description is the number of cells in a projected plane layer.
+
+# --------------------- utl ncf griddata ---------------------
+
+block griddata
+name latitude
+type double precision
+shape (ncpl)
+optional true
+reader readarray
+longname cell center latitude
+description cell center latitude.
+
+block griddata
+name longitude
+type double precision
+shape (ncpl)
+optional true
+reader readarray
+longname cell center longitude
+description cell center longitude.

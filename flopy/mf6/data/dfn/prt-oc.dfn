@@ -157,7 +157,7 @@ type keyword
 reader urword
 optional true
 longname track transitions
-description keyword to indicate that particle tracking output is to be written when a particle exits a cell
+description keyword to indicate that particle tracking output is to be written when a particle exits a feature (a model, cell, or subcell)
 
 block options
 name track_timestep
@@ -189,70 +189,37 @@ type keyword
 reader urword
 optional true
 longname track usertime
-description keyword to indicate that particle tracking output is to be written at user-specified times, provided as double precision values to the TRACK\_TIMES or TRACK\_TIMESFILE options
+description keyword to indicate that particle tracking output is to be written at user-specified times, provided as double precision values in the TRACKTIMES block.
 
-block options
-name track_timesrecord
-type record track_times times
-shape
-reader urword
-tagged true
-optional true
-longname
-description
+# --------------------- prt oc dimensions ------------------
 
-block options
-name track_times
-type keyword
+block dimensions
+name ntracktimes
+type integer
 reader urword
-in_record true
-tagged true
-shape
-longname
-description keyword indicating tracking times will follow
-
-block options
-name times
-type double precision
-shape (unknown)
-reader urword
-in_record true
-tagged false
-repeating true
-longname tracking times
-description times to track, relative to the beginning of the simulation.
-
-block options
-name track_timesfilerecord
-type record track_timesfile timesfile
-shape
-reader urword
-tagged true
-optional true
-longname
-description
-
-block options
-name track_timesfile
-type keyword
-reader urword
-in_record true
-tagged true
-shape
-longname
-description keyword indicating tracking times file name will follow
-
-block options
-name timesfile
-type string
-preserve_case true
-shape
-in_record true
-reader urword
-tagged false
 optional false
-longname file keyword
-description name of the tracking times file
+longname number of particle tracking times
+description is the number of user-specified particle tracking times in the TRACKTIMES block.
+
+# --------------------- prt oc tracktimes -----------------
+
+block tracktimes
+name tracktimes
+type recarray time
+shape (ntracktimes)
+reader urword
+longname
+description
+
+block tracktimes
+name time
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+longname release time
+description real value that defines the tracking time with respect to the simulation start time.
 
 # --------------------- prt oc period ---------------------
 
