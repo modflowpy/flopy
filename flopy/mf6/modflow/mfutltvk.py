@@ -143,7 +143,7 @@ class UtltvkPackages(mfpackage.MFChildPackages):
     UtltvkPackages is a container class for the ModflowUtltvk class.
 
     Methods
-    ----------
+    -------
     initialize
         Initializes a new ModflowUtltvk package removing any sibling child
         packages attached to the same parent package. See ModflowUtltvk init

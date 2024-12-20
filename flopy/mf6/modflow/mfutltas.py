@@ -109,7 +109,7 @@ class UtltasPackages(mfpackage.MFChildPackages):
     UtltasPackages is a container class for the ModflowUtltas class.
 
     Methods
-    ----------
+    -------
     initialize
         Initializes a new ModflowUtltas package removing any sibling child
         packages attached to the same parent package. See ModflowUtltas init

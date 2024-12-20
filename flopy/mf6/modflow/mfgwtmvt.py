@@ -111,7 +111,7 @@ class GwtmvtPackages(mfpackage.MFChildPackages):
     GwtmvtPackages is a container class for the ModflowGwtmvt class.
 
     Methods
-    ----------
+    -------
     initialize
         Initializes a new ModflowGwtmvt package removing any sibling child
         packages attached to the same parent package. See ModflowGwtmvt init

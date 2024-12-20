@@ -140,7 +140,7 @@ class UtlncfPackages(mfpackage.MFChildPackages):
     UtlncfPackages is a container class for the ModflowUtlncf class.
 
     Methods
-    ----------
+    -------
     initialize
         Initializes a new ModflowUtlncf package removing any sibling child
         packages attached to the same parent package. See ModflowUtlncf init

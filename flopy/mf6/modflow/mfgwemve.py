@@ -111,7 +111,7 @@ class GwemvePackages(mfpackage.MFChildPackages):
     GwemvePackages is a container class for the ModflowGwemve class.
 
     Methods
-    ----------
+    -------
     initialize
         Initializes a new ModflowGwemve package removing any sibling child
         packages attached to the same parent package. See ModflowGwemve init

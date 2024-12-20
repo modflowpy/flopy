@@ -1,5 +1,4 @@
 from .mfsimulation import MFSimulation  # isort:skip
-from .mfsimulation import MFSimulation
 from .mfchf import ModflowChf
 from .mfchfcdb import ModflowChfcdb
 from .mfchfchd import ModflowChfchd
@@ -118,6 +117,7 @@ from .mfprtnam import ModflowPrtnam
 from .mfprtoc import ModflowPrtoc
 from .mfprtprp import ModflowPrtprp
 from .mfpts import ModflowPts
+from .mfsimulation import MFSimulation
 from .mfswf import ModflowSwf
 from .mfswfcdb import ModflowSwfcdb
 from .mfswfchd import ModflowSwfchd

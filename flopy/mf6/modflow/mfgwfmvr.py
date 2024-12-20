@@ -216,7 +216,7 @@ class GwfmvrPackages(mfpackage.MFChildPackages):
     GwfmvrPackages is a container class for the ModflowGwfmvr class.
 
     Methods
-    ----------
+    -------
     initialize
         Initializes a new ModflowGwfmvr package removing any sibling child
         packages attached to the same parent package. See ModflowGwfmvr init

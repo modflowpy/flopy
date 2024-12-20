@@ -118,7 +118,7 @@ class UtlatsPackages(mfpackage.MFChildPackages):
     UtlatsPackages is a container class for the ModflowUtlats class.
 
     Methods
-    ----------
+    -------
     initialize
         Initializes a new ModflowUtlats package removing any sibling child
         packages attached to the same parent package. See ModflowUtlats init

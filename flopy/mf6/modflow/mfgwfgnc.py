@@ -153,7 +153,7 @@ class GwfgncPackages(mfpackage.MFChildPackages):
     GwfgncPackages is a container class for the ModflowGwfgnc class.
 
     Methods
-    ----------
+    -------
     initialize
         Initializes a new ModflowGwfgnc package removing any sibling child
         packages attached to the same parent package. See ModflowGwfgnc init
