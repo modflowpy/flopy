@@ -1301,7 +1301,6 @@ def test_multi_model(function_tmpdir):
 
 @requires_exe("mf6")
 def test_timeseries(function_tmpdir):
-
     sim = MFSimulation(
         sim_name="np001",
         sim_ws=function_tmpdir,
@@ -1326,16 +1325,11 @@ def test_timeseries(function_tmpdir):
         preconditioner_drop_tolerance=0.01,
         number_orthogonalizations=2,
     )
-    gwf =  flopy.mf6.ModflowGwf(sim,)
+    gwf = flopy.mf6.ModflowGwf(
+        sim,
+    )
     dis = flopy.mf6.ModflowGwfdis(
-        gwf,
-        nlay=1,
-        nrow=1,
-        ncol=10,
-        delr=500,
-        delc=500,
-        top=100,
-        botm=50
+        gwf, nlay=1, nrow=1, ncol=10, delr=500, delc=500, top=100, botm=50
     )
 
     ic = flopy.mf6.ModflowGwfic(gwf, strt=95)
@@ -1377,7 +1371,7 @@ def test_timeseries(function_tmpdir):
         "filename": "drn_ts.ts",
         "timeseries": [(0.0, 60.0), (100000.0, 60.0)],
         "time_series_namerecord": "drn_1",
-        "interpolation_methodrecord": "linearend"
+        "interpolation_methodrecord": "linearend",
     }
     drn = flopy.mf6.ModflowGwfdrn(
         gwf,
@@ -1401,7 +1395,6 @@ def test_timeseries(function_tmpdir):
     )
     sim.write_simulation()
     sim.run_simulation()
-
 
     mfs = Mf6Splitter(sim)
     mask = mfs.optimize_splitting_mask(2)
