@@ -10,7 +10,7 @@ from flopy.utils.voronoi import VoronoiGrid
 
 class GridCases:
     @staticmethod
-    def structured_small():
+    def structured_small(xoff=0.0, yoff=0.0):
         nlay, nrow, ncol = 3, 2, 3
         delc = 1.0 * np.ones(nrow, dtype=float)
         delr = 1.0 * np.ones(ncol, dtype=float)
@@ -29,6 +29,8 @@ class GridCases:
             top=top,
             botm=botm,
             idomain=idomain,
+            xoff=xoff,
+            yoff=yoff,
         )
 
     @staticmethod
