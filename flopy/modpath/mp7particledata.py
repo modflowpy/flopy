@@ -792,9 +792,7 @@ def get_extent(
     # get cell coords and span in each dimension
     if not (k is None or i is None or j is None):
         verts = grid.get_cell_vertices(i, j)
-        if not global_xy and (
-            grid.xoffset != 0.0 or grid.yoffset != 0.0 or grid.angrot != 0.0
-        ):
+        if not global_xy and grid._has_ref_coordinates:
             verts = list(zip(*grid.get_local_coords(*np.array(verts).T)))
         minz, maxz = (
             (0, 1)
@@ -806,9 +804,7 @@ def get_extent(
         )
     elif nn is not None:
         verts = grid.get_cell_vertices(nn)
-        if not global_xy and (
-            grid.xoffset != 0.0 or grid.yoffset != 0.0 or grid.angrot != 0.0
-        ):
+        if not global_xy and grid._has_ref_coordinates:
             verts = list(zip(*grid.get_local_coords(*np.array(verts).T)))
         if grid.grid_type == "structured":
             k, i, j = grid.get_lrc([nn])[0]
