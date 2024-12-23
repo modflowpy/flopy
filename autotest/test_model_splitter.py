@@ -1264,7 +1264,7 @@ def test_multi_model(function_tmpdir):
     new_sim.run_simulation()
 
     # compare results for each of the models
-    splits = list(i for i in range(nparts))
+    splits = range(nparts)
     for name in sim.model_names:
         gwm = sim.get_model(name)
         if "concentration()" in gwm.output.methods():
