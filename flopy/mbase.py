@@ -65,31 +65,25 @@ def resolve_exe(exe_name: Union[str, os.PathLike], forgive: bool = False) -> str
     """
 
     def _resolve(exe_name):
-        exe = which(exe_name)
-        if exe is not None:
-            # if which() returned a relative path, resolve it
-            exe = which(str(Path(exe).resolve()))
-        else:
-            if exe_name.lower().endswith(".exe"):
-                # try removing .exe suffix
-                # mode=0 effectively allows which() to return exe without suffix
-                exe = which(exe_name[:-4], mode=0)
-            if exe is not None:
-                # in case which() returned a relative path, resolve it
-                exe = which(str(Path(exe).resolve()), mode=0)
-            else:
-                # try tilde-expanded abspath
-                exe = which(Path(exe_name).expanduser().absolute())
-            if exe is None and exe_name.lower().endswith(".exe"):
-                # try tilde-expanded abspath without .exe suffix
-                exe = which(Path(exe_name[:-4]).expanduser().absolute())
-        return exe
+        # exe_name is found (not None), ensure absolute path is returned
+        if exe := which(exe_name):
+            return which(Path(exe).resolve())
 
-    name = str(exe_name)
-    exe_path = _resolve(name)
-    if exe_path is None and on_windows and Path(name).suffix == "":
-        # try adding .exe suffix on windows (for portability from other OS)
-        exe_path = _resolve(f"{name}.exe")
+        # exe_name has "~", expand first before returning absolute path
+        if "~" in exe_name and (exe := which(Path(exe_name).expanduser().resolve())):
+            return exe
+
+        # exe_name is relative path
+        if not Path(exe_name).is_absolute() and (
+            exe := which(Path(exe_name).resolve(), mode=0)
+        ):  # mode=0 effectively allows which() to find exe without suffix in windows
+            return exe
+
+        # try removing .exe suffix
+        if exe_name.lower().endswith(".exe"):
+            return _resolve(exe_name[:-4])
+
+    exe_path = _resolve(exe_name)
 
     # raise if we are unforgiving, otherwise return None
     if exe_path is None:
