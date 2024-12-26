@@ -72,10 +72,11 @@ def resolve_exe(exe_name: Union[str, os.PathLike], forgive: bool = False) -> str
         else:
             if exe_name.lower().endswith(".exe"):
                 # try removing .exe suffix
-                exe = which(exe_name[:-4])
+                # mode=0 effectively allows which() to return exe without suffix
+                exe = which(exe_name[:-4], mode=0)
             if exe is not None:
                 # in case which() returned a relative path, resolve it
-                exe = which(str(Path(exe).resolve()))
+                exe = which(str(Path(exe).resolve()), mode=0)
             else:
                 # try tilde-expanded abspath
                 exe = which(Path(exe_name).expanduser().absolute())
