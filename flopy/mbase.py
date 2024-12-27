@@ -98,7 +98,7 @@ def resolve_exe(exe_name: Union[str, os.PathLike], forgive: bool = False) -> str
             f"The program {exe_name} does not exist or is not executable."
         )
 
-    return exe_path
+    return str(exe_path)
 
 
 # external exceptions for users
