@@ -79,9 +79,11 @@ def resolve_exe(exe_name: Union[str, os.PathLike], forgive: bool = False) -> str
         ):  # mode=0 effectively allows which() to find exe without suffix in windows
             return exe
 
-        # try removing .exe suffix
-        if exe_name.lower().endswith(".exe"):
+        # try adding/removing .exe suffix
+        if on_windows and exe_name.lower().endswith(".exe"):
             return _resolve(exe_name[:-4])
+        elif on_windows and "." not in Path(exe_name).stem:
+            return _resolve(f"{exe_name}.exe")
 
     exe_path = _resolve(exe_name)
 
