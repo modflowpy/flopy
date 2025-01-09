@@ -2332,6 +2332,8 @@ def test_remove_model(function_tmpdir, example_data_path):
             break
 
 
+@requires_pkg("shapely")
+@requires_exe("triangle")
 def test_flopy_2283(function_tmpdir):
     # create triangular grid
     triangle_ws = function_tmpdir / "triangle"

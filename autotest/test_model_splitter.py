@@ -158,8 +158,8 @@ def test_model_with_lak_sfr_mvr(function_tmpdir):
     np.testing.assert_allclose(new_heads, original_heads, err_msg=err_msg)
 
 
-@requires_pkg("pymetis")
 @requires_exe("mf6")
+@requires_pkg("pymetis")
 @pytest.mark.slow
 def test_metis_splitting_with_lak_sfr(function_tmpdir):
     sim_path = get_example_data_path() / "mf6" / "test045_lake2tr"
@@ -848,8 +848,7 @@ def test_unstructured_complex_disu(function_tmpdir):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymetis")
-@requires_pkg("scipy")
+@requires_pkg("pymetis", "scipy")
 def test_multi_model(function_tmpdir):
     from scipy.spatial import KDTree
 
@@ -1301,6 +1300,7 @@ def test_multi_model(function_tmpdir):
 
 
 @requires_exe("mf6")
+@requires_pkg("pymetis")
 def test_timeseries(function_tmpdir):
     sim = MFSimulation(
         sim_name="np001",

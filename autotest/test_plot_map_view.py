@@ -276,6 +276,7 @@ def test_plot_limits():
     plt.close(fig)
 
 
+@requires_pkg("shapely")
 def test_plot_centers():
     nlay = 1
     nrow = 10
