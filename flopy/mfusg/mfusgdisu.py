@@ -532,8 +532,7 @@ class MfUsgDisU(Package):
         # dataset 1
         if model.verbose:
             print(
-                "   loading NODES, NLAY, NJAG, IVSD, NPER, ITMUNI, LENUNI,"
-                " IDSYMRD..."
+                "   loading NODES, NLAY, NJAG, IVSD, NPER, ITMUNI, LENUNI, IDSYMRD..."
             )
         ll = line.strip().split()
         nodes = int(ll.pop(0))

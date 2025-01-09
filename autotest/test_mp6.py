@@ -451,15 +451,15 @@ def test_mp6_timeseries_load(example_data_path):
 
 def eval_timeseries(file):
     ts = TimeseriesFile(file)
-    assert isinstance(
-        ts, TimeseriesFile
-    ), f"{os.path.basename(file)} is not an instance of TimeseriesFile"
+    assert isinstance(ts, TimeseriesFile), (
+        f"{os.path.basename(file)} is not an instance of TimeseriesFile"
+    )
 
     # get the all of the data
     tsd = ts.get_alldata()
-    assert (
-        len(tsd) > 0
-    ), f"could not load data using get_alldata() from {os.path.basename(file)}."
+    assert len(tsd) > 0, (
+        f"could not load data using get_alldata() from {os.path.basename(file)}."
+    )
 
     # get the data for the last particleid
     partid = ts.get_maxid()
@@ -476,8 +476,7 @@ def eval_timeseries(file):
 
     timemax = ts.get_maxtime() / 2.0
     assert timemax is not None, (
-        "could not get maximum time using get_maxtime() from "
-        f"{os.path.basename(file)}."
+        f"could not get maximum time using get_maxtime() from {os.path.basename(file)}."
     )
 
     tsd = ts.get_alldata(totim=timemax)
@@ -488,8 +487,7 @@ def eval_timeseries(file):
 
     timemax = ts.get_maxtime()
     assert timemax is not None, (
-        "could not get maximum time using get_maxtime() from "
-        f"{os.path.basename(file)}."
+        f"could not get maximum time using get_maxtime() from {os.path.basename(file)}."
     )
 
     tsd = ts.get_alldata(totim=timemax, ge=False)

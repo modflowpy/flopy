@@ -744,8 +744,7 @@ class Package(PackageInterface):
                 continue
             if confined and l > 0:
                 desc = (
-                    "\r    LAYTYP: unconfined (convertible) "
-                    "layer below confined layer"
+                    "\r    LAYTYP: unconfined (convertible) layer below confined layer"
                 )
                 chk._add_to_summary(type="Warning", desc=desc)
 
@@ -949,7 +948,7 @@ class Package(PackageInterface):
                     if toption.lower() == "autoflowreduce":
                         options.append(toption.lower())
                     elif toption.lower() == "iunitafr":
-                        options.append(f"{toption.lower()} {t[it+1]}")
+                        options.append(f"{toption.lower()} {t[it + 1]}")
                         it += 1
                 it += 1
 

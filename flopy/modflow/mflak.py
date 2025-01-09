@@ -315,8 +315,7 @@ class ModflowLak(Package):
             for idx, fname in enumerate(tab_files, 1):
                 if fname is None:
                     raise ValueError(
-                        "a filename must be specified for the "
-                        f"tabfile for lake {idx}"
+                        f"a filename must be specified for the tabfile for lake {idx}"
                     )
             # set unit for tab files if not passed to __init__
             if tab_units is None:

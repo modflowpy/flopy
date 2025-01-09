@@ -460,19 +460,19 @@ def test_empty_packages(function_tmpdir):
     m0 = new_sim.get_model(f"{base_name}_0")
     m1 = new_sim.get_model(f"{base_name}_1")
 
-    assert not m0.get_package(
-        name="chd_0"
-    ), f"Empty CHD file written to {base_name}_0 model"
-    assert not m1.get_package(
-        name="wel_0"
-    ), f"Empty WEL file written to {base_name}_1 model"
+    assert not m0.get_package(name="chd_0"), (
+        f"Empty CHD file written to {base_name}_0 model"
+    )
+    assert not m1.get_package(name="wel_0"), (
+        f"Empty WEL file written to {base_name}_1 model"
+    )
 
     mvr_status0 = m0.sfr.mover.array
     mvr_status1 = m0.sfr.mover.array
 
-    assert (
-        mvr_status0 and mvr_status1
-    ), "Mover status being overwritten in options splitting"
+    assert mvr_status0 and mvr_status1, (
+        "Mover status being overwritten in options splitting"
+    )
 
 
 @requires_exe("mf6")
@@ -1295,7 +1295,7 @@ def test_multi_model(function_tmpdir):
             if diff > 10.25:
                 raise AssertionError(
                     f"Difference between output arrays: "
-                    f"{diff :.2f} greater than tolerance"
+                    f"{diff:.2f} greater than tolerance"
                 )
 
 
