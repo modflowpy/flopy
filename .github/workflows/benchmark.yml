@@ -54,6 +54,7 @@ jobs:
         run: |
           mkdir -p .benchmarks
           pytest -v --durations=0 --benchmark-only --benchmark-json .benchmarks/${{ matrix.os }}_python${{ matrix.python-version }}.json --keep-failed=.failed
+          ls .benchmarks
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
