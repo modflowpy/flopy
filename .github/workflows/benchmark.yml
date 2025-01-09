@@ -52,9 +52,9 @@ jobs:
       - name: Run benchmarks
         working-directory: autotest
         run: |
-          mkdir -p .benchmarks
-          pytest -v --durations=0 --benchmark-only --benchmark-json .benchmarks/${{ matrix.os }}_python${{ matrix.python-version }}.json --keep-failed=.failed
-          ls .benchmarks
+          mkdir -p __benchmarks__
+          pytest -v --durations=0 --benchmark-only --benchmark-json __benchmarks__/${{ matrix.os }}_python${{ matrix.python-version }}.json --keep-failed=.failed
+          ls __benchmarks__
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -69,7 +69,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: benchmarks-${{ matrix.os }}-${{ matrix.python-version }}-${{ github.run_id }}
-          path: autotest/.benchmarks/*.json
+          path: autotest/__benchmarks__/*.json
 
   post_benchmark:
     needs:
@@ -100,12 +100,12 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: autotest/.benchmarks
+          path: autotest/__benchmarks__
 
       - name: Process benchmark results
         run: |
           repo="${{ github.repository }}"
-          path="autotest/.benchmarks"
+          path="autotest/__benchmarks__"
 
           # list benchmark artifacts
           artifact_json=$(gh api -X GET -H "Accept: application/vnd.github+json" /repos/$repo/actions/artifacts)
@@ -141,5 +141,5 @@ jobs:
         with:
           name: benchmarks-${{ github.run_id }}
           path: |
-            autotest/.benchmarks/*.csv
-            autotest/.benchmarks/*.png
+            autotest/__benchmarks__/*.csv
+            autotest/__benchmarks__/*.png
