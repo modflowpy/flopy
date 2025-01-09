@@ -1,6 +1,7 @@
 name: FloPy benchmarks
 
 on:
+  push:
   schedule:
     - cron: '0 8 * * *' # run at 8 AM UTC (12 am PST)
 
@@ -67,7 +68,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: benchmarks-${{ matrix.os }}-${{ matrix.python-version }}-${{ github.run_id }}
-          path: autotest/.benchmarks/**/*.json
+          path: autotest/.benchmarks/*.json
 
   post_benchmark:
     needs:
