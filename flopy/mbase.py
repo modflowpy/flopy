@@ -74,16 +74,12 @@ def resolve_exe(exe_name: Union[str, os.PathLike], forgive: bool = False) -> str
         if exe := which(str(exe_name)):
             return which(str(Path(exe).resolve()))
 
-        # exe_name has "~", expand first before returning absolute path
-        if "~" in exe_name and (
-            exe := which(str(Path(exe_name).expanduser().resolve()))
-        ):
-            return exe
-
         # exe_name is relative path
         if not Path(exe_name).is_absolute() and (
-            exe := which(str(Path(exe_name).resolve()), mode=0)
-        ):  # mode=0 effectively allows which() to find exe without suffix in windows
+            exe := which(str(Path(exe_name).expanduser().resolve()), mode=0)
+        ):
+            # expanduser() in case of ~ in path
+            # mode=0 effectively allows which() to find exe without suffix in windows
             return exe
 
         # try adding/removing .exe suffix
