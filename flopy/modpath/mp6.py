@@ -147,8 +147,7 @@ class Modpath6(BaseModel):
             )
         if self.dis_file is None:
             raise ValueError(
-                "the dis file in the MODFLOW model or passed "
-                "to __init__ cannot be None"
+                "the dis file in the MODFLOW model or passed to __init__ cannot be None"
             )
 
         if self.__mf is None:

@@ -1010,8 +1010,7 @@ def test_np002(function_tmpdir, example_data_path):
         "checker threshold of 1e-06" in summary
     )
     assert (
-        "sto package: specific yield values above "
-        "checker threshold of 0.5" in summary
+        "sto package: specific yield values above checker threshold of 0.5" in summary
     )
     assert "Not a number" in summary
     model.remove_package("chd_2")

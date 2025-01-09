@@ -140,9 +140,9 @@ class Modflow(BaseModel):
         # -- check if unstructured is specified for something
         # other than mfusg is specified
         if not self.structured:
-            assert (
-                "mfusg" in self.version
-            ), "structured=False can only be specified for mfusg models"
+            assert "mfusg" in self.version, (
+                "structured=False can only be specified for mfusg models"
+            )
 
         # external option stuff
         self.array_free_format = True

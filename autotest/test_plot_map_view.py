@@ -96,9 +96,9 @@ def test_map_view_bc_gwfs_disv(example_data_path):
         raise AssertionError("Boundary condition was not drawn")
 
     for col in ax.collections:
-        assert isinstance(
-            col, (QuadMesh, PathCollection)
-        ), f"Unexpected collection type: {type(col)}"
+        assert isinstance(col, (QuadMesh, PathCollection)), (
+            f"Unexpected collection type: {type(col)}"
+        )
 
 
 @pytest.mark.mf6
@@ -116,9 +116,9 @@ def test_map_view_bc_lake2tr(example_data_path):
         raise AssertionError("Boundary condition was not drawn")
 
     for col in ax.collections:
-        assert isinstance(
-            col, (QuadMesh, PathCollection)
-        ), f"Unexpected collection type: {type(col)}"
+        assert isinstance(col, (QuadMesh, PathCollection)), (
+            f"Unexpected collection type: {type(col)}"
+        )
 
 
 @pytest.mark.mf6
@@ -143,9 +143,9 @@ def test_map_view_bc_2models_mvr(example_data_path):
     assert len(ax.collections) > 0, "Boundary condition was not drawn"
 
     for col in ax.collections:
-        assert isinstance(
-            col, (QuadMesh, PathCollection)
-        ), f"Unexpected collection type: {type(col)}"
+        assert isinstance(col, (QuadMesh, PathCollection)), (
+            f"Unexpected collection type: {type(col)}"
+        )
 
 
 @pytest.mark.mf6
@@ -163,9 +163,9 @@ def test_map_view_bc_UZF_3lay(example_data_path):
         raise AssertionError("Boundary condition was not drawn")
 
     for col in ax.collections:
-        assert isinstance(
-            col, (QuadMesh, PathCollection)
-        ), f"Unexpected collection type: {type(col)}"
+        assert isinstance(col, (QuadMesh, PathCollection)), (
+            f"Unexpected collection type: {type(col)}"
+        )
 
 
 @pytest.mark.parametrize("ndim", [1, 2, 3])

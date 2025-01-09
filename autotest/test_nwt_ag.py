@@ -55,12 +55,12 @@ def test_load_write_agwater_uzf(function_tmpdir, example_data_path):
     dis2 = ModflowDis(ml2, nlay=1, nrow=15, ncol=10, nper=49)
     uzf2 = ModflowUzf1.load(function_tmpdir / uzffile, ml2)
 
-    assert np.allclose(
-        uzf1.air_entry.array, uzf2.air_entry.array
-    ), "Air entry pressure array comparison failed"
-    assert np.allclose(
-        uzf1.hroot.array, uzf2.hroot.array
-    ), "root pressure array comparison failed"
-    assert np.allclose(
-        uzf1.rootact.array, uzf2.rootact.array
-    ), "root activity array comparison failed"
+    assert np.allclose(uzf1.air_entry.array, uzf2.air_entry.array), (
+        "Air entry pressure array comparison failed"
+    )
+    assert np.allclose(uzf1.hroot.array, uzf2.hroot.array), (
+        "root pressure array comparison failed"
+    )
+    assert np.allclose(uzf1.rootact.array, uzf2.rootact.array), (
+        "root activity array comparison failed"
+    )

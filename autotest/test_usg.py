@@ -84,9 +84,9 @@ def test_usg_sms_load(function_tmpdir, mfusg_01A_nestedgrid_nognc_model_path):
     for (key1, value1), (key2, value2) in zip(
         sms2.__dict__.items(), sms.__dict__.items()
     ):
-        assert (
-            value1 == value2
-        ), f"key1 {key1}, value 1 {value1} != key2 {key2} value 2 {value2}"
+        assert value1 == value2, (
+            f"key1 {key1}, value 1 {value1} != key2 {key2} value 2 {value2}"
+        )
 
 
 @requires_exe("mfusg")

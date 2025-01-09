@@ -470,8 +470,9 @@ class Modpath7Sim(Package):
             else:
                 if len(timepointdata) != 2:
                     raise ValueError(
-                        "timepointdata must be a have 2 entries "
-                        "({} provided)".format(len(timepointdata))
+                        "timepointdata must be a have 2 entries ({} provided)".format(
+                            len(timepointdata)
+                        )
                     )
                 else:
                     if isinstance(timepointdata[1], (list, tuple)):

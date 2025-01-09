@@ -151,9 +151,9 @@ def test_gage(function_tmpdir, example_data_path):
     for f in files:
         pth0 = join(ws, f)
         pth1 = join(model_ws2, f)
-        assert filecmp.cmp(
-            pth0, pth1
-        ), f'new and original gage file "{f}" are not binary equal.'
+        assert filecmp.cmp(pth0, pth1), (
+            f'new and original gage file "{f}" are not binary equal.'
+        )
 
 
 __example_data_path = get_example_data_path()

@@ -553,21 +553,18 @@ class Mt3dSft(Package):
             print(f"   IETSFR {ietsfr}")
             if ietsfr == 0:
                 print(
-                    "   Mass does not exit the model via simulated "
-                    "stream evaporation "
+                    "   Mass does not exit the model via simulated stream evaporation "
                 )
             else:
                 print(
-                    "   Mass exits the stream network via simulated "
-                    "stream evaporation "
+                    "   Mass exits the stream network via simulated stream evaporation "
                 )
 
         # Item 2 (ISFSOLV, WIMP, WUPS, CCLOSESF, MXITERSF, CRNTSF, IPRTXMD)
         line = f.readline()
         if model.verbose:
             print(
-                "   loading isfsolv, wimp, wups, cclosesf, mxitersf, "
-                "crntsf, iprtxmd..."
+                "   loading isfsolv, wimp, wups, cclosesf, mxitersf, crntsf, iprtxmd..."
             )
 
         vals = line.strip().split()

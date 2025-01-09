@@ -431,16 +431,16 @@ def test_binaryfile_read(function_tmpdir, freyberg_model_path):
     h0 = h.get_data(totim=times[0])
     h1 = h.get_data(kstpkper=kstpkper[0])
     h2 = h.get_data(idx=0)
-    assert np.array_equal(
-        h0, h1
-    ), "binary head read using totim != head read using kstpkper"
+    assert np.array_equal(h0, h1), (
+        "binary head read using totim != head read using kstpkper"
+    )
     assert np.array_equal(h0, h2), "binary head read using totim != head read using idx"
 
     ts = h.get_ts((0, 7, 5))
     expected = 26.00697135925293
-    assert np.isclose(
-        ts[0, 1], expected
-    ), f"time series value ({ts[0, 1]}) != {expected}"
+    assert np.isclose(ts[0, 1], expected), (
+        f"time series value ({ts[0, 1]}) != {expected}"
+    )
     h.close()
 
     # Check error when reading empty file
