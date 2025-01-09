@@ -217,6 +217,7 @@ def test_plot_limits():
     plt.close(fig)
 
 
+@requires_pkg("shapely")
 def test_plot_centers():
     from matplotlib.collections import PathCollection
 
