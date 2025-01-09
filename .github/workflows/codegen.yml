@@ -1,0 +1,42 @@
+name: FloPy code generation
+on:
+  schedule:
+    - cron: '0 8 * * *' # run at 8 AM UTC (12 am PST)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  codegen:
+    name: Test code generation
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        python-version: [ 3.9, "3.10", "3.11", "3.12" ]
+        ref: ["develop", "master", "6.4.1", "4458f9f", "4458f9f7a6244182e6acc2430a6996f9ca2df367"]
+    defaults:
+      run:
+        shell: bash -l {0}
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Micromamba
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: etc/environment.yml
+          cache-environment: true
+          cache-downloads: true
+          create-args: >-
+            python=${{ matrix.python-version }}
+          init-shell: >-
+            bash
+            powershell
+
+      - name: Install FloPy
+        run: pip install .
+
+      - name: Generate classes
+        run: python -m flopy.mf6.utils.generate_classes --ref ${{ matrix.ref }} --no-backup
