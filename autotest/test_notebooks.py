@@ -3,7 +3,7 @@ from pprint import pprint
 
 import pytest
 from flaky import flaky
-from modflow_devtools.misc import run_cmd, is_in_ci
+from modflow_devtools.misc import is_in_ci, run_cmd
 
 from autotest.conftest import get_project_root_path
 
