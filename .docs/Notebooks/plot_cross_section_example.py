@@ -17,14 +17,12 @@
 #       - name: Scott Paulinski
 # ---
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # # Making Cross Sections of Your Model
 # This notebook demonstrates the cross sectional mapping capabilities of FloPy. It demonstrates these capabilities by loading and running existing models and then showing how the `PlotCrossSection` object and its methods can be used to make nice plots of the model grid, boundary conditions, model results, shape files, etc.
 #
 # ### Mapping is demonstrated for MODFLOW-2005 and MODFLOW-6 models in this notebook
 
 
-# + pycharm={"name": "#%%\n"}
 import os
 import sys
 from pathlib import Path
@@ -45,7 +43,6 @@ print(f"numpy version: {np.__version__}")
 print(f"matplotlib version: {mpl.__version__}")
 print(f"flopy version: {flopy.__version__}")
 
-# + pycharm={"name": "#%%\n"}
 # Set names of the MODFLOW exes
 # assumes that the executable is in users path statement
 v2005 = "mf2005"
@@ -89,7 +86,6 @@ for fname, fhash in file_names.items():
 tempdir = TemporaryDirectory()
 modelpth = Path(tempdir.name)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Load and Run an Existing MODFLOW-2005 Model
 # A model called the "Freyberg Model" is located in the loadpth folder.  In the following code block, we load that model, then change into a new workspace (modelpth) where we recreate and run the model.  For this to work properly, the MODFLOW-2005 executable (mf2005) must be in the path.  We verify that it worked correctly by checking for the presence of freyberg.hds and freyberg.cbc.
 
@@ -111,12 +107,10 @@ for f in files:
         errmsg = f"Error. Output file cannot be found: {f}"
         print(errmsg)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Creating a Cross-Section of the Model Grid
 #
 # Now that we have a model, we can use the FloPy plotting utilities to make cross-sections. We'll start by making a Map to show the model grid and basic boundary conditions. Then we'll begin making a cross section using the `PlotCrossSection` class and the `plot_grid()` method of that class.
 
-# + pycharm={"name": "#%%\n"}
 # let's take a look at our grid before making a cross section
 fig = plt.figure(figsize=(8, 8))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
@@ -126,10 +120,8 @@ wel = mapview.plot_bc("WEL")
 riv = mapview.plot_bc("RIV")
 linecollection = mapview.plot_grid()
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # Next we will make a cross-section of the model grid at column 6.
 
-# + pycharm={"name": "#%%\n"}
 # First step is to set up the plot
 fig = plt.figure(figsize=(15, 5))
 ax = fig.add_subplot(1, 1, 1)
@@ -143,12 +135,10 @@ xsect = flopy.plot.PlotCrossSection(model=ml, line={"Column": 5})
 linecollection = xsect.plot_grid()
 t = ax.set_title("Column 6 Cross-Section - Model Grid")
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Ploting Ibound
 #
 # The `plot_ibound()` method can be used to plot the boundary conditions contained in the ibound arrray, which is part of the MODFLOW Basic Package.  The `plot_ibound()` method returns a matplotlib PatchCollection object (matplotlib.collections.PatchCollection).  If you are familiar with the matplotlib collections, then this may be important to you, but if not, then don't worry about the return objects of these plotting function.
 
-# + pycharm={"name": "#%%\n"}
 fig = plt.figure(figsize=(15, 5))
 ax = fig.add_subplot(1, 1, 1)
 
@@ -157,7 +147,6 @@ patches = xsect.plot_ibound()
 linecollection = xsect.plot_grid()
 t = ax.set_title("Column 6 Cross-Section with IBOUND Boundary Conditions")
 
-# + pycharm={"name": "#%%\n"}
 # Or we could change the colors!
 fig = plt.figure(figsize=(15, 5))
 ax = fig.add_subplot(1, 1, 1)
@@ -167,7 +156,6 @@ patches = xsect.plot_ibound(color_noflow="red", color_ch="orange")
 linecollection = xsect.plot_grid(color="green")
 t = ax.set_title("Column 6 Cross-Section with IBOUND Boundary Conditions")
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting Boundary Conditions
 # The `plot_bc()` method can be used to plot boundary conditions on a cross section.  It is setup to use the following dictionary to assign colors, however, these colors can be changed in the method call.
 #
@@ -178,7 +166,6 @@ t = ax.set_title("Column 6 Cross-Section with IBOUND Boundary Conditions")
 #
 # Here, we plot the location of well cells in column 6.
 
-# + pycharm={"name": "#%%\n"}
 fig = plt.figure(figsize=(15, 5))
 ax = fig.add_subplot(1, 1, 1)
 
@@ -188,12 +175,10 @@ patches = xsect.plot_ibound()
 linecollection = xsect.plot_grid()
 t = ax.set_title("Column 6 Cross-Section with Boundary Conditions")
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting an Array
 #
 # `PlotCrossSection` has a `plot_array()` method.  The `plot_array()` method will only accept 3D arrays for structured grids.
 
-# + pycharm={"name": "#%%\n"}
 # Create a random array and plot it
 a = np.random.random((ml.dis.nlay, ml.dis.nrow, ml.dis.ncol))
 
@@ -206,7 +191,6 @@ linecollection = xsect.plot_grid()
 t = ax.set_title("Column 6 Cross-Section with Random Data")
 cb = plt.colorbar(csa, shrink=0.75)
 
-# + pycharm={"name": "#%%\n"}
 # plot the horizontal hydraulic conductivities
 a = ml.lpf.hk.array
 
@@ -219,12 +203,10 @@ linecollection = xsect.plot_grid()
 t = ax.set_title("Column 6 Cross-Section with Horizontal hydraulic conductivity")
 cb = plt.colorbar(csa, shrink=0.75)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Contouring an Array
 #
 # `PlotCrossSection` also has a `contour_array()` method.  It also accepts a 3D array for structured grids.
 
-# + pycharm={"name": "#%%\n"}
 # plot the horizontal hydraulic conductivities
 a = ml.lpf.hk.array
 
@@ -239,14 +221,12 @@ t = ax.set_title(
 )
 cb = plt.colorbar(contour_set, shrink=0.75)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting Heads
 #
 # We can easily plot results from the simulation by extracting heads using `flopy.utils.HeadFile`.
 #
 # The head can be passed into the `plot_array()` and `contour_array()` using the `head=` keyword argument to fix the top of the colored patch and contour lines at the top of the water table in each cell, respectively.
 
-# + pycharm={"name": "#%%\n"}
 fname = os.path.join(str(modelpth), "freyberg.hds")
 hdobj = flopy.utils.HeadFile(fname)
 head = hdobj.get_data()
@@ -261,7 +241,6 @@ patches = xsect.plot_ibound(head=head)
 linecollection = xsect.plot_grid()
 cb = plt.colorbar(pc, shrink=0.75)
 
-# + pycharm={"name": "#%%\n"}
 # contour array on top of heads
 levels = np.arange(17, 26, 1)
 
@@ -283,12 +262,10 @@ plt.clabel(contour_set, fmt="%.1f", colors="k", fontsize=11)
 
 cb = plt.colorbar(pc, shrink=0.75)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting a surface on the cross section
 #
 # The `plot_surface()` method allows the user to plot a surface along the cross section. Here is a short example using head data.
 
-# + pycharm={"name": "#%%\n"}
 levels = np.arange(10, 30, 0.5)
 
 fig = plt.figure(figsize=(18, 5))
@@ -307,12 +284,10 @@ linecollection = xsect.plot_grid()
 plt.title("contour_array() and plot_surface()")
 cb = plt.colorbar(ct, shrink=0.75)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting discharge vectors
 #
 # `PlotCrossSection` has a `plot_vector()` method, which takes `qx`, `qy`, and `qz` vector arrays (ex. specific discharge or flow across a cell faces). The flow array values can be extracted from the cell by cell flow file using the `flopy.utils.CellBudgetFile` object as shown below.  Once they are extracted, they either be can be passed to the `plot_vector()` method or they can be post processed into specific discharge using `postprocessing.get_specific_discharge`.  Note that `get_specific_discharge()` also takes the head array as an argument.  The head array is used by `get_specific_discharge()` to convert the volumetric flow in dimensions of $L^3/T$ to specific discharge in dimensions of $L/T$ and to plot the specific discharge in the center of each saturated cell. For this problem, there is no 'FLOW LOWER FACE' array since the Freyberg Model is a one layer model.
 
-# + pycharm={"name": "#%%\n"}
 fname = os.path.join(str(modelpth), "freyberg.cbc")
 cbb = flopy.utils.CellBudgetFile(fname)
 frf = cbb.get_data(text="FLOW RIGHT FACE")[0]
@@ -321,7 +296,6 @@ qx, qy, qz = flopy.utils.postprocessing.get_specific_discharge(
     (frf, fff, None), ml, head=head
 )
 
-# + pycharm={"name": "#%%\n"}
 fig = plt.figure(figsize=(18, 5))
 ax = fig.add_subplot(1, 1, 1)
 
@@ -347,7 +321,6 @@ quiver = xsect.plot_vector(
 
 cb = plt.colorbar(csa, shrink=0.75)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting a cross section from Shapefile data
 #
 # A shapefile can be used to define the vertices for a instance of the `PlotCrossSection` class. The function `flopy.plot.plotutil.shapefile_get_vertices()` will return a list of vertices for each polyline in a shapefile.
@@ -408,7 +381,6 @@ for fname, fhash in file_names.items():
 
 copytree(data_path / sim_name / "gis", modelpth / "gis")
 
-# + pycharm={"name": "#%%\n"}
 # Setup the figure and PlotMapView. Show a very faint map of ibound and
 # model grid by specifying a transparency alpha value.
 
@@ -443,12 +415,10 @@ patch_collection = mapview.plot_shapefile(shp, radius=100, facecolor="red")
 quadmesh = mapview.plot_ibound(alpha=0.1)
 linecollection = mapview.plot_grid(alpha=0.1)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # Now let's make a cross section based on this arbitrary cross-sectional line. We can load the cross sectional line vertices using `flopy.plot.plotutil.shapefile_get_vertices()`
 #
 # **Note**: in previous examples we passed `line={'column', 5}` to plot a cross section along a column. In this example we pass vertex information into `PlotCrossSection` using `line={'line', line[0]}` where `line[0]` is a list of vertices.
 
-# + pycharm={"name": "#%%\n"}
 # get the vertices for cross-section lines in a shapefile
 fpth = os.path.join(modelpth, "gis", "cross_section_rotate14")
 line = flopy.plot.plotutil.shapefile_get_vertices(fpth)
@@ -465,14 +435,12 @@ patches = xsect.plot_ibound(head=head)
 linecollection = xsect.plot_grid(lw=0.5)
 cb = fig.colorbar(csa, ax=ax, shrink=0.5)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting geographic coordinates on the x-axis using the `PlotCrossSection` class
 #
 # The default cross section plotting method plots cells with regard to their intersection distance along the cross sectional line defined by the user. While this method is perfectly acceptable and in many cases may be preferred for plotting arbitrary cross sections, a flag has been added to plot based on geographic coordinates.
 #
 # The flag `geographic_coords` defaults to `False` which maintains FloPy's previous method of plotting cross sections.
 
-# + pycharm={"name": "#%%\n"}
 # get the vertices for cross-section lines in a shapefile
 fpth = os.path.join(modelpth, "gis", "cross_section_rotate14")
 line = flopy.plot.plotutil.shapefile_get_vertices(fpth)
@@ -491,7 +459,6 @@ patches = xsect.plot_ibound(head=head)
 linecollection = xsect.plot_grid(lw=0.5)
 cb = fig.colorbar(csa, ax=ax, shrink=0.5)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ## Plotting Cross Sections with MODFLOW-6 models
 #
 # `PlotCrossSection` has support for MODFLOW-6 models and operates in the same fashion for Structured Grids, Vertex Grids, and Unstructured Grids. Here is a short example on how to plot with MODFLOW-6 structured grids using a version of the Freyberg model created for MODFLOW-6|
@@ -551,12 +518,10 @@ for f in files:
         errmsg = f"Error. Output file cannot be found: {f}"
         print(errmsg)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting boundary conditions and arrays
 #
 # This works the same as modflow-2005, however the simulation object can host a number of modflow-6 models so we need to grab a model before attempting to plot with `PlotCrossSection`
 
-# + pycharm={"name": "#%%\n"}
 # get the modflow-6 model we want to plot
 ml6 = sim.get_model("freyberg")
 
@@ -582,12 +547,10 @@ linecollection = xsect.plot_grid()
 t = ax.set_title("Column 6 Cross-Section with Horizontal hydraulic conductivity")
 cb = plt.colorbar(csa, shrink=0.75)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting specific discharge with a MODFLOW-6 model
 #
 # MODFLOW-6 includes a the PLOT_SPECIFIC_DISCHARGE flag in the NPF package to calculate and store discharge vectors for easy plotting. The `postprocessing.get_specific_discharge()` method will preprocess the data into vectors and `PlotCrossSection` has the `plot_vector()` method to use this data. The specific discharge array is stored in the cell budget file.
 
-# + pycharm={"name": "#%%\n"}
 # get the head from the head file
 head_file = os.path.join(modelpth, "freyberg.hds")
 hds = flopy.utils.HeadFile(head_file)
@@ -624,13 +587,11 @@ quiver = xsect.plot_vector(
 
 cb = plt.colorbar(csa, shrink=0.75)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ## Vertex cross section plotting with MODFLOW-6 (DISV)
 #
 # FloPy fully supports vertex discretization (DISV) plotting through the `PlotCrossSection` class. The method calls are identical to the ones presented previously for Structured discretization (DIS) and the same matplotlib keyword arguments are supported. Let's run through an example using a vertex model grid.
 
 
-# + pycharm={"name": "#%%\n"}
 # build and run vertex model grid demo problem
 def run_vertex_grid_example(ws):
     """load and run vertex grid example"""
@@ -932,7 +893,6 @@ for f in files:
         errmsg = f"Error. Output file cannot be found: {f}"
         print(errmsg)
 
-# + pycharm={"name": "#%%\n"}
 # load the simulation and get the model
 vertex_sim_name = "mfsim.nam"
 vertex_sim = flopy.mf6.MFSimulation.load(
@@ -943,13 +903,11 @@ vertex_sim = flopy.mf6.MFSimulation.load(
 )
 vertex_ml6 = vertex_sim.get_model("mp7p2")
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting a line based cross section through the model grid
 #
 # Because a `VertexGrid` has no row or column number, the cross-section line must be defined explicitly. This is done by passing a dictionary to the `line` parameter with key `line` &mdash; the value may be an array-like of 2 or more points, e.g. `{"line": [(x0, y0), (x1, y1), ...]}`, or a `flopy.utils.geometry.LineString` or `shapely.geometry.LineString`. Below we show an example of setting up a cross-section line with a MODFLOW-6 DISV model.
 #
 
-# + pycharm={"name": "#%%\n"}
 line = np.array([(4700, 0), (4700, 5000), (7250, 10500)])
 
 # Let's plot the model grid in map view to look at it
@@ -964,10 +922,8 @@ linecollection = mapview.plot_grid()
 # plot the line over the model grid
 lc = plt.plot(line.T[0], line.T[1], "r--", lw=2)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # Now we can plot a cross section of the model grid defined by this line
 
-# + pycharm={"name": "#%%\n"}
 fig = plt.figure(figsize=(15, 5))
 ax = fig.add_subplot(1, 1, 1)
 
@@ -980,12 +936,10 @@ xsect = flopy.plot.PlotCrossSection(model=vertex_ml6, line={"line": line})
 linecollection = xsect.plot_grid()
 t = ax.set_title("Column 6 Cross-Section - Model Grid")
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting Arrays and Contouring with Vertex Model grids
 #
 # `PlotCrossSection` allows the user to plot arrays and contour with DISV based discretization. The `plot_array()` method is called in the same way as using a structured grid. The only difference is that `PlotCrossSection` builds a matplotlib patch collection for Vertex based grids.
 
-# + pycharm={"name": "#%%\n"}
 # get the head output for stress period 1 from the modflow6 head file
 head = flopy.utils.HeadFile(os.path.join(modelpth, "mp7p2.hds"))
 hdata = head.get_alldata()[0, :, :, :]
@@ -999,10 +953,8 @@ patch_collection = xsect.plot_array(hdata, head=hdata, alpha=0.5)
 line_collection = xsect.plot_grid()
 cb = plt.colorbar(patch_collection, shrink=0.75)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # The `contour_array()` method operates in the same way as the sturctured example.
 
-# + pycharm={"name": "#%%\n"}
 levels = np.arange(329, 337, 1)
 
 fig = plt.figure(figsize=(18, 5))
@@ -1018,13 +970,11 @@ plt.clabel(contour_set, fmt="%.1f", colors="k", fontsize=11)
 
 cb = plt.colorbar(patch_collection, shrink=0.75)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting specific discharge vectors for DISV
 # MODFLOW-6 includes a the PLOT_SPECIFIC_DISCHARGE flag in the NPF package to calculate and store discharge vectors for easy plotting.The `postprocessing.get_specific_discharge()` method will preprocess the data into vectors and `PlotCrossSection` has the `plot_vector()` method to use this data. The specific discharge array is stored in the cell budget file.
 #
 # **Note**: When plotting specific discharge, an arbitrary cross section cannot be used. The cross sectional line must be orthogonal to the model grid
 
-# + pycharm={"name": "#%%\n"}
 # define and plot our orthogonal line
 line = np.array([(0, 4700), (10000, 4700)])
 
@@ -1040,7 +990,6 @@ linecollection = mapview.plot_grid()
 # plot the line over the model grid
 lc = plt.plot(line.T[0], line.T[1], "r--", lw=2)
 
-# + pycharm={"name": "#%%\n"}
 # plot specific discharge on cross section
 cbb = flopy.utils.CellBudgetFile(os.path.join(modelpth, "mp7p2.cbb"))
 spdis = cbb.get_data(text="SPDIS")[-1]
@@ -1071,14 +1020,11 @@ quiver = xsect.plot_vector(
 
 cb = plt.colorbar(patch_collection, shrink=0.75)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ## Plotting using built in styles
 #
 # FloPy's plotting routines can be used with built in styles from the `styles` module. The `styles` module takes advantage of matplotlib's temporary styling routines by reading in pre-built style sheets. Two different types of styles have been built for flopy: `USGSMap()` and `USGSPlot()` styles which can be used to create report quality figures. The styles module also contains a number of methods that can be used for adding axis labels, text, annotations, headings, removing tick lines, and updating the current font.
 #
 # This example will run the Keating groundwater transport model and plot results using `styles`
-
-# + pycharm={"name": "#%%\n"}
 
 example_name = "ex-gwt-keating"
 
@@ -1351,10 +1297,8 @@ def run_keating_model(ws=example_name, silent=True):
 
 run_keating_model(modelpth)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # Load the flow and transport models
 
-# + pycharm={"name": "#%%\n"}
 sim_path = os.path.join(modelpth, "mf6-gwt-keating", "mf6gwf")
 tr_path = os.path.join(modelpth, "mf6-gwt-keating", "mf6gwt")
 sim_name = "mfsim.nam"
@@ -1368,7 +1312,6 @@ sim = flopy.mf6.MFSimulation.load(
 )
 gwt6 = sim.get_model("trans")
 
-# + pycharm={"name": "#%%\n"}
 # import styles
 from flopy.plot import styles
 
@@ -1396,10 +1339,8 @@ with styles.USGSMap():
     styles.heading(letter="A.", heading="Simulated hydraulic head", fontsize=10)
     ax.set_aspect(1.0)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # Plotting concentration model results using the `USGSMap()` style
 
-# + pycharm={"name": "#%%\n"}
 # load the transport output file
 cobj = gwt6.output.concentration()
 plot_times = [100, 1000, 3000]
@@ -1439,14 +1380,12 @@ with styles.USGSPlot():
             z = zgrid[k, i, j]
             ax.plot(x, z, mfc="yellow", mec="black", marker="o", ms="8")
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ## Summary
 #
 # This notebook demonstrates some of the plotting functionality available with flopy.  Although not described here, the plotting functionality tries to be general by passing keyword arguments passed to the `PlotCrossSection` methods down into the `matplotlib.pyplot` routines that do the actual plotting.  For those looking to customize these plots, it may be necessary to search for the available keywords by understanding the types of objects that are created by the `PlotCrossSection` methods.  The `PlotCrossSection` methods return these matplotlib.collections objects so that they could be fine-tuned later in the script before plotting.
 #
 # Hope this gets you started!
 
-# + pycharm={"name": "#%%\n"}
 try:
     # ignore PermissionError on Windows
     tempdir.cleanup()

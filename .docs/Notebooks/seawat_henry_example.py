@@ -31,7 +31,6 @@ print(sys.version)
 print(f"numpy version: {np.__version__}")
 print(f"flopy version: {flopy.__version__}")
 
-# + pycharm={"name": "#%%\n"}
 # temporary directory
 temp_dir = TemporaryDirectory()
 workspace = temp_dir.name

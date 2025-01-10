@@ -114,7 +114,6 @@ from pathlib import Path
 recarray2shp(chk.summary_array, geoms, os.path.join(workspace, "test.shp"), crs=26715)
 shape_path = os.path.join(workspace, "test.prj")
 
-# + pycharm={"name": "#%%\n"}
 shutil.copy(shape_path, os.path.join(workspace, "26715.prj"))
 recarray2shp(
     chk.summary_array,
@@ -127,11 +126,9 @@ recarray2shp(
 # ### read it back in
 # * flopy geometry objects representing the shapes are stored in the 'geometry' field
 
-# + pycharm={"name": "#%%\n"}
 ra = shp2recarray(os.path.join(workspace, "test.shp"))
 ra
 
-# + pycharm={"name": "#%%\n"}
 ra.geometry[0].plot()
 # -
 
