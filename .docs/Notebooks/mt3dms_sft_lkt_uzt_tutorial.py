@@ -841,7 +841,6 @@ lkt = flopy.mt3d.Mt3dLkt(
 
 # #### Write the MT3D-USGS input files for inspecting and running
 
-# + pycharm={"name": "#%%\n"}
 mf.write_input()
 mt.write_input()
 

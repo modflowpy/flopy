@@ -17,16 +17,13 @@
 #       - name: Jeremy White
 # ---
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # # Formatting ASCII output arrays
 #
 # ### Configuring numeric arrays written by FloPy
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # load and run the Freyberg model
 
 
-# + pycharm={"name": "#%%\n"}
 import os
 import sys
 from pathlib import Path
@@ -111,26 +108,20 @@ for f in files:
         errmsg = f"Error. Output file cannot be found: {f}"
         print(errmsg)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # Each ``Util2d`` instance now has a ```.format``` attribute, which is an ```ArrayFormat``` instance:
 
-# + pycharm={"name": "#%%\n"}
 print(ml.lpf.hk[0].format)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # The ```ArrayFormat``` class exposes each of the attributes seen in the ```ArrayFormat.___str___()``` call. ```ArrayFormat``` also exposes ``.fortran``, ``.py`` and ``.numpy`` atrributes, which are the respective format descriptors:
 
-# + pycharm={"name": "#%%\n"}
 print(ml.dis.botm[0].format.fortran)
 print(ml.dis.botm[0].format.py)
 print(ml.dis.botm[0].format.numpy)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # #### (re)-setting ```.format```
 #
 # We can reset the format using a standard fortran type format descriptor
 
-# + pycharm={"name": "#%%\n"}
 ml.dis.botm[0].format.free = False
 ml.dis.botm[0].format.fortran = "(20f10.4)"
 print(ml.dis.botm[0].format.fortran)
@@ -147,25 +138,19 @@ if success:
 else:
     raise ValueError("Failed to run.")
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # Let's load the model we just wrote and check that the desired ```botm[0].format``` was used:
 
-# + pycharm={"name": "#%%\n"}
 ml1 = flopy.modflow.Modflow.load("freyberg.nam", model_ws=modelpth)
 print(ml1.dis.botm[0].format)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # We can also reset individual format components (we can also generate some warnings):
 
-# + pycharm={"name": "#%%\n"}
 ml.dis.botm[0].format.width = 9
 ml.dis.botm[0].format.decimal = 1
 print(ml1.dis.botm[0].format)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # We can also select ``free`` format.  Note that setting to free format resets the format attributes to the default, max precision:
 
-# + pycharm={"name": "#%%\n"}
 ml.dis.botm[0].format.free = True
 print(ml1.dis.botm[0].format)
 # -
@@ -178,6 +163,5 @@ if success:
 else:
     raise ValueError("Failed to run.")
 
-# + pycharm={"name": "#%%\n"}
 ml1 = flopy.modflow.Modflow.load("freyberg.nam", model_ws=modelpth)
 print(ml1.dis.botm[0].format)

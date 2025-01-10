@@ -106,15 +106,6 @@ def pytest_addoption(parser):
         "check patch collections or figure & axis properties.)",
     )
 
-    # for test_generate_classes.py
-    parser.addoption(
-        "--ref",
-        action="append",
-        type=str,
-        help="Include extra refs to test. Useful for testing branches on a fork, "
-        "e.g. <your GitHub username>/modflow6/<your branch>.",
-    )
-
 
 def pytest_report_header(config):
     """Header for pytest to show versions of packages."""
