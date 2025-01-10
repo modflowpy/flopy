@@ -82,6 +82,9 @@ class Modflow(BaseModel):
         Location for external files.
     verbose : bool, default False
         Print additional information to the screen.
+    extra_pkgs : dict, optional
+        Add custom packages classes to mfnam_packages. Allows for loading models
+        with custom packages not contained in the standard flopy distribution.
 
     Attributes
     ----------
@@ -113,6 +116,7 @@ class Modflow(BaseModel):
         model_ws: Union[str, os.PathLike] = os.curdir,
         external_path: Optional[Union[str, os.PathLike]] = None,
         verbose=False,
+        extra_pkgs: Optional[dict] = None,
         **kwargs,
     ):
         super().__init__(
@@ -224,6 +228,8 @@ class Modflow(BaseModel):
             "vdf": flopy.seawat.SeawatVdf,
             "vsc": flopy.seawat.SeawatVsc,
         }
+        if extra_pkgs:
+            self.mfnam_packages.update(extra_pkgs)
 
     def __repr__(self):
         nrow, ncol, nlay, nper = self.get_nrow_ncol_nlay_nper()
@@ -632,6 +638,7 @@ class Modflow(BaseModel):
         load_only=None,
         forgive=False,
         check=True,
+        extra_pkgs: Optional[dict] = None,
     ):
         """
         Load an existing MODFLOW model.
@@ -661,6 +668,10 @@ class Modflow(BaseModel):
             useful for debugging. Default False.
         check : boolean, optional
             Check model input for common errors. Default True.
+        extra_pkgs : dict, optional
+            Add custom packages classes to mfnam_packages. Allows for loading models
+            with custom packages not contained in the standard flopy distribution.
+
 
         Returns
         -------
@@ -692,6 +703,7 @@ class Modflow(BaseModel):
             exe_name=exe_name,
             verbose=verbose,
             model_ws=model_ws,
+            extra_pkgs=extra_pkgs,
             **attribs,
         )
 

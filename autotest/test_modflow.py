@@ -77,6 +77,22 @@ def test_modflow_load(namfile, example_data_path):
     assert model.model_ws == str(mpath)
 
 
+def test_modflow_load_with_extra_pkg(example_data_path):
+    namfile = Path("freyberg") / "freyberg.nam"
+    mpath = Path(example_data_path / namfile).parent
+
+    # extra pkg
+    dummy_extra_pkg_for_test = {"DUM": "Dummy"}
+
+    model = Modflow.load(
+        mpath / namfile.name,
+        verbose=True,
+        model_ws=mpath,
+        extra_pkgs=dummy_extra_pkg_for_test,
+    )
+    assert model.mfnam_packages["DUM"] == "Dummy"
+
+
 @pytest.mark.parametrize(
     "path,expected",
     [
