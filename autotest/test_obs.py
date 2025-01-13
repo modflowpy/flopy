@@ -32,12 +32,7 @@ def test_hob_simple(function_tmpdir):
     shape2d = (nrow, ncol)
     ib = np.ones(shape3d, dtype=int)
     ib[0, 0, 0] = -1
-    m = Modflow(
-        modelname=modelname,
-        model_ws=ws,
-        verbose=False,
-        exe_name="mf2005",
-    )
+    m = Modflow(modelname=modelname, model_ws=ws, verbose=False, exe_name="mf2005")
     dis = ModflowDis(m, nlay=1, nrow=11, ncol=11, nper=2, perlen=[1, 1])
 
     bas = ModflowBas(m, ibound=ib, strt=10.0)
@@ -233,7 +228,7 @@ def test_obs_load_and_write(function_tmpdir, example_data_path):
     s = f"nqtfb loaded from {m.drob.fn_path} read incorrectly"
     assert drob.nqtfb == m.drob.nqtfb, s
     s = f"obsnam loaded from {m.drob.fn_path} read incorrectly"
-    assert list([n for n in drob.obsnam]) == list([n for n in m.drob.obsnam]), s
+    assert list(drob.obsnam) == list(m.drob.obsnam), s
     s = f"flwobs loaded from {m.drob.fn_path} read incorrectly"
     assert np.array_equal(drob.flwobs, m.drob.flwobs), s
     s = f"layer loaded from {m.drob.fn_path} read incorrectly"

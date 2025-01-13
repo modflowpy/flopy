@@ -382,11 +382,7 @@ class Mt3dSft(Package):
         # Item 1
         f.write(
             "{:10d}{:10d}{:10d}{:10d}{:10d}".format(
-                self.nsfinit,
-                self.mxsfbc,
-                self.icbcsf,
-                self.ioutobs,
-                self.ietsfr,
+                self.nsfinit, self.mxsfbc, self.icbcsf, self.ioutobs, self.ietsfr
             )
             + 30 * " "
             + "# nsfinit, mxsfbc, icbcsf, ioutobs, ietsfr\n"
@@ -428,7 +424,8 @@ class Mt3dSft(Package):
                 f.write(line)
 
         # Items 7, 8
-        # Loop through each stress period and assign source & sink concentrations to stream features
+        # Loop through each stress period and assign source & sink
+        # concentrations to stream features
         nper = self.parent.nper
         for kper in range(nper):
             if f.closed:
@@ -556,21 +553,18 @@ class Mt3dSft(Package):
             print(f"   IETSFR {ietsfr}")
             if ietsfr == 0:
                 print(
-                    "   Mass does not exit the model via simulated "
-                    "stream evaporation "
+                    "   Mass does not exit the model via simulated stream evaporation "
                 )
             else:
                 print(
-                    "   Mass exits the stream network via simulated "
-                    "stream evaporation "
+                    "   Mass exits the stream network via simulated stream evaporation "
                 )
 
         # Item 2 (ISFSOLV, WIMP, WUPS, CCLOSESF, MXITERSF, CRNTSF, IPRTXMD)
         line = f.readline()
         if model.verbose:
             print(
-                "   loading isfsolv, wimp, wups, cclosesf, mxitersf, "
-                "crntsf, iprtxmd..."
+                "   loading isfsolv, wimp, wups, cclosesf, mxitersf, crntsf, iprtxmd..."
             )
 
         vals = line.strip().split()

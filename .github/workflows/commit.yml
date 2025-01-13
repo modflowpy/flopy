@@ -70,6 +70,9 @@ jobs:
       - name: Check format
         run: ruff format . --check
 
+      - name: Check spelling
+        run: codespell
+
       - name: Check CITATION.cff
         run: |
           cffconvert --validate
@@ -121,7 +124,7 @@ jobs:
       
       - name: Upload coverage
         if: github.repository_owner == 'modflowpy' && (github.event_name == 'push' || github.event_name == 'pull_request')
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           files: autotest/coverage.xml
 
@@ -197,6 +200,6 @@ jobs:
 
       - name: Upload coverage
         if: github.repository_owner == 'modflowpy' && (github.event_name == 'push' || github.event_name == 'pull_request')
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           files: autotest/coverage.xml

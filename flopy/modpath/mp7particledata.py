@@ -190,7 +190,8 @@ class ParticleData:
                 partlocs = unstructured_to_structured(partlocs, dtype=dtype)
         else:
             raise ValueError(
-                f"{self.name}: partlocs must be a list or tuple with lists or tuples, or an ndarray"
+                f"{self.name}: partlocs must be a list or tuple with lists or "
+                "tuples, or an ndarray"
             )
 
         # localx
@@ -349,12 +350,7 @@ class ParticleData:
         d = np.recarray.copy(self.particledata.to_records(index=False))
         lnames = [name.lower() for name in d.dtype.names]
         # Add one to the kij and node indices
-        for idx in (
-            "k",
-            "i",
-            "j",
-            "node",
-        ):
+        for idx in ("k", "i", "j", "node"):
             if idx in lnames:
                 d[idx] += 1
         # Add one to the particle id if required
@@ -366,7 +362,7 @@ class ParticleData:
         for v in d:
             f.write(fmt.format(*v))
 
-    def to_coords(self, grid, localz=False) -> Iterator[tuple]:
+    def to_coords(self, grid, localz=False, global_xy=False) -> Iterator[tuple]:
         """
         Compute particle coordinates on the given grid.
 
@@ -401,9 +397,12 @@ class ParticleData:
                 span = mx - mn
                 return mn + span * p
 
-            def convert(row) -> tuple[float, float, float]:
+            def convert(row, global_xy=False) -> tuple[float, float, float]:
                 verts = grid.get_cell_vertices(row.i, row.j)
-                xs, ys = list(zip(*verts))
+                if global_xy:
+                    xs, ys = list(zip(*verts))
+                else:
+                    xs, ys = grid.get_local_coords(*np.array(verts).T)
                 return [
                     cvt_xy(row.localx, xs),
                     cvt_xy(row.localy, ys),
@@ -425,9 +424,12 @@ class ParticleData:
                 span = mx - mn
                 return mn + span * p
 
-            def convert(row) -> tuple[float, float, float]:
+            def convert(row, global_xy=False) -> tuple[float, float, float]:
                 verts = grid.get_cell_vertices(row.node)
-                xs, ys = list(zip(*verts))
+                if global_xy:
+                    xs, ys = list(zip(*verts))
+                else:
+                    xs, ys = grid.get_local_coords(*np.array(verts).T)
                 return [
                     cvt_xy(row.localx, xs),
                     cvt_xy(row.localy, ys),
@@ -435,9 +437,9 @@ class ParticleData:
                 ]
 
         for t in self.particledata.itertuples():
-            yield convert(t)
+            yield convert(t, global_xy=global_xy)
 
-    def to_prp(self, grid, localz=False) -> Iterator[tuple]:
+    def to_prp(self, grid, localz=False, global_xy=False) -> Iterator[tuple]:
         """
         Convert particle data to PRT particle release point (PRP)
         package data entries for the given grid. A model grid is
@@ -451,6 +453,8 @@ class ParticleData:
             The grid on which to locate particle release points.
         localz : bool, optional
             Whether to return local z coordinates.
+        global_xy : bool, optional
+            Whether to return global x and y coordinates, default is False.
 
         Returns
         -------
@@ -463,7 +467,7 @@ class ParticleData:
         for i, (t, c) in enumerate(
             zip(
                 self.particledata.itertuples(index=False),
-                self.to_coords(grid, localz),
+                self.to_coords(grid, localz, global_xy=global_xy),
             )
         ):
             row = [i]  # release point index (irpt)
@@ -771,33 +775,25 @@ class CellDataType:
         # item 5
         fmt = " {} {} {}\n"
         line = fmt.format(
-            self.columncelldivisions,
-            self.rowcelldivisions,
-            self.layercelldivisions,
+            self.columncelldivisions, self.rowcelldivisions, self.layercelldivisions
         )
         f.write(line)
 
 
 Extent = namedtuple(
     "Extent",
-    [
-        "minx",
-        "maxx",
-        "miny",
-        "maxy",
-        "minz",
-        "maxz",
-        "xspan",
-        "yspan",
-        "zspan",
-    ],
+    ["minx", "maxx", "miny", "maxy", "minz", "maxz", "xspan", "yspan", "zspan"],
 )
 
 
-def get_extent(grid, k=None, i=None, j=None, nn=None, localz=False) -> Extent:
+def get_extent(
+    grid, k=None, i=None, j=None, nn=None, localz=False, global_xy=False
+) -> Extent:
     # get cell coords and span in each dimension
     if not (k is None or i is None or j is None):
         verts = grid.get_cell_vertices(i, j)
+        if not global_xy and grid._has_ref_coordinates:
+            verts = list(zip(*grid.get_local_coords(*np.array(verts).T)))
         minz, maxz = (
             (0, 1)
             if localz
@@ -808,6 +804,8 @@ def get_extent(grid, k=None, i=None, j=None, nn=None, localz=False) -> Extent:
         )
     elif nn is not None:
         verts = grid.get_cell_vertices(nn)
+        if not global_xy and grid._has_ref_coordinates:
+            verts = list(zip(*grid.get_local_coords(*np.array(verts).T)))
         if grid.grid_type == "structured":
             k, i, j = grid.get_lrc([nn])[0]
             minz, maxz = (
@@ -826,7 +824,8 @@ def get_extent(grid, k=None, i=None, j=None, nn=None, localz=False) -> Extent:
             )
     else:
         raise ValueError(
-            "A cell (node) must be specified by indices (for structured grids) or node number (for vertex/unstructured)"
+            "A cell (node) must be specified by indices (for structured grids) "
+            "or node number (for vertex/unstructured)"
         )
     xs, ys = list(zip(*verts))
     minx, maxx = min(xs), max(xs)
@@ -982,7 +981,14 @@ def get_cell_release_points(subdivisiondata, cellid, extent) -> Iterator[tuple]:
 
 
 def get_release_points(
-    subdivisiondata, grid, k=None, i=None, j=None, nn=None, localz=False
+    subdivisiondata,
+    grid,
+    k=None,
+    i=None,
+    j=None,
+    nn=None,
+    localz=False,
+    global_xy=False,
 ) -> Iterator[tuple]:
     """
     Get MODPATH 7 release point tuples for the given cell.
@@ -990,11 +996,12 @@ def get_release_points(
 
     if nn is None and (k is None or i is None or j is None):
         raise ValueError(
-            "A cell (node) must be specified by indices (for structured grids) or node number (for vertex/unstructured)"
+            "A cell (node) must be specified by indices (for structured grids) "
+            "or node number (for vertex/unstructured)"
         )
 
     cellid = [k, i, j] if nn is None else [nn]
-    extent = get_extent(grid, k, i, j, nn, localz)
+    extent = get_extent(grid, k, i, j, nn, localz, global_xy=global_xy)
 
     if isinstance(subdivisiondata, FaceDataType):
         return get_face_release_points(subdivisiondata, cellid, extent)
@@ -1365,7 +1372,7 @@ class NodeParticleData:
                     line += "\n"
             f.write(line)
 
-    def to_coords(self, grid, localz=False) -> Iterator[tuple]:
+    def to_coords(self, grid, localz=False, global_xy=False) -> Iterator[tuple]:
         """
         Compute global particle coordinates on the given grid.
 
@@ -1375,6 +1382,8 @@ class NodeParticleData:
             The grid on which to locate particle release points.
         localz : bool, optional
             Whether to return local z coordinates.
+        global_xy : bool, optional
+            Whether to return global x, y coordinates. Default is False.
 
         Returns
         -------
@@ -1383,16 +1392,18 @@ class NodeParticleData:
 
         for sd in self.subdivisiondata:
             for nd in self.nodedata:
-                for rpt in get_release_points(sd, grid, nn=int(nd[0]), localz=localz):
+                for rpt in get_release_points(
+                    sd, grid, nn=int(nd[0]), localz=localz, global_xy=global_xy
+                ):
                     yield (*rpt[1:4],)
 
-    def to_prp(self, grid, localz=False) -> Iterator[tuple]:
+    def to_prp(self, grid, localz=False, global_xy=False) -> Iterator[tuple]:
         """
         Convert particle data to PRT particle release point (PRP)
         package data entries for the given grid. A model grid is
         required because MODPATH supports several ways to specify
         particle release locations by cell ID and subdivision info
-        or local coordinates, but PRT expects global coordinates.
+        or local coordinates, but PRT expects model coordinates, by default.
 
         Parameters
         ----------
@@ -1400,6 +1411,8 @@ class NodeParticleData:
             The grid on which to locate particle release points.
         localz : bool, optional
             Whether to return local z coordinates.
+        global_xy : bool, optional
+            Whether to return global x, y coordinates. Default is False.
 
         Returns
         -------
@@ -1410,7 +1423,9 @@ class NodeParticleData:
         for sd in self.subdivisiondata:
             for nd in self.nodedata:
                 for irpt, rpt in enumerate(
-                    get_release_points(sd, grid, nn=int(nd[0]), localz=localz)
+                    get_release_points(
+                        sd, grid, nn=int(nd[0]), localz=localz, global_xy=global_xy
+                    )
                 ):
                     row = [irpt]
                     if grid.grid_type == "structured":

@@ -239,14 +239,7 @@ class Mt3dAdv(Package):
         if (self.mixelm == 1) or (self.mixelm == 3):
             f_adv.write(
                 "%10.4e%10i%10i%10i%10i%10i\n"
-                % (
-                    self.dceps,
-                    self.nplane,
-                    self.npl,
-                    self.nph,
-                    self.npmin,
-                    self.npmax,
-                )
+                % (self.dceps, self.nplane, self.npl, self.nph, self.npmin, self.npmax)
             )
         if (self.mixelm == 2) or (self.mixelm == 3):
             f_adv.write("%10i%10i%10i\n" % (self.interp, self.nlsink, self.npsink))

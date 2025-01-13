@@ -90,15 +90,12 @@ def create_examples_rst():
             "flopy": {"title": "Other FloPy features", "files": []},
             "mf6": {"title": "MODFLOW 6 examples", "files": []},
             "mfusg": {"title": "MODFLOW USG examples", "files": []},
-            "mf2005": {
-                "title": "MODFLOW-2005/MODFLOW-NWT examples",
-                "files": [],
-            },
+            "mf2005": {"title": "MODFLOW-2005/MODFLOW-NWT examples", "files": []},
             "modpath": {"title": "MODPATH examples", "files": []},
             "mt3d": {"title": "MT3D and SEAWAT examples", "files": []},
             "2016gw-paper": {
                 "title": "Examples from Bakker and others (2016)",
-                "description": "Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Starn, J. J. and Fienen, M. N., 2016, Scripting MODFLOW Model Development Using Python and FloPy: Groundwater, v. 54, p. 733–739, https://doi.org/10.1111/gwat.12413.",
+                "description": "Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Starn, J. J. and Fienen, M. N., 2016, Scripting MODFLOW Model Development Using Python and FloPy: Groundwater, v. 54, p. 733–739, https://doi.org/10.1111/gwat.12413.",  # noqa: RUF001
                 "files": [],
             },
             "2023gw-paper": {

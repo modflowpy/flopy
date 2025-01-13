@@ -107,11 +107,7 @@ class ModflowMnw1(Package):
 
         # call base package constructor
         super().__init__(
-            model,
-            extension,
-            self._ftype(),
-            unitnumber,
-            filenames=filenames[0],
+            model, extension, self._ftype(), unitnumber, filenames=filenames[0]
         )
 
         self.url = "mnw.html"
@@ -119,23 +115,30 @@ class ModflowMnw1(Package):
         self._generate_heading()
         self.mxmnw = mxmnw  # -maximum number of multi-node wells to be simulated
         self.iwelpt = iwelpt  # -verbosity flag
-        self.nomoiter = nomoiter  # -integer indicating the number of iterations for which flow in MNW wells is calculated
-        self.kspref = kspref  # -alphanumeric key indicating which set of water levels are to be used as reference values for calculating drawdown
+        # integer indicating the number of iterations for which flow in MNW wells
+        # is calculated
+        self.nomoiter = nomoiter
+        # alphanumeric key indicating which set of water levels are to be used as
+        # reference values for calculating drawdown
+        self.kspref = kspref
         self.losstype = losstype  # -string indicating head loss type for each well
-        self.wel1_bynode_qsum = wel1_bynode_qsum  # -nested list containing file names, unit numbers, and ALLTIME flag for auxiliary output, e.g. [['test.ByNode',92,'ALLTIME']]
+        # nested list containing file names, unit numbers, and ALLTIME flag for
+        # auxiliary output, e.g. [['test.ByNode',92,'ALLTIME']]
+        self.wel1_bynode_qsum = wel1_bynode_qsum
         if dtype is not None:
             self.dtype = dtype
         else:
             self.dtype = self.get_default_dtype(structured=self.parent.structured)
         self.stress_period_data = MfList(self, stress_period_data)
 
-        self.mnwname = mnwname  # -string prefix name of file for outputting time series data from MNW1
+        # string prefix name of file for outputting time series data from MNW1
+        self.mnwname = mnwname
 
         # -input format checks:
         lossTypes = ["skin", "linear", "nonlinear"]
-        assert (
-            self.losstype.lower() in lossTypes
-        ), f"LOSSTYPE ({self.losstype}) must be one of the following: {lossTypes}"
+        assert self.losstype.lower() in lossTypes, (
+            f"LOSSTYPE ({self.losstype}) must be one of the following: {lossTypes}"
+        )
         self.parent.add_package(self)
 
     @staticmethod
@@ -180,9 +183,8 @@ class ModflowMnw1(Package):
         structured = model.structured
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
-            nper = (
-                1 if nper == 0 else nper
-            )  # otherwise iterations from 0, nper won't run
+            nper = 1 if nper == 0 else nper
+            # otherwise iterations from 0, nper won't run
 
         openfile = not hasattr(f, "read")
         if openfile:
@@ -270,13 +272,7 @@ class ModflowMnw1(Package):
         # -Section 1 - MXMNW ipakcb IWELPT NOMOITER REF:kspref
         f.write(
             "%10i%10i%10i%10i REF = %s\n"
-            % (
-                self.mxmnw,
-                self.ipakcb,
-                self.iwelpt,
-                self.nomoiter,
-                self.kspref,
-            )
+            % (self.mxmnw, self.ipakcb, self.iwelpt, self.nomoiter, self.kspref)
         )
 
         # -Section 2 - LOSSTYPE {PLossMNW}
@@ -310,7 +306,8 @@ class ModflowMnw1(Package):
                         )
 
         spd = self.stress_period_data.drop("mnw_no")
-        # force write_transient to keep the list arrays internal because MNW1 doesn't allow open/close
+        # force write_transient to keep the list arrays internal because MNW1
+        # doesn't allow open/close
         spd.write_transient(f, forceInternal=True)
 
         # -Un-numbered section PREFIX:MNWNAME
@@ -439,11 +436,11 @@ def _parse_5(f, itmp, qfrcmn_default=None, qfrcmx_default=None, qcut_default="")
         qfrcmn = 0.0
         qfrcmx = 0.0
         if "qcut" in linetxt:
-            txt = [t for t in line if "qcut" in t][0]
+            txt = next(t for t in line if "qcut" in t)
             qcut = txt
             line.remove(txt)
         elif "%cut" in linetxt:
-            txt = [t for t in line if "%cut" in t][0]
+            txt = next(t for t in line if "%cut" in t)
             qcut = txt
             line.remove(txt)
         if "qcut" in linetxt or "%cut" in linetxt:

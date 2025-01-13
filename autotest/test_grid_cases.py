@@ -10,7 +10,7 @@ from flopy.utils.voronoi import VoronoiGrid
 
 class GridCases:
     @staticmethod
-    def structured_small():
+    def structured_small(xoff=0.0, yoff=0.0):
         nlay, nrow, ncol = 3, 2, 3
         delc = 1.0 * np.ones(nrow, dtype=float)
         delr = 1.0 * np.ones(ncol, dtype=float)
@@ -29,6 +29,8 @@ class GridCases:
             top=top,
             botm=botm,
             idomain=idomain,
+            xoff=xoff,
+            yoff=yoff,
         )
 
     @staticmethod
@@ -38,18 +40,8 @@ class GridCases:
         laycbd = np.array([1, 2, 0], dtype=int)
         ncb = np.count_nonzero(laycbd)
         dx = dy = 150
-        delc = np.array(
-            [
-                dy,
-            ]
-            * nrow
-        )
-        delr = np.array(
-            [
-                dx,
-            ]
-            * ncol
-        )
+        delc = np.array([dy] * nrow)
+        delr = np.array([dx] * ncol)
         top = np.ones((15, 15))
         botm = np.ones((nlay + ncb, nrow, ncol))
         elevations = np.array([-10, -20, -40, -50, -70])[:, np.newaxis]
@@ -139,20 +131,8 @@ class GridCases:
             [4, 5, 8, 7],
             [6, 7, 10, 9],
         ]
-        xcenters = [
-            0.5,
-            1.5,
-            0.5,
-            1.5,
-            0.5,
-        ]
-        ycenters = [
-            2.5,
-            2.5,
-            1.5,
-            1.5,
-            0.5,
-        ]
+        xcenters = [0.5, 1.5, 0.5, 1.5, 0.5]
+        ycenters = [2.5, 2.5, 1.5, 1.5, 0.5]
         idomain = np.ones((nlay, 5), dtype=int)
         top = np.ones((nlay, 5), dtype=float)
         top[0, :] = 10.0
@@ -287,7 +267,7 @@ class GridCases:
         radius = 100.0
         x = radius * np.cos(theta)
         y = radius * np.sin(theta)
-        poly = [(x, y) for x, y in zip(x, y)]
+        poly = list(zip(x, y))
         max_area = 50
         angle = 30
 
@@ -311,13 +291,13 @@ class GridCases:
         radius = 100.0
         x = radius * np.cos(theta)
         y = radius * np.sin(theta)
-        circle_poly = [(x, y) for x, y in zip(x, y)]
+        circle_poly = list(zip(x, y))
 
         theta = np.arange(0.0, 2 * np.pi, 0.2)
         radius = 30.0
         x = radius * np.cos(theta) + 25.0
         y = radius * np.sin(theta) + 25.0
-        inner_circle_poly = [(x, y) for x, y in zip(x, y)]
+        inner_circle_poly = list(zip(x, y))
 
         polys = [circle_poly, inner_circle_poly]
         max_area = 100
@@ -377,7 +357,7 @@ class GridCases:
             radius = 10.0
             x = radius * np.cos(theta) + 50.0
             y = radius * np.sin(theta) + 70.0
-            circle_poly0 = [(x, y) for x, y in zip(x, y)]
+            circle_poly0 = list(zip(x, y))
             tri.add_polygon(circle_poly0)
             tri.add_hole((50, 70))
 
@@ -386,7 +366,7 @@ class GridCases:
             radius = 10.0
             x = radius * np.cos(theta) + 70.0
             y = radius * np.sin(theta) + 20.0
-            circle_poly1 = [(x, y) for x, y in zip(x, y)]
+            circle_poly1 = list(zip(x, y))
             tri.add_polygon(circle_poly1)
 
             # add line through domain to force conforming cells

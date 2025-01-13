@@ -137,20 +137,14 @@ class Modpath7(BaseModel):
                 )
             else:
                 if dis.package_name.lower() == "dis":
-                    nlay, nrow, ncol = (
-                        dis.nlay.array,
-                        dis.nrow.array,
-                        dis.ncol.array,
-                    )
+                    nlay, nrow, ncol = (dis.nlay.array, dis.nrow.array, dis.ncol.array)
                     shape = (nlay, nrow, ncol)
                 elif dis.package_name.lower() == "disv":
                     nlay, ncpl = dis.nlay.array, dis.ncpl.array
                     shape = (nlay, ncpl)
                 elif dis.package_name.lower() == "disu":
                     nodes = dis.nodes.array
-                    shape = tuple(
-                        nodes,
-                    )
+                    shape = tuple(nodes)
                 else:
                     raise TypeError(
                         "DIS, DISV, or DISU packages must be "
@@ -215,8 +209,7 @@ class Modpath7(BaseModel):
                 shape = (nlay, nrow, ncol)
             if dis is None:
                 raise Exception(
-                    "DIS, or DISU packages must be "
-                    "included in the passed MODFLOW model"
+                    "DIS, or DISU packages must be included in the passed MODFLOW model"
                 )
             elif dis is not None and shape is None:
                 nlay, nodes = dis.nlay, dis.nodes
@@ -309,8 +302,7 @@ class Modpath7(BaseModel):
             )
         if self.dis_file is None and self.grbdis_file is None:
             raise ValueError(
-                "the dis file in the MODFLOW model or passed "
-                "to __init__ cannot be None"
+                "the dis file in the MODFLOW model or passed to __init__ cannot be None"
             )
 
         # set ib and ibound
@@ -372,7 +364,7 @@ class Modpath7(BaseModel):
             f.write(f"DIS        {self.dis_file}\n")
         if self.grbdis_file is not None:
             f.write(
-                f"{self.grbtag:10s} {os.path.join(self._flowmodel_ws, self.grbdis_file)}\n"
+                f"{self.grbtag:10s} {os.path.join(self._flowmodel_ws, self.grbdis_file)}\n"  # noqa
             )
         if self.tdis_file is not None:
             f.write(f"TDIS       {os.path.join(self._flowmodel_ws, self.tdis_file)}\n")

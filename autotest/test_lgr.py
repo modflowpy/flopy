@@ -84,7 +84,9 @@ def singleModel(
     # Variables for the BAS package
     ibound = np.ones((nlay, nrow, ncol), dtype=np.int32)
     if iChild > 0:
-        iBndBnd = 59  # code for child cell to be linked to parent; value assigned to ibflg in the LGR-data
+        # code for child cell to be linked to parent;
+        # value assigned to ibflg in the LGR-data
+        iBndBnd = 59
     else:
         iBndBnd = -1
     ibound[:, 0, :] = iBndBnd

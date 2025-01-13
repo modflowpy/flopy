@@ -46,8 +46,9 @@ iprn = -1
 
 def resolve_exe(exe_name: Union[str, os.PathLike], forgive: bool = False) -> str:
     """
-    Resolves the absolute path of the executable, raising FileNotFoundError if the executable
-    cannot be found (set forgive to True to return None and warn instead of raising an error).
+    Resolves the absolute path of the executable, raising FileNotFoundError
+    if the executable cannot be found (set forgive to True to return None
+    and warn instead of raising an error).
 
     Parameters
     ----------
@@ -63,31 +64,31 @@ def resolve_exe(exe_name: Union[str, os.PathLike], forgive: bool = False) -> str
         str: absolute path to the executable
     """
 
-    def _resolve(exe_name):
-        exe = which(exe_name)
-        if exe is not None:
-            # if which() returned a relative path, resolve it
-            exe = which(str(Path(exe).resolve()))
-        else:
-            if exe_name.lower().endswith(".exe"):
-                # try removing .exe suffix
-                exe = which(exe_name[:-4])
-            if exe is not None:
-                # in case which() returned a relative path, resolve it
-                exe = which(str(Path(exe).resolve()))
-            else:
-                # try tilde-expanded abspath
-                exe = which(Path(exe_name).expanduser().absolute())
-            if exe is None and exe_name.lower().endswith(".exe"):
-                # try tilde-expanded abspath without .exe suffix
-                exe = which(Path(exe_name[:-4]).expanduser().absolute())
-        return exe
+    def _resolve(exe_name, checked=set()):
+        # Prevent infinite recursion by checking if exe_name has been checked
+        if exe_name in checked:
+            return None
+        checked.add(exe_name)
 
-    name = str(exe_name)
-    exe_path = _resolve(name)
-    if exe_path is None and on_windows and Path(name).suffix == "":
-        # try adding .exe suffix on windows (for portability from other OS)
-        exe_path = _resolve(f"{name}.exe")
+        # exe_name is found (not None), ensure absolute path is returned
+        if exe := which(str(exe_name)):
+            return which(str(Path(exe).resolve()))
+
+        # exe_name is relative path
+        if not Path(exe_name).is_absolute() and (
+            exe := which(str(Path(exe_name).expanduser().resolve()), mode=0)
+        ):
+            # expanduser() in case of ~ in path
+            # mode=0 effectively allows which() to find exe without suffix in windows
+            return exe
+
+        # try adding/removing .exe suffix
+        if exe_name.lower().endswith(".exe"):
+            return _resolve(exe_name[:-4], checked)
+        elif on_windows and "." not in Path(exe_name).stem:
+            return _resolve(f"{exe_name}.exe", checked)
+
+    exe_path = _resolve(exe_name)
 
     # raise if we are unforgiving, otherwise return None
     if exe_path is None:
@@ -102,7 +103,7 @@ def resolve_exe(exe_name: Union[str, os.PathLike], forgive: bool = False) -> str
             f"The program {exe_name} does not exist or is not executable."
         )
 
-    return exe_path
+    return str(exe_path)
 
 
 # external exceptions for users
@@ -310,10 +311,7 @@ class ModelInterface:
         for p in self.packagelist:
             if chk.package_check_levels.get(p.name[0].lower(), 0) <= level:
                 results[p.name[0]] = p.check(
-                    f=None,
-                    verbose=False,
-                    level=level - 1,
-                    checktype=chk.__class__,
+                    f=None, verbose=False, level=level - 1, checktype=chk.__class__
                 )
 
         # model level checks
@@ -338,9 +336,8 @@ class ModelInterface:
 
         # add package check results to model level check summary
         for r in results.values():
-            if (
-                r is not None and r.summary_array is not None
-            ):  # currently SFR doesn't have one
+            if r is not None and r.summary_array is not None:
+                # currently SFR doesn't have one
                 chk.summary_array = np.append(chk.summary_array, r.summary_array).view(
                     np.recarray
                 )
@@ -433,10 +430,7 @@ class BaseModel(ModelInterface):
         self._start_datetime = kwargs.pop("start_datetime", "1-1-1970")
 
         if kwargs:
-            warn(
-                f"unhandled keywords: {kwargs}",
-                category=UserWarning,
-            )
+            warn(f"unhandled keywords: {kwargs}", category=UserWarning)
 
         # build model discretization objects
         self._modelgrid = Grid(
@@ -1267,7 +1261,8 @@ class BaseModel(ModelInterface):
         if not os.path.exists(new_pth):
             try:
                 print(
-                    f"\ncreating model workspace...\n   {flopy_io.relpath_safe(new_pth)}"
+                    "\ncreating model workspace...\n   "
+                    + flopy_io.relpath_safe(new_pth)
                 )
                 os.makedirs(new_pth)
             except:
@@ -1539,9 +1534,9 @@ class BaseModel(ModelInterface):
                 if p.unit_number[i] != 0:
                     if p.unit_number[i] in package_units.values():
                         duplicate_units[p.name[i]] = p.unit_number[i]
-                        otherpackage = [
+                        otherpackage = next(
                             k for k, v in package_units.items() if v == p.unit_number[i]
-                        ][0]
+                        )
                         duplicate_units[otherpackage] = p.unit_number[i]
         if len(duplicate_units) > 0:
             for k, v in duplicate_units.items():
@@ -1691,7 +1686,8 @@ def run_model(
     exe_path = resolve_exe(exe_name)
     if not silent:
         print(
-            f"FloPy is using the following executable to run the model: {flopy_io.relpath_safe(exe_path, model_ws)}"
+            "FloPy is using the following executable to run the model: "
+            + flopy_io.relpath_safe(exe_path, model_ws)
         )
 
     # make sure namefile exists

@@ -53,6 +53,7 @@ jobs:
         run: |
           mkdir -p .benchmarks
           pytest -v --durations=0 --benchmark-only --benchmark-json .benchmarks/${{ matrix.os }}_python${{ matrix.python-version }}.json --keep-failed=.failed
+          ls .benchmarks
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -67,7 +68,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: benchmarks-${{ matrix.os }}-${{ matrix.python-version }}-${{ github.run_id }}
-          path: autotest/.benchmarks/**/*.json
+          path: autotest/.benchmarks/*.json
+          include-hidden-files: true
 
   post_benchmark:
     needs:

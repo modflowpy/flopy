@@ -223,10 +223,7 @@ def _add_output_nc_variable(
     try:
         dim_tuple = ("time",) + nc.dimension_names
         var = nc.create_variable(
-            var_name,
-            attribs,
-            precision_str=precision_str,
-            dimensions=dim_tuple,
+            var_name, attribs, precision_str=precision_str, dimensions=dim_tuple
         )
     except Exception as e:
         estr = f"error creating variable {var_name}:\n{e!s}"
@@ -301,7 +298,8 @@ def output_helper(
     Parameters
     ----------
     f : str or PathLike or NetCdf or dict
-        filepath to write output to (must have .shp or .nc extension), NetCDF object, or dictionary
+        filepath to write output to (must have .shp or .nc extension),
+        NetCDF object, or dictionary
     ml : flopy.mbase.ModelInterface derived type
     oudic : dict
         output_filename,flopy datafile/cellbudgetfile instance
@@ -398,7 +396,7 @@ def output_helper(
             logger.warn(msg)
         elif verbose:
             print(msg)
-    times = [t for t in common_times[::stride]]
+    times = list(common_times[::stride])
     if (isinstance(f, str) or isinstance(f, Path)) and Path(f).suffix.lower() == ".nc":
         f = NetCdf(f, ml, time_values=times, logger=logger, forgive=forgive, **kwargs)
     elif isinstance(f, NetCdf):
@@ -574,7 +572,8 @@ def model_export(f: Union[str, os.PathLike, NetCdf, dict], ml, fmt=None, **kwarg
     Parameters
     ----------
     f : str or PathLike or NetCdf or dict
-        file path (".nc" for netcdf or ".shp" for shapefile) or NetCDF object or dictionary
+        file path (".nc" for netcdf or ".shp" for shapefile),
+        NetCDF object, or dictionary
     ml : flopy.modflow.mbase.ModelInterface object
         flopy model object
     fmt : str
@@ -661,7 +660,8 @@ def package_export(
     Parameters
     ----------
     f : str or PathLike or NetCdf or dict
-        output file path (extension .shp for shapefile or .nc for netcdf) or NetCDF object or dictionary
+        output file path (extension .shp for shapefile or .nc for netcdf),
+        NetCDF object, or dictionary
     pak : flopy.pakbase.Package object
         package to export
     fmt : str
@@ -784,15 +784,14 @@ def generic_array_export(
     """
     if (isinstance(f, str) or isinstance(f, Path)) and Path(f).suffix.lower() == ".nc":
         assert "model" in kwargs.keys(), (
-            "creating a new netCDF using generic_array_helper requires a "
-            "'model' kwarg"
+            "creating a new netCDF using generic_array_helper requires a 'model' kwarg"
         )
         assert isinstance(kwargs["model"], BaseModel)
         f = NetCdf(f, kwargs.pop("model"), **kwargs)
 
-    assert array.ndim == len(
-        dimensions
-    ), "generic_array_helper() array.ndim != dimensions"
+    assert array.ndim == len(dimensions), (
+        "generic_array_helper() array.ndim != dimensions"
+    )
     coords_dims = {
         "time": "time",
         "layer": "layer",
@@ -816,10 +815,7 @@ def generic_array_export(
         raise Exception(f"error processing {var_name}: all NaNs")
     try:
         var = f.create_variable(
-            var_name,
-            attribs,
-            precision_str=precision_str,
-            dimensions=dimensions,
+            var_name, attribs, precision_str=precision_str, dimensions=dimensions
         )
     except Exception as e:
         estr = f"error creating variable {var_name}:\n{e!s}"
@@ -916,12 +912,7 @@ def mflist_export(f: Union[str, os.PathLike, NetCdf], mfl, **kwargs):
             prjfile = kwargs.get("prjfile", None)
             polys = np.array([Polygon(v) for v in verts])
             recarray2shp(
-                ra,
-                geoms=polys,
-                shpname=f,
-                mg=modelgrid,
-                crs=crs,
-                prjfile=prjfile,
+                ra, geoms=polys, shpname=f, mg=modelgrid, crs=crs, prjfile=prjfile
             )
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
@@ -962,10 +953,7 @@ def mflist_export(f: Union[str, os.PathLike, NetCdf], mfl, **kwargs):
             try:
                 dim_tuple = ("time",) + f.dimension_names
                 var = f.create_variable(
-                    var_name,
-                    attribs,
-                    precision_str=precision_str,
-                    dimensions=dim_tuple,
+                    var_name, attribs, precision_str=precision_str, dimensions=dim_tuple
                 )
             except Exception as e:
                 estr = f"error creating variable {var_name}:\n{e!s}"
@@ -1077,10 +1065,7 @@ def transient2d_export(f: Union[str, os.PathLike], t2d, fmt=None, **kwargs):
         try:
             dim_tuple = ("time",) + f.dimension_names
             var = f.create_variable(
-                var_name,
-                attribs,
-                precision_str=precision_str,
-                dimensions=dim_tuple,
+                var_name, attribs, precision_str=precision_str, dimensions=dim_tuple
             )
         except Exception as e:
             estr = f"error creating variable {var_name}:\n{e!s}"
@@ -1109,7 +1094,7 @@ def transient2d_export(f: Union[str, os.PathLike], t2d, fmt=None, **kwargs):
             if hasattr(t2d, "transient_2ds"):
                 d = t2d.transient_2ds
             else:
-                d = {ix: i for ix, i in enumerate(t2d.array)}
+                d = dict(enumerate(t2d.array))
         else:
             raise AssertionError("No data available to export")
 
@@ -1149,9 +1134,9 @@ def array3d_export(f: Union[str, os.PathLike], u3d, fmt=None, **kwargs):
 
     """
 
-    assert isinstance(
-        u3d, DataInterface
-    ), "array3d_export only helps instances that support DataInterface"
+    assert isinstance(u3d, DataInterface), (
+        "array3d_export only helps instances that support DataInterface"
+    )
 
     min_valid = kwargs.get("min_valid", -1.0e9)
     max_valid = kwargs.get("max_valid", 1.0e9)
@@ -1305,9 +1290,9 @@ def array2d_export(f: Union[str, os.PathLike], u2d, fmt=None, verbose=False, **k
         if fmt is set to 'vtk', parameters of Vtk initializer
 
     """
-    assert isinstance(
-        u2d, DataInterface
-    ), "util2d_helper only helps instances that support DataInterface"
+    assert isinstance(u2d, DataInterface), (
+        "util2d_helper only helps instances that support DataInterface"
+    )
     assert len(u2d.array.shape) == 2, "util2d_helper only supports 2D arrays"
 
     min_valid = kwargs.get("min_valid", -1.0e9)
@@ -1585,11 +1570,7 @@ def export_array(
         except ImportError:
             crs = None
         write_grid_shapefile(
-            filename,
-            modelgrid,
-            array_dict={fieldname: a},
-            nan_val=nodata,
-            crs=crs,
+            filename, modelgrid, array_dict={fieldname: a}, nan_val=nodata, crs=crs
         )
 
 

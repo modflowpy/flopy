@@ -14,15 +14,37 @@ type keyword
 reader urword
 optional true
 longname activate zero-order decay
-description is a text keyword to indicate that zero-order decay will occur.  Use of this keyword requires that DECAY and DECAY\_SORBED (if sorption is active) are specified in the GRIDDATA block.
+description is a text keyword to indicate that zero-order decay will occur.  Use of this keyword requires that DECAY is specified in the GRIDDATA block.
+
+block options
+name density_water
+type double precision
+reader urword
+optional true
+longname density of water
+description density of water used by calculations related to heat storage and conduction.  This value is set to 1,000 kg/m3 if no overriding value is specified.  A user-specified value should be provided for models that use units other than kilograms and meters or if it is necessary to use a value other than the default.
+default_value 1000.0
+mf6internal rhow
+
+block options
+name heat_capacity_water
+type double precision
+reader urword
+optional true
+longname heat capacity of water
+description heat capacity of water used by calculations related to heat storage and conduction.  This value is set to 4,184 J/kg/C if no overriding value is specified.  A user-specified value should be provided for models that use units other than kilograms, joules, and degrees Celsius or it is necessary to use a value other than the default.
+default_value 4184.0
+mf6internal cpw
 
 block options
 name latent_heat_vaporization
-type keyword
+type double precision
 reader urword
 optional true
-longname activate cooling associated with evaporation
-description is a text keyword to indicate that cooling associated with evaporation will occur.  Use of this keyword requires that LATHEATVAP are specified in the GRIDDATA block.  While the EST package does not simulate evaporation, multiple other packages in a GWE simulation may.  For example, evaporation may occur from the surface of streams or lakes.  Owing to the energy consumed by the change in phase, the latent heat of vaporization is required.
+longname latent heat of vaporization
+description latent heat of vaporization is the amount of energy that is required to convert a given quantity of liquid into a gas and is associated with evaporative cooling.  While the EST package does not simulate evaporation, multiple other packages in a GWE simulation may.  To avoid having to specify the latent heat of vaporization in multiple packages, it is specified in a single location and accessed wherever it is needed.  For example, evaporation may occur from the surface of streams or lakes and the energy consumed by the change in phase would be needed in both the SFE and LKE packages.  This value is set to 2,453,500 J/kg if no overriding value is specified.  A user-specified value should be provided for models that use units other than joules and kilograms or if it is necessary to use a value other than the default.
+default_value 2453500.0
+mf6internal latheatvap
 
 # --------------------- gwe est griddata ---------------------
 
@@ -46,61 +68,21 @@ longname aqueous phase decay rate coefficient
 description is the rate coefficient for zero-order decay for the aqueous phase of the mobile domain.  A negative value indicates heat (energy) production.  The dimensions of decay for zero-order decay is energy per length cubed per time.  Zero-order decay will have no effect on simulation results unless zero-order decay is specified in the options block.
 
 block griddata
-name cps
+name heat_capacity_solid
 type double precision
 shape (nodes)
 reader readarray
 layered true
 longname heat capacity of the aquifer material
 description is the mass-based heat capacity of dry solids (aquifer material). For example, units of J/kg/C may be used (or equivalent).
+mf6internal cps
 
 block griddata
-name rhos
+name density_solid
 type double precision
 shape (nodes)
 reader readarray
 layered true
 longname density of aquifer material
 description is a user-specified value of the density of aquifer material not considering the voids. Value will remain fixed for the entire simulation.  For example, if working in SI units, values may be entered as kilograms per cubic meter. 
-
-# --------------------- gwe est packagedata ---------------------
-
-block packagedata
-name packagedata
-type recarray cpw rhow latheatvap
-shape 
-reader urword
-longname
-description
-
-block packagedata
-name cpw
-type double precision
-shape
-tagged false
-in_record true
-reader urword
-longname heat capacity of water
-description is the mass-based heat capacity of the simulated fluid. For example, units of J/kg/C may be used (or equivalent). 
-
-block packagedata
-name rhow
-type double precision
-shape
-tagged false
-in_record true
-reader urword
-longname density of water
-description is a user-specified value of the density of water. Value will remain fixed for the entire simulation.  For example, if working in SI units, values may be entered as kilograms per cubic meter. 
-
-
-block packagedata
-name latheatvap
-type double precision
-shape
-tagged false
-in_record true
-reader urword
-longname latent heat of vaporization
-description is the user-specified value for the latent heat of vaporization. For example, if working in SI units, values may be entered as kJ/kg.
-
+mf6internal rhos

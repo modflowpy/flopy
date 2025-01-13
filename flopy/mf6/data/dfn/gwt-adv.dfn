@@ -9,3 +9,10 @@ optional true
 longname advective scheme
 description scheme used to solve the advection term.  Can be upstream, central, or TVD.  If not specified, upstream weighting is the default weighting scheme.
 
+block options
+name ats_percel
+type double precision
+reader urword
+optional true
+longname fractional cell distance used for time step calculation
+description fractional cell distance submitted by the ADV Package to the adaptive time stepping (ATS) package.  If ATS\_PERCEL is specified and the ATS Package is active, a time step calculation will be made for each cell based on flow through the cell and cell properties.  The largest time step will be calculated such that the advective fractional cell distance (ATS\_PERCEL) is not exceeded for any active cell in the grid.  This time-step constraint will be submitted to the ATS Package, perhaps with constraints submitted by other packages, in the calculation of the time step.  ATS\_PERCEL must be greater than zero.  If a value of zero is specified for ATS\_PERCEL the program will automatically reset it to an internal no data value to indicate that time steps should not be subject to this constraint.

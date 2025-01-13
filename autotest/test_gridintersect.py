@@ -427,10 +427,7 @@ def test_rect_grid_multilinestring_in_one_cell():
     ix = GridIntersect(gr, method="structured")
     result = ix.intersect(
         MultiLineString(
-            [
-                LineString([(1.0, 1), (9.0, 1.0)]),
-                LineString([(1.0, 9.0), (9.0, 9.0)]),
-            ]
+            [LineString([(1.0, 1), (9.0, 1.0)]), LineString([(1.0, 9.0), (9.0, 9.0)])]
         )
     )
     assert len(result) == 1
@@ -555,10 +552,7 @@ def test_rect_grid_multilinestring_in_one_cell_shapely(rtree):
     ix = GridIntersect(gr, method="vertex", rtree=rtree)
     result = ix.intersect(
         MultiLineString(
-            [
-                LineString([(1.0, 1), (9.0, 1.0)]),
-                LineString([(1.0, 9.0), (9.0, 9.0)]),
-            ]
+            [LineString([(1.0, 1), (9.0, 1.0)]), LineString([(1.0, 9.0), (9.0, 9.0)])]
         )
     )
     assert len(result) == 1
@@ -708,10 +702,7 @@ def test_tri_grid_multilinestring_in_one_cell(rtree):
     ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect(
         MultiLineString(
-            [
-                LineString([(1.0, 1), (9.0, 1.0)]),
-                LineString([(2.0, 2.0), (9.0, 2.0)]),
-            ]
+            [LineString([(1.0, 1), (9.0, 1.0)]), LineString([(2.0, 2.0), (9.0, 2.0)])]
         )
     )
     assert len(result) == 1
@@ -831,14 +822,7 @@ def test_rect_grid_polygon_running_along_boundary():
     ix = GridIntersect(gr, method="structured")
     result = ix.intersect(
         Polygon(
-            [
-                (5.0, 5.0),
-                (5.0, 10.0),
-                (9.0, 10.0),
-                (9.0, 15.0),
-                (1.0, 15.0),
-                (1.0, 5.0),
-            ]
+            [(5.0, 5.0), (5.0, 10.0), (9.0, 10.0), (9.0, 15.0), (1.0, 15.0), (1.0, 5.0)]
         )
     )
 
@@ -1060,14 +1044,7 @@ def test_rect_grid_polygon_running_along_boundary_shapely():
     ix = GridIntersect(gr, method="vertex")
     result = ix.intersect(
         Polygon(
-            [
-                (5.0, 5.0),
-                (5.0, 10.0),
-                (9.0, 10.0),
-                (9.0, 15.0),
-                (1.0, 15.0),
-                (1.0, 5.0),
-            ]
+            [(5.0, 5.0), (5.0, 10.0), (9.0, 10.0), (9.0, 15.0), (1.0, 15.0), (1.0, 5.0)]
         )
     )
 
@@ -1128,14 +1105,7 @@ def test_rect_grid_polygon_in_edge_in_cell(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, method="vertex", rtree=rtree)
     p = Polygon(
-        [
-            (0.0, 5.0),
-            (3.0, 0.0),
-            (7.0, 0.0),
-            (10.0, 5.0),
-            (10.0, -1.0),
-            (0.0, -1.0),
-        ]
+        [(0.0, 5.0), (3.0, 0.0), (7.0, 0.0), (10.0, 5.0), (10.0, -1.0), (0.0, -1.0)]
     )
     result = ix.intersect(p)
     assert len(result) == 1

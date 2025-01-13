@@ -114,7 +114,7 @@ def test_cellbudgetfile_build_index_compact(example_data_path):
         52,
     )
     assert list_recorddict[-1] == (
-        (1, 1097, b"FLOW LOWER FACE ", 20, 40, -3, 1, 1.0, 1.0, 1097.0, b"", b"", b"", b""),
+        (1, 1097, b"FLOW LOWER FACE ", 20, 40, -3, 1, 1.0, 1.0, 1097.0, b"", b"", b"", b""),  # noqa
         42648784,
     )
     # fmt: on
@@ -209,7 +209,7 @@ def test_cellbudgetfile_build_index_mf6(example_data_path):
     assert list_recorddict[-1] == (
         (120, 4, b"             EVT", 10, 15, -3, 6,
          0.08333333333333333, 10.000000000000002, 30.99999999999983,
-         b"GWF_1           ", b"GWF_1           ", b"GWF_1           ", b"EVT             "),
+         b"GWF_1           ", b"GWF_1           ", b"GWF_1           ", b"EVT             "),  # noqa
         13414144,
     )
     # fmt: on
@@ -350,13 +350,7 @@ def test_budgetfile_detect_precision_single(path):
 
 @pytest.mark.parametrize(
     "path",
-    [
-        _example_data_path
-        / "mf6"
-        / "test006_gwf3"
-        / "expected_output"
-        / "flow_adj.cbc",
-    ],
+    [_example_data_path / "mf6" / "test006_gwf3" / "expected_output" / "flow_adj.cbc"],
 )
 def test_budgetfile_detect_precision_double(path):
     file = CellBudgetFile(path, precision="auto")
@@ -515,11 +509,10 @@ def test_cellbudgetfile_readrecord(example_data_path):
         for idx, kk in enumerate(kstpkper):
             t0 = v.get_data(kstpkper=kk, text=record.strip())[0]
             t1 = v.get_data(idx=indices[idx], text=record)[0]
-            assert np.array_equal(
-                t0, t1
-            ), "binary budget item {0} read using kstpkper != binary budget item {0} read using idx".format(
-                record
-            )
+            assert np.array_equal(t0, t1), (
+                "binary budget item {0} read using kstpkper != "
+                "binary budget item {0} read using idx"
+            ).format(record)
 
     # idx can be either an int or a list of ints
     s9 = v.get_data(idx=9)
@@ -577,11 +570,10 @@ def test_cellbudgetfile_readrecord_waux(example_data_path):
         for idx, kk in enumerate(kstpkper):
             t0 = v.get_data(kstpkper=kk, text=record.strip())[0]
             t1 = v.get_data(idx=indices[idx], text=record)[0]
-            assert np.array_equal(
-                t0, t1
-            ), "binary budget item {0} read using kstpkper != binary budget item {0} read using idx".format(
-                record
-            )
+            assert np.array_equal(t0, t1), (
+                "binary budget item {0} read using kstpkper != "
+                "binary budget item {0} read using idx"
+            ).format(record)
     v.close()
 
 

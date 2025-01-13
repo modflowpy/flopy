@@ -173,7 +173,7 @@ jobs:
 
       # actions/download-artifact won't look at previous workflow runs but we need to in order to get changelog
       - name: Download artifacts
-        uses: dawidd6/action-download-artifact@v6
+        uses: dawidd6/action-download-artifact@v7
 
       - name: Draft release
         env:

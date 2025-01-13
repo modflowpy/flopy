@@ -5,35 +5,37 @@ This document describes how to set up a FloPy development environment, run the e
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-- [Requirements & installation](#requirements--installation)
-  - [Git](#git)
-  - [Python](#python)
-    - [Python IDEs](#python-ides)
-      - [Visual Studio Code](#visual-studio-code)
-      - [PyCharm](#pycharm)
-  - [MODFLOW executables](#modflow-executables)
-    - [Scripted installation](#scripted-installation)
-    - [Manually installing executables](#manually-installing-executables)
-      - [Linux](#linux)
-      - [Mac](#mac)
-  - [Updating FloPy packages](#updating-flopy-packages)
-- [Examples](#examples)
-  - [Developing new examples](#developing-new-examples)
-- [Tests](#tests)
-  - [Configuring tests](#configuring-tests)
-  - [Running tests](#running-tests)
-    - [Selecting tests with markers](#selecting-tests-with-markers)
-  - [Writing tests](#writing-tests)
-  - [Debugging tests](#debugging-tests)
-    - [Debugging tests in VS Code](#debugging-tests-in-vs-code)
-  - [Performance testing](#performance-testing)
-    - [Benchmarking](#benchmarking)
-    - [Profiling](#profiling)
-  - [Snapshot testing](#snapshot-testing)
-- [Branching model](#branching-model)
-- [Deprecation policy](#deprecation-policy)
-- [Miscellaneous](#miscellaneous)
-  - [Locating the root](#locating-the-root)
+- [Developing FloPy](#developing-flopy)
+  - [Requirements \& installation](#requirements--installation)
+    - [Git](#git)
+    - [Python](#python)
+      - [Python IDEs](#python-ides)
+        - [Visual Studio Code](#visual-studio-code)
+        - [PyCharm](#pycharm)
+    - [MODFLOW executables](#modflow-executables)
+      - [Scripted installation](#scripted-installation)
+      - [Manually installing executables](#manually-installing-executables)
+        - [Linux](#linux)
+        - [Mac](#mac)
+    - [Updating FloPy packages](#updating-flopy-packages)
+  - [Examples](#examples)
+    - [Developing new examples](#developing-new-examples)
+  - [Tests](#tests)
+    - [Configuring tests](#configuring-tests)
+    - [Running tests](#running-tests)
+      - [Selecting tests with markers](#selecting-tests-with-markers)
+    - [Writing tests](#writing-tests)
+    - [Debugging tests](#debugging-tests)
+      - [Debugging tests in VS Code](#debugging-tests-in-vs-code)
+    - [Performance testing](#performance-testing)
+      - [Benchmarking](#benchmarking)
+      - [Profiling](#profiling)
+    - [Snapshot testing](#snapshot-testing)
+  - [Branching model](#branching-model)
+  - [Deprecation policy](#deprecation-policy)
+  - [Miscellaneous](#miscellaneous)
+    - [Locating the root](#locating-the-root)
+    - [Dependency analysis](#dependency-analysis)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -50,6 +52,12 @@ To develop FloPy you must have the following software installed on your machine:
 You will need [Git](https://git-scm.com) and/or the **GitHub app** (for [Mac](https://mac.github.com) or [Windows](https://windows.github.com)).
 GitHub's  [Guide to Installing Git](https://help.github.com/articles/set-up-git) is a good source of information.
 
+Optionally, the [`git blame`](https://git-scm.com/docs/git-blame) tool can be configured to work locally using:
+
+```sh
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
+
 ### Python
 
 FloPy supports several recent versions of Python, loosely following [NEP 29](https://numpy.org/neps/nep-0029-deprecation_policy.html#implementation).
@@ -58,21 +66,28 @@ Install Python >=3.9 via [standalone download](https://www.python.org/downloads/
 
 Then install FloPy and core dependencies from the project root:
 
-    pip install .
+```sh
+pip install .
+```
 
 The FloPy package has a number of [optional dependencies](.docs/optional_dependencies.md), as well as extra dependencies required for linting, testing, and building documentation. Extra dependencies are listed in the `test`, `lint`, `optional`, and `doc` groups under the `[project.optional-dependencies]` section in `pyproject.toml`. Core, linting, testing and optional dependencies are included in the Conda environment in `etc/environment.yml`. Only core dependencies are included in the PyPI package &mdash; to install extra dependency groups with pip, use `pip install ".[<group>]"`. For instance, to install all development dependencies:
 
-    pip install ".[dev]"
+```sh
+pip install ".[dev]"
+```
 
 Alternatively, with Anaconda or Miniconda:
 
-    conda env create -f etc/environment.yml
-    conda activate flopy
+```sh
+conda env create -f etc/environment.yml
+conda activate flopy
+```
 
 For the tests to work, flopy must also be installed to the "flopy" environment:
 
-    pip install -e .
-
+```sh
+pip install -e .
+```
 
 #### Python IDEs
 
@@ -111,35 +126,41 @@ A utility script is provided to easily download and install executables: after i
 
 To download and extract all executables for Linux (e.g., Ubuntu):
 
-```shell
+```sh
 wget https://github.com/MODFLOW-USGS/executables/releases/download/8.0/linux.zip && \
 unzip linux.zip -d /path/to/your/install/location
 ```
 
 Then add the install location to the `PATH`
 
-    export PATH="/path/to/install/location:$PATH"
+```sh
+export PATH="/path/to/install/location:$PATH"
+```
 
 ##### Mac
 
 The same commands should work to download and extract executables for OSX:
 
-```shell
+```sh
 wget https://github.com/MODFLOW-USGS/executables/releases/download/8.0/mac.zip && \
 unzip mac.zip -d /path/to/your/install/location
 ```
 
 Then add the install location to your `PATH`
 
-    export PATH="/path/to/your/install/location:$PATH"
+```sh
+export PATH="/path/to/your/install/location:$PATH"
+```
 
 On OSX you may see unidentified developer warnings upon running the executables. To disable warnings and enable permissions for all binaries at once, navigate to the install directory and run
 
-    `for f in *; do xattr -d com.apple.quarantine "$f" && chmod +x "$f"; done;`
+```sh
+`for f in *; do xattr -d com.apple.quarantine "$f" && chmod +x "$f"; done;`
+```
 
 When run on OSX, certain tests (e.g., `t032_test.py::test_polygon_from_ij`) may produce errors like
 
-```shell
+```sh
 URLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1129)'))
 ```
 
@@ -155,19 +176,19 @@ A number of examples demonstrating FloPy features are located in `.docs/Notebook
 
 To convert a Python example script to an `.ipynb` notebook, run:
 
-```
+```sh
 jupytext --from py --to ipynb path/to/script.py
 ```
 
 To work with `.ipynb` notebooks from a browser interface, you will need `jupyter` installed (`jupyter` is included with the `test` optional dependency group in `pyproject.toml`). Some of the notebooks use testing dependencies and [optional dependencies](.docs/optional_dependencies.md) as well. The conda environment provided in `etc/environment.yml` already includes all dependencies needed to run the examples. To install all development dependencies at once using `pip`:
 
-```shell
+```sh
 pip install ".[dev]"
 ```
 
 To start a local Jupyter notebook server, run:
 
-```shell
+```sh
 jupyter notebook
 ```
 
@@ -175,7 +196,7 @@ jupyter notebook
 
 Submissions of high-quality examples that demonstrate the use of FloPy are encouraged, as are edits to existing examples to improve the code quality, performance, or clarity of presentation.
 
-There are two kinds of examples: tutorials and full-fledged examples. 
+There are two kinds of examples: tutorials and full-fledged examples.
 
 If a script's filename contains "tutorial", it will automatically be assigned to the [Tutorials](https://flopy.readthedocs.io/en/latest/tutorials.html) page on the documentation site.
 
@@ -185,7 +206,7 @@ If a script's filename contains "example", it is considered a full-fledged examp
 
 All tutorials and examples should include a header with the following format:
 
-```
+```py
 # ---
 # jupyter
 #   jupytext:
@@ -201,7 +222,7 @@ All tutorials and examples should include a header with the following format:
 
 Contents above the `metadata` attribute can be auto-generated with `jupytext` by first-converting an example script to a notebook, and then back to a script (i.e. a round-trip conversion). For instance:
 
-```shell
+```sh
 jupytext --from py --to ipynb .docs/Notebooks/your_example.py
 jupytext --from ipynb --to py .docs/Notebooks/your_example.ipynb
 ```
@@ -215,7 +236,7 @@ The `section` attribute assigns the example to a group within the rendered docum
 
 **Note**: Examples are rendered into a thumbnail gallery view by [nbsphinx](https://github.com/spatialaudio/nbsphinx) when the [online documentation](https://flopy.readthedocs.io/en/latest/) is built. At least one plot/visualization is recommended in order to provide a thumbnail for each example notebook in the [Examples gallery](https://flopy.readthedocs.io/en/latest/notebooks.html)gallery.
 
-**Note**: Thumbnails for the examples gallery are generated automatically from the notebook header (typically the first line, begining with a single '#'), and by default, the last plot generated. Thumbnails can be customized to use any plot in the notebook, or an external image, as described [here](https://nbsphinx.readthedocs.io/en/0.9.1/subdir/gallery.html).
+**Note**: Thumbnails for the examples gallery are generated automatically from the notebook header (typically the first line, beginning with a single '#'), and by default, the last plot generated. Thumbnails can be customized to use any plot in the notebook, or an external image, as described [here](https://nbsphinx.readthedocs.io/en/0.9.1/subdir/gallery.html).
 
 Each example should create and (attempt to) dispose of its own isolated temporary workspace. On Windows, Python's `TemporaryDirectory` can raise permissions errors, so cleanup is trapped with `try/except`. Some scripts also accept a `--quiet` flag, curtailing verbose output, and a `--keep` option to specify a working directory of the user's choice.
 
@@ -241,17 +262,23 @@ Environment variables can be set as usual, but a more convenient way to store va
 
 Tests must be run from the `autotest` directory. To run a single test script in verbose mode:
 
-    pytest -v test_conftest.py
+```sh
+pytest -v test_conftest.py
+```
 
 The `test_conftest.py` script tests the test suite's `pytest` configuration. This includes shared fixtures providing a single source of truth for the location of example data, as well as various other fixtures and utilities.
 
 Tests matching a pattern can be run with `-k`, e.g.:
 
-    pytest -v -k "export"
+```sh
+pytest -v -k "export"
+```
 
 To run all tests in parallel, using however many cores your machine is willing to spare:
 
-    pytest -v -n auto
+```sh
+pytest -v -n auto
+```
 
 The `-n auto` option configures the `pytest-xdist` extension to query your computer for the number of processors available. To explicitly set the number of cores, substitute an integer for `auto` in the `-n` argument, e.g. `pytest -v -n 2`. (The space between `-n` and the number of processors can be replaced with `=`, e.g. `-n=2`.)
 
@@ -267,15 +294,21 @@ Markers are a `pytest` feature that can be used to select subsets of tests. Mark
 
 Markers can be used with the `-m <marker>` option. For example, to run only fast tests:
 
-    pytest -v -n auto -m "not slow"
+```sh
+pytest -v -n auto -m "not slow"
+```
 
 Markers can be applied in boolean combinations with `and` and `not`. For instance, to run fast tests in parallel, excluding example scripts/notebooks and regression tests:
 
-    pytest -v -n auto -m "not slow and not example and not regression"
+```sh
+pytest -v -n auto -m "not slow and not example and not regression"
+```
 
 A CLI option `--smoke` (short form `-S`) is provided as an alias for the above. For instance:
 
-    pytest -v -n auto -S
+```sh
+pytest -v -n auto -S
+```
 
 This should complete in under a minute on most machines. Smoke testing aims to cover a reasonable fraction of the codebase while being fast enough to run often during development. (To preserve this ability, new tests should be marked as slow if they take longer than a second or two to complete.)
 
@@ -283,22 +316,25 @@ This should complete in under a minute on most machines. Smoke testing aims to c
 
 ### Writing tests
 
-Test functions and files should be named informatively, with related tests grouped in the same file. The test suite runs on GitHub Actions in parallel, so tests should not access the working space of other tests, example scripts, tutorials or notebooks. A number of shared test fixtures are [imported](conftest.py) from [`modflow-devtools`](https://github.com/MODFLOW-USGS/modflow-devtools). These include keepable temporary directory fixtures and miscellanous utilities (see `modflow-devtools` repository README for more information on fixture usage). New tests should use these facilities where possible. See also the [contribution guidelines](CONTRIBUTING.md) before submitting a pull request.
+Test functions and files should be named informatively, with related tests grouped in the same file. The test suite runs on GitHub Actions in parallel, so tests should not access the working space of other tests, example scripts, tutorials or notebooks. A number of shared test fixtures are [imported](conftest.py) from [`modflow-devtools`](https://github.com/MODFLOW-USGS/modflow-devtools). These include keepable temporary directory fixtures and miscellaneous utilities (see `modflow-devtools` repository README for more information on fixture usage). New tests should use these facilities where possible. See also the [contribution guidelines](CONTRIBUTING.md) before submitting a pull request.
 
 ### Debugging tests
 
 To debug a failed test it can be helpful to inspect its output, which is cleaned up automatically by default. `modflow-devtools` provides temporary directory fixtures that allow optionally keeping test outputs in a specified location. To run a test and keep its output, use the `--keep` option to provide a save location:
 
-    pytest test_export.py --keep exports_scratch
+```sh
+pytest test_export.py --keep exports_scratch
+```
 
 This will retain any files created by the test in `exports_scratch` in the current working directory. Any tests using the function-scoped `function_tmpdir` and related fixtures (e.g. `class_tmpdir`, `module_tmpdir`) defined in `modflow_devtools/fixtures` are compatible with this mechanism.
 
 There is also a `--keep-failed <dir>` option which preserves the outputs of failed tests in the given location, however this option is only compatible with function-scoped temporary directories (the `function_tmpdir` fixture).
 
 #### Debugging tests in VS Code
+
 When writing tests to develop a new feature or reproduce and fix a bug, it can often be helpful to debug tests interactively in an IDE. In addition to the [documentation](https://code.visualstudio.com/docs/python/testing), the following tips might be helpful for getting test debugging to work in VS Code:
 
-* Add the following to the `settings.json` file:
+- Add the following to the `settings.json` file:
 
     ```json
     "python.testing.pytestArgs": ["."],  
@@ -306,18 +342,20 @@ When writing tests to develop a new feature or reproduce and fix a bug, it can o
     "python.testing.pytestEnabled": true,  
     "python.testing.cwd": "${workspaceFolder}/autotest"  
     ```
+
     Notes:  
         - The first three may be already set correctly by default, but the last item is needed for VS Code to discover the tests correctly and run the tests from the `autotest` folder.  
         - The first three settings can also be set via the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) by entering `Python: Configure Tests`, and following the prompts.
-* Make sure the python interpreter is set correctly.
-* If test discovery is taking too long or not working, it may be helpful to install the [Python Tests Explorer for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=LittleFoxTeam.vscode-python-test-adapter) extension.
-* Test discovery issues can often be troubleshot by running `pytest --collect-only` at the terminal, though this may be prohibitively slow with the Flopy test suite.
-* Note that the [debug console](https://code.visualstudio.com/docs/editor/debugging#_user-interface) can also be used for interactive plotting. If plots aren't showing up, try adding a `pyplot.pause()` statement at the end. For example `import matplotlib.pyplot as plt; plt.imshow(array); plt.pause(1)`
-* The number of columns displayed for a `pandas` `DataFrame` can be adjusted by executing these lines in the debug console:
+- Make sure the python interpreter is set correctly.
+- If test discovery is taking too long or not working, it may be helpful to install the [Python Tests Explorer for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=LittleFoxTeam.vscode-python-test-adapter) extension.
+- Test discovery issues can often be troubleshot by running `pytest --collect-only` at the terminal, though this may be prohibitively slow with the Flopy test suite.
+- Note that the [debug console](https://code.visualstudio.com/docs/editor/debugging#_user-interface) can also be used for interactive plotting. If plots aren't showing up, try adding a `pyplot.pause()` statement at the end. For example `import matplotlib.pyplot as plt; plt.imshow(array); plt.pause(1)`
+- The number of columns displayed for a `pandas` `DataFrame` can be adjusted by executing these lines in the debug console:
 
-    `pd.options.display.max_columns = <desired number of columns>`  
-    `pd.options.display.width = 0`
-
+```sh
+pd.options.display.max_columns = <desired number of columns>
+pd.options.display.width = 0
+```
 
 ### Performance testing
 
@@ -407,7 +445,7 @@ See the linked article for more detail.
 
 ### Locating the root
 
-Python scripts and notebooks often need to reference files elsewhere in the project. 
+Python scripts and notebooks often need to reference files elsewhere in the project.
 
 To allow scripts to be run from anywhere in the project hierarchy, scripts should locate the project root relative to themselves, then use paths relative to the root for file access, rather than using relative paths (e.g., `../some/path`).
 
@@ -416,3 +454,20 @@ For a script in a subdirectory of the root, for instance, the conventional appro
 ```Python
 project_root_path = Path(__file__).parent.parent
 ```
+
+### Dependency analysis
+
+For dependency analysis between internal modules, the `dev` optional dependencies installs `tach`.
+This is a package that visualizes the imports defined in the python files.
+More information on the usage of this package can be found on the [tach documentation page](https://docs.gauge.sh/usage/commands).
+
+The `tach.toml` file is already checked in and can simply be modified via `tach mod`.
+We have set the root to `root_module = "ignore"`, because it only cluttered the drawing.
+You can call the following commands to generate a new overview.
+
+```sh
+tach sync
+tach show --mermaid
+```
+
+You can inspect the results in the [Mermaid Live Editor](https://mermaid.live/).

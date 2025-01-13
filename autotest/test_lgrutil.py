@@ -74,16 +74,7 @@ def test_lgrutil():
     errmsg = f"{ans1} /= {exchange_data[0]}"
     assert exchange_data[0] == ans1, errmsg
 
-    ans2 = [
-        (2, 3, 3),
-        (1, 8, 8),
-        0,
-        50.0,
-        50,
-        1111.1111111111113,
-        180.0,
-        100.0,
-    ]
+    ans2 = [(2, 3, 3), (1, 8, 8), 0, 50.0, 50, 1111.1111111111113, 180.0, 100.0]
     errmsg = f"{ans2} /= {exchange_data[-1]}"
     assert exchange_data[-1] == ans2, errmsg
 
@@ -91,10 +82,7 @@ def test_lgrutil():
     assert len(exchange_data) == 72 + 81, errmsg
 
     # list of parent cells connected to a child cell
-    assert lgr.get_parent_connections(0, 0, 0) == [
-        ((0, 1, 0), -1),
-        ((0, 0, 1), 2),
-    ]
+    assert lgr.get_parent_connections(0, 0, 0) == [((0, 1, 0), -1), ((0, 0, 1), 2)]
     assert lgr.get_parent_connections(1, 8, 8) == [
         ((1, 3, 4), 1),
         ((1, 4, 3), -2),

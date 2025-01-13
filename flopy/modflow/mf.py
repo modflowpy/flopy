@@ -82,6 +82,9 @@ class Modflow(BaseModel):
         Location for external files.
     verbose : bool, default False
         Print additional information to the screen.
+    extra_pkgs : dict, optional
+        Add custom packages classes to mfnam_packages. Allows for loading models
+        with custom packages not contained in the standard flopy distribution.
 
     Attributes
     ----------
@@ -113,6 +116,7 @@ class Modflow(BaseModel):
         model_ws: Union[str, os.PathLike] = os.curdir,
         external_path: Optional[Union[str, os.PathLike]] = None,
         verbose=False,
+        extra_pkgs: Optional[dict] = None,
         **kwargs,
     ):
         super().__init__(
@@ -140,9 +144,9 @@ class Modflow(BaseModel):
         # -- check if unstructured is specified for something
         # other than mfusg is specified
         if not self.structured:
-            assert (
-                "mfusg" in self.version
-            ), "structured=False can only be specified for mfusg models"
+            assert "mfusg" in self.version, (
+                "structured=False can only be specified for mfusg models"
+            )
 
         # external option stuff
         self.array_free_format = True
@@ -224,6 +228,8 @@ class Modflow(BaseModel):
             "vdf": flopy.seawat.SeawatVdf,
             "vsc": flopy.seawat.SeawatVsc,
         }
+        if extra_pkgs:
+            self.mfnam_packages.update(extra_pkgs)
 
     def __repr__(self):
         nrow, ncol, nlay, nper = self.get_nrow_ncol_nlay_nper()
@@ -438,16 +444,12 @@ class Modflow(BaseModel):
             if self.glo.unit_number[0] > 0:
                 f_nam.write(
                     "{:14s} {:5d}  {}\n".format(
-                        self.glo.name[0],
-                        self.glo.unit_number[0],
-                        self.glo.file_name[0],
+                        self.glo.name[0], self.glo.unit_number[0], self.glo.file_name[0]
                     )
                 )
         f_nam.write(
             "{:14s} {:5d}  {}\n".format(
-                self.lst.name[0],
-                self.lst.unit_number[0],
-                self.lst.file_name[0],
+                self.lst.name[0], self.lst.unit_number[0], self.lst.file_name[0]
             )
         )
         f_nam.write(str(self.get_name_file_entries()))
@@ -633,6 +635,7 @@ class Modflow(BaseModel):
         load_only=None,
         forgive=False,
         check=True,
+        extra_pkgs: Optional[dict] = None,
     ):
         """
         Load an existing MODFLOW model.
@@ -662,6 +665,10 @@ class Modflow(BaseModel):
             useful for debugging. Default False.
         check : boolean, optional
             Check model input for common errors. Default True.
+        extra_pkgs : dict, optional
+            Add custom packages classes to mfnam_packages. Allows for loading models
+            with custom packages not contained in the standard flopy distribution.
+
 
         Returns
         -------
@@ -693,6 +700,7 @@ class Modflow(BaseModel):
             exe_name=exe_name,
             verbose=verbose,
             model_ws=model_ws,
+            extra_pkgs=extra_pkgs,
             **attribs,
         )
 
@@ -731,7 +739,8 @@ class Modflow(BaseModel):
         # DEPRECATED since version 3.3.4
         if ml.version == "mfusg":
             raise ValueError(
-                "flopy.modflow.Modflow no longer supports mfusg; use flopy.mfusg.MfUsg() instead"
+                "flopy.modflow.Modflow no longer supports mfusg; "
+                "use flopy.mfusg.MfUsg() instead"
             )
 
         # reset unit number for glo file
@@ -827,9 +836,7 @@ class Modflow(BaseModel):
                                 )
                             else:
                                 item.package.load(
-                                    item.filehandle,
-                                    ml,
-                                    ext_unit_dict=ext_unit_dict,
+                                    item.filehandle, ml, ext_unit_dict=ext_unit_dict
                                 )
                             files_successfully_loaded.append(item.filename)
                             if ml.verbose:
@@ -850,9 +857,7 @@ class Modflow(BaseModel):
                             )
                         else:
                             item.package.load(
-                                item.filehandle,
-                                ml,
-                                ext_unit_dict=ext_unit_dict,
+                                item.filehandle, ml, ext_unit_dict=ext_unit_dict
                             )
                         files_successfully_loaded.append(item.filename)
                         if ml.verbose:

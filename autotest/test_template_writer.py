@@ -56,7 +56,8 @@ def test_tpl_layered(function_tmpdir):
     partype = "hk"
     parname = "HK_LAYER_1-3"
 
-    # Span indicates that the hk parameter applies as a multiplier to layers 0 and 2 (MODFLOW layers 1 and 3)
+    # Span indicates that the hk parameter applies as a multiplier to layers 0 and 2
+    # (MODFLOW layers 1 and 3)
     span = {"layers": [0, 2]}
 
     # These parameters have not affect yet, but may in the future

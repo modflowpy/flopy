@@ -31,11 +31,14 @@ import os
 import shutil
 import sys
 import warnings
+from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import git
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import pooch
 
 import flopy
 from flopy.export.shapefile_utils import recarray2shp, shp2recarray
@@ -57,6 +60,15 @@ print(f"flopy version: {flopy.__version__}")
 # +
 temp_dir = TemporaryDirectory()
 workspace = temp_dir.name
+
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
 
 m = flopy.modflow.Modflow("toy_model", model_ws=workspace)
 botm = np.zeros((2, 10, 10))
@@ -102,7 +114,6 @@ from pathlib import Path
 recarray2shp(chk.summary_array, geoms, os.path.join(workspace, "test.shp"), crs=26715)
 shape_path = os.path.join(workspace, "test.prj")
 
-# + pycharm={"name": "#%%\n"}
 shutil.copy(shape_path, os.path.join(workspace, "26715.prj"))
 recarray2shp(
     chk.summary_array,
@@ -115,11 +126,9 @@ recarray2shp(
 # ### read it back in
 # * flopy geometry objects representing the shapes are stored in the 'geometry' field
 
-# + pycharm={"name": "#%%\n"}
 ra = shp2recarray(os.path.join(workspace, "test.shp"))
 ra
 
-# + pycharm={"name": "#%%\n"}
 ra.geometry[0].plot()
 # -
 
@@ -129,7 +138,14 @@ ra.geometry[0].plot()
 # * create geometry objects for pathlines from a MODPATH simulation
 # * plot the paths using the built in plotting method
 
-pthfile = PathlineFile("../../examples/data/mp6/EXAMPLE-3.pathline")
+fname = "EXAMPLE-3.pathline"
+pthfile = pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/mp6/{fname}",
+    fname=fname,
+    path=data_path / "mp6",
+    known_hash=None,
+)
+pthfile = PathlineFile(pthfile)
 pthdata = pthfile._data.view(np.recarray)
 
 # +
@@ -162,7 +178,14 @@ ax.set_aspect(1)
 
 # ## Points
 
-eptfile = EndpointFile("../../examples/data/mp6/EXAMPLE-3.endpoint")
+fname = "EXAMPLE-3.endpoint"
+eptfile = pooch.retrieve(
+    url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/mp6/{fname}",
+    fname=fname,
+    path=data_path / "mp6",
+    known_hash=None,
+)
+eptfile = EndpointFile(eptfile)
 eptdata = eptfile.get_alldata()
 
 # +

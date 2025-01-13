@@ -65,7 +65,7 @@ def test_resolve_exe_by_rel_path(function_tmpdir, use_ext, forgive):
         assert actual.lower() == expected
         assert which(actual)
 
-        # check behavior if exe DNE
+        # check behavior if exe does not exist
         with pytest.warns(UserWarning) if forgive else pytest.raises(FileNotFoundError):
             assert not resolve_exe("../bin/mf2005", forgive)
 
@@ -135,10 +135,8 @@ def test_run_model_exe_rel_path(mf6_model_path, function_tmpdir, use_ext):
 
     bin_dir = function_tmpdir / "bin"
     bin_dir.mkdir()
-    inner_dir = function_tmpdir / "inner"
-    inner_dir.mkdir()
 
-    with set_dir(inner_dir):
+    with set_dir(ws):
         # copy exe to relative dir
         copy(mf6, bin_dir / "mf6")
         assert (bin_dir / "mf6").is_file()

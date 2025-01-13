@@ -347,8 +347,7 @@ class MfList(DataInterface, DataListInterface):
                     self.__vtype[kper] = None
                 else:
                     raise ValueError(
-                        "MfList error: unsupported data type: "
-                        f"{type(d)} at kper {kper}"
+                        f"MfList error: unsupported data type: {type(d)} at kper {kper}"
                     )
 
         # A single dataframe
@@ -447,9 +446,7 @@ class MfList(DataInterface, DataListInterface):
         # may have to iterate over the first stress period
         for per in range(self._model.nper):
             if hasattr(self.data[per], "dtype"):
-                varnames = list(
-                    [n for n in self.data[per].dtype.names if n not in names]
-                )
+                varnames = [n for n in self.data[per].dtype.names if n not in names]
                 break
 
         # create list of dataframes for each stress period
@@ -484,14 +481,7 @@ class MfList(DataInterface, DataListInterface):
 
         df = df.reset_index()
         df.loc[:, "node"] = df.loc[:, "i"] * self._model.ncol + df.loc[:, "j"]
-        df = df.loc[
-            :,
-            names
-            + [
-                "node",
-            ]
-            + [v for v in varnames if not v == "node"],
-        ]
+        df = df.loc[:, names + ["node"] + [v for v in varnames if not v == "node"]]
         return df
 
     def add_record(self, kper, index, values):
@@ -632,9 +622,9 @@ class MfList(DataInterface, DataListInterface):
         # external arrays are not supported (oh hello MNW1!)
         # write the transient sequence described by the data dict
         nr, nc, nl, nper = self._model.get_nrow_ncol_nlay_nper()
-        assert hasattr(
-            f, "read"
-        ), "MfList.write() error: f argument must be a file handle"
+        assert hasattr(f, "read"), (
+            "MfList.write() error: f argument must be a file handle"
+        )
         kpers = list(self.data.keys())
         pak_name_str = self.package.__class__.__name__.lower()
         if (len(kpers) == 0) and (pak_name_str == "mfusgwel"):  # must be cln wels
@@ -735,9 +725,9 @@ class MfList(DataInterface, DataListInterface):
 
     def __tofile(self, f, data):
         # Write the recarray (data) to the file (or file handle) f
-        assert isinstance(
-            data, np.recarray
-        ), "MfList.__tofile() data arg not a recarray"
+        assert isinstance(data, np.recarray), (
+            "MfList.__tofile() data arg not a recarray"
+        )
 
         # Add one to the kij indices
         lnames = [name.lower() for name in self.dtype.names]
@@ -1042,8 +1032,7 @@ class MfList(DataInterface, DataListInterface):
                 cnt = np.zeros((self._model.nlay * self._model.ncpl,), dtype=float)
             else:
                 cnt = np.zeros(
-                    (self._model.nlay, self._model.nrow, self._model.ncol),
-                    dtype=float,
+                    (self._model.nlay, self._model.nrow, self._model.ncol), dtype=float
                 )
             for rec in sarr:
                 if unstructured:

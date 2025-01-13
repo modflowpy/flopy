@@ -451,15 +451,15 @@ def test_mp6_timeseries_load(example_data_path):
 
 def eval_timeseries(file):
     ts = TimeseriesFile(file)
-    assert isinstance(
-        ts, TimeseriesFile
-    ), f"{os.path.basename(file)} is not an instance of TimeseriesFile"
+    assert isinstance(ts, TimeseriesFile), (
+        f"{os.path.basename(file)} is not an instance of TimeseriesFile"
+    )
 
     # get the all of the data
     tsd = ts.get_alldata()
-    assert (
-        len(tsd) > 0
-    ), f"could not load data using get_alldata() from {os.path.basename(file)}."
+    assert len(tsd) > 0, (
+        f"could not load data using get_alldata() from {os.path.basename(file)}."
+    )
 
     # get the data for the last particleid
     partid = ts.get_maxid()
@@ -476,8 +476,7 @@ def eval_timeseries(file):
 
     timemax = ts.get_maxtime() / 2.0
     assert timemax is not None, (
-        "could not get maximum time using get_maxtime() from "
-        f"{os.path.basename(file)}."
+        f"could not get maximum time using get_maxtime() from {os.path.basename(file)}."
     )
 
     tsd = ts.get_alldata(totim=timemax)
@@ -488,8 +487,7 @@ def eval_timeseries(file):
 
     timemax = ts.get_maxtime()
     assert timemax is not None, (
-        "could not get maximum time using get_maxtime() from "
-        f"{os.path.basename(file)}."
+        f"could not get maximum time using get_maxtime() from {os.path.basename(file)}."
     )
 
     tsd = ts.get_alldata(totim=timemax, ge=False)
@@ -592,10 +590,8 @@ def get_mf2005_model(name, ws, alt=False):
     ocspd = {}
     for p in range(nper):
         ocspd[(p, 0)] = ["save head", "save budget"]
-    ocspd[(0, 0)] = [
-        "save head",
-        "save budget",
-    ]  # pretty sure it just uses the last for everything
+    # pretty sure it just uses the last for everything
+    ocspd[(0, 0)] = ["save head", "save budget"]
     flopy.modflow.ModflowOc(m, stress_period_data=ocspd)
 
     return m, ctx
@@ -637,12 +633,7 @@ def test_data_pass_no_modflow(function_tmpdir, alt):
     assert mp.head_file == hd_file
     assert mp.budget_file == bud_file
     assert mp.dis_file == dis_file
-    assert mp.nrow_ncol_nlay_nper == (
-        ctx.nrow,
-        ctx.ncol,
-        ctx.nlay,
-        ctx.nper,
-    )
+    assert mp.nrow_ncol_nlay_nper == (ctx.nrow, ctx.ncol, ctx.nlay, ctx.nper)
 
     mpbas = flopy.modpath.Modpath6Bas(
         mp,
@@ -682,7 +673,8 @@ def test_data_pass_no_modflow(function_tmpdir, alt):
 @pytest.mark.parametrize("alt", [True, False])
 def test_data_pass_with_modflow(function_tmpdir, alt):
     """
-    test that user specified head files etc. are preferred over files from the modflow model
+    test that user specified head files etc. are preferred
+    over files from the modflow model
     """
 
     ml, ctx = get_mf2005_model("data_pass", function_tmpdir, alt)
@@ -714,12 +706,7 @@ def test_data_pass_with_modflow(function_tmpdir, alt):
     assert mp.head_file == hd_file
     assert mp.budget_file == bud_file
     assert mp.dis_file == dis_file
-    assert mp.nrow_ncol_nlay_nper == (
-        ctx.nrow,
-        ctx.ncol,
-        ctx.nlay,
-        ctx.nper,
-    )
+    assert mp.nrow_ncol_nlay_nper == (ctx.nrow, ctx.ncol, ctx.nlay, ctx.nper)
 
     mpbas = flopy.modpath.Modpath6Bas(
         mp,
@@ -760,7 +747,8 @@ def test_data_pass_with_modflow(function_tmpdir, alt):
 @pytest.mark.parametrize("alt", [True, False])
 def test_just_from_model(function_tmpdir, alt):
     """
-    test that user specified head files etc. are preferred over files from the modflow model
+    test that user specified head files etc. are preferred
+    over files from the modflow model
     """
 
     ml, ctx = get_mf2005_model("data_pass", function_tmpdir, alt)
@@ -792,12 +780,7 @@ def test_just_from_model(function_tmpdir, alt):
     assert mp.head_file == hd_file
     assert mp.budget_file == bud_file
     assert mp.dis_file == dis_file
-    assert mp.nrow_ncol_nlay_nper == (
-        ctx.nrow,
-        ctx.ncol,
-        ctx.nlay,
-        ctx.nper,
-    )
+    assert mp.nrow_ncol_nlay_nper == (ctx.nrow, ctx.ncol, ctx.nlay, ctx.nper)
 
     mpbas = flopy.modpath.Modpath6Bas(
         mp,

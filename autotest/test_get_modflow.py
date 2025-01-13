@@ -20,15 +20,15 @@ rate_limit_msg = "rate limit exceeded"
 flopy_dir = get_project_root_path()
 get_modflow_script = flopy_dir / "flopy" / "utils" / "get_modflow.py"
 bindir_options = {
-    "flopy": Path(expandvars(r"%LOCALAPPDATA%\flopy")) / "bin"
-    if system() == "Windows"
-    else Path.home() / ".local" / "share" / "flopy" / "bin",
+    "flopy": (
+        Path(expandvars(r"%LOCALAPPDATA%\flopy")) / "bin"
+        if system() == "Windows"
+        else Path.home() / ".local" / "share" / "flopy" / "bin"
+    ),
     "python": Path(sys.prefix) / ("Scripts" if system() == "Windows" else "bin"),
     "home": Path.home() / ".local" / "bin",
 }
-owner_options = [
-    "MODFLOW-USGS",
-]
+owner_options = ["MODFLOW-USGS"]
 repo_options = {
     "executables": [
         "crt",
@@ -248,13 +248,7 @@ def test_script_valid_options(function_tmpdir, downloads_dir):
 def test_script(function_tmpdir, owner, repo, downloads_dir):
     bindir = str(function_tmpdir)
     stdout, stderr, returncode = run_get_modflow_script(
-        bindir,
-        "--owner",
-        owner,
-        "--repo",
-        repo,
-        "--downloads-dir",
-        downloads_dir,
+        bindir, "--owner", owner, "--repo", repo, "--downloads-dir", downloads_dir
     )
     if rate_limit_msg in stderr:
         pytest.skip(f"GitHub {rate_limit_msg}")

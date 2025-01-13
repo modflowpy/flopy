@@ -269,40 +269,29 @@ class ModflowSfr2(Package):
 
     """
 
-    _options = dict(
-        [
-            ("reachinput", OptionBlock.simple_flag),
-            ("transroute", OptionBlock.simple_flag),
-            ("tabfiles", OptionBlock.simple_tabfile),
-            (
-                "lossfactor",
-                {
-                    OptionBlock.dtype: np.bool_,
-                    OptionBlock.nested: True,
-                    OptionBlock.n_nested: 1,
-                    OptionBlock.vars: {"factor": OptionBlock.simple_float},
-                },
-            ),
-            (
-                "strhc1kh",
-                {
-                    OptionBlock.dtype: np.bool_,
-                    OptionBlock.nested: True,
-                    OptionBlock.n_nested: 1,
-                    OptionBlock.vars: {"factorkh": OptionBlock.simple_float},
-                },
-            ),
-            (
-                "strhc1kv",
-                {
-                    OptionBlock.dtype: np.bool_,
-                    OptionBlock.nested: True,
-                    OptionBlock.n_nested: 1,
-                    OptionBlock.vars: {"factorkv": OptionBlock.simple_float},
-                },
-            ),
-        ]
-    )
+    _options = {
+        "reachinput": OptionBlock.simple_flag,
+        "transroute": OptionBlock.simple_flag,
+        "tabfiles": OptionBlock.simple_tabfile,
+        "lossfactor": {
+            OptionBlock.dtype: np.bool_,
+            OptionBlock.nested: True,
+            OptionBlock.n_nested: 1,
+            OptionBlock.vars: {"factor": OptionBlock.simple_float},
+        },
+        "strhc1kh": {
+            OptionBlock.dtype: np.bool_,
+            OptionBlock.nested: True,
+            OptionBlock.n_nested: 1,
+            OptionBlock.vars: {"factorkh": OptionBlock.simple_float},
+        },
+        "strhc1kv": {
+            OptionBlock.dtype: np.bool_,
+            OptionBlock.nested: True,
+            OptionBlock.n_nested: 1,
+            OptionBlock.vars: {"factorkv": OptionBlock.simple_float},
+        },
+    }
 
     nsfrpar = 0
     default_value = 0.0
@@ -366,10 +355,7 @@ class ModflowSfr2(Package):
                 if fname is None:
                     fname = f"{model.name}.sfr.{ext}"
                 model.add_output_file(
-                    abs(istcb2),
-                    fname=fname,
-                    binflag=binflag,
-                    package=self._ftype(),
+                    abs(istcb2), fname=fname, binflag=binflag, package=self._ftype()
                 )
         else:
             istcb2 = 0
@@ -428,10 +414,12 @@ class ModflowSfr2(Package):
         else:
             pass
         # use atleast_1d for length since segment_data might be a 0D array
-        # this seems to be OK, because self.segment_data is produced by the constructor (never 0D)
+        # this seems to be OK, because self.segment_data is produced by the
+        # constructor (never 0D)
         self.nsfrpar = nsfrpar
         self.nparseg = nparseg
-        # conversion factor used in calculating stream depth for stream reach (icalc = 1 or 2)
+        # conversion factor used in calculating stream depth for stream reach
+        # (icalc = 1 or 2)
         self._const = const if const is not None else None
         self.dleak = dleak  # tolerance level of stream depth used in computing leakage
 
@@ -439,7 +427,8 @@ class ModflowSfr2(Package):
         self.istcb2 = istcb2
 
         # if nstrm < 0
-        # defines the format of the input data and whether or not unsaturated flow is simulated
+        # defines the format of the input data and whether or not unsaturated
+        # flow is simulated
         self.isfropt = isfropt
 
         # if isfropt > 1
@@ -622,7 +611,7 @@ class ModflowSfr2(Package):
         nseg = np.array(sorted(self._paths.keys()), dtype=int)
         nseg = nseg[nseg > 0].copy()
         outseg = np.array([self._paths[k][1] for k in nseg])
-        existing_nseg = sorted(list(self.graph.keys()))
+        existing_nseg = sorted(self.graph.keys())
         existing_outseg = [self.graph[k] for k in existing_nseg]
         if not np.array_equal(nseg, existing_nseg) or not np.array_equal(
             outseg, existing_outseg
@@ -777,9 +766,8 @@ class ModflowSfr2(Package):
         structured = model.structured
         if nper is None:
             nper = model.nper
-            nper = (
-                1 if nper == 0 else nper
-            )  # otherwise iterations from 0, nper won't run
+            nper = 1 if nper == 0 else nper
+            # otherwise iterations from 0, nper won't run
 
         openfile = not hasattr(f, "read")
         if openfile:
@@ -867,9 +855,8 @@ class ModflowSfr2(Package):
         # initialize full reach_data array with all possible columns
         reach_data = ModflowSfr2.get_empty_reach_data(len(lines))
         for n in names:
-            reach_data[n] = tmp[
-                n
-            ]  # not sure if there's a way to assign multiple columns
+            # not sure if there's a way to assign multiple columns
+            reach_data[n] = tmp[n]
 
         # zero-based convention
         inds = ["k", "i", "j"] if structured else ["node"]
@@ -893,7 +880,8 @@ class ModflowSfr2(Package):
                 )
                 # container to hold any auxiliary variables
                 current_aux = {}
-                # these could also be implemented as structured arrays with a column for segment number
+                # these could also be implemented as structured arrays with
+                # a column for segment number
                 current_6d = {}
                 current_6e = {}
                 for j in range(itmp):
@@ -932,9 +920,10 @@ class ModflowSfr2(Package):
 
                     if icalc == 2:
                         # ATL: not sure exactly how isfropt logic functions for this
-                        # dataset 6d description suggests that this line isn't read for isfropt > 1
-                        # but description of icalc suggest that icalc=2 (8-point channel) can be used with any isfropt
-                        if i == 0 or nstrm > 0 and not reachinput or isfropt <= 1:
+                        # dataset 6d description suggests that this line isn't read for
+                        # isfropt > 1 but description of icalc suggest that icalc=2
+                        # (8-point channel) can be used with any isfropt
+                        if i == 0 or (nstrm > 0 and not reachinput) or isfropt <= 1:
                             dataset_6d = []
                             for _ in range(2):
                                 dataset_6d.append(_get_dataset(f.readline(), [0.0] * 8))
@@ -1298,9 +1287,8 @@ class ModflowSfr2(Package):
                 for o in np.unique(segment_data.outseg)
             }
 
-            outsegs = [
-                k for k in list(upsegs.keys()) if k > 0
-            ]  # exclude 0, which is the outlet designator
+            # exclude 0, which is the outlet designator
+            outsegs = [k for k in list(upsegs.keys()) if k > 0]
 
             # for each outseg key, for each upseg, check for more upsegs,
             # append until headwaters has been reached
@@ -1357,7 +1345,7 @@ class ModflowSfr2(Package):
         r : dictionary mapping old segment numbers to new
         """
 
-        nseg = sorted(list(self.graph.keys()))
+        nseg = sorted(self.graph.keys())
         outseg = [self.graph[k] for k in nseg]
 
         # explicitly fix any gaps in the numbering
@@ -1617,9 +1605,8 @@ class ModflowSfr2(Package):
             )
         )
         if self.reachinput:
-            self.nstrm = abs(
-                self.nstrm
-            )  # see explanation for dataset 1c in online guide
+            # see explanation for dataset 1c in online guide
+            self.nstrm = abs(self.nstrm)
             f_sfr.write(f"{self.isfropt:.0f} ")
             if self.isfropt > 1:
                 f_sfr.write(f"{self.nstrail:.0f} {self.isuzn:.0f} {self.nsfrsets:.0f} ")
@@ -1635,16 +1622,13 @@ class ModflowSfr2(Package):
 
     def _write_reach_data(self, f_sfr):
         # Write the recarray (data) to the file (or file handle) f
-        assert isinstance(
-            self.reach_data, np.recarray
-        ), "MfList.__tofile() data arg not a recarray"
+        assert isinstance(self.reach_data, np.recarray), (
+            "MfList.__tofile() data arg not a recarray"
+        )
 
         # decide which columns to write
         columns = _get_item2_names(
-            self.nstrm,
-            self.reachinput,
-            self.isfropt,
-            structured=self.parent.structured,
+            self.nstrm, self.reachinput, self.isfropt, structured=self.parent.structured
         )
 
         # --make copy of data for multiple calls
@@ -1864,8 +1848,7 @@ class ModflowSfr2(Package):
                         # or isfropt <= 1:
                         if (
                             i == 0
-                            or self.nstrm > 0
-                            and not self.reachinput
+                            or (self.nstrm > 0 and not self.reachinput)
                             or self.isfropt <= 1
                         ):
                             for k in range(2):
@@ -1944,11 +1927,7 @@ class ModflowSfr2(Package):
 
         # append connection lengths for filtering in GIS
         rd = recfunctions.append_fields(
-            rd,
-            names=["length"],
-            data=[lengths],
-            usemask=False,
-            asrecarray=True,
+            rd, names=["length"], data=[lengths], usemask=False, asrecarray=True
         )
         recarray2shp(rd, geoms, f, **kwargs)
 
@@ -2037,12 +2016,14 @@ class check:
 
     Daniel Feinstein's top 10 SFR problems (7/16/2014):
     1) cell gaps btw adjacent reaches in a single segment
-    2) cell gaps btw routed segments. possibly because of re-entry problems at domain edge
+    2) cell gaps btw routed segments. possibly because of re-entry problems at
+       domain edge
     3) adjacent reaches with STOP sloping the wrong way
     4) routed segments with end/start sloping the wrong way
     5) STOP>TOP1 violations, i.e.,floaters
     6) STOP<<TOP1 violations, i.e., exaggerated incisions
-    7) segments that end within one diagonal cell distance from another segment, inviting linkage
+    7) segments that end within one diagonal cell distance from another
+       segment, inviting linkage
     8) circular routing of segments
     9) multiple reaches with non-zero conductance in a single cell
     10) reaches in inactive cells
@@ -2243,8 +2224,9 @@ class check:
 
         if len(txt) == 0 and np.any(inds):
             decreases = np.array(sd[inds])[["nseg", "outseg"]]
-            txt += "Found {} segment numbers decreasing in the downstream direction.\n".format(
-                len(decreases)
+            txt += (
+                f"Found {len(decreases)} segment numbers decreasing "
+                "in the downstream direction.\n"
             )
             txt += "MODFLOW will run but convergence may be slowed:\n"
             if self.level == 1:
@@ -2271,8 +2253,9 @@ class check:
         # simpler check method using paths from routing graph
         circular_segs = [k for k, v in self.sfr.paths.items() if v is None]
         if len(circular_segs) > 0:
-            txt += "{} instances where an outlet was not found after {} consecutive segments!\n".format(
-                len(circular_segs), self.sfr.nss
+            txt += (
+                f"{len(circular_segs)} instances where an outlet was "
+                f"not found after {self.sfr.nss} consecutive segments!\n"
             )
             if self.level == 1:
                 txt += " ".join(map(str, circular_segs)) + "\n"
@@ -2336,8 +2319,7 @@ class check:
                     txt += " ".join(map(str, segments_with_breaks)) + "\n"
                 else:
                     fpath = os.path.join(
-                        self.sfr.parent._model_ws,
-                        "reach_connection_gaps.chk.csv",
+                        self.sfr.parent._model_ws, "reach_connection_gaps.chk.csv"
                     )
                     with open(fpath, "w") as fp:
                         fp.write(",".join(rd.dtype.names) + "\n")
@@ -2532,10 +2514,7 @@ class check:
                 # enforce consecutive increasing segment numbers (for indexing)
                 segment_data.sort(order="nseg")
                 t = _check_numbers(
-                    len(segment_data),
-                    segment_data.nseg,
-                    level=1,
-                    datatype="Segment",
+                    len(segment_data), segment_data.nseg, level=1, datatype="Segment"
                 )
                 if len(t) > 0:
                     txt += "Elevation check requires consecutive segment numbering."
@@ -2575,13 +2554,7 @@ class check:
 
                 txt += self._boolean_compare(
                     non_outlets_seg_data[
-                        [
-                            "nseg",
-                            "outseg",
-                            "elevdn",
-                            "outseg_elevup",
-                            "d_elev2",
-                        ]
+                        ["nseg", "outseg", "elevdn", "outseg_elevup", "d_elev2"]
                     ],
                     col1="d_elev2",
                     col2=np.zeros(len(non_outlets_seg_data)),
@@ -2608,9 +2581,10 @@ class check:
         if self.verbose:
             print(headertxt.strip())
         passed = False
-        if (
-            self.sfr.nstrm < 0 or self.sfr.reachinput and self.sfr.isfropt in [1, 2, 3]
-        ):  # see SFR input instructions
+        if self.sfr.nstrm < 0 or (
+            self.sfr.reachinput and self.sfr.isfropt in [1, 2, 3]
+        ):
+            # see SFR input instructions
             # compute outreaches if they aren't there already
             if np.diff(self.sfr.reach_data.outreach).max() == 0:
                 self.sfr.set_outreaches()
@@ -2630,12 +2604,12 @@ class check:
                 ]
             )
 
-            reach_data = (
-                self.sfr.reach_data
-            )  # inconsistent with other checks that work with
-            # reach_data attribute of check class. Want to have get_outreaches as a method of sfr class
-            # (for other uses). Not sure if other check methods should also copy reach_data directly from
+            # inconsistent with other checks that work with
+            # reach_data attribute of check class. Want to have get_outreaches
+            # as a method of sfr class (for other uses). Not sure if other
+            # check methods should also copy reach_data directly from
             # SFR package instance for consistency.
+            reach_data = self.sfr.reach_data
 
             rd = recfunctions.append_fields(
                 rd,
@@ -2661,19 +2635,20 @@ class check:
                 ],
                 col1="d_strtop",
                 col2=np.zeros(len(rd)),
-                level0txt="{} reaches encountered with strtop < strtop of downstream reach.",
+                level0txt="{} reaches encountered with strtop < strtop of downstream reach.",  # noqa
                 level1txt="Elevation rises:",
             )
             if len(txt) == 0:
                 passed = True
         else:
-            txt += "Reach strtop not specified for nstrm={}, reachinput={} and isfropt={}\n".format(
-                self.sfr.nstrm, self.sfr.reachinput, self.sfr.isfropt
+            txt += (
+                f"Reach strtop not specified for nstrm={self.sfr.nstrm}, "
+                f"reachinput={self.sfr.reachinput} and isfropt={self.sfr.isfropt}\n"
             )
             passed = True
         self._txt_footer(headertxt, txt, "reach elevations", passed)
 
-        headertxt = "Checking reach_data for inconsistencies between streambed elevations and the model grid...\n"
+        headertxt = "Checking reach_data for inconsistencies between streambed elevations and the model grid...\n"  # noqa
         if self.verbose:
             print(headertxt.strip())
         txt = ""
@@ -2685,9 +2660,10 @@ class check:
             return
         passed = False
         warning = True
-        if (
-            self.sfr.nstrm < 0 or self.sfr.reachinput and self.sfr.isfropt in [1, 2, 3]
-        ):  # see SFR input instructions
+        if self.sfr.nstrm < 0 or (
+            self.sfr.reachinput and self.sfr.isfropt in [1, 2, 3]
+        ):
+            # see SFR input instructions
             reach_data = np.array(self.reach_data)
             i, j, k = reach_data["i"], reach_data["j"], reach_data["k"]
 
@@ -2719,7 +2695,7 @@ class check:
                 ],
                 col1="layerbot",
                 col2="strbot",
-                level0txt="{} reaches encountered with streambed bottom below layer bottom.",
+                level0txt="{} reaches encountered with streambed bottom below layer bottom.",  # noqa
                 level1txt="Layer bottom violations:",
             )
             if len(txt) > 0:
@@ -2727,11 +2703,7 @@ class check:
             # check streambed elevations in relation to model top
             tops = self.sfr.parent.dis.top.array[i, j]
             reach_data = recfunctions.append_fields(
-                reach_data,
-                names="modeltop",
-                data=tops,
-                usemask=False,
-                asrecarray=False,
+                reach_data, names="modeltop", data=tops, usemask=False, asrecarray=False
             )
 
             txt += self._boolean_compare(
@@ -2757,8 +2729,9 @@ class check:
             if len(txt) == 0:
                 passed = True
         else:
-            txt += "Reach strtop, strthick not specified for nstrm={}, reachinput={} and isfropt={}\n".format(
-                self.sfr.nstrm, self.sfr.reachinput, self.sfr.isfropt
+            txt += (
+                f"Reach strtop, strthick not specified for nstrm={self.sfr.nstrm}, "
+                f"reachinput={self.sfr.reachinput} and isfropt={self.sfr.isfropt}\n"
             )
             passed = True
         self._txt_footer(
@@ -2791,10 +2764,7 @@ class check:
                 # enforce consecutive increasing segment numbers (for indexing)
                 segment_data.sort(order="nseg")
                 t = _check_numbers(
-                    len(segment_data),
-                    segment_data.nseg,
-                    level=1,
-                    datatype="Segment",
+                    len(segment_data), segment_data.nseg, level=1, datatype="Segment"
                 )
                 if len(t) > 0:
                     raise Exception(
@@ -2824,16 +2794,7 @@ class check:
 
             txt += self._boolean_compare(
                 segment_ends[
-                    [
-                        "k",
-                        "i",
-                        "j",
-                        "iseg",
-                        "strtop",
-                        "modeltop",
-                        "diff",
-                        "reachID",
-                    ]
+                    ["k", "i", "j", "iseg", "strtop", "modeltop", "diff", "reachID"]
                 ].copy(),
                 col1=np.zeros(len(segment_ends)),
                 col2="diff",
@@ -2844,16 +2805,17 @@ class check:
             if len(txt) == 0:
                 passed = True
         else:
-            txt += "Segment elevup and elevdn not specified for nstrm={} and isfropt={}\n".format(
-                self.sfr.nstrm, self.sfr.isfropt
+            txt += (
+                f"Segment elevup and elevdn not specified for nstrm={self.sfr.nstrm} "
+                f"and isfropt={self.sfr.isfropt}\n"
             )
             passed = True
         self._txt_footer(headertxt, txt, "segment elevations vs. model grid", passed)
 
     def slope(self, minimum_slope=1e-4, maximum_slope=1.0):
-        """Checks that streambed slopes are greater than or equal to a specified minimum value.
-        Low slope values can cause "backup" or unrealistic stream stages with icalc options
-        where stage is computed.
+        """Checks that streambed slopes are greater than or equal to a
+        specified minimum value.  Low slope values can cause "backup" or
+        unrealistic stream stages with icalc options where stage is computed.
         """
         headertxt = f"Checking for streambed slopes of less than {minimum_slope}...\n"
         txt = ""
@@ -2868,8 +2830,9 @@ class check:
                 is_less = self.reach_data.slope < minimum_slope
                 if np.any(is_less):
                     below_minimum = self.reach_data[is_less]
-                    txt += "{} instances of streambed slopes below minimum found.\n".format(
-                        len(below_minimum)
+                    txt += (
+                        f"{len(below_minimum)} instances of streambed slopes "
+                        "below minimum found.\n"
                     )
                     if self.level == 1:
                         txt += "Reaches with low slopes:\n"
@@ -2897,8 +2860,9 @@ class check:
 
                 if np.any(is_greater):
                     above_max = self.reach_data[is_greater]
-                    txt += "{} instances of streambed slopes above maximum found.\n".format(
-                        len(above_max)
+                    txt += (
+                        f"{len(above_max)} instances of streambed slopes "
+                        "above maximum found.\n"
                     )
                     if self.level == 1:
                         txt += "Reaches with high slopes:\n"
@@ -2991,9 +2955,8 @@ def _get_duplicates(a):
     method https://stackoverflow.com/q/11528078/
     """
     s = np.sort(a, axis=None)
-    equal_to_previous_item = np.append(
-        s[1:] == s[:-1], False
-    )  # maintain same dimension for boolean array
+    # maintain same dimension for boolean array
+    equal_to_previous_item = np.append(s[1:] == s[:-1], False)
     return np.unique(s[equal_to_previous_item])
 
 
@@ -3284,8 +3247,8 @@ def _parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
             thickm = line.pop(0)
             elevupdn = line.pop(0)
             if isfropt in [4, 5] and per == 0:
-                # table in online guide suggests that the following items should be present in this case
-                # but in the example
+                # table in online guide suggests that the following items
+                # should be present in this case but in the example
                 thts = _pop_item(line)
                 thti = _pop_item(line)
                 eps = _pop_item(line)
@@ -3342,7 +3305,7 @@ def _find_path(graph, start, end=0, path=None):
     dictionary (graph) so that the recursion works.
     """
     if path is None:
-        path = list()
+        path = []
     path = path + [start]
     if start == end:
         return path

@@ -302,41 +302,31 @@ class ModflowUzf1(Package):
 
     """
 
-    _options = dict(
-        [
-            ("specifythtr", OptionBlock.simple_flag),
-            ("specifythti", OptionBlock.simple_flag),
-            ("nosurfleak", OptionBlock.simple_flag),
-            ("specifysurfk", OptionBlock.simple_flag),
-            ("rejectsurfk", OptionBlock.simple_flag),
-            ("seepsurfk", OptionBlock.simple_flag),
-            ("capillaryuzet", OptionBlock.simple_flag),
-            (
-                "etsquare",
-                {
-                    OptionBlock.dtype: np.bool_,
-                    OptionBlock.nested: True,
-                    OptionBlock.n_nested: 1,
-                    OptionBlock.vars: {"smoothfact": OptionBlock.simple_float},
-                },
-            ),
-            (
-                "netflux",
-                {
-                    OptionBlock.dtype: np.bool_,
-                    OptionBlock.nested: True,
-                    OptionBlock.n_nested: 2,
-                    OptionBlock.vars: dict(
-                        [
-                            ("unitrech", OptionBlock.simple_int),
-                            ("unitdis", OptionBlock.simple_int),
-                        ]
-                    ),
-                },
-            ),
-            ("savefinf", OptionBlock.simple_flag),
-        ]
-    )
+    _options = {
+        "specifythtr": OptionBlock.simple_flag,
+        "specifythti": OptionBlock.simple_flag,
+        "nosurfleak": OptionBlock.simple_flag,
+        "specifysurfk": OptionBlock.simple_flag,
+        "rejectsurfk": OptionBlock.simple_flag,
+        "seepsurfk": OptionBlock.simple_flag,
+        "capillaryuzet": OptionBlock.simple_flag,
+        "etsquare": {
+            OptionBlock.dtype: np.bool_,
+            OptionBlock.nested: True,
+            OptionBlock.n_nested: 1,
+            OptionBlock.vars: {"smoothfact": OptionBlock.simple_float},
+        },
+        "netflux": {
+            OptionBlock.dtype: np.bool_,
+            OptionBlock.nested: True,
+            OptionBlock.n_nested: 2,
+            OptionBlock.vars: {
+                "unitrech": OptionBlock.simple_int,
+                "unitdis": OptionBlock.simple_int,
+            },
+        },
+        "savefinf": OptionBlock.simple_flag,
+    }
 
     def __init__(
         self,
@@ -562,7 +552,7 @@ class ModflowUzf1(Package):
         # Dataset 9, 11, 13 and 15 will be written automatically in the
         # write_file function
         # Data Set 10
-        # [FINF (NCOL, NROW)] – U2DREL
+        # [FINF (NCOL, NROW)] - U2DREL
 
         self.finf = Transient2d(model, (nrow, ncol), np.float32, finf, name="finf")
         if ietflg > 0:

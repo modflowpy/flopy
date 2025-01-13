@@ -21,15 +21,18 @@
 # ### Setup the Notebook Environment
 
 import os
+import sys
 
 # +
-import sys
+from pathlib import Path
 from pprint import pformat
 from tempfile import TemporaryDirectory
 
+import git
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import pooch
 
 import flopy
 
@@ -39,20 +42,63 @@ print(f"matplotlib version: {mpl.__version__}")
 print(f"flopy version: {flopy.__version__}")
 # -
 
+
+# Check if we are in the repository and define the data path.
+
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+sim_name = "test005_advgw_tidal"
+file_names = [
+    "AdvGW_tidal.dis",
+    "AdvGW_tidal.evt",
+    "AdvGW_tidal.ghb",
+    "AdvGW_tidal.ghb.obs",
+    "AdvGW_tidal.head.cont.opncls",
+    "AdvGW_tidal.ic",
+    "AdvGW_tidal.nam",
+    "AdvGW_tidal.npf",
+    "AdvGW_tidal.obs",
+    "AdvGW_tidal.oc",
+    "AdvGW_tidal.riv",
+    "AdvGW_tidal.riv.obs",
+    "AdvGW_tidal.riv.single.opncls",
+    "AdvGW_tidal.sto",
+    "AdvGW_tidal.wel",
+    "AdvGW_tidal_1.rch",
+    "AdvGW_tidal_2.rch",
+    "AdvGW_tidal_3.rch",
+    "advgw_tidal.dis.grb",
+    "mfsim.nam",
+    "model.ims",
+    "recharge_rates.ts",
+    "recharge_rates_1.ts",
+    "recharge_rates_2.ts",
+    "recharge_rates_3.ts",
+    "river_stages.ts",
+    "simulation.tdis",
+    "tides.ts",
+    "tides.txt",
+    "well_rates.ts",
+]
+for fname in file_names:
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/mf6/{sim_name}/{fname}",
+        fname=fname,
+        path=data_path / "mf6" / sim_name,
+        known_hash=None,
+    )
+
 # For this example, we will set up a temporary workspace.
 # Model input files and output files will reside here.
 temp_dir = TemporaryDirectory()
 model_name = "advgw_tidal"
 workspace = os.path.join(temp_dir.name, model_name)
 
-data_pth = os.path.join(
-    "..",
-    "..",
-    "examples",
-    "data",
-    "mf6",
-    "test005_advgw_tidal",
-)
+data_pth = data_path / "mf6" / sim_name
 assert os.path.isdir(data_pth)
 
 # +
@@ -158,30 +204,18 @@ sto = flopy.mf6.ModflowGwfsto(
 # well package
 # test empty with aux vars, bound names, and time series
 period_two = flopy.mf6.ModflowGwfwel.stress_period_data.empty(
-    gwf,
-    maxbound=3,
-    aux_vars=["var1", "var2", "var3"],
-    boundnames=True,
-    timeseries=True,
+    gwf, maxbound=3, aux_vars=["var1", "var2", "var3"], boundnames=True, timeseries=True
 )
 period_two[0][0] = ((0, 11, 2), -50.0, -1, -2, -3, None)
 period_two[0][1] = ((2, 4, 7), "well_1_rate", 1, 2, 3, "well_1")
 period_two[0][2] = ((2, 3, 2), "well_2_rate", 4, 5, 6, "well_2")
 period_three = flopy.mf6.ModflowGwfwel.stress_period_data.empty(
-    gwf,
-    maxbound=2,
-    aux_vars=["var1", "var2", "var3"],
-    boundnames=True,
-    timeseries=True,
+    gwf, maxbound=2, aux_vars=["var1", "var2", "var3"], boundnames=True, timeseries=True
 )
 period_three[0][0] = ((2, 3, 2), "well_2_rate", 1, 2, 3, "well_2")
 period_three[0][1] = ((2, 4, 7), "well_1_rate", 4, 5, 6, "well_1")
 period_four = flopy.mf6.ModflowGwfwel.stress_period_data.empty(
-    gwf,
-    maxbound=5,
-    aux_vars=["var1", "var2", "var3"],
-    boundnames=True,
-    timeseries=True,
+    gwf, maxbound=5, aux_vars=["var1", "var2", "var3"], boundnames=True, timeseries=True
 )
 period_four[0][0] = ((2, 4, 7), "well_1_rate", 1, 2, 3, "well_1")
 period_four[0][1] = ((2, 3, 2), "well_2_rate", 4, 5, 6, "well_2")
@@ -373,15 +407,7 @@ obs_recarray = {
         ("rv2-upper", "RIV", "riv2_upper"),
         ("rv-2-7-4", "RIV", (0, 6, 3)),
         ("rv2-8-5", "RIV", (0, 6, 4)),
-        (
-            "rv-2-9-6",
-            "RIV",
-            (
-                0,
-                5,
-                5,
-            ),
-        ),
+        ("rv-2-9-6", "RIV", (0, 5, 5)),
     ],
     "riv_flowsA.csv": [
         ("riv1-3-1", "RIV", (0, 2, 0)),

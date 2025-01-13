@@ -151,9 +151,9 @@ def test_gage(function_tmpdir, example_data_path):
     for f in files:
         pth0 = join(ws, f)
         pth1 = join(model_ws2, f)
-        assert filecmp.cmp(
-            pth0, pth1
-        ), f'new and original gage file "{f}" are not binary equal.'
+        assert filecmp.cmp(pth0, pth1), (
+            f'new and original gage file "{f}" are not binary equal.'
+        )
 
 
 __example_data_path = get_example_data_path()
@@ -377,14 +377,14 @@ def test_mf2005_lake(function_tmpdir, namfile, mf2005_test_path):
 
     fn0 = join(ws, Path(namfile).name)
 
-    # write free format files - won't run without resetting to free format - evt external file issue
+    # write free format files -
+    # won't run without resetting to free format - evt external file issue
     m.free_format_input = True
 
     # rewrite files
     model_ws2 = join(ws, "external")
-    m.change_model_ws(
-        model_ws2, reset_external=True
-    )  # l1b2k_bath won't run without this
+    # l1b2k_bath won't run without this
+    m.change_model_ws(model_ws2, reset_external=True)
     m.write_input()
 
     success, buff = m.run_model()

@@ -470,8 +470,9 @@ class Modpath7Sim(Package):
             else:
                 if len(timepointdata) != 2:
                     raise ValueError(
-                        "timepointdata must be a have 2 entries "
-                        "({} provided)".format(len(timepointdata))
+                        "timepointdata must be a have 2 entries ({} provided)".format(
+                            len(timepointdata)
+                        )
                     )
                 else:
                     if isinstance(timepointdata[1], (list, tuple)):
@@ -520,12 +521,7 @@ class Modpath7Sim(Package):
             if zones is None:
                 raise ValueError("zones must be specified if zonedataoption='on'.")
             self.zones = Util3d(
-                model,
-                shape3d,
-                np.int32,
-                zones,
-                name="zones",
-                locat=self.unit_number[0],
+                model, shape3d, np.int32, zones, name="zones", locat=self.unit_number[0]
             )
 
         # retardationfactoroption
@@ -553,11 +549,7 @@ class Modpath7Sim(Package):
             particlegroups = [ParticleGroup()]
         elif isinstance(
             particlegroups,
-            (
-                ParticleGroup,
-                ParticleGroupLRCTemplate,
-                ParticleGroupNodeTemplate,
-            ),
+            (ParticleGroup, ParticleGroupLRCTemplate, ParticleGroupNodeTemplate),
         ):
             particlegroups = [particlegroups]
         self.particlegroups = particlegroups

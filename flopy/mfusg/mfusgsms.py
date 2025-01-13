@@ -530,8 +530,7 @@ class MfUsgSms(Package):
         if linmeth == 1 and nopt == 0:
             if model.verbose:
                 print(
-                    "   loading IACL NORDER LEVEL NORTH "
-                    "IREDSYS RRCTOL IDROPTOL EPSRN"
+                    "   loading IACL NORDER LEVEL NORTH IREDSYS RRCTOL IDROPTOL EPSRN"
                 )
             while True:
                 line = f.readline()

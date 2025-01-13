@@ -134,7 +134,7 @@ type integer
 reader urword
 optional false
 longname maximum number of sources
-description REPLACE maxbound {'{#1}': 'sources'}
+description REPLACE maxbound {'{#1}': 'source'}
 
 
 # --------------------- gwe esl period ---------------------

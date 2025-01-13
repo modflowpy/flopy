@@ -222,7 +222,7 @@ class VertexGrid(Grid):
         if self.cell1d is not None:
             close_cell = False
 
-        # go through each cell and create a line segement for each face
+        # go through each cell and create a line segment for each face
         lines = []
         ncpl = len(xgrid)
         for icpl in range(ncpl):

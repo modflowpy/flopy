@@ -315,8 +315,7 @@ class ModflowLak(Package):
             for idx, fname in enumerate(tab_files, 1):
                 if fname is None:
                     raise ValueError(
-                        "a filename must be specified for the "
-                        f"tabfile for lake {idx}"
+                        f"a filename must be specified for the tabfile for lake {idx}"
                     )
             # set unit for tab files if not passed to __init__
             if tab_units is None:
@@ -742,12 +741,7 @@ class ModflowLak(Package):
                     print(f"   reading lak dataset 6 - for stress period {iper + 1}")
                 name = f"BDLKNC_StressPeriod_{iper}"
                 bdlknc = Util3d.load(
-                    f,
-                    model,
-                    (nlay, nrow, ncol),
-                    np.float32,
-                    name,
-                    ext_unit_dict,
+                    f, model, (nlay, nrow, ncol), np.float32, name, ext_unit_dict
                 )
 
                 lake_loc[iper] = lakarr

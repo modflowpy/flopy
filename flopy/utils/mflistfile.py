@@ -488,9 +488,7 @@ class ListBudget:
         if start_datetime is not None:
             try:
                 totim = totim_to_datetime(
-                    totim,
-                    start=pd.to_datetime(start_datetime),
-                    timeunit=self.timeunit,
+                    totim, start=pd.to_datetime(start_datetime), timeunit=self.timeunit
                 )
             except:
                 pass  # if totim can't be cast to pd.datetime return in native units
@@ -559,8 +557,7 @@ class ListBudget:
             # Check if reduced pumping data was set to be written
             # to list file
             check_str = (
-                "WELLS WITH REDUCED PUMPING WILL BE REPORTED "
-                "TO THE MAIN LISTING FILE"
+                "WELLS WITH REDUCED PUMPING WILL BE REPORTED TO THE MAIN LISTING FILE"
             )
 
             check_str_ag = "AG WELLS WITH REDUCED PUMPING FOR STRESS PERIOD"
@@ -633,10 +630,7 @@ class ListBudget:
                     ts, sp = get_ts_sp(line)
                 except:
                     print(
-                        "unable to cast ts,sp on line number",
-                        l_count,
-                        " line: ",
-                        line,
+                        "unable to cast ts,sp on line number", l_count, " line: ", line
                     )
                     break
 
@@ -787,20 +781,12 @@ class ListBudget:
                     return self.null_entries
                 if flux is None:
                     print(
-                        "error casting in flux for",
-                        entry,
-                        " to float in ts,sp",
-                        ts,
-                        sp,
+                        "error casting in flux for", entry, " to float in ts,sp", ts, sp
                     )
                     return self.null_entries
                 if cumu is None:
                     print(
-                        "error casting in cumu for",
-                        entry,
-                        " to float in ts,sp",
-                        ts,
-                        sp,
+                        "error casting in cumu for", entry, " to float in ts,sp", ts, sp
                     )
                     return self.null_entries
                 if entry.endswith(tag.upper()):

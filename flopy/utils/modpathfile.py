@@ -20,13 +20,9 @@ class ModpathFile(ParticleTrackFile):
     def __init__(self, filename: Union[str, os.PathLike], verbose: bool = False):
         super().__init__(filename, verbose)
         self.output_type = self.__class__.__name__.lower().replace("file", "")
-        (
-            self.modpath,
-            self.compact,
-            self.skiprows,
-            self.version,
-            self.direction,
-        ) = self.parse(filename, self.output_type)
+        (self.modpath, self.compact, self.skiprows, self.version, self.direction) = (
+            self.parse(filename, self.output_type)
+        )
 
     @staticmethod
     def parse(
@@ -271,13 +267,7 @@ class PathlineFile(ModpathFile):
                     nrows += pathlinecount
                     # read in the particle data
                     d = np.loadtxt(itertools.islice(f, 0, pathlinecount), dtype=dtyper)
-                    key = (
-                        idx,
-                        sequencenumber,
-                        group,
-                        particleid,
-                        pathlinecount,
-                    )
+                    key = (idx, sequencenumber, group, particleid, pathlinecount)
                     particle_pathlines[key] = d.copy()
                     idx += 1
 
@@ -375,7 +365,8 @@ class PathlineFile(ModpathFile):
             .get_alldata() (if None, .get_alldata() is exported).
 
             .. deprecated:: 3.7
-                The ``timeseries_data`` option will be removed for FloPy 4. Use ``data`` instead.
+                The ``timeseries_data`` option will be removed for FloPy 4.
+                Use ``data`` instead.
         one_per_particle : boolean (default True)
             True writes a single LineString with a single set of attribute
             data for each particle. False writes a record/geometry for each
@@ -701,7 +692,8 @@ class EndpointFile(ModpathFile):
             (if none, EndpointFile.get_alldata() is exported).
 
             .. deprecated:: 3.7
-                The ``endpoint_data`` option will be removed for FloPy 4. Use ``data`` instead.
+                The ``endpoint_data`` option will be removed for FloPy 4.
+                Use ``data`` instead.
         shpname : str
             File path for shapefile
         direction : str
@@ -939,7 +931,8 @@ class TimeseriesFile(ModpathFile):
             is exported).
 
             .. deprecated:: 3.7
-                The ``timeseries_data`` option will be removed for FloPy 4. Use ``data`` instead.
+                The ``timeseries_data`` option will be removed for FloPy 4.
+                Use ``data`` instead.
         one_per_particle : boolean (default True)
             True writes a single LineString with a single set of attribute
             data for each particle. False writes a record/geometry for each

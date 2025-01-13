@@ -49,9 +49,9 @@ def test_dataset_dot_plot_nlay_ne_plottable(function_tmpdir, example_data_path):
     ml = Modflow.load("ibs2k.nam", "mf2k", model_ws=loadpth, check=False)
     # special case where nlay != plottable
     ax = ml.bcf6.vcont.plot()
-    assert isinstance(
-        ax, plt.Axes
-    ), "ml.bcf6.vcont.plot() ax is is not of type plt.Axes"
+    assert isinstance(ax, plt.Axes), (
+        "ml.bcf6.vcont.plot() ax is is not of type plt.Axes"
+    )
 
 
 def test_model_dot_plot_export(function_tmpdir, example_data_path):

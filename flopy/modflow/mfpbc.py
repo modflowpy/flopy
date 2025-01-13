@@ -40,10 +40,7 @@ class ModflowPbc(Package):
                     "or layer_row_column_data."
                 )
 
-        (
-            self.mxactp,
-            self.layer_row_column_data,
-        ) = self.assign_layer_row_column_data(
+        (self.mxactp, self.layer_row_column_data) = self.assign_layer_row_column_data(
             layer_row_column_data, 5, zerobase=zerobase
         )
         # misuse of this function - zerobase needs to be False

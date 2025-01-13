@@ -77,24 +77,34 @@ def test_modflow_load(namfile, example_data_path):
     assert model.model_ws == str(mpath)
 
 
+def test_modflow_load_with_extra_pkg(example_data_path):
+    namfile = Path("freyberg") / "freyberg.nam"
+    mpath = Path(example_data_path / namfile).parent
+
+    # extra pkg
+    dummy_extra_pkg_for_test = {"DUM": "Dummy"}
+
+    model = Modflow.load(
+        mpath / namfile.name,
+        verbose=True,
+        model_ws=mpath,
+        extra_pkgs=dummy_extra_pkg_for_test,
+    )
+    assert model.mfnam_packages["DUM"] == "Dummy"
+
+
 @pytest.mark.parametrize(
     "path,expected",
     [
         pytest.param(
             _example_data_path / "freyberg" / "freyberg.nam",
-            {
-                "crs": None,
-                "epsg": None,
-                "angrot": 0.0,
-                "xoffset": 0.0,
-                "yoffset": 0.0,
-            },
+            {"crs": None, "epsg": None, "angrot": 0.0, "xoffset": 0.0, "yoffset": 0.0},
             id="freyberg",
         ),
         pytest.param(
             _example_data_path / "freyberg_multilayer_transient" / "freyberg.nam",
             {
-                "proj4": "+proj=utm +zone=14 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
+                "proj4": "+proj=utm +zone=14 +ellps=WGS84 +datum=WGS84 +units=m +no_defs",  # noqa
                 "angrot": 15.0,
                 "xoffset": 622241.1904510253,
                 "yoffset": 3343617.741737109,
@@ -107,12 +117,7 @@ def test_modflow_load(namfile, example_data_path):
             / "mfnwt_mt3dusgs"
             / "sft_crnkNic"
             / "CrnkNic.nam",
-            {
-                "epsg": 26916,
-                "angrot": 0.0,
-                "xoffset": 0.0,
-                "yoffset": 0.0,
-            },
+            {"epsg": 26916, "angrot": 0.0, "xoffset": 0.0, "yoffset": 0.0},
             id="CrnkNic",
         ),
     ],
@@ -277,14 +282,14 @@ def test_exe_selection(example_data_path, function_tmpdir):
         == exe_name
     )
 
-    # init/load should warn if exe DNE
+    # init/load should warn if exe does not exist
     exe_name = "not_an_exe"
     with pytest.warns(UserWarning):
         ml = Modflow(exe_name=exe_name)
     with pytest.warns(UserWarning):
         ml = Modflow.load(namfile_path, exe_name=exe_name, model_ws=model_path)
 
-    # run should error if exe DNE
+    # run should error if exe does not exist
     ml = Modflow.load(namfile_path, exe_name=exe_name, model_ws=model_path)
     ml.change_model_ws(function_tmpdir)
     ml.write_input()
@@ -368,9 +373,9 @@ def test_mf6_update_grid(example_data_path):
     mg = gwf.modelgrid
     gwf.dis.top = 12
 
-    assert np.allclose(
-        gwf.dis.top.array, gwf.modelgrid.top
-    ), "StructuredGrid failed dynamic update test"
+    assert np.allclose(gwf.dis.top.array, gwf.modelgrid.top), (
+        "StructuredGrid failed dynamic update test"
+    )
 
     # disv
     ml_path = example_data_path / "mf6" / "test003_gwfs_disv"
@@ -379,9 +384,9 @@ def test_mf6_update_grid(example_data_path):
     mg = gwf.modelgrid
     gwf.disv.top = 6.12
 
-    assert np.allclose(
-        gwf.disv.top.array, gwf.modelgrid.top
-    ), "VertexGrid failed dynamic update test"
+    assert np.allclose(gwf.disv.top.array, gwf.modelgrid.top), (
+        "VertexGrid failed dynamic update test"
+    )
 
     # disu
     ml_path = example_data_path / "mf6" / "test006_gwf3"
@@ -390,9 +395,9 @@ def test_mf6_update_grid(example_data_path):
     mg = gwf.modelgrid
     gwf.disu.top = 101
 
-    assert np.allclose(
-        gwf.disu.top.array, gwf.modelgrid.top
-    ), "UnstructuredGrid failed dynamic update test"
+    assert np.allclose(gwf.disu.top.array, gwf.modelgrid.top), (
+        "UnstructuredGrid failed dynamic update test"
+    )
 
 
 def test_load_twri_grid(example_data_path):
@@ -405,9 +410,9 @@ def test_load_twri_grid(example_data_path):
     assert mg.shape == shape, f"modelgrid shape {mg.shape} not equal to {shape}"
     thickness = mg.cell_thickness
     shape = (5, 15, 15)
-    assert (
-        thickness.shape == shape
-    ), f"cell_thickness shape {thickness.shape} not equal to {shape}"
+    assert thickness.shape == shape, (
+        f"cell_thickness shape {thickness.shape} not equal to {shape}"
+    )
 
 
 def test_mg(function_tmpdir):
@@ -1183,14 +1188,7 @@ def test_load_with_list_reader(function_tmpdir):
 
     # create the wells, but use an all float dtype to write a binary file
     # use one-based values
-    weldt = np.dtype(
-        [
-            ("k", "<f4"),
-            ("i", "<f4"),
-            ("j", "<f4"),
-            ("q", "<f4"),
-        ]
-    )
+    weldt = np.dtype([("k", "<f4"), ("i", "<f4"), ("j", "<f4"), ("q", "<f4")])
     welra = np.recarray(2, dtype=weldt)
     welra[0] = (1, 2, 2, -5.0)
     welra[1] = (1, nrow - 2, ncol - 2, -10.0)
@@ -1225,7 +1223,8 @@ def test_load_with_list_reader(function_tmpdir):
     ["recarray", "dataframe", "dict_of_recarray", "dict_of_dataframe"],
 )
 def test_pkg_data_containers(function_tmpdir, container):
-    """Test various containers for package data (list, ndarray, recarray, dataframe, dict of such)"""
+    """Test various containers for package data
+    (list, ndarray, recarray, dataframe, dict of such)"""
 
     nlay = 1
     nrow = 10
@@ -1250,14 +1249,7 @@ def test_pkg_data_containers(function_tmpdir, container):
     wel_ra = ModflowWel.get_empty(2)
     wel_ra[0] = (0, 1, 1, -5.0)
     wel_ra[1] = (0, nrow - 3, ncol - 3, -10.0)
-    wel_dtype = np.dtype(
-        [
-            ("k", int),
-            ("i", int),
-            ("j", int),
-            ("q", np.float32),
-        ]
-    )
+    wel_dtype = np.dtype([("k", int), ("i", int), ("j", int), ("q", np.float32)])
     df_per = pd.DataFrame(wel_ra)
     if "dict_of_recarray" in container:
         wel_spd = {0: wel_ra}

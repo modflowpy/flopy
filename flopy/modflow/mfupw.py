@@ -274,11 +274,7 @@ class ModflowUpw(Package):
         """
         # allows turning off package checks when writing files at model level
         if check:
-            self.check(
-                f=f"{self.name[0]}.chk",
-                verbose=self.parent.verbose,
-                level=1,
-            )
+            self.check(f=f"{self.name[0]}.chk", verbose=self.parent.verbose, level=1)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         if f is not None:
             f_upw = f
@@ -383,12 +379,7 @@ class ModflowUpw(Package):
         if model.verbose:
             print("   loading ipakcb, HDRY, NPUPW, IPHDRY...")
         t = line_parse(line)
-        ipakcb, hdry, npupw, iphdry = (
-            int(t[0]),
-            float(t[1]),
-            int(t[2]),
-            int(t[3]),
-        )
+        ipakcb, hdry, npupw, iphdry = (int(t[0]), float(t[1]), int(t[2]), int(t[3]))
 
         # options
         noparcheck = False
@@ -465,12 +456,7 @@ class ModflowUpw(Package):
                     print(f"   loading hani layer {k + 1:3d}...")
                 if "hani" not in par_types:
                     t = Util2d.load(
-                        f,
-                        model,
-                        (nrow, ncol),
-                        np.float32,
-                        "hani",
-                        ext_unit_dict,
+                        f, model, (nrow, ncol), np.float32, "hani", ext_unit_dict
                     )
                 else:
                     line = f.readline()
@@ -516,12 +502,7 @@ class ModflowUpw(Package):
                         print(f"   loading sy layer {k + 1:3d}...")
                     if "sy" not in par_types:
                         t = Util2d.load(
-                            f,
-                            model,
-                            (nrow, ncol),
-                            np.float32,
-                            "sy",
-                            ext_unit_dict,
+                            f, model, (nrow, ncol), np.float32, "sy", ext_unit_dict
                         )
                     else:
                         line = f.readline()
@@ -536,12 +517,7 @@ class ModflowUpw(Package):
                     print(f"   loading vkcb layer {k + 1:3d}...")
                 if "vkcb" not in par_types:
                     t = Util2d.load(
-                        f,
-                        model,
-                        (nrow, ncol),
-                        np.float32,
-                        "vkcb",
-                        ext_unit_dict,
+                        f, model, (nrow, ncol), np.float32, "vkcb", ext_unit_dict
                     )
                 else:
                     line = f.readline()
@@ -586,11 +562,7 @@ class ModflowUpw(Package):
             filenames=filenames,
         )
         if check:
-            upw.check(
-                f=f"{upw.name[0]}.chk",
-                verbose=upw.parent.verbose,
-                level=0,
-            )
+            upw.check(f=f"{upw.name[0]}.chk", verbose=upw.parent.verbose, level=0)
 
         # return upw object
         return upw

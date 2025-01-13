@@ -618,12 +618,12 @@ class UnstructuredGrid(Grid):
         reset = kwargs.pop("reset", False)
         if method == "iac":
             if self._neighbors is None or reset:
-                neighors = {}
+                neighbors = {}
                 idx0 = 0
                 for node, ia in enumerate(self._iac):
                     idx1 = idx0 + ia
-                    neighors[node] = list(self._ja[idx0 + 1 : idx1])
-                self._neighbors = neighors
+                    neighbors[node] = list(self._ja[idx0 + 1 : idx1])
+                self._neighbors = neighbors
             if node is not None:
                 return self._neighbors[node]
             else:
@@ -681,9 +681,7 @@ class UnstructuredGrid(Grid):
                 if vert in vset:
                     vset[vert].add(rec[0])
                 else:
-                    vset[vert] = {
-                        rec[0],
-                    }
+                    vset[vert] = {rec[0]}
 
             cnt = 0
             ivert_remap = {}
@@ -1177,7 +1175,8 @@ class UnstructuredGrid(Grid):
                 verts_provided = len(line) - 6
                 if verts_declared != verts_provided:
                     raise ValueError(
-                        f"Cell {nn} declares {verts_declared} vertices but provides {verts_provided}"
+                        f"Cell {nn} declares {verts_declared} vertices "
+                        f"but provides {verts_provided}"
                     )
 
                 verts = [int(vert) - 1 for vert in line[6 : 6 + verts_declared]]

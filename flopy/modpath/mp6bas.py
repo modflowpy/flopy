@@ -28,13 +28,14 @@ class Modpath6Bas(Package):
     hdry : float
         Head value assigned to dry cells (default is -8888.).
     def_face_ct : int
-        Number fo default iface codes to read (default is 0).
+        Number of default iface codes to read (default is 0).
     bud_label : str or list of strs
         MODFLOW budget item to which a default iface is assigned.
     def_iface : int or list of ints
         Cell face (iface) on which to assign flows from MODFLOW budget file.
     laytyp : None, int or list of ints
-        MODFLOW layer type (0 is convertible, 1 is confined). If None, read from modflow model
+        MODFLOW layer type (0 is convertible, 1 is confined).
+        If None, read from modflow model
     ibound : None or array of ints, optional
         The ibound array (the default is 1). If None, pull from parent modflow model
     prsity : array of ints, optional

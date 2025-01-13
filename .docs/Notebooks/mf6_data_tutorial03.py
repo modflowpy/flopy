@@ -240,20 +240,17 @@ ghb.ts.append_package(
 
 print(
     "{} is using {} interpolation".format(
-        ghb.ts[0].filename,
-        ghb.ts[0].interpolation_methodrecord.get_data()[0][0],
+        ghb.ts[0].filename, ghb.ts[0].interpolation_methodrecord.get_data()[0][0]
     )
 )
 print(
     "{} is using {} interpolation".format(
-        ghb.ts[1].filename,
-        ghb.ts[1].interpolation_methodrecord.get_data()[0][0],
+        ghb.ts[1].filename, ghb.ts[1].interpolation_methodrecord.get_data()[0][0]
     )
 )
 print(
     "{} is using {} interpolation".format(
-        ghb.ts[2].filename,
-        ghb.ts[2].interpolation_methodrecord.get_data()[0][0],
+        ghb.ts[2].filename, ghb.ts[2].interpolation_methodrecord.get_data()[0][0]
     )
 )
 

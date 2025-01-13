@@ -44,13 +44,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import shapely
-from shapely.geometry import (
-    LineString,
-    MultiLineString,
-    MultiPoint,
-    Point,
-    Polygon,
-)
+from shapely.geometry import LineString, MultiLineString, MultiPoint, Point, Polygon
 
 import flopy
 import flopy.discretization as fgrid
@@ -110,15 +104,7 @@ sgr.plot()
 # Polygon to intersect with:
 
 p = Polygon(
-    shell=[
-        (15, 15),
-        (20, 50),
-        (35, 80.0),
-        (80, 50),
-        (80, 40),
-        (40, 5),
-        (15, 12),
-    ],
+    shell=[(15, 15), (20, 50), (35, 80.0), (80, 50), (80, 40), (40, 5), (15, 12)],
     holes=[[(25, 25), (25, 45), (45, 45), (45, 25)]],
 )
 
@@ -261,12 +247,7 @@ ax.legend([h2], [i.get_label() for i in [h2]], loc="best")
 # MultiPoint to intersect with
 
 mp = MultiPoint(
-    points=[
-        Point(50.0, 0.0),
-        Point(45.0, 45.0),
-        Point(10.0, 10.0),
-        Point(150.0, 100.0),
-    ]
+    points=[Point(50.0, 0.0), Point(45.0, 45.0), Point(10.0, 10.0), Point(150.0, 100.0)]
 )
 
 # For points and linestrings there is a keyword argument `return_all_intersections` which will return multiple intersection results for points or (parts of) linestrings on cell boundaries. As an example, the difference is shown with the MultiPoint intersection. Note the number of red "+" symbols indicating the centroids of intersected cells, in the bottom left case, there are 4 results because the point lies exactly on the intersection between 4 grid cells.

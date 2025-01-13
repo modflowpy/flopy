@@ -98,8 +98,8 @@ class ModflowDrt(Package):
 
     >>> import flopy
     >>> ml = flopy.modflow.Modflow()
-    >>> lrcec = {0:[2, 3, 4, 10., 100., 1 ,1 ,1, 1.0]}  #this drain will be applied to all
-    >>>                                   #stress periods
+    >>> # this drain will be applied to all stress periods
+    >>> lrcec = {0:[2, 3, 4, 10., 100., 1 ,1 ,1, 1.0]}
     >>> drt = flopy.modflow.ModflowDrt(ml, stress_period_data=lrcec)
 
     """
@@ -214,11 +214,7 @@ class ModflowDrt(Package):
 
         """
         if check:  # allows turning off package checks when writing files at model level
-            self.check(
-                f=f"{self.name[0]}.chk",
-                verbose=self.parent.verbose,
-                level=1,
-            )
+            self.check(f=f"{self.name[0]}.chk", verbose=self.parent.verbose, level=1)
         f_drn = open(self.fn_path, "w")
         f_drn.write(f"{self.heading}\n")
         line = f"{self.stress_period_data.mxact:10d}{self.ipakcb:10d}{0:10d}{0:10d}"

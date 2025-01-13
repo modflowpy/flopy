@@ -85,9 +85,8 @@ class TemplateWriter:
             # Write the file
             paktpl.heading = "ptf ~\n" + paktpl.heading
             paktpl.fn_path += ".tpl"
-            paktpl.write_file(
-                check=False
-            )  # for now, turn off checks for template files
+            # for now, turn off checks for template files
+            paktpl.write_file(check=False)
 
             # Destroy the template version of the package
             paktpl = None

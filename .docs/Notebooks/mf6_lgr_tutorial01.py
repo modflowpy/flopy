@@ -551,10 +551,7 @@ assert success, "Model did not run to completion."
 # +
 # load and store the head arrays from the parent and child models
 head = [gwfp.output.head().get_data(), gwfc.output.head().get_data()]
-conc = [
-    gwtp.output.concentration().get_data(),
-    gwtc.output.concentration().get_data(),
-]
+conc = [gwtp.output.concentration().get_data(), gwtc.output.concentration().get_data()]
 
 # load and store the specific discharge results for the parent and child models
 bud = gwfp.output.budget()

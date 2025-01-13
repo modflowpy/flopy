@@ -33,6 +33,12 @@ if HAS_PYPROJ:
     import pyproj
 
 
+epsg_3070_proj4_str = (
+    "+proj=tmerc +lat_0=0 +lon_0=-90 +k=0.9996 +x_0=520000 "
+    "+y_0=-4480000 +datum=NAD83 +units=m +no_defs "
+)
+
+
 @pytest.fixture
 def minimal_unstructured_grid_info():
     d = {
@@ -302,7 +308,7 @@ def test_intersection(dis_model, disv_model):
                 x, y, local=local, forgive=forgive
             )
         except Exception as e:
-            if not forgive and any(["outside of the model area" in k for k in e.args]):
+            if not forgive and any("outside of the model area" in k for k in e.args):
                 pass
             else:  # should be forgiving x,y out of grid
                 raise e
@@ -343,7 +349,7 @@ def test_structured_xyz_intersect(example_data_path):
 
 def test_vertex_xyz_intersect(example_data_path):
     sim = MFSimulation.load(sim_ws=example_data_path / "mf6" / "test003_gwfs_disv")
-    ml = sim.get_model(list(sim.model_names)[0])
+    ml = sim.get_model(next(iter(sim.model_names)))
     mg = ml.modelgrid
 
     assert mg.size == np.prod((mg.nlay, mg.ncpl))
@@ -373,12 +379,8 @@ def test_unstructured_xyz_intersect(example_data_path):
     ncpl = np.array(3 * [len(iverts)])
     nnodes = np.sum(ncpl)
 
-    top = np.ones(
-        (nnodes),
-    )
-    botm = np.ones(
-        (nnodes),
-    )
+    top = np.ones((nnodes))
+    botm = np.ones((nnodes))
 
     # set top and botm elevations
     i0 = 0
@@ -424,9 +426,9 @@ def test_structured_from_gridspec(example_data_path, spc_file):
     assert isinstance(modelgrid, StructuredGrid)
 
     lc = modelgrid.plot()
-    assert isinstance(
-        lc, matplotlib.collections.LineCollection
-    ), f"could not plot grid object created from {fn}"
+    assert isinstance(lc, matplotlib.collections.LineCollection), (
+        f"could not plot grid object created from {fn}"
+    )
     plt.close()
 
     extents = modelgrid.extent
@@ -437,12 +439,12 @@ def test_structured_from_gridspec(example_data_path, spc_file):
         0,  # xmin
         8000 * np.sin(theta) + 8000 * np.cos(theta),  # xmax
         8000 * np.sin(theta) * np.tan(theta / 2),  # ymin
-        8000 + 8000 * np.sin(theta),
-    )  # ymax
+        8000 + 8000 * np.sin(theta),  # ymax
+    )
     errmsg = f"extents {extents} of {fn} does not equal {rotated_extents}"
-    assert all(
-        [np.isclose(x, x0) for x, x0 in zip(modelgrid.extent, rotated_extents)]
-    ), errmsg
+    assert all(np.isclose(x, x0) for x, x0 in zip(modelgrid.extent, rotated_extents)), (
+        errmsg
+    )
 
     ncpl = modelgrid.ncol * modelgrid.nrow
     assert modelgrid.ncpl == ncpl, f"ncpl ({modelgrid.ncpl}) does not equal {ncpl}"
@@ -452,9 +454,9 @@ def test_structured_from_gridspec(example_data_path, spc_file):
     maxvertex = max([max(sublist[1:]) for sublist in iverts])
     assert maxvertex + 1 == nvert, f"nvert ({maxvertex + 1}) does not equal {nvert}"
     verts = modelgrid.verts
-    assert (
-        nvert == verts.shape[0]
-    ), f"number of vertex (x, y) pairs ({verts.shape[0]}) does not equal {nvert}"
+    assert nvert == verts.shape[0], (
+        f"number of vertex (x, y) pairs ({verts.shape[0]}) does not equal {nvert}"
+    )
 
 
 @requires_pkg("shapely")
@@ -544,14 +546,7 @@ def unstructured_from_gridspec_driver(example_data_path, gsf_file):
 
         # check nodes
         expected_nodes = [
-            (
-                int(s[0]),
-                float(s[1]),
-                float(s[2]),
-                float(s[3]),
-                int(s[4]),
-                int(s[5]),
-            )
+            (int(s[0]), float(s[1]), float(s[2]), float(s[3]), int(s[4]), int(s[5]))
             for s in split[(3 + nverts) : -1]
         ]
         for i, en in enumerate(expected_nodes):
@@ -579,10 +574,7 @@ def test_unstructured_from_gridspec_comments(example_data_path):
         (None, None),
         (26916, "EPSG:26916"),
         ("epsg:5070", "EPSG:5070"),
-        (
-            "+proj=tmerc +lat_0=0 +lon_0=-90 +k=0.9996 +x_0=520000 +y_0=-4480000 +datum=NAD83 +units=m +no_defs ",
-            "EPSG:3070",
-        ),
+        (epsg_3070_proj4_str, "EPSG:3070"),
         pytest.param(4269, None, marks=pytest.mark.xfail),
     ),
 )
@@ -649,10 +641,7 @@ def test_grid_crs(minimal_unstructured_grid_info, crs, expected_srs, function_tm
         (None, None),
         (26916, "EPSG:26916"),
         ("epsg:5070", "EPSG:5070"),
-        (
-            "+proj=tmerc +lat_0=0 +lon_0=-90 +k=0.9996 +x_0=520000 +y_0=-4480000 +datum=NAD83 +units=m +no_defs ",
-            "EPSG:3070",
-        ),
+        (epsg_3070_proj4_str, "EPSG:3070"),
         ("ESRI:102733", "ESRI:102733"),
         pytest.param(4269, None, marks=pytest.mark.xfail),
     ),
@@ -1156,17 +1145,13 @@ def test_voronoi_grid(request, function_tmpdir, grid_info):
     ax = fig.add_subplot()
     ax.set_aspect("equal")
     grid.plot(ax=ax)
-    ax.plot(
-        grid.xcellcenters[invalid_cells],
-        grid.ycellcenters[invalid_cells],
-        "ro",
-    )
+    ax.plot(grid.xcellcenters[invalid_cells], grid.ycellcenters[invalid_cells], "ro")
     plt.savefig(function_tmpdir / f"{name}.png")
 
     assert ncpl == gridprops["ncpl"] or almost_right
-    assert (
-        len(invalid_cells) == 0
-    ), f"The following cells do not have 3 or more vertices.\n{invalid_cells}"
+    assert len(invalid_cells) == 0, (
+        f"The following cells do not have 3 or more vertices.\n{invalid_cells}"
+    )
 
 
 @pytest.fixture
@@ -1272,21 +1257,21 @@ def test_structured_ncb_thickness():
     grid = GridCases.structured_cbd_small()
     thickness = grid.cell_thickness
 
-    assert thickness.shape[0] == grid.nlay + np.count_nonzero(
-        grid.laycbd
-    ), "grid cell_thickness attribute returns incorrect shape"
+    assert thickness.shape[0] == grid.nlay + np.count_nonzero(grid.laycbd), (
+        "grid cell_thickness attribute returns incorrect shape"
+    )
 
     thickness = grid.remove_confining_beds(grid.cell_thickness)
     assert thickness.shape == grid.shape, "quasi3d confining beds not properly removed"
 
     sat_thick = grid.saturated_thickness(grid.cell_thickness)
-    assert (
-        sat_thick.shape == grid.shape
-    ), "saturated_thickness confining beds not removed"
+    assert sat_thick.shape == grid.shape, (
+        "saturated_thickness confining beds not removed"
+    )
 
-    assert (
-        sat_thick[1, 0, 0] == 20
-    ), "saturated_thickness is not properly indexing confining beds"
+    assert sat_thick[1, 0, 0] == 20, (
+        "saturated_thickness is not properly indexing confining beds"
+    )
 
 
 @pytest.mark.parametrize(
@@ -1294,9 +1279,9 @@ def test_structured_ncb_thickness():
 )
 def test_unstructured_iverts(grid):
     iverts = grid.iverts
-    assert not any(
-        None in l for l in iverts
-    ), "None type should not be returned in iverts list"
+    assert not any(None in l for l in iverts), (
+        "None type should not be returned in iverts list"
+    )
 
 
 @pytest.mark.parametrize(
@@ -1407,12 +1392,7 @@ def test_unstructured_iverts_cleanup():
     iac, ja = [], []
     for cell, neigh in neighbors.items():
         iac.append(len(neigh) + 1)
-        ja.extend(
-            [
-                cell,
-            ]
-            + neigh
-        )
+        ja.extend([cell] + neigh)
 
     # build iverts and verts without using shared vertices
     verts, iverts = [], []

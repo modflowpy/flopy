@@ -110,34 +110,22 @@ class ModflowWel(Package):
 
     """
 
-    _options = dict(
-        [
-            (
-                "specify",
-                {
-                    OptionBlock.dtype: np.bool_,
-                    OptionBlock.nested: True,
-                    OptionBlock.n_nested: 2,
-                    OptionBlock.vars: dict(
-                        [
-                            ("phiramp", OptionBlock.simple_float),
-                            (
-                                "iunitramp",
-                                dict(
-                                    [
-                                        (OptionBlock.dtype, int),
-                                        (OptionBlock.nested, False),
-                                        (OptionBlock.optional, True),
-                                    ]
-                                ),
-                            ),
-                        ]
-                    ),
+    _options = {
+        "specify": {
+            OptionBlock.dtype: np.bool_,
+            OptionBlock.nested: True,
+            OptionBlock.n_nested: 2,
+            OptionBlock.vars: {
+                "phiramp": OptionBlock.simple_float,
+                "iunitramp": {
+                    OptionBlock.dtype: int,
+                    OptionBlock.nested: False,
+                    OptionBlock.optional: True,
                 },
-            ),
-            ("tabfiles", OptionBlock.simple_tabfile),
-        ]
-    )
+            },
+        },
+        "tabfiles": OptionBlock.simple_tabfile,
+    }
 
     def __init__(
         self,

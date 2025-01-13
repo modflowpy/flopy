@@ -72,12 +72,7 @@ def features_to_shapefile(features, featuretype, filename: Union[str, os.PathLik
 
     features = GeoSpatialCollection(features, featuretype).flopy_geometry
 
-    if featuretype.lower() not in [
-        "point",
-        "line",
-        "linestring",
-        "polygon",
-    ]:
+    if featuretype.lower() not in ["point", "line", "linestring", "polygon"]:
         raise ValueError(f"Unrecognized feature type: {featuretype}")
 
     if featuretype.lower() in ("line", "linestring"):
@@ -319,7 +314,8 @@ class Gridgen:
                     xmin, xmax, ymin, ymax = elev_extent
                 except:
                     raise ValueError(
-                        f"Cannot unpack elev_extent as tuple (xmin, xmax, ymin, ymax): {elev_extent}"
+                        "Cannot unpack elev_extent as tuple (xmin, xmax, ymin, ymax): "
+                        f"{elev_extent}"
                     )
 
                 nm = f"_gridgen.lay{isurf}.asc"
@@ -335,7 +331,8 @@ class Gridgen:
                 self._asciigrid_dict[isurf] = elev
             else:
                 raise ValueError(
-                    "ASCIIGRID was specified but elevation was not provided as a numpy ndarray or asciigrid file."
+                    "ASCIIGRID was specified but elevation was not provided "
+                    "as a numpy ndarray or asciigrid file."
                 )
 
     def resolve_shapefile_path(self, p):
@@ -387,9 +384,9 @@ class Gridgen:
             )
 
         # make sure shapefile exists
-        assert (
-            shapefile_path and shapefile_path.is_file()
-        ), f"Shapefile does not exist: {shapefile_path}"
+        assert shapefile_path and shapefile_path.is_file(), (
+            f"Shapefile does not exist: {shapefile_path}"
+        )
 
         # store shapefile info
         self._addict[shapefile_path.stem] = relpath_safe(shapefile_path, self.model_ws)
@@ -439,9 +436,9 @@ class Gridgen:
             )
 
         # make sure shapefile exists
-        assert (
-            shapefile_path and shapefile_path.is_file()
-        ), f"Shapefile does not exist: {shapefile_path}"
+        assert shapefile_path and shapefile_path.is_file(), (
+            f"Shapefile does not exist: {shapefile_path}"
+        )
 
         # store shapefile info
         self._rfdict[shapefile_path.stem] = [
@@ -491,11 +488,7 @@ class Gridgen:
         qtgfname = os.path.join(self.model_ws, "quadtreegrid.dfn")
         if os.path.isfile(qtgfname):
             os.remove(qtgfname)
-        cmds = [
-            self.exe_name,
-            "quadtreebuilder",
-            "_gridgen_build.dfn",
-        ]
+        cmds = [self.exe_name, "quadtreebuilder", "_gridgen_build.dfn"]
         buff = subprocess.check_output(cmds, cwd=self.model_ws)
         if verbose:
             print(buff)
@@ -578,11 +571,7 @@ class Gridgen:
         assert os.path.isfile(fname), f"Could not create export dfn file: {fname}"
 
         # Export shapefiles
-        cmds = [
-            self.exe_name,
-            "grid_to_shapefile_poly",
-            "_gridgen_export.dfn",
-        ]
+        cmds = [self.exe_name, "grid_to_shapefile_poly", "_gridgen_export.dfn"]
         buff = []
         try:
             buff = subprocess.check_output(cmds, cwd=self.model_ws)
@@ -591,16 +580,9 @@ class Gridgen:
             fn = os.path.join(self.model_ws, "qtgrid.shp")
             assert os.path.isfile(fn)
         except:
-            print(
-                "Error.  Failed to export polygon shapefile of grid",
-                buff,
-            )
+            print("Error.  Failed to export polygon shapefile of grid", buff)
 
-        cmds = [
-            self.exe_name,
-            "grid_to_shapefile_point",
-            "_gridgen_export.dfn",
-        ]
+        cmds = [self.exe_name, "grid_to_shapefile_point", "_gridgen_export.dfn"]
         buff = []
         try:
             buff = subprocess.check_output(cmds, cwd=self.model_ws)
@@ -609,17 +591,10 @@ class Gridgen:
             fn = os.path.join(self.model_ws, "qtgrid_pt.shp")
             assert os.path.isfile(fn)
         except:
-            print(
-                "Error.  Failed to export polygon shapefile of grid",
-                buff,
-            )
+            print("Error.  Failed to export polygon shapefile of grid", buff)
 
         # Export the usg data
-        cmds = [
-            self.exe_name,
-            "grid_to_usgdata",
-            "_gridgen_export.dfn",
-        ]
+        cmds = [self.exe_name, "grid_to_usgdata", "_gridgen_export.dfn"]
         buff = []
         try:
             buff = subprocess.check_output(cmds, cwd=self.model_ws)
@@ -642,11 +617,7 @@ class Gridgen:
         except:
             print("Error.  Failed to export vtk file", buff)
 
-        cmds = [
-            self.exe_name,
-            "grid_to_vtk_sv",
-            "_gridgen_export.dfn",
-        ]
+        cmds = [self.exe_name, "grid_to_vtk_sv", "_gridgen_export.dfn"]
         buff = []
         try:
             buff = subprocess.check_output(cmds, cwd=self.model_ws)
@@ -655,10 +626,7 @@ class Gridgen:
             fn = os.path.join(self.model_ws, "qtg_sv.vtu")
             assert os.path.isfile(fn)
         except:
-            print(
-                "Error.  Failed to export shared vertex vtk file",
-                buff,
-            )
+            print("Error.  Failed to export shared vertex vtk file", buff)
 
     def plot(
         self,
@@ -1664,11 +1632,7 @@ class Gridgen:
         # Load the intersection results as a recarray, convert nodenumber
         # to zero-based and return
         result = np.genfromtxt(
-            fn,
-            dtype=None,
-            names=True,
-            delimiter=",",
-            usecols=tuple(range(ncol)),
+            fn, dtype=None, names=True, delimiter=",", usecols=tuple(range(ncol))
         )
         result = np.atleast_1d(result)
         result = result.view(np.recarray)

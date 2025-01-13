@@ -6,6 +6,7 @@ import pytest
 from matplotlib.collections import LineCollection, PathCollection
 from modflow_devtools.markers import requires_exe
 
+import flopy
 from flopy.modflow import Modflow
 from flopy.modpath import Modpath6, Modpath6Bas
 from flopy.plot import PlotCrossSection, PlotMapView

@@ -248,12 +248,13 @@ def get_bindir_options(previous=None) -> Dict[str, Tuple[Path, str]]:
 
 
 def select_bindir(bindir, previous=None, quiet=False, is_cli=False) -> Path:
-    """Resolve an install location if provided, or prompt interactive user to select one."""
+    """Resolve an install location if provided, or prompt interactive user to
+    select one."""
     options = get_bindir_options(previous)
 
     if len(bindir) > 1:  # auto-select mode
         # match one option that starts with input, e.g. :Py -> :python
-        sel = list(opt for opt in options if opt.startswith(bindir.lower()))
+        sel = [opt for opt in options if opt.startswith(bindir.lower())]
         if len(sel) != 1:
             opt_avail = ", ".join(
                 f"'{opt}' for '{optpath}'" for opt, (optpath, _) in options.items()
@@ -575,7 +576,7 @@ def run_main(
             bindir_path.replace(bindir / fpath.name)
             rmdirs.add(fpath.parent)
         # clean up directories, starting with the longest
-        for rmdir in reversed(sorted(rmdirs)):
+        for rmdir in sorted(rmdirs, reverse=True):
             bindir_path = bindir / rmdir
             bindir_path.rmdir()
             for subdir in rmdir.parents:

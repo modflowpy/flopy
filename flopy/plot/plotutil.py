@@ -356,10 +356,7 @@ class PlotUtilities:
                     if defaults["key"] is None:
                         names = [
                             "{} {} location stress period {} layer {}".format(
-                                model_name,
-                                package.name[0],
-                                defaults["kper"] + 1,
-                                k + 1,
+                                model_name, package.name[0], defaults["kper"] + 1, k + 1
                             )
                             for k in range(package.parent.modelgrid.nlay)
                         ]
@@ -623,11 +620,7 @@ class PlotUtilities:
             else:
                 names = [
                     "{}{} {} stress period: {} layer: {}".format(
-                        model_name,
-                        mflist.package.name[0],
-                        key,
-                        kper + 1,
-                        k + 1,
+                        model_name, mflist.package.name[0], key, kper + 1, k + 1
                     )
                     for k in range(mflist.model.modelgrid.nlay)
                 ]
@@ -966,7 +959,7 @@ class PlotUtilities:
         name = transient2d.name.replace("_", "").upper()
         axes = []
         for idx, kper in enumerate(range(k0, k1)):
-            title = f"{name} stress period {kper + 1 :d}"
+            title = f"{name} stress period {kper + 1:d}"
 
             if filename_base is not None:
                 filename = f"{filename_base}_{name}_{kper + 1:05d}.{fext}"
@@ -1278,11 +1271,7 @@ class PlotUtilities:
             pmv = PlotMapView(ax=axes[idx], model=model, layer=k)
             fig = plt.figure(num=fignum[idx])
             pmv.plot_bc(
-                ftype=ftype,
-                package=package,
-                kper=kper,
-                ax=axes[idx],
-                color=color,
+                ftype=ftype, package=package, kper=kper, ax=axes[idx], color=color
             )
 
             if defaults["grid"]:
@@ -1654,10 +1643,7 @@ class UnstructuredPlotUtilities:
             for iix, cell in enumerate(cells):
                 xc = x[cell]
                 yc = y[cell]
-                verts = [
-                    (xt, yt)
-                    for xt, yt in zip(xc[cell_vertex_ix[iix]], yc[cell_vertex_ix[iix]])
-                ]
+                verts = list(zip(xc[cell_vertex_ix[iix]], yc[cell_vertex_ix[iix]]))
 
                 if cell in vdict:
                     for i in verts:
@@ -2374,9 +2360,7 @@ def intersect_modpath_with_crosssection(
         xp, yp, zp = "x0", "y0", "z0"
 
     if not isinstance(recarrays, list):
-        recarrays = [
-            recarrays,
-        ]
+        recarrays = [recarrays]
 
     if projection == "x":
         v_opp = yvertices
@@ -2576,7 +2560,7 @@ def parse_modpath_selection_options(
     # selection of endpoints
     if selection is not None:
         if isinstance(selection, int):
-            selection = tuple((selection,))
+            selection = (selection,)
         try:
             if len(selection) == 1:
                 node = selection[0]

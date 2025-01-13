@@ -262,12 +262,7 @@ class Lgr:
                     dz = (top - bot) / self.ncppl[kp]
                     for _ in range(self.ncppl[kp]):
                         botm[kc, icrowstart:icrowend, iccolstart:iccolend] = (
-                            botm[
-                                kc - 1,
-                                icrowstart:icrowend,
-                                iccolstart:iccolend,
-                            ]
-                            - dz
+                            botm[kc - 1, icrowstart:icrowend, iccolstart:iccolend] - dz
                         )
                         kc += 1
         return botm[0], botm[1:]
@@ -508,14 +503,7 @@ class Lgr:
                                 y2 = float(yp[ip, jp])
                                 cd = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
-                        exg = [
-                            (kp, ip, jp),
-                            (kc, ic, jc),
-                            ihc,
-                            cl1,
-                            cl2,
-                            hwva,
-                        ]
+                        exg = [(kp, ip, jp), (kc, ic, jc), ihc, cl1, cl2, hwva]
                         if angldegx:
                             exg.append(float(angle))
                         if cdist:
@@ -570,16 +558,7 @@ class Lgr:
         xorigin = self.xll
         yorigin = self.yll
         simple_regular_grid = SimpleRegularGrid(
-            nlayc,
-            nrowc,
-            ncolc,
-            delrc,
-            delcc,
-            topc,
-            botmc,
-            idomainc,
-            xorigin,
-            yorigin,
+            nlayc, nrowc, ncolc, delrc, delcc, topc, botmc, idomainc, xorigin, yorigin
         )
         return simple_regular_grid
 
@@ -589,7 +568,7 @@ class Lgr:
         used to create a disv grid (instead of a separate parent
         and child representation).  The gridprops dictionary can
         be unpacked into the flopy.mf6.Modflowdisv() constructor
-        and flopy.discretization.VertexGrid() contructor.
+        and flopy.discretization.VertexGrid() constructor.
 
         Note that export capability will only work if the parent
         and child models have corresponding layers.
@@ -964,7 +943,7 @@ class LgrToDisv:
         used to create a disv grid (instead of a separate parent
         and child representation).  The gridprops dictionary can
         be unpacked into the flopy.mf6.Modflowdisv() constructor
-        and flopy.discretization.VertexGrid() contructor.
+        and flopy.discretization.VertexGrid() constructor.
 
         Note that export capability will only work if the parent
         and child models have corresponding layers.
@@ -978,16 +957,18 @@ class LgrToDisv:
         """
 
         # check
-        assert (
-            self.lgr.ncppl.min() == self.lgr.ncppl.max()
-        ), "Exporting disv grid properties requires ncppl to be 1."
-        assert (
-            self.lgr.nlayp == self.lgr.nlay
-        ), "Exporting disv grid properties requires parent and child models to have the same number of layers."
+        assert self.lgr.ncppl.min() == self.lgr.ncppl.max(), (
+            "Exporting disv grid properties requires ncppl to be 1."
+        )
+        assert self.lgr.nlayp == self.lgr.nlay, (
+            "Exporting disv grid properties requires parent and child models "
+            "to have the same number of layers."
+        )
         for k in range(self.lgr.nlayp - 1):
-            assert np.allclose(
-                self.lgr.idomain[k], self.lgr.idomain[k + 1]
-            ), "Exporting disv grid properties requires parent idomain is same for all layers."
+            assert np.allclose(self.lgr.idomain[k], self.lgr.idomain[k + 1]), (
+                "Exporting disv grid properties requires parent idomain "
+                "is same for all layers."
+            )
 
         # get information and build gridprops
         xcyc = self.get_xcyc()

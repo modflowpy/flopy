@@ -196,10 +196,7 @@ class ModflowZon(Package):
             )
 
         return cls(
-            model,
-            zone_dict=zone_dict,
-            unitnumber=unitnumber,
-            filenames=filenames,
+            model, zone_dict=zone_dict, unitnumber=unitnumber, filenames=filenames
         )
 
     @staticmethod

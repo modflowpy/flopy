@@ -27,11 +27,7 @@ def test_load_write_agwater(function_tmpdir, example_data_path):
     ml.change_model_ws(function_tmpdir)
     ag1.write_file()
 
-    ml2 = Modflow(
-        "Agwater1",
-        version="mfnwt",
-        model_ws=function_tmpdir,
-    )
+    ml2 = Modflow("Agwater1", version="mfnwt", model_ws=function_tmpdir)
     ag2 = ModflowAg.load(function_tmpdir / agfile, ml2, nper=49)
 
     assert repr(ag1) == repr(ag2), "comparison failed"
@@ -55,20 +51,16 @@ def test_load_write_agwater_uzf(function_tmpdir, example_data_path):
     ml.change_model_ws(function_tmpdir)
     uzf1.write_file()
 
-    ml2 = Modflow(
-        "Agwater1",
-        version="mfnwt",
-        model_ws=function_tmpdir,
-    )
+    ml2 = Modflow("Agwater1", version="mfnwt", model_ws=function_tmpdir)
     dis2 = ModflowDis(ml2, nlay=1, nrow=15, ncol=10, nper=49)
     uzf2 = ModflowUzf1.load(function_tmpdir / uzffile, ml2)
 
-    assert np.allclose(
-        uzf1.air_entry.array, uzf2.air_entry.array
-    ), "Air entry pressure array comparison failed"
-    assert np.allclose(
-        uzf1.hroot.array, uzf2.hroot.array
-    ), "root pressure array comparison failed"
-    assert np.allclose(
-        uzf1.rootact.array, uzf2.rootact.array
-    ), "root activity array comparison failed"
+    assert np.allclose(uzf1.air_entry.array, uzf2.air_entry.array), (
+        "Air entry pressure array comparison failed"
+    )
+    assert np.allclose(uzf1.hroot.array, uzf2.hroot.array), (
+        "root pressure array comparison failed"
+    )
+    assert np.allclose(uzf1.rootact.array, uzf2.rootact.array), (
+        "root activity array comparison failed"
+    )

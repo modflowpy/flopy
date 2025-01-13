@@ -255,10 +255,7 @@ class ZoneBudget:
             C-----FLOW.  STORE CONSTANT-HEAD LOCATIONS IN ICH ARRAY.
             """
             chd = self.cbc.get_data(
-                text="CONSTANT HEAD",
-                full3D=True,
-                kstpkper=kstpkper,
-                totim=totim,
+                text="CONSTANT HEAD", full3D=True, kstpkper=kstpkper, totim=totim
             )[0]
             ich[np.ma.where(chd != 0.0)] = 1
         if "FLOW RIGHT FACE" in self.record_names:
@@ -366,10 +363,7 @@ class ZoneBudget:
         for recname in self.ssst_record_names:
             if recname != "STORAGE":
                 recordarray = self._add_empty_record(
-                    recordarray,
-                    "FROM_" + "_".join(recname.split()),
-                    kstpkper,
-                    totim,
+                    recordarray, "FROM_" + "_".join(recname.split()), kstpkper, totim
                 )
 
         for z, n in self._zonenamedict.items():
@@ -393,10 +387,7 @@ class ZoneBudget:
         for recname in self.ssst_record_names:
             if recname != "STORAGE":
                 recordarray = self._add_empty_record(
-                    recordarray,
-                    "TO_" + "_".join(recname.split()),
-                    kstpkper,
-                    totim,
+                    recordarray, "TO_" + "_".join(recname.split()), kstpkper, totim
                 )
 
         for z, n in self._zonenamedict.items():
@@ -1028,7 +1019,7 @@ class ZoneBudget:
             ).nonzero()
         a = _numpyvoid2numeric(self._budget[list(self._zonenamedict.values())][rowidx])
         intot = np.array(a.sum(axis=0))
-        tz = np.array(list([n for n in self._budget.dtype.names if n not in skipcols]))
+        tz = np.array([n for n in self._budget.dtype.names if n not in skipcols])
         fz = np.array(["TOTAL_IN"] * len(tz))
         self._update_budget_fromssst(fz, tz, intot, kstpkper, totim)
 
@@ -1046,18 +1037,18 @@ class ZoneBudget:
             ).nonzero()
         a = _numpyvoid2numeric(self._budget[list(self._zonenamedict.values())][rowidx])
         outot = np.array(a.sum(axis=0))
-        tz = np.array(list([n for n in self._budget.dtype.names if n not in skipcols]))
+        tz = np.array([n for n in self._budget.dtype.names if n not in skipcols])
         fz = np.array(["TOTAL_OUT"] * len(tz))
         self._update_budget_fromssst(fz, tz, outot, kstpkper, totim)
 
         # Compute IN-OUT
-        tz = np.array(list([n for n in self._budget.dtype.names if n not in skipcols]))
+        tz = np.array([n for n in self._budget.dtype.names if n not in skipcols])
         f = intot - outot
         fz = np.array(["IN-OUT"] * len(tz))
         self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper, totim)
 
         # Compute percent discrepancy
-        tz = np.array(list([n for n in self._budget.dtype.names if n not in skipcols]))
+        tz = np.array([n for n in self._budget.dtype.names if n not in skipcols])
         fz = np.array(["PERCENT_DISCREPANCY"] * len(tz))
         in_minus_out = intot - outot
         in_plus_out = intot + outot
@@ -1602,7 +1593,7 @@ class ZoneBudget:
     def __mul__(self, other):
         newbud = self._budget.copy()
         for f in self._zonenamedict.values():
-            newbud[f] = np.array([r for r in newbud[f]]) * other
+            newbud[f] = np.array(list(newbud[f])) * other
         idx = np.isin(self._budget["name"], "PERCENT_DISCREPANCY")
         newbud[:][idx] = self._budget[:][idx]
         newobj = self.copy()
@@ -1612,7 +1603,7 @@ class ZoneBudget:
     def __truediv__(self, other):
         newbud = self._budget.copy()
         for f in self._zonenamedict.values():
-            newbud[f] = np.array([r for r in newbud[f]]) / float(other)
+            newbud[f] = np.array(list(newbud[f])) / float(other)
         idx = np.isin(self._budget["name"], "PERCENT_DISCREPANCY")
         newbud[:][idx] = self._budget[:][idx]
         newobj = self.copy()
@@ -1622,7 +1613,7 @@ class ZoneBudget:
     def __div__(self, other):
         newbud = self._budget.copy()
         for f in self._zonenamedict.values():
-            newbud[f] = np.array([r for r in newbud[f]]) / float(other)
+            newbud[f] = np.array(list(newbud[f])) / float(other)
         idx = np.isin(self._budget["name"], "PERCENT_DISCREPANCY")
         newbud[:][idx] = self._budget[:][idx]
         newobj = self.copy()
@@ -1632,7 +1623,7 @@ class ZoneBudget:
     def __add__(self, other):
         newbud = self._budget.copy()
         for f in self._zonenamedict.values():
-            newbud[f] = np.array([r for r in newbud[f]]) + other
+            newbud[f] = np.array(list(newbud[f])) + other
         idx = np.isin(self._budget["name"], "PERCENT_DISCREPANCY")
         newbud[:][idx] = self._budget[:][idx]
         newobj = self.copy()
@@ -1642,7 +1633,7 @@ class ZoneBudget:
     def __sub__(self, other):
         newbud = self._budget.copy()
         for f in self._zonenamedict.values():
-            newbud[f] = np.array([r for r in newbud[f]]) - other
+            newbud[f] = np.array(list(newbud[f])) - other
         idx = np.isin(self._budget["name"], "PERCENT_DISCREPANCY")
         newbud[:][idx] = self._budget[:][idx]
         newobj = self.copy()
@@ -2274,9 +2265,7 @@ def _recarray_to_dataframe(
     df = pd.DataFrame().from_records(recarray)
     if start_datetime is not None and "totim" in list(df):
         totim = totim_to_datetime(
-            df.totim,
-            start=pd.to_datetime(start_datetime),
-            timeunit=timeunit,
+            df.totim, start=pd.to_datetime(start_datetime), timeunit=timeunit
         )
         df["datetime"] = totim
         if pivot:
@@ -2452,9 +2441,7 @@ def _compute_net_budget(recarray, zonenamedict):
     out_budget = recarray[select_fields][select_records_out]
     net_budget = in_budget.copy()
     for f in [n for n in zonenamedict.values() if n in select_fields]:
-        net_budget[f] = np.array([r for r in in_budget[f]]) - np.array(
-            [r for r in out_budget[f]]
-        )
+        net_budget[f] = np.array(list(in_budget[f])) - np.array(list(out_budget[f]))
     newnames = []
     for n in net_budget["name"]:
         if n.endswith("_IN") or n.endswith("_OUT"):
@@ -2978,13 +2965,7 @@ def dataframe_to_netcdf_fmt(df, zone_array, flux=True):
             data[col] = np.zeros((totim.size, zones.size), dtype=float)
 
     for i, time in enumerate(totim):
-        tdf = df.loc[
-            df.totim.isin(
-                [
-                    time,
-                ]
-            )
-        ]
+        tdf = df.loc[df.totim.isin([time])]
         tdf = tdf.sort_values(by=["zone"])
 
         for col in df.columns:

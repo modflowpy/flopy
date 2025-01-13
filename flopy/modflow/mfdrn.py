@@ -92,8 +92,8 @@ class ModflowDrn(Package):
     Notes
     -----
     Parameters are not supported in FloPy.
-    If "RETURNFLOW" in passed in options, the drain return package (DRT) activated, which expects
-    a different (longer) dtype for stress_period_data
+    If "RETURNFLOW" in passed in options, the drain return package (DRT)
+    activated, which expects a different (longer) dtype for stress_period_data
 
     Examples
     --------
@@ -224,11 +224,7 @@ class ModflowDrn(Package):
 
         """
         if check:  # allows turning off package checks when writing files at model level
-            self.check(
-                f=f"{self.name[0]}.chk",
-                verbose=self.parent.verbose,
-                level=1,
-            )
+            self.check(f=f"{self.name[0]}.chk", verbose=self.parent.verbose, level=1)
         f_drn = open(self.fn_path, "w")
         f_drn.write(f"{self.heading}\n")
         line = f"{self.stress_period_data.mxact:10d}{self.ipakcb:10d}"

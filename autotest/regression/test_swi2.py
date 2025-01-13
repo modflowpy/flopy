@@ -35,9 +35,8 @@ def test_mf2005swi2(function_tmpdir, swi_path, namfile):
 
     # rewrite files
     model_ws2 = os.path.join(ws, "flopy")
-    m.change_model_ws(
-        model_ws2, reset_external=True
-    )  # l1b2k_bath won't run without this
+    # l1b2k_bath won't run without this
+    m.change_model_ws(model_ws2, reset_external=True)
     m.write_input()
 
     success, buff = m.run_model()

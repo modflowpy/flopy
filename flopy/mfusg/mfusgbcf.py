@@ -201,12 +201,7 @@ class MfUsgBcf(ModflowBcf):
         if not structured:
             njag = dis.njag
             self.anglex = Util2d(
-                model,
-                (njag,),
-                np.float32,
-                anglex,
-                "anglex",
-                locat=self.unit_number[0],
+                model, (njag,), np.float32, anglex, "anglex", locat=self.unit_number[0]
             )
 
         # item 1
@@ -220,12 +215,7 @@ class MfUsgBcf(ModflowBcf):
         )
         if not structured:
             self.ksat = Util2d(
-                model,
-                (njag,),
-                np.float32,
-                ksat,
-                "ksat",
-                locat=self.unit_number[0],
+                model, (njag,), np.float32, ksat, "ksat", locat=self.unit_number[0]
             )
 
         if add_package:
@@ -342,7 +332,8 @@ class MfUsgBcf(ModflowBcf):
         >>> import flopy
         >>> m = flopy.mfusg.MfUsg()
         >>> disu = flopy.mfusg.MfUsgDisU(
-            model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]), fahl=[1.0], cl12=[1.0])
+        ...     model=m, nlay=1, nodes=1, iac=[1], njag=1,ja=np.array([0]),
+        ...     fahl=[1.0], cl12=[1.0])
         >>> bcf = flopy.mfusg.MfUsgBcf.load('test.bcf', m)
         """
         msg = (
@@ -585,12 +576,7 @@ class MfUsgBcf(ModflowBcf):
                 if model.verbose:
                     print(f"   loading sf1 layer {layer + 1:3d}...")
                 sf1[layer] = Util2d.load(
-                    f_obj,
-                    model,
-                    util2d_shape,
-                    np.float32,
-                    "sf1",
-                    ext_unit_dict,
+                    f_obj, model, util2d_shape, np.float32, "sf1", ext_unit_dict
                 )
 
             # hy/tran, and kv/vcont
@@ -615,12 +601,7 @@ class MfUsgBcf(ModflowBcf):
                 if model.verbose:
                     print(f"   loading sf2 layer {layer + 1:3d}...")
                 sf2[layer] = Util2d.load(
-                    f_obj,
-                    model,
-                    util2d_shape,
-                    np.float32,
-                    "sf2",
-                    ext_unit_dict,
+                    f_obj, model, util2d_shape, np.float32, "sf2", ext_unit_dict
                 )
 
             # wetdry
@@ -628,12 +609,7 @@ class MfUsgBcf(ModflowBcf):
                 if model.verbose:
                     print(f"   loading sf2 layer {layer + 1:3d}...")
                 wetdry[layer] = Util2d.load(
-                    f_obj,
-                    model,
-                    util2d_shape,
-                    np.float32,
-                    "wetdry",
-                    ext_unit_dict,
+                    f_obj, model, util2d_shape, np.float32, "wetdry", ext_unit_dict
                 )
 
         return sf1, tran, hy, vcont, sf2, wetdry, kv
@@ -673,12 +649,7 @@ class MfUsgBcf(ModflowBcf):
             if model.verbose:
                 print(f"   loading tran layer {layer + 1:3d}...")
             _tran = Util2d.load(
-                f_obj,
-                model,
-                util2d_shape,
-                np.float32,
-                "tran",
-                ext_unit_dict,
+                f_obj, model, util2d_shape, np.float32, "tran", ext_unit_dict
             )
         else:
             if model.verbose:
@@ -694,12 +665,7 @@ class MfUsgBcf(ModflowBcf):
             if model.verbose:
                 print(f"   loading vcont layer {layer + 1:3d}...")
             _vcont = Util2d.load(
-                f_obj,
-                model,
-                util2d_shape,
-                np.float32,
-                "vcont",
-                ext_unit_dict,
+                f_obj, model, util2d_shape, np.float32, "vcont", ext_unit_dict
             )
         elif (ikvflag == 1) and (model.nlay > 1):
             if model.verbose:

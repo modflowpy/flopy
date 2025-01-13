@@ -549,22 +549,7 @@ def test_np001(function_tmpdir, example_data_path):
     ic_array = ic_data.get_data()
     assert array_util.array_comp(
         ic_array,
-        [
-            [
-                [
-                    100.0,
-                    100.0,
-                    100.0,
-                    100.0,
-                    100.0,
-                    100.0,
-                    100.0,
-                    100.0,
-                    100.0,
-                    100.0,
-                ]
-            ]
-        ],
+        [[[100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0]]],
     )
 
     # make folder to save simulation
@@ -881,18 +866,7 @@ def test_np002(function_tmpdir, example_data_path):
     top = {
         "filename": "top data.txt",
         "factor": 1.0,
-        "data": [
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-        ],
+        "data": [100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0],
     }
     botm = {"filename": "botm.txt", "factor": 1.0}
     dis_package = ModflowGwfdis(
@@ -911,18 +885,7 @@ def test_np002(function_tmpdir, example_data_path):
     assert sim.simulation_data.max_columns_of_data == 22
     sim.simulation_data.max_columns_of_data = dis_package.ncol.get_data()
 
-    ic_vals = [
-        100.0,
-        100.0,
-        100.0,
-        100.0,
-        100.0,
-        100.0,
-        100.0,
-        100.0,
-        100.0,
-        100.0,
-    ]
+    ic_vals = [100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0]
     ic_package = ModflowGwfic(model, strt=ic_vals, filename=f"{model_name}.ic")
     ic_package.strt.store_as_external_file("initial_heads.txt")
     npf_package = ModflowGwfnpf(model, save_flows=True, icelltype=1, k=100.0)
@@ -1047,8 +1010,7 @@ def test_np002(function_tmpdir, example_data_path):
         "checker threshold of 1e-06" in summary
     )
     assert (
-        "sto package: specific yield values above "
-        "checker threshold of 0.5" in summary
+        "sto package: specific yield values above checker threshold of 0.5" in summary
     )
     assert "Not a number" in summary
     model.remove_package("chd_2")
@@ -1165,13 +1127,7 @@ def test021_twri(function_tmpdir, example_data_path):
         header_data=header,
     )
     f.close()
-    top = {
-        "factor": 1.0,
-        "filename": fname,
-        "data": None,
-        "binary": True,
-        "iprn": 1,
-    }
+    top = {"factor": 1.0, "filename": fname, "data": None, "binary": True, "iprn": 1}
 
     dis_package = ModflowGwfdis(
         model,
@@ -1186,12 +1142,7 @@ def test021_twri(function_tmpdir, example_data_path):
     )
     strt = [
         {"filename": "strt.txt", "factor": 1.0, "data": 0.0},
-        {
-            "filename": "strt2.bin",
-            "factor": 1.0,
-            "data": 1.0,
-            "binary": "True",
-        },
+        {"filename": "strt2.bin", "factor": 1.0, "data": 1.0, "binary": "True"},
         2.0,
     ]
     ic_package = ModflowGwfic(model, strt=strt, filename=f"{model_name}.ic")
@@ -1631,15 +1582,7 @@ def test005_create_tests_advgw_tidal(function_tmpdir, example_data_path):
             ("rv2-upper", "RIV", "riv2_upper"),
             ("rv-2-7-4", "RIV", (0, 6, 3)),
             ("rv2-8-5", "RIV", (0, 6, 4)),
-            (
-                "rv-2-9-6",
-                "RIV",
-                (
-                    0,
-                    5,
-                    5,
-                ),
-            ),
+            ("rv-2-9-6", "RIV", (0, 5, 5)),
         ],
         "riv_flowsA.csv": [
             ("riv1-3-1", "RIV", (0, 2, 0)),
@@ -2765,11 +2708,7 @@ def test006_create_tests_2models_gnc(function_tmpdir, example_data_path):
     )
     sim.remove_package(exg_package.package_type)
 
-    exg_data = {
-        "filename": "exg_data.txt",
-        "data": exgrecarray,
-        "binary": True,
-    }
+    exg_data = {"filename": "exg_data.txt", "data": exgrecarray, "binary": True}
     exg_package = ModflowGwfgwf(
         sim,
         print_input=True,
@@ -3482,9 +3421,7 @@ def test_create_tests_transport(function_tmpdir, example_data_path):
     sim.run_simulation()
 
     # inspect cells
-    cell_list = [
-        (0, 0, 0),
-    ]
+    cell_list = [(0, 0, 0)]
     out_file = function_tmpdir / "inspect_transport_gwf.csv"
     gwf.inspect_cells(cell_list, output_file_path=out_file)
     out_file = function_tmpdir / "inspect_transport_gwt.csv"
@@ -4085,7 +4022,8 @@ def test006_gwf3(function_tmpdir, example_data_path):
     save_folder.mkdir()
     sim.set_sim_path(save_folder)
 
-    # write with "copy_external_files" turned off so external files do not get copied to new location
+    # write with "copy_external_files" turned off so external files
+    # do not get copied to new location
     sim.write_simulation(ext_file_action=ExtFileAction.copy_none)
 
     # store strt in an external binary file
@@ -4102,10 +4040,7 @@ def test006_gwf3(function_tmpdir, example_data_path):
     assert success, f"simulation {sim.name} rerun(3) did not run"
 
     # get expected results
-    budget_obj = CellBudgetFile(
-        expected_cbc_file_b,
-        precision="double",
-    )
+    budget_obj = CellBudgetFile(expected_cbc_file_b, precision="double")
     budget_fjf_valid = np.array(
         budget_obj.get_data(text="    FLOW JA FACE", full3D=True)
     )
@@ -4500,12 +4435,7 @@ def test001e_uzf_3lay(function_tmpdir, example_data_path):
     sim.remove_package(ims)
 
     ims = ModflowIms(sim, print_option="SUMMARY", complexity="COMPLEX")
-    sim.register_ims_package(
-        ims,
-        [
-            "GwF_1",
-        ],
-    )
+    sim.register_ims_package(ims, ["GwF_1"])
     sim.write_simulation()
 
     success, buff = sim.run_simulation()

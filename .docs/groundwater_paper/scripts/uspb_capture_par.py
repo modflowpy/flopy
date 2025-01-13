@@ -98,7 +98,7 @@ def copy_files(ml, nproc):
         else:
             if not os.path.exists(cf_pths[idx]):
                 os.makedirs(cf_pths[idx])
-            filelist = [f for f in os.listdir(cf_pths[0])]
+            filelist = list(os.listdir(cf_pths[0]))
             sys.stdout.write(f"copying files from {cf_pths[0]} to {cf_pths[idx]}\n")
             for f in filelist:
                 if os.path.splitext(f)[1].lower() in exclude:
@@ -242,11 +242,7 @@ def doit():
     ncol2 = ncol // nstep
 
     # open summary file
-    fs = open(
-        os.path.join("data", "uspb", f"uspb_capture_{nstep}.out"),
-        "w",
-        0,
-    )
+    fs = open(os.path.join("data", "uspb", f"uspb_capture_{nstep}.out"), "w", 0)
 
     # write some summary information
     fs.write(f"Problem size: {nrow} rows and {ncol} columns.\n")
@@ -314,7 +310,7 @@ def doit():
 
     # clean up working directories
     for idx in range(nproc):
-        filelist = [f for f in os.listdir(cf_pths[idx])]
+        filelist = list(os.listdir(cf_pths[idx]))
         for f in filelist:
             os.remove(os.path.join(cf_pths[idx], f))
 
@@ -323,8 +319,7 @@ def doit():
         os.makedirs(res_pth)
     for idx in range(10):
         fn = os.path.join(
-            res_pth,
-            f"USPB_capture_fraction_{nstep:02d}_{idx + 1:02d}.dat",
+            res_pth, f"USPB_capture_fraction_{nstep:02d}_{idx + 1:02d}.dat"
         )
         sys.stdout.write(f"saving capture fraction data to...{os.path.basename(fn)}\n")
         np.savetxt(fn, cf_array[idx, :, :], delimiter=" ")

@@ -5,13 +5,7 @@ from modflow_devtools.markers import requires_exe, requires_pkg
 
 from flopy.discretization import UnstructuredGrid
 from flopy.mfusg import MfUsg, MfUsgDisU, MfUsgLpf, MfUsgSms
-from flopy.modflow import (
-    Modflow,
-    ModflowBas,
-    ModflowChd,
-    ModflowDis,
-    ModflowOc,
-)
+from flopy.modflow import Modflow, ModflowBas, ModflowChd, ModflowDis, ModflowOc
 from flopy.utils import HeadUFile
 from flopy.utils.gridgen import Gridgen
 from flopy.utils.gridutil import get_lni
@@ -111,9 +105,9 @@ def test_get_ts_multiple_nodes(mfusg_model):
     multi_hds = head_file.get_ts(idx=nodes)
     for i, node in enumerate(nodes):
         layer, nn = get_lni(grid.ncpl, [node])[0]
-        assert (
-            multi_hds[0, i + 1] == head[layer][nn]
-        ), "head from 'get_ts' != head from 'get_data'"
+        assert multi_hds[0, i + 1] == head[layer][nn], (
+            "head from 'get_ts' != head from 'get_data'"
+        )
 
 
 @requires_exe("mfusg", "gridgen")
@@ -128,9 +122,9 @@ def test_get_ts_all_nodes(mfusg_model):
     multi_hds = head_file.get_ts(idx=nodes)
     for node in nodes:
         layer, nn = get_lni(grid.ncpl, [node])[0]
-        assert (
-            multi_hds[0, node + 1] == head[layer][nn]
-        ), "head from 'get_ts' != head from 'get_data'"
+        assert multi_hds[0, node + 1] == head[layer][nn], (
+            "head from 'get_ts' != head from 'get_data'"
+        )
 
 
 @requires_exe("mfusg", "gridgen")
@@ -143,9 +137,9 @@ def test_get_lni(mfusg_model):
     head = head_file.get_data()
 
     def get_expected():
-        exp = dict()
+        exp = {}
         for l, ncpl in enumerate(list(grid.ncpl)):
-            exp[l] = dict()
+            exp[l] = {}
             for nn in range(ncpl):
                 exp[l][nn] = head[l][nn]
         return exp

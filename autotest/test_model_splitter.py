@@ -158,8 +158,8 @@ def test_model_with_lak_sfr_mvr(function_tmpdir):
     np.testing.assert_allclose(new_heads, original_heads, err_msg=err_msg)
 
 
-@requires_pkg("pymetis")
 @requires_exe("mf6")
+@requires_pkg("pymetis")
 @pytest.mark.slow
 def test_metis_splitting_with_lak_sfr(function_tmpdir):
     sim_path = get_example_data_path() / "mf6" / "test045_lake2tr"
@@ -848,8 +848,7 @@ def test_unstructured_complex_disu(function_tmpdir):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymetis")
-@requires_pkg("scipy")
+@requires_pkg("pymetis", "scipy")
 def test_multi_model(function_tmpdir):
     from scipy.spatial import KDTree
 
@@ -1264,7 +1263,7 @@ def test_multi_model(function_tmpdir):
     new_sim.run_simulation()
 
     # compare results for each of the models
-    splits = [i for i in range(nparts)]
+    splits = range(nparts)
     for name in sim.model_names:
         gwm = sim.get_model(name)
         if "concentration()" in gwm.output.methods():
@@ -1295,5 +1294,116 @@ def test_multi_model(function_tmpdir):
             diff = np.nansum(diff)
             if diff > 10.25:
                 raise AssertionError(
-                    f"Difference between output arrays: {diff:.2f} greater than tolerance"
+                    f"Difference between output arrays: "
+                    f"{diff:.2f} greater than tolerance"
                 )
+
+
+@requires_exe("mf6")
+@requires_pkg("pymetis")
+def test_timeseries(function_tmpdir):
+    sim = MFSimulation(
+        sim_name="np001",
+        sim_ws=function_tmpdir,
+        continue_=True,
+        memory_print_option="summary",
+    )
+
+    tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
+    tdis = flopy.mf6.ModflowTdis(sim, time_units="DAYS", nper=2, perioddata=tdis_rc)
+
+    ims = flopy.mf6.ModflowIms(
+        sim,
+        print_option="ALL",
+        complexity="SIMPLE",
+        outer_dvclose=0.00001,
+        outer_maximum=50,
+        under_relaxation="NONE",
+        inner_maximum=30,
+        inner_dvclose=0.00001,
+        linear_acceleration="CG",
+        preconditioner_levels=7,
+        preconditioner_drop_tolerance=0.01,
+        number_orthogonalizations=2,
+    )
+    gwf = flopy.mf6.ModflowGwf(
+        sim,
+    )
+    dis = flopy.mf6.ModflowGwfdis(
+        gwf, nlay=1, nrow=1, ncol=10, delr=500, delc=500, top=100, botm=50
+    )
+
+    ic = flopy.mf6.ModflowGwfic(gwf, strt=95)
+
+    npf = flopy.mf6.ModflowGwfnpf(
+        gwf,
+        pname="npf_1",
+        save_flows=True,
+        alternative_cell_averaging="logarithmic",
+        icelltype=1,
+        k=5.0,
+    )
+
+    oc = flopy.mf6.ModflowGwfoc(
+        gwf,
+        budget_filerecord=[("np001_mod 1.cbc",)],
+        head_filerecord=[("np001_mod 1.hds",)],
+        saverecord={
+            0: [("HEAD", "ALL"), ("BUDGET", "ALL")],
+            1: [("HEAD", "ALL"), ("BUDGET", "ALL")],
+        },
+        printrecord=[("HEAD", "ALL")],
+    )
+
+    sto = flopy.mf6.ModflowGwfsto(
+        gwf, save_flows=True, iconvert=1, ss=0.000001, sy=0.15
+    )
+
+    wel = flopy.mf6.ModflowGwfwel(
+        gwf,
+        print_input=True,
+        print_flows=True,
+        save_flows=True,
+        maxbound=2,
+        stress_period_data={0: [(0, 0, 4, -2000.0), (0, 0, 7, -2.0)], 1: None},
+    )
+
+    tsdict = {
+        "filename": "drn_ts.ts",
+        "timeseries": [(0.0, 60.0), (100000.0, 60.0)],
+        "time_series_namerecord": "drn_1",
+        "interpolation_methodrecord": "linearend",
+    }
+    drn = flopy.mf6.ModflowGwfdrn(
+        gwf,
+        print_input=True,
+        print_flows=True,
+        save_flows=True,
+        maxbound=1,
+        timeseries=tsdict,
+        stress_period_data=[((0, 0, 0), 80, "drn_1")],
+    )
+
+    spd = {0: [((0, 0, 9), 110, 90.0, 100.0, 1.0, 2.0, 3.0)]}
+    riv = flopy.mf6.ModflowGwfriv(
+        gwf,
+        print_input=True,
+        print_flows=True,
+        save_flows=True,
+        maxbound=1,
+        auxiliary=["var1", "var2", "var3"],
+        stress_period_data=spd,
+    )
+    sim.write_simulation()
+    sim.run_simulation()
+
+    mfs = Mf6Splitter(sim)
+    mask = mfs.optimize_splitting_mask(2)
+    new_sim = mfs.split_model(mask)
+
+    new_sim.set_sim_path(function_tmpdir / "split_model")
+    new_sim.write_simulation()
+    success, _ = new_sim.run_simulation()
+
+    if not success:
+        raise AssertionError("Timeseries split simulation did not properly run")

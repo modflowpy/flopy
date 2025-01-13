@@ -213,7 +213,8 @@ def test_create_uzf(function_tmpdir, mf2005_test_path, uzf_test_path):
                 for i, a in enumerate(a1):
                     assert a == l2[i]
 
-    # load uzf test problem for nwt model with 'nwt_11_fmt'-style options and 'open/close' array types
+    # load uzf test problem for nwt model with 'nwt_11_fmt'-style options
+    # and 'open/close' array types
     tpth = uzf_test_path / "load_uzf_for_nwt"
     [shutil.copy(os.path.join(tpth, f), os.path.join(ws, f)) for f in os.listdir(tpth)]
     m3 = Modflow("UZFtest3", version="mfnwt", verbose=True)
@@ -588,10 +589,7 @@ def test_uzf_negative_iuzfopt(function_tmpdir):
         steady=[False, False],
     )
     bas = ModflowBas(ml, strt=9, ibound=1)
-    upw = ModflowUpw(
-        ml,
-        vka=0.1,
-    )
+    upw = ModflowUpw(ml, vka=0.1)
     oc = ModflowOc(ml)
     nwt = ModflowNwt(ml, options="SIMPLE")
 
@@ -624,15 +622,15 @@ def test_uzf_negative_iuzfopt(function_tmpdir):
 
 
 def test_optionsblock_auxillary_typo():
-    # Incorrect: auxillary
+    # Incorrect: auxillary  # codespell:ignore
     #   Correct: auxiliary
     options = OptionBlock("", ModflowWel, block=True)
     assert options.auxiliary == []
     with pytest.deprecated_call():
-        assert options.auxillary == []
+        assert options.auxillary == []  # codespell:ignore
     with pytest.deprecated_call():
-        options.auxillary = ["aux", "iface"]
+        options.auxillary = ["aux", "iface"]  # codespell:ignore
     assert options.auxiliary == ["aux", "iface"]
     options.auxiliary = []
     with pytest.deprecated_call():
-        assert options.auxillary == []
+        assert options.auxillary == []  # codespell:ignore

@@ -15,7 +15,7 @@ def iterable(obj, any_iterator=False):
     if any_iterator:
         try:
             my_iter = iter(obj)
-        except TypeError as te:
+        except TypeError:
             return False
         return True
     else:

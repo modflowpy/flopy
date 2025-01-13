@@ -147,12 +147,12 @@ class Modpath6(BaseModel):
             )
         if self.dis_file is None:
             raise ValueError(
-                "the dis file in the MODFLOW model or passed "
-                "to __init__ cannot be None"
+                "the dis file in the MODFLOW model or passed to __init__ cannot be None"
             )
 
         if self.__mf is None:
-            # read from nper, lay, nrow, ncol from dis file, Item 1: NLAY, NROW, NCOL, NPER, ITMUNI, LENUNI
+            # read from nper, lay, nrow, ncol from dis file,
+            # Item 1: NLAY, NROW, NCOL, NPER, ITMUNI, LENUNI
             read_dis = dis_file
             if not os.path.exists(read_dis):
                 # path doesn't exist, probably relative to model_ws
@@ -162,12 +162,7 @@ class Modpath6(BaseModel):
                 while line[0] == "#":
                     line = f.readline()
                 nlay, nrow, ncol, nper, itmuni, lennuni = line.split()
-                self.nrow_ncol_nlay_nper = (
-                    int(nrow),
-                    int(ncol),
-                    int(nlay),
-                    int(nper),
-                )
+                self.nrow_ncol_nlay_nper = (int(nrow), int(ncol), int(nlay), int(nper))
 
         # set the rest of the attributes
         self.__sim = None
@@ -263,14 +258,17 @@ class Modpath6(BaseModel):
             (default is 'WEL').
         start_time : float or tuple
             Sets the value of MODPATH reference time relative to MODFLOW time.
-            float : value of MODFLOW simulation time at which to start the particle tracking simulation.
+            float : value of MODFLOW simulation time at which to start the
+                    particle tracking simulation.
                     Sets the value of MODPATH ReferenceTimeOption to 1.
-            tuple : (period, step, time fraction) MODFLOW stress period, time step and fraction
+            tuple : (period, step, time fraction) MODFLOW stress period,
+                    time step and fraction
                     between 0 and 1 at which to start the particle tracking simulation.
                     Sets the value of MODPATH ReferenceTimeOption to 2.
         default_ifaces : list
-            List of cell faces (1-6; see MODPATH6 manual, fig. 7) on which to start particles.
-            (default is None, meaning ifaces will vary depending on packages argument above)
+            List of cell faces (1-6; see MODPATH6 manual, fig. 7) on which to
+            start particles. (default is None, meaning ifaces will vary
+            depending on packages argument above)
         ParticleRowCount : int
             Rows of particles to start on each cell index face (iface).
         ParticleColumnCount : int
@@ -297,7 +295,8 @@ class Modpath6(BaseModel):
         ref_time = 0
         ref_time_per_stp = (0, 0, 1.0)
         if isinstance(start_time, tuple):
-            ReferenceTimeOption = 2  # 1: specify value for ref. time, 2: specify kper, kstp, rel. time pos
+            # 1: specify value for ref. time, 2: specify kper, kstp, rel. time pos
+            ReferenceTimeOption = 2
             ref_time_per_stp = start_time
         else:
             ref_time = start_time
@@ -400,12 +399,7 @@ class Modpath6(BaseModel):
                     k, i, j = nd.k[0], nd.i[0], nd.j[0]
                     if len(nd) == 1:
                         append_node(
-                            side_faces + [top_face, botm_face],
-                            wellid,
-                            0,
-                            k,
-                            i,
-                            j,
+                            side_faces + [top_face, botm_face], wellid, 0, k, i, j
                         )
                     else:
                         append_node(side_faces + [top_face], wellid, 0, k, i, j)
@@ -413,12 +407,7 @@ class Modpath6(BaseModel):
                             k, i, j = nd.k[n], nd.i[n], nd.j[n]
                             if n == len(nd) - 1:
                                 append_node(
-                                    side_faces + [botm_face],
-                                    wellid,
-                                    n,
-                                    k,
-                                    i,
-                                    j,
+                                    side_faces + [botm_face], wellid, n, k, i, j
                                 )
                             else:
                                 append_node(side_faces, wellid, n, k, i, j)

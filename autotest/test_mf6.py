@@ -72,13 +72,7 @@ from flopy.mf6.modflow import (
     mfims,
     mftdis,
 )
-from flopy.utils import (
-    CellBudgetFile,
-    HeadFile,
-    Mf6ListBudget,
-    Mf6Obs,
-    ZoneBudget6,
-)
+from flopy.utils import CellBudgetFile, HeadFile, Mf6ListBudget, Mf6Obs, ZoneBudget6
 from flopy.utils.observationfile import CsvFile
 from flopy.utils.triangle import Triangle
 from flopy.utils.voronoi import VoronoiGrid
@@ -314,15 +308,13 @@ def test_load_sim_when_namefile_uses_rel_paths(function_tmpdir, example_data_pat
                     if sep == "win":
                         l = to_win_sep(
                             l.replace(
-                                pattern,
-                                "../" + workspace.name + "/" + model_name + ".",
+                                pattern, "../" + workspace.name + "/" + model_name + "."
                             )
                         )
                     else:
                         l = to_posix_sep(
                             l.replace(
-                                pattern,
-                                "../" + workspace.name + "/" + model_name + ".",
+                                pattern, "../" + workspace.name + "/" + model_name + "."
                             )
                         )
                 f.write(l)
@@ -361,15 +353,13 @@ def test_write_simulation_always_writes_posix_path_separators(
                     if sep == "win":
                         l = to_win_sep(
                             l.replace(
-                                pattern,
-                                "../" + workspace.name + "/" + model_name + ".",
+                                pattern, "../" + workspace.name + "/" + model_name + "."
                             )
                         )
                     else:
                         l = to_posix_sep(
                             l.replace(
-                                pattern,
-                                "../" + workspace.name + "/" + model_name + ".",
+                                pattern, "../" + workspace.name + "/" + model_name + "."
                             )
                         )
                 f.write(l)
@@ -489,9 +479,9 @@ def test_subdir(function_tmpdir):
         sim_ws=sim.simulation_data.mfpath.get_sim_path(),
     )
     gwf_r = sim_r.get_model()
-    assert (
-        gwf.dis.delc.get_file_entry() == gwf_r.dis.delc.get_file_entry()
-    ), "Something wrong with model external paths"
+    assert gwf.dis.delc.get_file_entry() == gwf_r.dis.delc.get_file_entry(), (
+        "Something wrong with model external paths"
+    )
 
     sim_r.set_all_data_internal()
     sim_r.set_all_data_external(external_data_folder=os.path.join("dat", "dat_l2"))
@@ -502,9 +492,9 @@ def test_subdir(function_tmpdir):
         sim_ws=sim_r.simulation_data.mfpath.get_sim_path(),
     )
     gwf_r2 = sim_r.get_model()
-    assert (
-        gwf_r.dis.delc.get_file_entry() == gwf_r2.dis.delc.get_file_entry()
-    ), "Something wrong with model external paths"
+    assert gwf_r.dis.delc.get_file_entry() == gwf_r2.dis.delc.get_file_entry(), (
+        "Something wrong with model external paths"
+    )
 
 
 @requires_exe("mf6")
@@ -526,7 +516,7 @@ def test_binary_write(function_tmpdir, layered):
             idomain_data.append(
                 {
                     "factor": 1.0,
-                    "filename": f"idomain_l{k+1}.bin",
+                    "filename": f"idomain_l{k + 1}.bin",
                     "data": 1,
                     "binary": True,
                     "iprn": 1,
@@ -534,7 +524,7 @@ def test_binary_write(function_tmpdir, layered):
             )
             botm_data.append(
                 {
-                    "filename": f"botm_l{k+1}.bin",
+                    "filename": f"botm_l{k + 1}.bin",
                     "binary": True,
                     "iprn": 1,
                     "data": np.full(shape2d, botm[k], dtype=float),
@@ -542,7 +532,7 @@ def test_binary_write(function_tmpdir, layered):
             )
             strt_data.append(
                 {
-                    "filename": f"strt_l{k+1}.bin",
+                    "filename": f"strt_l{k + 1}.bin",
                     "binary": True,
                     "iprn": 1,
                     "data": np.full(shape2d, strt[k], dtype=float),
@@ -838,9 +828,10 @@ def test_binary_read(function_tmpdir):
             bf, data_shape, data_size, np.float64, modelgrid
         )[0]
 
-        assert np.allclose(
-            arr, arr2
-        ), f"Binary read for layered structured failed with {'Path' if isinstance(binfile, Path) else 'str'}"
+        assert np.allclose(arr, arr2), (
+            "Binary read for layered structured failed with "
+            + ("Path" if isinstance(binfile, Path) else "str")
+        )
 
     binfile = function_tmpdir / "structured_flat.hds"
     with open(binfile, "wb") as foo:
@@ -1129,18 +1120,7 @@ def test_create_and_run_model(function_tmpdir, use_paths):
     )
     ic_package = mfgwfic.ModflowGwfic(
         model,
-        strt=[
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-            100.0,
-        ],
+        strt=[100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0],
         filename=f"{model_name}.ic",
     )
     npf_package = mfgwfnpf.ModflowGwfnpf(model, save_flows=True, icelltype=1, k=100.0)
@@ -1558,9 +1538,9 @@ def test_output_add_observation(function_tmpdir, example_data_path):
     # check that .output finds the newly added OBS package
     sfr_obs = gwf.sfr.output.obs()
 
-    assert isinstance(
-        sfr_obs, Mf6Obs
-    ), "remove and add observation test (Mf6Output) failed"
+    assert isinstance(sfr_obs, Mf6Obs), (
+        "remove and add observation test (Mf6Output) failed"
+    )
 
 
 @requires_exe("mf6")
@@ -2335,7 +2315,8 @@ def test_remove_model(function_tmpdir, example_data_path):
     files = list(function_tmpdir.glob("*"))
     assert not any("model2" in f.name for f in files)
 
-    # there should be no model or solver entry for the child model in the simulation namefile
+    # there should be no model or solver entry for the child model
+    # in the simulation namefile
     lines = open(function_tmpdir / "mfsim.nam").readlines()
     lines = [l.lower().strip() for l in lines]
     assert not any("model2" in l for l in lines)
@@ -2351,6 +2332,8 @@ def test_remove_model(function_tmpdir, example_data_path):
             break
 
 
+@requires_pkg("shapely")
+@requires_exe("triangle")
 def test_flopy_2283(function_tmpdir):
     # create triangular grid
     triangle_ws = function_tmpdir / "triangle"

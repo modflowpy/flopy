@@ -629,7 +629,7 @@ class PlotMapView:
             optional numpy nd.array of size modelgrid.nnodes
         s : None, float, numpy array
             optional point size parameter
-        masked_values : None, iteratable
+        masked_values : None, iterable
             optional list, tuple, or np array of array (a) values to mask
         inactive : bool
             boolean flag to include inactive cell centers in the plot.
@@ -1032,11 +1032,7 @@ class PlotMapView:
 
         # transform data!
         x0r, y0r = geometry.transform(
-            tep[xp],
-            tep[yp],
-            self.mg.xoffset,
-            self.mg.yoffset,
-            self.mg.angrot_radians,
+            tep[xp], tep[yp], self.mg.xoffset, self.mg.yoffset, self.mg.angrot_radians
         )
         # build array to plot
         arr = np.vstack((x0r, y0r)).T

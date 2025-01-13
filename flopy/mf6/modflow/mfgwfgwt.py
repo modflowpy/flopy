@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on May 23, 2024 14:30:07 UTC
+# FILE created on December 20, 2024 02:43:08 UTC
 from .. import mfpackage
 
 
@@ -28,7 +28,7 @@ class ModflowGwfgwt(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have
+        utility packages (mfutl*). For example, mfutllaktab package must have 
         a mfgwflak package parent_file.
 
     """
@@ -38,25 +38,14 @@ class ModflowGwfgwt(mfpackage.MFPackage):
     dfn_file_name = "exg-gwfgwt.dfn"
 
     dfn = [
-        [
-            "header",
-        ],
-    ]
+           ["header", ],
+           ]
 
-    def __init__(
-        self,
-        simulation,
-        loading_package=False,
-        exgtype="GWF6-GWT6",
-        exgmnamea=None,
-        exgmnameb=None,
-        filename=None,
-        pname=None,
-        **kwargs,
-    ):
-        super().__init__(
-            simulation, "gwfgwt", filename, pname, loading_package, **kwargs
-        )
+    def __init__(self, simulation, loading_package=False, exgtype="GWF6-GWT6",
+                 exgmnamea=None, exgmnameb=None, filename=None, pname=None,
+                 **kwargs):
+        super().__init__(simulation, "gwfgwt", filename, pname,
+                         loading_package, **kwargs)
 
         # set up variables
         self.exgtype = exgtype

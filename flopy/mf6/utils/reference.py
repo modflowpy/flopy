@@ -1,6 +1,10 @@
 """
 Module spatial referencing for flopy model objects
 
+.. deprecated:: 3.9
+    This module will be removed in FloPy 3.10+. Use
+    the :mod:`flopy.discretization` module instead.
+
 """
 
 import numpy as np
@@ -9,6 +13,11 @@ import numpy as np
 class StructuredSpatialReference:
     """
     a simple class to locate the model grid in x-y space
+
+    .. deprecated:: 3.9
+        This class will be removed in FloPy 3.10+. Use
+        :class:`~flopy.discretization.structuredgrid.StructuredGrid`
+        instead.
 
     Parameters
     ----------
@@ -544,6 +553,11 @@ class VertexSpatialReference:
     """
     a simple class to locate the model grid in x-y space
 
+    .. deprecated:: 3.9
+        This class will be removed in FloPy 3.10+. Use
+        :class:`~flopy.discretization.vertexgrid.VertexGrid`
+        instead.
+
     Parameters
     ----------
     xvdict: dictionary
@@ -852,33 +866,36 @@ class SpatialReference:
     """
     A dynamic inheritance class that locates a gridded model in space
 
-        Parameters
-        ----------
-        delr : numpy ndarray
-            the model discretization delr vector
-        delc : numpy ndarray
-            the model discretization delc vector
-        lenuni : int
-            the length units flag from the discretization package
-        xul : float
-            the x coordinate of the upper left corner of the grid
-        yul : float
-           the y coordinate of the upper left corner of the grid
-        rotation : float
-            the counter-clockwise rotation (in degrees) of the grid
-        proj4_str: str
-            a PROJ4 string that identifies the grid in space. warning:
-            case sensitive!
-        xadj : float
-            vertex grid: x vertex adjustment factor
-        yadj : float
-            vertex grid: y vertex adjustment factor
-        xvdict: dict
-            dictionary of x-vertices by cellnum ex. {0: (0,1,1,0)}
-        yvdict: dict
-            dictionary of y-vertices by cellnum ex. {0: (1,1,0,0)}
-        distype: str
-            model grid discretization type
+    .. deprecated:: 3.9
+        This class will be removed in FloPy 3.10+.
+
+    Parameters
+    ----------
+    delr : numpy ndarray
+        the model discretization delr vector
+    delc : numpy ndarray
+        the model discretization delc vector
+    lenuni : int
+        the length units flag from the discretization package
+    xul : float
+        the x coordinate of the upper left corner of the grid
+    yul : float
+        the y coordinate of the upper left corner of the grid
+    rotation : float
+        the counter-clockwise rotation (in degrees) of the grid
+    proj4_str: str
+        a PROJ4 string that identifies the grid in space. warning:
+        case sensitive!
+    xadj : float
+        vertex grid: x vertex adjustment factor
+    yadj : float
+        vertex grid: y vertex adjustment factor
+    xvdict: dict
+        dictionary of x-vertices by cellnum ex. {0: (0,1,1,0)}
+    yvdict: dict
+        dictionary of y-vertices by cellnum ex. {0: (1,1,0,0)}
+    distype: str
+        model grid discretization type
     """
 
     def __new__(

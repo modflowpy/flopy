@@ -8,13 +8,7 @@ from modflow_devtools.markers import requires_exe
 
 from autotest.conftest import get_example_data_path
 from flopy.mfusg import MfUsg, MfUsgDisU, MfUsgLpf, MfUsgSms, MfUsgWel
-from flopy.modflow import (
-    ModflowBas,
-    ModflowDis,
-    ModflowDrn,
-    ModflowGhb,
-    ModflowOc,
-)
+from flopy.modflow import ModflowBas, ModflowDis, ModflowDrn, ModflowGhb, ModflowOc
 from flopy.utils import Util2d, Util3d
 
 
@@ -90,9 +84,9 @@ def test_usg_sms_load(function_tmpdir, mfusg_01A_nestedgrid_nognc_model_path):
     for (key1, value1), (key2, value2) in zip(
         sms2.__dict__.items(), sms.__dict__.items()
     ):
-        assert (
-            value1 == value2
-        ), f"key1 {key1}, value 1 {value1} != key2 {key2} value 2 {value2}"
+        assert value1 == value2, (
+            f"key1 {key1}, value 1 {value1} != key2 {key2} value 2 {value2}"
+        )
 
 
 @requires_exe("mfusg")

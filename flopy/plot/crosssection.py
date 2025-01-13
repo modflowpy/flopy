@@ -93,7 +93,7 @@ class PlotCrossSection:
         else:
             self.ax = ax
 
-        onkey = list(line.keys())[0]
+        onkey = next(iter(line.keys()))
         self.__geographic_xpts = None
 
         # un-translate model grid into model coordinates
@@ -174,7 +174,7 @@ class PlotCrossSection:
                 xp[idx2] += 1e-03
                 self.direction = "y"
 
-            pts = [(xt, yt) for xt, yt in zip(xp, yp)]
+            pts = list(zip(xp, yp))
 
         self.pts = np.array(pts)
 
@@ -185,7 +185,7 @@ class PlotCrossSection:
         self.xypts = plotutil.UnstructuredPlotUtilities.filter_line_segments(
             self.xypts, threshold=min_segment_length
         )
-        # need to ensure that the ordering of verticies in xypts is correct
+        # need to ensure that the ordering of vertices in xypts is correct
         # based on the projection. In certain cases vertices need to be sorted
         # for the specific "projection"
         for node, points in self.xypts.items():
@@ -199,7 +199,7 @@ class PlotCrossSection:
             self.xypts[node] = points
 
         if len(self.xypts) < 2:
-            if len(list(self.xypts.values())[0]) < 2:
+            if len(next(iter(self.xypts.values()))) < 2:
                 s = (
                     "cross-section cannot be created\n."
                     " less than 2 points intersect the model grid\n"
@@ -215,13 +215,9 @@ class PlotCrossSection:
                 xp = [t[0] for t in pt]
                 yp = [t[1] for t in pt]
                 xp, yp = geometry.transform(
-                    xp,
-                    yp,
-                    self.mg.xoffset,
-                    self.mg.yoffset,
-                    self.mg.angrot_radians,
+                    xp, yp, self.mg.xoffset, self.mg.yoffset, self.mg.angrot_radians
                 )
-                xypts[nn] = [(xt, yt) for xt, yt in zip(xp, yp)]
+                xypts[nn] = list(zip(xp, yp))
 
             self.xypts = xypts
 
@@ -288,24 +284,11 @@ class PlotCrossSection:
     def _is_valid(line):
         shapely_geo = import_optional_dependency("shapely.geometry")
 
-        if isinstance(
-            line,
-            (
-                list,
-                tuple,
-                np.ndarray,
-            ),
-        ):
+        if isinstance(line, (list, tuple, np.ndarray)):
             a = np.array(line)
             if (len(a.shape) < 2 or a.shape[0] < 2) or a.shape[1] != 2:
                 return False
-        elif not isinstance(
-            line,
-            (
-                geometry.LineString,
-                shapely_geo.LineString,
-            ),
-        ):
+        elif not isinstance(line, (geometry.LineString, shapely_geo.LineString)):
             return False
 
         return True
@@ -589,13 +572,10 @@ class PlotCrossSection:
         xcenters = self.xcenters
         plotarray = np.array([a[cell] for cell in sorted(self.projpts)])
 
-        (
-            plotarray,
-            xcenters,
-            zcenters,
-            mplcontour,
-        ) = self.mg.cross_section_set_contour_arrays(
-            plotarray, xcenters, head, self.elev, self.projpts
+        (plotarray, xcenters, zcenters, mplcontour) = (
+            self.mg.cross_section_set_contour_arrays(
+                plotarray, xcenters, head, self.elev, self.projpts
+            )
         )
 
         if not mplcontour:
@@ -771,12 +751,7 @@ class PlotCrossSection:
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
         # mask active cells
         patches = self.plot_array(
-            plotarray,
-            masked_values=[0],
-            head=head,
-            cmap=cmap,
-            norm=norm,
-            **kwargs,
+            plotarray, masked_values=[0], head=head, cmap=cmap, norm=norm, **kwargs
         )
         return patches
 
@@ -908,12 +883,7 @@ class PlotCrossSection:
         bounds = [0, 1, 2]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
         patches = self.plot_array(
-            plotarray,
-            masked_values=[0],
-            head=head,
-            cmap=cmap,
-            norm=norm,
-            **kwargs,
+            plotarray, masked_values=[0], head=head, cmap=cmap, norm=norm, **kwargs
         )
 
         return patches
@@ -933,7 +903,7 @@ class PlotCrossSection:
             optional numpy nd.array of size modelgrid.nnodes
         s : None, float, numpy array
             optional point size parameter
-        masked_values : None, iteratable
+        masked_values : None, iterable
             optional list, tuple, or np array of array (a) values to mask
         inactive : bool
             boolean flag to include inactive cell centers in the plot.

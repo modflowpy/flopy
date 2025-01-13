@@ -51,8 +51,7 @@ class _Modpath7ParticleGroup:
 
         if releasedata is None:
             raise ValueError(
-                "releasedata must be provided to instantiate "
-                "a MODPATH 7 particle group"
+                "releasedata must be provided to instantiate a MODPATH 7 particle group"
             )
 
         # convert releasedata to a list, if required
@@ -142,9 +141,7 @@ class _Modpath7ParticleGroup:
             # item 29
             fp.write(
                 "{} {} {}\n".format(
-                    self.releasetimecount,
-                    self.releasetimes[0],
-                    self.releaseinterval,
+                    self.releasetimecount, self.releasetimes[0], self.releaseinterval
                 )
             )
         elif self.releaseoption == 3:

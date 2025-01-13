@@ -33,7 +33,9 @@ from pathlib import Path
 from pprint import pformat
 from tempfile import TemporaryDirectory
 
+import git
 import numpy as np
+import pooch
 
 import flopy
 from flopy.export import vtk
@@ -42,11 +44,39 @@ print(sys.version)
 print(f"flopy version: {flopy.__version__}")
 # -
 
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
+
+data_path = root / "examples" / "data" if root else Path.cwd()
+sim_name = "freyberg_multilayer_transient"
+file_names = {
+    "freyberg.bas": None,
+    "freyberg.cbc": None,
+    "freyberg.ddn": None,
+    "freyberg.dis": None,
+    "freyberg.drn": None,
+    "freyberg.hds": None,
+    "freyberg.list": None,
+    "freyberg.nam": None,
+    "freyberg.nwt": None,
+    "freyberg.oc": None,
+    "freyberg.rch": None,
+    "freyberg.upw": None,
+    "freyberg.wel": None,
+}
+for fname, fhash in file_names.items():
+    pooch.retrieve(
+        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{sim_name}/{fname}",
+        fname=fname,
+        path=data_path / sim_name,
+        known_hash=fhash,
+    )
+
 # load model for examples
 nam_file = "freyberg.nam"
-model_ws = Path(
-    os.path.join("..", "..", "examples", "data", "freyberg_multilayer_transient")
-)
+model_ws = data_path / sim_name
 ml = flopy.modflow.Modflow.load(nam_file, model_ws=model_ws, check=False)
 
 # Create a temporary workspace.
@@ -216,13 +246,7 @@ vtkobj = vtk.Vtk(ml, xml=True, pvd=True, vertical_exageration=10)
 
 ## add recharge to the VTK object
 recharge = ml.rch.rech.transient_2ds
-vtkobj.add_transient_array(
-    recharge,
-    "recharge",
-    masked_values=[
-        0,
-    ],
-)
+vtkobj.add_transient_array(recharge, "recharge", masked_values=[0])
 
 ## write vtk files
 vtkobj.write(output_dir / "tr_array_example" / "recharge.vtu")
@@ -242,12 +266,7 @@ vtkobj = vtk.Vtk(ml, xml=True, pvd=True, vertical_exageration=10)
 
 ## add well fluxes to the VTK object
 spd = ml.wel.stress_period_data
-vtkobj.add_transient_list(
-    spd,
-    masked_values=[
-        0,
-    ],
-)
+vtkobj.add_transient_list(spd, masked_values=[0])
 
 ## write vtk files
 vtkobj.write(output_dir / "tr_list_example" / "wel_flux.vtu")
@@ -412,17 +431,7 @@ def run_vertex_grid_example(ws):
     xmax = 12 * delr
     ymin = 8 * delc
     ymax = 13 * delc
-    rfpoly = [
-        [
-            [
-                (xmin, ymin),
-                (xmax, ymin),
-                (xmax, ymax),
-                (xmin, ymax),
-                (xmin, ymin),
-            ]
-        ]
-    ]
+    rfpoly = [[[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]]]
     g.add_refinement_features(rfpoly, "polygon", 1, range(nlay))
 
     rf1shp = os.path.join(gridgen_ws, "rf1")
@@ -430,17 +439,7 @@ def run_vertex_grid_example(ws):
     xmax = 11 * delr
     ymin = 9 * delc
     ymax = 12 * delc
-    rfpoly = [
-        [
-            [
-                (xmin, ymin),
-                (xmax, ymin),
-                (xmax, ymax),
-                (xmin, ymax),
-                (xmin, ymin),
-            ]
-        ]
-    ]
+    rfpoly = [[[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]]]
     g.add_refinement_features(rfpoly, "polygon", 2, range(nlay))
 
     rf2shp = os.path.join(gridgen_ws, "rf2")
@@ -448,17 +447,7 @@ def run_vertex_grid_example(ws):
     xmax = 10 * delr
     ymin = 10 * delc
     ymax = 11 * delc
-    rfpoly = [
-        [
-            [
-                (xmin, ymin),
-                (xmax, ymin),
-                (xmax, ymax),
-                (xmin, ymax),
-                (xmin, ymin),
-            ]
-        ]
-    ]
+    rfpoly = [[[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]]]
     g.add_refinement_features(rfpoly, "polygon", 3, range(nlay))
 
     g.build(verbose=False)
