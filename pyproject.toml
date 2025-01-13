@@ -76,6 +76,7 @@ optional = [
     "scipy",
     "shapely >=2.0",
     "vtk >=9.4.0",
+    "xarray",
     "xmipy",
     "h5py",
 ]

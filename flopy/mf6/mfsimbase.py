@@ -1655,7 +1655,11 @@ class MFSimulationBase:
             package.set_all_data_internal(check_data)
 
     def write_simulation(
-        self, ext_file_action=ExtFileAction.copy_relative_paths, silent=False
+        self,
+        ext_file_action=ExtFileAction.copy_relative_paths,
+        silent=False,
+        netcdf=None,
+        to_cdl=False,
     ):
         """
         Write the simulation to files.
@@ -1668,6 +1672,11 @@ class MFSimulationBase:
                 by absolute paths fixed.
             silent : bool
                 Writes out the simulation in silent mode (verbosity_level = 0)
+            netcdf : str
+                Create model NetCDF file, of type specified, in which to store
+                package griddata. 'mesh2d' and 'structured' are supported types.
+            to_cdl : bool
+                Generate text version of netcdf file (debug feature)
 
         """
         sim_data = self.simulation_data
@@ -1735,7 +1744,11 @@ class MFSimulationBase:
                 >= VerbosityLevel.normal.value
             ):
                 print(f"  writing model {model.name}...")
-            model.write(ext_file_action=ext_file_action)
+            model.write(
+                ext_file_action=ext_file_action,
+                netcdf=netcdf,
+                to_cdl=to_cdl,
+            )
 
         self.simulation_data.mfpath.set_last_accessed_path()
 

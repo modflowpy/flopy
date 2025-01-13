@@ -152,6 +152,8 @@ class MFModel(ModelInterface):
             _internal_package=True,
         )
 
+        self._nc_dataset = None
+
     def __init_subclass__(cls):
         """Register model type"""
         super().__init_subclass__()
@@ -927,6 +929,27 @@ class MFModel(ModelInterface):
 
         # load name file
         instance.name_file.load(strict)
+        if hasattr(instance.name_file, "nc_filerecord"):
+            nc_filerecord = instance.name_file.nc_filerecord.get_data()
+            if nc_filerecord:
+                from ..utils.model_netcdf import open_netcdf_dataset
+
+                dis_str = {
+                    "dis6": "structured",
+                    "disv6": "vertex",
+                    "disu6": "unstructured",
+                }
+                dis_type = None
+                for t in instance.name_file.packages.get_data():
+                    if t[0].lower().startswith("dis"):
+                        dis_type = t[0].lower()
+                        break
+                if dis_type:
+                    nc_fpth = os.path.join(instance.model_ws, nc_filerecord[0][0])
+                    instance._nc_dataset = open_netcdf_dataset(nc_fpth, dis_type=dis_str[dis_type])
+                else:
+                    pass
+                    # TODO: set error "invalid dis for netcdf input"
 
         # order packages
         vnum = mfstructure.MFStructure().get_version_string()
@@ -1296,7 +1319,12 @@ class MFModel(ModelInterface):
         else:
             return f",{data_entry}\n"
 
-    def write(self, ext_file_action=ExtFileAction.copy_relative_paths):
+    def write(
+        self,
+        ext_file_action=ExtFileAction.copy_relative_paths,
+        netcdf=None,
+        to_cdl=False,
+    ):
         """
         Writes out model's package files.
 
@@ -1306,8 +1334,36 @@ class MFModel(ModelInterface):
             Defines what to do with external files when the simulation path has
             changed.  defaults to copy_relative_paths which copies only files
             with relative paths, leaving files defined by absolute paths fixed.
+        netcdf : str
+            Create model NetCDF file, of type specified, in which to store
+            package griddata. 'mesh2d' and 'structured' are supported types.
+        to_cdl : bool
+            Generate text version of netcdf file (debug feature)
 
         """
+
+        # write netcdf file
+        if netcdf or self._nc_dataset:
+            if not self._nc_dataset:
+                from ..utils.model_netcdf import create_netcdf_dataset
+
+                # set netcdf file name
+                nc_fname = f"{self.name}.in.nc"
+
+                # update name file to read from netcdf
+                self.name_file.nc_filerecord = nc_fname
+
+                # create netcdf dataset
+                self._nc_dataset = create_netcdf_dataset(
+                    self.model_type, self.name, netcdf, nc_fname, self._modelgrid
+                )
+
+                # reset data storage and populate netcdf file
+                for pp in self.packagelist:
+                    pp._set_netcdf_storage(self._nc_dataset, create=True)
+
+            # TODO: fix...see get_file_path() in mfpackage, needs to take into acct model path if set
+            self._nc_dataset.write(self.simulation_data.mfpath.get_sim_path())
 
         # write name file
         if (

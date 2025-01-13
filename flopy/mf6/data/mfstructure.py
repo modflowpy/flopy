@@ -1089,6 +1089,14 @@ class MFDataStructure:
             or "nodes" in data_item.shape
             or len(data_item.layer_dims) > 1
         )
+        # TODO: only gwf, gwt, gwe models
+        self.netcdf = (
+            ("ncol" in data_item.shape
+            or "nrow" in data_item.shape
+            or "nlay" in data_item.shape
+            or "nodes" in data_item.shape)
+            and data_item.block_name == 'griddata'
+        )
         self.num_data_items = len(data_item.data_items)
         self.record_within_record = False
         self.file_data = False

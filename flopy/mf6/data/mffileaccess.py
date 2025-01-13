@@ -513,6 +513,14 @@ class MFFileAccessArray(MFFileAccess):
             fd.close()
             return bin_data
 
+    def load_netcdf_array(
+        self,
+        nc_dataset,
+        nc_tag,
+        layer,
+    ):
+        return nc_dataset.data(nc_tag, layer + 1)
+
     def get_data_string(self, data, data_type, data_indent=""):
         layer_data_string = [str(data_indent)]
         line_data_count = 0
