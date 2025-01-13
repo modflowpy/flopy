@@ -1063,6 +1063,15 @@ class MFArray(MFMultiDimVar):
             external_file_info=None,
         )
         self._resync()
+        nc_dataset=None
+        if self.structure.netcdf:
+            if (
+                # TODO use util splitting method e.g. see mffileaccess #NETCDF-DEV
+                hasattr(self._model_or_sim, "_nc_dataset")
+                and len(first_line.split()) > 1
+                and first_line.split()[1].lower() == "netcdf"
+            ):
+                nc_dataset = self._model_or_sim._nc_dataset
         if (
             self.structure.layered
             and self.structure.name.lower() != "aux"
@@ -1101,6 +1110,9 @@ class MFArray(MFMultiDimVar):
             storage.point_to_existing_external_file(
                 external_file_info, storage.layer_storage.get_total_size() - 1
             )
+            return_val = [False, None]
+        elif nc_dataset is not None:
+            self._set_storage_netcdf(nc_dataset)
             return_val = [False, None]
         else:
             file_access = MFFileAccessArray(
@@ -1160,7 +1172,7 @@ class MFArray(MFMultiDimVar):
         if (
             data_storage is None
             or data_storage.layer_storage.get_total_size() == 0
-            or not data_storage.has_data()
+            or (not data_storage.has_data() and not data_storage.netcdf)
         ):
             return ""
 
@@ -1206,7 +1218,7 @@ class MFArray(MFMultiDimVar):
                 f"{indent}{self.structure.name}{indent}{data}\n"
             )
         elif data_storage.layered:
-            if not layered_aux:
+            if not layered_aux and not data_storage.netcdf:
                 if not self.structure.data_item_structures[0].just_data:
                     name = self.structure.name
                     file_entry_array.append(f"{indent}{name}{indent}LAYERED\n")
@@ -1241,7 +1253,11 @@ class MFArray(MFMultiDimVar):
 
                 layer_min = layer
                 layer_max = shape_ml.inc_shape_idx(layer)
-            if layered_aux:
+
+            if data_storage.netcdf:
+                file_entry_array.append(f"{indent}{self.structure.name}{indent}NETCDF\n")
+
+            elif layered_aux:
                 aux_var_names = (
                     self.data_dimensions.package_dim.get_aux_variables()[0]
                 )
@@ -1274,15 +1290,18 @@ class MFArray(MFMultiDimVar):
                     file_entry_array.append(
                         f"{indent}{self._get_aux_var_name([0])}\n"
                     )
+                elif data_storage.netcdf:
+                    file_entry_array.append(f"{indent}{self.structure.name}{indent}NETCDF\n")
                 else:
                     file_entry_array.append(f"{indent}{self.structure.name}\n")
 
             data_storage_type = data_storage.layer_storage[0].data_storage_type
-            file_entry_array.append(
-                self._get_file_entry_layer(
-                    None, data_indent, data_storage_type, ext_file_action
+            if not data_storage.netcdf:
+                file_entry_array.append(
+                    self._get_file_entry_layer(
+                        None, data_indent, data_storage_type, ext_file_action
+                    )
                 )
-            )
 
         return "".join(file_entry_array)
 
@@ -1395,6 +1414,9 @@ class MFArray(MFMultiDimVar):
                 const_val, layer, self._data_type
             ).upper()
             file_entry = f"{file_entry}{indent_string}{const_str}"
+        elif self._get_storage_obj().netcdf:
+            indent = self._simulation_data.indent_string
+            file_entry = f"{indent}{self.structure.name}{indent_string}NETCDF\n"
         else:
             #  external data
             ext_str = self._get_external_formatting_string(
@@ -1589,6 +1611,25 @@ class MFArray(MFMultiDimVar):
             axes = None
 
         return axes
+
+    def _set_storage_netcdf(self, nc_dataset, create=False):
+        storage = self._get_storage_obj()
+        package_dim = self.data_dimensions.package_dim
+        m = package_dim.model_dim[0].model_name
+        # TODO: fix, this won't work for multi-packages #NETCDF-DEV
+        p = self.structure.get_package()
+        n = self.structure.name.lower()
+        input_tag = f"{m}/{p}/{n}".lower()
+
+        if create:
+            # cache data and update file before resetting storage
+            nc_varname = f"{p}_{n}".lower()
+            data = self._get_data()
+            nc_dataset.create_var(nc_varname, input_tag, 0, data, self.structure.shape)
+
+        storage._set_storage_netcdf(
+            nc_dataset, input_tag, self.structure.layered, storage.layer_storage.get_total_size() - 1
+        )
 
 
 class MFTransientArray(MFArray, MFTransient):

@@ -71,6 +71,12 @@ class LayerStorage:
         print code
     binary : bool
         whether the data is stored in a binary file
+    nc_dataset : ModelNetCDFDataset or None
+        model netcdf dataset
+    nc_input_tag : str
+        parameter netcdf file input tag
+    nc_layered : bool  #NETCDF-DEV verify this is needed
+        array storage data is layered
 
     Methods
     -------
@@ -115,6 +121,9 @@ class LayerStorage:
             self.factor = 1.0
         self.iprn = None
         self.binary = False
+        self.nc_dataset = None
+        self.nc_input_tag = None
+        self.nc_layered = False
 
     def set_internal_constant(self):
         self.data_storage_type = DataStorageType.internal_constant
@@ -327,6 +336,7 @@ class DataStorage:
             self.build_type_list(resolve_data_shape=False)
 
         self.layered = layered
+        self.netcdf = False
 
         # initialize comments
         self.pre_data_comments = None
@@ -1871,6 +1881,17 @@ class DataStorage:
         self.set_ext_file_attributes(layer, data_file, print_format, binary)
         self.layer_storage[layer].factor = multiplier
 
+    def _set_storage_netcdf(self, nc_dataset, input_tag, layered, layer):
+        self.netcdf = True
+        is_layered = layered and layer > 0
+        for idx in self.layer_storage.indexes():
+            self.layer_storage[idx].nc_dataset = nc_dataset
+            self.layer_storage[idx].nc_input_tag = input_tag
+            self.layer_storage[idx].nc_layered = is_layered
+            self.layer_storage[
+                idx
+            ].data_storage_type = DataStorageType.external_file
+
     def external_to_external(
         self, new_external_file, multiplier=None, layer=None, binary=None
     ):
@@ -1986,6 +2007,16 @@ class DataStorage:
                     self._data_type,
                     self._model_or_sim.modeldiscrit,
                 )[0]
+            elif self.layer_storage[layer].nc_dataset is not None:
+                # TODO: ensure multiplier only set by open/close #NETCDF-DEV
+                for idx in self.layer_storage.indexes():
+                    data_out = (
+                        file_access.load_netcdf_array(
+                            self.layer_storage[layer].nc_dataset,
+                            self.layer_storage[layer].nc_input_tag,
+                            idx[0],
+                        )
+                )
             else:
                 data_out = file_access.read_text_data_from_file(
                     self.get_data_size(layer),
@@ -2440,6 +2471,20 @@ class DataStorage:
                             self._model_or_sim.modeldiscrit,
                             False,
                         )[0]
+                        * mult
+                    )
+                elif self.layer_storage[layer].nc_dataset is not None:
+                    # TODO: ensure multiplier only set by open/close #NETCDF-DEV
+                    if self.layer_storage[layer].nc_layered:
+                        nc_layer = layer
+                    else:
+                        nc_layer = -1
+                    data_out = (
+                        file_access.load_netcdf_array(
+                            self.layer_storage[layer].nc_dataset,
+                            self.layer_storage[layer].nc_input_tag,
+                            nc_layer,
+                        )
                         * mult
                     )
                 else:

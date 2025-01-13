@@ -61,5 +61,6 @@ dependencies:
   - scipy
   - shapely>=2.0
   - vtk
+  - xarray
   - xmipy
   - h5py

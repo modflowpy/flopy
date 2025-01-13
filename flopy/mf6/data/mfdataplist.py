@@ -221,10 +221,13 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
         self._data_types = None
         self._data_item_names = None
         self._mg = None
+        self._grid_type = None
         self._current_key = 0
         self._max_file_size = 1000000000000000
         if self._model_or_sim.type == "Model":
-            self._mg = self._model_or_sim.modelgrid
+            self._grid_type = self._model_or_sim.get_grid_type()
+            if hasattr(self._model_or_sim, "modelgrid"):
+                self._mg = self._model_or_sim.modelgrid
 
         if data is not None:
             try:
@@ -302,7 +305,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
             if data_item.type == DatumType.integer:
                 if data_item.name.lower() == "cellid":
                     columns = data.columns.tolist()
-                    if isinstance(self._mg, StructuredGrid):
+                    if self._grid_type == DiscretizationType.DIS:
                         if (
                             "cellid_layer" in columns
                             and "cellid_row" in columns
@@ -414,7 +417,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
                     if data_item.name.lower() == "cellid":
                         # get the appropriate cellid column headings for the
                         # model's discretization type
-                        if isinstance(self._mg, StructuredGrid):
+                        if self._grid_type == DiscretizationType.DIS:
                             self._append_type_list(
                                 "cellid_layer", i_type, True
                             )
@@ -431,7 +434,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
                             self._append_type_list("cellid_node", i_type, True)
                         else:
                             raise MFDataException(
-                                "ERROR: Unrecognized model grid "
+                                f"ERROR: Unrecognized model grid "
                                 "{str(self._mg)} not supported by MFBasicList"
                             )
                     else:
@@ -505,7 +508,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
         # fix columns
         for field_idx, column_name in fields_to_correct:
             # add individual layer/row/column/cell/node columns
-            if isinstance(self._mg, StructuredGrid):
+            if self._grid_type == DiscretizationType.DIS:
                 try:
                     pdata.insert(
                         loc=field_idx,
@@ -1468,7 +1471,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
         if data_item_struct.numeric_index or data_item_struct.is_cellid:
             name = data_item_struct.name.lower()
             if name.startswith("cellid"):
-                if isinstance(self._mg, StructuredGrid):
+                if self._grid_type == DiscretizationType.DIS:
                     id_fields.append(f"{name}_layer")
                     id_fields.append(f"{name}_row")
                     id_fields.append(f"{name}_column")
