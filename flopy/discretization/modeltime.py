@@ -464,8 +464,7 @@ class ModelTime:
 
         else:
             raise NotImplementedError(
-                f"{type(datetime_obj)} date representations "
-                f"are not currently supported"
+                f"{type(datetime_obj)} date representations are not currently supported"
             )
 
         return datetime_obj
