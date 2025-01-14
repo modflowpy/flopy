@@ -177,7 +177,7 @@ class ModelNetCDFDataset:
     ):
         try:
             for layer in range(data.shape[0]):
-                layer_vname = f"{varname}_l{layer+1}"
+                layer_vname = f"{varname}_l{layer + 1}"
                 var_d = {layer_vname: (nc_shape, data[layer].flatten())}
                 self._dataset = self._dataset.assign(var_d)
                 self._dataset[layer_vname].attrs["modflow6_input"] = tag

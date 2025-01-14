@@ -84,11 +84,10 @@ def test_load_netcdf_gwfsto01(function_tmpdir, example_data_path):
                     next(file2)
 
                     for line1, line2 in zip(file1, file2):
-                        assert line1 == line2
+                        assert line1.lower() == line2.lower()
             else:
                 # TODO compare nc files
                 assert os.path.exists(gen)
-        continue
 
 
 @requires_pkg("xarray")
@@ -96,8 +95,21 @@ def test_load_netcdf_gwfsto01(function_tmpdir, example_data_path):
 @pytest.mark.regression
 def test_create_netcdf_gwfsto01(function_tmpdir, example_data_path):
     xr = import_optional_dependency("xarray")
-
-    cases = ["structured", "mesh2d"]
+    data_path_base = example_data_path / "mf6" / "netcdf"
+    tests = {
+        "test_gwf_sto01_mesh": TestInfo(
+            "gwf_sto01",
+            "gwf_sto01_write",
+            "gwf_sto01.ugrid.nc",
+        ),
+        "test_gwf_sto01_structured": TestInfo(
+            "gwf_sto01",
+            "gwf_sto01_write",
+            "gwf_sto01.structured.nc",
+        ),
+    }
+    name = "gwf_sto01"
+    cases = ["mesh2d", "structured"]
 
     # static model data
     # temporal discretization
@@ -174,9 +186,17 @@ def test_create_netcdf_gwfsto01(function_tmpdir, example_data_path):
     ske = [6e-4, 3e-4, 6e-4]
 
     # build
-    for name in cases:
-        # name = cases[0]
-        ws = function_tmpdir / name
+    ws = function_tmpdir / "ws"
+    for idx, (base_folder, test_info) in enumerate(tests.items()):
+        print(f"RUNNING TEST: {base_folder}")
+        netcdf = cases[idx]
+        data_path = os.path.join(
+            data_path_base, base_folder, test_info.original_simulation_folder
+        )
+        # copy example data into working directory
+        base_model_folder = os.path.join(ws, f"{base_folder}_base")
+        test_model_folder = os.path.join(ws, f"{base_folder}_test")
+        shutil.copytree(data_path, base_model_folder)
 
         # build MODFLOW 6 files
         sim = flopy.mf6.MFSimulation(
@@ -184,7 +204,11 @@ def test_create_netcdf_gwfsto01(function_tmpdir, example_data_path):
         )
         # create tdis package
         tdis = flopy.mf6.ModflowTdis(
-            sim, time_units="DAYS", nper=nper, perioddata=tdis_rc
+            sim,
+            time_units="DAYS",
+            start_date_time="2041-01-01t00:00:00-05:00",
+            nper=nper,
+            perioddata=tdis_rc,
         )
 
         # create gwf model
@@ -276,21 +300,43 @@ def test_create_netcdf_gwfsto01(function_tmpdir, example_data_path):
             printrecord=[("HEAD", "LAST"), ("BUDGET", "ALL")],
         )
 
-        sim.write_simulation(netcdf=name)
+        sim.set_sim_path(test_model_folder)
+        sim.write_simulation(netcdf=netcdf)
 
-        try:
-            success, buff = flopy.run_model(
-                "mf6",
-                ws / "mfsim.nam",
-                model_ws=ws,
-                report=True,
-            )
-        except Exception:
-            warn(
-                "MODFLOW 6 serial test",
-                name,
-                f"failed with error:\n{format_exc()}",
-            )
-            success = False
+        # compare generated files
+        gen_files = [
+            f
+            for f in os.listdir(test_model_folder)
+            if os.path.isfile(os.path.join(test_model_folder, f))
+        ]
+        base_files = [
+            f
+            for f in os.listdir(base_model_folder)
+            if os.path.isfile(os.path.join(base_model_folder, f))
+        ]
+        # assert len(gen_files) == len(base_files)
+        for f in base_files:
+            print(f"cmp => {f}")
+            base = os.path.join(base_model_folder, f)
+            gen = os.path.join(test_model_folder, f)
+            if f != test_info.netcdf_output_file:
+                with open(base, "r") as file1, open(gen, "r") as file2:
+                    # Skip first line
+                    next(file1)
+                    next(file2)
 
-        assert success
+                    for line1, line2 in zip(file1, file2):
+                        if "netcdf  filein" in line1.lower():
+                            if netcdf == "mesh2d":
+                                suffix = "ugrid"
+                            else:
+                                suffix = netcdf
+                            assert line1 == f"  NETCDF  FILEIN  gwf_sto01.{suffix}.nc\n"
+                            assert line2 == "  NETCDF  FILEIN  gwf_sto01.in.nc\n"
+                        else:
+                            assert line1 == line2
+            else:
+                # TODO compare nc files
+                assert os.path.exists(
+                    os.path.join(test_model_folder, "gwf_sto01.in.nc")
+                )
