@@ -1337,7 +1337,7 @@ class BaseModel(ModelInterface):
         elif key == "start_datetime":
             if self.dis is not None:
                 self.dis.start_datetime = value
-                self.modeltime.set_start_datetime(value)
+                self.modeltime.start_datetime = value
             else:
                 raise Exception("cannot set start_datetime - ModflowDis not found")
         else:

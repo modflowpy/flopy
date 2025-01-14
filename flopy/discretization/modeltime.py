@@ -200,7 +200,7 @@ class ModelTime:
 
     def get_datetime_string(self, datetime_obj):
         """
-        Method to get a standarized ISO 8601 compliant datetime string
+        Method to get a standardized ISO 8601 compliant datetime string
 
         Parameters
         ----------
