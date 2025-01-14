@@ -17,12 +17,12 @@ class ModelTime:
     nstp : list, np.ndarray
         list or numpy array of number of time-steps per stress period
     tsmult : list, np.ndarray
-        list or numpy array of timestep mult infomation
+        list or numpy array of timestep mult information
     time_units : int or str
         string or pre-mf6 integer representation (ITMUNI) of time units
     start_datetime : various objects
         user supplied datetime representation. Please see the
-        ModelTime.datetime_from_user_input documentation for a list
+        ModelTime.parse_datetime documentation for a list
         of the supported representation types
     steady_state : list, np.ndarray
         optional list or numpy array of boolean flags that identify whether a stress
@@ -51,8 +51,8 @@ class ModelTime:
         self._perlen = perlen
         self._nstp = nstp
         self._tsmult = tsmult
-        self._time_units = self.timeunits_from_user_input(time_units)
-        self._start_datetime = self.datetime_from_user_input(start_datetime)
+        self._time_units = self.parse_timeunits(time_units)
+        self._start_datetime = ModelTime.parse_datetime(start_datetime)
         self._steady_state = steady_state
         self._totim_dict = {}
         self._datetime_dict = {}
@@ -65,12 +65,42 @@ class ModelTime:
         """
         return self._time_units
 
+    @time_units.setter
+    def time_units(self, units):
+        """
+        Method to reset the time units of the ModelTime class
+
+        Parameters
+        ----------
+        units : str or int
+            string or pre-mf6 integer representation (ITMUNI) of time units
+
+        """
+        units = self.parse_timeunits(units)
+        self._time_units = units
+
     @property
     def start_datetime(self):
         """
         Returns a datetime.datetime object of the model start time
         """
         return self._start_datetime
+
+    @start_datetime.setter
+    def start_datetime(self, datetime_obj):
+        """
+        Property setter method to reset the start datetime of the ModelTime class
+
+        Parameters
+        ----------
+        datetime_obj : various objects
+            user-supplied datetime representation. Please see the
+            ModelTime.parse_datetime documentation for a list
+            of the supported representation types
+
+        """
+        start_dt = self.parse_datetime(datetime_obj)
+        self._start_datetime = start_dt
 
     @property
     def perlen(self):
@@ -129,16 +159,10 @@ class ModelTime:
 
         return list(self._totim_dict.values())
 
-    def datetime_list(self):
+    @property
+    def datetimes(self):
         """
-
-        Parameters
-        ----------
-        kper_kstp
-
-        Returns
-        -------
-
+        Returns a list of datetime objects for all time steps
         """
         if not self._datetime_dict:
             self._set_datetime_dict()
@@ -182,40 +206,12 @@ class ModelTime:
         ----------
         datetime_obj : various objects
             user supplied datetime representation. Please see the
-            ModelTime.datetime_from_user_input documentation for a list
+            ModelTime.parse_datetime documentation for a list
             of the supported representation types
 
         """
-        dt = self.datetime_from_user_input(datetime_obj)
+        dt = ModelTime.parse_datetime(datetime_obj)
         return dt.strftime("%Y-%m-%dT%H:%M:%S")
-
-    def set_start_datetime(self, datetime_obj):
-        """
-        Method to reset the start datetime of the ModelTime class
-
-        Parameters
-        ----------
-        datetime_obj : various objects
-            user supplied datetime representation. Please see the
-            ModelTime.datetime_from_user_input documentation for a list
-            of the supported representation types
-
-        """
-        start_dt = self.datetime_from_user_input(datetime_obj)
-        self._start_datetime = start_dt
-
-    def set_time_units(self, units):
-        """
-        Method to reset the time units of the ModelTime class
-
-        Parameters
-        ----------
-        units : str or int
-            string or pre-mf6 integer representation (ITMUNI) of time units
-
-        """
-        units = self.timeunits_from_user_input(units)
-        self._time_units = units
 
     def _set_totim_dict(self):
         """
@@ -297,7 +293,7 @@ class ModelTime:
         self._datetime_dict = dt_dict
 
     @staticmethod
-    def timeunits_from_user_input(units):
+    def parse_timeunits(units):
         """
         Method to get a normalized time unit string from user input. User
         input can be either a string representation or ITMUNI integer. String
@@ -365,7 +361,7 @@ class ModelTime:
         ----------
         str_datetime : str
             string representation of date time. See the
-            ModelTime.datetime_from_user_input documentation for supported
+            ModelTime.parse_datetime documentation for supported
             formats
 
         Returns
@@ -413,7 +409,7 @@ class ModelTime:
         return str_rep
 
     @staticmethod
-    def datetime_from_user_input(datetime_obj):
+    def parse_datetime(datetime_obj):
         """
         Method to create a datetime.datetime object from a variety of user
         inputs including the following:
@@ -446,7 +442,7 @@ class ModelTime:
         Parameters
         ----------
         datetime_obj : various formats
-            a user supplied representation of date or datetime
+            a user-supplied representation of date or datetime
 
         Returns
         -------
@@ -468,7 +464,8 @@ class ModelTime:
 
         else:
             raise NotImplementedError(
-                f"{type(datetime_obj)} date representations are not currently supported"
+                f"{type(datetime_obj)} date representations "
+                f"are not currently supported"
             )
 
         return datetime_obj
@@ -564,7 +561,7 @@ class ModelTime:
         ----------
         datetime_obj : various objects
             user supplied datetime representation. Please see the
-            ModelTime.datetime_from_user_input documentation for a list
+            ModelTime.parse_datetime documentation for a list
             of the supported representation types
         totim : float
             optional total time elapsed from the beginning of the model
@@ -578,7 +575,7 @@ class ModelTime:
             tuple: (kper, kstp)
         """
         if datetime_obj is not None:
-            datetime_obj = self.datetime_from_user_input(datetime_obj)
+            datetime_obj = ModelTime.parse_datetime(datetime_obj)
             timedelta = datetime_obj - self.start_datetime
 
             if self.time_units == "unknown":
@@ -669,7 +666,7 @@ class ModelTime:
             string or pre-mf6 integer representation (ITMUNI) of time units
         start_datetime : various objects
             user supplied datetime representation. Please see the
-            ModelTime.datetime_from_user_input documentation for a list
+            ModelTime.parse_datetime documentation for a list
             of the supported representation types
         steady_state : list, np.ndarray
             optional list or numpy array of boolean flags that identify whether a stress
