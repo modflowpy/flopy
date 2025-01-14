@@ -11,18 +11,7 @@ from modflow_devtools.markers import requires_exe, requires_pkg
 import flopy
 from flopy.utils import import_optional_dependency
 from flopy.utils.datautil import DatumUtil
-
-
-class TestInfo:
-    def __init__(
-        self,
-        original_simulation_folder,
-        netcdf_simulation_folder,
-        netcdf_output_file,
-    ):
-        self.original_simulation_folder = original_simulation_folder
-        self.netcdf_simulation_folder = netcdf_simulation_folder
-        self.netcdf_output_file = netcdf_output_file
+from flopy.utils.gridutil import get_disv_kwargs
 
 
 @requires_pkg("xarray")
@@ -32,23 +21,19 @@ def test_load_netcdf_gwfsto01(function_tmpdir, example_data_path):
     xr = import_optional_dependency("xarray")
     data_path_base = example_data_path / "mf6" / "netcdf"
     tests = {
-        "test_gwf_sto01_mesh": TestInfo(
-            "gwf_sto01",
-            "gwf_sto01_write",
-            "gwf_sto01.ugrid.nc",
-        ),
-        "test_gwf_sto01_structured": TestInfo(
-            "gwf_sto01",
-            "gwf_sto01_write",
-            "gwf_sto01.structured.nc",
-        ),
+        "test_gwf_sto01_mesh": {
+            "base_sim_dir": "gwf_sto01",
+            "netcdf_output_file": "gwf_sto01.in.nc",
+        },
+        "test_gwf_sto01_structured": {
+            "base_sim_dir": "gwf_sto01",
+            "netcdf_output_file": "gwf_sto01.in.nc",
+        },
     }
     ws = function_tmpdir / "ws"
     for base_folder, test_info in tests.items():
         print(f"RUNNING TEST: {base_folder}")
-        data_path = os.path.join(
-            data_path_base, base_folder, test_info.original_simulation_folder
-        )
+        data_path = os.path.join(data_path_base, base_folder, test_info["base_sim_dir"])
         # copy example data into working directory
         base_model_folder = os.path.join(ws, f"{base_folder}_base")
         test_model_folder = os.path.join(ws, f"{base_folder}_test")
@@ -76,7 +61,7 @@ def test_load_netcdf_gwfsto01(function_tmpdir, example_data_path):
             print(f"cmp => {f}")
             base = os.path.join(base_model_folder, f)
             gen = os.path.join(test_model_folder, f)
-            if f != test_info.netcdf_output_file:
+            if f != test_info["netcdf_output_file"]:
                 # "gwf_sto01.dis.ncf":   # TODO wkt string missing on write?
                 with open(base, "r") as file1, open(gen, "r") as file2:
                     # Skip first line
@@ -91,25 +76,23 @@ def test_load_netcdf_gwfsto01(function_tmpdir, example_data_path):
 
 
 @requires_pkg("xarray")
-@requires_exe("mf6")
 @pytest.mark.regression
 def test_create_netcdf_gwfsto01(function_tmpdir, example_data_path):
     xr = import_optional_dependency("xarray")
     data_path_base = example_data_path / "mf6" / "netcdf"
     tests = {
-        "test_gwf_sto01_mesh": TestInfo(
-            "gwf_sto01",
-            "gwf_sto01_write",
-            "gwf_sto01.ugrid.nc",
-        ),
-        "test_gwf_sto01_structured": TestInfo(
-            "gwf_sto01",
-            "gwf_sto01_write",
-            "gwf_sto01.structured.nc",
-        ),
+        "test_gwf_sto01_mesh": {
+            "base_sim_dir": "gwf_sto01",
+            "netcdf_output_file": "gwf_sto01.in.nc",
+            "netcdf_type": "mesh2d",
+        },
+        "test_gwf_sto01_structured": {
+            "base_sim_dir": "gwf_sto01",
+            "netcdf_output_file": "gwf_sto01.in.nc",
+            "netcdf_type": "structured",
+        },
     }
     name = "gwf_sto01"
-    cases = ["mesh2d", "structured"]
 
     # static model data
     # temporal discretization
@@ -189,10 +172,7 @@ def test_create_netcdf_gwfsto01(function_tmpdir, example_data_path):
     ws = function_tmpdir / "ws"
     for idx, (base_folder, test_info) in enumerate(tests.items()):
         print(f"RUNNING TEST: {base_folder}")
-        netcdf = cases[idx]
-        data_path = os.path.join(
-            data_path_base, base_folder, test_info.original_simulation_folder
-        )
+        data_path = os.path.join(data_path_base, base_folder, test_info["base_sim_dir"])
         # copy example data into working directory
         base_model_folder = os.path.join(ws, f"{base_folder}_base")
         test_model_folder = os.path.join(ws, f"{base_folder}_test")
@@ -301,7 +281,7 @@ def test_create_netcdf_gwfsto01(function_tmpdir, example_data_path):
         )
 
         sim.set_sim_path(test_model_folder)
-        sim.write_simulation(netcdf=netcdf)
+        sim.write_simulation(netcdf=test_info["netcdf_type"])
 
         # compare generated files
         gen_files = [
@@ -319,24 +299,159 @@ def test_create_netcdf_gwfsto01(function_tmpdir, example_data_path):
             print(f"cmp => {f}")
             base = os.path.join(base_model_folder, f)
             gen = os.path.join(test_model_folder, f)
-            if f != test_info.netcdf_output_file:
+            if f != test_info["netcdf_output_file"]:
                 with open(base, "r") as file1, open(gen, "r") as file2:
                     # Skip first line
                     next(file1)
                     next(file2)
 
                     for line1, line2 in zip(file1, file2):
-                        if "netcdf  filein" in line1.lower():
-                            if netcdf == "mesh2d":
-                                suffix = "ugrid"
-                            else:
-                                suffix = netcdf
-                            assert line1 == f"  NETCDF  FILEIN  gwf_sto01.{suffix}.nc\n"
-                            assert line2 == "  NETCDF  FILEIN  gwf_sto01.in.nc\n"
-                        else:
-                            assert line1 == line2
+                        assert line1 == line2
             else:
                 # TODO compare nc files
-                assert os.path.exists(
-                    os.path.join(test_model_folder, "gwf_sto01.in.nc")
-                )
+                assert os.path.exists(gen)
+
+
+@requires_pkg("xarray")
+@pytest.mark.regression
+def test_load_netcdf_disv01b(function_tmpdir, example_data_path):
+    xr = import_optional_dependency("xarray")
+    data_path_base = example_data_path / "mf6" / "netcdf"
+    tests = {
+        "test_gwf_disv01b": {
+            "base_sim_dir": "disv01b",
+            "netcdf_output_file": "disv01b.in.nc",
+        },
+    }
+    ws = function_tmpdir / "ws"
+    for base_folder, test_info in tests.items():
+        print(f"RUNNING TEST: {base_folder}")
+        data_path = os.path.join(data_path_base, base_folder, test_info["base_sim_dir"])
+        # copy example data into working directory
+        base_model_folder = os.path.join(ws, f"{base_folder}_base")
+        test_model_folder = os.path.join(ws, f"{base_folder}_test")
+        shutil.copytree(data_path, base_model_folder)
+        # load example
+        sim = flopy.mf6.MFSimulation.load(sim_ws=base_model_folder)
+        # change simulation path
+        sim.set_sim_path(test_model_folder)
+        # write example simulation to reset path
+        sim.write_simulation()
+
+        # compare generated files
+        gen_files = [
+            f
+            for f in os.listdir(test_model_folder)
+            if os.path.isfile(os.path.join(test_model_folder, f))
+        ]
+        base_files = [
+            f
+            for f in os.listdir(base_model_folder)
+            if os.path.isfile(os.path.join(base_model_folder, f))
+        ]
+        # assert len(gen_files) == len(base_files)
+        for f in base_files:
+            print(f"cmp => {f}")
+            base = os.path.join(base_model_folder, f)
+            gen = os.path.join(test_model_folder, f)
+            if f != test_info["netcdf_output_file"]:
+                with open(base, "r") as file1, open(gen, "r") as file2:
+                    # Skip first line
+                    next(file1)
+                    next(file2)
+
+                    for line1, line2 in zip(file1, file2):
+                        assert line1.lower() == line2.lower()
+            else:
+                # TODO compare nc files
+                assert os.path.exists(gen)
+
+
+@requires_pkg("xarray")
+@pytest.mark.regression
+def test_create_netcdf_disv01b(function_tmpdir, example_data_path):
+    xr = import_optional_dependency("xarray")
+    data_path_base = example_data_path / "mf6" / "netcdf"
+    tests = {
+        "test_gwf_disv01b": {
+            "base_sim_dir": "disv01b",
+            "netcdf_output_file": "disv01b.in.nc",
+            "netcdf_type": "mesh2d",
+        },
+    }
+
+    name = "disv01b"
+    nlay = 3
+    nrow = 3
+    ncol = 3
+    delr = 10.0
+    delc = 10.0
+    top = 0
+    botm = [-10, -20, -30]
+    xoff = 100000000.0
+    yoff = 100000000.0
+    disvkwargs = get_disv_kwargs(nlay, nrow, ncol, delr, delc, top, botm, xoff, yoff)
+    idomain = np.ones((nlay, nrow * ncol), dtype=int)
+    idomain[0, 1] = 0
+    disvkwargs["idomain"] = idomain
+
+    # build
+    ws = function_tmpdir / "ws"
+    for idx, (base_folder, test_info) in enumerate(tests.items()):
+        print(f"RUNNING TEST: {base_folder}")
+        data_path = os.path.join(data_path_base, base_folder, test_info["base_sim_dir"])
+        # copy example data into working directory
+        base_model_folder = os.path.join(ws, f"{base_folder}_base")
+        test_model_folder = os.path.join(ws, f"{base_folder}_test")
+        shutil.copytree(data_path, base_model_folder)
+
+        sim = flopy.mf6.MFSimulation(
+            sim_name=name,
+            version="mf6",
+            exe_name="mf6",
+            sim_ws=ws,
+        )
+        tdis = flopy.mf6.ModflowTdis(sim, start_date_time="2041-01-01t00:00:00-05:00")
+        gwf = flopy.mf6.ModflowGwf(sim, modelname=name)
+        ims = flopy.mf6.ModflowIms(sim, print_option="SUMMARY")
+        disv = flopy.mf6.ModflowGwfdisv(gwf, **disvkwargs)
+        ic = flopy.mf6.ModflowGwfic(gwf, strt=0.0)
+        npf = flopy.mf6.ModflowGwfnpf(gwf)
+        spd = {0: [[(0, 0), 1.0], [(0, nrow * ncol - 1), 0.0]]}
+        chd = flopy.mf6.modflow.mfgwfchd.ModflowGwfchd(gwf, stress_period_data=spd)
+        oc = flopy.mf6.ModflowGwfoc(
+            gwf,
+            head_filerecord=f"{name}.hds",
+            saverecord=[("HEAD", "ALL")],
+        )
+
+        sim.set_sim_path(test_model_folder)
+        sim.write_simulation(netcdf=test_info["netcdf_type"])
+
+        # compare generated files
+        gen_files = [
+            f
+            for f in os.listdir(test_model_folder)
+            if os.path.isfile(os.path.join(test_model_folder, f))
+        ]
+        base_files = [
+            f
+            for f in os.listdir(base_model_folder)
+            if os.path.isfile(os.path.join(base_model_folder, f))
+        ]
+        # assert len(gen_files) == len(base_files)
+        for f in base_files:
+            print(f"cmp => {f}")
+            base = os.path.join(base_model_folder, f)
+            gen = os.path.join(test_model_folder, f)
+            if f != test_info["netcdf_output_file"]:
+                with open(base, "r") as file1, open(gen, "r") as file2:
+                    # Skip first line
+                    next(file1)
+                    next(file2)
+
+                    for line1, line2 in zip(file1, file2):
+                        assert line1 == line2
+            else:
+                # TODO compare nc files
+                assert os.path.exists(gen)

@@ -2,7 +2,7 @@
 BEGIN options
   SAVE_FLOWS
   NEWTON
-  NETCDF  FILEIN  gwf_sto01.ugrid.nc
+  NETCDF  FILEIN  gwf_sto01.in.nc
 END options
 
 BEGIN packages
