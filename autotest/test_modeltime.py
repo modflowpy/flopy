@@ -2,66 +2,66 @@ import datetime
 
 import numpy as np
 import pandas as pd
+import pytest
 
 import flopy
 from flopy.discretization.modeltime import ModelTime
 
 
-def test_date_userinput_parsing():
-    formats = [
-        datetime.datetime(2024, 11, 12),
-        np.datetime64("2024-11-12"),
-        pd.Timestamp("2024-11-12"),
-        "2024-11-12",
-        "2024/11/12",
-        "11-12-2024",
-        "11/12/2024",
-    ]
-
+@pytest.mark.parametrize(
+    ["dt_rep"],
+    [
+        (datetime.datetime(2024, 11, 12),),
+        (np.datetime64("2024-11-12"),),
+        (pd.Timestamp("2024-11-12"),),
+        ("2024-11-12",),
+        ("2024/11/12",),
+        ("11-12-2024",),
+        ("11/12/2024",),
+    ],
+)
+def test_date_userinput_parsing(dt_rep):
     valid = datetime.datetime(2024, 11, 12)
-
-    for dt_rep in formats:
-        dt_obj = ModelTime.parse_datetime(dt_rep)
-        if dt_obj != valid:
-            raise AssertionError("datetime not properly determined from user input")
+    dt_obj = ModelTime.parse_datetime(dt_rep)
+    if dt_obj != valid:
+        raise AssertionError("datetime not properly determined from user input")
 
 
-def test_datetime_userinput_parsing():
-    formats = [
-        datetime.datetime(2024, 11, 12, 14, 31, 29),
-        np.datetime64("2024-11-12T14:31:29"),
-        pd.Timestamp("2024-11-12T14:31:29"),
-        "2024-11-12T14:31:29",
-        "2024/11/12T14:31:29",
-        "11-12-2024 14:31:29",
-        "11/12/2024 14:31:29",
-    ]
-
+@pytest.mark.parametrize(
+    ["dt_rep"],
+    [
+        (datetime.datetime(2024, 11, 12, 14, 31, 29),),
+        (np.datetime64("2024-11-12T14:31:29"),),
+        (pd.Timestamp("2024-11-12T14:31:29"),),
+        ("2024-11-12T14:31:29",),
+        ("2024/11/12T14:31:29",),
+        ("11-12-2024 14:31:29",),
+        ("11/12/2024 14:31:29",),
+    ],
+)
+def test_datetime_userinput_parsing(dt_rep):
     valid = datetime.datetime(2024, 11, 12, 14, 31, 29)
-
-    for dt_rep in formats:
-        dt_obj = ModelTime.parse_datetime(dt_rep)
-        if dt_obj != valid:
-            raise AssertionError("datetime not properly determined from user input")
+    dt_obj = ModelTime.parse_datetime(dt_rep)
+    if dt_obj != valid:
+        raise AssertionError("datetime not properly determined from user input")
 
 
-def test_timeunits_userinput_parsing():
-    formats = {
-        "years": ["years", "YeaR", "yaEr", "ayer", "y", "yr", 5],
-        "days": ["days", "Day", "dyAs", "dysa", "d", 4],
-        "hours": ["hours", "Hour", "huors", "h", "hrs", 3],
-        "minutes": ["minutes", "MinUte", "minte", "m", "min", 2],
-        "seconds": ["seconds", "Second", "sedcon", "s", "sec", 1],
-        "unknown": ["unkonwn", "undefined", "u", 0],
-    }
-
-    for unit_name, checks in formats.items():
-        for check in checks:
-            mt_unit = ModelTime.timeunits_from_user_input(check)
-            if mt_unit != unit_name:
-                raise AssertionError(
-                    "Units are unable to be determined from user input"
-                )
+@pytest.mark.parametrize(
+    "unit_name, user_inputs",
+    (
+        ("years", ["years", "YeaR", "yaEr", "ayer", "y", "yr", 5]),
+        ("days", ["days", "Day", "dyAs", "dysa", "d", 4]),
+        ("hours", ["hours", "Hour", "huors", "h", "hrs", 3]),
+        ("minutes", ["minutes", "MinUte", "minte", "m", "min", 2]),
+        ("seconds", ["seconds", "Second", "sedcon", "s", "sec", 1]),
+        ("unknown", ["unkonwn", "undefined", "u", 0]),
+    ),
+)
+def test_timeunits_user_input_parsing(unit_name, user_inputs):
+    for user_input in user_inputs:
+        mt_unit = ModelTime.parse_timeunits(user_input)
+        if mt_unit != unit_name:
+            raise AssertionError("Units are unable to be determined from user input")
 
 
 def test_set_datetime_and_units():
@@ -93,9 +93,11 @@ def test_set_datetime_and_units():
         raise AssertionError("start_datetime setting not behaving properly")
 
 
-def test_get_totim_from_kper_kstp():
-    validate = {(0, None): 30.25, (1, 3): 60.5, (4, 0): 126.246, (11, None): 363.00}
-
+@pytest.mark.parametrize(
+    "kperkstp,totim0",
+    [((0, None), 30.25), ((1, 3), 60.5), ((4, 0), 126.246), ((11, None), 363.00)],
+)
+def test_get_elapsed_time_from_kper_kstp(kperkstp, totim0):
     nrec = 12
     perlen = np.full((nrec,), 30.25)
     nstp = np.full((nrec,), 4, dtype=int)
@@ -107,20 +109,22 @@ def test_get_totim_from_kper_kstp():
         perlen, nstp, tslen, time_units=time_unit, start_datetime=start_datetime
     )
 
-    for (kper, kstp), totim0 in validate.items():
-        totim = mt.get_totim(kper, kstp=kstp)
-        if np.abs(totim - totim0) > 0.01:
-            raise AssertionError("Incorrect totim calculation from get_totim()")
+    kper, kstp = kperkstp
+    totim = mt.get_elapsed_time(kper, kstp=kstp)
+    if np.abs(totim - totim0) > 0.01:
+        raise AssertionError("Incorrect totim calculation from get_elapsed_time()")
 
 
-def test_get_datetime_from_kper_kstp():
-    validate = {
-        (0, None): datetime.datetime(2024, 1, 31, 5, 59, 59),
-        (1, 3): datetime.datetime(2024, 3, 1, 11, 59, 59),
-        (4, 0): datetime.datetime(2024, 5, 6, 5, 55, 6),
-        (11, None): datetime.datetime(2024, 12, 28, 23, 59, 59),
-    }
-
+@pytest.mark.parametrize(
+    "kperkstp, dt0",
+    [
+        ((0, None), datetime.datetime(2024, 1, 31, 5, 59, 59)),
+        ((1, 3), datetime.datetime(2024, 3, 1, 11, 59, 59)),
+        ((4, 0), datetime.datetime(2024, 5, 6, 5, 55, 6)),
+        ((11, None), datetime.datetime(2024, 12, 28, 23, 59, 59)),
+    ],
+)
+def test_get_datetime_from_kper_kstp(kperkstp, dt0):
     nrec = 12
     perlen = np.full((nrec,), 30.25)
     nstp = np.full((nrec,), 4, dtype=int)
@@ -132,21 +136,23 @@ def test_get_datetime_from_kper_kstp():
         perlen, nstp, tslen, time_units=time_unit, start_datetime=start_datetime
     )
 
-    for (kper, kstp), dt0 in validate.items():
-        dt = mt.get_datetime(kper, kstp=kstp)
-        td = dt - dt0
-        if np.abs(td.seconds) > 2:
-            raise AssertionError("Datetime calculation incorrect for get_datetime()")
+    kper, kstp = kperkstp
+    dt = mt.get_datetime(kper, kstp=kstp)
+    td = dt - dt0
+    if np.abs(td.seconds) > 2:
+        raise AssertionError("Datetime calculation incorrect for get_datetime()")
 
 
-def test_datetime_intersect():
-    validate = {
-        (0, None): datetime.datetime(2024, 1, 31, 5, 59, 58),
-        (1, 3): datetime.datetime(2024, 3, 1, 11, 59, 58),
-        (4, 0): datetime.datetime(2024, 5, 6, 5, 55, 5),
-        (11, None): datetime.datetime(2024, 12, 28, 23, 59, 58),
-    }
-
+@pytest.mark.parametrize(
+    "kperkstp, dt",
+    [
+        ((0, 3), datetime.datetime(2024, 1, 31, 5, 59, 58)),
+        ((1, 3), datetime.datetime(2024, 3, 1, 11, 59, 58)),
+        ((4, 0), datetime.datetime(2024, 5, 6, 5, 55, 5)),
+        ((11, 3), datetime.datetime(2024, 12, 28, 23, 59, 58)),
+    ],
+)
+def test_datetime_intersect(kperkstp, dt):
     nrec = 12
     perlen = np.full((nrec,), 30.25)
     nstp = np.full((nrec,), 4, dtype=int)
@@ -158,22 +164,19 @@ def test_datetime_intersect():
         perlen, nstp, tslen, time_units=time_unit, start_datetime=start_datetime
     )
 
-    for (kper0, kstp0), dt in validate.items():
-        if kstp0 is None:
-            kper, _ = mt.intersect(dt)
-            if kper != kper0:
-                raise AssertionError("intersect() not returning correct stress-period")
-
-        else:
-            kper, kstp = mt.intersect(dt)
-            if kper != kper0 or kstp != kstp0:
-                raise AssertionError(
-                    "intersect() not returning correct stress-period and timestep"
-                )
+    kper0, kstp0 = kperkstp
+    kper, kstp = mt.intersect(dt)
+    if kper != kper0 or kstp != kstp0:
+        raise AssertionError(
+            "intersect() not returning correct stress-period and timestep"
+        )
 
 
-def test_totim_intersect():
-    validate = {(0, None): 30.2, (1, 3): 60.4, (4, 0): 126.23, (11, None): 362.9}
+@pytest.mark.parametrize(
+    "kperkstp,totim",
+    [((0, 3), 30.2), ((1, 3), 60.4), ((4, 0), 126.23), ((11, 3), 362.9)],
+)
+def test_totim_intersect(kperkstp, totim):
     nrec = 12
     perlen = np.full((nrec,), 30.25)
     nstp = np.full((nrec,), 4, dtype=int)
@@ -184,19 +187,12 @@ def test_totim_intersect():
     mt = ModelTime(
         perlen, nstp, tslen, time_units=time_unit, start_datetime=start_datetime
     )
-
-    for (kper0, kstp0), totim in validate.items():
-        if kstp0 is None:
-            kper, _ = mt.intersect(totim=totim)
-            if kper != kper0:
-                raise AssertionError("intersect() not returning correct stress-period")
-
-        else:
-            kper, kstp = mt.intersect(totim=totim)
-            if kper != kper0 or kstp != kstp0:
-                raise AssertionError(
-                    "intersect() not returning correct stress-period and timestep"
-                )
+    kper0, kstp0 = kperkstp
+    kper, kstp = mt.intersect(totim=totim)
+    if kper != kper0 or kstp != kstp0:
+        raise AssertionError(
+            "intersect() not returning correct stress-period and timestep"
+        )
 
 
 def test_mf2005_modeltime():
