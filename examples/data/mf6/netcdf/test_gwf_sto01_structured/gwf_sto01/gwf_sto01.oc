@@ -2,13 +2,13 @@
 BEGIN options
   BUDGET  FILEOUT  gwf_sto01.cbc
   HEAD  FILEOUT  gwf_sto01.hds
-  HEAD  PRINT_FORMAT  COLUMNS  10  WIDTH  15  DIGITS  6  general
+  HEAD  PRINT_FORMAT  COLUMNS  10  WIDTH  15  DIGITS  6  GENERAL
 END options
 
 BEGIN period  1
-  SAVE  head  all
-  SAVE  budget  all
-  PRINT  head  last
-  PRINT  budget  all
+  SAVE  HEAD  ALL
+  SAVE  BUDGET  ALL
+  PRINT  HEAD  LAST
+  PRINT  BUDGET  ALL
 END period  1
 

@@ -6,12 +6,12 @@ BEGIN options
 END options
 
 BEGIN packages
-  dis6  gwf_sto01.dis  dis
-  ic6  gwf_sto01.ic  ic
-  npf6  gwf_sto01.npf  npf
-  sto6  gwf_sto01.sto  sto
-  rch6  gwf_sto01.rcha  rcha_0
-  wel6  gwf_sto01.wel  wel_0
-  chd6  gwf_sto01.chd  chd_0
-  oc6  gwf_sto01.oc  oc
+  DIS6  gwf_sto01.dis  dis
+  IC6  gwf_sto01.ic  ic
+  NPF6  gwf_sto01.npf  npf
+  STO6  gwf_sto01.sto  sto
+  RCH6  gwf_sto01.rcha  rcha_0
+  WEL6  gwf_sto01.wel  wel_0
+  CHD6  gwf_sto01.chd  chd_0
+  OC6  gwf_sto01.oc  oc
 END packages
