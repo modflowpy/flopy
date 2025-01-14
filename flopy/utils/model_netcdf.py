@@ -319,7 +319,12 @@ class DisvNetCDFMesh2d(ModelNetCDFDataset):
     def create_var(
         self, varname: str, tag: str, layer: int, data: np.typing.ArrayLike, shape: list
     ):
-        pass
+        nc_shape = ["nmesh_face"]
+
+        if len(data.shape) == 2:
+            self._create_layered_var(varname, tag, data, nc_shape)
+        else:
+            self._create_var(varname, tag, data.flatten(), nc_shape)
 
     def data(self, path, layer=None):
         if not layer:
@@ -352,17 +357,12 @@ def open_netcdf_dataset(nc_fpth: str, dis_type: str) -> ModelNetCDFDataset:
             if dis_str == "vertex":
                 if gridtype == "layered mesh":
                     nc_dataset = DisvNetCDFMesh2d()
-                else:
-                    # TODO error?
-                    pass
             elif dis_str == "structured":
                 if gridtype == "layered mesh":
                     nc_dataset = DisNetCDFMesh2d()
                 elif gridtype == "structured":
                     nc_dataset = DisNetCDFStructured()
-                else:
-                    # TODO error?
-                    pass
+
         dataset.close()
     except Exception as e:
         print(f"Exception: {e}")
@@ -370,6 +370,12 @@ def open_netcdf_dataset(nc_fpth: str, dis_type: str) -> ModelNetCDFDataset:
     if nc_dataset:
         fpth = Path(nc_fpth).resolve()
         nc_dataset.open(fpth)
+    else:
+        raise TypeError(
+            f"Unable to load netcdf dataset for file grid "
+            f'type "{gridtype}" and discretization grid '
+            f'type "{dis_str}"'
+        )
 
     return nc_dataset
 
@@ -384,19 +390,19 @@ def create_netcdf_dataset(model_type, name, nc_type, nc_fname, dis):
     if isinstance(dis, VertexGrid):
         if nc_type.lower() == "mesh2d":
             nc_dataset = DisvNetCDFMesh2d()
-        else:
-            # TODO error?
-            pass
     elif isinstance(dis, StructuredGrid):
         if nc_type.lower() == "mesh2d":
             nc_dataset = DisNetCDFMesh2d()
         elif nc_type.lower() == "structured":
             nc_dataset = DisNetCDFStructured()
-        else:
-            # TODO error?
-            pass
 
     if nc_dataset:
         nc_dataset.create(model_type, name, nc_type, nc_fname, dis)
+    else:
+        raise TypeError(
+            f"Unable to generate netcdf dataset for file type "
+            f'"{nc_type.lower()}" and discretization grid type '
+            f'"{dis.grid_type}"'
+        )
 
     return nc_dataset
