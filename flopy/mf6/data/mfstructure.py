@@ -1093,6 +1093,7 @@ class MFDataStructure:
         self.netcdf = (
             ("ncol" in data_item.shape
             or "nrow" in data_item.shape
+            or "ncpl" in data_item.shape
             or "nlay" in data_item.shape
             or "nodes" in data_item.shape)
             and data_item.block_name == 'griddata'
