@@ -43,7 +43,7 @@ class ModelTime:
             tsmult = np.full((nrecs,), 1)
 
         if nrecs != len(nstp):
-            raise ValueError("perlen and nstp inputs must have the same dimesion")
+            raise ValueError("perlen and nstp inputs must have the same dimension")
 
         if len(tsmult) != len(nstp):
             raise ValueError("tsmult and nstp inputs must have the same dimension")
@@ -375,8 +375,8 @@ class ModelTime:
             dsep = "-"
         else:
             raise ValueError(
-                "Seperator type for date part of date time representation "
-                "not recognized, supported date seperator types include '/' "
+                "Separator type for date part of date time representation "
+                "not recognized, supported date separator types include '/' "
                 "and '-'"
             )
 
