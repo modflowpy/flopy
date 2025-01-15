@@ -7,13 +7,12 @@ mfstructure module.  Contains classes related to package structure
 import ast
 import keyword
 import os
-import warnings
 from enum import Enum
 from textwrap import TextWrapper
 
 import numpy as np
 
-from ..mfbase import PackageContainer, StructException
+from ..mfbase import StructException
 
 numeric_index_text = (
     "This argument is an index variable, which means that "
@@ -903,7 +902,7 @@ class MFDataItemStructure:
 
     def set_path(self, path):
         self.path = path + (self.name,)
-        mfstruct = MFStructure(True)
+        mfstruct = MFStructure()
         for dimension in self.shape:
             dim_path = path + (dimension,)
             if dim_path in mfstruct.dimension_dict:
@@ -2025,7 +2024,7 @@ class MFSimulationStructure:
             or dfn_file.dfn_type == DfnType.mvr_file
             or dfn_file.dfn_type == DfnType.mvt_file
         ):
-            model_ver = f"{dfn_file.model_type}{MFStructure(True).get_version_string()}"
+            model_ver = f"{dfn_file.model_type}{MFStructure().get_version_string()}"
             if model_ver not in self.model_struct_objs:
                 self.add_model(model_ver)
             if dfn_file.dfn_type == DfnType.model_file:
@@ -2158,22 +2157,22 @@ class MFStructure:
             cls._instance.flopy_dict = {}
 
             # Read metadata from file
-            cls._instance.valid = cls._instance.__load_structure()
+            cls._instance.valid = cls._instance._load_structure()
 
         return cls._instance
 
     def get_version_string(self):
         return format(str(self.mf_version))
 
-    def __load_structure(self):
+    def _load_structure(self):
         # set up structure classes
         self.sim_struct = MFSimulationStructure()
 
         # initialize flopy dict keys
         MFStructure().flopy_dict["solution_packages"] = {}
 
-        package_list = PackageContainer.package_list()
-        for package in package_list:
+        from ..mfpackage import MFPackage
+        for package in MFPackage.__subclasses__():
             # process header
             for entry in package.dfn[0][1:]:
                 if (

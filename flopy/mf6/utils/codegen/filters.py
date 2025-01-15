@@ -1,6 +1,5 @@
 from enum import Enum
 from keyword import kwlist
-from pprint import pformat
 from typing import Any, List, Optional
 
 from jinja2 import pass_context
@@ -18,10 +17,9 @@ class Filters:
     class Cls:
         def base(ctx_name) -> str:
             """Base class from which the input context should inherit."""
-            _, r = ctx_name
             if ctx_name == ("sim", "nam"):
                 return "MFSimulationBase"
-            if r is None:
+            if ctx_name[1] is None:
                 return "MFModel"
             return "MFPackage"
 
@@ -32,9 +30,9 @@ class Filters:
             remains unique. The title is substituted into
             the file name and class name.
             """
-            l, r = ctx_name
-            if (l, r) == ("sim", "nam"):
+            if ctx_name == ("sim", "nam"):
                 return "simulation"
+            l, r = ctx_name
             if l is None:
                 return r
             if r is None:
@@ -44,6 +42,11 @@ class Filters:
             if l in ["sln", "exg"]:
                 return r
             return l + r
+
+        def package_abbr(ctx_name) -> str:
+            if ctx_name[0] in ["sim", "sln", "exg", None]:
+                return ctx_name[1]
+            return "".join(ctx_name)
 
         def description(ctx_name) -> str:
             """A description of the input context."""
@@ -256,9 +259,7 @@ class Filters:
             if base == "MFPackage":
                 attrs.extend(
                     [
-                        f"package_abbr = '{name[1]}'"
-                        if name[0] == "exg"
-                        else f"package_abbr = '{'' if name[0] in ['sln', 'sim', 'exg', None] else name[0]}{name[1]}'",
+                        f"package_abbr = '{Filters.Cls.package_abbr(name)}'",
                         f"_package_type = '{name[1]}'",
                         f"dfn_file_name = '{name[0]}-{name[1]}.dfn'"
                         if name[0] == "exg"

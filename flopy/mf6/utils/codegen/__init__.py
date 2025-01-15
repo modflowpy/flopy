@@ -28,6 +28,7 @@ def _get_template_env():
     env.filters["prefix"] = Filters.Cls.prefix
     env.filters["parent"] = Filters.Cls.parent
     env.filters["skip_init"] = Filters.Cls.skip_init
+    env.filters["package_abbr"] = Filters.Cls.package_abbr
     env.filters["attrs"] = Filters.Vars.attrs
     env.filters["init"] = Filters.Vars.init
     env.filters["untag"] = Filters.Var.untag
@@ -45,7 +46,7 @@ def make_init(dfns: dict, outdir: PathLike, verbose: bool = False):
     """Generate a Python __init__.py file for the given input definitions."""
 
     env = _get_template_env()
-    outdir = Path(outdir).expanduser()
+    outdir = Path(outdir).expanduser().absolute()
 
     from flopy.mf6.utils.codegen.context import Context
 
@@ -65,7 +66,7 @@ def make_targets(dfn, outdir: PathLike, verbose: bool = False):
     """Generate Python source file(s) from the given input definition."""
 
     env = _get_template_env()
-    outdir = Path(outdir).expanduser()
+    outdir = Path(outdir).expanduser().absolute()
 
     from flopy.mf6.utils.codegen.context import Context
     from flopy.mf6.utils.codegen.filters import Filters
@@ -81,12 +82,13 @@ def make_targets(dfn, outdir: PathLike, verbose: bool = False):
             if ctx_name.l == "exg":
                 return "exchange.py.jinja"
             return "package.py.jinja"
+        else:
+            raise NotImplementedError(f"Unknown base class: {base}")
         
     for context in Context.from_dfn(dfn):
         name = context["name"]
         target_path = outdir / f"mf{Filters.Cls.title(name)}.py"
-        template_name = _get_template_name(name)
-        template = env.get_template(template_name)
+        template = env.get_template(_get_template_name(name))
         with open(target_path, "w") as f:
             f.write(template.render(**context))
             if verbose:
