@@ -226,7 +226,7 @@ def to_cvfd(
     if not skip_hanging_node_check:
         if verbose:
             print("Checking for hanging nodes.")
-        vertexdict_keys = list(vertexdict.keys())
+        
         finished = False
         while not finished:
             finished = True
@@ -252,6 +252,7 @@ def to_cvfd(
         if verbose:
             print("Done checking for hanging nodes.")
 
+    vertexdict_keys = list(vertexdict.keys())
     verts = np.array(vertexdict_keys)
     iverts = vertexlist
 
