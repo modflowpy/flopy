@@ -421,341 +421,6 @@ class DfnPackage(Dfn):
                     ]
 
 
-class DfnFile(Dfn):
-    """
-    Dfn child class that loads dfn information from a package definition (dfn)
-    file
-
-    Attributes
-    ----------
-    file : str
-        name of the file to be loaded
-
-    Methods
-    -------
-    dict_by_name : {} : dict
-        returns a dictionary of data item descriptions from the dfn file with
-        the data item name as the dictionary key
-    get_block_structure_dict : (path : tuple, common : bool, model_file :
-            bool) : dict
-        returns a dictionary of block structure information for the package
-
-    See Also
-    --------
-
-    Notes
-    -----
-
-    Examples
-    --------
-    """
-
-    def __init__(self, file):
-        super().__init__()
-
-        dfn_path, tail = os.path.split(os.path.realpath(__file__))
-        dfn_path = os.path.join(dfn_path, "dfn")
-        self._file_path = os.path.join(dfn_path, file)
-        self.dfn_file_name = file
-        self.dfn_type, self.model_type = self._file_type(
-            self.dfn_file_name.replace("-", "")
-        )
-        self.package_type = os.path.splitext(file[4:])[0]
-        # the package type is always the text after the last -
-        package_name = self.package_type.split("-")
-        self.package_type = package_name[-1]
-        if not isinstance(package_name, str) and len(package_name) > 1:
-            self.package_prefix = "".join(package_name[:-1])
-        else:
-            self.package_prefix = ""
-        self.file = file
-        self.dataset_items_needed_dict = {}
-        self.dfn_list = []
-
-    def dict_by_name(self):
-        name_dict = {}
-        name = None
-        dfn_fp = open(self._file_path, "r")
-        for line in dfn_fp:
-            if self._valid_line(line):
-                arr_line = line.strip().split()
-                if arr_line[0] == "name":
-                    name = arr_line[1]
-                elif arr_line[0] == "description" and name is not None:
-                    name_dict[name] = " ".join(arr_line[1:])
-        dfn_fp.close()
-        return name_dict
-
-    def get_block_structure_dict(self, path, common, model_file, block_parent):
-        self.dfn_list = []
-        block_dict = {}
-        dataset_items_in_block = {}
-        self.dataset_items_needed_dict = {}
-        keystring_items_needed_dict = {}
-        current_block = None
-        dfn_fp = open(self._file_path, "r")
-
-        # load header
-        header_dict = {}
-        while True:
-            line = dfn_fp.readline()
-            if len(line) < 1 or line[0] != "#":
-                break
-            line_lst = line.strip().split()
-            if len(line_lst) > 2 and line_lst[1] == "flopy":
-                # load flopy data
-                if line_lst[2] == "multi-package":
-                    header_dict["multi-package"] = True
-                if line_lst[2] == "parent_name_type" and len(line_lst) == 5:
-                    header_dict["parent_name_type"] = [
-                        line_lst[3],
-                        line_lst[4],
-                    ]
-            elif len(line_lst) > 2 and line_lst[1] == "package-type":
-                header_dict["package-type"] = line_lst[2]
-        # load file definitions
-        for line in dfn_fp:
-            if self._valid_line(line):
-                # load next data item
-                new_data_item_struct = MFDataItemStructure()
-                new_data_item_struct.set_value(line, common)
-                self.dfn_list.append([line])
-                for next_line in dfn_fp:
-                    if self._empty_line(next_line):
-                        break
-                    if self._valid_line(next_line):
-                        new_data_item_struct.set_value(next_line, common)
-                        self.dfn_list[-1].append(next_line)
-
-                # if block does not exist
-                if (
-                    current_block is None
-                    or current_block.name != new_data_item_struct.block_name
-                ):
-                    # create block
-                    current_block = MFBlockStructure(
-                        new_data_item_struct.block_name,
-                        path,
-                        model_file,
-                        block_parent,
-                    )
-                    # put block in block_dict
-                    block_dict[current_block.name] = current_block
-                    # init dataset item lookup
-                    self.dataset_items_needed_dict = {}
-                    dataset_items_in_block = {}
-
-                # resolve block type
-                if len(current_block.block_header_structure) > 0:
-                    if (
-                        len(
-                            current_block.block_header_structure[
-                                0
-                            ].data_item_structures
-                        )
-                        > 0
-                        and current_block.block_header_structure[0]
-                        .data_item_structures[0]
-                        .type
-                        == DatumType.integer
-                    ):
-                        block_type = BlockType.transient
-                    else:
-                        block_type = BlockType.multiple
-                else:
-                    block_type = BlockType.single
-
-                if new_data_item_struct.block_variable:
-                    block_dataset_struct = MFDataStructure(
-                        new_data_item_struct,
-                        model_file,
-                        self.package_type,
-                        self.dfn_list,
-                    )
-                    block_dataset_struct.parent_block = current_block
-                    self._process_needed_data_items(
-                        block_dataset_struct, dataset_items_in_block
-                    )
-                    block_dataset_struct.set_path(
-                        path + (new_data_item_struct.block_name,)
-                    )
-                    block_dataset_struct.add_item(
-                        new_data_item_struct, False, self.dfn_list
-                    )
-                    current_block.add_dataset(block_dataset_struct)
-                else:
-                    new_data_item_struct.block_type = block_type
-                    dataset_items_in_block[new_data_item_struct.name] = (
-                        new_data_item_struct
-                    )
-
-                    # if data item belongs to existing dataset(s)
-                    item_location_found = False
-                    if (
-                        new_data_item_struct.name
-                        in self.dataset_items_needed_dict
-                    ):
-                        if new_data_item_struct.type == DatumType.record:
-                            # record within a record - create a data set in
-                            # place of the data item
-                            new_data_item_struct = self._new_dataset(
-                                new_data_item_struct,
-                                current_block,
-                                dataset_items_in_block,
-                                path,
-                                model_file,
-                                False,
-                            )
-                            new_data_item_struct.record_within_record = True
-
-                        for dataset in self.dataset_items_needed_dict[
-                            new_data_item_struct.name
-                        ]:
-                            item_added = dataset.add_item(
-                                new_data_item_struct, True, self.dfn_list
-                            )
-                            item_location_found = (
-                                item_location_found or item_added
-                            )
-                    # if data item belongs to an existing keystring
-                    if (
-                        new_data_item_struct.name
-                        in keystring_items_needed_dict
-                    ):
-                        new_data_item_struct.set_path(
-                            keystring_items_needed_dict[
-                                new_data_item_struct.name
-                            ].path
-                        )
-                        if new_data_item_struct.type == DatumType.record:
-                            # record within a keystring - create a data set in
-                            # place of the data item
-                            new_data_item_struct = self._new_dataset(
-                                new_data_item_struct,
-                                current_block,
-                                dataset_items_in_block,
-                                path,
-                                model_file,
-                                False,
-                            )
-                        keystring_items_needed_dict[
-                            new_data_item_struct.name
-                        ].keystring_dict[
-                            new_data_item_struct.name
-                        ] = new_data_item_struct
-                        item_location_found = True
-
-                    if new_data_item_struct.type == DatumType.keystring:
-                        # add keystrings to search list
-                        for (
-                            key,
-                            val,
-                        ) in new_data_item_struct.keystring_dict.items():
-                            keystring_items_needed_dict[key] = (
-                                new_data_item_struct
-                            )
-
-                    # if data set does not exist
-                    if not item_location_found:
-                        self._new_dataset(
-                            new_data_item_struct,
-                            current_block,
-                            dataset_items_in_block,
-                            path,
-                            model_file,
-                            True,
-                        )
-                        if (
-                            current_block.name.upper() == "SOLUTIONGROUP"
-                            and len(current_block.block_header_structure) == 0
-                        ):
-                            # solution_group a special case for now
-                            block_data_item_struct = MFDataItemStructure()
-                            block_data_item_struct.name = "order_num"
-                            block_data_item_struct.data_items = ["order_num"]
-                            block_data_item_struct.type = DatumType.integer
-                            block_data_item_struct.longname = "order_num"
-                            block_data_item_struct.description = (
-                                "internal variable to keep track of "
-                                "solution group number"
-                            )
-                            block_dataset_struct = MFDataStructure(
-                                block_data_item_struct,
-                                model_file,
-                                self.package_type,
-                                self.dfn_list,
-                            )
-                            block_dataset_struct.parent_block = current_block
-                            block_dataset_struct.set_path(
-                                path + (new_data_item_struct.block_name,)
-                            )
-                            block_dataset_struct.add_item(
-                                block_data_item_struct, False, self.dfn_list
-                            )
-                            current_block.add_dataset(block_dataset_struct)
-        dfn_fp.close()
-        return block_dict, header_dict
-
-    def _new_dataset(
-        self,
-        new_data_item_struct,
-        current_block,
-        dataset_items_in_block,
-        path,
-        model_file,
-        add_to_block=True,
-    ):
-        current_dataset_struct = MFDataStructure(
-            new_data_item_struct, model_file, self.package_type, self.dfn_list
-        )
-        current_dataset_struct.set_path(
-            path + (new_data_item_struct.block_name,)
-        )
-        self._process_needed_data_items(
-            current_dataset_struct, dataset_items_in_block
-        )
-        if add_to_block:
-            # add dataset
-            current_block.add_dataset(current_dataset_struct)
-            current_dataset_struct.parent_block = current_block
-        current_dataset_struct.add_item(
-            new_data_item_struct, False, self.dfn_list
-        )
-        return current_dataset_struct
-
-    def _process_needed_data_items(
-        self, current_dataset_struct, dataset_items_in_block
-    ):
-        # add data items needed to dictionary
-        for (
-            item_name,
-            val,
-        ) in current_dataset_struct.expected_data_items.items():
-            if item_name in dataset_items_in_block:
-                current_dataset_struct.add_item(
-                    dataset_items_in_block[item_name], False, self.dfn_list
-                )
-            else:
-                if item_name in self.dataset_items_needed_dict:
-                    self.dataset_items_needed_dict[item_name].append(
-                        current_dataset_struct
-                    )
-                else:
-                    self.dataset_items_needed_dict[item_name] = [
-                        current_dataset_struct
-                    ]
-
-    def _valid_line(self, line):
-        if len(line.strip()) > 1 and line[0] != "#":
-            return True
-        return False
-
-    def _empty_line(self, line):
-        if len(line.strip()) <= 1:
-            return True
-        return False
-
-
 class DataType(Enum):
     """
     Types of data that can be found in a package file
@@ -2482,23 +2147,18 @@ class MFStructure:
 
     _instance = None
 
-    def __new__(cls, internal_request=False, load_from_dfn_files=False):
+    def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
 
             # Initialize variables
             cls._instance.mf_version = 6
-            cls._instance.valid = True
             cls._instance.sim_struct = None
             cls._instance.dimension_dict = {}
-            cls._instance.load_from_dfn_files = load_from_dfn_files
             cls._instance.flopy_dict = {}
 
             # Read metadata from file
             cls._instance.valid = cls._instance.__load_structure()
-        elif not cls._instance.valid and not internal_request:
-            if cls._instance.__load_structure():
-                cls._instance.valid = True
 
         return cls._instance
 
@@ -2512,74 +2172,19 @@ class MFStructure:
         # initialize flopy dict keys
         MFStructure().flopy_dict["solution_packages"] = {}
 
-        if self.load_from_dfn_files:
-            mf_dfn = Dfn()
-            dfn_files = mf_dfn.get_file_list()
-
-            # get common
-            common_dfn = DfnFile("common.dfn")
-            self.sim_struct.process_dfn(common_dfn)
-
-            # process each file's flopy header
-            for file in dfn_files:
-                dfn_path, tail = os.path.split(os.path.realpath(__file__))
-                dfn_path = os.path.join(dfn_path, "dfn")
-                dfn_file = os.path.join(dfn_path, file)
-                with open(dfn_file) as fd_dfn:
-                    for line in fd_dfn:
-                        if len(line) < 1 or line[0] != "#":
-                            break
-                        line_lst = line.strip().split()
-                        if len(line_lst) > 2 and line_lst[1] == "flopy":
-                            # load flopy data
-                            if (
-                                line_lst[2] == "subpackage"
-                                and len(line_lst) == 7
-                            ):
-                                sp_dict = {
-                                    "construct_package": line_lst[4],
-                                    "construct_data": line_lst[5],
-                                    "parameter_name": line_lst[6],
-                                }
-                                MFStructure().flopy_dict[line_lst[3]] = sp_dict
-                            elif line_lst[2] == "solution_package":
-                                MFStructure().flopy_dict["solution_packages"][
-                                    line_lst[3]
-                                ] = line_lst[4:]
-            if len(MFStructure().flopy_dict["solution_packages"]) == 0:
-                MFStructure().flopy_dict["solution_packages"]["ims"] = ["*"]
-                warnings.warn(
-                    "Package definition files (dfn) do not define a solution "
-                    "package.  This can happen if your dfn files are out of "
-                    "sync.  Auto-loaded default IMS solution package metadata."
-                    "  In the future auto-loading default metadata will be "
-                    "deprecated.",
-                    DeprecationWarning,
-                )
-            # process each file
-            for file in dfn_files:
-                self.sim_struct.process_dfn(DfnFile(file))
-            self.sim_struct.tag_read_as_arrays()
-        else:
-            package_list = PackageContainer.package_list()
-            for package in package_list:
-                # process header
-                for entry in package.dfn[0][1:]:
-                    if (
-                        isinstance(entry, list)
-                        and entry[0] == "solution_package"
-                    ):
-                        MFStructure().flopy_dict["solution_packages"][
-                            package.package_abbr
-                        ] = entry[1:]
-                # process each package
-                self.sim_struct.process_dfn(DfnPackage(package))
-            self.sim_struct.tag_read_as_arrays()
+        package_list = PackageContainer.package_list()
+        for package in package_list:
+            # process header
+            for entry in package.dfn[0][1:]:
+                if (
+                    isinstance(entry, list)
+                    and entry[0] == "solution_package"
+                ):
+                    MFStructure().flopy_dict["solution_packages"][
+                        package.package_abbr
+                    ] = entry[1:]
+            # process each package
+            self.sim_struct.process_dfn(DfnPackage(package))
+        self.sim_struct.tag_read_as_arrays()
 
         return True
-
-    @staticmethod
-    def __valid_line(line):
-        if len(line.strip()) > 1 and line[0] != "#":
-            return True
-        return False
