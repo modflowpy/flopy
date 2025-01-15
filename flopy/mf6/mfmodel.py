@@ -937,19 +937,26 @@ class MFModel(ModelInterface):
                 dis_str = {
                     "dis6": "structured",
                     "disv6": "vertex",
-                    "disu6": "unstructured",
+                    #"disu6": "unstructured",
                 }
                 dis_type = None
                 for t in instance.name_file.packages.get_data():
                     if t[0].lower().startswith("dis"):
                         dis_type = t[0].lower()
                         break
-                if dis_type:
+                if dis_type and dis_type in dis_str:
                     nc_fpth = os.path.join(instance.model_ws, nc_filerecord[0][0])
                     instance._nc_dataset = open_netcdf_dataset(nc_fpth, dis_type=dis_str[dis_type])
                 else:
-                    pass
-                    # TODO: set error "invalid dis for netcdf input"
+                    message = (
+                        "Invalid discretization type "
+                        f"provided for model {modelname} "
+                        "NetCDF input"
+                    )
+                    raise MFDataException(
+                        model=modelname,
+                        message=message,
+                    )
 
         # order packages
         vnum = mfstructure.MFStructure().get_version_string()
