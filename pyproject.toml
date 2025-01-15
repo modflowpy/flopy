@@ -35,6 +35,69 @@ dependencies = [
 ]
 dynamic = ["version", "readme"]
 
+[dependency-groups]
+build = ["build", "twine"]
+lint = ["cffconvert", "codespell[toml] >=2.2.2", "ruff"]
+test = [
+    "flopy[lint]",
+    "coverage !=7.6.5",
+    "flaky",
+    "filelock",
+    "jupyter",
+    "jupyter_client >=8.4.0", # avoid datetime.utcnow() deprecation warning
+    "jupytext",
+    "modflow-devtools",
+    "pytest !=8.1.0",
+    "pytest-benchmark",
+    "pytest-cov",
+    "pytest-dotenv",
+    "pytest-xdist",
+    "pyzmq >=25.1.2",
+    "syrupy",
+    "virtualenv"
+]
+optional = [
+    "affine",
+    "descartes",
+    "fiona",
+    "geojson",
+    "geopandas",
+    "GitPython",
+    "imageio",
+    "netcdf4",
+    "pooch",
+    "pymetis ; platform_system != 'Windows'",
+    "pyproj",
+    "pyshp",
+    "pyvista",
+    "rasterio",
+    "rasterstats",
+    "scipy",
+    "shapely >=2.0",
+    "vtk",
+    "xmipy",
+]
+doc = [
+    "flopy[optional]",
+    "ipython[kernel]",
+    "jupytext",
+    "myst-parser",
+    "nbconvert <7.14.0",
+    "nbsphinx",
+    "PyYAML",
+    "rtds-action",
+    "sphinx ==7.1.2",
+    "sphinx-rtd-theme >=1",
+]
+dev = [
+    {include-group = "build"},
+    {include-group = "lint"},
+    {include-group = "test"},
+    {include-group = "optional"},
+    {include-group = "doc"},
+    "tach"
+]
+
 [project.optional-dependencies]
 dev = ["flopy[build,lint,test,optional,doc]", "tach"]
 build = ["build", "twine"]

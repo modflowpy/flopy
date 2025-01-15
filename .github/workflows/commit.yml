@@ -32,7 +32,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          uv pip install ".[build]"
+          uv sync --group build
           uv run python -c "import flopy; print(f'{flopy.__version__}')"
 
       - name: Build package
@@ -64,7 +64,7 @@ jobs:
           python-version-file: pyproject.toml
 
       - name: Install Python dependencies
-        run: uv pip install ".[lint]"
+        run: uv sync --group lint
 
       - name: Lint
         run: uv run ruff check .
@@ -106,7 +106,7 @@ jobs:
           python-version-file: pyproject.toml
 
       - name: Install Python dependencies
-        run: uv pip install ".[test, optional]"
+        run: uv sync --group test --group optional
       
       - name: Install Modflow executables
         uses: modflowpy/install-modflow-action@v1
@@ -159,7 +159,7 @@ jobs:
           python-version-file: pyproject.toml
 
       - name: Install FloPy
-        run: uv sync
+        run: uv sync --all-extras
 
       - name: Install Modflow-related executables
         uses: modflowpy/install-modflow-action@v1
