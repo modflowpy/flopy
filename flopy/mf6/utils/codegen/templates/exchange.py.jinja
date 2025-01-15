@@ -1,5 +1,8 @@
 {% import 'macros.jinja' as macros %}
+{% set parent = name|parent %}
 {% set title = (name|title).title() %}
+{% set description = name|description %}
+
 
 from os import PathLike, curdir
 from typing import Union
@@ -9,11 +12,11 @@ from flopy.mf6.mfpackage import MFPackage
 
 class Modflow{{ title }}(MFPackage):
     """
-    {{ name|description }}
+    {{ description }}
 
     Parameters
     ----------
-{{ macros.vars_docs(vars)|indent(4, first=true) }}
+{{ macros.docstrings(vars)|indent(4, first=true) }}
     """
 
     {% for attr in vars|attrs %}
@@ -24,16 +27,16 @@ class Modflow{{ title }}(MFPackage):
         self,
         simulation,
         loading_package=False,
-        exgtype="{{ name.r[:3].upper() }}6-{{ name.r[3:].upper() }}6",
+        exgtype="{{ name[1][:3].upper() }}6-{{ name[1][3:].upper() }}6",
         exgmnamea=None,
         exgmnameb=None,
-{{ macros.init_vars(vars, skip=name|skip_init)|indent(8, first=true) }}
+{{ macros.init_params(vars, skip=name|skip_init)|indent(8, first=true) }}
         filename=None,
         pname=None,
         **kwargs,
     ):
         """
-        {{ name|description }}
+        {{ description }}
 
         simulation : MFSimulation
             Simulation that this package is a part of. Package is automatically
@@ -64,12 +67,12 @@ class Modflow{{ title }}(MFPackage):
             GWE Model with the name exgmnameb must correspond to the GWF Model
             with the name gwfmodelname2. 
 
-{{ macros.vars_docs(vars)|indent(8, first=true) }}
+{{ macros.docstrings(vars)|indent(8, first=true) }}
         """
 
         super().__init__(
-            {{ name|parent }},
-            "{{ name.r }}",
+            {{ parent }},
+            "{{ name[1] }}",
             filename,
             pname,
             loading_package,

@@ -2,17 +2,16 @@ from itertools import chain
 from os import PathLike
 from pathlib import Path
 
-from flopy.utils import import_optional_dependency
-
 __all__ = ["make_init", "make_targets", "make_all"]
 
 
 def _get_template_env():
     # import here instead of module so we don't
     # expect optional deps at module init time
-    jinja = import_optional_dependency("jinja2")
-    loader = jinja.PackageLoader("flopy", "mf6/utils/codegen/templates/")
-    env = jinja.Environment(
+    import jinja2
+
+    loader = jinja2.PackageLoader("flopy", "mf6/utils/codegen/templates/")
+    env = jinja2.Environment(
         loader=loader,
         trim_blocks=True,
         lstrip_blocks=True,
@@ -22,22 +21,24 @@ def _get_template_env():
 
     from flopy.mf6.utils.codegen.filters import Filters
 
-    env.filters["base"] = Filters.Cls.base
-    env.filters["title"] = Filters.Cls.title
-    env.filters["description"] = Filters.Cls.description
-    env.filters["prefix"] = Filters.Cls.prefix
-    env.filters["parent"] = Filters.Cls.parent
-    env.filters["skip_init"] = Filters.Cls.skip_init
-    env.filters["package_abbr"] = Filters.Cls.package_abbr
-    env.filters["attrs"] = Filters.Vars.attrs
-    env.filters["init"] = Filters.Vars.init
-    env.filters["untag"] = Filters.Var.untag
-    env.filters["type"] = Filters.Var.type
+    env.filters["base"] = Filters.base
+    env.filters["title"] = Filters.title
+    env.filters["description"] = Filters.description
+    env.filters["prefix"] = Filters.prefix
+    env.filters["parent"] = Filters.parent
+    env.filters["skip_init"] = Filters.skip_init
+    env.filters["package_abbr"] = Filters.package_abbr
+    env.filters["attrs"] = Filters.attrs
+    env.filters["init"] = Filters.init
+    env.filters["untag"] = Filters.untag
+    env.filters["type"] = Filters.type
     env.filters["safe_name"] = Filters.safe_name
     env.filters["escape_trailing_underscore"] = (
         Filters.escape_trailing_underscore
     )
     env.filters["value"] = Filters.value
+    env.filters["math"] = Filters.math
+    env.filters["clean"] = Filters.clean
 
     return env
 
@@ -73,7 +74,7 @@ def make_targets(dfn, outdir: PathLike, verbose: bool = False):
 
     def _get_template_name(ctx_name) -> str:
         """The template file to use."""
-        base = Filters.Cls.base(ctx_name)
+        base = Filters.base(ctx_name)
         if base == "MFSimulationBase":
             return "simulation.py.jinja"
         elif base == "MFModel":
@@ -87,7 +88,7 @@ def make_targets(dfn, outdir: PathLike, verbose: bool = False):
         
     for context in Context.from_dfn(dfn):
         name = context["name"]
-        target_path = outdir / f"mf{Filters.Cls.title(name)}.py"
+        target_path = outdir / f"mf{Filters.title(name)}.py"
         template = env.get_template(_get_template_name(name))
         with open(target_path, "w") as f:
             f.write(template.render(**context))

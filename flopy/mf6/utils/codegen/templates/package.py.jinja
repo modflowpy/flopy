@@ -1,5 +1,7 @@
 {% import 'macros.jinja' as macros %}
+{% set parent = name|parent %}
 {% set title = (name|title).title() %}
+{% set description = name|description %}
 
 from os import PathLike, curdir
 from typing import Union
@@ -10,11 +12,11 @@ from flopy.mf6.mfpackage import MFPackage, MFChildPackages
 
 class Modflow{{ title }}(MFPackage):
     """
-    {{ name|description }}
+    {{ description }}
 
     Parameters
     ----------
-{{ macros.vars_docs(vars)|indent(4, first=true) }}
+{{ macros.docstrings(vars)|indent(4, first=true) }}
     """
 
     {% for attr in vars|attrs %}
@@ -23,19 +25,19 @@ class Modflow{{ title }}(MFPackage):
 
     def __init__(
         self,
-        {{ name|parent }},
+        {{ parent }},
         loading_package=False,
-{{ macros.init_vars(vars, skip=name|skip_init)|indent(8, first=true) }}
+{{ macros.init_params(vars, skip=name|skip_init)|indent(8, first=true) }}
         filename=None,
         pname=None,
         **kwargs,
     ):
         """
-        {{ name|description }}
+        {{ description }}
 
         Parameters
         ----------
-        {{ name|parent }}
+        {{ parent }}
             Parent_package that this package is a part of. Package is automatically
             added to parent_package when it is initialized.
 
@@ -43,7 +45,7 @@ class Modflow{{ title }}(MFPackage):
             Do not set this parameter. It is intended for debugging and internal
             processing purposes only.
 
-{{ macros.vars_docs(vars)|indent(8, first=true) }}
+{{ macros.docstrings(vars)|indent(8, first=true) }}
 
         filename : str
             File name for this package.
@@ -58,8 +60,8 @@ class Modflow{{ title }}(MFPackage):
         """
 
         super().__init__(
-            {{ name|parent }},
-            "{{ name.r }}",
+            {{ parent }},
+            "{{ name[1] }}",
             filename,
             pname,
             loading_package,
@@ -72,7 +74,7 @@ class Modflow{{ title }}(MFPackage):
 
         self._init_complete = True
 
-{% if subpackage is defined and name.r != "hpc" %}
+{% if subpackage is defined and name[1] != "hpc" %}
 class {{ title }}Packages(MFChildPackages):
     """
     {{ title }}Packages is a container class for the Modflow{{ title }} class.
@@ -94,7 +96,7 @@ class {{ title }}Packages(MFChildPackages):
 
     def initialize(
         self,
-{{ macros.init_vars(vars, alias=true, skip=name|skip_init)|indent(8, first=true) }}
+{{ macros.init_params(vars, alias=true, skip=name|skip_init)|indent(8, first=true) }}
         filename=None,
         pname=None,
     ):
@@ -112,7 +114,7 @@ class {{ title }}Packages(MFChildPackages):
     {% if name.r != "obs" %}
     def append_package(
         self,
-{{ macros.init_vars(vars, alias=true, skip=name|skip_init)|indent(8, first=true) }}
+{{ macros.init_params(vars, alias=true, skip=name|skip_init)|indent(8, first=true) }}
         filename=None,
         pname=None,
     ):

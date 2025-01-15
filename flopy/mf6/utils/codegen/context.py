@@ -6,8 +6,6 @@ from typing import (
     TypedDict,
 )
 
-from modflow_devtools.dfn import Dfn, Vars
-
 
 class Context(TypedDict):
     """
@@ -37,12 +35,15 @@ class Context(TypedDict):
         r: Optional[str]
 
         @staticmethod
-        def from_dfn(dfn: Dfn) -> List["Context.Name"]:
+        def from_dfn(dfn: dict) -> List["Context.Name"]:
             """
             Returns a list of context names this definition produces.
             An input definition may produce one or more input contexts.
             """
-            name = dfn["name"].split("-")
+            name = dfn.get("name", None)
+            if not name:
+                raise ValueError(f"DFN must have a 'name' entry")
+            name = name.split("-")
             if name[1] == "nam":
                 if name[0] == "sim":
                     return [
@@ -67,22 +68,24 @@ class Context(TypedDict):
             return [Context.Name(*name)]
 
     name: Name
-    vars: Vars
 
     @staticmethod
-    def from_dfn(dfn: Dfn) -> Iterator["Context"]:
+    def from_dfn(dfn: dict) -> Iterator["Context"]:
         """
-        Extract context class descriptor(s) from an input definition.
-        These are structured representations of input context classes.
-
-        Each input definition yields one or more input contexts.
+        Extract context(s) from an input definition.
+        Each definition yields one or more contexts.
         """
 
-        def _ctx(name, _dfn):
-            _dfn = _dfn.copy()
-            _dfn.pop("name", None)
-            _vars = _dfn.pop("vars", dict())
-            return Context(name=name, vars=_vars, **_dfn)
+        def get_vars(dfn_):
+            vars_ = dict()
+            blocks = dfn_.get("blocks", dict())
+            for block in blocks.values():
+                for name, var in block.items():
+                    vars_[name] = var
+            return vars_
 
         for name in Context.Name.from_dfn(dfn):
-            yield _ctx(name, dfn)
+            dfn_ = dfn.copy()
+            dfn_.pop("name", None)
+            vars_ = get_vars(dfn_)
+            yield Context(name=name, vars=vars_, **dfn_)

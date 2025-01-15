@@ -1781,7 +1781,6 @@ class MFInputFileStructure:
 
     def __init__(self, dfn_file, path, common, model_file):
         # initialize
-        self.valid = True
         self.file_type = dfn_file.package_type
         self.file_prefix = dfn_file.package_prefix
         self.dfn_type = dfn_file.dfn_type

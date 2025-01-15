@@ -1,4 +1,4 @@
-{% macro init_vars(vars, alias=false, skip=none) %}
+{% macro init_params(vars, alias=false, skip=none) %}
 {% for name, var in vars.items() if name not in skip %}
 {% set v = var|untag %}
 {% set n = (name if alias else v.name)|safe_name %}
@@ -6,13 +6,13 @@
 {% endfor %}
 {% endmacro %}
 
-{% macro vars_docs(vars, recurse=true) %}
+{% macro docstrings(vars, recurse=true) %}
 {% for var in vars.values() recursive %}
 {% set v = var|untag %}
 {% set n = v.name|safe_name|escape_trailing_underscore %}
 {% if loop.depth > 1 %}* {% endif %}{{ n }} : {{ v|type }}
 {% if v.description is defined and v.description is not none %}
-{{ v.description|wordwrap|indent(loop.depth * 4, first=true) }}
+{{ v.description|clean|math|wordwrap|indent(loop.depth * 4, first=true) }}
 {% endif %}
 {% if recurse and v.children is defined and v.children is not none %}
 {% if v.type == "list" and v.children|length == 1 and (v.children.values()|first).type in ["record", "union"] %}

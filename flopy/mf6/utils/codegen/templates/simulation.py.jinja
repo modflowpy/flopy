@@ -1,5 +1,6 @@
 {% import 'macros.jinja' as macros %}
 {% set title = (name|title).title() %}
+{% set description = name|description %}
 
 from os import PathLike, curdir
 from typing import Union
@@ -9,11 +10,11 @@ from flopy.mf6.mfsimbase import MFSimulationBase
 
 class MF{{ title }}(MFSimulationBase):
     """
-    {{ name|description }}
+    {{ description }}
 
     Parameters
     ----------
-{{ macros.vars_docs(vars)|indent(4, first=true) }}
+{{ macros.docstrings(vars)|indent(4, first=true) }}
 
     Methods
     -------
@@ -35,10 +36,10 @@ class MF{{ title }}(MFSimulationBase):
         write_headers: bool = True,
         use_pandas: bool = True,
         lazy_io: bool = False,
-{{ macros.init_vars(vars, skip=name|skip_init)|indent(8, first=true) }}
+{{ macros.init_params(vars, skip=name|skip_init)|indent(8, first=true) }}
     ):
         """
-        {{ name|description }}
+        {{ description }}
 
         Parameters
         ----------
@@ -66,7 +67,7 @@ class MF{{ title }}(MFSimulationBase):
         lazy_io
             Whether to use lazy IO
 
-{{ macros.vars_docs(vars)|indent(8, first=true) }}
+{{ macros.docstrings(vars)|indent(8, first=true) }}
         """
 
         super().__init__(

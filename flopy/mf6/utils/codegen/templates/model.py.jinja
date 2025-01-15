@@ -1,5 +1,6 @@
 {% import 'macros.jinja' as macros %}
 {% set title = (name|title).title() %}
+{% set description = name|description %}
 
 from os import PathLike, curdir
 from typing import Union
@@ -10,11 +11,11 @@ from flopy.mf6.mfmodel import MFModel
 
 class Modflow{{ title }}(MFModel):
     """
-    {{ name|description }}
+    {{ description }}
 
     Parameters
     ----------
-{{ macros.vars_docs(vars)|indent(4, first=true) }}
+{{ macros.docstrings(vars)|indent(4, first=true) }}
 
     Methods
     -------
@@ -34,11 +35,11 @@ class Modflow{{ title }}(MFModel):
         version="mf6",
         exe_name="mf6",
         model_rel_path=".",
-{{ macros.init_vars(vars, skip=name|skip_init)|indent(8, first=true) }}
+{{ macros.init_params(vars, skip=name|skip_init)|indent(8, first=true) }}
         **kwargs,
     ):
         """
-        {{ name|description }}
+        {{ description }}
 
         Parameters
         ----------
@@ -61,7 +62,7 @@ class Modflow{{ title }}(MFModel):
             Simulation that this model is a part of.  Model is automatically
             added to simulation when it is initialized.
 
-{{ macros.vars_docs(vars)|indent(8, first=true) }}
+{{ macros.docstrings(vars)|indent(8, first=true) }}
         """
 
         super().__init__(
