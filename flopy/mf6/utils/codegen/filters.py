@@ -125,7 +125,7 @@ class Filters:
         """
         name = var["name"]
         tagged = var.get("tagged", False)
-        fields = var.get("children", None)
+        fields = var.get("fields", None)
 
         if not fields:
             return var
@@ -149,7 +149,7 @@ class Filters:
             if keyword:
                 fields.pop(keyword)
 
-        var["children"] = fields
+        var["fields"] = fields
         return var
 
     def type(var: dict) -> str:
@@ -160,7 +160,7 @@ class Filters:
         """
         _type = var["type"]
         shape = var.get("shape", None)
-        children = var.get("children", None)
+        children = Filters.children(var)
         if children:
             if _type == "list":
                 if len(children) == 1:
@@ -178,9 +178,31 @@ class Filters:
                 return f"({children})"
             elif _type == "union":
                 return " | ".join([v["name"] for v in children.values()])
-        if shape:
+        elif shape:
             return f"[{_type}]"
         return var["type"]
+
+    def children(var: dict) -> Optional[dict]:
+        _type = var["type"]
+        items = var.get("items", None)
+        fields = var.get("fields", None)
+        choices = var.get("choices", None)
+        if items:
+            assert _type == "list"
+            return items
+        if fields:
+            assert _type == "record"
+            return fields
+        if choices:
+            assert _type == "union"
+            return choices
+        return None
+
+    def default(var: dict) -> Any:
+        _default = var.get("default", None)
+        if _default:
+            return _default
+        return None
 
     @pass_context
     def attrs(ctx, vars_) -> List[str]:
@@ -188,9 +210,6 @@ class Filters:
         Map the context's input variables to corresponding class attributes,
         where applicable. TODO: this should get much simpler if we can drop
         all the `ListTemplateGenerator`/`ArrayTemplateGenerator` attributes.
-        Ultimately I (WPB) think we can aim for context classes consisting
-        of just a class attr for each variable, with anything complicated
-        happening in a decorator or base class.
         """
         from modflow_devtools.dfn import _MF6_SCALARS
 
@@ -274,7 +293,10 @@ class Filters:
             "namespace",
             "macros",
             "name",
-            "vars"
+            "vars",
+            "description",
+            "title",
+            "parent"
         ]
         dfn = {k: v for k, v in ctx.items() if k not in dfn_skip}
         if base == "MFPackage":

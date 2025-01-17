@@ -32,6 +32,8 @@ def _get_template_env():
     env.filters["init"] = Filters.init
     env.filters["untag"] = Filters.untag
     env.filters["type"] = Filters.type
+    env.filters["children"] = Filters.children
+    env.filters["default"] = Filters.default
     env.filters["safe_name"] = Filters.safe_name
     env.filters["escape_trailing_underscore"] = (
         Filters.escape_trailing_underscore
