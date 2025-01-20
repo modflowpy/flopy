@@ -59,7 +59,7 @@ class MfGrdFile(FlopyBinaryData):
         super().__init__()
 
         # set attributes
-        self.set_float(precision=precision)
+        self.precision = precision
         self.verbose = verbose
         self._initial_len = 50
         self._recorddict = {}
@@ -83,7 +83,7 @@ class MfGrdFile(FlopyBinaryData):
         t = line.split()
         self._version = t[1]
 
-        # version
+        # ntxt
         line = self.read_text(self._initial_len).strip()
         t = line.split()
         self._ntxt = int(t[1])
@@ -154,20 +154,20 @@ class MfGrdFile(FlopyBinaryData):
         self.file.close()
 
         # initialize the model grid to None
-        self.__modelgrid = None
+        self._modelgrid = None
 
         # set ia and ja
-        self.__set_iaja()
+        self._set_iaja()
 
     # internal functions
-    def __set_iaja(self):
+    def _set_iaja(self):
         """
         Set ia and ja from _datadict.
         """
         self._ia = self._datadict["IA"] - 1
         self._ja = self._datadict["JA"] - 1
 
-    def __set_modelgrid(self):
+    def _set_modelgrid(self):
         """
         Define structured, vertex, or unstructured grid based on MODFLOW 6
         discretization type.
@@ -246,11 +246,11 @@ class MfGrdFile(FlopyBinaryData):
         except:
             print(f"could not set model grid for {self.file.name}")
 
-        self.__modelgrid = modelgrid
+        self._modelgrid = modelgrid
 
         return
 
-    def __build_vertices_cell2d(self):
+    def _build_vertices_cell2d(self):
         """
         Build the mf6 vertices and cell2d array to generate a VertexGrid
 
@@ -268,7 +268,7 @@ class MfGrdFile(FlopyBinaryData):
         ]
         return vertices, cell2d
 
-    def __get_iverts(self):
+    def _get_iverts(self):
         """
         Get a list of the vertices that define each model cell.
 
@@ -292,7 +292,7 @@ class MfGrdFile(FlopyBinaryData):
                 print(f"returning iverts from {self.file.name}")
         return iverts
 
-    def __get_verts(self):
+    def _get_verts(self):
         """
         Get a list of the x, y pair for each vertex from the data in the
         binary grid file.
@@ -317,7 +317,7 @@ class MfGrdFile(FlopyBinaryData):
                 print(f"returning verts from {self.file.name}")
         return verts
 
-    def __get_cellcenters(self):
+    def _get_cellcenters(self):
         """
         Get the cell centers centroids for a MODFLOW 6 GWF model that uses
         the DISV or DISU discretization.
@@ -689,7 +689,7 @@ class MfGrdFile(FlopyBinaryData):
         -------
         iverts : list of lists of ints
         """
-        return self.__get_iverts()
+        return self._get_iverts()
 
     @property
     def verts(self):
@@ -700,7 +700,7 @@ class MfGrdFile(FlopyBinaryData):
         -------
         verts : ndarray of floats
         """
-        return self.__get_verts()
+        return self._get_verts()
 
     @property
     def cellcenters(self):
@@ -711,7 +711,7 @@ class MfGrdFile(FlopyBinaryData):
         -------
         cellcenters : ndarray of floats
         """
-        return self.__get_cellcenters()
+        return self._get_cellcenters()
 
     @property
     def modelgrid(self):
@@ -722,9 +722,9 @@ class MfGrdFile(FlopyBinaryData):
         -------
         modelgrid : StructuredGrid, VertexGrid, UnstructuredGrid
         """
-        if self.__modelgrid is None:
-            self.__set_modelgrid()
-        return self.__modelgrid
+        if self._modelgrid is None:
+            self._set_modelgrid()
+        return self._modelgrid
 
     @property
     def cell2d(self):
@@ -736,7 +736,7 @@ class MfGrdFile(FlopyBinaryData):
         cell2d : list of lists
         """
         if self._grid_type in ("DISV", "DISV2D", "DISV1D"):
-            vertices, cell2d = self.__build_vertices_cell2d()
+            vertices, cell2d = self._build_vertices_cell2d()
         else:
             vertices, cell2d = None, None
         return vertices, cell2d

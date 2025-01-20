@@ -47,7 +47,7 @@ class SwrFile(FlopyBinaryData):
 
         """
         super().__init__()
-        self.set_float(precision=precision)
+        self.precision = precision
         self.header_dtype = np.dtype(
             [
                 ("totim", self.floattype),
