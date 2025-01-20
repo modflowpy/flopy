@@ -6,19 +6,62 @@ from warnings import warn
 
 import numpy as np
 import pytest
-from modflow_devtools.markers import requires_exe, requires_pkg
+import xarray as xr
 
 import flopy
-from flopy.utils import import_optional_dependency
+from flopy.discretization.structuredgrid import StructuredGrid
+from flopy.discretization.vertexgrid import VertexGrid
 from flopy.utils.datautil import DatumUtil
 from flopy.utils.gridutil import get_disv_kwargs
+from flopy.utils.model_netcdf import create_dataset
 
 
-@requires_pkg("xarray")
-@requires_exe("mf6")
+def compare_netcdf(base, gen):
+    """Check for functional equivalence"""
+    xrb = xr.open_dataset(base, engine="netcdf4")
+    xrg = xr.open_dataset(gen, engine="netcdf4")
+
+    # global attributes
+    for a in xrb.attrs:
+        # TODO
+        if a == "title" or a == "history" or a == "source":
+            assert a in xrg.attrs
+            continue
+        assert xrb.attrs[a] == xrg.attrs[a]
+
+    # coordinates
+    for coordname, da in xrb.coords.items():
+        assert coordname in xrg.coords
+        # TODO
+        # assert np.allclose(xrb.coords[coordname].data, xrg.coords[coordname].data)
+
+    # variables
+    for varname, da in xrb.data_vars.items():
+        # TODO
+        if varname == "mesh_face_xbnds" or varname == "mesh_face_ybnds":
+            continue
+
+        # TODO
+        if varname == "projection":
+            continue
+
+        # check variable name
+        assert varname in xrg.data_vars
+
+        # check variable attributes
+        for a in da.attrs:
+            # TODO delr/delc
+            if a == "grid_mapping" or a == "long_name":
+                continue
+            assert da.attrs[a] == xrg.data_vars[varname].attrs[a]
+
+        # check variable data
+        print(f"NetCDF file check data equivalence for variable: {varname}")
+        assert np.allclose(da.data, xrg.data_vars[varname].data)
+
+
 @pytest.mark.regression
-def test_load_netcdf_gwfsto01(function_tmpdir, example_data_path):
-    xr = import_optional_dependency("xarray")
+def test_load_gwfsto01(function_tmpdir, example_data_path):
     data_path_base = example_data_path / "mf6" / "netcdf"
     tests = {
         "test_gwf_sto01_mesh": {
@@ -71,14 +114,11 @@ def test_load_netcdf_gwfsto01(function_tmpdir, example_data_path):
                     for line1, line2 in zip(file1, file2):
                         assert line1.lower() == line2.lower()
             else:
-                # TODO compare nc files
-                assert os.path.exists(gen)
+                compare_netcdf(base, gen)
 
 
-@requires_pkg("xarray")
 @pytest.mark.regression
-def test_create_netcdf_gwfsto01(function_tmpdir, example_data_path):
-    xr = import_optional_dependency("xarray")
+def test_create_gwfsto01(function_tmpdir, example_data_path):
     data_path_base = example_data_path / "mf6" / "netcdf"
     tests = {
         "test_gwf_sto01_mesh": {
@@ -308,14 +348,134 @@ def test_create_netcdf_gwfsto01(function_tmpdir, example_data_path):
                     for line1, line2 in zip(file1, file2):
                         assert line1 == line2
             else:
-                # TODO compare nc files
-                assert os.path.exists(gen)
+                compare_netcdf(base, gen)
 
 
-@requires_pkg("xarray")
 @pytest.mark.regression
-def test_load_netcdf_disv01b(function_tmpdir, example_data_path):
-    xr = import_optional_dependency("xarray")
+def test_gwfsto01(function_tmpdir, example_data_path):
+    data_path_base = example_data_path / "mf6" / "netcdf"
+    tests = {
+        "test_gwf_sto01_mesh": {
+            "base_sim_dir": "gwf_sto01",
+            "netcdf_output_file": "gwf_sto01.in.nc",
+            "netcdf_type": "mesh2d",
+        },
+        "test_gwf_sto01_structured": {
+            "base_sim_dir": "gwf_sto01",
+            "netcdf_output_file": "gwf_sto01.in.nc",
+            "netcdf_type": "structured",
+        },
+    }
+
+    # spatial discretization data
+    nlay, nrow, ncol = 3, 10, 10
+    delr = [1000.0]
+    delc = [2000.0]
+    top = np.full((nrow, ncol), 0.0)
+    botm = []
+    botm.append(np.full((nrow, ncol), -100.0))
+    botm.append(np.full((nrow, ncol), -150.0))
+    botm.append(np.full((nrow, ncol), -350.0))
+    botm = np.array(botm)
+
+    # ic
+    strt = np.full((nlay, nrow, ncol), 0.0)
+
+    # npf
+    # icelltype
+    ic1 = np.full((nrow, ncol), 1)
+    ic2 = np.full((nrow, ncol), 0)
+    ic3 = np.full((nrow, ncol), 0)
+    icelltype = np.array([ic1, ic2, ic3])
+
+    # k
+    hk2fact = 1.0 / 50.0
+    hk2 = np.ones((nrow, ncol), dtype=float) * 0.5 * hk2fact
+    hk2[0, :] = 1000.0 * hk2fact
+    hk2[-1, :] = 1000.0 * hk2fact
+    hk2[:, 0] = 1000.0 * hk2fact
+    hk2[:, -1] = 1000.0 * hk2fact
+    k1 = np.full((nrow, ncol), 20.0)
+    k3 = np.full((nrow, ncol), 5.0)
+    k = np.array([k1, hk2, k3])
+
+    # k33
+    k33_1 = np.full((nrow, ncol), 1e6)
+    k33_2 = np.full((nrow, ncol), 7.5e-5)
+    k33_3 = np.full((nrow, ncol), 1e6)
+    k33 = np.array([k33_1, k33_2, k33_3])
+
+    # sto
+    iconvert = icelltype
+
+    # storage and compaction data
+    ss1 = np.full((nrow, ncol), 6e-4)
+    ss2 = np.full((nrow, ncol), 3e-4)
+    ss3 = np.full((nrow, ncol), 6e-4)
+    ss = np.array([ss1, ss2, ss3])
+
+    sy = np.full((nlay, nrow, ncol), 0)
+
+    ws = function_tmpdir / "ws"
+    for base_folder, test_info in tests.items():
+        print(f"RUNNING TEST: {base_folder}")
+        data_path = os.path.join(data_path_base, base_folder, test_info["base_sim_dir"])
+        # copy example data into working directory
+        base_model_folder = os.path.join(ws, f"{base_folder}_base")
+        test_model_folder = os.path.join(ws, f"{base_folder}_test")
+        shutil.copytree(data_path, base_model_folder)
+        os.mkdir(test_model_folder)
+
+        # create discretization
+        dis = flopy.discretization.StructuredGrid(
+            delc=np.array(delc * nrow),
+            delr=np.array(delr * ncol),
+            top=top,
+            botm=botm,
+            nlay=nlay,
+            nrow=nrow,
+            ncol=ncol,
+        )
+
+        ds = create_dataset(
+            "gwf6",
+            "gwf_sto01",
+            test_info["netcdf_type"],
+            test_info["netcdf_output_file"],
+            dis,
+        )
+
+        # add dis arrays
+        ds.create_array("dis", "delc", dis.delc, ["nrow"])
+        ds.create_array("dis", "delr", dis.delr, ["ncol"])
+        ds.create_array("dis", "top", dis.top, ["nrow", "ncol"])
+        ds.create_array("dis", "botm", dis.botm, ["nlay", "nrow", "ncol"])
+
+        # add ic array
+        ds.create_array("ic", "strt", strt, ["nlay", "nrow", "ncol"])
+
+        # add npf arrays
+        ds.create_array("npf", "icelltype", icelltype, ["nlay", "nrow", "ncol"])
+        ds.create_array("npf", "k", k, ["nlay", "nrow", "ncol"])
+        ds.create_array("npf", "k33", k33, ["nlay", "nrow", "ncol"])
+
+        # add sto array
+        ds.create_array("sto", "iconvert", iconvert, ["nlay", "nrow", "ncol"])
+        ds.create_array("sto", "ss", ss, ["nlay", "nrow", "ncol"])
+        ds.create_array("sto", "sy", sy, ["nlay", "nrow", "ncol"])
+
+        # write to netcdf
+        ds.write(test_model_folder)
+
+        # compare
+        compare_netcdf(
+            os.path.join(base_model_folder, test_info["netcdf_output_file"]),
+            os.path.join(test_model_folder, test_info["netcdf_output_file"]),
+        )
+
+
+@pytest.mark.regression
+def test_load_disv01b(function_tmpdir, example_data_path):
     data_path_base = example_data_path / "mf6" / "netcdf"
     tests = {
         "test_gwf_disv01b": {
@@ -363,14 +523,11 @@ def test_load_netcdf_disv01b(function_tmpdir, example_data_path):
                     for line1, line2 in zip(file1, file2):
                         assert line1.lower() == line2.lower()
             else:
-                # TODO compare nc files
-                assert os.path.exists(gen)
+                compare_netcdf(base, gen)
 
 
-@requires_pkg("xarray")
 @pytest.mark.regression
-def test_create_netcdf_disv01b(function_tmpdir, example_data_path):
-    xr = import_optional_dependency("xarray")
+def test_create_disv01b(function_tmpdir, example_data_path):
     data_path_base = example_data_path / "mf6" / "netcdf"
     tests = {
         "test_gwf_disv01b": {
@@ -453,5 +610,130 @@ def test_create_netcdf_disv01b(function_tmpdir, example_data_path):
                     for line1, line2 in zip(file1, file2):
                         assert line1 == line2
             else:
-                # TODO compare nc files
-                assert os.path.exists(gen)
+                compare_netcdf(base, gen)
+
+
+@pytest.mark.regression
+def test_disv01b(function_tmpdir, example_data_path):
+    data_path_base = example_data_path / "mf6" / "netcdf"
+    tests = {
+        "test_gwf_disv01b": {
+            "base_sim_dir": "disv01b",
+            "netcdf_output_file": "disv01b.in.nc",
+            "netcdf_type": "mesh2d",
+        },
+    }
+
+    nlay = 3
+    nrow = 3
+    ncol = 3
+    ncpl = nrow * ncol
+    # delr = 10.0
+    # delc = 10.0
+    # xoff = 100000000.0
+    # yoff = 100000000.0
+
+    vertices = [
+        (0, 1.0000000e08, 1.0000003e08),
+        (1, 1.0000001e08, 1.0000003e08),
+        (2, 1.0000002e08, 1.0000003e08),
+        (3, 1.0000003e08, 1.0000003e08),
+        (4, 1.0000000e08, 1.0000002e08),
+        (5, 1.0000001e08, 1.0000002e08),
+        (6, 1.0000002e08, 1.0000002e08),
+        (7, 1.0000003e08, 1.0000002e08),
+        (8, 1.0000000e08, 1.0000001e08),
+        (9, 1.0000001e08, 1.0000001e08),
+        (10, 1.0000002e08, 1.0000001e08),
+        (11, 1.0000003e08, 1.0000001e08),
+        (12, 1.0000000e08, 1.0000000e08),
+        (13, 1.0000001e08, 1.0000000e08),
+        (14, 1.0000002e08, 1.0000000e08),
+        (15, 1.0000003e08, 1.0000000e08),
+    ]
+
+    cell2d = [
+        (0, 1.00000005e08, 1.00000025e08, 4, 0, 1, 5, 4),
+        (1, 1.00000015e08, 1.00000025e08, 4, 1, 2, 6, 5),
+        (2, 1.00000025e08, 1.00000025e08, 4, 2, 3, 7, 6),
+        (3, 1.00000005e08, 1.00000015e08, 4, 4, 5, 9, 8),
+        (4, 1.00000015e08, 1.00000015e08, 4, 5, 6, 10, 9),
+        (5, 1.00000025e08, 1.00000015e08, 4, 6, 7, 11, 10),
+        (6, 1.00000005e08, 1.00000005e08, 4, 8, 9, 13, 12),
+        (7, 1.00000015e08, 1.00000005e08, 4, 9, 10, 14, 13),
+        (8, 1.00000025e08, 1.00000005e08, 4, 10, 11, 15, 14),
+    ]
+
+    top = np.array(np.full((ncpl), 0.0))
+
+    idomain = np.array(
+        [
+            [1, 0, 1, 1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1],
+        ]
+    )
+
+    botm = []
+    botm.append(np.full((ncpl), -10.0))
+    botm.append(np.full((ncpl), -20.0))
+    botm.append(np.full((ncpl), -30.0))
+    botm = np.array(botm)
+
+    # npf
+    icelltype = np.full((nlay, ncpl), 0)
+    k = np.full((nlay, ncpl), 1)
+
+    # ic
+    strt = np.full((nlay, ncpl), 0.0)
+
+    ws = function_tmpdir / "ws"
+    for base_folder, test_info in tests.items():
+        print(f"RUNNING TEST: {base_folder}")
+        data_path = os.path.join(data_path_base, base_folder, test_info["base_sim_dir"])
+        # copy example data into working directory
+        base_model_folder = os.path.join(ws, f"{base_folder}_base")
+        test_model_folder = os.path.join(ws, f"{base_folder}_test")
+        shutil.copytree(data_path, base_model_folder)
+        os.mkdir(test_model_folder)
+
+        # create discretization
+        disv = VertexGrid(
+            vertices=vertices,
+            cell2d=cell2d,
+            top=top,
+            idomain=idomain,
+            botm=botm,
+            nlay=nlay,
+            ncpl=ncpl,
+        )
+
+        # create dataset
+        ds = create_dataset(
+            "gwf6",
+            "disv01b",
+            test_info["netcdf_type"],
+            test_info["netcdf_output_file"],
+            disv,
+        )
+
+        # add dis arrays
+        ds.create_array("disv", "top", disv.top, ["ncpl"])
+        ds.create_array("disv", "botm", disv.botm, ["nlay", "ncpl"])
+        ds.create_array("disv", "idomain", disv.idomain, ["nlay", "ncpl"])
+
+        # add npf arrays
+        ds.create_array("npf", "icelltype", icelltype, ["nlay", "ncpl"])
+        ds.create_array("npf", "k", k, ["nlay", "ncpl"])
+
+        # add ic arrays
+        ds.create_array("ic", "strt", strt, ["nlay", "ncpl"])
+
+        # write to netcdf
+        ds.write(test_model_folder)
+
+        # compare
+        compare_netcdf(
+            os.path.join(base_model_folder, test_info["netcdf_output_file"]),
+            os.path.join(test_model_folder, test_info["netcdf_output_file"]),
+        )

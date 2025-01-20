@@ -932,7 +932,7 @@ class MFModel(ModelInterface):
         if hasattr(instance.name_file, "nc_filerecord"):
             nc_filerecord = instance.name_file.nc_filerecord.get_data()
             if nc_filerecord:
-                from ..utils.model_netcdf import open_netcdf_dataset
+                from ..utils.model_netcdf import open_dataset
 
                 dis_str = {
                     "dis6": "structured",
@@ -946,7 +946,7 @@ class MFModel(ModelInterface):
                         break
                 if dis_type and dis_type in dis_str:
                     nc_fpth = os.path.join(instance.model_ws, nc_filerecord[0][0])
-                    instance._nc_dataset = open_netcdf_dataset(nc_fpth, dis_type=dis_str[dis_type])
+                    instance._nc_dataset = open_dataset(nc_fpth, dis_type=dis_str[dis_type])
                 else:
                     message = (
                         "Invalid discretization type "
@@ -1352,7 +1352,7 @@ class MFModel(ModelInterface):
         # write netcdf file
         if netcdf or self._nc_dataset:
             if not self._nc_dataset:
-                from ..utils.model_netcdf import create_netcdf_dataset
+                from ..utils.model_netcdf import create_dataset
 
                 # set netcdf file name
                 nc_fname = f"{self.name}.in.nc"
@@ -1361,7 +1361,7 @@ class MFModel(ModelInterface):
                 self.name_file.nc_filerecord = nc_fname
 
                 # create netcdf dataset
-                self._nc_dataset = create_netcdf_dataset(
+                self._nc_dataset = create_dataset(
                     self.model_type, self.name, netcdf, nc_fname, self._modelgrid
                 )
 
