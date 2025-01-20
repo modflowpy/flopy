@@ -14,7 +14,7 @@ MF6_REPO = "modflow6"
 MF6_REF = "develop"
 
 
-def pytest_generate_tests(metafunc):
+def pytest_generate_tests(_):
     if not any(DFN_PATH.glob("*.dfn")):
         get_dfns(MF6_OWNER, MF6_REPO, MF6_REF, DFN_PATH, verbose=True)
 
