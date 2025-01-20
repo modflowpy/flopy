@@ -5,6 +5,7 @@ from pathlib import Path
 
 import numpy as np
 import xarray as xr
+from pyproj import CRS
 
 import flopy
 
@@ -52,6 +53,7 @@ class ModelNetCDFDataset:
     def create(
         self, model_type: str, model_name: str, nc_type: str, fname: str, dis: Grid
     ) -> None:
+        self._modelname = model_name.lower()
         self._type = nc_type.lower()
         self._dis = dis
         self._name = fname
@@ -68,11 +70,12 @@ class ModelNetCDFDataset:
         # print(self._dataset.info())
 
     def create_array(
-        self, varname: str, tag: str, layer: int, data: np.typing.ArrayLike, shape: list
+        self, package: str, param: str, data: np.typing.ArrayLike, shape: list
     ):
         raise NotImplementedError("create_array not implemented in base class")
 
     def write(self, path: str) -> None:
+        self._set_projection()
         nc_fpath = Path(path) / self._name
         self._dataset.to_netcdf(nc_fpath, format="NETCDF4", engine="netcdf4")
 
@@ -85,6 +88,24 @@ class ModelNetCDFDataset:
 
     def array(self, path, layer=None):
         raise NotImplementedError("array not implemented in base class")
+
+    def _set_projection(self):
+        # TODO remove, testing
+        # if self._dis:
+        #    self._dis.crs = "EPSG:26918"
+        if self._dis and self._dis.crs:
+            proj = CRS.from_user_input(self._dis.crs)
+            wkt = proj.to_wkt()
+            self._dataset = self._dataset.assign({"projection": ([], np.int32(1))})
+            if self._type == "structured":
+                self._dataset["projection"].attrs["crs_wkt"] = wkt
+            elif self._type == "mesh2d":
+                self._dataset["projection"].attrs["wkt"] = wkt
+
+            # TODO excluded? delr/delc in mesh?
+            for p in self._tags:
+                for l in self._tags[p]:
+                    self._dataset[self._tags[p][l]].attrs["grid_mapping"] = "projection"
 
     def _set_mapping(self):
         var_d = {}
@@ -147,12 +168,14 @@ class ModelNetCDFDataset:
         raise NotImplementedError("_set_grid not implemented in base class")
 
     def _create_array(
-        self, varname: str, tag: str, data: np.typing.ArrayLike, nc_shape: list
+        self, package: str, param: str, data: np.typing.ArrayLike, nc_shape: list
     ):
         layer = 0
+        varname = f"{package.lower()}_{param.lower()}"
+        tag = f"{self._modelname.upper()}/{package.upper()}/{param.upper()}"
         var_d = {varname: (nc_shape, data)}
         self._dataset = self._dataset.assign(var_d)
-        self._dataset[varname].attrs["modflow6_input"] = tag
+        self._dataset[varname].attrs["modflow6_input"] = tag.upper()
         if tag not in self._tags:
             self._tags[tag] = {}
         if layer in self._tags[tag]:
@@ -160,15 +183,19 @@ class ModelNetCDFDataset:
         self._tags[tag][layer] = varname
 
     def _create_layered_array(
-        self, varname: str, tag: str, data: np.typing.ArrayLike, nc_shape: list
+        self, package: str, param: str, data: np.typing.ArrayLike, nc_shape: list
     ):
+        varname = f"{package.lower()}_{param.lower()}"
+        tag = f"{self._modelname.upper()}/{package.upper()}/{param.upper()}"
         for layer in range(data.shape[0]):
             mf6_layer = layer + 1
             layer_vname = f"{varname}_l{mf6_layer}"
             var_d = {layer_vname: (nc_shape, data[layer].flatten())}
             self._dataset = self._dataset.assign(var_d)
-            self._dataset[layer_vname].attrs["modflow6_input"] = tag
-            self._dataset[layer_vname].attrs["modflow6_layer"] = layer + 1
+            # self._dataset[layer_vname].attrs["_FillValue"] = 9.96920996838687e+36
+            self._dataset[layer_vname].attrs["coordinates"] = "mesh_face_x mesh_face_y"
+            self._dataset[layer_vname].attrs["modflow6_input"] = tag.upper()
+            self._dataset[layer_vname].attrs["modflow6_layer"] = np.int32(layer + 1)
             if tag not in self._tags:
                 self._tags[tag] = {}
             if mf6_layer in self._tags[tag]:
@@ -183,7 +210,7 @@ class DisNetCDFStructured(ModelNetCDFDataset):
         super().__init__()
 
     def create_array(
-        self, varname: str, tag: str, layer: int, data: np.typing.ArrayLike, shape: list
+        self, package: str, param: str, data: np.typing.ArrayLike, shape: list
     ):
         nc_shape = None
         if len(data.shape) == 3:
@@ -196,16 +223,16 @@ class DisNetCDFStructured(ModelNetCDFDataset):
             elif shape[0].lower() == "ncol":
                 nc_shape = ["x"]
 
-        self._create_array(varname, tag, data, nc_shape)
+        self._create_array(package, param, data, nc_shape)
 
     def array(self, path, layer=None):
+        # TODO update to take package/param instead of path
         if len(self._dataset[self._tags[path][0]].data.shape) == 3:
             return self._dataset[self._tags[path][0]].data[layer - 1]
         else:
             return self._dataset[self._tags[path][0]].data
 
     def _set_grid(self, dis):
-        # lenunits = {0: "undefined", 1: "feet", 2: "meters", 3: "centimeters"}
         lenunits = {0: "m", 1: "feet", 2: "m", 3: "cm"}
 
         x_bnds = []
@@ -243,13 +270,11 @@ class DisNetCDFStructured(ModelNetCDFDataset):
         self._dataset["y"].attrs["axis"] = "Y"
         self._dataset["y"].attrs["standard_name"] = "projection_y_coordinate"
         self._dataset["y"].attrs["long_name"] = "Northing"
-        # self._dataset["y"].attrs["grid_mapping"] = "projection"  # TODO
         self._dataset["y"].attrs["bounds"] = "y_bnds"
         self._dataset["x"].attrs["units"] = lenunits[dis.lenuni]
         self._dataset["x"].attrs["axis"] = "X"
         self._dataset["x"].attrs["standard_name"] = "projection_x_coordinate"
         self._dataset["x"].attrs["long_name"] = "Easting"
-        # self._dataset["x"].attrs["grid_mapping"] = "projection"  # TODO
         self._dataset["x"].attrs["bounds"] = "x_bnds"
 
 
@@ -258,7 +283,7 @@ class DisNetCDFMesh2d(ModelNetCDFDataset):
         super().__init__()
 
     def create_array(
-        self, varname: str, tag: str, layer: int, data: np.typing.ArrayLike, shape: list
+        self, package: str, param: str, data: np.typing.ArrayLike, shape: list
     ):
         nc_shape = None
         if len(data.shape) == 1:
@@ -270,9 +295,9 @@ class DisNetCDFMesh2d(ModelNetCDFDataset):
             nc_shape = ["nmesh_face"]
 
         if len(data.shape) == 3:
-            self._create_layered_array(varname, tag, data, nc_shape)
+            self._create_layered_array(package, param, data, nc_shape)
         else:
-            self._create_array(varname, tag, data.flatten(), nc_shape)
+            self._create_array(package, param, data.flatten(), nc_shape)
 
     def array(self, path, layer=None):
         if not layer:
@@ -284,14 +309,69 @@ class DisNetCDFMesh2d(ModelNetCDFDataset):
         return None
 
     def _set_grid(self, dis):
-        print(dir(dis))
-        print(dis.ncpl)
-        print(dis.nvert)
-        # print(dis.get_cell_vertices())
-        # nmesh_node = dis.nvert
-        # nmesh_face = dis.ncpl
-        # max_nmesh_face_nodes = 4 ; # assume 4 for dis?
-        # nlay = dis.nlay
+        lenunits = {0: "m", 1: "feet", 2: "m", 3: "cm"}
+
+        # mesh container variable
+        self._dataset = self._dataset.assign({"mesh": ([], np.int32(1))})
+        self._dataset["mesh"].attrs["cf_role"] = "mesh_topology"
+        self._dataset["mesh"].attrs["long_name"] = "2D mesh topology"
+        self._dataset["mesh"].attrs["topology_dimension"] = np.int32(2)
+        self._dataset["mesh"].attrs["face_dimension"] = "nmesh_face"
+        self._dataset["mesh"].attrs["node_coordinates"] = "mesh_node_x mesh_node_y"
+        self._dataset["mesh"].attrs["face_coordinates"] = "mesh_face_x mesh_face_y"
+        self._dataset["mesh"].attrs["face_node_connectivity"] = "mesh_face_nodes"
+
+        # mesh node x and y
+        var_d = {
+            "mesh_node_x": (["nmesh_node"], dis.verts[:, 0]),
+            "mesh_node_y": (["nmesh_node"], dis.verts[:, 1]),
+        }
+        self._dataset = self._dataset.assign(var_d)
+        self._dataset["mesh_node_x"].attrs["units"] = lenunits[dis.lenuni]
+        self._dataset["mesh_node_x"].attrs["standard_name"] = "projection_x_coordinate"
+        self._dataset["mesh_node_x"].attrs["long_name"] = "Easting"
+        self._dataset["mesh_node_y"].attrs["units"] = lenunits[dis.lenuni]
+        self._dataset["mesh_node_y"].attrs["standard_name"] = "projection_y_coordinate"
+        self._dataset["mesh_node_y"].attrs["long_name"] = "Northing"
+
+        # mesh face x and y
+        # TODO bounds
+        var_d = {
+            # TODO modflow6 and flopy results differ for mesh_face_x gwf_sto01
+            "mesh_face_x": (["nmesh_face"], dis.xcellcenters.flatten()),
+            # "mesh_face_xbnds": ([], ),
+            "mesh_face_y": (["nmesh_face"], dis.ycellcenters.flatten()),
+            # "mesh_face_ybnds": ([], ),
+        }
+        self._dataset = self._dataset.assign(var_d)
+        self._dataset["mesh_face_x"].attrs["units"] = lenunits[dis.lenuni]
+        self._dataset["mesh_face_x"].attrs["standard_name"] = "projection_x_coordinate"
+        self._dataset["mesh_face_x"].attrs["long_name"] = "Easting"
+        self._dataset["mesh_face_x"].attrs["bounds"] = "mesh_face_xbnds"
+        self._dataset["mesh_face_y"].attrs["units"] = lenunits[dis.lenuni]
+        self._dataset["mesh_face_y"].attrs["standard_name"] = "projection_y_coordinate"
+        self._dataset["mesh_face_y"].attrs["long_name"] = "Northing"
+        self._dataset["mesh_face_y"].attrs["bounds"] = "mesh_face_ybnds"
+
+        # mesh face nodes
+        max_face_nodes = 4
+        face_nodes = []
+        for r in dis.iverts:
+            # nodes = list(map(lambda x: np.int32(x + 1), r))
+            nodes = [np.int32(x + 1) for x in r]
+            nodes.reverse()
+            face_nodes.append(nodes)
+
+        var_d = {
+            "mesh_face_nodes": (["nmesh_face", "max_nmesh_face_nodes"], face_nodes),
+        }
+        self._dataset = self._dataset.assign(var_d)
+        self._dataset["mesh_face_nodes"].attrs["cf_role"] = "face_node_connectivity"
+        self._dataset["mesh_face_nodes"].attrs["long_name"] = (
+            "Vertices bounding cell (counterclockwise)"
+        )
+        self._dataset["mesh_face_nodes"].attrs["_FillValue"] = np.int32(-2147483647)
+        self._dataset["mesh_face_nodes"].attrs["start_index"] = np.int32(1)
 
 
 class DisvNetCDFMesh2d(ModelNetCDFDataset):
@@ -299,14 +379,14 @@ class DisvNetCDFMesh2d(ModelNetCDFDataset):
         super().__init__()
 
     def create_array(
-        self, varname: str, tag: str, layer: int, data: np.typing.ArrayLike, shape: list
+        self, package: str, param: str, data: np.typing.ArrayLike, shape: list
     ):
         nc_shape = ["nmesh_face"]
 
         if len(data.shape) == 2:
-            self._create_layered_array(varname, tag, data, nc_shape)
+            self._create_layered_array(package, param, data, nc_shape)
         else:
-            self._create_array(varname, tag, data.flatten(), nc_shape)
+            self._create_array(package, param, data.flatten(), nc_shape)
 
     def array(self, path, layer=None):
         if not layer:
@@ -317,14 +397,81 @@ class DisvNetCDFMesh2d(ModelNetCDFDataset):
 
         return None
 
-    def _set_grid(self, dis):
-        pass
+    def _set_grid(self, disv):
+        # default metric "m" when undefined
+        lenunits = {0: "m", 1: "feet", 2: "m", 3: "cm"}
+
+        # mesh container variable
+        self._dataset = self._dataset.assign({"mesh": ([], np.int32(1))})
+        self._dataset["mesh"].attrs["cf_role"] = "mesh_topology"
+        self._dataset["mesh"].attrs["long_name"] = "2D mesh topology"
+        self._dataset["mesh"].attrs["topology_dimension"] = np.int32(2)
+        self._dataset["mesh"].attrs["face_dimension"] = "nmesh_face"
+        self._dataset["mesh"].attrs["node_coordinates"] = "mesh_node_x mesh_node_y"
+        self._dataset["mesh"].attrs["face_coordinates"] = "mesh_face_x mesh_face_y"
+        self._dataset["mesh"].attrs["face_node_connectivity"] = "mesh_face_nodes"
+
+        # mesh node x and y
+        var_d = {
+            "mesh_node_x": (["nmesh_node"], disv.verts[:, 0]),
+            "mesh_node_y": (["nmesh_node"], disv.verts[:, 1]),
+        }
+        self._dataset = self._dataset.assign(var_d)
+        self._dataset["mesh_node_x"].attrs["units"] = lenunits[disv.lenuni]
+        self._dataset["mesh_node_x"].attrs["standard_name"] = "projection_x_coordinate"
+        self._dataset["mesh_node_x"].attrs["long_name"] = "Easting"
+        self._dataset["mesh_node_y"].attrs["units"] = lenunits[disv.lenuni]
+        self._dataset["mesh_node_y"].attrs["standard_name"] = "projection_y_coordinate"
+        self._dataset["mesh_node_y"].attrs["long_name"] = "Northing"
+
+        # mesh face x and y
+        # TODO bounds
+        var_d = {
+            "mesh_face_x": (["nmesh_face"], disv.xcellcenters),
+            # "mesh_face_xbnds": ([], ),
+            "mesh_face_y": (["nmesh_face"], disv.ycellcenters),
+            # "mesh_face_ybnds": ([], ),
+        }
+        self._dataset = self._dataset.assign(var_d)
+        self._dataset["mesh_face_x"].attrs["units"] = lenunits[disv.lenuni]
+        self._dataset["mesh_face_x"].attrs["standard_name"] = "projection_x_coordinate"
+        self._dataset["mesh_face_x"].attrs["long_name"] = "Easting"
+        self._dataset["mesh_face_x"].attrs["bounds"] = "mesh_face_xbnds"
+        self._dataset["mesh_face_y"].attrs["units"] = lenunits[disv.lenuni]
+        self._dataset["mesh_face_y"].attrs["standard_name"] = "projection_y_coordinate"
+        self._dataset["mesh_face_y"].attrs["long_name"] = "Northing"
+        self._dataset["mesh_face_y"].attrs["bounds"] = "mesh_face_ybnds"
+
+        # mesh face nodes
+        cell_nverts = [cell2d[3] for cell2d in disv.cell2d]
+        max_face_nodes = max(cell_nverts)
+        face_nodes = []
+        for idx, r in enumerate(disv.cell2d):
+            nodes = disv.cell2d[idx][4 : 4 + r[3]]
+            # nodes = list(map(lambda x: np.int32(x + 1), nodes))
+            nodes = [np.int32(x + 1) for x in nodes]
+            nodes.reverse()
+            if len(nodes) < max_face_nodes:
+                nodes.extend([np.int32(-2147483647)] * (max_face_nodes - len(nodes)))
+            face_nodes.append(nodes)
+
+        var_d = {
+            "mesh_face_nodes": (["nmesh_face", "max_nmesh_face_nodes"], face_nodes),
+        }
+        self._dataset = self._dataset.assign(var_d)
+        self._dataset["mesh_face_nodes"].attrs["cf_role"] = "face_node_connectivity"
+        self._dataset["mesh_face_nodes"].attrs["long_name"] = (
+            "Vertices bounding cell (counterclockwise)"
+        )
+        self._dataset["mesh_face_nodes"].attrs["_FillValue"] = np.int32(-2147483647)
+        self._dataset["mesh_face_nodes"].attrs["start_index"] = np.int32(1)
 
 
-def open_netcdf_dataset(nc_fpth: str, dis_type: str) -> ModelNetCDFDataset:
-    # dis_type corresponds to a flopy.discretization derived object type
+def open_dataset(nc_fpth: str, dis_type: str) -> ModelNetCDFDataset:
     nc_dataset = None
     dis_str = dis_type.lower()
+
+    # dis_type corresponds to a flopy.discretization type
     if dis_str != "vertex" and dis_str != "structured":
         raise Exception(
             "Supported NetCDF discretication types "
@@ -334,6 +481,7 @@ def open_netcdf_dataset(nc_fpth: str, dis_type: str) -> ModelNetCDFDataset:
 
     fpth = Path(nc_fpth).resolve()
     dataset = xr.open_dataset(fpth, engine="netcdf4")
+
     if ("modflow6_grid" and "modflow6_model") not in dataset.attrs:
         modelname = None
         gridtype = None
@@ -364,14 +512,17 @@ def open_netcdf_dataset(nc_fpth: str, dis_type: str) -> ModelNetCDFDataset:
     return nc_dataset
 
 
-def create_netcdf_dataset(
-    model_type, name, nc_type, nc_fname, dis
+def create_dataset(
+    model_type: str, name: str, nc_type: str, nc_fname: str, dis: Grid
 ) -> ModelNetCDFDataset:
-    assert (
+    # TODO: aren't model_type and name in dis?
+    if not (
         model_type.lower() == "gwf6"
         or model_type.lower() == "gwt6"
         or model_type.lower() == "gwe6"
-    )
+    ):
+        raise Exception("NetCDF supported model types are GWF, GWT and GWE")
+
     nc_dataset = None
     if isinstance(dis, VertexGrid):
         if nc_type.lower() == "mesh2d":
@@ -383,6 +534,7 @@ def create_netcdf_dataset(
             nc_dataset = DisNetCDFStructured()
 
     if nc_dataset:
+        # TODO: remove model_type/name?
         nc_dataset.create(model_type, name, nc_type, nc_fname, dis)
     else:
         raise Exception(

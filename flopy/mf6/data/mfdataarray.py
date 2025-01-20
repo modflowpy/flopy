@@ -1623,9 +1623,8 @@ class MFArray(MFMultiDimVar):
 
         if create:
             # add array to netcdf dataset
-            nc_varname = f"{p}_{n}".lower()
             data = self._get_data()
-            nc_dataset.create_array(nc_varname, input_tag, 0, data, self.structure.shape)
+            nc_dataset.create_array(p, n, data, self.structure.shape)
 
         storage._set_storage_netcdf(
             nc_dataset, input_tag, self.structure.layered, storage.layer_storage.get_total_size() - 1
