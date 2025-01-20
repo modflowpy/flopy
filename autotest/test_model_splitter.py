@@ -847,6 +847,7 @@ def test_unstructured_complex_disu(function_tmpdir):
         raise AssertionError("Reconstructed head results outside of tolerance")
 
 
+@pytest.mark.slow
 @requires_exe("mf6")
 @requires_pkg("pymetis", "scipy")
 def test_multi_model(function_tmpdir):
