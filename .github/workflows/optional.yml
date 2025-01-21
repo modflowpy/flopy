@@ -3,7 +3,6 @@
 # rather it should gracefully raise an ImportError if absent when needed.
 name: FloPy optional dependency testing
 on:
-  push:
   schedule:
     - cron: '0 8 * * *' # run at 8 AM UTC (12 am PST)
 jobs:

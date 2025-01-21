@@ -1,6 +1,5 @@
 name: FloPy code generation
 on:
-  push:
   schedule:
     - cron: '0 8 * * *' # run at 8 AM UTC (12 am PST)
 concurrency:

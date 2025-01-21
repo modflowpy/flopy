@@ -37,9 +37,9 @@ jobs:
     - name: Install Python dependencies
       run: |
         uv sync --all-extras
-        uv pip install https://github.com/modflowpy/pymake/zipball/master
-        uv pip install https://github.com/Deltares/xmipy/zipball/develop
-        uv pip install https://github.com/MODFLOW-USGS/modflowapi/zipball/develop
+        uv pip install https://github.com/modflowpy/pymake/archive/master.zip
+        uv pip install https://github.com/Deltares/xmipy/archive/develop.zip
+        uv pip install https://github.com/MODFLOW-USGS/modflowapi/archive/develop.zip
         uv pip install meson ninja
 
     - name: Setup GNU Fortran
@@ -122,9 +122,9 @@ jobs:
     - name: Install Python dependencies
       run: |
         uv sync --all-extras
-        uv pip install https://github.com/modflowpy/pymake/zipball/master
-        uv pip install https://github.com/Deltares/xmipy/zipball/develop
-        uv pip install https://github.com/MODFLOW-USGS/modflowapi/zipball/develop
+        uv pip install https://github.com/modflowpy/pymake/archive/master.zip
+        uv pip install https://github.com/Deltares/xmipy/archive/develop.zip
+        uv pip install https://github.com/MODFLOW-USGS/modflowapi/archive/develop.zip
         uv pip install meson ninja
         uv pip install -r modflow6-examples/etc/requirements.pip.txt
 
