@@ -23,20 +23,18 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Micromamba
-        uses: mamba-org/setup-micromamba@v1
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
         with:
-          environment-file: etc/environment.yml
-          cache-environment: true
-          cache-downloads: true
-          create-args: >-
-            python=${{ matrix.python-version }}
-          init-shell: >-
-            bash
-            powershell
+          version: "0.5.18"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: pyproject.toml
 
       - name: Install FloPy
-        run: pip install .
+        run: uv sync
 
       - name: Generate classes
-        run: python -m flopy.mf6.utils.generate_classes --ref ${{ matrix.ref }} --no-backup
+        run: uv run python -m flopy.mf6.utils.generate_classes --ref ${{ matrix.ref }} --no-backup
