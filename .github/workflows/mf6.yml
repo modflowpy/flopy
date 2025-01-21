@@ -77,7 +77,7 @@ jobs:
 
     - name: Print coverage report before upload
       working-directory: ./modflow6/autotest
-      run: coverage report
+      run: uv run coverage report
 
     - name: Upload coverage to Codecov
       if:
