@@ -21,25 +21,27 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup uv
-        uses: astral-sh/setup-uv@v5
+      - name: Setup Micromamba
+        uses: mamba-org/setup-micromamba@v2
         with:
-          version: "0.5.18"
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: pyproject.toml
+          environment-file: etc/environment.yml
+          cache-environment: true
+          cache-downloads: true
+          create-args: >-
+            python=${{ matrix.python-version }}
+          init-shell: >-
+            bash
+            powershell
 
       - name: Install FloPy
-        run: uv sync --all-extras
+        run: pip install .
 
       - name: OpenGL workaround on Linux
         if: runner.os == 'Linux'
         run: |
           # referenced from https://github.com/pyvista/pyvista/blob/main/.github/workflows/vtk-pre-test.yml#L53
-          uv pip uninstall -y vtk
-          uv pip install --extra-index-url https://wheels.vtk.org trame vtk-osmesa
+          pip uninstall -y vtk
+          pip install --extra-index-url https://wheels.vtk.org trame vtk-osmesa
       
       - name: Install OpenGL on Windows
         if: runner.os == 'Windows'
@@ -67,11 +69,11 @@ jobs:
           subset: triangle
 
       - name: Update FloPy packages
-        run: uv run python -m flopy.mf6.utils.generate_classes --ref develop --no-backup
+        run: python -m flopy.mf6.utils.generate_classes --ref develop --no-backup
 
       - name: Run example tests
         working-directory: autotest
-        run: uv run pytest -v -m="example" -n=auto -s --durations=0 --keep-failed=.failed
+        run: pytest -v -m="example" -n=auto -s --durations=0 --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
