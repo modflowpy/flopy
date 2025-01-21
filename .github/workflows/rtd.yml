@@ -79,25 +79,29 @@ jobs:
           echo $GITHUB_REF
           echo $GITHUB_EVENT_NAME
 
-      - name: Setup uv
-        uses: astral-sh/setup-uv@v5
+      - name: Setup Micromamba
+        uses: mamba-org/setup-micromamba@v1
         with:
-          version: "0.5.18"
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: pyproject.toml
+          environment-file: etc/environment.yml
+          cache-environment: true
+          cache-downloads: true
+          create-args: >-
+            python=3.12
+          init-shell: >-
+            bash
+            powershell
 
       - name: Install Python dependencies
-        run: uv sync --all-extras
+        run: |
+          pip install --upgrade pip
+          pip install .
       
       - name: Workaround OpenGL issue on Linux
         if: runner.os == 'Linux'
         run: |
           # referenced from https://github.com/pyvista/pyvista/blob/main/.github/workflows/vtk-pre-test.yml#L53
-          uv pip uninstall -y vtk
-          uv pip install --extra-index-url https://wheels.vtk.org trame vtk-osmesa
+          pip uninstall -y vtk
+          pip install --extra-index-url https://wheels.vtk.org trame vtk-osmesa
       
       - name: Install fonts on Linux
         if: runner.os == 'Linux'
@@ -133,7 +137,7 @@ jobs:
 
       - name: Run tutorial and example notebooks
         working-directory: autotest
-        run: uv run pytest -v -n auto test_notebooks.py
+        run: pytest -v -n auto test_notebooks.py
 
       - name: Upload notebooks artifact for ReadtheDocs
         if: |
