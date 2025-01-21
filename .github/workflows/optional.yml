@@ -3,6 +3,7 @@
 # rather it should gracefully raise an ImportError if absent when needed.
 name: FloPy optional dependency testing
 on:
+  push:
   schedule:
     - cron: '0 8 * * *' # run at 8 AM UTC (12 am PST)
 jobs:
@@ -27,31 +28,32 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.18"
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-          cache-dependency-path: pyproject.toml
+          python-version-file: pyproject.toml
 
       - name: Install Python dependencies
         run: |
-          pip install --upgrade pip
-          pip install .
-          pip install ".[test]"
+          uv sync --extra test
 
           # Install optional dependencies according to matrix.optdeps.
           # If matrix.optdeps is "some" remove 3 optional dependencies
           # selected randomly using the current date as the seed.
           if [[ ! "${{ matrix.optdeps }}" == *"no"* ]]; then
-            pip install ".[optional]"
+            uv pip install ".[optional]"
           fi
           if [[ "${{ matrix.optdeps }}" == *"some"* ]]; then
             deps=$(sed '/optional =/,/]/!d' pyproject.toml | sed -e '1d;$d' -e 's/\"//g' -e 's/,//g' | tr -d ' ' | cut -f 1 -d ';')
             rmvd=$(echo $deps | tr ' ' '\n' | shuf --random-source <(yes date +%d.%m.%y) | head -n 3)
             echo "Removing optional dependencies: $rmvd" >> removed_dependencies.txt
             cat removed_dependencies.txt
-            pip uninstall --yes $rmvd
+            uv pip uninstall --yes $rmvd
           fi
       
       - name: Upload removed dependencies log
@@ -65,7 +67,7 @@ jobs:
       
       - name: Smoke test (${{ matrix.optdeps }})
         working-directory: autotest
-        run: pytest -v -n=auto -m "not regression and not example" --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
+        run: uv run pytest -v -n=auto -m "not regression and not example" --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
