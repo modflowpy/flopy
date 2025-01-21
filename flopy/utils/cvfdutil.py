@@ -223,10 +223,11 @@ def to_cvfd(
     # Now, go through each vertex and look at the cells that use the vertex.
     # For quadtree-like grids, there may be a need to add a new hanging node
     # vertex to the larger cell.
+    vertexdict_keys = list(vertexdict.keys())
     if not skip_hanging_node_check:
         if verbose:
             print("Checking for hanging nodes.")
-        
+
         finished = False
         while not finished:
             finished = True
@@ -252,7 +253,6 @@ def to_cvfd(
         if verbose:
             print("Done checking for hanging nodes.")
 
-    vertexdict_keys = list(vertexdict.keys())
     verts = np.array(vertexdict_keys)
     iverts = vertexlist
 
