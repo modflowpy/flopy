@@ -32,11 +32,11 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          uv sync --group build
+          uv sync --extra build
           uv run python -c "import flopy; print(f'{flopy.__version__}')"
 
       - name: Build package
-        run: uv run python -m build
+        run: uv build
 
       - name: Check package
         run: uv run twine check --strict dist/*
@@ -64,7 +64,7 @@ jobs:
           python-version-file: pyproject.toml
 
       - name: Install Python dependencies
-        run: uv sync --group lint
+        run: uv sync --extra lint
 
       - name: Lint
         run: uv run ruff check .
@@ -106,7 +106,8 @@ jobs:
           python-version-file: pyproject.toml
 
       - name: Install Python dependencies
-        run: uv sync --group test --group optional
+        # temp. allow prereleases for vtk on aarch64
+        run: uv sync --all-extras --prerelease=allow
       
       - name: Install Modflow executables
         uses: modflowpy/install-modflow-action@v1
