@@ -73,9 +73,7 @@ class LayerStorage:
         whether the data is stored in a binary file
     nc_dataset : ModelNetCDFDataset or None
         model netcdf dataset
-    nc_input_tag : str
-        parameter netcdf file input tag
-    nc_layered : bool  #NETCDF-DEV verify this is needed
+    nc_layered : bool
         array storage data is layered
 
     Methods
@@ -122,7 +120,6 @@ class LayerStorage:
         self.iprn = None
         self.binary = False
         self.nc_dataset = None
-        self.nc_input_tag = None
         self.nc_layered = False
 
     def set_internal_constant(self):
@@ -212,6 +209,8 @@ class DataStorage:
         what internal type is the data stored in (ndarray, recarray, scalar)
     layered : bool
         is the data layered
+    netcdf : bool
+        is the data stored in netcdf
     pre_data_comments : string
         any comments before the start of the data
     comments : dict
@@ -1026,6 +1025,9 @@ class DataStorage:
 
         success = False
         if preserve_record:
+            if self.netcdf and isinstance(data, list):
+                # TODO: is this a kludge? #NETCDF-DEV
+                data = self._to_ndarray(data, layer)
             if isinstance(data, np.ndarray):
                 # try to store while preserving the structure of the
                 # existing record
@@ -1127,16 +1129,24 @@ class DataStorage:
                 self.layer_storage[layer].data_storage_type
                 == DataStorageType.external_file
             ):
-                self.store_external(
-                    self.layer_storage[layer].fname,
-                    layer,
-                    self.layer_storage[layer].factor,
-                    self.layer_storage[layer].iprn,
-                    data=data,
-                    do_not_verify=True,
-                    binary=self.layer_storage[layer].binary,
-                    preserve_record=preserve_record,
-                )
+                if self.netcdf:
+                    self.store_netcdf(
+                        layer,
+                        self.layer_storage[layer].factor,
+                        self.layer_storage[layer].iprn,
+                        data=data,
+                    )
+                else:
+                    self.store_external(
+                        self.layer_storage[layer].fname,
+                        layer,
+                        self.layer_storage[layer].factor,
+                        self.layer_storage[layer].iprn,
+                        data=data,
+                        do_not_verify=True,
+                        binary=self.layer_storage[layer].binary,
+                        preserve_record=preserve_record,
+                    )
             else:
                 self.store_internal(
                     data,
@@ -1153,7 +1163,15 @@ class DataStorage:
                 data[0], data_type
             ):
                 # store data as const
-                self.store_internal(data, layer, True, multiplier, key=key)
+                if self.netcdf:
+                    self.store_netcdf(
+                        layer,
+                        self.layer_storage[layer].factor,
+                        self.layer_storage[layer].iprn,
+                        data=data,
+                    )
+                else:
+                    self.store_internal(data, layer, True, multiplier, key=key)
                 return True
 
         # look for internal and open/close data
@@ -1862,6 +1880,28 @@ class DataStorage:
             layer_new, fp_relative, print_format, binary
         )
 
+    def store_netcdf(
+        self,
+        layer=None,
+        multiplier=None,
+        print_format=None,
+        data=None,
+    ):
+        file_access = MFFileAccessArray(
+            self.data_dimensions.structure,
+            self.data_dimensions,
+            self._simulation_data,
+            self._data_path,
+            self._stress_period,
+        )
+        file_access.set_netcdf_array(
+            self.layer_storage[layer].nc_dataset,
+            self.data_dimensions.structure.get_package(),
+            self.data_dimensions.structure.name,
+            data,
+            layer[0],
+        )
+
     def set_ext_file_attributes(self, layer, file_path, print_format, binary):
         # point to the external file and set flags
         self.layer_storage[layer].fname = file_path
@@ -1881,12 +1921,11 @@ class DataStorage:
         self.set_ext_file_attributes(layer, data_file, print_format, binary)
         self.layer_storage[layer].factor = multiplier
 
-    def _set_storage_netcdf(self, nc_dataset, input_tag, layered, layer):
+    def _set_storage_netcdf(self, nc_dataset, layered, layer):
         self.netcdf = True
         is_layered = layered and layer > 0
         for idx in self.layer_storage.indexes():
             self.layer_storage[idx].nc_dataset = nc_dataset
-            self.layer_storage[idx].nc_input_tag = input_tag
             self.layer_storage[idx].nc_layered = is_layered
             self.layer_storage[
                 idx
@@ -2011,9 +2050,10 @@ class DataStorage:
                 # TODO: ensure multiplier only set by open/close #NETCDF-DEV
                 for idx in self.layer_storage.indexes():
                     data_out = (
-                        file_access.load_netcdf_array(
+                        file_access.read_netcdf_array(
                             self.layer_storage[layer].nc_dataset,
-                            self.layer_storage[layer].nc_input_tag,
+                            self.data_dimensions.structure.get_package(),
+                            self.data_dimensions.structure.name,
                             idx[0],
                         )
                 )
@@ -2480,9 +2520,10 @@ class DataStorage:
                     else:
                         nc_layer = -1
                     data_out = (
-                        file_access.load_netcdf_array(
+                        file_access.read_netcdf_array(
                             self.layer_storage[layer].nc_dataset,
-                            self.layer_storage[layer].nc_input_tag,
+                            self.data_dimensions.structure.get_package(),
+                            self.data_dimensions.structure.name,
                             nc_layer,
                         )
                         * mult
