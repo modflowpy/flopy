@@ -7,6 +7,7 @@ from warnings import warn
 import numpy as np
 import pytest
 import xarray as xr
+from pyproj import CRS
 
 import flopy
 from flopy.discretization.structuredgrid import StructuredGrid
@@ -16,16 +17,15 @@ from flopy.utils.gridutil import get_disv_kwargs
 from flopy.utils.model_netcdf import create_dataset
 
 
-def compare_netcdf(base, gen):
+def compare_netcdf(base, gen, update=None):
     """Check for functional equivalence"""
     xrb = xr.open_dataset(base, engine="netcdf4")
     xrg = xr.open_dataset(gen, engine="netcdf4")
 
     # global attributes
     for a in xrb.attrs:
-        # TODO
+        assert a in xrg.attrs
         if a == "title" or a == "history" or a == "source":
-            assert a in xrg.attrs
             continue
         assert xrb.attrs[a] == xrg.attrs[a]
 
@@ -33,16 +33,29 @@ def compare_netcdf(base, gen):
     for coordname, da in xrb.coords.items():
         assert coordname in xrg.coords
         # TODO
-        # assert np.allclose(xrb.coords[coordname].data, xrg.coords[coordname].data)
+        assert np.allclose(xrb.coords[coordname].data, xrg.coords[coordname].data)
+        for a in da.attrs:
+            assert a in xrg.coords[coordname].attrs
+            assert da.attrs[a] == xrg.coords[coordname].attrs[a]
 
     # variables
     for varname, da in xrb.data_vars.items():
-        # TODO
-        if varname == "mesh_face_xbnds" or varname == "mesh_face_ybnds":
-            continue
-
-        # TODO
+        print(varname)
         if varname == "projection":
+            assert varname in xrg.data_vars
+            assert "wkt" in da.attrs or "crs_wkt" in da.attrs
+            if "wkt" in da.attrs:
+                attr = "wkt"
+            else:
+                attr = "crs_wkt"
+            assert attr in xrg.data_vars[varname].attrs
+
+            # TODO
+            # crs_b = CRS.from_wkt(da.attrs[attr])
+            # epsg_b = crs_b.to_epsg(min_confidence=90)
+            # crs_g = CRS.from_wkt(xrg.data_vars[varname].attrs[attr])
+            # epsg_g = crs_g.to_epsg(min_confidence=90)
+            # assert epsg_b == epsg_g
             continue
 
         # check variable name
@@ -50,14 +63,18 @@ def compare_netcdf(base, gen):
 
         # check variable attributes
         for a in da.attrs:
-            # TODO delr/delc
-            if a == "grid_mapping" or a == "long_name":
-                continue
+            # TODO long_name
+            # if a == "long_name":
+            #    continue
+            print(a)
             assert da.attrs[a] == xrg.data_vars[varname].attrs[a]
 
         # check variable data
         print(f"NetCDF file check data equivalence for variable: {varname}")
-        assert np.allclose(da.data, xrg.data_vars[varname].data)
+        if update and varname in update:
+            assert np.allclose(update[varname], xrg.data_vars[varname].data)
+        else:
+            assert np.allclose(da.data, xrg.data_vars[varname].data)
 
 
 @pytest.mark.regression
@@ -99,7 +116,7 @@ def test_load_gwfsto01(function_tmpdir, example_data_path):
             for f in os.listdir(base_model_folder)
             if os.path.isfile(os.path.join(base_model_folder, f))
         ]
-        # assert len(gen_files) == len(base_files)
+        assert len(gen_files) == len(base_files)
         for f in base_files:
             print(f"cmp => {f}")
             base = os.path.join(base_model_folder, f)
@@ -115,6 +132,91 @@ def test_load_gwfsto01(function_tmpdir, example_data_path):
                         assert line1.lower() == line2.lower()
             else:
                 compare_netcdf(base, gen)
+
+
+@pytest.mark.regression
+def test_update_gwfsto01(function_tmpdir, example_data_path):
+    data_path_base = example_data_path / "mf6" / "netcdf"
+    tests = {
+        "test_gwf_sto01_mesh": {
+            "base_sim_dir": "gwf_sto01",
+            "netcdf_output_file": "gwf_sto01.in.nc",
+        },
+        "test_gwf_sto01_structured": {
+            "base_sim_dir": "gwf_sto01",
+            "netcdf_output_file": "gwf_sto01.in.nc",
+        },
+    }
+
+    nlay, nrow, ncol = 3, 10, 10
+
+    dis_delr = np.array([1010, 1010, 1010, 1010, 1010, 1010, 1010, 1010, 1010, 1010])
+    dis_delc = [2000, 2010, 2020, 2030, 2040, 2050, 2060, 2070, 2080, 2090]
+
+    # ic
+    strt1 = np.full((nrow, ncol), 0.15)
+    strt2 = np.full((nrow, ncol), 0.21)
+    strt3 = np.full((nrow, ncol), 1.21)
+    ic_strt = np.array([strt1, strt2, strt3])
+
+    update = {
+        "dis_delr": dis_delr,
+        "dis_delc": dis_delc,
+        "ic_strt": ic_strt,
+        "ic_strt_l1": ic_strt[0].flatten(),
+        "ic_strt_l2": ic_strt[1].flatten(),
+        "ic_strt_l3": ic_strt[2].flatten(),
+    }
+
+    ws = function_tmpdir / "ws"
+    for base_folder, test_info in tests.items():
+        print(f"RUNNING TEST: {base_folder}")
+        data_path = os.path.join(data_path_base, base_folder, test_info["base_sim_dir"])
+        # copy example data into working directory
+        base_model_folder = os.path.join(ws, f"{base_folder}_base")
+        test_model_folder = os.path.join(ws, f"{base_folder}_test")
+        shutil.copytree(data_path, base_model_folder)
+        # load example
+        sim = flopy.mf6.MFSimulation.load(sim_ws=base_model_folder)
+        # get model instance
+        gwf = sim.get_model("gwf_sto01")
+        # update dis delr and delc
+        gwf.dis.delr = dis_delr
+        gwf.dis.delc = dis_delc
+        # update ic strt
+        gwf.ic.strt.set_data(ic_strt)
+        # change simulation path
+        sim.set_sim_path(test_model_folder)
+        # write example simulation to reset path
+        sim.write_simulation()
+
+        # compare generated files
+        gen_files = [
+            f
+            for f in os.listdir(test_model_folder)
+            if os.path.isfile(os.path.join(test_model_folder, f))
+        ]
+        base_files = [
+            f
+            for f in os.listdir(base_model_folder)
+            if os.path.isfile(os.path.join(base_model_folder, f))
+        ]
+        assert len(gen_files) == len(base_files)
+        for f in base_files:
+            print(f"cmp => {f}")
+            base = os.path.join(base_model_folder, f)
+            gen = os.path.join(test_model_folder, f)
+            if f != test_info["netcdf_output_file"]:
+                # "gwf_sto01.dis.ncf":   # TODO wkt string missing on write?
+                with open(base, "r") as file1, open(gen, "r") as file2:
+                    # Skip first line
+                    next(file1)
+                    next(file2)
+
+                    for line1, line2 in zip(file1, file2):
+                        assert line1.lower() == line2.lower()
+            else:
+                compare_netcdf(base, gen, update=update)
 
 
 @pytest.mark.regression
@@ -236,8 +338,10 @@ def test_create_gwfsto01(function_tmpdir, example_data_path):
         zthick = [top - botm[0], botm[0] - botm[1], botm[1] - botm[2]]
         elevs = [top] + botm
 
+        kwargs = {}
+        kwargs["crs"] = "EPSG:26918"
         gwf = flopy.mf6.ModflowGwf(
-            sim, modelname=name, newtonoptions=newtonoptions, save_flows=True
+            sim, modelname=name, newtonoptions=newtonoptions, save_flows=True, **kwargs
         )
 
         # create iterative model solution and register the gwf model with it
@@ -334,7 +438,7 @@ def test_create_gwfsto01(function_tmpdir, example_data_path):
             for f in os.listdir(base_model_folder)
             if os.path.isfile(os.path.join(base_model_folder, f))
         ]
-        # assert len(gen_files) == len(base_files)
+        assert len(gen_files) == len(base_files)
         for f in base_files:
             print(f"cmp => {f}")
             base = os.path.join(base_model_folder, f)
@@ -416,6 +520,18 @@ def test_gwfsto01(function_tmpdir, example_data_path):
 
     sy = np.full((nlay, nrow, ncol), 0)
 
+    delr_longname = "spacing along a row"
+    delc_longname = "spacing along a column"
+    top_longname = "cell top elevation"
+    botm_longname = "cell bottom elevation"
+    icelltype_longname = "confined or convertible indicator"
+    k_longname = "hydraulic conductivity (L/T)"
+    k33_longname = "hydraulic conductivity of third ellipsoid axis (L/T)"
+    iconvert_longname = "convertible indicator"
+    ss_longname = "specific storage"
+    sy_longname = "specific yield"
+    strt_longname = "starting head"
+
     ws = function_tmpdir / "ws"
     for base_folder, test_info in tests.items():
         print(f"RUNNING TEST: {base_folder}")
@@ -435,6 +551,7 @@ def test_gwfsto01(function_tmpdir, example_data_path):
             nlay=nlay,
             nrow=nrow,
             ncol=ncol,
+            crs="EPSG:26918",
         )
 
         ds = create_dataset(
@@ -446,23 +563,29 @@ def test_gwfsto01(function_tmpdir, example_data_path):
         )
 
         # add dis arrays
-        ds.create_array("dis", "delc", dis.delc, ["nrow"])
-        ds.create_array("dis", "delr", dis.delr, ["ncol"])
-        ds.create_array("dis", "top", dis.top, ["nrow", "ncol"])
-        ds.create_array("dis", "botm", dis.botm, ["nlay", "nrow", "ncol"])
+        ds.create_array("dis", "delc", dis.delc, ["nrow"], delc_longname)
+        ds.create_array("dis", "delr", dis.delr, ["ncol"], delr_longname)
+        ds.create_array("dis", "top", dis.top, ["nrow", "ncol"], top_longname)
+        ds.create_array(
+            "dis", "botm", dis.botm, ["nlay", "nrow", "ncol"], botm_longname
+        )
 
         # add ic array
-        ds.create_array("ic", "strt", strt, ["nlay", "nrow", "ncol"])
+        ds.create_array("ic", "strt", strt, ["nlay", "nrow", "ncol"], strt_longname)
 
         # add npf arrays
-        ds.create_array("npf", "icelltype", icelltype, ["nlay", "nrow", "ncol"])
-        ds.create_array("npf", "k", k, ["nlay", "nrow", "ncol"])
-        ds.create_array("npf", "k33", k33, ["nlay", "nrow", "ncol"])
+        ds.create_array(
+            "npf", "icelltype", icelltype, ["nlay", "nrow", "ncol"], icelltype_longname
+        )
+        ds.create_array("npf", "k", k, ["nlay", "nrow", "ncol"], k_longname)
+        ds.create_array("npf", "k33", k33, ["nlay", "nrow", "ncol"], k33_longname)
 
-        # add sto array
-        ds.create_array("sto", "iconvert", iconvert, ["nlay", "nrow", "ncol"])
-        ds.create_array("sto", "ss", ss, ["nlay", "nrow", "ncol"])
-        ds.create_array("sto", "sy", sy, ["nlay", "nrow", "ncol"])
+        # add sto arrays
+        ds.create_array(
+            "sto", "iconvert", iconvert, ["nlay", "nrow", "ncol"], iconvert_longname
+        )
+        ds.create_array("sto", "ss", ss, ["nlay", "nrow", "ncol"], ss_longname)
+        ds.create_array("sto", "sy", sy, ["nlay", "nrow", "ncol"], sy_longname)
 
         # write to netcdf
         ds.write(test_model_folder)
@@ -509,7 +632,7 @@ def test_load_disv01b(function_tmpdir, example_data_path):
             for f in os.listdir(base_model_folder)
             if os.path.isfile(os.path.join(base_model_folder, f))
         ]
-        # assert len(gen_files) == len(base_files)
+        assert len(gen_files) == len(base_files)
         for f in base_files:
             print(f"cmp => {f}")
             base = os.path.join(base_model_folder, f)
@@ -524,6 +647,96 @@ def test_load_disv01b(function_tmpdir, example_data_path):
                         assert line1.lower() == line2.lower()
             else:
                 compare_netcdf(base, gen)
+
+
+@pytest.mark.regression
+def test_update_disv01b(function_tmpdir, example_data_path):
+    data_path_base = example_data_path / "mf6" / "netcdf"
+    tests = {
+        "test_gwf_disv01b": {
+            "base_sim_dir": "disv01b",
+            "netcdf_output_file": "disv01b.in.nc",
+        },
+    }
+
+    nlay, nrow, ncol = 3, 3, 3
+    ncpl = nrow * ncol
+    strt = np.full((nlay, ncpl), 0.999)
+
+    idomain = np.array(
+        [
+            [1, 0, 0, 0, 1, 1, 1, 1, 1],
+            [1, 1, 1, 0, 0, 0, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1, 0, 0, 0],
+        ]
+    )
+
+    botm = [
+        [-15.0, -15.0, -15.0, -15.0, -15.0, -15.0, -15.0, -15.0, -15.0],
+        [-25.0, -25.0, -25.0, -25.0, -25.0, -25.0, -25.0, -25.0, -25.0],
+        [-35.0, -35.0, -35.0, -35.0, -35.0, -35.0, -35.0, -35.0, -35.0],
+    ]
+
+    update = {
+        "disv_idomain_l1": idomain[0],
+        "disv_idomain_l2": idomain[1],
+        "disv_idomain_l3": idomain[2],
+        "disv_botm_l1": botm[0],
+        "disv_botm_l2": botm[1],
+        "disv_botm_l3": botm[2],
+        "ic_strt_l1": strt[0],
+        "ic_strt_l2": strt[1],
+        "ic_strt_l3": strt[2],
+    }
+
+    ws = function_tmpdir / "ws"
+    for base_folder, test_info in tests.items():
+        print(f"RUNNING TEST: {base_folder}")
+        data_path = os.path.join(data_path_base, base_folder, test_info["base_sim_dir"])
+        # copy example data into working directory
+        base_model_folder = os.path.join(ws, f"{base_folder}_base")
+        test_model_folder = os.path.join(ws, f"{base_folder}_test")
+        shutil.copytree(data_path, base_model_folder)
+        # load example
+        sim = flopy.mf6.MFSimulation.load(sim_ws=base_model_folder)
+        # get model instance
+        gwf = sim.get_model("disv01b")
+        # update disv idomain and botm
+        gwf.disv.idomain = idomain
+        gwf.disv.botm.set_data(botm)
+        # update ic strt
+        gwf.ic.strt.set_data(strt)
+        # change simulation path
+        sim.set_sim_path(test_model_folder)
+        # write example simulation to reset path
+        sim.write_simulation()
+
+        # compare generated files
+        gen_files = [
+            f
+            for f in os.listdir(test_model_folder)
+            if os.path.isfile(os.path.join(test_model_folder, f))
+        ]
+        base_files = [
+            f
+            for f in os.listdir(base_model_folder)
+            if os.path.isfile(os.path.join(base_model_folder, f))
+        ]
+        assert len(gen_files) == len(base_files)
+        for f in base_files:
+            print(f"cmp => {f}")
+            base = os.path.join(base_model_folder, f)
+            gen = os.path.join(test_model_folder, f)
+            if f != test_info["netcdf_output_file"]:
+                with open(base, "r") as file1, open(gen, "r") as file2:
+                    # Skip first line
+                    next(file1)
+                    next(file2)
+
+                    for line1, line2 in zip(file1, file2):
+                        assert line1.lower() == line2.lower()
+            else:
+                compare_netcdf(base, gen, update=update)
 
 
 @pytest.mark.regression
@@ -569,7 +782,9 @@ def test_create_disv01b(function_tmpdir, example_data_path):
             sim_ws=ws,
         )
         tdis = flopy.mf6.ModflowTdis(sim, start_date_time="2041-01-01t00:00:00-05:00")
-        gwf = flopy.mf6.ModflowGwf(sim, modelname=name)
+        kwargs = {}
+        kwargs["crs"] = "EPSG:26918"
+        gwf = flopy.mf6.ModflowGwf(sim, modelname=name, **kwargs)
         ims = flopy.mf6.ModflowIms(sim, print_option="SUMMARY")
         disv = flopy.mf6.ModflowGwfdisv(gwf, **disvkwargs)
         ic = flopy.mf6.ModflowGwfic(gwf, strt=0.0)
@@ -596,7 +811,7 @@ def test_create_disv01b(function_tmpdir, example_data_path):
             for f in os.listdir(base_model_folder)
             if os.path.isfile(os.path.join(base_model_folder, f))
         ]
-        # assert len(gen_files) == len(base_files)
+        assert len(gen_files) == len(base_files)
         for f in base_files:
             print(f"cmp => {f}")
             base = os.path.join(base_model_folder, f)
@@ -624,9 +839,7 @@ def test_disv01b(function_tmpdir, example_data_path):
         },
     }
 
-    nlay = 3
-    nrow = 3
-    ncol = 3
+    nlay, nrow, ncol = 3, 3, 3
     ncpl = nrow * ncol
     # delr = 10.0
     # delc = 10.0
@@ -687,6 +900,13 @@ def test_disv01b(function_tmpdir, example_data_path):
     # ic
     strt = np.full((nlay, ncpl), 0.0)
 
+    top_longname = "model top elevation"
+    botm_longname = "model bottom elevation"
+    idomain_longname = "idomain existence array"
+    icelltype_longname = "confined or convertible indicator"
+    k_longname = "hydraulic conductivity (L/T)"
+    strt_longname = "starting head"
+
     ws = function_tmpdir / "ws"
     for base_folder, test_info in tests.items():
         print(f"RUNNING TEST: {base_folder}")
@@ -706,6 +926,7 @@ def test_disv01b(function_tmpdir, example_data_path):
             botm=botm,
             nlay=nlay,
             ncpl=ncpl,
+            crs="EPSG:26918",
         )
 
         # create dataset
@@ -718,16 +939,20 @@ def test_disv01b(function_tmpdir, example_data_path):
         )
 
         # add dis arrays
-        ds.create_array("disv", "top", disv.top, ["ncpl"])
-        ds.create_array("disv", "botm", disv.botm, ["nlay", "ncpl"])
-        ds.create_array("disv", "idomain", disv.idomain, ["nlay", "ncpl"])
+        ds.create_array("disv", "top", disv.top, ["ncpl"], top_longname)
+        ds.create_array("disv", "botm", disv.botm, ["nlay", "ncpl"], botm_longname)
+        ds.create_array(
+            "disv", "idomain", disv.idomain, ["nlay", "ncpl"], idomain_longname
+        )
 
         # add npf arrays
-        ds.create_array("npf", "icelltype", icelltype, ["nlay", "ncpl"])
-        ds.create_array("npf", "k", k, ["nlay", "ncpl"])
+        ds.create_array(
+            "npf", "icelltype", icelltype, ["nlay", "ncpl"], icelltype_longname
+        )
+        ds.create_array("npf", "k", k, ["nlay", "ncpl"], k_longname)
 
         # add ic arrays
-        ds.create_array("ic", "strt", strt, ["nlay", "ncpl"])
+        ds.create_array("ic", "strt", strt, ["nlay", "ncpl"], strt_longname)
 
         # write to netcdf
         ds.write(test_model_folder)

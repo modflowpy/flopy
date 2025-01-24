@@ -1089,7 +1089,6 @@ class MFDataStructure:
             or "nodes" in data_item.shape
             or len(data_item.layer_dims) > 1
         )
-        # TODO: only gwf, gwt, gwe models NETCDF-DEV
         self.netcdf = (
             ("ncol" in data_item.shape
             or "nrow" in data_item.shape

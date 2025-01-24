@@ -1613,21 +1613,20 @@ class MFArray(MFMultiDimVar):
         return axes
 
     def _set_storage_netcdf(self, nc_dataset, create=False):
-        storage = self._get_storage_obj()
-        package_dim = self.data_dimensions.package_dim
-        m = package_dim.model_dim[0].model_name
-        # TODO: fix, this won't work for multi-packages #NETCDF-DEV
-        p = self.structure.get_package()
-        n = self.structure.name.lower()
-        input_tag = f"{m}/{p}/{n}".lower()
-
         if create:
             # add array to netcdf dataset
-            data = self._get_data()
-            nc_dataset.create_array(p, n, data, self.structure.shape)
+            # TODO: fix, this won't work for multi-packages #NETCDF-DEV
+            nc_dataset.create_array(
+                self.structure.get_package(),
+                self.structure.name.lower(),
+                self._get_data(),
+                self.structure.shape,
+                self.structure.longname,
+            )
 
+        storage = self._get_storage_obj()
         storage._set_storage_netcdf(
-            nc_dataset, input_tag, self.structure.layered, storage.layer_storage.get_total_size() - 1
+            nc_dataset, self.structure.layered, storage.layer_storage.get_total_size() - 1
         )
 
 
