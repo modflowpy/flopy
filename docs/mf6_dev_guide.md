@@ -15,36 +15,26 @@ This file provides an overview of how FloPy's MODFLOW 6 module `flopy.mf6` works
 
 ## Code generation
 
-MODFLOW 6 describes its input specification with definition files. These are currently a custom text-based format. Definition files have suffix `.dfn` by convention.
+MODFLOW 6 describes its input specification with definition (DFN) files.
 
-We plan to move soon to TOML definition files. More on this below.
+Definition files describe components (e.g. simulations, models, packages) in the MODFLOW 6 input hierarchy. Definition files are used to generate both source code and documentation.
 
-Definition files describe components (e.g. simulations, models, packages) supported by MODFLOW 6, and are used to generate both source code and documentation.
-
-FloPy has two scripts that can be used to generate a MODFLOW 6 compatibility layer:
+FloPy can generate a MODFLOW 6 compatibility layer for itself, given a set of definition files:
 
 - `flopy/mf6/utils/createpackages.py`: assumes definition files are in `flopy/mf6/data/dfn`
 - `flopy/mf6/utils/generate_classes.py`: downloads DFNs then runs `createpackages.py`
 
-The latter is typically used with e.g. `python -m flopy.mf6.utils.generate_classes --ref develop`.
+For instance, to sync with DFNs from the MODFLOW 6 develop branch:
 
-Generated files are created in `flopy/mf6/modflow/` and contain interface classes, one file/class per input component. These can be used to initialize and access model/package data as well as the input specification itself.
+```shell
+python -m flopy.mf6.utils.generate_classes --ref develop --no-backup
+```
+
+Generated files are created in `flopy/mf6/modflow/`.
+
+The code generation utility downloads DFN files, loads them, and uses Jinja to generate corresponding source files. A definition file typically maps 1-1 to a source file and component class, but 1-many is also possible (e.g. a model definition file yields a model class/file and namefile package class/file).
 
 **Note**: Code generation requires a few extra dependencies, grouped in the `codegen` optional dependency group: `Jinja2` and `modflow-devtools`.
-
-**Note**: Code generation scripts previously used `flopy/mf6/data/mfstructure.py` to read and represent definition files, and wrote Python by hand. They now use the `flopy.mf6.utils.codegen` module, which uses Jinja2.
-
-**Note**: Each component's input definition is currently reproduced almost verbatim in the `dfn` class attribute. Currently, `flopy/mf6/data/mfstructure.py` is used to introspect the input specification using the `dfn` attribute. This can eventually be removed in favor of direct introspection.
-
-The `flopy.mf6.utils.codegen` module is small and meant to be easy to iterate on. Its purpose is to load and convert input definition files to Python source code by way of an intermediate representation.
-
-As such, there are 2 abstractions: `Dfn` and `Context`. A `Dfn` corresponds to a definition file, and knows how to load itself from one. A `Context` corresponds to a Python source file, which it is fed to a Jinja template to create. ('Context' is a term borrowed from Jinja.) `Dfn` and `Context` typically map 1-1, but can be 1-many (e.g. a model definition file yields a model class and namefile package class).
-
-Both `Dfn` and `Context` are structured representations of an input component/block/variable hierarchy. For now, we have to infer this structure from a flat representation in the definition file. This is a bit like [object-relational impedance mismatch](https://en.wikipedia.org/wiki/Object%E2%80%93relational_impedance_mismatch) and seriously complicates the `Dfn` load routines, but happily this is temporary &mdash; once we move to TOML and define input components in structured form, we can simply load the nested variable hierarchy directly from the definition file.
-
-For now we use a data structure from the `boltons` library to maintain an unstructured (flat) map of variables before structural parsing, where variables can have duplicate names.
-
-Some quirks of the legacy framework are handled in a "shim" of Jinja filters that transform the template context, as well as some macros. These can ideally be removed as refactoring goes on. The templates should also get simpler over time.
 
 ## Input specification
 

@@ -6,10 +6,12 @@ from typing import (
     TypedDict,
 )
 
+from modflow_devtools.dfn import Dfn
 
-class Context(TypedDict):
+
+class Component(TypedDict):
     """
-    An input context. Each of these is specified by a definition file
+    MODFLOW 6 input component. Specified by a definition file
     and becomes a generated class. A definition file may specify more
     than one input context (e.g. model DFNs yield a model class and a
     package class).
@@ -35,7 +37,7 @@ class Context(TypedDict):
         r: Optional[str]
 
         @staticmethod
-        def from_dfn(dfn: dict) -> List["Context.Name"]:
+        def from_dfn(dfn: dict) -> List["Component.Name"]:
             """
             Returns a list of context names this definition produces.
             An input definition may produce one or more input contexts.
@@ -47,13 +49,13 @@ class Context(TypedDict):
             if name[1] == "nam":
                 if name[0] == "sim":
                     return [
-                        Context.Name(None, name[1]),  # nam pkg
-                        Context.Name(*name),  # simulation
+                        Component.Name(None, name[1]),  # nam pkg
+                        Component.Name(*name),  # simulation
                     ]
                 else:
                     return [
-                        Context.Name(*name),  # nam pkg
-                        Context.Name(name[0], None),  # model
+                        Component.Name(*name),  # nam pkg
+                        Component.Name(name[0], None),  # model
                     ]
             elif name in [
                 ("gwf", "mvr"),
@@ -62,15 +64,15 @@ class Context(TypedDict):
             ]:
                 # TODO: deduplicate mfmvr.py/mfgwfmvr.py etc and remove special cases
                 return [
-                    Context.Name(*name),
-                    Context.Name(None, name[1]),
+                    Component.Name(*name),
+                    Component.Name(None, name[1]),
                 ]
-            return [Context.Name(*name)]
+            return [Component.Name(*name)]
 
     name: Name
 
     @staticmethod
-    def from_dfn(dfn: dict) -> Iterator["Context"]:
+    def from_dfn(dfn: Dfn) -> Iterator["Component"]:
         """
         Extract context(s) from an input definition.
         Each definition yields one or more contexts.
@@ -84,8 +86,8 @@ class Context(TypedDict):
                     vars_[name] = var
             return vars_
 
-        for name in Context.Name.from_dfn(dfn):
-            dfn_ = dfn.copy()
-            dfn_.pop("name", None)
-            vars_ = get_vars(dfn_)
-            yield Context(name=name, vars=vars_, **dfn_)
+        for name in Component.Name.from_dfn(dfn):
+            spec = dfn.copy()
+            spec.pop("name", None)
+            vars_ = get_vars(spec)
+            yield Component(name=name, vars=vars_, **spec)

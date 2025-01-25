@@ -7,7 +7,7 @@ from typing import Any, List, Optional
 from boltons.iterutils import remap
 from jinja2 import pass_context
 
-from flopy.mf6.utils.codegen.context import Context
+from flopy.mf6.utils.codegen.component import Component
 
 
 def try_get_enum_value(v: Any) -> Any:
@@ -20,7 +20,7 @@ def try_get_enum_value(v: Any) -> Any:
 
 class Filters:
 
-    def base(ctx_name: Context.Name) -> str:
+    def base(ctx_name: Component.Name) -> str:
         """Base class from which the input context should inherit."""
         if ctx_name == ("sim", "nam"):
             return "MFSimulationBase"
@@ -28,7 +28,7 @@ class Filters:
             return "MFModel"
         return "MFPackage"
 
-    def title(ctx_name: Context.Name) -> str:
+    def title(ctx_name: Component.Name) -> str:
         """
         The input context's unique title. This is not
         identical to `f"{l}{r}` in some cases, but it
@@ -48,12 +48,12 @@ class Filters:
             return r
         return l + r
 
-    def package_abbr(ctx_name: Context.Name) -> str:
+    def package_abbr(ctx_name: Component.Name) -> str:
         if ctx_name[0] in ["sim", "sln", "exg", None]:
             return ctx_name[1]
         return "".join(ctx_name)
 
-    def description(ctx_name: Context.Name) -> str:
+    def description(ctx_name: Component.Name) -> str:
         """A description of the input context."""
         l, r = ctx_name
         base = Filters.base(ctx_name)
@@ -69,20 +69,20 @@ class Filters:
                 " 6 model objects."
             )
 
-    def prefix(ctx_name: Context.Name) -> str:
+    def prefix(ctx_name: Component.Name) -> str:
         """The input context class name prefix, e.g. 'MF' or 'Modflow'."""
         base = Filters.base(ctx_name)
         return "MF" if base == "MFSimulationBase" else "Modflow"
 
-    def dfn_file_name(ctx_name: Context.Name) -> str:
+    def dfn_file_name(ctx_name: Component.Name) -> str:
         if ctx_name[0] == "exg":
             return f"{'-'.join(ctx_name)}.dfn"
         return f"{ctx_name[0] or 'sim'}-{ctx_name[1]}.dfn"
 
     @pass_context
-    def parent(ctx, ctx_name: Context.Name) -> str:
+    def parent(ctx, ctx_name: Component.Name) -> str:
         """The input context's parent context type, if it can have a parent."""
-        subpkg = ctx.get("subpackage", None)
+        subpkg = ctx.get("sub", None)
         if subpkg:
             return subpkg["parent"]
         if ctx_name == ("sim", "nam"):
@@ -96,7 +96,7 @@ class Filters:
         return "model"
 
     @pass_context
-    def skip_init(ctx, ctx_name: Context.Name) -> List[str]:
+    def skip_init(ctx, ctx_name: Component.Name) -> List[str]:
         """Variables to skip in input context's `__init__` method."""
         base = Filters.base(ctx_name)
         if base == "MFSimulationBase":
@@ -221,7 +221,7 @@ class Filters:
             var_type = var["type"]
             var_shape = var.get("shape", None)
             var_block = var.get("block", None)
-            var_subpkg = var.get("subpackage", None)
+            var_subpkg = var.get("sub", None)
 
             if (
                 (var_type in _MF6_SCALARS and not var_shape)
@@ -283,29 +283,51 @@ class Filters:
 
         attrs = list(filter(None, [_attr(v) for v in vars_.values()]))
 
+        def _to_list(var: dict) -> list[str]:
+            default = var.get("default", None)
+            if default:
+                del var["default"]
+                var["default_value"] = default
+            skip = [
+                "fields",
+                "choices",
+                "items",
+                "description"
+            ]
+            return [f"{k} {str(v).lower()}" for k, v in var.items() if k not in skip]
+
+
+        def _get_all_vars(d: dict) -> dict[str, dict]:
+            vars_ = dict()
+            def visit(p, k, v):
+                if isinstance(v, dict) and "type" in v:
+                    vars_[k] = v
+                return True
+            remap(d, visit)
+            return vars_
+
         dfn_file_name = Filters.dfn_file_name(name)
-        dfn_skip = [
-            "range",
-            "lipsum",
-            "cycler",
-            "joiner",
-            "dict",
-            "namespace",
-            "macros",
-            "name",
-            "vars",
-            "description",
-            "title",
-            "parent"
-        ]
-        dfn = {k: v for k, v in ctx.items() if k not in dfn_skip}
+        dfn_header = ["header"]
+        if ctx.get("multi", None):
+            dfn_header.append("multi-package")
+        if ctx.get("advanced", None):
+            dfn_header.append("package-type advanced-stress-package")
+        if ctx.get("sln", None):
+            dfn_header.append(["solution_package", "*"])
+        legacy_dfn = [dfn_header]
+        legacy_dfn.extend([_to_list(v) for v in _get_all_vars(ctx.get("vars", dict())).values() ])
+        period = ctx.get("period", None)
+        if period and period.get("transient", False):
+            legacy_dfn.append(["block period", "name iper", "type integer",
+            "block_variable true", "in_record true", "tagged false", "shape",
+            "valid", "reader urword", "optional false"])
         if base == "MFPackage":
             attrs.extend(
                 [
                     f"package_abbr = '{Filters.package_abbr(name)}'",
                     f"_package_type = '{name[1]}'",
                     f"dfn_file_name = '{dfn_file_name}'",
-                    f"dfn = {pformat(dfn, indent=10, width=sys.maxsize)}"
+                    f"dfn = {pformat(legacy_dfn, indent=10, width=sys.maxsize)}"
                 ]
             )
 
@@ -356,7 +378,7 @@ class Filters:
                             f"self.{name} = self.name_file.{name}"
                         )
 
-                    subpkg = var.get("subpackage", None)
+                    subpkg = var.get("sub", None)
                     if subpkg and subpkg["key"] not in refs:
                         refs[subpkg["key"]] = subpkg
                         args = f"'{subpkg['abbr']}', {subpkg['param']}"
@@ -387,7 +409,7 @@ class Filters:
                             f"self.{name} = self.name_file.{name}"
                         )
 
-                    subpkg = var.get("subpackage", None)
+                    subpkg = var.get("sub", None)
                     if subpkg and subpkg["key"] not in refs:
                         refs[subpkg["key"]] = subpkg
                         args = f"'{subpkg['abbr']}', {subpkg['param']}"
@@ -397,7 +419,7 @@ class Filters:
             elif base == "MFPackage":
 
                 def _should_build(var: dict) -> bool:
-                    subpkg = var.get("subpackage", None)
+                    subpkg = var.get("sub", None)
                     if subpkg and ctx_name != (None, "nam"):
                         return False
                     return var["name"] not in [
@@ -425,7 +447,7 @@ class Filters:
                     if name in kwlist:
                         name = f"{name}_"
 
-                    subpkg = var.get("subpackage", None)
+                    subpkg = var.get("sub", None)
                     if _should_build(var):
                         if subpkg and ctx["name"] == (None, "nam"):
                             stmts.append(

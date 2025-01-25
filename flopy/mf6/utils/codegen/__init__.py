@@ -51,10 +51,10 @@ def make_init(dfns: dict, outdir: PathLike, verbose: bool = False):
     env = _get_template_env()
     outdir = Path(outdir).expanduser().absolute()
 
-    from flopy.mf6.utils.codegen.context import Context
+    from flopy.mf6.utils.codegen.context import Component
 
     contexts = list(
-        chain.from_iterable(Context.from_dfn(dfn) for dfn in dfns.values())
+        chain.from_iterable(Component.from_dfn(dfn) for dfn in dfns.values())
     )
     target_name = "__init__.py"
     target_path = outdir / target_name
@@ -71,7 +71,7 @@ def make_targets(dfn, outdir: PathLike, verbose: bool = False):
     env = _get_template_env()
     outdir = Path(outdir).expanduser().absolute()
 
-    from flopy.mf6.utils.codegen.context import Context
+    from flopy.mf6.utils.codegen.context import Component
     from flopy.mf6.utils.codegen.filters import Filters
 
     def _get_template_name(ctx_name) -> str:
@@ -88,7 +88,7 @@ def make_targets(dfn, outdir: PathLike, verbose: bool = False):
         else:
             raise NotImplementedError(f"Unknown base class: {base}")
         
-    for context in Context.from_dfn(dfn):
+    for context in Component.from_dfn(dfn):
         name = context["name"]
         target_path = outdir / f"mf{Filters.title(name)}.py"
         template = env.get_template(_get_template_name(name))
