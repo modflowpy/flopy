@@ -12,13 +12,13 @@ class ModelTime:
 
     Parameters
     ----------
-    perlen : list, np.ndarray
+    perlen : ArrayLike[float]
         list or numpy array of stress-period lengths
-    nstp : list, np.ndarray
+    nstp : ArrayLike[int]
         list or numpy array of number of time-steps per stress period
     tsmult : list, np.ndarray
         list or numpy array of timestep mult information
-    time_units : int or str
+    time_units : ArrayLike[float] or None
         string or pre-mf6 integer representation (ITMUNI) of time units
     start_datetime : various objects
         user supplied datetime representation. Please see the
