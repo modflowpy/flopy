@@ -3410,12 +3410,14 @@ class Mf6Splitter:
 
         Parameters
         ----------
-        mname0 :
-        mname1 :
+        mname0 : str
+            model name of first model in exchange
+        mname1 : str
+            model name of second model in exchange
 
         Returns
         -------
-
+            None
         """
         exchange_classes = {
             "gwfgwt": modflow.ModflowGwfgwt,
@@ -3575,7 +3577,7 @@ class Mf6Splitter:
 
         gwf_base = model_names[0]
         model_labels = [
-            f"{i :{self._fdigits}d}" for i in sorted(np.unique(array))
+            f"{i :0{self._fdigits}d}" for i in sorted(np.unique(array))
         ]
 
         self._multimodel_exchange_gwf_names = {
