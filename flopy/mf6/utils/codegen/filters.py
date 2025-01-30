@@ -4,13 +4,13 @@ from keyword import kwlist
 from pprint import pformat
 from typing import Any, List, Optional
 
-from boltons.iterutils import remap
+from boltons.iterutils import remap, default_enter
 from jinja2 import pass_context
 
-from flopy.mf6.utils.codegen.component import Component
+from flopy.mf6.utils.codegen.component import ComponentDescriptor
 
 
-def try_get_enum_value(v: Any) -> Any:
+def _try_get_enum_value(v: Any) -> Any:
     """
     Get the enum's value if the object is an instance
     of an enumeration, otherwise return it unaltered.
@@ -18,26 +18,41 @@ def try_get_enum_value(v: Any) -> Any:
     return v.value if isinstance(v, Enum) else v
 
 
+def _get_vars(d: dict, all_vars=False) -> dict[str, dict]:
+    vars_ = dict()
+    def visit(p, k, v):
+        if isinstance(v, dict) and "type" in v:
+            vars_[k] = v
+        return True
+    def enter(p, k, v):
+        if not all_vars and isinstance(v, dict) and "type" in v:
+            return (v, False)
+        return default_enter(p, k, v)
+
+    remap(d, enter=enter, visit=visit)
+    return vars_
+
+
 class Filters:
 
-    def base(ctx_name: Component.Name) -> str:
+    def base(component_name: tuple[str, str]) -> str:
         """Base class from which the input context should inherit."""
-        if ctx_name == ("sim", "nam"):
+        if component_name == ("sim", "nam"):
             return "MFSimulationBase"
-        if ctx_name[1] is None:
+        if component_name[1] is None:
             return "MFModel"
         return "MFPackage"
 
-    def title(ctx_name: Component.Name) -> str:
+    def title(component_name: tuple[str, str]) -> str:
         """
         The input context's unique title. This is not
         identical to `f"{l}{r}` in some cases, but it
         remains unique. The title is substituted into
         the file name and class name.
         """
-        if ctx_name == ("sim", "nam"):
+        if component_name == ("sim", "nam"):
             return "simulation"
-        l, r = ctx_name
+        l, r = component_name
         if l is None:
             return r
         if r is None:
@@ -48,16 +63,16 @@ class Filters:
             return r
         return l + r
 
-    def package_abbr(ctx_name: Component.Name) -> str:
-        if ctx_name[0] in ["sim", "sln", "exg", None]:
-            return ctx_name[1]
-        return "".join(ctx_name)
+    def package_abbr(component_name: tuple[str, str]) -> str:
+        if component_name[0] in ["sim", "sln", "exg", None]:
+            return component_name[1]
+        return "".join(component_name)
 
-    def description(ctx_name: Component.Name) -> str:
+    def description(component_name: tuple[str, str]) -> str:
         """A description of the input context."""
-        l, r = ctx_name
-        base = Filters.base(ctx_name)
-        title = Filters.title(ctx_name).title()
+        l, r = component_name
+        base = Filters.base(component_name)
+        title = Filters.title(component_name).title()
         if base == "MFPackage":
             return f"Modflow{title} defines a {r.upper()} package."
         elif base == "MFModel":
@@ -69,36 +84,35 @@ class Filters:
                 " 6 model objects."
             )
 
-    def prefix(ctx_name: Component.Name) -> str:
+    def prefix(component_name: tuple[str, str]) -> str:
         """The input context class name prefix, e.g. 'MF' or 'Modflow'."""
-        base = Filters.base(ctx_name)
+        base = Filters.base(component_name)
         return "MF" if base == "MFSimulationBase" else "Modflow"
 
-    def dfn_file_name(ctx_name: Component.Name) -> str:
-        if ctx_name[0] == "exg":
-            return f"{'-'.join(ctx_name)}.dfn"
-        return f"{ctx_name[0] or 'sim'}-{ctx_name[1]}.dfn"
+    def dfn_file_name(component_name: tuple[str, str]) -> str:
+        if component_name[0] == "exg":
+            return f"{'-'.join(component_name)}.dfn"
+        return f"{component_name[0] or 'sim'}-{component_name[1]}.dfn"
 
-    @pass_context
-    def parent(ctx, ctx_name: Component.Name) -> str:
+    def parent(dfn: dict, component_name: tuple[str, str]) -> str:
+        # TODO should be no longer needed when parents are explicit in dfns
         """The input context's parent context type, if it can have a parent."""
-        subpkg = ctx.get("sub", None)
+        subpkg = dfn.get("sub", None)
         if subpkg:
             return subpkg["parent"]
-        if ctx_name == ("sim", "nam"):
+        if component_name == ("sim", "nam"):
             return None
         elif (
-            ctx_name[0] is None
-            or ctx_name[1] is None
-            or ctx_name[0] in ["sim", "exg", "sln"]
+            component_name[0] is None
+            or component_name[1] is None
+            or component_name[0] in ["sim", "exg", "sln"]
         ):
             return "simulation"
         return "model"
 
-    @pass_context
-    def skip_init(ctx, ctx_name: Component.Name) -> List[str]:
+    def skip_init(component_name: tuple[str, str]) -> List[str]:
         """Variables to skip in input context's `__init__` method."""
-        base = Filters.base(ctx_name)
+        base = Filters.base(component_name)
         if base == "MFSimulationBase":
             return [
                 "tdis6",
@@ -110,9 +124,9 @@ class Filters:
         elif base == "MFModel":
             return ["packages", "export_netcdf", "nc_filerecord"]
         else:
-            if ctx_name[1] == "nam":
+            if component_name[1] == "nam":
                 return ["export_netcdf", "nc_filerecord"]
-            elif ctx_name == ("utl", "ts"):
+            elif component_name == ("utl", "ts"):
                 return ["method", "interpolation_method_single", "sfac"]
             return []
 
@@ -204,8 +218,10 @@ class Filters:
             return _default
         return None
 
-    @pass_context
-    def attrs(ctx, vars_) -> List[str]:
+    def variables(dfn: dict) -> List[str]:
+        return _get_vars(dfn)
+
+    def attrs(dfn: dict, component_name: tuple[str, str]) -> List[str]:
         """
         Map the context's input variables to corresponding class attributes,
         where applicable. TODO: this should get much simpler if we can drop
@@ -213,23 +229,29 @@ class Filters:
         """
         from modflow_devtools.dfn import _MF6_SCALARS
 
-        name = ctx["name"]
-        base = Filters.base(name)
+        component_base = Filters.base(component_name)
+        component_vars = {}
+        blocks = {n: d for n, d in dfn.items() if isinstance(d, dict) and n not in ["fkeys"]}
+        for block_name, block in blocks.items():
+            block_vars = _get_vars(block)
+            for var in block_vars.values():
+                var["block"] = block_name
+                component_vars[var["name"]] = var
 
         def _attr(var: dict) -> Optional[str]:
             var_name = var["name"]
             var_type = var["type"]
+            var_block = var["block"]
             var_shape = var.get("shape", None)
-            var_block = var.get("block", None)
-            var_subpkg = var.get("sub", None)
+            var_subpkg = var.get("ref", None)
 
             if (
                 (var_type in _MF6_SCALARS and not var_shape)
                 or var_name in ["cvoptions", "output"]
-                or (name[1] == "dis" and var_name == "packagedata")
+                or (component_name[1] == "dis" and var_name == "packagedata")
                 or (
                     var_name != "packages"
-                    and (name[0] is not None and name[1] == "nam")
+                    and (component_name[0] is not None and component_name[1] == "nam")
                 )
             ):
                 return None
@@ -240,40 +262,37 @@ class Filters:
             )
             is_composite = var_type in ["list", "record", "union"]
             if is_array or is_composite:
-                if not var_block:
-                    raise ValueError("Need block")
-
                 if not is_array:
                     if var_subpkg:
                         # if the variable is a subpackage reference, use the original key
                         # (which has been replaced already with the referenced variable)
                         args = [
-                            f"'{name[1]}'",
+                            f"'{component_name[1]}'",
                             f"'{var_block}'",
                             f"'{var_subpkg['key']}'",
                         ]
-                        if name[0] is not None and name[0] not in [
+                        if component_name[0] is not None and component_name[0] not in [
                             "sim",
                             "sln",
                             "utl",
                             "exg",
                         ]:
-                            args.insert(0, f"'{name[0]}6'")
+                            args.insert(0, f"'{component_name[0]}6'")
                         return f"{var_subpkg['key']} = ListTemplateGenerator(({', '.join(args)}))"
 
                 def _args():
                     args = [
-                        f"'{name[1]}'",
+                        f"'{component_name[1]}'",
                         f"'{var_block}'",
                         f"'{var_name}'",
                     ]
-                    if name[0] is not None and name[0] not in [
+                    if component_name[0] is not None and component_name[0] not in [
                         "sim",
                         "sln",
                         "utl",
                         "exg",
                     ]:
-                        args.insert(0, f"'{name[0]}6'")
+                        args.insert(0, f"'{component_name[0]}6'")
                     return args
 
                 kind = "array" if is_array else "list"
@@ -281,7 +300,7 @@ class Filters:
 
             return None
 
-        attrs = list(filter(None, [_attr(v) for v in vars_.values()]))
+        attrs = list(filter(None, [_attr(v) for v in component_vars.values()]))
 
         def _to_list(var: dict) -> list[str]:
             default = var.get("default", None)
@@ -296,36 +315,26 @@ class Filters:
             ]
             return [f"{k} {str(v).lower()}" for k, v in var.items() if k not in skip]
 
-
-        def _get_all_vars(d: dict) -> dict[str, dict]:
-            vars_ = dict()
-            def visit(p, k, v):
-                if isinstance(v, dict) and "type" in v:
-                    vars_[k] = v
-                return True
-            remap(d, visit)
-            return vars_
-
-        dfn_file_name = Filters.dfn_file_name(name)
+        dfn_file_name = Filters.dfn_file_name(component_name)
         dfn_header = ["header"]
-        if ctx.get("multi", None):
+        if dfn.get("multi", None):
             dfn_header.append("multi-package")
-        if ctx.get("advanced", None):
+        if dfn.get("advanced", None):
             dfn_header.append("package-type advanced-stress-package")
-        if ctx.get("sln", None):
+        if dfn.get("sln", None):
             dfn_header.append(["solution_package", "*"])
         legacy_dfn = [dfn_header]
-        legacy_dfn.extend([_to_list(v) for v in _get_all_vars(ctx.get("vars", dict())).values() ])
-        period = ctx.get("period", None)
+        legacy_dfn.extend([_to_list(v) for v in _get_vars(dfn, all_vars=True).values() ])
+        period = dfn.get("period", None)
         if period and period.get("transient", False):
             legacy_dfn.append(["block period", "name iper", "type integer",
             "block_variable true", "in_record true", "tagged false", "shape",
             "valid", "reader urword", "optional false"])
-        if base == "MFPackage":
+        if component_base == "MFPackage":
             attrs.extend(
                 [
-                    f"package_abbr = '{Filters.package_abbr(name)}'",
-                    f"_package_type = '{name[1]}'",
+                    f"package_abbr = '{Filters.package_abbr(component_name)}'",
+                    f"_package_type = '{component_name[1]}'",
                     f"dfn_file_name = '{dfn_file_name}'",
                     f"dfn = {pformat(legacy_dfn, indent=10, width=sys.maxsize)}"
                 ]
@@ -333,25 +342,12 @@ class Filters:
 
         return attrs
     
-    @pass_context
-    def init(ctx, vars_) -> List[str]:
-        """
-        Map the context's input variables to statements in the class'
-        `__init__` method body, if applicable. TODO: consider how we
-        can dispatch as necessary based on a variable's type instead
-        of explicitly choosing among:
-
-        - self.var = var
-        - self.var = self.build_mfdata(...)
-        - self.subppkg_var = self._create_package(...)
-        - ...
-
-        """
-        ctx_name = ctx["name"]
-        base = Filters.base(ctx_name)
+    def init(dfn: dict, component_name: tuple[str, str]) -> List[str]:
+        component_base = Filters.base(component_name)
+        component_vars = _get_vars(dfn)
 
         def _statements() -> Optional[List[str]]:
-            if base == "MFSimulationBase":
+            if component_base == "MFSimulationBase":
 
                 def _should_set(var: dict) -> bool:
                     return var["name"] not in [
@@ -360,32 +356,33 @@ class Filters:
                         "exchanges",
                         "mxiter",
                         "solutiongroup",
-                        "hpc_data",
                     ]
 
                 stmts = []
                 refs = {}
-                for var in vars_.values():
+                for var in component_vars.values():
                     name = var["name"]
                     if name in kwlist:
                         name = f"{name}_"
+
+                    subpkg = var.get("ref", None)
 
                     if _should_set(var):
                         stmts.append(
                             f"self.name_file.{name}.set_data({name})"
                         )
-                        stmts.append(
-                            f"self.{name} = self.name_file.{name}"
-                        )
-
-                    subpkg = var.get("sub", None)
+                        if not subpkg:
+                            stmts.append(
+                                f"self.{name} = self.name_file.{name}"
+                            )
+                    
                     if subpkg and subpkg["key"] not in refs:
                         refs[subpkg["key"]] = subpkg
                         args = f"'{subpkg['abbr']}', {subpkg['param']}"
                         stmts.append(
                             f"self.{subpkg['param']} = self._create_package({args})"
                         )
-            elif base == "MFModel":
+            elif component_base == "MFModel":
 
                 def _should_set(var: dict) -> bool:
                     return var["name"] not in [
@@ -396,7 +393,7 @@ class Filters:
 
                 stmts = []
                 refs = {}
-                for var in vars_.values():
+                for var in component_vars.values():
                     name = var["name"]
                     if name in kwlist:
                         name = f"{name}_"
@@ -409,18 +406,18 @@ class Filters:
                             f"self.{name} = self.name_file.{name}"
                         )
 
-                    subpkg = var.get("sub", None)
+                    subpkg = var.get("ref", None)
                     if subpkg and subpkg["key"] not in refs:
                         refs[subpkg["key"]] = subpkg
                         args = f"'{subpkg['abbr']}', {subpkg['param']}"
                         stmts.append(
                             f"self.{subpkg['param']} = self._create_package({args})"
                         )
-            elif base == "MFPackage":
+            elif component_base == "MFPackage":
 
                 def _should_build(var: dict) -> bool:
-                    subpkg = var.get("sub", None)
-                    if subpkg and ctx_name != (None, "nam"):
+                    subpkg = var.get("ref", None)
+                    if subpkg and component_name != (None, "nam"):
                         return False
                     return var["name"] not in [
                         "simulation",
@@ -442,14 +439,14 @@ class Filters:
 
                 stmts = []
                 refs = {}
-                for var in vars_.values():
+                for var in component_vars.values():
                     name = var["name"]
                     if name in kwlist:
                         name = f"{name}_"
 
-                    subpkg = var.get("sub", None)
+                    subpkg = var.get("ref", None)
                     if _should_build(var):
-                        if subpkg and ctx["name"] == (None, "nam"):
+                        if subpkg and component_name == (None, "nam"):
                             stmts.append(
                                 f"self.{'_' if subpkg else ''}{subpkg['key']} "
                                 f"= self.build_mfdata('{subpkg['key']}', None)"
@@ -467,7 +464,7 @@ class Filters:
                     if (
                         subpkg
                         and subpkg["key"] not in refs
-                        and ctx["name"][1] != "nam"
+                        and component_name[1] != "nam"
                     ):
                         refs[subpkg["key"]] = subpkg
                         stmts.append(
@@ -494,10 +491,6 @@ class Filters:
         Also replace any hyphens with underscores.
         """
         return (f"{v}_" if v in kwlist else v).replace("-", "_")
-
-    def escape_trailing_underscore(v: str) -> str:
-        """If the string has a trailing underscore, escape it."""
-        return f"{v[:-1]}\\\\_" if v.endswith("_") else v
 
     def math(v: str) -> str:
         """Massage latex equations"""
@@ -542,7 +535,7 @@ class Filters:
         passing expression: if it's an enum, get its value; if it's `str`,
         quote it.
         """
-        v = try_get_enum_value(v)
+        v = _try_get_enum_value(v)
         if isinstance(v, str) and v[0] not in ["'", '"']:
             v = f"'{v}'"
         return v

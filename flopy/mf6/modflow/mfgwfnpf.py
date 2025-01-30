@@ -385,3 +385,11 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         self.angle3 = self.build_mfdata("angle3", angle3)
         self.wetdry = self.build_mfdata("wetdry", wetdry)
         self._init_complete = True
+
+
+
+
+
+
+
+

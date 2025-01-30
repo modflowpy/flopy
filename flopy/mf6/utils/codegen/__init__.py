@@ -28,6 +28,7 @@ def _get_template_env():
     env.filters["parent"] = Filters.parent
     env.filters["skip_init"] = Filters.skip_init
     env.filters["package_abbr"] = Filters.package_abbr
+    env.filters["variables"] = Filters.variables
     env.filters["attrs"] = Filters.attrs
     env.filters["init"] = Filters.init
     env.filters["untag"] = Filters.untag
@@ -35,9 +36,6 @@ def _get_template_env():
     env.filters["children"] = Filters.children
     env.filters["default"] = Filters.default
     env.filters["safe_name"] = Filters.safe_name
-    env.filters["escape_trailing_underscore"] = (
-        Filters.escape_trailing_underscore
-    )
     env.filters["value"] = Filters.value
     env.filters["math"] = Filters.math
     env.filters["clean"] = Filters.clean
@@ -51,16 +49,18 @@ def make_init(dfns: dict, outdir: PathLike, verbose: bool = False):
     env = _get_template_env()
     outdir = Path(outdir).expanduser().absolute()
 
-    from flopy.mf6.utils.codegen.context import Component
+    # import here instead of module so we don't
+    # expect optional deps at module init time
+    from flopy.mf6.utils.codegen.component import ComponentDescriptor
 
-    contexts = list(
-        chain.from_iterable(Component.from_dfn(dfn) for dfn in dfns.values())
+    components = list(
+        chain.from_iterable(ComponentDescriptor.from_dfn(dfn) for dfn in dfns.values())
     )
     target_name = "__init__.py"
     target_path = outdir / target_name
     template = env.get_template(f"{target_name}.jinja")
     with open(target_path, "w") as f:
-        f.write(template.render(contexts=contexts))
+        f.write(template.render(components=components))
         if verbose:
             print(f"Wrote {target_path}")
 
@@ -71,29 +71,30 @@ def make_targets(dfn, outdir: PathLike, verbose: bool = False):
     env = _get_template_env()
     outdir = Path(outdir).expanduser().absolute()
 
-    from flopy.mf6.utils.codegen.context import Component
+    # import here instead of module so we don't
+    # expect optional deps at module init time
+    from flopy.mf6.utils.codegen.component import ComponentDescriptor
     from flopy.mf6.utils.codegen.filters import Filters
 
-    def _get_template_name(ctx_name) -> str:
-        """The template file to use."""
-        base = Filters.base(ctx_name)
+    def _get_template_name(component_name) -> str:
+        base = Filters.base(component_name)
         if base == "MFSimulationBase":
             return "simulation.py.jinja"
         elif base == "MFModel":
             return "model.py.jinja"
         elif base == "MFPackage":
-            if ctx_name.l == "exg":
+            if component_name[0] == "exg":
                 return "exchange.py.jinja"
             return "package.py.jinja"
         else:
             raise NotImplementedError(f"Unknown base class: {base}")
         
-    for context in Component.from_dfn(dfn):
-        name = context["name"]
-        target_path = outdir / f"mf{Filters.title(name)}.py"
-        template = env.get_template(_get_template_name(name))
+    for component in ComponentDescriptor.from_dfn(dfn):
+        component_name = component["name"]
+        target_path = outdir / f"mf{Filters.title(component_name)}.py"
+        template = env.get_template(_get_template_name(component_name))
         with open(target_path, "w") as f:
-            f.write(template.render(**context))
+            f.write(template.render(**component))
             if verbose:
                 print(f"Wrote {target_path}")
 
@@ -101,6 +102,8 @@ def make_targets(dfn, outdir: PathLike, verbose: bool = False):
 def make_all(dfndir: Path, outdir: PathLike, verbose: bool = False, version: int = 1):
     """Generate Python source files from the DFN files in the given location."""
 
+    # import here instead of module so we don't
+    # expect optional deps at module init time
     from modflow_devtools.dfn import Dfn
 
     dfns = Dfn.load_all(dfndir, version=version)

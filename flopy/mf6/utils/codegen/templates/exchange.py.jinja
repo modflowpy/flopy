@@ -1,5 +1,5 @@
 {% import 'macros.jinja' as macros %}
-{% set parent = name|parent %}
+{% set parent = dfn|parent(name) %}
 {% set title = (name|title).title() %}
 {% set description = name|description %}
 
@@ -16,10 +16,10 @@ class Modflow{{ title }}(MFPackage):
 
     Parameters
     ----------
-{{ macros.docstrings(vars)|indent(4, first=true) }}
+{{ macros.docstrings(dfn|variables)|indent(4, first=true) }}
     """
 
-    {% for attr in vars|attrs %}
+    {% for attr in dfn|attrs(name) %}
     {{ attr }}
     {% endfor %}
 
@@ -30,7 +30,7 @@ class Modflow{{ title }}(MFPackage):
         exgtype="{{ name[1][:3].upper() }}6-{{ name[1][3:].upper() }}6",
         exgmnamea=None,
         exgmnameb=None,
-{{ macros.init_params(vars, skip=name|skip_init)|indent(8, first=true) }}
+{{ macros.init_params(dfn|variables, skip=name|skip_init)|indent(8, first=true) }}
         filename=None,
         pname=None,
         **kwargs,
@@ -67,7 +67,7 @@ class Modflow{{ title }}(MFPackage):
             GWE Model with the name exgmnameb must correspond to the GWF Model
             with the name gwfmodelname2. 
 
-{{ macros.docstrings(vars)|indent(8, first=true) }}
+{{ macros.docstrings(dfn|variables)|indent(8, first=true) }}
         """
 
         super().__init__(
@@ -84,7 +84,7 @@ class Modflow{{ title }}(MFPackage):
         self.exgmnameb = exgmnameb
         simulation.register_exchange_file(self)
 
-        {% for statement in vars|init %}
+        {% for statement in dfn|init(name) %}
         {{ statement }}
         {% endfor %}
 

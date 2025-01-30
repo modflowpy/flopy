@@ -1,5 +1,5 @@
 {% import 'macros.jinja' as macros %}
-{% set parent = name|parent %}
+{% set parent = dfn|parent(name) %}
 {% set title = (name|title).title() %}
 {% set description = name|description %}
 
@@ -16,10 +16,10 @@ class Modflow{{ title }}(MFPackage):
 
     Parameters
     ----------
-{{ macros.docstrings(vars)|indent(4, first=true) }}
+{{ macros.docstrings(dfn|variables)|indent(4, first=true) }}
     """
 
-    {% for attr in vars|attrs %}
+    {% for attr in dfn|attrs(name) %}
     {{ attr }}
     {% endfor %}
 
@@ -27,7 +27,7 @@ class Modflow{{ title }}(MFPackage):
         self,
         {{ parent }},
         loading_package=False,
-{{ macros.init_params(vars, skip=name|skip_init)|indent(8, first=true) }}
+{{ macros.init_params(dfn|variables, skip=name|skip_init)|indent(8, first=true) }}
         filename=None,
         pname=None,
         **kwargs,
@@ -45,7 +45,7 @@ class Modflow{{ title }}(MFPackage):
             Do not set this parameter. It is intended for debugging and internal
             processing purposes only.
 
-{{ macros.docstrings(vars)|indent(8, first=true) }}
+{{ macros.docstrings(dfn|variables)|indent(8, first=true) }}
 
         filename : str
             File name for this package.
@@ -68,7 +68,7 @@ class Modflow{{ title }}(MFPackage):
             **kwargs
         )
 
-        {% for statement in vars|init %}
+        {% for statement in dfn|init(name) %}
         {{ statement }}
         {% endfor %}
 
@@ -96,7 +96,7 @@ class {{ title }}Packages(MFChildPackages):
 
     def initialize(
         self,
-{{ macros.init_params(vars, alias=true, skip=name|skip_init)|indent(8, first=true) }}
+{{ macros.init_params(dfn|variables, alias=true, skip=name|skip_init)|indent(8, first=true) }}
         filename=None,
         pname=None,
     ):
@@ -111,10 +111,10 @@ class {{ title }}Packages(MFChildPackages):
         )
         self.init_package(new_package, filename)
 
-    {% if name.r != "obs" %}
+    {% if name[1] != "obs" %}
     def append_package(
         self,
-{{ macros.init_params(vars, alias=true, skip=name|skip_init)|indent(8, first=true) }}
+{{ macros.init_params(dfn|variables, alias=true, skip=name|skip_init)|indent(8, first=true) }}
         filename=None,
         pname=None,
     ):
