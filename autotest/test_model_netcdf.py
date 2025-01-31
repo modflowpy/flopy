@@ -7,6 +7,7 @@ from warnings import warn
 import numpy as np
 import pytest
 import xarray as xr
+from modflow_devtools.markers import requires_exe, requires_pkg
 from pyproj import CRS
 
 import flopy
@@ -17,7 +18,7 @@ from flopy.utils.gridutil import get_disv_kwargs
 from flopy.utils.model_netcdf import create_dataset
 
 
-def compare_netcdf(base, gen, update=None):
+def compare_netcdf(base, gen, projection=False, update=None):
     """Check for functional equivalence"""
     xrb = xr.open_dataset(base, engine="netcdf4")
     xrg = xr.open_dataset(gen, engine="netcdf4")
@@ -32,30 +33,31 @@ def compare_netcdf(base, gen, update=None):
     # coordinates
     for coordname, da in xrb.coords.items():
         assert coordname in xrg.coords
-        # TODO
         assert np.allclose(xrb.coords[coordname].data, xrg.coords[coordname].data)
         for a in da.attrs:
+            if a == "grid_mapping" and not projection:
+                continue
             assert a in xrg.coords[coordname].attrs
             assert da.attrs[a] == xrg.coords[coordname].attrs[a]
 
     # variables
     for varname, da in xrb.data_vars.items():
-        print(varname)
         if varname == "projection":
-            assert varname in xrg.data_vars
-            assert "wkt" in da.attrs or "crs_wkt" in da.attrs
-            if "wkt" in da.attrs:
-                attr = "wkt"
-            else:
-                attr = "crs_wkt"
-            assert attr in xrg.data_vars[varname].attrs
+            if projection:
+                assert varname in xrg.data_vars
+                assert "wkt" in da.attrs or "crs_wkt" in da.attrs
+                if "wkt" in da.attrs:
+                    attr = "wkt"
+                else:
+                    attr = "crs_wkt"
+                assert attr in xrg.data_vars[varname].attrs
 
-            # TODO
-            # crs_b = CRS.from_wkt(da.attrs[attr])
-            # epsg_b = crs_b.to_epsg(min_confidence=90)
-            # crs_g = CRS.from_wkt(xrg.data_vars[varname].attrs[attr])
-            # epsg_g = crs_g.to_epsg(min_confidence=90)
-            # assert epsg_b == epsg_g
+                # TODO
+                # crs_b = CRS.from_wkt(da.attrs[attr])
+                # epsg_b = crs_b.to_epsg(min_confidence=90)
+                # crs_g = CRS.from_wkt(xrg.data_vars[varname].attrs[attr])
+                # epsg_g = crs_g.to_epsg(min_confidence=90)
+                # assert epsg_b == epsg_g
             continue
 
         # check variable name
@@ -63,10 +65,8 @@ def compare_netcdf(base, gen, update=None):
 
         # check variable attributes
         for a in da.attrs:
-            # TODO long_name
-            # if a == "long_name":
-            #    continue
-            print(a)
+            if a == "grid_mapping" and not projection:
+                continue
             assert da.attrs[a] == xrg.data_vars[varname].attrs[a]
 
         # check variable data
@@ -77,33 +77,67 @@ def compare_netcdf(base, gen, update=None):
             assert np.allclose(da.data, xrg.data_vars[varname].data)
 
 
-@pytest.mark.regression
+def compare_netcdf_data(base, gen):
+    """Data comparison check"""
+    xrb = xr.open_dataset(base, engine="netcdf4")
+    xrg = xr.open_dataset(gen, engine="netcdf4")
+
+    # coordinates
+    for coordname, da in xrb.coords.items():
+        assert coordname in xrg.coords
+        print(f"NetCDF file check data equivalence for coordinate: {coordname}")
+        assert np.allclose(xrb.coords[coordname].data, xrg.coords[coordname].data)
+
+    # variables
+    for varname, da in xrb.data_vars.items():
+        if varname == "projection":
+            continue
+
+        # check variable name
+        assert varname in xrg.data_vars or varname in xrg.coords
+
+        if "bnds" in varname:
+            # TODO
+            continue
+
+        # check variable data
+        print(f"NetCDF file check data equivalence for variable: {varname}")
+        if varname in xrg.data_vars:
+            assert np.allclose(da.data, xrg.data_vars[varname].data)
+        else:
+            assert np.allclose(da.data, xrg.coords[varname].data)
+
+
 def test_load_gwfsto01(function_tmpdir, example_data_path):
     data_path_base = example_data_path / "mf6" / "netcdf"
     tests = {
         "test_gwf_sto01_mesh": {
             "base_sim_dir": "gwf_sto01",
             "netcdf_output_file": "gwf_sto01.in.nc",
+            "netcdf_type": "mesh2d",
         },
         "test_gwf_sto01_structured": {
             "base_sim_dir": "gwf_sto01",
             "netcdf_output_file": "gwf_sto01.in.nc",
+            "netcdf_type": "structured",
         },
     }
     ws = function_tmpdir / "ws"
     for base_folder, test_info in tests.items():
-        print(f"RUNNING TEST: {base_folder}")
         data_path = os.path.join(data_path_base, base_folder, test_info["base_sim_dir"])
+
         # copy example data into working directory
         base_model_folder = os.path.join(ws, f"{base_folder}_base")
         test_model_folder = os.path.join(ws, f"{base_folder}_test")
         shutil.copytree(data_path, base_model_folder)
+
         # load example
         sim = flopy.mf6.MFSimulation.load(sim_ws=base_model_folder)
-        # change simulation path
+        gwf = sim.get_model("gwf_sto01")
+
+        # set simulation path and write simulation
         sim.set_sim_path(test_model_folder)
-        # write example simulation to reset path
-        sim.write_simulation()
+        sim.write_simulation(netcdf=test_info["netcdf_type"])
 
         # compare generated files
         gen_files = [
@@ -116,9 +150,9 @@ def test_load_gwfsto01(function_tmpdir, example_data_path):
             for f in os.listdir(base_model_folder)
             if os.path.isfile(os.path.join(base_model_folder, f))
         ]
+
         assert len(gen_files) == len(base_files)
         for f in base_files:
-            print(f"cmp => {f}")
             base = os.path.join(base_model_folder, f)
             gen = os.path.join(test_model_folder, f)
             if f != test_info["netcdf_output_file"]:
@@ -134,17 +168,18 @@ def test_load_gwfsto01(function_tmpdir, example_data_path):
                 compare_netcdf(base, gen)
 
 
-@pytest.mark.regression
 def test_update_gwfsto01(function_tmpdir, example_data_path):
     data_path_base = example_data_path / "mf6" / "netcdf"
     tests = {
         "test_gwf_sto01_mesh": {
             "base_sim_dir": "gwf_sto01",
             "netcdf_output_file": "gwf_sto01.in.nc",
+            "netcdf_type": "mesh2d",
         },
         "test_gwf_sto01_structured": {
             "base_sim_dir": "gwf_sto01",
             "netcdf_output_file": "gwf_sto01.in.nc",
+            "netcdf_type": "structured",
         },
     }
 
@@ -170,25 +205,29 @@ def test_update_gwfsto01(function_tmpdir, example_data_path):
 
     ws = function_tmpdir / "ws"
     for base_folder, test_info in tests.items():
-        print(f"RUNNING TEST: {base_folder}")
         data_path = os.path.join(data_path_base, base_folder, test_info["base_sim_dir"])
+
         # copy example data into working directory
         base_model_folder = os.path.join(ws, f"{base_folder}_base")
         test_model_folder = os.path.join(ws, f"{base_folder}_test")
         shutil.copytree(data_path, base_model_folder)
+
         # load example
         sim = flopy.mf6.MFSimulation.load(sim_ws=base_model_folder)
+
         # get model instance
         gwf = sim.get_model("gwf_sto01")
+
         # update dis delr and delc
         gwf.dis.delr = dis_delr
         gwf.dis.delc = dis_delc
+
         # update ic strt
         gwf.ic.strt.set_data(ic_strt)
-        # change simulation path
+
+        # set simulation path and write simulation
         sim.set_sim_path(test_model_folder)
-        # write example simulation to reset path
-        sim.write_simulation()
+        sim.write_simulation(netcdf=test_info["netcdf_type"])
 
         # compare generated files
         gen_files = [
@@ -201,9 +240,9 @@ def test_update_gwfsto01(function_tmpdir, example_data_path):
             for f in os.listdir(base_model_folder)
             if os.path.isfile(os.path.join(base_model_folder, f))
         ]
+
         assert len(gen_files) == len(base_files)
         for f in base_files:
-            print(f"cmp => {f}")
             base = os.path.join(base_model_folder, f)
             gen = os.path.join(test_model_folder, f)
             if f != test_info["netcdf_output_file"]:
@@ -219,7 +258,6 @@ def test_update_gwfsto01(function_tmpdir, example_data_path):
                 compare_netcdf(base, gen, update=update)
 
 
-@pytest.mark.regression
 def test_create_gwfsto01(function_tmpdir, example_data_path):
     data_path_base = example_data_path / "mf6" / "netcdf"
     tests = {
@@ -313,8 +351,8 @@ def test_create_gwfsto01(function_tmpdir, example_data_path):
     # build
     ws = function_tmpdir / "ws"
     for idx, (base_folder, test_info) in enumerate(tests.items()):
-        print(f"RUNNING TEST: {base_folder}")
         data_path = os.path.join(data_path_base, base_folder, test_info["base_sim_dir"])
+
         # copy example data into working directory
         base_model_folder = os.path.join(ws, f"{base_folder}_base")
         test_model_folder = os.path.join(ws, f"{base_folder}_test")
@@ -324,6 +362,7 @@ def test_create_gwfsto01(function_tmpdir, example_data_path):
         sim = flopy.mf6.MFSimulation(
             sim_name=name, version="mf6", exe_name="mf6", sim_ws=ws
         )
+
         # create tdis package
         tdis = flopy.mf6.ModflowTdis(
             sim,
@@ -338,6 +377,7 @@ def test_create_gwfsto01(function_tmpdir, example_data_path):
         zthick = [top - botm[0], botm[0] - botm[1], botm[1] - botm[2]]
         elevs = [top] + botm
 
+        # create model
         kwargs = {}
         kwargs["crs"] = "EPSG:26918"
         gwf = flopy.mf6.ModflowGwf(
@@ -361,6 +401,7 @@ def test_create_gwfsto01(function_tmpdir, example_data_path):
         )
         sim.register_ims_package(ims, [gwf.name])
 
+        # dis
         dis = flopy.mf6.ModflowGwfdis(
             gwf,
             nlay=nlay,
@@ -384,6 +425,7 @@ def test_create_gwfsto01(function_tmpdir, example_data_path):
             k=hk,
             k33=vka,
         )
+
         # storage
         sto = flopy.mf6.ModflowGwfsto(
             gwf,
@@ -424,6 +466,7 @@ def test_create_gwfsto01(function_tmpdir, example_data_path):
             printrecord=[("HEAD", "LAST"), ("BUDGET", "ALL")],
         )
 
+        # set simulation path and write simulation
         sim.set_sim_path(test_model_folder)
         sim.write_simulation(netcdf=test_info["netcdf_type"])
 
@@ -438,9 +481,9 @@ def test_create_gwfsto01(function_tmpdir, example_data_path):
             for f in os.listdir(base_model_folder)
             if os.path.isfile(os.path.join(base_model_folder, f))
         ]
+
         assert len(gen_files) == len(base_files)
         for f in base_files:
-            print(f"cmp => {f}")
             base = os.path.join(base_model_folder, f)
             gen = os.path.join(test_model_folder, f)
             if f != test_info["netcdf_output_file"]:
@@ -455,7 +498,6 @@ def test_create_gwfsto01(function_tmpdir, example_data_path):
                 compare_netcdf(base, gen)
 
 
-@pytest.mark.regression
 def test_gwfsto01(function_tmpdir, example_data_path):
     data_path_base = example_data_path / "mf6" / "netcdf"
     tests = {
@@ -517,9 +559,9 @@ def test_gwfsto01(function_tmpdir, example_data_path):
     ss2 = np.full((nrow, ncol), 3e-4)
     ss3 = np.full((nrow, ncol), 6e-4)
     ss = np.array([ss1, ss2, ss3])
-
     sy = np.full((nlay, nrow, ncol), 0)
 
+    # define longnames
     delr_longname = "spacing along a row"
     delc_longname = "spacing along a column"
     top_longname = "cell top elevation"
@@ -534,8 +576,8 @@ def test_gwfsto01(function_tmpdir, example_data_path):
 
     ws = function_tmpdir / "ws"
     for base_folder, test_info in tests.items():
-        print(f"RUNNING TEST: {base_folder}")
         data_path = os.path.join(data_path_base, base_folder, test_info["base_sim_dir"])
+
         # copy example data into working directory
         base_model_folder = os.path.join(ws, f"{base_folder}_base")
         test_model_folder = os.path.join(ws, f"{base_folder}_test")
@@ -554,6 +596,7 @@ def test_gwfsto01(function_tmpdir, example_data_path):
             crs="EPSG:26918",
         )
 
+        # create the dataset
         ds = create_dataset(
             "gwf6",
             "gwf_sto01",
@@ -594,10 +637,10 @@ def test_gwfsto01(function_tmpdir, example_data_path):
         compare_netcdf(
             os.path.join(base_model_folder, test_info["netcdf_output_file"]),
             os.path.join(test_model_folder, test_info["netcdf_output_file"]),
+            projection=True,
         )
 
 
-@pytest.mark.regression
 def test_load_disv01b(function_tmpdir, example_data_path):
     data_path_base = example_data_path / "mf6" / "netcdf"
     tests = {
@@ -608,18 +651,19 @@ def test_load_disv01b(function_tmpdir, example_data_path):
     }
     ws = function_tmpdir / "ws"
     for base_folder, test_info in tests.items():
-        print(f"RUNNING TEST: {base_folder}")
         data_path = os.path.join(data_path_base, base_folder, test_info["base_sim_dir"])
+
         # copy example data into working directory
         base_model_folder = os.path.join(ws, f"{base_folder}_base")
         test_model_folder = os.path.join(ws, f"{base_folder}_test")
         shutil.copytree(data_path, base_model_folder)
+
         # load example
         sim = flopy.mf6.MFSimulation.load(sim_ws=base_model_folder)
-        # change simulation path
+
+        # set simulation path and write simulation
         sim.set_sim_path(test_model_folder)
-        # write example simulation to reset path
-        sim.write_simulation()
+        sim.write_simulation(netcdf="mesh2d")
 
         # compare generated files
         gen_files = [
@@ -632,9 +676,9 @@ def test_load_disv01b(function_tmpdir, example_data_path):
             for f in os.listdir(base_model_folder)
             if os.path.isfile(os.path.join(base_model_folder, f))
         ]
+
         assert len(gen_files) == len(base_files)
         for f in base_files:
-            print(f"cmp => {f}")
             base = os.path.join(base_model_folder, f)
             gen = os.path.join(test_model_folder, f)
             if f != test_info["netcdf_output_file"]:
@@ -649,7 +693,6 @@ def test_load_disv01b(function_tmpdir, example_data_path):
                 compare_netcdf(base, gen)
 
 
-@pytest.mark.regression
 def test_update_disv01b(function_tmpdir, example_data_path):
     data_path_base = example_data_path / "mf6" / "netcdf"
     tests = {
@@ -691,25 +734,29 @@ def test_update_disv01b(function_tmpdir, example_data_path):
 
     ws = function_tmpdir / "ws"
     for base_folder, test_info in tests.items():
-        print(f"RUNNING TEST: {base_folder}")
         data_path = os.path.join(data_path_base, base_folder, test_info["base_sim_dir"])
+
         # copy example data into working directory
         base_model_folder = os.path.join(ws, f"{base_folder}_base")
         test_model_folder = os.path.join(ws, f"{base_folder}_test")
         shutil.copytree(data_path, base_model_folder)
+
         # load example
         sim = flopy.mf6.MFSimulation.load(sim_ws=base_model_folder)
+
         # get model instance
         gwf = sim.get_model("disv01b")
+
         # update disv idomain and botm
         gwf.disv.idomain = idomain
         gwf.disv.botm.set_data(botm)
+
         # update ic strt
         gwf.ic.strt.set_data(strt)
-        # change simulation path
+
+        # set simulation path and write simulation
         sim.set_sim_path(test_model_folder)
-        # write example simulation to reset path
-        sim.write_simulation()
+        sim.write_simulation(netcdf="mesh2d")
 
         # compare generated files
         gen_files = [
@@ -722,9 +769,9 @@ def test_update_disv01b(function_tmpdir, example_data_path):
             for f in os.listdir(base_model_folder)
             if os.path.isfile(os.path.join(base_model_folder, f))
         ]
+
         assert len(gen_files) == len(base_files)
         for f in base_files:
-            print(f"cmp => {f}")
             base = os.path.join(base_model_folder, f)
             gen = os.path.join(test_model_folder, f)
             if f != test_info["netcdf_output_file"]:
@@ -739,7 +786,6 @@ def test_update_disv01b(function_tmpdir, example_data_path):
                 compare_netcdf(base, gen, update=update)
 
 
-@pytest.mark.regression
 def test_create_disv01b(function_tmpdir, example_data_path):
     data_path_base = example_data_path / "mf6" / "netcdf"
     tests = {
@@ -768,13 +814,14 @@ def test_create_disv01b(function_tmpdir, example_data_path):
     # build
     ws = function_tmpdir / "ws"
     for idx, (base_folder, test_info) in enumerate(tests.items()):
-        print(f"RUNNING TEST: {base_folder}")
         data_path = os.path.join(data_path_base, base_folder, test_info["base_sim_dir"])
+
         # copy example data into working directory
         base_model_folder = os.path.join(ws, f"{base_folder}_base")
         test_model_folder = os.path.join(ws, f"{base_folder}_test")
         shutil.copytree(data_path, base_model_folder)
 
+        # create simulation
         sim = flopy.mf6.MFSimulation(
             sim_name=name,
             version="mf6",
@@ -797,6 +844,7 @@ def test_create_disv01b(function_tmpdir, example_data_path):
             saverecord=[("HEAD", "ALL")],
         )
 
+        # set path and write simulation
         sim.set_sim_path(test_model_folder)
         sim.write_simulation(netcdf=test_info["netcdf_type"])
 
@@ -811,9 +859,9 @@ def test_create_disv01b(function_tmpdir, example_data_path):
             for f in os.listdir(base_model_folder)
             if os.path.isfile(os.path.join(base_model_folder, f))
         ]
+
         assert len(gen_files) == len(base_files)
         for f in base_files:
-            print(f"cmp => {f}")
             base = os.path.join(base_model_folder, f)
             gen = os.path.join(test_model_folder, f)
             if f != test_info["netcdf_output_file"]:
@@ -828,7 +876,6 @@ def test_create_disv01b(function_tmpdir, example_data_path):
                 compare_netcdf(base, gen)
 
 
-@pytest.mark.regression
 def test_disv01b(function_tmpdir, example_data_path):
     data_path_base = example_data_path / "mf6" / "netcdf"
     tests = {
@@ -900,6 +947,7 @@ def test_disv01b(function_tmpdir, example_data_path):
     # ic
     strt = np.full((nlay, ncpl), 0.0)
 
+    # define longnames
     top_longname = "model top elevation"
     botm_longname = "model bottom elevation"
     idomain_longname = "idomain existence array"
@@ -909,8 +957,8 @@ def test_disv01b(function_tmpdir, example_data_path):
 
     ws = function_tmpdir / "ws"
     for base_folder, test_info in tests.items():
-        print(f"RUNNING TEST: {base_folder}")
         data_path = os.path.join(data_path_base, base_folder, test_info["base_sim_dir"])
+
         # copy example data into working directory
         base_model_folder = os.path.join(ws, f"{base_folder}_base")
         test_model_folder = os.path.join(ws, f"{base_folder}_test")
@@ -961,4 +1009,155 @@ def test_disv01b(function_tmpdir, example_data_path):
         compare_netcdf(
             os.path.join(base_model_folder, test_info["netcdf_output_file"]),
             os.path.join(test_model_folder, test_info["netcdf_output_file"]),
+            projection=True,
         )
+
+
+def test_dis_transform(function_tmpdir, example_data_path):
+    transform_ws = function_tmpdir
+    cmp_pth = transform_ws / "compare"
+    nc_types = ["mesh2d", "structured"]
+    data_path_base = example_data_path / "mf6" / "netcdf" / "test_dis_transform"
+    shutil.copytree(data_path_base, cmp_pth)
+
+    # define transform / projection info
+    kwargs = {}
+    kwargs["crs"] = "EPSG:31370"
+    kwargs["xll"] = 199000
+    kwargs["yll"] = 215500
+    kwargs["rotation"] = 30
+
+    # create simulation
+    nlay, nrow, ncol = 3, 10, 15
+    sim = flopy.mf6.MFSimulation(sim_ws=transform_ws, sim_name="transform")
+    flopy.mf6.ModflowTdis(sim)
+    flopy.mf6.ModflowIms(sim, complexity="simple")
+
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="transform", print_input=True, **kwargs)
+    flopy.mf6.ModflowGwfdis(
+        gwf,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=1.0,
+        delc=1.0,
+        top=10.0,
+        botm=[0.0, -10.0, -30.0],
+        xorigin=199000,
+        yorigin=215500,
+        angrot=30,
+    )
+    flopy.mf6.ModflowGwfnpf(
+        gwf,
+        icelltype=[1, 1, 1],
+    )
+    strt = np.array([np.linspace(-0.999, 0.999, nlay * nrow * ncol)])
+    flopy.mf6.ModflowGwfic(
+        gwf,
+        # strt=strt,
+        strt=10.0,
+    )
+    data = {0: [[(0, 0, 0), 1.0000000], [(1, 0, 14), 0.0000000]]}
+    flopy.mf6.ModflowGwfchd(
+        gwf,
+        stress_period_data=data,
+    )
+
+    for t in nc_types:
+        ws = transform_ws / t
+        sim.set_sim_path(ws)
+        sim.write_simulation(netcdf=t)
+        compare_netcdf_data(cmp_pth / f"transform.{t}.nc", ws / "transform.in.nc")
+
+
+@requires_exe("triangle")
+def test_disv_transform(function_tmpdir, example_data_path):
+    # create triangular grid
+    from flopy.utils.triangle import Triangle
+
+    transform_ws = function_tmpdir
+    cmp_pth = transform_ws / "compare"
+    data_path_base = example_data_path / "mf6" / "netcdf" / "test_disv_transform"
+    shutil.copytree(data_path_base, cmp_pth)
+
+    nc_type = "mesh2d"
+
+    triangle_ws = transform_ws / "triangle"
+    triangle_ws.mkdir()
+
+    active_area = [(0, 0), (0, 1000), (1000, 1000), (1000, 0)]
+    tri = Triangle(model_ws=triangle_ws, angle=30)
+    tri.add_polygon(active_area)
+    tri.add_region((1, 1), maximum_area=50**2)
+
+    tri.build()
+
+    # strt array
+    strt = np.array([np.linspace(-0.999, 0.999, len(tri.get_cell2d()))])
+
+    ###
+    # vertex discretization based run
+    vertex_ws = triangle_ws / "vertex"
+    os.mkdir(vertex_ws)
+
+    # build vertex grid object
+    vgrid = flopy.discretization.VertexGrid(
+        vertices=tri.get_vertices(),
+        cell2d=tri.get_cell2d(),
+        xoff=199000,
+        yoff=215500,
+        crs=31370,
+        angrot=30,
+    )
+
+    ds = create_dataset(
+        "example",  # model type
+        "trimodel",  # model name
+        nc_type,  # netcdf file type
+        "tri.nc",  # netcdf file name
+        vgrid,
+    )
+
+    ds.create_array("start_conditions", "head", strt, ["nlay", "ncpl"])
+
+    # write to netcdf
+    ds.write(vertex_ws)
+
+    ###
+    # MOFLOW 6 sim based run
+    mf6_ws = triangle_ws / "mf6"
+    sim = flopy.mf6.MFSimulation(
+        sim_name="tri_disv",
+        version="mf6",
+        exe_name="mf6",
+        sim_ws=mf6_ws,
+    )
+    tdis = flopy.mf6.ModflowTdis(sim, start_date_time="2041-01-01t00:00:00-05:00")
+
+    # set projection and transform info
+    kwargs = {}
+    kwargs["crs"] = "EPSG:31370"
+    kwargs["xll"] = 199000
+    kwargs["yll"] = 215500
+    kwargs["rotation"] = 30
+
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="tri", **kwargs)
+    ims = flopy.mf6.ModflowIms(sim, print_option="SUMMARY")
+    disv = flopy.mf6.ModflowGwfdisv(
+        gwf,
+        nlay=1,
+        ncpl=tri.ncpl,
+        nvert=tri.nvert,
+        vertices=tri.get_vertices(),
+        cell2d=tri.get_cell2d(),
+        top=0,
+        botm=-150,
+    )
+    ic = flopy.mf6.ModflowGwfic(gwf, strt=strt)
+    npf = flopy.mf6.ModflowGwfnpf(gwf)
+    data = {0: [[(0, 0), 1.0000000], [(0, 14), 0.0000000]]}
+    chd = flopy.mf6.modflow.mfgwfchd.ModflowGwfchd(gwf, stress_period_data=data)
+
+    sim.write_simulation(netcdf=nc_type)
+
+    compare_netcdf_data(cmp_pth / f"tri.{nc_type}.nc", mf6_ws / "tri.in.nc")

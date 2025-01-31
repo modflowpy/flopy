@@ -609,6 +609,13 @@ class MFArray(MFMultiDimVar):
                     == DataStorageType.external_file
                 ):
                     layer_list.append(index)
+            if (
+                #TODO NETCDF-DEV improve
+                len(layer_list) == 1
+                and layer_list[0] == 0
+                and storage.netcdf
+            ):
+                layer_list[0] = -1
         else:
             if (
                 storage.layer_storage[layer].data_storage_type
@@ -950,6 +957,9 @@ class MFArray(MFMultiDimVar):
                     else:
                         layer_data = aux_var_data
                     try:
+                        #NETCDF-DEV
+                        if storage.netcdf:
+                            multiplier = 1.0
                         storage.set_data(
                             layer_data,
                             [layer],

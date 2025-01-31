@@ -2,11 +2,12 @@ import os
 import re
 import sys
 import time
+import warnings
 from pathlib import Path
 
 import numpy as np
 import xarray as xr
-from pyproj import CRS
+from pyproj import CRS, Proj
 
 import flopy
 
@@ -18,7 +19,24 @@ from ..discretization.vertexgrid import VertexGrid
 
 class ModelNetCDFDataset:
     """
-    MODFLOW 6 Model NetCDF input reader-writer
+    These objects are intended to support loading, creating and
+    updating model input NetCDF files.
+
+    Newly created datasets define coordinate or mesh variables
+    corresponding to the type of NetCDF file specified. When
+    the discretization crs attribute is valid, a projection
+    variable is also added to the dataset and candidate data
+    variables are associated with the grid.
+
+    Additionally, these files can can be used as MODFLOW 6
+    model inputs for variables that define internal attributes
+    designated for that purpose, specifically "modflow6_input".
+    For a created dataset, these attributes are managed internally
+    when the supported data interfaces are used, e.g.
+    "create_array()" and "set_array()". Data variables that
+    define these attributes in a complient loaded file are
+    also supported and can be updated to add new or modify
+    existing data.
     """
 
     def __init__(self):
@@ -72,10 +90,10 @@ class ModelNetCDFDataset:
         self._dataset.attrs["history"] = f"{history}; updated {time.ctime(time.time())}"
 
     def create(
-        self, model_type: str, model_name: str, nc_type: str, fname: str, dis: Grid
+        self, modeltype: str, modelname: str, nc_type: str, fname: str, dis: Grid
     ) -> None:
-        self._modelname = model_name.lower()
-        self._modeltype = model_type.lower()
+        self._modelname = modelname.lower()
+        self._modeltype = modeltype.lower()
         self._nc_type = nc_type.lower()
         self._dis = dis
         self._fname = fname
@@ -87,9 +105,19 @@ class ModelNetCDFDataset:
             raise Exception("VertexGrid object must use mesh2d netcdf file type")
 
         self._dataset = xr.Dataset()
-        self._set_global_attrs(model_type, model_name)
+        self._set_global_attrs(modeltype, modelname)
         self._set_grid(dis)
         # print(self._dataset.info())
+
+    def close(self):
+        self._dataset.close()
+        self._modelname = None
+        self._modeltype = None
+        self._dataset = None
+        self._dis = None
+        self._tags = None
+        self._fname = None
+        self._nc_type = None
 
     def create_array(
         self,
@@ -99,6 +127,26 @@ class ModelNetCDFDataset:
         shape: list,
         longname: str | None = None,
     ):
+        """
+        Create a new array. Override this function in a derived class.
+
+        Args:
+            package (str): A name of a data grouping in the file, typically
+                a package. Must be distinct for each grouping. If this dataset
+                is assoicated with a modflow 6 model and this is a base package
+                (dis, disv, npf, ic, etc.), use that name. If this is a stress
+                package, use the same package name that is defined in the model
+                name file, e.g. chd_0, chd_1 or the user defined name.
+            param (str): The parameter name associated with the data. If this
+                is a modflow 6 model this should be the same name used in a
+                modflow input file for the data, e.g. strt, k, k33, idomain,
+                icelltype, etc.
+            data (ArrayLike): The data.
+            shape (list): The named dimensions of the grid that the data is
+                associated with, e.g. nlay, ncol, nrow, ncpl.
+            longname (str, None): An optional longname for the parameter that
+                the data is associated with.
+        """
         raise NotImplementedError("create_array not implemented in base class")
 
     def set_array(
@@ -108,21 +156,70 @@ class ModelNetCDFDataset:
         data: np.typing.ArrayLike,
         layer: int | None = None,
     ):
+        """
+        Set data in an existing array. Override this function in a derived class.
+
+        Args:
+            package (str): A package name provided as an argument to create_array().
+            param (str): A parameter name provided as an argument to create_array().
+            data (ArrayLike): The data.
+            layer (int, None): The layer that the data applies to. If the data
+                applies to the entire array or grid do not define.
+        """
         raise NotImplementedError("set_array not implemented in base class")
 
     def array(self, package: str, param: str, layer=None):
+        """
+        Read data in an existing array. Override this function in a derived class.
+
+        Args:
+            package (str): A package name provided as an argument to create_array().
+            param (str): A parameter name provided as an argument to create_array().
+            layer (int, None): The layer that the data applies to.  If the data
+                applies to the entire array or grid do not define.
+
+        Returns:
+            The data.
+        """
         raise NotImplementedError("array not implemented in base class")
 
     def write(self, path: str) -> None:
+        """
+        Write the data set to a NetCDF file.
+
+        Args:
+            path (str): A directory in which to write the file.
+        """
         self._set_projection()
-        self._set_mf6_attrs()
+        self._set_modflow_attrs()
         nc_fpath = Path(path) / self._fname
         self._dataset.to_netcdf(nc_fpath, format="NETCDF4", engine="netcdf4")
 
+    def _set_grid(self, dis):
+        """
+        Define grid or coordinate variables associated with the NetCDF
+        file type. Override this function in a derived class.
+
+        Args:
+            dis (Grid): A derived FloPy discretization object.
+        """
+        raise NotImplementedError("_set_grid not implemented in base class")
+
+    def _set_coords(self, dis):
+        """
+        Define coordinate variables associated with the NetCDF
+        file type. Override this function in a derived class.
+
+        Args:
+            dis (Grid): A derived FloPy discretization object.
+        """
+        raise NotImplementedError("_set_coords not implemented in base class")
+
     def _set_projection(self):
         if self._dis and self._dis.crs:
-            proj = CRS.from_user_input(self._dis.crs)
-            wkt = proj.to_wkt()
+            crs = CRS.from_user_input(self._dis.crs)
+            coords = self._set_coords(crs)
+            wkt = crs.to_wkt()
             self._dataset = self._dataset.assign({"projection": ([], np.int32(1))})
             if self._nc_type == "structured":
                 self._dataset["projection"].attrs["crs_wkt"] = wkt
@@ -145,17 +242,20 @@ class ModelNetCDFDataset:
                         self._dataset[self._tags[p][l]].attrs["grid_mapping"] = (
                             "projection"
                         )
+                        if coords is not None:
+                            self._dataset[self._tags[p][l]].attrs["coordinates"] = (
+                                coords
+                            )
 
-    def _set_mf6_attrs(self):
-        if not self._modeltype.endswith("6"):
-            return
-
-        for tag in self._tags:
-            for l in self._tags[tag]:
-                vname = self._tags[tag][l]
-                self._dataset[vname].attrs["modflow6_input"] = tag.upper()
-                if l > -1:
-                    self._dataset[vname].attrs["modflow6_layer"] = np.int32(l + 1)
+    def _set_modflow_attrs(self):
+        if self._modeltype.endswith("6"):
+            # MODFLOW 6 attributes
+            for tag in self._tags:
+                for l in self._tags[tag]:
+                    vname = self._tags[tag][l]
+                    self._dataset[vname].attrs["modflow6_input"] = tag.upper()
+                    if l > -1:
+                        self._dataset[vname].attrs["modflow6_layer"] = np.int32(l + 1)
 
     def _set_mapping(self):
         var_d = {}
@@ -229,9 +329,6 @@ class ModelNetCDFDataset:
         self._dataset.attrs["history"] = "first created " + time.ctime(time.time())
         self._dataset.attrs["Conventions"] = conventions
 
-    def _set_grid(self, dis):
-        raise NotImplementedError("_set_grid not implemented in base class")
-
     def _create_array(
         self,
         package: str,
@@ -242,7 +339,7 @@ class ModelNetCDFDataset:
     ):
         layer = -1
         varname = f"{package.lower()}_{param.lower()}"
-        tag = f"{self._modelname.upper()}/{package.upper()}/{param.upper()}"
+        tag = f"{self._modelname.lower()}/{package.lower()}/{param.lower()}"
         var_d = {varname: (nc_shape, data)}
         self._dataset = self._dataset.assign(var_d)
         self._dataset[varname].attrs["long_name"] = longname
@@ -261,7 +358,7 @@ class ModelNetCDFDataset:
         longname: str,
     ):
         varname = f"{package.lower()}_{param.lower()}"
-        tag = f"{self._modelname.upper()}/{package.upper()}/{param.upper()}"
+        tag = f"{self._modelname.lower()}/{package.lower()}/{param.lower()}"
         for layer in range(data.shape[0]):
             mf6_layer = layer + 1
             layer_vname = f"{varname}_l{mf6_layer}"
@@ -295,6 +392,7 @@ class DisNetCDFStructured(ModelNetCDFDataset):
         shape: list,
         longname: str | None = None,
     ):
+        data = np.array(data)
         if not longname:
             longname = ""
         nc_shape = None
@@ -317,6 +415,7 @@ class DisNetCDFStructured(ModelNetCDFDataset):
         data: np.typing.ArrayLike,
         layer: int | None = None,
     ):
+        data = np.array(data)
         tag = f"{self._modelname}/{package}/{param}".lower()
         vname = self._tags[tag][-1]
         if len(self._dataset[vname].values.shape) == 1:
@@ -330,7 +429,10 @@ class DisNetCDFStructured(ModelNetCDFDataset):
     def array(self, package: str, param: str, layer=None):
         path = f"{self._modelname.lower()}/{package.lower()}/{param.lower()}"
         if len(self._dataset[self._tags[path][-1]].data.shape) == 3:
-            return self._dataset[self._tags[path][-1]].data[layer]
+            if layer > -1:
+                return self._dataset[self._tags[path][-1]].data[layer]
+            else:
+                return self._dataset[self._tags[path][-1]].data
         else:
             return self._dataset[self._tags[path][-1]].data
 
@@ -379,6 +481,59 @@ class DisNetCDFStructured(ModelNetCDFDataset):
         self._dataset["x"].attrs["long_name"] = "Easting"
         self._dataset["x"].attrs["bounds"] = "x_bnds"
 
+    def _set_coords(self, crs):
+        lats = []
+        lons = []
+        xdim = self._dataset.dims["x"]
+        ydim = self._dataset.dims["y"]
+
+        try:
+            epsg_code = crs.to_epsg(min_confidence=90)
+            proj = Proj(
+                f"EPSG:{epsg_code}",
+            )
+        except Exception as e:
+            warnings.warn(
+                f"Cannot create coordinates from CRS: {e}",
+                UserWarning,
+            )
+            return "x y"
+
+        x_local = []
+        y_local = []
+        xycenters = self._dis.xycenters
+        for y in xycenters[1]:
+            for x in xycenters[0]:
+                x_local.append(x)
+                y_local.append(y)
+
+        x_global, y_global = self._dis.get_coords(x_local, y_local)
+
+        for i, x in enumerate(x_global):
+            lon, lat = proj(x, y_global[i], inverse=True)
+            lats.append(lat)
+            lons.append(lon)
+
+        lats = np.array(lats)
+        lons = np.array(lons)
+
+        # create coordinate vars
+        var_d = {
+            "lat": (["y", "x"], lats.reshape(ydim, xdim)),
+            "lon": (["y", "x"], lons.reshape(ydim, xdim)),
+        }
+        self._dataset = self._dataset.assign(var_d)
+
+        # set coordinate attributes
+        self._dataset["lat"].attrs["units"] = "degrees_north"
+        self._dataset["lat"].attrs["standard_name"] = "latitude"
+        self._dataset["lat"].attrs["long_name"] = "latitude"
+        self._dataset["lon"].attrs["units"] = "degrees_east"
+        self._dataset["lon"].attrs["standard_name"] = "longitude"
+        self._dataset["lon"].attrs["long_name"] = "longitude"
+
+        return "lon lat"
+
 
 class DisNetCDFMesh2d(ModelNetCDFDataset):
     def __init__(self):
@@ -392,6 +547,7 @@ class DisNetCDFMesh2d(ModelNetCDFDataset):
         shape: list,
         longname: str | None = None,
     ):
+        data = np.array(data)
         if not longname:
             longname = ""
         nc_shape = None
@@ -415,6 +571,7 @@ class DisNetCDFMesh2d(ModelNetCDFDataset):
         data: np.typing.ArrayLike,
         layer: int | None = None,
     ):
+        data = np.array(data)
         tag = f"{self._modelname}/{package}/{param}".lower()
         if layer is not None and layer in self._tags[tag]:
             vname = self._tags[tag][layer]
@@ -424,10 +581,16 @@ class DisNetCDFMesh2d(ModelNetCDFDataset):
 
     def array(self, package: str, param: str, layer=None):
         path = f"{self._modelname.lower()}/{package.lower()}/{param.lower()}"
-        if layer is None:
-            layer = -1
         if path in self._tags:
-            if layer in self._tags[path]:
+            if layer is None or layer == -1:
+                if layer == -1 and layer in self._tags[path]:
+                    return self._dataset[self._tags[path][layer]].data
+                else:
+                    data = []
+                    for l in self._tags[path]:
+                        data.append(self._dataset[self._tags[path][l]].data)
+                    return np.array(data)
+            elif layer in self._tags[path]:
                 return self._dataset[self._tags[path][layer]].data
 
         return None
@@ -498,7 +661,6 @@ class DisNetCDFMesh2d(ModelNetCDFDataset):
         max_face_nodes = 4
         face_nodes = []
         for r in dis.iverts:
-            # nodes = list(map(lambda x: np.int32(x + 1), r))
             nodes = [np.int32(x + 1) for x in r]
             nodes.reverse()
             face_nodes.append(nodes)
@@ -514,6 +676,9 @@ class DisNetCDFMesh2d(ModelNetCDFDataset):
         self._dataset["mesh_face_nodes"].attrs["_FillValue"] = np.int32(-2147483647)
         self._dataset["mesh_face_nodes"].attrs["start_index"] = np.int32(1)
 
+    def _set_coords(self, proj):
+        return None
+
 
 class DisvNetCDFMesh2d(ModelNetCDFDataset):
     def __init__(self):
@@ -527,6 +692,7 @@ class DisvNetCDFMesh2d(ModelNetCDFDataset):
         shape: list,
         longname: str | None = None,
     ):
+        data = np.array(data)
         if not longname:
             longname = ""
         nc_shape = ["nmesh_face"]
@@ -543,6 +709,7 @@ class DisvNetCDFMesh2d(ModelNetCDFDataset):
         data: np.typing.ArrayLike,
         layer: int | None = None,
     ):
+        data = np.array(data)
         tag = f"{self._modelname}/{package}/{param}".lower()
         if layer is not None and layer in self._tags[tag]:
             vname = self._tags[tag][layer]
@@ -552,10 +719,16 @@ class DisvNetCDFMesh2d(ModelNetCDFDataset):
 
     def array(self, package: str, param: str, layer=None):
         path = f"{self._modelname.lower()}/{package.lower()}/{param.lower()}"
-        if layer is None:
-            layer = -1
         if path in self._tags:
-            if layer in self._tags[path]:
+            if layer is None or layer == -1:
+                if layer == -1 and layer in self._tags[path]:
+                    return self._dataset[self._tags[path][layer]].data
+                else:
+                    data = []
+                    for l in self._tags[path]:
+                        data.append(self._dataset[self._tags[path][l]].data)
+                    return np.array(data)
+            elif layer in self._tags[path]:
                 return self._dataset[self._tags[path][layer]].data
 
         return None
@@ -600,8 +773,7 @@ class DisvNetCDFMesh2d(ModelNetCDFDataset):
             x_bnds.append(x)
 
         y_bnds = []
-        for y in disv.yvertices:
-            y.reverse()
+        for y in disv.yvertices[::-1]:
             if len(y) < max_face_nodes:
                 # TODO: set fill value?
                 y.extend([np.int32(-2147483647)] * (max_face_nodes - len(y)))
@@ -627,7 +799,6 @@ class DisvNetCDFMesh2d(ModelNetCDFDataset):
         face_nodes = []
         for idx, r in enumerate(disv.cell2d):
             nodes = disv.cell2d[idx][4 : 4 + r[3]]
-            # nodes = list(map(lambda x: np.int32(x + 1), nodes))
             nodes = [np.int32(x + 1) for x in nodes]
             nodes.reverse()
             if len(nodes) < max_face_nodes:
@@ -646,8 +817,22 @@ class DisvNetCDFMesh2d(ModelNetCDFDataset):
         self._dataset["mesh_face_nodes"].attrs["_FillValue"] = np.int32(-2147483647)
         self._dataset["mesh_face_nodes"].attrs["start_index"] = np.int32(1)
 
+    def _set_coords(self, proj):
+        return None
+
 
 def open_dataset(nc_fpth: str, dis_type: str) -> ModelNetCDFDataset:
+    """
+    Open an existing dataset.
+
+    Args:
+        nc_fpth (str): The path of the existing NetCDF file.
+        dis_type (str): The FloPy discretizaton type corresponding
+            to the model associated with the file: vertex or structured.
+
+    Returns:
+        ModelNetCDFDataset: A dataset derived from the base class.
+    """
     nc_dataset = None
     dis_str = dis_type.lower()
 
@@ -693,8 +878,21 @@ def open_dataset(nc_fpth: str, dis_type: str) -> ModelNetCDFDataset:
 
 
 def create_dataset(
-    model_type: str, name: str, nc_type: str, nc_fname: str, dis: Grid
+    modeltype: str, modelname: str, nc_type: str, nc_fname: str, dis: Grid
 ) -> ModelNetCDFDataset:
+    """
+    Create a new dataset.
+
+    Args:
+        modeltype (str): A model type, e.g. GWF6.
+        modelname (str): The model name.
+        nc_type (str): A supported NetCDF file type: mesh2d or structured.
+        nc_fname (str): The generated NetCDF file name.
+        dis (Grid): A FloPy derived discretization object.
+
+    Returns:
+        ModelNetCDFDataset: A dataset derived from the base class.
+    """
     nc_dataset = None
     if isinstance(dis, VertexGrid):
         if nc_type.lower() == "mesh2d":
@@ -706,7 +904,7 @@ def create_dataset(
             nc_dataset = DisNetCDFStructured()
 
     if nc_dataset:
-        nc_dataset.create(model_type, name, nc_type, nc_fname, dis)
+        nc_dataset.create(modeltype, modelname, nc_type, nc_fname, dis)
     else:
         raise Exception(
             f"Unable to generate netcdf dataset for file type "
