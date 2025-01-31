@@ -1350,8 +1350,8 @@ class MFModel(ModelInterface):
         """
 
         # write netcdf file
-        if netcdf or self._nc_dataset:
-            if not self._nc_dataset:
+        if netcdf or self._nc_dataset is not None:
+            if self._nc_dataset is None:
                 from ..utils.model_netcdf import create_dataset
 
                 # set netcdf file name
@@ -1369,8 +1369,8 @@ class MFModel(ModelInterface):
                 for pp in self.packagelist:
                     pp._set_netcdf_storage(self._nc_dataset, create=True)
 
-            # TODO: fix...see get_file_path() in mfpackage, needs to take into acct model path if set
-            self._nc_dataset.write(self.simulation_data.mfpath.get_sim_path())
+            # write the dataset to netcdf
+            self._nc_dataset.write(self.model_ws)
 
         # write name file
         if (
@@ -1912,6 +1912,13 @@ class MFModel(ModelInterface):
         """
         for package in self.packagelist:
             package.set_all_data_internal(check_data)
+
+        if (
+            hasattr(self, "_nc_dataset")
+            and self._nc_dataset is not None
+        ):
+            self._nc_dataset.close()
+            self._nc_dataset = None
 
     def register_package(
         self,

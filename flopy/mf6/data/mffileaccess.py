@@ -516,11 +516,40 @@ class MFFileAccessArray(MFFileAccess):
     def read_netcdf_array(
         self,
         nc_dataset,
+        modelgrid,
         package,
         param,
         layer,
     ):
-        return nc_dataset.array(package, param, layer)
+        if isinstance(layer, tuple):
+            layer = layer[0]
+
+        # read all data if not layered
+        if layer == 0 and not self.structure.layered:
+            layer = -1
+
+        # retrieve data
+        data = nc_dataset.array(package, param, layer)
+
+        if (
+            nc_dataset.nc_type == "mesh2d"
+            and modelgrid.grid_type == "structured"
+        ):
+            # reshape 1d and 2d data associated with mesh
+            if (
+                len(self.structure.shape) == 3
+                #or self.structure.shape[0] == "nodes"
+            ):
+                if layer > -1:
+                    data = data.reshape(modelgrid.nrow, modelgrid.ncol)
+                else:
+                    data = data.reshape(modelgrid.nlay, modelgrid.nrow, modelgrid.ncol)
+            elif len(self.structure.shape) == 2:
+                data = data.reshape(modelgrid.nrow, modelgrid.ncol)
+        else:
+            data = nc_dataset.array(package, param, layer)
+
+        return data
 
     def set_netcdf_array(
         self,
@@ -530,6 +559,9 @@ class MFFileAccessArray(MFFileAccess):
         data,
         layer,
     ):
+        if isinstance(layer, tuple):
+            layer = layer[0]
+
         nc_dataset.set_array(package, param, data, layer)
 
     def get_data_string(self, data, data_type, data_indent=""):
