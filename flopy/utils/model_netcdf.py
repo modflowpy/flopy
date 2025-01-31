@@ -34,7 +34,7 @@ class ModelNetCDFDataset:
     For a created dataset, these attributes are managed internally
     when the supported data interfaces are used, e.g.
     "create_array()" and "set_array()". Data variables that
-    define these attributes in a complient loaded file are
+    define these attributes in a compliant loaded file are
     also supported and can be updated to add new or modify
     existing data.
     """
@@ -133,7 +133,7 @@ class ModelNetCDFDataset:
         Args:
             package (str): A name of a data grouping in the file, typically
                 a package. Must be distinct for each grouping. If this dataset
-                is assoicated with a modflow 6 model and this is a base package
+                is associated with a modflow 6 model and this is a base package
                 (dis, disv, npf, ic, etc.), use that name. If this is a stress
                 package, use the same package name that is defined in the model
                 name file, e.g. chd_0, chd_1 or the user defined name.
