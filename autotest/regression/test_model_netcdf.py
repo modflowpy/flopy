@@ -108,6 +108,7 @@ def compare_netcdf_data(base, gen):
             assert np.allclose(da.data, xrg.coords[varname].data)
 
 
+@pytest.mark.regression
 def test_load_gwfsto01(function_tmpdir, example_data_path):
     data_path_base = example_data_path / "mf6" / "netcdf"
     tests = {
@@ -168,6 +169,7 @@ def test_load_gwfsto01(function_tmpdir, example_data_path):
                 compare_netcdf(base, gen)
 
 
+@pytest.mark.regression
 def test_update_gwfsto01(function_tmpdir, example_data_path):
     data_path_base = example_data_path / "mf6" / "netcdf"
     tests = {
@@ -258,6 +260,7 @@ def test_update_gwfsto01(function_tmpdir, example_data_path):
                 compare_netcdf(base, gen, update=update)
 
 
+@pytest.mark.regression
 def test_create_gwfsto01(function_tmpdir, example_data_path):
     data_path_base = example_data_path / "mf6" / "netcdf"
     tests = {
@@ -498,6 +501,7 @@ def test_create_gwfsto01(function_tmpdir, example_data_path):
                 compare_netcdf(base, gen)
 
 
+@pytest.mark.regression
 def test_gwfsto01(function_tmpdir, example_data_path):
     data_path_base = example_data_path / "mf6" / "netcdf"
     tests = {
@@ -641,6 +645,7 @@ def test_gwfsto01(function_tmpdir, example_data_path):
         )
 
 
+@pytest.mark.regression
 def test_load_disv01b(function_tmpdir, example_data_path):
     data_path_base = example_data_path / "mf6" / "netcdf"
     tests = {
@@ -693,6 +698,7 @@ def test_load_disv01b(function_tmpdir, example_data_path):
                 compare_netcdf(base, gen)
 
 
+@pytest.mark.regression
 def test_update_disv01b(function_tmpdir, example_data_path):
     data_path_base = example_data_path / "mf6" / "netcdf"
     tests = {
@@ -786,6 +792,7 @@ def test_update_disv01b(function_tmpdir, example_data_path):
                 compare_netcdf(base, gen, update=update)
 
 
+@pytest.mark.regression
 def test_create_disv01b(function_tmpdir, example_data_path):
     data_path_base = example_data_path / "mf6" / "netcdf"
     tests = {
@@ -876,6 +883,7 @@ def test_create_disv01b(function_tmpdir, example_data_path):
                 compare_netcdf(base, gen)
 
 
+@pytest.mark.regression
 def test_disv01b(function_tmpdir, example_data_path):
     data_path_base = example_data_path / "mf6" / "netcdf"
     tests = {
@@ -1013,6 +1021,7 @@ def test_disv01b(function_tmpdir, example_data_path):
         )
 
 
+@pytest.mark.regression
 def test_dis_transform(function_tmpdir, example_data_path):
     transform_ws = function_tmpdir
     cmp_pth = transform_ws / "compare"
@@ -1071,6 +1080,7 @@ def test_dis_transform(function_tmpdir, example_data_path):
 
 
 @requires_exe("triangle")
+@pytest.mark.regression
 def test_disv_transform(function_tmpdir, example_data_path):
     # create triangular grid
     from flopy.utils.triangle import Triangle
