@@ -235,7 +235,6 @@ class Filters:
         for block_name, block in blocks.items():
             block_vars = _get_vars(block)
             for var in block_vars.values():
-                var["block"] = block_name
                 component_vars[var["name"]] = var
 
         def _attr(var: dict) -> Optional[str]:
