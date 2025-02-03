@@ -1,3 +1,4 @@
+from pathlib import Path
 import sys
 from enum import Enum
 from keyword import kwlist
@@ -5,9 +6,6 @@ from pprint import pformat
 from typing import Any, List, Optional
 
 from boltons.iterutils import remap, default_enter
-from jinja2 import pass_context
-
-from flopy.mf6.utils.codegen.component import ComponentDescriptor
 
 
 def _try_get_enum_value(v: Any) -> Any:
@@ -18,14 +16,14 @@ def _try_get_enum_value(v: Any) -> Any:
     return v.value if isinstance(v, Enum) else v
 
 
-def _get_vars(d: dict, all_vars=False) -> dict[str, dict]:
+def _get_vars(d: dict) -> dict[str, dict]:
     vars_ = dict()
     def visit(p, k, v):
         if isinstance(v, dict) and "type" in v:
             vars_[k] = v
         return True
     def enter(p, k, v):
-        if not all_vars and isinstance(v, dict) and "type" in v:
+        if isinstance(v, dict) and "type" in v:
             return (v, False)
         return default_enter(p, k, v)
 
@@ -227,12 +225,12 @@ class Filters:
         where applicable. TODO: this should get much simpler if we can drop
         all the `ListTemplateGenerator`/`ArrayTemplateGenerator` attributes.
         """
-        from modflow_devtools.dfn import _MF6_SCALARS
+        from modflow_devtools.dfn import Dfn, _MF6_SCALARS
 
         component_base = Filters.base(component_name)
         component_vars = {}
         blocks = {n: d for n, d in dfn.items() if isinstance(d, dict) and n not in ["fkeys"]}
-        for block_name, block in blocks.items():
+        for block in blocks.values():
             block_vars = _get_vars(block)
             for var in block_vars.values():
                 component_vars[var["name"]] = var
@@ -255,30 +253,28 @@ class Filters:
             ):
                 return None
 
+            if var_subpkg:
+                # if the variable is a subpackage reference, use the original key
+                # (which has been replaced already with the referenced variable)
+                args = [
+                    f"'{component_name[1]}'",
+                    f"'{var_block}'",
+                    f"'{var_subpkg['key']}'",
+                ]
+                if component_name[0] is not None and component_name[0] not in [
+                    "sim",
+                    "sln",
+                    "utl",
+                    "exg",
+                ]:
+                    args.insert(0, f"'{component_name[0]}6'")
+                return f"{var_subpkg['key']} = ListTemplateGenerator(({', '.join(args)}))"
             is_array = (
                 var_type in ["string", "integer", "double precision"]
                 and var_shape
             )
             is_composite = var_type in ["list", "record", "union"]
             if is_array or is_composite:
-                if not is_array:
-                    if var_subpkg:
-                        # if the variable is a subpackage reference, use the original key
-                        # (which has been replaced already with the referenced variable)
-                        args = [
-                            f"'{component_name[1]}'",
-                            f"'{var_block}'",
-                            f"'{var_subpkg['key']}'",
-                        ]
-                        if component_name[0] is not None and component_name[0] not in [
-                            "sim",
-                            "sln",
-                            "utl",
-                            "exg",
-                        ]:
-                            args.insert(0, f"'{component_name[0]}6'")
-                        return f"{var_subpkg['key']} = ListTemplateGenerator(({', '.join(args)}))"
-
                 def _args():
                     args = [
                         f"'{component_name[1]}'",
@@ -301,19 +297,6 @@ class Filters:
 
         attrs = list(filter(None, [_attr(v) for v in component_vars.values()]))
 
-        def _to_list(var: dict) -> list[str]:
-            default = var.get("default", None)
-            if default:
-                del var["default"]
-                var["default_value"] = default
-            skip = [
-                "fields",
-                "choices",
-                "items",
-                "description"
-            ]
-            return [f"{k} {str(v).lower()}" for k, v in var.items() if k not in skip]
-
         dfn_file_name = Filters.dfn_file_name(component_name)
         dfn_header = ["header"]
         if dfn.get("multi", None):
@@ -322,22 +305,62 @@ class Filters:
             dfn_header.append("package-type advanced-stress-package")
         if dfn.get("sln", None):
             dfn_header.append(["solution_package", "*"])
-        legacy_dfn = [dfn_header]
-        legacy_dfn.extend([_to_list(v) for v in _get_vars(dfn, all_vars=True).values() ])
-        period = dfn.get("period", None)
-        if period and period.get("transient", False):
-            legacy_dfn.append(["block period", "name iper", "type integer",
-            "block_variable true", "in_record true", "tagged false", "shape",
-            "valid", "reader urword", "optional false"])
-        if component_base == "MFPackage":
-            attrs.extend(
-                [
-                    f"package_abbr = '{Filters.package_abbr(component_name)}'",
-                    f"_package_type = '{component_name[1]}'",
-                    f"dfn_file_name = '{dfn_file_name}'",
-                    f"dfn = {pformat(legacy_dfn, indent=10, width=sys.maxsize)}"
+
+        dfn_dir = Path(__file__).parents[2] / "data" / "dfn"
+
+        def _dfn(definition, metadata) -> List[List[str]]:
+            def _meta():
+                exclude = ["subpackage", "parent_name_type"]
+                return [
+                    v for v in metadata if not any(p in v for p in exclude)
                 ]
-            )
+
+            def __dfn():
+                def _var(var: dict) -> List[str]:
+                    exclude = ["longname", "description"]
+                    name = var["name"]
+                    subpkg = dfn.get("fkeys", dict()).get(name, None)
+                    if subpkg:
+                        var["construct_package"] = subpkg["abbr"]
+                        var["construct_data"] = subpkg["val"]
+                        var["parameter_name"] = subpkg["param"]
+                    return [
+                        " ".join([k, v]).strip()
+                        for k, v in var.items()
+                        if k not in exclude
+                    ]
+
+                return [_var(var) for var in list(definition.values(multi=True))]
+
+            return [["header"] + _meta()] + __dfn()
+        
+        def _filter_metadata(metadata):
+            meta_ = list()
+            for m in metadata:
+                if "multi" in m:
+                    meta_.append(m)
+                elif "solution" in m:
+                    s = m.split()
+                    meta_.append([s[0], s[2]])
+                elif "package-type" in m:
+                    s = m.split()
+                    meta_.append(" ".join(s))
+            return meta_
+
+        with open(dfn_dir / "common.dfn") as common_f, \
+                open(dfn_dir / dfn_file_name) as f:
+            common, _ = Dfn._load_v1_flat(common_f)
+            legacy_dfn, metadata = Dfn._load_v1_flat(f, common=common)
+            legacy_dfn = _dfn(legacy_dfn, _filter_metadata(metadata))
+            if component_base == "MFPackage":
+                attrs.extend(
+                    [
+                        f"package_abbr = '{Filters.package_abbr(component_name)}'",
+                        f"_package_type = '{component_name[1]}'",
+                        f"dfn_file_name = '{dfn_file_name}'",
+                        f"dfn = {pformat(legacy_dfn, indent=10, width=sys.maxsize)}"
+                    ]
+                )
 
         return attrs
     
@@ -367,9 +390,10 @@ class Filters:
                     subpkg = var.get("ref", None)
 
                     if _should_set(var):
-                        stmts.append(
-                            f"self.name_file.{name}.set_data({name})"
-                        )
+                        if name not in ["hpc_data"]:
+                            stmts.append(
+                                f"self.name_file.{name}.set_data({name})"
+                            )
                         if not subpkg:
                             stmts.append(
                                 f"self.{name} = self.name_file.{name}"

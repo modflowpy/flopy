@@ -16,9 +16,7 @@ MF6_REF = "develop"
 
 
 def pytest_generate_tests(metafunc):
-    if not any(DFN_PATH.glob("*.dfn")):
-        get_dfns(MF6_OWNER, MF6_REPO, MF6_REF, DFN_PATH, verbose=True)
-
+    get_dfns(MF6_OWNER, MF6_REPO, MF6_REF, DFN_PATH, verbose=True)
     convert(DFN_PATH, TOML_PATH)
     dfns = list(DFN_PATH.glob("*.dfn"))
     assert all(

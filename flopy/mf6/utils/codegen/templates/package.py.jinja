@@ -69,7 +69,7 @@ class Modflow{{ title }}(MFPackage):
 
         self._init_complete = True
 
-{% if subpackage is defined and name[1] != "hpc" %}
+{% if dfn.ref is defined and name[1] != "hpc" %}
 class {{ title }}Packages(MFChildPackages):
     """
     {{ title }}Packages is a container class for the Modflow{{ title }} class.
@@ -96,7 +96,7 @@ class {{ title }}Packages(MFChildPackages):
     ):
         new_package = Modflow{{ title }}(
             self._cpparent,
-            {% for n, var in vars.items() if n not in name|skip_init %}
+            {% for n, var in (dfn|variables).items() if n not in name|skip_init %}
             {{ n|safe_name }}={{ n|safe_name }},
             {% endfor %}
             filename=filename,
@@ -114,7 +114,7 @@ class {{ title }}Packages(MFChildPackages):
     ):
         new_package = Modflow{{ title }}(
             self._cpparent,
-            {% for n, var in vars.items() if n not in name|skip_init %}
+            {% for n, var in (dfn|variables).items() if n not in name|skip_init %}
             {{ n|safe_name }}={{ n|safe_name }},
             {% endfor %}
             filename=filename,
