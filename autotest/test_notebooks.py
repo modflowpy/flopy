@@ -31,13 +31,12 @@ def get_notebooks(pattern=None, exclude=None):
     + get_notebooks(pattern="example"),
 )
 def test_notebooks(notebook):
-    in_ci = is_in_ci()
     args = ["jupytext", "--from", "py", "--to", "ipynb", "--execute", notebook]
     stdout, stderr, returncode = run_cmd(*args, verbose=True)
 
     # allow notebooks to fail for lack of optional dependencies in local runs,
     # expect all dependencies to be present and notebooks to pass in ci tests.
-    if returncode != 0 and not in_ci:
+    if returncode != 0 and not is_in_ci():
         if "Missing optional dependency" in stderr:
             pkg = re.findall("Missing optional dependency '(.*)'", stderr)[0]
             pytest.skip(f"notebook requires optional dependency {pkg!r}")
