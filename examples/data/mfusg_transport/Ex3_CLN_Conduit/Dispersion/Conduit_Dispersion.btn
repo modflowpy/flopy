@@ -1,0 +1,17 @@
+         1        55         1         1        00         0         0    999.99    1.0e-6        02         0       0.0
+         01.0000e-02(10E12.4)                   -1     POROSITY Layer   1
+         01.0000e-02(10E12.4)                   -1     POROSITY Layer   2
+         05000.0e+00(10E12.4)                   -1     AlphaLX Layer   1
+         05000.0e+00(10E12.4)                   -1     AlphaLX Layer   2
+         05000.0e+00(10E12.4)                   -1     AlphaLY Layer   1
+         05000.0e+00(10E12.4)                   -1     AlphaLY Layer   2
+         05000.0e+00(10E12.4)                   -1     AlphaLZ Layer   1
+         05000.0e+00(10E12.4)                   -1     AlphaLZ Layer   2
+         0 100.0e+00(10E12.4)                   -1     AlphaTXY Layer   1
+         0 100.0e+00(10E12.4)                   -1     AlphaTXY Layer   2
+         0   0.0e+00(10E12.4)                   -1     AlphaTYZ Layer   1
+         0   0.0e+00(10E12.4)                   -1     AlphaTYZ Layer   2
+         0   0.0e+00(10E12.4)                   -1     AlphaTXZ Layer   1
+         0   0.0e+00(10E12.4)                   -1     AlphaTXZ Layer   2
+         00.0000e+00(10e12.4)                   -1     STARTING CONCS Layer   1 Component 1
+         0     1.000(10e12.4)                   -1     STARTING CONCS Layer   2 Component 1

@@ -1,0 +1,4 @@
+FREE                                     #  1. Options
+CONSTANT 1                               #  2. IBOUND(NCOL,NROW) LAY 1
+999.0                                    #  3. HNOFLO
+CONSTANT 10.0                            #  4. STRT(NCOL,NROW)   LAY 1

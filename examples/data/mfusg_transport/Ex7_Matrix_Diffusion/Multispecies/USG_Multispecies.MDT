@@ -1,0 +1,111 @@
+  0   00   FRAHK
+CONSTANT 2                         MDFLAG LAYER 1 (2 = embedded)
+CONSTANT 2                         MDFLAG LAYER 2 (2 = embedded)
+CONSTANT 2                         MDFLAG LAYER 3 (2 = embedded)
+CONSTANT 2                         MDFLAG LAYER 4 (2 = embedded)
+CONSTANT 2                         MDFLAG LAYER 5 (2 = embedded)
+CONSTANT 4.000000e-001               PHIF Layer 1 (same as volfracmd)
+CONSTANT 4.000000e-001               PHIF Layer 2 (same as volfracmd)
+CONSTANT 4.000000e-001               PHIF Layer 3 (same as volfracmd)
+CONSTANT 4.000000e-001               PHIF Layer 4 (same as volfracmd)
+CONSTANT 4.000000e-001               PHIF Layer 5 (same as volfracmd)
+CONSTANT  4.000000e-001              PRSITYIM Layer 1
+CONSTANT  4.000000e-001              PRSITYIM Layer 2
+CONSTANT  4.000000e-001              PRSITYIM Layer 3
+CONSTANT  4.000000e-001              PRSITYIM Layer 4
+CONSTANT  4.000000e-001              PRSITYIM Layer 5
+CONSTANT  1.600000e+000              BULKDIM Layer 1
+CONSTANT  1.600000e+000              BULKDIM Layer 2
+CONSTANT  1.600000e+000              BULKDIM Layer 3
+CONSTANT  1.600000e+000              BULKDIM Layer 4
+CONSTANT  1.600000e+000              BULKDIM Layer 5
+CONSTANT  5.000000e-001              DIFLENMD Layer 1
+CONSTANT  5.000000e-001              DIFLENMD Layer 2
+CONSTANT  5.000000e-001              DIFLENMD Layer 3
+CONSTANT  5.000000e-001              DIFLENMD Layer 4
+CONSTANT  5.000000e-001              DIFLENMD Layer 5
+CONSTANT  0.700000e+000              TORTMD Layer 1
+CONSTANT  0.700000e+000              TORTMD Layer 2
+CONSTANT  0.700000e+000              TORTMD Layer 3
+CONSTANT  0.700000e+000              TORTMD Layer 4
+CONSTANT  0.700000e+000              TORTMD Layer 5
+CONSTANT  1.937500e-001              KDMD Layer 1
+CONSTANT  1.937500e-001              KDMD Layer 2
+CONSTANT  1.937500e-001              KDMD Layer 3
+CONSTANT  1.937500e-001              KDMD Layer 4
+CONSTANT  1.937500e-001              KDMD Layer 5
+CONSTANT  0.400000e+000              DECAYMD Layer 1
+CONSTANT  0.400000e+000              DECAYMD Layer 2
+CONSTANT  0.400000e+000              DECAYMD Layer 3
+CONSTANT  0.400000e+000              DECAYMD Layer 4
+CONSTANT  0.400000e+000              DECAYMD Layer 5
+CONSTANT  0.000000e+000              YIELDMD Layer 1
+CONSTANT  0.000000e+000              YIELDMD Layer 2
+CONSTANT  0.000000e+000              YIELDMD Layer 3
+CONSTANT  0.000000e+000              YIELDMD Layer 4
+CONSTANT  0.000000e+000              YIELDMD Layer 5
+CONSTANT  0.031558e+000              DIFFMD Layer 1
+CONSTANT  0.031558e+000              DIFFMD Layer 2
+CONSTANT  0.031558e+000              DIFFMD Layer 3
+CONSTANT  0.031558e+000              DIFFMD Layer 4
+CONSTANT  0.031558e+000              DIFFMD Layer 5
+CONSTANT  1.166630e-001              KDMD Layer 1
+CONSTANT  1.166630e-001              KDMD Layer 2
+CONSTANT  1.166630e-001              KDMD Layer 3
+CONSTANT  1.166630e-001              KDMD Layer 4
+CONSTANT  1.166630e-001              KDMD Layer 5
+CONSTANT  0.150000e+000              DECAYMD Layer 1
+CONSTANT  0.150000e+000              DECAYMD Layer 2
+CONSTANT  0.150000e+000              DECAYMD Layer 3
+CONSTANT  0.150000e+000              DECAYMD Layer 4
+CONSTANT  0.150000e+000              DECAYMD Layer 5
+CONSTANT  0.795000e+000              YIELDMD Layer 1
+CONSTANT  0.795000e+000              YIELDMD Layer 2
+CONSTANT  0.795000e+000              YIELDMD Layer 3
+CONSTANT  0.795000e+000              YIELDMD Layer 4
+CONSTANT  0.795000e+000              YIELDMD Layer 5
+CONSTANT  0.031558e+000              DIFFMD Layer 1
+CONSTANT  0.031558e+000              DIFFMD Layer 2
+CONSTANT  0.031558e+000              DIFFMD Layer 3
+CONSTANT  0.031558e+000              DIFFMD Layer 4
+CONSTANT  0.031558e+000              DIFFMD Layer 5
+CONSTANT  3.625000e-002              KDMD Layer 1
+CONSTANT  3.625000e-002              KDMD Layer 2
+CONSTANT  3.625000e-002              KDMD Layer 3
+CONSTANT  3.625000e-002              KDMD Layer 4
+CONSTANT  3.625000e-002              KDMD Layer 5
+CONSTANT  0.100000e+000              DECAYMD Layer 1
+CONSTANT  0.100000e+000              DECAYMD Layer 2
+CONSTANT  0.100000e+000              DECAYMD Layer 3
+CONSTANT  0.100000e+000              DECAYMD Layer 4
+CONSTANT  0.100000e+000              DECAYMD Layer 5
+CONSTANT  0.737000e+000              YIELDMD Layer 1
+CONSTANT  0.737000e+000              YIELDMD Layer 2
+CONSTANT  0.737000e+000              YIELDMD Layer 3
+CONSTANT  0.737000e+000              YIELDMD Layer 4
+CONSTANT  0.737000e+000              YIELDMD Layer 5
+CONSTANT  0.031558e+000              DIFFMD Layer 1
+CONSTANT  0.031558e+000              DIFFMD Layer 2
+CONSTANT  0.031558e+000              DIFFMD Layer 3
+CONSTANT  0.031558e+000              DIFFMD Layer 4
+CONSTANT  0.031558e+000              DIFFMD Layer 5
+CONSTANT  1.370000e-002              KDMD Layer 1
+CONSTANT  1.370000e-002              KDMD Layer 2
+CONSTANT  1.370000e-002              KDMD Layer 3
+CONSTANT  1.370000e-002              KDMD Layer 4
+CONSTANT  1.370000e-002              KDMD Layer 5
+CONSTANT  0.200000e+000              DECAYMD Layer 1
+CONSTANT  0.200000e+000              DECAYMD Layer 2
+CONSTANT  0.200000e+000              DECAYMD Layer 3
+CONSTANT  0.200000e+000              DECAYMD Layer 4
+CONSTANT  0.200000e+000              DECAYMD Layer 5
+CONSTANT  0.640000e+000              YIELDMD Layer 1
+CONSTANT  0.640000e+000              YIELDMD Layer 2
+CONSTANT  0.640000e+000              YIELDMD Layer 3
+CONSTANT  0.640000e+000              YIELDMD Layer 4
+CONSTANT  0.640000e+000              YIELDMD Layer 5
+CONSTANT  0.031558e+000              DIFFMD Layer 1
+CONSTANT  0.031558e+000              DIFFMD Layer 2
+CONSTANT  0.031558e+000              DIFFMD Layer 3
+CONSTANT  0.031558e+000              DIFFMD Layer 4
+CONSTANT  0.031558e+000              DIFFMD Layer 5

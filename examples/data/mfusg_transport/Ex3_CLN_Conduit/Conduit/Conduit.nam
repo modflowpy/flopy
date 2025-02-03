@@ -1,0 +1,17 @@
+LIST 7 Conduit.lst
+BAS6  1 Conduit.bas
+WEL  14 Conduit.WEL
+DIS  12 Conduit.dis
+BCF6 11 Conduit.bcf
+BCT 43 Conduit.btn
+CLN 13 Conduit.Cln
+CHD 16 Conduit.CHD
+OC  22 Conduit.oc
+SMS 19 Conduit.SMS
+DATA(BINARY) 33 Conduit.con
+DATA(BINARY) 50 Conduit.cbb
+DATA(BINARY) 30 Conduit.hds
+DATA(BINARY) 31 Conduit.ddn
+DATA(BINARY) 35 Conduit.lfc
+DATA(BINARY) 36 Conduit.lfh
+DATA(BINARY) 55 Conduit.cbt
