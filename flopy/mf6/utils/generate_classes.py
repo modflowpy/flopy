@@ -2,6 +2,7 @@ import os
 import shutil
 import tempfile
 import time
+from pathlib import Path
 from warnings import warn
 
 from .createpackages import create_packages
@@ -153,7 +154,7 @@ def generate_classes(
     print(2 * "\n")
     print(72 * "*")
     print("Updating the flopy MODFLOW 6 classes")
-    flopy_dfn_path = os.path.join(flopypth, "mf6", "data", "dfn")
+    flopy_dfn_path = (Path(flopypth) / "mf6" / "data" / "dfn").expanduser().absolute()
 
     # download the dfn files and put them in flopy.mf6.data or update using
     # user provided dfnpath
@@ -180,15 +181,20 @@ def generate_classes(
         print(f"  Backup existing definition files in: {flopy_dfn_path}")
         backup_existing_dfns(flopy_dfn_path)
 
-    print("  Replacing existing definition files with new ones.")
-    replace_dfn_files(new_dfn_pth, flopy_dfn_path)
-    if dfnpath is None:
-        shutil.rmtree(new_dfn_pth)
+    new_dfn_path = Path(new_dfn_pth).expanduser().absolute()
 
-    print("  Deleting existing mf6 classes.")
+    if (new_dfn_path == flopy_dfn_path):
+        print("  Using pre-existing definition files")
+    else:
+        print("  Replacing existing definition files")
+        replace_dfn_files(new_dfn_pth, flopy_dfn_path)
+        if dfnpath is None:
+            shutil.rmtree(new_dfn_pth)
+
+    print("  Deleting existing mf6 classes")
     delete_mf6_classes()
 
-    print("  Create mf6 classes using the downloaded definition files.")
+    print("  Creating mf6 classes using the definition files")
     create_packages()
     list_files(os.path.join(flopypth, "mf6", "modflow"))
 
