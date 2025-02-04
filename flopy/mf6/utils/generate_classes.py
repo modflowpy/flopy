@@ -5,10 +5,6 @@ import time
 from pathlib import Path
 from warnings import warn
 
-from modflow_devtools.dfn2toml import convert as dfn2toml
-
-from .createpackages import make_all
-
 thisfilepath = os.path.dirname(os.path.abspath(__file__))
 flopypth = os.path.join(thisfilepath, "..", "..")
 flopypth = os.path.abspath(flopypth)
@@ -204,9 +200,11 @@ def generate_classes(
     # convert dfns to toml.. when we
     # do this upstream, remove this.
     _TOML_PATH.mkdir(exist_ok=True)
+    from modflow_devtools.dfn2toml import convert as dfn2toml
     dfn2toml(_DFN_PATH, _TOML_PATH)
 
     print("  Create mf6 classes using the definition files.")
+    from flopy.mf6.utils.createpackages import make_all
     make_all(_TOML_PATH, _TGT_PATH, version=2)
     list_files(os.path.join(flopypth, "mf6", "modflow"))
 
