@@ -60,21 +60,9 @@ def compare_netcdf(base, gen, projection=False, update=None):
                 # assert epsg_b == epsg_g
             continue
 
-        # check variable name
-        assert varname in xrg.data_vars
-
-        # check variable attributes
-        for a in da.attrs:
-            if a == "grid_mapping" and not projection:
-                continue
-            assert da.attrs[a] == xrg.data_vars[varname].attrs[a]
-
-        # check variable data
-        print(f"NetCDF file check data equivalence for variable: {varname}")
-        if update and varname in update:
-            assert np.allclose(update[varname], xrg.data_vars[varname].data)
-        else:
-            assert np.allclose(da.data, xrg.data_vars[varname].data)
+        compare_netcdf_var(
+            varname, xrb.data_vars, xrg.data_vars, xrg.coords, projection, update
+        )
 
 
 def compare_netcdf_data(base, gen):
@@ -93,19 +81,47 @@ def compare_netcdf_data(base, gen):
         if varname == "projection":
             continue
 
-        # check variable name
-        assert varname in xrg.data_vars or varname in xrg.coords
+        compare_netcdf_var(
+            varname,
+            xrb.data_vars,
+            xrg.data_vars,
+            xrg.coords,
+        )
 
-        if "bnds" in varname:
-            # TODO
+
+def compare_netcdf_var(varname, base_d, gen_d, coord_d, projection=False, update=None):
+    # check variable name
+    # assert varname in xrg.data_vars
+    assert varname in gen_d or varname in coord_d
+
+    if varname in gen_d:
+        var_d = gen_d
+    else:
+        var_d = coord_d
+
+    # encodings
+    for e in base_d[varname].encoding:
+        if e.lower() == "source":
             continue
-
-        # check variable data
-        print(f"NetCDF file check data equivalence for variable: {varname}")
-        if varname in xrg.data_vars:
-            assert np.allclose(da.data, xrg.data_vars[varname].data)
+        assert e in var_d[varname].encoding
+        if e == "_FillValue":
+            assert np.allclose(base_d[varname].encoding[e], var_d[varname].encoding[e])
         else:
-            assert np.allclose(da.data, xrg.coords[varname].data)
+            assert base_d[varname].encoding[e] == var_d[varname].encoding[e]
+
+    # check variable attributes
+    for a in base_d[varname].attrs:
+        if a == "grid_mapping" and not projection:
+            continue
+        assert a in var_d[varname].attrs
+        assert base_d[varname].attrs[a] == var_d[varname].attrs[a]
+
+    # check variable data
+    print(f"NetCDF file check data equivalence for variable: {varname}")
+    if update and varname in update:
+        assert np.allclose(update[varname], var_d[varname].data)
+    else:
+        assert np.allclose(base_d[varname].data, var_d[varname].data)
 
 
 @pytest.mark.regression
@@ -533,9 +549,9 @@ def test_gwfsto01(function_tmpdir, example_data_path):
 
     # npf
     # icelltype
-    ic1 = np.full((nrow, ncol), 1)
-    ic2 = np.full((nrow, ncol), 0)
-    ic3 = np.full((nrow, ncol), 0)
+    ic1 = np.full((nrow, ncol), np.int32(1))
+    ic2 = np.full((nrow, ncol), np.int32(0))
+    ic3 = np.full((nrow, ncol), np.int32(0))
     icelltype = np.array([ic1, ic2, ic3])
 
     # k
@@ -563,7 +579,7 @@ def test_gwfsto01(function_tmpdir, example_data_path):
     ss2 = np.full((nrow, ncol), 3e-4)
     ss3 = np.full((nrow, ncol), 6e-4)
     ss = np.array([ss1, ss2, ss3])
-    sy = np.full((nlay, nrow, ncol), 0)
+    sy = np.full((nlay, nrow, ncol), 0.0)
 
     # define longnames
     delr_longname = "spacing along a row"
@@ -939,7 +955,8 @@ def test_disv01b(function_tmpdir, example_data_path):
             [1, 0, 1, 1, 1, 1, 1, 1, 1],
             [1, 1, 1, 1, 1, 1, 1, 1, 1],
             [1, 1, 1, 1, 1, 1, 1, 1, 1],
-        ]
+        ],
+        dtype=np.int32,
     )
 
     botm = []
@@ -949,8 +966,8 @@ def test_disv01b(function_tmpdir, example_data_path):
     botm = np.array(botm)
 
     # npf
-    icelltype = np.full((nlay, ncpl), 0)
-    k = np.full((nlay, ncpl), 1)
+    icelltype = np.full((nlay, ncpl), np.int32(0))
+    k = np.full((nlay, ncpl), 1.0)
 
     # ic
     strt = np.full((nlay, ncpl), 0.0)
@@ -1171,3 +1188,4 @@ def test_disv_transform(function_tmpdir, example_data_path):
     sim.write_simulation(netcdf=nc_type)
 
     compare_netcdf_data(cmp_pth / f"tri.{nc_type}.nc", mf6_ws / "tri.in.nc")
+    # compare_netcdf_data(cmp_pth / f"tri.{nc_type}.nc", vertex_ws / "tri.nc")
