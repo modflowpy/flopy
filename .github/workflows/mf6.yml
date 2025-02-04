@@ -1,4 +1,4 @@
-name: FloPy Modflow6 continuous integration
+name: Modflow6 continuous integration
 
 on:
   schedule:
@@ -24,23 +24,16 @@ jobs:
     - name: Checkout flopy repo
       uses: actions/checkout@v4
 
-    - name: Setup uv
+    - name: Setup Python
       uses: astral-sh/setup-uv@v5
       with:
-        version: "0.5.18"
+        cache-dependency-glob: "**/pyproject.toml"
 
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version-file: pyproject.toml
+    - name: Install FloPy
+      run: uv sync --all-extras
 
-    - name: Install Python dependencies
-      run: |
-        uv sync --all-extras
-        uv pip install https://github.com/modflowpy/pymake/archive/master.zip
-        uv pip install https://github.com/Deltares/xmipy/archive/develop.zip
-        uv pip install https://github.com/MODFLOW-USGS/modflowapi/archive/develop.zip
-        uv pip install meson ninja
+    - name: Install other dependencies from GitHub
+      run: uv pip install -r etc/github-develop-requirements.txt
 
     - name: Setup GNU Fortran
       uses: fortran-lang/setup-fortran@v1
@@ -63,7 +56,7 @@ jobs:
 
     - name: Update package classes
       working-directory: modflow6/autotest
-      run: uv run python update_flopy.py
+      run: uv run update_flopy.py
 
     - name: Install executables
       working-directory: modflow6/autotest
@@ -109,24 +102,16 @@ jobs:
         repository: MODFLOW-USGS/modflow6-examples
         path: modflow6-examples
 
-    - name: Setup uv
+    - name: Setup Python
       uses: astral-sh/setup-uv@v5
       with:
-        version: "0.5.18"
+        cache-dependency-glob: "**/pyproject.toml"
 
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version-file: pyproject.toml
+    - name: Install FloPy
+      run: uv sync --all-extras
 
-    - name: Install Python dependencies
-      run: |
-        uv sync --all-extras
-        uv pip install https://github.com/modflowpy/pymake/archive/master.zip
-        uv pip install https://github.com/Deltares/xmipy/archive/develop.zip
-        uv pip install https://github.com/MODFLOW-USGS/modflowapi/archive/develop.zip
-        uv pip install meson ninja
-        uv pip install -r modflow6-examples/etc/requirements.pip.txt
+    - name: Install other dependencies from modflow6-examples and GitHub
+      run: uv pip install -r etc/github-develop-requirements.txt -r modflow6-examples/etc/requirements.pip.txt
 
     - name: Setup GNU Fortran
       uses: fortran-lang/setup-fortran@v1
@@ -147,7 +132,7 @@ jobs:
 
     - name: Update package classes
       working-directory: modflow6/autotest
-      run: uv run python update_flopy.py
+      run: uv run update_flopy.py
 
     - name: Test MF6 examples
       working-directory: modflow6-examples/autotest

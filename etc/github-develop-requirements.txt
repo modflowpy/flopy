@@ -1,0 +1,3 @@
+git+https://github.com/modflowpy/pymake@master
+git+https://github.com/Deltares/xmipy@develop
+git+https://github.com/MODFLOW-USGS/modflowapi@develop
