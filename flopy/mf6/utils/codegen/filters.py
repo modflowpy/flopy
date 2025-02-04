@@ -95,7 +95,7 @@ class Filters:
     def parent(dfn: dict, component_name: tuple[str, str]) -> str:
         # TODO should be no longer needed when parents are explicit in dfns
         """The input context's parent context type, if it can have a parent."""
-        subpkg = dfn.get("sub", None)
+        subpkg = dfn.get("ref", None)
         if subpkg:
             return subpkg["parent"]
         if component_name == ("sim", "nam"):
@@ -228,12 +228,7 @@ class Filters:
         from modflow_devtools.dfn import Dfn, _MF6_SCALARS
 
         component_base = Filters.base(component_name)
-        component_vars = {}
-        blocks = {n: d for n, d in dfn.items() if isinstance(d, dict) and n not in ["fkeys"]}
-        for block in blocks.values():
-            block_vars = _get_vars(block)
-            for var in block_vars.values():
-                component_vars[var["name"]] = var
+        component_vars = _get_vars(dfn)
 
         def _attr(var: dict) -> Optional[str]:
             var_name = var["name"]
@@ -245,7 +240,7 @@ class Filters:
             if (
                 (var_type in _MF6_SCALARS and not var_shape)
                 or var_name in ["cvoptions", "output"]
-                or (component_name[1] == "dis" and var_name == "packagedata")
+                # or (component_name[1] == "dis" and var_name == "packagedata")
                 or (
                     var_name != "packages"
                     and (component_name[0] is not None and component_name[1] == "nam")
