@@ -1,11 +1,11 @@
-from pathlib import Path
 import sys
 from enum import Enum
 from keyword import kwlist
+from pathlib import Path
 from pprint import pformat
 from typing import Any, List, Optional
 
-from boltons.iterutils import remap, default_enter
+from boltons.iterutils import default_enter, remap
 
 
 def _try_get_enum_value(v: Any) -> Any:
@@ -90,6 +90,15 @@ class Filters:
     def dfn_file_name(component_name: tuple[str, str]) -> str:
         if component_name[0] == "exg":
             return f"{'-'.join(component_name)}.dfn"
+        if tuple(component_name) in [
+            (None, "mvr"),
+            (None, "gnc"),
+        ]:
+            return f"gwf-{component_name[1]}.dfn"
+        if tuple(component_name) in [
+            (None, "mvt")
+        ]:
+            return f"gwt-{component_name[1]}.dfn"
         return f"{component_name[0] or 'sim'}-{component_name[1]}.dfn"
 
     def parent(dfn: dict, component_name: tuple[str, str]) -> str:
@@ -212,7 +221,7 @@ class Filters:
 
     def default(var: dict) -> Any:
         _default = var.get("default", None)
-        if _default:
+        if _default is not None:
             return _default
         return None
 
@@ -225,7 +234,7 @@ class Filters:
         where applicable. TODO: this should get much simpler if we can drop
         all the `ListTemplateGenerator`/`ArrayTemplateGenerator` attributes.
         """
-        from modflow_devtools.dfn import Dfn, _MF6_SCALARS
+        from modflow_devtools.dfn import _MF6_SCALARS, Dfn
 
         component_base = Filters.base(component_name)
         component_vars = _get_vars(dfn)

@@ -27,9 +27,9 @@ def get_component_names(dfn: dict) -> list[tuple[str, str]]:
                 (name[0], None),  # model
             ]
     elif name in [
-        ("gwf", "mvr"),
-        ("gwf", "gnc"),
-        ("gwt", "mvt"),
+        ["gwf", "mvr"],
+        ["gwf", "gnc"],
+        ["gwt", "mvt"],
     ]:
         # TODO: deduplicate mfmvr.py/mfgwfmvr.py etc and remove special cases
         return [
