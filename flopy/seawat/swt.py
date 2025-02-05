@@ -166,16 +166,13 @@ class Seawat(BaseModel):
     @property
     def modeltime(self):
         # build model time
-        data_frame = {
-            "perlen": self.dis.perlen.array,
-            "nstp": self.dis.nstp.array,
-            "tsmult": self.dis.tsmult.array,
-        }
         self._model_time = ModelTime(
-            data_frame,
-            self.dis.itmuni_dict[self.dis.itmuni],
-            self.dis.start_datetime,
-            self.dis.steady.array,
+            perlen=self.dis.perlen.array,
+            nstp=self.dis.nstp.array,
+            tsmult=self.dis.tsmult.array,
+            time_units=self.dis.itmuni_dict,
+            start_datetime=self.dis.start_datetime,
+            steady_state=self.dis.steady.array,
         )
         return self._model_time
 

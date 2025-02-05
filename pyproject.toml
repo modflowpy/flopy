@@ -165,7 +165,7 @@ ignore = [
 "flopy/mf6/**/*.py" = ["C4", "E", "F", "ISC", "RUF"]
 
 [tool.codespell]
-skip = "cliff.toml,./examples/data/*"
+skip = "cliff.toml,./examples/data/*,./autotest/test_modeltime.py"
 ignore-words-list = [
     "alltime",
     "dum",
