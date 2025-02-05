@@ -33,7 +33,7 @@ jobs:
       run: uv sync --all-extras
 
     - name: Install other dependencies from GitHub
-      run: uv pip install -r etc/github-develop-requirements.txt
+      run: uv pip install -r etc/requirements.mf6.txt
 
     - name: Setup GNU Fortran
       uses: fortran-lang/setup-fortran@v1
@@ -111,7 +111,7 @@ jobs:
       run: uv sync --all-extras
 
     - name: Install other dependencies from modflow6-examples and GitHub
-      run: uv pip install -r etc/github-develop-requirements.txt -r modflow6-examples/etc/requirements.pip.txt
+      run: uv pip install -r etc/requirements.mf6.txt -r modflow6-examples/etc/requirements.pip.txt
 
     - name: Setup GNU Fortran
       uses: fortran-lang/setup-fortran@v1
