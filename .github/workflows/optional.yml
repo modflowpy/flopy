@@ -1,7 +1,7 @@
 # This workflow tests flopy with random subsets of optional dependencies.
 # Flopy should not crash due to the absence of any optional dependencies,
 # rather it should gracefully raise an ImportError if absent when needed.
-name: FloPy optional dependency testing
+name: Optional dependency testing
 on:
   schedule:
     - cron: '0 8 * * *' # run at 8 AM UTC (12 am PST)
@@ -27,20 +27,16 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup uv
+      - name: Setup Python
         uses: astral-sh/setup-uv@v5
         with:
-          version: "0.5.18"
+          cache-dependency-glob: "**/pyproject.toml"
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: pyproject.toml
+      - name: Install FloPy
+        run: uv sync --extra test
 
-      - name: Install Python dependencies
+      - name: Install other dependencies
         run: |
-          uv sync --extra test
-
           # Install optional dependencies according to matrix.optdeps.
           # If matrix.optdeps is "some" remove 3 optional dependencies
           # selected randomly using the current date as the seed.

@@ -1,4 +1,4 @@
-name: FloPy continuous integration
+name: Commit continuous integration
 on:
   push:
   pull_request:
@@ -20,26 +20,16 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup uv
+      - name: Setup Python
         uses: astral-sh/setup-uv@v5
         with:
-          version: "0.5.18"
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: pyproject.toml
-
-      - name: Install Python dependencies
-        run: |
-          uv sync --extra build
-          uv run python -c "import flopy; print(f'{flopy.__version__}')"
+          enable-cache: false
 
       - name: Build package
         run: uv build
 
       - name: Check package
-        run: uv run twine check --strict dist/*
+        run: uvx twine check --strict dist/*
 
   lint:
     name: Lint
@@ -53,33 +43,25 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup uv
+      - name: Setup Python
         uses: astral-sh/setup-uv@v5
         with:
-          version: "0.5.18"
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: pyproject.toml
-
-      - name: Install Python dependencies
-        run: uv sync --extra lint
+          enable-cache: false
 
       - name: Lint
-        run: uv run ruff check .
+        run: uvx ruff check
 
       - name: Check format
-        run: uv run ruff format . --check
+        run: uvx ruff format --check
 
       - name: Check spelling
-        run: uv run codespell
+        run: uvx codespell
 
       - name: Check CITATION.cff
         run: |
-          uv run cffconvert --validate
-          uv run cffconvert -f apalike
-          uv run cffconvert -f bibtex
+          uvx cffconvert --validate
+          uvx cffconvert -f apalike
+          uvx cffconvert -f bibtex
 
   smoke:
     name: Smoke test
@@ -95,15 +77,10 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup uv
+      - name: Setup Python
         uses: astral-sh/setup-uv@v5
         with:
-          version: "0.5.18"
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: pyproject.toml
+          cache-dependency-glob: "**/pyproject.toml"
 
       - name: Install Python dependencies
         # temp. allow prereleases for vtk on aarch64
@@ -149,15 +126,11 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup uv
+      - name: Setup Python ${{ matrix.python-version }}
         uses: astral-sh/setup-uv@v5
         with:
-          version: "0.5.18"
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: pyproject.toml
+          cache-dependency-glob: "**/pyproject.toml"
+          python-version: ${{ matrix.python-version }}
 
       - name: Install FloPy
         run: uv sync --all-extras
