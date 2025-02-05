@@ -13,6 +13,8 @@ dependencies:
   # codegen
   - boltons>=1.0
   - Jinja2>=3.0
+  - tomli
+  - tomli-w
   - pip:
       - git+https://github.com/MODFLOW-USGS/modflow-devtools.git
 

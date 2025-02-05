@@ -110,9 +110,8 @@ class Filters:
         if component_name == ("sim", "nam"):
             return None
         elif (
-            component_name[0] is None
-            or component_name[1] is None
-            or component_name[0] in ["sim", "exg", "sln"]
+            component_name[1] is None
+            or component_name[0] in [None, "sim", "exg", "sln"]
         ):
             return "simulation"
         return "model"
@@ -219,7 +218,7 @@ class Filters:
             return choices
         return None
 
-    def default(var: dict) -> Any:
+    def default_value(var: dict) -> Any:
         _default = var.get("default", None)
         if _default is not None:
             return _default
@@ -265,7 +264,8 @@ class Filters:
                     f"'{var_block}'",
                     f"'{var_subpkg['key']}'",
                 ]
-                if component_name[0] is not None and component_name[0] not in [
+                if component_name[0] not in [
+                    None,
                     "sim",
                     "sln",
                     "utl",

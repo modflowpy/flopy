@@ -38,8 +38,8 @@ class Modflow{{ title }}(MFPackage):
         Parameters
         ----------
         {{ parent }}
-            Parent_package that this package is a part of. Package is automatically
-            added to parent_package when it is initialized.
+            {{ parent|capitalize }} that this package is a part of. Package is automatically
+            added to {{ parent }} when it is initialized.
         loading_package : bool
             Do not set this parameter. It is intended for debugging and internal
             processing purposes only.

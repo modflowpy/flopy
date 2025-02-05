@@ -15,7 +15,6 @@ def _get_template_env():
         loader=loader,
         trim_blocks=True,
         lstrip_blocks=True,
-        line_statement_prefix="_",
         keep_trailing_newline=True,
     )
 
@@ -34,7 +33,7 @@ def _get_template_env():
     env.filters["untag"] = Filters.untag
     env.filters["type"] = Filters.type
     env.filters["children"] = Filters.children
-    env.filters["default"] = Filters.default
+    env.filters["default_value"] = Filters.default_value
     env.filters["safe_name"] = Filters.safe_name
     env.filters["value"] = Filters.value
     env.filters["math"] = Filters.math

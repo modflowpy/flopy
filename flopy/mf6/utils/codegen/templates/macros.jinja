@@ -2,7 +2,7 @@
 {% for name, var in vars.items() if name not in skip %}
 {% set v = var|untag %}
 {% set n = (name if alias else v.name)|safe_name %}
-{{ n }}={{ v|default|value }},
+{{ n }}={{ v|default_value|value }},
 {% endfor %}
 {% endmacro %}
 
