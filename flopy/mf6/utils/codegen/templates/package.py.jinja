@@ -69,7 +69,7 @@ class Modflow{{ title }}(MFPackage):
 
         self._init_complete = True
 
-{% if dfn.ref is defined and name[1] != "hpc" %}
+{% if dfn.ref is defined and name[0] not in ["sln", "sim"] and name[1] not in ["hpc"] %}
 class {{ title }}Packages(MFChildPackages):
     """
     {{ title }}Packages is a container class for the Modflow{{ title }} class.
