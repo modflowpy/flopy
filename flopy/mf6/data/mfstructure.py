@@ -2463,6 +2463,11 @@ class MFSimulationStructure:
                     package_struct.read_as_arrays = True
 
 
+def _get_solution_packages():
+    pkgs = get_solution_packages()
+    return {k.lower().replace("modflow", ""): "*" for k in pkgs.keys()}
+
+
 class MFStructure:
     """
     Singleton class for accessing the contents of the json structure file
@@ -2495,7 +2500,7 @@ class MFStructure:
             cls._instance.dimension_dict = {}
             cls._instance.load_from_dfn_files = load_from_dfn_files
             cls._instance.flopy_dict = {
-                "solution_packages": get_solution_packages()
+                "solution_packages": _get_solution_packages()
             }
 
             # Read metadata from file
