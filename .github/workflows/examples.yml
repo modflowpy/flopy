@@ -34,7 +34,9 @@ jobs:
             powershell
 
       - name: Install FloPy
-        run: pip install .
+        run: |
+          pip install .
+          pip install ".[codegen]"
 
       - name: OpenGL workaround on Linux
         if: runner.os == 'Linux'

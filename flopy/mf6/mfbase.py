@@ -449,7 +449,7 @@ class PackageContainer:
     """
 
     modflow_packages = []
-    packages_by_abbr = {}
+    packages_by_abbr: dict[str, type] = {}
     modflow_models = []
     models_by_type = {}
 
@@ -459,21 +459,6 @@ class PackageContainer:
         self.package_type_dict = {}
         self.package_name_dict = {}
         self.package_filename_dict = {}
-
-    @staticmethod
-    def package_list():
-        """Static method that returns the list of available packages.
-        For internal FloPy use only, not intended for end users.
-
-        Returns a list of MFPackage subclasses
-        """
-        # all packages except "group" classes
-        package_list = []
-        for abbr, package in sorted(PackageContainer.packages_by_abbr.items()):
-            # don't store packages "group" classes
-            if not abbr.endswith("packages"):
-                package_list.append(package)
-        return package_list
 
     @staticmethod
     def package_factory(package_type: str, model_type: str):

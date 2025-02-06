@@ -316,7 +316,7 @@ class DataStorage:
         self.data_structure_type = data_structure_type
         package_dim = self.data_dimensions.package_dim
         self.in_model = (
-            self.data_dimensions is not None
+            package_dim is not None
             and len(package_dim.package_path) > 1
             and package_dim.model_dim[0].model_name is not None
             and package_dim.model_dim[0].model_name.lower()
