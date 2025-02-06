@@ -1,4 +1,7 @@
-def get_classes(predicate=None):
+from collections.abc import Mapping
+
+
+def get_classes(predicate=None) -> Mapping[str, type]:
     import flopy.mf6.modflow as modflow
     from flopy.utils.inspect import get_classes as _get_classes
 
@@ -8,7 +11,7 @@ def get_classes(predicate=None):
     )
 
 
-def get_multi_packages():
+def get_multi_packages() -> Mapping[str, type]:
     def _filter(cls):
         return (
             len(cls.dfn) > 0
@@ -19,7 +22,7 @@ def get_multi_packages():
     return get_classes(_filter)
 
 
-def get_solution_packages():
+def get_solution_packages() -> Mapping[str, type]:
     def _filter(cls):
         return (
             len(cls.dfn) > 0
@@ -31,7 +34,7 @@ def get_solution_packages():
     return get_classes(_filter)
 
 
-def get_sub_packages():
+def get_sub_packages() -> Mapping[str, type]:
     def _filter(cls):
         return (
             len(cls.dfn) > 0

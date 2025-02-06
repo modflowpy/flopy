@@ -1,7 +1,8 @@
 import inspect
+from collections.abc import Mapping
 
 
-def get_classes(module, predicate=None):
+def get_classes(module, predicate=None) -> Mapping[str, type]:
     """Find classes in a module which satisfy a predicate."""
     classes = inspect.getmembers(module, inspect.isclass)
-    return [cls for name, cls in classes if predicate(cls)]
+    return {name: cls for name, cls in classes if predicate(cls)}

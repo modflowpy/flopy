@@ -13,6 +13,8 @@ from textwrap import TextWrapper
 
 import numpy as np
 
+from flopy.mf6.inspect import get_solution_packages
+
 from ..mfbase import PackageContainer, StructException
 
 numeric_index_text = (
@@ -2492,7 +2494,9 @@ class MFStructure:
             cls._instance.sim_struct = None
             cls._instance.dimension_dict = {}
             cls._instance.load_from_dfn_files = load_from_dfn_files
-            cls._instance.flopy_dict = {}
+            cls._instance.flopy_dict = {
+                "solution_packages": get_solution_packages()
+            }
 
             # Read metadata from file
             cls._instance.valid = cls._instance.__load_structure()
@@ -2508,9 +2512,6 @@ class MFStructure:
     def __load_structure(self):
         # set up structure classes
         self.sim_struct = MFSimulationStructure()
-
-        # initialize flopy dict keys
-        MFStructure().flopy_dict["solution_packages"] = {}
 
         if self.load_from_dfn_files:
             mf_dfn = Dfn()
@@ -2542,44 +2543,12 @@ class MFStructure:
                                     "parameter_name": line_lst[6],
                                 }
                                 MFStructure().flopy_dict[line_lst[3]] = sp_dict
-                            elif line_lst[2] == "solution_package":
-                                MFStructure().flopy_dict["solution_packages"][
-                                    line_lst[3]
-                                ] = line_lst[4:]
-            if len(MFStructure().flopy_dict["solution_packages"]) == 0:
-                MFStructure().flopy_dict["solution_packages"]["ims"] = ["*"]
-                warnings.warn(
-                    "Package definition files (dfn) do not define a solution "
-                    "package.  This can happen if your dfn files are out of "
-                    "sync.  Auto-loaded default IMS solution package metadata."
-                    "  In the future auto-loading default metadata will be "
-                    "deprecated.",
-                    DeprecationWarning,
-                )
-            # process each file
             for file in dfn_files:
                 self.sim_struct.process_dfn(DfnFile(file))
             self.sim_struct.tag_read_as_arrays()
         else:
-            package_list = PackageContainer.package_list()
-            for package in package_list:
-                # process header
-                for entry in package.dfn[0][1:]:
-                    if (
-                        isinstance(entry, list)
-                        and entry[0] == "solution_package"
-                    ):
-                        MFStructure().flopy_dict["solution_packages"][
-                            package.package_abbr
-                        ] = entry[1:]
-                # process each package
+            for package in PackageContainer.package_list():
                 self.sim_struct.process_dfn(DfnPackage(package))
             self.sim_struct.tag_read_as_arrays()
 
         return True
-
-    @staticmethod
-    def __valid_line(line):
-        if len(line.strip()) > 1 and line[0] != "#":
-            return True
-        return False
