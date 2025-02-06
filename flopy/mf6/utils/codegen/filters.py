@@ -128,11 +128,11 @@ class Filters:
                 "solutiongroup",
             ]
         elif base == "MFModel":
-            return ["packages", "export_netcdf", "nc_filerecord"]
+            return ["packages"]
         else:
-            if component_name[1] == "nam":
-                return ["export_netcdf", "nc_filerecord"]
-            elif component_name == ("utl", "ts"):
+            # if component_name[1] == "nam":
+            #     return ["export_netcdf", "nc_filerecord"]
+            if component_name == ("utl", "ts"):
                 return ["method", "interpolation_method_single", "sfac"]
             return []
 
@@ -249,10 +249,6 @@ class Filters:
                 (var_type in _MF6_SCALARS and not var_shape)
                 or var_name in ["cvoptions", "output"]
                 # or (component_name[1] == "dis" and var_name == "packagedata")
-                or (
-                    var_name != "packages"
-                    and (component_name[0] is not None and component_name[1] == "nam")
-                )
             ):
                 return None
 
@@ -413,8 +409,6 @@ class Filters:
 
                 def _should_set(var: dict) -> bool:
                     return var["name"] not in [
-                        "export_netcdf",
-                        "nc_filerecord",
                         "packages",
                     ]
 
@@ -456,8 +450,6 @@ class Filters:
                         "parent_file",
                         "modelname",
                         "model_nam_file",
-                        "export_netcdf",
-                        "nc_filerecord",
                         "method",
                         "interpolation_method_single",
                         "sfac",
