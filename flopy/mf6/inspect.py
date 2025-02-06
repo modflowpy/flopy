@@ -29,3 +29,15 @@ def get_solution_packages():
         )
 
     return get_classes(_filter)
+
+
+def get_sub_packages():
+    def _filter(cls):
+        return (
+            len(cls.dfn) > 0
+            and len(cls.dfn[0]) >= 2
+            and len(cls.dfn[0][1]) > 0
+            and cls.dfn[0][1][0] == "subpackage"
+        )
+    
+    return get_classes(_filter)
