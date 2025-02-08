@@ -1085,7 +1085,7 @@ class LRCParticleData:
         if len(lrcregions) != shape:
             raise ValueError(
                 "{}: lrcregions data must have {} rows but a total of {} rows "
-                "were provided.".format(self.name, shape, lrcregions.shape[0])
+                "were provided.".format(self.name, shape, len(lrcregions))
             )
 
         # validate that there are 6 columns in each lrcregions entry
@@ -1319,7 +1319,7 @@ class NodeParticleData:
         if len(nodes) != shape:
             raise ValueError(
                 "{}: node data must have {} rows but a total of {} rows were "
-                "provided.".format(self.name, shape, nodes.shape[0])
+                "provided.".format(self.name, shape, len(nodes))
             )
 
         totalcellcount = 0
