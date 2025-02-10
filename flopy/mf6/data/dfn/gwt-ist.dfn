@@ -92,7 +92,7 @@ valid linear freundlich langmuir
 reader urword
 optional true
 longname activate sorption
-description is a text keyword to indicate that sorption will be activated.  Valid sorption options include LINEAR, FREUNDLICH, and LANGMUIR.  Use of this keyword requires that BULK\_DENSITY and DISTCOEF are specified in the GRIDDATA block.  If sorption is specified as FREUNDLICH or LANGMUIR then SP2 is also required in the GRIDDATA block.
+description is a text keyword to indicate that sorption will be activated.  Valid sorption options include LINEAR, FREUNDLICH, and LANGMUIR.  Use of this keyword requires that BULK\_DENSITY and DISTCOEF are specified in the GRIDDATA block.  If sorption is specified as FREUNDLICH or LANGMUIR then SP2 is also required in the GRIDDATA block.  The sorption option must be consistent with the sorption option specified in the MST Package or the program will terminate with an error.
 
 block options
 name first_order_decay

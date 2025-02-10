@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 20, 2024 02:43:08 UTC
+# FILE created on February 10, 2025 23:05:19 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -33,34 +33,73 @@ class ModflowUtlhpc(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
-    partitions = ListTemplateGenerator(('hpc', 'partitions',
-                                        'partitions'))
+
+    partitions = ListTemplateGenerator(("hpc", "partitions", "partitions"))
     package_abbr = "utlhpc"
     _package_type = "hpc"
     dfn_file_name = "utl-hpc.dfn"
 
     dfn = [
-           ["header", ],
-           ["block options", "name print_table", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name dev_log_mpi", "type keyword",
-            "reader urword", "optional true"],
-           ["block partitions", "name partitions",
-            "type recarray mname mrank", "reader urword", "optional true"],
-           ["block partitions", "name mname", "in_record true",
-            "type string", "tagged false", "reader urword"],
-           ["block partitions", "name mrank", "in_record true",
-            "type integer", "tagged false", "reader urword"]]
+        [
+            "header",
+        ],
+        [
+            "block options",
+            "name print_table",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name dev_log_mpi",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block partitions",
+            "name partitions",
+            "type recarray mname mrank",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block partitions",
+            "name mname",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block partitions",
+            "name mrank",
+            "in_record true",
+            "type integer",
+            "tagged false",
+            "reader urword",
+        ],
+    ]
 
-    def __init__(self, parent_package, loading_package=False, print_table=None,
-                 dev_log_mpi=None, partitions=None, filename=None, pname=None,
-                 **kwargs):
-        super().__init__(parent_package, "hpc", filename, pname,
-                         loading_package, **kwargs)
+    def __init__(
+        self,
+        parent_package,
+        loading_package=False,
+        print_table=None,
+        dev_log_mpi=None,
+        partitions=None,
+        filename=None,
+        pname=None,
+        **kwargs,
+    ):
+        super().__init__(
+            parent_package, "hpc", filename, pname, loading_package, **kwargs
+        )
 
         # set up variables
         self.print_table = self.build_mfdata("print_table", print_table)

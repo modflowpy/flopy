@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 20, 2024 02:43:08 UTC
+# FILE created on February 10, 2025 23:05:19 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -46,10 +46,10 @@ class ModflowUtlats(mfpackage.MFPackage):
           file with a default value of 1/3), then the time step length is
           multiplied by dtadj. If the number of outer solver iterations are
           greater than the product of the maximum number of outer iterations
-          and ATS_OUTER_MAXIMUM_FRACTION, then the time step length is divided
-          by dtadj. dtadj must be zero, one, or greater than one. If dtadj is
-          zero or one, then it has no effect on the simulation. A value between
-          2.0 and 5.0 can be used as an initial estimate.
+          and 1.0 minus ATS_OUTER_MAXIMUM_FRACTION, then the time step length
+          is divided by dtadj. dtadj must be zero, one, or greater than one. If
+          dtadj is zero or one, then it has no effect on the simulation. A
+          value between 2.0 and 5.0 can be used as an initial estimate.
         * dtfailadj (double) is the divisor of the time step length when a time
           step fails to converge. If there is solver failure, then the time
           step will be tried again with a shorter time step length calculated
@@ -66,46 +66,105 @@ class ModflowUtlats(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
-    perioddata = ListTemplateGenerator(('ats', 'perioddata',
-                                        'perioddata'))
+
+    perioddata = ListTemplateGenerator(("ats", "perioddata", "perioddata"))
     package_abbr = "utlats"
     _package_type = "ats"
     dfn_file_name = "utl-ats.dfn"
 
     dfn = [
-           ["header", ],
-           ["block dimensions", "name maxats", "type integer",
-            "reader urword", "optional false", "default_value 1"],
-           ["block perioddata", "name perioddata",
+        [
+            "header",
+        ],
+        [
+            "block dimensions",
+            "name maxats",
+            "type integer",
+            "reader urword",
+            "optional false",
+            "default_value 1",
+        ],
+        [
+            "block perioddata",
+            "name perioddata",
             "type recarray iperats dt0 dtmin dtmax dtadj dtfailadj",
-            "reader urword", "optional false"],
-           ["block perioddata", "name iperats", "type integer",
-            "in_record true", "tagged false", "reader urword",
-            "optional false", "numeric_index true"],
-           ["block perioddata", "name dt0", "type double precision",
-            "in_record true", "tagged false", "reader urword",
-            "optional false"],
-           ["block perioddata", "name dtmin", "type double precision",
-            "in_record true", "tagged false", "reader urword",
-            "optional false"],
-           ["block perioddata", "name dtmax", "type double precision",
-            "in_record true", "tagged false", "reader urword",
-            "optional false"],
-           ["block perioddata", "name dtadj", "type double precision",
-            "in_record true", "tagged false", "reader urword",
-            "optional false"],
-           ["block perioddata", "name dtfailadj", "type double precision",
-            "in_record true", "tagged false", "reader urword",
-            "optional false"]]
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block perioddata",
+            "name iperats",
+            "type integer",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+            "numeric_index true",
+        ],
+        [
+            "block perioddata",
+            "name dt0",
+            "type double precision",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block perioddata",
+            "name dtmin",
+            "type double precision",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block perioddata",
+            "name dtmax",
+            "type double precision",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block perioddata",
+            "name dtadj",
+            "type double precision",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block perioddata",
+            "name dtfailadj",
+            "type double precision",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+    ]
 
-    def __init__(self, parent_package, loading_package=False, maxats=1,
-                 perioddata=None, filename=None, pname=None, **kwargs):
-        super().__init__(parent_package, "ats", filename, pname,
-                         loading_package, **kwargs)
+    def __init__(
+        self,
+        parent_package,
+        loading_package=False,
+        maxats=1,
+        perioddata=None,
+        filename=None,
+        pname=None,
+        **kwargs,
+    ):
+        super().__init__(
+            parent_package, "ats", filename, pname, loading_package, **kwargs
+        )
 
         # set up variables
         self.maxats = self.build_mfdata("maxats", maxats)
@@ -127,17 +186,27 @@ class UtlatsPackages(mfpackage.MFChildPackages):
         Adds a new ModflowUtlats package to the container. See ModflowUtlats
         init documentation for definition of parameters.
     """
+
     package_abbr = "utlatspackages"
 
     def initialize(self, maxats=1, perioddata=None, filename=None, pname=None):
-        new_package = ModflowUtlats(self._cpparent, maxats=maxats,
-                                    perioddata=perioddata, filename=filename,
-                                    pname=pname, child_builder_call=True)
+        new_package = ModflowUtlats(
+            self._cpparent,
+            maxats=maxats,
+            perioddata=perioddata,
+            filename=filename,
+            pname=pname,
+            child_builder_call=True,
+        )
         self.init_package(new_package, filename)
 
-    def append_package(self, maxats=1, perioddata=None, filename=None,
-                   pname=None):
-        new_package = ModflowUtlats(self._cpparent, maxats=maxats,
-                                    perioddata=perioddata, filename=filename,
-                                    pname=pname, child_builder_call=True)
+    def append_package(self, maxats=1, perioddata=None, filename=None, pname=None):
+        new_package = ModflowUtlats(
+            self._cpparent,
+            maxats=maxats,
+            perioddata=perioddata,
+            filename=filename,
+            pname=pname,
+            child_builder_call=True,
+        )
         self._append_package(new_package, filename)

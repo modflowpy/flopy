@@ -134,7 +134,7 @@ type double precision
 reader urword
 optional true
 longname stop time
-description real value defining the maximum simulation time to which particles in the package can be tracked.  Particles that have not terminated earlier due to another termination condition will terminate when simulation time STOPTIME is reached.  If the last stress period in the simulation consists of more than one time step, particles will not be tracked past the ending time of the last stress period, regardless of STOPTIME.  If the last stress period in the simulation consists of a single time step, it is assumed to be a steady-state stress period, and its ending time will not limit the simulation time to which particles can be tracked.  If STOPTIME and STOPTRAVELTIME are both provided, particles will be stopped if either is reached.
+description real value defining the maximum simulation time to which particles in the package can be tracked.  Particles that have not terminated earlier due to another termination condition will terminate when simulation time STOPTIME is reached.  If the last stress period in the simulation consists of more than one time step, particles will not be tracked past the ending time of the last stress period, regardless of STOPTIME.  If the EXTEND\_TRACKING option is enabled and the last stress period in the simulation is steady-state, the simulation ending time will not limit the time to which particles can be tracked, but STOPTIME and STOPTRAVELTIME will continue to apply.  If STOPTIME and STOPTRAVELTIME are both provided, particles will be stopped if either is reached.
 
 block options
 name stoptraveltime
@@ -142,7 +142,7 @@ type double precision
 reader urword
 optional true
 longname stop travel time
-description real value defining the maximum travel time over which particles in the model can be tracked.  Particles that have not terminated earlier due to another termination condition will terminate when their travel time reaches STOPTRAVELTIME.  If the last stress period in the simulation consists of more than one time step, particles will not be tracked past the ending time of the last stress period, regardless of STOPTRAVELTIME.  If the last stress period in the simulation consists of a single time step, it is assumed to be a steady-state stress period, and its ending time will not limit the travel time over which particles can be tracked.  If STOPTIME and STOPTRAVELTIME are both provided, particles will be stopped if either is reached.
+description real value defining the maximum travel time over which particles in the model can be tracked.  Particles that have not terminated earlier due to another termination condition will terminate when their travel time reaches STOPTRAVELTIME.  If the last stress period in the simulation consists of more than one time step, particles will not be tracked past the ending time of the last stress period, regardless of STOPTRAVELTIME.  If the EXTEND\_TRACKING option is enabled and the last stress period in the simulation is steady-state, the simulation ending time will not limit the time to which particles can be tracked, but STOPTIME and STOPTRAVELTIME will continue to apply.  If STOPTIME and STOPTRAVELTIME are both provided, particles will be stopped if either is reached.
 
 block options
 name stop_at_weak_sink
@@ -337,7 +337,7 @@ description
 
 block period
 name releasesetting
-type keystring all first frequency steps fraction
+type keystring all first last frequency steps fraction
 shape
 tagged false
 in_record true
@@ -400,6 +400,6 @@ tagged true
 in_record true
 reader urword
 optional true
-removed 6.5.1
+removed 6.6.0
 longname
 description release particles after the specified fraction of the time step has elapsed. If FRACTION is not set, particles are released at the start of the specified time step(s). FRACTION must be a single value when used with ALL, FIRST, or FREQUENCY. When used with STEPS, FRACTION may be a single value or an array of the same length as STEPS. If a single FRACTION value is provided with STEPS, the fraction applies to all steps. NOTE: The FRACTION option has been removed. For fine control over release timing, specify times explicitly using the RELEASETIMES block.

@@ -1,0 +1,237 @@
+# --------------------- chf zdg options ---------------------
+# flopy multi-package
+
+block options
+name auxiliary
+type string
+shape (naux)
+reader urword
+optional true
+longname keyword to specify aux variables
+description REPLACE auxnames {'{#1}': 'Surface Water Flow'}
+
+block options
+name boundnames
+type keyword
+shape
+reader urword
+optional true
+longname
+description REPLACE boundnames {'{#1}': 'zero-depth-gradient boundary'}
+
+block options
+name print_input
+type keyword
+reader urword
+optional true
+longname print input to listing file
+description REPLACE print_input {'{#1}': 'zero-depth-gradient boundary'}
+mf6internal iprpak
+
+block options
+name print_flows
+type keyword
+reader urword
+optional true
+longname print calculated flows to listing file
+description REPLACE print_flows {'{#1}': 'zero-depth-gradient boundary'}
+mf6internal iprflow
+
+block options
+name save_flows
+type keyword
+reader urword
+optional true
+longname save flows to budget file
+description REPLACE save_flows {'{#1}': 'zero-depth-gradient boundary'}
+mf6internal ipakcb
+
+block options
+name ts_filerecord
+type record ts6 filein ts6_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name ts6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname head keyword
+description keyword to specify that record corresponds to a time-series file.
+
+block options
+name filein
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an input filename is expected next.
+
+block options
+name ts6_filename
+type string
+preserve_case true
+in_record true
+reader urword
+optional false
+tagged false
+longname file name of time series information
+description REPLACE timeseriesfile {}
+
+block options
+name obs_filerecord
+type record obs6 filein obs6_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name obs6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname obs keyword
+description keyword to specify that record corresponds to an observations file.
+
+block options
+name obs6_filename
+type string
+preserve_case true
+in_record true
+tagged false
+reader urword
+optional false
+longname obs6 input filename
+description REPLACE obs6_filename {'{#1}': 'Zero-Depth-Gradient Boundary'}
+
+
+# --------------------- chf zdg dimensions ---------------------
+
+block dimensions
+name maxbound
+type integer
+reader urword
+optional false
+longname maximum number of zero-depth-gradient boundaries
+description REPLACE maxbound {'{#1}': 'zero-depth-gradient boundary'}
+
+
+# --------------------- chf zdg period ---------------------
+
+block period
+name iper
+type integer
+block_variable True
+in_record true
+tagged false
+shape
+valid
+reader urword
+optional false
+longname stress period number
+description REPLACE iper {}
+
+block period
+name stress_period_data
+type recarray cellid idcxs width slope rough aux boundname
+shape (maxbound)
+reader urword
+longname
+description
+mf6internal spd
+
+block period
+name cellid
+type integer
+shape (ncelldim)
+tagged false
+in_record true
+reader urword
+longname cell identifier
+description REPLACE cellid {}
+
+block period
+name idcxs
+type integer
+shape
+tagged false
+in_record true
+reader urword
+time_series false
+longname cross section identifier
+description is the identifier for the cross section specified in the CXS Package.  A value of zero indicates the zero-depth-gradient calculation will use parameters for a hydraulically wide channel. 
+numeric_index true
+
+block period
+name width
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+time_series true
+longname width of the zero-depth gradient boundary
+description is the channel width of the zero-depth gradient boundary. If a cross section is associated with this boundary, the width will be scaled by the cross section information.  If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+
+block period
+name slope
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+time_series true
+longname channel slope
+description is the channel slope used to calculate flow to the zero-depth-gradient boundary. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+
+block period
+name rough
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+time_series true
+longname channel roughness
+description is the Manning channel roughness value used to calculate flow to the zero-depth-gradient boundary. If a cross section is associated with this boundary, the roughness value will be multiplied by the roughness fraction for each part of the cross section.  If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+
+block period
+name aux
+type double precision
+in_record true
+tagged false
+shape (naux)
+reader urword
+optional true
+time_series true
+longname auxiliary variables
+description REPLACE aux {'{#1}': 'zero-depth-gradient boundary'}
+mf6internal auxvar
+
+block period
+name boundname
+type string
+shape
+tagged false
+in_record true
+reader urword
+optional true
+longname zero-depth-gradient boundary name
+description REPLACE boundname {'{#1}': 'zero-depth-gradient boundary'}

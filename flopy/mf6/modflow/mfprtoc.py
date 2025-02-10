@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 20, 2024 02:43:08 UTC
+# FILE created on February 10, 2025 23:05:19 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -111,149 +111,383 @@ class ModflowPrtoc(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
-    budget_filerecord = ListTemplateGenerator(('prt6', 'oc', 'options',
-                                               'budget_filerecord'))
-    budgetcsv_filerecord = ListTemplateGenerator(('prt6', 'oc',
-                                                  'options',
-                                                  'budgetcsv_filerecord'))
-    track_filerecord = ListTemplateGenerator(('prt6', 'oc', 'options',
-                                              'track_filerecord'))
-    trackcsv_filerecord = ListTemplateGenerator(('prt6', 'oc', 'options',
-                                                 'trackcsv_filerecord'))
-    tracktimes = ListTemplateGenerator(('prt6', 'oc', 'tracktimes',
-                                        'tracktimes'))
-    saverecord = ListTemplateGenerator(('prt6', 'oc', 'period',
-                                        'saverecord'))
-    printrecord = ListTemplateGenerator(('prt6', 'oc', 'period',
-                                         'printrecord'))
+
+    budget_filerecord = ListTemplateGenerator(
+        ("prt6", "oc", "options", "budget_filerecord")
+    )
+    budgetcsv_filerecord = ListTemplateGenerator(
+        ("prt6", "oc", "options", "budgetcsv_filerecord")
+    )
+    track_filerecord = ListTemplateGenerator(
+        ("prt6", "oc", "options", "track_filerecord")
+    )
+    trackcsv_filerecord = ListTemplateGenerator(
+        ("prt6", "oc", "options", "trackcsv_filerecord")
+    )
+    tracktimes = ListTemplateGenerator(("prt6", "oc", "tracktimes", "tracktimes"))
+    saverecord = ListTemplateGenerator(("prt6", "oc", "period", "saverecord"))
+    printrecord = ListTemplateGenerator(("prt6", "oc", "period", "printrecord"))
     package_abbr = "prtoc"
     _package_type = "oc"
     dfn_file_name = "prt-oc.dfn"
 
     dfn = [
-           ["header", ],
-           ["block options", "name budget_filerecord",
-            "type record budget fileout budgetfile", "shape", "reader urword",
-            "tagged true", "optional true"],
-           ["block options", "name budget", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name fileout", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name budgetfile", "type string",
-            "preserve_case true", "shape", "in_record true", "reader urword",
-            "tagged false", "optional false"],
-           ["block options", "name budgetcsv_filerecord",
-            "type record budgetcsv fileout budgetcsvfile", "shape",
-            "reader urword", "tagged true", "optional true"],
-           ["block options", "name budgetcsv", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name budgetcsvfile", "type string",
-            "preserve_case true", "shape", "in_record true", "reader urword",
-            "tagged false", "optional false"],
-           ["block options", "name track_filerecord",
-            "type record track fileout trackfile", "shape", "reader urword",
-            "tagged true", "optional true"],
-           ["block options", "name track", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name trackfile", "type string",
-            "preserve_case true", "shape", "in_record true", "reader urword",
-            "tagged false", "optional false"],
-           ["block options", "name trackcsv_filerecord",
-            "type record trackcsv fileout trackcsvfile", "shape",
-            "reader urword", "tagged true", "optional true"],
-           ["block options", "name trackcsv", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name trackcsvfile", "type string",
-            "preserve_case true", "shape", "in_record true", "reader urword",
-            "tagged false", "optional false"],
-           ["block options", "name track_release", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name track_exit", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name track_timestep", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name track_terminate", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name track_weaksink", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name track_usertime", "type keyword",
-            "reader urword", "optional true"],
-           ["block dimensions", "name ntracktimes", "type integer",
-            "reader urword", "optional false"],
-           ["block tracktimes", "name tracktimes", "type recarray time",
-            "shape (ntracktimes)", "reader urword"],
-           ["block tracktimes", "name time", "type double precision",
-            "shape", "tagged false", "in_record true", "reader urword"],
-           ["block period", "name iper", "type integer",
-            "block_variable True", "in_record true", "tagged false", "shape",
-            "valid", "reader urword", "optional false"],
-           ["block period", "name saverecord",
-            "type record save rtype ocsetting", "shape", "reader urword",
-            "tagged false", "optional true"],
-           ["block period", "name save", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block period", "name printrecord",
-            "type record print rtype ocsetting", "shape", "reader urword",
-            "tagged false", "optional true"],
-           ["block period", "name print", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block period", "name rtype", "type string", "shape",
-            "in_record true", "reader urword", "tagged false",
-            "optional false"],
-           ["block period", "name ocsetting",
-            "type keystring all first last frequency steps", "shape",
-            "tagged false", "in_record true", "reader urword"],
-           ["block period", "name all", "type keyword", "shape",
-            "in_record true", "reader urword"],
-           ["block period", "name first", "type keyword", "shape",
-            "in_record true", "reader urword"],
-           ["block period", "name last", "type keyword", "shape",
-            "in_record true", "reader urword"],
-           ["block period", "name frequency", "type integer", "shape",
-            "tagged true", "in_record true", "reader urword"],
-           ["block period", "name steps", "type integer", "shape (<nstp)",
-            "tagged true", "in_record true", "reader urword"]]
+        [
+            "header",
+        ],
+        [
+            "block options",
+            "name budget_filerecord",
+            "type record budget fileout budgetfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name budget",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name fileout",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsv_filerecord",
+            "type record budgetcsv fileout budgetcsvfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name budgetcsv",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsvfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name track_filerecord",
+            "type record track fileout trackfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name track",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name trackfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name trackcsv_filerecord",
+            "type record trackcsv fileout trackcsvfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name trackcsv",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name trackcsvfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name track_release",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name track_exit",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name track_timestep",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name track_terminate",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name track_weaksink",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name track_usertime",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block dimensions",
+            "name ntracktimes",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block tracktimes",
+            "name tracktimes",
+            "type recarray time",
+            "shape (ntracktimes)",
+            "reader urword",
+        ],
+        [
+            "block tracktimes",
+            "name time",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name iper",
+            "type integer",
+            "block_variable True",
+            "in_record true",
+            "tagged false",
+            "shape",
+            "valid",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name saverecord",
+            "type record save rtype ocsetting",
+            "shape",
+            "reader urword",
+            "tagged false",
+            "optional true",
+        ],
+        [
+            "block period",
+            "name save",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name printrecord",
+            "type record print rtype ocsetting",
+            "shape",
+            "reader urword",
+            "tagged false",
+            "optional true",
+        ],
+        [
+            "block period",
+            "name print",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name rtype",
+            "type string",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name ocsetting",
+            "type keystring all first last frequency steps",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name all",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name first",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name last",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name frequency",
+            "type integer",
+            "shape",
+            "tagged true",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name steps",
+            "type integer",
+            "shape (<nstp)",
+            "tagged true",
+            "in_record true",
+            "reader urword",
+        ],
+    ]
 
-    def __init__(self, model, loading_package=False, budget_filerecord=None,
-                 budgetcsv_filerecord=None, track_filerecord=None,
-                 trackcsv_filerecord=None, track_release=None, track_exit=None,
-                 track_timestep=None, track_terminate=None,
-                 track_weaksink=None, track_usertime=None, ntracktimes=None,
-                 tracktimes=None, saverecord=None, printrecord=None,
-                 filename=None, pname=None, **kwargs):
-        super().__init__(model, "oc", filename, pname,
-                         loading_package, **kwargs)
+    def __init__(
+        self,
+        model,
+        loading_package=False,
+        budget_filerecord=None,
+        budgetcsv_filerecord=None,
+        track_filerecord=None,
+        trackcsv_filerecord=None,
+        track_release=None,
+        track_exit=None,
+        track_timestep=None,
+        track_terminate=None,
+        track_weaksink=None,
+        track_usertime=None,
+        ntracktimes=None,
+        tracktimes=None,
+        saverecord=None,
+        printrecord=None,
+        filename=None,
+        pname=None,
+        **kwargs,
+    ):
+        super().__init__(model, "oc", filename, pname, loading_package, **kwargs)
 
         # set up variables
-        self.budget_filerecord = self.build_mfdata("budget_filerecord",
-                                                   budget_filerecord)
-        self.budgetcsv_filerecord = self.build_mfdata("budgetcsv_filerecord",
-                                                      budgetcsv_filerecord)
-        self.track_filerecord = self.build_mfdata("track_filerecord",
-                                                  track_filerecord)
-        self.trackcsv_filerecord = self.build_mfdata("trackcsv_filerecord",
-                                                     trackcsv_filerecord)
+        self.budget_filerecord = self.build_mfdata(
+            "budget_filerecord", budget_filerecord
+        )
+        self.budgetcsv_filerecord = self.build_mfdata(
+            "budgetcsv_filerecord", budgetcsv_filerecord
+        )
+        self.track_filerecord = self.build_mfdata("track_filerecord", track_filerecord)
+        self.trackcsv_filerecord = self.build_mfdata(
+            "trackcsv_filerecord", trackcsv_filerecord
+        )
         self.track_release = self.build_mfdata("track_release", track_release)
         self.track_exit = self.build_mfdata("track_exit", track_exit)
-        self.track_timestep = self.build_mfdata("track_timestep",
-                                                track_timestep)
-        self.track_terminate = self.build_mfdata("track_terminate",
-                                                 track_terminate)
-        self.track_weaksink = self.build_mfdata("track_weaksink",
-                                                track_weaksink)
-        self.track_usertime = self.build_mfdata("track_usertime",
-                                                track_usertime)
+        self.track_timestep = self.build_mfdata("track_timestep", track_timestep)
+        self.track_terminate = self.build_mfdata("track_terminate", track_terminate)
+        self.track_weaksink = self.build_mfdata("track_weaksink", track_weaksink)
+        self.track_usertime = self.build_mfdata("track_usertime", track_usertime)
         self.ntracktimes = self.build_mfdata("ntracktimes", ntracktimes)
         self.tracktimes = self.build_mfdata("tracktimes", tracktimes)
         self.saverecord = self.build_mfdata("saverecord", saverecord)

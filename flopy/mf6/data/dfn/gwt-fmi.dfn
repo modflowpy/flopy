@@ -33,7 +33,7 @@ type string
 tagged false
 reader urword
 longname flow type
-description is the word GWFBUDGET, GWFHEAD, GWFMOVER or the name of an advanced GWF stress package.  If GWFBUDGET is specified, then the corresponding file must be a budget file from a previous GWF Model run.  If an advanced GWF stress package name appears then the corresponding file must be the budget file saved by a LAK, SFR, MAW or UZF Package.
+description is the word GWFBUDGET, GWFHEAD, GWFMOVER or the name of an advanced GWF stress package.  If GWFBUDGET is specified, then the corresponding file must be a budget file. If GWFHEAD is specified, the file must be a head file.  If GWFGRID is specified, the file must be a binary grid file.  If an advanced GWF stress package name appears then the corresponding file must be the budget file saved by a LAK, SFR, MAW or UZF Package.
 
 block packagedata
 name filein

@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 20, 2024 02:43:08 UTC
+# FILE created on February 10, 2025 23:05:19 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator
 
@@ -34,36 +34,68 @@ class ModflowGwtic(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
-    strt = ArrayTemplateGenerator(('gwt6', 'ic', 'griddata', 'strt'))
+
+    strt = ArrayTemplateGenerator(("gwt6", "ic", "griddata", "strt"))
     package_abbr = "gwtic"
     _package_type = "ic"
     dfn_file_name = "gwt-ic.dfn"
 
     dfn = [
-           ["header", ],
-           ["block options", "name export_array_ascii", "type keyword",
-            "reader urword", "optional true", "mf6internal export_ascii"],
-           ["block options", "name export_array_netcdf", "type keyword",
-            "reader urword", "optional true", "mf6internal export_nc",
-            "extended true"],
-           ["block griddata", "name strt", "type double precision",
-            "shape (nodes)", "reader readarray", "layered true",
-            "netcdf true", "default_value 0.0"]]
+        [
+            "header",
+        ],
+        [
+            "block options",
+            "name export_array_ascii",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_ascii",
+        ],
+        [
+            "block options",
+            "name export_array_netcdf",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_nc",
+            "extended true",
+        ],
+        [
+            "block griddata",
+            "name strt",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "default_value 0.0",
+        ],
+    ]
 
-    def __init__(self, model, loading_package=False, export_array_ascii=None,
-                 export_array_netcdf=None, strt=0.0, filename=None, pname=None,
-                 **kwargs):
-        super().__init__(model, "ic", filename, pname,
-                         loading_package, **kwargs)
+    def __init__(
+        self,
+        model,
+        loading_package=False,
+        export_array_ascii=None,
+        export_array_netcdf=None,
+        strt=0.0,
+        filename=None,
+        pname=None,
+        **kwargs,
+    ):
+        super().__init__(model, "ic", filename, pname, loading_package, **kwargs)
 
         # set up variables
-        self.export_array_ascii = self.build_mfdata("export_array_ascii",
-                                                    export_array_ascii)
-        self.export_array_netcdf = self.build_mfdata("export_array_netcdf",
-                                                     export_array_netcdf)
+        self.export_array_ascii = self.build_mfdata(
+            "export_array_ascii", export_array_ascii
+        )
+        self.export_array_netcdf = self.build_mfdata(
+            "export_array_netcdf", export_array_netcdf
+        )
         self.strt = self.build_mfdata("strt", strt)
         self._init_complete = True

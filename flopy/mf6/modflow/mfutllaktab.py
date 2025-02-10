@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 20, 2024 02:43:08 UTC
+# FILE created on February 10, 2025 23:05:19 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -42,39 +42,93 @@ class ModflowUtllaktab(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
-    table = ListTemplateGenerator(('laktab', 'table', 'table'))
+
+    table = ListTemplateGenerator(("laktab", "table", "table"))
     package_abbr = "utllaktab"
     _package_type = "laktab"
     dfn_file_name = "utl-laktab.dfn"
 
     dfn = [
-           ["header", 
-            "multi-package", ],
-           ["block dimensions", "name nrow", "type integer",
-            "reader urword", "optional false"],
-           ["block dimensions", "name ncol", "type integer",
-            "reader urword", "optional false"],
-           ["block table", "name table",
-            "type recarray stage volume sarea barea", "shape (nrow)",
-            "reader urword"],
-           ["block table", "name stage", "type double precision", "shape",
-            "tagged false", "in_record true", "reader urword"],
-           ["block table", "name volume", "type double precision", "shape",
-            "tagged false", "in_record true", "reader urword"],
-           ["block table", "name sarea", "type double precision", "shape",
-            "tagged false", "in_record true", "reader urword"],
-           ["block table", "name barea", "type double precision", "shape",
-            "tagged false", "in_record true", "reader urword",
-            "optional true"]]
+        [
+            "header",
+            "multi-package",
+        ],
+        [
+            "block dimensions",
+            "name nrow",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block dimensions",
+            "name ncol",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block table",
+            "name table",
+            "type recarray stage volume sarea barea",
+            "shape (nrow)",
+            "reader urword",
+        ],
+        [
+            "block table",
+            "name stage",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block table",
+            "name volume",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block table",
+            "name sarea",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block table",
+            "name barea",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "optional true",
+        ],
+    ]
 
-    def __init__(self, model, loading_package=False, nrow=None, ncol=None,
-                 table=None, filename=None, pname=None, **kwargs):
-        super().__init__(model, "laktab", filename, pname,
-                         loading_package, **kwargs)
+    def __init__(
+        self,
+        model,
+        loading_package=False,
+        nrow=None,
+        ncol=None,
+        table=None,
+        filename=None,
+        pname=None,
+        **kwargs,
+    ):
+        super().__init__(model, "laktab", filename, pname, loading_package, **kwargs)
 
         # set up variables
         self.nrow = self.build_mfdata("nrow", nrow)

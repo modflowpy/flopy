@@ -1,0 +1,136 @@
+# --------------------- exg olfgwf options ---------------------
+# flopy multi-package
+
+block options
+name print_input
+type keyword
+reader urword
+optional true
+longname keyword to print input to list file
+description keyword to indicate that the list of exchange entries will be echoed to the listing file immediately after it is read.
+mf6internal ipr_input
+
+block options
+name print_flows
+type keyword
+reader urword
+optional true
+longname keyword to print olfgwf flows to list file
+description keyword to indicate that the list of exchange flow rates will be printed to the listing file for every stress period in which ``SAVE BUDGET'' is specified in Output Control.
+mf6internal ipr_flow
+
+block options
+name fixed_conductance
+type keyword
+reader urword
+optional true
+longname keyword to indicate conductance is fixed
+description keyword to indicate that the product of the bedleak and cfact input variables in the exchangedata block represents conductance.  This conductance is fixed and does not change as a function of head in the surface water and groundwater models.
+mf6internal ifixedcond
+
+block options
+name obs_filerecord
+type record obs6 filein obs6_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name obs6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname obs keyword
+description keyword to specify that record corresponds to an observations file.
+
+block options
+name filein
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an input filename is expected next.
+
+block options
+name obs6_filename
+type string
+preserve_case true
+in_record true
+tagged false
+reader urword
+optional false
+longname obs6 input filename
+description is the file name of the observations input file for this exchange. See the ``Observation utility'' section for instructions for preparing observation input files. Table \ref{table:gwf-obstypetable} lists observation type(s) supported by the SWF-GWF package.
+
+# --------------------- exg olfgwf dimensions ---------------------
+
+block dimensions
+name nexg
+type integer
+reader urword
+optional false
+longname number of exchanges
+description keyword and integer value specifying the number of SWF-GWF exchanges.
+
+
+# --------------------- exg olfgwf exchangedata ---------------------
+
+block exchangedata
+name exchangedata
+type recarray cellidm1 cellidm2 bedleak cfact
+shape (nexg)
+reader urword
+optional false
+longname exchange data
+description
+
+block exchangedata
+name cellidm1
+type integer
+in_record true
+tagged false
+reader urword
+optional false
+longname cellid of cell in surface water model
+description is the cellid of the cell in model 1, which must be the surface water model. For a structured grid that uses the DIS input file, CELLIDM1 is the layer, row, and column numbers of the cell.   For a grid that uses the DISV input file, CELLIDM1 is the layer number and CELL2D number for the two cells.  If the model uses the unstructured discretization (DISU) input file, then CELLIDM1 is the node number for the cell.
+numeric_index true
+
+block exchangedata
+name cellidm2
+type integer
+in_record true
+tagged false
+reader urword
+optional false
+longname cellid of cell in groundwater model
+description is the cellid of the cell in model 2, which must be the groundwater model. For a structured grid that uses the DIS input file, CELLIDM2 is the layer, row, and column numbers of the cell.   For a grid that uses the DISV input file, CELLIDM2 is the layer number and CELL2D number for the two cells.  If the model uses the unstructured discretization (DISU) input file, then CELLIDM2 is the node number for the cell.
+numeric_index true
+
+block exchangedata
+name bedleak
+type double precision
+in_record true
+tagged false
+reader urword
+optional false
+longname bed leakance
+description is the leakance between the surface water and groundwater.  bedleak has dimensions of 1/T and is equal to the hydraulic conductivity of the bed sediments divided by the thickness of the bed sediments.
+
+block exchangedata
+name cfact
+type double precision
+in_record true
+tagged false
+reader urword
+optional false
+longname factor used for conductance calculation
+description is the factor used for the conductance calculation.  The definition for this parameter depends the type of surface water model and whether or not the fixed\_conductance option is specified.  If the fixed\_conductance option is specified, then the hydraulic conductance is calculated as the product of bedleak and cfact.  In this case, the conductance is fixed and does not change as a function of the calculated surface water and groundwater head.  If the fixed\_conductance option is not specified, then the definition of cfact depends on whether the surface water model represents one-dimensional channel flow or two-dimensional overland flow.  If the surface water model represents one-dimensional channel flow, then cfact is the length of the channel cell in the groundwater model cell.  If the surface water model represents two-dimensional overland flow, then cfact is the intersection area of the overland flow cell and the underlying groundwater model cell. 

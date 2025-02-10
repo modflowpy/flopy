@@ -1,0 +1,60 @@
+# --------------------- swf sto options ---------------------
+
+block options
+name save_flows
+type keyword
+reader urword
+optional true
+longname keyword to save NPF flows
+description keyword to indicate that cell-by-cell flow terms will be written to the file specified with ``BUDGET SAVE FILE'' in Output Control.
+mf6internal ipakcb
+
+block options
+name export_array_ascii
+type keyword
+reader urword
+optional true
+mf6internal export_ascii
+longname export array variables to layered ascii files.
+description keyword that specifies input grid arrays, which already support the layered keyword, should be written to layered ascii output files.
+
+# --------------------- swf sto griddata ---------------------
+
+# none
+
+# --------------------- swf sto period ---------------------
+
+block period
+name iper
+type integer
+block_variable True
+in_record true
+tagged false
+shape
+valid
+reader urword
+optional false
+longname stress period number
+description REPLACE iper {}
+
+block period
+name steady-state
+type keyword
+shape
+valid
+reader urword
+optional true
+longname steady state indicator
+description keyword to indicate that stress period IPER is steady-state. Steady-state conditions will apply until the TRANSIENT keyword is specified in a subsequent BEGIN PERIOD block.
+mf6internal steady_state
+
+block period
+name transient
+type keyword
+shape
+valid
+reader urword
+optional true
+longname transient indicator
+description keyword to indicate that stress period IPER is transient. Transient conditions will apply until the STEADY-STATE keyword is specified in a subsequent BEGIN PERIOD block.
+

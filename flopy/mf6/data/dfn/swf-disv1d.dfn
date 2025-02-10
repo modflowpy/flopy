@@ -1,0 +1,199 @@
+# --------------------- swf disv1d options ---------------------
+
+block options
+name length_units
+type string
+reader urword
+optional true
+longname model length units
+description is the length units used for this model.  Values can be ``FEET'', ``METERS'', or ``CENTIMETERS''.  If not specified, the default is ``UNKNOWN''.
+
+block options
+name nogrb
+type keyword
+reader urword
+optional true
+longname do not write binary grid file
+description keyword to deactivate writing of the binary grid file.
+
+block options
+name xorigin
+type double precision
+reader urword
+optional true
+longname x-position origin of the model grid coordinate system
+description x-position of the origin used for model grid vertices.  This value should be provided in a real-world coordinate system.  A default value of zero is assigned if not specified.  The value for XORIGIN does not affect the model simulation, but it is written to the binary grid file so that postprocessors can locate the grid in space.
+
+block options
+name yorigin
+type double precision
+reader urword
+optional true
+longname y-position origin of the model grid coordinate system
+description y-position of the origin used for model grid vertices.  This value should be provided in a real-world coordinate system.  If not specified, then a default value equal to zero is used.  The value for YORIGIN does not affect the model simulation, but it is written to the binary grid file so that postprocessors can locate the grid in space.
+
+block options
+name angrot
+type double precision
+reader urword
+optional true
+longname rotation angle
+description counter-clockwise rotation angle (in degrees) of the model grid coordinate system relative to a real-world coordinate system.  If not specified, then a default value of 0.0 is assigned.  The value for ANGROT does not affect the model simulation, but it is written to the binary grid file so that postprocessors can locate the grid in space.
+
+block options
+name export_array_ascii
+type keyword
+reader urword
+optional true
+mf6internal export_ascii
+longname export array variables to layered ascii files.
+description keyword that specifies input griddata arrays should be written to layered ascii output files.
+
+# --------------------- swf disv1d dimensions ---------------------
+
+block dimensions
+name nodes
+type integer
+reader urword
+optional false
+longname number of linear features
+description is the number of linear cells.
+
+block dimensions
+name nvert
+type integer
+reader urword
+optional true
+longname number of columns
+description is the total number of (x, y, z) vertex pairs used to characterize the model grid.
+
+# --------------------- swf disv1d griddata ---------------------
+
+block griddata
+name width
+type double precision
+shape (nodes)
+valid
+reader readarray
+layered false
+optional
+longname width
+description real value that defines the width for each one-dimensional cell. WIDTH must be greater than zero.  If the Cross Section (CXS) Package is used, then the WIDTH value will be multiplied by the specified cross section x-fraction values.
+
+block griddata
+name bottom
+type double precision
+shape (nodes)
+valid
+reader readarray
+layered false
+optional
+longname bottom elevation for the one-dimensional cell
+description bottom elevation for the one-dimensional cell.
+
+block griddata
+name idomain
+type integer
+shape (nodes)
+reader readarray
+layered false
+optional true
+longname idomain existence array
+description is an optional array that characterizes the existence status of a cell.  If the IDOMAIN array is not specified, then all model cells exist within the solution.  If the IDOMAIN value for a cell is 0, the cell does not exist in the simulation.  Input and output values will be read and written for the cell, but internal to the program, the cell is excluded from the solution.  If the IDOMAIN value for a cell is 1, the cell exists in the simulation.
+
+
+# --------------------- swf disv1d vertices ---------------------
+
+block vertices
+name vertices
+type recarray iv xv yv
+shape (nvert)
+reader urword
+optional false
+longname vertices data
+description
+
+block vertices
+name iv
+type integer
+in_record true
+tagged false
+reader urword
+optional false
+longname vertex number
+description is the vertex number.  Records in the VERTICES block must be listed in consecutive order from 1 to NVERT.
+numeric_index true
+
+block vertices
+name xv
+type double precision
+in_record true
+tagged false
+reader urword
+optional false
+longname x-coordinate for vertex
+description is the x-coordinate for the vertex.
+
+block vertices
+name yv
+type double precision
+in_record true
+tagged false
+reader urword
+optional false
+longname y-coordinate for vertex
+description is the y-coordinate for the vertex.
+
+# --------------------- swf disv1d cell1d ---------------------
+
+block cell1d
+name cell1d
+type recarray icell1d fdc ncvert icvert
+shape (nodes)
+reader urword
+optional false
+longname cell1d data
+description
+
+block cell1d
+name icell1d
+type integer
+in_record true
+tagged false
+reader urword
+optional false
+longname cell1d number
+description is the cell1d number.  Records in the cell1d block must be listed in consecutive order from the first to the last.
+numeric_index true
+
+block cell1d
+name fdc
+type double precision
+in_record true
+tagged false
+reader urword
+optional false
+longname fractional distance to the cell center
+description is the fractional distance to the cell center. FDC is relative to the first vertex in the ICVERT array. In most cases FDC should be 0.5, which would place the center of the line segment that defines the cell. If the value of FDC is 1, the cell center would located at the last vertex. FDC values of 0 and 1 can be used to place the node at either end of the cell which can be useful for cells with boundary conditions.
+
+block cell1d
+name ncvert
+type integer
+in_record true
+tagged false
+reader urword
+optional false
+longname number of cell vertices
+description is the number of vertices required to define the cell.  There may be a different number of vertices for each cell.
+
+block cell1d
+name icvert
+type integer
+shape (ncvert)
+in_record true
+tagged false
+reader urword
+optional false
+longname number of cell vertices
+description is an array of integer values containing vertex numbers (in the VERTICES block) used to define the cell.  Vertices must be listed in the order that defines the line representing the cell.  Cells that are connected must share vertices. The bottom elevation of the cell is calculated using the ZV of the first and last vertex point and FDC.
+numeric_index true

@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 20, 2024 02:43:08 UTC
+# FILE created on February 10, 2025 23:05:19 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -99,91 +99,243 @@ class ModflowGwfchd(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
-    auxiliary = ListTemplateGenerator(('gwf6', 'chd', 'options',
-                                       'auxiliary'))
-    ts_filerecord = ListTemplateGenerator(('gwf6', 'chd', 'options',
-                                           'ts_filerecord'))
-    obs_filerecord = ListTemplateGenerator(('gwf6', 'chd', 'options',
-                                            'obs_filerecord'))
-    stress_period_data = ListTemplateGenerator(('gwf6', 'chd', 'period',
-                                                'stress_period_data'))
+
+    auxiliary = ListTemplateGenerator(("gwf6", "chd", "options", "auxiliary"))
+    ts_filerecord = ListTemplateGenerator(("gwf6", "chd", "options", "ts_filerecord"))
+    obs_filerecord = ListTemplateGenerator(("gwf6", "chd", "options", "obs_filerecord"))
+    stress_period_data = ListTemplateGenerator(
+        ("gwf6", "chd", "period", "stress_period_data")
+    )
     package_abbr = "gwfchd"
     _package_type = "chd"
     dfn_file_name = "gwf-chd.dfn"
 
     dfn = [
-           ["header", 
-            "multi-package", 
-            "package-type stress-package"],
-           ["block options", "name auxiliary", "type string",
-            "shape (naux)", "reader urword", "optional true"],
-           ["block options", "name auxmultname", "type string", "shape",
-            "reader urword", "optional true"],
-           ["block options", "name boundnames", "type keyword", "shape",
-            "reader urword", "optional true"],
-           ["block options", "name print_input", "type keyword",
-            "reader urword", "optional true", "mf6internal iprpak"],
-           ["block options", "name print_flows", "type keyword",
-            "reader urword", "optional true", "mf6internal iprflow"],
-           ["block options", "name save_flows", "type keyword",
-            "reader urword", "optional true", "mf6internal ipakcb"],
-           ["block options", "name ts_filerecord",
-            "type record ts6 filein ts6_filename", "shape", "reader urword",
-            "tagged true", "optional true", "construct_package ts",
-            "construct_data timeseries", "parameter_name timeseries"],
-           ["block options", "name ts6", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name filein", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name ts6_filename", "type string",
-            "preserve_case true", "in_record true", "reader urword",
-            "optional false", "tagged false"],
-           ["block options", "name obs_filerecord",
-            "type record obs6 filein obs6_filename", "shape", "reader urword",
-            "tagged true", "optional true", "construct_package obs",
-            "construct_data continuous", "parameter_name observations"],
-           ["block options", "name obs6", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name obs6_filename", "type string",
-            "preserve_case true", "in_record true", "tagged false",
-            "reader urword", "optional false"],
-           ["block options", "name dev_no_newton", "type keyword",
-            "reader urword", "optional true", "mf6internal inewton"],
-           ["block dimensions", "name maxbound", "type integer",
-            "reader urword", "optional false"],
-           ["block period", "name iper", "type integer",
-            "block_variable True", "in_record true", "tagged false", "shape",
-            "valid", "reader urword", "optional false"],
-           ["block period", "name stress_period_data",
-            "type recarray cellid head aux boundname", "shape (maxbound)",
-            "reader urword", "mf6internal spd"],
-           ["block period", "name cellid", "type integer",
-            "shape (ncelldim)", "tagged false", "in_record true",
-            "reader urword"],
-           ["block period", "name head", "type double precision", "shape",
-            "tagged false", "in_record true", "reader urword",
-            "time_series true"],
-           ["block period", "name aux", "type double precision",
-            "in_record true", "tagged false", "shape (naux)", "reader urword",
-            "optional true", "time_series true", "mf6internal auxvar"],
-           ["block period", "name boundname", "type string", "shape",
-            "tagged false", "in_record true", "reader urword",
-            "optional true"]]
+        ["header", "multi-package", "package-type stress-package"],
+        [
+            "block options",
+            "name auxiliary",
+            "type string",
+            "shape (naux)",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name auxmultname",
+            "type string",
+            "shape",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name boundnames",
+            "type keyword",
+            "shape",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name print_input",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal iprpak",
+        ],
+        [
+            "block options",
+            "name print_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal iprflow",
+        ],
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal ipakcb",
+        ],
+        [
+            "block options",
+            "name ts_filerecord",
+            "type record ts6 filein ts6_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "construct_package ts",
+            "construct_data timeseries",
+            "parameter_name timeseries",
+        ],
+        [
+            "block options",
+            "name ts6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name ts6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged false",
+        ],
+        [
+            "block options",
+            "name obs_filerecord",
+            "type record obs6 filein obs6_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "construct_package obs",
+            "construct_data continuous",
+            "parameter_name observations",
+        ],
+        [
+            "block options",
+            "name obs6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name obs6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name dev_no_newton",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal inewton",
+        ],
+        [
+            "block dimensions",
+            "name maxbound",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name iper",
+            "type integer",
+            "block_variable True",
+            "in_record true",
+            "tagged false",
+            "shape",
+            "valid",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name stress_period_data",
+            "type recarray cellid head aux boundname",
+            "shape (maxbound)",
+            "reader urword",
+            "mf6internal spd",
+        ],
+        [
+            "block period",
+            "name cellid",
+            "type integer",
+            "shape (ncelldim)",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name head",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "time_series true",
+        ],
+        [
+            "block period",
+            "name aux",
+            "type double precision",
+            "in_record true",
+            "tagged false",
+            "shape (naux)",
+            "reader urword",
+            "optional true",
+            "time_series true",
+            "mf6internal auxvar",
+        ],
+        [
+            "block period",
+            "name boundname",
+            "type string",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "optional true",
+        ],
+    ]
 
-    def __init__(self, model, loading_package=False, auxiliary=None,
-                 auxmultname=None, boundnames=None, print_input=None,
-                 print_flows=None, save_flows=None, timeseries=None,
-                 observations=None, dev_no_newton=None, maxbound=None,
-                 stress_period_data=None, filename=None, pname=None, **kwargs):
-        super().__init__(model, "chd", filename, pname,
-                         loading_package, **kwargs)
+    def __init__(
+        self,
+        model,
+        loading_package=False,
+        auxiliary=None,
+        auxmultname=None,
+        boundnames=None,
+        print_input=None,
+        print_flows=None,
+        save_flows=None,
+        timeseries=None,
+        observations=None,
+        dev_no_newton=None,
+        maxbound=None,
+        stress_period_data=None,
+        filename=None,
+        pname=None,
+        **kwargs,
+    ):
+        super().__init__(model, "chd", filename, pname, loading_package, **kwargs)
 
         # set up variables
         self.auxiliary = self.build_mfdata("auxiliary", auxiliary)
@@ -192,18 +344,17 @@ class ModflowGwfchd(mfpackage.MFPackage):
         self.print_input = self.build_mfdata("print_input", print_input)
         self.print_flows = self.build_mfdata("print_flows", print_flows)
         self.save_flows = self.build_mfdata("save_flows", save_flows)
-        self._ts_filerecord = self.build_mfdata("ts_filerecord",
-                                                None)
-        self._ts_package = self.build_child_package("ts", timeseries,
-                                                    "timeseries",
-                                                    self._ts_filerecord)
-        self._obs_filerecord = self.build_mfdata("obs_filerecord",
-                                                 None)
-        self._obs_package = self.build_child_package("obs", observations,
-                                                     "continuous",
-                                                     self._obs_filerecord)
+        self._ts_filerecord = self.build_mfdata("ts_filerecord", None)
+        self._ts_package = self.build_child_package(
+            "ts", timeseries, "timeseries", self._ts_filerecord
+        )
+        self._obs_filerecord = self.build_mfdata("obs_filerecord", None)
+        self._obs_package = self.build_child_package(
+            "obs", observations, "continuous", self._obs_filerecord
+        )
         self.dev_no_newton = self.build_mfdata("dev_no_newton", dev_no_newton)
         self.maxbound = self.build_mfdata("maxbound", maxbound)
-        self.stress_period_data = self.build_mfdata("stress_period_data",
-                                                    stress_period_data)
+        self.stress_period_data = self.build_mfdata(
+            "stress_period_data", stress_period_data
+        )
         self._init_complete = True

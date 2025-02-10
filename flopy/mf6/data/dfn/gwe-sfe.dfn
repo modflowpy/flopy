@@ -294,7 +294,7 @@ tagged false
 in_record true
 reader urword
 longname boundary thermal conductivity
-description is the thermal conductivity of the of the interface between the aquifer cell and the stream reach.  
+description is the thermal conductivity of the material between the aquifer cell and the stream reach. The thickness of the material is defined by the variable RBTHCND.
 
 block packagedata
 name rbthcnd
@@ -404,7 +404,7 @@ in_record true
 reader urword
 time_series true
 longname rainfall temperature
-description real or character value that defines the rainfall temperature $(e.g., ^{\circ}C or ^{\circ}F)$ for the reach. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description real or character value that defines the rainfall temperature $(e.g.,\:^{\circ}C\:or\:^{\circ}F)$ for the reach. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block period
 name evaporation
@@ -426,7 +426,7 @@ in_record true
 reader urword
 time_series true
 longname runoff temperature
-description real or character value that defines the temperature of runoff $(e.g., ^{\circ}C or ^{\circ}F)$ for the reach.  Users are free to use whatever temperature scale they want, which might include negative temperatures.  If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description real or character value that defines the temperature of runoff $(e.g.,\:^{\circ}C\:or\:^{\circ}F)$ for the reach.  Users are free to use whatever temperature scale they want, which might include negative temperatures.  If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block period
 name inflow
@@ -437,7 +437,7 @@ in_record true
 reader urword
 time_series true
 longname inflow temperature
-description real or character value that defines the temperature of inflow $(e.g., ^{\circ}C or ^{\circ}F)$ for the reach. Users are free to use whatever temperature scale they want, which might include negative temperatures.  If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description real or character value that defines the temperature of inflow $(e.g.,\:^{\circ}C\:or\:^{\circ}F)$ for the reach. Users are free to use whatever temperature scale they want, which might include negative temperatures.  If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block period
 name auxiliaryrecord
