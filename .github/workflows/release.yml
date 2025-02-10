@@ -39,7 +39,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update FloPy version
+      - name: Sync MF6 module
+        run: uv run python -m flopy.mf6.utils.generate_classes --no-backup
+
+      - name: Update version numbers
         id: version
         run: |
           # extract version from branch name
@@ -57,10 +60,12 @@ jobs:
           uv run python -c "import flopy; print(f'FloPy version: {flopy.__version__}')"
           echo "version=${ver#"v"}" >> $GITHUB_OUTPUT
 
-      - name: Lint and format Python files
+      - name: Format and lint Python files
         run: |
-          uvx ruff check --fix
           uvx ruff format
+          uvx ruff check --fix
+          uvx ruff format flopy/mf6/modflow/*.py
+          uvx ruff check --fix flopy/mf6/modflow/*.py
 
       - name: Run tests
         working-directory: autotest
