@@ -72,26 +72,18 @@ def compare_netcdf_data(base, gen):
 
     # coordinates
     for coordname, da in xrb.coords.items():
-        assert coordname in xrg.coords
-        print(f"NetCDF file check data equivalence for coordinate: {coordname}")
-        assert np.allclose(xrb.coords[coordname].data, xrg.coords[coordname].data)
+        compare_netcdf_var(coordname, xrb.coords, xrg.data_vars, xrg.coords)
 
     # variables
     for varname, da in xrb.data_vars.items():
         if varname == "projection":
             continue
 
-        compare_netcdf_var(
-            varname,
-            xrb.data_vars,
-            xrg.data_vars,
-            xrg.coords,
-        )
+        compare_netcdf_var(varname, xrb.data_vars, xrg.data_vars, xrg.coords)
 
 
 def compare_netcdf_var(varname, base_d, gen_d, coord_d, projection=False, update=None):
     # check variable name
-    # assert varname in xrg.data_vars
     assert varname in gen_d or varname in coord_d
 
     if varname in gen_d:
@@ -101,11 +93,16 @@ def compare_netcdf_var(varname, base_d, gen_d, coord_d, projection=False, update
 
     # encodings
     for e in base_d[varname].encoding:
+        assert e in var_d[varname].encoding
         if e.lower() == "source":
             continue
-        assert e in var_d[varname].encoding
         if e == "_FillValue":
-            assert np.allclose(base_d[varname].encoding[e], var_d[varname].encoding[e])
+            if np.isnan(base_d[varname].encoding[e]):
+                assert np.isnan(var_d[varname].encoding[e])
+            else:
+                assert np.allclose(
+                    base_d[varname].encoding[e], var_d[varname].encoding[e]
+                )
         else:
             assert base_d[varname].encoding[e] == var_d[varname].encoding[e]
 
@@ -140,39 +137,39 @@ def test_load_gwfsto01(function_tmpdir, example_data_path):
         },
     }
     ws = function_tmpdir / "ws"
-    for base_folder, test_info in tests.items():
-        data_path = os.path.join(data_path_base, base_folder, test_info["base_sim_dir"])
+    for dirname, test in tests.items():
+        data_path = os.path.join(data_path_base, dirname, test["base_sim_dir"])
 
         # copy example data into working directory
-        base_model_folder = os.path.join(ws, f"{base_folder}_base")
-        test_model_folder = os.path.join(ws, f"{base_folder}_test")
-        shutil.copytree(data_path, base_model_folder)
+        base_path = os.path.join(ws, f"{dirname}_base")
+        test_path = os.path.join(ws, f"{dirname}_test")
+        shutil.copytree(data_path, base_path)
 
         # load example
-        sim = flopy.mf6.MFSimulation.load(sim_ws=base_model_folder)
+        sim = flopy.mf6.MFSimulation.load(sim_ws=base_path)
         gwf = sim.get_model("gwf_sto01")
 
         # set simulation path and write simulation
-        sim.set_sim_path(test_model_folder)
-        sim.write_simulation(netcdf=test_info["netcdf_type"])
+        sim.set_sim_path(test_path)
+        sim.write_simulation(netcdf=test["netcdf_type"])
 
         # compare generated files
         gen_files = [
             f
-            for f in os.listdir(test_model_folder)
-            if os.path.isfile(os.path.join(test_model_folder, f))
+            for f in os.listdir(test_path)
+            if os.path.isfile(os.path.join(test_path, f))
         ]
         base_files = [
             f
-            for f in os.listdir(base_model_folder)
-            if os.path.isfile(os.path.join(base_model_folder, f))
+            for f in os.listdir(base_path)
+            if os.path.isfile(os.path.join(base_path, f))
         ]
 
         assert len(gen_files) == len(base_files)
         for f in base_files:
-            base = os.path.join(base_model_folder, f)
-            gen = os.path.join(test_model_folder, f)
-            if f != test_info["netcdf_output_file"]:
+            base = os.path.join(base_path, f)
+            gen = os.path.join(test_path, f)
+            if f != test["netcdf_output_file"]:
                 # "gwf_sto01.dis.ncf":   # TODO wkt string missing on write?
                 with open(base, "r") as file1, open(gen, "r") as file2:
                     # Skip first line
@@ -222,16 +219,16 @@ def test_update_gwfsto01(function_tmpdir, example_data_path):
     }
 
     ws = function_tmpdir / "ws"
-    for base_folder, test_info in tests.items():
-        data_path = os.path.join(data_path_base, base_folder, test_info["base_sim_dir"])
+    for dirname, test in tests.items():
+        data_path = os.path.join(data_path_base, dirname, test["base_sim_dir"])
 
         # copy example data into working directory
-        base_model_folder = os.path.join(ws, f"{base_folder}_base")
-        test_model_folder = os.path.join(ws, f"{base_folder}_test")
-        shutil.copytree(data_path, base_model_folder)
+        base_path = os.path.join(ws, f"{dirname}_base")
+        test_path = os.path.join(ws, f"{dirname}_test")
+        shutil.copytree(data_path, base_path)
 
         # load example
-        sim = flopy.mf6.MFSimulation.load(sim_ws=base_model_folder)
+        sim = flopy.mf6.MFSimulation.load(sim_ws=base_path)
 
         # get model instance
         gwf = sim.get_model("gwf_sto01")
@@ -244,26 +241,26 @@ def test_update_gwfsto01(function_tmpdir, example_data_path):
         gwf.ic.strt.set_data(ic_strt)
 
         # set simulation path and write simulation
-        sim.set_sim_path(test_model_folder)
-        sim.write_simulation(netcdf=test_info["netcdf_type"])
+        sim.set_sim_path(test_path)
+        sim.write_simulation(netcdf=test["netcdf_type"])
 
         # compare generated files
         gen_files = [
             f
-            for f in os.listdir(test_model_folder)
-            if os.path.isfile(os.path.join(test_model_folder, f))
+            for f in os.listdir(test_path)
+            if os.path.isfile(os.path.join(test_path, f))
         ]
         base_files = [
             f
-            for f in os.listdir(base_model_folder)
-            if os.path.isfile(os.path.join(base_model_folder, f))
+            for f in os.listdir(base_path)
+            if os.path.isfile(os.path.join(base_path, f))
         ]
 
         assert len(gen_files) == len(base_files)
         for f in base_files:
-            base = os.path.join(base_model_folder, f)
-            gen = os.path.join(test_model_folder, f)
-            if f != test_info["netcdf_output_file"]:
+            base = os.path.join(base_path, f)
+            gen = os.path.join(test_path, f)
+            if f != test["netcdf_output_file"]:
                 # "gwf_sto01.dis.ncf":   # TODO wkt string missing on write?
                 with open(base, "r") as file1, open(gen, "r") as file2:
                     # Skip first line
@@ -369,13 +366,13 @@ def test_create_gwfsto01(function_tmpdir, example_data_path):
 
     # build
     ws = function_tmpdir / "ws"
-    for idx, (base_folder, test_info) in enumerate(tests.items()):
-        data_path = os.path.join(data_path_base, base_folder, test_info["base_sim_dir"])
+    for idx, (dirname, test) in enumerate(tests.items()):
+        data_path = os.path.join(data_path_base, dirname, test["base_sim_dir"])
 
         # copy example data into working directory
-        base_model_folder = os.path.join(ws, f"{base_folder}_base")
-        test_model_folder = os.path.join(ws, f"{base_folder}_test")
-        shutil.copytree(data_path, base_model_folder)
+        base_path = os.path.join(ws, f"{dirname}_base")
+        test_path = os.path.join(ws, f"{dirname}_test")
+        shutil.copytree(data_path, base_path)
 
         # build MODFLOW 6 files
         sim = flopy.mf6.MFSimulation(
@@ -486,26 +483,26 @@ def test_create_gwfsto01(function_tmpdir, example_data_path):
         )
 
         # set simulation path and write simulation
-        sim.set_sim_path(test_model_folder)
-        sim.write_simulation(netcdf=test_info["netcdf_type"])
+        sim.set_sim_path(test_path)
+        sim.write_simulation(netcdf=test["netcdf_type"])
 
         # compare generated files
         gen_files = [
             f
-            for f in os.listdir(test_model_folder)
-            if os.path.isfile(os.path.join(test_model_folder, f))
+            for f in os.listdir(test_path)
+            if os.path.isfile(os.path.join(test_path, f))
         ]
         base_files = [
             f
-            for f in os.listdir(base_model_folder)
-            if os.path.isfile(os.path.join(base_model_folder, f))
+            for f in os.listdir(base_path)
+            if os.path.isfile(os.path.join(base_path, f))
         ]
 
         assert len(gen_files) == len(base_files)
         for f in base_files:
-            base = os.path.join(base_model_folder, f)
-            gen = os.path.join(test_model_folder, f)
-            if f != test_info["netcdf_output_file"]:
+            base = os.path.join(base_path, f)
+            gen = os.path.join(test_path, f)
+            if f != test["netcdf_output_file"]:
                 with open(base, "r") as file1, open(gen, "r") as file2:
                     # Skip first line
                     next(file1)
@@ -595,14 +592,14 @@ def test_gwfsto01(function_tmpdir, example_data_path):
     strt_longname = "starting head"
 
     ws = function_tmpdir / "ws"
-    for base_folder, test_info in tests.items():
-        data_path = os.path.join(data_path_base, base_folder, test_info["base_sim_dir"])
+    for dirname, test in tests.items():
+        data_path = os.path.join(data_path_base, dirname, test["base_sim_dir"])
 
         # copy example data into working directory
-        base_model_folder = os.path.join(ws, f"{base_folder}_base")
-        test_model_folder = os.path.join(ws, f"{base_folder}_test")
-        shutil.copytree(data_path, base_model_folder)
-        os.mkdir(test_model_folder)
+        base_path = os.path.join(ws, f"{dirname}_base")
+        test_path = os.path.join(ws, f"{dirname}_test")
+        shutil.copytree(data_path, base_path)
+        os.mkdir(test_path)
 
         # create discretization
         dis = flopy.discretization.StructuredGrid(
@@ -620,8 +617,8 @@ def test_gwfsto01(function_tmpdir, example_data_path):
         ds = create_dataset(
             "gwf6",
             "gwf_sto01",
-            test_info["netcdf_type"],
-            test_info["netcdf_output_file"],
+            test["netcdf_type"],
+            test["netcdf_output_file"],
             dis,
         )
 
@@ -651,12 +648,12 @@ def test_gwfsto01(function_tmpdir, example_data_path):
         ds.create_array("sto", "sy", sy, ["nlay", "nrow", "ncol"], sy_longname)
 
         # write to netcdf
-        ds.write(test_model_folder)
+        ds.write(test_path)
 
         # compare
         compare_netcdf(
-            os.path.join(base_model_folder, test_info["netcdf_output_file"]),
-            os.path.join(test_model_folder, test_info["netcdf_output_file"]),
+            os.path.join(base_path, test["netcdf_output_file"]),
+            os.path.join(test_path, test["netcdf_output_file"]),
             projection=True,
         )
 
@@ -671,38 +668,38 @@ def test_load_disv01b(function_tmpdir, example_data_path):
         },
     }
     ws = function_tmpdir / "ws"
-    for base_folder, test_info in tests.items():
-        data_path = os.path.join(data_path_base, base_folder, test_info["base_sim_dir"])
+    for dirname, test in tests.items():
+        data_path = os.path.join(data_path_base, dirname, test["base_sim_dir"])
 
         # copy example data into working directory
-        base_model_folder = os.path.join(ws, f"{base_folder}_base")
-        test_model_folder = os.path.join(ws, f"{base_folder}_test")
-        shutil.copytree(data_path, base_model_folder)
+        base_path = os.path.join(ws, f"{dirname}_base")
+        test_path = os.path.join(ws, f"{dirname}_test")
+        shutil.copytree(data_path, base_path)
 
         # load example
-        sim = flopy.mf6.MFSimulation.load(sim_ws=base_model_folder)
+        sim = flopy.mf6.MFSimulation.load(sim_ws=base_path)
 
         # set simulation path and write simulation
-        sim.set_sim_path(test_model_folder)
+        sim.set_sim_path(test_path)
         sim.write_simulation(netcdf="mesh2d")
 
         # compare generated files
         gen_files = [
             f
-            for f in os.listdir(test_model_folder)
-            if os.path.isfile(os.path.join(test_model_folder, f))
+            for f in os.listdir(test_path)
+            if os.path.isfile(os.path.join(test_path, f))
         ]
         base_files = [
             f
-            for f in os.listdir(base_model_folder)
-            if os.path.isfile(os.path.join(base_model_folder, f))
+            for f in os.listdir(base_path)
+            if os.path.isfile(os.path.join(base_path, f))
         ]
 
         assert len(gen_files) == len(base_files)
         for f in base_files:
-            base = os.path.join(base_model_folder, f)
-            gen = os.path.join(test_model_folder, f)
-            if f != test_info["netcdf_output_file"]:
+            base = os.path.join(base_path, f)
+            gen = os.path.join(test_path, f)
+            if f != test["netcdf_output_file"]:
                 with open(base, "r") as file1, open(gen, "r") as file2:
                     # Skip first line
                     next(file1)
@@ -755,16 +752,16 @@ def test_update_disv01b(function_tmpdir, example_data_path):
     }
 
     ws = function_tmpdir / "ws"
-    for base_folder, test_info in tests.items():
-        data_path = os.path.join(data_path_base, base_folder, test_info["base_sim_dir"])
+    for dirname, test in tests.items():
+        data_path = os.path.join(data_path_base, dirname, test["base_sim_dir"])
 
         # copy example data into working directory
-        base_model_folder = os.path.join(ws, f"{base_folder}_base")
-        test_model_folder = os.path.join(ws, f"{base_folder}_test")
-        shutil.copytree(data_path, base_model_folder)
+        base_path = os.path.join(ws, f"{dirname}_base")
+        test_path = os.path.join(ws, f"{dirname}_test")
+        shutil.copytree(data_path, base_path)
 
         # load example
-        sim = flopy.mf6.MFSimulation.load(sim_ws=base_model_folder)
+        sim = flopy.mf6.MFSimulation.load(sim_ws=base_path)
 
         # get model instance
         gwf = sim.get_model("disv01b")
@@ -777,26 +774,26 @@ def test_update_disv01b(function_tmpdir, example_data_path):
         gwf.ic.strt.set_data(strt)
 
         # set simulation path and write simulation
-        sim.set_sim_path(test_model_folder)
+        sim.set_sim_path(test_path)
         sim.write_simulation(netcdf="mesh2d")
 
         # compare generated files
         gen_files = [
             f
-            for f in os.listdir(test_model_folder)
-            if os.path.isfile(os.path.join(test_model_folder, f))
+            for f in os.listdir(test_path)
+            if os.path.isfile(os.path.join(test_path, f))
         ]
         base_files = [
             f
-            for f in os.listdir(base_model_folder)
-            if os.path.isfile(os.path.join(base_model_folder, f))
+            for f in os.listdir(base_path)
+            if os.path.isfile(os.path.join(base_path, f))
         ]
 
         assert len(gen_files) == len(base_files)
         for f in base_files:
-            base = os.path.join(base_model_folder, f)
-            gen = os.path.join(test_model_folder, f)
-            if f != test_info["netcdf_output_file"]:
+            base = os.path.join(base_path, f)
+            gen = os.path.join(test_path, f)
+            if f != test["netcdf_output_file"]:
                 with open(base, "r") as file1, open(gen, "r") as file2:
                     # Skip first line
                     next(file1)
@@ -836,13 +833,13 @@ def test_create_disv01b(function_tmpdir, example_data_path):
 
     # build
     ws = function_tmpdir / "ws"
-    for idx, (base_folder, test_info) in enumerate(tests.items()):
-        data_path = os.path.join(data_path_base, base_folder, test_info["base_sim_dir"])
+    for idx, (dirname, test) in enumerate(tests.items()):
+        data_path = os.path.join(data_path_base, dirname, test["base_sim_dir"])
 
         # copy example data into working directory
-        base_model_folder = os.path.join(ws, f"{base_folder}_base")
-        test_model_folder = os.path.join(ws, f"{base_folder}_test")
-        shutil.copytree(data_path, base_model_folder)
+        base_path = os.path.join(ws, f"{dirname}_base")
+        test_path = os.path.join(ws, f"{dirname}_test")
+        shutil.copytree(data_path, base_path)
 
         # create simulation
         sim = flopy.mf6.MFSimulation(
@@ -868,26 +865,26 @@ def test_create_disv01b(function_tmpdir, example_data_path):
         )
 
         # set path and write simulation
-        sim.set_sim_path(test_model_folder)
-        sim.write_simulation(netcdf=test_info["netcdf_type"])
+        sim.set_sim_path(test_path)
+        sim.write_simulation(netcdf=test["netcdf_type"])
 
         # compare generated files
         gen_files = [
             f
-            for f in os.listdir(test_model_folder)
-            if os.path.isfile(os.path.join(test_model_folder, f))
+            for f in os.listdir(test_path)
+            if os.path.isfile(os.path.join(test_path, f))
         ]
         base_files = [
             f
-            for f in os.listdir(base_model_folder)
-            if os.path.isfile(os.path.join(base_model_folder, f))
+            for f in os.listdir(base_path)
+            if os.path.isfile(os.path.join(base_path, f))
         ]
 
         assert len(gen_files) == len(base_files)
         for f in base_files:
-            base = os.path.join(base_model_folder, f)
-            gen = os.path.join(test_model_folder, f)
-            if f != test_info["netcdf_output_file"]:
+            base = os.path.join(base_path, f)
+            gen = os.path.join(test_path, f)
+            if f != test["netcdf_output_file"]:
                 with open(base, "r") as file1, open(gen, "r") as file2:
                     # Skip first line
                     next(file1)
@@ -981,14 +978,14 @@ def test_disv01b(function_tmpdir, example_data_path):
     strt_longname = "starting head"
 
     ws = function_tmpdir / "ws"
-    for base_folder, test_info in tests.items():
-        data_path = os.path.join(data_path_base, base_folder, test_info["base_sim_dir"])
+    for dirname, test in tests.items():
+        data_path = os.path.join(data_path_base, dirname, test["base_sim_dir"])
 
         # copy example data into working directory
-        base_model_folder = os.path.join(ws, f"{base_folder}_base")
-        test_model_folder = os.path.join(ws, f"{base_folder}_test")
-        shutil.copytree(data_path, base_model_folder)
-        os.mkdir(test_model_folder)
+        base_path = os.path.join(ws, f"{dirname}_base")
+        test_path = os.path.join(ws, f"{dirname}_test")
+        shutil.copytree(data_path, base_path)
+        os.mkdir(test_path)
 
         # create discretization
         disv = VertexGrid(
@@ -1006,8 +1003,8 @@ def test_disv01b(function_tmpdir, example_data_path):
         ds = create_dataset(
             "gwf6",
             "disv01b",
-            test_info["netcdf_type"],
-            test_info["netcdf_output_file"],
+            test["netcdf_type"],
+            test["netcdf_output_file"],
             disv,
         )
 
@@ -1028,12 +1025,12 @@ def test_disv01b(function_tmpdir, example_data_path):
         ds.create_array("ic", "strt", strt, ["nlay", "ncpl"], strt_longname)
 
         # write to netcdf
-        ds.write(test_model_folder)
+        ds.write(test_path)
 
         # compare
         compare_netcdf(
-            os.path.join(base_model_folder, test_info["netcdf_output_file"]),
-            os.path.join(test_model_folder, test_info["netcdf_output_file"]),
+            os.path.join(base_path, test["netcdf_output_file"]),
+            os.path.join(test_path, test["netcdf_output_file"]),
             projection=True,
         )
 
@@ -1189,3 +1186,90 @@ def test_disv_transform(function_tmpdir, example_data_path):
 
     compare_netcdf_data(cmp_pth / f"tri.{nc_type}.nc", mf6_ws / "tri.in.nc")
     # compare_netcdf_data(cmp_pth / f"tri.{nc_type}.nc", vertex_ws / "tri.nc")
+
+
+@pytest.mark.regression
+def test_utlncf_load(function_tmpdir, example_data_path):
+    data_path_base = example_data_path / "mf6" / "netcdf"
+    tests = {
+        "test_utlncf_load": {
+            "base_sim_dir": "disv01b",
+            "netcdf_output_file": "disv01b.in.nc",
+        },
+    }
+    ws = function_tmpdir / "ws"
+    for dirname, test in tests.items():
+        data_path = os.path.join(data_path_base, dirname, test["base_sim_dir"])
+
+        # copy example data into working directory
+        base_path = os.path.join(ws, f"{dirname}_base")
+        test_path = os.path.join(ws, f"{dirname}_test")
+        shutil.copytree(data_path, base_path)
+
+        # load example
+        sim = flopy.mf6.MFSimulation.load(sim_ws=base_path)
+
+        # set simulation path and write simulation
+        sim.set_sim_path(test_path)
+        sim.write_simulation(netcdf="mesh2d")
+
+        # compare generated files
+        gen_files = [
+            f
+            for f in os.listdir(test_path)
+            if os.path.isfile(os.path.join(test_path, f))
+        ]
+        base_files = [
+            f
+            for f in os.listdir(base_path)
+            if os.path.isfile(os.path.join(base_path, f))
+        ]
+
+        assert len(gen_files) == len(base_files)
+        for f in base_files:
+            base = os.path.join(base_path, f)
+            gen = os.path.join(test_path, f)
+            if f != test["netcdf_output_file"]:
+                with open(base, "r") as file1, open(gen, "r") as file2:
+                    # Skip first line
+                    next(file1)
+                    next(file2)
+
+                    for line1, line2 in zip(file1, file2):
+                        if line1.lower().startswith("  wkt"):
+                            break
+                        assert line1.lower() == line2.lower()
+            else:
+                compare_netcdf_data(base, gen)
+
+
+@pytest.mark.regression
+def test_utlncf_create(function_tmpdir, example_data_path):
+    data_path_base = example_data_path / "mf6" / "netcdf"
+    tests = {
+        "test_utlncf_create": {
+            "base_sim_dir": "disv01b",
+            "netcdf_output_file": "disv01b.in.nc",
+        },
+    }
+    ws = function_tmpdir / "ws"
+    for dirname, test in tests.items():
+        data_path = os.path.join(data_path_base, dirname, test["base_sim_dir"])
+
+        # copy example data into working directory
+        base_path = os.path.join(ws, f"{dirname}_base")
+        test_path = os.path.join(ws, f"{dirname}_test")
+        shutil.copytree(data_path, base_path)
+
+        # load example
+        sim = flopy.mf6.MFSimulation.load(sim_ws=base_path)
+
+        # set simulation path and write simulation
+        sim.set_sim_path(test_path)
+        sim.write_simulation(netcdf="mesh2d")
+
+        # compare generated files
+        compare_path = os.path.join(base_path, "compare")
+        base = os.path.join(compare_path, "disv01b.in.nc")
+        gen = os.path.join(test_path, test["netcdf_output_file"])
+        compare_netcdf_data(base, gen)
