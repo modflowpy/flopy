@@ -1,5 +1,5 @@
 # --------------------- sim hpc options ---------------------
-# flopy subpackage hpc_filerecord hpc hpc_data hpc
+# flopy subpackage hpc_filerecord hpc hpc_data hpc_data
 # flopy parent_name_type parent_package MFSimulation
 
 block options

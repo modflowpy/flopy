@@ -294,7 +294,7 @@ tagged false
 in_record true
 reader urword
 longname thermal conductivity of the feature
-description is the thermal conductivity of the interface between the aquifer cell and the feature.
+description is the thermal conductivity of the material between the aquifer cell and the feature. The thickness of the material is defined by the variable FTHK.
 
 block packagedata
 name fthk
@@ -404,7 +404,7 @@ in_record true
 reader urword
 time_series true
 longname well injection temperature
-description real or character value that defines the injection temperature $(e.g., ^{\circ}C or ^{\circ}F)$ for the well. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description real or character value that defines the injection temperature $(e.g.,\:^{\circ}C\:or\:^{\circ}F)$ for the well. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block period
 name auxiliaryrecord
