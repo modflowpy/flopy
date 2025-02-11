@@ -28,8 +28,7 @@ class ModelNetCDFDataset:
     Newly created datasets define coordinate or mesh variables
     corresponding to the type of NetCDF file specified. When
     the discretization crs attribute is valid, a projection
-    variable is also added to the dataset and candidate data
-    variables are associated with the grid.
+    variable is also added to the dataset.
 
     Data will be associated with the grid and projection when
     the relevant interfaces, e.g. create_array() and write(),
@@ -38,9 +37,10 @@ class ModelNetCDFDataset:
 
     Additionally, these files can can be used as MODFLOW 6
     model inputs for variables that define internal attributes
-    designated for that purpose, specifically "modflow6_input".
-    These attributes are managed internally when the supported
-    data interfaces are used.
+    designated for that purpose, specifically "modflow6_input"
+    and "modflow6_layer". These attributes are managed internally
+    for MODFLOW 6 models when the supported data interfaces are
+    used.
     """
 
     def __init__(self):
@@ -129,7 +129,7 @@ class ModelNetCDFDataset:
         Create a new array. Override this function in a derived class.
 
         Args:
-            package (str): A name of a data grouping in the file, typically
+            package (str): The name of a data grouping in the file, typically
                 a package. Must be distinct for each grouping. If this dataset
                 is associated with a modflow 6 model and this is a base package
                 (dis, disv, npf, ic, etc.), use that name. If this is a stress
@@ -181,17 +181,25 @@ class ModelNetCDFDataset:
         """
         raise NotImplementedError("array not implemented in base class")
 
-    def write(self, path: str) -> None:
+    def write(self, path: str, **kwargs) -> None:
         """
         Write the data set to a NetCDF file.
 
         Args:
             path (str): A directory in which to write the file.
+            kwargs (dict): A dictionay of supported encodings to
+                apply to managed grid associated arrays.
         """
         self._set_projection()
         self._set_modflow_attrs()
         nc_fpath = Path(path) / self._fname
-        self._dataset.to_netcdf(nc_fpath, format="NETCDF4", engine="netcdf4")
+        encoding = self._set_encoding(**kwargs)
+        if encoding is not None:
+            self._dataset.to_netcdf(
+                nc_fpath, format="NETCDF4", engine="netcdf4", encoding=encoding
+            )
+        else:
+            self._dataset.to_netcdf(nc_fpath, format="NETCDF4", engine="netcdf4")
 
     def path(self, package: str, param: str):
         return f"{self._modelname.lower()}/{package.lower()}/{param.lower()}"
@@ -206,7 +214,7 @@ class ModelNetCDFDataset:
         """
         raise NotImplementedError("_set_grid not implemented in base class")
 
-    def _set_coords(self, dis):
+    def _set_coords(self, crs):
         """
         Define coordinate variables associated with the NetCDF
         file type. Override this function in a derived class.
@@ -216,23 +224,110 @@ class ModelNetCDFDataset:
         """
         raise NotImplementedError("_set_coords not implemented in base class")
 
-    def _set_projection(self):
-        if self._dis and self._dis.crs:
-            crs = CRS.from_user_input(self._dis.crs)
-            coords = self._set_coords(crs)
-            wkt = crs.to_wkt()
-            self._dataset = self._dataset.assign({"projection": ([], np.int32(1))})
-            if self._nc_type == "structured":
-                self._dataset["projection"].attrs["crs_wkt"] = wkt
-                self._dataset["x"].attrs["grid_mapping"] = "projection"
-                self._dataset["y"].attrs["grid_mapping"] = "projection"
-            elif self._nc_type == "mesh2d":
-                self._dataset["projection"].attrs["wkt"] = wkt
-                self._dataset["mesh_node_x"].attrs["grid_mapping"] = "projection"
-                self._dataset["mesh_node_y"].attrs["grid_mapping"] = "projection"
-                self._dataset["mesh_face_x"].attrs["grid_mapping"] = "projection"
-                self._dataset["mesh_face_y"].attrs["grid_mapping"] = "projection"
+    def _set_encoding(self, **kwargs):
+        if self._dis is None:
+            return None
+        # encodings: {
+        #   'szip_coding',
+        #   'shuffle',
+        #   'fletcher32',
+        #   'quantize_mode',
+        #   'least_significant_digit',
+        #   'endian',
+        #   'szip_pixels_per_block',
+        #   '_FillValue',
+        #   'compression',
+        #   'blosc_shuffle',
+        #   'zlib',
+        #   'significant_digits',
+        #   'complevel',
+        #   'dtype',
+        #   'contiguous',
+        #   'chunksizes'}
+        encoding = {}
+        encodes = {}
 
+        deflate = kwargs.pop("deflate", None)
+        shuffle = kwargs.pop("shuffle", None)
+        chunk_time = kwargs.pop("chunk_time", None)
+        chunk_face = kwargs.pop("chunk_face", None)
+        chunk_x = kwargs.pop("chunk_x", None)
+        chunk_y = kwargs.pop("chunk_y", None)
+        chunk_z = kwargs.pop("chunk_z", None)
+
+        if deflate:
+            encodes["zlib"] = True
+            encodes["complevel"] = deflate
+        if shuffle:
+            encodes["shuffle"] = True
+
+        for path in self._tags:
+            for l in self._tags[path]:
+                if chunk_face and self._nc_type == "mesh2d":
+                    codes = dict(encodes)
+                    dims = self._dataset[self._tags[path][l]].dims
+                    if "nmesh_face" in dims:
+                        codes["chunksizes"] = [chunk_face]
+                        encoding[self._tags[path][l]] = codes
+                elif self._nc_type == "structured" and chunk_x and chunk_y and chunk_z:
+                    codes = dict(encodes)
+                    dims = self._dataset[self._tags[path][l]].dims
+                    if "x" in dims and "y" in dims:
+                        if "z" in dims:
+                            codes["chunksizes"] = [chunk_z, chunk_y, chunk_x]
+                        else:
+                            codes["chunksizes"] = [chunk_y, chunk_x]
+                        encoding[self._tags[path][l]] = codes
+
+                else:
+                    encoding[self._tags[path][l]] = encodes
+
+        return encoding
+
+    def _set_projection(self):
+        if self._dis:
+            crs = None
+            wkt = None
+            if self._dis.crs:
+                try:
+                    crs = CRS.from_user_input(self._dis.crs)
+                    wkt = crs.to_wkt()
+                except Exception as e:
+                    # crs = None
+                    # wkt = None
+                    warnings.warn(
+                        f"Cannot generate CRS object from user input: {e}",
+                        UserWarning,
+                    )
+
+                if wkt is not None:
+                    # add projection variable
+                    self._dataset = self._dataset.assign(
+                        {"projection": ([], np.int32(1))}
+                    )
+                    if self._nc_type == "structured":
+                        self._dataset["projection"].attrs["crs_wkt"] = wkt
+                        self._dataset["x"].attrs["grid_mapping"] = "projection"
+                        self._dataset["y"].attrs["grid_mapping"] = "projection"
+                    elif self._nc_type == "mesh2d":
+                        self._dataset["projection"].attrs["wkt"] = wkt
+                        self._dataset["mesh_node_x"].attrs["grid_mapping"] = (
+                            "projection"
+                        )
+                        self._dataset["mesh_node_y"].attrs["grid_mapping"] = (
+                            "projection"
+                        )
+                        self._dataset["mesh_face_x"].attrs["grid_mapping"] = (
+                            "projection"
+                        )
+                        self._dataset["mesh_face_y"].attrs["grid_mapping"] = (
+                            "projection"
+                        )
+
+            # update coords based on crs
+            coords = self._set_coords(crs)
+
+            # set grid_mapping and coordinates attributes
             for p in self._tags:
                 for l in self._tags[p]:
                     dims = self._dataset[self._tags[p][l]].dims
@@ -240,9 +335,10 @@ class ModelNetCDFDataset:
                         self._nc_type == "mesh2d"
                         and ("nmesh_face" in dims or "nmesh_node" in dims)
                     ):
-                        self._dataset[self._tags[p][l]].attrs["grid_mapping"] = (
-                            "projection"
-                        )
+                        if crs is not None:
+                            self._dataset[self._tags[p][l]].attrs["grid_mapping"] = (
+                                "projection"
+                            )
                         if coords is not None:
                             self._dataset[self._tags[p][l]].attrs["coordinates"] = (
                                 coords
@@ -278,10 +374,6 @@ class ModelNetCDFDataset:
         for varname, da in self._dataset.data_vars.items():
             if "modflow6_input" in da.attrs:
                 path = da.attrs["modflow6_input"].lower()
-
-                tokens = path.split("/")
-                assert len(tokens) == 3
-                assert tokens[0] == self._modelname
 
                 if "modflow6_layer" in da.attrs:
                     layer = da.attrs["modflow6_layer"]
@@ -388,7 +480,6 @@ class ModelNetCDFDataset:
             else:
                 ln = longname
             self._dataset[layer_vname].attrs["long_name"] = ln
-            self._dataset[layer_vname].attrs["coordinates"] = "mesh_face_x mesh_face_y"
             if path not in self._tags:
                 self._tags[path] = {}
             if layer in self._tags[path]:
@@ -479,7 +570,7 @@ class DisNetCDFStructured(ModelNetCDFDataset):
         # y = dis.ycellcenters[:, 0]
         x = dis.xoffset + dis.xycenters[0]
         y = dis.yoffset + dis.xycenters[1]
-        z = list(range(1, dis.nlay + 1))
+        z = [float(x) for x in range(1, dis.nlay + 1)]
 
         # create coordinate vars
         var_d = {"z": (["z"], z), "y": (["y"], y), "x": (["x"], x)}
@@ -504,6 +595,9 @@ class DisNetCDFStructured(ModelNetCDFDataset):
         self._dataset["x"].attrs["bounds"] = "x_bnds"
 
     def _set_coords(self, crs):
+        if crs is None:
+            return "x y"
+
         lats = []
         lons = []
         xdim = self._dataset.dims["x"]
@@ -714,8 +808,8 @@ class DisNetCDFMesh2d(ModelNetCDFDataset):
         self._dataset["mesh_face_nodes"].attrs["_FillValue"] = FILLNA_INT32
         self._dataset["mesh_face_nodes"].attrs["start_index"] = np.int32(1)
 
-    def _set_coords(self, proj):
-        return None
+    def _set_coords(self, crs):
+        return "mesh_face_x mesh_face_y"
 
 
 class DisvNetCDFMesh2d(ModelNetCDFDataset):
@@ -857,8 +951,8 @@ class DisvNetCDFMesh2d(ModelNetCDFDataset):
         self._dataset["mesh_face_nodes"].attrs["_FillValue"] = FILLNA_INT32
         self._dataset["mesh_face_nodes"].attrs["start_index"] = np.int32(1)
 
-    def _set_coords(self, proj):
-        return None
+    def _set_coords(self, crs):
+        return "mesh_face_x mesh_face_y"
 
 
 def open_dataset(nc_fpth: str, dis_type: str) -> ModelNetCDFDataset:
@@ -905,7 +999,6 @@ def open_dataset(nc_fpth: str, dis_type: str) -> ModelNetCDFDataset:
     dataset.close()
 
     if nc_dataset:
-        fpth = Path(nc_fpth).resolve()
         nc_dataset.open(fpth)
     else:
         raise Exception(
