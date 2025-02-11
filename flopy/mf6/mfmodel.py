@@ -946,6 +946,8 @@ class MFModel(ModelInterface):
                         break
                 if dis_type and dis_type in dis_str:
                     nc_fpth = os.path.join(instance.model_ws, nc_filerecord[0][0])
+                    # TODO: verify a partial dataset (not all griddata vars) don't
+                    #       break everything
                     instance._nc_dataset = open_dataset(nc_fpth, dis_type=dis_str[dis_type])
                 else:
                     message = (
@@ -1330,7 +1332,6 @@ class MFModel(ModelInterface):
         self,
         ext_file_action=ExtFileAction.copy_relative_paths,
         netcdf=None,
-        to_cdl=False,
     ):
         """
         Writes out model's package files.
@@ -1344,13 +1345,11 @@ class MFModel(ModelInterface):
         netcdf : str
             Create model NetCDF file, of type specified, in which to store
             package griddata. 'mesh2d' and 'structured' are supported types.
-        to_cdl : bool
-            Generate text version of netcdf file (debug feature)
-
         """
 
         # write netcdf file
         if netcdf or self._nc_dataset is not None:
+            kwargs = {}
             if self._nc_dataset is None:
                 from ..utils.model_netcdf import create_dataset
 
@@ -1367,10 +1366,21 @@ class MFModel(ModelInterface):
 
                 # reset data storage and populate netcdf file
                 for pp in self.packagelist:
-                    pp._set_netcdf_storage(self._nc_dataset, create=True)
+                    if pp.package_type == "ncf":
+                        kwargs["shuffle"] = pp.shuffle.get_data()
+                        kwargs["deflate"] = pp.deflate.get_data()
+                        kwargs["chunk_time"] = pp.chunk_time.get_data()
+                        kwargs["chunk_face"] = pp.chunk_face.get_data()
+                        kwargs["chunk_x"] = pp.chunk_x.get_data()
+                        kwargs["chunk_y"] = pp.chunk_y.get_data()
+                        kwargs["chunk_z"] = pp.chunk_z.get_data()
+                        kwargs["wkt"] = pp.wkt.get_data()
+                    pp._set_netcdf_storage(
+                        self._nc_dataset, create=True
+                    )
 
             # write the dataset to netcdf
-            self._nc_dataset.write(self.model_ws)
+            self._nc_dataset.write(self.model_ws, **kwargs)
 
         # write name file
         if (

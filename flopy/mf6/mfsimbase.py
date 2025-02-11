@@ -1659,7 +1659,6 @@ class MFSimulationBase:
         ext_file_action=ExtFileAction.copy_relative_paths,
         silent=False,
         netcdf=None,
-        to_cdl=False,
     ):
         """
         Write the simulation to files.
@@ -1675,9 +1674,6 @@ class MFSimulationBase:
             netcdf : str
                 Create model NetCDF file, of type specified, in which to store
                 package griddata. 'mesh2d' and 'structured' are supported types.
-            to_cdl : bool
-                Generate text version of netcdf file (debug feature)
-
         """
         sim_data = self.simulation_data
         if not sim_data.max_columns_user_set:
@@ -1747,7 +1743,6 @@ class MFSimulationBase:
             model.write(
                 ext_file_action=ext_file_action,
                 netcdf=netcdf,
-                to_cdl=to_cdl,
             )
 
         self.simulation_data.mfpath.set_last_accessed_path()
