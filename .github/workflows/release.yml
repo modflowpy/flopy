@@ -40,7 +40,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Sync MF6 module
-        run: uv run python -m flopy.mf6.utils.generate_classes --no-backup --exclude chf --exclude olf
+        run: uv run python -m flopy.mf6.utils.generate_classes --no-backup --exclude chf --exclude olf --exclude swf
 
       - name: Update version numbers
         id: version
