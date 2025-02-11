@@ -88,6 +88,13 @@ OBS_ID1_LUT = {
     "lkt": "ifno",
     "mwt": "mawno",
     "uzt": "ifno",
+    # energy
+    "gwe": "cellid",
+    "ctp": "cellid",
+    "sfe": "ifno",
+    "uze": "ifno",
+
+
 }
 
 OBS_ID2_LUT = {
@@ -114,6 +121,10 @@ OBS_ID2_LUT = {
     },
     "mwt": None,
     "uzt": "ifno",
+    "gwe": "cellid",
+    "sfe": "ifno",
+    "uze": "ifno"
+
 }
 
 
@@ -383,13 +394,19 @@ class Mf6Splitter:
                     modflow.ModflowGwfuzf,
                     modflow.ModflowGwflak,
                     modflow.ModflowGwfhfb,
+                    modflow.ModflowGwtsft,
+                    modflow.ModflowGwtuzt,
+                    modflow.ModflowGwtlkt,
+                    modflow.ModflowGwesfe,
+                    modflow.ModflowGweuze,
+                    modflow.ModflowGwelke
                 ),
             ):
                 if isinstance(package, modflow.ModflowGwfhfb):
                     hfbs.append(package)
                     continue
 
-                if isinstance(package, modflow.ModflowGwflak):
+                if isinstance(package, (modflow.ModflowGwflak, modflow.ModflowGwtlkt, modflow.ModflowGwelke)):
                     cellids = package.connectiondata.array.cellid
                 else:
                     cellids = package.packagedata.array.cellid
@@ -401,7 +418,7 @@ class Mf6Splitter:
                 else:
                     nodes = [i[0] for i in cellids]
 
-                if isinstance(package, modflow.ModflowGwflak):
+                if isinstance(package, (modflow.ModflowGwflak, modflow.ModflowGwtlkt, modflow.ModflowGwelke)):
                     lakenos = package.connectiondata.array.ifno + 1
                     lak_array[nodes] = lakenos
                     laks += [i for i in np.unique(lakenos)]
@@ -1025,6 +1042,8 @@ class Mf6Splitter:
             "stage_filerecord",
             "obs_filerecord",
             "concentration_filerecord",
+            "ts_filerecord",
+            "temperature_filerecord"
         ):
             value = value.array
             if value is None:
@@ -1480,7 +1499,7 @@ class Mf6Splitter:
             dict
         """
         # self._mvr_remaps = {}
-        if isinstance(package, modflow.ModflowGwtmvt):
+        if isinstance(package, (modflow.ModflowGwtmvt, modflow.ModflowGwemve)):
             return mapped_data
 
         perioddata = package.perioddata.data
@@ -2111,6 +2130,33 @@ class Mf6Splitter:
 
         return mapped_data
 
+    def _remap_buy(self, package, mapped_data):
+        """
+        Method to remap a Buoyancy package
+
+        Parameters
+        ----------
+        package : ModflowGwfbuy
+        mapped_data : dict
+            dictionary of remapped package data
+
+        Returns
+        -------
+            dict
+        """
+        recarray = package.packagedata.array
+        mnames = [i for i in recarray["modelname"]]
+
+        for mkey in mapped_data.keys():
+            new_recarray = recarray.copy()
+            new_mnames = [
+                f"{mn}_{mkey :0{self._fdigits}d}" for mn in mnames
+            ]
+            new_recarray["modelname"] = new_mnames
+            mapped_data[mkey]["packagedata"] = new_recarray
+
+        return mapped_data
+
     def _set_boundname_remaps(self, recarray, obs_map, variables, mkey):
         """
 
@@ -2235,18 +2281,19 @@ class Mf6Splitter:
             dict
         """
         packagedata = package.packagedata.array
-        fnames = packagedata.fname
+        if packagedata is not None:
+            fnames = packagedata.fname
 
-        for mkey in self._model_dict.keys():
-            new_fnames = []
-            for fname in fnames:
-                new_val = fname.split(".")
-                new_val = f"{'.'.join(new_val[0:-1])}_{mkey :0{self._fdigits}d}.{new_val[-1]}"
-                new_fnames.append(new_val)
+            for mkey in self._model_dict.keys():
+                new_fnames = []
+                for fname in fnames:
+                    new_val = fname.split(".")
+                    new_val = f"{'.'.join(new_val[0:-1])}_{mkey :0{self._fdigits}d}.{new_val[-1]}"
+                    new_fnames.append(new_val)
 
-            new_packagedata = packagedata.copy()
-            new_packagedata["fname"] = new_fnames
-            mapped_data[mkey]["packagedata"] = new_packagedata
+                new_packagedata = packagedata.copy()
+                new_packagedata["fname"] = new_fnames
+                mapped_data[mkey]["packagedata"] = new_packagedata
 
         return mapped_data
 
@@ -2824,6 +2871,8 @@ class Mf6Splitter:
                 modflow.ModflowGwfdisu,
                 modflow.ModflowGwtdis,
                 modflow.ModflowGwtdisu,
+                modflow.ModflowGwedis,
+                modflow.ModflowGwedisu
             ),
         ):
             for item, value in package.__dict__.items():
@@ -2888,13 +2937,16 @@ class Mf6Splitter:
         elif isinstance(package, modflow.ModflowGwfcsub):
             mapped_data = self._remap_csub(package, mapped_data)
 
+        elif isinstance(package, modflow.ModflowGwfbuy):
+            mapped_data = self._remap_buy(package, mapped_data)
+
         elif isinstance(
-            package, (modflow.ModflowGwfuzf, modflow.ModflowGwtuzt)
+            package, (modflow.ModflowGwfuzf, modflow.ModflowGwtuzt, modflow.ModflowGweuze)
         ):
             mapped_data = self._remap_uzf(package, mapped_data)
 
         elif isinstance(
-            package, (modflow.ModflowGwfmaw, modflow.ModflowGwtmwt)
+            package, (modflow.ModflowGwfmaw, modflow.ModflowGwtmwt, modflow.ModflowGwemwe)
         ):
             mapped_data = self._remap_maw(package, mapped_data)
 
@@ -2902,18 +2954,18 @@ class Mf6Splitter:
             self._remap_mvr(package, mapped_data)
 
         elif isinstance(
-            package, (modflow.ModflowGwfmvr, modflow.ModflowGwtmvt)
+            package, (modflow.ModflowGwfmvr, modflow.ModflowGwtmvt, modflow.ModflowGwemve)
         ):
             self._mover = True
             return {}
 
         elif isinstance(
-            package, (modflow.ModflowGwflak, modflow.ModflowGwtlkt)
+            package, (modflow.ModflowGwflak, modflow.ModflowGwtlkt, modflow.ModflowGwelke)
         ):
             mapped_data = self._remap_lak(package, mapped_data)
 
         elif isinstance(
-            package, (modflow.ModflowGwfsfr, modflow.ModflowGwtsft)
+            package, (modflow.ModflowGwfsfr, modflow.ModflowGwtsft, modflow.ModflowGwesfe)
         ):
             mapped_data = self._remap_sfr(package, mapped_data)
 
@@ -3025,6 +3077,20 @@ class Mf6Splitter:
                 elif isinstance(value, mfdatascalar.MFScalar):
                     for mkey in self._model_dict.keys():
                         mapped_data[mkey][item] = value.data
+                elif isinstance(value, modflow.mfutlts.UtltsPackages):
+                    if value._filerecord.array is None:
+                        continue
+                    tspkg = value._packages[0]
+                    for mkey in self._model_dict.keys():
+                        new_fname = tspkg.filename.split(".")
+                        new_fname = f"{'.'.join(new_fname[0:-1])}_{mkey :0{self._fdigits}d}.{new_fname[-1]}"
+                        tsdict = {
+                            "filename": new_fname,
+                            "timeseries": tspkg.timeseries.array,
+                            "time_series_namerecord": tspkg.time_series_namerecord.array["time_series_names"][0],
+                            "interpolation_methodrecord": tspkg.interpolation_methodrecord.array["interpolation_method"][0]
+                        }
+                        mapped_data[mkey]["timeseries"] = tsdict
                 else:
                     pass
 
@@ -3344,12 +3410,14 @@ class Mf6Splitter:
 
         Parameters
         ----------
-        mname0 :
-        mname1 :
+        mname0 : str
+            model name of first model in exchange
+        mname1 : str
+            model name of second model in exchange
 
         Returns
         -------
-
+            None
         """
         exchange_classes = {
             "gwfgwt": modflow.ModflowGwfgwt,
@@ -3509,7 +3577,7 @@ class Mf6Splitter:
 
         gwf_base = model_names[0]
         model_labels = [
-            f"{i :{self._fdigits}d}" for i in sorted(np.unique(array))
+            f"{i :0{self._fdigits}d}" for i in sorted(np.unique(array))
         ]
 
         self._multimodel_exchange_gwf_names = {

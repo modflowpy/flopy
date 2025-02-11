@@ -104,3 +104,6 @@ app
 
 # DFN backups
 flopy/mf6/data/dfn_backup/
+
+# uv lockfile
+uv.lock

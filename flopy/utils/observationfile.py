@@ -302,7 +302,7 @@ class Mf6Obs(ObsFiles):
             precision = "single"
             if "double" in cline[5:11].lower():
                 precision = "double"
-            self.set_float(precision)
+            self.precision = precision
             lenobsname = int(cline[11:])
 
             # get number of observations
@@ -370,7 +370,7 @@ class HydmodObs(ObsFiles):
         if self.nobs < 0:
             self.nobs = abs(self.nobs)
             precision = "double"
-        self.set_float(precision)
+        self.precision = precision
 
         # continue reading the file
         self.itmuni = self.read_integer()
@@ -438,7 +438,7 @@ class SwrObs(ObsFiles):
 
         """
         super().__init__()
-        self.set_float(precision=precision)
+        self.precision = precision
         # initialize class information
         self.verbose = verbose
         # open binary head file

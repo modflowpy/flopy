@@ -557,8 +557,7 @@ class ListBudget:
             # Check if reduced pumping data was set to be written
             # to list file
             check_str = (
-                "WELLS WITH REDUCED PUMPING WILL BE REPORTED "
-                "TO THE MAIN LISTING FILE"
+                "WELLS WITH REDUCED PUMPING WILL BE REPORTED TO THE MAIN LISTING FILE"
             )
 
             check_str_ag = "AG WELLS WITH REDUCED PUMPING FOR STRESS PERIOD"

@@ -74,9 +74,9 @@ class ArrayFormat:
     """
 
     def __init__(self, u2d, python=None, fortran=None, array_free_format=None):
-        assert isinstance(
-            u2d, Util2d
-        ), f"ArrayFormat only supports Util2d, not {type(u2d)}"
+        assert isinstance(u2d, Util2d), (
+            f"ArrayFormat only supports Util2d, not {type(u2d)}"
+        )
         if len(u2d.shape) == 1:
             self._npl_full = u2d.shape[0]
         else:
@@ -105,8 +105,7 @@ class ArrayFormat:
 
         if python is not None and fortran is not None:
             raise Exception(
-                "only one of [python,fortran] can be passed "
-                "to ArrayFormat constructor"
+                "only one of [python,fortran] can be passed to ArrayFormat constructor"
             )
 
         if python is not None:
@@ -136,8 +135,7 @@ class ArrayFormat:
             self._decimal = self.default_float_decimal
         else:
             raise Exception(
-                "ArrayFormat._set_defaults() error: "
-                f"unsupported dtype: {self.dtype!s}"
+                f"ArrayFormat._set_defaults() error: unsupported dtype: {self.dtype!s}"
             )
 
     def __str__(self):
@@ -786,10 +784,10 @@ class Util3d(DataInterface):
         if isinstance(self.__value, list) or (
             isinstance(self.__value, np.ndarray) and (self.__value.ndim == 1)
         ):
-            assert (
-                len(self.__value) == self.shape[0]
-            ), "length of 3d enumerable: {} != to shape[0]: {}".format(
-                len(self.__value), self.shape[0]
+            assert len(self.__value) == self.shape[0], (
+                "length of 3d enumerable: {} != to shape[0]: {}".format(
+                    len(self.__value), self.shape[0]
+                )
             )
 
             for i, item in enumerate(self.__value):
@@ -1090,14 +1088,12 @@ class Transient3d(DataInterface):
             key = int(key)
         except Exception as e:
             raise Exception(
-                "Transient3d.__setitem__() error: "
-                f"'key'could not be cast to int:{e!s}"
+                f"Transient3d.__setitem__() error: 'key'could not be cast to int:{e!s}"
             )
         nper = self._model.nper
         if key > self._model.nper or key < 0:
             raise Exception(
-                "Transient3d.__setitem__() error: "
-                f"key {key} not in nper range 0:{nper}"
+                f"Transient3d.__setitem__() error: key {key} not in nper range 0:{nper}"
             )
 
         self.transient_3ds[key] = self.__get_3d_instance(key, value)
@@ -1537,14 +1533,12 @@ class Transient2d(DataInterface):
             key = int(key)
         except Exception as e:
             raise Exception(
-                "Transient2d.__setitem__() error: "
-                f"'key'could not be cast to int:{e!s}"
+                f"Transient2d.__setitem__() error: 'key'could not be cast to int:{e!s}"
             )
         nper = self._model.nper
         if key > self._model.nper or key < 0:
             raise Exception(
-                "Transient2d.__setitem__() error: "
-                f"key {key} not in nper range 0:{nper}"
+                f"Transient2d.__setitem__() error: key {key} not in nper range 0:{nper}"
             )
 
         self.transient_2ds[key] = self.__get_2d_instance(key, value)
@@ -2247,9 +2241,9 @@ class Util2d(DataInterface):
             else:
                 how = "external"
         if how == "internal":
-            assert (
-                not self.format.binary
-            ), "Util2d error: 'how' is internal, but format is binary"
+            assert not self.format.binary, (
+                "Util2d error: 'how' is internal, but format is binary"
+            )
             cr = self.get_internal_cr()
             return cr + self.string
 
@@ -2305,9 +2299,9 @@ class Util2d(DataInterface):
         elif how == "constant":
             if self.vtype not in [np.int32, np.float32]:
                 u = np.unique(self._array)
-                assert (
-                    u.shape[0] == 1
-                ), "Util2d error: 'how' is constant, but array is not uniform"
+                assert u.shape[0] == 1, (
+                    "Util2d error: 'how' is constant, but array is not uniform"
+                )
                 value = u[0]
             else:
                 value = self.__value
@@ -2788,9 +2782,9 @@ class Util2d(DataInterface):
             fname = fname.replace('"', "")
             fname = fname.replace("\\", os.path.sep)
             fname = os.path.join(model.model_ws, fname)
-            assert os.path.exists(
-                fname
-            ), f"Util2d.load() error: open/close file {fname} not found"
+            assert os.path.exists(fname), (
+                f"Util2d.load() error: open/close file {fname} not found"
+            )
             if "binary" not in cr_dict["fmtin"].lower():
                 f = open(fname, "r")
                 data = Util2d.load_txt(

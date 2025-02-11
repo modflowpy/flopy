@@ -18,3 +18,6 @@ b142b081516e6ac78e426257c7472dd4a9994b89
 
 # reformat codebase with longer line length (#2362)
 12a3bcd1ba8b229e00e2da8a448e7866c16fdb29
+
+# apply ruff updates (#2411)
+d67e3519d522207938e99d58c9985c3807b58f07

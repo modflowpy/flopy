@@ -1,4 +1,4 @@
-name: FloPy example script & notebook tests
+name: Example script & notebook tests
 
 on:
   schedule:

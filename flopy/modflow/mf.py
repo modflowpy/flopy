@@ -82,6 +82,9 @@ class Modflow(BaseModel):
         Location for external files.
     verbose : bool, default False
         Print additional information to the screen.
+    extra_pkgs : dict, optional
+        Add custom packages classes to mfnam_packages. Allows for loading models
+        with custom packages not contained in the standard flopy distribution.
 
     Attributes
     ----------
@@ -113,6 +116,7 @@ class Modflow(BaseModel):
         model_ws: Union[str, os.PathLike] = os.curdir,
         external_path: Optional[Union[str, os.PathLike]] = None,
         verbose=False,
+        extra_pkgs: Optional[dict] = None,
         **kwargs,
     ):
         super().__init__(
@@ -140,9 +144,9 @@ class Modflow(BaseModel):
         # -- check if unstructured is specified for something
         # other than mfusg is specified
         if not self.structured:
-            assert (
-                "mfusg" in self.version
-            ), "structured=False can only be specified for mfusg models"
+            assert "mfusg" in self.version, (
+                "structured=False can only be specified for mfusg models"
+            )
 
         # external option stuff
         self.array_free_format = True
@@ -224,6 +228,8 @@ class Modflow(BaseModel):
             "vdf": flopy.seawat.SeawatVdf,
             "vsc": flopy.seawat.SeawatVsc,
         }
+        if extra_pkgs:
+            self.mfnam_packages.update(extra_pkgs)
 
     def __repr__(self):
         nrow, ncol, nlay, nper = self.get_nrow_ncol_nlay_nper()
@@ -239,17 +245,14 @@ class Modflow(BaseModel):
             dis = self.disu
         else:
             dis = self.dis
-        # build model time
-        data_frame = {
-            "perlen": dis.perlen.array,
-            "nstp": dis.nstp.array,
-            "tsmult": dis.tsmult.array,
-        }
+
         self._model_time = ModelTime(
-            data_frame,
-            dis.itmuni_dict[dis.itmuni],
-            dis.start_datetime,
-            dis.steady.array,
+            perlen=dis.perlen.array,
+            nstp=dis.nstp.array,
+            tsmult=dis.tsmult.array,
+            time_units=dis.itmuni,
+            start_datetime=dis.start_datetime,
+            steady_state=dis.steady.array,
         )
         return self._model_time
 
@@ -632,6 +635,7 @@ class Modflow(BaseModel):
         load_only=None,
         forgive=False,
         check=True,
+        extra_pkgs: Optional[dict] = None,
     ):
         """
         Load an existing MODFLOW model.
@@ -661,6 +665,10 @@ class Modflow(BaseModel):
             useful for debugging. Default False.
         check : boolean, optional
             Check model input for common errors. Default True.
+        extra_pkgs : dict, optional
+            Add custom packages classes to mfnam_packages. Allows for loading models
+            with custom packages not contained in the standard flopy distribution.
+
 
         Returns
         -------
@@ -692,6 +700,7 @@ class Modflow(BaseModel):
             exe_name=exe_name,
             verbose=verbose,
             model_ws=model_ws,
+            extra_pkgs=extra_pkgs,
             **attribs,
         )
 

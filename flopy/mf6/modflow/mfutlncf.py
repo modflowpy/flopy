@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 20, 2024 02:43:08 UTC
+# FILE created on February 11, 2025 01:24:12 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -18,7 +18,8 @@ class ModflowUtlncf(mfpackage.MFPackage):
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     wkt : [string]
-        * wkt (string) is the CRS well-known text (WKT) string.
+        * wkt (string) is the coordinate reference system (CRS) well-known text
+          (WKT) string.
     deflate : integer
         * deflate (integer) is the variable deflate level (0=min, 9=max) in the
           netcdf file. Defining this parameter activates per-variable
@@ -72,51 +73,135 @@ class ModflowUtlncf(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
-    wkt = ListTemplateGenerator(('ncf', 'options', 'wkt'))
-    latitude = ArrayTemplateGenerator(('ncf', 'griddata', 'latitude'))
-    longitude = ArrayTemplateGenerator(('ncf', 'griddata', 'longitude'))
+
+    wkt = ListTemplateGenerator(("ncf", "options", "wkt"))
+    latitude = ArrayTemplateGenerator(("ncf", "griddata", "latitude"))
+    longitude = ArrayTemplateGenerator(("ncf", "griddata", "longitude"))
     package_abbr = "utlncf"
     _package_type = "ncf"
     dfn_file_name = "utl-ncf.dfn"
 
     dfn = [
-           ["header", ],
-           ["block options", "name wkt", "type string", "shape lenbigline",
-            "reader urword", "optional true"],
-           ["block options", "name deflate", "type integer",
-            "reader urword", "optional true"],
-           ["block options", "name shuffle", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name chunk_time", "type integer",
-            "reader urword", "optional true"],
-           ["block options", "name chunk_face", "type integer",
-            "reader urword", "optional true"],
-           ["block options", "name chunk_z", "type integer",
-            "reader urword", "optional true"],
-           ["block options", "name chunk_y", "type integer",
-            "reader urword", "optional true"],
-           ["block options", "name chunk_x", "type integer",
-            "reader urword", "optional true"],
-           ["block options", "name modflow6_attr_off", "type keyword",
-            "reader urword", "optional true", "mf6internal attr_off"],
-           ["block dimensions", "name ncpl", "type integer",
-            "optional true", "reader urword"],
-           ["block griddata", "name latitude", "type double precision",
-            "shape (ncpl)", "optional true", "reader readarray"],
-           ["block griddata", "name longitude", "type double precision",
-            "shape (ncpl)", "optional true", "reader readarray"]]
+        [
+            "header",
+        ],
+        [
+            "block options",
+            "name wkt",
+            "type string",
+            "shape lenbigline",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name deflate",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name shuffle",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name chunk_time",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name chunk_face",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name chunk_z",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name chunk_y",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name chunk_x",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name modflow6_attr_off",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal attr_off",
+        ],
+        [
+            "block dimensions",
+            "name ncpl",
+            "type integer",
+            "optional true",
+            "reader urword",
+        ],
+        [
+            "block griddata",
+            "name latitude",
+            "type double precision",
+            "shape (ncpl)",
+            "optional true",
+            "reader readarray",
+        ],
+        [
+            "block griddata",
+            "name longitude",
+            "type double precision",
+            "shape (ncpl)",
+            "optional true",
+            "reader readarray",
+        ],
+    ]
 
-    def __init__(self, parent_package, loading_package=False, wkt=None,
-                 deflate=None, shuffle=None, chunk_time=None, chunk_face=None,
-                 chunk_z=None, chunk_y=None, chunk_x=None,
-                 modflow6_attr_off=None, ncpl=None, latitude=None,
-                 longitude=None, filename=None, pname=None, **kwargs):
-        super().__init__(parent_package, "ncf", filename, pname,
-                         loading_package, **kwargs)
+    def __init__(
+        self,
+        parent_package,
+        loading_package=False,
+        wkt=None,
+        deflate=None,
+        shuffle=None,
+        chunk_time=None,
+        chunk_face=None,
+        chunk_z=None,
+        chunk_y=None,
+        chunk_x=None,
+        modflow6_attr_off=None,
+        ncpl=None,
+        latitude=None,
+        longitude=None,
+        filename=None,
+        pname=None,
+        **kwargs,
+    ):
+        super().__init__(
+            parent_package, "ncf", filename, pname, loading_package, **kwargs
+        )
 
         # set up variables
         self.wkt = self.build_mfdata("wkt", wkt)
@@ -127,8 +212,9 @@ class ModflowUtlncf(mfpackage.MFPackage):
         self.chunk_z = self.build_mfdata("chunk_z", chunk_z)
         self.chunk_y = self.build_mfdata("chunk_y", chunk_y)
         self.chunk_x = self.build_mfdata("chunk_x", chunk_x)
-        self.modflow6_attr_off = self.build_mfdata("modflow6_attr_off",
-                                                   modflow6_attr_off)
+        self.modflow6_attr_off = self.build_mfdata(
+            "modflow6_attr_off", modflow6_attr_off
+        )
         self.ncpl = self.build_mfdata("ncpl", ncpl)
         self.latitude = self.build_mfdata("latitude", latitude)
         self.longitude = self.build_mfdata("longitude", longitude)
@@ -149,33 +235,79 @@ class UtlncfPackages(mfpackage.MFChildPackages):
         Adds a new ModflowUtlncf package to the container. See ModflowUtlncf
         init documentation for definition of parameters.
     """
+
     package_abbr = "utlncfpackages"
 
-    def initialize(self, wkt=None, deflate=None, shuffle=None, chunk_time=None,
-                   chunk_face=None, chunk_z=None, chunk_y=None, chunk_x=None,
-                   modflow6_attr_off=None, ncpl=None, latitude=None,
-                   longitude=None, filename=None, pname=None):
-        new_package = ModflowUtlncf(self._cpparent, wkt=wkt, deflate=deflate,
-                                    shuffle=shuffle, chunk_time=chunk_time,
-                                    chunk_face=chunk_face, chunk_z=chunk_z,
-                                    chunk_y=chunk_y, chunk_x=chunk_x,
-                                    modflow6_attr_off=modflow6_attr_off,
-                                    ncpl=ncpl, latitude=latitude,
-                                    longitude=longitude, filename=filename,
-                                    pname=pname, child_builder_call=True)
+    def initialize(
+        self,
+        wkt=None,
+        deflate=None,
+        shuffle=None,
+        chunk_time=None,
+        chunk_face=None,
+        chunk_z=None,
+        chunk_y=None,
+        chunk_x=None,
+        modflow6_attr_off=None,
+        ncpl=None,
+        latitude=None,
+        longitude=None,
+        filename=None,
+        pname=None,
+    ):
+        new_package = ModflowUtlncf(
+            self._cpparent,
+            wkt=wkt,
+            deflate=deflate,
+            shuffle=shuffle,
+            chunk_time=chunk_time,
+            chunk_face=chunk_face,
+            chunk_z=chunk_z,
+            chunk_y=chunk_y,
+            chunk_x=chunk_x,
+            modflow6_attr_off=modflow6_attr_off,
+            ncpl=ncpl,
+            latitude=latitude,
+            longitude=longitude,
+            filename=filename,
+            pname=pname,
+            child_builder_call=True,
+        )
         self.init_package(new_package, filename)
 
-    def append_package(self, wkt=None, deflate=None, shuffle=None,
-                   chunk_time=None, chunk_face=None, chunk_z=None,
-                   chunk_y=None, chunk_x=None, modflow6_attr_off=None,
-                   ncpl=None, latitude=None, longitude=None, filename=None,
-                   pname=None):
-        new_package = ModflowUtlncf(self._cpparent, wkt=wkt, deflate=deflate,
-                                    shuffle=shuffle, chunk_time=chunk_time,
-                                    chunk_face=chunk_face, chunk_z=chunk_z,
-                                    chunk_y=chunk_y, chunk_x=chunk_x,
-                                    modflow6_attr_off=modflow6_attr_off,
-                                    ncpl=ncpl, latitude=latitude,
-                                    longitude=longitude, filename=filename,
-                                    pname=pname, child_builder_call=True)
+    def append_package(
+        self,
+        wkt=None,
+        deflate=None,
+        shuffle=None,
+        chunk_time=None,
+        chunk_face=None,
+        chunk_z=None,
+        chunk_y=None,
+        chunk_x=None,
+        modflow6_attr_off=None,
+        ncpl=None,
+        latitude=None,
+        longitude=None,
+        filename=None,
+        pname=None,
+    ):
+        new_package = ModflowUtlncf(
+            self._cpparent,
+            wkt=wkt,
+            deflate=deflate,
+            shuffle=shuffle,
+            chunk_time=chunk_time,
+            chunk_face=chunk_face,
+            chunk_z=chunk_z,
+            chunk_y=chunk_y,
+            chunk_x=chunk_x,
+            modflow6_attr_off=modflow6_attr_off,
+            ncpl=ncpl,
+            latitude=latitude,
+            longitude=longitude,
+            filename=filename,
+            pname=pname,
+            child_builder_call=True,
+        )
         self._append_package(new_package, filename)

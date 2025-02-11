@@ -209,8 +209,7 @@ class Modpath7(BaseModel):
                 shape = (nlay, nrow, ncol)
             if dis is None:
                 raise Exception(
-                    "DIS, or DISU packages must be "
-                    "included in the passed MODFLOW model"
+                    "DIS, or DISU packages must be included in the passed MODFLOW model"
                 )
             elif dis is not None and shape is None:
                 nlay, nodes = dis.nlay, dis.nodes
@@ -303,8 +302,7 @@ class Modpath7(BaseModel):
             )
         if self.dis_file is None and self.grbdis_file is None:
             raise ValueError(
-                "the dis file in the MODFLOW model or passed "
-                "to __init__ cannot be None"
+                "the dis file in the MODFLOW model or passed to __init__ cannot be None"
             )
 
         # set ib and ibound

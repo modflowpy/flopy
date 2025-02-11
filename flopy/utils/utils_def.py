@@ -3,39 +3,85 @@ Generic classes and utility functions
 """
 
 from datetime import timedelta
+from typing import Literal, get_args
+from warnings import warn
 
 import numpy as np
+
+Precision = Literal["single", "double"]
 
 
 class FlopyBinaryData:
     """
-    The FlopyBinaryData class is a class to that defines the data types for
-    integer, floating point, and character data in MODFLOW binary
-    files. The FlopyBinaryData class is the super class from which the
-    specific derived classes are formed.  This class should not be
-    instantiated directly.
-
+    Defines integer, floating point, and character data types for
+    MODFLOW binary files.
     """
 
     def __init__(self):
-        self.integer = np.int32
-        self.integerbyte = self.integer(1).nbytes
+        self.precision = "double"
 
-        self.character = np.uint8
-        self.textbyte = 1
+    @property
+    def integer(self) -> type:
+        return np.int32
 
-        return
+    @property
+    def integerbyte(self) -> int:
+        return self.integer(1).nbytes
+
+    @property
+    def character(self) -> type:
+        return np.uint8
+
+    @property
+    def textbyte(self) -> int:
+        return 1
+
+    @property
+    def precision(self) -> Precision:
+        return self._precision
+
+    @precision.setter
+    def precision(self, value: Precision):
+        if value not in get_args(Precision):
+            raise ValueError(
+                f"Invalid floating precision '{value}', expected 'single' or 'double'"
+            )
+
+        value = value.lower()
+        self._precision = value
+        if value == "double":
+            self._real = np.float64
+            self._floattype = "f8"
+        else:
+            self._real = np.float32
+            self._floattype = "f4"
+        self._realbyte = self.real(1).nbytes
+
+    @property
+    def real(self) -> type:
+        return self._real
+
+    @property
+    def realbyte(self) -> int:
+        return self._realbyte
+
+    @property
+    def floattype(self) -> str:
+        return self._floattype
 
     def set_float(self, precision):
+        """
+        Set floating point precision.
+
+            .. deprecated:: 3.5
+                This method will be removed in Flopy 3.10+.
+                Use ``precision`` property setter instead.
+        """
+        warn(
+            "set_float() is deprecated, use precision property setter instead",
+            PendingDeprecationWarning,
+        )
         self.precision = precision
-        if precision.lower() == "double":
-            self.real = np.float64
-            self.floattype = "f8"
-        else:
-            self.real = np.float32
-            self.floattype = "f4"
-        self.realbyte = self.real(1).nbytes
-        return
 
     def read_text(self, nchar=20):
         bytesvalue = self._read_values(self.character, nchar).tobytes()

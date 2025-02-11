@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 20, 2024 02:43:08 UTC
+# FILE created on February 11, 2025 01:24:12 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -94,84 +94,183 @@ class ModflowGwtmst(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
-    sorbate_filerecord = ListTemplateGenerator(('gwt6', 'mst', 'options',
-                                                'sorbate_filerecord'))
-    porosity = ArrayTemplateGenerator(('gwt6', 'mst', 'griddata',
-                                       'porosity'))
-    decay = ArrayTemplateGenerator(('gwt6', 'mst', 'griddata', 'decay'))
-    decay_sorbed = ArrayTemplateGenerator(('gwt6', 'mst', 'griddata',
-                                           'decay_sorbed'))
-    bulk_density = ArrayTemplateGenerator(('gwt6', 'mst', 'griddata',
-                                           'bulk_density'))
-    distcoef = ArrayTemplateGenerator(('gwt6', 'mst', 'griddata',
-                                       'distcoef'))
-    sp2 = ArrayTemplateGenerator(('gwt6', 'mst', 'griddata', 'sp2'))
+
+    sorbate_filerecord = ListTemplateGenerator(
+        ("gwt6", "mst", "options", "sorbate_filerecord")
+    )
+    porosity = ArrayTemplateGenerator(("gwt6", "mst", "griddata", "porosity"))
+    decay = ArrayTemplateGenerator(("gwt6", "mst", "griddata", "decay"))
+    decay_sorbed = ArrayTemplateGenerator(("gwt6", "mst", "griddata", "decay_sorbed"))
+    bulk_density = ArrayTemplateGenerator(("gwt6", "mst", "griddata", "bulk_density"))
+    distcoef = ArrayTemplateGenerator(("gwt6", "mst", "griddata", "distcoef"))
+    sp2 = ArrayTemplateGenerator(("gwt6", "mst", "griddata", "sp2"))
     package_abbr = "gwtmst"
     _package_type = "mst"
     dfn_file_name = "gwt-mst.dfn"
 
     dfn = [
-           ["header", ],
-           ["block options", "name save_flows", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name first_order_decay", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name zero_order_decay", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name sorption", "type string",
-            "valid linear freundlich langmuir", "reader urword",
-            "optional true"],
-           ["block options", "name sorbate_filerecord",
-            "type record sorbate fileout sorbatefile", "shape",
-            "reader urword", "tagged true", "optional true"],
-           ["block options", "name sorbate", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name fileout", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name sorbatefile", "type string",
-            "preserve_case true", "shape", "in_record true", "reader urword",
-            "tagged false", "optional false"],
-           ["block griddata", "name porosity", "type double precision",
-            "shape (nodes)", "reader readarray", "layered true"],
-           ["block griddata", "name decay", "type double precision",
-            "shape (nodes)", "reader readarray", "layered true",
-            "optional true"],
-           ["block griddata", "name decay_sorbed", "type double precision",
-            "shape (nodes)", "reader readarray", "optional true",
-            "layered true"],
-           ["block griddata", "name bulk_density", "type double precision",
-            "shape (nodes)", "reader readarray", "optional true",
-            "layered true"],
-           ["block griddata", "name distcoef", "type double precision",
-            "shape (nodes)", "reader readarray", "layered true",
-            "optional true"],
-           ["block griddata", "name sp2", "type double precision",
-            "shape (nodes)", "reader readarray", "layered true",
-            "optional true"]]
+        [
+            "header",
+        ],
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name first_order_decay",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name zero_order_decay",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name sorption",
+            "type string",
+            "valid linear freundlich langmuir",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name sorbate_filerecord",
+            "type record sorbate fileout sorbatefile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name sorbate",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name fileout",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name sorbatefile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block griddata",
+            "name porosity",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+        ],
+        [
+            "block griddata",
+            "name decay",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name decay_sorbed",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "optional true",
+            "layered true",
+        ],
+        [
+            "block griddata",
+            "name bulk_density",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "optional true",
+            "layered true",
+        ],
+        [
+            "block griddata",
+            "name distcoef",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name sp2",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "optional true",
+        ],
+    ]
 
-    def __init__(self, model, loading_package=False, save_flows=None,
-                 first_order_decay=None, zero_order_decay=None, sorption=None,
-                 sorbate_filerecord=None, porosity=None, decay=None,
-                 decay_sorbed=None, bulk_density=None, distcoef=None, sp2=None,
-                 filename=None, pname=None, **kwargs):
-        super().__init__(model, "mst", filename, pname,
-                         loading_package, **kwargs)
+    def __init__(
+        self,
+        model,
+        loading_package=False,
+        save_flows=None,
+        first_order_decay=None,
+        zero_order_decay=None,
+        sorption=None,
+        sorbate_filerecord=None,
+        porosity=None,
+        decay=None,
+        decay_sorbed=None,
+        bulk_density=None,
+        distcoef=None,
+        sp2=None,
+        filename=None,
+        pname=None,
+        **kwargs,
+    ):
+        super().__init__(model, "mst", filename, pname, loading_package, **kwargs)
 
         # set up variables
         self.save_flows = self.build_mfdata("save_flows", save_flows)
-        self.first_order_decay = self.build_mfdata("first_order_decay",
-                                                   first_order_decay)
-        self.zero_order_decay = self.build_mfdata("zero_order_decay",
-                                                  zero_order_decay)
+        self.first_order_decay = self.build_mfdata(
+            "first_order_decay", first_order_decay
+        )
+        self.zero_order_decay = self.build_mfdata("zero_order_decay", zero_order_decay)
         self.sorption = self.build_mfdata("sorption", sorption)
-        self.sorbate_filerecord = self.build_mfdata("sorbate_filerecord",
-                                                    sorbate_filerecord)
+        self.sorbate_filerecord = self.build_mfdata(
+            "sorbate_filerecord", sorbate_filerecord
+        )
         self.porosity = self.build_mfdata("porosity", porosity)
         self.decay = self.build_mfdata("decay", decay)
         self.decay_sorbed = self.build_mfdata("decay_sorbed", decay_sorbed)

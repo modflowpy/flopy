@@ -37,9 +37,9 @@ def test_mfgrddis_modelgrid(mfgrd_test_path):
     assert isinstance(modelgrid, StructuredGrid), "invalid grid type"
 
     lc = modelgrid.plot()
-    assert isinstance(
-        lc, matplotlib.collections.LineCollection
-    ), f"could not plot grid object created from {fn}"
+    assert isinstance(lc, matplotlib.collections.LineCollection), (
+        f"could not plot grid object created from {fn}"
+    )
     plt.close()
 
     extents = modelgrid.extent
@@ -54,9 +54,9 @@ def test_mfgrddis_modelgrid(mfgrd_test_path):
     maxvertex = max([max(sublist[1:]) for sublist in iverts])
     assert maxvertex + 1 == nvert, f"nvert ({maxvertex + 1}) does not equal {nvert}"
     verts = modelgrid.verts
-    assert (
-        nvert == verts.shape[0]
-    ), f"number of vertex (x, y) pairs ({verts.shape[0]}) does not equal {nvert}"
+    assert nvert == verts.shape[0], (
+        f"number of vertex (x, y) pairs ({verts.shape[0]}) does not equal {nvert}"
+    )
 
 
 def test_mfgrddisv_MfGrdFile(mfgrd_test_path):
@@ -87,9 +87,9 @@ def test_mfgrddisv_modelgrid(mfgrd_test_path):
     assert mg.ncpl == ncpl, f"ncpl ({mg.ncpl}) does not equal {ncpl}"
 
     lc = mg.plot()
-    assert isinstance(
-        lc, matplotlib.collections.LineCollection
-    ), f"could not plot grid object created from {fn}"
+    assert isinstance(lc, matplotlib.collections.LineCollection), (
+        f"could not plot grid object created from {fn}"
+    )
     plt.close("all")
 
     extents = mg.extent
@@ -102,9 +102,9 @@ def test_mfgrddisv_modelgrid(mfgrd_test_path):
     maxvertex = max([max(sublist[1:]) for sublist in iverts])
     assert maxvertex + 1 == nvert, f"nvert ({maxvertex + 1}) does not equal {nvert}"
     verts = mg.verts
-    assert (
-        nvert == verts.shape[0]
-    ), f"number of vertex (x, y) pairs ({verts.shape[0]}) does not equal {nvert}"
+    assert nvert == verts.shape[0], (
+        f"number of vertex (x, y) pairs ({verts.shape[0]}) does not equal {nvert}"
+    )
 
     cellxy = np.column_stack(mg.xyzcellcenters[:2])
     errmsg = f"shape of flow.disv centroids {cellxy.shape} not equal to (218, 2)."
@@ -141,9 +141,9 @@ def test_mfgrddisu_modelgrid(mfgrd_test_path):
     assert isinstance(mg, UnstructuredGrid), f"invalid grid type ({type(mg)})"
 
     lc = mg.plot()
-    assert isinstance(
-        lc, matplotlib.collections.LineCollection
-    ), f"could not plot grid object created from {fn}"
+    assert isinstance(lc, matplotlib.collections.LineCollection), (
+        f"could not plot grid object created from {fn}"
+    )
     plt.close("all")
 
     extents = mg.extent
@@ -156,6 +156,6 @@ def test_mfgrddisu_modelgrid(mfgrd_test_path):
     maxvertex = max([max(sublist[1:]) for sublist in iverts])
     assert maxvertex + 1 == nvert, f"nvert ({maxvertex + 1}) does not equal {nvert}"
     verts = mg.verts
-    assert (
-        nvert == verts.shape[0]
-    ), f"number of vertex (x, y) pairs ({verts.shape[0]}) does not equal {nvert}"
+    assert nvert == verts.shape[0], (
+        f"number of vertex (x, y) pairs ({verts.shape[0]}) does not equal {nvert}"
+    )

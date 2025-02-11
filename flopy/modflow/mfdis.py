@@ -16,7 +16,6 @@ from ..pakbase import Package
 from ..utils import Util2d, Util3d
 from ..utils.crs import get_crs
 from ..utils.flopy_io import line_parse
-from ..utils.reference import TemporalReference
 
 ITMUNI = {"u": 0, "s": 1, "m": 2, "h": 3, "d": 4, "y": 5}
 LENUNI = {"u": 0, "f": 1, "m": 2, "c": 3}
@@ -273,7 +272,6 @@ class ModflowDis(Package):
 
         if start_datetime is None:
             start_datetime = model._start_datetime
-        self.tr = TemporalReference(itmuni=self.itmuni, start_datetime=start_datetime)
 
         self.start_datetime = start_datetime
         self._totim = None

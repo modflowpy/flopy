@@ -78,6 +78,5 @@ class DataListInterface:
     def masked_4D_arrays_itr(self):
         def masked_4D_arrays_itr(self):
             raise NotImplementedError(
-                "must define masked_4D_arrays_itr in child "
-                "class to use this base class"
+                "must define masked_4D_arrays_itr in child class to use this base class"
             )

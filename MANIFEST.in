@@ -1,5 +1,0 @@
-include CITATION.cff
-include pyproject.toml
-include docs/*.md
-include flopy/mf6/data/dfn/*.dfn
-include flopy/plot/mplstyle/*.mplstyle

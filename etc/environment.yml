@@ -12,6 +12,7 @@ dependencies:
 
   # lint
   - cffconvert
+  - codespell>=2.2.2
   - ruff
 
   # test
@@ -23,29 +24,33 @@ dependencies:
   - jupytext
   - pip:
       - git+https://github.com/MODFLOW-USGS/modflow-devtools.git
+      - tach
   - pytest!=8.1.0
   - pytest-benchmark
   - pytest-cov
   - pytest-dotenv
   - pytest-xdist
+  - pyzmq>=25.1.2,
   - syrupy
   - virtualenv
 
   # optional
   - affine
-  - scipy
-  - netcdf4
-  - pyshp
-  - rasterio
-  - fiona
   - descartes
-  - pyproj
-  - shapely>=2.0
-  - geos
+  - fiona
   - geojson
-  - vtk
-  - rasterstats
-  - pyvista
+  - geopandas
+  - GitPython
   - imageio
+  - netcdf4
+  - pooch
   - pymetis
+  - pyproj
+  - pyshp
+  - pyvista
+  - rasterio
+  - rasterstats
+  - scipy
+  - shapely>=2.0
+  - vtk
   - xmipy

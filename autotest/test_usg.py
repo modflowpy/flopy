@@ -9,7 +9,7 @@ from modflow_devtools.markers import requires_exe
 from autotest.conftest import get_example_data_path
 from flopy.mfusg import MfUsg, MfUsgDisU, MfUsgLpf, MfUsgSms, MfUsgWel
 from flopy.modflow import ModflowBas, ModflowDis, ModflowDrn, ModflowGhb, ModflowOc
-from flopy.utils import TemporalReference, Util2d, Util3d
+from flopy.utils import Util2d, Util3d
 
 
 @pytest.fixture
@@ -56,7 +56,7 @@ def test_usg_disu_load(function_tmpdir, mfusg_01A_nestedgrid_nognc_model_path):
             assert np.array_equal(value1.array, value2.array)
         elif isinstance(value1, list):  # this is for the jagged _get_neighbours list
             assert np.all([np.all(v1 == v2) for v1, v2 in zip(value1, value2)])
-        elif not isinstance(value1, TemporalReference):
+        else:
             assert value1 == value2
 
 
@@ -84,9 +84,9 @@ def test_usg_sms_load(function_tmpdir, mfusg_01A_nestedgrid_nognc_model_path):
     for (key1, value1), (key2, value2) in zip(
         sms2.__dict__.items(), sms.__dict__.items()
     ):
-        assert (
-            value1 == value2
-        ), f"key1 {key1}, value 1 {value1} != key2 {key2} value 2 {value2}"
+        assert value1 == value2, (
+            f"key1 {key1}, value 1 {value1} != key2 {key2} value 2 {value2}"
+        )
 
 
 @requires_exe("mfusg")

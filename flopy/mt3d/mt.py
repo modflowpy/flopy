@@ -227,16 +227,13 @@ class Mt3dms(BaseModel):
     @property
     def modeltime(self):
         # build model time
-        data_frame = {
-            "perlen": self.mf.dis.perlen.array,
-            "nstp": self.mf.dis.nstp.array,
-            "tsmult": self.mf.dis.tsmult.array,
-        }
         self._model_time = ModelTime(
-            data_frame,
-            self.mf.dis.itmuni_dict[self.mf.dis.itmuni],
-            self.dis.start_datetime,
-            self.dis.steady.array,
+            perlen=self.mf.dis.perlen.array,
+            nstp=self.mf.dis.nstp.array,
+            tsmult=self.mf.dis.tsmult.array,
+            time_units=self.mf.dis.itmuni_dict,
+            start_datetime=self.dis.start_datetime,
+            steady_state=self.dis.steady.array,
         )
         return self._model_time
 

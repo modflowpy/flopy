@@ -1,4 +1,31 @@
 # Changelog
+### Version 3.9.2
+
+#### New features
+
+* [feat(mf2005,mf2k)](https://github.com/modflowpy/flopy/commit/f058122a51404aadb5d28d23548ec96eff82ec8a): Allow loading custom flopy packages (#2404). Committed by Davíd Brakenhoff on 2025-01-10.
+* [feat(generate_classes.py)](https://github.com/modflowpy/flopy/commit/48ec3b2f2cfa0287c94fb6d62a596196294cfc2d): Allow excluding components (#2447). Committed by wpbonelli on 2025-02-11.
+
+#### Bug fixes
+
+* [fix(mp7particledata)](https://github.com/modflowpy/flopy/commit/942a4cd0eadec1201b430867f84412a03751747e): Add global_xy option for to_coords/to_prp (#2405). Committed by Davíd Brakenhoff on 2024-12-23.
+* [fix(resolve_exe)](https://github.com/modflowpy/flopy/commit/4deabe1d34b3476d9134bf0b64614ef0779634bb): Allow shutil.which() to find exe without suffix in Windows (#2408). Committed by martclanor on 2025-01-10.
+* [fix(cvfdutil)](https://github.com/modflowpy/flopy/commit/f9da244347f6e076e8e5d65562efc06640b07677): Fix skip_hanging_node_check (#2423). Committed by Oscar  Sanchez on 2025-01-21.
+* [fix(Mf6Splitter)](https://github.com/modflowpy/flopy/commit/25ec5cd4ce32e8862760ef672ef709fbb870d19f): Multiple bug fixes and added support (#2418). Committed by Joshua Larsen on 2025-01-30.
+* [fix(mp7particledata.py)](https://github.com/modflowpy/flopy/commit/9385daac51d064b34ca72117a27d5ec741a640c7): Avoid attribute error (#2441). Committed by wpbonelli on 2025-02-08.
+
+#### Perf
+
+* [perf(tutorials)](https://github.com/modflowpy/flopy/commit/8fd63758606091b323b01b1b77d39be964650cdd): Skip some writes in export_vtk_tutorial.py (#2432). Committed by wpbonelli on 2025-02-03.
+
+#### Refactoring
+
+* [refactor(model_splitter)](https://github.com/modflowpy/flopy/commit/bb587c3e46d934799e1e1060681dd10073ad935e): Add timeseries support (#2403). Committed by Joshua Larsen on 2025-01-03.
+* [refactor(FlopyBinaryData)](https://github.com/modflowpy/flopy/commit/ef5ca6a6361bab020f9e198563c18d7242f12e28): Make properties readonly, deprecate set_float() (#2421). Committed by wpbonelli on 2025-01-20.
+* [refactor(get-modflow)](https://github.com/modflowpy/flopy/commit/6a8f313df441c73673f8780a203a7233ae4f3ecc): Don't hard-code available os tags (#2426). Committed by wpbonelli on 2025-01-26.
+* [refactor(mf6)](https://github.com/modflowpy/flopy/commit/816ff8108f6985e0b2ead549a13f6446639d8f61): Allow using existing dfn files in generate_classes.py (#2431). Committed by wpbonelli on 2025-02-03.
+* [refactor(ModelTime)](https://github.com/modflowpy/flopy/commit/069d5430760fd0a9eb5eff6e8f36ce39974e25d3): Refactor ModelTime and add new features (#2367). Committed by Joshua Larsen on 2025-02-05.
+
 ### Version 3.9.1
 
 #### Mf6

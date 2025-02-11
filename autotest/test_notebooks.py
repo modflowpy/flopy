@@ -3,7 +3,7 @@ from pprint import pprint
 
 import pytest
 from flaky import flaky
-from modflow_devtools.misc import run_cmd
+from modflow_devtools.misc import is_in_ci, run_cmd
 
 from autotest.conftest import get_project_root_path
 
@@ -34,7 +34,9 @@ def test_notebooks(notebook):
     args = ["jupytext", "--from", "py", "--to", "ipynb", "--execute", notebook]
     stdout, stderr, returncode = run_cmd(*args, verbose=True)
 
-    if returncode != 0:
+    # allow notebooks to fail for lack of optional dependencies in local runs,
+    # expect all dependencies to be present and notebooks to pass in ci tests.
+    if returncode != 0 and not is_in_ci():
         if "Missing optional dependency" in stderr:
             pkg = re.findall("Missing optional dependency '(.*)'", stderr)[0]
             pytest.skip(f"notebook requires optional dependency {pkg!r}")

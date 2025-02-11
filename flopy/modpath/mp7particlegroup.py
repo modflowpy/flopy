@@ -51,8 +51,7 @@ class _Modpath7ParticleGroup:
 
         if releasedata is None:
             raise ValueError(
-                "releasedata must be provided to instantiate "
-                "a MODPATH 7 particle group"
+                "releasedata must be provided to instantiate a MODPATH 7 particle group"
             )
 
         # convert releasedata to a list, if required
