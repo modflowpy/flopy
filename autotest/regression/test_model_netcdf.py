@@ -1142,7 +1142,7 @@ def test_disv_transform(function_tmpdir, example_data_path):
         vgrid,
     )
 
-    ds.create_array("start_conditions", "head", strt, ["nlay", "ncpl"])
+    ds.create_array("start_conditions", "head", strt, ["nlay", "ncpl"], None)
 
     # write to netcdf
     ds.write(vertex_ws)

@@ -4,6 +4,7 @@ import sys
 import time
 import warnings
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 import xarray as xr
@@ -123,7 +124,7 @@ class ModelNetCDFDataset:
         param: str,
         data: np.typing.ArrayLike,
         shape: list,
-        longname: str | None = None,
+        longname: Optional[str],
     ):
         """
         Create a new array. Override this function in a derived class.
@@ -152,7 +153,7 @@ class ModelNetCDFDataset:
         package: str,
         param: str,
         data: np.typing.ArrayLike,
-        layer: int | None = None,
+        layer: Optional[int],
     ):
         """
         Set data in an existing array. Override this function in a derived class.
@@ -187,7 +188,7 @@ class ModelNetCDFDataset:
 
         Args:
             path (str): A directory in which to write the file.
-            kwargs (dict): A dictionay of supported encodings to
+            kwargs (dict): A dictionary of supported encodings to
                 apply to managed grid associated arrays.
         """
         self._set_projection()
@@ -426,7 +427,7 @@ class ModelNetCDFDataset:
         param: str,
         data: np.typing.ArrayLike,
         nc_shape: list,
-        longname: str,
+        longname: Optional[str],
     ):
         layer = -1
         if data.dtype == np.float64:
@@ -443,7 +444,8 @@ class ModelNetCDFDataset:
         self._dataset = self._dataset.assign(var_d)
         # self._dataset = self._dataset.fillna(fillna)
         self._dataset[varname].attrs["_FillValue"] = fillna
-        self._dataset[varname].attrs["long_name"] = longname
+        if longname:
+            self._dataset[varname].attrs["long_name"] = longname
         if path not in self._tags:
             self._tags[path] = {}
         if layer in self._tags[path]:
@@ -456,7 +458,7 @@ class ModelNetCDFDataset:
         param: str,
         data: np.typing.ArrayLike,
         nc_shape: list,
-        longname: str,
+        longname: Optional[str],
     ):
         if data.dtype == np.float64:
             fillna = FILLNA_DBL
@@ -475,11 +477,10 @@ class ModelNetCDFDataset:
             self._dataset = self._dataset.assign(var_d)
             # self._dataset = self._dataset.fillna(fillna)
             self._dataset[layer_vname].attrs["_FillValue"] = fillna
-            if longname != "":
-                ln = f"{longname} layer={mf6_layer}"
-            else:
-                ln = longname
-            self._dataset[layer_vname].attrs["long_name"] = ln
+            if longname:
+                self._dataset[layer_vname].attrs["long_name"] = (
+                    f"{longname} layer={mf6_layer}"
+                )
             if path not in self._tags:
                 self._tags[path] = {}
             if layer in self._tags[path]:
@@ -499,11 +500,9 @@ class DisNetCDFStructured(ModelNetCDFDataset):
         param: str,
         data: np.typing.ArrayLike,
         shape: list,
-        longname: str | None = None,
+        longname: Optional[str],
     ):
         data = np.array(data)
-        if not longname:
-            longname = ""
         nc_shape = None
         if len(data.shape) == 3:
             nc_shape = ["z", "y", "x"]
@@ -522,7 +521,7 @@ class DisNetCDFStructured(ModelNetCDFDataset):
         package: str,
         param: str,
         data: np.typing.ArrayLike,
-        layer: int | None = None,
+        layer: Optional[int],
     ):
         data = np.array(data)
         path = self.path(package, param)
@@ -667,11 +666,9 @@ class DisNetCDFMesh2d(ModelNetCDFDataset):
         param: str,
         data: np.typing.ArrayLike,
         shape: list,
-        longname: str | None = None,
+        longname: Optional[str],
     ):
         data = np.array(data)
-        if not longname:
-            longname = ""
         nc_shape = None
         if len(data.shape) == 1:
             if shape[0].lower() == "nrow":
@@ -691,7 +688,7 @@ class DisNetCDFMesh2d(ModelNetCDFDataset):
         package: str,
         param: str,
         data: np.typing.ArrayLike,
-        layer: int | None = None,
+        layer: Optional[int],
     ):
         data = np.array(data)
         path = self.path(package, param)
@@ -822,11 +819,9 @@ class DisvNetCDFMesh2d(ModelNetCDFDataset):
         param: str,
         data: np.typing.ArrayLike,
         shape: list,
-        longname: str | None = None,
+        longname: Optional[str],
     ):
         data = np.array(data)
-        if not longname:
-            longname = ""
         nc_shape = ["nmesh_face"]
 
         if len(data.shape) == 2:
@@ -839,7 +834,7 @@ class DisvNetCDFMesh2d(ModelNetCDFDataset):
         package: str,
         param: str,
         data: np.typing.ArrayLike,
-        layer: int | None = None,
+        layer: Optional[int],
     ):
         data = np.array(data)
         path = self.path(package, param)
