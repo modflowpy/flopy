@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 20, 2024 02:43:08 UTC
+# FILE created on February 11, 2025 01:24:12 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -22,9 +22,10 @@ class ModflowPrtfmi(mfpackage.MFPackage):
           written to the file specified with "BUDGET FILEOUT" in Output
           Control.
     packagedata : [flowtype, fname]
-        * flowtype (string) is the word GWFBUDGET or GWFHEAD. If GWFBUDGET is
-          specified, then the corresponding file must be a budget file from a
-          previous GWF Model run.
+        * flowtype (string) is the word GWFBUDGET, GWFHEAD, or GWFGRID. If
+          GWFBUDGET is specified, then the corresponding file must be a budget
+          file. If GWFHEAD is specified, the file must be a head file. If
+          GWFGRID is specified, the file must be a binary grid file.
         * fname (string) is the name of the file containing flows. The path to
           the file should be included if the file is not located in the folder
           where the program was run.
@@ -34,36 +35,74 @@ class ModflowPrtfmi(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
-    packagedata = ListTemplateGenerator(('prt6', 'fmi', 'packagedata',
-                                         'packagedata'))
+
+    packagedata = ListTemplateGenerator(("prt6", "fmi", "packagedata", "packagedata"))
     package_abbr = "prtfmi"
     _package_type = "fmi"
     dfn_file_name = "prt-fmi.dfn"
 
     dfn = [
-           ["header", ],
-           ["block options", "name save_flows", "type keyword",
-            "reader urword", "optional true"],
-           ["block packagedata", "name packagedata",
-            "type recarray flowtype filein fname", "reader urword",
-            "optional false"],
-           ["block packagedata", "name flowtype", "in_record true",
-            "type string", "tagged false", "reader urword"],
-           ["block packagedata", "name filein", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block packagedata", "name fname", "in_record true",
-            "type string", "preserve_case true", "tagged false",
-            "reader urword"]]
+        [
+            "header",
+        ],
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block packagedata",
+            "name packagedata",
+            "type recarray flowtype filein fname",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block packagedata",
+            "name flowtype",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block packagedata",
+            "name fname",
+            "in_record true",
+            "type string",
+            "preserve_case true",
+            "tagged false",
+            "reader urword",
+        ],
+    ]
 
-    def __init__(self, model, loading_package=False, save_flows=None,
-                 packagedata=None, filename=None, pname=None, **kwargs):
-        super().__init__(model, "fmi", filename, pname,
-                         loading_package, **kwargs)
+    def __init__(
+        self,
+        model,
+        loading_package=False,
+        save_flows=None,
+        packagedata=None,
+        filename=None,
+        pname=None,
+        **kwargs,
+    ):
+        super().__init__(model, "fmi", filename, pname, loading_package, **kwargs)
 
         # set up variables
         self.save_flows = self.build_mfdata("save_flows", save_flows)

@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 20, 2024 02:43:08 UTC
+# FILE created on February 11, 2025 01:24:12 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator
 
@@ -106,93 +106,220 @@ class ModflowPts(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
-    csv_output_filerecord = ListTemplateGenerator(('pts', 'options',
-                                                   'csv_output_filerecord'))
-    csv_outer_output_filerecord = ListTemplateGenerator((
-        'pts', 'options', 'csv_outer_output_filerecord'))
-    csv_inner_output_filerecord = ListTemplateGenerator((
-        'pts', 'options', 'csv_inner_output_filerecord'))
-    no_ptcrecord = ListTemplateGenerator(('pts', 'options',
-                                          'no_ptcrecord'))
+
+    csv_output_filerecord = ListTemplateGenerator(
+        ("pts", "options", "csv_output_filerecord")
+    )
+    csv_outer_output_filerecord = ListTemplateGenerator(
+        ("pts", "options", "csv_outer_output_filerecord")
+    )
+    csv_inner_output_filerecord = ListTemplateGenerator(
+        ("pts", "options", "csv_inner_output_filerecord")
+    )
+    no_ptcrecord = ListTemplateGenerator(("pts", "options", "no_ptcrecord"))
     package_abbr = "pts"
     _package_type = "pts"
     dfn_file_name = "sln-pts.dfn"
 
     dfn = [
-           ["header", ],
-           ["block options", "name print_option", "type string",
-            "reader urword", "optional true"],
-           ["block options", "name complexity", "type string",
-            "reader urword", "optional true"],
-           ["block options", "name csv_output_filerecord",
-            "type record csv_output fileout csvfile", "shape",
-            "reader urword", "tagged true", "optional true",
-            "deprecated 6.1.1"],
-           ["block options", "name csv_output", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false", "deprecated 6.1.1"],
-           ["block options", "name csvfile", "type string",
-            "preserve_case true", "shape", "in_record true", "reader urword",
-            "tagged false", "optional false", "deprecated 6.1.1"],
-           ["block options", "name csv_outer_output_filerecord",
-            "type record csv_outer_output fileout outer_csvfile", "shape",
-            "reader urword", "tagged true", "optional true"],
-           ["block options", "name csv_outer_output", "type keyword",
-            "shape", "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name fileout", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name outer_csvfile", "type string",
-            "preserve_case true", "shape", "in_record true", "reader urword",
-            "tagged false", "optional false"],
-           ["block options", "name csv_inner_output_filerecord",
-            "type record csv_inner_output fileout inner_csvfile", "shape",
-            "reader urword", "tagged true", "optional true"],
-           ["block options", "name csv_inner_output", "type keyword",
-            "shape", "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name inner_csvfile", "type string",
-            "preserve_case true", "shape", "in_record true", "reader urword",
-            "tagged false", "optional false"],
-           ["block options", "name no_ptcrecord",
-            "type record no_ptc no_ptc_option", "reader urword",
-            "optional true"],
-           ["block options", "name no_ptc", "type keyword",
-            "in_record true", "reader urword", "optional false",
-            "tagged true"],
-           ["block options", "name no_ptc_option", "type string",
-            "in_record true", "reader urword", "optional true",
-            "tagged false"],
-           ["block options", "name ats_outer_maximum_fraction",
-            "type double precision", "reader urword", "optional true"],
-           ["block nonlinear", "name outer_maximum", "type integer",
-            "reader urword", "optional false"]]
+        [
+            "header",
+        ],
+        [
+            "block options",
+            "name print_option",
+            "type string",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name complexity",
+            "type string",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name csv_output_filerecord",
+            "type record csv_output fileout csvfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "deprecated 6.1.1",
+        ],
+        [
+            "block options",
+            "name csv_output",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+            "deprecated 6.1.1",
+        ],
+        [
+            "block options",
+            "name csvfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+            "deprecated 6.1.1",
+        ],
+        [
+            "block options",
+            "name csv_outer_output_filerecord",
+            "type record csv_outer_output fileout outer_csvfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name csv_outer_output",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name fileout",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name outer_csvfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name csv_inner_output_filerecord",
+            "type record csv_inner_output fileout inner_csvfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name csv_inner_output",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name inner_csvfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name no_ptcrecord",
+            "type record no_ptc no_ptc_option",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name no_ptc",
+            "type keyword",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged true",
+        ],
+        [
+            "block options",
+            "name no_ptc_option",
+            "type string",
+            "in_record true",
+            "reader urword",
+            "optional true",
+            "tagged false",
+        ],
+        [
+            "block options",
+            "name ats_outer_maximum_fraction",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block nonlinear",
+            "name outer_maximum",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+    ]
 
-    def __init__(self, simulation, loading_package=False, print_option=None,
-                 complexity=None, csv_output_filerecord=None,
-                 csv_outer_output_filerecord=None,
-                 csv_inner_output_filerecord=None, no_ptcrecord=None,
-                 ats_outer_maximum_fraction=None, outer_maximum=None,
-                 filename=None, pname=None, **kwargs):
-        super().__init__(simulation, "pts", filename, pname,
-                         loading_package, **kwargs)
+    def __init__(
+        self,
+        simulation,
+        loading_package=False,
+        print_option=None,
+        complexity=None,
+        csv_output_filerecord=None,
+        csv_outer_output_filerecord=None,
+        csv_inner_output_filerecord=None,
+        no_ptcrecord=None,
+        ats_outer_maximum_fraction=None,
+        outer_maximum=None,
+        filename=None,
+        pname=None,
+        **kwargs,
+    ):
+        super().__init__(simulation, "pts", filename, pname, loading_package, **kwargs)
 
         # set up variables
         self.print_option = self.build_mfdata("print_option", print_option)
         self.complexity = self.build_mfdata("complexity", complexity)
-        self.csv_output_filerecord = self.build_mfdata("csv_output_filerecord",
-                                                       csv_output_filerecord)
+        self.csv_output_filerecord = self.build_mfdata(
+            "csv_output_filerecord", csv_output_filerecord
+        )
         self.csv_outer_output_filerecord = self.build_mfdata(
-            "csv_outer_output_filerecord", csv_outer_output_filerecord)
+            "csv_outer_output_filerecord", csv_outer_output_filerecord
+        )
         self.csv_inner_output_filerecord = self.build_mfdata(
-            "csv_inner_output_filerecord", csv_inner_output_filerecord)
+            "csv_inner_output_filerecord", csv_inner_output_filerecord
+        )
         self.no_ptcrecord = self.build_mfdata("no_ptcrecord", no_ptcrecord)
         self.ats_outer_maximum_fraction = self.build_mfdata(
-            "ats_outer_maximum_fraction", ats_outer_maximum_fraction)
+            "ats_outer_maximum_fraction", ats_outer_maximum_fraction
+        )
         self.outer_maximum = self.build_mfdata("outer_maximum", outer_maximum)
         self._init_complete = True

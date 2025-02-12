@@ -10,7 +10,7 @@ shape lenbigline
 reader urword
 optional true
 longname CRS well-known text (WKT) string
-description is the CRS well-known text (WKT) string.
+description is the coordinate reference system (CRS) well-known text (WKT) string.
 
 block options
 name deflate

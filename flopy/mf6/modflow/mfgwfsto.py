@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 20, 2024 02:43:08 UTC
+# FILE created on February 11, 2025 01:24:12 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -82,99 +82,235 @@ class ModflowGwfsto(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
-    tvs_filerecord = ListTemplateGenerator(('gwf6', 'sto', 'options',
-                                            'tvs_filerecord'))
-    iconvert = ArrayTemplateGenerator(('gwf6', 'sto', 'griddata',
-                                       'iconvert'))
-    ss = ArrayTemplateGenerator(('gwf6', 'sto', 'griddata', 'ss'))
-    sy = ArrayTemplateGenerator(('gwf6', 'sto', 'griddata', 'sy'))
+
+    tvs_filerecord = ListTemplateGenerator(("gwf6", "sto", "options", "tvs_filerecord"))
+    iconvert = ArrayTemplateGenerator(("gwf6", "sto", "griddata", "iconvert"))
+    ss = ArrayTemplateGenerator(("gwf6", "sto", "griddata", "ss"))
+    sy = ArrayTemplateGenerator(("gwf6", "sto", "griddata", "sy"))
     package_abbr = "gwfsto"
     _package_type = "sto"
     dfn_file_name = "gwf-sto.dfn"
 
     dfn = [
-           ["header", ],
-           ["block options", "name save_flows", "type keyword",
-            "reader urword", "optional true", "mf6internal ipakcb"],
-           ["block options", "name storagecoefficient", "type keyword",
-            "reader urword", "optional true", "mf6internal istor_coef"],
-           ["block options", "name ss_confined_only", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name tvs_filerecord",
-            "type record tvs6 filein tvs6_filename", "shape", "reader urword",
-            "tagged true", "optional true", "construct_package tvs",
-            "construct_data tvs_perioddata", "parameter_name perioddata"],
-           ["block options", "name tvs6", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name filein", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name tvs6_filename", "type string",
-            "preserve_case true", "in_record true", "reader urword",
-            "optional false", "tagged false"],
-           ["block options", "name export_array_ascii", "type keyword",
-            "reader urword", "optional true", "mf6internal export_ascii"],
-           ["block options", "name export_array_netcdf", "type keyword",
-            "reader urword", "optional true", "mf6internal export_nc",
-            "extended true"],
-           ["block options", "name dev_original_specific_storage",
-            "type keyword", "reader urword", "optional true",
-            "mf6internal iorig_ss"],
-           ["block options", "name dev_oldstorageformulation",
-            "type keyword", "reader urword", "optional true",
-            "mf6internal iconf_ss"],
-           ["block griddata", "name iconvert", "type integer",
-            "shape (nodes)", "valid", "reader readarray", "layered true",
-            "netcdf true", "optional false", "default_value 0"],
-           ["block griddata", "name ss", "type double precision",
-            "shape (nodes)", "valid", "reader readarray", "layered true",
-            "netcdf true", "optional false", "default_value 1.e-5"],
-           ["block griddata", "name sy", "type double precision",
-            "shape (nodes)", "valid", "reader readarray", "layered true",
-            "netcdf true", "optional false", "default_value 0.15"],
-           ["block period", "name iper", "type integer",
-            "block_variable True", "in_record true", "tagged false", "shape",
-            "valid", "reader urword", "optional false"],
-           ["block period", "name steady-state", "type keyword", "shape",
-            "valid", "reader urword", "optional true",
-            "mf6internal steady_state"],
-           ["block period", "name transient", "type keyword", "shape",
-            "valid", "reader urword", "optional true"]]
+        [
+            "header",
+        ],
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal ipakcb",
+        ],
+        [
+            "block options",
+            "name storagecoefficient",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal istor_coef",
+        ],
+        [
+            "block options",
+            "name ss_confined_only",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name tvs_filerecord",
+            "type record tvs6 filein tvs6_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "construct_package tvs",
+            "construct_data tvs_perioddata",
+            "parameter_name perioddata",
+        ],
+        [
+            "block options",
+            "name tvs6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name tvs6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged false",
+        ],
+        [
+            "block options",
+            "name export_array_ascii",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_ascii",
+        ],
+        [
+            "block options",
+            "name export_array_netcdf",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_nc",
+            "extended true",
+        ],
+        [
+            "block options",
+            "name dev_original_specific_storage",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal iorig_ss",
+        ],
+        [
+            "block options",
+            "name dev_oldstorageformulation",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal iconf_ss",
+        ],
+        [
+            "block griddata",
+            "name iconvert",
+            "type integer",
+            "shape (nodes)",
+            "valid",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "optional false",
+            "default_value 0",
+        ],
+        [
+            "block griddata",
+            "name ss",
+            "type double precision",
+            "shape (nodes)",
+            "valid",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "optional false",
+            "default_value 1.e-5",
+        ],
+        [
+            "block griddata",
+            "name sy",
+            "type double precision",
+            "shape (nodes)",
+            "valid",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "optional false",
+            "default_value 0.15",
+        ],
+        [
+            "block period",
+            "name iper",
+            "type integer",
+            "block_variable True",
+            "in_record true",
+            "tagged false",
+            "shape",
+            "valid",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name steady-state",
+            "type keyword",
+            "shape",
+            "valid",
+            "reader urword",
+            "optional true",
+            "mf6internal steady_state",
+        ],
+        [
+            "block period",
+            "name transient",
+            "type keyword",
+            "shape",
+            "valid",
+            "reader urword",
+            "optional true",
+        ],
+    ]
 
-    def __init__(self, model, loading_package=False, save_flows=None,
-                 storagecoefficient=None, ss_confined_only=None,
-                 perioddata=None, export_array_ascii=None,
-                 export_array_netcdf=None, dev_original_specific_storage=None,
-                 dev_oldstorageformulation=None, iconvert=0, ss=1.e-5, sy=0.15,
-                 steady_state=None, transient=None, filename=None, pname=None,
-                 **kwargs):
-        super().__init__(model, "sto", filename, pname,
-                         loading_package, **kwargs)
+    def __init__(
+        self,
+        model,
+        loading_package=False,
+        save_flows=None,
+        storagecoefficient=None,
+        ss_confined_only=None,
+        perioddata=None,
+        export_array_ascii=None,
+        export_array_netcdf=None,
+        dev_original_specific_storage=None,
+        dev_oldstorageformulation=None,
+        iconvert=0,
+        ss=1.0e-5,
+        sy=0.15,
+        steady_state=None,
+        transient=None,
+        filename=None,
+        pname=None,
+        **kwargs,
+    ):
+        super().__init__(model, "sto", filename, pname, loading_package, **kwargs)
 
         # set up variables
         self.save_flows = self.build_mfdata("save_flows", save_flows)
-        self.storagecoefficient = self.build_mfdata("storagecoefficient",
-                                                    storagecoefficient)
-        self.ss_confined_only = self.build_mfdata("ss_confined_only",
-                                                  ss_confined_only)
-        self._tvs_filerecord = self.build_mfdata("tvs_filerecord",
-                                                 None)
-        self._tvs_package = self.build_child_package("tvs", perioddata,
-                                                     "tvs_perioddata",
-                                                     self._tvs_filerecord)
-        self.export_array_ascii = self.build_mfdata("export_array_ascii",
-                                                    export_array_ascii)
-        self.export_array_netcdf = self.build_mfdata("export_array_netcdf",
-                                                     export_array_netcdf)
+        self.storagecoefficient = self.build_mfdata(
+            "storagecoefficient", storagecoefficient
+        )
+        self.ss_confined_only = self.build_mfdata("ss_confined_only", ss_confined_only)
+        self._tvs_filerecord = self.build_mfdata("tvs_filerecord", None)
+        self._tvs_package = self.build_child_package(
+            "tvs", perioddata, "tvs_perioddata", self._tvs_filerecord
+        )
+        self.export_array_ascii = self.build_mfdata(
+            "export_array_ascii", export_array_ascii
+        )
+        self.export_array_netcdf = self.build_mfdata(
+            "export_array_netcdf", export_array_netcdf
+        )
         self.dev_original_specific_storage = self.build_mfdata(
-            "dev_original_specific_storage", dev_original_specific_storage)
+            "dev_original_specific_storage", dev_original_specific_storage
+        )
         self.dev_oldstorageformulation = self.build_mfdata(
-            "dev_oldstorageformulation", dev_oldstorageformulation)
+            "dev_oldstorageformulation", dev_oldstorageformulation
+        )
         self.iconvert = self.build_mfdata("iconvert", iconvert)
         self.ss = self.build_mfdata("ss", ss)
         self.sy = self.build_mfdata("sy", sy)

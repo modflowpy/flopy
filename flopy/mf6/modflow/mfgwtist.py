@@ -1,6 +1,6 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
-# FILE created on December 20, 2024 02:43:08 UTC
+# FILE created on February 11, 2025 01:24:12 UTC
 from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
@@ -34,7 +34,9 @@ class ModflowGwtist(mfpackage.MFPackage):
           LANGMUIR. Use of this keyword requires that BULK_DENSITY and DISTCOEF
           are specified in the GRIDDATA block. If sorption is specified as
           FREUNDLICH or LANGMUIR then SP2 is also required in the GRIDDATA
-          block.
+          block. The sorption option must be consistent with the sorption
+          option specified in the MST Package or the program will terminate
+          with an error.
     first_order_decay : boolean
         * first_order_decay (boolean) is a text keyword to indicate that first-
           order decay will occur. Use of this keyword requires that DECAY and
@@ -123,161 +125,392 @@ class ModflowGwtist(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
-    budget_filerecord = ListTemplateGenerator(('gwt6', 'ist', 'options',
-                                               'budget_filerecord'))
-    budgetcsv_filerecord = ListTemplateGenerator(('gwt6', 'ist',
-                                                  'options',
-                                                  'budgetcsv_filerecord'))
-    cim_filerecord = ListTemplateGenerator(('gwt6', 'ist', 'options',
-                                            'cim_filerecord'))
-    cimprintrecord = ListTemplateGenerator(('gwt6', 'ist', 'options',
-                                            'cimprintrecord'))
-    sorbate_filerecord = ListTemplateGenerator(('gwt6', 'ist', 'options',
-                                                'sorbate_filerecord'))
-    porosity = ArrayTemplateGenerator(('gwt6', 'ist', 'griddata',
-                                       'porosity'))
-    volfrac = ArrayTemplateGenerator(('gwt6', 'ist', 'griddata',
-                                      'volfrac'))
-    zetaim = ArrayTemplateGenerator(('gwt6', 'ist', 'griddata',
-                                     'zetaim'))
-    cim = ArrayTemplateGenerator(('gwt6', 'ist', 'griddata', 'cim'))
-    decay = ArrayTemplateGenerator(('gwt6', 'ist', 'griddata', 'decay'))
-    decay_sorbed = ArrayTemplateGenerator(('gwt6', 'ist', 'griddata',
-                                           'decay_sorbed'))
-    bulk_density = ArrayTemplateGenerator(('gwt6', 'ist', 'griddata',
-                                           'bulk_density'))
-    distcoef = ArrayTemplateGenerator(('gwt6', 'ist', 'griddata',
-                                       'distcoef'))
-    sp2 = ArrayTemplateGenerator(('gwt6', 'ist', 'griddata', 'sp2'))
+
+    budget_filerecord = ListTemplateGenerator(
+        ("gwt6", "ist", "options", "budget_filerecord")
+    )
+    budgetcsv_filerecord = ListTemplateGenerator(
+        ("gwt6", "ist", "options", "budgetcsv_filerecord")
+    )
+    cim_filerecord = ListTemplateGenerator(("gwt6", "ist", "options", "cim_filerecord"))
+    cimprintrecord = ListTemplateGenerator(("gwt6", "ist", "options", "cimprintrecord"))
+    sorbate_filerecord = ListTemplateGenerator(
+        ("gwt6", "ist", "options", "sorbate_filerecord")
+    )
+    porosity = ArrayTemplateGenerator(("gwt6", "ist", "griddata", "porosity"))
+    volfrac = ArrayTemplateGenerator(("gwt6", "ist", "griddata", "volfrac"))
+    zetaim = ArrayTemplateGenerator(("gwt6", "ist", "griddata", "zetaim"))
+    cim = ArrayTemplateGenerator(("gwt6", "ist", "griddata", "cim"))
+    decay = ArrayTemplateGenerator(("gwt6", "ist", "griddata", "decay"))
+    decay_sorbed = ArrayTemplateGenerator(("gwt6", "ist", "griddata", "decay_sorbed"))
+    bulk_density = ArrayTemplateGenerator(("gwt6", "ist", "griddata", "bulk_density"))
+    distcoef = ArrayTemplateGenerator(("gwt6", "ist", "griddata", "distcoef"))
+    sp2 = ArrayTemplateGenerator(("gwt6", "ist", "griddata", "sp2"))
     package_abbr = "gwtist"
     _package_type = "ist"
     dfn_file_name = "gwt-ist.dfn"
 
     dfn = [
-           ["header", ],
-           ["block options", "name save_flows", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name budget_filerecord",
-            "type record budget fileout budgetfile", "shape", "reader urword",
-            "tagged true", "optional true"],
-           ["block options", "name budget", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name fileout", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name budgetfile", "type string",
-            "preserve_case true", "shape", "in_record true", "reader urword",
-            "tagged false", "optional false"],
-           ["block options", "name budgetcsv_filerecord",
-            "type record budgetcsv fileout budgetcsvfile", "shape",
-            "reader urword", "tagged true", "optional true"],
-           ["block options", "name budgetcsv", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name budgetcsvfile", "type string",
-            "preserve_case true", "shape", "in_record true", "reader urword",
-            "tagged false", "optional false"],
-           ["block options", "name sorption", "type string",
-            "valid linear freundlich langmuir", "reader urword",
-            "optional true"],
-           ["block options", "name first_order_decay", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name zero_order_decay", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name cim_filerecord",
-            "type record cim fileout cimfile", "shape", "reader urword",
-            "tagged true", "optional true"],
-           ["block options", "name cim", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name cimfile", "type string",
-            "preserve_case true", "shape", "in_record true", "reader urword",
-            "tagged false", "optional false"],
-           ["block options", "name cimprintrecord",
-            "type record cim print_format formatrecord", "shape",
-            "reader urword", "optional true"],
-           ["block options", "name print_format", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name formatrecord",
-            "type record columns width digits format", "shape",
-            "in_record true", "reader urword", "tagged", "optional false"],
-           ["block options", "name columns", "type integer", "shape",
-            "in_record true", "reader urword", "tagged true", "optional"],
-           ["block options", "name width", "type integer", "shape",
-            "in_record true", "reader urword", "tagged true", "optional"],
-           ["block options", "name digits", "type integer", "shape",
-            "in_record true", "reader urword", "tagged true", "optional"],
-           ["block options", "name format", "type string", "shape",
-            "in_record true", "reader urword", "tagged false",
-            "optional false"],
-           ["block options", "name sorbate_filerecord",
-            "type record sorbate fileout sorbatefile", "shape",
-            "reader urword", "tagged true", "optional true"],
-           ["block options", "name sorbate", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name sorbatefile", "type string",
-            "preserve_case true", "shape", "in_record true", "reader urword",
-            "tagged false", "optional false"],
-           ["block griddata", "name porosity", "type double precision",
-            "shape (nodes)", "reader readarray", "layered true"],
-           ["block griddata", "name volfrac", "type double precision",
-            "shape (nodes)", "reader readarray", "layered true"],
-           ["block griddata", "name zetaim", "type double precision",
-            "shape (nodes)", "reader readarray", "layered true"],
-           ["block griddata", "name cim", "type double precision",
-            "shape (nodes)", "reader readarray", "optional true",
-            "layered true"],
-           ["block griddata", "name decay", "type double precision",
-            "shape (nodes)", "reader readarray", "layered true",
-            "optional true"],
-           ["block griddata", "name decay_sorbed", "type double precision",
-            "shape (nodes)", "reader readarray", "optional true",
-            "layered true"],
-           ["block griddata", "name bulk_density", "type double precision",
-            "shape (nodes)", "reader readarray", "optional true",
-            "layered true"],
-           ["block griddata", "name distcoef", "type double precision",
-            "shape (nodes)", "reader readarray", "optional true",
-            "layered true"],
-           ["block griddata", "name sp2", "type double precision",
-            "shape (nodes)", "reader readarray", "layered true",
-            "optional true"]]
+        [
+            "header",
+        ],
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name budget_filerecord",
+            "type record budget fileout budgetfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name budget",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name fileout",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsv_filerecord",
+            "type record budgetcsv fileout budgetcsvfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name budgetcsv",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsvfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name sorption",
+            "type string",
+            "valid linear freundlich langmuir",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name first_order_decay",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name zero_order_decay",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name cim_filerecord",
+            "type record cim fileout cimfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name cim",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name cimfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name cimprintrecord",
+            "type record cim print_format formatrecord",
+            "shape",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name print_format",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name formatrecord",
+            "type record columns width digits format",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name columns",
+            "type integer",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional",
+        ],
+        [
+            "block options",
+            "name width",
+            "type integer",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional",
+        ],
+        [
+            "block options",
+            "name digits",
+            "type integer",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional",
+        ],
+        [
+            "block options",
+            "name format",
+            "type string",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name sorbate_filerecord",
+            "type record sorbate fileout sorbatefile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name sorbate",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name sorbatefile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block griddata",
+            "name porosity",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+        ],
+        [
+            "block griddata",
+            "name volfrac",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+        ],
+        [
+            "block griddata",
+            "name zetaim",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+        ],
+        [
+            "block griddata",
+            "name cim",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "optional true",
+            "layered true",
+        ],
+        [
+            "block griddata",
+            "name decay",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name decay_sorbed",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "optional true",
+            "layered true",
+        ],
+        [
+            "block griddata",
+            "name bulk_density",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "optional true",
+            "layered true",
+        ],
+        [
+            "block griddata",
+            "name distcoef",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "optional true",
+            "layered true",
+        ],
+        [
+            "block griddata",
+            "name sp2",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "optional true",
+        ],
+    ]
 
-    def __init__(self, model, loading_package=False, save_flows=None,
-                 budget_filerecord=None, budgetcsv_filerecord=None,
-                 sorption=None, first_order_decay=None, zero_order_decay=None,
-                 cim_filerecord=None, cimprintrecord=None,
-                 sorbate_filerecord=None, porosity=None, volfrac=None,
-                 zetaim=None, cim=None, decay=None, decay_sorbed=None,
-                 bulk_density=None, distcoef=None, sp2=None, filename=None,
-                 pname=None, **kwargs):
-        super().__init__(model, "ist", filename, pname,
-                         loading_package, **kwargs)
+    def __init__(
+        self,
+        model,
+        loading_package=False,
+        save_flows=None,
+        budget_filerecord=None,
+        budgetcsv_filerecord=None,
+        sorption=None,
+        first_order_decay=None,
+        zero_order_decay=None,
+        cim_filerecord=None,
+        cimprintrecord=None,
+        sorbate_filerecord=None,
+        porosity=None,
+        volfrac=None,
+        zetaim=None,
+        cim=None,
+        decay=None,
+        decay_sorbed=None,
+        bulk_density=None,
+        distcoef=None,
+        sp2=None,
+        filename=None,
+        pname=None,
+        **kwargs,
+    ):
+        super().__init__(model, "ist", filename, pname, loading_package, **kwargs)
 
         # set up variables
         self.save_flows = self.build_mfdata("save_flows", save_flows)
-        self.budget_filerecord = self.build_mfdata("budget_filerecord",
-                                                   budget_filerecord)
-        self.budgetcsv_filerecord = self.build_mfdata("budgetcsv_filerecord",
-                                                      budgetcsv_filerecord)
+        self.budget_filerecord = self.build_mfdata(
+            "budget_filerecord", budget_filerecord
+        )
+        self.budgetcsv_filerecord = self.build_mfdata(
+            "budgetcsv_filerecord", budgetcsv_filerecord
+        )
         self.sorption = self.build_mfdata("sorption", sorption)
-        self.first_order_decay = self.build_mfdata("first_order_decay",
-                                                   first_order_decay)
-        self.zero_order_decay = self.build_mfdata("zero_order_decay",
-                                                  zero_order_decay)
-        self.cim_filerecord = self.build_mfdata("cim_filerecord",
-                                                cim_filerecord)
-        self.cimprintrecord = self.build_mfdata("cimprintrecord",
-                                                cimprintrecord)
-        self.sorbate_filerecord = self.build_mfdata("sorbate_filerecord",
-                                                    sorbate_filerecord)
+        self.first_order_decay = self.build_mfdata(
+            "first_order_decay", first_order_decay
+        )
+        self.zero_order_decay = self.build_mfdata("zero_order_decay", zero_order_decay)
+        self.cim_filerecord = self.build_mfdata("cim_filerecord", cim_filerecord)
+        self.cimprintrecord = self.build_mfdata("cimprintrecord", cimprintrecord)
+        self.sorbate_filerecord = self.build_mfdata(
+            "sorbate_filerecord", sorbate_filerecord
+        )
         self.porosity = self.build_mfdata("porosity", porosity)
         self.volfrac = self.build_mfdata("volfrac", volfrac)
         self.zetaim = self.build_mfdata("zetaim", zetaim)
