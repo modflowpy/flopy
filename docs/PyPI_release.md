@@ -30,4 +30,4 @@ How to Cite
 
 *Software/Code citation for FloPy:*
 
-[Bakker, Mark, Post, Vincent, Hughes, J. D., Langevin, C. D., White, J. T., Leaf, A. T., Paulinski, S. R., Bellino, J. C., Morway, E. D., Toews, M. W., Larsen, J. D., Fienen, M. N., Starn, J. J., Brakenhoff, D. A., and Bonelli, W. P., 2025, FloPy v3.9.2: U.S. Geological Survey Software Release, 11 February 2025, https://doi.org/10.5066/F7BK19FH](https://doi.org/10.5066/F7BK19FH)
+[Bakker, Mark, Post, Vincent, Hughes, J. D., Langevin, C. D., White, J. T., Leaf, A. T., Paulinski, S. R., Bellino, J. C., Morway, E. D., Toews, M. W., Larsen, J. D., Fienen, M. N., Starn, J. J., Brakenhoff, D. A., and Bonelli, W. P., 2025, FloPy v3.10.0.dev2: U.S. Geological Survey Software Release, 12 February 2025, https://doi.org/10.5066/F7BK19FH](https://doi.org/10.5066/F7BK19FH)
