@@ -290,7 +290,8 @@ def test_exe_selection(example_data_path, function_tmpdir):
         ml = Modflow.load(namfile_path, exe_name=exe_name, model_ws=model_path)
 
     # run should error if exe does not exist
-    ml = Modflow.load(namfile_path, exe_name=exe_name, model_ws=model_path)
+    with pytest.warns(UserWarning):
+        ml = Modflow.load(namfile_path, exe_name=exe_name, model_ws=model_path)
     ml.change_model_ws(function_tmpdir)
     ml.write_input()
     with pytest.raises(ValueError):

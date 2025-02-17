@@ -22,9 +22,9 @@ def mf6_model_path(example_data_path):
 @pytest.mark.parametrize("use_ext", [True, False])
 def test_resolve_exe_by_name(use_ext):
     ext = ".exe" if use_ext else ""
-    expected = which("mf6").lower()
-    actual = resolve_exe(f"mf6{ext}")
-    assert actual.lower() == expected
+    expected = Path(which("mf6"))
+    actual = Path(resolve_exe(f"mf6{ext}"))
+    assert actual == expected
     assert which(actual)
 
 
@@ -36,9 +36,9 @@ def test_resolve_exe_by_abs_path(use_ext):
         abs_path = abs_path[:-4]
     elif _system != "Windows" and use_ext:
         abs_path = f"{abs_path}.exe"
-    expected = which("mf6").lower()
-    actual = resolve_exe(abs_path)
-    assert actual.lower() == expected
+    expected = Path(which("mf6"))
+    actual = Path(resolve_exe(abs_path))
+    assert actual == expected
     assert which(actual)
 
 
@@ -47,7 +47,7 @@ def test_resolve_exe_by_abs_path(use_ext):
 @pytest.mark.parametrize("forgive", [True, False])
 def test_resolve_exe_by_rel_path(function_tmpdir, use_ext, forgive):
     ext = ".exe" if use_ext else ""
-    expected = which("mf6").lower()
+    expected = Path(which("mf6"))
 
     bin_dir = function_tmpdir / "bin"
     bin_dir.mkdir()
@@ -56,18 +56,22 @@ def test_resolve_exe_by_rel_path(function_tmpdir, use_ext, forgive):
 
     with set_dir(inner_dir):
         # copy exe to relative dir
-        new_exe_path = bin_dir / Path(expected).name
+        new_exe_path = bin_dir / expected.name
         copy(expected, new_exe_path)
         assert new_exe_path.is_file()
 
-        expected = which(str(new_exe_path.absolute())).lower()
-        actual = resolve_exe(f"../bin/mf6{ext}")
-        assert actual.lower() == expected
+        expected = Path(which(str(new_exe_path.absolute())))
+        actual = Path(resolve_exe(f"../bin/mf6{ext}"))
+        assert actual == expected
         assert which(actual)
 
         # check behavior if exe does not exist
-        with pytest.warns(UserWarning) if forgive else pytest.raises(FileNotFoundError):
-            assert not resolve_exe("../bin/mf2005", forgive)
+        if forgive:
+            with pytest.warns(UserWarning):
+                assert resolve_exe("../bin/mf2005", forgive=True) is None
+        else:
+            with pytest.raises(FileNotFoundError):
+                resolve_exe("../bin/mf2005", forgive=False)
 
 
 def test_run_model_when_namefile_not_in_model_ws(mf6_model_path, function_tmpdir):
@@ -124,14 +128,11 @@ def test_run_model(mf6_model_path, function_tmpdir, use_paths, exe):
 @requires_exe("mf6")
 @pytest.mark.parametrize("use_ext", [True, False])
 def test_run_model_exe_rel_path(mf6_model_path, function_tmpdir, use_ext):
-    if use_ext and system() != "Windows":
-        pytest.skip(".exe extensions are Windows-only")
-
     ws = function_tmpdir / "ws"
     copytree(mf6_model_path, ws)
 
     ext = ".exe" if use_ext else ""
-    mf6 = which("mf6").lower()
+    mf6 = which("mf6")
 
     bin_dir = function_tmpdir / "bin"
     bin_dir.mkdir()
