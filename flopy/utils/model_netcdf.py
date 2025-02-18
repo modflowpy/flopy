@@ -19,6 +19,7 @@ from ..discretization.vertexgrid import VertexGrid
 
 FILLNA_INT32 = np.int32(-2147483647)
 FILLNA_DBL = 9.96920996838687e36
+lenunits = {0: "m", 1: "ft", 2: "m", 3: "m"}
 
 
 class ModelNetCDFDataset:
@@ -45,7 +46,6 @@ class ModelNetCDFDataset:
     """
 
     def __init__(self):
-        # TODO: grid offsets
         self._modelname = None
         self._modeltype = None
         self._dataset = None
@@ -157,6 +157,9 @@ class ModelNetCDFDataset:
     ):
         """
         Set data in an existing array. Override this function in a derived class.
+        Do not use to update variables that establish the vertices and cell
+        structure of the grid, e.g. delr/delc or vertex/cell parameters, only
+        model data associated with the grid.
 
         Args:
             package (str): A package name provided as an argument to create_array().
@@ -286,64 +289,59 @@ class ModelNetCDFDataset:
         return encoding
 
     def _set_projection(self):
-        if self._dis:
-            crs = None
-            wkt = None
-            if self._dis.crs:
-                try:
-                    crs = CRS.from_user_input(self._dis.crs)
-                    wkt = crs.to_wkt()
-                except Exception as e:
-                    # crs = None
-                    # wkt = None
-                    warnings.warn(
-                        f"Cannot generate CRS object from user input: {e}",
-                        UserWarning,
-                    )
+        if not self._dis:
+            return
 
-                if wkt is not None:
-                    # add projection variable
-                    self._dataset = self._dataset.assign(
-                        {"projection": ([], np.int32(1))}
-                    )
-                    if self._nc_type == "structured":
-                        self._dataset["projection"].attrs["crs_wkt"] = wkt
-                        self._dataset["x"].attrs["grid_mapping"] = "projection"
-                        self._dataset["y"].attrs["grid_mapping"] = "projection"
-                    elif self._nc_type == "mesh2d":
-                        self._dataset["projection"].attrs["wkt"] = wkt
-                        self._dataset["mesh_node_x"].attrs["grid_mapping"] = (
-                            "projection"
-                        )
-                        self._dataset["mesh_node_y"].attrs["grid_mapping"] = (
-                            "projection"
-                        )
-                        self._dataset["mesh_face_x"].attrs["grid_mapping"] = (
-                            "projection"
-                        )
-                        self._dataset["mesh_face_y"].attrs["grid_mapping"] = (
-                            "projection"
-                        )
+        crs = None
+        wkt = None
+        projection = False
+        if self._dis.crs:
+            try:
+                crs = CRS.from_user_input(self._dis.crs)
+                wkt = crs.to_wkt()
+                projection = True
+            except Exception as e:
+                warnings.warn(
+                    f"Cannot generate CRS object from user input: {e}",
+                    UserWarning,
+                )
 
-            # update coords based on crs
-            coords = self._set_coords(crs)
+        # update coords based on crs
+        coords = self._set_coords(crs)
 
-            # set grid_mapping and coordinates attributes
-            for p in self._tags:
-                for l in self._tags[p]:
-                    dims = self._dataset[self._tags[p][l]].dims
-                    if (self._nc_type == "structured" and len(dims) > 1) or (
-                        self._nc_type == "mesh2d"
-                        and ("nmesh_face" in dims or "nmesh_node" in dims)
-                    ):
-                        if crs is not None:
-                            self._dataset[self._tags[p][l]].attrs["grid_mapping"] = (
-                                "projection"
-                            )
-                        if coords is not None:
-                            self._dataset[self._tags[p][l]].attrs["coordinates"] = (
-                                coords
-                            )
+        # Don't define projection and grid mapping if using
+        # geographic coordinates in the structured type
+        if self._nc_type == "structured" and coords == "lon lat":
+            projection = False
+
+        if projection:
+            # add projection variable
+            self._dataset = self._dataset.assign({"projection": ([], np.int32(1))})
+            if self._nc_type == "structured":
+                self._dataset["projection"].attrs["crs_wkt"] = wkt
+                self._dataset["x"].attrs["grid_mapping"] = "projection"
+                self._dataset["y"].attrs["grid_mapping"] = "projection"
+            elif self._nc_type == "mesh2d":
+                self._dataset["projection"].attrs["wkt"] = wkt
+                self._dataset["mesh_node_x"].attrs["grid_mapping"] = "projection"
+                self._dataset["mesh_node_y"].attrs["grid_mapping"] = "projection"
+                self._dataset["mesh_face_x"].attrs["grid_mapping"] = "projection"
+                self._dataset["mesh_face_y"].attrs["grid_mapping"] = "projection"
+
+        # set grid_mapping and coordinates attributes
+        for p in self._tags:
+            for l in self._tags[p]:
+                dims = self._dataset[self._tags[p][l]].dims
+                if (self._nc_type == "structured" and len(dims) > 1) or (
+                    self._nc_type == "mesh2d"
+                    and ("nmesh_face" in dims or "nmesh_node" in dims)
+                ):
+                    if projection:
+                        self._dataset[self._tags[p][l]].attrs["grid_mapping"] = (
+                            "projection"
+                        )
+                    if coords is not None:
+                        self._dataset[self._tags[p][l]].attrs["coordinates"] = coords
 
     def _set_modflow_attrs(self):
         if self._modeltype.endswith("6"):
@@ -545,10 +543,16 @@ class DisNetCDFStructured(ModelNetCDFDataset):
             return self._dataset[self._tags[path][-1]].data
 
     def _set_grid(self, dis):
-        lenunits = {0: "m", 1: "feet", 2: "m", 3: "cm"}
+        if dis.angrot != 0.0:
+            xoff = 0.0
+            yoff = 0.0
+        else:
+            xoff = dis.xoffset
+            yoff = dis.yoffset
 
+        # set coordinate var bounds
         x_bnds = []
-        xv = dis.xoffset + dis.xyedges[0]
+        xv = xoff + dis.xyedges[0]
         for idx, val in enumerate(xv):
             if idx + 1 < len(xv):
                 bnd = []
@@ -557,7 +561,7 @@ class DisNetCDFStructured(ModelNetCDFDataset):
                 x_bnds.append(bnd)
 
         y_bnds = []
-        yv = dis.yoffset + dis.xyedges[1]
+        yv = yoff + dis.xyedges[1]
         for idx, val in enumerate(yv):
             if idx + 1 < len(yv):
                 bnd = []
@@ -565,10 +569,9 @@ class DisNetCDFStructured(ModelNetCDFDataset):
                 bnd.append(yv[idx])
                 y_bnds.append(bnd)
 
-        # x = dis.xcellcenters[0]
-        # y = dis.ycellcenters[:, 0]
-        x = dis.xoffset + dis.xycenters[0]
-        y = dis.yoffset + dis.xycenters[1]
+        # set coordinate vars
+        x = xoff + dis.xycenters[0]
+        y = yoff + dis.xycenters[1]
         z = [float(x) for x in range(1, dis.nlay + 1)]
 
         # create coordinate vars
@@ -715,8 +718,6 @@ class DisNetCDFMesh2d(ModelNetCDFDataset):
         return None
 
     def _set_grid(self, dis):
-        lenunits = {0: "m", 1: "feet", 2: "m", 3: "cm"}
-
         # mesh container variable
         self._dataset = self._dataset.assign({"mesh": ([], np.int32(1))})
         self._dataset["mesh"].attrs["cf_role"] = "mesh_topology"
@@ -770,7 +771,6 @@ class DisNetCDFMesh2d(ModelNetCDFDataset):
                     y_bnds.append(bnd)
 
         var_d = {
-            # TODO modflow6 and flopy results differ for mesh_face_x gwf_sto01
             "mesh_face_x": (["nmesh_face"], dis.xcellcenters.flatten()),
             "mesh_face_xbnds": (["nmesh_face", "max_nmesh_face_nodes"], x_bnds),
             "mesh_face_y": (["nmesh_face"], dis.ycellcenters.flatten()),
@@ -861,9 +861,6 @@ class DisvNetCDFMesh2d(ModelNetCDFDataset):
         return None
 
     def _set_grid(self, disv):
-        # default metric "m" when undefined
-        lenunits = {0: "m", 1: "feet", 2: "m", 3: "cm"}
-
         # mesh container variable
         self._dataset = self._dataset.assign({"mesh": ([], np.int32(1))})
         self._dataset["mesh"].attrs["cf_role"] = "mesh_topology"

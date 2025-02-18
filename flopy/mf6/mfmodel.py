@@ -1348,7 +1348,11 @@ class MFModel(ModelInterface):
         """
 
         # write netcdf file
-        if netcdf or self._nc_dataset is not None:
+        if (netcdf or self._nc_dataset is not None) and (
+            self.model_type == "gwf6"
+            or self.model_type == "gwt6"
+            or self.model_type == "gwe6"
+        ):
             kwargs = {}
             if self._nc_dataset is None:
                 from ..utils.model_netcdf import create_dataset
@@ -1361,7 +1365,7 @@ class MFModel(ModelInterface):
 
                 # create netcdf dataset
                 self._nc_dataset = create_dataset(
-                    self.model_type, self.name, netcdf, nc_fname, self._modelgrid
+                    self.model_type, self.name, netcdf, nc_fname, self.modelgrid
                 )
 
                 # reset data storage and populate netcdf file
@@ -1375,6 +1379,7 @@ class MFModel(ModelInterface):
                         kwargs["chunk_y"] = pp.chunk_y.get_data()
                         kwargs["chunk_z"] = pp.chunk_z.get_data()
                         kwargs["wkt"] = pp.wkt.get_data()
+
                     pp._set_netcdf_storage(
                         self._nc_dataset, create=True
                     )
