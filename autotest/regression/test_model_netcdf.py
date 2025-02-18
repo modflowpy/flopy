@@ -32,13 +32,9 @@ def compare_netcdf(base, gen, projection=False, update=None):
 
     # coordinates
     for coordname, da in xrb.coords.items():
-        assert coordname in xrg.coords
-        assert np.allclose(xrb.coords[coordname].data, xrg.coords[coordname].data)
-        for a in da.attrs:
-            if a == "grid_mapping" and not projection:
-                continue
-            assert a in xrg.coords[coordname].attrs
-            assert da.attrs[a] == xrg.coords[coordname].attrs[a]
+        compare_netcdf_var(
+            coordname, xrb.coords, xrg.data_vars, xrg.coords, projection, update
+        )
 
     # variables
     for varname, da in xrb.data_vars.items():
@@ -147,7 +143,7 @@ def test_load_gwfsto01(function_tmpdir, example_data_path):
 
         # load example
         sim = flopy.mf6.MFSimulation.load(sim_ws=base_path)
-        gwf = sim.get_model("gwf_sto01")
+        # gwf = sim.get_model("gwf_sto01")
 
         # set simulation path and write simulation
         sim.set_sim_path(test_path)
@@ -200,8 +196,7 @@ def test_update_gwfsto01(function_tmpdir, example_data_path):
 
     nlay, nrow, ncol = 3, 10, 10
 
-    dis_delr = np.array([1010, 1010, 1010, 1010, 1010, 1010, 1010, 1010, 1010, 1010])
-    dis_delc = [2000, 2010, 2020, 2030, 2040, 2050, 2060, 2070, 2080, 2090]
+    dis_top = np.full((nrow, ncol), 50)
 
     # ic
     strt1 = np.full((nrow, ncol), 0.15)
@@ -210,8 +205,7 @@ def test_update_gwfsto01(function_tmpdir, example_data_path):
     ic_strt = np.array([strt1, strt2, strt3])
 
     update = {
-        "dis_delr": dis_delr,
-        "dis_delc": dis_delc,
+        "dis_top": dis_top.flatten()[0],
         "ic_strt": ic_strt,
         "ic_strt_l1": ic_strt[0].flatten(),
         "ic_strt_l2": ic_strt[1].flatten(),
@@ -233,9 +227,8 @@ def test_update_gwfsto01(function_tmpdir, example_data_path):
         # get model instance
         gwf = sim.get_model("gwf_sto01")
 
-        # update dis delr and delc
-        gwf.dis.delr = dis_delr
-        gwf.dis.delc = dis_delc
+        # update dis top
+        gwf.dis.top = dis_top
 
         # update ic strt
         gwf.ic.strt.set_data(ic_strt)
@@ -1090,7 +1083,9 @@ def test_dis_transform(function_tmpdir, example_data_path):
         ws = transform_ws / t
         sim.set_sim_path(ws)
         sim.write_simulation(netcdf=t)
-        compare_netcdf_data(cmp_pth / f"transform.{t}.nc", ws / "transform.in.nc")
+        compare_netcdf(
+            cmp_pth / f"transform.{t}.nc", ws / "transform.in.nc", projection=True
+        )
 
 
 @requires_exe("triangle")
@@ -1184,8 +1179,7 @@ def test_disv_transform(function_tmpdir, example_data_path):
 
     sim.write_simulation(netcdf=nc_type)
 
-    compare_netcdf_data(cmp_pth / f"tri.{nc_type}.nc", mf6_ws / "tri.in.nc")
-    # compare_netcdf_data(cmp_pth / f"tri.{nc_type}.nc", vertex_ws / "tri.nc")
+    compare_netcdf(cmp_pth / f"tri.{nc_type}.nc", mf6_ws / "tri.in.nc", projection=True)
 
 
 @pytest.mark.regression
