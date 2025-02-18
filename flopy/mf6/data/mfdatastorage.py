@@ -1840,7 +1840,6 @@ class DataStorage:
                     )
 
                     if self.netcdf:
-                        # TODO: multiplier NETCDF-DEV
                         file_access.set_netcdf_array(
                             self.layer_storage[layer].nc_dataset,
                             self.data_dimensions.structure.get_package(),
@@ -3063,7 +3062,10 @@ class DataStorage:
         if layer is None:
             # layer is none means the data provided is for all layers or this
             # is not layered data
-            layer = (0,)
+            if self.netcdf:
+                layer = (-1,)
+            else:
+                layer = (0,)
             self.layer_storage.list_shape = (1,)
             self.layer_storage.multi_dim_list = [
                 self.layer_storage.first_item()
