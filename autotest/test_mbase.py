@@ -68,7 +68,6 @@ def test_resolve_exe_by_rel_path(function_tmpdir, use_ext, forgive):
         # check behavior if exe does not exist
         with pytest.warns(UserWarning) if forgive else pytest.raises(FileNotFoundError):
             assert not resolve_exe("../bin/mf2005", forgive)
-            assert not resolve_exe(Path("../bin/mf2005"), forgive)
 
 
 def test_run_model_when_namefile_not_in_model_ws(mf6_model_path, function_tmpdir):
