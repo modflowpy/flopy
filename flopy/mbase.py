@@ -71,7 +71,7 @@ def resolve_exe(exe_name: Union[str, os.PathLike], forgive: bool = False) -> str
         checked.add(exe_name)
 
         # exe_name is found (not None), ensure absolute path is returned
-        if exe := which(str(exe_name)):
+        if exe := which(exe_name):
             return which(str(Path(exe).resolve()))
 
         # exe_name is relative path
@@ -88,7 +88,7 @@ def resolve_exe(exe_name: Union[str, os.PathLike], forgive: bool = False) -> str
         elif on_windows and "." not in Path(exe_name).stem:
             return _resolve(f"{exe_name}.exe", checked)
 
-    exe_path = _resolve(exe_name)
+    exe_path = _resolve(str(exe_name))
 
     # raise if we are unforgiving, otherwise return None
     if exe_path is None:
