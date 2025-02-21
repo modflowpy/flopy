@@ -182,10 +182,10 @@ def build_dfn_string(dfn_list, header, package_abbr, flopy_dict):
         # process each line in a data item
         for line in data_item:
             line = line.strip()
-            # do not include the description of longname
+            # do not include the description
             if not line.lower().startswith(
                 "description"
-            ) and not line.lower().startswith("longname"):
+            ):
                 line = line.replace('"', "'")
                 line_length += len(line) + 4
                 if not first_line:
