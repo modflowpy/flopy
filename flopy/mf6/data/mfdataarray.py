@@ -610,10 +610,9 @@ class MFArray(MFMultiDimVar):
                 ):
                     layer_list.append(index)
             if (
-                #TODO NETCDF-DEV improve
-                len(layer_list) == 1
+                storage.netcdf
+                and len(layer_list) == 1
                 and layer_list[0] == 0
-                and storage.netcdf
             ):
                 layer_list[0] = -1
         else:
@@ -957,9 +956,6 @@ class MFArray(MFMultiDimVar):
                     else:
                         layer_data = aux_var_data
                     try:
-                        #NETCDF-DEV
-                        if storage.netcdf:
-                            multiplier = 1.0
                         storage.set_data(
                             layer_data,
                             [layer],
@@ -1076,7 +1072,6 @@ class MFArray(MFMultiDimVar):
         nc_dataset=None
         if self.structure.netcdf:
             if (
-                # TODO use util splitting method e.g. see mffileaccess #NETCDF-DEV
                 hasattr(self._model_or_sim, "_nc_dataset")
                 and len(first_line.split()) > 1
                 and first_line.split()[1].lower() == "netcdf"
@@ -1625,7 +1620,7 @@ class MFArray(MFMultiDimVar):
     def _set_storage_netcdf(self, nc_dataset, create=False):
         if create:
             # add array to netcdf dataset
-            # TODO: fix, this won't work for multi-packages #NETCDF-DEV
+            # TODO: update to use pname for (stress) multi-packages
             nc_dataset.create_array(
                 self.structure.get_package(),
                 self.structure.name.lower(),

@@ -934,21 +934,18 @@ class MFModel(ModelInterface):
             if nc_filerecord:
                 from ..utils.model_netcdf import open_dataset
 
-                dis_str = {
+                grid_str = {
                     "dis6": "structured",
                     "disv6": "vertex",
-                    #"disu6": "unstructured",
                 }
                 dis_type = None
                 for t in instance.name_file.packages.get_data():
                     if t[0].lower().startswith("dis"):
                         dis_type = t[0].lower()
                         break
-                if dis_type and dis_type in dis_str:
+                if dis_type and dis_type in grid_str:
                     nc_fpth = os.path.join(instance.model_ws, nc_filerecord[0][0])
-                    # TODO: verify a partial dataset (not all griddata vars) don't
-                    #       break everything
-                    instance._nc_dataset = open_dataset(nc_fpth, dis_type=dis_str[dis_type])
+                    instance._nc_dataset = open_dataset(nc_fpth, grid_type=grid_str[dis_type])
                 else:
                     message = (
                         "Invalid discretization type "
