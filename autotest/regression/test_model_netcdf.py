@@ -1,8 +1,5 @@
-import math
 import os
 import shutil
-from traceback import format_exc
-from warnings import warn
 
 import numpy as np
 import pytest
@@ -13,7 +10,6 @@ from pyproj import CRS
 import flopy
 from flopy.discretization.structuredgrid import StructuredGrid
 from flopy.discretization.vertexgrid import VertexGrid
-from flopy.utils.datautil import DatumUtil
 from flopy.utils.gridutil import get_disv_kwargs
 from flopy.utils.model_netcdf import create_dataset
 
@@ -47,13 +43,6 @@ def compare_netcdf(base, gen, projection=False, update=None):
                 else:
                     attr = "crs_wkt"
                 assert attr in xrg.data_vars[varname].attrs
-
-                # TODO
-                # crs_b = CRS.from_wkt(da.attrs[attr])
-                # epsg_b = crs_b.to_epsg(min_confidence=90)
-                # crs_g = CRS.from_wkt(xrg.data_vars[varname].attrs[attr])
-                # epsg_g = crs_g.to_epsg(min_confidence=90)
-                # assert epsg_b == epsg_g
             continue
 
         compare_netcdf_var(
@@ -143,7 +132,6 @@ def test_load_gwfsto01(function_tmpdir, example_data_path):
 
         # load example
         sim = flopy.mf6.MFSimulation.load(sim_ws=base_path)
-        # gwf = sim.get_model("gwf_sto01")
 
         # set simulation path and write simulation
         sim.set_sim_path(test_path)
@@ -902,10 +890,6 @@ def test_disv01b(function_tmpdir, example_data_path):
 
     nlay, nrow, ncol = 3, 3, 3
     ncpl = nrow * ncol
-    # delr = 10.0
-    # delc = 10.0
-    # xoff = 100000000.0
-    # yoff = 100000000.0
 
     vertices = [
         (0, 1.0000000e08, 1.0000003e08),
@@ -1244,8 +1228,25 @@ def test_utlncf_create(function_tmpdir, example_data_path):
         "test_utlncf_create": {
             "base_sim_dir": "disv01b",
             "netcdf_output_file": "disv01b.in.nc",
+            "netcdf_type": "mesh2d",
         },
     }
+
+    name = "disv01b"
+    nlay = 3
+    nrow = 3
+    ncol = 3
+    delr = 10.0
+    delc = 10.0
+    top = 0
+    botm = [-10, -20, -30]
+    xoff = 100000000.0
+    yoff = 100000000.0
+    disvkwargs = get_disv_kwargs(nlay, nrow, ncol, delr, delc, top, botm, xoff, yoff)
+    idomain = np.ones((nlay, nrow * ncol), dtype=int)
+    idomain[0, 1] = 0
+    disvkwargs["idomain"] = idomain
+
     ws = function_tmpdir / "ws"
     for dirname, test in tests.items():
         data_path = os.path.join(data_path_base, dirname, test["base_sim_dir"])
@@ -1255,8 +1256,40 @@ def test_utlncf_create(function_tmpdir, example_data_path):
         test_path = os.path.join(ws, f"{dirname}_test")
         shutil.copytree(data_path, base_path)
 
-        # load example
-        sim = flopy.mf6.MFSimulation.load(sim_ws=base_path)
+        # create example
+        sim = flopy.mf6.MFSimulation(
+            sim_name=name,
+            version="mf6",
+            exe_name="mf6",
+            sim_ws=ws,
+        )
+        tdis = flopy.mf6.ModflowTdis(sim, start_date_time="2041-01-01t00:00:00-05:00")
+        kwargs = {}
+        kwargs["crs"] = "EPSG:26918"
+        gwf = flopy.mf6.ModflowGwf(sim, modelname=name, **kwargs)
+        ims = flopy.mf6.ModflowIms(sim, print_option="SUMMARY")
+        disv = flopy.mf6.ModflowGwfdisv(gwf, **disvkwargs)
+        ncf = flopy.mf6.ModflowUtlncf(
+            disv,
+            deflate=9,
+            shuffle=True,
+            chunk_time=1,
+            chunk_face=3,
+            filename=f"{name}.disv.ncf",
+        )
+        ic = flopy.mf6.ModflowGwfic(gwf, strt=0.0)
+        npf = flopy.mf6.ModflowGwfnpf(gwf)
+        spd = {0: [[(0, 0), 1.0], [(0, nrow * ncol - 1), 0.0]]}
+        chd = flopy.mf6.modflow.mfgwfchd.ModflowGwfchd(gwf, stress_period_data=spd)
+        oc = flopy.mf6.ModflowGwfoc(
+            gwf,
+            head_filerecord=f"{name}.hds",
+            saverecord=[("HEAD", "ALL")],
+        )
+
+        # set path and write simulation
+        sim.set_sim_path(test_path)
+        sim.write_simulation(netcdf=test["netcdf_type"])
 
         # set simulation path and write simulation
         sim.set_sim_path(test_path)

@@ -2011,7 +2011,6 @@ class DataStorage:
                     self._model_or_sim.modeldiscrit,
                 )[0]
             elif self.layer_storage[layer].nc_dataset is not None:
-                # TODO: ensure multiplier only set by open/close #NETCDF-DEV
                 data_out = (
                     file_access.read_netcdf_array(
                         self.layer_storage[layer].nc_dataset,

@@ -1,6 +1,4 @@
-import os
 import re
-import sys
 import time
 import warnings
 from pathlib import Path
@@ -49,7 +47,7 @@ class ModelNetCDFDataset:
         self._modelname = None
         self._modeltype = None
         self._dataset = None
-        self._dis = None
+        self._modelgrid = None
         self._tags = None
         self._fname = None
         self._nc_type = None
@@ -95,23 +93,23 @@ class ModelNetCDFDataset:
         self._dataset.attrs["history"] = f"{history}; updated {time.ctime(time.time())}"
 
     def create(
-        self, modeltype: str, modelname: str, nc_type: str, fname: str, dis: Grid
+        self, modeltype: str, modelname: str, nc_type: str, fname: str, modelgrid: Grid
     ) -> None:
         self._modelname = modelname.lower()
         self._modeltype = modeltype.lower()
         self._nc_type = nc_type.lower()
-        self._dis = dis
+        self._modelgrid = modelgrid
         self._fname = fname
         self._tags = {}
 
         if self._nc_type != "mesh2d" and self._nc_type != "structured":
             raise Exception('Supported NetCDF file types are "mesh2d" and "structured"')
-        if isinstance(dis, VertexGrid) and self._nc_type != "mesh2d":
+        if isinstance(modelgrid, VertexGrid) and self._nc_type != "mesh2d":
             raise Exception("VertexGrid object must use mesh2d netcdf file type")
 
         self._dataset = xr.Dataset()
         self._set_global_attrs(modeltype, modelname)
-        self._set_grid(dis)
+        self._set_grid(modelgrid)
         # print(self._dataset.info())
 
     def close(self):
@@ -194,9 +192,9 @@ class ModelNetCDFDataset:
             kwargs (dict): A dictionary of supported encodings to
                 apply to managed grid associated arrays.
         """
+        nc_fpath = Path(path) / self._fname
         self._set_projection()
         self._set_modflow_attrs()
-        nc_fpath = Path(path) / self._fname
         encoding = self._set_encoding(**kwargs)
         if encoding is not None:
             self._dataset.to_netcdf(
@@ -205,8 +203,13 @@ class ModelNetCDFDataset:
         else:
             self._dataset.to_netcdf(nc_fpath, format="NETCDF4", engine="netcdf4")
 
-    def path(self, package: str, param: str):
-        return f"{self._modelname.lower()}/{package.lower()}/{param.lower()}"
+    def path(self, package: str, param: str, verify=False):
+        path = f"{self._modelname.lower()}/{package.lower()}/{param.lower()}"
+
+        if verify and path not in self._tags:
+            raise Exception(f"Managed variable path not found in dataset: {path}")
+
+        return path
 
     def _set_grid(self, dis):
         """
@@ -229,7 +232,7 @@ class ModelNetCDFDataset:
         raise NotImplementedError("_set_coords not implemented in base class")
 
     def _set_encoding(self, **kwargs):
-        if self._dis is None:
+        if self._modelgrid is None:
             return None
         # encodings: {
         #   'szip_coding',
@@ -289,15 +292,15 @@ class ModelNetCDFDataset:
         return encoding
 
     def _set_projection(self):
-        if not self._dis:
+        if not self._modelgrid:
             return
 
         crs = None
         wkt = None
         projection = False
-        if self._dis.crs:
+        if self._modelgrid.crs:
             try:
-                crs = CRS.from_user_input(self._dis.crs)
+                crs = CRS.from_user_input(self._modelgrid.crs)
                 wkt = crs.to_wkt()
                 projection = True
             except Exception as e:
@@ -435,15 +438,21 @@ class ModelNetCDFDataset:
         elif data.dtype == np.int64:
             # TODO
             fillna = FILLNA_INT32
+
+        # set name and path
         varname = f"{package.lower()}_{param.lower()}"
         path = self.path(package, param)
+
+        # create variable
         var_d = {varname: (nc_shape, data)}
-        # fillna = {f"{varname}": 9.96920996838687e+36}
         self._dataset = self._dataset.assign(var_d)
-        # self._dataset = self._dataset.fillna(fillna)
+
+        # update var attrs
         self._dataset[varname].attrs["_FillValue"] = fillna
         if longname:
             self._dataset[varname].attrs["long_name"] = longname
+
+        # update mapping
         if path not in self._tags:
             self._tags[path] = {}
         if layer in self._tags[path]:
@@ -465,22 +474,30 @@ class ModelNetCDFDataset:
         elif data.dtype == np.int64:
             # TODO
             fillna = FILLNA_INT32
-        varname = f"{package.lower()}_{param.lower()}"
+
+        # set basename and path
+        basename = f"{package.lower()}_{param.lower()}"
         path = self.path(package, param)
+        if path not in self._tags:
+            self._tags[path] = {}
+
         for layer in range(data.shape[0]):
+            # set varname
             mf6_layer = layer + 1
-            layer_vname = f"{varname}_l{mf6_layer}"
+            layer_vname = f"{basename}_l{mf6_layer}"
+
+            # create variable
             var_d = {layer_vname: (nc_shape, data[layer].flatten())}
-            # fillna = {layer_vname: 9.96920996838687e+36}
             self._dataset = self._dataset.assign(var_d)
-            # self._dataset = self._dataset.fillna(fillna)
+
+            # update var attrs
             self._dataset[layer_vname].attrs["_FillValue"] = fillna
             if longname:
                 self._dataset[layer_vname].attrs["long_name"] = (
                     f"{longname} layer={mf6_layer}"
                 )
-            if path not in self._tags:
-                self._tags[path] = {}
+
+            # update mapping
             if layer in self._tags[path]:
                 raise Exception(
                     f"Array variable path already exists: {path}, layer={layer}"
@@ -522,7 +539,7 @@ class DisNetCDFStructured(ModelNetCDFDataset):
         layer: Optional[int],
     ):
         data = np.array(data)
-        path = self.path(package, param)
+        path = self.path(package, param, verify=True)
         vname = self._tags[path][-1]
         if len(self._dataset[vname].values.shape) == 1:
             self._dataset[vname].values = data.flatten()
@@ -533,7 +550,7 @@ class DisNetCDFStructured(ModelNetCDFDataset):
                 self._dataset[vname].values = data
 
     def array(self, package: str, param: str, layer=None):
-        path = self.path(package, param)
+        path = self.path(package, param, verify=True)
         if len(self._dataset[self._tags[path][-1]].data.shape) == 3:
             if layer > -1:
                 return self._dataset[self._tags[path][-1]].data[layer]
@@ -597,13 +614,13 @@ class DisNetCDFStructured(ModelNetCDFDataset):
         self._dataset["x"].attrs["bounds"] = "x_bnds"
 
     def _set_coords(self, crs):
-        if crs is None:
+        if crs is None or self._modelgrid is None:
             return "x y"
 
         lats = []
         lons = []
-        xdim = self._dataset.dims["x"]
-        ydim = self._dataset.dims["y"]
+        xdim = self._dataset.sizes["x"]
+        ydim = self._dataset.sizes["y"]
 
         try:
             epsg_code = crs.to_epsg(min_confidence=90)
@@ -619,13 +636,13 @@ class DisNetCDFStructured(ModelNetCDFDataset):
 
         x_local = []
         y_local = []
-        xycenters = self._dis.xycenters
+        xycenters = self._modelgrid.xycenters
         for y in xycenters[1]:
             for x in xycenters[0]:
                 x_local.append(x)
                 y_local.append(y)
 
-        x_global, y_global = self._dis.get_coords(x_local, y_local)
+        x_global, y_global = self._modelgrid.get_coords(x_local, y_local)
 
         for i, x in enumerate(x_global):
             lon, lat = proj(x, y_global[i], inverse=True)
@@ -646,15 +663,9 @@ class DisNetCDFStructured(ModelNetCDFDataset):
         self._dataset["lat"].attrs["units"] = "degrees_north"
         self._dataset["lat"].attrs["standard_name"] = "latitude"
         self._dataset["lat"].attrs["long_name"] = "latitude"
-        # self._dataset["lat"].attrs["units"] = "degrees"
-        # self._dataset["lat"].attrs["standard_name"] = "grid_latitude"
-        # self._dataset["lat"].attrs["long_name"] = "rotated grid latitude"
         self._dataset["lon"].attrs["units"] = "degrees_east"
         self._dataset["lon"].attrs["standard_name"] = "longitude"
         self._dataset["lon"].attrs["long_name"] = "longitude"
-        # self._dataset["lon"].attrs["units"] = "degrees"
-        # self._dataset["lon"].attrs["standard_name"] = "grid_longitude"
-        # self._dataset["lon"].attrs["long_name"] = "rotated grid longitude"
 
         return "lon lat"
 
@@ -694,7 +705,7 @@ class DisNetCDFMesh2d(ModelNetCDFDataset):
         layer: Optional[int],
     ):
         data = np.array(data)
-        path = self.path(package, param)
+        path = self.path(package, param, verify=True)
         if layer is not None and layer in self._tags[path]:
             vname = self._tags[path][layer]
         else:
@@ -702,7 +713,7 @@ class DisNetCDFMesh2d(ModelNetCDFDataset):
         self._dataset[vname].values = data.flatten()
 
     def array(self, package: str, param: str, layer=None):
-        path = self.path(package, param)
+        path = self.path(package, param, verify=True)
         if path in self._tags:
             if layer is None or layer == -1:
                 if layer == -1 and layer in self._tags[path]:
@@ -837,7 +848,7 @@ class DisvNetCDFMesh2d(ModelNetCDFDataset):
         layer: Optional[int],
     ):
         data = np.array(data)
-        path = self.path(package, param)
+        path = self.path(package, param, verify=True)
         if layer is not None and layer in self._tags[path]:
             vname = self._tags[path][layer]
         else:
@@ -845,7 +856,7 @@ class DisvNetCDFMesh2d(ModelNetCDFDataset):
         self._dataset[vname].values = data.flatten()
 
     def array(self, package: str, param: str, layer=None):
-        path = self.path(package, param)
+        path = self.path(package, param, verify=True)
         if path in self._tags:
             if layer is None or layer == -1:
                 if layer == -1 and layer in self._tags[path]:
@@ -947,22 +958,22 @@ class DisvNetCDFMesh2d(ModelNetCDFDataset):
         return "mesh_face_x mesh_face_y"
 
 
-def open_dataset(nc_fpth: str, dis_type: str) -> ModelNetCDFDataset:
+def open_dataset(nc_fpth: str, grid_type: str) -> ModelNetCDFDataset:
     """
     Open an existing dataset.
 
     Args:
         nc_fpth (str): The path of the existing NetCDF file.
-        dis_type (str): The FloPy discretizaton type corresponding
+        grid_type (str): The FloPy discretizaton type corresponding
             to the model associated with the file: vertex or structured.
 
     Returns:
         ModelNetCDFDataset: A dataset derived from the base class.
     """
     nc_dataset = None
-    dis_str = dis_type.lower()
+    dis_str = grid_type.lower()
 
-    # dis_type corresponds to a flopy.discretization type
+    # grid_type corresponds to a flopy.discretization type
     if dis_str != "vertex" and dis_str != "structured":
         raise Exception(
             "Supported NetCDF discretication types "
@@ -1003,7 +1014,7 @@ def open_dataset(nc_fpth: str, dis_type: str) -> ModelNetCDFDataset:
 
 
 def create_dataset(
-    modeltype: str, modelname: str, nc_type: str, nc_fname: str, dis: Grid
+    modeltype: str, modelname: str, nc_type: str, nc_fname: str, modelgrid: Grid
 ) -> ModelNetCDFDataset:
     """
     Create a new dataset.
@@ -1013,28 +1024,28 @@ def create_dataset(
         modelname (str): The model name.
         nc_type (str): A supported NetCDF file type: mesh2d or structured.
         nc_fname (str): The generated NetCDF file name.
-        dis (Grid): A FloPy derived discretization object.
+        modelgrid (Grid): A FloPy derived discretization object.
 
     Returns:
         ModelNetCDFDataset: A dataset derived from the base class.
     """
     nc_dataset = None
-    if isinstance(dis, VertexGrid):
+    if isinstance(modelgrid, VertexGrid):
         if nc_type.lower() == "mesh2d":
             nc_dataset = DisvNetCDFMesh2d()
-    elif isinstance(dis, StructuredGrid):
+    elif isinstance(modelgrid, StructuredGrid):
         if nc_type.lower() == "mesh2d":
             nc_dataset = DisNetCDFMesh2d()
         elif nc_type.lower() == "structured":
             nc_dataset = DisNetCDFStructured()
 
     if nc_dataset:
-        nc_dataset.create(modeltype, modelname, nc_type, nc_fname, dis)
+        nc_dataset.create(modeltype, modelname, nc_type, nc_fname, modelgrid)
     else:
         raise Exception(
             f"Unable to generate netcdf dataset for file type "
             f'"{nc_type.lower()}" and discretization grid type '
-            f'"{dis.grid_type}"'
+            f'"{modelgrid.grid_type}"'
         )
 
     return nc_dataset
