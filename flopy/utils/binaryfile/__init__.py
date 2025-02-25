@@ -577,6 +577,22 @@ class BinaryLayerFile(LayerFile):
         return result
 
 
+def _get_max_kper_kstp_tsim(ra: np.recarray) -> tuple[int, dict[int, int], float]:
+    header = ra[-1]
+    max_kper = header["kper"] - 1
+    max_tsim = header["totim"]
+    max_kstp = {0: 0}
+    for i in range(len(ra) - 1, -1, -1):
+        header = ra[i]
+        kper = header["kper"] - 1
+        kstp = header["kstp"] - 1
+        if kper in max_kstp and kstp > max_kstp[kper]:
+            max_kstp[kper] += 1
+        else:
+            max_kstp[kper] = 0
+    return max_kper, max_kstp, max_tsim
+
+
 class HeadFile(BinaryLayerFile):
     """
     The HeadFile class provides simple ways to retrieve and manipulate
@@ -650,20 +666,7 @@ class HeadFile(BinaryLayerFile):
             else self.filename
         )
 
-        def get_max_kper_kstp_tsim():
-            header = self.recordarray[-1]
-            kper = header["kper"] - 1
-            tsim = header["totim"]
-            kstp = {0: 0}
-            for i in range(len(self) - 1, -1, -1):
-                header = self.recordarray[i]
-                if header["kper"] in kstp and header["kstp"] > kstp[header["kper"]]:
-                    kstp[header["kper"]] += 1
-                else:
-                    kstp[header["kper"]] = 0
-            return kper, kstp, tsim
-
-        maxkper, maxkstp, maxtsim = get_max_kper_kstp_tsim()
+        maxkper, maxkstp, maxtsim = _get_max_kper_kstp_tsim(self.recordarray)
         prev_kper = None
         perlen = None
 
@@ -2229,20 +2232,7 @@ class CellBudgetFile:
         nrecords = len(self)
         target = filename
 
-        def get_max_kper_kstp_tsim():
-            header = self.recordarray[-1]
-            kper = header["kper"] - 1
-            tsim = header["totim"]
-            kstp = {0: 0}
-            for i in range(len(self) - 1, -1, -1):
-                header = self.recordarray[i]
-                if header["kper"] in kstp and header["kstp"] > kstp[header["kper"]]:
-                    kstp[header["kper"]] += 1
-                else:
-                    kstp[header["kper"]] = 0
-            return kper, kstp, tsim
-
-        maxkper, maxkstp, maxtsim = get_max_kper_kstp_tsim()
+        maxkper, maxkstp, maxtsim = _get_max_kper_kstp_tsim(self.recordarray)
         prev_kper = None
         perlen = None
 

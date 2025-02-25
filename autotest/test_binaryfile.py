@@ -469,7 +469,7 @@ def test_binaryfile_read_context(freyberg_model_path):
 def test_binaryfile_reverse_mf6_dis(function_tmpdir):
     name = "reverse_dis"
     sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=function_tmpdir, exe_name="mf6")
-    tdis_rc = [(1, 1, 1.0), (1, 1, 1.0)]
+    tdis_rc = [(1, 1, 1.0), (1, 1, 1.0), (1, 1, 1.0)]
     nper = len(tdis_rc)
     tdis = flopy.mf6.ModflowTdis(sim, nper=nper, perioddata=tdis_rc)
     ims = flopy.mf6.ModflowIms(sim)
@@ -503,20 +503,26 @@ def test_binaryfile_reverse_mf6_dis(function_tmpdir):
 
     # reverse head file in place and check reversal
     head_file = flopy.utils.HeadFile(function_tmpdir / head_file)
-    heads = head_file.get_alldata()
-    assert heads.shape == (nper, 2, 10, 10)
+    orig_heads = head_file.get_alldata()
+    orig_kstpkper = head_file.get_kstpkper()
     head_file.reverse()
-    heads_rev = head_file.get_alldata()
-    assert heads_rev.shape == (nper, 2, 10, 10)
+    rev_heads = head_file.get_alldata()
+    rev_kstpkper = head_file.get_kstpkper()
+    exp_head_shape = (nper, 2, 10, 10)
+    assert orig_heads.shape == exp_head_shape
+    assert rev_heads.shape == (nper, 2, 10, 10)
+    assert orig_kstpkper == rev_kstpkper
 
     # reverse budget and write to separate file
     budget_file_rev_path = function_tmpdir / f"{budget_file}_rev"
     budget_file = flopy.utils.CellBudgetFile(function_tmpdir / budget_file)
     budget_file.reverse(budget_file_rev_path)
     budget_file_rev = flopy.utils.CellBudgetFile(budget_file_rev_path)
+    assert budget_file.get_kstpkper() == orig_kstpkper
+    assert budget_file_rev.get_kstpkper() == rev_kstpkper
 
     for kper in range(nper):
-        assert np.allclose(heads[kper], heads_rev[-kper + 1])
+        assert np.allclose(orig_heads[kper], rev_heads[-(kper + 1)])
         budget = budget_file.get_data(text="FLOW-JA-FACE", totim=kper)[0]
         budget_rev = budget_file_rev.get_data(text="FLOW-JA-FACE", totim=kper)[0]
         assert budget.shape == budget_rev.shape
@@ -527,7 +533,7 @@ def test_binaryfile_reverse_mf6_dis(function_tmpdir):
 def test_binaryfile_reverse_mf6_disv(function_tmpdir):
     name = "reverse_disv"
     sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=function_tmpdir, exe_name="mf6")
-    tdis_rc = [(1, 1, 1.0), (1, 1, 1.0)]
+    tdis_rc = [(1, 1, 1.0), (1, 1, 1.0), (1, 1, 1.0)]
     nper = len(tdis_rc)
     tdis = flopy.mf6.ModflowTdis(sim, nper=nper, perioddata=tdis_rc)
     ims = flopy.mf6.ModflowIms(sim)
@@ -555,20 +561,26 @@ def test_binaryfile_reverse_mf6_disv(function_tmpdir):
 
     # reverse head file in place and check reversal
     head_file = flopy.utils.HeadFile(function_tmpdir / head_file)
-    heads = head_file.get_alldata()
-    assert heads.shape == (nper, 2, 1, 100)
+    orig_heads = head_file.get_alldata()
+    orig_kstpkper = head_file.get_kstpkper()
     head_file.reverse()
-    heads_rev = head_file.get_alldata()
-    assert heads_rev.shape == (nper, 2, 1, 100)
+    rev_heads = head_file.get_alldata()
+    rev_kstpkper = head_file.get_kstpkper()
+    exp_shape = (nper, 2, 1, 100)
+    assert orig_heads.shape == exp_shape
+    assert rev_heads.shape == exp_shape
+    assert orig_kstpkper == rev_kstpkper
 
     # reverse budget and write to separate file
     budget_file_rev_path = function_tmpdir / f"{budget_file}_rev"
     budget_file = flopy.utils.CellBudgetFile(function_tmpdir / budget_file)
     budget_file.reverse(budget_file_rev_path)
     budget_file_rev = flopy.utils.CellBudgetFile(budget_file_rev_path, tdis=tdis)
+    assert budget_file.get_kstpkper() == orig_kstpkper
+    assert budget_file_rev.get_kstpkper() == rev_kstpkper
 
     for kper in range(nper):
-        assert np.allclose(heads[kper], heads_rev[-kper + 1])
+        assert np.allclose(orig_heads[kper], rev_heads[-(kper + 1)])
         budget = budget_file.get_data(text="FLOW-JA-FACE", totim=kper)[0]
         budget_rev = budget_file_rev.get_data(text="FLOW-JA-FACE", totim=kper)[0]
         assert budget.shape == budget_rev.shape
@@ -581,7 +593,7 @@ def test_binaryfile_reverse_mf6_disu(example_data_path, function_tmpdir):
     sim = flopy.mf6.MFSimulation.load(
         sim_name=sim_name, sim_ws=example_data_path / "mf6" / sim_name
     )
-    tdis_rc = [(1, 1, 1.0), (1, 1, 1.0)]
+    tdis_rc = [(1, 1, 1.0), (1, 1, 1.0), (1, 1, 1.0)]
     nper = len(tdis_rc)
     tdis = flopy.mf6.ModflowTdis(sim, time_units="DAYS", nper=nper, perioddata=tdis_rc)
     sim.set_sim_path(function_tmpdir)
@@ -591,11 +603,14 @@ def test_binaryfile_reverse_mf6_disu(example_data_path, function_tmpdir):
     # load head file, providing tdis as kwarg
     file_path = function_tmpdir / "flow.hds"
     head_file = HeadFile(file_path, tdis=tdis)
+    orig_kstpkper = head_file.get_kstpkper()
 
     # reverse and write to a separate file
     head_file_rev_path = function_tmpdir / "flow_rev.hds"
     head_file.reverse(filename=head_file_rev_path)
     head_file_rev = HeadFile(head_file_rev_path)
+    rev_kstpkper = head_file_rev.get_kstpkper()
+    assert orig_kstpkper == rev_kstpkper
 
     # load budget file
     file_path = function_tmpdir / "flow.cbc"
@@ -605,6 +620,8 @@ def test_binaryfile_reverse_mf6_disu(example_data_path, function_tmpdir):
     budget_file_rev_path = function_tmpdir / "flow_rev.cbc"
     budget_file.reverse(filename=budget_file_rev_path)
     budget_file_rev = CellBudgetFile(budget_file_rev_path)
+    assert budget_file.get_kstpkper() == orig_kstpkper
+    assert budget_file_rev.get_kstpkper() == rev_kstpkper
 
     # check that data from both files have the same shape
     assert head_file.get_alldata().shape == (nper, 1, 1, 121)
