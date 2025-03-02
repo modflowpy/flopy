@@ -19,9 +19,9 @@ $ python -m flopy.mf6.utils.generate_classes
 
 ************************************************************************
 Updating the flopy MODFLOW 6 classes
-  Updating the MODFLOW 6 classes using MODFLOW-USGS/modflow6/master
-  Downloading MODFLOW 6 repository from https://github.com/MODFLOW-USGS/modflow6/archive/master.zip
-Downloading https://github.com/MODFLOW-USGS/modflow6/archive/master.zip
+  Updating the MODFLOW 6 classes using MODFLOW-ORG/modflow6/master
+  Downloading MODFLOW 6 repository from https://github.com/MODFLOW-ORG/modflow6/archive/master.zip
+Downloading https://github.com/MODFLOW-ORG/modflow6/archive/master.zip
    file size: 15,821,180 bytes
 
 total download time: 0.88 seconds
@@ -65,7 +65,7 @@ user.
 
 options:
   -h, --help         show this help message and exit
-  --owner OWNER      GitHub repository owner; default is 'MODFLOW-USGS'.
+  --owner OWNER      GitHub repository owner; default is 'MODFLOW-ORG'.
   --repo REPO        Name of GitHub repository; default is 'modflow6'.
   --ref REF          Branch name, tag, or commit hash to use to update the
                      definition; default is 'master'.

@@ -24,7 +24,7 @@ The FloPy release procedure is mostly automated with GitHub Actions in [`release
 
 1.  Update `usgsprograms.txt` in the [GitHub pymake repository](https://github.com/modflowpy/pymake) with the path to the new MODFLOW 6 release. Also update all other targets in `usgsprograms.txt` with the path to new releases.
 
-2.  Trigger a new release for the [executables repository](https://github.com/MODFLOW-USGS/executables), either via the GitHub Actions UI or GitHub CLI. See the executables repo's `DEVELOPER.md` for more information. Wait for the release to be published.
+2.  Trigger a new release for the [executables repository](https://github.com/MODFLOW-ORG/executables), either via the GitHub Actions UI or GitHub CLI. See the executables repo's `DEVELOPER.md` for more information. Wait for the release to be published.
 
 3. Update the authors in `CITATION.cff` for the Software/Code citation for FloPy, if required.
 

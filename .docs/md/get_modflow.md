@@ -75,7 +75,7 @@ Other auto-select options are only available if the current user can write files
 
 ## Selecting a distribution
 
-By default the distribution from the [`MODFLOW-USGS/executables` repository](https://github.com/MODFLOW-USGS/executables) is installed. This includes the MODFLOW 6 binary `mf6` and over 20 other related programs. The utility can also install from the main [MODFLOW 6 repo](https://github.com/MODFLOW-USGS/modflow6) or the [nightly build](https://github.com/MODFLOW-USGS/modflow6-nightly-build) distributions, which contain only:
+By default the distribution from the [`MODFLOW-ORG/executables` repository](https://github.com/MODFLOW-ORG/executables) is installed. This includes the MODFLOW 6 binary `mf6` and over 20 other related programs. The utility can also install from the main [MODFLOW 6 repo](https://github.com/MODFLOW-ORG/modflow6) or the [nightly build](https://github.com/MODFLOW-ORG/modflow6-nightly-build) distributions, which contain only:
 
 - `mf6`
 - `mf5to6`
