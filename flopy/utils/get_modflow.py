@@ -26,7 +26,7 @@ __license__ = "CC0"
 
 from typing import Dict, List, Tuple
 
-default_owner = "MODFLOW-USGS"
+default_owner = "MODFLOW-ORG"
 default_repo = "executables"
 # key is the repo name, value is the renamed file prefix for the download
 renamed_prefix = {
@@ -299,7 +299,7 @@ def run_main(
         Writable path to extract executables. Auto-select options start with a
         colon character. See error message or other documentation for further
         information on auto-select options.
-    owner : str, default "MODFLOW-USGS"
+    owner : str, default "MODFLOW-ORG"
         Name of GitHub repository owner (user or organization).
     repo : str, default "executables"
         Name of GitHub repository. Choose one of "executables" (default),

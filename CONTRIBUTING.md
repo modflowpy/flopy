@@ -71,7 +71,7 @@ Before you submit your Pull Request (PR) consider the following guidelines:
     pytest -v -n auto
     ```
 
-   **Note**: the FloPy test suite requires the [pytest](https://pypi.org/project/pytest/) and [modflow-devtools](https://github.com/MODFLOW-USGS/modflow-devtools) python packages. Be sure to install all optional dependencies as described in the [developer docs](DEVELOPER.md), as tests will be skipped if optional dependencies are not found.
+   **Note**: the FloPy test suite requires the [pytest](https://pypi.org/project/pytest/) and [modflow-devtools](https://github.com/MODFLOW-ORG/modflow-devtools) python packages. Be sure to install all optional dependencies as described in the [developer docs](DEVELOPER.md), as tests will be skipped if optional dependencies are not found.
 
     **Note:** you will either need to exclude notebooks when checking in your changeset or restore them after running the full test suite, to avoid including large volumes of execution metadata with your PR. See `DEVELOPER.md` for [instructions on how to automatically strip Notebook output from commits](https://github.com/modflowpy/flopy/blob/develop/DEVELOPER.md#editing-or-developing-example-notebooks).
 

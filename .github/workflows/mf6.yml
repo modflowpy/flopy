@@ -44,7 +44,7 @@ jobs:
     - name: Checkout MODFLOW 6
       uses: actions/checkout@v4
       with:
-        repository: MODFLOW-USGS/modflow6
+        repository: MODFLOW-ORG/modflow6
         path: modflow6
 
     - name: Build and install MF6
@@ -93,13 +93,13 @@ jobs:
     - name: Checkout MODFLOW 6
       uses: actions/checkout@v4
       with:
-        repository: MODFLOW-USGS/modflow6
+        repository: MODFLOW-ORG/modflow6
         path: modflow6
 
     - name: Checkout MF6 examples
       uses: actions/checkout@v4
       with:
-        repository: MODFLOW-USGS/modflow6-examples
+        repository: MODFLOW-ORG/modflow6-examples
         path: modflow6-examples
 
     - name: Setup Python

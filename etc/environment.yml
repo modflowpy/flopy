@@ -23,7 +23,7 @@ dependencies:
   - jupyter_client>=8.4.0
   - jupytext
   - pip:
-      - git+https://github.com/MODFLOW-USGS/modflow-devtools.git
+      - git+https://github.com/MODFLOW-ORG/modflow-devtools.git
       - tach
   - pytest!=8.1.0
   - pytest-benchmark

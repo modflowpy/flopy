@@ -11,7 +11,7 @@ thisfilepath = os.path.dirname(os.path.abspath(__file__))
 flopypth = os.path.join(thisfilepath, "..", "..")
 flopypth = os.path.abspath(flopypth)
 protected_dfns = ["flopy.dfn"]
-default_owner = "MODFLOW-USGS"
+default_owner = "MODFLOW-ORG"
 default_repo = "modflow6"
 
 
@@ -129,7 +129,7 @@ def generate_classes(
 
     Parameters
     ----------
-    owner : str, default "MODFLOW-USGS"
+    owner : str, default "MODFLOW-ORG"
         Owner of the MODFLOW 6 repository to use to update the definition
         files and generate the MODFLOW 6 classes.
     repo : str, default "modflow6"
