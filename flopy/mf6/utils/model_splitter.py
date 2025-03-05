@@ -487,9 +487,11 @@ class Mf6Splitter:
 
             Parameters
             ----------
-            f :
-            name :
-            grid_type :
+            f : h5py.File object
+            name : str
+                model name string
+            grid_type : str
+                grid type string
 
             Returns
             -------
