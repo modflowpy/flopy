@@ -495,7 +495,7 @@ class Mf6Splitter:
             -------
                 flopy.discretization.Grid object
             """
-            from ...discretization import StructuredGrid, VertexGrid, UnstructuredGrid
+            from ...discretization import StructuredGrid, UnstructuredGrid, VertexGrid
             grid = f[f"modelgrids/{name}"]
             tmp2 = list(grid.keys())
 
