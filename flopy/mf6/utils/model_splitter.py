@@ -88,6 +88,11 @@ OBS_ID1_LUT = {
     "lkt": "ifno",
     "mwt": "mawno",
     "uzt": "ifno",
+    # energy
+    "gwe": "cellid",
+    "ctp": "cellid",
+    "sfe": "ifno",
+    "uze": "ifno",
 }
 
 OBS_ID2_LUT = {
@@ -114,6 +119,9 @@ OBS_ID2_LUT = {
     },
     "mwt": None,
     "uzt": "ifno",
+    "gwe": "cellid",
+    "sfe": "ifno",
+    "uze": "ifno"
 }
 
 
@@ -642,13 +650,19 @@ class Mf6Splitter:
                     modflow.ModflowGwfuzf,
                     modflow.ModflowGwflak,
                     modflow.ModflowGwfhfb,
+                    modflow.ModflowGwtsft,
+                    modflow.ModflowGwtuzt,
+                    modflow.ModflowGwtlkt,
+                    modflow.ModflowGwesfe,
+                    modflow.ModflowGweuze,
+                    modflow.ModflowGwelke
                 ),
             ):
                 if isinstance(package, modflow.ModflowGwfhfb):
                     hfbs.append(package)
                     continue
 
-                if isinstance(package, modflow.ModflowGwflak):
+                if isinstance(package, (modflow.ModflowGwflak, modflow.ModflowGwtlkt, modflow.ModflowGwelke)):
                     cellids = package.connectiondata.array.cellid
                 else:
                     cellids = package.packagedata.array.cellid
@@ -660,7 +674,7 @@ class Mf6Splitter:
                 else:
                     nodes = [i[0] for i in cellids]
 
-                if isinstance(package, modflow.ModflowGwflak):
+                if isinstance(package, (modflow.ModflowGwflak, modflow.ModflowGwtlkt, modflow.ModflowGwelke)):
                     lakenos = package.connectiondata.array.ifno + 1
                     lak_array[nodes] = lakenos
                     laks += [i for i in np.unique(lakenos)]
@@ -1740,7 +1754,7 @@ class Mf6Splitter:
             dict
         """
         # self._mvr_remaps = {}
-        if isinstance(package, modflow.ModflowGwtmvt):
+        if isinstance(package,  (modflow.ModflowGwtmvt, modflow.ModflowGwemve)):
             return mapped_data
 
         perioddata = package.perioddata.data
@@ -3181,12 +3195,12 @@ class Mf6Splitter:
             mapped_data = self._remap_buy(package, mapped_data)
 
         elif isinstance(
-            package, (modflow.ModflowGwfuzf, modflow.ModflowGwtuzt)
+            package, (modflow.ModflowGwfuzf, modflow.ModflowGwtuzt, modflow.ModflowGweuze)
         ):
             mapped_data = self._remap_uzf(package, mapped_data)
 
         elif isinstance(
-            package, (modflow.ModflowGwfmaw, modflow.ModflowGwtmwt)
+            package, (modflow.ModflowGwfmaw, modflow.ModflowGwtmwt, modflow.ModflowGwemwe)
         ):
             mapped_data = self._remap_maw(package, mapped_data)
 
@@ -3194,18 +3208,18 @@ class Mf6Splitter:
             self._remap_mvr(package, mapped_data)
 
         elif isinstance(
-            package, (modflow.ModflowGwfmvr, modflow.ModflowGwtmvt)
+            package, (modflow.ModflowGwfmvr, modflow.ModflowGwtmvt, modflow.ModflowGwemve)
         ):
             self._mover = True
             return {}
 
         elif isinstance(
-            package, (modflow.ModflowGwflak, modflow.ModflowGwtlkt)
+            package, (modflow.ModflowGwflak, modflow.ModflowGwtlkt, modflow.ModflowGwelke)
         ):
             mapped_data = self._remap_lak(package, mapped_data)
 
         elif isinstance(
-            package, (modflow.ModflowGwfsfr, modflow.ModflowGwtsft)
+            package, (modflow.ModflowGwfsfr, modflow.ModflowGwtsft, modflow.ModflowGwesfe)
         ):
             mapped_data = self._remap_sfr(package, mapped_data)
 
@@ -3815,7 +3829,7 @@ class Mf6Splitter:
 
         gwf_base = model_names[0]
         model_labels = [
-            f"{i :{self._fdigits}d}" for i in sorted(np.unique(array))
+            f"{i :0{self._fdigits}d}" for i in sorted(np.unique(array))
         ]
 
         self._multimodel_exchange_gwf_names = {
