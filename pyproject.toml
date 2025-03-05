@@ -74,6 +74,7 @@ optional = [
     "shapely >=2.0",
     "vtk >=9.4.0",
     "xmipy",
+    "h5py",
 ]
 doc = [
     "flopy[optional]",
