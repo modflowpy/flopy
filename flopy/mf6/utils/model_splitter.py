@@ -1298,7 +1298,8 @@ class Mf6Splitter:
             "stage_filerecord",
             "obs_filerecord",
             "concentration_filerecord",
-            "ts_filerecord"
+            "ts_filerecord",
+            "temperature_filerecord"
         ):
             value = value.array
             if value is None:
@@ -1754,7 +1755,7 @@ class Mf6Splitter:
             dict
         """
         # self._mvr_remaps = {}
-        if isinstance(package,  (modflow.ModflowGwtmvt, modflow.ModflowGwemve)):
+        if isinstance(package, (modflow.ModflowGwtmvt, modflow.ModflowGwemve)):
             return mapped_data
 
         perioddata = package.perioddata.data
@@ -3127,6 +3128,8 @@ class Mf6Splitter:
                 modflow.ModflowGwfdisu,
                 modflow.ModflowGwtdis,
                 modflow.ModflowGwtdisu,
+                modflow.ModflowGwedis,
+                modflow.ModflowGwedisu
             ),
         ):
             for item, value in package.__dict__.items():
@@ -3664,12 +3667,14 @@ class Mf6Splitter:
 
         Parameters
         ----------
-        mname0 :
-        mname1 :
+        mname0 : str
+            model name of first model in exchange
+        mname1 : str
+            model name of second model in exchange
 
         Returns
         -------
-
+            None
         """
         exchange_classes = {
             "gwfgwt": modflow.ModflowGwfgwt,
