@@ -484,6 +484,7 @@ class Mf6Splitter:
 
         def construct_modelgrid(f, name, grid_type):
             """
+            Method to construct a modelgrid instance from HDF5 stored grid information
 
             Parameters
             ----------
@@ -499,7 +500,6 @@ class Mf6Splitter:
             """
             from ...discretization import StructuredGrid, UnstructuredGrid, VertexGrid
             grid = f[f"modelgrids/{name}"]
-            tmp2 = list(grid.keys())
 
             gridprops = dict()
             gridprops["top"] = grid["top"][:]
