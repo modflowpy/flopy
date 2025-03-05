@@ -204,10 +204,10 @@ def test_metis_splitting_with_lak_sfr(function_tmpdir):
 
 @requires_exe("mf6")
 @requires_pkg("pymetis")
-def test_save_load_node_mapping(function_tmpdir):
+def test_save_load_node_mapping_structured(function_tmpdir):
     sim_path = get_example_data_path() / "mf6-freyberg"
     new_sim_path = function_tmpdir / "mf6-freyberg/split_model"
-    json_file = new_sim_path / "node_map.json"
+    hdf_file = new_sim_path / "node_map.hdf5"
     nparts = 5
 
     sim = MFSimulation.load(sim_ws=sim_path)
@@ -225,12 +225,11 @@ def test_save_load_node_mapping(function_tmpdir):
     new_sim.run_simulation()
     original_node_map = mfsplit._node_map
 
-    mfsplit.save_node_mapping(json_file)
+    mfsplit.save_node_mapping(hdf_file)
 
     new_sim2 = MFSimulation.load(sim_ws=new_sim_path)
 
-    mfsplit2 = Mf6Splitter(new_sim2)
-    mfsplit2.load_node_mapping(new_sim2, json_file)
+    mfsplit2 = Mf6Splitter.load_node_mapping(hdf_file)
     saved_node_map = mfsplit2._node_map
 
     for k, v1 in original_node_map.items():
@@ -245,6 +244,86 @@ def test_save_load_node_mapping(function_tmpdir):
         array_dict[model] = heads0
 
     new_heads = mfsplit2.reconstruct_array(array_dict)
+    err_msg = "Heads from original and split models do not match"
+    np.testing.assert_allclose(new_heads, original_heads, err_msg=err_msg)
+
+
+@requires_exe("mf6")
+def test_save_load_node_mapping_vertex(function_tmpdir):
+    sim_path = get_example_data_path() / "mf6" / "test003_gwftri_disv"
+    new_sim_path = function_tmpdir / "split_model"
+    hdf_file = new_sim_path / "vertex_node_map.hdf5"
+    sim = MFSimulation.load(sim_ws=sim_path)
+    sim.set_sim_path(function_tmpdir)
+    sim.write_simulation()
+    sim.run_simulation()
+
+    gwf = sim.get_model()
+    modelgrid = gwf.modelgrid
+
+    array = np.zeros((modelgrid.ncpl,), dtype=int)
+    array[0:85] = 1
+
+    mfsplit = Mf6Splitter(sim)
+    new_sim = mfsplit.split_model(array)
+
+    new_sim.set_sim_path(new_sim_path)
+    new_sim.write_simulation()
+    new_sim.run_simulation()
+    mfsplit.save_node_mapping(hdf_file)
+
+    original_heads = np.squeeze(gwf.output.head().get_alldata()[-1])
+
+    ml0 = new_sim.get_model("gwf_1_0")
+    ml1 = new_sim.get_model("gwf_1_1")
+    heads0 = ml0.output.head().get_alldata()[-1]
+    heads1 = ml1.output.head().get_alldata()[-1]
+
+    mfsplit2 = Mf6Splitter.load_node_mapping(hdf_file)
+
+    new_heads = mfsplit2.reconstruct_array({0: heads0, 1: heads1})
+
+    err_msg = "Heads from original and split models do not match"
+    np.testing.assert_allclose(
+        new_heads, original_heads, rtol=0.002, atol=0.01, err_msg=err_msg
+    )
+
+
+@requires_exe("mf6")
+def test_save_load_node_mapping_unstructured(function_tmpdir):
+    sim_path = get_example_data_path() / "mf6" / "test006_gwf3"
+    new_sim_path = function_tmpdir / "split_model"
+    hdf_file = new_sim_path / "unstruct_node_mapping.hdf5"
+
+    sim = MFSimulation.load(sim_ws=sim_path)
+    sim.set_sim_path(function_tmpdir)
+    sim.write_simulation()
+    sim.run_simulation()
+
+    gwf = sim.get_model()
+    modelgrid = gwf.modelgrid
+
+    array = np.zeros((modelgrid.nnodes,), dtype=int)
+    array[65:] = 1
+
+    mfsplit = Mf6Splitter(sim)
+    new_sim = mfsplit.split_model(array)
+
+    new_sim.set_sim_path(new_sim_path)
+    new_sim.write_simulation()
+    new_sim.run_simulation()
+    mfsplit.save_node_mapping(hdf_file)
+
+    original_heads = np.squeeze(gwf.output.head().get_alldata()[-1])
+
+    ml0 = new_sim.get_model("gwf_1_0")
+    ml1 = new_sim.get_model("gwf_1_1")
+    heads0 = ml0.output.head().get_alldata()[-1]
+    heads1 = ml1.output.head().get_alldata()[-1]
+
+    mfsplit2 = Mf6Splitter.load_node_mapping(hdf_file)
+    new_heads = mfsplit2.reconstruct_array({0: heads0, 1: heads1})
+
     err_msg = "Heads from original and split models do not match"
     np.testing.assert_allclose(new_heads, original_heads, err_msg=err_msg)
 
@@ -847,7 +926,6 @@ def test_unstructured_complex_disu(function_tmpdir):
         raise AssertionError("Reconstructed head results outside of tolerance")
 
 
-@pytest.mark.slow
 @requires_exe("mf6")
 @requires_pkg("pymetis", "scipy")
 def test_multi_model(function_tmpdir):

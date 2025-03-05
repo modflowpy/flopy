@@ -88,13 +88,6 @@ OBS_ID1_LUT = {
     "lkt": "ifno",
     "mwt": "mawno",
     "uzt": "ifno",
-    # energy
-    "gwe": "cellid",
-    "ctp": "cellid",
-    "sfe": "ifno",
-    "uze": "ifno",
-
-
 }
 
 OBS_ID2_LUT = {
@@ -121,10 +114,6 @@ OBS_ID2_LUT = {
     },
     "mwt": None,
     "uzt": "ifno",
-    "gwe": "cellid",
-    "sfe": "ifno",
-    "uze": "ifno"
-
 }
 
 
@@ -265,6 +254,125 @@ class Mf6Splitter:
         """
         return self._modelgrid
 
+    def _map_grids_to_hdf5(self, f):
+        """
+        Method to map modelgrid information to hdf5 for easier save/reconstruction
+        process
+
+        Parameters
+        ----------
+        f : h5py.File object
+
+        Returns
+        -------
+            None
+        """
+        import h5py
+
+        kwargs = {
+            "compression": "gzip",
+        }
+
+        mgg = f.create_group("modelgrids")
+        grid_type = f["grid_type"][0].decode("utf8")
+        mkeys = f["mkey"][:]
+        mnames = [self._modelname] + list(f["new_modelnames"][:])
+        grids = [self._modelgrid, ] + [self._model_dict[mk].modelgrid for mk in mkeys]
+
+        for ix, name in enumerate(mnames):
+            if hasattr(name, "decode"):
+                name = name.decode("utf8")
+
+            # name = name.decode("utf8")
+            grd_grp = mgg.create_group(name)
+            grid = grids[ix]
+            if grid_type == "structured":
+                delc = grid.delc
+                dc = grd_grp.create_dataset("delc", (len(delc),), dtype=float, **kwargs)
+                dc[:] = delc
+
+                delr = grid.delr
+                dr = grd_grp.create_dataset("delr", (len(delr),), dtype=float, **kwargs)
+                dr[:] = delr
+
+            else:
+                # need cell2d information, idomain, top, botm, xoff, yoff, angrot.
+                if grid.is_valid:
+                    vert_dt = np.dtype([("ivert", int), ("xvert", float), ("yvert", float)])
+
+                    # construct c2d dtype
+                    cell2d = grid.cell2d
+                    nverts = [row[3] for row in cell2d]
+                    max_vert = np.max(nverts)
+                    c2d_dt = np.dtype(
+                        [("icell2d", int), ('xc', float), ("yc", float), ("ncvert", int)]
+                        + [(f"iv_{i}", int) for i in range(max_vert)]
+                    )
+
+                    # now create datasets and set data
+                    vert_ds = grd_grp.create_dataset(
+                        "vertices", (len(grid._vertices),), dtype=vert_dt, **kwargs
+                    )
+                    for ix, verts in enumerate(grid._vertices):
+                        vert_ds[ix] = tuple(verts)
+
+                    c2d_ds = grd_grp.create_dataset(
+                        "cell2d", (len(grid.cell2d),), dtype=c2d_dt, **kwargs
+                    )
+                    for ix, rec in enumerate(cell2d):
+                        nvert = rec[3]
+                        nfill = max_vert - nvert
+                        fill = [-1,] * nfill
+                        frec = tuple(list(rec) + fill)
+                        c2d_ds[ix] = frec
+
+                if grid_type == "unstructured":
+                    # ncpl is also needed
+                    iac = grid.iac
+                    ja = grid.ja
+                    ncpl = grid.ncpl
+
+                    iac_ds = grd_grp.create_dataset(
+                        "iac", (len(iac),), dtype=int, **kwargs
+                    )
+                    iac_ds[:] = iac
+
+                    ja_ds = grd_grp.create_dataset(
+                        "ja", (len(ja),), dtype=int, **kwargs
+                    )
+                    ja_ds[:] = ja
+
+                    ncpl_ds = grd_grp.create_dataset(
+                        "ncpl", (len(ncpl),), dtype=int, **kwargs
+                    )
+                    ncpl_ds[:] = ncpl
+
+            top = grid.top
+            botm = grid.botm
+            idomain = grid.idomain
+            if idomain is None:
+                idomain = np.ones(botm.shape, dtype=int)
+
+            top_ds = grd_grp.create_dataset("top", top.shape, dtype=float, **kwargs)
+            top_ds[:] = top[:]
+
+            botm_ds = grd_grp.create_dataset("botm", botm.shape, dtype=float, **kwargs)
+            botm_ds[:] = botm[:]
+
+            id_ds = grd_grp.create_dataset(
+                "idomain", idomain.shape, dtype=int, **kwargs
+            )
+            id_ds[:] = idomain[:]
+
+            xoff_ds = grd_grp.create_dataset("xoff", (1,), dtype=float)
+            xoff_ds[0] = grid.xoffset
+
+            yoff_ds = grd_grp.create_dataset("yoff", (1,), dtype=float)
+            yoff_ds[0] = grid.yoffset
+
+            rot_ds = grd_grp.create_dataset("angrot", (1,), dtype=float)
+            rot_ds[0] = grid.angrot
+
     def save_node_mapping(self, filename):
         """
         Method to save the Mf6Splitter's node mapping to file for
@@ -273,7 +381,9 @@ class Mf6Splitter:
         Parameters
         ----------
         filename : str, Path
-            JSON file name
+            HDF5 file name
+        hdf5 : bool
+            flag to save as a hdf5 binary file
 
         Returns
         -------
@@ -282,71 +392,207 @@ class Mf6Splitter:
         node_map = {
             int(k): (int(v[0]), int(v[1])) for k, v in self._node_map.items()
         }
-        json_dict = {
-            "node_map": node_map,
-            "original_ncpl": self._ncpl,
-            "shape": self._shape,
-            "grid_type": self._grid_type,
-        }
-        with open(filename, "w") as foo:
-            json.dump(json_dict, foo, indent=4)
 
-    def load_node_mapping(self, sim, filename):
+        h5py = import_optional_dependency("h5py")
+        # import h5py
+        f = h5py.File(filename, "w")
+
+        string_dt = h5py.string_dtype(encoding="ascii")
+
+        gt_ds = f.create_dataset("grid_type", (1,), dtype=string_dt)
+        gt_ds[:] = [self._grid_type,]
+
+        mname_ds = f.create_dataset("modelname", (1,), dtype=string_dt)
+        mname_ds[:] = [self._modelname,]
+
+        mnames = [m.name for m in self._model_dict.values()]
+        nname_ds = f.create_dataset("new_modelnames", (len(mnames),), string_dt)
+        nname_ds[:] = mnames
+
+        mkeys = list(self._model_dict.keys())
+        mkey_ds = f.create_dataset("mkey", (len(mkeys),), dtype=int)
+        mkey_ds[:] = mkeys
+
+        # if int doesn't work try "i8"
+        ncpl_ds = f.create_dataset("original_ncpl", (1,), dtype=int)
+        ncpl_ds[:] = [self._ncpl]
+
+        shape_ds = f.create_dataset("shape", (len(self._shape),), dtype=int)
+        shape_ds[:] = list(self._shape)
+
+        # finally, think about the node_map arrangement.... onode: (model, nnode)
+        # maybe put it in a group "node_map/original_node", etc...
+        nm_grp = f.create_group("node_map")
+        onode, nmodel, nnode = [], [], []
+        for k, (m, n) in node_map.items():
+            onode.append(k)
+            nmodel.append(m)
+            nnode.append(n)
+
+        onode_ds = nm_grp.create_dataset(
+            "original_node", (len(onode),), dtype=int, compression="gzip"
+        )
+        nmodel_ds = nm_grp.create_dataset(
+            "new_model", (len(nmodel),), dtype=int, compression="gzip"
+        )
+        nnode_ds = nm_grp.create_dataset(
+            "new_node", (len(nnode),), dtype=int, compression="gzip"
+        )
+
+        onode_ds[:] = onode
+        nmodel_ds[:] = nmodel
+        nnode_ds[:] = nnode
+
+        self._map_grids_to_hdf5(f)
+
+        f.close()
+
+
+    @staticmethod
+    def load_node_mapping(filename):
         """
-        Method to load a saved json node mapping file and populate mapping
-        dictionaries for reconstructing arrays and recarrays
+        Method that loads and instantiate a Mf6Splitter object from hdf5 file. Once
+        Mf6Splitter has been instantiated, it can be used to reconstruct arrays and
+        recarrays of output data
 
         Parameters
         ----------
-        sim : flopy.mf6.MFSimulation
-            MFSimulation instance with split models
-        filename : str, Path
-            JSON file name
+        filename : str
+            hdf5 file name
 
+        Returns
+        -------
+            Mf6Splitter object
         """
-        modelnames = sim.model_names
-        self._model_dict = {}
-        self._new_ncpl = {}
-        for modelname in modelnames:
-            mkey = int(modelname.split("_")[-1])
-            model = sim.get_model(modelname)
-            self._model_dict[mkey] = model
-            self._new_ncpl[mkey] = model.modelgrid.ncpl
+        h5py = import_optional_dependency("h5py")
 
-        with open(filename) as foo:
-            json_dict = json.load(foo)
-            oncpl = json_dict.pop("original_ncpl")
-            shape = json_dict.pop("shape")
-            grid_type = json_dict.pop("grid_type")
-            node_map = {
-                int(k): tuple(v) for k, v in json_dict["node_map"].items()
-            }
+        class FakeSim:
+            def __init__(self, modeldict):
+                self._modeldict = modeldict
+                self._model_names = list(modeldict.keys())
 
-            split_array = np.zeros((oncpl,), dtype=int)
-            model_array = np.zeros((oncpl,), dtype=int)
-            for k, v in json_dict["node_map"].items():
-                k = int(k)
-                model_array[k] = v[0]
-                split_array[k] = v[1]
+            def get_model(self, name=None):
+                if name is None:
+                    name = self._model_names[0]
+                return self._modeldict[name]
 
-            grid_info = {}
-            models = sorted(np.unique(model_array))
-            for mkey in models:
-                ncpl = self._new_ncpl[mkey]
-                array = np.full((ncpl,), -1, dtype=int)
-                onode = np.asarray(model_array == mkey).nonzero()[0]
-                nnode = split_array[onode]
-                array[nnode] = onode
-                grid_info[mkey] = (array,)
+        class FakeModel:
+            def __init__(self, name, modelgrid):
+                self.name = name
+                self.modelgrid = modelgrid
+                self.model_type = "FAK6"
 
-            self._grid_info = grid_info
-            self._ncpl = oncpl
-            self._shape = shape
-            self._grid_type = grid_type
-            self._node_map = node_map
-            self._modelgrid = None
+        def construct_modelgrid(f, name, grid_type):
+            """
 
-        self._allow_splitting = False
+            Parameters
+            ----------
+            f :
+            name :
+            grid_type :
+
+            Returns
+            -------
+                flopy.discretization.Grid object
+            """
+            from ...discretization import StructuredGrid, VertexGrid, UnstructuredGrid
+            grid = f[f"modelgrids/{name}"]
+            tmp2 = list(grid.keys())
+
+            gridprops = dict()
+            gridprops["top"] = grid["top"][:]
+            gridprops["botm"] = grid["botm"][:]
+            gridprops["idomain"] = grid["idomain"][:]
+            gridprops["xoff"] = grid["xoff"][0]
+            gridprops["yoff"] = grid["yoff"][0]
+            gridprops["angrot"] = grid["angrot"][0]
+            if grid_type == "structured":
+                delc = grid["delc"][:]
+                delr = grid["delr"][:]
+                modelgrid = StructuredGrid(delc=delc, delr=delr, **gridprops)
+            else:
+                gridkeys = list(grid.keys())
+                if "vertices" in gridkeys:
+                    vertices = grid["vertices"][:]
+                    gridprops["vertices"] = [list(v) for v in vertices]
+
+                if "cell2d" in gridkeys:
+                    c2d = grid["cell2d"][:]
+                    gridprops["cell2d"] = [[i for i in row if i != -1] for row in c2d]
+
+                if grid_type == "vertex":
+                    modelgrid = VertexGrid(**gridprops)
+
+                else:
+                    iac = grid["iac"][:]
+                    ja = grid["ja"][:]
+                    ncpl = grid["ncpl"][:]
+                    modelgrid = UnstructuredGrid(iac=iac, ja=ja, ncpl=ncpl, **gridprops)
+
+            return modelgrid
+
+        try:
+            f = h5py.File(filename)
+        except OSError:
+            raise TypeError(
+                "Text based files no longer supported, re-save node "
+                "mapping in hdf5 format using Mf6Splitter.save_node_mapping()"
+            )
+
+        # construct the node map
+        node_map = {}
+        onode = f["node_map/original_node"][:]
+        mnum = f["node_map/new_model"][:]
+        nnode = f["node_map/new_node"][:]
+        for ix, node in enumerate(onode):
+            node_map[node] = (mnum[ix], nnode[ix])
+
+        # construct representation of original model geometry
+        modelname = f["modelname"][0].decode("utf8")
+        grid_type = f["grid_type"][0].decode("utf8")
+        grid = construct_modelgrid(f, modelname, grid_type)
+        ml = FakeModel(modelname, grid)
+        sim = FakeSim({modelname: ml})
+        mfs = Mf6Splitter(sim)
+        mfs._model_dict = {}
+        mfs._new_ncpl = {}
+
+        # construct representation of new model geometries
+        mkeys = [int(i) for i in f["mkey"][:]]
+        modelnames = [i.decode("utf8") for i in f["new_modelnames"][:]]
+        for ix, mname in enumerate(modelnames):
+            mkey = mkeys[ix]
+            sgrid = construct_modelgrid(f, mname, grid_type)
+            sml = FakeModel(mname, sgrid)
+            mfs._model_dict[mkey] = sml
+            if grid_type in ("structured", "vertex"):
+                mfs._new_ncpl[mkey] = sgrid.ncpl
+            else:
+                mfs._new_ncpl[mkey] = sgrid.nnodes
+
+        f.close()
+
+        # create additional splitting data efficient reconstruction
+        split_array = np.zeros((mfs._ncpl,), dtype=int)
+        model_array = np.zeros((mfs._ncpl,), dtype=int)
+        for k, v in node_map.items():
+            k = int(k)
+            model_array[k] = v[0]
+            split_array[k] = v[1]
+
+        grid_info = {}
+        for mkey in mkeys:
+            ncpl = mfs._new_ncpl[mkey]
+            array = np.full((ncpl,), -1, dtype=int)
+            onode = np.asarray(model_array == mkey).nonzero()[0]
+            nnode = split_array[onode]
+            array[nnode] = onode
+            grid_info[mkey] = (array,)
+
+        mfs._grid_info = grid_info
+        mfs._node_map = node_map
+        mfs._allow_splitting = False
+        return mfs
 
     def optimize_splitting_mask(self, nparts):
         """
@@ -394,19 +640,13 @@ class Mf6Splitter:
                     modflow.ModflowGwfuzf,
                     modflow.ModflowGwflak,
                     modflow.ModflowGwfhfb,
-                    modflow.ModflowGwtsft,
-                    modflow.ModflowGwtuzt,
-                    modflow.ModflowGwtlkt,
-                    modflow.ModflowGwesfe,
-                    modflow.ModflowGweuze,
-                    modflow.ModflowGwelke
                 ),
             ):
                 if isinstance(package, modflow.ModflowGwfhfb):
                     hfbs.append(package)
                     continue
 
-                if isinstance(package, (modflow.ModflowGwflak, modflow.ModflowGwtlkt, modflow.ModflowGwelke)):
+                if isinstance(package, modflow.ModflowGwflak):
                     cellids = package.connectiondata.array.cellid
                 else:
                     cellids = package.packagedata.array.cellid
@@ -418,7 +658,7 @@ class Mf6Splitter:
                 else:
                     nodes = [i[0] for i in cellids]
 
-                if isinstance(package, (modflow.ModflowGwflak, modflow.ModflowGwtlkt, modflow.ModflowGwelke)):
+                if isinstance(package, modflow.ModflowGwflak):
                     lakenos = package.connectiondata.array.ifno + 1
                     lak_array[nodes] = lakenos
                     laks += [i for i in np.unique(lakenos)]
@@ -1042,8 +1282,7 @@ class Mf6Splitter:
             "stage_filerecord",
             "obs_filerecord",
             "concentration_filerecord",
-            "ts_filerecord",
-            "temperature_filerecord"
+            "ts_filerecord"
         ):
             value = value.array
             if value is None:
@@ -1499,7 +1738,7 @@ class Mf6Splitter:
             dict
         """
         # self._mvr_remaps = {}
-        if isinstance(package, (modflow.ModflowGwtmvt, modflow.ModflowGwemve)):
+        if isinstance(package, modflow.ModflowGwtmvt):
             return mapped_data
 
         perioddata = package.perioddata.data
@@ -2630,22 +2869,23 @@ class Mf6Splitter:
 
                     # remap file names
                     if isinstance(ofile, (list, tuple)):
+                        rm_ofile = [i for i in ofile]
                         fname = ofile[0]
                         tmp = fname.split(".")
                         tmp[-2] += f"_{mkey :0{self._fdigits}d}"
-                        ofile[0] = ".".join(tmp)
+                        rm_ofile[0] = ".".join(tmp)
                     else:
                         tmp = ofile.split(".")
                         tmp[-2] += f"_{mkey :0{self._fdigits}d}"
-                        ofile = ".".join(tmp)
+                        rm_ofile = ".".join(tmp)
 
                     if pkg_type is None:
                         if "continuous" not in mapped_data[mkey]:
                             mapped_data[mkey]["continuous"] = {
-                                ofile: new_recarray
+                                rm_ofile: new_recarray
                             }
                         else:
-                            mapped_data[mkey]["continuous"][ofile] = (
+                            mapped_data[mkey]["continuous"][rm_ofile] = (
                                 new_recarray
                             )
                     else:
@@ -2656,11 +2896,11 @@ class Mf6Splitter:
 
                         if "continuous" not in mapped_data[mkey]:
                             mapped_data["observations"][mkey]["continuous"] = {
-                                ofile: new_recarray
+                                rm_ofile: new_recarray
                             }
                         else:
                             mapped_data["observations"][mkey]["continuous"][
-                                ofile
+                                rm_ofile
                             ] = new_recarray
 
         return mapped_data
@@ -2871,8 +3111,6 @@ class Mf6Splitter:
                 modflow.ModflowGwfdisu,
                 modflow.ModflowGwtdis,
                 modflow.ModflowGwtdisu,
-                modflow.ModflowGwedis,
-                modflow.ModflowGwedisu
             ),
         ):
             for item, value in package.__dict__.items():
@@ -2941,12 +3179,12 @@ class Mf6Splitter:
             mapped_data = self._remap_buy(package, mapped_data)
 
         elif isinstance(
-            package, (modflow.ModflowGwfuzf, modflow.ModflowGwtuzt, modflow.ModflowGweuze)
+            package, (modflow.ModflowGwfuzf, modflow.ModflowGwtuzt)
         ):
             mapped_data = self._remap_uzf(package, mapped_data)
 
         elif isinstance(
-            package, (modflow.ModflowGwfmaw, modflow.ModflowGwtmwt, modflow.ModflowGwemwe)
+            package, (modflow.ModflowGwfmaw, modflow.ModflowGwtmwt)
         ):
             mapped_data = self._remap_maw(package, mapped_data)
 
@@ -2954,18 +3192,18 @@ class Mf6Splitter:
             self._remap_mvr(package, mapped_data)
 
         elif isinstance(
-            package, (modflow.ModflowGwfmvr, modflow.ModflowGwtmvt, modflow.ModflowGwemve)
+            package, (modflow.ModflowGwfmvr, modflow.ModflowGwtmvt)
         ):
             self._mover = True
             return {}
 
         elif isinstance(
-            package, (modflow.ModflowGwflak, modflow.ModflowGwtlkt, modflow.ModflowGwelke)
+            package, (modflow.ModflowGwflak, modflow.ModflowGwtlkt)
         ):
             mapped_data = self._remap_lak(package, mapped_data)
 
         elif isinstance(
-            package, (modflow.ModflowGwfsfr, modflow.ModflowGwtsft, modflow.ModflowGwesfe)
+            package, (modflow.ModflowGwfsfr, modflow.ModflowGwtsft)
         ):
             mapped_data = self._remap_sfr(package, mapped_data)
 
@@ -3410,14 +3648,12 @@ class Mf6Splitter:
 
         Parameters
         ----------
-        mname0 : str
-            model name of first model in exchange
-        mname1 : str
-            model name of second model in exchange
+        mname0 :
+        mname1 :
 
         Returns
         -------
-            None
+
         """
         exchange_classes = {
             "gwfgwt": modflow.ModflowGwfgwt,
@@ -3577,7 +3813,7 @@ class Mf6Splitter:
 
         gwf_base = model_names[0]
         model_labels = [
-            f"{i :0{self._fdigits}d}" for i in sorted(np.unique(array))
+            f"{i :{self._fdigits}d}" for i in sorted(np.unique(array))
         ]
 
         self._multimodel_exchange_gwf_names = {
