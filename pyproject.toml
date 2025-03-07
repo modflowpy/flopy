@@ -112,6 +112,10 @@ only-include = [
 [tool.hatch.build.targets.wheel]
 packages = ["flopy"]
 
+[tool.hatch.metadata]
+# temporary, until new devtools release
+allow-direct-references = true
+
 [tool.hatch.metadata.hooks.fancy-pypi-readme]
 content-type = "text/markdown"
 
