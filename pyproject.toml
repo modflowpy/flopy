@@ -37,7 +37,7 @@ dynamic = ["version", "readme"]
 dev = ["flopy[codegen,lint,test,optional,doc]", "tach"]
 codegen = [
     "Jinja2>=3.0",
-    "modflow-devtools[dfn] @ git+https://github.com/MODFLOW-USGS/modflow-devtools.git",   
+    "modflow-devtools[dfn] @ git+https://github.com/MODFLOW-ORG/modflow-devtools.git",   
 ]
 lint = ["cffconvert", "codespell[toml] >=2.2.2", "ruff"]
 test = [
@@ -48,7 +48,7 @@ test = [
     "jupyter",
     "jupyter_client >=8.4.0", # avoid datetime.utcnow() deprecation warning
     "jupytext",
-    "modflow-devtools[dfn] @ git+https://github.com/MODFLOW-USGS/modflow-devtools.git",
+    "modflow-devtools[dfn] @ git+https://github.com/MODFLOW-ORG/modflow-devtools.git",
     "pytest !=8.1.0",
     "pytest-benchmark",
     "pytest-cov",

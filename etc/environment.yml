@@ -16,7 +16,7 @@ dependencies:
   - tomli
   - tomli-w
   - pip:
-      - git+https://github.com/MODFLOW-USGS/modflow-devtools.git
+      - git+https://github.com/MODFLOW-ORG/modflow-devtools.git
 
   # lint
   - cffconvert
