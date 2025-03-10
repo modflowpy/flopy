@@ -60,7 +60,7 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 
 ### Python
 
-This project has historically aimed to support several recent versions of Python, loosely following [NEP 29](https://numpy.org/neps/nep-0029-deprecation_policy.html#implementation). In current and future development this window may narrow to follow [SPEC 0](https://scientific-python.org/specs/spec-0000/#support-window) instead.
+This project has historically aimed to support a wide range of [Python versions](https://devguide.python.org/versions/). In current and future development this window may narrow to follow [SPEC 0](https://scientific-python.org/specs/spec-0000/#support-window) instead.
 
 Install Python >=3.10 via [standalone download](https://www.python.org/downloads/) or a distribution like [Anaconda](https://www.anaconda.com/products/individual) or [miniconda](https://docs.conda.io/en/latest/miniconda.html).
 
