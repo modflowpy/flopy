@@ -768,3 +768,69 @@ with styles.USGSMap():
             sa = np.array(seg)
             ax.plot(sa[:, 0], sa[:, 1], "b-")
 # -
+
+# ### Save node mapping data
+#
+# The `save_node_mapping()` method allows users to save a HDF5 representation of model splitter information that can be reloaded and used to reconstruct arrays at a later time
+
+# +
+filename = workspace / "node_mapping.hdf5"
+mfsplit.save_node_mapping(filename)
+# -
+
+# ### reloading node mapping data
+#
+# The `load_node_mapping()` method allows the user to instantiate a Mf6Splitter object from a hdf5 node mapping file for reconstructing output arrays
+
+# +
+mfs = Mf6Splitter.load_node_mapping(filename)
+# -
+
+# Reconstruct heads using the `Mf6Splitter` object we just created
+
+# +
+model_names = list(new_sim.model_names)
+head_dict = {}
+for modelname in model_names:
+    mnum = int(modelname.split("_")[-1])
+    head = new_sim.get_model(modelname).output.head().get_alldata()[-1]
+    head_dict[mnum] = head
+
+ra_heads = mfs.reconstruct_array(head_dict)
+ra_watertable = flopy.utils.postprocessing.get_water_table(ra_heads)
+# -
+
+# +
+with styles.USGSMap():
+    fig, axs = plt.subplots(nrows=3, figsize=(8, 12))
+    diff = ra_heads - heads
+    hv = [ra_heads, heads, diff]
+    titles = ["Multiple models", "Single model", "Multiple - single"]
+    for idx, ax in enumerate(axs):
+        ax.set_aspect("equal")
+        ax.set_title(titles[idx])
+
+        if idx < 2:
+            levels = contours
+            vmin = hmin
+            vmax = hmax
+        else:
+            levels = None
+            vmin = None
+            vmax = None
+
+        pmv = flopy.plot.PlotMapView(modelgrid=gwf.modelgrid, ax=ax, layer=0)
+        h = pmv.plot_array(hv[idx], vmin=vmin, vmax=vmax)
+        if levels is not None:
+            c = pmv.contour_array(
+                hv[idx], levels=levels, colors="white", linewidths=0.75, linestyles=":"
+            )
+            plt.clabel(c, fontsize=8)
+        pmv.plot_inactive()
+        plt.colorbar(h, ax=ax, shrink=0.5)
+
+        ax.plot(bp[:, 0], bp[:, 1], "r-")
+        for seg in segs:
+            sa = np.array(seg)
+            ax.plot(sa[:, 0], sa[:, 1], "b-")
+# -

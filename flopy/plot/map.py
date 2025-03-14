@@ -446,6 +446,7 @@ class PlotMapView:
         kper=0,
         color=None,
         plotAll=False,
+        boundname=None,
         **kwargs,
     ):
         """
@@ -505,7 +506,8 @@ class PlotMapView:
                         raise Exception(f"Not a list-style boundary package: {e!s}")
                     if mflist is None:
                         return
-
+                    if boundname is not None:
+                        mflist = mflist[mflist["boundname"] == boundname]
                     t = np.array([list(i) for i in mflist["cellid"]], dtype=int).T
 
                 if len(idx) == 0:

@@ -62,3 +62,4 @@ dependencies:
   - shapely>=2.0
   - vtk
   - xmipy
+  - h5py
