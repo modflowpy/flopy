@@ -2415,6 +2415,7 @@ class Mf6Splitter:
 
     def _set_boundname_remaps(self, recarray, obs_map, variables, mkey):
         """
+        Method for creating observation remaps based on boundnames
 
         Parameters
         ----------
@@ -2550,6 +2551,36 @@ class Mf6Splitter:
                 new_packagedata = packagedata.copy()
                 new_packagedata["fname"] = new_fnames
                 mapped_data[mkey]["packagedata"] = new_packagedata
+
+        return mapped_data
+
+    def _remap_ssm(self, package, mapped_data):
+        """
+        Method to remap the source and sink mixing package
+
+        Parameters
+        ----------
+        package : ModflowGwtssm or ModflowGwessm package
+        mapped_data : dict
+            dictionary of remapped data for package construction
+
+        Returns
+        -------
+            mapped_data : dict
+        """
+        sources = package.sources.array
+        if sources is not None:
+            if self._multimodel_exchange_gwf_names:
+                for mkey, mname in self._multimodel_exchange_gwf_names.items():
+                    records = []
+                    gwf = self._new_sim.get_model(mname)
+                    for rec in sources:
+                        tmp = gwf.get_package(rec.pname)
+                        if tmp is None:
+                            continue
+                        records.append(tuple(rec))
+
+                    mapped_data[mkey]["sources"] = records
 
         return mapped_data
 
@@ -3196,6 +3227,9 @@ class Mf6Splitter:
 
         elif isinstance(package, modflow.ModflowGwfbuy):
             mapped_data = self._remap_buy(package, mapped_data)
+
+        elif isinstance(package, (modflow.ModflowGwtssm, modflow.ModflowGwessm)):
+            mapped_data = self._remap_ssm(package, mapped_data)
 
         elif isinstance(
             package, (modflow.ModflowGwfuzf, modflow.ModflowGwtuzt, modflow.ModflowGweuze)
