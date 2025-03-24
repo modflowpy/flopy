@@ -1,5 +1,4 @@
 import datetime
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -8,7 +7,7 @@ import pytest
 import flopy
 from flopy.discretization.modeltime import ModelTime
 from flopy.mf6.modflow.mfsimulation import MFSimulation
-from flopy.utils.binaryfile import CellBudgetFile, HeadFile
+from flopy.utils.binaryfile import HeadFile
 
 
 @pytest.mark.parametrize(
@@ -330,6 +329,25 @@ def test_from_headers_test005_advgw_tidal(example_data_path):
     assert np.allclose(mt.tsmult, tdis.perioddata.get_data()["tsmult"])
 
 
+def test_from_headers_disu(function_tmpdir):
+    from autotest.test_export import disu_sim as _disu_sim
+
+    name = "from_headers"
+    sim = _disu_sim(name, function_tmpdir)
+    tdis = [(1.0, 1, 1.0), (1.0, 2, 1.5), (1.0, 1, 1.0)]
+    tdis = flopy.mf6.ModflowTdis(sim, nper=len(tdis), perioddata=tdis)
+    sim.write_simulation()
+    sim.run_simulation()
+    tdis = sim.tdis
+    hf = HeadFile(function_tmpdir / f"{name}.hds")
+    mt = ModelTime.from_headers(hf.recordarray)
+
+    assert np.isclose(hf.recordarray[-1]["totim"], sum(mt.perlen))
+    assert np.allclose(mt.perlen, tdis.perioddata.get_data()["perlen"])
+    assert np.allclose(mt.nstp, tdis.perioddata.get_data()["nstp"])
+    assert np.allclose(mt.tsmult, tdis.perioddata.get_data()["tsmult"])
+
+
 def test_reverse(example_data_path):
     ws = example_data_path / "mf6" / "test005_advgw_tidal" / "expected_output"
     sim = MFSimulation.load(sim_ws=ws.parent)
@@ -341,3 +359,4 @@ def test_reverse(example_data_path):
     assert np.isclose(hf.recordarray[-1]["totim"], sum(rev.perlen))
     assert np.allclose(rev.perlen[::-1], tdis.perioddata.get_data()["perlen"])
     assert np.allclose(rev.nstp[::-1], tdis.perioddata.get_data()["nstp"])
+    assert np.allclose(rev.tsmult[::-1], 1 / tdis.perioddata.get_data()["tsmult"])

@@ -31,6 +31,7 @@ from flopy.mf6 import (
     ModflowGwfdisv,
     ModflowGwfic,
     ModflowGwfnpf,
+    ModflowGwfoc,
     ModflowIms,
     ModflowTdis,
 )
@@ -109,6 +110,12 @@ def disu_sim(name, tmpdir, missing_arrays=False):
 
     ic = ModflowGwfic(gwf, strt=np.random.random_sample(gwf.modelgrid.nnodes) * 350)
     npf = ModflowGwfnpf(gwf, k=np.random.random_sample(gwf.modelgrid.nnodes) * 10)
+    oc = ModflowGwfoc(
+        gwf,
+        budget_filerecord=f"{name}.bud",
+        head_filerecord=f"{name}.hds",
+        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    )
 
     return sim
 

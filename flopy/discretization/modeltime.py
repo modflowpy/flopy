@@ -55,6 +55,7 @@ class ModelTime:
         self._start_datetime = ModelTime.parse_datetime(start_datetime)
         self._steady_state = steady_state
         self._totim_dict = {}
+        self._pertim_dict = {}
         self._datetime_dict = {}
         self.__str_format = "%Y-%m-%dt%H:%M:%S"
 
@@ -149,6 +150,16 @@ class ModelTime:
         return self._steady_state
 
     @property
+    def pertim(self):
+        """
+        Returns a list of pertim values at the end of each time-step
+        """
+        if not self._totim_dict:
+            self._set_totim_dict()
+
+        return list(self._pertim_dict.values())
+
+    @property
     def totim(self):
         """
         Returns a list of totim values at the end of each time-step
@@ -224,12 +235,14 @@ class ModelTime:
         """
         delt = []
         per_stp = []
+        pertim = []
         perlen_array = self.perlen
         nstp_array = self.nstp
         tsmult_array = self.tsmult
         for per, nstp in enumerate(nstp_array):
             perlen = perlen_array[per]
             tsmult = tsmult_array[per]
+            pt = 0
             for stp in range(nstp):
                 if stp == 0:
                     if tsmult != 1.0:
@@ -238,11 +251,14 @@ class ModelTime:
                         dt = perlen / nstp
                 else:
                     dt = delt[-1] * tsmult
+                pt += dt
                 delt.append(dt)
                 per_stp.append((per, stp))
+                pertim.append(pt)
 
         totim = np.add.accumulate(delt)
         self._totim_dict = {ps: totim[i] for i, ps in enumerate(per_stp)}
+        self._pertim_dict = {ps: pertim[i] for i, ps in enumerate(per_stp)}
 
     def _set_datetime_dict(self):
         """
@@ -725,7 +741,7 @@ class ModelTime:
                 case 0 | 1:
                     tsmult[kper] = 1.0
                 case _:
-                    tsmult[kper] = tslens[0] / tslens[1]
+                    tsmult[kper] = tslens[1] / tslens[0]
 
         for i in range(len(headers)):
             hdr = headers[i]
@@ -740,7 +756,7 @@ class ModelTime:
                 perlen[kper] += tdiff
             else:
                 perlen[kper] = tdiff
-                set_tsmult()
+            set_tsmult()
             totim = hdr["totim"]
 
         if i == len(headers) - 1:
@@ -761,7 +777,7 @@ class ModelTime:
         return ModelTime(
             self.perlen[::-1],
             self.nstp[::-1],
-            self.tsmult[::-1] if self.tsmult is not None else None,
+            1 / self.tsmult[::-1] if self.tsmult is not None else None,
             self.time_units,
             self.start_datetime,
             self.steady_state[::-1] if self.steady_state is not None else None,

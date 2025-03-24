@@ -19,6 +19,8 @@ from typing import Optional, Union
 import numpy as np
 import pandas as pd
 
+from flopy.discretization.modeltime import ModelTime
+
 from ..datafile import Header, LayerFile
 from ..gridutil import get_lni
 
@@ -453,22 +455,6 @@ class BinaryLayerFile(LayerFile):
         return result
 
 
-def _get_max_kper_kstp_tsim(ra: np.recarray) -> tuple[int, dict[int, int], float]:
-    header = ra[-1]
-    max_kper = header["kper"] - 1
-    max_tsim = header["totim"]
-    nstp = {0: 0}
-    for i in range(len(ra) - 1, -1, -1):
-        header = ra[i]
-        kper = header["kper"] - 1
-        kstp = header["kstp"] - 1
-        if kper in nstp and kstp > nstp[kper]:
-            nstp[kper] += 1
-        else:
-            nstp[kper] = 1
-    return max_kper, nstp, max_tsim
-
-
 class HeadFile(BinaryLayerFile):
     """
     The HeadFile class provides simple ways to retrieve and manipulate
@@ -542,24 +528,27 @@ class HeadFile(BinaryLayerFile):
             else self.filename
         )
 
-        maxkper, nstp, maxtsim = _get_max_kper_kstp_tsim(self.recordarray)
-        prev_kper = None
-        perlen = None
+        time = ModelTime.from_headers(self.recordarray)
+        time._set_totim_dict()
+        trev = time.reverse()
+        trev._set_totim_dict()
+        nper = time.nper
+        seen = set()
 
         def reverse_header(header):
             """Reverse period, step and time fields in the record header"""
 
-            nonlocal prev_kper
-            nonlocal perlen
-
-            if (kper := header["kper"] - 1) != prev_kper:
-                perlen = header["pertim"]
-            prev_kper = kper
+            nonlocal seen
+            kper = header["kper"] - 1
+            kstp = header["kstp"] - 1
             header = header.copy()
-            header["kstp"] = nstp[kper] + 1 - header["kstp"]
-            header["kper"] = maxkper + 1 - kper
-            header["pertim"] = perlen - header["pertim"]
-            header["totim"] = maxtsim - header["totim"] + perlen
+            header["kper"] = nper - kper
+            header["kstp"] = time.nstp[kper] - kstp
+            kper = header["kper"] - 1
+            kstp = header["kstp"] - 1
+            seen.add((kper, kstp))
+            header["pertim"] = trev._pertim_dict[(kper, kstp)]
+            header["totim"] = trev._totim_dict[(kper, kstp)]
             return header
 
         target = filename
@@ -2118,24 +2107,27 @@ class CellBudgetFile:
         nrecords = len(self)
         target = filename
 
-        maxkper, nstp, maxtsim = _get_max_kper_kstp_tsim(self.recordarray)
-        prev_kper = None
-        perlen = None
+        time = ModelTime.from_headers(self.recordarray)
+        time._set_totim_dict()
+        trev = time.reverse()
+        trev._set_totim_dict()
+        nper = time.nper
+        seen = set()
 
         def reverse_header(header):
             """Reverse period, step and time fields in the record header"""
 
-            nonlocal prev_kper
-            nonlocal perlen
-
-            if (kper := header["kper"] - 1) != prev_kper:
-                perlen = header["pertim"]
-            prev_kper = kper
+            nonlocal seen
+            kper = header["kper"] - 1
+            kstp = header["kstp"] - 1
             header = header.copy()
-            header["kstp"] = nstp[kper] + 1 - header["kstp"]
-            header["kper"] = maxkper + 1 - kper
-            header["pertim"] = perlen - header["pertim"]
-            header["totim"] = maxtsim - header["totim"] + perlen
+            header["kper"] = nper - kper
+            header["kstp"] = time.nstp[kper] - kstp
+            kper = header["kper"] - 1
+            kstp = header["kstp"] - 1
+            seen.add((kper, kstp))
+            header["pertim"] = trev._pertim_dict[(kper, kstp)]
+            header["totim"] = trev._totim_dict[(kper, kstp)]
             return header
 
         # if rewriting the same file, write
