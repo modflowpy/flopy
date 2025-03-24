@@ -1,5 +1,6 @@
 from dataclasses import dataclass, replace
 from itertools import repeat
+from pathlib import Path
 from pprint import pformat
 from typing import Literal, get_args
 
@@ -114,21 +115,22 @@ def pytest_generate_tests(metafunc):
     cases = []
     sims = []
     names = []
-    for case in CASES:
-        for dis_type in get_args(DisType):
-            name = f"{case.name}_{dis_type}"
-            case_ = replace(case, name=name)
-            ws = tmp_path_factory.mktemp(name)
-            if dis_type == "dis":
-                sim = dis_sim(case_, ws)
-            elif dis_type == "disv":
-                sim = disv_sim(case_, ws)
-            elif dis_type == "disu":
-                sim = disu_sim(case_, ws)
-            cases.append(case_)
-            sims.append(sim)
-            names.append(name)
-    metafunc.parametrize("case, sim", zip(cases, sims), ids=names)
+    if "case" in metafunc.fixturenames:
+        for case in CASES:
+            for dis_type in get_args(DisType):
+                name = f"{case.name}_{dis_type}"
+                case_ = replace(case, name=name)
+                ws = tmp_path_factory.mktemp(name)
+                if dis_type == "dis":
+                    sim = dis_sim(case_, ws)
+                elif dis_type == "disv":
+                    sim = disv_sim(case_, ws)
+                elif dis_type == "disu":
+                    sim = disu_sim(case_, ws)
+                cases.append(case_)
+                sims.append(sim)
+                names.append(name)
+        metafunc.parametrize("case, sim", zip(cases, sims), ids=names)
 
 
 @requires_exe("mf6")

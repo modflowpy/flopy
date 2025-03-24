@@ -139,7 +139,9 @@ class ModelTime:
         Returns a tuple of period data for the MF6 TDIS package containing records
         of [(perlen, nstp, tsmult), ....] for each stress period
         """
-        return [(per, self.nstp[ix], self.tsmult[ix]) for ix, per in self.perlen]
+        return [
+            (per, self.nstp[ix], self.tsmult[ix]) for ix, per in enumerate(self.perlen)
+        ]
 
     @property
     def steady_state(self):
