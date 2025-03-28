@@ -3382,8 +3382,27 @@ class Mf6Splitter:
                             "interpolation_methodrecord": tspkg.interpolation_methodrecord.array["interpolation_method"][0]
                         }
                         mapped_data[mkey]["timeseries"] = tsdict
+
                 else:
                     pass
+
+            if hasattr(package, "obs"):
+                obs_map = {"cellid": self._node_map}
+                for mkey, mdict in mapped_data.items():
+                    if "stress_period_data" in mdict:
+                        for _, ra in mdict["stress_period_data"].items():
+                            if isinstance(ra, dict):
+                                continue
+                            obs_map = self._set_boundname_remaps(
+                                ra, obs_map, list(obs_map.keys()), mkey
+                            )
+                for obspak in package.obs._packages:
+                    mapped_data = self._remap_obs(
+                        obspak,
+                        obs_map["cellid"],
+                        self._node_map,
+                        pkg_type=package.package_type,
+                    )
 
         observations = mapped_data.pop("observations", None)
 
