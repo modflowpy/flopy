@@ -22,130 +22,6 @@ import pandas as pd
 from ..datafile import Header, LayerFile
 from ..gridutil import get_lni
 
-HEAD_TEXT = "            HEAD"
-
-
-def write_head(
-    fbin,
-    data,
-    kstp=1,
-    kper=1,
-    pertim=1.0,
-    totim=1.0,
-    text=HEAD_TEXT,
-    ilay=1,
-):
-    dt = np.dtype(
-        [
-            ("kstp", np.int32),
-            ("kper", np.int32),
-            ("pertim", np.float64),
-            ("totim", np.float64),
-            ("text", "S16"),
-            ("ncol", np.int32),
-            ("nrow", np.int32),
-            ("ilay", np.int32),
-        ]
-    )
-    nrow = data.shape[0]
-    ncol = data.shape[1]
-    h = np.array((kstp, kper, pertim, totim, text, ncol, nrow, ilay), dtype=dt)
-    h.tofile(fbin)
-    data.tofile(fbin)
-
-
-def write_budget(
-    fbin,
-    data,
-    kstp=1,
-    kper=1,
-    text="    FLOW-JA-FACE",
-    imeth=1,
-    delt=1.0,
-    pertim=1.0,
-    totim=1.0,
-    text1id1="           GWF-1",
-    text2id1="           GWF-1",
-    text1id2="           GWF-1",
-    text2id2="             NPF",
-):
-    dt = np.dtype(
-        [
-            ("kstp", np.int32),
-            ("kper", np.int32),
-            ("text", "S16"),
-            ("ndim1", np.int32),
-            ("ndim2", np.int32),
-            ("ndim3", np.int32),
-            ("imeth", np.int32),
-            ("delt", np.float64),
-            ("pertim", np.float64),
-            ("totim", np.float64),
-        ]
-    )
-
-    if imeth == 1:
-        ndim1 = data.shape[0]
-        ndim2 = 1
-        ndim3 = -1
-        h = np.array(
-            (kstp, kper, text, ndim1, ndim2, ndim3, imeth, delt, pertim, totim),
-            dtype=dt,
-        )
-        h.tofile(fbin)
-        data.tofile(fbin)
-
-    elif imeth == 6:
-        ndim1 = 1
-        ndim2 = 1
-        ndim3 = -1
-        h = np.array(
-            (kstp, kper, text, ndim1, ndim2, ndim3, imeth, delt, pertim, totim),
-            dtype=dt,
-        )
-        h.tofile(fbin)
-
-        # write text1id1, ...
-        dt = np.dtype(
-            [
-                ("text1id1", "S16"),
-                ("text1id2", "S16"),
-                ("text2id1", "S16"),
-                ("text2id2", "S16"),
-            ]
-        )
-        h = np.array((text1id1, text1id2, text2id1, text2id2), dtype=dt)
-        h.tofile(fbin)
-
-        # write ndat (number of floating point columns)
-        colnames = data.dtype.names
-        ndat = len(colnames) - 2
-        dt = np.dtype([("ndat", np.int32)])
-        h = np.array([(ndat,)], dtype=dt)
-        h.tofile(fbin)
-
-        # write auxiliary column names
-        naux = ndat - 1
-        if naux > 0:
-            auxtxt = [f"{colname:16}" for colname in colnames[3:]]
-            auxtxt = tuple(auxtxt)
-            dt = np.dtype([(colname, "S16") for colname in colnames[3:]])
-            h = np.array(auxtxt, dtype=dt)
-            h.tofile(fbin)
-
-        # write nlist
-        nlist = data.shape[0]
-        dt = np.dtype([("nlist", np.int32)])
-        h = np.array([(nlist,)], dtype=dt)
-        h.tofile(fbin)
-
-        # write the data
-        data.tofile(fbin)
-
-        pass
-    else:
-        raise Exception(f"unknown method code {imeth}")
-
 
 class BinaryHeader(Header):
     """
@@ -581,16 +457,16 @@ def _get_max_kper_kstp_tsim(ra: np.recarray) -> tuple[int, dict[int, int], float
     header = ra[-1]
     max_kper = header["kper"] - 1
     max_tsim = header["totim"]
-    max_kstp = {0: 0}
+    nstp = {0: 0}
     for i in range(len(ra) - 1, -1, -1):
         header = ra[i]
         kper = header["kper"] - 1
         kstp = header["kstp"] - 1
-        if kper in max_kstp and kstp > max_kstp[kper]:
-            max_kstp[kper] += 1
+        if kper in nstp and kstp > nstp[kper]:
+            nstp[kper] += 1
         else:
-            max_kstp[kper] = 0
-    return max_kper, max_kstp, max_tsim
+            nstp[kper] = 1
+    return max_kper, nstp, max_tsim
 
 
 class HeadFile(BinaryLayerFile):
@@ -666,7 +542,7 @@ class HeadFile(BinaryLayerFile):
             else self.filename
         )
 
-        maxkper, maxkstp, maxtsim = _get_max_kper_kstp_tsim(self.recordarray)
+        maxkper, nstp, maxtsim = _get_max_kper_kstp_tsim(self.recordarray)
         prev_kper = None
         perlen = None
 
@@ -676,19 +552,14 @@ class HeadFile(BinaryLayerFile):
             nonlocal prev_kper
             nonlocal perlen
 
-            # reverse kstp and kper headers
-            kstp = header["kstp"] - 1
-            kper = header["kper"] - 1
-            header["kstp"] = maxkstp[kper] - kstp + 1
-            header["kper"] = maxkper - kper + 1
-
-            if kper != prev_kper:
+            if (kper := header["kper"] - 1) != prev_kper:
                 perlen = header["pertim"]
             prev_kper = kper
-
-            # reverse totim and pertim headers
-            header["totim"] = maxtsim - header["totim"]
+            header = header.copy()
+            header["kstp"] = nstp[kper] + 1 - header["kstp"]
+            header["kper"] = maxkper + 1 - kper
             header["pertim"] = perlen - header["pertim"]
+            header["totim"] = maxtsim - header["totim"] + perlen
             return header
 
         target = filename
@@ -706,17 +577,32 @@ class HeadFile(BinaryLayerFile):
             for i in range(len(self) - 1, -1, -1):
                 header = self.recordarray[i].copy()
                 header = reverse_header(header)
-                data = self.get_data(idx=i)
+                text = header["text"]
                 ilay = header["ilay"]
-                write_head(
-                    fbin=f,
-                    data=data[ilay - 1],
-                    kstp=header["kstp"],
-                    kper=header["kper"],
-                    pertim=header["pertim"],
-                    totim=header["totim"],
-                    ilay=ilay,
+                kstp = header["kstp"]
+                kper = header["kper"]
+                pertim = header["pertim"]
+                totim = header["totim"]
+                data = self.get_data(idx=i)[ilay - 1]
+                dt = np.dtype(
+                    [
+                        ("kstp", np.int32),
+                        ("kper", np.int32),
+                        ("pertim", np.float64),
+                        ("totim", np.float64),
+                        ("text", "S16"),
+                        ("ncol", np.int32),
+                        ("nrow", np.int32),
+                        ("ilay", np.int32),
+                    ]
                 )
+                nrow = data.shape[0]
+                ncol = data.shape[1]
+                h = np.array(
+                    (kstp, kper, pertim, totim, text, ncol, nrow, ilay), dtype=dt
+                )
+                h.tofile(f)
+                data.tofile(f)
 
         # if we rewrote the original file, reinitialize
         if inplace:
@@ -2232,7 +2118,7 @@ class CellBudgetFile:
         nrecords = len(self)
         target = filename
 
-        maxkper, maxkstp, maxtsim = _get_max_kper_kstp_tsim(self.recordarray)
+        maxkper, nstp, maxtsim = _get_max_kper_kstp_tsim(self.recordarray)
         prev_kper = None
         perlen = None
 
@@ -2242,19 +2128,14 @@ class CellBudgetFile:
             nonlocal prev_kper
             nonlocal perlen
 
-            # reverse kstp and kper headers
-            kstp = header["kstp"] - 1
-            kper = header["kper"] - 1
-            header["kstp"] = maxkstp[kper] - kstp + 1
-            header["kper"] = maxkper - kper + 1
-
-            if kper != prev_kper:
-                perlen = header["pertim"] - 1
+            if (kper := header["kper"] - 1) != prev_kper:
+                perlen = header["pertim"]
             prev_kper = kper
-
-            # reverse totim and pertim headers
-            header["totim"] = maxtsim - header["totim"]
+            header = header.copy()
+            header["kstp"] = nstp[kper] + 1 - header["kstp"]
+            header["kper"] = maxkper + 1 - kper
             header["pertim"] = perlen - header["pertim"]
+            header["totim"] = maxtsim - header["totim"] + perlen
             return header
 
         # if rewriting the same file, write

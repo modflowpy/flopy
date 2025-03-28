@@ -105,5 +105,8 @@ app
 # DFN backups
 flopy/mf6/data/dfn_backup/
 
+# DFN TOML dir
+flopy/mf6/data/toml/
+
 # uv lockfile
 uv.lock
