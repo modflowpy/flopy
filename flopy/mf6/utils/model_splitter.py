@@ -3399,8 +3399,8 @@ class Mf6Splitter:
                 for obspak in package.obs._packages:
                     mapped_data = self._remap_obs(
                         obspak,
+                        mapped_data,
                         obs_map["cellid"],
-                        self._node_map,
                         pkg_type=package.package_type,
                     )
 
