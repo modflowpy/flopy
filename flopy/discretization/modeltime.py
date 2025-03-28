@@ -5,6 +5,8 @@ from difflib import SequenceMatcher
 import numpy as np
 import pandas as pd
 
+# TODO standalone function to reverse
+
 
 class ModelTime:
     """
@@ -48,9 +50,9 @@ class ModelTime:
         if len(tsmult) != len(nstp):
             raise ValueError("tsmult and nstp inputs must have the same dimension")
 
-        self._perlen = perlen
-        self._nstp = nstp
-        self._tsmult = tsmult
+        self._perlen = np.array(list(perlen))
+        self._nstp = np.array(list(nstp))
+        self._tsmult = np.array(list(tsmult))
         self._time_units = self.parse_timeunits(time_units)
         self._start_datetime = ModelTime.parse_datetime(start_datetime)
         self._steady_state = steady_state
@@ -653,8 +655,7 @@ class ModelTime:
         cls, perioddata, time_units=None, start_datetime=None, steady_state=None
     ):
         """
-        Method to instantiate the ModelTime class from a TDIS perioddata
-        array
+        Instantiate a ModelTime class from a TDIS perioddata array.
 
         Parameters
         ----------
@@ -693,4 +694,77 @@ class ModelTime:
             time_units=time_units,
             start_datetime=start_datetime,
             steady_state=steady_state,
+        )
+
+    @classmethod
+    def from_headers(cls, headers: np.recarray):
+        """
+        Instantiate a ModelTime class from a head or budget file header array.
+
+        Parameters
+        ----------
+        headers : np.recarray
+            head or budget file header array
+
+        Returns
+        -------
+            ModelTime object
+        """
+
+        perlen = {}
+        nstp = {}
+        tsmult = {}
+        tslens = []
+        tdiff = 0.0
+        totim = 0.0
+        kper = 0
+
+        def record_tsmult():
+            nonlocal tslens
+            nonlocal tsmult
+            tslens = [l for l in tslens if l > 0]
+            match len(tslens):
+                case 0 | 1:
+                    tsmult[kper] = 1.0
+                case _:
+                    tsmult[kper] = tslens[0] / tslens[1]
+
+        for i in range(len(headers)):
+            hdr = headers[i]
+            if kper != int(hdr["kper"] - 1):
+                tslens = []
+            kper = int(hdr["kper"] - 1)
+            kstp = int(hdr["kstp"] - 1)
+            tdiff = float(abs(totim - hdr["totim"]))
+            tslens.append(tdiff)
+            nstp[kper] = kstp + 1
+            if kper in perlen:
+                perlen[kper] += tdiff
+            else:
+                perlen[kper] = tdiff
+                record_tsmult()
+            totim = hdr["totim"]
+
+        if i == len(headers) - 1:
+            if len(perlen) == 1 and perlen[0] == 0.0:
+                perlen[0] = totim
+            record_tsmult()
+
+        return cls(perlen.values(), nstp.values(), tsmult.values())
+
+    def reverse(self):
+        """
+        Get a new instance with stress periods and time steps in reverse order.
+
+        Returns
+        -------
+            ModelTime object with reversed order of stress periods and time steps.
+        """
+        return ModelTime(
+            self.perlen[::-1],
+            self.nstp[::-1],
+            self.tsmult[::-1] if self.tsmult is not None else None,
+            self.time_units,
+            self.start_datetime,
+            self.steady_state[::-1] if self.steady_state is not None else None,
         )
