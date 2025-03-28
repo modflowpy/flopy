@@ -72,8 +72,8 @@ def test_get_lni_infers_layer_count_when_int_ncpl(ncpl, nodes, expected):
             61,
             np.array(61 * [50]),
             np.array(61 * [50]),
-            np.array([-10]),
-            np.array([-30.0, -50.0]),
+            -10,
+            np.array([-30.0]),
         ),
         (
             2,
@@ -81,7 +81,7 @@ def test_get_lni_infers_layer_count_when_int_ncpl(ncpl, nodes, expected):
             61,
             np.array(61 * [50]),
             np.array(61 * [50]),
-            np.array([-10]),
+            -10,
             np.array([-30.0, -50.0]),
         ),
         (
@@ -90,8 +90,8 @@ def test_get_lni_infers_layer_count_when_int_ncpl(ncpl, nodes, expected):
             4,  # ncol
             np.array(4 * [4.0]),  # delr
             np.array(3 * [3.0]),  # delc
-            np.array([-10]),  # top
-            np.array([-30.0]),  # botm
+            -10,  # top
+            -30.0,  # botm
         ),
     ],
 )
@@ -106,10 +106,6 @@ def test_get_disu_kwargs(nlay, nrow, ncol, delr, delc, tp, botm):
         botm=botm,
         return_vertices=True,
     )
-
-    from pprint import pprint
-
-    pprint(kwargs["area"])
 
     assert kwargs["nodes"] == nlay * nrow * ncol
     assert kwargs["nvert"] == (nrow + 1) * (ncol + 1)
