@@ -5,8 +5,6 @@ from difflib import SequenceMatcher
 import numpy as np
 import pandas as pd
 
-# TODO standalone function to reverse
-
 
 class ModelTime:
     """
@@ -719,7 +717,7 @@ class ModelTime:
         totim = 0.0
         kper = 0
 
-        def record_tsmult():
+        def set_tsmult():
             nonlocal tslens
             nonlocal tsmult
             tslens = [l for l in tslens if l > 0]
@@ -742,13 +740,13 @@ class ModelTime:
                 perlen[kper] += tdiff
             else:
                 perlen[kper] = tdiff
-                record_tsmult()
+                set_tsmult()
             totim = hdr["totim"]
 
         if i == len(headers) - 1:
             if len(perlen) == 1 and perlen[0] == 0.0:
                 perlen[0] = totim
-            record_tsmult()
+            set_tsmult()
 
         return cls(perlen.values(), nstp.values(), tsmult.values())
 
