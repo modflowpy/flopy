@@ -1025,7 +1025,7 @@ class CellBudgetFile:
 
         try:
             self._build_index()
-        except (BudgetIndexError, EOFError):
+        except (BudgetIndexError, EOFError) as e:
             success = False
             self.__reset()
 
@@ -2194,7 +2194,7 @@ class CellBudgetFile:
                     h.tofile(f)
                 elif header["imeth"] == 1:
                     # Load data
-                    data = self.get_data(idx)[0][0][0]
+                    data = self.get_data(idx)[0]
                     data = np.array(data, dtype=np.float64)
                     # Negate flows
                     data = -data
