@@ -92,7 +92,7 @@ def get_disu_kwargs(
     botm : numpy.ndarray
         Bottom elevation(s) for each layer
     return_vertices: bool
-        If true, then include vertices and cell2d in kwargs
+        If true, then include vertices, cell2d and angldegx in kwargs
     """
 
     def get_nn(k, i, j):
@@ -147,6 +147,7 @@ def get_disu_kwargs(
     ihc = []
     cl12 = []
     hwva = []
+    angldegx = []
     for k in range(nlay):
         for i in range(nrow):
             for j in range(ncol):
@@ -158,6 +159,7 @@ def get_disu_kwargs(
                 ihc.append(k + 1)  # put layer in diagonal for flopy plotting
                 cl12.append(n + 1)
                 hwva.append(n + 1)
+                angldegx.append(n + 1)
                 if k == 0:
                     top[n] = tp[i, j]
                 else:
@@ -171,6 +173,7 @@ def get_disu_kwargs(
                     dz = botm[k - 1, i, j] - botm[k, i, j]
                     cl12.append(0.5 * dz)
                     hwva.append(delr[j] * delc[i])
+                    angldegx.append(0)  # Always Perpendicular to the x-axis
                 # back
                 if i > 0:
                     ja.append(get_nn(k, i - 1, j))
@@ -178,6 +181,7 @@ def get_disu_kwargs(
                     ihc.append(1)
                     cl12.append(0.5 * delc[i])
                     hwva.append(delr[j])
+                    angldegx.append(90)
                 # left
                 if j > 0:
                     ja.append(get_nn(k, i, j - 1))
@@ -185,6 +189,7 @@ def get_disu_kwargs(
                     ihc.append(1)
                     cl12.append(0.5 * delr[j])
                     hwva.append(delc[i])
+                    angldegx.append(180)
                 # right
                 if j < ncol - 1:
                     ja.append(get_nn(k, i, j + 1))
@@ -192,6 +197,7 @@ def get_disu_kwargs(
                     ihc.append(1)
                     cl12.append(0.5 * delr[j])
                     hwva.append(delc[i])
+                    angldegx.append(0)
                 # front
                 if i < nrow - 1:
                     ja.append(get_nn(k, i + 1, j))
@@ -199,6 +205,7 @@ def get_disu_kwargs(
                     ihc.append(1)
                     cl12.append(0.5 * delc[i])
                     hwva.append(delr[j])
+                    angldegx.append(270)
                 # bottom
                 if k < nlay - 1:
                     ja.append(get_nn(k + 1, i, j))
@@ -210,6 +217,7 @@ def get_disu_kwargs(
                         dz = botm[k - 1, i, j] - botm[k, i, j]
                     cl12.append(0.5 * dz)
                     hwva.append(delr[j] * delc[i])
+                    angldegx.append(0)  # Always Perpendicular to the x-axis
     ja = np.array(ja, dtype=int)
     nja = ja.shape[0]
     hwva = np.array(hwva, dtype=float)
@@ -259,6 +267,7 @@ def get_disu_kwargs(
     if return_vertices:
         kw["vertices"] = vertices
         kw["cell2d"] = cell2d
+        kw["angldegx"] = angldegx
     return kw
 
 
