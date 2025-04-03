@@ -14,4 +14,5 @@ DATA(BINARY) 30 Conduit.hds
 DATA(BINARY) 31 Conduit.ddn
 DATA(BINARY) 35 Conduit.lfc
 DATA(BINARY) 36 Conduit.lfh
+DATA(BINARY) 37 Conduit.lfm
 DATA(BINARY) 55 Conduit.cbt
