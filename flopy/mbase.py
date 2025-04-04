@@ -44,7 +44,9 @@ iconst = 1
 iprn = -1
 
 
-def resolve_exe(exe_name: Union[str, os.PathLike], forgive: bool = False) -> str:
+def resolve_exe(
+    exe_name: Union[str, os.PathLike], forgive: bool = False
+) -> Union[str, None]:
     """
     Resolves the absolute path of the executable, raising FileNotFoundError
     if the executable cannot be found (set forgive to True to return None
@@ -55,55 +57,59 @@ def resolve_exe(exe_name: Union[str, os.PathLike], forgive: bool = False) -> str
     exe_name : str or PathLike
         The executable's name or path. If only the name is provided,
         the executable must be on the system path.
-    forgive : bool
+    forgive : bool, default False
         If True and executable cannot be found, return None and warn
         rather than raising a FileNotFoundError. Defaults to False.
 
     Returns
     -------
-        str: absolute path to the executable
+    str or None
+        Absolute path to the executable, or None if not found and
+        ``forgive=True``.
     """
 
-    def _resolve(exe_name):
-        exe = which(exe_name)
-        if exe is not None:
-            # if which() returned a relative path, resolve it
-            exe = which(str(Path(exe).resolve()))
-        else:
-            if exe_name.lower().endswith(".exe"):
-                # try removing .exe suffix
-                exe = which(exe_name[:-4])
-            if exe is not None:
-                # in case which() returned a relative path, resolve it
-                exe = which(str(Path(exe).resolve()))
-            else:
-                # try tilde-expanded abspath
-                exe = which(Path(exe_name).expanduser().absolute())
-            if exe is None and exe_name.lower().endswith(".exe"):
-                # try tilde-expanded abspath without .exe suffix
-                exe = which(Path(exe_name[:-4]).expanduser().absolute())
-        return exe
+    def _resolve(exe_name, checked=set()):
+        exe_pth = Path(exe_name)
+        exe_name = str(exe_name)
 
-    name = str(exe_name)
-    exe_path = _resolve(name)
-    if exe_path is None and on_windows and Path(name).suffix == "":
-        # try adding .exe suffix on windows (for portability from other OS)
-        exe_path = _resolve(f"{name}.exe")
+        # Prevent infinite recursion by checking if exe_name has been checked
+        if exe_name in checked:
+            return None
+        checked.add(exe_name)
+
+        # exe_name is found (not None), ensure absolute path is returned
+        if exe := which(exe_name):
+            return which(str(Path(exe).resolve()))
+
+        # exe_name is relative path
+        if not exe_pth.is_absolute() and (
+            exe := which(str(exe_pth.expanduser().resolve()), mode=0)
+        ):
+            # expanduser() in case of ~ in path
+            # mode=0 effectively allows which() to find exe without suffix in windows
+            return exe
+
+        # try adding/removing .exe suffix
+        if exe_name.lower().endswith(".exe"):
+            return _resolve(exe_name[:-4], checked)
+        elif on_windows and "." not in exe_pth.stem:
+            return _resolve(f"{exe_name}.exe", checked)
+
+    # return path if found
+    if exe_path := _resolve(exe_name):
+        return str(exe_path)
 
     # raise if we are unforgiving, otherwise return None
-    if exe_path is None:
-        if forgive:
-            warn(
-                f"The program {exe_name} does not exist or is not executable.",
-                category=UserWarning,
-            )
-            return None
-
-        raise FileNotFoundError(
-            f"The program {exe_name} does not exist or is not executable."
+    if forgive:
+        warn(
+            f"The program {exe_name} does not exist or is not executable.",
+            category=UserWarning,
         )
+        return None
 
-    return exe_path
+    raise FileNotFoundError(
+        f"The program {exe_name} does not exist or is not executable."
+    )
 
 
 # external exceptions for users
@@ -678,8 +684,7 @@ class BaseModel(ModelInterface):
         Returns
         -------
         object, str, int or None
-            Package object of type :class:`flopy.pakbase.Package`,
-            :class:`flopy.utils.reference.TemporalReference`, str, int or None.
+            Package object of type :class:`flopy.pakbase.Package`, str, int, or None
 
         Raises
         ------
@@ -694,12 +699,6 @@ class BaseModel(ModelInterface):
         """
         if item == "output_packages" or not hasattr(self, "output_packages"):
             raise AttributeError(item)
-
-        if item == "tr":
-            if self.dis is not None:
-                return self.dis.tr
-            else:
-                return None
 
         if item == "nper":
             # most subclasses have a nper property, but ModflowAg needs this
@@ -1341,16 +1340,10 @@ class BaseModel(ModelInterface):
             self._set_name(value)
         elif key == "model_ws":
             self.change_model_ws(value)
-        elif key == "tr":
-            assert isinstance(value, discretization.reference.TemporalReference)
-            if self.dis is not None:
-                self.dis.tr = value
-            else:
-                raise Exception("cannot set TemporalReference - ModflowDis not found")
         elif key == "start_datetime":
             if self.dis is not None:
                 self.dis.start_datetime = value
-                self.tr.start_datetime = value
+                self.modeltime.start_datetime = value
             else:
                 raise Exception("cannot set start_datetime - ModflowDis not found")
         else:

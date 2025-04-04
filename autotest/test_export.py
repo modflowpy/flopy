@@ -31,6 +31,7 @@ from flopy.mf6 import (
     ModflowGwfdisv,
     ModflowGwfic,
     ModflowGwfnpf,
+    ModflowGwfoc,
     ModflowIms,
     ModflowTdis,
 )
@@ -109,6 +110,12 @@ def disu_sim(name, tmpdir, missing_arrays=False):
 
     ic = ModflowGwfic(gwf, strt=np.random.random_sample(gwf.modelgrid.nnodes) * 350)
     npf = ModflowGwfnpf(gwf, k=np.random.random_sample(gwf.modelgrid.nnodes) * 10)
+    oc = ModflowGwfoc(
+        gwf,
+        budget_filerecord=f"{name}.bud",
+        head_filerecord=f"{name}.hds",
+        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    )
 
     return sim
 
@@ -494,9 +501,9 @@ def test_shapefile(function_tmpdir, namfile):
     fnc = model.export(fnc_name)
 
     s = Reader(fnc_name)
-    assert (
-        s.numRecords == model.nrow * model.ncol
-    ), f"wrong number of records in shapefile {fnc_name}"
+    assert s.numRecords == model.nrow * model.ncol, (
+        f"wrong number of records in shapefile {fnc_name}"
+    )
 
 
 @requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
@@ -896,9 +903,9 @@ def test_export_mf6_shp(function_tmpdir):
     riv6spdarrays = dict(riv6.stress_period_data.masked_4D_arrays_itr())
     rivspdarrays = dict(riv.stress_period_data.masked_4D_arrays_itr())
     for k, v in rivspdarrays.items():
-        assert (
-            np.abs(np.nansum(v) - np.nansum(riv6spdarrays[k])) < 1e-6
-        ), f"variable {k} is not equal"
+        assert np.abs(np.nansum(v) - np.nansum(riv6spdarrays[k])) < 1e-6, (
+            f"variable {k} is not equal"
+        )
         pass
 
     m.export(function_tmpdir / "mfnwt.shp")
@@ -1579,9 +1586,9 @@ def test_vtk_vertex(function_tmpdir, example_data_path):
     hk = gwf.npf.k.array
     hk[gwf.modelgrid.idomain == 0] = np.nan
 
-    assert np.allclose(
-        np.ravel(hk), hk2, equal_nan=True
-    ), "Field data not properly written"
+    assert np.allclose(np.ravel(hk), hk2, equal_nan=True), (
+        "Field data not properly written"
+    )
 
 
 @requires_exe("mf2005")
@@ -1652,9 +1659,9 @@ def test_vtk_pathline(function_tmpdir, example_data_path):
 
     assert len(totim) == 12054, "Array size is incorrect"
     assert np.abs(np.max(totim) - maxtime) < 100, "time values are incorrect"
-    assert len(np.unique(pid)) == len(
-        plines
-    ), "number of particles are incorrect for modpath VTK"
+    assert len(np.unique(pid)) == len(plines), (
+        "number of particles are incorrect for modpath VTK"
+    )
 
 
 def grid2disvgrid(nrow, ncol):

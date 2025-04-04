@@ -611,8 +611,7 @@ def get_specific_discharge(
 
         else:
             raise IndexError(
-                "Classical budget components must have "
-                "the same shape as the modelgrid"
+                "Classical budget components must have the same shape as the modelgrid"
             )
     else:
         spdis = vectors

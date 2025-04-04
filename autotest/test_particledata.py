@@ -245,6 +245,33 @@ def test_particledata_to_prp_dis_1():
         assert np.isclose(rpt[6], minz + (exp[ci][5] * (maxz - minz)))
 
 
+def test_particledata_to_prp_dis_1_global_xy():
+    # model grid
+    xoff = 100.0
+    yoff = 300.0
+    grid = GridCases().structured_small(xoff=xoff, yoff=yoff)
+
+    # particle data
+    cells = [(0, 1, 1), (0, 1, 2)]
+    part_data = ParticleData(partlocs=cells, structured=True)
+
+    # convert to global coordinates
+    rpts_prt_model_coords = flatten(list(part_data.to_prp(grid)))
+    rpts_prt_global_coords = flatten(list(part_data.to_prp(grid, global_xy=True)))
+
+    # check global and model coords
+    # x
+    assert np.all(
+        np.array(rpts_prt_global_coords)[:, -3] - xoff
+        == np.array(rpts_prt_model_coords)[:, -3]
+    )
+    # y
+    assert np.all(
+        np.array(rpts_prt_global_coords)[:, -2] - yoff
+        == np.array(rpts_prt_model_coords)[:, -2]
+    )
+
+
 def test_particledata_to_prp_dis_9():
     # minimal structured grid
     grid = GridCases().structured_small()

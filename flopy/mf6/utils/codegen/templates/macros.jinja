@@ -1,0 +1,27 @@
+{% macro init_params(vars, alias=false, skip=none) %}
+{% for name, var in vars.items() if name not in skip %}
+{% set v = var|untag %}
+{% set n = (name if alias else v.name)|safe_name %}
+{{ n }}={{ v|default_value|value }},
+{% endfor %}
+{% endmacro %}
+
+{% macro docstrings(vars, recurse=true) %}
+{% for var in vars.values() recursive %}
+{% set v = var|untag %}
+{% set n = v.name|safe_name %}
+{% set children = v|children %}
+{% if loop.depth > 1 %}* {% endif %}{{ n }} : {{ v|type }}
+{% if v.description is defined and v.description is not none %}
+{{ v.description|clean|math|wordwrap|indent(loop.depth * 4, first=true) }}
+{% endif %}
+{% if recurse and children is not none %}
+{% if v.type == "list" and children|length == 1 and (children.values()|first).type in ["record", "union"] %}
+{% set grandchildren = (children.values()|first)|children %}
+{{ loop(grandchildren.values())|indent(loop.depth * 4, first=true) }} 
+{% else %}
+{{ loop(children.values())|indent(loop.depth * 4, first=true) }}
+{% endif %}
+{% endif %}
+{% endfor %}
+{% endmacro %}

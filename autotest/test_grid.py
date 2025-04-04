@@ -426,9 +426,9 @@ def test_structured_from_gridspec(example_data_path, spc_file):
     assert isinstance(modelgrid, StructuredGrid)
 
     lc = modelgrid.plot()
-    assert isinstance(
-        lc, matplotlib.collections.LineCollection
-    ), f"could not plot grid object created from {fn}"
+    assert isinstance(lc, matplotlib.collections.LineCollection), (
+        f"could not plot grid object created from {fn}"
+    )
     plt.close()
 
     extents = modelgrid.extent
@@ -442,9 +442,9 @@ def test_structured_from_gridspec(example_data_path, spc_file):
         8000 + 8000 * np.sin(theta),  # ymax
     )
     errmsg = f"extents {extents} of {fn} does not equal {rotated_extents}"
-    assert all(
-        np.isclose(x, x0) for x, x0 in zip(modelgrid.extent, rotated_extents)
-    ), errmsg
+    assert all(np.isclose(x, x0) for x, x0 in zip(modelgrid.extent, rotated_extents)), (
+        errmsg
+    )
 
     ncpl = modelgrid.ncol * modelgrid.nrow
     assert modelgrid.ncpl == ncpl, f"ncpl ({modelgrid.ncpl}) does not equal {ncpl}"
@@ -454,9 +454,9 @@ def test_structured_from_gridspec(example_data_path, spc_file):
     maxvertex = max([max(sublist[1:]) for sublist in iverts])
     assert maxvertex + 1 == nvert, f"nvert ({maxvertex + 1}) does not equal {nvert}"
     verts = modelgrid.verts
-    assert (
-        nvert == verts.shape[0]
-    ), f"number of vertex (x, y) pairs ({verts.shape[0]}) does not equal {nvert}"
+    assert nvert == verts.shape[0], (
+        f"number of vertex (x, y) pairs ({verts.shape[0]}) does not equal {nvert}"
+    )
 
 
 @requires_pkg("shapely")
@@ -1149,9 +1149,9 @@ def test_voronoi_grid(request, function_tmpdir, grid_info):
     plt.savefig(function_tmpdir / f"{name}.png")
 
     assert ncpl == gridprops["ncpl"] or almost_right
-    assert (
-        len(invalid_cells) == 0
-    ), f"The following cells do not have 3 or more vertices.\n{invalid_cells}"
+    assert len(invalid_cells) == 0, (
+        f"The following cells do not have 3 or more vertices.\n{invalid_cells}"
+    )
 
 
 @pytest.fixture
@@ -1257,21 +1257,21 @@ def test_structured_ncb_thickness():
     grid = GridCases.structured_cbd_small()
     thickness = grid.cell_thickness
 
-    assert thickness.shape[0] == grid.nlay + np.count_nonzero(
-        grid.laycbd
-    ), "grid cell_thickness attribute returns incorrect shape"
+    assert thickness.shape[0] == grid.nlay + np.count_nonzero(grid.laycbd), (
+        "grid cell_thickness attribute returns incorrect shape"
+    )
 
     thickness = grid.remove_confining_beds(grid.cell_thickness)
     assert thickness.shape == grid.shape, "quasi3d confining beds not properly removed"
 
     sat_thick = grid.saturated_thickness(grid.cell_thickness)
-    assert (
-        sat_thick.shape == grid.shape
-    ), "saturated_thickness confining beds not removed"
+    assert sat_thick.shape == grid.shape, (
+        "saturated_thickness confining beds not removed"
+    )
 
-    assert (
-        sat_thick[1, 0, 0] == 20
-    ), "saturated_thickness is not properly indexing confining beds"
+    assert sat_thick[1, 0, 0] == 20, (
+        "saturated_thickness is not properly indexing confining beds"
+    )
 
 
 @pytest.mark.parametrize(
@@ -1279,9 +1279,9 @@ def test_structured_ncb_thickness():
 )
 def test_unstructured_iverts(grid):
     iverts = grid.iverts
-    assert not any(
-        None in l for l in iverts
-    ), "None type should not be returned in iverts list"
+    assert not any(None in l for l in iverts), (
+        "None type should not be returned in iverts list"
+    )
 
 
 @pytest.mark.parametrize(

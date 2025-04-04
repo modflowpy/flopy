@@ -26,6 +26,15 @@ description is a flag that controls printing of detailed memory manager usage to
 mf6internal prmem
 
 block options
+name profile_option
+type string
+reader urword
+optional true
+longname profiling option
+description is a flag that controls performance profiling and reporting.  NONE disables profiling. SUMMARY means to measure and print a coarse performance profile. DETAIL means collect and print information with the highest resolution available. NONE is default if PROFILE\_OPTION is not specified.
+mf6internal prprof
+
+block options
 name maxerrors
 type integer
 reader urword

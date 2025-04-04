@@ -26,7 +26,7 @@ __license__ = "CC0"
 
 from typing import Dict, List, Tuple
 
-default_owner = "MODFLOW-USGS"
+default_owner = "MODFLOW-ORG"
 default_repo = "executables"
 # key is the repo name, value is the renamed file prefix for the download
 renamed_prefix = {
@@ -35,15 +35,6 @@ renamed_prefix = {
     "modflow6-nightly-build": "modflow6_nightly",
 }
 available_repos = list(renamed_prefix.keys())
-available_ostags = [
-    "linux",
-    "mac",
-    "macarm",
-    "win32",
-    "win64",
-    "win64ext",
-    "win64par",
-]
 max_http_tries = 3
 
 # Check if this is running from flopy
@@ -83,9 +74,7 @@ def get_suffixes(ostag) -> Tuple[str, str]:
     elif "mac" in ostag:
         return "", ".dylib"
     else:
-        raise KeyError(
-            f"unrecognized ostag {ostag!r}; choose one of {available_ostags}"
-        )
+        raise KeyError(f"unrecognized ostag {ostag!r}")
 
 
 def get_request(url, params={}):
@@ -310,7 +299,7 @@ def run_main(
         Writable path to extract executables. Auto-select options start with a
         colon character. See error message or other documentation for further
         information on auto-select options.
-    owner : str, default "MODFLOW-USGS"
+    owner : str, default "MODFLOW-ORG"
         Name of GitHub repository owner (user or organization).
     repo : str, default "executables"
         Name of GitHub repository. Choose one of "executables" (default),
@@ -699,7 +688,6 @@ Examples:
     )
     parser.add_argument(
         "--ostag",
-        choices=available_ostags,
         help="Operating system tag; default is to automatically choose.",
     )
     parser.add_argument(

@@ -626,30 +626,17 @@ def test_cellbudgetfile_reverse_mf6(example_data_path, function_tmpdir):
     assert len(f) == 2
     assert len(rf) == 2
 
-    # check data were reversed
-    nrecords = len(f)
-    for idx in range(nrecords - 1, -1, -1):
-        # check headers
-        f_header = list(f.recordarray[nrecords - idx - 1])
-        rf_header = list(rf.recordarray[idx])
-        f_totim = f_header.pop(9)  # todo check totim
-        rf_totim = rf_header.pop(9)
-        assert f_header == rf_header
+    kstpkper = f.get_kstpkper()
+    times = f.get_times()
+    tmax = times[-1]
+    budtxt = "FLOW JA FACE"
+    perlen = tdis.perioddata.get_data().perlen
 
-        # check data
-        f_data = f.get_data(idx=idx)[0]
-        rf_data = rf.get_data(idx=nrecords - idx - 1)[0]
-        assert f_data.shape == rf_data.shape
-        if f_data.ndim == 1:
-            for row in range(len(f_data)):
-                f_datum = f_data[row]
-                rf_datum = rf_data[row]
-                # flows should be negated
-                rf_datum[2] = -rf_datum[2]
-                assert f_datum == rf_datum
-        else:
-            # flows should be negated
-            assert np.array_equal(f_data[0][0], -rf_data[0][0])
+    for (_, kper), t in zip(kstpkper, times):
+        budget = f.get_data(text=budtxt, totim=t)[0]
+        budget_rev = rf.get_data(text=budtxt, totim=tmax - t + perlen[kper])[0]
+        assert budget.shape == budget_rev.shape
+        assert np.allclose(budget, -budget_rev)
 
 
 def test_read_mf6_budgetfile(example_data_path):

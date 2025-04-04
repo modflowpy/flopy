@@ -2,17 +2,20 @@ import os
 import shutil
 import tempfile
 import time
+from pathlib import Path
 from warnings import warn
-
-from .createpackages import create_packages
 
 thisfilepath = os.path.dirname(os.path.abspath(__file__))
 flopypth = os.path.join(thisfilepath, "..", "..")
 flopypth = os.path.abspath(flopypth)
 protected_dfns = ["flopy.dfn"]
-
-default_owner = "MODFLOW-USGS"
+default_owner = "MODFLOW-ORG"
 default_repo = "modflow6"
+
+_MF6_PATH = Path(__file__).parents[1]
+_DFN_PATH = _MF6_PATH / "data" / "dfn"
+_TOML_PATH = _DFN_PATH / "toml"
+_TGT_PATH = _MF6_PATH / "modflow"
 
 
 def delete_files(files, pth, allow_failure=False, exclude=None):
@@ -87,7 +90,7 @@ def backup_existing_dfns(flopy_dfn_path):
     ), f"dfn backup files not found: {backup_folder}"
 
 
-def replace_dfn_files(new_dfn_pth, flopy_dfn_path):
+def replace_dfn_files(new_dfn_pth, flopy_dfn_path, exclude):
     # remove the old files, unless the file is protected
     filenames = os.listdir(flopy_dfn_path)
     delete_files(filenames, flopy_dfn_path, exclude=protected_dfns)
@@ -95,6 +98,9 @@ def replace_dfn_files(new_dfn_pth, flopy_dfn_path):
     # copy the new ones into the folder
     filenames = os.listdir(new_dfn_pth)
     for filename in filenames:
+        if exclude and any(pattern in filename for pattern in exclude):
+            print(f"  excluding..{filename}")
+            continue
         filename_w_path = os.path.join(new_dfn_pth, filename)
         print(f"  copying..{filename}")
         shutil.copy(filename_w_path, flopy_dfn_path)
@@ -117,6 +123,7 @@ def generate_classes(
     ref="master",
     dfnpath=None,
     backup=True,
+    exclude=None
 ):
     """
     Generate the MODFLOW 6 flopy classes using definition files from the
@@ -125,7 +132,7 @@ def generate_classes(
 
     Parameters
     ----------
-    owner : str, default "MODFLOW-USGS"
+    owner : str, default "MODFLOW-ORG"
         Owner of the MODFLOW 6 repository to use to update the definition
         files and generate the MODFLOW 6 classes.
     repo : str, default "modflow6"
@@ -146,14 +153,15 @@ def generate_classes(
     backup : bool, default True
         Keep a backup of the definition files in dfn_backup with a date and
         timestamp from when the definition files were replaced.
-
+    exclude : list of str, optional, default None
+        Patterns for excluding DFN files and corresponding components.
     """
 
     # print header
     print(2 * "\n")
     print(72 * "*")
     print("Updating the flopy MODFLOW 6 classes")
-    flopy_dfn_path = os.path.join(flopypth, "mf6", "data", "dfn")
+    flopy_dfn_path = (Path(flopypth) / "mf6" / "data" / "dfn").expanduser().absolute()
 
     # download the dfn files and put them in flopy.mf6.data or update using
     # user provided dfnpath
@@ -180,16 +188,28 @@ def generate_classes(
         print(f"  Backup existing definition files in: {flopy_dfn_path}")
         backup_existing_dfns(flopy_dfn_path)
 
-    print("  Replacing existing definition files with new ones.")
-    replace_dfn_files(new_dfn_pth, flopy_dfn_path)
-    if dfnpath is None:
-        shutil.rmtree(new_dfn_pth)
+    new_dfn_path = Path(new_dfn_pth).expanduser().absolute()
 
-    print("  Deleting existing mf6 classes.")
+    if (new_dfn_path == flopy_dfn_path):
+        print("  Using pre-existing definition files")
+    else:
+        print("  Replacing existing definition files")
+        replace_dfn_files(new_dfn_pth, flopy_dfn_path, exclude)
+        if dfnpath is None:
+            shutil.rmtree(new_dfn_pth)
+
+    print("  Deleting existing mf6 classes")
     delete_mf6_classes()
 
-    print("  Create mf6 classes using the downloaded definition files.")
-    create_packages()
+    # convert dfns to toml.. when we
+    # do this upstream, remove this.
+    _TOML_PATH.mkdir(exist_ok=True)
+    from modflow_devtools.dfn2toml import convert as dfn2toml
+    dfn2toml(_DFN_PATH, _TOML_PATH)
+
+    print("  Create mf6 classes using the definition files.")
+    from flopy.mf6.utils.codegen import make_all
+    make_all(_TOML_PATH, _TGT_PATH, version=2)
     list_files(os.path.join(flopypth, "mf6", "modflow"))
 
 
@@ -223,6 +243,11 @@ def cli_main():
         "--dfnpath",
         help="Path to a definition file folder that will be used to generate "
         "the MODFLOW 6 classes.",
+    )
+    parser.add_argument(
+        "--exclude",
+        help="Exclude DFNs matching a pattern.",
+        action="append"
     )
     parser.add_argument(
         "--no-backup",

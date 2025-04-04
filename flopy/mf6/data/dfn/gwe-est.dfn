@@ -9,12 +9,20 @@ longname save calculated flows to budget file
 description REPLACE save_flows {'{#1}': 'EST'}
 
 block options
-name zero_order_decay
+name zero_order_decay_water
 type keyword
 reader urword
 optional true
-longname activate zero-order decay
-description is a text keyword to indicate that zero-order decay will occur.  Use of this keyword requires that DECAY is specified in the GRIDDATA block.
+longname activate zero-order decay in aqueous phase
+description is a text keyword to indicate that zero-order decay will occur in the aqueous phase. That is, decay occurs in the water and is a rate per volume of water only, not per volume of aquifer (i.e., grid cell).  Use of this keyword requires that DECAY\_WATER is specified in the GRIDDATA block.
+
+block options
+name zero_order_decay_solid
+type keyword
+reader urword
+optional true
+longname activate zero-order decay in solid phase
+description is a text keyword to indicate that zero-order decay will occur in the solid phase. That is, decay occurs in the solid and is a rate per mass (not volume) of solid only.  Use of this keyword requires that DECAY\_SOLID is specified in the GRIDDATA block.
 
 block options
 name density_water
@@ -58,14 +66,24 @@ longname porosity
 description is the mobile domain porosity, defined as the mobile domain pore volume per mobile domain volume.  The GWE model does not support the concept of an immobile domain in the context of heat transport. 
 
 block griddata
-name decay
+name decay_water
 type double precision
 shape (nodes)
 reader readarray
 layered true
 optional true
 longname aqueous phase decay rate coefficient
-description is the rate coefficient for zero-order decay for the aqueous phase of the mobile domain.  A negative value indicates heat (energy) production.  The dimensions of decay for zero-order decay is energy per length cubed per time.  Zero-order decay will have no effect on simulation results unless zero-order decay is specified in the options block.
+description is the rate coefficient for zero-order decay for the aqueous phase of the mobile domain.  A negative value indicates heat (energy) production.  The dimensions of zero-order decay in the aqueous phase are energy per length cubed (volume of water) per time.  Zero-order decay in the aqueous phase will have no effect on simulation results unless ZERO\_ORDER\_DECAY\_WATER is specified in the options block.
+
+block griddata
+name decay_solid
+type double precision
+shape (nodes)
+reader readarray
+layered true
+optional true
+longname solid phase decay rate coefficient
+description is the rate coefficient for zero-order decay for the solid phase.  A negative value indicates heat (energy) production. The dimensions of zero-order decay in the solid phase are energy per mass of solid per time. Zero-order decay in the solid phase will have no effect on simulation results unless ZERO\_ORDER\_DECAY\_SOLID is specified in the options block.
 
 block griddata
 name heat_capacity_solid

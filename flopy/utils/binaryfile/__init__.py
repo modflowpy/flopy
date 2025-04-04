@@ -19,132 +19,10 @@ from typing import Optional, Union
 import numpy as np
 import pandas as pd
 
+from flopy.discretization.modeltime import ModelTime
+
 from ..datafile import Header, LayerFile
 from ..gridutil import get_lni
-
-HEAD_TEXT = "            HEAD"
-
-
-def write_head(
-    fbin,
-    data,
-    kstp=1,
-    kper=1,
-    pertim=1.0,
-    totim=1.0,
-    text=HEAD_TEXT,
-    ilay=1,
-):
-    dt = np.dtype(
-        [
-            ("kstp", np.int32),
-            ("kper", np.int32),
-            ("pertim", np.float64),
-            ("totim", np.float64),
-            ("text", "S16"),
-            ("ncol", np.int32),
-            ("nrow", np.int32),
-            ("ilay", np.int32),
-        ]
-    )
-    nrow = data.shape[0]
-    ncol = data.shape[1]
-    h = np.array((kstp, kper, pertim, totim, text, ncol, nrow, ilay), dtype=dt)
-    h.tofile(fbin)
-    data.tofile(fbin)
-
-
-def write_budget(
-    fbin,
-    data,
-    kstp=1,
-    kper=1,
-    text="    FLOW-JA-FACE",
-    imeth=1,
-    delt=1.0,
-    pertim=1.0,
-    totim=1.0,
-    text1id1="           GWF-1",
-    text2id1="           GWF-1",
-    text1id2="           GWF-1",
-    text2id2="             NPF",
-):
-    dt = np.dtype(
-        [
-            ("kstp", np.int32),
-            ("kper", np.int32),
-            ("text", "S16"),
-            ("ndim1", np.int32),
-            ("ndim2", np.int32),
-            ("ndim3", np.int32),
-            ("imeth", np.int32),
-            ("delt", np.float64),
-            ("pertim", np.float64),
-            ("totim", np.float64),
-        ]
-    )
-
-    if imeth == 1:
-        ndim1 = data.shape[0]
-        ndim2 = 1
-        ndim3 = -1
-        h = np.array(
-            (kstp, kper, text, ndim1, ndim2, ndim3, imeth, delt, pertim, totim),
-            dtype=dt,
-        )
-        h.tofile(fbin)
-        data.tofile(fbin)
-
-    elif imeth == 6:
-        ndim1 = 1
-        ndim2 = 1
-        ndim3 = -1
-        h = np.array(
-            (kstp, kper, text, ndim1, ndim2, ndim3, imeth, delt, pertim, totim),
-            dtype=dt,
-        )
-        h.tofile(fbin)
-
-        # write text1id1, ...
-        dt = np.dtype(
-            [
-                ("text1id1", "S16"),
-                ("text1id2", "S16"),
-                ("text2id1", "S16"),
-                ("text2id2", "S16"),
-            ]
-        )
-        h = np.array((text1id1, text1id2, text2id1, text2id2), dtype=dt)
-        h.tofile(fbin)
-
-        # write ndat (number of floating point columns)
-        colnames = data.dtype.names
-        ndat = len(colnames) - 2
-        dt = np.dtype([("ndat", np.int32)])
-        h = np.array([(ndat,)], dtype=dt)
-        h.tofile(fbin)
-
-        # write auxiliary column names
-        naux = ndat - 1
-        if naux > 0:
-            auxtxt = [f"{colname:16}" for colname in colnames[3:]]
-            auxtxt = tuple(auxtxt)
-            dt = np.dtype([(colname, "S16") for colname in colnames[3:]])
-            h = np.array(auxtxt, dtype=dt)
-            h.tofile(fbin)
-
-        # write nlist
-        nlist = data.shape[0]
-        dt = np.dtype([("nlist", np.int32)])
-        h = np.array([(nlist,)], dtype=dt)
-        h.tofile(fbin)
-
-        # write the data
-        data.tofile(fbin)
-
-        pass
-    else:
-        raise Exception(f"unknown method code {imeth}")
 
 
 class BinaryHeader(Header):
@@ -650,42 +528,27 @@ class HeadFile(BinaryLayerFile):
             else self.filename
         )
 
-        def get_max_kper_kstp_tsim():
-            header = self.recordarray[-1]
-            kper = header["kper"] - 1
-            tsim = header["totim"]
-            kstp = {0: 0}
-            for i in range(len(self) - 1, -1, -1):
-                header = self.recordarray[i]
-                if header["kper"] in kstp and header["kstp"] > kstp[header["kper"]]:
-                    kstp[header["kper"]] += 1
-                else:
-                    kstp[header["kper"]] = 0
-            return kper, kstp, tsim
-
-        maxkper, maxkstp, maxtsim = get_max_kper_kstp_tsim()
-        prev_kper = None
-        perlen = None
+        time = ModelTime.from_headers(self.recordarray)
+        time._set_totim_dict()
+        trev = time.reverse()
+        trev._set_totim_dict()
+        nper = time.nper
+        seen = set()
 
         def reverse_header(header):
             """Reverse period, step and time fields in the record header"""
 
-            nonlocal prev_kper
-            nonlocal perlen
-
-            # reverse kstp and kper headers
-            kstp = header["kstp"] - 1
+            nonlocal seen
             kper = header["kper"] - 1
-            header["kstp"] = maxkstp[kper] - kstp + 1
-            header["kper"] = maxkper - kper + 1
-
-            if kper != prev_kper:
-                perlen = header["pertim"]
-            prev_kper = kper
-
-            # reverse totim and pertim headers
-            header["totim"] = maxtsim - header["totim"]
-            header["pertim"] = perlen - header["pertim"]
+            kstp = header["kstp"] - 1
+            header = header.copy()
+            header["kper"] = nper - kper
+            header["kstp"] = time.nstp[kper] - kstp
+            kper = header["kper"] - 1
+            kstp = header["kstp"] - 1
+            seen.add((kper, kstp))
+            header["pertim"] = trev._pertim_dict[(kper, kstp)]
+            header["totim"] = trev._totim_dict[(kper, kstp)]
             return header
 
         target = filename
@@ -703,17 +566,32 @@ class HeadFile(BinaryLayerFile):
             for i in range(len(self) - 1, -1, -1):
                 header = self.recordarray[i].copy()
                 header = reverse_header(header)
-                data = self.get_data(idx=i)
+                text = header["text"]
                 ilay = header["ilay"]
-                write_head(
-                    fbin=f,
-                    data=data[ilay - 1],
-                    kstp=header["kstp"],
-                    kper=header["kper"],
-                    pertim=header["pertim"],
-                    totim=header["totim"],
-                    ilay=ilay,
+                kstp = header["kstp"]
+                kper = header["kper"]
+                pertim = header["pertim"]
+                totim = header["totim"]
+                data = self.get_data(idx=i)[ilay - 1]
+                dt = np.dtype(
+                    [
+                        ("kstp", np.int32),
+                        ("kper", np.int32),
+                        ("pertim", np.float64),
+                        ("totim", np.float64),
+                        ("text", "S16"),
+                        ("ncol", np.int32),
+                        ("nrow", np.int32),
+                        ("ilay", np.int32),
+                    ]
                 )
+                nrow = data.shape[0]
+                ncol = data.shape[1]
+                h = np.array(
+                    (kstp, kper, pertim, totim, text, ncol, nrow, ilay), dtype=dt
+                )
+                h.tofile(f)
+                data.tofile(f)
 
         # if we rewrote the original file, reinitialize
         if inplace:
@@ -1207,7 +1085,7 @@ class CellBudgetFile:
 
         try:
             self._build_index()
-        except (BudgetIndexError, EOFError):
+        except (BudgetIndexError, EOFError) as e:
             success = False
             self.__reset()
 
@@ -2289,42 +2167,27 @@ class CellBudgetFile:
         nrecords = len(self)
         target = filename
 
-        def get_max_kper_kstp_tsim():
-            header = self.recordarray[-1]
-            kper = header["kper"] - 1
-            tsim = header["totim"]
-            kstp = {0: 0}
-            for i in range(len(self) - 1, -1, -1):
-                header = self.recordarray[i]
-                if header["kper"] in kstp and header["kstp"] > kstp[header["kper"]]:
-                    kstp[header["kper"]] += 1
-                else:
-                    kstp[header["kper"]] = 0
-            return kper, kstp, tsim
-
-        maxkper, maxkstp, maxtsim = get_max_kper_kstp_tsim()
-        prev_kper = None
-        perlen = None
+        time = ModelTime.from_headers(self.recordarray)
+        time._set_totim_dict()
+        trev = time.reverse()
+        trev._set_totim_dict()
+        nper = time.nper
+        seen = set()
 
         def reverse_header(header):
             """Reverse period, step and time fields in the record header"""
 
-            nonlocal prev_kper
-            nonlocal perlen
-
-            # reverse kstp and kper headers
-            kstp = header["kstp"] - 1
+            nonlocal seen
             kper = header["kper"] - 1
-            header["kstp"] = maxkstp[kper] - kstp + 1
-            header["kper"] = maxkper - kper + 1
-
-            if kper != prev_kper:
-                perlen = header["pertim"] - 1
-            prev_kper = kper
-
-            # reverse totim and pertim headers
-            header["totim"] = maxtsim - header["totim"]
-            header["pertim"] = perlen - header["pertim"]
+            kstp = header["kstp"] - 1
+            header = header.copy()
+            header["kper"] = nper - kper
+            header["kstp"] = time.nstp[kper] - kstp
+            kper = header["kper"] - 1
+            kstp = header["kstp"] - 1
+            seen.add((kper, kstp))
+            header["pertim"] = trev._pertim_dict[(kper, kstp)]
+            header["totim"] = trev._totim_dict[(kper, kstp)]
             return header
 
         # if rewriting the same file, write
@@ -2391,7 +2254,7 @@ class CellBudgetFile:
                     h.tofile(f)
                 elif header["imeth"] == 1:
                     # Load data
-                    data = self.get_data(idx)[0][0][0]
+                    data = self.get_data(idx)[0]
                     data = np.array(data, dtype=np.float64)
                     # Negate flows
                     data = -data

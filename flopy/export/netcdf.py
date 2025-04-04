@@ -181,7 +181,7 @@ class NetCdf:
         self.model_grid = model.modelgrid
         if "modelgrid" in kwargs:
             self.model_grid = kwargs.pop("modelgrid")
-        self.model_time = model.modeltime
+        self.modeltime = model.modeltime
         if prj is not None:
             self.model_grid.proj4 = prj
         if self.model_grid.grid_type == "structured":
@@ -191,10 +191,8 @@ class NetCdf:
             raise Exception(f"Grid type {self.model_grid.grid_type} not supported.")
         self.shape = self.model_grid.shape
 
-        parser = import_optional_dependency("dateutil.parser")
-
-        dt = parser.parse(self.model_time.start_datetime)
-        self.start_datetime = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+        dt = self.modeltime.start_datetime
+        self.start_datetime = self.modeltime.get_datetime_string(dt)
         self.logger.log(f"start datetime:{self.start_datetime}")
 
         crs = get_authority_crs(self.model_grid.crs)
@@ -210,7 +208,7 @@ class NetCdf:
             "unsupported length units: " + self.grid_units
         )
 
-        self.time_units = self.model_time.time_units
+        self.time_units = self.modeltime.time_units
 
         self.log("initializing attributes")
         self.nc_crs_str = "epsg:4326"
@@ -243,7 +241,7 @@ class NetCdf:
         }
         for n, v in spatial_attribs.items():
             self.global_attributes["flopy_sr_" + n] = v
-        self.global_attributes["start_datetime"] = self.model_time.start_datetime
+        self.global_attributes["start_datetime"] = self.start_datetime
 
         self.fillvalue = FILLVALUE
 
@@ -348,10 +346,10 @@ class NetCdf:
                             attrs["long_name"] += " " + suffix
                     else:
                         continue
-                assert (
-                    new_vname not in self.nc.variables.keys()
-                ), "var already exists:{} in {}".format(
-                    new_vname, ",".join(self.nc.variables.keys())
+                assert new_vname not in self.nc.variables.keys(), (
+                    "var already exists:{} in {}".format(
+                        new_vname, ",".join(self.nc.variables.keys())
+                    )
                 )
                 attrs["max"] = var[:].max()
                 attrs["min"] = var[:].min()
@@ -481,9 +479,9 @@ class NetCdf:
 
         """
 
-        assert (
-            self.nc is not None
-        ), "can't call difference() if nc hasn't been populated"
+        assert self.nc is not None, (
+            "can't call difference() if nc hasn't been populated"
+        )
 
         netCDF4 = import_optional_dependency("netCFD4")
 
@@ -720,7 +718,7 @@ class NetCdf:
         self.log("creating dimensions")
         # time
         if time_values is None:
-            time_values = np.cumsum(self.model_time.perlen)
+            time_values = np.cumsum(self.modeltime.perlen)
         self.nc.createDimension("time", len(time_values))
         for name, length in zip(self.dimension_names, self.shape):
             self.nc.createDimension(name, length)
@@ -935,7 +933,7 @@ class NetCdf:
         for dim in dimensions:
             if dim == "time":
                 if "time" not in dimension_data:
-                    time_values = np.cumsum(self.model_time.perlen)
+                    time_values = np.cumsum(self.modeltime.perlen)
                 else:
                     time_values = dimension_data["time"]
 
@@ -1133,10 +1131,10 @@ class NetCdf:
             raise Exception(f"duplicate variable name: {name}")
 
         self.log(f"creating variable: {name}")
-        assert (
-            precision_str in PRECISION_STRS
-        ), "netcdf.create_variable() error: precision string {} not in {}".format(
-            precision_str, PRECISION_STRS
+        assert precision_str in PRECISION_STRS, (
+            "netcdf.create_variable() error: precision string {} not in {}".format(
+                precision_str, PRECISION_STRS
+            )
         )
 
         if self.nc is None:

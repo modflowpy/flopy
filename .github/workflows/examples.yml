@@ -1,4 +1,4 @@
-name: FloPy example script & notebook tests
+name: Example script & notebook tests
 
 on:
   schedule:
@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-        python-version: [ 3.9, "3.10", "3.11", "3.12" ]
+        python-version: [ "3.10", "3.11", "3.12" ]
     defaults:
       run:
         shell: bash -l {0}
@@ -34,7 +34,9 @@ jobs:
             powershell
 
       - name: Install FloPy
-        run: pip install .
+        run: |
+          pip install .
+          pip install ".[codegen]"
 
       - name: OpenGL workaround on Linux
         if: runner.os == 'Linux'

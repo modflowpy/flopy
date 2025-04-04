@@ -1,4 +1,4 @@
-name: FloPy documentation
+name: Documentation
 on:
   push:
   pull_request:
@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   set_options:
-    name: Set release options
+    name: Set options
     runs-on: ubuntu-22.04
     outputs:
       ref: ${{ steps.set_ref.outputs.ref }}

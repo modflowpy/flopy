@@ -384,9 +384,9 @@ class Gridgen:
             )
 
         # make sure shapefile exists
-        assert (
-            shapefile_path and shapefile_path.is_file()
-        ), f"Shapefile does not exist: {shapefile_path}"
+        assert shapefile_path and shapefile_path.is_file(), (
+            f"Shapefile does not exist: {shapefile_path}"
+        )
 
         # store shapefile info
         self._addict[shapefile_path.stem] = relpath_safe(shapefile_path, self.model_ws)
@@ -436,9 +436,9 @@ class Gridgen:
             )
 
         # make sure shapefile exists
-        assert (
-            shapefile_path and shapefile_path.is_file()
-        ), f"Shapefile does not exist: {shapefile_path}"
+        assert shapefile_path and shapefile_path.is_file(), (
+            f"Shapefile does not exist: {shapefile_path}"
+        )
 
         # store shapefile info
         self._rfdict[shapefile_path.stem] = [

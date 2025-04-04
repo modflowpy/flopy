@@ -1,8 +1,6 @@
 [build-system]
-requires = [
-    "setuptools >=61",
-]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling", "hatch-fancy-pypi-readme"]
+build-backend = "hatchling.build"
 
 [project]
 name = "flopy"
@@ -20,23 +18,26 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Hydrology",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "numpy>=1.20.3",
     "matplotlib >=1.4.0",
-    "pandas >=2.0.0"
+    "pandas >=2.0.0",
 ]
 dynamic = ["version", "readme"]
 
 [project.optional-dependencies]
-dev = ["flopy[lint,test,optional,doc]", "tach"]
+dev = ["flopy[codegen,lint,test,optional,doc]", "tach"]
+codegen = [
+    "Jinja2>=3.0",
+    "modflow-devtools[dfn] @ git+https://github.com/MODFLOW-ORG/modflow-devtools.git",   
+]
 lint = ["cffconvert", "codespell[toml] >=2.2.2", "ruff"]
 test = [
     "flopy[lint]",
@@ -46,7 +47,7 @@ test = [
     "jupyter",
     "jupyter_client >=8.4.0", # avoid datetime.utcnow() deprecation warning
     "jupytext",
-    "modflow-devtools",
+    "modflow-devtools[dfn] @ git+https://github.com/MODFLOW-ORG/modflow-devtools.git",
     "pytest !=8.1.0",
     "pytest-benchmark",
     "pytest-cov",
@@ -74,8 +75,9 @@ optional = [
     "rasterstats",
     "scipy",
     "shapely >=2.0",
-    "vtk",
+    "vtk >=9.4.0",
     "xmipy",
+    "h5py",
 ]
 doc = [
     "flopy[optional]",
@@ -99,20 +101,32 @@ Documentation = "https://flopy.readthedocs.io"
 "Bug Tracker" = "https://github.com/modflowpy/flopy/issues"
 "Source Code" = "https://github.com/modflowpy/flopy"
 
-[tool.setuptools]
-include-package-data = true
-zip-safe = false
+[tool.hatch.build.targets.sdist]
+only-include = [
+    "CITATION.cff",
+    "README.md",
+    "docs",
+    "flopy",
+]
 
-[tool.setuptools.dynamic]
-version = {attr = "flopy.version.__version__"}
-readme = {file = ["docs/PyPI_release.md", "LICENSE.md"], content-type = "text/markdown"}
+[tool.hatch.build.targets.wheel]
+packages = ["flopy"]
 
-[tool.setuptools.packages.find]
-include = ["flopy", "flopy.*"]
+[tool.hatch.metadata]
+# temporary, until new devtools release
+allow-direct-references = true
 
-[tool.setuptools.package-data]
-"flopy.mf6.data" = ["dfn/*.dfn"]
-"flopy.plot" = ["mplstyle/*.mplstyle"]
+[tool.hatch.metadata.hooks.fancy-pypi-readme]
+content-type = "text/markdown"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "docs/PyPI_release.md"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "LICENSE.md"
+
+[tool.hatch.version]
+path = "flopy/version.py"
 
 [tool.ruff]
 line-length = 88
@@ -164,7 +178,7 @@ ignore = [
 "flopy/mf6/**/*.py" = ["C4", "E", "F", "ISC", "RUF"]
 
 [tool.codespell]
-skip = "cliff.toml,./examples/data/*"
+skip = "cliff.toml,./examples/data/*,./autotest/test_modeltime.py"
 ignore-words-list = [
     "alltime",
     "dum",

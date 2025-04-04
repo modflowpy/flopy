@@ -17,7 +17,6 @@
 #       - name: Christian Langevin
 # ---
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # # Making Maps of Your Model
 # This notebook demonstrates the mapping capabilities of FloPy. It demonstrates these capabilities by loading and running existing models and then showing how the PlotMapView object and its methods can be used to make nice plots of the model grid, boundary conditions, model results, shape files, etc.
 #
@@ -47,7 +46,6 @@ print(f"numpy version: {np.__version__}")
 print(f"matplotlib version: {mpl.__version__}")
 print(f"flopy version: {flopy.__version__}")
 
-# + pycharm={"name": "#%%\n"}
 # Set name of MODFLOW exe
 # assumes executable is in users path statement
 v2005 = "mf2005"
@@ -58,7 +56,7 @@ exe_mp = "mp6"
 sim_name = "freyberg"
 
 # Set the paths
-tempdir = TemporaryDirectory()
+tempdir = TemporaryDirectory(delete=False)
 modelpth = Path(tempdir.name)
 
 # Check if we are in the repository and define the data path.
@@ -70,7 +68,6 @@ except:
 
 data_path = root / "examples" / "data" if root else Path.cwd()
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Load and Run an Existing MODFLOW-2005 Model
 # A model called the "Freyberg Model" is located in the modelpth folder.  In the following code block, we load that model, then change into a new workspace (modelpth) where we recreate and run the model.  For this to work properly, the MODFLOW-2005 executable (mf2005) must be in the path.  We verify that it worked correctly by checking for the presence of freyberg.hds and freyberg.cbc.
 
@@ -113,7 +110,6 @@ for f in files:
         errmsg = f"Error. Output file cannot be found: {f}"
         print(errmsg)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Create and Run MODPATH 6 model
 #
 # The MODFLOW-2005 model created in the previous code block will be used to create a endpoint capture zone and pathline analysis for the pumping wells in the model.
@@ -150,11 +146,9 @@ sim = mpp.create_mpsim(trackdir="backward", simtype="pathline", packages="WEL")
 mpp.write_input()
 mpp.run_model()
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Creating a Map of the Model Grid
 # Now that we have a model, we can use the flopy plotting utilities to make maps.  We will start by making a map of the model grid using the `PlotMapView` class and the `plot_grid()` method of that class.
 
-# + pycharm={"name": "#%%\n"}
 # First step is to set up the plot
 fig = plt.figure(figsize=(8, 8))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
@@ -169,14 +163,12 @@ linecollection = mapview.plot_grid()
 
 t = ax.set_title("Model Grid")
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ## Grid transformations and setting coordinate information
 #
 # The `PlotMapView` class can plot the position of the model grid in space. However, transformations must be done on the modelgrid  using `set_coord_info()`. This allows the user to set the coordinate information once, and then they are able to generate as many instanstances of `PlotMapView` as they wish, without providing the coordinate info again.
 #
 # Here we demonstrate the effects of these values.  In the first two plots, the grid origin (lower left corner) remains fixed at (0, 0). These first two plots demostrate how work with coordinate info in the `PlotMapView` class. The third example shows the grid origin set at (507000 E, 2927000 N)
 
-# + pycharm={"name": "#%%\n"}
 fig = plt.figure(figsize=(18, 6))
 
 ax = fig.add_subplot(1, 3, 1, aspect="equal")
@@ -205,12 +197,10 @@ mapview = flopy.plot.PlotMapView(model=ml)
 linecollection = mapview.plot_grid()
 t = ax.set_title("xoffset, yoffset, and rotation")
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Ploting Ibound
 #
 # The `plot_ibound()` method can be used to plot the boundary conditions contained in the ibound arrray, which is part of the MODFLOW Basic Package.  The `plot_ibound()` method returns a matplotlib QuadMesh object (matplotlib.collections.QuadMesh).  If you are familiar with the matplotlib collections, then this may be important to you, but if not, then don't worry about the return objects of these plotting function.
 
-# + pycharm={"name": "#%%\n"}
 fig = plt.figure(figsize=(8, 8))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
 
@@ -220,17 +210,14 @@ mapview = flopy.plot.PlotMapView(model=ml)
 quadmesh = mapview.plot_ibound()
 linecollection = mapview.plot_grid()
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # We can also change the colors by calling the `color_noflow` and `color_ch` parameters in `plot_ibound()` and the `colors` parameter in `plot_grid()`
 
-# + pycharm={"name": "#%%\n"}
 fig = plt.figure(figsize=(8, 8))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
 mapview = flopy.plot.PlotMapView(model=ml)
 quadmesh = mapview.plot_ibound(color_noflow="red", color_ch="orange")
 linecollection = mapview.plot_grid(colors="yellow")
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting Boundary Conditions
 # The plot_bc() method can be used to plot boundary conditions.  It is setup to use the following dictionary to assign colors, however, these colors can be changed in the method call.
 #
@@ -239,7 +226,6 @@ linecollection = mapview.plot_grid(colors="yellow")
 #
 # Here, we plot the location of river cells and the location of well cells.
 
-# + pycharm={"name": "#%%\n"}
 fig = plt.figure(figsize=(8, 8))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
 mapview = flopy.plot.PlotMapView(model=ml)
@@ -248,10 +234,8 @@ quadmesh = mapview.plot_bc("RIV")
 quadmesh = mapview.plot_bc("WEL")
 linecollection = mapview.plot_grid()
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # The colors can be changed by using the `color_noflow` and `color_ch` parameters in `plot_ibound()`, the `color` parameter in `plot_bc()`, and the `colors` parameter in `plot_grid()`
 
-# + pycharm={"name": "#%%\n"}
 fig = plt.figure(figsize=(8, 8))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
 mapview = flopy.plot.PlotMapView(model=ml)
@@ -260,12 +244,10 @@ quadmesh = mapview.plot_bc("RIV", color="purple")
 quadmesh = mapview.plot_bc("WEL", color="navy")
 linecollection = mapview.plot_grid(colors="yellow")
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting an Array
 #
 # `PlotMapView` has a `plot_array()` method.  The `plot_array()` method will accept either a 2D or 3D array.  If a 3D array is passed, then the `layer` parameter for the `PlotMapView` object will be used (note that the `PlotMapView` object can be created with a `layer=` argument).
 
-# + pycharm={"name": "#%%\n"}
 # Create a random array and plot it
 a = np.random.random((ml.dis.nrow, ml.dis.ncol))
 
@@ -277,7 +259,6 @@ quadmesh = mapview.plot_array(a)
 linecollection = mapview.plot_grid()
 cb = plt.colorbar(quadmesh, shrink=0.5)
 
-# + pycharm={"name": "#%%\n"}
 # Plot the model bottom array
 a = ml.dis.botm.array
 
@@ -289,12 +270,10 @@ quadmesh = mapview.plot_array(a)
 linecollection = mapview.plot_grid()
 cb = plt.colorbar(quadmesh, shrink=0.5)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Contouring an Array
 #
 # `PlotMapView` also has a `contour_array()` method.  It also takes a 2D or 3D array and will contour the layer slice if 3D.
 
-# + pycharm={"name": "#%%\n"}
 # Contour the model bottom array
 a = ml.dis.botm.array
 
@@ -307,7 +286,6 @@ linecollection = mapview.plot_grid()
 
 plt.colorbar(contour_set, shrink=0.75)
 
-# + pycharm={"name": "#%%\n"}
 # The contour_array() method will take any keywords
 # that can be used by the matplotlib.pyplot.contour
 # function. So we can pass in levels, for example.
@@ -329,10 +307,8 @@ sm = plt.cm.ScalarMappable(norm=norm, cmap=contour_set.cmap)
 sm.set_array([])
 fig.colorbar(sm, shrink=0.75, ax=ax)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # Array contours can be exported directly to a shapefile.
 
-# + pycharm={"name": "#%%\n"}
 from flopy.export.utils import (  # use export_contourf for filled contours
     export_contours,
 )
@@ -346,12 +322,10 @@ with Reader(shp_path) as r:
     nshapes = len(r.shapes())
     print("Contours:", nshapes)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting Heads
 #
 # So this means that we can easily plot results from the simulation by extracting heads using `flopy.utils.HeadFile`.  Here we plot the simulated heads.
 
-# + pycharm={"name": "#%%\n"}
 fname = os.path.join(modelpth, "freyberg.hds")
 hdobj = flopy.utils.HeadFile(fname)
 head = hdobj.get_data()
@@ -375,14 +349,12 @@ mapview.plot_bc("WEL")
 contour_set = mapview.contour_array(head, levels=levels)
 linecollection = mapview.plot_grid()
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting Discharge Vectors
 #
 # `PlotMapView` has a `plot_vector()` method, which takes vector components in the x- and y-directions at the cell centers. The x- and y-vector components are calculated from the `'FLOW RIGHT FACE'` and `'FLOW FRONT FACE'` arrays, which can be written by MODFLOW to the cell by cell budget file.  These array can be extracted from the cell by cell flow file using the `flopy.utils.CellBudgetFile` object as shown below.  Once they are extracted, they can be passed to the `postprocessing.get_specific_discharge()` method to get the discharge vectors and plotted using the `plot_vector()` method.
 #
 # **Note**: `postprocessing.get_specific_discharge()` also takes the head array as an optional argument.  The head array is used to convert the volumetric discharge in dimensions of $L^3/T$ to specific discharge in dimensions of $L/T$.
 
-# + pycharm={"name": "#%%\n"}
 fname = os.path.join(modelpth, "freyberg.cbc")
 cbb = flopy.utils.CellBudgetFile(fname)
 head = hdobj.get_data()
@@ -415,12 +387,10 @@ quadmesh = mapview.plot_array(head, alpha=0.5)
 quiver = mapview.plot_vector(sqx, sqy)  # include the head array for specific discharge
 linecollection = mapview.plot_grid()
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting MODPATH endpoints and pathlines
 #
 # `PlotMapView` has a `plot_endpoint()` and `plot_pathline()` method, which takes MODPATH endpoint and pathline data and plots them on the map object. Here we load the endpoint and pathline data and plot them on the head and discharge data previously plotted. Pathlines are shown for all times less than or equal to 200 years. Recharge capture zone data for all of the pumping wells are plotted as circle markers colored by travel time.
 
-# + pycharm={"name": "#%%\n"}
 # load the endpoint data
 endfile = os.path.join(modelpth, mp.sim.endpoint_file)
 endobj = flopy.utils.EndpointFile(endfile)
@@ -457,7 +427,6 @@ ctt = f"<={travel_time_max}"
 # plot the pathlines
 mapview.plot_pathline(plines, layer="all", colors="red", travel_time=ctt)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting a Shapefile
 #
 # `PlotMapView` has a `plot_shapefile()` method that can be used to quickly plot a shapefile on your map.  In order to use the `plot_shapefile()` method, you must be able to  "import shapefile".  The command `import shapefile` is part of the pyshp package.
@@ -519,12 +488,14 @@ for fname, fhash in file_names.items():
     )
 
 copytree(data_path / sim_name / "gis", modelpth / "gis")
+assert (modelpth / "gis").is_dir()
 
-# + pycharm={"name": "#%%\n"}
 # Setup the figure and PlotMapView. Show a very faint map of ibound and
 # model grid by specifying a transparency alpha value.
 fig = plt.figure(figsize=(8, 8))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
+
+assert (modelpth / "gis").is_dir()
 
 # reset the grid rotation and offsets to 0
 ml.modelgrid.set_coord_info(xoff=0, yoff=0, angrot=0)
@@ -532,7 +503,9 @@ ml.modelgrid.set_coord_info(xoff=0, yoff=0, angrot=0)
 mapview = flopy.plot.PlotMapView(model=ml, ax=ax)
 
 # Plot a shapefile of
+assert (modelpth / "gis").is_dir()
 shp = os.path.join(modelpth, "gis", "bedrock_outcrop_hole")
+print(os.listdir(modelpth / "gis"))
 patch_collection = mapview.plot_shapefile(
     shp,
     edgecolor="green",
@@ -554,10 +527,8 @@ quadmesh = mapview.plot_ibound(alpha=0.1)
 quadmesh = mapview.plot_bc("RIV", alpha=0.1)
 linecollection = mapview.plot_grid(alpha=0.1)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # Although the `PlotMapView`'s `plot_shapefile()` method does not consider projection information when plotting maps, it can be used to plot shapefiles when a `PlotMapView` instance is rotated and offset into geographic coordinates. The same shapefiles plotted above (but in geographic coordinates rather than model coordinates) are plotted on the rotated model grid. The offset from model coordinates to geographic coordinates relative to the lower left corner are `xoff=-2419.22`, `yoff=297.04` and the rotation angle is 14$^{\circ}$.
 
-# + pycharm={"name": "#%%\n"}
 # Setup the figure and PlotMapView. Show a very faint map of ibound and
 # model grid by specifying a transparency alpha value.
 
@@ -590,7 +561,6 @@ patch_collection = mapview.plot_shapefile(shp, radius=100, facecolor="red")
 quadmesh = mapview.plot_ibound(alpha=0.1)
 linecollection = mapview.plot_grid(alpha=0.1)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting GIS Shapes
 #
 # `PlotMapView` has a `plot_shapes()` method that can be used to quickly plot GIS based shapes on your map. In order to use the `plot_shapes()` method, you must be able to "import shapefile". The command import shapefile is part of the pyshp package.
@@ -613,7 +583,6 @@ linecollection = mapview.plot_grid(alpha=0.1)
 #
 # Here is a basic example of how to use the method:
 
-# + pycharm={"name": "#%%\n"}
 # lets extract some shapes from our shapefiles
 shp = os.path.join(modelpth, "gis", "bedrock_outcrop_hole_rotate14")
 with shapefile.Reader(shp) as r:
@@ -628,10 +597,8 @@ shp = os.path.join(modelpth, "gis", "wells_locations_rotate14")
 with shapefile.Reader(shp) as r:
     wells = r.shapes()
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # Now that the shapes are extracted from the shapefiles, they can be plotted using `plot_shapes()`
 
-# + pycharm={"name": "#%%\n"}
 # set the modelgrid rotation and offset
 ml.modelgrid.set_coord_info(
     xoff=-2419.2189559966773, yoff=297.0427372400354, angrot=-14
@@ -656,12 +623,10 @@ patch_collection1 = mapview.plot_shapes(cross_section, lw=3, edgecolor="red")
 # plot_point(s)
 patch_collection3 = mapview.plot_shapes(wells, radius=100, facecolor="k", edgecolor="k")
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ## Working with MODFLOW-6 models
 #
 # `PlotMapView` has support for MODFLOW-6 models and operates in the same fashion for Structured Grids, Vertex Grids, and Unstructured Grids. Here is a short example on how to plot with MODFLOW-6 structured grids using a version of the Freyberg model created for MODFLOW-6
 
-# + pycharm={"name": "#%%\n"}
 # load the Freyberg model into mf6-flopy and run the simulation
 
 sim_name = "mf6-freyberg"
@@ -716,12 +681,10 @@ for f in files:
         errmsg = f"Error. Output file cannot be found: {f}"
         print(errmsg)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting boundary conditions and arrays
 #
 # This works the same as modflow-2005, however the simulation object can host a number of modflow-6 models so we need to grab a model before attempting to plot with `PlotMapView`
 
-# + pycharm={"name": "#%%\n"}
 # get the modflow-6 model we want to plot
 ml6 = sim.get_model("freyberg")
 ml6.modelgrid.set_coord_info(angrot=-14)
@@ -748,12 +711,10 @@ inactive = mapview.plot_inactive()
 linecollection = mapview.plot_grid()
 cb = plt.colorbar(quadmesh, shrink=0.5, ax=ax)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Contouring Arrays
 #
 # Contouring arrays follows the same code signature for MODFLOW-6 as the MODFLOW-2005 example. Just use the `contour_array()` method
 
-# + pycharm={"name": "#%%\n"}
 # The contour_array() method will take any keywords
 # that can be used by the matplotlib.pyplot.contour
 # function. So we can pass in levels, for example.
@@ -775,12 +736,10 @@ sm = plt.cm.ScalarMappable(norm=norm, cmap=contour_set.cmap)
 sm.set_array([])
 fig.colorbar(sm, shrink=0.75, ax=ax)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting specific discharge with a MODFLOW-6 model
 #
 # MODFLOW-6 includes a the PLOT_SPECIFIC_DISCHARGE flag in the NPF package to calculate and store discharge vectors for easy plotting. The postprocessing module will translate the specific dischage into vector array and `PlotMapView` has the `plot_vector()` method to use this data. The specific discharge array is stored in the cell budget file.
 
-# + pycharm={"name": "#%%\n"}
 # get the specific discharge from the cell budget file
 cbc_file = os.path.join(sim_path, "freyberg.cbc")
 cbc = flopy.utils.CellBudgetFile(cbc_file)
@@ -805,12 +764,10 @@ inactive = mapview.plot_inactive()
 plt.title("Specific Discharge (" + r"$L/T$" + ")")
 plt.colorbar(quadmesh, shrink=0.75)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ## Vertex model plotting with MODFLOW-6
 #
 # FloPy fully supports vertex discretization (DISV) plotting through the `PlotMapView` class. The method calls are identical to the ones presented previously for Structured discretization (DIS) and the same matplotlib keyword arguments are supported. Let's run through an example using a vertex model grid.
 
-# + pycharm={"name": "#%%\n"}
 # build and run vertex model grid demo problem
 
 
@@ -1115,7 +1072,6 @@ for f in files:
         errmsg = f"Error. Output file cannot be found: {f}"
         print(errmsg)
 
-# + pycharm={"name": "#%%\n"}
 # load the simulation and get the model
 vertex_sim_name = "mfsim.nam"
 vertex_sim = flopy.mf6.MFSimulation.load(
@@ -1126,14 +1082,12 @@ vertex_sim = flopy.mf6.MFSimulation.load(
 )
 vertex_ml6 = vertex_sim.get_model("mp7p2")
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Setting MODFLOW-6 Vertex Model Grid offsets, rotation and plotting
 #
 # Setting the `Grid` offsets and rotation is consistent in FloPy, no matter which type of discretization the user is using. The `set_coord_info()` method on the `modelgrid` is used.
 #
 # Plotting works consistently too, the user just calls the `PlotMapView` class and it accounts for the discretization type
 
-# + pycharm={"name": "#%%\n"}
 # set coordinate information on the modelgrid
 vertex_ml6.modelgrid.set_coord_info(xoff=362100, yoff=4718900, angrot=-21)
 
@@ -1145,7 +1099,6 @@ ax.set_title("Vertex Model Grid (DISV)")
 mapview = flopy.plot.PlotMapView(vertex_ml6, layer=0)
 linecollection = mapview.plot_grid()
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting boundary conditions with Vertex Model grids
 #
 # The `plot_bc()` method can be used to plot boundary conditions.  It is setup to use the following dictionary to assign colors, however, these colors can be changed in the method call.
@@ -1155,7 +1108,6 @@ linecollection = mapview.plot_grid()
 #
 # Here we plot river (RIV) cell locations
 
-# + pycharm={"name": "#%%\n"}
 fig = plt.figure(figsize=(12, 12))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
 ax.set_title("Vertex Model Grid (DISV)")
@@ -1165,12 +1117,10 @@ mapview = flopy.plot.PlotMapView(vertex_ml6, layer=0)
 riv = mapview.plot_bc("RIV")
 linecollection = mapview.plot_grid()
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting Arrays and Contouring with Vertex Model grids
 #
 # `PlotMapView` allows the user to plot arrays and contour with DISV based discretization. The `plot_array()` method is called in the same way as using a structured grid. The only difference is that `PlotMapView` builds a matplotlib patch collection for Vertex based grids.
 
-# + pycharm={"name": "#%%\n"}
 # get the head output for stress period 1 from the modflow6 head file
 head = flopy.utils.HeadFile(os.path.join(mp7modelpth, "mp7p2.hds"))
 hdata = head.get_alldata()[0, :, :, :]
@@ -1184,10 +1134,8 @@ patch_collection = mapview.plot_array(hdata, cmap="Dark2")
 linecollection = mapview.plot_grid(lw=0.25, color="k")
 cb = plt.colorbar(patch_collection, shrink=0.75)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # The `contour_array()` method operates in the same way as the sturctured example.
 
-# + pycharm={"name": "#%%\n"}
 # plotting head array and then contouring the array!
 levels = np.arange(327, 332, 0.5)
 
@@ -1205,12 +1153,10 @@ linecollection = mapview.plot_grid(lw=0.25, color="k")
 
 cb = plt.colorbar(pc, shrink=0.75, ax=ax)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting MODPATH 7 results on a vertex model
 #
 # MODPATH-7 results can be plotted using the same built in methods as used previously to plot MODPATH-6 results. The `plot_pathline()` and `plot_timeseries()` methods are layered on the previous example to show modpath simulation results
 
-# + pycharm={"name": "#%%\n"}
 # load the MODPATH-7 results
 mp_namea = "mp7p2a_mp"
 fpth = os.path.join(mp7modelpth, f"{mp_namea}.mppth")
@@ -1221,7 +1167,6 @@ fpth = os.path.join(mp7modelpth, f"{mp_namea}.timeseries")
 ts = flopy.utils.TimeseriesFile(fpth)
 ts0 = ts.get_alldata()
 
-# + pycharm={"name": "#%%\n"}
 # setup the plot
 fig = plt.figure(figsize=(12, 12))
 ax = fig.add_subplot(1, 1, 1, aspect="equal")
@@ -1242,11 +1187,9 @@ colors = ["green", "orange", "red"]
 for k in range(3):
     tseries = mapview.plot_timeseries(ts0, layer=k, marker="o", lw=0, color=colors[k])
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Plotting specific discharge vectors for DISV
 # MODFLOW-6 includes a the PLOT_SPECIFIC_DISCHARGE flag in the NPF package to calculate and store discharge vectors for easy plotting. The postprocessing module will translate the specific dischage into vector array and `PlotMapView` has the `plot_vector()` method to use this data. The specific discharge array is stored in the cell budget file.
 
-# + pycharm={"name": "#%%\n"}
 cbb = flopy.utils.CellBudgetFile(
     os.path.join(mp7modelpth, "mp7p2.cbb"), precision="double"
 )
@@ -1265,12 +1208,10 @@ cb = plt.colorbar(pc, shrink=0.75, ax=ax)
 # plot specific discharge
 quiver = mapview.plot_vector(qx, qy, normalize=True, alpha=0.60)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ## Unstructured grid (DISU) plotting with MODFLOW-USG and MODFLOW-6
 #
 # Unstructured grid (DISU) plotting has support through the `PlotMapView` class and the `UnstructuredGrid` discretization object. The method calls are identical to those used for vertex (DISV) and structured (DIS) model grids. Let's run through a few unstructured grid examples
 
-# + pycharm={"name": "#%%\n"}
 # set up the notebook for unstructured grid plotting
 from flopy.discretization import UnstructuredGrid
 
@@ -1314,7 +1255,6 @@ def load_iverts(fname):
     return iverts, np.array(xc), np.array(yc)
 
 
-# + pycharm={"name": "#%%\n"}
 # load vertices
 fname = os.path.join(datapth, "ugrid_verts.dat")
 verts = load_verts(fname)
@@ -1323,10 +1263,8 @@ verts = load_verts(fname)
 fname = os.path.join(datapth, "ugrid_iverts.dat")
 iverts, xc, yc = load_iverts(fname)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # In this case, verts is just a 2-dimensional list of x,y vertex pairs.  iverts is also a 2-dimensional list, where the outer list is of size ncells, and the inner list is a list of the vertex numbers that comprise the cell.
 
-# + pycharm={"name": "#%%\n"}
 # Print the first 5 entries in verts and iverts
 for ivert, v in enumerate(verts[:5]):
     print(f"Vertex coordinate pair for vertex {ivert}: {v}")
@@ -1335,25 +1273,20 @@ print("...\n")
 for icell, vertlist in enumerate(iverts[:5]):
     print(f"List of vertices for cell {icell}: {vertlist}")
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # A flopy `UnstructuredGrid` object can now be created using the vertices and incidence list.  The `UnstructuredGrid` object is a key part of the plotting capabilities in flopy.  In addition to the vertex information, the `UnstructuredGrid` object also needs to know how many cells are in each layer.  This is specified in the ncpl variable, which is a list of cells per layer.
 
-# + pycharm={"name": "#%%\n"}
 ncpl = np.array(5 * [len(iverts)])
 umg = UnstructuredGrid(verts, iverts, xc, yc, ncpl=ncpl, angrot=10)
 print(ncpl)
 print(umg)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # Now that we have an `UnstructuredGrid`, we can use the flopy `PlotMapView` object to create different types of plots, just like we do for structured grids.
 
-# + pycharm={"name": "#%%\n"}
 f = plt.figure(figsize=(10, 10))
 mapview = flopy.plot.PlotMapView(modelgrid=umg)
 mapview.plot_grid()
 plt.plot(umg.xcellcenters, umg.ycellcenters, "bo")
 
-# + pycharm={"name": "#%%\n"}
 # Create a random array for layer 0, and then plot it with a color flood and contours
 f = plt.figure(figsize=(10, 10))
 
@@ -1367,10 +1300,8 @@ plt.clabel(contour_set, fmt="%.1f", colors="white", fontsize=11)
 linecollection = mapview.plot_grid(color="k", lw=0.5)
 colorbar = plt.colorbar(pc, shrink=0.75)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # Here are some examples of some other types of grids.  The data files for these grids are located in the datapth folder.
 
-# + pycharm={"name": "#%%\n"}
 from pathlib import Path
 
 fig = plt.figure(figsize=(10, 30))
@@ -1384,16 +1315,13 @@ for i, f in enumerate(fnames):
     linecollection = mapview.plot_grid(colors="sienna")
     ax.set_title(Path(fname).name)
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ## Plotting using built in styles
 #
 # FloPy's plotting routines can be used with built in styles from the `styles` module. The `styles` module takes advantage of matplotlib's temporary styling routines by reading in pre-built style sheets. Two different types of styles have been built for flopy: `USGSMap()` and `USGSPlot()` styles which can be used to create report quality figures. The styles module also contains a number of methods that can be used for adding axis labels, text, annotations, headings, removing tick lines, and updating the current font.
 
-# + pycharm={"name": "#%%\n"}
 # import flopy's styles
 from flopy.plot import styles
 
-# + pycharm={"name": "#%%\n"}
 # get the specific discharge from the cell budget file
 cbc_file = os.path.join(sim_path, "freyberg.cbc")
 cbc = flopy.utils.CellBudgetFile(cbc_file)
@@ -1422,10 +1350,8 @@ with styles.USGSMap():
     styles.xlabel(label="Easting")
     styles.ylabel(label="Northing")
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # Here is a second example showing how to change the font type using `styles`
 
-# + pycharm={"name": "#%%\n"}
 # use USGSMap style, change font type, and plot without tick lines:
 with styles.USGSMap():
     fig = plt.figure(figsize=(12, 12))
@@ -1450,17 +1376,16 @@ with styles.USGSMap():
     styles.ylabel(label="Northing", fontsize=12)
     styles.remove_edge_ticks()
 
-# + [markdown] pycharm={"name": "#%% md\n"}
 # ## Summary
 #
 # This notebook demonstrates some of the plotting functionality available with FloPy.  Although not described here, the plotting functionality tries to be general by passing keyword arguments passed to `PlotMapView` methods down into the `matplotlib.pyplot` routines that do the actual plotting.  For those looking to customize these plots, it may be necessary to search for the available keywords by understanding the types of objects that are created by the `PlotMapView` methods.  The `PlotMapView` methods return these `matplotlib.collections` objects so that they could be fine-tuned later in the script before plotting.
 #
 # Hope this gets you started!
 
-# + pycharm={"name": "#%%\n"}
 try:
     # ignore PermissionError on Windows
-    tempdir.cleanup()
+    pass
+    # tempdir.cleanup()
 except:
     pass
 # -

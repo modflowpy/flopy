@@ -26,9 +26,9 @@ def test_hydmodfile_create(function_tmpdir):
     m.hyd.write_file()
     pth = function_tmpdir / "test.hyd"
     hydload = ModflowHyd.load(pth, m)
-    assert np.array_equal(
-        hyd.obsdata, hydload.obsdata
-    ), "Written hydmod data not equal to loaded hydmod data"
+    assert np.array_equal(hyd.obsdata, hydload.obsdata), (
+        "Written hydmod data not equal to loaded hydmod data"
+    )
 
     # test obsdata as recarray
     obsdata = np.array(
@@ -64,9 +64,9 @@ def test_hydmodfile_load(function_tmpdir, hydmod_model_path):
 
     pth = hydmod_model_path / "test1tr.hyd"
     hydload = ModflowHyd.load(pth, m)
-    assert np.array_equal(
-        hydref.obsdata, hydload.obsdata
-    ), "Written hydmod data not equal to loaded hydmod data"
+    assert np.array_equal(hydref.obsdata, hydload.obsdata), (
+        "Written hydmod data not equal to loaded hydmod data"
+    )
 
 
 def test_hydmodfile_read(hydmod_model_path):
@@ -101,9 +101,9 @@ def test_hydmodfile_read(hydmod_model_path):
 
     data = h.get_data()
     assert data.shape == (len(times),), f"data shape is not ({len(times)},)"
-    assert (
-        len(data.dtype.names) == nitems + 1
-    ), f"data column length is not {len(nitems + 1)}"
+    assert len(data.dtype.names) == nitems + 1, (
+        f"data column length is not {len(nitems + 1)}"
+    )
 
     for idx in range(ntimes):
         df = h.get_dataframe(idx=idx, timeunit="S")
@@ -163,9 +163,9 @@ def test_mf6obsfile_read(mf6_obs_model_path):
 
         data = h.get_data()
         assert data.shape == (len(times),), f"data shape is not ({len(times)},)"
-        assert (
-            len(data.dtype.names) == nitems + 1
-        ), f"data column length is not {len(nitems + 1)}"
+        assert len(data.dtype.names) == nitems + 1, (
+            f"data column length is not {len(nitems + 1)}"
+        )
 
         for idx in range(ntimes):
             df = h.get_dataframe(idx=idx, timeunit="S")

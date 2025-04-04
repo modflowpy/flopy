@@ -44,9 +44,9 @@ def test_swr_binary_stage(swr_test_path, ipos):
         r = sobj.get_data(idx=idx)
         assert r is not None, "SwrStage could not read data with get_data(idx=)"
         assert r.shape == (18,), "SwrStage stage data shape does not equal (18,)"
-        assert (
-            len(r.dtype.names) == 2
-        ), "SwrStage stage data dtype does not have 2 entries"
+        assert len(r.dtype.names) == 2, (
+            "SwrStage stage data dtype does not have 2 entries"
+        )
 
     kswrkstpkper = sobj.get_kswrkstpkper()
     assert kswrkstpkper.shape == (
@@ -56,13 +56,13 @@ def test_swr_binary_stage(swr_test_path, ipos):
 
     for kkk in kswrkstpkper:
         r = sobj.get_data(kswrkstpkper=kkk)
-        assert (
-            r is not None
-        ), "SwrStage could not read data with get_data(kswrkstpkper=)"
+        assert r is not None, (
+            "SwrStage could not read data with get_data(kswrkstpkper=)"
+        )
         assert r.shape == (18,), "SwrStage stage data shape does not equal (18,)"
-        assert (
-            len(r.dtype.names) == 2
-        ), "SwrStage stage data dtype does not have 2 entries"
+        assert len(r.dtype.names) == 2, (
+            "SwrStage stage data dtype does not have 2 entries"
+        )
 
     times = sobj.get_times()
     assert len(times) == 336, "SwrStage times length does not equal 336"
@@ -71,15 +71,15 @@ def test_swr_binary_stage(swr_test_path, ipos):
         r = sobj.get_data(totim=time)
         assert r is not None, "SwrStage could not read data with get_data(tottim=)"
         assert r.shape == (18,), "SwrStage stage data shape does not equal (18,)"
-        assert (
-            len(r.dtype.names) == 2
-        ), "SwrStage stage data dtype does not have 2 entries"
+        assert len(r.dtype.names) == 2, (
+            "SwrStage stage data dtype does not have 2 entries"
+        )
 
     ts = sobj.get_ts(irec=17)
     assert ts.shape == (336,), "SwrStage stage timeseries shape does not equal (336,)"
-    assert (
-        len(ts.dtype.names) == 2
-    ), "SwrStage stage time series stage data dtype does not have 2 entries"
+    assert len(ts.dtype.names) == 2, (
+        "SwrStage stage time series stage data dtype does not have 2 entries"
+    )
 
     # plt.plot(ts['totim'], ts['stage'])
     # plt.show()
@@ -114,13 +114,13 @@ def test_swr_binary_budget(swr_test_path, ipos):
 
     for kkk in kswrkstpkper:
         r = sobj.get_data(kswrkstpkper=kkk)
-        assert (
-            r is not None
-        ), "SwrBudget could not read data with get_data(kswrkstpkper=)"
+        assert r is not None, (
+            "SwrBudget could not read data with get_data(kswrkstpkper=)"
+        )
         assert r.shape == (18,), "SwrBudget budget data shape does not equal (18,)"
-        assert (
-            len(r.dtype.names) == 15
-        ), "SwrBudget budget data dtype does not have 15 entries"
+        assert len(r.dtype.names) == 15, (
+            "SwrBudget budget data dtype does not have 15 entries"
+        )
 
     times = sobj.get_times()
     assert len(times) == 336, "SwrBudget times length does not equal 336"
@@ -129,15 +129,15 @@ def test_swr_binary_budget(swr_test_path, ipos):
         r = sobj.get_data(totim=time)
         assert r is not None, "SwrBudget could not read data with get_data(tottim=)"
         assert r.shape == (18,), "SwrBudget budget data shape does not equal (18,)"
-        assert (
-            len(r.dtype.names) == 15
-        ), "SwrBudget budget data dtype does not have 15 entries"
+        assert len(r.dtype.names) == 15, (
+            "SwrBudget budget data dtype does not have 15 entries"
+        )
 
     ts = sobj.get_ts(irec=17)
     assert ts.shape == (336,), "SwrBudget budget timeseries shape does not equal (336,)"
-    assert (
-        len(ts.dtype.names) == 15
-    ), "SwrBudget time series budget data dtype does not have 15 entries"
+    assert len(ts.dtype.names) == 15, (
+        "SwrBudget time series budget data dtype does not have 15 entries"
+    )
 
     # plt.plot(ts['totim'], ts['qbcflow'])
     # plt.show()
@@ -190,15 +190,15 @@ def test_swr_binary_qm(swr_test_path, ipos):
 
     ts = sobj.get_ts(irec=17, iconn=16)
     assert ts.shape == (336,), "SwrFlow qm timeseries shape does not equal (336,)"
-    assert (
-        len(ts.dtype.names) == 3
-    ), "SwrFlow time series qm data dtype does not have 3 entries"
+    assert len(ts.dtype.names) == 3, (
+        "SwrFlow time series qm data dtype does not have 3 entries"
+    )
 
     ts2 = sobj.get_ts(irec=16, iconn=17)
     assert ts2.shape == (336,), "SwrFlow qm timeseries shape does not equal (336,)"
-    assert (
-        len(ts2.dtype.names) == 3
-    ), "SwrFlow time series qm data dtype does not have 3 entries"
+    assert len(ts2.dtype.names) == 3, (
+        "SwrFlow time series qm data dtype does not have 3 entries"
+    )
 
     # plt.plot(ts['totim'], ts['velocity'])
     # plt.plot(ts2['totim'], ts2['velocity'])
@@ -221,9 +221,9 @@ def test_swr_binary_qaq(swr_test_path, ipos):
         r = sobj.get_data(idx=idx)
         assert r is not None, "SwrExchange could not read data with get_data(idx=)"
         assert r.shape == (21,), "SwrExchange qaq data shape does not equal (21,)"
-        assert (
-            len(r.dtype.names) == 11
-        ), "SwrExchange qaq data dtype does not have 11 entries"
+        assert len(r.dtype.names) == 11, (
+            "SwrExchange qaq data dtype does not have 11 entries"
+        )
 
     # plt.bar(range(21), r['qaq'])
     # plt.show()
@@ -236,13 +236,13 @@ def test_swr_binary_qaq(swr_test_path, ipos):
 
     for kkk in kswrkstpkper:
         r = sobj.get_data(kswrkstpkper=kkk)
-        assert (
-            r is not None
-        ), "SwrExchange could not read data with get_data(kswrkstpkper=)"
+        assert r is not None, (
+            "SwrExchange could not read data with get_data(kswrkstpkper=)"
+        )
         assert r.shape == (21,), "SwrExchange qaq data shape does not equal (21,)"
-        assert (
-            len(r.dtype.names) == 11
-        ), "SwrExchange qaq data dtype does not have 11 entries"
+        assert len(r.dtype.names) == 11, (
+            "SwrExchange qaq data dtype does not have 11 entries"
+        )
 
     times = sobj.get_times()
     assert len(times) == 350, "SwrExchange times length does not equal 350"
@@ -251,15 +251,15 @@ def test_swr_binary_qaq(swr_test_path, ipos):
         r = sobj.get_data(totim=time)
         assert r is not None, "SwrExchange could not read data with get_data(tottim=)"
         assert r.shape == (21,), "SwrExchange qaq data shape does not equal (21,)"
-        assert (
-            len(r.dtype.names) == 11
-        ), "SwrExchange qaq data dtype does not have 11 entries"
+        assert len(r.dtype.names) == 11, (
+            "SwrExchange qaq data dtype does not have 11 entries"
+        )
 
     ts = sobj.get_ts(irec=17, klay=0)
     assert ts.shape == (350,), "SwrExchange timeseries shape does not equal (350,)"
-    assert (
-        len(ts.dtype.names) == 11
-    ), "SwrExchange time series qaq data dtype does not have 11 entries"
+    assert len(ts.dtype.names) == 11, (
+        "SwrExchange time series qaq data dtype does not have 11 entries"
+    )
 
     # plt.plot(ts['totim'], ts['qaq'])
     # plt.show()
@@ -281,9 +281,9 @@ def test_swr_binary_structure(swr_test_path, ipos):
         r = sobj.get_data(idx=idx)
         assert r is not None, "SwrStructure could not read data with get_data(idx=)"
         assert r.shape == (2,), "SwrStructure structure data shape does not equal (2,)"
-        assert (
-            len(r.dtype.names) == 8
-        ), "SwrStructure structure data dtype does not have 8 entries"
+        assert len(r.dtype.names) == 8, (
+            "SwrStructure structure data dtype does not have 8 entries"
+        )
 
     kswrkstpkper = sobj.get_kswrkstpkper()
     assert kswrkstpkper.shape == (
@@ -293,13 +293,13 @@ def test_swr_binary_structure(swr_test_path, ipos):
 
     for kkk in kswrkstpkper:
         r = sobj.get_data(kswrkstpkper=kkk)
-        assert (
-            r is not None
-        ), "SwrStructure could not read data with get_data(kswrkstpkper=)"
+        assert r is not None, (
+            "SwrStructure could not read data with get_data(kswrkstpkper=)"
+        )
         assert r.shape == (2,), "SwrStructure structure data shape does not equal (2,)"
-        assert (
-            len(r.dtype.names) == 8
-        ), "SwrStructure structure data dtype does not have 8 entries"
+        assert len(r.dtype.names) == 8, (
+            "SwrStructure structure data dtype does not have 8 entries"
+        )
 
     times = sobj.get_times()
     assert len(times) == 336, "SwrStructure times length does not equal 336"
@@ -308,15 +308,15 @@ def test_swr_binary_structure(swr_test_path, ipos):
         r = sobj.get_data(totim=time)
         assert r is not None, "SwrStructure could not read data with get_data(tottim=)"
         assert r.shape == (2,), "SwrStructure structure data shape does not equal (2,)"
-        assert (
-            len(r.dtype.names) == 8
-        ), "SwrStructure structure data dtype does not have 8 entries"
+        assert len(r.dtype.names) == 8, (
+            "SwrStructure structure data dtype does not have 8 entries"
+        )
 
     ts = sobj.get_ts(irec=17, istr=0)
     assert ts.shape == (336,), "SwrStructure timeseries shape does not equal (336,)"
-    assert (
-        len(ts.dtype.names) == 8
-    ), "SwrStructure time series structure data dtype does not have 8 entries"
+    assert len(ts.dtype.names) == 8, (
+        "SwrStructure time series structure data dtype does not have 8 entries"
+    )
 
     # plt.plot(ts['totim'], ts['strflow'])
     # plt.show()

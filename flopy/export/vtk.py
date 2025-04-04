@@ -63,8 +63,7 @@ class Pvd:
             file = file.with_suffix(".vtu")
 
         record = (
-            f'<DataSet timestep="{timevalue}" group="" '
-            f'part="0" file="{file.name}"/>\n'
+            f'<DataSet timestep="{timevalue}" group="" part="0" file="{file.name}"/>\n'
         )
         self.__data.append(record)
 
