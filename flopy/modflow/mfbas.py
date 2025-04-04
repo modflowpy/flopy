@@ -159,24 +159,24 @@ class ModflowBas(Package):
         if self.stoper is not None:
             opts.append(f"STOPERROR {self.stoper}")
 
-        if "iprinttime" in kwargs and kwargs["iprinttime"]:
+        if kwargs.get("iprinttime"):
             opts.append("PRINTTIME")
-        if "ishowp" in kwargs and kwargs["ishowp"]:
+        if kwargs.get("ishowp"):
             opts.append("SHOWPROGRESS")
         
-        if "printfv" in kwargs and kwargs["printfv"]:
+        if kwargs.get("printfv"):
             opts.append("PRINTFV")
-        if "unstructured" in kwargs and kwargs["unstructured"]:
+        if kwargs.get("unstructured"):
             opts.append("UNSTRUCTURED")
-        if "converge" in kwargs and kwargs["converge"]:
+        if kwargs.get("converge"):
             opts.append("CONVERGE")
-        if "dpin" in kwargs and kwargs["dpin"]:
+        if kwargs.get("dpin"):
             opts.append("DPIN")
-        if "dpout" in kwargs and kwargs["dpout"]:
+        if kwargs.get("dpout"):
             opts.append("DPOUT")
-        if "dpio" in kwargs and kwargs["dpio"]:
+        if kwargs.get("dpio"):
             opts.append("DPIO")
-        if "dpin" in kwargs and kwargs["dpin"]:
+        if kwargs.get("dpin"):
             opts.append("DPIN")
         
         self.options = " ".join(opts)

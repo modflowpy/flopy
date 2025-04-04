@@ -3,26 +3,57 @@
 
 # ## Dual Domain Transport in a One-Dimensional, Uniform Flow Field
 
-# Panday, S., 2024; USG-Transport Version 2.4.0: Transport and Other Enhancements to MODFLOW-USG, GSI Environmental, July 2024 http://www.gsi-net.com/en/software/free-software/USG-Transport.html
+# Panday, S., 2024; USG-Transport Version 2.4.0: Transport and Other 
+# Enhancements to MODFLOW-USG, GSI Environmental, July 2024 
+# http://www.gsi-net.com/en/software/free-software/USG-Transport.html
 # 
-# This test problem discusses one dimensional dual domain transport in a uniform steady-state flow-field. A 150 foot long horizontal soil column is discretized into 1 layer, 1 row, and 300 columns using 0.5xΔ=feet, 1yΔ=foot, and 1zΔ= foot. The flow-field is setup using a hydraulic conductivity of 1000 ft/day and constant head boundaries of 10 feet and 9 feet at either end of the domain. The simulation considers a dual porosity system with a mobile domain fraction of 0.4. Transport related parameters for the mobile domain include a longitudinal dispersivity of 0.5 feet, zero molecular diffusion, a porosity value of 0.35, a soil bulk density value of 1.6 kg/L, and an adsorption coefficient (kd) value of 0.1 L/kg. Transport parameters for the immobile domain include a porosity value of 0.2, a soil bulk density value of 1.6 kg/L, an adsorption coefficient (kd) value of 0.1 L/kg, and a mass transfer rate of 0.1 day-1. The concentration of water in both mobile and immobile domains is zero at the start of the simulation.
+# This test problem discusses one dimensional dual domain transport in 
+# a uniform steady-state flow-field. A 150 foot long horizontal soil 
+# column is discretized into 1 layer, 1 row, and 300 columns using 
+# dx=0.5feet, dy=1foot, and dz=1foot. The flow-field is setup using 
+# a hydraulic conductivity of 1000 ft/day and constant head boundaries 
+# of 10 feet and 9 feet at either end of the domain. The simulation 
+# considers a dual porosity system with a mobile domain fraction of 0.4. 
+# Transport related parameters for the mobile domain include a 
+# longitudinal dispersivity of 0.5 feet, zero molecular diffusion, 
+# a porosity value of 0.35, a soil bulk density value of 1.6 kg/L, 
+# and an adsorption coefficient (kd) value of 0.1 L/kg. Transport 
+# parameters for the immobile domain include a porosity value of 0.2, 
+# a soil bulk density value of 1.6 kg/L, an adsorption coefficient (kd) 
+# value of 0.1 L/kg, and a mass transfer rate of 0.1 day-1. The 
+# concentration of water in both mobile and immobile domains is zero at 
+# the start of the simulation.
 # 
-# A transport simulation was performed for this setup with a prescribed species concentration of 1mg/L at the upstream end of the soil column within the mobile domain, for a period of 20 days. Subsequently, the concentration of inflow water was made to zero for a period of 30 days to evaluate flushing of the system. Each stress period contains 100 time steps of uniform size – 0.04 day step size for the first stress period when the component species front is advancing, and a 0.08 day step size for the second stress period when the soil column is being flushed. Simulation results were compared with results from a MT3D simulation of the same setup, using the TVD solution scheme. Note that the mobile porosity in MT3D is equal to the porosity of the mobile domain (0.35) times the mobile domain fraction (0.4), and that the immobile porosity in
-# MT3D is equal to the porosity of the immobile domain (0.2) times the immobile domain fraction (which is one minus the mobile domain fraction = 0.6). Figure Ex 7 shows the concentration versus time plot in the mobile domain, at the outlet of the domain. The MT3D and BCT Process simulation results are almost the same.
+# A transport simulation was performed for this setup with a prescribed 
+# species concentration of 1mg/L at the upstream end of the soil column 
+# within the mobile domain, for a period of 20 days. Subsequently, the 
+# concentration of inflow water was made to zero for a period of 30 days 
+# to evaluate flushing of the system. Each stress period contains 100 time 
+# steps of uniform size 0.04 day step size for the first stress period 
+# when the component species front is advancing, and a 0.08 day step size 
+# for the second stress period when the soil column is being flushed. 
+# Simulation results were compared with results from a MT3D simulation of 
+# the same setup, using the TVD solution scheme. Note that the mobile 
+# porosity in MT3D is equal to the porosity of the mobile domain (0.35) 
+# times the mobile domain fraction (0.4), and that the immobile porosity in
+# MT3D is equal to the porosity of the immobile domain (0.2) times the 
+# immobile domain fraction (which is one minus the mobile domain fraction 0.6). 
+# Figure Ex 7 shows the concentration versus time plot in the mobile domain, 
+# at the outlet of the domain. The MT3D and BCT Process simulation results 
+# are almost the same.
 
 # In[1]:
 
 
-import numpy as np
-import matplotlib.pyplot as plt
-
-import flopy
-from flopy.modflow import ModflowBas, ModflowDis, ModflowChd
-from flopy.mfusg import MfUsg, MfUsgBcf, MfUsgSms, MfUsgBct, MfUsgDpt, MfUsgOc, MfUsgPcb
-from flopy.utils import HeadFile
-
 from tempfile import TemporaryDirectory
 
+import matplotlib.pyplot as plt
+import numpy as np
+
+import flopy
+from flopy.mfusg import MfUsg, MfUsgBcf, MfUsgBct, MfUsgDpt, MfUsgOc, MfUsgPcb, MfUsgSms
+from flopy.modflow import ModflowBas, ModflowChd, ModflowDis
+from flopy.utils import HeadFile
 
 # In[2]:
 

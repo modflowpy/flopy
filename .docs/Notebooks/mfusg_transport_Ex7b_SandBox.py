@@ -10,28 +10,37 @@
 # In[1]:
 
 
-import os, shutil
-import numpy as np
-import matplotlib.pyplot as plt
-
-import flopy
-from flopy.modflow import ModflowBas, ModflowChd,ModflowDis
-from flopy.mfusg import MfUsg, MfUsgDisU, MfUsgLpf, MfUsgSms, MfUsgBct, MfUsgWel, MfUsgOc, MfUsgPcb, MfUsgMdt
-from flopy.utils import HeadUFile
-from flopy.utils.gridgen import Gridgen
-from flopy.plot import PlotCrossSection,PlotMapView
-
-import flopy.utils.binaryfile as bf
-
+import os
+import shutil
 from tempfile import TemporaryDirectory
 
+import matplotlib.pyplot as plt
+import numpy as np
+
+import flopy
+import flopy.utils.binaryfile as bf
+from flopy.mfusg import (
+    MfUsg,
+    MfUsgBct,
+    MfUsgDisU,
+    MfUsgLpf,
+    MfUsgMdt,
+    MfUsgOc,
+    MfUsgPcb,
+    MfUsgSms,
+    MfUsgWel,
+)
+from flopy.modflow import ModflowBas, ModflowChd, ModflowDis
+from flopy.plot import PlotCrossSection, PlotMapView
+from flopy.utils import HeadUFile
+from flopy.utils.gridgen import Gridgen
 
 # ## Example MD2: Embedded Low Permeability Zones
 
-# Flow of fluorescein through a sand tank embedded with several low permeability zones is used to demonstrate the MODFLOW-USG MDT package’s ability to model the effects of diffusion into and from low-k zones. The sand tank study is described in detail in Chapman et al. (2012) and a comparison with the semi-analytical solution is described in Muskus and Falta (2018). In this laboratory experiment, a tracer solution containing fluorescein and bromide was flushed through a 1.07×0.03×0.84 m sand tank embedded with four clay lenses (Figure Ex 12). Twenty-two days of tracer flushing through the system were followed by 100 days of flushing with clean water. A flow rate of 0.9 mL/min was used for the first 10 days after which a constant rate of 1.5 mL/min was employed.
+# Flow of fluorescein through a sand tank embedded with several low permeability zones is used to demonstrate the MODFLOW-USG MDT package's ability to model the effects of diffusion into and from low-k zones. The sand tank study is described in detail in Chapman et al. (2012) and a comparison with the semi-analytical solution is described in Muskus and Falta (2018). In this laboratory experiment, a tracer solution containing fluorescein and bromide was flushed through a 1.07x0.03x0.84 m sand tank embedded with four clay lenses (Figure Ex 12). Twenty-two days of tracer flushing through the system were followed by 100 days of flushing with clean water. A flow rate of 0.9 mL/min was used for the first 10 days after which a constant rate of 1.5 mL/min was employed.
 # 
 # Chapman et al. (2012) used various numerical models to simulate the tank experiment. Although their models closely matched the experimental data, they required high resolution grids with ~9,000 to 24,000 cells. Comparatively, Muskus and Falta (2018) simulated the sand tank as a 1-D model with 50 cells in the direction of groundwater flow (x direction) with the clay lenses represented as an embedded matrix diffusion area.
-# Developed as a 1-D model, the MODFLOW-USG MDT model contains a total of 50 cells (1 row, 50 columns, and 1 layer). Input parameters are shown in Table 4. Matrix diffusion was modeled as being from the clay lenses embedded in the transmissive zone. A total matrix diffusion area of 0.193 m2 was obtained as the sum of the surface area (perimeter times the thickness of the sand tank) of the four clay lenses; resulting in an interfacial surface area (Amd) per cell of 3.85×10-3 m2 (Muskus and Falta, 2018). A volume fraction of 0.711, a characteristic diffusion length of 4.05 ×10-2 m, and a Darcy velocity of 31.29 m/yr were also obtained from Muskus and Falta (2018). Note that while the sand tank experiment employed variable volumetric flowrates (0.9 mL/min for the first 10 days and 1.5 mL/min thereafter), Muskus and Falta (2018) selected the most prevalent flow rate (1.5 mL/min) for the entire time period for their comparison. This same methodology was applied to the MODFLOW-USG-MD model. Fluorescein source concentrations were maintained at 400 mg/L for the first 22 days, after which the tracer concentrations were set to zero.
+# Developed as a 1-D model, the MODFLOW-USG MDT model contains a total of 50 cells (1 row, 50 columns, and 1 layer). Input parameters are shown in Table 4. Matrix diffusion was modeled as being from the clay lenses embedded in the transmissive zone. A total matrix diffusion area of 0.193 m2 was obtained as the sum of the surface area (perimeter times the thickness of the sand tank) of the four clay lenses; resulting in an interfacial surface area (Amd) per cell of 3.85x10-3 m2 (Muskus and Falta, 2018). A volume fraction of 0.711, a characteristic diffusion length of 4.05E-2 m, and a Darcy velocity of 31.29 m/yr were also obtained from Muskus and Falta (2018). Note that while the sand tank experiment employed variable volumetric flowrates (0.9 mL/min for the first 10 days and 1.5 mL/min thereafter), Muskus and Falta (2018) selected the most prevalent flow rate (1.5 mL/min) for the entire time period for their comparison. This same methodology was applied to the MODFLOW-USG-MD model. Fluorescein source concentrations were maintained at 400 mg/L for the first 22 days, after which the tracer concentrations were set to zero.
 # 
 # As shown on Figure Ex 13, observed fluorescein concentrations increase over the first 22 days while the tracer is introduced into the sand tank. Once the tracer is removed on day 22, concentrations start to decrease and tail off by day 120. Comparison of the MODFLOW-USG MDT model effluent concentrations with the experimental
 # results is shown on Figure Ex 13. Also shown on the figure are the simulated concentration curves reported by Muskus and Falta (2018) and Chapman et al. (2012). The MODFLOW-USG MDT package was able to reproduce the observed effluent concentrations reasonably well. The slight left shift of the leading edge of both the MODFLOW-USG MDT and semi-analytical curves compared to the observed concentrations is expected due to the difference in volumetric

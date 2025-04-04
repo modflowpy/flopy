@@ -20,22 +20,28 @@
 # In[ ]:
 
 
-import os, shutil
-import numpy as np
-import matplotlib.pyplot as plt
-
-import flopy
-from flopy.modflow import ModflowBas, ModflowChd,ModflowDis
-from flopy.mfusg import (MfUsg, MfUsgDisU, MfUsgLpf, MfUsgSms, 
-MfUsgBct, MfUsgRch, MfUsgOc)
-from flopy.utils import HeadUFile
-from flopy.utils.gridgen import Gridgen
-from flopy.plot import PlotCrossSection,PlotMapView
-
-import flopy.utils.binaryfile as bf
-
+import os
+import shutil
 from tempfile import TemporaryDirectory
 
+import matplotlib.pyplot as plt
+import numpy as np
+
+import flopy
+import flopy.utils.binaryfile as bf
+from flopy.mfusg import (
+    MfUsg,
+    MfUsgBct,
+    MfUsgDisU,
+    MfUsgLpf,
+    MfUsgOc,
+    MfUsgRch,
+    MfUsgSms,
+)
+from flopy.modflow import ModflowBas, ModflowChd, ModflowDis
+from flopy.plot import PlotCrossSection, PlotMapView
+from flopy.utils import HeadUFile
+from flopy.utils.gridgen import Gridgen
 
 # In[ ]:
 

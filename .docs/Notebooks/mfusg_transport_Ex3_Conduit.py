@@ -17,17 +17,17 @@
 # In[1]:
 
 
-import os, shutil
-import numpy as np
+import os
+import shutil
+
 import matplotlib.pyplot as plt
+import numpy as np
 
 import flopy
-from flopy.modflow import ModflowBas, ModflowChd,ModflowDis
-from flopy.mfusg import (MfUsg, MfUsgBcf, MfUsgSms, MfUsgWel,
-MfUsgCln, MfUsgBct, MfUsgOc)
+from flopy.mfusg import MfUsg, MfUsgBcf, MfUsgBct, MfUsgCln, MfUsgOc, MfUsgSms, MfUsgWel
+from flopy.modflow import ModflowBas, ModflowChd, ModflowDis
+from flopy.plot import PlotCrossSection, PlotMapView
 from flopy.utils import HeadFile
-from flopy.plot import PlotCrossSection,PlotMapView
-
 
 # In[2]:
 

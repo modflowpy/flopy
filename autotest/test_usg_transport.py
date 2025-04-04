@@ -8,15 +8,29 @@ from modflow_devtools.markers import requires_exe
 
 from autotest.conftest import get_example_data_path
 from flopy.mfusg import (
-    MfUsg, MfUsgDisU, MfUsgLpf, MfUsgSms, MfUsgWel,
-    MfUsgBcf, MfUsgBct, MfUsgCln, MfUsgDdf, MfUsgDpf,
-    MfUsgDpt, MfUsgMdt, MfUsgLak, MfUsgRch, MfUsgPcb,
-    MfUsgGnc, MfUsgOc,MfUsgEvt
+    MfUsg,
+    MfUsgBcf,
+    MfUsgBct,
+    MfUsgCln,
+    MfUsgDdf,
+    MfUsgDisU,
+    MfUsgDpf,
+    MfUsgDpt,
+    MfUsgEvt,
+    MfUsgGnc,
+    MfUsgLak,
+    MfUsgLpf,
+    MfUsgMdt,
+    MfUsgOc,
+    MfUsgPcb,
+    MfUsgRch,
+    MfUsgSms,
+    MfUsgWel,
 )
 from flopy.modflow import (
     ModflowBas,
-    ModflowDis,
     ModflowChd,
+    ModflowDis,
     ModflowFhb,
     ModflowGhb,
 )
@@ -24,47 +38,47 @@ from flopy.utils import TemporalReference, Util2d, Util3d
 
 
 @pytest.fixture
-def mfusg_transport_Ex1_1D_model_path(example_data_path: Path):
+def mfusg_transport_Ex1_model_path(example_data_path: Path):
     return example_data_path / "mfusg_transport" / "Ex1_1D"
 
 @pytest.fixture
-def mfusg_transport_Ex2_Radial_2D_model_path(example_data_path: Path):
+def mfusg_transport_Ex2_model_path(example_data_path: Path):
     return example_data_path / "mfusg_transport" / "Ex2_Radial_2D"
 
 @pytest.fixture
-def mfusg_transport_Ex3_CLN_Conduit_model_path(example_data_path: Path):
+def mfusg_transport_Ex3_model_path(example_data_path: Path):
     return example_data_path / "mfusg_transport" / "Ex3_CLN_Conduit"
 
 @pytest.fixture
-def mfusg_transport_Ex4_Dual_Domain_model_path(example_data_path: Path):
+def mfusg_transport_Ex4_model_path(example_data_path: Path):
     return example_data_path / "mfusg_transport" / "Ex4_Dual_Domain"
 
 @pytest.fixture
-def mfusg_transport_Ex5_Henry_model_path(example_data_path: Path):
+def mfusg_transport_Ex5_model_path(example_data_path: Path):
     return example_data_path / "mfusg_transport" / "Ex5_Henry"
 
 @pytest.fixture
-def mfusg_transport_Ex6_Stallman_model_path(example_data_path: Path):
+def mfusg_transport_Ex6_model_path(example_data_path: Path):
     return example_data_path / "mfusg_transport" / "Ex6_Stallman"
 
 @pytest.fixture
-def mfusg_transport_Ex7_Matrix_Diffusion_model_path(example_data_path: Path):
+def mfusg_transport_Ex7_model_path(example_data_path: Path):
     return example_data_path / "mfusg_transport" / "Ex7_Matrix_Diffusion"
 
 @pytest.fixture
-def mfusg_transport_Ex8_Lake_model_path(example_data_path: Path):
+def mfusg_transport_Ex8_model_path(example_data_path: Path):
     return example_data_path / "mfusg_transport" / "Ex8_Lake"
 
 @pytest.fixture
-def mfusg_transport_Ex9_PFAS_model_path(example_data_path: Path):
+def mfusg_transport_Ex9_model_path(example_data_path: Path):
     return example_data_path / "mfusg_transport" / "Ex9_PFAS"
 
 
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex1_1D(function_tmpdir, mfusg_transport_Ex1_1D_model_path):
+def test_usg_load_Ex1_1D(function_tmpdir, mfusg_transport_Ex1_model_path):
     print("testing mfusg transport model loading: BTN_Test1.nam")
 
-    fname = mfusg_transport_Ex1_1D_model_path / "BTN_Test1.nam"
+    fname = mfusg_transport_Ex1_model_path / "BTN_Test1.nam"
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
@@ -97,10 +111,10 @@ def test_usg_load_Ex1_1D(function_tmpdir, mfusg_transport_Ex1_1D_model_path):
     assert success, msg
 
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex2_Radial_adv(function_tmpdir, mfusg_transport_Ex2_Radial_2D_model_path):
+def test_usg_load_Ex2_Radial_adv(function_tmpdir, mfusg_transport_Ex2_model_path):
     print("testing mfusg transport model loading: Radial-adv.nam")
 
-    fname = mfusg_transport_Ex2_Radial_2D_model_path / "Radial_adv.nam"
+    fname = mfusg_transport_Ex2_model_path / "Radial_adv.nam"
 
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
@@ -133,10 +147,10 @@ def test_usg_load_Ex2_Radial_adv(function_tmpdir, mfusg_transport_Ex2_Radial_2D_
     assert success
 
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex2_Radial_Disp(function_tmpdir, mfusg_transport_Ex2_Radial_2D_model_path):
+def test_usg_load_Ex2_Radial_Disp(function_tmpdir, mfusg_transport_Ex2_model_path):
     print("testing mfusg transport model loading: Radial-dis.nam")
 
-    fname = mfusg_transport_Ex2_Radial_2D_model_path / "Radial_dis.nam"
+    fname = mfusg_transport_Ex2_model_path / "Radial_dis.nam"
 
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
@@ -169,10 +183,10 @@ def test_usg_load_Ex2_Radial_Disp(function_tmpdir, mfusg_transport_Ex2_Radial_2D
     assert success
 
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex3_CLN_Conduit(function_tmpdir, mfusg_transport_Ex3_CLN_Conduit_model_path):
+def test_usg_load_Ex3_CLN_Conduit(function_tmpdir, mfusg_transport_Ex3_model_path):
     print("testing mfusg transport model loading: Conduit.nam")
 
-    fname = mfusg_transport_Ex3_CLN_Conduit_model_path / "Conduit/Conduit.nam"
+    fname = mfusg_transport_Ex3_model_path / "Conduit/Conduit.nam"
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
@@ -209,10 +223,11 @@ def test_usg_load_Ex3_CLN_Conduit(function_tmpdir, mfusg_transport_Ex3_CLN_Condu
     assert success, msg
 
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex3_CLN_Conduit_Dispersion(function_tmpdir, mfusg_transport_Ex3_CLN_Conduit_model_path):
+def test_usg_load_Ex3_CLN_Conduit_Dispersion(
+    function_tmpdir, mfusg_transport_Ex3_model_path):
     print("testing mfusg transport model loading: Conduit.nam")
 
-    fname = mfusg_transport_Ex3_CLN_Conduit_model_path / "Dispersion/Conduit_Dispersion.nam"
+    fname = mfusg_transport_Ex3_model_path / "Dispersion/Conduit_Dispersion.nam"
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
@@ -249,10 +264,10 @@ def test_usg_load_Ex3_CLN_Conduit_Dispersion(function_tmpdir, mfusg_transport_Ex
     assert success, msg
 
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex3_CLN_Conduit_Nest(function_tmpdir, mfusg_transport_Ex3_CLN_Conduit_model_path):
+def test_usg_load_Ex3_CLN_Conduit_Nest(function_tmpdir, mfusg_transport_Ex3_model_path):
     print("testing mfusg transport model loading: Conduit.nam")
 
-    fname = mfusg_transport_Ex3_CLN_Conduit_model_path / "Nest/Conduit_Nest.nam"
+    fname = mfusg_transport_Ex3_model_path / "Nest/Conduit_Nest.nam"
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
@@ -289,10 +304,10 @@ def test_usg_load_Ex3_CLN_Conduit_Nest(function_tmpdir, mfusg_transport_Ex3_CLN_
     assert success, msg
 
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex4_Dual_Domain(function_tmpdir, mfusg_transport_Ex4_Dual_Domain_model_path):
+def test_usg_load_Ex4_Dual_Domain(function_tmpdir, mfusg_transport_Ex4_model_path):
     print("testing mfusg transport model loading: Conduit.nam")
 
-    fname = mfusg_transport_Ex4_Dual_Domain_model_path / "DualDomain.nam"
+    fname = mfusg_transport_Ex4_model_path / "DualDomain.nam"
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
@@ -329,10 +344,10 @@ def test_usg_load_Ex4_Dual_Domain(function_tmpdir, mfusg_transport_Ex4_Dual_Doma
     assert success, msg
 
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex5_Henry(function_tmpdir, mfusg_transport_Ex5_Henry_model_path):
+def test_usg_load_Ex5_Henry(function_tmpdir, mfusg_transport_Ex5_model_path):
     print("testing mfusg transport model loading: Conduit.nam")
 
-    fname = mfusg_transport_Ex5_Henry_model_path / "Henry.nam"
+    fname = mfusg_transport_Ex5_model_path / "Henry.nam"
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
@@ -371,10 +386,10 @@ def test_usg_load_Ex5_Henry(function_tmpdir, mfusg_transport_Ex5_Henry_model_pat
     assert success, msg
 
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex6_Stallman_Heat(function_tmpdir, mfusg_transport_Ex6_Stallman_model_path):
+def test_usg_load_Ex6_Stallman_Heat(function_tmpdir, mfusg_transport_Ex6_model_path):
     print("testing mfusg transport model loading: Stallman_Heat.nam")
 
-    fname = mfusg_transport_Ex6_Stallman_model_path / "Heat/Stallman_Heat.nam"
+    fname = mfusg_transport_Ex6_model_path / "Heat/Stallman_Heat.nam"
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
@@ -409,10 +424,10 @@ def test_usg_load_Ex6_Stallman_Heat(function_tmpdir, mfusg_transport_Ex6_Stallma
     assert success, msg
 
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex6_Stallman_Solute(function_tmpdir, mfusg_transport_Ex6_Stallman_model_path):
+def test_usg_load_Ex6_Stallman_Solute(function_tmpdir, mfusg_transport_Ex6_model_path):
     print("testing mfusg transport model loading: Stallman_Solute.nam")
 
-    fname = mfusg_transport_Ex6_Stallman_model_path / "Solute/Stallman_Solute.nam"
+    fname = mfusg_transport_Ex6_model_path / "Solute/Stallman_Solute.nam"
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
@@ -447,10 +462,12 @@ def test_usg_load_Ex6_Stallman_Solute(function_tmpdir, mfusg_transport_Ex6_Stall
     assert success, msg
 
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex6_Stallman_Solute_Heat(function_tmpdir, mfusg_transport_Ex6_Stallman_model_path):
+def test_usg_load_Ex6_Stallman_Solute_Heat(
+    function_tmpdir, mfusg_transport_Ex6_model_path):
+
     print("testing mfusg transport model loading: Stallman.nam")
 
-    fname = mfusg_transport_Ex6_Stallman_model_path / "Solute_Heat/Stallman.nam"
+    fname = mfusg_transport_Ex6_model_path / "Solute_Heat/Stallman.nam"
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
@@ -485,10 +502,12 @@ def test_usg_load_Ex6_Stallman_Solute_Heat(function_tmpdir, mfusg_transport_Ex6_
     assert success, msg
 
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex7_Matrix_Diffusion_DiscreteFracture(function_tmpdir, mfusg_transport_Ex7_Matrix_Diffusion_model_path):
+def test_usg_load_Ex7_Matrix_Diffusion_DiscreteFracture(
+    function_tmpdir, mfusg_transport_Ex7_model_path):
+
     print("testing mfusg transport model loading: USG_discrete_fracture.nam")
 
-    fname = mfusg_transport_Ex7_Matrix_Diffusion_model_path / "DiscreteFracture/USG_discrete_fracture.nam"
+    fname = mfusg_transport_Ex7_model_path/"DiscreteFracture/USG_discrete_fracture.nam"
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
@@ -525,10 +544,10 @@ def test_usg_load_Ex7_Matrix_Diffusion_DiscreteFracture(function_tmpdir, mfusg_t
     assert success, msg
 
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex7_Matrix_Diffusion(function_tmpdir, mfusg_transport_Ex7_Matrix_Diffusion_model_path):
+def test_usg_load_Ex7_Matrix_Diffusion(function_tmpdir, mfusg_transport_Ex7_model_path):
     print("testing mfusg transport model loading: USG_Multispecies.nam")
 
-    fname = mfusg_transport_Ex7_Matrix_Diffusion_model_path / "Multispecies/USG_Multispecies.nam"
+    fname = mfusg_transport_Ex7_model_path / "Multispecies/USG_Multispecies.nam"
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
@@ -565,10 +584,10 @@ def test_usg_load_Ex7_Matrix_Diffusion(function_tmpdir, mfusg_transport_Ex7_Matr
     assert success, msg
 
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex7_SandTank(function_tmpdir, mfusg_transport_Ex7_Matrix_Diffusion_model_path):
+def test_usg_load_Ex7_SandTank(function_tmpdir, mfusg_transport_Ex7_model_path):
     print("testing mfusg transport model loading: usg_sand_tank.nam")
 
-    fname = mfusg_transport_Ex7_Matrix_Diffusion_model_path / "SandTank/usg_sand_tank.nam"
+    fname = mfusg_transport_Ex7_model_path / "SandTank/usg_sand_tank.nam"
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
@@ -607,10 +626,10 @@ def test_usg_load_Ex7_SandTank(function_tmpdir, mfusg_transport_Ex7_Matrix_Diffu
     assert success, msg
 
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex8_Lake(function_tmpdir, mfusg_transport_Ex8_Lake_model_path):
+def test_usg_load_Ex8_Lake(function_tmpdir, mfusg_transport_Ex8_model_path):
     print("testing mfusg transport model loading: lak_usg_01.nam")
 
-    fname = mfusg_transport_Ex8_Lake_model_path / "lak_usg_01.nam"
+    fname = mfusg_transport_Ex8_model_path / "lak_usg_01.nam"
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
@@ -652,10 +671,10 @@ def test_usg_load_Ex8_Lake(function_tmpdir, mfusg_transport_Ex8_Lake_model_path)
     # assert success, msg
 
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex9_PFAS(function_tmpdir, mfusg_transport_Ex9_PFAS_model_path):
+def test_usg_load_Ex9_PFAS(function_tmpdir, mfusg_transport_Ex9_model_path):
     print("testing mfusg transport model loading: PFAS_C1.nam")
 
-    fname = mfusg_transport_Ex9_PFAS_model_path / "C1/PFAS_C1.nam"
+    fname = mfusg_transport_Ex9_model_path / "C1/PFAS_C1.nam"
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model

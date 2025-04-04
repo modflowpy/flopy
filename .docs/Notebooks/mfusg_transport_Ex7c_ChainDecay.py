@@ -10,25 +10,34 @@
 # In[1]:
 
 
-import os, shutil
-import numpy as np
-import matplotlib.pyplot as plt
-
-import flopy
-from flopy.modflow import ModflowBas, ModflowChd,ModflowDis
-from flopy.mfusg import MfUsg, MfUsgDisU, MfUsgLpf, MfUsgSms, MfUsgBct, MfUsgWel, MfUsgOc, MfUsgPcb, MfUsgMdt
-from flopy.utils import HeadUFile
-from flopy.utils.gridgen import Gridgen
-from flopy.plot import PlotCrossSection,PlotMapView
-
-import flopy.utils.binaryfile as bf
-
+import os
+import shutil
 from tempfile import TemporaryDirectory
 
+import matplotlib.pyplot as plt
+import numpy as np
+
+import flopy
+import flopy.utils.binaryfile as bf
+from flopy.mfusg import (
+    MfUsg,
+    MfUsgBct,
+    MfUsgDisU,
+    MfUsgLpf,
+    MfUsgMdt,
+    MfUsgOc,
+    MfUsgPcb,
+    MfUsgSms,
+    MfUsgWel,
+)
+from flopy.modflow import ModflowBas, ModflowChd, ModflowDis
+from flopy.plot import PlotCrossSection, PlotMapView
+from flopy.utils import HeadUFile
+from flopy.utils.gridgen import Gridgen
 
 # ## Example MD3: Demonstration of PCE Decay
 
-# A hypothetical site with a tetrachloroethene (PCE) release is used to demonstrate MODFLOW-USG MDT package’s ability to model the effects of sequential decay in addition to diffusion into and from low-k zones (Table 5). The transmissive zone is a sandy aquifer that is interbedded with clay lenses. Hydraulic conductivity of the transmissive zone is 12,500 m/yr and the hydraulic gradient across the site is 0.002 m/m. Porosities for the sand and clay are 0.33 and 0.4, respectively. A tortuosity of 0.7 is assumed for both sand and clay. PCE is continuously released into groundwater at a concentration of 100 mg/L. The source area is 10 m perpendicular to groundwater flow and 3 m deep.
+# A hypothetical site with a tetrachloroethene (PCE) release is used to demonstrate MODFLOW-USG MDT package's ability to model the effects of sequential decay in addition to diffusion into and from low-k zones (Table 5). The transmissive zone is a sandy aquifer that is interbedded with clay lenses. Hydraulic conductivity of the transmissive zone is 12,500 m/yr and the hydraulic gradient across the site is 0.002 m/m. Porosities for the sand and clay are 0.33 and 0.4, respectively. A tortuosity of 0.7 is assumed for both sand and clay. PCE is continuously released into groundwater at a concentration of 100 mg/L. The source area is 10 m perpendicular to groundwater flow and 3 m deep.
 # 
 # Approximately 40% of the transmissive zone comprises of clay lenses with a characteristic diffusion length of 0.5 m. Therefore, matrix diffusion was modeled as being from the clay lenses embedded in the transmissive zone. PCE is assumed to undergo reductive dechlorination to trichloroethene (TCE), then to cis-1,2-dicloroethene (cis-DCE), and finally to vinyl chloride (VC) with decay rates of 0.4 yr-1 (PCE), 0.15 yr-1 (TCE), 0.1 yr-1 (cis-DCE), and 0.2 yr-1 (VC) (Wiedemeier et al., 1999; Aziz et al., 2002). Retardation factors assigned to each of the constituents are shown in Table 5.
 # 

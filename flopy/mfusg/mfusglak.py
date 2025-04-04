@@ -896,7 +896,7 @@ class MfUsgLak(Package):
                             ds9b[(n, icomp)] = tds
 
                     if mcomp > 0 and transportboundary:
-                        ## CLAKBC–The concentration of solute for lake boundary
+                        ## CLAKBC - concentration of solute for lake boundary
                         line = f.readline().rstrip()
                         t = line.split()
                         for icomp in range(mcomp):

@@ -6,13 +6,13 @@ the MfUsgEvt class as `flopy.mfusg.MfUsgEvt`.
 
 import numpy as np
 
+from ..modflow.mfparbc import ModflowParBc as mfparbc
 from ..pakbase import Package
 from ..utils import Transient2d, Util2d
 from ..utils.utils_def import (
     get_pak_vals_shape,
     type_from_iterable,
 )
-from ..modflow.mfparbc import ModflowParBc as mfparbc
 
 
 class MfUsgEvt(Package):
@@ -158,7 +158,8 @@ class MfUsgEvt(Package):
         # self.inznevt = [inznevt]*nper
         # self.iznevt = iznevt
         # iznevt_u2d_shape = get_pak_vals_shape(model, iznevt)
-        # self.iznevt = Transient2d(model, iznevt_u2d_shape, np.int32, iznevt, name="iznevt")
+        # self.iznevt = Transient2d(
+        # model, iznevt_u2d_shape, np.int32, iznevt, name="iznevt")
 
         self.np = 0
         self.parent.add_package(self)
@@ -197,7 +198,7 @@ class MfUsgEvt(Package):
             f_evt.write(f"{self.ietfactor:10d}")
         if self.mxetzones >0:
             f_evt.write(f"ETS {self.mxetzones:10d}")
-        f_evt.write(f"\n")
+        f_evt.write("\n")
 
         
         if self.nevtop == 2:
@@ -447,7 +448,8 @@ class MfUsgEvt(Package):
             # if inznevt[iper] > 0:
             #     if model.verbose:
             #         print(f"   loading iznevt stress period {iper + 1:3d}...")
-            #     current_iznevt = Util2d.load(f, model, (inznevt[iper],), np.int32, "iznevt", ext_unit_dict)
+            #     current_iznevt = Util2d.load(
+            # f, model, (inznevt[iper],), np.int32, "iznevt", ext_unit_dict)
             # iznevt[iper] = current_iznevt
 
         if openfile:

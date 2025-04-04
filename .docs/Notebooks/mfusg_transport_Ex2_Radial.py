@@ -3,25 +3,38 @@
 
 # ## Advection and Dispersion in a Two-Dimensional Confined Radial Flow Field
 
-# Panday, S., 2024; USG-Transport Version 2.4.0: Transport and Other Enhancements to MODFLOW-USG, GSI Environmental, July 2024 http://www.gsi-net.com/en/software/free-software/USG-Transport.html
+# Panday, S., 2024; USG-Transport Version 2.4.0: Transport and Other Enhancements
+# to MODFLOW-USG, GSI Environmental, July 2024 
+# http://www.gsi-net.com/en/software/free-software/USG-Transport.html
 # 
-# This test problem discusses advective dispersive transport of a chemical species in a radial flow field resulting from injection of a dissolved chemical species at the center of a 10,000 feet by 10,000 feet square simulation domain. The domain is discretized into 1 layer, 100 rows, and 100 columns with ∆ = x y ∆ = 100 feet, and ∆ =z 15feet. A confined flow-field is setup using a hydraulic conductivity of 100 ft/day, a constant head boundary condition of 20 feet around the perimeter, and a well at row = 50 and column = 50, that injects fluid at a rate of 10,000 ft3/day. The concentration of water in the domain is zero at the start of the simulation. The species concentration in injected water is 1mg/L. The dispersivity values used were αl = 500 feet and 
-# 50 αt = feet for the longitudinal and transverse directions respectively, and the effective porosity value used was 0.2. 
-# The transport simulation was conducted for 5,000 days with 50 time steps using a fixed time step size of 100 days. Also, the cross-dispersion option was activated. Simulation results for this test case are compared with results from an MT3D (Zheng and Wang, 1999) simulation with an identical setup.
+# This test problem discusses advective dispersive transport of a chemical species
+# in a radial flow field resulting from injection of a dissolved chemical species 
+# at the center of a 10,000 feet by 10,000 feet square simulation domain. The 
+# domain is discretized into 1 layer, 100 rows, and 100 columns with grid size of
+# 100x100 feet, and thickness of 15feet. A confined flow-field is setup using a 
+# hydraulic conductivity of 100 ft/day, a constant head boundary condition of 20 
+# feet around the perimeter, and a well at row = 50 and column = 50, that injects 
+# fluid at a rate of 10,000 ft3/day. The concentration of water in the domain is 
+# zero at the start of the simulation. The species concentration in injected water 
+# is 1mg/L. The dispersivity values used were 500 feet and 50 feet for the 
+# longitudinal and transverse directions respectively, and the effective porosity 
+# value used was 0.2. The transport simulation was conducted for 5,000 days with 
+# 50 time steps using a fixed time step size of 100 days. Also, the cross-dispersion
+# option was activated. Simulation results for this test case are compared with 
+# results from an MT3D (Zheng and Wang, 1999) simulation with an identical setup.
 
 # In[1]:
 
 
-import numpy as np
-import matplotlib.pyplot as plt
-
-import flopy
-from flopy.modflow import ModflowBas, ModflowDis, ModflowChd
-from flopy.mfusg import MfUsg, MfUsgLpf, MfUsgSms, MfUsgBct, MfUsgWel, MfUsgOc
-from flopy.utils import HeadFile
-
 from tempfile import TemporaryDirectory
 
+import matplotlib.pyplot as plt
+import numpy as np
+
+import flopy
+from flopy.mfusg import MfUsg, MfUsgBct, MfUsgLpf, MfUsgOc, MfUsgSms, MfUsgWel
+from flopy.modflow import ModflowBas, ModflowChd, ModflowDis
+from flopy.utils import HeadFile
 
 # In[2]:
 

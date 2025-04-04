@@ -12,27 +12,36 @@
 # 
 # In this simple benchmark problem, initial groundwater concentrations are set equal to zero. Upon execution of the simulation, groundwater begins flowing into the lake as a result of a lake stage that is 50 ft below fixed groundwater heads on the left edge of the model boundary. The initial constituent concentration in the lake is 100 mg/L. Thus, the discharge of “clean” groundwater to the lake dilutes the lake concentrations for the remainder of the simulation. Streams entering or exiting the lake are not simulated. Precipitation and evaporation rates of 0.0115 ft/d and 0.0103 ft/d, respectively, remain constant throughout the simulation and have associated concentrations equal to zero. Thus, the analytical solution for this problem is easy to calculate and is shown as the black line in figure 33. The simulated LKT concentrations, depicted as green color-filled circles in figure 33, demonstrate the accuracy of MT3D-USGS.
 # 
-# As the lake fills, seepage from the lake to the surficial aquifer begins to occur at approximately 1,230 days into the simulation, when the lake stage rises sufficiently above the fixed head boundary along the right-hand edge of the model domain. Furthermore, after 3,000 simulation days, the amount of precipitation falling on the lake, which has a significantly expanded surface area by this point in the simulation, plus groundwater inflow to the lake is roughly balanced by the combination of evaporation and seepage losses to the surficial aquifer below the lake. Hence, even after the lake stage levels off, the lake constituent concentration continues to drop as solute is continually lost to the groundwater system through seepage occurring in parts of the lakebed, and is diluted by precipitation and by groundwater inflow occurring in other parts of the lakebed with zero (or very low) concentrations. The simulation maintains a good mass balance and verifies lake transport related calculations in the absence of lake–stream interaction.
+# As the lake fills, seepage from the lake to the surficial aquifer begins to occur at approximately 1,230 days into the simulation, when the lake stage rises sufficiently above the fixed head boundary along the right-hand edge of the model domain. Furthermore, after 3,000 simulation days, the amount of precipitation falling on the lake, which has a significantly expanded surface area by this point in the simulation, plus groundwater inflow to the lake is roughly balanced by the combination of evaporation and seepage losses to the surficial aquifer below the lake. Hence, even after the lake stage levels off, the lake constituent concentration continues to drop as solute is continually lost to the groundwater system through seepage occurring in parts of the lakebed, and is diluted by precipitation and by groundwater inflow occurring in other parts of the lakebed with zero (or very low) concentrations. The simulation maintains a good mass balance and verifies lake transport related calculations in the absence of lake-stream interaction.
 
 # In[1]:
 
 
-import os, shutil
-import numpy as np
-import matplotlib.pyplot as plt
-
-import flopy
-from flopy.modflow import ModflowBas, ModflowChd,ModflowDis, ModflowFhb,ModflowGage
-from flopy.mfusg import (MfUsg, MfUsgDisU, MfUsgBcf, MfUsgSms, 
-MfUsgBct, MfUsgRch, MfUsgOc, MfUsgPcb, MfUsgLak, MfUsgEvt)
-from flopy.utils import HeadUFile
-from flopy.utils.gridgen import Gridgen
-from flopy.plot import PlotCrossSection,PlotMapView
-
-import flopy.utils.binaryfile as bf
-
+import os
+import shutil
 from tempfile import TemporaryDirectory
 
+import matplotlib.pyplot as plt
+import numpy as np
+
+import flopy
+import flopy.utils.binaryfile as bf
+from flopy.mfusg import (
+    MfUsg,
+    MfUsgBcf,
+    MfUsgBct,
+    MfUsgDisU,
+    MfUsgEvt,
+    MfUsgLak,
+    MfUsgOc,
+    MfUsgPcb,
+    MfUsgRch,
+    MfUsgSms,
+)
+from flopy.modflow import ModflowBas, ModflowChd, ModflowDis, ModflowFhb, ModflowGage
+from flopy.plot import PlotCrossSection, PlotMapView
+from flopy.utils import HeadUFile
+from flopy.utils.gridgen import Gridgen
 
 # In[2]:
 

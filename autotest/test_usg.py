@@ -7,9 +7,7 @@ from flaky import flaky
 from modflow_devtools.markers import requires_exe
 
 from autotest.conftest import get_example_data_path
-from flopy.mfusg import (
-    MfUsg, MfUsgDisU, MfUsgLpf, MfUsgSms, MfUsgWel,MfUsgOc
-)
+from flopy.mfusg import MfUsg, MfUsgDisU, MfUsgLpf, MfUsgOc, MfUsgSms, MfUsgWel
 from flopy.modflow import (
     ModflowBas,
     ModflowDis,
@@ -44,6 +42,8 @@ def test_usg_disu_load(function_tmpdir, mfusg_01A_nestedgrid_nognc_model_path):
 
     # Load the disu file (as Path and str)
     disu = MfUsgDisU.load(fname, m)
+    assert isinstance(disu, MfUsgDisU)
+    m.remove_package("DISU")
     disu = MfUsgDisU.load(str(fname), m)
     assert isinstance(disu, MfUsgDisU)
 
@@ -55,6 +55,7 @@ def test_usg_disu_load(function_tmpdir, mfusg_01A_nestedgrid_nognc_model_path):
     assert Path(function_tmpdir / f"{m.name}.{m.disu.extension[0]}").is_file()
 
     # Load disu file
+    m.remove_package("DISU")
     disu2 = MfUsgDisU.load(fname, m)
     for (key1, value1), (key2, value2) in zip(
         disu2.__dict__.items(), disu.__dict__.items()
@@ -87,6 +88,7 @@ def test_usg_sms_load(function_tmpdir, mfusg_01A_nestedgrid_nognc_model_path):
     assert Path(function_tmpdir / f"{m.name}.{m.sms.extension[0]}").is_file()
 
     # Load sms file
+    m.remove_package("SMS")
     sms2 = MfUsgSms.load(fname, m)
     for (key1, value1), (key2, value2) in zip(
         sms2.__dict__.items(), sms.__dict__.items()
@@ -129,6 +131,7 @@ def test_usg_model(function_tmpdir):
     # try different complexity options; all should run successfully
     for complexity in ["simple", "moderate", "complex"]:
         print(f"testing MFUSG with sms complexity: {complexity}")
+        mf.remove_package("SMS")
         sms = MfUsgSms(mf, options=complexity)
         sms.write_file()
         success, buff = mf.run_model()
@@ -369,6 +372,7 @@ def test_flat_array_to_util3d_usg(function_tmpdir, freyberg_usg_model_path):
 
     # modify hk array and check updates values are in the lpf
     custom_array[m.disu.nodelay[1] : m.disu.nodelay[1] + 2] = 999.9
+    m.remove_package("LPF")
     lpf_new = MfUsgLpf(m, hk=custom_array)
 
     msg = "modified flat array provided to lpf constructor is not updated as expected."

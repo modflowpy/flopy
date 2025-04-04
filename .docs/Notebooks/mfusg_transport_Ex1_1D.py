@@ -3,7 +3,8 @@
 
 # ## Advection, Dispersion and Decay in a One-Dimensional Uniform Flow Field 
 
-# Panday, S., 2024; USG-Transport Version 2.4.0: Transport and Other Enhancements to MODFLOW-USG, GSI Environmental, July 2024
+# Panday, S., 2024; USG-Transport Version 2.4.0: Transport and Other 
+# Enhancements to MODFLOW-USG, GSI Environmental, July 2024
 # http://www.gsi-net.com/en/software/free-software/USG-Transport.html
 # 
 # This test problem discusses one dimensional advective dispersive transport with first-order 
@@ -22,16 +23,15 @@
 # In[1]:
 
 
-import numpy as np
-import matplotlib.pyplot as plt
-
-import flopy
-from flopy.modflow import ModflowBas, ModflowDis
-from flopy.mfusg import MfUsg, MfUsgLpf, MfUsgSms, MfUsgBct, MfUsgPcb, MfUsgOc
-from flopy.utils import HeadFile
-
 from tempfile import TemporaryDirectory
 
+import matplotlib.pyplot as plt
+import numpy as np
+
+import flopy
+from flopy.mfusg import MfUsg, MfUsgBct, MfUsgLpf, MfUsgOc, MfUsgPcb, MfUsgSms
+from flopy.modflow import ModflowBas, ModflowDis
+from flopy.utils import HeadFile
 
 # In[2]:
 

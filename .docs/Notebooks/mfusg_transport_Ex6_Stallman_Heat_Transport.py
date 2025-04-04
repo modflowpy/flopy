@@ -11,19 +11,29 @@
 # In[1]:
 
 
-import os, shutil
-import numpy as np
-import matplotlib.pyplot as plt
-
-import flopy
-from flopy.modflow import ModflowBas, ModflowChd,ModflowDis
-from flopy.mfusg import MfUsg, MfUsgDisU, MfUsgLpf, MfUsgSms, MfUsgBct, MfUsgWel, MfUsgOc, MfUsgPcb, MfUsgDdf
-from flopy.utils import HeadUFile
-from flopy.utils.gridgen import Gridgen
-from flopy.plot import PlotCrossSection
-
+import os
+import shutil
 from tempfile import TemporaryDirectory
 
+import matplotlib.pyplot as plt
+import numpy as np
+
+import flopy
+from flopy.mfusg import (
+    MfUsg,
+    MfUsgBct,
+    MfUsgDdf,
+    MfUsgDisU,
+    MfUsgLpf,
+    MfUsgOc,
+    MfUsgPcb,
+    MfUsgSms,
+    MfUsgWel,
+)
+from flopy.modflow import ModflowBas, ModflowChd, ModflowDis
+from flopy.plot import PlotCrossSection
+from flopy.utils import HeadUFile
+from flopy.utils.gridgen import Gridgen
 
 # In[2]:
 
@@ -162,7 +172,7 @@ chd = ModflowChd(mf,ipakcb = ipakcb, stress_period_data=lrcsc)
 # Porosity (unitless)	0.35
 # Longitudinal dispersivity (m)	0
 # Transverse dispersivity (m)	0
-# Diffusion coefficient (ms−1)	1.03E-06
+# Diffusion coefficient (ms-1)	1.03E-06
 # Ambient temperature (oC)	10
 # Temperature variation (oC)	+/- 5
 # Bulk density (kg/m3)	1709.5

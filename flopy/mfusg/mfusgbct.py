@@ -251,17 +251,17 @@ class MfUsgBct(Package):
             opts.append(f" TIMEWEIGHT {self.timeweight} ")
         
         self.chaindecay = None
-        if "chaindecay" in kwargs and kwargs["chaindecay"]:
+        if kwargs.get("chaindecay"):
             self.chaindecay = 1
             opts.append(" CHAINDECAY ")
             
         self.only_satadsorb = None
-        if "only_satadsorb" in kwargs and kwargs["only_satadsorb"]:
+        if kwargs.get("only_satadsorb"):
             self.only_satadsorb = 1
             opts.append(" ONLY_SATADSORB ")
 
         self.spatialreact = None
-        if "spatialreact" in kwargs and kwargs["spatialreact"]:
+        if kwargs.get("spatialreact"):
             self.spatialreact = 1
             opts.append(" SPATIALREACT ")
 
@@ -288,8 +288,10 @@ class MfUsgBct(Package):
                     # )
         
         self.solubility = None
-        if "solubility" in kwargs and kwargs["solubility"]:
-            self.sollim = Util2d(model, (mcomp,), np.float32, kwargs["sollim"], name="sollim")
+        if kwargs.get("solubility"):
+            self.sollim = Util2d(
+                model, (mcomp,), np.float32, kwargs["sollim"], name="sollim"
+                )
             self.solslope = Util2d(
                 model, (mcomp,), np.float32, kwargs["solslope"], name="solslope"
             )
@@ -297,13 +299,13 @@ class MfUsgBct(Package):
             opts.append(" SOLUBILITY ")
         
         self.aw_adsorb = None
-        if "aw_adsorb" in kwargs and kwargs["aw_adsorb"]:
+        if kwargs.get("aw_adsorb"):
             self.iarea_fn = kwargs["iarea_fn"]
             self.ikawi_fn = kwargs["ikawi_fn"]
             self.aw_adsorb = 1
             opts.append(f" A-W_ADSORB {self.iarea_fn} {self.ikawi_fn}")
         
-        if "imasswr" in kwargs and kwargs["imasswr"]:
+        if kwargs.get("imasswr"):
             opts.append(f" WRITE_GWMASS {kwargs["imasswr"]} ")
         
         if "crootname" in kwargs:
@@ -455,19 +457,21 @@ class MfUsgBct(Package):
 
         if self.parent.free_format_input:
             f_obj.write(
-                f" {self.itrnsp:3d} {self.ipakcb:3d} {self.mcomp:3d} {self.icbndflg:3d} "
-                f"{self.itvd:3d} {self.iadsorb:3d} {self.ict:3d} {self.cinact:14.6e} "
-                f"{self.ciclose:14.6e} {self.idisp:3d} {self.ixdisp:3d} {self.diffnc:14.6e} "
-                f"{self.izod:3d} {self.ifod:3d} {self.ifmbc:3d} {self.iheat:3d} "
-                f"{self.imcomp:3d} {self.idispcln:3d} {self.nseqitr:3d} "
+                f" {self.itrnsp:3d} {self.ipakcb:3d} {self.mcomp:3d}"
+                f" {self.icbndflg:3d} {self.itvd:3d} {self.iadsorb:3d}"
+                f" {self.ict:3d} {self.cinact:14.6e} {self.ciclose:14.6e}"
+                f" {self.idisp:3d} {self.ixdisp:3d} {self.diffnc:14.6e}"
+                f" {self.izod:3d} {self.ifod:3d} {self.ifmbc:3d} {self.iheat:3d}"
+                f" {self.imcomp:3d} {self.idispcln:3d} {self.nseqitr:3d} "
             )
         else :
             f_obj.write(
-                f" {self.itrnsp:9d} {self.ipakcb:9d} {self.mcomp:9d} {self.icbndflg:9d} "
-                f"{self.itvd:9d} {self.iadsorb:9d} {self.ict:9d} {self.cinact:9.2e} "
-                f"{self.ciclose:9.2e} {self.idisp:9d} {self.ixdisp:9d} {self.diffnc:9.2e} "
-                f"{self.izod:9d} {self.ifod:9d} {self.ifmbc:9d} {self.iheat:9d} "
-                f"{self.imcomp:9d} {self.idispcln:9d} {self.nseqitr:9d} "
+                f" {self.itrnsp:9d} {self.ipakcb:9d} {self.mcomp:9d} {self.icbndflg:9d}"
+                f" {self.itvd:9d} {self.iadsorb:9d} {self.ict:9d} {self.cinact:9.2e}"
+                f" {self.ciclose:9.2e} {self.idisp:9d} {self.ixdisp:9d}"
+                f" {self.diffnc:9.2e} {self.izod:9d} {self.ifod:9d} {self.ifmbc:9d}"
+                f" {self.iheat:9d} {self.imcomp:9d} {self.idispcln:9d}"
+                f" {self.nseqitr:9d} "
             )
 
         f_obj.write(self.options + "\n")
