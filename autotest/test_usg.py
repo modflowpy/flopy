@@ -7,7 +7,6 @@ from flaky import flaky
 from modflow_devtools.markers import requires_exe
 
 from autotest.conftest import get_example_data_path
-
 from flopy.mfusg import MfUsg, MfUsgDisU, MfUsgLpf, MfUsgOc, MfUsgSms, MfUsgWel
 from flopy.modflow import (
     ModflowBas,
