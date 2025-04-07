@@ -16,6 +16,7 @@ from flopy.modflow import (
 )
 from flopy.utils import TemporalReference, Util2d, Util3d
 
+
 @pytest.fixture
 def mfusg_01A_nestedgrid_nognc_model_path(example_data_path):
     return example_data_path / "mfusg_test" / "01A_nestedgrid_nognc"
