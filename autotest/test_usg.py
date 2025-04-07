@@ -14,7 +14,7 @@ from flopy.modflow import (
     ModflowDrn,
     ModflowGhb,
 )
-from flopy.utils import TemporalReference, Util2d, Util3d
+from flopy.utils import Util2d, Util3d
 
 
 @pytest.fixture
