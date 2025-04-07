@@ -374,9 +374,9 @@ def test_mf6_update_grid(example_data_path):
     mg = gwf.modelgrid
     gwf.dis.top = 12
 
-    assert np.allclose(gwf.dis.top.array, gwf.modelgrid.top), (
-        "StructuredGrid failed dynamic update test"
-    )
+    assert np.allclose(
+        gwf.dis.top.array, gwf.modelgrid.top
+    ), "StructuredGrid failed dynamic update test"
 
     # disv
     ml_path = example_data_path / "mf6" / "test003_gwfs_disv"
@@ -385,9 +385,9 @@ def test_mf6_update_grid(example_data_path):
     mg = gwf.modelgrid
     gwf.disv.top = 6.12
 
-    assert np.allclose(gwf.disv.top.array, gwf.modelgrid.top), (
-        "VertexGrid failed dynamic update test"
-    )
+    assert np.allclose(
+        gwf.disv.top.array, gwf.modelgrid.top
+    ), "VertexGrid failed dynamic update test"
 
     # disu
     ml_path = example_data_path / "mf6" / "test006_gwf3"
@@ -396,9 +396,9 @@ def test_mf6_update_grid(example_data_path):
     mg = gwf.modelgrid
     gwf.disu.top = 101
 
-    assert np.allclose(gwf.disu.top.array, gwf.modelgrid.top), (
-        "UnstructuredGrid failed dynamic update test"
-    )
+    assert np.allclose(
+        gwf.disu.top.array, gwf.modelgrid.top
+    ), "UnstructuredGrid failed dynamic update test"
 
 
 def test_load_twri_grid(example_data_path):
@@ -411,9 +411,9 @@ def test_load_twri_grid(example_data_path):
     assert mg.shape == shape, f"modelgrid shape {mg.shape} not equal to {shape}"
     thickness = mg.cell_thickness
     shape = (5, 15, 15)
-    assert thickness.shape == shape, (
-        f"cell_thickness shape {thickness.shape} not equal to {shape}"
-    )
+    assert (
+        thickness.shape == shape
+    ), f"cell_thickness shape {thickness.shape} not equal to {shape}"
 
 
 def test_mg(function_tmpdir):

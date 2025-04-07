@@ -136,9 +136,9 @@ class ModflowMnw1(Package):
 
         # -input format checks:
         lossTypes = ["skin", "linear", "nonlinear"]
-        assert self.losstype.lower() in lossTypes, (
-            f"LOSSTYPE ({self.losstype}) must be one of the following: {lossTypes}"
-        )
+        assert (
+            self.losstype.lower() in lossTypes
+        ), f"LOSSTYPE ({self.losstype}) must be one of the following: {lossTypes}"
         self.parent.add_package(self)
 
     @staticmethod

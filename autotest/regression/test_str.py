@@ -117,6 +117,6 @@ def test_str_fixed_free(function_tmpdir, example_data_path):
     # compare the fixed and free format head files
     fn1 = function_tmpdir / "str.nam"
     fn2 = function_tmpdir / "str.nam"
-    assert compare_heads(fn1, fn2, verbose=True), (
-        "fixed and free format input output head files are different"
-    )
+    assert compare_heads(
+        fn1, fn2, verbose=True
+    ), "fixed and free format input output head files are different"

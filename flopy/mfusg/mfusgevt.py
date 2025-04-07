@@ -51,8 +51,8 @@ class MfUsgEvt(Package):
         1 = chemical component leaves with water
         between 0 and 1 = fraction of mass of the component leaves
     iznevt : float of array (mcomp) (default is 1.0)
-        array of zonal indices for applying a PET time series to zones. 
-        This PET input is independent of the stress period input, which 
+        array of zonal indices for applying a PET time series to zones.
+        This PET input is independent of the stress period input, which
         is ignored when the zonal time series are provided.
     extension : string
         Filename extension (default is 'evt')
@@ -101,11 +101,11 @@ class MfUsgEvt(Package):
         evtr=1e-3,
         exdp=1.0,
         ievt=1,
-        mxetzones = 0,
-        ietfactor = 0,
-        etfactor = 0.0,
-        inznevt = 0,
-        iznevt = 0,
+        mxetzones=0,
+        ietfactor=0,
+        etfactor=0.0,
+        inznevt=0,
+        iznevt=0,
         extension="evt",
         unitnumber=None,
         filenames=None,
@@ -196,11 +196,10 @@ class MfUsgEvt(Package):
 
         if self.parent.itrnsp and self.ietfactor != 0:
             f_evt.write(f"{self.ietfactor:10d}")
-        if self.mxetzones >0:
+        if self.mxetzones > 0:
             f_evt.write(f"ETS {self.mxetzones:10d}")
         f_evt.write("\n")
 
-        
         if self.nevtop == 2:
             ievt = {}
             for kper, u2d in self.ievt.transient_2ds.items():
@@ -234,9 +233,7 @@ class MfUsgEvt(Package):
                 if inievt >= 0 and not self.parent.structured:
                     inievt = self.ievt[n].array.size
             comment = f"Evapotranspiration dataset 5 for stress period {n + 1}"
-            f_evt.write(
-                f"{insurf:10d}{inevtr:10d}{inexdp:10d}{inievt:10d} "
-            )
+            f_evt.write(f"{insurf:10d}{inevtr:10d}{inexdp:10d}{inievt:10d} ")
             # if self.inznevt[n] > 0:
             #     f_evt.write(f"INEVTZONES {self.inznevt[n]:10d}\n")
             f_evt.write(f"#{comment}\n")
@@ -249,7 +246,7 @@ class MfUsgEvt(Package):
                 f_evt.write(exdp)
             if self.nevtop == 2 and inievt >= 0:
                 f_evt.write(file_entry_ievt)
-            
+
             # if self.inznevt[n] > 0:
             #     iznevt = self.iznevt.get_kper_entry(n)
             #     f_evt.write(iznevt)
@@ -331,7 +328,7 @@ class MfUsgEvt(Package):
             mxndevt = int(t[0])
 
         # dataset 2c for mfusg
-        etfactor= None
+        etfactor = None
         mcomp = model.mcomp
         if mcomp > 0:
             etfactor = np.zeros(model.mcomp)
@@ -385,7 +382,7 @@ class MfUsgEvt(Package):
             # if "INEVTZONES" in t:
             #     idx = t.index("INEVTZONES")
             #     inznevt[iper] = int(t[idx + 1])
-            
+
             if insurf >= 0:
                 if model.verbose:
                     print(f"   loading surf stress period {iper + 1:3d}...")

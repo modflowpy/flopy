@@ -61,13 +61,12 @@ class MfUsg(Modflow):
         version="mfusg",
         exe_name: Union[str, os.PathLike] = "mfusg",
         structured=True,
-        listunit = 2,
+        listunit=2,
         model_ws: Union[str, os.PathLike] = os.curdir,
-        external_path = None,
-        verbose= False,
+        external_path=None,
+        verbose=False,
         **kwargs,
     ):
-
         super().__init__(
             modelname,
             namefile_ext,
@@ -81,11 +80,11 @@ class MfUsg(Modflow):
             **kwargs,
         )
 
-        self.itrnsp = 0 # transport simulation flag
+        self.itrnsp = 0  # transport simulation flag
         self.mcomp = 0  # number of chemical components
         self.iheat = 0  # flag for heat transport
         self.idpf = 0  # flag for dual porosity flow
-        self.icln = 0   # flag for CLN package
+        self.icln = 0  # flag for CLN package
 
         # Create a dictionary to map package with package object.
         # This is used for loading models.
@@ -347,7 +346,7 @@ class MfUsg(Modflow):
 
         # set mfpar / pval
         cls._set_mfpar_pval(model, ext_unit_dict, ext_pkg_d)
-        
+
         load_only = cls._prepare_load_only(load_only, ext_pkg_d)
 
         # try loading packages in ext_unit_dict

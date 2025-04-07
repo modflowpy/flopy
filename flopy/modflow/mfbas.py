@@ -146,7 +146,7 @@ class ModflowBas(Package):
         self.richards = richards
 
         model.free_format_input = ifrefm
-        
+
         opts = []
         if self.ixsec:
             opts.append("XSECTION")
@@ -163,7 +163,7 @@ class ModflowBas(Package):
             opts.append("PRINTTIME")
         if kwargs.get("ishowp"):
             opts.append("SHOWPROGRESS")
-        
+
         if kwargs.get("printfv"):
             opts.append("PRINTFV")
         if kwargs.get("unstructured"):
@@ -178,7 +178,7 @@ class ModflowBas(Package):
             opts.append("DPIO")
         if kwargs.get("dpin"):
             opts.append("DPIN")
-        
+
         self.options = " ".join(opts)
 
         self.hnoflo = hnoflo
@@ -358,7 +358,7 @@ class ModflowBas(Package):
         ixsec = "XSECTION" in opts
         ichflg = "CHTOCH" in opts
         ifrefm = "FREE" in opts
-        args = {} ## Additional options in BAS6 for MF-USG
+        args = {}  ## Additional options in BAS6 for MF-USG
         richards = "RICHARDS" in opts
         args["iprinttime"] = "PRINTTIME" in opts
         args["ishowp"] = "SHOWPROGRESS" in opts
@@ -370,7 +370,7 @@ class ModflowBas(Package):
         args["dpout"] = "DPOUT" in opts
         args["dpio"] = "DPIO" in opts
         args["dpin"] = "DPIN" in opts
-        
+
         if "STOPERROR" in opts:
             i = opts.index("STOPERROR")
             stoper = np.float32(opts[i + 1])

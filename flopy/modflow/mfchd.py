@@ -131,9 +131,9 @@ class ModflowChd(Package):
             self.dtype = dtype
         else:
             self.dtype = self.get_default_dtype(structured=self.parent.structured)
-        
+
         options = self._check_for_aux(options)
-        
+
         self.stress_period_data = MfList(self, stress_period_data)
 
         self.np = 0

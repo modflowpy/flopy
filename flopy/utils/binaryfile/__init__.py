@@ -677,7 +677,7 @@ class HeadUFile(BinaryLayerFile):
         Path of the head file
     text : string
         Name of the text string in the head file. Default is 'headu'.
-        TEXT can be “HEAD”, “CONC”, “TMPR” or “DRAWDOWN”. CONC and TMPR  
+        TEXT can be “HEAD”, “CONC”, “TMPR” or “DRAWDOWN”. CONC and TMPR
         are concentration and temperature. If there are multiple mobile
         components, then the concentration for each of the components
         is identified by the species number. Thus, if there are three
@@ -775,7 +775,7 @@ class HeadUFile(BinaryLayerFile):
                         self.kstpkper.append((header["kstp"], header["kper"]))
                 ipos = self.file.tell()
                 self.iposarray.append(ipos)
-            
+
             databytes = self.get_databytes(header)
             self.file.seek(databytes, 1)
             ipos = self.file.tell()

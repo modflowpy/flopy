@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# ## MF-USG Verification Example for Heat and Solute Transport - Ex6 Stallman 
+# ## MF-USG Verification Example for Heat and Solute Transport - Ex6 Stallman
 
 # Panday, S., 2024; USG-Transport Version 2.4.0: Transport and Other Enhancements to MODFLOW-USG, GSI Environmental, July 2024 http://www.gsi-net.com/en/software/free-software/USG-Transport.html
-# 
-# The problem compares the MODFLOW-USG solution with the Stallman (1965) analytical solution for transient heat flow in the subsurface in response to a sinusoidally varying temperature boundary at land surface. 
+#
+# The problem compares the MODFLOW-USG solution with the Stallman (1965) analytical solution for transient heat flow in the subsurface in response to a sinusoidally varying temperature boundary at land surface.
 # The transport model is simulated with both heat and equivalent solute conditions.  The heat transport parameters and equivalent solute parameters are shown on Table H1 below.
 
 # In[1]:
@@ -50,7 +50,7 @@ model_ws = "Ex6a_Stallman_Heat"
 mf = MfUsg(
     version="mfusg",
     structured=True,
-    model_ws= model_ws,
+    model_ws=model_ws,
     modelname="Ex6_Stallman",
     exe_name="mfusg_gsi",
 )
@@ -73,84 +73,90 @@ delv = 0.5
 top = 60.0
 botm = np.linspace(top - delv, 0.0, nlay)
 
-dis = flopy.modflow.ModflowDis(ms,nlay,nrow,ncol, delr=delr, delc=delc, laycbd=0, top=top, botm=botm)
+dis = flopy.modflow.ModflowDis(
+    ms, nlay, nrow, ncol, delr=delr, delc=delc, laycbd=0, top=top, botm=botm
+)
 
 
 # In[5]:
 
 
-gridgen_ws = os.path.join(model_ws, 'gridgen')
+gridgen_ws = os.path.join(model_ws, "gridgen")
 if not os.path.exists(gridgen_ws):
-    os.mkdir(gridgen_ws)    
+    os.mkdir(gridgen_ws)
 g = Gridgen(ms.modelgrid, model_ws=gridgen_ws)
 g.build()
 gridprops = g.get_gridprops_disu5()
 
 
-# Number of stress periods: 600; 
-# Number of time steps in each stress period : 6; 
+# Number of stress periods: 600;
+# Number of time steps in each stress period : 6;
 # Simulation time length (s) of each stress period :	525600
 
 # In[6]:
 
 
 nper = 601
-perlen = [525600.0]*nper
-nstp = [6]*nper
+perlen = [525600.0] * nper
+nstp = [6] * nper
 nstp[0] = 1
-steady = [False]*nper
+steady = [False] * nper
 steady[0] = True
 
-disu = MfUsgDisU(mf, **gridprops, itmuni=1, nper=nper, perlen=perlen, nstp=nstp, steady=steady)
+disu = MfUsgDisU(
+    mf, **gridprops, itmuni=1, nper=nper, perlen=perlen, nstp=nstp, steady=steady
+)
 
 
 # In[7]:
 
 
-bas = ModflowBas(mf,strt=60.0)
+bas = ModflowBas(mf, strt=60.0)
 
 
-# Hydraulic conductivity of 1.0 x 10-4 m/sec (28.35 ft/d). With a porosity of 0.35, the pore velocity is 12.3 cm/d = 1.42 x x 10-6 m/sec. 
+# Hydraulic conductivity of 1.0 x 10-4 m/sec (28.35 ft/d). With a porosity of 0.35, the pore velocity is 12.3 cm/d = 1.42 x x 10-6 m/sec.
 
 # In[8]:
 
 
 ipakcb = 50
-hk  = 1.0E-4
-vka = 1.0E-4
-ss  = 1.0E-10
-lpf = MfUsgLpf(mf,ipakcb = ipakcb, constantcv=1, novfc=1, 
-               laytyp =4, hk = hk,vka = vka,ss=ss)
+hk = 1.0e-4
+vka = 1.0e-4
+ss = 1.0e-10
+lpf = MfUsgLpf(
+    mf, ipakcb=ipakcb, constantcv=1, novfc=1, laytyp=4, hk=hk, vka=vka, ss=ss
+)
 
 
 # In[9]:
 
 
-sms = MfUsgSms(mf, 
-        hclose=1.0e-3,
-        hiclose=1.0e-5,
-        mxiter=250,
-        iter1=600,
-        iprsms=1,
-        nonlinmeth=1,
-        linmeth=1,
-        theta=0.7,
-        akappa=0.07,
-        gamma=0.1,
-        amomentum=0.0,
-        numtrack=200,
-        btol=1.1,
-        breduc=0.2,
-        reslim=1.0,
-        iacl=1,
-        norder=0,
-        level=7,
-        north=14,
-        iredsys=0,
-        rrctol=0.0,
-        idroptol=1,
-        epsrn=1.0e-3,
-        options2=["SOLVEACTIVE","DAMPBOT"],
+sms = MfUsgSms(
+    mf,
+    hclose=1.0e-3,
+    hiclose=1.0e-5,
+    mxiter=250,
+    iter1=600,
+    iprsms=1,
+    nonlinmeth=1,
+    linmeth=1,
+    theta=0.7,
+    akappa=0.07,
+    gamma=0.1,
+    amomentum=0.0,
+    numtrack=200,
+    btol=1.1,
+    breduc=0.2,
+    reslim=1.0,
+    iacl=1,
+    norder=0,
+    level=7,
+    north=14,
+    iredsys=0,
+    rrctol=0.0,
+    idroptol=1,
+    epsrn=1.0e-3,
+    options2=["SOLVEACTIVE", "DAMPBOT"],
 )
 
 
@@ -161,10 +167,10 @@ sms = MfUsgSms(mf,
 
 # mf.remove_package("CHD")
 lrcsc = {}
-for iper in range(nper) :
-    lrcsc[iper] = [[0,60.0,60.0],[119,59.704285,59.704285]]
+for iper in range(nper):
+    lrcsc[iper] = [[0, 60.0, 60.0], [119, 59.704285, 59.704285]]
 
-chd = ModflowChd(mf,ipakcb = ipakcb, stress_period_data=lrcsc)
+chd = ModflowChd(mf, ipakcb=ipakcb, stress_period_data=lrcsc)
 
 
 # ## Heat Transport
@@ -180,10 +186,24 @@ chd = ModflowChd(mf,ipakcb = ipakcb, stress_period_data=lrcsc)
 # In[11]:
 
 
-bct = MfUsgBct(mf, itvd=5, idisp=0, cinact=-999.9, diffnc = 0.0, timeweight=1.0, mcomp = 0, 
-               iheat=1, htcondw=0.58, rhow=1.0E3, htcapw=4.174E3,
-               htcaps = 800.0, htconds = 2.0, heat = 10.0, 
-               prsity = 0.35, bulkd = 1709.5)
+bct = MfUsgBct(
+    mf,
+    itvd=5,
+    idisp=0,
+    cinact=-999.9,
+    diffnc=0.0,
+    timeweight=1.0,
+    mcomp=0,
+    iheat=1,
+    htcondw=0.58,
+    rhow=1.0e3,
+    htcapw=4.174e3,
+    htcaps=800.0,
+    htconds=2.0,
+    heat=10.0,
+    prsity=0.35,
+    bulkd=1709.5,
+)
 
 
 # The initial temperature of the subsurface is 10$^\circ$C, and the temperature at the surface varies as $T_{top}=10+5sin(2\pi t/T)$ where t is the time and T is the wave length of 1 year.
@@ -191,19 +211,25 @@ bct = MfUsgBct(mf, itvd=5, idisp=0, cinact=-999.9, diffnc = 0.0, timeweight=1.0,
 # In[12]:
 
 
-simy = (np.cumsum(disu.perlen.array)-perlen)/3600/24/365
+simy = (np.cumsum(disu.perlen.array) - perlen) / 3600 / 24 / 365
 lrcsc = {}
-for iper in range(nper) :
-    ttop = 10.0+5*np.sin(2*np.pi*simy[iper])
-    lrcsc[iper] = [0,1,ttop]
+for iper in range(nper):
+    ttop = 10.0 + 5 * np.sin(2 * np.pi * simy[iper])
+    lrcsc[iper] = [0, 1, ttop]
 
-pcb = MfUsgPcb(mf,stress_period_data=lrcsc)
+pcb = MfUsgPcb(mf, stress_period_data=lrcsc)
 
 
 # In[13]:
 
 
-oc = MfUsgOc(mf, save_conc = 1, save_every=1, save_types = ["save head", "save budget"],unitnumber= [14,30,31,0,0,132])
+oc = MfUsgOc(
+    mf,
+    save_conc=1,
+    save_every=1,
+    save_types=["save head", "save budget"],
+    unitnumber=[14, 30, 31, 0, 0, 132],
+)
 
 
 # In[14]:
@@ -216,7 +242,7 @@ success, buff = mf.run_model(silent=True)
 # In[15]:
 
 
-tempobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text='tmpr')
+tempobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text="tmpr")
 simtemp = np.concatenate(tempobj.get_data())
 
 
@@ -226,27 +252,37 @@ simtemp = np.concatenate(tempobj.get_data())
 
 
 mf.remove_package("CHD")
-dtype = np.dtype([
-    ("node", int),
-    ("shead", np.float32),
-    ("ehead", np.float32),
-    ("c01", np.float32)])
+dtype = np.dtype(
+    [("node", int), ("shead", np.float32), ("ehead", np.float32), ("c01", np.float32)]
+)
 
 lrcsc = {}
-for iper in range(nper) :
-    lrcsc[iper] = [[0,60.0,60.0,10.0],[119,59.704285,59.704285,0.0]]
+for iper in range(nper):
+    lrcsc[iper] = [[0, 60.0, 60.0, 10.0], [119, 59.704285, 59.704285, 0.0]]
 
-chd = ModflowChd(mf,ipakcb = ipakcb, options=[], dtype=dtype, stress_period_data=lrcsc)
+chd = ModflowChd(mf, ipakcb=ipakcb, options=[], dtype=dtype, stress_period_data=lrcsc)
 
 
 # In[17]:
 
 
 mf.remove_package("BCT")
-bct = MfUsgBct(mf, itvd=5, cinact=-999.9, diffnc=1.028820e-06, nseqitr=1, timeweight=1.0,  
-               prsity = 0.35, anglex=0.0, dl=0.0, dt = 0.0,  conc = 10.0,
-               iadsorb=1, bulkd = 1709.5, adsorb = 1.916630e-04,               
-              )
+bct = MfUsgBct(
+    mf,
+    itvd=5,
+    cinact=-999.9,
+    diffnc=1.028820e-06,
+    nseqitr=1,
+    timeweight=1.0,
+    prsity=0.35,
+    anglex=0.0,
+    dl=0.0,
+    dt=0.0,
+    conc=10.0,
+    iadsorb=1,
+    bulkd=1709.5,
+    adsorb=1.916630e-04,
+)
 
 
 # In[18]:
@@ -259,19 +295,19 @@ success, buff = mf.run_model(silent=True)
 # In[19]:
 
 
-concobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text='conc')
+concobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text="conc")
 simconc = concobj.get_data()
 
 
 # In[20]:
 
 
-depth = top- np.squeeze(dis.botm.array)
+depth = top - np.squeeze(dis.botm.array)
 
 fig = plt.figure(figsize=(8, 5), dpi=150)
 ax = fig.add_subplot(111)
-ax.plot(simtemp,depth,label="Temperature", linewidth=3)
-ax.plot(simconc,depth,label="Concentration")
+ax.plot(simtemp, depth, label="Temperature", linewidth=3)
+ax.plot(simconc, depth, label="Concentration")
 plt.gca().invert_yaxis()
 ax.set_ylabel("Depth(m)")
 ax.set_title("MODFLOW-USG Transport Simulation Results for Heat and Solute Transport")
@@ -284,25 +320,42 @@ ax.legend()
 
 
 mf.remove_package("BCT")
-bct = MfUsgBct(mf, itvd=5, cinact=-999.9, diffnc=1.028820e-06, nseqitr=1, timeweight=1.0,  
-               iheat=1, htcondw=0.58, rhow=1.0E3, htcapw=4.174E3,
-               prsity = 0.35, anglex=0.0, dl=0.0, dt = 0.0,  conc = 10.0,
-               iadsorb=1, bulkd = 1709.5, adsorb = 1.916630e-04,
-               htcaps = 800.0, htconds = 2.0, heat = 10.0, 
-             )
+bct = MfUsgBct(
+    mf,
+    itvd=5,
+    cinact=-999.9,
+    diffnc=1.028820e-06,
+    nseqitr=1,
+    timeweight=1.0,
+    iheat=1,
+    htcondw=0.58,
+    rhow=1.0e3,
+    htcapw=4.174e3,
+    prsity=0.35,
+    anglex=0.0,
+    dl=0.0,
+    dt=0.0,
+    conc=10.0,
+    iadsorb=1,
+    bulkd=1709.5,
+    adsorb=1.916630e-04,
+    htcaps=800.0,
+    htconds=2.0,
+    heat=10.0,
+)
 
 
 # In[22]:
 
 
 mf.remove_package("PCB")
-simy = (np.cumsum(disu.perlen.array)-perlen)/3600/24/365
+simy = (np.cumsum(disu.perlen.array) - perlen) / 3600 / 24 / 365
 lrcsc = {}
-for iper in range(nper) :
-    ttop = 10.0+5*np.sin(2*np.pi*simy[iper])
-    lrcsc[iper] = [[0,1,ttop],[0,2,ttop]]
+for iper in range(nper):
+    ttop = 10.0 + 5 * np.sin(2 * np.pi * simy[iper])
+    lrcsc[iper] = [[0, 1, ttop], [0, 2, ttop]]
 
-pcb = MfUsgPcb(mf,stress_period_data=lrcsc)
+pcb = MfUsgPcb(mf, stress_period_data=lrcsc)
 
 
 # In[23]:
@@ -337,22 +390,22 @@ success, buff = mf.run_model(silent=True)
 # In[24]:
 
 
-tempobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text='tmpr')
+tempobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text="tmpr")
 simtemp = np.concatenate(tempobj.get_data())
 
-concobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text='conc')
+concobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text="conc")
 simconc = concobj.get_data()
 
 
 # In[25]:
 
 
-depth = top- np.squeeze(dis.botm.array)
+depth = top - np.squeeze(dis.botm.array)
 
 fig = plt.figure(figsize=(8, 5), dpi=150)
 ax = fig.add_subplot(111)
-ax.plot(simtemp,depth,label="Temperature", linewidth=3)
-ax.plot(simconc,depth,label="Concentration")
+ax.plot(simtemp, depth, label="Temperature", linewidth=3)
+ax.plot(simconc, depth, label="Concentration")
 plt.gca().invert_yaxis()
 ax.set_ylabel("Depth(m)")
 ax.set_title("MODFLOW-USG Transport Simulation Results for Heat and Solute Transport")
@@ -360,7 +413,3 @@ ax.legend()
 
 
 # In[ ]:
-
-
-
-

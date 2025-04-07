@@ -384,9 +384,9 @@ class Gridgen:
             )
 
         # make sure shapefile exists
-        assert shapefile_path and shapefile_path.is_file(), (
-            f"Shapefile does not exist: {shapefile_path}"
-        )
+        assert (
+            shapefile_path and shapefile_path.is_file()
+        ), f"Shapefile does not exist: {shapefile_path}"
 
         # store shapefile info
         self._addict[shapefile_path.stem] = relpath_safe(shapefile_path, self.model_ws)
@@ -436,9 +436,9 @@ class Gridgen:
             )
 
         # make sure shapefile exists
-        assert shapefile_path and shapefile_path.is_file(), (
-            f"Shapefile does not exist: {shapefile_path}"
-        )
+        assert (
+            shapefile_path and shapefile_path.is_file()
+        ), f"Shapefile does not exist: {shapefile_path}"
 
         # store shapefile info
         self._rfdict[shapefile_path.stem] = [
@@ -819,14 +819,14 @@ class Gridgen:
                 )
             area[k] = ark
             istart = istop
-        
+
         ivsd = -1
         for array in area[1:]:
             if not np.array_equal(area[0], array):
                 ivsd = 0
                 break
-        
-        if ivsd == -1 :
+
+        if ivsd == -1:
             area = area[0]
 
         # iac
@@ -1252,9 +1252,9 @@ class Gridgen:
         if fldr is None:
             fldr = self.get_fldr()
         anglex = np.zeros(fldr.shape, dtype=float)
-        anglex = np.where(fldr == 2, 1.5*np.pi, anglex)
+        anglex = np.where(fldr == 2, 1.5 * np.pi, anglex)
         anglex = np.where(fldr == -1, np.pi, anglex)
-        anglex = np.where(fldr == -2, 0.5*np.pi, anglex)
+        anglex = np.where(fldr == -2, 0.5 * np.pi, anglex)
         return anglex
 
     def get_verts_iverts(self, ncells, verbose=False):

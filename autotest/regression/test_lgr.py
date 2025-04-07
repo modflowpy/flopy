@@ -46,9 +46,9 @@ def test_simplelgr(function_tmpdir, example_data_path):
 
     # get the namefiles of the parent and child
     namefiles = lgr.get_namefiles()
-    assert len(namefiles) == 2, (
-        f"get_namefiles returned {len(namefiles)} items instead of 2"
-    )
+    assert (
+        len(namefiles) == 2
+    ), f"get_namefiles returned {len(namefiles)} items instead of 2"
 
     tpth = dirname(namefiles[0])
     assert tpth == model_ws2, f"dir path is {tpth} not {model_ws2}"
