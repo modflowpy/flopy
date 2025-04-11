@@ -1998,8 +1998,10 @@ class MFModel(ModelInterface):
                 # update model name file
                 pkg_type = package.package_type.upper()
                 if (
-                    pkg_type == "EVTA" or
-                    pkg_type == "RCHA"
+                    package.package_type != "obs" and
+                    self.structure.package_struct_objs[
+                    package.package_type
+                    ].read_as_arrays
                 ):
                     pkg_type = pkg_type[0:-1]
                 # Model Assumption - assuming all name files have a package
