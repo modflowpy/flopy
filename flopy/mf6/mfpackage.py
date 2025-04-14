@@ -852,7 +852,13 @@ class MFBlock:
             )
 
         # handle special readasarrays case
-        if self._container_package.structure.read_as_arrays:
+        if (
+            self._container_package.structure.read_as_arrays
+            or (
+                hasattr(self._container_package, "aux")
+                and self._container_package.aux.structure.layered
+            )
+        ):
             # auxiliary variables may appear with aux variable name as keyword
             aux_vars = self._container_package.auxiliary.get_data()
             if aux_vars is not None:

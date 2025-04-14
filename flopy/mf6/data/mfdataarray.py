@@ -1063,7 +1063,10 @@ class MFArray(MFMultiDimVar):
             external_file_info=None,
         )
         self._resync()
-        if self.structure.layered:
+        if (
+            self.structure.layered
+            and self.structure.name.lower() != "aux"
+        ):
             try:
                 model_grid = self.data_dimensions.get_model_grid()
             except Exception as ex:
