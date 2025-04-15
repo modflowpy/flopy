@@ -1019,7 +1019,8 @@ class DataStorage:
             if isinstance(data, np.ndarray):
                 # try to store while preserving the structure of the
                 # existing record
-                if self.layer_storage.get_total_size() > 1:
+                is_aux = self.data_dimensions.structure.name == "aux"
+                if not is_aux and self.layer_storage.get_total_size() > 1:
                     if len(data) == self.layer_storage.get_total_size():
                         # break ndarray into layers and store
                         success = self._set_array_by_layer(
@@ -2948,8 +2949,10 @@ class DataStorage:
 
     def get_data_dimensions(self, layer):
         data_dimensions = self.data_dimensions.get_data_shape()[0]
+        is_aux = self.data_dimensions.structure.name == "aux"
         if (
-            layer is not None
+            not is_aux
+            and layer is not None
             and self.layer_storage.get_total_size() > 1
             and self._has_layer_dim()
         ):

@@ -2110,17 +2110,14 @@ class MFSimulationStructure:
 
     def tag_read_as_arrays(self):
         for key, package_struct in self.package_struct_objs.items():
-            if key[0:-1] in self.package_struct_objs and key[-1] == "a":
+            if package_struct.get_data_structure(('options', 'readasarrays')):
                 package_struct.read_as_arrays = True
         for model_key, model_struct in self.model_struct_objs.items():
             for (
                 key,
                 package_struct,
             ) in model_struct.package_struct_objs.items():
-                if (
-                    key[0:-1] in model_struct.package_struct_objs
-                    and key[-1] == "a"
-                ):
+                if package_struct.get_data_structure(('options', 'readasarrays')):
                     package_struct.read_as_arrays = True
 
 
