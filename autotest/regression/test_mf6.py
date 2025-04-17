@@ -1441,7 +1441,6 @@ def test005_create_tests_advgw_tidal(function_tmpdir, example_data_path):
                 50.0,
                 0.0004,
                 10.0,
-                None,
             )
     evt_package_test = ModflowGwfevt(
         model,
@@ -1467,7 +1466,6 @@ def test005_create_tests_advgw_tidal(function_tmpdir, example_data_path):
                 0.5,
                 0.3,
                 0.1,
-                None,
             )
     evt_package = ModflowGwfevt(
         model,

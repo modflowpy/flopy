@@ -190,6 +190,39 @@ class MFFileAccess:
         else:
             return None, None
 
+    def _optional_in_scope(self, data_item):
+        # aux and boundname are already managed
+        if (
+            data_item.name == "aux"
+            or data_item.name == "boundname"
+            or 'options' in self._path
+        ):
+            return True
+
+        # in_scope default True for non-managed packages
+        if (
+            self.structure.get_package() == "evt"
+        ):
+            in_scope = False
+        else:
+            in_scope = True
+
+        # set in_scope per package
+        if self.structure.get_package() == "evt":
+            if data_item.name == "petm0":
+                for key in self._simulation_data.mfdata:
+                    if "surf_rate_specified" in key:
+                        if self._simulation_data.mfdata[key].get_data():
+                            in_scope = True
+            elif data_item.name == "pxdp" or data_item.name == "petm":
+                for key in self._simulation_data.mfdata:
+                    if "nseg" in key:
+                        nseg = self._simulation_data.mfdata[key].get_data()
+                        if nseg and nseg > 1:
+                            in_scope = True
+
+        return in_scope
+
 
 class MFFileAccessArray(MFFileAccess):
     def __init__(
@@ -1130,15 +1163,32 @@ class MFFileAccessList(MFFileAccess):
                 else:
                     header.append((di_struct.name, np_flt_type))
                 ext_index += 1
-            elif di_struct.name == "aux":
-                aux_var_names = (
-                    self._data_dimensions.package_dim.get_aux_variables()
-                )
-                if aux_var_names is not None:
-                    for aux_var_name in aux_var_names[0]:
-                        if aux_var_name.lower() != "auxiliary":
-                            header.append((aux_var_name, np_flt_type))
+            else:
+                # optional tags
+                if di_struct.name == "aux":
+                    aux_var_names = (
+                        self._data_dimensions.package_dim.get_aux_variables()
+                    )
+                    if aux_var_names is not None:
+                        for aux_var_name in aux_var_names[0]:
+                            if aux_var_name.lower() != "auxiliary":
+                                header.append((aux_var_name, np_flt_type))
+                                ext_index += 1
+                elif self._optional_in_scope(di_struct):
+                    if di_struct.name == "pxdp" or di_struct.name == "petm":
+                        for seg in range(
+                            self._simulation_data.mfdata[key].get_data() - 1
+                        ):
+                            header.append(
+                                (
+                                    f"{di_struct.name}{seg+1}",
+                                    np_flt_type,
+                                )
+                            )
                             ext_index += 1
+                    elif di_struct.name == "petm0":
+                        header.append((di_struct.name, np_flt_type))
+                        ext_index += 1
         return header, int_cellid_indexes, ext_cellid_indexes
 
     def _get_cell_header(self, data_item, data_set, index):
@@ -1958,6 +2008,11 @@ class MFFileAccessList(MFFileAccess):
                                             zero_based=zero_based,
                                         )
                                         data_item.type = di_type
+                                    if (
+                                        data_item.optional
+                                        and not self._optional_in_scope(data_item)
+                                    ):
+                                        break
                                     (
                                         data_index,
                                         more_data_expected,
