@@ -193,7 +193,8 @@ class MFFileAccess:
     def _optional_in_scope(self, data_item):
         # aux and boundname are already managed
         if (
-            data_item.name == "aux"
+            not data_item.optional
+            or data_item.name == "aux"
             or data_item.name == "boundname"
             or 'options' in self._path
         ):
@@ -220,6 +221,7 @@ class MFFileAccess:
                         nseg = self._simulation_data.mfdata[key].get_data()
                         if nseg and nseg > 1:
                             in_scope = True
+                        break
 
         return in_scope
 
@@ -1176,16 +1178,19 @@ class MFFileAccessList(MFFileAccess):
                                 ext_index += 1
                 elif self._optional_in_scope(di_struct):
                     if di_struct.name == "pxdp" or di_struct.name == "petm":
-                        for seg in range(
-                            self._simulation_data.mfdata[key].get_data() - 1
-                        ):
-                            header.append(
-                                (
-                                    f"{di_struct.name}{seg+1}",
-                                    np_flt_type,
+                        nseg = None
+                        for key in self._simulation_data.mfdata:
+                            if "nseg" in key:
+                                nseg = self._simulation_data.mfdata[key].get_data()
+                        if nseg and nseg > 1:
+                            for seg in range(nseg - 1):
+                                header.append(
+                                    (
+                                        f"{di_struct.name}{seg+1}",
+                                        np_flt_type,
+                                    )
                                 )
-                            )
-                            ext_index += 1
+                                ext_index += 1
                     elif di_struct.name == "petm0":
                         header.append((di_struct.name, np_flt_type))
                         ext_index += 1
