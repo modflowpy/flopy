@@ -1993,7 +1993,9 @@ class MFFileAccessList(MFFileAccess):
                                         )
                                         data_item.type = di_type
                                     if (
-                                        data_item.optional
+                                        (data_item.name == "pxdp"
+                                        or data_item.name == "petm"
+                                        or data_item.name == "petm0")
                                         and self._optional_nvals(data_item) == 0
                                     ):
                                         break
