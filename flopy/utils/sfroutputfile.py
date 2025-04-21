@@ -245,7 +245,7 @@ class SfrFile:
             for s, r in locsr:
                 srresults = self._get_result(s, r)
                 if len(srresults) > 0:
-                    results = results.append(srresults)
+                    results = pd.concat([results, srresults])
                 else:
                     print(f"No results for segment {s}, reach {r}!")
         return results
