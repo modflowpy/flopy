@@ -2713,22 +2713,29 @@ class DataStorage:
                                     aux_var_name, data_type, False
                                 )
 
-                elif data_item.name == "petm0" and resolve_data_shape:
-                    if surf_rate_specified or self._optional_in_scope(data_item):
-                        self._append_type_lists(
-                            data_item.name, data_type, False
-                        )
-                elif data_item.name == "pxdp" or data_item.name == "petm":
-                    if (nseg and nseg > 1) or self._optional_in_scope(data_item):
-                        if nseg is None:
-                            for key in self._simulation_data.mfdata:
-                                if "nseg" in key:
-                                    nseg = self._simulation_data.mfdata[key].get_data()
-                        if nseg and nseg > 1:
-                            for seg in range(nseg - 1):
-                                self._append_type_lists(
-                                    f"{data_item.name}{seg+1}", data_type, False
-                                )
+                elif (
+                    data_item.name == "petm0"
+                    or data_item.name == "pxdp"
+                    or data_item.name == "petm"
+                ):
+                    nval = self._optional_nvals(data_item)
+                    if data_item.name == "petm0":
+                        if surf_rate_specified or nval == 1:
+                            self._append_type_lists(
+                                data_item.name, data_type, False
+                            )
+                    elif (
+                        data_item.name == "pxdp"
+                        or data_item.name == "petm"
+                    ):
+                        if (nseg and nseg > 1) or nval > 0:
+                            if nseg is None:
+                                nseg = nval + 1
+                            if nseg > 1:
+                                for seg in range(nseg - 1):
+                                    self._append_type_lists(
+                                        f"{data_item.name}{seg+1}", data_type, False
+                                    )
                 elif data_item.type == DatumType.record:
                     # record within a record, recurse
                     self.build_type_list(data_item, True, data)
@@ -2895,7 +2902,7 @@ class DataStorage:
                 self._recarray_type_list_ex = existing_type_list_ex
             return new_type_list
 
-    def _optional_in_scope(self, data_item):
+    def _optional_nvals(self, data_item):
         file_access = MFFileAccessList(
             self.data_dimensions.structure,
             self.data_dimensions,
@@ -2904,7 +2911,7 @@ class DataStorage:
             self._stress_period,
         )
 
-        return file_access._optional_in_scope(data_item)
+        return file_access._optional_nvals(data_item)
 
     def get_default_mult(self):
         if self._data_type == DatumType.integer:

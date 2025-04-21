@@ -190,40 +190,24 @@ class MFFileAccess:
         else:
             return None, None
 
-    def _optional_in_scope(self, data_item):
-        # aux and boundname are already managed
-        if (
-            not data_item.optional
-            or data_item.name == "aux"
-            or data_item.name == "boundname"
-            or 'options' in self._path
-        ):
-            return True
+    def _optional_nvals(self, data_item):
+        nvals = 0
 
-        # in_scope default True for non-managed packages
-        if (
-            self.structure.get_package() == "evt"
-        ):
-            in_scope = False
-        else:
-            in_scope = True
-
-        # set in_scope per package
+        # set nvals per managed optional param
         if self.structure.get_package() == "evt":
             if data_item.name == "petm0":
                 for key in self._simulation_data.mfdata:
                     if "surf_rate_specified" in key:
                         if self._simulation_data.mfdata[key].get_data():
-                            in_scope = True
+                            nvals = 1
             elif data_item.name == "pxdp" or data_item.name == "petm":
-                for key in self._simulation_data.mfdata:
-                    if "nseg" in key:
-                        nseg = self._simulation_data.mfdata[key].get_data()
-                        if nseg and nseg > 1:
-                            in_scope = True
-                        break
+                shape, rule = self._data_dimensions.get_data_shape(
+                    data_item, self._data_dimensions.structure
+                )
+                if len(shape) == 1:
+                    nvals = shape[0]
 
-        return in_scope
+        return nvals
 
 
 class MFFileAccessArray(MFFileAccess):
@@ -1176,24 +1160,19 @@ class MFFileAccessList(MFFileAccess):
                             if aux_var_name.lower() != "auxiliary":
                                 header.append((aux_var_name, np_flt_type))
                                 ext_index += 1
-                elif self._optional_in_scope(di_struct):
-                    if di_struct.name == "pxdp" or di_struct.name == "petm":
-                        nseg = None
-                        for key in self._simulation_data.mfdata:
-                            if "nseg" in key:
-                                nseg = self._simulation_data.mfdata[key].get_data()
-                        if nseg and nseg > 1:
-                            for seg in range(nseg - 1):
-                                header.append(
-                                    (
-                                        f"{di_struct.name}{seg+1}",
-                                        np_flt_type,
-                                    )
-                                )
-                                ext_index += 1
-                    elif di_struct.name == "petm0":
+                elif (nvals := self._optional_nvals(di_struct)):
+                    if nvals == 1:
                         header.append((di_struct.name, np_flt_type))
                         ext_index += 1
+                    elif nvals > 1:
+                        for val in range(nvals):
+                            header.append(
+                                (
+                                    f"{di_struct.name}_{val+1}",
+                                    np_flt_type,
+                                )
+                            )
+                            ext_index += 1
         return header, int_cellid_indexes, ext_cellid_indexes
 
     def _get_cell_header(self, data_item, data_set, index):
@@ -2015,7 +1994,7 @@ class MFFileAccessList(MFFileAccess):
                                         data_item.type = di_type
                                     if (
                                         data_item.optional
-                                        and not self._optional_in_scope(data_item)
+                                        and self._optional_nvals(data_item) == 0
                                     ):
                                         break
                                     (
