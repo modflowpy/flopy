@@ -1573,8 +1573,8 @@ def test_package_observations():
     gwf1 = new_sim.get_model("ps1a_mod_1")
     gwf2 = new_sim.get_model("ps1a_mod_2")
 
-    obsdata1 = list(gwf1.obs.continuous.data.values())[0]
-    obsdata2 = list(gwf2.obs.continuous.data.values())[0]
+    obsdata1 = [i for i in gwf1.obs.continuous.data.values()][0]
+    obsdata2 = [i for i in gwf2.obs.continuous.data.values()][0]
 
     vdict1 = {"C1": (0, 4, 0), "R1": (0, 3, 19)}
     vdict2 = {"C2": (0, 6, 0), "R2": (0, 10, 19)}
