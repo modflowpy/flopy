@@ -1489,3 +1489,112 @@ def test_timeseries(function_tmpdir):
 
     if not success:
         raise AssertionError("Timeseries split simulation did not properly run")
+
+
+def test_package_observations():
+    XL = 10000
+    YL = 10500
+    dx = dy = 500
+    nlay = 3
+    nrow = int(YL / dy)
+    ncol = int(XL / dx)
+
+    delc = np.full((nrow,), dy)
+    delr = np.full((ncol,), dx)
+
+    top = np.full((nrow, ncol), 330)
+
+    botm = np.zeros((nlay, nrow, ncol))
+    botm[0] = 220
+    botm[1] = 200
+    botm[2] = 0
+
+    sim = flopy.mf6.MFSimulation()
+    ims = flopy.mf6.ModflowIms(sim, complexity="SIMPLE")
+    tdis = flopy.mf6.ModflowTdis(sim)
+
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="ps1a_mod")
+
+    dis = flopy.mf6.ModflowGwfdis(
+        gwf,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=delr,
+        delc=delc,
+        top=top,
+        botm=botm,
+        idomain=np.ones(botm.shape, dtype=int),
+    )
+
+    ic = flopy.mf6.ModflowGwfic(gwf, strt=330)
+
+    npf = flopy.mf6.ModflowGwfnpf(
+        gwf, k=[50, 0.01, 200], k33=[10, 0.01, 20], icelltype=[1, 0, 0]
+    )
+
+    # build the CHD stress period data
+    records = []
+    for row in range(nrow):
+        rec = ((0, row, 0), 330)
+        records.append(rec)
+
+    for row in range(nrow):
+        rec = ((0, row, ncol - 1), 320)
+        records.append(rec)
+
+    spd = {0: records}
+
+    chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=spd)
+
+    observations = {
+        "chd_obs_out.csv": [
+            ("C1", "chd", (0, 4, 0)),  # 80 (end up as same)
+            ("C2", "chd", (0, 16, 0)),  # 320 (end up as m2 120)
+            ("R1", "chd", (0, 3, 19)),  # 79 (end up as same)
+            ("R2", "chd", (0, 20, 19)),  # 419 (end up as m2 219)
+        ]
+    }
+
+    # do observations on the chd package!!!!
+    obs = flopy.mf6.ModflowUtlobs(
+        chd,
+        continuous=observations,
+    )
+
+    # now do model splitter???
+    array = np.ones((nrow, ncol), dtype=int)
+    split_loc = ncol // 2
+    array[split_loc:, :] = 2
+
+    mfs = flopy.mf6.utils.Mf6Splitter(sim)
+    new_sim = mfs.split_model(array)
+
+    gwf1 = new_sim.get_model("ps1a_mod_1")
+    gwf2 = new_sim.get_model("ps1a_mod_2")
+
+    obsdata1 = list(gwf1.obs.continuous.data.values())[0]
+    obsdata2 = list(gwf2.obs.continuous.data.values())[0]
+
+    vdict1 = {"C1": (0, 4, 0), "R1": (0, 3, 19)}
+    vdict2 = {"C2": (0, 6, 0), "R2": (0, 10, 19)}
+
+    for row in obsdata1:
+        obsname = row.obsname
+        cellid = row.id
+        if obsname not in vdict1:
+            raise AssertionError("Observations not correctly mapped to new model")
+
+        vcid = vdict1[obsname]
+        if vcid != cellid:
+            raise AssertionError("Observation cellid not correctly mapped to new model")
+
+    for row in obsdata2:
+        obsname = row.obsname
+        cellid = row.id
+        if obsname not in vdict2:
+            raise AssertionError("Observations not correctly mapped to new model")
+
+        vcid = vdict2[obsname]
+        if vcid != cellid:
+            raise AssertionError("Observation cellid not correctly mapped to new model")

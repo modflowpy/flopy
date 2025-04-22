@@ -2735,11 +2735,11 @@ class Mf6Splitter:
                             dtype=object,
                         )
                         for mkey, model in self._model_dict.items():
-                            idx = np.asarray(new_model1 == mkey).nonzero()
+                            idx = np.asarray(new_model1 == mkey).nonzero()[0]
                             idx = [
                                 ix
-                                for ix, i in enumerate(recarray.id[idx])
-                                if not isinstance(i, str)
+                                for ix in idx
+                                if not isinstance(recarray.id[ix], str)
                             ]
                             tmp_cellid = self._new_node_to_cellid(
                                 model, new_node1, layers1, idx
@@ -3382,8 +3382,27 @@ class Mf6Splitter:
                             "interpolation_methodrecord": tspkg.interpolation_methodrecord.array["interpolation_method"][0]
                         }
                         mapped_data[mkey]["timeseries"] = tsdict
+
                 else:
                     pass
+
+            if hasattr(package, "obs"):
+                obs_map = {"cellid": self._node_map}
+                for mkey, mdict in mapped_data.items():
+                    if "stress_period_data" in mdict:
+                        for _, ra in mdict["stress_period_data"].items():
+                            if isinstance(ra, dict):
+                                continue
+                            obs_map = self._set_boundname_remaps(
+                                ra, obs_map, list(obs_map.keys()), mkey
+                            )
+                for obspak in package.obs._packages:
+                    mapped_data = self._remap_obs(
+                        obspak,
+                        mapped_data,
+                        obs_map["cellid"],
+                        pkg_type=package.package_type,
+                    )
 
         observations = mapped_data.pop("observations", None)
 
