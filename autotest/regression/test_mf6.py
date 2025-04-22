@@ -5113,6 +5113,8 @@ def test_evt_optional(function_tmpdir, example_data_path):
         surf_rate_specified4 = test_srs4[i]
         surf_rate_specified1 = test_srs1[i]
         evtbin = test_bin[i]
+
+        # evt4 (nseg=4)
         if surf_rate_specified4:
             data4 = [
                 (
@@ -5168,7 +5170,7 @@ def test_evt_optional(function_tmpdir, example_data_path):
             stress_period_data=evtspd4,
         )
 
-        # evt1
+        # evt1 (nseg=1)
         if surf_rate_specified1:
             data1 = [
                 (

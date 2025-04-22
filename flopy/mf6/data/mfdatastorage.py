@@ -2713,12 +2713,8 @@ class DataStorage:
                                     aux_var_name, data_type, False
                                 )
 
-                elif (
-                    data_item.name == "petm0"
-                    or data_item.name == "pxdp"
-                    or data_item.name == "petm"
-                ):
-                    nval = self._optional_nvals(data_item)
+                elif self._dependent_opt(data_item):
+                    nval = self._optional_nval(data_item)
                     if data_item.name == "petm0":
                         if surf_rate_specified or nval == 1:
                             self._append_type_lists(
@@ -2902,7 +2898,7 @@ class DataStorage:
                 self._recarray_type_list_ex = existing_type_list_ex
             return new_type_list
 
-    def _optional_nvals(self, data_item):
+    def _optional_nval(self, data_item):
         file_access = MFFileAccessList(
             self.data_dimensions.structure,
             self.data_dimensions,
@@ -2911,7 +2907,18 @@ class DataStorage:
             self._stress_period,
         )
 
-        return file_access._optional_nvals(data_item)
+        return file_access._optional_nval(data_item)
+
+    def _dependent_opt(self, data_item):
+        file_access = MFFileAccessList(
+            self.data_dimensions.structure,
+            self.data_dimensions,
+            self._simulation_data,
+            self._data_path,
+            self._stress_period,
+        )
+
+        return file_access._dependent_opt(data_item)
 
     def get_default_mult(self):
         if self._data_type == DatumType.integer:
