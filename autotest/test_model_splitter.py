@@ -1574,7 +1574,7 @@ def test_package_observations():
     gwf2 = new_sim.get_model("ps1a_mod_2")
 
     obsdata1 = gwf1.obs.continuous.data["chd_obs_out_1.csv"]
-    obsdata2 = gwf2.obs.continuous.data.values["chd_obs_out_2.csv"]
+    obsdata2 = gwf2.obs.continuous.data["chd_obs_out_2.csv"]
 
     vdict1 = {"C1": (0, 4, 0), "R1": (0, 3, 19)}
     vdict2 = {"C2": (0, 6, 0), "R2": (0, 10, 19)}
