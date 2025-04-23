@@ -190,6 +190,44 @@ class MFFileAccess:
         else:
             return None, None
 
+    def _optional_nval(self, data_item):
+        # return in scope number of values associated
+        # with optional parameter that also returns
+        # true from _dependent_opt()
+        nval = 0
+
+        # set nval per managed optional param
+        if self.structure.get_package() == "evt":
+            if data_item.name == "petm0":
+                for key in self._simulation_data.mfdata:
+                    if "options" in key[1:] and "surf_rate_specified" in key[1:]:
+                        if self._simulation_data.mfdata[key].get_data():
+                            nval = 1
+            elif data_item.name == "pxdp" or data_item.name == "petm":
+                shape, rule = self._data_dimensions.get_data_shape(
+                    data_item, self._data_dimensions.structure
+                )
+                if len(shape) == 1:
+                    nval = shape[0]
+
+        return nval
+
+    def _dependent_opt(self, data_item):
+        # return true if this is a managed dependent
+        # option other than aux, boundname. These options
+        # should return a value from _optional_nval()
+        dep_opt = False
+
+        if self.structure.get_package() == "evt":
+            if (
+                data_item.name == "petm0"
+                or data_item.name == "pxdp"
+                or data_item.name == "petm"
+            ):
+                dep_opt = True
+
+        return dep_opt
+
 
 class MFFileAccessArray(MFFileAccess):
     def __init__(
@@ -1130,14 +1168,30 @@ class MFFileAccessList(MFFileAccess):
                 else:
                     header.append((di_struct.name, np_flt_type))
                 ext_index += 1
-            elif di_struct.name == "aux":
-                aux_var_names = (
-                    self._data_dimensions.package_dim.get_aux_variables()
-                )
-                if aux_var_names is not None:
-                    for aux_var_name in aux_var_names[0]:
-                        if aux_var_name.lower() != "auxiliary":
-                            header.append((aux_var_name, np_flt_type))
+            else:
+                # optional tags
+                if di_struct.name == "aux":
+                    aux_var_names = (
+                        self._data_dimensions.package_dim.get_aux_variables()
+                    )
+                    if aux_var_names is not None:
+                        for aux_var_name in aux_var_names[0]:
+                            if aux_var_name.lower() != "auxiliary":
+                                header.append((aux_var_name, np_flt_type))
+                                ext_index += 1
+                elif self._dependent_opt(di_struct):
+                    nval = self._optional_nval(di_struct)
+                    if nval == 1:
+                        header.append((di_struct.name, np_flt_type))
+                        ext_index += 1
+                    elif nval > 1:
+                        for val in range(nval):
+                            header.append(
+                                (
+                                    f"{di_struct.name}_{val+1}",
+                                    np_flt_type,
+                                )
+                            )
                             ext_index += 1
         return header, int_cellid_indexes, ext_cellid_indexes
 
@@ -1958,6 +2012,11 @@ class MFFileAccessList(MFFileAccess):
                                             zero_based=zero_based,
                                         )
                                         data_item.type = di_type
+                                    if (
+                                        self._dependent_opt(data_item)
+                                        and self._optional_nval(data_item) == 0
+                                    ):
+                                        break
                                     (
                                         data_index,
                                         more_data_expected,
