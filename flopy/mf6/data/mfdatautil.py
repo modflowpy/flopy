@@ -940,7 +940,6 @@ class ListTemplateGenerator(TemplateGenerator):
         aux_vars=None,
         boundnames=False,
         nseg=None,
-        surf_rate_specified=False,
         timeseries=False,
         cellid_expanded=False,
     ):
@@ -960,9 +959,7 @@ class ListTemplateGenerator(TemplateGenerator):
 
         # build type list
         type_list = data_storage.build_type_list(
-            nseg=nseg,
-            surf_rate_specified=surf_rate_specified,
-            cellid_expanded=cellid_expanded
+            nseg=nseg, cellid_expanded=cellid_expanded
         )
         if data_storage.jagged_record:
             comment = (
@@ -1012,7 +1009,6 @@ class ListTemplateGenerator(TemplateGenerator):
         aux_vars=None,
         boundnames=False,
         nseg=None,
-        surf_rate_specified=False,
         timeseries=False,
         stress_periods=None,
         cellid_expanded=False,
@@ -1025,7 +1021,6 @@ class ListTemplateGenerator(TemplateGenerator):
             aux_vars,
             boundnames,
             nseg,
-            surf_rate_specified,
             timeseries,
             cellid_expanded,
         )
