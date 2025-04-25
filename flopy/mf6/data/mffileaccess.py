@@ -199,10 +199,18 @@ class MFFileAccess:
         # set nval per managed optional param
         if self.structure.get_package() == "evt":
             if data_item.name == "petm0":
-                for key in self._simulation_data.mfdata:
-                    if "options" in key[1:] and "surf_rate_specified" in key[1:]:
-                        if self._simulation_data.mfdata[key].get_data():
-                            nval = 1
+                if len(self._path) > 1:
+                    key = (
+                        self._path[0],
+                        self._path[1],
+                        "options",
+                        "surf_rate_specified",
+                    )
+                    if (
+                        key in self._simulation_data.mfdata
+                        and self._simulation_data.mfdata[key].get_data()
+                    ):
+                        nval = 1
             elif data_item.name == "pxdp" or data_item.name == "petm":
                 shape, rule = self._data_dimensions.get_data_shape(
                     data_item, self._data_dimensions.structure

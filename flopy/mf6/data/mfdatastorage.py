@@ -2698,8 +2698,8 @@ class DataStorage:
                 or not self.in_model
             ):
                 overrides = self._data_type_overrides
-                if index in overrides:
-                    data_type = overrides[index]
+                if len(self._recarray_type_list) in overrides:
+                    data_type = overrides[len(self._recarray_type_list)]
                 elif isinstance(data_item, MFDataItemStructure):
                     data_type = data_item.get_rec_type()
                 else:
