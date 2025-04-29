@@ -1217,7 +1217,7 @@ class Mf6Splitter:
             new_sim : MFSimulation object
         """
         for pak in self._sim.sim_package_list:
-            if pak.package_abbr in ("gwfgwt", "gwfgwf", "gwfgwe"):
+            if pak.package_abbr in ("gwfgwt", "gwfgwf", "gwfgwe", "utlats"):
                 continue
             pak_cls = PackageContainer.package_factory(pak.package_abbr, "")
             signature = inspect.signature(pak_cls)
@@ -1226,7 +1226,11 @@ class Mf6Splitter:
                 if key in ("simulation", "loading_package", "pname", "kwargs"):
                     continue
                 elif key == "ats_perioddata":
-                    continue
+                    data = getattr(pak, "ats")
+                    if len(data._packages) > 0:
+                        data = data._packages[0].perioddata.array
+                        d[key] = data
+
                 else:
                     data = getattr(pak, key)
                     if hasattr(data, "array"):
