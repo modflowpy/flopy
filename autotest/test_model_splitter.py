@@ -1600,6 +1600,7 @@ def test_package_observations():
             raise AssertionError("Observation cellid not correctly mapped to new model")
 
 
+
 @requires_exe("mf6")
 def test_ats(function_tmpdir):
     name = "ats_dev"
@@ -1665,3 +1666,4 @@ def test_ats(function_tmpdir):
     new_sim.write_simulation()
     success, _ = new_sim.run_simulation()
     assert success
+
