@@ -1598,3 +1598,70 @@ def test_package_observations():
         vcid = vdict2[obsname]
         if vcid != cellid:
             raise AssertionError("Observation cellid not correctly mapped to new model")
+
+
+@requires_exe("mf6")
+def test_ats(function_tmpdir):
+    name = "ats_dev"
+
+    sim = flopy.mf6.MFSimulation()
+    ims = flopy.mf6.ModflowIms(sim, complexity="SIMPLE")
+    tdis = flopy.mf6.ModflowTdis(
+        sim,
+        perioddata=[
+            (100.0, 5, 1.0),
+        ],
+        ats_perioddata=[(0, 10.0, 1e-05, 20, 2, 10)],
+    )
+
+    gwf = flopy.mf6.ModflowGwf(sim, modelname=name)
+
+    dx = 100
+    dy = 10
+    nlay = 1
+    nrow = 1
+    ncol = 10
+    delc = np.full((nrow,), dy / nrow)
+    delr = np.full((ncol,), dx / ncol)
+    top = 10
+    botm = 0
+    idomain = np.ones((nlay, nrow, ncol), dtype=int)
+
+    dis = flopy.mf6.ModflowGwfdis(
+        gwf,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=delr,
+        delc=delc,
+        top=top,
+        botm=botm,
+        idomain=idomain,
+    )
+
+    ic = flopy.mf6.ModflowGwfic(gwf, strt=top)
+    npf = flopy.mf6.ModflowGwfnpf(gwf)
+    chd = flopy.mf6.ModflowGwfchd(
+        gwf, stress_period_data=[((0, 0, 0), 9.5), ((0, 0, 9), 7)]
+    )
+
+    budget_file = f"{name}.bud"
+    head_file = f"{name}.hds"
+    oc = flopy.mf6.ModflowGwfoc(
+        gwf,
+        budget_filerecord=budget_file,
+        head_filerecord=head_file,
+        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+        printrecord=[("BUDGET", "ALL")],
+    )
+
+    array = np.ones((nrow, ncol), dtype=int)
+    array[0, 5:] = 2
+
+    mfs = flopy.mf6.utils.Mf6Splitter(sim)
+    new_sim = mfs.split_model(array)
+
+    new_sim.set_sim_path(function_tmpdir)
+    new_sim.write_simulation()
+    success, _ = new_sim.run_simulation()
+    assert success
