@@ -82,6 +82,14 @@ class ModelNetCDFDataset:
         return res
 
     def open(self, nc_fpth: str) -> None:
+        """
+        Open an existing dataset. Assumes the dataset has been annotated
+        with the necessary attributes to read and update, including global
+        attributes modflow_model and modflow_grid.
+
+        Args:
+            nc_fpth (str): Path to an existing NetCDF file.
+        """
         fpth = Path(nc_fpth).resolve()
         self._fname = fpth.name
 
@@ -95,6 +103,16 @@ class ModelNetCDFDataset:
     def create(
         self, modeltype: str, modelname: str, nc_type: str, fname: str, modelgrid: Grid
     ) -> None:
+        """
+        Create a new dataset.
+
+        Args:
+            modeltype (str): A model type, e.g. GWF6.
+            modelname (str): The model name.
+            nc_type (str): A supported NetCDF file type: mesh2d or structured.
+            fname (str): The generated NetCDF file name.
+            modelgrid (Grid): A FloPy derived discretization object.
+        """
         self._modelname = modelname.lower()
         self._modeltype = modeltype.lower()
         self._nc_type = nc_type.lower()
@@ -971,10 +989,10 @@ def open_dataset(nc_fpth: str, grid_type: str) -> ModelNetCDFDataset:
         ModelNetCDFDataset: A dataset derived from the base class.
     """
     nc_dataset = None
-    dis_str = grid_type.lower()
+    grid_t = grid_type.lower()
 
     # grid_type corresponds to a flopy.discretization type
-    if dis_str != "vertex" and dis_str != "structured":
+    if grid_t != "vertex" and grid_t != "structured":
         raise Exception(
             "Supported NetCDF discretication types "
             'are "vertex" (DISV) and "structured" '
@@ -990,10 +1008,10 @@ def open_dataset(nc_fpth: str, grid_type: str) -> ModelNetCDFDataset:
     else:
         modelname = dataset.attrs["modflow_model"].split(":")[0].lower()
         gridtype = dataset.attrs["modflow_grid"].lower()
-        if dis_str == "vertex":
+        if grid_t == "vertex":
             if gridtype == "layered mesh":
                 nc_dataset = DisvNetCDFMesh2d()
-        elif dis_str == "structured":
+        elif grid_t == "structured":
             if gridtype == "layered mesh":
                 nc_dataset = DisNetCDFMesh2d()
             elif gridtype == "structured":
@@ -1007,7 +1025,7 @@ def open_dataset(nc_fpth: str, grid_type: str) -> ModelNetCDFDataset:
         raise Exception(
             f"Unable to load netcdf dataset for file grid "
             f'type "{gridtype}" and discretization grid '
-            f'type "{dis_str}"'
+            f'type "{grid_t}"'
         )
 
     return nc_dataset
