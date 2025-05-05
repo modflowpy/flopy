@@ -87,6 +87,9 @@ jobs:
       - name: Install FloPy
         run: uv sync
 
+      - name: Install seaborn
+        run: uv pip install seaborn
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
