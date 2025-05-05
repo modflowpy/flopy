@@ -38,7 +38,7 @@ dependencies:
   - pytest-cov
   - pytest-dotenv
   - pytest-xdist
-  - pyzmq>=25.1.2,
+  - pyzmq>=25.1.2
   - syrupy
   - virtualenv
 
