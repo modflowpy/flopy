@@ -56,7 +56,7 @@ exe_mp = "mp6"
 sim_name = "freyberg"
 
 # Set the paths
-tempdir = TemporaryDirectory(delete=False)
+tempdir = TemporaryDirectory()
 modelpth = Path(tempdir.name)
 
 # Check if we are in the repository and define the data path.
