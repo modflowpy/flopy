@@ -23,12 +23,20 @@ jobs:
 
     - name: Checkout flopy repo
       uses: actions/checkout@v4
+      with:
+        path: flopy
 
     - name: Checkout MODFLOW 6
       uses: actions/checkout@v4
       with:
         repository: MODFLOW-ORG/modflow6
         path: modflow6
+
+    - name: Setup GNU Fortran
+      uses: fortran-lang/setup-fortran@v1
+      with:
+        compiler: gcc
+        version: 13
 
     - name: Setup pixi
       uses: prefix-dev/setup-pixi@v0.8.8
@@ -37,16 +45,8 @@ jobs:
         manifest-path: modflow6/pixi.toml
 
     - name: Install FloPy
+      working-directory: flopy
       run: pixi run pip install --no-deps -e .
-
-    - name: Install other dependencies from GitHub
-      run: pixi run pip install -r etc/requirements.mf6.txt
-
-    - name: Setup GNU Fortran
-      uses: fortran-lang/setup-fortran@v1
-      with:
-        compiler: gcc
-        version: 13
 
     - name: Build and install MF6
       working-directory: modflow6
@@ -90,6 +90,8 @@ jobs:
       
     - name: Checkout flopy repo
       uses: actions/checkout@v4
+      with:
+        path: flopy
 
     - name: Checkout MODFLOW 6
       uses: actions/checkout@v4
@@ -116,10 +118,8 @@ jobs:
         manifest-path: modflow6/pixi.toml
 
     - name: Install FloPy
+      working-directory: flopy
       run: pixi run pip install --no-deps -e .
-
-    - name: Install other dependencies from GitHub
-      run: pixi run pip install -r etc/requirements.mf6.txt
 
     - name: Install executables
       uses: modflowpy/install-modflow-action@v1
