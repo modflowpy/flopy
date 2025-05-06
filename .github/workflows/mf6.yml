@@ -23,23 +23,8 @@ jobs:
 
     - name: Checkout flopy repo
       uses: actions/checkout@v4
-
-    - name: Setup Python
-      uses: astral-sh/setup-uv@v6
       with:
-        cache-dependency-glob: "**/pyproject.toml"
-
-    - name: Install FloPy
-      run: uv sync --all-extras
-
-    - name: Install other dependencies from GitHub
-      run: uv pip install -r etc/requirements.mf6.txt
-
-    - name: Setup GNU Fortran
-      uses: fortran-lang/setup-fortran@v1
-      with:
-        compiler: gcc
-        version: 13
+        path: flopy
 
     - name: Checkout MODFLOW 6
       uses: actions/checkout@v4
@@ -47,30 +32,56 @@ jobs:
         repository: MODFLOW-ORG/modflow6
         path: modflow6
 
-    - name: Build and install MF6
+    - name: Setup GNU Fortran
+      uses: fortran-lang/setup-fortran@v1
+      with:
+        compiler: gcc
+        version: 13
+
+    - name: Setup pixi
+      uses: prefix-dev/setup-pixi@v0.8.8
+      with:
+        pixi-version: v0.41.4
+        manifest-path: modflow6/pixi.toml
+
+    - name: Install dependencies
       working-directory: modflow6
       run: |
-        uv run meson setup builddir --buildtype=debugoptimized --prefix=$(pwd) --libdir=bin
-        uv run meson install -C builddir
-        uv run meson test --verbose --no-rebuild -C builddir
+        pixi run install
+        pixi run pip install coverage pytest-cov
 
-    - name: Update package classes
-      working-directory: modflow6/autotest
-      run: uv run update_flopy.py
+    - name: Install FloPy
+      working-directory: flopy
+      run: |
+        pixi run --manifest-path=../modflow6/pixi.toml pip install --no-deps -e .
+        pixi run --manifest-path=../modflow6/pixi.toml python -m flopy.mf6.utils.generate_classes --dfnpath ../modflow6/doc/mf6io/mf6ivar/dfn
+
+    - name: Build MF6
+      working-directory: modflow6
+      run: |
+        pixi run meson setup builddir --buildtype=debugoptimized --prefix=$(pwd) --libdir=bin
+        pixi run meson install -C builddir
+        pixi run meson test --verbose --no-rebuild -C builddir
+      
+    - name: Build mf5to6 converter
+      working-directory: modflow6/utils/mf5to6
+      run: |
+        pixi run meson setup builddir --prefix=$(pwd)/../../ --libdir=bin
+        pixi run meson install -C builddir
 
     - name: Install executables
       working-directory: modflow6/autotest
       env:
         GITHUB_TOKEN: ${{ github.token }}
-      run: uv run pytest -v --durations=0 get_exes.py
+      run: pixi run pytest -v --durations=0 get_exes.py
 
     - name: Run tests
       working-directory: modflow6/autotest
-      run: uv run pytest -v --cov=flopy --cov-report=xml --cov-append --durations=0 -n auto -m "not repo and not regression"
+      run: pixi run pytest -v --cov=flopy --cov-report=xml --cov-append --durations=0 -n auto -m "not repo and not regression"
 
     - name: Print coverage report before upload
       working-directory: ./modflow6/autotest
-      run: uv run coverage report
+      run: pixi run coverage report
 
     - name: Upload coverage to Codecov
       if:
@@ -86,9 +97,11 @@ jobs:
       run:
         shell: bash
     steps:
-      
+
     - name: Checkout flopy repo
       uses: actions/checkout@v4
+      with:
+        path: flopy
 
     - name: Checkout MODFLOW 6
       uses: actions/checkout@v4
@@ -102,22 +115,27 @@ jobs:
         repository: MODFLOW-ORG/modflow6-examples
         path: modflow6-examples
 
-    - name: Setup Python
-      uses: astral-sh/setup-uv@v6
-      with:
-        cache-dependency-glob: "**/pyproject.toml"
-
-    - name: Install FloPy
-      run: uv sync --all-extras
-
-    - name: Install other dependencies from modflow6-examples and GitHub
-      run: uv pip install -r etc/requirements.mf6.txt -r modflow6-examples/etc/requirements.pip.txt
-
     - name: Setup GNU Fortran
       uses: fortran-lang/setup-fortran@v1
       with:
         compiler: gcc
         version: 13
+
+    - name: Setup pixi
+      uses: prefix-dev/setup-pixi@v0.8.8
+      with:
+        pixi-version: v0.41.4
+        manifest-path: modflow6/pixi.toml
+
+    - name: Install dependencies
+      working-directory: modflow6
+      run: pixi run install
+
+    - name: Install FloPy
+      working-directory: flopy
+      run: |
+        pixi run --manifest-path=../modflow6/pixi.toml pip install --no-deps -e .
+        pixi run --manifest-path=../modflow6/pixi.toml python -m flopy.mf6.utils.generate_classes --dfnpath ../modflow6/doc/mf6io/mf6ivar/dfn
 
     - name: Install executables
       uses: modflowpy/install-modflow-action@v1
@@ -125,15 +143,11 @@ jobs:
     - name: Build and install MF6
       working-directory: modflow6
       run: |
-        uv run meson setup builddir --buildtype=debugoptimized --prefix=$(pwd) --libdir=bin
-        uv run meson install -C builddir
-        uv run meson test --verbose --no-rebuild -C builddir
+        pixi run meson setup builddir --buildtype=debugoptimized --prefix=$(pwd) --libdir=bin
+        pixi run meson install -C builddir
+        pixi run meson test --verbose --no-rebuild -C builddir
         cp bin/* ~/.local/bin/modflow/
-
-    - name: Update package classes
-      working-directory: modflow6/autotest
-      run: uv run update_flopy.py
 
     - name: Test MF6 examples
       working-directory: modflow6-examples/autotest
-      run: uv run pytest -v -n=auto --durations=0 test_scripts.py
+      run: pixi run --manifest-path=../../modflow6/pixi.toml pytest -v -n=auto --durations=0 test_scripts.py
