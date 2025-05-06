@@ -61,10 +61,6 @@ jobs:
         pixi run meson install -C builddir
         pixi run meson test --verbose --no-rebuild -C builddir
 
-    - name: Update package classes
-      working-directory: modflow6/autotest
-      run: pixi run update_flopy.py
-
     - name: Install executables
       working-directory: modflow6/autotest
       env:
@@ -146,4 +142,4 @@ jobs:
 
     - name: Test MF6 examples
       working-directory: modflow6-examples/autotest
-      run: pixi run pytest -v -n=auto --durations=0 test_scripts.py
+      run: pixi run --manifest-path=../modflow6/pixi.toml pytest -v -n=auto --durations=0 test_scripts.py
