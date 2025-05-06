@@ -44,6 +44,10 @@ jobs:
         pixi-version: v0.41.4
         manifest-path: modflow6/pixi.toml
 
+    - name: Install dependencies
+      working-directory: modflow6
+      run: pixi run install
+
     - name: Install FloPy
       working-directory: flopy
       run: |
@@ -118,6 +122,10 @@ jobs:
       with:
         pixi-version: v0.41.4
         manifest-path: modflow6/pixi.toml
+
+    - name: Install dependencies
+      working-directory: modflow6
+      run: pixi run install
 
     - name: Install FloPy
       working-directory: flopy
