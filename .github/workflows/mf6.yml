@@ -46,7 +46,9 @@ jobs:
 
     - name: Install dependencies
       working-directory: modflow6
-      run: pixi run install
+      run: |
+        pixi run install
+        pixi run pip install coverage
 
     - name: Install FloPy
       working-directory: flopy
@@ -121,7 +123,9 @@ jobs:
 
     - name: Install dependencies
       working-directory: modflow6
-      run: pixi run install
+      run: |
+        pixi run install
+        pixi run pip install coverage
 
     - name: Install FloPy
       working-directory: flopy
@@ -142,4 +146,4 @@ jobs:
 
     - name: Test MF6 examples
       working-directory: modflow6-examples/autotest
-      run: pixi run --manifest-path=../modflow6/pixi.toml pytest -v -n=auto --durations=0 test_scripts.py
+      run: pixi run --manifest-path=../../modflow6/pixi.toml pytest -v -n=auto --durations=0 test_scripts.py
