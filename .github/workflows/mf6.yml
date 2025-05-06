@@ -46,7 +46,9 @@ jobs:
 
     - name: Install FloPy
       working-directory: flopy
-      run: pixi run --manifest-path=../modflow6/pixi.toml pip install --no-deps -e .
+      run: |
+        pixi run --manifest-path=../modflow6/pixi.toml pip install --no-deps -e .
+        pixi run --manifest-path=../modflow6/pixi.toml python -m flopy.mf6.utils.generate_classes --dfnpath ../modflow6/doc/mf6io/mf6ivar
 
     - name: Build and install MF6
       working-directory: modflow6
@@ -119,7 +121,9 @@ jobs:
 
     - name: Install FloPy
       working-directory: flopy
-      run: pixi run --manifest-path=../modflow6/pixi.toml pip install --no-deps -e .
+      run: |
+        pixi run --manifest-path=../modflow6/pixi.toml pip install --no-deps -e .
+        pixi run --manifest-path=../modflow6/pixi.toml python -m flopy.mf6.utils.generate_classes --dfnpath ../modflow6/doc/mf6io/mf6ivar
 
     - name: Install executables
       uses: modflowpy/install-modflow-action@v1
@@ -131,10 +135,6 @@ jobs:
         pixi run meson install -C builddir
         pixi run meson test --verbose --no-rebuild -C builddir
         cp bin/* ~/.local/bin/modflow/
-
-    - name: Update package classes
-      working-directory: modflow6/autotest
-      run: pixi run update_flopy.py
 
     - name: Test MF6 examples
       working-directory: modflow6-examples/autotest
