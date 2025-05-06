@@ -1010,12 +1010,12 @@ class ZoneBudget:
             rowidx = np.asarray(
                 (self._budget["time_step"] == kstpkper[0])
                 & (self._budget["stress_period"] == kstpkper[1])
-                & np.in1d(self._budget["name"], innames)
+                & np.isin(self._budget["name"], innames)
             ).nonzero()
         elif totim is not None:
             rowidx = np.asarray(
                 (self._budget["totim"] == totim)
-                & np.in1d(self._budget["name"], innames)
+                & np.isin(self._budget["name"], innames)
             ).nonzero()
         a = _numpyvoid2numeric(self._budget[list(self._zonenamedict.values())][rowidx])
         intot = np.array(a.sum(axis=0))
@@ -1028,12 +1028,12 @@ class ZoneBudget:
             rowidx = np.asarray(
                 (self._budget["time_step"] == kstpkper[0])
                 & (self._budget["stress_period"] == kstpkper[1])
-                & np.in1d(self._budget["name"], outnames)
+                & np.isin(self._budget["name"], outnames)
             ).nonzero()
         elif totim is not None:
             rowidx = np.asarray(
                 (self._budget["totim"] == totim)
-                & np.in1d(self._budget["name"], outnames)
+                & np.isin(self._budget["name"], outnames)
             ).nonzero()
         a = _numpyvoid2numeric(self._budget[list(self._zonenamedict.values())][rowidx])
         outot = np.array(a.sum(axis=0))
