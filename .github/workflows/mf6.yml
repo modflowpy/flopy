@@ -56,12 +56,18 @@ jobs:
         pixi run --manifest-path=../modflow6/pixi.toml pip install --no-deps -e .
         pixi run --manifest-path=../modflow6/pixi.toml python -m flopy.mf6.utils.generate_classes --dfnpath ../modflow6/doc/mf6io/mf6ivar/dfn
 
-    - name: Build and install MF6
+    - name: Build MF6
       working-directory: modflow6
       run: |
         pixi run meson setup builddir --buildtype=debugoptimized --prefix=$(pwd) --libdir=bin
         pixi run meson install -C builddir
         pixi run meson test --verbose --no-rebuild -C builddir
+      
+    - name: Build mf5to6 converter
+      working-directory: modflow6/utils/mf5to6
+      run: |
+        pixi run meson setup builddir --prefix=$(pwd)/../../ --libdir=bin
+        pixi run meson install -C builddir
 
     - name: Install executables
       working-directory: modflow6/autotest
