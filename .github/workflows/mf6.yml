@@ -48,7 +48,7 @@ jobs:
       working-directory: modflow6
       run: |
         pixi run install
-        pixi run pip install coverage
+        pixi run pip install coverage pytest-cov
 
     - name: Install FloPy
       working-directory: flopy
@@ -123,9 +123,7 @@ jobs:
 
     - name: Install dependencies
       working-directory: modflow6
-      run: |
-        pixi run install
-        pixi run pip install coverage
+      run: pixi run install
 
     - name: Install FloPy
       working-directory: flopy
