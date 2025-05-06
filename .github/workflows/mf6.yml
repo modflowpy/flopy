@@ -23,6 +23,8 @@ jobs:
 
     - name: Checkout flopy repo
       uses: actions/checkout@v4
+      with:
+        path: flopy
 
     - name: Checkout MODFLOW 6
       uses: actions/checkout@v4
@@ -42,11 +44,8 @@ jobs:
         pixi-version: v0.41.4
         manifest-path: modflow6/pixi.toml
 
-    - name: List dir
-      run: pixi run ls -l
-
     - name: Install FloPy
-      run: pixi run pip install --no-deps -e .
+      run: pixi run --manifest-path=../modflow6/pixi.toml pip install --no-deps -e .
 
     - name: Build and install MF6
       working-directory: modflow6
@@ -116,7 +115,7 @@ jobs:
         manifest-path: modflow6/pixi.toml
 
     - name: Install FloPy
-      run: pixi run pip install --no-deps -e .
+      run: pixi run --manifest-path=../modflow6/pixi.toml pip install --no-deps -e .
 
     - name: Install executables
       uses: modflowpy/install-modflow-action@v1
