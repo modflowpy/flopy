@@ -739,11 +739,11 @@ class ModelTime:
             nonlocal tslens
             nonlocal tsmult
             tslens = [l for l in tslens if l > 0]
-            match len(tslens):
-                case 0 | 1:
-                    tsmult[kper] = 1.0
-                case _:
-                    tsmult[kper] = tslens[1] / tslens[0]
+
+            if len(tslens) in (0, 1):
+                tsmult[kper] = 1.0
+            else:
+                tsmult[kper] = tslens[-1] / tslens[-2]
 
         for i in range(len(headers)):
             hdr = headers[i]
