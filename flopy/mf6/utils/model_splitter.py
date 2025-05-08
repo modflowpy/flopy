@@ -921,7 +921,7 @@ class Mf6Splitter:
         array = np.ravel(array)
 
         idomain = self._modelgrid.idomain.reshape((-1, self._ncpl))
-        mkeys = np.unique(array)
+        mkeys = [int(i) for i in np.unique(array)]
         bad_keys = []
         for mkey in mkeys:
             count = 0
@@ -980,7 +980,7 @@ class Mf6Splitter:
             except TypeError:
                 xverts, yverts = None, None
 
-            for m in np.unique(array):
+            for m in mkeys:
                 cells = np.asarray(array == m).nonzero()[0]
                 mapping = np.zeros((len(cells),), dtype=int)
                 mapping[:] = cells
@@ -1002,12 +1002,12 @@ class Mf6Splitter:
                     self._offsets[m] = {"xorigin": None, "yorigin": None}
 
         new_ncpl = {}
-        for m in np.unique(array):
+        for m in mkeys:
             new_ncpl[m] = 1
             for i in grid_info[m][0]:
                 new_ncpl[m] *= i
 
-        for mdl in np.unique(array):
+        for mdl in mkeys:
             mnodes = np.asarray(array == mdl).nonzero()[0]
             mg_info = grid_info[mdl]
             if mg_info is not None:
@@ -1021,10 +1021,10 @@ class Mf6Splitter:
                     self._node_map[onode] = (mdl, nnode)
 
         new_connections = {
-            i: {"internal": {}, "external": {}} for i in np.unique(array)
+            i: {"internal": {}, "external": {}} for i in mkeys
         }
-        exchange_meta = {i: {} for i in np.unique(array)}
-        usg_meta = {i: {} for i in np.unique(array)}
+        exchange_meta = {i: {} for i in mkeys}
+        usg_meta = {i: {} for i in mkeys}
         for node, conn in self._connection.items():
             mdl, nnode = self._node_map[node]
             for ix, cnode in enumerate(conn):
@@ -1173,8 +1173,9 @@ class Mf6Splitter:
         if iverts is None:
             return
 
-        ivlut = {mkey: {} for mkey in np.unique(array)}
-        for mkey in np.unique(array):
+        mkeys = [int(i) for i in np.unique(array)]
+        ivlut = {mkey: {} for mkey in mkeys}
+        for mkey in mkeys:
             new_iv = 0
             new_iverts = []
             new_verts = []
@@ -1217,7 +1218,7 @@ class Mf6Splitter:
             new_sim : MFSimulation object
         """
         for pak in self._sim.sim_package_list:
-            if pak.package_abbr in ("gwfgwt", "gwfgwf", "gwfgwe"):
+            if pak.package_abbr in ("gwfgwt", "gwfgwf", "gwfgwe", "utlats"):
                 continue
             pak_cls = PackageContainer.package_factory(pak.package_abbr, "")
             signature = inspect.signature(pak_cls)
@@ -1226,7 +1227,11 @@ class Mf6Splitter:
                 if key in ("simulation", "loading_package", "pname", "kwargs"):
                     continue
                 elif key == "ats_perioddata":
-                    continue
+                    data = getattr(pak, "ats")
+                    if len(data._packages) > 0:
+                        data = data._packages[0].perioddata.array
+                        d[key] = data
+
                 else:
                     data = getattr(pak, key)
                     if hasattr(data, "array"):
@@ -1273,7 +1278,7 @@ class Mf6Splitter:
 
         return mapped_data
 
-    def _remap_filerecords(self, item, value, mapped_data):
+    def _remap_filerecords(self, item, value, mapped_data, namfile=False):
         """
         Method to create new file record names and map them to their
         associated models
@@ -1299,7 +1304,8 @@ class Mf6Splitter:
             "obs_filerecord",
             "concentration_filerecord",
             "ts_filerecord",
-            "temperature_filerecord"
+            "temperature_filerecord",
+            "nc_mesh2d_filerecord"
         ):
             value = value.array
             if value is None:
@@ -1307,7 +1313,7 @@ class Mf6Splitter:
             else:
                 value = value[0][0]
                 for mdl in mapped_data.keys():
-                    if mapped_data[mdl]:
+                    if mapped_data[mdl] or namfile:
                         new_val = value.split(".")
                         new_val = f"{'.'.join(new_val[0:-1])}_{mdl :0{self._fdigits}d}.{new_val[-1]}"
                         mapped_data[mdl][item] = new_val
@@ -2580,7 +2586,10 @@ class Mf6Splitter:
                             continue
                         records.append(tuple(rec))
 
-                    mapped_data[mkey]["sources"] = records
+                    if records:
+                        mapped_data[mkey]["sources"] = records
+                    else:
+                        mapped_data[mkey]["sources"] = None
 
         return mapped_data
 
@@ -3793,20 +3802,28 @@ class Mf6Splitter:
             )
             self._create_sln_tdis()
 
-        nam_options = {}
+        nam_options = {mkey: {} for mkey in self._new_ncpl.keys()}
+        # todo: change this to model by model options bc nc_filerecord stuff
         for item, value in self._model.name_file.blocks[
             "options"
         ].datasets.items():
             if item == "list":
                 continue
-            nam_options[item] = value.array
+            if value.array is None:
+                continue
+            if item.endswith("_filerecord"):
+                self._remap_filerecords(item, value, nam_options, namfile=True)
+            else:
+                for mkey in self._new_ncpl.keys():
+                    nam_options[mkey][item] = value.array
         self._model_dict = {}
+        # todo: trap the nc_mesh2d_filerecord stuff...
         for mkey in self._new_ncpl.keys():
             mdl_cls = PackageContainer.model_factory(self._model_type)
             self._model_dict[mkey] = mdl_cls(
                 self._new_sim,
                 modelname=f"{self._modelname}_{mkey :0{self._fdigits}d}",
-                **nam_options,
+                **nam_options[mkey],
             )
 
         for package in self._model.packagelist:
