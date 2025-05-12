@@ -1318,13 +1318,6 @@ class MFModel(ModelInterface):
 
         self.name_file.write(ext_file_action=ext_file_action)
 
-        if not self.simulation_data.max_columns_user_set:
-            grid_type = self.get_grid_type()
-            if grid_type == DiscretizationType.DIS:
-                self.simulation_data.max_columns_of_data = self.dis.ncol.get_data()
-                self.simulation_data.max_columns_user_set = False
-                self.simulation_data.max_columns_auto_set = True
-
         # write packages
         for pp in self.packagelist:
             if (
