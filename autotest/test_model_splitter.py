@@ -57,8 +57,8 @@ def test_structured_model_splitter(function_tmpdir):
 
     # test that line length is ncol for each model....
     ll_dict = {
-        split_path / f"freyberg_001.npf": ml0.dis.ncol.get_data(),
-        split_path / f"freyberg_100.npf": ml1.dis.ncol.get_data(),
+        split_path / "freyberg_001.npf": ml0.dis.ncol.get_data(),
+        split_path / "freyberg_100.npf": ml1.dis.ncol.get_data(),
     }
     for f, ncol in ll_dict.items():
         with open(f) as foo:
