@@ -36,18 +36,22 @@ dynamic = ["version", "readme"]
 dev = ["flopy[codegen,lint,test,optional,doc]", "tach"]
 codegen = [
     "Jinja2>=3.0",
-    "modflow-devtools[dfn] @ git+https://github.com/MODFLOW-ORG/modflow-devtools.git",   
+    "boltons",
+    "modflow-devtools",
+    "tomli",
+    "tomli-w"
 ]
 lint = ["cffconvert", "codespell[toml] >=2.2.2", "ruff"]
 test = [
     "flopy[lint]",
+    "boltons",
     "coverage !=7.6.5",
     "flaky",
     "filelock",
     "jupyter",
     "jupyter_client >=8.4.0", # avoid datetime.utcnow() deprecation warning
     "jupytext",
-    "modflow-devtools[dfn] @ git+https://github.com/MODFLOW-ORG/modflow-devtools.git",
+    "modflow-devtools",
     "pytest !=8.1.0",
     "pytest-benchmark",
     "pytest-cov",
@@ -55,6 +59,8 @@ test = [
     "pytest-xdist",
     "pyzmq >=25.1.2",
     "syrupy",
+    "tomli",
+    "tomli-w",
     "virtualenv"
 ]
 optional = [

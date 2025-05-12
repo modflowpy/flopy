@@ -204,7 +204,7 @@ def generate_classes(
     # convert dfns to toml.. when we
     # do this upstream, remove this.
     _TOML_PATH.mkdir(exist_ok=True)
-    from modflow_devtools.dfn2toml import convert as dfn2toml
+    from flopy.mf6.utils.dfn2toml import convert as dfn2toml
     dfn2toml(_DFN_PATH, _TOML_PATH)
 
     print("  Create mf6 classes using the definition files.")

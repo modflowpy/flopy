@@ -233,7 +233,7 @@ class Filters:
         where applicable. TODO: this should get much simpler if we can drop
         all the `ListTemplateGenerator`/`ArrayTemplateGenerator` attributes.
         """
-        from modflow_devtools.dfn import _MF6_SCALARS, Dfn
+        from flopy.mf6.utils.dfn import _MF6_SCALARS, Dfn
 
         component_base = Filters.base(component_name)
         component_vars = _get_vars(dfn)
