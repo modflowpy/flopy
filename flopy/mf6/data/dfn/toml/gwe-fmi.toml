@@ -1,0 +1,62 @@
+name = "gwe-fmi"
+advanced = false
+multi = false
+
+[options.save_flows]
+block = "options"
+name = "save_flows"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "save calculated flow imbalance correction to budget file"
+description = "keyword to indicate that fmi flow terms will be written to the file specified with 'budget fileout' in output control."
+
+[options.flow_imbalance_correction]
+block = "options"
+name = "flow_imbalance_correction"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "correct for flow imbalance"
+description = "correct for an imbalance in flows by assuming that any residual flow error comes in or leaves at the temperature of the cell.  when this option is activated, the gwe model budget written to the listing file will contain two additional entries: flow-error and flow-correction.  these two entries will be equal but opposite in sign.  the flow-correction term is a mass flow that is added to offset the error caused by an imprecise flow balance.  if these terms are not relatively small, the flow model should be rerun with stricter convergence tolerances."
+
+[packagedata.packagedata]
+block = "packagedata"
+name = "packagedata"
+type = "list"
+reader = "urword"
+optional = false
+longname = "flowtype list"
+
+[packagedata.packagedata.item]
+name = "packagedata"
+type = "record"
+block = "packagedata"
+reader = "urword"
+optional = false
+longname = "flowtype list"
+
+[packagedata.packagedata.item.fields.flowtype]
+block = "packagedata"
+name = "flowtype"
+type = "string"
+reader = "urword"
+longname = "flow type"
+description = "is the word GWFBUDGET, GWFHEAD, GWFGRID, GWFMOVER or the name of an advanced GWF stress package from a previous model run.  If GWFBUDGET is specified, then the corresponding file must be a budget file.  If GWFHEAD is specified, the file must be a head file.  If GWFGRID is specified, the file must be a binary grid file. If GWFMOVER is specified, the file must be a mover file.  If an advanced GWF stress package name appears then the corresponding file must be the budget file saved by a LAK, SFR, MAW or UZF Package."
+
+[packagedata.packagedata.item.fields.filein]
+block = "packagedata"
+name = "filein"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "keyword to specify that an input filename is expected next."
+
+[packagedata.packagedata.item.fields.fname]
+block = "packagedata"
+name = "fname"
+type = "string"
+reader = "urword"
+longname = "file name"
+description = "is the name of the file containing flows.  The path to the file should be included if the file is not located in the folder where the program was run."

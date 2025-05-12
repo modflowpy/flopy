@@ -1,0 +1,36 @@
+name = "gwe-ic"
+advanced = false
+multi = false
+
+[options.export_array_ascii]
+block = "options"
+name = "export_array_ascii"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "export array variables to layered ascii files."
+description = "keyword that specifies input griddata arrays should be written to layered ascii output files."
+mf6internal = "export_ascii"
+
+[options.export_array_netcdf]
+block = "options"
+name = "export_array_netcdf"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "export array variables to netcdf output files."
+description = "keyword that specifies input griddata arrays should be written to the model output netcdf file."
+mf6internal = "export_nc"
+extended = true
+
+[griddata.strt]
+block = "griddata"
+name = "strt"
+type = "double precision"
+shape = "(nodes)"
+default = 0.0
+reader = "readarray"
+longname = "starting temperature"
+description = "is the initial (starting) temperature---that is, the temperature at the beginning of the gwe model simulation.  strt must be specified for all gwe model simulations. one value is read for every model cell."
+layered = true
+netcdf = true

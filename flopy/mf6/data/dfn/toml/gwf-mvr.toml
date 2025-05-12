@@ -1,0 +1,236 @@
+name = "gwf-mvr"
+advanced = false
+multi = false
+
+[ref]
+parent = "parent_model_or_package"
+key = "mvr_filerecord"
+val = "perioddata"
+abbr = "mvr"
+param = "perioddata"
+
+[options.print_input]
+block = "options"
+name = "print_input"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "print input to listing file"
+description = "keyword to indicate that the list of mvr information will be written to the listing file immediately after it is read."
+
+[options.print_flows]
+block = "options"
+name = "print_flows"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "print calculated flows to listing file"
+description = "keyword to indicate that the list of mvr flow rates will be printed to the listing file for every stress period time step in which 'budget print' is specified in output control.  if there is no output control option and 'print_flows' is specified, then flow rates are printed for the last time step of each stress period."
+
+[options.modelnames]
+block = "options"
+name = "modelnames"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "precede all package names with model names"
+description = "keyword to indicate that all package names will be preceded by the model name for the package.  model names are required when the mover package is used with a gwf-gwf exchange.  the modelname keyword should not be used for a mover package that is for a single gwf model."
+
+[options.budget_filerecord]
+block = "options"
+name = "budget_filerecord"
+type = "record"
+reader = "urword"
+optional = true
+
+[options.budget_filerecord.fields.budget]
+block = "options"
+name = "budget"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "budget keyword"
+description = "keyword to specify that record corresponds to the budget."
+
+[options.budget_filerecord.fields.fileout]
+block = "options"
+name = "fileout"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "keyword to specify that an output filename is expected next."
+
+[options.budget_filerecord.fields.budgetfile]
+block = "options"
+name = "budgetfile"
+type = "string"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "name of the output file to write budget information."
+
+[options.budgetcsv_filerecord]
+block = "options"
+name = "budgetcsv_filerecord"
+type = "record"
+reader = "urword"
+optional = true
+
+[options.budgetcsv_filerecord.fields.budgetcsv]
+block = "options"
+name = "budgetcsv"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "budget keyword"
+description = "keyword to specify that record corresponds to the budget CSV."
+
+[options.budgetcsv_filerecord.fields.fileout]
+block = "options"
+name = "fileout"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "keyword to specify that an output filename is expected next."
+
+[options.budgetcsv_filerecord.fields.budgetcsvfile]
+block = "options"
+name = "budgetcsvfile"
+type = "string"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "name of the comma-separated value (CSV) output file to write budget summary information.  A budget summary record will be written to this file for each time step of the simulation."
+
+[dimensions.maxmvr]
+block = "dimensions"
+name = "maxmvr"
+type = "integer"
+reader = "urword"
+optional = false
+longname = "maximum number of movers"
+description = "integer value specifying the maximum number of water mover entries that will specified for any stress period."
+
+[dimensions.maxpackages]
+block = "dimensions"
+name = "maxpackages"
+type = "integer"
+reader = "urword"
+optional = false
+longname = "number of packages to be used with the mover"
+description = "integer value specifying the number of unique packages that are included in this water mover input file."
+
+[packages.packages]
+block = "packages"
+name = "packages"
+type = "list"
+shape = "(npackages)"
+reader = "urword"
+optional = false
+
+[packages.packages.item]
+name = "packages"
+type = "record"
+block = "packages"
+reader = "urword"
+optional = false
+
+[packages.packages.item.fields.mname]
+block = "packages"
+name = "mname"
+type = "string"
+reader = "urword"
+optional = "true"
+description = "name of model containing the package.  Model names are assigned by the user in the simulation name file."
+
+[packages.packages.item.fields.pname]
+block = "packages"
+name = "pname"
+type = "string"
+reader = "urword"
+optional = "false"
+description = "is the name of a package that may be included in a subsequent stress period block.  The package name is assigned in the name file for the GWF Model.  Package names are optionally provided in the name file.  If they are not provided by the user, then packages are assigned a default value, which is the package acronym followed by a hyphen and the package number.  For example, the first Drain Package is named DRN-1.  The second Drain Package is named DRN-2, and so forth."
+
+[period]
+transient_block = true
+
+[period.perioddata]
+block = "period"
+name = "perioddata"
+type = "list"
+shape = "(maxbound)"
+reader = "urword"
+
+[period.perioddata.item]
+name = "perioddata"
+type = "record"
+block = "period"
+reader = "urword"
+
+[period.perioddata.item.fields.mname1]
+block = "period"
+name = "mname1"
+type = "string"
+reader = "urword"
+optional = "true"
+description = "name of model containing the package, PNAME1."
+
+[period.perioddata.item.fields.pname1]
+block = "period"
+name = "pname1"
+type = "string"
+reader = "urword"
+longname = "provider package name"
+description = "is the package name for the provider.  The package PNAME1 must be designated to provide water through the MVR Package by specifying the keyword 'MOVER' in its OPTIONS block."
+
+[period.perioddata.item.fields.id1]
+block = "period"
+name = "id1"
+type = "integer"
+reader = "urword"
+longname = "provider reach"
+description = "is the identifier for the provider.  For the standard boundary packages, the provider identifier is the number of the boundary as it is listed in the package input file. (Note that the order of these boundaries may change by stress period, which must be accounted for in the Mover Package.)  So the first well has an identifier of one.  The second is two, and so forth.  For the advanced packages, the identifier is the reach number (SFR Package), well number (MAW Package), or UZF cell number.  For the Lake Package, ID1 is the lake outlet number.  Thus, outflows from a single lake can be routed to different streams, for example."
+numeric_index = "true"
+
+[period.perioddata.item.fields.mname2]
+block = "period"
+name = "mname2"
+type = "string"
+reader = "urword"
+optional = "true"
+description = "name of model containing the package, PNAME2."
+
+[period.perioddata.item.fields.pname2]
+block = "period"
+name = "pname2"
+type = "string"
+reader = "urword"
+longname = "receiver package name"
+description = "is the package name for the receiver.  The package PNAME2 must be designated to receive water from the MVR Package by specifying the keyword 'MOVER' in its OPTIONS block."
+
+[period.perioddata.item.fields.id2]
+block = "period"
+name = "id2"
+type = "integer"
+reader = "urword"
+longname = "receiver reach"
+description = "is the identifier for the receiver.  The receiver identifier is the reach number (SFR Package), Lake number (LAK Package), well number (MAW Package), or UZF cell number."
+numeric_index = "true"
+
+[period.perioddata.item.fields.mvrtype]
+block = "period"
+name = "mvrtype"
+type = "string"
+reader = "urword"
+longname = "mover type"
+description = "is the character string signifying the method for determining how much water will be moved.  Supported values are 'FACTOR' 'EXCESS' 'THRESHOLD' and 'UPTO'.  These four options determine how the receiver flow rate, $Q_R$, is calculated.  These options mirror the options defined for the cprior variable in the SFR package, with the term 'FACTOR' being functionally equivalent to the 'FRACTION' option for cprior."
+
+[period.perioddata.item.fields.value]
+block = "period"
+name = "value"
+type = "double precision"
+reader = "urword"
+longname = "mover value"
+description = "is the value to be used in the equation for calculating the amount of water to move.  For the 'FACTOR' option, VALUE is the $alpha$ factor.  For the remaining options, VALUE is the specified flow rate, $Q_S$."

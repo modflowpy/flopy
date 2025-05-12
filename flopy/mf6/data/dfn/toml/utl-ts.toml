@@ -1,0 +1,172 @@
+name = "utl-ts"
+advanced = false
+multi = true
+
+[ref]
+parent = "parent_package"
+key = "ts_filerecord"
+val = "timeseries"
+abbr = "ts"
+param = "timeseries"
+description = "xxx"
+
+[attributes.time_series_namerecord]
+block = "attributes"
+name = "time_series_namerecord"
+type = "record"
+reader = "urword"
+optional = false
+description = "xxx"
+
+[attributes.time_series_namerecord.fields.names]
+block = "attributes"
+name = "names"
+other_names = "name"
+type = "keyword"
+reader = "urword"
+optional = "false"
+description = "xxx"
+
+[attributes.time_series_namerecord.fields.time_series_names]
+block = "attributes"
+name = "time_series_names"
+type = "string"
+shape = "any1d"
+reader = "urword"
+optional = "false"
+description = "Name by which a package references a particular time-array series. The name must be unique among all time-array series used in a package."
+
+[attributes.interpolation_methodrecord]
+block = "attributes"
+name = "interpolation_methodrecord"
+type = "record"
+reader = "urword"
+optional = true
+description = "xxx"
+
+[attributes.interpolation_methodrecord.fields.methods]
+block = "attributes"
+name = "methods"
+type = "keyword"
+reader = "urword"
+optional = "false"
+description = " xxx"
+
+[attributes.interpolation_methodrecord.fields.interpolation_method]
+block = "attributes"
+name = "interpolation_method"
+type = "string"
+valid = "stepwise linear linearend"
+shape = "time_series_names"
+reader = "urword"
+optional = "false"
+description = "Interpolation method, which is either STEPWISE or LINEAR."
+
+[attributes.interpolation_methodrecord_single]
+block = "attributes"
+name = "interpolation_methodrecord_single"
+type = "record"
+reader = "urword"
+optional = true
+description = "xxx"
+
+[attributes.method]
+block = "attributes"
+name = "method"
+type = "keyword"
+reader = "urword"
+optional = false
+description = " xxx"
+
+[attributes.interpolation_method_single]
+block = "attributes"
+name = "interpolation_method_single"
+type = "string"
+reader = "urword"
+optional = false
+description = "interpolation method, which is either stepwise or linear."
+valid = "stepwise linear linearend"
+
+[attributes.sfacrecord]
+block = "attributes"
+name = "sfacrecord"
+type = "record"
+reader = "urword"
+optional = true
+description = "xxx"
+
+[attributes.sfacrecord.fields.sfacs]
+block = "attributes"
+name = "sfacs"
+type = "keyword"
+reader = "urword"
+optional = "false"
+description = " xxx"
+
+[attributes.sfacrecord.fields.sfacval]
+block = "attributes"
+name = "sfacval"
+type = "double precision"
+shape = "<time_series_name"
+reader = "urword"
+optional = "false"
+description = "Scale factor, which will multiply all array values in time series. SFAC is an optional attribute; if omitted, SFAC = 1.0."
+
+[attributes.sfacrecord_single]
+block = "attributes"
+name = "sfacrecord_single"
+type = "record"
+reader = "urword"
+optional = true
+description = "xxx"
+
+[attributes.sfacrecord_single.fields.sfacval]
+block = "attributes"
+name = "sfacval"
+type = "double precision"
+shape = "<time_series_name"
+reader = "urword"
+optional = "false"
+description = "Scale factor, which will multiply all array values in time series. SFAC is an optional attribute; if omitted, SFAC = 1.0."
+
+[attributes.sfac]
+block = "attributes"
+name = "sfac"
+type = "keyword"
+reader = "urword"
+optional = false
+description = " xxx"
+
+[timeseries.timeseries]
+block = "timeseries"
+name = "timeseries"
+type = "list"
+reader = "urword"
+optional = false
+description = "xxx"
+
+[timeseries.timeseries.item]
+name = "timeseries"
+type = "record"
+block = "timeseries"
+description = "xxx"
+reader = "urword"
+optional = false
+
+[timeseries.timeseries.item.fields.ts_time]
+block = "timeseries"
+name = "ts_time"
+type = "double precision"
+reader = "urword"
+optional = "false"
+repeating = "false"
+description = "A numeric time relative to the start of the simulation, in the time unit used in the simulation. Times must be strictly increasing."
+
+[timeseries.timeseries.item.fields.ts_array]
+block = "timeseries"
+name = "ts_array"
+type = "double precision"
+shape = "time_series_names"
+reader = "urword"
+optional = "false"
+description = "A 2-D array of numeric, floating-point values, or a constant value, readable by the U2DREL array-reading utility."

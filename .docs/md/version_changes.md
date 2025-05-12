@@ -1,4 +1,31 @@
 # Changelog
+### Version 3.9.3
+
+#### New features
+
+* [feat(modeltime)](https://github.com/modflowpy/flopy/commit/932bdcc8c07a10148cf733c02ba9190167239066): Add from_headers and reverse methods (#2481). Committed by wpbonelli on 2025-03-29.
+* [feat](https://github.com/modflowpy/flopy/commit/d8048a868b51d75039f0c3c097429144c6d44714): Add the angldegx to the kw dictionary produced by the get_disu_kwargs method (#2484). Committed by Sunny Titus on 2025-04-14.
+
+#### Bug fixes
+
+* [fix(resolve_exe)](https://github.com/modflowpy/flopy/commit/ca3adb34031285bc795b58fa42c4965d67278adc): Typecast exe name to string before passing to _resolve (#2457). Committed by martclanor on 2025-02-20.
+* [fix(HeadFile,CellBudgetFile)](https://github.com/modflowpy/flopy/commit/39d8d32625151979d78b82e709fa46ca4f5f7d9f): Fix tdis reversal (#2460). Committed by wpbonelli on 2025-02-25.
+* [fix(output_util.py)](https://github.com/modflowpy/flopy/commit/61e52f03ff69ec50b03a17c863738ad4a3c1dc4b): Trap grb in MF6Output (#2468). Committed by wpbonelli on 2025-03-07.
+* [fix(binaryfile)](https://github.com/modflowpy/flopy/commit/02ab7f1ff18a5c03f06d98fe1b35d6d6f7ad12df): Tdis in head/budget reversal methods (#2475). Committed by wpbonelli on 2025-03-18.
+* [fix(binaryfile)](https://github.com/modflowpy/flopy/commit/0eba4babad994a7cd73a3853714b9ff3bb326c90): Fix head/budget file reversal (#2483). Committed by wpbonelli on 2025-04-01.
+* [fix(flopy/utils/sfroutputfile.py::SfrFile.get_results)](https://github.com/modflowpy/flopy/commit/bf02be00ded034d2765948c7d7b075bf9d6ed4f1): Refactor deprecated DataFrame.append() call to pandas.concat() (#2491). Committed by aleaf on 2025-04-21.
+* [fix(model_splitter.py)](https://github.com/modflowpy/flopy/commit/838b37cc999c713aa7e71c4215f7535c5c9df27b): Add trap for obs packages in bc packages (#2493). Committed by Joshua Larsen on 2025-04-22.
+* [fix(evt)](https://github.com/modflowpy/flopy/commit/dcba9cf5ca1d8b946b568748f713a6dcf21e2bc3): Optional field mishandling (#2490). Committed by mjreno on 2025-04-23.
+* [fix](https://github.com/modflowpy/flopy/commit/0d9c91489a6a9df2c2c51c962e59cb5e9dd4ff2b): Update numpy array comparisons to use isin (#2504). Committed by Emmanuel Ferdman on 2025-05-06.
+
+#### Refactoring
+
+* [refactor(resolve_exe)](https://github.com/modflowpy/flopy/commit/c61643fd8d61e6e4866527104324a6c468eb0e41): Also fix tests (#2464). Committed by Mike Taves on 2025-03-03.
+* [refactor(createpackages)](https://github.com/modflowpy/flopy/commit/c5b5a41f626ad24d8f0e564a83ab8dc673cc9b7b): Use jinja for mf6 module code generation (#2333). Committed by wpbonelli on 2025-03-07.
+* [refactor(Mf6Splitter)](https://github.com/modflowpy/flopy/commit/20829b704b20be5175119fcd685fe808c55d51b6): Change how node mapping is stored and loaded (#2465). Committed by Joshua Larsen on 2025-03-14.
+* [refactor(gridutil)](https://github.com/modflowpy/flopy/commit/48f46fb87a1a23bc13a41be881f3852fdab7d682): Improve arg handling in get_disu_kwargs (#2480). Committed by wpbonelli on 2025-04-01.
+* [refactor(model_splitter.py)](https://github.com/modflowpy/flopy/commit/14640530dd46598d8d76417b6b640db0850cbf80): Support for SSM and ATS (#2505). Committed by Joshua Larsen on 2025-05-08.
+
 ### Version 3.9.2
 
 #### New features
