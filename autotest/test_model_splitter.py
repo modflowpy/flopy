@@ -14,6 +14,12 @@ from flopy.mf6.utils import Mf6Splitter
 def test_structured_model_splitter(function_tmpdir):
     sim_path = get_example_data_path() / "mf6-freyberg"
 
+    from pathlib import Path
+
+    function_tmpdir = Path("./temp")
+
+    split_path = function_tmpdir / "split_model"
+
     sim = MFSimulation.load(sim_ws=sim_path)
     sim.set_sim_path(function_tmpdir)
     sim.write_simulation()
@@ -32,7 +38,7 @@ def test_structured_model_splitter(function_tmpdir):
     mfsplit = Mf6Splitter(sim)
     new_sim = mfsplit.split_model(array)
 
-    new_sim.set_sim_path(function_tmpdir / "split_model")
+    new_sim.set_sim_path(split_path)
     new_sim.write_simulation()
     new_sim.run_simulation()
 
@@ -48,6 +54,21 @@ def test_structured_model_splitter(function_tmpdir):
 
     err_msg = "Heads from original and split models do not match"
     np.testing.assert_allclose(new_heads, original_heads, err_msg=err_msg)
+
+    # test that line length is ncol for each model....
+    ll_dict = {
+        split_path / f"freyberg_001.npf": ml0.dis.ncol.get_data(),
+        split_path / f"freyberg_100.npf": ml1.dis.ncol.get_data(),
+    }
+    for f, ncol in ll_dict.items():
+        with open(f) as foo:
+            while "internal" not in foo.readline().lower():
+                continue
+
+            line = foo.readline().strip()
+            tmp = line.split()
+            if len(tmp) != ncol:
+                raise AssertionError("Array column length is not equal to ncol")
 
 
 @requires_exe("mf6")
