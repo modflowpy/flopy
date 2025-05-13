@@ -152,6 +152,8 @@ class MFModel(ModelInterface):
             _internal_package=True,
         )
 
+        self._nc_dataset = None
+
     def __init_subclass__(cls):
         """Register model type"""
         super().__init_subclass__()
@@ -927,6 +929,33 @@ class MFModel(ModelInterface):
 
         # load name file
         instance.name_file.load(strict)
+        if hasattr(instance.name_file, "nc_filerecord"):
+            nc_filerecord = instance.name_file.nc_filerecord.get_data()
+            if nc_filerecord:
+                from ..utils.model_netcdf import open_dataset
+
+                grid_str = {
+                    "dis6": "structured",
+                    "disv6": "vertex",
+                }
+                dis_type = None
+                for t in instance.name_file.packages.get_data():
+                    if t[0].lower().startswith("dis"):
+                        dis_type = t[0].lower()
+                        break
+                if dis_type and dis_type in grid_str:
+                    nc_fpth = os.path.join(instance.model_ws, nc_filerecord[0][0])
+                    instance._nc_dataset = open_dataset(nc_fpth, grid_type=grid_str[dis_type])
+                else:
+                    message = (
+                        "Invalid discretization type "
+                        f"provided for model {modelname} "
+                        "NetCDF input"
+                    )
+                    raise MFDataException(
+                        model=modelname,
+                        message=message,
+                    )
 
         # order packages
         vnum = mfstructure.MFStructure().get_version_string()
@@ -1296,7 +1325,11 @@ class MFModel(ModelInterface):
         else:
             return f",{data_entry}\n"
 
-    def write(self, ext_file_action=ExtFileAction.copy_relative_paths):
+    def write(
+        self,
+        ext_file_action=ExtFileAction.copy_relative_paths,
+        netcdf=None,
+    ):
         """
         Writes out model's package files.
 
@@ -1306,8 +1339,50 @@ class MFModel(ModelInterface):
             Defines what to do with external files when the simulation path has
             changed.  defaults to copy_relative_paths which copies only files
             with relative paths, leaving files defined by absolute paths fixed.
-
+        netcdf : str
+            Create model NetCDF file, of type specified, in which to store
+            package griddata. 'mesh2d' and 'structured' are supported types.
         """
+
+        # write netcdf file
+        if (netcdf or self._nc_dataset is not None) and (
+            self.model_type == "gwf6"
+            or self.model_type == "gwt6"
+            or self.model_type == "gwe6"
+        ):
+            kwargs = {}
+            if self._nc_dataset is None:
+                from ..utils.model_netcdf import create_dataset
+
+                # set netcdf file name
+                nc_fname = f"{self.name}.in.nc"
+
+                # update name file to read from netcdf
+                self.name_file.nc_filerecord = nc_fname
+
+                # create netcdf dataset
+                self._nc_dataset = create_dataset(
+                    self.model_type, self.name, netcdf, nc_fname, self.modelgrid
+                )
+
+                # reset data storage and populate netcdf file
+                for pp in self.packagelist:
+                    if pp.package_type == "ncf":
+                        kwargs["shuffle"] = pp.shuffle.get_data()
+                        kwargs["deflate"] = pp.deflate.get_data()
+                        kwargs["chunk_time"] = pp.chunk_time.get_data()
+                        kwargs["chunk_face"] = pp.chunk_face.get_data()
+                        kwargs["chunk_x"] = pp.chunk_x.get_data()
+                        kwargs["chunk_y"] = pp.chunk_y.get_data()
+                        kwargs["chunk_z"] = pp.chunk_z.get_data()
+                        kwargs["wkt"] = pp.wkt.get_data()
+
+                    pp._set_netcdf_storage(
+                        self._nc_dataset, create=True
+                    )
+
+            # write the dataset to netcdf
+            self._nc_dataset.write(self.model_ws, **kwargs)
 
         # write name file
         if (
@@ -1856,6 +1931,13 @@ class MFModel(ModelInterface):
         """
         for package in self.packagelist:
             package.set_all_data_internal(check_data)
+
+        if (
+            hasattr(self, "_nc_dataset")
+            and self._nc_dataset is not None
+        ):
+            self._nc_dataset.close()
+            self._nc_dataset = None
 
     def register_package(
         self,

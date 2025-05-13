@@ -1685,6 +1685,33 @@ class MFBlock:
                 if dataset.enabled and not dataset.is_valid():
                     return False
 
+    def _set_netcdf_storage(self, nc_dataset, create=False):
+        """Set the dataset storage to netcdf if supported for the dataset.
+
+        Parameters
+        ----------
+            nc_dataset : ModelNetCDFDataset
+                The dataset in which to store the data.
+            create : bool
+                Create the dataset data variable.
+
+        """
+
+        for key, dataset in self.datasets.items():
+            if isinstance(dataset, mfdataarray.MFArray):
+                if dataset.structure.netcdf and dataset.has_data():
+                    try:
+                        dataset._set_storage_netcdf(nc_dataset, create)
+                    except MFDataException as mfde:
+                        raise MFDataException(
+                            mfdata_except=mfde,
+                            model=self._container_package.model_name,
+                            package=self._container_package._get_pname(),
+                            message="Error setting netcdf storage: "
+                            ' data of dataset "{}" in block '
+                            '"{}"'.format(dataset.structure.name, self.structure.name),
+                        )
+
 
 class MFPackage(PackageInterface):
     """
@@ -3421,6 +3448,24 @@ class MFPackage(PackageInterface):
 
         axes = PlotUtilities._plot_package_helper(self, **kwargs)
         return axes
+
+    def _set_netcdf_storage(self, nc_dataset, create=False):
+        """Set griddata array dataset storage to netcdf.
+
+        Parameters
+        ----------
+            nc_dataset : ModelNetCDFDataset
+                The dataset in which to store the data.
+            create : bool
+                Create the dataset data variable.
+
+        """
+
+        # update blocks
+        for key, block in self.blocks.items():
+            # TODO: if key == "griddata" or key == "period":
+            if key == "griddata":
+                block._set_netcdf_storage(nc_dataset, create)
 
 
 class MFChildPackages:

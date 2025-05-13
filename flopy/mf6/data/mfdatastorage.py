@@ -71,6 +71,8 @@ class LayerStorage:
         print code
     binary : bool
         whether the data is stored in a binary file
+    nc_dataset : ModelNetCDFDataset or None
+        model netcdf dataset
 
     Methods
     -------
@@ -115,6 +117,7 @@ class LayerStorage:
             self.factor = 1.0
         self.iprn = None
         self.binary = False
+        self.nc_dataset = None
 
     def set_internal_constant(self):
         self.data_storage_type = DataStorageType.internal_constant
@@ -203,6 +206,8 @@ class DataStorage:
         what internal type is the data stored in (ndarray, recarray, scalar)
     layered : bool
         is the data layered
+    netcdf : bool
+        is the data stored in netcdf
     pre_data_comments : string
         any comments before the start of the data
     comments : dict
@@ -327,6 +332,7 @@ class DataStorage:
             self.build_type_list(resolve_data_shape=False)
 
         self.layered = layered
+        self.netcdf = False
 
         # initialize comments
         self.pre_data_comments = None
@@ -1718,7 +1724,7 @@ class DataStorage:
             fp = self._simulation_data.mfpath.resolve_path(
                 fp_relative, model_name
             )
-        else:
+        elif fp_relative is not None:
             fp = os.path.join(
                 self._simulation_data.mfpath.get_sim_path(), fp_relative
             )
@@ -1832,12 +1838,22 @@ class DataStorage:
                         self._data_path,
                         self._stress_period,
                     )
-                    file_access.write_text_file(
-                        data,
-                        fp,
-                        data_type,
-                        data_size,
-                    )
+
+                    if self.netcdf:
+                        file_access.set_netcdf_array(
+                            self.layer_storage[layer].nc_dataset,
+                            self.data_dimensions.structure.get_package(),
+                            self.data_dimensions.structure.name,
+                            data,
+                            layer,
+                        )
+                    else:
+                        file_access.write_text_file(
+                            data,
+                            fp,
+                            data_type,
+                            data_size,
+                        )
                 if not preserve_record:
                     self.layer_storage[layer_new].factor = multiplier
                 self.layer_storage[layer_new].internal_data = None
@@ -1870,6 +1886,14 @@ class DataStorage:
         ) = self.process_open_close_line(arr_line, layer, store=False)
         self.set_ext_file_attributes(layer, data_file, print_format, binary)
         self.layer_storage[layer].factor = multiplier
+
+    def _set_storage_netcdf(self, nc_dataset, layered, layer):
+        self.netcdf = True
+        for idx in self.layer_storage.indexes():
+            self.layer_storage[idx].nc_dataset = nc_dataset
+            self.layer_storage[
+                idx
+            ].data_storage_type = DataStorageType.external_file
 
     def external_to_external(
         self, new_external_file, multiplier=None, layer=None, binary=None
@@ -1986,6 +2010,16 @@ class DataStorage:
                     self._data_type,
                     self._model_or_sim.modeldiscrit,
                 )[0]
+            elif self.layer_storage[layer].nc_dataset is not None:
+                data_out = (
+                    file_access.read_netcdf_array(
+                        self.layer_storage[layer].nc_dataset,
+                        self._model_or_sim.modeldiscrit,
+                        self.data_dimensions.structure.get_package(),
+                        self.data_dimensions.structure.name,
+                        layer,
+                    )
+                )
             else:
                 data_out = file_access.read_text_data_from_file(
                     self.get_data_size(layer),
@@ -2440,6 +2474,18 @@ class DataStorage:
                             self._model_or_sim.modeldiscrit,
                             False,
                         )[0]
+                        * mult
+                    )
+                elif self.layer_storage[layer].nc_dataset is not None:
+                    data_out = (
+                        file_access.read_netcdf_array(
+                            self.layer_storage[layer].nc_dataset,
+                            self._model_or_sim.modeldiscrit,
+                            self.data_dimensions.structure.get_package(),
+                            self.data_dimensions.structure.name,
+                            -1,
+
+                        )
                         * mult
                     )
                 else:
@@ -3015,7 +3061,10 @@ class DataStorage:
         if layer is None:
             # layer is none means the data provided is for all layers or this
             # is not layered data
-            layer = (0,)
+            if self.netcdf:
+                layer = (-1,)
+            else:
+                layer = (0,)
             self.layer_storage.list_shape = (1,)
             self.layer_storage.multi_dim_list = [
                 self.layer_storage.first_item()
@@ -3042,7 +3091,7 @@ class DataStorage:
                 self._simulation_data.debug,
             )
         layer = self._layer_prep(layer)
-        if multiplier is None:
+        if multiplier is None or self.netcdf:
             multiplier = self.get_default_mult()
         else:
             if isinstance(multiplier, float):
