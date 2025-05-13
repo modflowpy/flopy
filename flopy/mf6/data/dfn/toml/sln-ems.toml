@@ -1,0 +1,7 @@
+name = "sln-ems"
+advanced = false
+multi = false
+
+[sln]
+abbr = "ems"
+pattern = "*"

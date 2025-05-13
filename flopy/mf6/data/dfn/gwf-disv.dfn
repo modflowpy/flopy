@@ -18,6 +18,48 @@ longname do not write binary grid file
 description keyword to deactivate writing of the binary grid file.
 
 block options
+name grb_filerecord
+type record grb6 fileout grb6_filename
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name grb6
+type keyword
+in_record true
+reader urword
+tagged true
+optional false
+longname grb keyword
+description keyword to specify that record corresponds to a binary grid file.
+extended true
+
+block options
+name fileout
+type keyword
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an output filename is expected next.
+
+block options
+name grb6_filename
+type string
+preserve_case true
+in_record true
+reader urword
+optional false
+tagged false
+longname file name of GRB information
+description defines a binary grid output file. If this option is not provided, the output file will have the same name as the discretization input file, plus extension ``.grb''.
+extended true
+
+block options
 name xorigin
 type double precision
 reader urword

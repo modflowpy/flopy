@@ -160,7 +160,7 @@ tagged false
 shape
 reader urword
 longname modelname
-description name of a GWT model used to simulate a species that will be used in the viscosity equation of state.  This name will have no effect if the simulation does not include a GWT model that corresponds to this GWF model.
+description name of a GWT or GWE model used to simulate a species that will be used in the viscosity equation of state.  This name will have no effect if the simulation does not include a GWT or GWE model that corresponds to this GWF model.
 
 block packagedata
 name auxspeciesname

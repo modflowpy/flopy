@@ -169,6 +169,75 @@ longname drape
 description is a text keyword to indicate that if a particle's release point is in a cell that happens to be inactive at release time, the particle is to be moved to the topmost active cell below it, if any. By default, a particle is not released into the simulation if its release point's cell is inactive at release time.
 
 block options
+name release_timesrecord
+type record release_times times
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+removed 6.6.1
+
+block options
+name release_times
+type keyword
+reader urword
+in_record true
+tagged true
+shape
+longname
+description keyword indicating release times will follow
+removed 6.6.1
+
+block options
+name times
+type double precision
+shape (unknown)
+reader urword
+in_record true
+tagged false
+repeating true
+longname release times
+description times to release, relative to the beginning of the simulation.  RELEASE\_TIMES and RELEASE\_TIMESFILE are mutually exclusive.
+removed 6.6.1
+
+block options
+name release_timesfilerecord
+type record release_timesfile timesfile
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+removed 6.6.1
+
+block options
+name release_timesfile
+type keyword
+reader urword
+in_record true
+tagged true
+shape
+longname
+description keyword indicating release times file name will follow
+removed 6.6.1
+
+block options
+name timesfile
+type string
+preserve_case true
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname file keyword
+description name of the release times file.  RELEASE\_TIMES and RELEASE\_TIMESFILE are mutually exclusive.
+removed 6.6.1
+
+block options
 name dry_tracking_method
 type string
 valid drop stop stay

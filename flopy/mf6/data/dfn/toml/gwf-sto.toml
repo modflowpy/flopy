@@ -1,0 +1,156 @@
+name = "gwf-sto"
+advanced = false
+multi = false
+
+[fkeys.tvs_filerecord]
+parent = "parent_package"
+key = "tvs_filerecord"
+val = "perioddata"
+abbr = "tvs"
+param = "tvs_perioddata"
+
+[options.save_flows]
+block = "options"
+name = "save_flows"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "keyword to save npf flows"
+description = "keyword to indicate that cell-by-cell flow terms will be written to the file specified with 'budget save file' in output control."
+mf6internal = "ipakcb"
+
+[options.storagecoefficient]
+block = "options"
+name = "storagecoefficient"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "keyword to indicate ss is read as storage coefficient"
+description = "keyword to indicate that the ss array is read as storage coefficient rather than specific storage."
+mf6internal = "istor_coef"
+
+[options.ss_confined_only]
+block = "options"
+name = "ss_confined_only"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "keyword to indicate specific storage only applied under confined conditions"
+description = "keyword to indicate that compressible storage is only calculated for a convertible cell (iconvert>0) when the cell is under confined conditions (head greater than or equal to the top of the cell). this option has no effect on cells that are marked as being always confined (iconvert=0).  this option is identical to the approach used to calculate storage changes under confined conditions in modflow-2005."
+
+[options.perioddata]
+block = "options"
+name = "perioddata"
+type = "record tvs6 filein tvs6_filename"
+reader = "urword"
+optional = true
+description = "Contains data for the tvs package. Data can be passed as a dictionary to the tvs package with variable names as keys and package data as values. Data for the perioddata variable is also acceptable. See tvs package documentation for more information."
+
+[options.perioddata.ref]
+parent = "parent_package"
+key = "tvs_filerecord"
+val = "perioddata"
+abbr = "tvs"
+param = "tvs_perioddata"
+
+[options.export_array_ascii]
+block = "options"
+name = "export_array_ascii"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "export array variables to layered ascii files."
+description = "keyword that specifies input grid arrays, which already support the layered keyword, should be written to layered ascii output files."
+mf6internal = "export_ascii"
+
+[options.export_array_netcdf]
+block = "options"
+name = "export_array_netcdf"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "export array variables to netcdf output files."
+description = "keyword that specifies input griddata arrays should be written to the model output netcdf file."
+mf6internal = "export_nc"
+extended = true
+
+[options.dev_original_specific_storage]
+block = "options"
+name = "dev_original_specific_storage"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "development option for original specific storage"
+description = "flag indicating the original storage specific storage formulation should be used"
+mf6internal = "iorig_ss"
+
+[options.dev_oldstorageformulation]
+block = "options"
+name = "dev_oldstorageformulation"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "development option flag for old storage formulation"
+description = "development option flag for old storage formulation"
+mf6internal = "iconf_ss"
+
+[griddata.iconvert]
+block = "griddata"
+name = "iconvert"
+type = "integer"
+shape = "(nodes)"
+default = 0
+reader = "readarray"
+optional = false
+longname = "convertible indicator"
+description = "is a flag for each cell that specifies whether or not a cell is convertible for the storage calculation. 0 indicates confined storage is used. $>$0 indicates confined storage is used when head is above cell top and a mixed formulation of unconfined and confined storage is used when head is below cell top."
+layered = true
+netcdf = true
+
+[griddata.ss]
+block = "griddata"
+name = "ss"
+type = "double precision"
+shape = "(nodes)"
+default = 1e-05
+reader = "readarray"
+optional = false
+longname = "specific storage"
+description = "is specific storage (or the storage coefficient if storagecoefficient is specified as an option). specific storage values must be greater than or equal to 0. if the csub package is included in the gwf model, specific storage must be zero for every cell."
+layered = true
+netcdf = true
+
+[griddata.sy]
+block = "griddata"
+name = "sy"
+type = "double precision"
+shape = "(nodes)"
+default = 0.15
+reader = "readarray"
+optional = false
+longname = "specific yield"
+description = "is specific yield. specific yield values must be greater than or equal to 0. specific yield does not have to be specified if there are no convertible cells (iconvert=0 in every cell)."
+layered = true
+netcdf = true
+
+[period]
+transient_block = true
+
+[period.steady-state]
+block = "period"
+name = "steady-state"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "steady state indicator"
+description = "keyword to indicate that stress period iper is steady-state. steady-state conditions will apply until the transient keyword is specified in a subsequent begin period block. if the csub package is included in the gwf model, only the first and last stress period can be steady-state."
+mf6internal = "steady_state"
+
+[period.transient]
+block = "period"
+name = "transient"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "transient indicator"
+description = "keyword to indicate that stress period iper is transient. transient conditions will apply until the steady-state keyword is specified in a subsequent begin period block."

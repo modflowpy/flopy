@@ -1,0 +1,279 @@
+name = "gwt-ist"
+advanced = false
+multi = false
+
+[options.save_flows]
+block = "options"
+name = "save_flows"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "save calculated flows to budget file"
+description = "keyword to indicate that ist flow terms will be written to the file specified with 'budget fileout' in output control."
+
+[options.budget_filerecord]
+block = "options"
+name = "budget_filerecord"
+type = "record"
+reader = "urword"
+optional = true
+
+[options.budget_filerecord.fields.budget]
+block = "options"
+name = "budget"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "budget keyword"
+description = "keyword to specify that record corresponds to the budget."
+
+[options.budget_filerecord.fields.fileout]
+block = "options"
+name = "fileout"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "keyword to specify that an output filename is expected next."
+
+[options.budget_filerecord.fields.budgetfile]
+block = "options"
+name = "budgetfile"
+type = "string"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "name of the binary output file to write budget information."
+
+[options.budgetcsv_filerecord]
+block = "options"
+name = "budgetcsv_filerecord"
+type = "record"
+reader = "urword"
+optional = true
+
+[options.budgetcsv_filerecord.fields.budgetcsv]
+block = "options"
+name = "budgetcsv"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "budget keyword"
+description = "keyword to specify that record corresponds to the budget CSV."
+
+[options.budgetcsv_filerecord.fields.fileout]
+block = "options"
+name = "fileout"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "keyword to specify that an output filename is expected next."
+
+[options.budgetcsv_filerecord.fields.budgetcsvfile]
+block = "options"
+name = "budgetcsvfile"
+type = "string"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "name of the comma-separated value (CSV) output file to write budget summary information.  A budget summary record will be written to this file for each time step of the simulation."
+
+[options.sorption]
+block = "options"
+name = "sorption"
+type = "string"
+reader = "urword"
+optional = true
+longname = "activate sorption"
+description = "is a text keyword to indicate that sorption will be activated.  valid sorption options include linear, freundlich, and langmuir.  use of this keyword requires that bulk_density and distcoef are specified in the griddata block.  if sorption is specified as freundlich or langmuir then sp2 is also required in the griddata block.  the sorption option must be consistent with the sorption option specified in the mst package or the program will terminate with an error."
+valid = "linear freundlich langmuir"
+
+[options.first_order_decay]
+block = "options"
+name = "first_order_decay"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "activate first-order decay"
+description = "is a text keyword to indicate that first-order decay will occur.  use of this keyword requires that decay and decay_sorbed (if sorption is active) are specified in the griddata block."
+
+[options.zero_order_decay]
+block = "options"
+name = "zero_order_decay"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "activate zero-order decay"
+description = "is a text keyword to indicate that zero-order decay will occur.  use of this keyword requires that decay and decay_sorbed (if sorption is active) are specified in the griddata block."
+
+[options.cim_filerecord]
+block = "options"
+name = "cim_filerecord"
+type = "record"
+reader = "urword"
+optional = true
+
+[options.cim_filerecord.fields.fileout]
+block = "options"
+name = "fileout"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "keyword to specify that an output filename is expected next."
+
+[options.cim_filerecord.fields.cimfile]
+block = "options"
+name = "cimfile"
+type = "string"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "name of the output file to write immobile concentrations.  This file is a binary file that has the same format and structure as a binary head and concentration file.  The value for the text variable written to the file is CIM.  Immobile domain concentrations will be written to this file at the same interval as mobile domain concentrations are saved, as specified in the GWT Model Output Control file."
+
+[options.cimprintrecord]
+block = "options"
+name = "cimprintrecord"
+type = "record"
+reader = "urword"
+optional = true
+
+[options.cimprintrecord.fields.print_format]
+block = "options"
+name = "print_format"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "keyword to indicate that a print format follows"
+description = "keyword to specify format for printing to the listing file."
+
+[options.sorbate_filerecord]
+block = "options"
+name = "sorbate_filerecord"
+type = "record"
+reader = "urword"
+optional = true
+
+[options.sorbate_filerecord.fields.sorbate]
+block = "options"
+name = "sorbate"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "sorbate keyword"
+description = "keyword to specify that record corresponds to immobile sorbate concentration."
+
+[options.sorbate_filerecord.fields.fileout]
+block = "options"
+name = "fileout"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "keyword to specify that an output filename is expected next."
+
+[options.sorbate_filerecord.fields.sorbatefile]
+block = "options"
+name = "sorbatefile"
+type = "string"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "name of the output file to write immobile sorbate concentration information.  Immobile sorbate concentrations will be written whenever aqueous immobile concentrations are saved, as determined by settings in the Output Control option."
+
+[griddata.porosity]
+block = "griddata"
+name = "porosity"
+type = "double precision"
+shape = "(nodes)"
+reader = "readarray"
+longname = "porosity of the immobile domain"
+description = "porosity of the immobile domain specified as the immobile domain pore volume per immobile domain volume."
+layered = true
+
+[griddata.volfrac]
+block = "griddata"
+name = "volfrac"
+type = "double precision"
+shape = "(nodes)"
+reader = "readarray"
+longname = "volume fraction of this immobile domain"
+description = "fraction of the cell volume that consists of this immobile domain.  the sum of all immobile domain volume fractions must be less than one."
+layered = true
+
+[griddata.zetaim]
+block = "griddata"
+name = "zetaim"
+type = "double precision"
+shape = "(nodes)"
+reader = "readarray"
+longname = "mass transfer rate coefficient between the mobile and immobile domains"
+description = "mass transfer rate coefficient between the mobile and immobile domains, in dimensions of per time."
+layered = true
+
+[griddata.cim]
+block = "griddata"
+name = "cim"
+type = "double precision"
+shape = "(nodes)"
+reader = "readarray"
+optional = true
+longname = "initial concentration of the immobile domain"
+description = "initial concentration of the immobile domain in mass per length cubed.  if cim is not specified, then it is assumed to be zero."
+layered = true
+
+[griddata.decay]
+block = "griddata"
+name = "decay"
+type = "double precision"
+shape = "(nodes)"
+reader = "readarray"
+optional = true
+longname = "first rate coefficient"
+description = "is the rate coefficient for first or zero-order decay for the aqueous phase of the immobile domain.  a negative value indicates solute production.  the dimensions of decay for first-order decay is one over time.  the dimensions of decay for zero-order decay is mass per length cubed per time.  decay will have no effect on simulation results unless either first- or zero-order decay is specified in the options block."
+layered = true
+
+[griddata.decay_sorbed]
+block = "griddata"
+name = "decay_sorbed"
+type = "double precision"
+shape = "(nodes)"
+reader = "readarray"
+optional = true
+longname = "second rate coefficient"
+description = "is the rate coefficient for first or zero-order decay for the sorbed phase of the immobile domain.  a negative value indicates solute production.  the dimensions of decay_sorbed for first-order decay is one over time.  the dimensions of decay_sorbed for zero-order decay is mass of solute per mass of aquifer per time.  if decay_sorbed is not specified and both decay and sorption are active, then the program will terminate with an error.  decay_sorbed will have no effect on simulation results unless the sorption keyword and either first- or zero-order decay are specified in the options block."
+layered = true
+
+[griddata.bulk_density]
+block = "griddata"
+name = "bulk_density"
+type = "double precision"
+shape = "(nodes)"
+reader = "readarray"
+optional = true
+longname = "bulk density"
+description = "is the bulk density of this immobile domain in mass per length cubed.  bulk density is defined as the immobile domain solid mass per volume of the immobile domain.  bulk_density is not required unless the sorption keyword is specified in the options block.  if the sorption keyword is not specified in the options block, bulk_density will have no effect on simulation results."
+layered = true
+
+[griddata.distcoef]
+block = "griddata"
+name = "distcoef"
+type = "double precision"
+shape = "(nodes)"
+reader = "readarray"
+optional = true
+longname = "distribution coefficient"
+description = "is the distribution coefficient for the equilibrium-controlled linear sorption isotherm in dimensions of length cubed per mass.  distcoef is not required unless the sorption keyword is specified in the options block.  if the sorption keyword is not specified in the options block, distcoef will have no effect on simulation results."
+layered = true
+
+[griddata.sp2]
+block = "griddata"
+name = "sp2"
+type = "double precision"
+shape = "(nodes)"
+reader = "readarray"
+optional = true
+longname = "second sorption parameter"
+description = "is the exponent for the freundlich isotherm and the sorption capacity for the langmuir isotherm.  sp2 is not required unless the sorption keyword is specified in the options block and sorption is specified as freundlich or langmuir. if the sorption keyword is not specified in the options block, or if sorption is specified as linear, sp2 will have no effect on simulation results."
+layered = true

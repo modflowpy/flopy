@@ -191,6 +191,75 @@ optional true
 longname track usertime
 description keyword to indicate that particle tracking output is to be written at user-specified times, provided as double precision values in the TRACKTIMES block.
 
+block options
+name track_timesrecord
+type record track_times times
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+removed 6.6.1
+
+block options
+name track_times
+type keyword
+reader urword
+in_record true
+tagged true
+shape
+longname
+description keyword indicating tracking times will follow
+removed 6.6.1
+
+block options
+name times
+type double precision
+shape (unknown)
+reader urword
+in_record true
+tagged false
+repeating true
+longname tracking times
+description times to track, relative to the beginning of the simulation.
+removed 6.6.1
+
+block options
+name track_timesfilerecord
+type record track_timesfile timesfile
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+removed 6.6.1
+
+block options
+name track_timesfile
+type keyword
+reader urword
+in_record true
+tagged true
+shape
+longname
+description keyword indicating tracking times file name will follow
+removed 6.6.1
+
+block options
+name timesfile
+type string
+preserve_case true
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname file keyword
+description name of the tracking times file
+removed 6.6.1
+
 # --------------------- prt oc dimensions ------------------
 
 block dimensions

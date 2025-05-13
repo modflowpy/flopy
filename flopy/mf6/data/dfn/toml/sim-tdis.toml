@@ -1,0 +1,103 @@
+name = "sim-tdis"
+advanced = false
+multi = false
+
+[fkeys.ats_filerecord]
+parent = "parent_package"
+key = "ats_filerecord"
+val = "ats_perioddata"
+abbr = "ats"
+param = "perioddata"
+
+[options.time_units]
+block = "options"
+name = "time_units"
+type = "string"
+reader = "urword"
+optional = true
+longname = "time unit"
+description = "is the time units of the simulation.  this is a text string that is used as a label within model output files.  values for time_units may be 'unknown',  'seconds', 'minutes', 'hours', 'days', or 'years'.  the default time unit is 'unknown'."
+
+[options.start_date_time]
+block = "options"
+name = "start_date_time"
+type = "string"
+reader = "urword"
+optional = true
+longname = "starting date and time"
+description = "is the starting date and time of the simulation.  this is a text string that is used as a label within the simulation list file.  the value has no effect on the simulation.  the recommended format for the starting date and time is described at https://www.w3.org/tr/note-datetime."
+
+[options.ats_perioddata]
+block = "options"
+name = "ats_perioddata"
+type = "record ats6 filein ats6_filename"
+reader = "urword"
+optional = true
+description = "Contains data for the ats package. Data can be passed as a dictionary to the ats package with variable names as keys and package data as values. Data for the ats_perioddata variable is also acceptable. See ats package documentation for more information."
+
+[options.ats_perioddata.ref]
+parent = "parent_package"
+key = "ats_filerecord"
+val = "ats_perioddata"
+abbr = "ats"
+param = "perioddata"
+
+[dimensions.nper]
+block = "dimensions"
+name = "nper"
+type = "integer"
+default = 1
+reader = "urword"
+optional = false
+longname = "number of stress periods"
+description = "is the number of stress periods for the simulation."
+
+[perioddata.perioddata]
+block = "perioddata"
+name = "perioddata"
+type = "list"
+default = [
+    [
+        1.0,
+        1,
+        1.0,
+    ],
+]
+reader = "urword"
+optional = false
+longname = "stress period time information"
+
+[perioddata.perioddata.item]
+name = "perioddata"
+type = "record"
+block = "perioddata"
+reader = "urword"
+optional = false
+longname = "stress period time information"
+
+[perioddata.perioddata.item.fields.perlen]
+block = "perioddata"
+name = "perlen"
+type = "double precision"
+reader = "urword"
+optional = "false"
+longname = "length of stress period"
+description = "is the length of a stress period."
+
+[perioddata.perioddata.item.fields.nstp]
+block = "perioddata"
+name = "nstp"
+type = "integer"
+reader = "urword"
+optional = "false"
+longname = "number of time steps"
+description = "is the number of time steps in a stress period."
+
+[perioddata.perioddata.item.fields.tsmult]
+block = "perioddata"
+name = "tsmult"
+type = "double precision"
+reader = "urword"
+optional = "false"
+longname = "number of time steps"
+description = "is the multiplier for the length of successive time steps. The length of a time step is calculated by multiplying the length of the previous time step by TSMULT. The length of the first time step, $Delta t_1$, is related to PERLEN, NSTP, and TSMULT by the relation $Delta t_1= perlen frac{tsmult - 1}{tsmult^{nstp}-1}$."

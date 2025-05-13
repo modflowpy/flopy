@@ -1,0 +1,80 @@
+name = "prt-nam"
+advanced = false
+multi = false
+
+[options.list]
+block = "options"
+name = "list"
+type = "string"
+reader = "urword"
+optional = true
+longname = "name of listing file"
+description = "is name of the listing file to create for this prt model.  if not specified, then the name of the list file will be the basename of the prt model name file and the '.lst' extension.  for example, if the prt name file is called 'my.model.nam' then the list file will be called 'my.model.lst'."
+
+[options.print_input]
+block = "options"
+name = "print_input"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "print input to listing file"
+description = "keyword to indicate that the list of all model stress package information will be written to the listing file immediately after it is read."
+
+[options.print_flows]
+block = "options"
+name = "print_flows"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "print calculated flows to listing file"
+description = "keyword to indicate that the list of all model package flow rates will be printed to the listing file for every stress period time step in which 'budget print' is specified in output control.  if there is no output control option and 'print_flows' is specified, then flow rates are printed for the last time step of each stress period."
+
+[options.save_flows]
+block = "options"
+name = "save_flows"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "save flows for all packages to budget file"
+description = "keyword to indicate that all model package flow terms will be written to the file specified with 'budget fileout' in output control."
+
+[packages.packages]
+block = "packages"
+name = "packages"
+type = "list"
+reader = "urword"
+optional = false
+longname = "package list"
+
+[packages.packages.item]
+name = "packages"
+type = "record"
+block = "packages"
+reader = "urword"
+optional = false
+longname = "package list"
+
+[packages.packages.item.fields.ftype]
+block = "packages"
+name = "ftype"
+type = "string"
+reader = "urword"
+longname = "package type"
+description = "is the file type, which must be one of the following character values shown in table~ref{table:ftype-prt}. Ftype may be entered in any combination of uppercase and lowercase."
+
+[packages.packages.item.fields.fname]
+block = "packages"
+name = "fname"
+type = "string"
+reader = "urword"
+longname = "file name"
+description = "is the name of the file containing the package input.  The path to the file should be included if the file is not located in the folder where the program was run."
+
+[packages.packages.item.fields.pname]
+block = "packages"
+name = "pname"
+type = "string"
+reader = "urword"
+optional = "true"
+longname = "user name for package"
+description = "is the user-defined name for the package. PNAME is restricted to 16 characters.  No spaces are allowed in PNAME.  PNAME character values are read and stored by the program for stress packages only.  These names may be useful for labeling purposes when multiple stress packages of the same type are located within a single PRT Model.  If PNAME is specified for a stress package, then PNAME will be used in the flow budget table in the listing file; it will also be used for the text entry in the cell-by-cell budget file.  PNAME is case insensitive and is stored in all upper case letters."

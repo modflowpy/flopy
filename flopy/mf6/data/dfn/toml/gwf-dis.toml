@@ -1,0 +1,214 @@
+name = "gwf-dis"
+advanced = false
+multi = false
+
+[fkeys.ncf_filerecord]
+parent = "parent_package"
+key = "ncf_filerecord"
+val = "packagedata"
+abbr = "ncf"
+param = "packagedata"
+
+[options.length_units]
+block = "options"
+name = "length_units"
+type = "string"
+reader = "urword"
+optional = true
+longname = "model length units"
+description = "is the length units used for this model.  values can be 'feet', 'meters', or 'centimeters'.  if not specified, the default is 'unknown'."
+
+[options.nogrb]
+block = "options"
+name = "nogrb"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "do not write binary grid file"
+description = "keyword to deactivate writing of the binary grid file."
+
+[options.grb_filerecord]
+block = "options"
+name = "grb_filerecord"
+type = "record"
+reader = "urword"
+optional = true
+
+[options.grb_filerecord.fields.grb6]
+block = "options"
+name = "grb6"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "grb keyword"
+description = "keyword to specify that record corresponds to a binary grid file."
+extended = "true"
+
+[options.grb_filerecord.fields.fileout]
+block = "options"
+name = "fileout"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "keyword to specify that an output filename is expected next."
+
+[options.grb_filerecord.fields.grb6_filename]
+block = "options"
+name = "grb6_filename"
+type = "string"
+reader = "urword"
+optional = "false"
+longname = "file name of GRB information"
+description = "defines a binary grid output file. If this option is not provided, the output file will have the same name as the discretization input file, plus extension '.grb'."
+extended = "true"
+
+[options.xorigin]
+block = "options"
+name = "xorigin"
+type = "double precision"
+reader = "urword"
+optional = true
+longname = "x-position of the model grid origin"
+description = "x-position of the lower-left corner of the model grid.  a default value of zero is assigned if not specified.  the value for xorigin does not affect the model simulation, but it is written to the binary grid file so that postprocessors can locate the grid in space."
+
+[options.yorigin]
+block = "options"
+name = "yorigin"
+type = "double precision"
+reader = "urword"
+optional = true
+longname = "y-position of the model grid origin"
+description = "y-position of the lower-left corner of the model grid.  if not specified, then a default value equal to zero is used.  the value for yorigin does not affect the model simulation, but it is written to the binary grid file so that postprocessors can locate the grid in space."
+
+[options.angrot]
+block = "options"
+name = "angrot"
+type = "double precision"
+reader = "urword"
+optional = true
+longname = "rotation angle"
+description = "counter-clockwise rotation angle (in degrees) of the lower-left corner of the model grid.  if not specified, then a default value of 0.0 is assigned.  the value for angrot does not affect the model simulation, but it is written to the binary grid file so that postprocessors can locate the grid in space."
+
+[options.export_array_ascii]
+block = "options"
+name = "export_array_ascii"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "export array variables to layered ascii files."
+description = "keyword that specifies input griddata arrays should be written to layered ascii output files."
+mf6internal = "export_ascii"
+
+[options.export_array_netcdf]
+block = "options"
+name = "export_array_netcdf"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "export array variables to netcdf output files."
+description = "keyword that specifies input griddata arrays should be written to the model output netcdf file."
+mf6internal = "export_nc"
+extended = true
+
+[options.packagedata]
+block = "options"
+name = "packagedata"
+type = "record ncf6 filein ncf6_filename"
+reader = "urword"
+optional = true
+description = "Contains data for the ncf package. Data can be passed as a dictionary to the ncf package with variable names as keys and package data as values. Data for the packagedata variable is also acceptable. See ncf package documentation for more information."
+
+[options.packagedata.ref]
+parent = "parent_package"
+key = "ncf_filerecord"
+val = "packagedata"
+abbr = "ncf"
+param = "packagedata"
+
+[dimensions.nlay]
+block = "dimensions"
+name = "nlay"
+type = "integer"
+default = 1
+reader = "urword"
+optional = false
+longname = "number of layers"
+description = "is the number of layers in the model grid."
+
+[dimensions.nrow]
+block = "dimensions"
+name = "nrow"
+type = "integer"
+default = 2
+reader = "urword"
+optional = false
+longname = "number of rows"
+description = "is the number of rows in the model grid."
+
+[dimensions.ncol]
+block = "dimensions"
+name = "ncol"
+type = "integer"
+default = 2
+reader = "urword"
+optional = false
+longname = "number of columns"
+description = "is the number of columns in the model grid."
+
+[griddata.delr]
+block = "griddata"
+name = "delr"
+type = "double precision"
+shape = "(ncol)"
+default = 1.0
+reader = "readarray"
+longname = "spacing along a row"
+description = "is the column spacing in the row direction."
+netcdf = true
+
+[griddata.delc]
+block = "griddata"
+name = "delc"
+type = "double precision"
+shape = "(nrow)"
+default = 1.0
+reader = "readarray"
+longname = "spacing along a column"
+description = "is the row spacing in the column direction."
+netcdf = true
+
+[griddata.top]
+block = "griddata"
+name = "top"
+type = "double precision"
+shape = "(ncol, nrow)"
+default = 1.0
+reader = "readarray"
+longname = "cell top elevation"
+description = "is the top elevation for each cell in the top model layer."
+netcdf = true
+
+[griddata.botm]
+block = "griddata"
+name = "botm"
+type = "double precision"
+shape = "(ncol, nrow, nlay)"
+default = 0.0
+reader = "readarray"
+longname = "cell bottom elevation"
+description = "is the bottom elevation for each cell."
+layered = true
+netcdf = true
+
+[griddata.idomain]
+block = "griddata"
+name = "idomain"
+type = "integer"
+shape = "(ncol, nrow, nlay)"
+reader = "readarray"
+optional = true
+longname = "idomain existence array"
+description = "is an optional array that characterizes the existence status of a cell.  if the idomain array is not specified, then all model cells exist within the solution.  if the idomain value for a cell is 0, the cell does not exist in the simulation.  input and output values will be read and written for the cell, but internal to the program, the cell is excluded from the solution.  if the idomain value for a cell is 1 or greater, the cell exists in the simulation.  if the idomain value for a cell is -1, the cell does not exist in the simulation.  furthermore, the first existing cell above will be connected to the first existing cell below.  this type of cell is referred to as a 'vertical pass through' cell."
+layered = true
+netcdf = true

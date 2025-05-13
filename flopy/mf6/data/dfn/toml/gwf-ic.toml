@@ -1,0 +1,36 @@
+name = "gwf-ic"
+advanced = false
+multi = false
+
+[options.export_array_ascii]
+block = "options"
+name = "export_array_ascii"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "export array variables to layered ascii files."
+description = "keyword that specifies input griddata arrays should be written to layered ascii output files."
+mf6internal = "export_ascii"
+
+[options.export_array_netcdf]
+block = "options"
+name = "export_array_netcdf"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "export array variables to netcdf output files."
+description = "keyword that specifies input griddata arrays should be written to the model output netcdf file."
+mf6internal = "export_nc"
+extended = true
+
+[griddata.strt]
+block = "griddata"
+name = "strt"
+type = "double precision"
+shape = "(nodes)"
+default = 1.0
+reader = "readarray"
+longname = "starting head"
+description = "is the initial (starting) head---that is, head at the beginning of the gwf model simulation.  strt must be specified for all simulations, including steady-state simulations. one value is read for every model cell. for simulations in which the first stress period is steady state, the values used for strt generally do not affect the simulation (exceptions may occur if cells go dry and (or) rewet). the execution time, however, will be less if strt includes hydraulic heads that are close to the steady-state solution.  a head value lower than the cell bottom can be provided if a cell should start as dry."
+layered = true
+netcdf = true

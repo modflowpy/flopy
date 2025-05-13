@@ -1,0 +1,426 @@
+name = "prt-prp"
+advanced = false
+multi = true
+
+[options.boundnames]
+block = "options"
+name = "boundnames"
+type = "keyword"
+reader = "urword"
+optional = true
+description = "keyword to indicate that boundary names may be provided with the list of particle release points."
+
+[options.print_input]
+block = "options"
+name = "print_input"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "print input to listing file"
+description = "keyword to indicate that the list of all model stress package information will be written to the listing file immediately after it is read."
+
+[options.dev_exit_solve_method]
+block = "options"
+name = "dev_exit_solve_method"
+type = "integer"
+reader = "urword"
+optional = true
+longname = "exit solve method"
+description = "the method for iterative solution of particle exit location and time in the generalized pollock's method.  0 default, 1 brent, 2 chandrupatla.  the default is brent's method."
+
+[options.exit_solve_tolerance]
+block = "options"
+name = "exit_solve_tolerance"
+type = "double precision"
+default = 1e-05
+reader = "urword"
+optional = true
+longname = "exit solve tolerance"
+description = "the convergence tolerance for iterative solution of particle exit location and time in the generalized pollock's method.  a value of 0.00001 works well for many problems, but the value that strikes the best balance between accuracy and runtime is problem-dependent."
+
+[options.local_z]
+block = "options"
+name = "local_z"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "whether to use local z coordinates"
+description = "indicates that 'zrpt' defines the local z coordinate of the release point within the cell, with value of 0 at the bottom and 1 at the top of the cell.  if the cell is partially saturated at release time, the top of the cell is considered to be the water table elevation (the head in the cell) rather than the top defined by the user."
+
+[options.extend_tracking]
+block = "options"
+name = "extend_tracking"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "whether to extend tracking beyond the end of the simulation"
+description = "indicates that particles should be tracked beyond the end of the simulation's final time step (using that time step's flows) until particles terminate or reach a specified stop time.  by default, particles are terminated at the end of the simulation's final time step."
+
+[options.track_filerecord]
+block = "options"
+name = "track_filerecord"
+type = "record"
+reader = "urword"
+optional = true
+
+[options.track_filerecord.fields.track]
+block = "options"
+name = "track"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "track keyword"
+description = "keyword to specify that record corresponds to a binary track output file.  Each PRP Package may have a distinct binary track output file."
+
+[options.track_filerecord.fields.fileout]
+block = "options"
+name = "fileout"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "keyword to specify that an output filename is expected next."
+
+[options.track_filerecord.fields.trackfile]
+block = "options"
+name = "trackfile"
+type = "string"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "name of the binary output file to write tracking information."
+
+[options.trackcsv_filerecord]
+block = "options"
+name = "trackcsv_filerecord"
+type = "record"
+reader = "urword"
+optional = true
+
+[options.trackcsv_filerecord.fields.trackcsv]
+block = "options"
+name = "trackcsv"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "track keyword"
+description = "keyword to specify that record corresponds to a CSV track output file.  Each PRP Package may have a distinct CSV track output file."
+
+[options.trackcsv_filerecord.fields.fileout]
+block = "options"
+name = "fileout"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "keyword to specify that an output filename is expected next."
+
+[options.trackcsv_filerecord.fields.trackcsvfile]
+block = "options"
+name = "trackcsvfile"
+type = "string"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "name of the comma-separated value (CSV) file to write tracking information."
+
+[options.stoptime]
+block = "options"
+name = "stoptime"
+type = "double precision"
+reader = "urword"
+optional = true
+longname = "stop time"
+description = "real value defining the maximum simulation time to which particles in the package can be tracked.  particles that have not terminated earlier due to another termination condition will terminate when simulation time stoptime is reached.  if the last stress period in the simulation consists of more than one time step, particles will not be tracked past the ending time of the last stress period, regardless of stoptime.  if the extend_tracking option is enabled and the last stress period in the simulation is steady-state, the simulation ending time will not limit the time to which particles can be tracked, but stoptime and stoptraveltime will continue to apply.  if stoptime and stoptraveltime are both provided, particles will be stopped if either is reached."
+
+[options.stoptraveltime]
+block = "options"
+name = "stoptraveltime"
+type = "double precision"
+reader = "urword"
+optional = true
+longname = "stop travel time"
+description = "real value defining the maximum travel time over which particles in the model can be tracked.  particles that have not terminated earlier due to another termination condition will terminate when their travel time reaches stoptraveltime.  if the last stress period in the simulation consists of more than one time step, particles will not be tracked past the ending time of the last stress period, regardless of stoptraveltime.  if the extend_tracking option is enabled and the last stress period in the simulation is steady-state, the simulation ending time will not limit the time to which particles can be tracked, but stoptime and stoptraveltime will continue to apply.  if stoptime and stoptraveltime are both provided, particles will be stopped if either is reached."
+
+[options.stop_at_weak_sink]
+block = "options"
+name = "stop_at_weak_sink"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "stop at weak sink"
+description = "is a text keyword to indicate that a particle is to terminate when it enters a cell that is a weak sink.  by default, particles are allowed to pass though cells that are weak sinks."
+
+[options.istopzone]
+block = "options"
+name = "istopzone"
+type = "integer"
+reader = "urword"
+optional = true
+longname = "stop zone number"
+description = "integer value defining the stop zone number.  if cells have been assigned izone values in the griddata block, a particle terminates if it enters a cell whose izone value matches istopzone.  an istopzone value of zero indicates that there is no stop zone.  the default value is zero."
+
+[options.drape]
+block = "options"
+name = "drape"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "drape"
+description = "is a text keyword to indicate that if a particle's release point is in a cell that happens to be inactive at release time, the particle is to be moved to the topmost active cell below it, if any. by default, a particle is not released into the simulation if its release point's cell is inactive at release time."
+
+[options.release_timesrecord]
+block = "options"
+name = "release_timesrecord"
+type = "record"
+reader = "urword"
+optional = true
+removed = "6.6.1"
+
+[options.release_timesrecord.fields.release_times]
+block = "options"
+name = "release_times"
+type = "keyword"
+reader = "urword"
+description = "keyword indicating release times will follow"
+removed = "6.6.1"
+
+[options.release_timesrecord.fields.times]
+block = "options"
+name = "times"
+type = "double precision"
+shape = "(unknown)"
+reader = "urword"
+repeating = "true"
+longname = "release times"
+description = "times to release, relative to the beginning of the simulation.  RELEASE_TIMES and RELEASE_TIMESFILE are mutually exclusive."
+removed = "6.6.1"
+
+[options.release_timesfilerecord]
+block = "options"
+name = "release_timesfilerecord"
+type = "record"
+reader = "urword"
+optional = true
+removed = "6.6.1"
+
+[options.release_timesfilerecord.fields.release_timesfile]
+block = "options"
+name = "release_timesfile"
+type = "keyword"
+reader = "urword"
+description = "keyword indicating release times file name will follow"
+removed = "6.6.1"
+
+[options.release_timesfilerecord.fields.timesfile]
+block = "options"
+name = "timesfile"
+type = "string"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "name of the release times file.  RELEASE_TIMES and RELEASE_TIMESFILE are mutually exclusive."
+removed = "6.6.1"
+
+[options.dry_tracking_method]
+block = "options"
+name = "dry_tracking_method"
+type = "string"
+reader = "urword"
+optional = true
+longname = "what to do in dry-but-active cells"
+description = "is a string indicating how particles should behave in dry-but-active cells (as can occur with the newton formulation).  the value can be 'drop', 'stop', or 'stay'.  the default is 'drop', which passes particles vertically and instantaneously to the water table. 'stop' causes particles to terminate. 'stay' causes particles to remain stationary but active."
+valid = "drop stop stay"
+
+[options.dev_forceternary]
+block = "options"
+name = "dev_forceternary"
+type = "keyword"
+reader = "urword"
+optional = false
+longname = "force ternary tracking method"
+description = "force use of the ternary tracking method regardless of cell type in disv grids."
+mf6internal = "ifrctrn"
+
+[options.release_time_tolerance]
+block = "options"
+name = "release_time_tolerance"
+type = "double precision"
+reader = "urword"
+optional = true
+longname = "release time coincidence tolerance"
+description = "real number indicating the tolerance within which to consider consecutive release times coincident. coincident release times will be merged into a single release time. the default is $epsilon times 10^{11}$, where $epsilon$ is machine precision."
+
+[options.release_time_frequency]
+block = "options"
+name = "release_time_frequency"
+type = "double precision"
+reader = "urword"
+optional = true
+longname = "release time frequency"
+description = "real number indicating the time frequency at which to release particles. this option can be used to schedule releases at a regular interval for the duration of the simulation, starting at the simulation start time. the release schedule is the union of this option, the releasetimes block, and period block releasesetting selections. if none of these are provided, a single release time is configured at the beginning of the first time step of the simulation's first stress period."
+
+[dimensions.nreleasepts]
+block = "dimensions"
+name = "nreleasepts"
+type = "integer"
+reader = "urword"
+optional = false
+longname = "number of particle release points"
+description = "is the number of particle release points."
+
+[dimensions.nreleasetimes]
+block = "dimensions"
+name = "nreleasetimes"
+type = "integer"
+reader = "urword"
+optional = false
+longname = "number of particle release times"
+description = "is the number of particle release times specified in the releasetimes block. this is not necessarily the total number of release times; release times are the union of release_time_frequency, releasetimes block, and period block releasesetting selections."
+
+[packagedata.packagedata]
+block = "packagedata"
+name = "packagedata"
+type = "list"
+shape = "(nreleasepts)"
+reader = "urword"
+
+[packagedata.packagedata.item]
+name = "packagedata"
+type = "record"
+block = "packagedata"
+reader = "urword"
+
+[packagedata.packagedata.item.fields.irptno]
+block = "packagedata"
+name = "irptno"
+type = "integer"
+reader = "urword"
+longname = "PRP id number for release point"
+description = "integer value that defines the PRP release point number associated with the specified PACKAGEDATA data on the line. IRPTNO must be greater than zero and less than or equal to NRELEASEPTS.  The program will terminate with an error if information for a PRP release point number is specified more than once."
+numeric_index = "true"
+
+[packagedata.packagedata.item.fields.cellid]
+block = "packagedata"
+name = "cellid"
+type = "integer"
+shape = "(ncelldim)"
+reader = "urword"
+longname = "cell identifier"
+description = "is the cell identifier, and depends on the type of grid that is used for the simulation.  For a structured grid that uses the DIS input file, CELLID is the layer, row, and column.   For a grid that uses the DISV input file, CELLID is the layer and CELL2D number.  If the model uses the unstructured discretization (DISU) input file, CELLID is the node number for the cell."
+
+[packagedata.packagedata.item.fields.xrpt]
+block = "packagedata"
+name = "xrpt"
+type = "double precision"
+reader = "urword"
+longname = "x coordinate of release point"
+description = "real value that defines the x coordinate of the release point in model coordinates.  The (x, y, z) location specified for the release point must lie within the cell that is identified by the specified cellid."
+
+[packagedata.packagedata.item.fields.yrpt]
+block = "packagedata"
+name = "yrpt"
+type = "double precision"
+reader = "urword"
+longname = "y coordinate of release point"
+description = "real value that defines the y coordinate of the release point in model coordinates.  The (x, y, z) location specified for the release point must lie within the cell that is identified by the specified cellid."
+
+[packagedata.packagedata.item.fields.zrpt]
+block = "packagedata"
+name = "zrpt"
+type = "double precision"
+reader = "urword"
+longname = "z coordinate of release point"
+description = "real value that defines the z coordinate of the release point in model coordinates or, if the LOCAL_Z option is active, in local cell coordinates.  The (x, y, z) location specified for the release point must lie within the cell that is identified by the specified cellid."
+
+[packagedata.packagedata.item.fields.boundname]
+block = "packagedata"
+name = "boundname"
+type = "string"
+reader = "urword"
+optional = "true"
+longname = "release point name"
+description = "name of the particle release point. BOUNDNAME is an ASCII character variable that can contain as many as 40 characters. If BOUNDNAME contains spaces in it, then the entire name must be enclosed within single quotes."
+
+[releasetimes.releasetimes]
+block = "releasetimes"
+name = "releasetimes"
+type = "list"
+shape = "(nreleasetimes)"
+reader = "urword"
+
+[releasetimes.releasetimes.item]
+name = "releasetimes"
+type = "record"
+block = "releasetimes"
+reader = "urword"
+
+[releasetimes.releasetimes.item.fields.time]
+block = "releasetimes"
+name = "time"
+type = "double precision"
+reader = "urword"
+longname = "release time"
+description = "real value that defines the release time with respect to the simulation start time."
+
+[period]
+transient_block = true
+
+[period.perioddata]
+block = "period"
+name = "perioddata"
+type = "list"
+reader = "urword"
+
+[period.perioddata.item]
+block = "period"
+name = "releasesetting"
+type = "union"
+reader = "urword"
+description = "specifies time steps at which to release a particle. a particle is released at the beginning of each specified time step. for fine control over release timing, specify times explicitly using the releasetimes block. if the beginning of a specified time step coincides with a release time specified in the releasetimes block or configured via release_time_frequency, only one particle is released at that time. coincidence is evaluated up to the tolerance specified in release_time_tolerance, or $epsilon times 10^{11}$ by default, where $epsilon$ is machine precision. if no release times are configured via this setting, the releasetimes block, or the release_time_frequency option, a single release time is configured at the beginning of the first time step of the simulation's first stress period."
+
+[period.perioddata.item.choices.all]
+block = "period"
+name = "all"
+type = "keyword"
+reader = "urword"
+description = "keyword to indicate release at the start of all time steps in the period."
+
+[period.perioddata.item.choices.first]
+block = "period"
+name = "first"
+type = "keyword"
+reader = "urword"
+description = "keyword to indicate release at the start of the first time step in the period. this keyword may be used in conjunction with other releasesetting options."
+
+[period.perioddata.item.choices.last]
+block = "period"
+name = "last"
+type = "keyword"
+reader = "urword"
+description = "keyword to indicate release at the start of the last time step in the period. this keyword may be used in conjunction with other releasesetting options."
+
+[period.perioddata.item.choices.frequency]
+block = "period"
+name = "frequency"
+type = "integer"
+reader = "urword"
+description = "release at the specified time step frequency. this keyword may be used in conjunction with other releasesetting options."
+
+[period.perioddata.item.choices.steps]
+block = "period"
+name = "steps"
+type = "integer"
+shape = "(<nstp)"
+reader = "urword"
+description = "release at the start of each step specified in steps. this option may be used in conjunction with other releasesetting options."
+
+[period.perioddata.item.choices.fraction]
+block = "period"
+name = "fraction"
+type = "double precision"
+shape = "(<nstp)"
+reader = "urword"
+optional = true
+description = "release particles after the specified fraction of the time step has elapsed. if fraction is not set, particles are released at the start of the specified time step(s). fraction must be a single value when used with all, first, or frequency. when used with steps, fraction may be a single value or an array of the same length as steps. if a single fraction value is provided with steps, the fraction applies to all steps. note: the fraction option has been removed. for fine control over release timing, specify times explicitly using the releasetimes block."
+removed = "6.6.0"

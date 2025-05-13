@@ -1,0 +1,173 @@
+name = "gwe-ctp"
+advanced = false
+multi = true
+
+[fkeys.ts_filerecord]
+parent = "parent_package"
+key = "ts_filerecord"
+val = "timeseries"
+abbr = "ts"
+param = "timeseries"
+description = "xxx"
+
+[fkeys.obs_filerecord]
+parent = "parent_model_or_package"
+key = "obs_filerecord"
+val = "observations"
+abbr = "obs"
+param = "continuous"
+
+[options.auxiliary]
+block = "options"
+name = "auxiliary"
+type = "string"
+shape = "(naux)"
+reader = "urword"
+optional = true
+longname = "keyword to specify aux variables"
+description = "defines an array of one or more auxiliary variable names.  there is no limit on the number of auxiliary variables that can be provided on this line; however, lists of information provided in subsequent blocks must have a column of data for each auxiliary variable name defined here.   the number of auxiliary variables detected on this line determines the value for naux.  comments cannot be provided anywhere on this line as they will be interpreted as auxiliary variable names.  auxiliary variables may not be used by the package, but they will be available for use by other parts of the program.  the program will terminate with an error if auxiliary variables are specified on more than one line in the options block."
+
+[options.auxmultname]
+block = "options"
+name = "auxmultname"
+type = "string"
+reader = "urword"
+optional = true
+longname = "name of auxiliary variable for multiplier"
+description = "name of auxiliary variable to be used as multiplier of temperature value."
+
+[options.boundnames]
+block = "options"
+name = "boundnames"
+type = "keyword"
+reader = "urword"
+optional = true
+description = "keyword to indicate that boundary names may be provided with the list of constant temperature cells."
+
+[options.print_input]
+block = "options"
+name = "print_input"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "print input to listing file"
+description = "keyword to indicate that the list of constant temperature information will be written to the listing file immediately after it is read."
+mf6internal = "iprflow"
+
+[options.print_flows]
+block = "options"
+name = "print_flows"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "print calculated flows to listing file"
+description = "keyword to indicate that the list of constant temperature flow rates will be printed to the listing file for every stress period time step in which 'budget print' is specified in output control.  if there is no output control option and 'print_flows' is specified, then flow rates are printed for the last time step of each stress period."
+mf6internal = "ipakcb"
+
+[options.save_flows]
+block = "options"
+name = "save_flows"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "save constant temperature flows to budget file"
+description = "keyword to indicate that constant temperature flow terms will be written to the file specified with 'budget fileout' in output control."
+mf6internal = "iprpak"
+
+[options.timeseries]
+block = "options"
+name = "timeseries"
+type = "record ts6 filein ts6_filename"
+reader = "urword"
+optional = true
+description = "Contains data for the ts package. Data can be passed as a dictionary to the ts package with variable names as keys and package data as values. Data for the timeseries variable is also acceptable. See ts package documentation for more information."
+
+[options.timeseries.ref]
+parent = "parent_package"
+key = "ts_filerecord"
+val = "timeseries"
+abbr = "ts"
+param = "timeseries"
+description = "xxx"
+
+[options.observations]
+block = "options"
+name = "observations"
+type = "record obs6 filein obs6_filename"
+reader = "urword"
+optional = true
+description = "Contains data for the obs package. Data can be passed as a dictionary to the obs package with variable names as keys and package data as values. Data for the observations variable is also acceptable. See obs package documentation for more information."
+
+[options.observations.ref]
+parent = "parent_model_or_package"
+key = "obs_filerecord"
+val = "observations"
+abbr = "obs"
+param = "continuous"
+
+[dimensions.maxbound]
+block = "dimensions"
+name = "maxbound"
+type = "integer"
+reader = "urword"
+optional = false
+longname = "maximum number of constant temperatures"
+description = "integer value specifying the maximum number of constant temperature cells that will be specified for use during any stress period."
+
+[period]
+transient_block = true
+
+[period.stress_period_data]
+block = "period"
+name = "stress_period_data"
+type = "list"
+shape = "(maxbound)"
+reader = "urword"
+mf6internal = "spd"
+
+[period.stress_period_data.item]
+name = "stress_period_data"
+type = "record"
+block = "period"
+reader = "urword"
+mf6internal = "spd"
+
+[period.stress_period_data.item.fields.cellid]
+block = "period"
+name = "cellid"
+type = "integer"
+shape = "(ncelldim)"
+reader = "urword"
+longname = "cell identifier"
+description = "is the cell identifier, and depends on the type of grid that is used for the simulation.  For a structured grid that uses the DIS input file, CELLID is the layer, row, and column.   For a grid that uses the DISV input file, CELLID is the layer and CELL2D number.  If the model uses the unstructured discretization (DISU) input file, CELLID is the node number for the cell."
+
+[period.stress_period_data.item.fields.temp]
+block = "period"
+name = "temp"
+type = "double precision"
+reader = "urword"
+time_series = "true"
+longname = "constant temperature value"
+description = "is the constant temperature value. If the Options block includes a TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be obtained from a time series by entering the time-series name in place of a numeric value."
+mf6internal = "tspvar"
+
+[period.stress_period_data.item.fields.aux]
+block = "period"
+name = "aux"
+type = "double precision"
+shape = "(naux)"
+reader = "urword"
+optional = "true"
+time_series = "true"
+longname = "auxiliary variables"
+description = "represents the values of the auxiliary variables for each constant temperature. The values of auxiliary variables must be present for each constant temperature. The values must be specified in the order of the auxiliary variables specified in the OPTIONS block.  If the package supports time series and the Options block includes a TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be obtained from a time series by entering the time-series name in place of a numeric value."
+mf6internal = "auxvar"
+
+[period.stress_period_data.item.fields.boundname]
+block = "period"
+name = "boundname"
+type = "string"
+reader = "urword"
+optional = "true"
+longname = "constant temperature name"
+description = "name of the constant temperature cell.  BOUNDNAME is an ASCII character variable that can contain as many as 40 characters.  If BOUNDNAME contains spaces in it, then the entire name must be enclosed within single quotes."

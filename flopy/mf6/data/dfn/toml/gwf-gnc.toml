@@ -1,0 +1,105 @@
+name = "gwf-gnc"
+advanced = false
+multi = false
+
+[ref]
+parent = "parent_model_or_package"
+key = "gnc_filerecord"
+val = "gncdata"
+abbr = "gnc"
+param = "gncdata"
+
+[options.print_input]
+block = "options"
+name = "print_input"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "print input to listing file"
+description = "keyword to indicate that the list of gnc information will be written to the listing file immediately after it is read."
+
+[options.print_flows]
+block = "options"
+name = "print_flows"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "print simulated flows to listing file"
+description = "keyword to indicate that the list of gnc flow rates will be printed to the listing file for every stress period time step in which 'budget print' is specified in output control.  if there is no output control option and 'print_flows' is specified, then flow rates are printed for the last time step of each stress period."
+
+[options.explicit]
+block = "options"
+name = "explicit"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "use explicit gnc formulation"
+description = "keyword to indicate that the ghost node correction is applied in an explicit manner on the right-hand side of the matrix.  the explicit approach will likely require additional outer iterations.  if the keyword is not specified, then the correction will be applied in an implicit manner on the left-hand side.  the implicit approach will likely converge better, but may require additional memory.  if the explicit keyword is not specified, then the bicgstab linear acceleration option should be specified within the linear block of the sparse matrix solver."
+
+[dimensions.numgnc]
+block = "dimensions"
+name = "numgnc"
+type = "integer"
+reader = "urword"
+optional = false
+longname = "number of ghost node corrections"
+description = "is the number of gnc entries."
+
+[dimensions.numalphaj]
+block = "dimensions"
+name = "numalphaj"
+type = "integer"
+reader = "urword"
+optional = false
+longname = "number of contributing factors"
+description = "is the number of contributing factors."
+
+[gncdata.gncdata]
+block = "gncdata"
+name = "gncdata"
+type = "list"
+shape = "(maxbound)"
+reader = "urword"
+
+[gncdata.gncdata.item]
+name = "gncdata"
+type = "record"
+block = "gncdata"
+reader = "urword"
+
+[gncdata.gncdata.item.fields.cellidn]
+block = "gncdata"
+name = "cellidn"
+type = "integer"
+reader = "urword"
+longname = "GNC cellid n"
+description = "is the cellid of the cell, $n$, in which the ghost node is located. For a structured grid that uses the DIS input file, CELLIDN is the layer, row, and column numbers of the cell.   For a grid that uses the DISV input file, CELLIDN is the layer number and CELL2D number for the two cells.  If the model uses the unstructured discretization (DISU) input file, then CELLIDN is the node number for the cell."
+numeric_index = "true"
+
+[gncdata.gncdata.item.fields.cellidm]
+block = "gncdata"
+name = "cellidm"
+type = "integer"
+reader = "urword"
+longname = "GNC cellid n"
+description = "is the cellid of the connecting cell, $m$, to which flow occurs from the ghost node. For a structured grid that uses the DIS input file, CELLIDM is the layer, row, and column numbers of the cell.   For a grid that uses the DISV input file, CELLIDM is the layer number and CELL2D number for the two cells.  If the model uses the unstructured discretization (DISU) input file, then CELLIDM is the node number for the cell."
+numeric_index = "true"
+
+[gncdata.gncdata.item.fields.cellidsj]
+block = "gncdata"
+name = "cellidsj"
+type = "integer"
+shape = "(numalphaj)"
+reader = "urword"
+longname = "GNC contributing cells"
+description = "is the array of CELLIDS for the contributing j cells, which contribute to the interpolated head value at the ghost node. This item contains one CELLID for each of the contributing cells of the ghost node. Note that if the number of actual contributing cells needed by the user is less than NUMALPHAJ for any ghost node, then a dummy CELLID of zero(s) should be inserted with an associated contributing factor of zero. For a structured grid that uses the DIS input file, CELLID is the layer, row, and column numbers of the cell.   For a grid that uses the DISV input file, CELLID is the layer number and cell2d number for the two cells.  If the model uses the unstructured discretization (DISU) input file, then CELLID is the node number for the cell."
+numeric_index = "true"
+
+[gncdata.gncdata.item.fields.alphasj]
+block = "gncdata"
+name = "alphasj"
+type = "double precision"
+shape = "(numalphaj)"
+reader = "urword"
+longname = "GNC contributing factors"
+description = "is the contributing factors for each contributing node in CELLIDSJ. Note that if the number of actual contributing cells is less than NUMALPHAJ for any ghost node, then dummy CELLIDS should be inserted with an associated contributing factor of zero.  The sum of ALPHASJ should be less than one.  This is because one minus the sum of ALPHASJ is equal to the alpha term (alpha n in equation 4-61 of the GWF Model report) that is multiplied by the head in cell n."
