@@ -1,0 +1,14 @@
+LIST 7 DualDomain.lst
+BAS6  1 DualDomain.bas
+DIS  12 DualDomain.dis
+BCF6 11 DualDomain.bcf
+BCT 15 DualDomain.BCT
+PCB 17 DualDomain.PCB
+DPT 16 DualDomain.DPT
+chd 29 DualDomain.chd
+OC  22 DualDomain.oc
+SMS 19 DualDomain.sms
+DATA(BINARY) 30 DualDomain.hds
+DATA(BINARY) 31 DualDomain.ddn
+DATA(BINARY) 32 DualDomain.CON
+DATA(BINARY) 33 DualDomain.CIM

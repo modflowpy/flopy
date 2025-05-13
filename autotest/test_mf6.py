@@ -479,9 +479,9 @@ def test_subdir(function_tmpdir):
         sim_ws=sim.simulation_data.mfpath.get_sim_path(),
     )
     gwf_r = sim_r.get_model()
-    assert gwf.dis.delc.get_file_entry() == gwf_r.dis.delc.get_file_entry(), (
-        "Something wrong with model external paths"
-    )
+    assert (
+        gwf.dis.delc.get_file_entry() == gwf_r.dis.delc.get_file_entry()
+    ), "Something wrong with model external paths"
 
     sim_r.set_all_data_internal()
     sim_r.set_all_data_external(external_data_folder=os.path.join("dat", "dat_l2"))
@@ -492,9 +492,9 @@ def test_subdir(function_tmpdir):
         sim_ws=sim_r.simulation_data.mfpath.get_sim_path(),
     )
     gwf_r2 = sim_r.get_model()
-    assert gwf_r.dis.delc.get_file_entry() == gwf_r2.dis.delc.get_file_entry(), (
-        "Something wrong with model external paths"
-    )
+    assert (
+        gwf_r.dis.delc.get_file_entry() == gwf_r2.dis.delc.get_file_entry()
+    ), "Something wrong with model external paths"
 
 
 @requires_exe("mf6")
@@ -1538,9 +1538,9 @@ def test_output_add_observation(function_tmpdir, example_data_path):
     # check that .output finds the newly added OBS package
     sfr_obs = gwf.sfr.output.obs()
 
-    assert isinstance(sfr_obs, Mf6Obs), (
-        "remove and add observation test (Mf6Output) failed"
-    )
+    assert isinstance(
+        sfr_obs, Mf6Obs
+    ), "remove and add observation test (Mf6Output) failed"
 
 
 @requires_exe("mf6")

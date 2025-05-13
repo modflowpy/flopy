@@ -138,15 +138,15 @@ def test_compare_budget_and_heads(comparison_model_1):
     assert success, "could not run the new MODFLOW-2005 model"
 
     # compare the files
-    assert compare_heads(fn0, fn1, outfile=fhsum), (
-        "head comparison failure (pathlib.Path)"
-    )
-    assert compare_heads(str(fn0), str(fn1), outfile=fhsum), (
-        "head comparison failure (str path)"
-    )
-    assert compare_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fbsum), (
-        "budget comparison failure (pathlib.Path)"
-    )
+    assert compare_heads(
+        fn0, fn1, outfile=fhsum
+    ), "head comparison failure (pathlib.Path)"
+    assert compare_heads(
+        str(fn0), str(fn1), outfile=fhsum
+    ), "head comparison failure (str path)"
+    assert compare_budget(
+        fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fbsum
+    ), "budget comparison failure (pathlib.Path)"
     assert compare_budget(
         str(fn0), str(fn1), max_incpd=0.1, max_cumpd=0.1, outfile=str(fbsum)
     ), "budget comparison failure (str path)"

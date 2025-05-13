@@ -677,6 +677,11 @@ class HeadUFile(BinaryLayerFile):
         Path of the head file
     text : string
         Name of the text string in the head file. Default is 'headu'.
+        TEXT can be “HEAD”, “CONC”, “TMPR” or “DRAWDOWN”. CONC and TMPR
+        are concentration and temperature. If there are multiple mobile
+        components, then the concentration for each of the components
+        is identified by the species number. Thus, if there are three
+        solute species, text will be “CONC01”, “CONC02”, and “CONC03”.
     precision : string
         Precision of the floating point head data in the file. Accepted
         values are 'auto', 'single' or 'double'. Default is 'auto', which
@@ -730,6 +735,61 @@ class HeadUFile(BinaryLayerFile):
                 raise Exception()
         self.header_dtype = BinaryHeader.set_dtype(bintype="Head", precision=precision)
         super().__init__(filename, precision, verbose, **kwargs)
+
+    def _build_index(self):
+        """
+        Build the recordarray and iposarray, which maps the header information
+        to the position in the binary file.
+
+        """
+        header = self._get_header()
+        self.nrow = header["nrow"]
+        self.ncol = header["ncol"]
+        if header["ilay"] > self.nlay:
+            self.nlay = header["ilay"]
+
+        if self.nrow < 0 or self.ncol < 0:
+            raise Exception("negative nrow, ncol")
+
+        warn_threshold = 10000000
+        if self.nrow > 1 and self.nrow * self.ncol > warn_threshold:
+            warnings.warn(
+                f"Very large grid, ncol ({self.ncol}) * nrow ({self.nrow})"
+                f" > {warn_threshold}"
+            )
+        self.file.seek(0, 2)
+        self.totalbytes = self.file.tell()
+        self.file.seek(0, 0)
+        ipos = 0
+        while ipos < self.totalbytes:
+            header = self._get_header()
+            if self.text.upper() in header["text"]:
+                self.recordarray.append(header)
+                totim = header["totim"]
+                if not self.times:
+                    self.times.append(totim)
+                    self.kstpkper.append((header["kstp"], header["kper"]))
+                else:
+                    if totim != self.times[-1]:
+                        self.times.append(totim)
+                        self.kstpkper.append((header["kstp"], header["kper"]))
+                ipos = self.file.tell()
+                self.iposarray.append(ipos)
+
+            databytes = self.get_databytes(header)
+            self.file.seek(databytes, 1)
+            ipos = self.file.tell()
+
+        # self.recordarray contains a recordarray of all the headers.
+        self.recordarray = np.array(self.recordarray, dtype=self.header_dtype)
+        self.iposarray = np.array(self.iposarray, dtype=np.int64)
+        self.nlay = np.max(self.recordarray["ilay"])
+
+        # provide headers as a pandas frame
+        self.headers = pd.DataFrame(self.recordarray, index=self.iposarray)
+        self.headers["text"] = (
+            self.headers["text"].str.decode("ascii", "strict").str.strip()
+        )
 
     def _get_data_array(self, totim=0.0):
         """

@@ -399,13 +399,13 @@ def test_flowja_residuals(function_tmpdir, mf6_freyberg_path):
     ax = fig.add_subplot(1, 1, 1, aspect="equal")
     mm = PlotMapView(model=gwf, ax=ax)
     r0 = mm.plot_array(residual)
-    assert isinstance(r0, matplotlib.collections.QuadMesh), (
-        "r0 not type matplotlib.collections.QuadMesh"
-    )
+    assert isinstance(
+        r0, matplotlib.collections.QuadMesh
+    ), "r0 not type matplotlib.collections.QuadMesh"
     q0 = mm.plot_vector(qx, qy)
-    assert isinstance(q0, matplotlib.quiver.Quiver), (
-        "q0 not type matplotlib.quiver.Quiver"
-    )
+    assert isinstance(
+        q0, matplotlib.quiver.Quiver
+    ), "q0 not type matplotlib.quiver.Quiver"
     mm.plot_grid(lw=0.5, color="black")
     mm.plot_ibound()
     plt.colorbar(r0, shrink=0.5)
@@ -555,6 +555,6 @@ def test_get_sat_thickness_gradients(function_tmpdir):
     assert np.nansum(np.abs(dh / dz - grad[:, 1, 0])) < 1e-6
 
     sat_thick = m.modelgrid.saturated_thickness(hds, mask=nodata)
-    assert np.abs(np.sum(sat_thick[:, 1, 1] - np.array([0.2, 1.0, 1.0]))) < 1e-6, (
-        "failed saturated thickness comparison (grid.thick())"
-    )
+    assert (
+        np.abs(np.sum(sat_thick[:, 1, 1] - np.array([0.2, 1.0, 1.0]))) < 1e-6
+    ), "failed saturated thickness comparison (grid.thick())"

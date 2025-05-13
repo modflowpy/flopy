@@ -1,0 +1,9 @@
+         1        55         1         1        00         0         0    999.99    1.0e-6         1         0       0.0
+         01.0000e-02(10E12.4)                   -1     POROSITY Layer   1
+         01.0000e-02(10E12.4)                   -1     POROSITY Layer   2
+         00.0000e+00(10E12.4)                   -1     AlphaL Layer   1
+         00.0000e+00(10E12.4)                   -1     AlphaL Layer   2
+         00.0000e+00(10E12.4)                   -1     AlphaT Layer   1
+         00.0000e+00(10E12.4)                   -1     AlphaT Layer   2
+         00.0000e+00(10e12.4)                   -1     STARTING CONCS Layer   1 Component 1
+         0     1.000(10e12.4)                   -1     STARTING CONCS Layer   2 Component 1

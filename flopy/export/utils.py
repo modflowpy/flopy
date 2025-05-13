@@ -783,15 +783,15 @@ def generic_array_export(
 
     """
     if (isinstance(f, str) or isinstance(f, Path)) and Path(f).suffix.lower() == ".nc":
-        assert "model" in kwargs.keys(), (
-            "creating a new netCDF using generic_array_helper requires a 'model' kwarg"
-        )
+        assert (
+            "model" in kwargs.keys()
+        ), "creating a new netCDF using generic_array_helper requires a 'model' kwarg"
         assert isinstance(kwargs["model"], BaseModel)
         f = NetCdf(f, kwargs.pop("model"), **kwargs)
 
-    assert array.ndim == len(dimensions), (
-        "generic_array_helper() array.ndim != dimensions"
-    )
+    assert array.ndim == len(
+        dimensions
+    ), "generic_array_helper() array.ndim != dimensions"
     coords_dims = {
         "time": "time",
         "layer": "layer",
@@ -1134,9 +1134,9 @@ def array3d_export(f: Union[str, os.PathLike], u3d, fmt=None, **kwargs):
 
     """
 
-    assert isinstance(u3d, DataInterface), (
-        "array3d_export only helps instances that support DataInterface"
-    )
+    assert isinstance(
+        u3d, DataInterface
+    ), "array3d_export only helps instances that support DataInterface"
 
     min_valid = kwargs.get("min_valid", -1.0e9)
     max_valid = kwargs.get("max_valid", 1.0e9)
@@ -1290,9 +1290,9 @@ def array2d_export(f: Union[str, os.PathLike], u2d, fmt=None, verbose=False, **k
         if fmt is set to 'vtk', parameters of Vtk initializer
 
     """
-    assert isinstance(u2d, DataInterface), (
-        "util2d_helper only helps instances that support DataInterface"
-    )
+    assert isinstance(
+        u2d, DataInterface
+    ), "util2d_helper only helps instances that support DataInterface"
     assert len(u2d.array.shape) == 2, "util2d_helper only supports 2D arrays"
 
     min_valid = kwargs.get("min_valid", -1.0e9)

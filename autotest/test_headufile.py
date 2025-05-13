@@ -105,9 +105,9 @@ def test_get_ts_multiple_nodes(mfusg_model):
     multi_hds = head_file.get_ts(idx=nodes)
     for i, node in enumerate(nodes):
         layer, nn = get_lni(grid.ncpl, [node])[0]
-        assert multi_hds[0, i + 1] == head[layer][nn], (
-            "head from 'get_ts' != head from 'get_data'"
-        )
+        assert (
+            multi_hds[0, i + 1] == head[layer][nn]
+        ), "head from 'get_ts' != head from 'get_data'"
 
 
 @requires_exe("mfusg", "gridgen")
@@ -122,9 +122,9 @@ def test_get_ts_all_nodes(mfusg_model):
     multi_hds = head_file.get_ts(idx=nodes)
     for node in nodes:
         layer, nn = get_lni(grid.ncpl, [node])[0]
-        assert multi_hds[0, node + 1] == head[layer][nn], (
-            "head from 'get_ts' != head from 'get_data'"
-        )
+        assert (
+            multi_hds[0, node + 1] == head[layer][nn]
+        ), "head from 'get_ts' != head from 'get_data'"
 
 
 @requires_exe("mfusg", "gridgen")

@@ -1,0 +1,15 @@
+# MODFLOW-USG name file written by Groundwater Vistas
+#xll:0.000000; yll:0.000000; rotation:0.000000;
+LIST   7 Stallman_Heat.lst
+BAS6   1 Stallman_Heat.bas
+SMS   19 Stallman_Heat.sms
+DISU  29 Stallman_Heat.dis
+OC    22 Stallman_Heat.oc
+CHD   40 Stallman_Heat.chd
+LPF   11 Stallman_Heat.lpf
+BCT  120 Stallman_Heat.bct
+PCB  121 Stallman_Heat.pcb
+DATA(BINARY) 132 Stallman_Heat.con
+DATA(BINARY) 50 Stallman_Heat.cbb
+DATA(BINARY) 30 Stallman_Heat.hds
+DATA(BINARY) 31 Stallman_Heat.ddn

@@ -13,7 +13,7 @@ import numpy as np
 
 from ..modflow.mflpf import ModflowLpf
 from ..modflow.mfpar import ModflowPar as mfpar
-from ..utils import Util2d, read1d
+from ..utils import Util2d, Util3d, read1d
 from ..utils.flopy_io import line_parse
 from ..utils.utils_def import (
     get_open_file_object,
@@ -231,6 +231,13 @@ class MfUsgLpf(ModflowLpf):
         thickstrt=False,
         nocvcorrection=False,
         novfc=False,
+        bubblept=False,
+        fullydry=False,
+        alpha=0,
+        beta=0,
+        sr=0,
+        brook=0,
+        bp=0,
         extension="lpf",
         unitnumber=None,
         filenames=None,
@@ -296,6 +303,10 @@ class MfUsgLpf(ModflowLpf):
             self.options = self.options + "NOCVCORRECTION "
         if novfc:
             self.options = self.options + "NOVFC "
+        if bubblept:
+            self.options = self.options + "BUBBLEPT "
+        if fullydry:
+            self.options = self.options + "FULLYDRY "
 
         if not structured:
             njag = dis.njag
@@ -308,6 +319,55 @@ class MfUsgLpf(ModflowLpf):
             self.ksat = Util2d(
                 model, (njag,), np.float32, ksat, "ksat", locat=self.unit_number[0]
             )
+
+        bas = model.get_package("BAS6")
+        self.richards = bas.richards
+        self.bubblept = bubblept
+        self.fullydry = fullydry
+
+        nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
+        if self.richards:
+            self.alpha = Util3d(
+                model,
+                (nlay, nrow, ncol),
+                np.float32,
+                alpha,
+                name="richards alpha",
+                locat=self.unit_number[0],
+            )
+            self.beta = Util3d(
+                model,
+                (nlay, nrow, ncol),
+                np.float32,
+                beta,
+                name="richards beta",
+                locat=self.unit_number[0],
+            )
+            self.sr = Util3d(
+                model,
+                (nlay, nrow, ncol),
+                np.float32,
+                sr,
+                name="richards sr",
+                locat=self.unit_number[0],
+            )
+            self.brook = Util3d(
+                model,
+                (nlay, nrow, ncol),
+                np.float32,
+                brook,
+                name="richards brook",
+                locat=self.unit_number[0],
+            )
+            if self.bubblept:
+                self.bp = Util3d(
+                    model,
+                    (nlay, nrow, ncol),
+                    np.float32,
+                    bp,
+                    name="richards bp",
+                    locat=self.unit_number[0],
+                )
 
         if add_package:
             self.parent.add_package(self)
@@ -390,6 +450,14 @@ class MfUsgLpf(ModflowLpf):
                 if self.laywet[layer] != 0 and self.laytyp[layer] != 0:
                     f_obj.write(self.wetdry[layer].get_file_entry())
 
+            if self.richards:
+                f_obj.write(self.alpha[layer].get_file_entry())
+                f_obj.write(self.beta[layer].get_file_entry())
+                f_obj.write(self.sr[layer].get_file_entry())
+                f_obj.write(self.brook[layer].get_file_entry())
+                if self.bubblept:
+                    f_obj.write(self.bp[layer].get_file_entry())
+
         if abs(self.ikcflag == 1):
             f_obj.write(self.ksat.get_file_entry())
 
@@ -444,7 +512,7 @@ class MfUsgLpf(ModflowLpf):
 
         # dataset 0 -- header
         while True:
-            line = f_obj.readline()
+            line = f_obj.readline().upper()
             if line[0] != "#":
                 break
 
@@ -464,6 +532,8 @@ class MfUsgLpf(ModflowLpf):
             thickstrt,
             nocvcorrection,
             novfc,
+            bubblept,
+            fullydry,
         ) = cls._load_item1(line, model)
 
         (laytyp, layavg, chani, layvka, laywet, wetfct, iwetit, ihdwet, iwetdry) = (
@@ -481,18 +551,21 @@ class MfUsgLpf(ModflowLpf):
             )
 
         # load layer properties
-        (hk, hani, vka, ss, sy, vkcb, wetdry) = cls._load_layer_properties(
-            cls,
-            f_obj,
-            model,
-            dis,
-            ikcflag,
-            layvka,
-            chani,
-            laytyp,
-            laywet,
-            nplpf,
-            ext_unit_dict,
+        (hk, hani, vka, ss, sy, vkcb, wetdry, alpha, beta, sr, brook, bp) = (
+            cls._load_layer_properties(
+                cls,
+                f_obj,
+                model,
+                dis,
+                ikcflag,
+                layvka,
+                chani,
+                laytyp,
+                laywet,
+                nplpf,
+                bubblept,
+                ext_unit_dict,
+            )
         )
 
         # Ksat  mfusg
@@ -532,6 +605,13 @@ class MfUsgLpf(ModflowLpf):
             sy=sy,
             vkcb=vkcb,
             wetdry=wetdry,
+            bubblept=bubblept,
+            fullydry=fullydry,
+            alpha=alpha,
+            beta=beta,
+            sr=sr,
+            brook=brook,
+            bp=bp,
             ksat=ksat,
             storagecoefficient=storagecoefficient,
             constantcv=constantcv,
@@ -560,13 +640,23 @@ class MfUsgLpf(ModflowLpf):
         ikcflag = 0
         if not model.structured:
             ikcflag = int(text_list[3])
-        storagecoefficient = "STORAGECOEFFICIENT" in [
-            item.upper() for item in text_list
-        ]
-        constantcv = "CONSTANTCV" in [item.upper() for item in text_list]
-        thickstrt = "THICKSTRT" in [item.upper() for item in text_list]
-        nocvcorrection = "NOCVCORRECTION" in [item.upper() for item in text_list]
-        novfc = "NOVFC" in [item.upper() for item in text_list]
+        storagecoefficient = "STORAGECOEFFICIENT" in text_list
+        constantcv = "CONSTANTCV" in text_list
+        thickstrt = "THICKSTRT" in text_list
+        nocvcorrection = "NOCVCORRECTION" in text_list
+        novfc = "NOVFC" in text_list
+        bubblept = "BUBBLEPT" in text_list
+        fullydry = "FULLYDRY" in text_list
+
+        ### Not implemented --- Richards equation uses a tabular input for the
+        ### moisture retention and relative permeability curves
+        if "TABRICH" in text_list:
+            i = text_list.index("TABRICH")
+            nuzones = np.float32(text_list[i + 1])
+            nutabrows = np.float32(text_list[i + 1])
+        else:
+            nuzones = None
+            nutabrows = None
 
         return (
             ipakcb,
@@ -578,6 +668,8 @@ class MfUsgLpf(ModflowLpf):
             thickstrt,
             nocvcorrection,
             novfc,
+            bubblept,
+            fullydry,
         )
 
     @staticmethod
@@ -723,6 +815,7 @@ class MfUsgLpf(ModflowLpf):
         laytyp,
         laywet,
         nplpf,
+        bubblept,
         ext_unit_dict,
     ):
         """Loads layer properties."""
@@ -733,7 +826,10 @@ class MfUsgLpf(ModflowLpf):
             par_types, parm_dict = mfpar.load(f_obj, nplpf, model.verbose)
 
         # non-parameter data
+        bas = model.get_package("BAS6")
+        richards = bas.richards
         transient = not dis.steady.all()
+
         nlay = model.nlay
         hk = [0] * nlay
         hani = [0] * nlay
@@ -742,6 +838,11 @@ class MfUsgLpf(ModflowLpf):
         sy = [0] * nlay
         vkcb = [0] * nlay
         wetdry = [0] * nlay
+        alpha = [0] * nlay
+        beta = [0] * nlay
+        sr = [0] * nlay
+        brook = [0] * nlay
+        bp = [0] * nlay
 
         # load by layer
         for layer in range(nlay):
@@ -788,7 +889,53 @@ class MfUsgLpf(ModflowLpf):
                     f_obj, model, util2d_shape, np.float32, "wetdry", ext_unit_dict
                 )
 
-        return hk, hani, vka, ss, sy, vkcb, wetdry
+            # Richards equation
+            if richards:
+                if model.verbose:
+                    print(f"   loading Richards equation layer {layer + 1:3d}...")
+                alpha[layer] = Util2d.load(
+                    f_obj,
+                    model,
+                    util2d_shape,
+                    np.float32,
+                    "alpha",
+                    ext_unit_dict,
+                )
+                beta[layer] = Util2d.load(
+                    f_obj,
+                    model,
+                    util2d_shape,
+                    np.float32,
+                    "beta",
+                    ext_unit_dict,
+                )
+                sr[layer] = Util2d.load(
+                    f_obj,
+                    model,
+                    util2d_shape,
+                    np.float32,
+                    "sr",
+                    ext_unit_dict,
+                )
+                brook[layer] = Util2d.load(
+                    f_obj,
+                    model,
+                    util2d_shape,
+                    np.float32,
+                    "brook",
+                    ext_unit_dict,
+                )
+                if bubblept:
+                    bp[layer] = Util2d.load(
+                        f_obj,
+                        model,
+                        util2d_shape,
+                        np.float32,
+                        "bp",
+                        ext_unit_dict,
+                    )
+
+        return hk, hani, vka, ss, sy, vkcb, wetdry, alpha, beta, sr, brook, bp
 
     @staticmethod
     def _load_storage(f_obj, model, layer_vars, ext_unit_dict, par_types_parm_dict):

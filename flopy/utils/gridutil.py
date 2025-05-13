@@ -102,17 +102,17 @@ def get_disu_kwargs(
     if np.isscalar(delr):
         delr = delr * np.ones(ncol, dtype=float)
     else:
-        assert np.asanyarray(delr).shape == (ncol,), (
-            "delr must be array with shape (ncol,), got {}".format(delr.shape)
-        )
+        assert np.asanyarray(delr).shape == (
+            ncol,
+        ), "delr must be array with shape (ncol,), got {}".format(delr.shape)
 
     # delc check
     if np.isscalar(delc):
         delc = delc * np.ones(nrow, dtype=float)
     else:
-        assert np.asanyarray(delc).shape == (nrow,), (
-            "delc must be array with shape (nrow,), got {}".format(delc.shape)
-        )
+        assert np.asanyarray(delc).shape == (
+            nrow,
+        ), "delc must be array with shape (nrow,), got {}".format(delc.shape)
 
     # tp check
     if np.isscalar(tp):
@@ -314,17 +314,17 @@ def get_disv_kwargs(
     if np.isscalar(delr):
         delr = delr * np.ones(ncol, dtype=float)
     else:
-        assert np.asanyarray(delr).shape == (ncol,), (
-            "delr must be array with shape (ncol,), got {}".format(delr.shape)
-        )
+        assert np.asanyarray(delr).shape == (
+            ncol,
+        ), "delr must be array with shape (ncol,), got {}".format(delr.shape)
 
     # delc check
     if np.isscalar(delc):
         delc = delc * np.ones(nrow, dtype=float)
     else:
-        assert np.asanyarray(delc).shape == (nrow,), (
-            "delc must be array with shape (nrow,), got {}".format(delc.shape)
-        )
+        assert np.asanyarray(delc).shape == (
+            nrow,
+        ), "delc must be array with shape (nrow,), got {}".format(delc.shape)
 
     # tp check
     if np.isscalar(tp):

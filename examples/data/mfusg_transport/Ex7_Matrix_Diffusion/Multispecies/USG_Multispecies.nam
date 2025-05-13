@@ -1,0 +1,13 @@
+LIST   7 USG_Multispecies.lst
+BAS6   1 USG_Multispecies.bas
+SMS   23 USG_Multispecies.sms
+DISU  26 USG_Multispecies.dis
+OC    22 USG_Multispecies.oc
+CHD  199 USG_Multispecies.chd
+BCT   27 USG_Multispecies.bct
+LPF   25 USG_Multispecies.lpf
+MDT   35 USG_Multispecies.mdt
+PCB   39 USG_Multispecies.pcb
+DATA(BINARY) 132 USG_Multispecies.con
+DATA(BINARY) 30 USG_Multispecies.hds
+DATA(BINARY) 31 USG_Multispecies.ddn

@@ -38,6 +38,8 @@ class ModflowBas(Package):
     ichflg : bool, optional
         Flag indicating that flows between constant head cells should be
         calculated (the default is False).
+    richards : bool, optional
+        Flag indicating that Richards equation is solved (the default is False).
     stoper : float
         percent discrepancy that is compared to the budget percent discrepancy
         continue when the solver convergence criteria are not met.  Execution
@@ -99,10 +101,12 @@ class ModflowBas(Package):
         ixsec=False,
         ichflg=False,
         stoper=None,
+        richards=False,
         hnoflo=-999.99,
         extension="bas",
         unitnumber=None,
         filenames=None,
+        **kwargs,
     ):
         if unitnumber is None:
             unitnumber = ModflowBas._defaultunit()
@@ -136,12 +140,46 @@ class ModflowBas(Package):
             locat=self.unit_number[0],
         )
         self._generate_heading()
-        self.options = ""
         self.ixsec = ixsec
         self.ichflg = ichflg
         self.stoper = stoper
+        self.richards = richards
 
         model.free_format_input = ifrefm
+
+        opts = []
+        if self.ixsec:
+            opts.append("XSECTION")
+        if self.ichflg:
+            opts.append("CHTOCH")
+        if self.ifrefm:
+            opts.append("FREE")
+        if self.richards:
+            opts.append("RICHARDS")
+        if self.stoper is not None:
+            opts.append(f"STOPERROR {self.stoper}")
+
+        if kwargs.get("iprinttime"):
+            opts.append("PRINTTIME")
+        if kwargs.get("ishowp"):
+            opts.append("SHOWPROGRESS")
+
+        if kwargs.get("printfv"):
+            opts.append("PRINTFV")
+        if kwargs.get("unstructured"):
+            opts.append("UNSTRUCTURED")
+        if kwargs.get("converge"):
+            opts.append("CONVERGE")
+        if kwargs.get("dpin"):
+            opts.append("DPIN")
+        if kwargs.get("dpout"):
+            opts.append("DPOUT")
+        if kwargs.get("dpio"):
+            opts.append("DPIO")
+        if kwargs.get("dpin"):
+            opts.append("DPIN")
+
+        self.options = " ".join(opts)
 
         self.hnoflo = hnoflo
         self.parent.add_package(self)
@@ -229,16 +267,6 @@ class ModflowBas(Package):
         # First line: heading
         f_bas.write(f"{self.heading}\n")
         # Second line: format specifier
-        opts = []
-        if self.ixsec:
-            opts.append("XSECTION")
-        if self.ichflg:
-            opts.append("CHTOCH")
-        if self.ifrefm:
-            opts.append("FREE")
-        if self.stoper is not None:
-            opts.append(f"STOPERROR {self.stoper}")
-        self.options = " ".join(opts)
         f_bas.write(self.options + "\n")
         # IBOUND array
         f_bas.write(self.ibound.get_file_entry())
@@ -330,8 +358,19 @@ class ModflowBas(Package):
         ixsec = "XSECTION" in opts
         ichflg = "CHTOCH" in opts
         ifrefm = "FREE" in opts
-        iprinttime = "PRINTTIME" in opts
-        ishowp = "SHOWPROGRESS" in opts
+        args = {}  ## Additional options in BAS6 for MF-USG
+        richards = "RICHARDS" in opts
+        args["iprinttime"] = "PRINTTIME" in opts
+        args["ishowp"] = "SHOWPROGRESS" in opts
+
+        args["printfv"] = "PRINTFV" in opts
+        args["unstructured"] = "UNSTRUCTURED" in opts
+        args["converge"] = "CONVERGE" in opts
+        args["dpin"] = "DPIN" in opts
+        args["dpout"] = "DPOUT" in opts
+        args["dpio"] = "DPIO" in opts
+        args["dpin"] = "DPIN" in opts
+
         if "STOPERROR" in opts:
             i = opts.index("STOPERROR")
             stoper = np.float32(opts[i + 1])
@@ -374,9 +413,11 @@ class ModflowBas(Package):
             ifrefm=ifrefm,
             ichflg=ichflg,
             stoper=stoper,
+            richards=richards,
             hnoflo=hnoflo,
             unitnumber=unitnumber,
             filenames=filenames,
+            **args,
         )
         if check:
             bas.check(f=f"{bas.name[0]}.chk", verbose=bas.parent.verbose, level=0)

@@ -1,0 +1,26 @@
+# MODFLOW-USG Block-Centered Transport (BCT) Package
+# 1a. ITRNSP IBCTCB MCOMP ICBNDFLG ITVD IADSORB ICT CINACT CICLOSE IDISP IXDISP DIFFNC IZOD IFOD IFMBC IHEAT IMCOMP IDISPCLN NSEQITR
+# 1a. ITRNSP IBCTCB MCOMP ICBNDFLG ITVD IADSORB ICT CINACT CICLOSE IDISP IXDISP DIFFNC IZOD IFOD IFMBC IHEAT IMCOMP IDISPCLN NSEQITR
+    3    27     1     1     0     1     0         -1.0      1.0e-06     1     0    0.0504576     0     3     0    0    0    0    1
+CONSTANT 1.0                             #  3. PRSITY(NDSLAY) Layer 1
+CONSTANT 157.0                           #  4. BULKD(NDSLAY) Layer 1
+INTERNAL 1.0 (FREE) -1                   #  5. ANGLEX(NJA)
+     0.0      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 
+3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 
+3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 
+3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 
+3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 
+3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 
+3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 
+3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 
+3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 
+3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 
+3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 
+3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 3.141593      0.0      0.0 
+3.141593 
+CONSTANT 0.0                             #  6. DL(NDSLAY) Layer 1
+CONSTANT 0.0                             #  7. DT(NDSLAY) Layer 1
+CONSTANT 0.0                             # 14. ADSORB(NDSLAY,ICOMP) Layer 1 Species 1
+CONSTANT 0.0561                          # 18. FODRW(NDSLAY,ICOMP) Layer 1 Species 1
+CONSTANT 0.0                             # 19. FODRS(NDSLAY,ICOMP) Layer 1 Species 1
+CONSTANT 0.0                             # 20. CONC(NDSLAY,ICOMP) Layer 1 Species 1

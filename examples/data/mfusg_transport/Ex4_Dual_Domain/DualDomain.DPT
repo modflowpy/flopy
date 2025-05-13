@@ -1,0 +1,8 @@
+         0        33         0         1         0         0         0
+         0         1(10E12.4)                   -1     ibound_M Layer   1
+         00.4000e+00(10E12.4)                   -1     fracture fraction Layer   1
+         00.2000e+00(10E12.4)                   -1     POROSITY_M Layer   1
+         01.6000e+00(10E12.4)                   -1     RHOB Layer   1
+         0000.10e+00(10E12.4)                   -1     GAMMA Layer   1
+         00.1000e+00(10E12.4)                   -1     KD Layer   1
+         00.0000e+00(10e12.4)                   -1     STARTING CONCS Layer   1 Component 1
