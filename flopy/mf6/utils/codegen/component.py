@@ -3,7 +3,7 @@ from typing import (
     TypedDict,
 )
 
-from modflow_devtools.dfn import Dfn
+from flopy.mf6.utils.dfn import Dfn
 
 
 def get_component_names(dfn: dict) -> list[tuple[str, str]]:
