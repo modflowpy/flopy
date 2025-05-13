@@ -1,0 +1,62 @@
+name = "utl-hpc"
+advanced = false
+multi = false
+
+[ref]
+parent = "parent_package"
+key = "hpc_filerecord"
+val = "hpc_data"
+abbr = "hpc"
+param = "hpc_data"
+
+[options.print_table]
+block = "options"
+name = "print_table"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "model print table to listing file"
+description = "keyword to indicate that the partition table will be printed to the listing file."
+
+[options.dev_log_mpi]
+block = "options"
+name = "dev_log_mpi"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "log mpi traffic"
+description = "keyword to enable (extremely verbose) logging of mpi traffic to file."
+
+[partitions.partitions]
+block = "partitions"
+name = "partitions"
+type = "list"
+reader = "urword"
+optional = true
+longname = "list of partition numbers"
+description = "is the list of zero-based partition numbers."
+
+[partitions.partitions.item]
+name = "partitions"
+type = "record"
+block = "partitions"
+description = "is the record of zero-based partition numbers."
+reader = "urword"
+optional = true
+longname = "list of partition numbers"
+
+[partitions.partitions.item.fields.mname]
+block = "partitions"
+name = "mname"
+type = "string"
+reader = "urword"
+longname = "model name"
+description = "is the unique model name."
+
+[partitions.partitions.item.fields.mrank]
+block = "partitions"
+name = "mrank"
+type = "integer"
+reader = "urword"
+longname = "model rank"
+description = "is the zero-based partition number (also: MPI rank or processor id) to which the model will be assigned."

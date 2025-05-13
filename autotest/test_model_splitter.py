@@ -14,6 +14,12 @@ from flopy.mf6.utils import Mf6Splitter
 def test_structured_model_splitter(function_tmpdir):
     sim_path = get_example_data_path() / "mf6-freyberg"
 
+    from pathlib import Path
+
+    function_tmpdir = Path("./temp")
+
+    split_path = function_tmpdir / "split_model"
+
     sim = MFSimulation.load(sim_ws=sim_path)
     sim.set_sim_path(function_tmpdir)
     sim.write_simulation()
@@ -32,7 +38,7 @@ def test_structured_model_splitter(function_tmpdir):
     mfsplit = Mf6Splitter(sim)
     new_sim = mfsplit.split_model(array)
 
-    new_sim.set_sim_path(function_tmpdir / "split_model")
+    new_sim.set_sim_path(split_path)
     new_sim.write_simulation()
     new_sim.run_simulation()
 
@@ -48,6 +54,21 @@ def test_structured_model_splitter(function_tmpdir):
 
     err_msg = "Heads from original and split models do not match"
     np.testing.assert_allclose(new_heads, original_heads, err_msg=err_msg)
+
+    # test that line length is ncol for each model....
+    ll_dict = {
+        split_path / "freyberg_001.npf": ml0.dis.ncol.get_data(),
+        split_path / "freyberg_100.npf": ml1.dis.ncol.get_data(),
+    }
+    for f, ncol in ll_dict.items():
+        with open(f) as foo:
+            while "internal" not in foo.readline().lower():
+                continue
+
+            line = foo.readline().strip()
+            tmp = line.split()
+            if len(tmp) != ncol:
+                raise AssertionError("Array column length is not equal to ncol")
 
 
 @requires_exe("mf6")
@@ -204,10 +225,11 @@ def test_metis_splitting_with_lak_sfr(function_tmpdir):
 
 @requires_exe("mf6")
 @requires_pkg("pymetis")
-def test_save_load_node_mapping(function_tmpdir):
+@requires_pkg("h5py")
+def test_save_load_node_mapping_structured(function_tmpdir):
     sim_path = get_example_data_path() / "mf6-freyberg"
     new_sim_path = function_tmpdir / "mf6-freyberg/split_model"
-    json_file = new_sim_path / "node_map.json"
+    hdf_file = new_sim_path / "node_map.hdf5"
     nparts = 5
 
     sim = MFSimulation.load(sim_ws=sim_path)
@@ -225,12 +247,11 @@ def test_save_load_node_mapping(function_tmpdir):
     new_sim.run_simulation()
     original_node_map = mfsplit._node_map
 
-    mfsplit.save_node_mapping(json_file)
+    mfsplit.save_node_mapping(hdf_file)
 
     new_sim2 = MFSimulation.load(sim_ws=new_sim_path)
 
-    mfsplit2 = Mf6Splitter(new_sim2)
-    mfsplit2.load_node_mapping(new_sim2, json_file)
+    mfsplit2 = Mf6Splitter.load_node_mapping(hdf_file)
     saved_node_map = mfsplit2._node_map
 
     for k, v1 in original_node_map.items():
@@ -245,6 +266,88 @@ def test_save_load_node_mapping(function_tmpdir):
         array_dict[model] = heads0
 
     new_heads = mfsplit2.reconstruct_array(array_dict)
+    err_msg = "Heads from original and split models do not match"
+    np.testing.assert_allclose(new_heads, original_heads, err_msg=err_msg)
+
+
+@requires_exe("mf6")
+@requires_pkg("h5py")
+def test_save_load_node_mapping_vertex(function_tmpdir):
+    sim_path = get_example_data_path() / "mf6" / "test003_gwftri_disv"
+    new_sim_path = function_tmpdir / "split_model"
+    hdf_file = new_sim_path / "vertex_node_map.hdf5"
+    sim = MFSimulation.load(sim_ws=sim_path)
+    sim.set_sim_path(function_tmpdir)
+    sim.write_simulation()
+    sim.run_simulation()
+
+    gwf = sim.get_model()
+    modelgrid = gwf.modelgrid
+
+    array = np.zeros((modelgrid.ncpl,), dtype=int)
+    array[0:85] = 1
+
+    mfsplit = Mf6Splitter(sim)
+    new_sim = mfsplit.split_model(array)
+
+    new_sim.set_sim_path(new_sim_path)
+    new_sim.write_simulation()
+    new_sim.run_simulation()
+    mfsplit.save_node_mapping(hdf_file)
+
+    original_heads = np.squeeze(gwf.output.head().get_alldata()[-1])
+
+    ml0 = new_sim.get_model("gwf_1_0")
+    ml1 = new_sim.get_model("gwf_1_1")
+    heads0 = ml0.output.head().get_alldata()[-1]
+    heads1 = ml1.output.head().get_alldata()[-1]
+
+    mfsplit2 = Mf6Splitter.load_node_mapping(hdf_file)
+
+    new_heads = mfsplit2.reconstruct_array({0: heads0, 1: heads1})
+
+    err_msg = "Heads from original and split models do not match"
+    np.testing.assert_allclose(
+        new_heads, original_heads, rtol=0.002, atol=0.01, err_msg=err_msg
+    )
+
+
+@requires_exe("mf6")
+@requires_pkg("h5py")
+def test_save_load_node_mapping_unstructured(function_tmpdir):
+    sim_path = get_example_data_path() / "mf6" / "test006_gwf3"
+    new_sim_path = function_tmpdir / "split_model"
+    hdf_file = new_sim_path / "unstruct_node_mapping.hdf5"
+
+    sim = MFSimulation.load(sim_ws=sim_path)
+    sim.set_sim_path(function_tmpdir)
+    sim.write_simulation()
+    sim.run_simulation()
+
+    gwf = sim.get_model()
+    modelgrid = gwf.modelgrid
+
+    array = np.zeros((modelgrid.nnodes,), dtype=int)
+    array[65:] = 1
+
+    mfsplit = Mf6Splitter(sim)
+    new_sim = mfsplit.split_model(array)
+
+    new_sim.set_sim_path(new_sim_path)
+    new_sim.write_simulation()
+    new_sim.run_simulation()
+    mfsplit.save_node_mapping(hdf_file)
+
+    original_heads = np.squeeze(gwf.output.head().get_alldata()[-1])
+
+    ml0 = new_sim.get_model("gwf_1_0")
+    ml1 = new_sim.get_model("gwf_1_1")
+    heads0 = ml0.output.head().get_alldata()[-1]
+    heads1 = ml1.output.head().get_alldata()[-1]
+
+    mfsplit2 = Mf6Splitter.load_node_mapping(hdf_file)
+    new_heads = mfsplit2.reconstruct_array({0: heads0, 1: heads1})
+
     err_msg = "Heads from original and split models do not match"
     np.testing.assert_allclose(new_heads, original_heads, err_msg=err_msg)
 
@@ -847,7 +950,6 @@ def test_unstructured_complex_disu(function_tmpdir):
         raise AssertionError("Reconstructed head results outside of tolerance")
 
 
-@pytest.mark.slow
 @requires_exe("mf6")
 @requires_pkg("pymetis", "scipy")
 def test_multi_model(function_tmpdir):
@@ -1408,3 +1510,179 @@ def test_timeseries(function_tmpdir):
 
     if not success:
         raise AssertionError("Timeseries split simulation did not properly run")
+
+
+def test_package_observations():
+    XL = 10000
+    YL = 10500
+    dx = dy = 500
+    nlay = 3
+    nrow = int(YL / dy)
+    ncol = int(XL / dx)
+
+    delc = np.full((nrow,), dy)
+    delr = np.full((ncol,), dx)
+
+    top = np.full((nrow, ncol), 330)
+
+    botm = np.zeros((nlay, nrow, ncol))
+    botm[0] = 220
+    botm[1] = 200
+    botm[2] = 0
+
+    sim = flopy.mf6.MFSimulation()
+    ims = flopy.mf6.ModflowIms(sim, complexity="SIMPLE")
+    tdis = flopy.mf6.ModflowTdis(sim)
+
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="ps1a_mod")
+
+    dis = flopy.mf6.ModflowGwfdis(
+        gwf,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=delr,
+        delc=delc,
+        top=top,
+        botm=botm,
+        idomain=np.ones(botm.shape, dtype=int),
+    )
+
+    ic = flopy.mf6.ModflowGwfic(gwf, strt=330)
+
+    npf = flopy.mf6.ModflowGwfnpf(
+        gwf, k=[50, 0.01, 200], k33=[10, 0.01, 20], icelltype=[1, 0, 0]
+    )
+
+    # build the CHD stress period data
+    records = []
+    for row in range(nrow):
+        rec = ((0, row, 0), 330)
+        records.append(rec)
+
+    for row in range(nrow):
+        rec = ((0, row, ncol - 1), 320)
+        records.append(rec)
+
+    spd = {0: records}
+
+    chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=spd)
+
+    observations = {
+        "chd_obs_out.csv": [
+            ("C1", "chd", (0, 4, 0)),  # 80 (end up as same)
+            ("C2", "chd", (0, 16, 0)),  # 320 (end up as m2 120)
+            ("R1", "chd", (0, 3, 19)),  # 79 (end up as same)
+            ("R2", "chd", (0, 20, 19)),  # 419 (end up as m2 219)
+        ]
+    }
+
+    # do observations on the chd package!!!!
+    obs = flopy.mf6.ModflowUtlobs(
+        chd,
+        continuous=observations,
+    )
+
+    # now do model splitter???
+    array = np.ones((nrow, ncol), dtype=int)
+    split_loc = ncol // 2
+    array[split_loc:, :] = 2
+
+    mfs = flopy.mf6.utils.Mf6Splitter(sim)
+    new_sim = mfs.split_model(array)
+
+    gwf1 = new_sim.get_model("ps1a_mod_1")
+    gwf2 = new_sim.get_model("ps1a_mod_2")
+
+    obsdata1 = gwf1.obs.continuous.data["chd_obs_out_1.csv"]
+    obsdata2 = gwf2.obs.continuous.data["chd_obs_out_2.csv"]
+
+    vdict1 = {"C1": (0, 4, 0), "R1": (0, 3, 19)}
+    vdict2 = {"C2": (0, 6, 0), "R2": (0, 10, 19)}
+
+    for row in obsdata1:
+        obsname = row.obsname
+        cellid = row.id
+        if obsname not in vdict1:
+            raise AssertionError("Observations not correctly mapped to new model")
+
+        vcid = vdict1[obsname]
+        if vcid != cellid:
+            raise AssertionError("Observation cellid not correctly mapped to new model")
+
+    for row in obsdata2:
+        obsname = row.obsname
+        cellid = row.id
+        if obsname not in vdict2:
+            raise AssertionError("Observations not correctly mapped to new model")
+
+        vcid = vdict2[obsname]
+        if vcid != cellid:
+            raise AssertionError("Observation cellid not correctly mapped to new model")
+
+
+@requires_exe("mf6")
+def test_ats(function_tmpdir):
+    name = "ats_dev"
+
+    sim = flopy.mf6.MFSimulation()
+    ims = flopy.mf6.ModflowIms(sim, complexity="SIMPLE")
+    tdis = flopy.mf6.ModflowTdis(
+        sim,
+        perioddata=[
+            (100.0, 5, 1.0),
+        ],
+        ats_perioddata=[(0, 10.0, 1e-05, 20, 2, 10)],
+    )
+
+    gwf = flopy.mf6.ModflowGwf(sim, modelname=name)
+
+    dx = 100
+    dy = 10
+    nlay = 1
+    nrow = 1
+    ncol = 10
+    delc = np.full((nrow,), dy / nrow)
+    delr = np.full((ncol,), dx / ncol)
+    top = 10
+    botm = 0
+    idomain = np.ones((nlay, nrow, ncol), dtype=int)
+
+    dis = flopy.mf6.ModflowGwfdis(
+        gwf,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=delr,
+        delc=delc,
+        top=top,
+        botm=botm,
+        idomain=idomain,
+    )
+
+    ic = flopy.mf6.ModflowGwfic(gwf, strt=top)
+    npf = flopy.mf6.ModflowGwfnpf(gwf)
+    chd = flopy.mf6.ModflowGwfchd(
+        gwf, stress_period_data=[((0, 0, 0), 9.5), ((0, 0, 9), 7)]
+    )
+
+    budget_file = f"{name}.bud"
+    head_file = f"{name}.hds"
+    oc = flopy.mf6.ModflowGwfoc(
+        gwf,
+        budget_filerecord=budget_file,
+        head_filerecord=head_file,
+        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+        printrecord=[("BUDGET", "ALL")],
+    )
+
+    array = np.ones((nrow, ncol), dtype=int)
+    array[0, 5:] = 2
+
+    mfs = flopy.mf6.utils.Mf6Splitter(sim)
+    new_sim = mfs.split_model(array)
+
+    new_sim.set_sim_path(function_tmpdir)
+    new_sim.write_simulation()
+    success, _ = new_sim.run_simulation()
+    assert success

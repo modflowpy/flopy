@@ -60,9 +60,9 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 
 ### Python
 
-FloPy supports several recent versions of Python, loosely following [NEP 29](https://numpy.org/neps/nep-0029-deprecation_policy.html#implementation).
+This project has historically aimed to support a wide range of [Python versions](https://devguide.python.org/versions/). In current and future development this window may narrow to follow [SPEC 0](https://scientific-python.org/specs/spec-0000/#support-window) instead.
 
-Install Python >=3.9 via [standalone download](https://www.python.org/downloads/) or a distribution like [Anaconda](https://www.anaconda.com/products/individual) or [miniconda](https://docs.conda.io/en/latest/miniconda.html).
+Install Python >=3.10 via [standalone download](https://www.python.org/downloads/) or a distribution like [Anaconda](https://www.anaconda.com/products/individual) or [miniconda](https://docs.conda.io/en/latest/miniconda.html).
 
 Then install FloPy and core dependencies from the project root:
 
@@ -127,7 +127,7 @@ A utility script is provided to easily download and install executables: after i
 To download and extract all executables for Linux (e.g., Ubuntu):
 
 ```sh
-wget https://github.com/MODFLOW-USGS/executables/releases/download/8.0/linux.zip && \
+wget https://github.com/MODFLOW-ORG/executables/releases/download/8.0/linux.zip && \
 unzip linux.zip -d /path/to/your/install/location
 ```
 
@@ -142,7 +142,7 @@ export PATH="/path/to/install/location:$PATH"
 The same commands should work to download and extract executables for OSX:
 
 ```sh
-wget https://github.com/MODFLOW-USGS/executables/releases/download/8.0/mac.zip && \
+wget https://github.com/MODFLOW-ORG/executables/releases/download/8.0/mac.zip && \
 unzip mac.zip -d /path/to/your/install/location
 ```
 
@@ -244,7 +244,7 @@ Each example should create and (attempt to) dispose of its own isolated temporar
 
 To run the tests you will need `pytest` and a few plugins, including [`pytest-xdist`](https://pytest-xdist.readthedocs.io/en/latest/), [`pytest-dotenv`](https://github.com/quiqua/pytest-dotenv), and [`pytest-benchmark`](https://pytest-benchmark.readthedocs.io/en/latest/index.html). Test dependencies are specified in the `test` extras group in `pyproject.toml` (with pip, use `pip install ".[test]"`). Test dependencies are included in the Conda environment `etc/environment`.
 
-**Note:** tests require the [`modflow-devtools`](https://github.com/MODFLOW-USGS/modflow-devtools) package, which is a grab bag of utilities and `pytest` fixtures shared by FloPy, MODFLOW 6, and other related projects. If you see testing errors that don't seem related to the contents of the tests, updating to the latest `modflow-devtools` is recommended as a first troubleshooting step.
+**Note:** tests require the [`modflow-devtools`](https://github.com/MODFLOW-ORG/modflow-devtools) package, which is a grab bag of utilities and `pytest` fixtures shared by FloPy, MODFLOW 6, and other related projects. If you see testing errors that don't seem related to the contents of the tests, updating to the latest `modflow-devtools` is recommended as a first troubleshooting step.
 
 **Note:** to prepare your code for a pull request, you will need the [`ruff`](https://docs.astral.sh/ruff/) linter/formatter, which is included in the `lint` extras group in `pyproject.toml` (also included by default for Conda). See the docs on [submitting a pull request](CONTRIBUTING.md) for more info.
 
@@ -316,7 +316,7 @@ This should complete in under a minute on most machines. Smoke testing aims to c
 
 ### Writing tests
 
-Test functions and files should be named informatively, with related tests grouped in the same file. The test suite runs on GitHub Actions in parallel, so tests should not access the working space of other tests, example scripts, tutorials or notebooks. A number of shared test fixtures are [imported](conftest.py) from [`modflow-devtools`](https://github.com/MODFLOW-USGS/modflow-devtools). These include keepable temporary directory fixtures and miscellaneous utilities (see `modflow-devtools` repository README for more information on fixture usage). New tests should use these facilities where possible. See also the [contribution guidelines](CONTRIBUTING.md) before submitting a pull request.
+Test functions and files should be named informatively, with related tests grouped in the same file. The test suite runs on GitHub Actions in parallel, so tests should not access the working space of other tests, example scripts, tutorials or notebooks. A number of shared test fixtures are [imported](conftest.py) from [`modflow-devtools`](https://github.com/MODFLOW-ORG/modflow-devtools). These include keepable temporary directory fixtures and miscellaneous utilities (see `modflow-devtools` repository README for more information on fixture usage). New tests should use these facilities where possible. See also the [contribution guidelines](CONTRIBUTING.md) before submitting a pull request.
 
 ### Debugging tests
 

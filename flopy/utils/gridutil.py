@@ -92,18 +92,51 @@ def get_disu_kwargs(
     botm : numpy.ndarray
         Bottom elevation(s) for each layer
     return_vertices: bool
-        If true, then include vertices and cell2d in kwargs
+        If true, then include vertices, cell2d and angldegx in kwargs
     """
 
     def get_nn(k, i, j):
         return k * nrow * ncol + i * ncol + j
 
-    if not isinstance(delr, np.ndarray):
-        delr = np.array(delr)
-    if not isinstance(delc, np.ndarray):
-        delc = np.array(delc)
-    assert delr.shape == (ncol,)
-    assert delc.shape == (nrow,)
+    # delr check
+    if np.isscalar(delr):
+        delr = delr * np.ones(ncol, dtype=float)
+    else:
+        assert np.asanyarray(delr).shape == (ncol,), (
+            "delr must be array with shape (ncol,), got {}".format(delr.shape)
+        )
+
+    # delc check
+    if np.isscalar(delc):
+        delc = delc * np.ones(nrow, dtype=float)
+    else:
+        assert np.asanyarray(delc).shape == (nrow,), (
+            "delc must be array with shape (nrow,), got {}".format(delc.shape)
+        )
+
+    # tp check
+    if np.isscalar(tp):
+        tp = tp * np.ones((nrow, ncol), dtype=float)
+    else:
+        assert np.asanyarray(tp).shape == (
+            nrow,
+            ncol,
+        ), "tp must be scalar or array with shape (nrow, ncol), got {}".format(tp.shape)
+
+    # botm check
+    if np.isscalar(botm):
+        botm = botm * np.ones((nlay, nrow, ncol), dtype=float)
+    elif np.asanyarray(botm).shape == (nlay,):
+        b = np.empty((nlay, nrow, ncol), dtype=float)
+        for k in range(nlay):
+            b[k] = botm[k]
+        botm = b
+    else:
+        assert np.asanyarray(botm).shape == (
+            nlay,
+            nrow,
+            ncol,
+        ), "botm must be array with shape (nlay, nrow, ncol), got {}".format(botm.shape)
 
     nodes = nlay * nrow * ncol
     iac = np.zeros((nodes), dtype=int)
@@ -114,6 +147,7 @@ def get_disu_kwargs(
     ihc = []
     cl12 = []
     hwva = []
+    angldegx = []
     for k in range(nlay):
         for i in range(nrow):
             for j in range(ncol):
@@ -125,19 +159,21 @@ def get_disu_kwargs(
                 ihc.append(k + 1)  # put layer in diagonal for flopy plotting
                 cl12.append(n + 1)
                 hwva.append(n + 1)
+                angldegx.append(n + 1)
                 if k == 0:
-                    top[n] = tp.item() if isinstance(tp, np.ndarray) else tp
+                    top[n] = tp[i, j]
                 else:
-                    top[n] = botm[k - 1]
-                bot[n] = botm[k]
+                    top[n] = botm[k - 1, i, j]
+                bot[n] = botm[k, i, j]
                 # up
                 if k > 0:
                     ja.append(get_nn(k - 1, i, j))
                     iac[n] += 1
                     ihc.append(0)
-                    dz = botm[k - 1] - botm[k]
+                    dz = botm[k - 1, i, j] - botm[k, i, j]
                     cl12.append(0.5 * dz)
                     hwva.append(delr[j] * delc[i])
+                    angldegx.append(0)  # Always Perpendicular to the x-axis
                 # back
                 if i > 0:
                     ja.append(get_nn(k, i - 1, j))
@@ -145,6 +181,7 @@ def get_disu_kwargs(
                     ihc.append(1)
                     cl12.append(0.5 * delc[i])
                     hwva.append(delr[j])
+                    angldegx.append(90)
                 # left
                 if j > 0:
                     ja.append(get_nn(k, i, j - 1))
@@ -152,6 +189,7 @@ def get_disu_kwargs(
                     ihc.append(1)
                     cl12.append(0.5 * delr[j])
                     hwva.append(delc[i])
+                    angldegx.append(180)
                 # right
                 if j < ncol - 1:
                     ja.append(get_nn(k, i, j + 1))
@@ -159,6 +197,7 @@ def get_disu_kwargs(
                     ihc.append(1)
                     cl12.append(0.5 * delr[j])
                     hwva.append(delc[i])
+                    angldegx.append(0)
                 # front
                 if i < nrow - 1:
                     ja.append(get_nn(k, i + 1, j))
@@ -166,17 +205,19 @@ def get_disu_kwargs(
                     ihc.append(1)
                     cl12.append(0.5 * delc[i])
                     hwva.append(delr[j])
+                    angldegx.append(270)
                 # bottom
                 if k < nlay - 1:
                     ja.append(get_nn(k + 1, i, j))
                     iac[n] += 1
                     ihc.append(0)
                     if k == 0:
-                        dz = tp - botm[k]
+                        dz = tp[i, j] - botm[k, i, j]
                     else:
-                        dz = botm[k - 1] - botm[k]
+                        dz = botm[k - 1, i, j] - botm[k, i, j]
                     cl12.append(0.5 * dz)
                     hwva.append(delr[j] * delc[i])
+                    angldegx.append(0)  # Always Perpendicular to the x-axis
     ja = np.array(ja, dtype=int)
     nja = ja.shape[0]
     hwva = np.array(hwva, dtype=float)
@@ -226,6 +267,7 @@ def get_disu_kwargs(
     if return_vertices:
         kw["vertices"] = vertices
         kw["cell2d"] = cell2d
+        kw["angldegx"] = angldegx
     return kw
 
 
@@ -272,28 +314,31 @@ def get_disv_kwargs(
     if np.isscalar(delr):
         delr = delr * np.ones(ncol, dtype=float)
     else:
-        assert delr.shape == (ncol,), "delr must be array with shape (ncol,)"
+        assert np.asanyarray(delr).shape == (ncol,), (
+            "delr must be array with shape (ncol,), got {}".format(delr.shape)
+        )
 
     # delc check
     if np.isscalar(delc):
         delc = delc * np.ones(nrow, dtype=float)
     else:
-        assert delc.shape == (nrow,), "delc must be array with shape (nrow,)"
+        assert np.asanyarray(delc).shape == (nrow,), (
+            "delc must be array with shape (nrow,), got {}".format(delc.shape)
+        )
 
     # tp check
     if np.isscalar(tp):
         tp = tp * np.ones((nrow, ncol), dtype=float)
     else:
-        assert tp.shape == (
+        assert np.asanyarray(tp).shape == (
             nrow,
             ncol,
-        ), "tp must be scalar or array with shape (nrow, ncol)"
+        ), "tp must be scalar or array with shape (nrow, ncol), got {}".format(tp.shape)
 
     # botm check
     if np.isscalar(botm):
         botm = botm * np.ones((nlay, nrow, ncol), dtype=float)
-    elif isinstance(botm, list):
-        assert len(botm) == nlay, "if botm provided as a list it must have length nlay"
+    elif np.asanyarray(botm).shape == (nlay,):
         b = np.empty((nlay, nrow, ncol), dtype=float)
         for k in range(nlay):
             b[k] = botm[k]
@@ -303,7 +348,7 @@ def get_disv_kwargs(
             nlay,
             nrow,
             ncol,
-        ), "botm must be array with shape (nlay, nrow, ncol)"
+        ), "botm must be array with shape (nlay, nrow, ncol), got {}".format(botm.shape)
 
     # build vertices
     xv = np.cumsum(delr)

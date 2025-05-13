@@ -1,0 +1,343 @@
+name = "prt-oc"
+advanced = false
+multi = false
+
+[options.budget_filerecord]
+block = "options"
+name = "budget_filerecord"
+type = "record"
+reader = "urword"
+optional = true
+
+[options.budget_filerecord.fields.budget]
+block = "options"
+name = "budget"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "budget keyword"
+description = "keyword to specify that record corresponds to the budget."
+
+[options.budget_filerecord.fields.fileout]
+block = "options"
+name = "fileout"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "keyword to specify that an output filename is expected next."
+
+[options.budget_filerecord.fields.budgetfile]
+block = "options"
+name = "budgetfile"
+type = "string"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "name of the output file to write budget information."
+
+[options.budgetcsv_filerecord]
+block = "options"
+name = "budgetcsv_filerecord"
+type = "record"
+reader = "urword"
+optional = true
+
+[options.budgetcsv_filerecord.fields.budgetcsv]
+block = "options"
+name = "budgetcsv"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "budget keyword"
+description = "keyword to specify that record corresponds to the budget CSV."
+
+[options.budgetcsv_filerecord.fields.fileout]
+block = "options"
+name = "fileout"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "keyword to specify that an output filename is expected next."
+
+[options.budgetcsv_filerecord.fields.budgetcsvfile]
+block = "options"
+name = "budgetcsvfile"
+type = "string"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "name of the comma-separated value (CSV) output file to write budget summary information.  A budget summary record will be written to this file for each time step of the simulation."
+
+[options.track_filerecord]
+block = "options"
+name = "track_filerecord"
+type = "record"
+reader = "urword"
+optional = true
+
+[options.track_filerecord.fields.track]
+block = "options"
+name = "track"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "track keyword"
+description = "keyword to specify that record corresponds to a binary track file.  Each PRT Model's OC Package may have only one binary track output file."
+
+[options.track_filerecord.fields.fileout]
+block = "options"
+name = "fileout"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "keyword to specify that an output filename is expected next."
+
+[options.track_filerecord.fields.trackfile]
+block = "options"
+name = "trackfile"
+type = "string"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "name of the binary output file to write tracking information."
+
+[options.trackcsv_filerecord]
+block = "options"
+name = "trackcsv_filerecord"
+type = "record"
+reader = "urword"
+optional = true
+
+[options.trackcsv_filerecord.fields.trackcsv]
+block = "options"
+name = "trackcsv"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "track keyword"
+description = "keyword to specify that record corresponds to a CSV track file.  Each PRT Model's OC Package may have only one CSV track file."
+
+[options.trackcsv_filerecord.fields.fileout]
+block = "options"
+name = "fileout"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "keyword to specify that an output filename is expected next."
+
+[options.trackcsv_filerecord.fields.trackcsvfile]
+block = "options"
+name = "trackcsvfile"
+type = "string"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "name of the comma-separated value (CSV) file to write tracking information."
+
+[options.track_release]
+block = "options"
+name = "track_release"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "track release"
+description = "keyword to indicate that particle tracking output is to be written when a particle is released"
+
+[options.track_exit]
+block = "options"
+name = "track_exit"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "track transitions"
+description = "keyword to indicate that particle tracking output is to be written when a particle exits a feature (a model, cell, or subcell)"
+
+[options.track_timestep]
+block = "options"
+name = "track_timestep"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "track timestep ends"
+description = "keyword to indicate that particle tracking output is to be written at the end of each time step"
+
+[options.track_terminate]
+block = "options"
+name = "track_terminate"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "track termination"
+description = "keyword to indicate that particle tracking output is to be written when a particle terminates for any reason"
+
+[options.track_weaksink]
+block = "options"
+name = "track_weaksink"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "track weaksink exits"
+description = "keyword to indicate that particle tracking output is to be written when a particle exits a weak sink (a cell which removes some but not all inflow from adjacent cells)"
+
+[options.track_usertime]
+block = "options"
+name = "track_usertime"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "track usertime"
+description = "keyword to indicate that particle tracking output is to be written at user-specified times, provided as double precision values in the tracktimes block."
+
+[options.track_timesrecord]
+block = "options"
+name = "track_timesrecord"
+type = "record"
+reader = "urword"
+optional = true
+removed = "6.6.1"
+
+[options.track_timesrecord.fields.track_times]
+block = "options"
+name = "track_times"
+type = "keyword"
+reader = "urword"
+description = "keyword indicating tracking times will follow"
+removed = "6.6.1"
+
+[options.track_timesrecord.fields.times]
+block = "options"
+name = "times"
+type = "double precision"
+shape = "(unknown)"
+reader = "urword"
+repeating = "true"
+longname = "tracking times"
+description = "times to track, relative to the beginning of the simulation."
+removed = "6.6.1"
+
+[options.track_timesfilerecord]
+block = "options"
+name = "track_timesfilerecord"
+type = "record"
+reader = "urword"
+optional = true
+removed = "6.6.1"
+
+[options.track_timesfilerecord.fields.track_timesfile]
+block = "options"
+name = "track_timesfile"
+type = "keyword"
+reader = "urword"
+description = "keyword indicating tracking times file name will follow"
+removed = "6.6.1"
+
+[options.track_timesfilerecord.fields.timesfile]
+block = "options"
+name = "timesfile"
+type = "string"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "name of the tracking times file"
+removed = "6.6.1"
+
+[dimensions.ntracktimes]
+block = "dimensions"
+name = "ntracktimes"
+type = "integer"
+reader = "urword"
+optional = false
+longname = "number of particle tracking times"
+description = "is the number of user-specified particle tracking times in the tracktimes block."
+
+[tracktimes.tracktimes]
+block = "tracktimes"
+name = "tracktimes"
+type = "list"
+shape = "(ntracktimes)"
+reader = "urword"
+
+[tracktimes.tracktimes.item]
+name = "tracktimes"
+type = "record"
+block = "tracktimes"
+reader = "urword"
+
+[tracktimes.tracktimes.item.fields.time]
+block = "tracktimes"
+name = "time"
+type = "double precision"
+reader = "urword"
+longname = "release time"
+description = "real value that defines the tracking time with respect to the simulation start time."
+
+[period]
+transient_block = true
+
+[period.saverecord]
+block = "period"
+name = "saverecord"
+type = "record"
+reader = "urword"
+optional = true
+
+[period.saverecord.fields.save]
+block = "period"
+name = "save"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "keyword to save"
+description = "keyword to indicate that information will be saved this stress period."
+
+[period.saverecord.fields.rtype]
+block = "period"
+name = "rtype"
+type = "string"
+reader = "urword"
+optional = "false"
+longname = "record type"
+description = "type of information to save or print.  Can only be BUDGET."
+
+[period.saverecord.fields.ocsetting]
+block = "period"
+name = "ocsetting"
+type = "keystring all first last frequency steps"
+reader = "urword"
+description = "specifies the steps for which the data will be saved."
+
+[period.printrecord]
+block = "period"
+name = "printrecord"
+type = "record"
+reader = "urword"
+optional = true
+
+[period.printrecord.fields.print]
+block = "period"
+name = "print"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "keyword to save"
+description = "keyword to indicate that information will be printed this stress period."
+
+[period.printrecord.fields.rtype]
+block = "period"
+name = "rtype"
+type = "string"
+reader = "urword"
+optional = "false"
+longname = "record type"
+description = "type of information to save or print.  Can only be BUDGET."
+
+[period.printrecord.fields.ocsetting]
+block = "period"
+name = "ocsetting"
+type = "keystring all first last frequency steps"
+reader = "urword"
+description = "specifies the steps for which the data will be saved."

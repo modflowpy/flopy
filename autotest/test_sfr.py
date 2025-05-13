@@ -7,6 +7,7 @@ from pathlib import Path
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import pytest
 from modflow_devtools.markers import requires_exe, requires_pkg
 
@@ -675,6 +676,17 @@ def test_SfrFile(function_tmpdir, sfr_examples_path, mf2005_model_path):
     assert df.column.values[0] == 169
     assert df.Cond.values[0] == 74510.0
     assert df.gw_head.values[3] == 1.288e03
+
+    segments = [1, 2, 3]
+    reaches = [3, 3, 3]
+    subset_df = sfrout.get_results(segments, reaches)
+    expected = pd.concat(
+        [
+            df.loc[(df["segment"] == s) & (df["reach"] == r)]
+            for s, r in zip(segments, reaches)
+        ]
+    )
+    subset_df.equals(expected)
 
     sfrout = SfrFile(sfr_examples_path / "test1tr.flw")
     assert sfrout.ncol == 16, sfrout.ncol

@@ -1,0 +1,297 @@
+name = "gwt-disv"
+advanced = false
+multi = false
+
+[fkeys.ncf_filerecord]
+parent = "parent_package"
+key = "ncf_filerecord"
+val = "packagedata"
+abbr = "ncf"
+param = "packagedata"
+
+[options.length_units]
+block = "options"
+name = "length_units"
+type = "string"
+reader = "urword"
+optional = true
+longname = "model length units"
+description = "is the length units used for this model.  values can be 'feet', 'meters', or 'centimeters'.  if not specified, the default is 'unknown'."
+
+[options.nogrb]
+block = "options"
+name = "nogrb"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "do not write binary grid file"
+description = "keyword to deactivate writing of the binary grid file."
+
+[options.grb_filerecord]
+block = "options"
+name = "grb_filerecord"
+type = "record"
+reader = "urword"
+optional = true
+
+[options.grb_filerecord.fields.grb6]
+block = "options"
+name = "grb6"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "grb keyword"
+description = "keyword to specify that record corresponds to a binary grid file."
+extended = "true"
+
+[options.grb_filerecord.fields.fileout]
+block = "options"
+name = "fileout"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "keyword to specify that an output filename is expected next."
+
+[options.grb_filerecord.fields.grb6_filename]
+block = "options"
+name = "grb6_filename"
+type = "string"
+reader = "urword"
+optional = "false"
+longname = "file name of GRB information"
+description = "defines a binary grid output file. If this option is not provided, the output file will have the same name as the discretization input file, plus extension '.grb'."
+extended = "true"
+
+[options.xorigin]
+block = "options"
+name = "xorigin"
+type = "double precision"
+reader = "urword"
+optional = true
+longname = "x-position origin of the model grid coordinate system"
+description = "x-position of the origin used for model grid vertices.  this value should be provided in a real-world coordinate system.  a default value of zero is assigned if not specified.  the value for xorigin does not affect the model simulation, but it is written to the binary grid file so that postprocessors can locate the grid in space."
+
+[options.yorigin]
+block = "options"
+name = "yorigin"
+type = "double precision"
+reader = "urword"
+optional = true
+longname = "y-position origin of the model grid coordinate system"
+description = "y-position of the origin used for model grid vertices.  this value should be provided in a real-world coordinate system.  if not specified, then a default value equal to zero is used.  the value for yorigin does not affect the model simulation, but it is written to the binary grid file so that postprocessors can locate the grid in space."
+
+[options.angrot]
+block = "options"
+name = "angrot"
+type = "double precision"
+reader = "urword"
+optional = true
+longname = "rotation angle"
+description = "counter-clockwise rotation angle (in degrees) of the model grid coordinate system relative to a real-world coordinate system.  if not specified, then a default value of 0.0 is assigned.  the value for angrot does not affect the model simulation, but it is written to the binary grid file so that postprocessors can locate the grid in space."
+
+[options.export_array_ascii]
+block = "options"
+name = "export_array_ascii"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "export array variables to layered ascii files."
+description = "keyword that specifies input griddata arrays should be written to layered ascii output files."
+mf6internal = "export_ascii"
+
+[options.export_array_netcdf]
+block = "options"
+name = "export_array_netcdf"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "export array variables to netcdf output files."
+description = "keyword that specifies input griddata arrays should be written to the model output netcdf file."
+mf6internal = "export_nc"
+extended = true
+
+[options.packagedata]
+block = "options"
+name = "packagedata"
+type = "record ncf6 filein ncf6_filename"
+reader = "urword"
+optional = true
+description = "Contains data for the ncf package. Data can be passed as a dictionary to the ncf package with variable names as keys and package data as values. Data for the packagedata variable is also acceptable. See ncf package documentation for more information."
+
+[options.packagedata.ref]
+parent = "parent_package"
+key = "ncf_filerecord"
+val = "packagedata"
+abbr = "ncf"
+param = "packagedata"
+
+[dimensions.nlay]
+block = "dimensions"
+name = "nlay"
+type = "integer"
+reader = "urword"
+optional = false
+longname = "number of layers"
+description = "is the number of layers in the model grid."
+
+[dimensions.ncpl]
+block = "dimensions"
+name = "ncpl"
+type = "integer"
+reader = "urword"
+optional = false
+longname = "number of cells per layer"
+description = "is the number of cells per layer.  this is a constant value for the grid and it applies to all layers."
+
+[dimensions.nvert]
+block = "dimensions"
+name = "nvert"
+type = "integer"
+reader = "urword"
+optional = false
+longname = "number of columns"
+description = "is the total number of (x, y) vertex pairs used to characterize the horizontal configuration of the model grid."
+
+[griddata.top]
+block = "griddata"
+name = "top"
+type = "double precision"
+shape = "(ncpl)"
+reader = "readarray"
+longname = "model top elevation"
+description = "is the top elevation for each cell in the top model layer."
+netcdf = true
+
+[griddata.botm]
+block = "griddata"
+name = "botm"
+type = "double precision"
+shape = "(ncpl, nlay)"
+reader = "readarray"
+longname = "model bottom elevation"
+description = "is the bottom elevation for each cell."
+layered = true
+netcdf = true
+
+[griddata.idomain]
+block = "griddata"
+name = "idomain"
+type = "integer"
+shape = "(ncpl, nlay)"
+reader = "readarray"
+optional = true
+longname = "idomain existence array"
+description = "is an optional array that characterizes the existence status of a cell.  if the idomain array is not specified, then all model cells exist within the solution.  if the idomain value for a cell is 0, the cell does not exist in the simulation.  input and output values will be read and written for the cell, but internal to the program, the cell is excluded from the solution.  if the idomain value for a cell is 1, the cell exists in the simulation.  if the idomain value for a cell is -1, the cell does not exist in the simulation.  furthermore, the first existing cell above will be connected to the first existing cell below.  this type of cell is referred to as a 'vertical pass through' cell."
+layered = true
+netcdf = true
+
+[vertices.vertices]
+block = "vertices"
+name = "vertices"
+type = "list"
+shape = "(nvert)"
+reader = "urword"
+optional = false
+longname = "vertices data"
+
+[vertices.vertices.item]
+name = "vertices"
+type = "record"
+block = "vertices"
+reader = "urword"
+optional = false
+longname = "vertices data"
+
+[vertices.vertices.item.fields.iv]
+block = "vertices"
+name = "iv"
+type = "integer"
+reader = "urword"
+optional = "false"
+longname = "vertex number"
+description = "is the vertex number.  Records in the VERTICES block must be listed in consecutive order from 1 to NVERT."
+numeric_index = "true"
+
+[vertices.vertices.item.fields.xv]
+block = "vertices"
+name = "xv"
+type = "double precision"
+reader = "urword"
+optional = "false"
+longname = "x-coordinate for vertex"
+description = "is the x-coordinate for the vertex."
+
+[vertices.vertices.item.fields.yv]
+block = "vertices"
+name = "yv"
+type = "double precision"
+reader = "urword"
+optional = "false"
+longname = "y-coordinate for vertex"
+description = "is the y-coordinate for the vertex."
+
+[cell2d.cell2d]
+block = "cell2d"
+name = "cell2d"
+type = "list"
+shape = "(ncpl)"
+reader = "urword"
+optional = false
+longname = "cell2d data"
+
+[cell2d.cell2d.item]
+name = "cell2d"
+type = "record"
+block = "cell2d"
+reader = "urword"
+optional = false
+longname = "cell2d data"
+
+[cell2d.cell2d.item.fields.icell2d]
+block = "cell2d"
+name = "icell2d"
+type = "integer"
+reader = "urword"
+optional = "false"
+longname = "cell2d number"
+description = "is the CELL2D number.  Records in the CELL2D block must be listed in consecutive order from the first to the last."
+numeric_index = "true"
+
+[cell2d.cell2d.item.fields.xc]
+block = "cell2d"
+name = "xc"
+type = "double precision"
+reader = "urword"
+optional = "false"
+longname = "x-coordinate for cell center"
+description = "is the x-coordinate for the cell center."
+
+[cell2d.cell2d.item.fields.yc]
+block = "cell2d"
+name = "yc"
+type = "double precision"
+reader = "urword"
+optional = "false"
+longname = "y-coordinate for cell center"
+description = "is the y-coordinate for the cell center."
+
+[cell2d.cell2d.item.fields.ncvert]
+block = "cell2d"
+name = "ncvert"
+type = "integer"
+reader = "urword"
+optional = "false"
+longname = "number of cell vertices"
+description = "is the number of vertices required to define the cell.  There may be a different number of vertices for each cell."
+
+[cell2d.cell2d.item.fields.icvert]
+block = "cell2d"
+name = "icvert"
+type = "integer"
+shape = "(ncvert)"
+reader = "urword"
+optional = "false"
+longname = "array of vertex numbers"
+description = "is an array of integer values containing vertex numbers (in the VERTICES block) used to define the cell.  Vertices must be listed in clockwise order.  Cells that are connected must share vertices."
+numeric_index = "true"

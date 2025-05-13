@@ -18,26 +18,33 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Hydrology",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "numpy>=1.20.3",
     "matplotlib >=1.4.0",
-    "pandas >=2.0.0"
+    "pandas >=2.0.0",
 ]
 dynamic = ["version", "readme"]
 
 [project.optional-dependencies]
-dev = ["flopy[lint,test,optional,doc]", "tach"]
-lint = ["ruff"]
+dev = ["flopy[codegen,lint,test,optional,doc]", "tach"]
+codegen = [
+    "Jinja2>=3.0",
+    "boltons",
+    "modflow-devtools",
+    "tomli",
+    "tomli-w"
+]
+lint = ["cffconvert", "codespell[toml] >=2.2.2", "ruff"]
 test = [
     "flopy[lint]",
+    "boltons",
     "coverage !=7.6.5",
     "flaky",
     "filelock",
@@ -52,6 +59,8 @@ test = [
     "pytest-xdist",
     "pyzmq >=25.1.2",
     "syrupy",
+    "tomli",
+    "tomli-w",
     "virtualenv"
 ]
 optional = [
@@ -74,6 +83,7 @@ optional = [
     "shapely >=2.0",
     "vtk >=9.4.0",
     "xmipy",
+    "h5py",
 ]
 doc = [
     "flopy[optional]",
@@ -107,6 +117,10 @@ only-include = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["flopy"]
+
+[tool.hatch.metadata]
+# temporary, until new devtools release
+allow-direct-references = true
 
 [tool.hatch.metadata.hooks.fancy-pypi-readme]
 content-type = "text/markdown"

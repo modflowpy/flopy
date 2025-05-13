@@ -48,13 +48,14 @@ class ModelTime:
         if len(tsmult) != len(nstp):
             raise ValueError("tsmult and nstp inputs must have the same dimension")
 
-        self._perlen = perlen
-        self._nstp = nstp
-        self._tsmult = tsmult
+        self._perlen = np.array(list(perlen))
+        self._nstp = np.array(list(nstp))
+        self._tsmult = np.array(list(tsmult))
         self._time_units = self.parse_timeunits(time_units)
         self._start_datetime = ModelTime.parse_datetime(start_datetime)
         self._steady_state = steady_state
         self._totim_dict = {}
+        self._pertim_dict = {}
         self._datetime_dict = {}
         self.__str_format = "%Y-%m-%dt%H:%M:%S"
 
@@ -138,7 +139,9 @@ class ModelTime:
         Returns a tuple of period data for the MF6 TDIS package containing records
         of [(perlen, nstp, tsmult), ....] for each stress period
         """
-        return [(per, self.nstp[ix], self.tsmult[ix]) for ix, per in self.perlen]
+        return [
+            (per, self.nstp[ix], self.tsmult[ix]) for ix, per in enumerate(self.perlen)
+        ]
 
     @property
     def steady_state(self):
@@ -147,6 +150,16 @@ class ModelTime:
 
         """
         return self._steady_state
+
+    @property
+    def pertim(self):
+        """
+        Returns a list of pertim values at the end of each time-step
+        """
+        if not self._totim_dict:
+            self._set_totim_dict()
+
+        return list(self._pertim_dict.values())
 
     @property
     def totim(self):
@@ -224,12 +237,14 @@ class ModelTime:
         """
         delt = []
         per_stp = []
+        pertim = []
         perlen_array = self.perlen
         nstp_array = self.nstp
         tsmult_array = self.tsmult
         for per, nstp in enumerate(nstp_array):
             perlen = perlen_array[per]
             tsmult = tsmult_array[per]
+            pt = 0
             for stp in range(nstp):
                 if stp == 0:
                     if tsmult != 1.0:
@@ -238,11 +253,14 @@ class ModelTime:
                         dt = perlen / nstp
                 else:
                     dt = delt[-1] * tsmult
+                pt += dt
                 delt.append(dt)
                 per_stp.append((per, stp))
+                pertim.append(pt)
 
         totim = np.add.accumulate(delt)
         self._totim_dict = {ps: totim[i] for i, ps in enumerate(per_stp)}
+        self._pertim_dict = {ps: pertim[i] for i, ps in enumerate(per_stp)}
 
     def _set_datetime_dict(self):
         """
@@ -653,8 +671,7 @@ class ModelTime:
         cls, perioddata, time_units=None, start_datetime=None, steady_state=None
     ):
         """
-        Method to instantiate the ModelTime class from a TDIS perioddata
-        array
+        Instantiate a ModelTime class from a TDIS perioddata array.
 
         Parameters
         ----------
@@ -693,4 +710,77 @@ class ModelTime:
             time_units=time_units,
             start_datetime=start_datetime,
             steady_state=steady_state,
+        )
+
+    @classmethod
+    def from_headers(cls, headers: np.recarray):
+        """
+        Instantiate a ModelTime class from a head or budget file header array.
+
+        Parameters
+        ----------
+        headers : np.recarray
+            head or budget file header array
+
+        Returns
+        -------
+            ModelTime object
+        """
+
+        perlen = {}
+        nstp = {}
+        tsmult = {}
+        tslens = []
+        tdiff = 0.0
+        totim = 0.0
+        kper = 0
+
+        def set_tsmult():
+            nonlocal tslens
+            nonlocal tsmult
+            tslens = [l for l in tslens if l > 0]
+
+            if len(tslens) in (0, 1):
+                tsmult[kper] = 1.0
+            else:
+                tsmult[kper] = tslens[-1] / tslens[-2]
+
+        for i in range(len(headers)):
+            hdr = headers[i]
+            if kper != int(hdr["kper"] - 1):
+                tslens = []
+            kper = int(hdr["kper"] - 1)
+            kstp = int(hdr["kstp"] - 1)
+            tdiff = float(abs(totim - hdr["totim"]))
+            tslens.append(tdiff)
+            nstp[kper] = kstp + 1
+            if kper in perlen:
+                perlen[kper] += tdiff
+            else:
+                perlen[kper] = tdiff
+            set_tsmult()
+            totim = hdr["totim"]
+
+        if i == len(headers) - 1:
+            if len(perlen) == 1 and perlen[0] == 0.0:
+                perlen[0] = totim
+            set_tsmult()
+
+        return cls(perlen.values(), nstp.values(), tsmult.values())
+
+    def reverse(self):
+        """
+        Get a new instance with stress periods and time steps in reverse order.
+
+        Returns
+        -------
+            ModelTime object with reversed order of stress periods and time steps.
+        """
+        return ModelTime(
+            self.perlen[::-1],
+            self.nstp[::-1],
+            1 / self.tsmult[::-1] if self.tsmult is not None else None,
+            self.time_units,
+            self.start_datetime,
+            self.steady_state[::-1] if self.steady_state is not None else None,
         )

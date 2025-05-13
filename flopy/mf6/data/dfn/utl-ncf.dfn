@@ -10,7 +10,7 @@ shape lenbigline
 reader urword
 optional true
 longname CRS well-known text (WKT) string
-description is the coordinate reference system (CRS) well-known text (WKT) string.
+description is the coordinate reference system (CRS) well-known text (WKT) string. Ignored if latitude and longitude griddata arrays have been provided for NETCDF\_STRUCTURED export type.
 
 block options
 name deflate
@@ -96,7 +96,7 @@ shape (ncpl)
 optional true
 reader readarray
 longname cell center latitude
-description cell center latitude.
+description cell center latitude. Only supported for NETCDF\_STRUCTURED export type.
 
 block griddata
 name longitude
@@ -105,4 +105,4 @@ shape (ncpl)
 optional true
 reader readarray
 longname cell center longitude
-description cell center longitude.
+description cell center longitude. Only supported for NETCDF\_STRUCTURED export type.

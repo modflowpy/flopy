@@ -1441,7 +1441,6 @@ def test005_create_tests_advgw_tidal(function_tmpdir, example_data_path):
                 50.0,
                 0.0004,
                 10.0,
-                None,
             )
     evt_package_test = ModflowGwfevt(
         model,
@@ -1467,7 +1466,6 @@ def test005_create_tests_advgw_tidal(function_tmpdir, example_data_path):
                 0.5,
                 0.3,
                 0.1,
-                None,
             )
     evt_package = ModflowGwfevt(
         model,
@@ -4823,3 +4821,431 @@ def test099_create_tests_int_ext(function_tmpdir, example_data_path):
     k_record = npf_package.k.get_record()
     assert k_record["factor"] == 4.000e-04
     assert k_record["data"][0, 0, 0] == 50.0
+
+
+@pytest.mark.regression
+def test_evt_optional(function_tmpdir, example_data_path):
+    nlay, nrow, ncol = 1, 1, 3
+    chdheads = list(np.linspace(1, 100))
+    nper = len(chdheads)
+    perlen = nper * [1.0]
+    nstp = nper * [1]
+    tsmult = nper * [1.0]
+
+    delr = delc = 1.0
+    strt = chdheads[0]
+
+    nouter, ninner = 100, 300
+    hclose, rclose, relax = 1e-9, 1e-3, 0.97
+
+    tdis_rc = []
+    for i in range(nper):
+        tdis_rc.append((perlen[i], nstp[i], tsmult[i]))
+
+    # Tests with single EVT package
+    tests = [
+        "nseg1",
+        "nseg4",
+        "nseg1_srs",
+        "nseg4_srs",
+        "nseg1_bin",
+        "nseg4_bin",
+        "nseg1_srs_bin",
+        "nseg4_srs_bin",
+    ]
+    test_srs = [False, False, True, True, False, False, True, True]
+    test_nseg = [1, 4, 1, 4, 1, 4, 1, 4]
+    test_bin = [False, False, False, False, True, True, True, True]
+
+    for i, test in enumerate(tests):
+        # build MODFLOW 6 files
+        name = tests[i]
+        ws = Path(function_tmpdir / name)
+        sim = flopy.mf6.MFSimulation(
+            sim_name=name, version="mf6", exe_name="mf6", sim_ws=ws
+        )
+        # create tdis package
+        tdis = flopy.mf6.ModflowTdis(
+            sim, time_units="DAYS", nper=nper, perioddata=tdis_rc
+        )
+
+        # create gwf model
+        gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
+
+        # create iterative model solution and register the gwf model with it
+        ims = flopy.mf6.ModflowIms(
+            sim,
+            print_option="SUMMARY",
+            outer_dvclose=hclose,
+            outer_maximum=nouter,
+            under_relaxation="DBD",
+            inner_maximum=ninner,
+            inner_dvclose=hclose,
+            rcloserecord=rclose,
+            linear_acceleration="BICGSTAB",
+            scaling_method="NONE",
+            reordering_method="NONE",
+            relaxation_factor=relax,
+        )
+        sim.register_ims_package(ims, [gwf.name])
+
+        dis = flopy.mf6.ModflowGwfdis(
+            gwf,
+            nlay=nlay,
+            nrow=nrow,
+            ncol=ncol,
+            delr=delr,
+            delc=delc,
+            top=100.0,
+            botm=0.0,
+        )
+
+        # initial conditions
+        ic = flopy.mf6.ModflowGwfic(gwf, strt=strt)
+
+        # node property flow
+        npf = flopy.mf6.ModflowGwfnpf(gwf, save_flows=True, icelltype=1, k=1.0)
+
+        # chd files
+        chdspd = {}
+        for kper, chdval in enumerate(chdheads):
+            chdspd[kper] = [[(0, 0, 0), chdval], [(0, 0, ncol - 1), chdval]]
+        chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chdspd)
+
+        # evt
+        nseg = test_nseg[i]
+        surf_rate_specified = test_srs[i]
+        evtbin = test_bin[i]
+        if nseg == 4:
+            if surf_rate_specified:
+                data = [
+                    (
+                        (0, 0, 1),
+                        95.0,
+                        0.001,
+                        90.0,
+                        0.25,
+                        0.5,
+                        0.75,
+                        1.0,
+                        0.0,
+                        1.0,
+                        0.1,
+                    )
+                ]
+            else:
+                data = [
+                    (
+                        (0, 0, 1),
+                        95.0,
+                        0.001,
+                        90.0,
+                        0.25,
+                        0.5,
+                        0.75,
+                        1.0,
+                        0.0,
+                        1.0,
+                    )
+                ]
+
+            if evtbin:
+                evtspd = {
+                    0: {
+                        "data": data,
+                        "filename": "evt.bin",
+                        "binary": True,
+                    }
+                }
+            else:
+                evtspd = ModflowGwfevt.stress_period_data.empty(
+                    gwf, 1, nseg=nseg, surf_rate_specified=surf_rate_specified
+                )
+                evtspd[0][0] = data[0]
+
+            evt = flopy.mf6.ModflowGwfevt(
+                gwf,
+                print_flows=True,
+                surf_rate_specified=surf_rate_specified,
+                maxbound=1,
+                nseg=nseg,
+                stress_period_data=evtspd,
+            )
+        elif nseg == 1:
+            if surf_rate_specified:
+                data = [
+                    (
+                        (0, 0, 1),
+                        95.0,
+                        0.001,
+                        90.0,
+                        0.1,
+                    )
+                ]
+            else:
+                data = [
+                    (
+                        (0, 0, 1),
+                        95.0,
+                        0.001,
+                        90.0,
+                    )
+                ]
+
+            if evtbin:
+                evtspd = {
+                    0: {
+                        "data": data,
+                        "filename": "evt.bin",
+                        "binary": True,
+                    }
+                }
+            else:
+                evtspd = ModflowGwfevt.stress_period_data.empty(
+                    gwf, 1, nseg=nseg, surf_rate_specified=surf_rate_specified
+                )
+                evtspd[0][0] = data[0]
+
+            evt = flopy.mf6.ModflowGwfevt(
+                gwf,
+                print_flows=True,
+                surf_rate_specified=surf_rate_specified,
+                maxbound=1,
+                nseg=nseg,
+                stress_period_data=evtspd,
+            )
+
+        # output control
+        oc = flopy.mf6.ModflowGwfoc(
+            gwf,
+            budget_filerecord=f"{name}.cbc",
+            head_filerecord=f"{name}.hds",
+            headprintrecord=[("COLUMNS", 10, "WIDTH", 15, "DIGITS", 6, "GENERAL")],
+            saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+            printrecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+            filename=f"{name}.oc",
+        )
+
+        # write sim
+        sim.write_simulation()
+
+        # test load
+        simload = flopy.mf6.MFSimulation.load("mfsim.nam", sim_ws=ws, exe_name="mf6")
+        gwf = simload.get_model()
+        evt = gwf.get_package("evt")
+        if evtbin:
+            assert evt.stress_period_data.data[0].tolist() == evtspd[0]["data"]
+        else:
+            assert evt.stress_period_data.data[0] == evtspd[0]
+        if surf_rate_specified:
+            assert surf_rate_specified == evt.surf_rate_specified.data
+        else:
+            assert evt.surf_rate_specified.data is None
+
+    # Tests with 2 EVT packages
+    tests = [
+        "nseg",
+        "nseg_srs",
+        "nseg_bin",
+        "nseg_srs_bin",
+        "nseg_srs_mixed",
+    ]
+    test_srs4 = [False, True, False, True, False]
+    test_srs1 = [False, True, False, True, True]
+    test_bin = [False, False, True, True, False]
+
+    for i, test in enumerate(tests):
+        # build MODFLOW 6 files
+        name = tests[i]
+        ws = Path(function_tmpdir / name)
+        sim = flopy.mf6.MFSimulation(
+            sim_name=name, version="mf6", exe_name="mf6", sim_ws=ws
+        )
+        # create tdis package
+        tdis = flopy.mf6.ModflowTdis(
+            sim, time_units="DAYS", nper=nper, perioddata=tdis_rc
+        )
+
+        # create gwf model
+        gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
+
+        # create iterative model solution and register the gwf model with it
+        ims = flopy.mf6.ModflowIms(
+            sim,
+            print_option="SUMMARY",
+            outer_dvclose=hclose,
+            outer_maximum=nouter,
+            under_relaxation="DBD",
+            inner_maximum=ninner,
+            inner_dvclose=hclose,
+            rcloserecord=rclose,
+            linear_acceleration="BICGSTAB",
+            scaling_method="NONE",
+            reordering_method="NONE",
+            relaxation_factor=relax,
+        )
+        sim.register_ims_package(ims, [gwf.name])
+
+        dis = flopy.mf6.ModflowGwfdis(
+            gwf,
+            nlay=nlay,
+            nrow=nrow,
+            ncol=ncol,
+            delr=delr,
+            delc=delc,
+            top=100.0,
+            botm=0.0,
+        )
+
+        # initial conditions
+        ic = flopy.mf6.ModflowGwfic(gwf, strt=strt)
+
+        # node property flow
+        npf = flopy.mf6.ModflowGwfnpf(gwf, save_flows=True, icelltype=1, k=1.0)
+
+        # chd files
+        chdspd = {}
+        for kper, chdval in enumerate(chdheads):
+            chdspd[kper] = [[(0, 0, 0), chdval], [(0, 0, ncol - 1), chdval]]
+        chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chdspd)
+
+        # evt
+        surf_rate_specified4 = test_srs4[i]
+        surf_rate_specified1 = test_srs1[i]
+        evtbin = test_bin[i]
+
+        # evt4 (nseg=4)
+        if surf_rate_specified4:
+            data4 = [
+                (
+                    (0, 0, 1),
+                    95.0,
+                    0.001,
+                    90.0,
+                    0.25,
+                    0.5,
+                    0.75,
+                    1.0,
+                    0.0,
+                    1.0,
+                    0.1,
+                )
+            ]
+        else:
+            data4 = [
+                (
+                    (0, 0, 1),
+                    95.0,
+                    0.001,
+                    90.0,
+                    0.25,
+                    0.5,
+                    0.75,
+                    1.0,
+                    0.0,
+                    1.0,
+                )
+            ]
+
+        if evtbin:
+            evtspd4 = {
+                0: {
+                    "data": data4,
+                    "filename": "evt4.bin",
+                    "binary": True,
+                }
+            }
+        else:
+            evtspd4 = ModflowGwfevt.stress_period_data.empty(
+                gwf, 1, nseg=4, surf_rate_specified=surf_rate_specified4
+            )
+            evtspd4[0][0] = data4[0]
+
+        evt4 = flopy.mf6.ModflowGwfevt(
+            gwf,
+            print_flows=True,
+            surf_rate_specified=surf_rate_specified4,
+            maxbound=1,
+            nseg=4,
+            stress_period_data=evtspd4,
+        )
+
+        # evt1 (nseg=1)
+        if surf_rate_specified1:
+            data1 = [
+                (
+                    (0, 0, 2),
+                    95.0,
+                    0.001,
+                    90.0,
+                    0.1,
+                )
+            ]
+        else:
+            data1 = [
+                (
+                    (0, 0, 2),
+                    95.0,
+                    0.001,
+                    90.0,
+                )
+            ]
+
+        if evtbin:
+            evtspd1 = {
+                0: {
+                    "data": data1,
+                    "filename": "evt1.bin",
+                    "binary": True,
+                }
+            }
+        else:
+            evtspd1 = ModflowGwfevt.stress_period_data.empty(
+                gwf, 1, nseg=1, surf_rate_specified=surf_rate_specified1
+            )
+            evtspd1[0][0] = data1[0]
+
+        evt1 = flopy.mf6.ModflowGwfevt(
+            gwf,
+            print_flows=True,
+            surf_rate_specified=surf_rate_specified1,
+            maxbound=1,
+            nseg=1,
+            stress_period_data=evtspd1,
+        )
+
+        # output control
+        oc = flopy.mf6.ModflowGwfoc(
+            gwf,
+            budget_filerecord=f"{name}.cbc",
+            head_filerecord=f"{name}.hds",
+            headprintrecord=[("COLUMNS", 10, "WIDTH", 15, "DIGITS", 6, "GENERAL")],
+            saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+            printrecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+            filename=f"{name}.oc",
+        )
+
+        # write sim
+        sim.write_simulation()
+
+        # test load
+        simload = flopy.mf6.MFSimulation.load("mfsim.nam", sim_ws=ws, exe_name="mf6")
+        gwf = simload.get_model()
+        evt = gwf.get_package("evt")
+        assert len(evt) == 2
+        if evtbin:
+            assert evt[0].stress_period_data.data[0].tolist() == evtspd4[0]["data"]
+            assert evt[1].stress_period_data.data[0].tolist() == evtspd1[0]["data"]
+        else:
+            assert evt[0].stress_period_data.data[0] == evtspd4[0]
+            assert evt[1].stress_period_data.data[0] == evtspd1[0]
+
+        if surf_rate_specified4:
+            assert surf_rate_specified4 == evt[0].surf_rate_specified.data
+        else:
+            assert evt[0].surf_rate_specified.data is None
+
+        if surf_rate_specified1:
+            assert surf_rate_specified1 == evt[1].surf_rate_specified.data
+        else:
+            assert evt[1].surf_rate_specified.data is None

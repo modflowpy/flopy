@@ -316,7 +316,7 @@ class DataStorage:
         self.data_structure_type = data_structure_type
         package_dim = self.data_dimensions.package_dim
         self.in_model = (
-            self.data_dimensions is not None
+            package_dim is not None
             and len(package_dim.package_path) > 1
             and package_dim.model_dim[0].model_name is not None
             and package_dim.model_dim[0].model_name.lower()
@@ -1019,7 +1019,8 @@ class DataStorage:
             if isinstance(data, np.ndarray):
                 # try to store while preserving the structure of the
                 # existing record
-                if self.layer_storage.get_total_size() > 1:
+                is_aux = self.data_dimensions.structure.name == "aux"
+                if not is_aux and self.layer_storage.get_total_size() > 1:
                     if len(data) == self.layer_storage.get_total_size():
                         # break ndarray into layers and store
                         success = self._set_array_by_layer(
@@ -2668,6 +2669,7 @@ class DataStorage:
         resolve_data_shape=True,
         key=None,
         nseg=None,
+        surf_rate_specified=False,
         cellid_expanded=False,
         min_size=False,
         overwrite_existing_type_list=True,
@@ -2711,6 +2713,25 @@ class DataStorage:
                                     aux_var_name, data_type, False
                                 )
 
+                elif self._dependent_opt(data_item):
+                    nval = self._optional_nval(data_item)
+                    if data_item.name == "petm0":
+                        if surf_rate_specified or nval == 1:
+                            self._append_type_lists(
+                                data_item.name, data_type, False
+                            )
+                    elif (
+                        data_item.name == "pxdp"
+                        or data_item.name == "petm"
+                    ):
+                        if (nseg and nseg > 1) or nval > 0:
+                            if nseg is None:
+                                nseg = nval + 1
+                            if nseg > 1:
+                                for seg in range(nseg - 1):
+                                    self._append_type_lists(
+                                        f"{data_item.name}{seg+1}", data_type, False
+                                    )
                 elif data_item.type == DatumType.record:
                     # record within a record, recurse
                     self.build_type_list(data_item, True, data)
@@ -2877,6 +2898,28 @@ class DataStorage:
                 self._recarray_type_list_ex = existing_type_list_ex
             return new_type_list
 
+    def _optional_nval(self, data_item):
+        file_access = MFFileAccessList(
+            self.data_dimensions.structure,
+            self.data_dimensions,
+            self._simulation_data,
+            self._data_path,
+            self._stress_period,
+        )
+
+        return file_access._optional_nval(data_item)
+
+    def _dependent_opt(self, data_item):
+        file_access = MFFileAccessList(
+            self.data_dimensions.structure,
+            self.data_dimensions,
+            self._simulation_data,
+            self._data_path,
+            self._stress_period,
+        )
+
+        return file_access._dependent_opt(data_item)
+
     def get_default_mult(self):
         if self._data_type == DatumType.integer:
             return 1
@@ -2948,8 +2991,10 @@ class DataStorage:
 
     def get_data_dimensions(self, layer):
         data_dimensions = self.data_dimensions.get_data_shape()[0]
+        is_aux = self.data_dimensions.structure.name == "aux"
         if (
-            layer is not None
+            not is_aux
+            and layer is not None
             and self.layer_storage.get_total_size() > 1
             and self._has_layer_dim()
         ):

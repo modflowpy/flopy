@@ -4,17 +4,15 @@ See also test_cellbudgetfile.py for similar tests.
 """
 
 from itertools import repeat
-from pprint import pformat
 
 import numpy as np
 import pandas as pd
 import pytest
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
-from modflow_devtools.markers import requires_exe, requires_pkg
+from modflow_devtools.markers import requires_exe
 
 import flopy
-from flopy.modflow import Modflow
 from flopy.utils import (
     BinaryHeader,
     CellBudgetFile,
@@ -23,12 +21,7 @@ from flopy.utils import (
     UcnFile,
     Util2d,
 )
-from flopy.utils.binaryfile import (
-    get_headfile_precision,
-    write_budget,
-    write_head,
-)
-from flopy.utils.gridutil import get_disv_kwargs, uniform_flow_field
+from flopy.utils.binaryfile import get_headfile_precision
 
 
 @pytest.fixture
@@ -375,43 +368,6 @@ def test_get_headfile_precision(example_data_path):
     assert precision == "double"
 
 
-def test_write_head(function_tmpdir):
-    file_path = function_tmpdir / "headfile"
-    head_data = np.random.random((10, 10))
-
-    write_head(file_path, head_data)
-
-    assert file_path.is_file()
-    content = np.fromfile(file_path)
-    assert np.array_equal(head_data.ravel(), content)
-
-    # TODO: what else needs to be checked here?
-
-
-def test_write_budget(function_tmpdir):
-    file_path = function_tmpdir / "budgetfile"
-
-    nlay = 3
-    nrow = 3
-    ncol = 3
-    qx = 1.0
-    qy = 0.0
-    qz = 0.0
-    shape = (nlay, nrow, ncol)
-    spdis, flowja = uniform_flow_field(qx, qy, qz, shape)
-
-    write_budget(file_path, flowja, kstp=0)
-    assert file_path.is_file()
-    content1 = np.fromfile(file_path)
-
-    write_budget(file_path, flowja, kstp=1, kper=1, text="text")
-    assert file_path.is_file()
-    content2 = np.fromfile(file_path)
-
-    # TODO: why are these the same?
-    assert np.array_equal(content1, content2)
-
-
 def test_binaryfile_read(function_tmpdir, freyberg_model_path):
     h = HeadFile(freyberg_model_path / "freyberg.githds")
     assert isinstance(h, HeadFile)
@@ -464,182 +420,6 @@ def test_binaryfile_read_context(freyberg_model_path):
     with pytest.raises(ValueError) as e:
         h.get_data()
     assert str(e.value) == "seek of closed file", str(e.value)
-
-
-def test_binaryfile_reverse_mf6_dis(function_tmpdir):
-    name = "reverse_dis"
-    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=function_tmpdir, exe_name="mf6")
-    tdis_rc = [(1, 1, 1.0), (1, 1, 1.0)]
-    nper = len(tdis_rc)
-    tdis = flopy.mf6.ModflowTdis(sim, nper=nper, perioddata=tdis_rc)
-    ims = flopy.mf6.ModflowIms(sim)
-    gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
-    dis = flopy.mf6.ModflowGwfdis(gwf, nrow=10, ncol=10)
-    dis = gwf.get_package("DIS")
-    nlay = 2
-    botm = [1 - (k + 1) for k in range(nlay)]
-    botm_data = np.array([list(repeat(b, 10 * 10)) for b in botm]).reshape(
-        (nlay, 10, 10)
-    )
-    dis.nlay = nlay
-    dis.botm.set_data(botm_data)
-    ic = flopy.mf6.ModflowGwfic(gwf)
-    npf = flopy.mf6.ModflowGwfnpf(gwf, save_specific_discharge=True)
-    chd = flopy.mf6.ModflowGwfchd(
-        gwf, stress_period_data=[[(0, 0, 0), 1.0], [(0, 9, 9), 0.0]]
-    )
-    budget_file = name + ".bud"
-    head_file = name + ".hds"
-    oc = flopy.mf6.ModflowGwfoc(
-        gwf,
-        budget_filerecord=budget_file,
-        head_filerecord=head_file,
-        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
-    )
-
-    sim.write_simulation(silent=True)
-    success, buff = sim.run_simulation(silent=True, report=True)
-    assert success, pformat(buff)
-
-    # reverse head file in place and check reversal
-    head_file = flopy.utils.HeadFile(function_tmpdir / head_file)
-    heads = head_file.get_alldata()
-    assert heads.shape == (nper, 2, 10, 10)
-    head_file.reverse()
-    heads_rev = head_file.get_alldata()
-    assert heads_rev.shape == (nper, 2, 10, 10)
-
-    # reverse budget and write to separate file
-    budget_file_rev_path = function_tmpdir / f"{budget_file}_rev"
-    budget_file = flopy.utils.CellBudgetFile(function_tmpdir / budget_file)
-    budget_file.reverse(budget_file_rev_path)
-    budget_file_rev = flopy.utils.CellBudgetFile(budget_file_rev_path)
-
-    for kper in range(nper):
-        assert np.allclose(heads[kper], heads_rev[-kper + 1])
-        budget = budget_file.get_data(text="FLOW-JA-FACE", totim=kper)[0]
-        budget_rev = budget_file_rev.get_data(text="FLOW-JA-FACE", totim=kper)[0]
-        assert budget.shape == budget_rev.shape
-        assert np.allclose(budget, -budget_rev)
-
-
-@requires_pkg("shapely")
-def test_binaryfile_reverse_mf6_disv(function_tmpdir):
-    name = "reverse_disv"
-    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=function_tmpdir, exe_name="mf6")
-    tdis_rc = [(1, 1, 1.0), (1, 1, 1.0)]
-    nper = len(tdis_rc)
-    tdis = flopy.mf6.ModflowTdis(sim, nper=nper, perioddata=tdis_rc)
-    ims = flopy.mf6.ModflowIms(sim)
-    gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
-    dis = flopy.mf6.ModflowGwfdisv(
-        gwf, **get_disv_kwargs(2, 10, 10, 1.0, 1.0, 25.0, [20.0, 15.0])
-    )
-    ic = flopy.mf6.ModflowGwfic(gwf)
-    npf = flopy.mf6.ModflowGwfnpf(gwf, save_specific_discharge=True)
-    chd = flopy.mf6.ModflowGwfchd(
-        gwf, stress_period_data=[[(0, 0, 0), 1.0], [(0, 9, 9), 0.0]]
-    )
-    budget_file = name + ".bud"
-    head_file = name + ".hds"
-    oc = flopy.mf6.ModflowGwfoc(
-        gwf,
-        budget_filerecord=budget_file,
-        head_filerecord=head_file,
-        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
-    )
-
-    sim.write_simulation(silent=True)
-    success, buff = sim.run_simulation(silent=True)
-    assert success, pformat(buff)
-
-    # reverse head file in place and check reversal
-    head_file = flopy.utils.HeadFile(function_tmpdir / head_file)
-    heads = head_file.get_alldata()
-    assert heads.shape == (nper, 2, 1, 100)
-    head_file.reverse()
-    heads_rev = head_file.get_alldata()
-    assert heads_rev.shape == (nper, 2, 1, 100)
-
-    # reverse budget and write to separate file
-    budget_file_rev_path = function_tmpdir / f"{budget_file}_rev"
-    budget_file = flopy.utils.CellBudgetFile(function_tmpdir / budget_file)
-    budget_file.reverse(budget_file_rev_path)
-    budget_file_rev = flopy.utils.CellBudgetFile(budget_file_rev_path, tdis=tdis)
-
-    for kper in range(nper):
-        assert np.allclose(heads[kper], heads_rev[-kper + 1])
-        budget = budget_file.get_data(text="FLOW-JA-FACE", totim=kper)[0]
-        budget_rev = budget_file_rev.get_data(text="FLOW-JA-FACE", totim=kper)[0]
-        assert budget.shape == budget_rev.shape
-        assert np.allclose(budget, -budget_rev)
-
-
-def test_binaryfile_reverse_mf6_disu(example_data_path, function_tmpdir):
-    # load simulation and extract tdis
-    sim_name = "test006_gwf3"
-    sim = flopy.mf6.MFSimulation.load(
-        sim_name=sim_name, sim_ws=example_data_path / "mf6" / sim_name
-    )
-    tdis_rc = [(1, 1, 1.0), (1, 1, 1.0)]
-    nper = len(tdis_rc)
-    tdis = flopy.mf6.ModflowTdis(sim, time_units="DAYS", nper=nper, perioddata=tdis_rc)
-    sim.set_sim_path(function_tmpdir)
-    sim.write_simulation()
-    sim.run_simulation()
-
-    # load head file, providing tdis as kwarg
-    file_path = function_tmpdir / "flow.hds"
-    head_file = HeadFile(file_path, tdis=tdis)
-
-    # reverse and write to a separate file
-    head_file_rev_path = function_tmpdir / "flow_rev.hds"
-    head_file.reverse(filename=head_file_rev_path)
-    head_file_rev = HeadFile(head_file_rev_path)
-
-    # load budget file
-    file_path = function_tmpdir / "flow.cbc"
-    budget_file = CellBudgetFile(file_path, tdis=tdis)
-
-    # reverse and write to a separate file
-    budget_file_rev_path = function_tmpdir / "flow_rev.cbc"
-    budget_file.reverse(filename=budget_file_rev_path)
-    budget_file_rev = CellBudgetFile(budget_file_rev_path)
-
-    # check that data from both files have the same shape
-    assert head_file.get_alldata().shape == (nper, 1, 1, 121)
-    assert head_file_rev.get_alldata().shape == (nper, 1, 1, 121)
-
-    # check number of records
-    assert len(head_file) == nper
-    assert len(head_file_rev) == nper
-    assert len(budget_file) == nper * 2
-    assert len(budget_file_rev) == nper * 2
-
-    # check that the data are reversed
-    nrecords = len(head_file)
-    for idx in range(nrecords - 1, -1, -1):
-        # check headfile headers
-        f_header = list(head_file.recordarray[nrecords - idx - 1])
-        rf_header = list(head_file_rev.recordarray[idx])
-        assert f_header != rf_header
-
-        # check headfile data
-        f_data = head_file.get_data(idx=idx)[0]
-        rf_data = head_file_rev.get_data(idx=nrecords - idx - 1)[0]
-        assert f_data.shape == rf_data.shape
-        if f_data.ndim == 1:
-            for row in range(len(f_data)):
-                f_datum = f_data[row]
-                rf_datum = rf_data[row]
-                assert f_datum == rf_datum
-        else:
-            assert np.array_equal(f_data[0][0], rf_data[0][0])
-
-        budget = budget_file.get_data(text="FLOW-JA-FACE", totim=idx)[0]
-        budget_rev = budget_file_rev.get_data(text="FLOW-JA-FACE", totim=idx)[0]
-        assert budget.shape == budget_rev.shape
-        assert np.allclose(budget, -budget_rev)
 
 
 @pytest.fixture

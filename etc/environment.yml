@@ -5,10 +5,18 @@ dependencies:
   - pip
 
   # required
-  - python>=3.9
+  - python>=3.10
   - numpy>=1.20.3
   - matplotlib>=1.4.0
   - pandas>=2.0.0
+
+  # codegen
+  - boltons>=1.0
+  - Jinja2>=3.0
+  - tomli
+  - tomli-w
+  - pip:
+      - git+https://github.com/MODFLOW-ORG/modflow-devtools.git
 
   # lint
   - cffconvert
@@ -23,14 +31,14 @@ dependencies:
   - jupyter_client>=8.4.0
   - jupytext
   - pip:
-      - git+https://github.com/MODFLOW-USGS/modflow-devtools.git
+      - git+https://github.com/MODFLOW-ORG/modflow-devtools.git
       - tach
   - pytest!=8.1.0
   - pytest-benchmark
   - pytest-cov
   - pytest-dotenv
   - pytest-xdist
-  - pyzmq>=25.1.2,
+  - pyzmq>=25.1.2
   - syrupy
   - virtualenv
 
@@ -54,3 +62,4 @@ dependencies:
   - shapely>=2.0
   - vtk
   - xmipy
+  - h5py

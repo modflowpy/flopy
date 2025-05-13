@@ -96,6 +96,8 @@ class MfGrdFile(FlopyBinaryData):
         # read text strings
         for idx in range(self._ntxt):
             line = self.read_text(self._lentxt).strip()
+            if line.startswith("#"):
+                continue
             t = line.split()
             key = t[0]
             dt = t[1]
@@ -105,6 +107,8 @@ class MfGrdFile(FlopyBinaryData):
                 dtype = np.float32
             elif dt == "DOUBLE":
                 dtype = np.float64
+            elif dt == "CHARACTER":
+                dtype = str
             else:
                 dtype = None
             nd = int(t[3])
@@ -122,7 +126,7 @@ class MfGrdFile(FlopyBinaryData):
                 print(f"  File contains data for {key} with shape {s}")
 
         if self.verbose:
-            print(f"Attempting to read {self._ntxt} records from {filename}")
+            print(f"Attempting to read {len(self._recordkeys)} records from {filename}")
 
         for key in self._recordkeys:
             if self.verbose:
@@ -133,7 +137,10 @@ class MfGrdFile(FlopyBinaryData):
                 count = 1
                 for v in shp:
                     count *= v
-                v = self.read_record(count=count, dtype=dt)
+                if dt == str:
+                    v = self.read_text(nchar=count)
+                else:
+                    v = self.read_record(count=count, dtype=dt)
             # read variable data
             else:
                 if dt == np.int32:

@@ -1,0 +1,159 @@
+name = "gwf-vsc"
+advanced = false
+multi = false
+
+[options.viscref]
+block = "options"
+name = "viscref"
+type = "double precision"
+default = 1.0
+reader = "urword"
+optional = true
+longname = "reference viscosity"
+description = "fluid reference viscosity used in the equation of state.  this value is set to 1.0 if not specified as an option."
+
+[options.temperature_species_name]
+block = "options"
+name = "temperature_species_name"
+type = "string"
+reader = "urword"
+optional = true
+longname = "auxspeciesname that corresponds to temperature"
+description = "string used to identify the auxspeciesname in packagedata that corresponds to the temperature species.  there can be only one occurrence of this temperature species name in the packagedata block or the program will terminate with an error.  this value has no effect if viscosity does not depend on temperature."
+
+[options.thermal_formulation]
+block = "options"
+name = "thermal_formulation"
+type = "string"
+reader = "urword"
+optional = true
+longname = "keyword to specify viscosity formulation for the temperature species"
+description = "may be used for specifying which viscosity formulation to use for the temperature species. can be either linear or nonlinear. the linear viscosity formulation is the default."
+valid = "linear nonlinear"
+
+[options.thermal_a2]
+block = "options"
+name = "thermal_a2"
+type = "double precision"
+default = 10.0
+reader = "urword"
+optional = true
+longname = "coefficient used in nonlinear viscosity function"
+description = "is an empirical parameter specified by the user for calculating viscosity using a nonlinear formulation.  if a2 is not specified, a default value of 10.0 is assigned (voss, 1984)."
+
+[options.thermal_a3]
+block = "options"
+name = "thermal_a3"
+type = "double precision"
+default = 248.37
+reader = "urword"
+optional = true
+longname = "coefficient used in nonlinear viscosity function"
+description = "is an empirical parameter specified by the user for calculating viscosity using a nonlinear formulation.  if a3 is not specified, a default value of 248.37 is assigned (voss, 1984)."
+
+[options.thermal_a4]
+block = "options"
+name = "thermal_a4"
+type = "double precision"
+default = 133.15
+reader = "urword"
+optional = true
+longname = "coefficient used in nonlinear viscosity function"
+description = "is an empirical parameter specified by the user for calculating viscosity using a nonlinear formulation.  if a4 is not specified, a default value of 133.15 is assigned (voss, 1984)."
+
+[options.viscosity_filerecord]
+block = "options"
+name = "viscosity_filerecord"
+type = "record"
+reader = "urword"
+optional = true
+
+[options.viscosity_filerecord.fields.viscosity]
+block = "options"
+name = "viscosity"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "viscosity keyword"
+description = "keyword to specify that record corresponds to viscosity."
+
+[options.viscosity_filerecord.fields.fileout]
+block = "options"
+name = "fileout"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "keyword to specify that an output filename is expected next."
+
+[options.viscosity_filerecord.fields.viscosityfile]
+block = "options"
+name = "viscosityfile"
+type = "string"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "name of the binary output file to write viscosity information.  The viscosity file has the same format as the head file.  Viscosity values will be written to the viscosity file whenever heads are written to the binary head file.  The settings for controlling head output are contained in the Output Control option."
+
+[dimensions.nviscspecies]
+block = "dimensions"
+name = "nviscspecies"
+type = "integer"
+reader = "urword"
+optional = false
+longname = "number of species used in viscosity equation of state"
+description = "number of species used in the viscosity equation of state.  if either concentrations or temperature (or both) are used to update viscosity then then nrhospecies needs to be at least one."
+
+[packagedata.packagedata]
+block = "packagedata"
+name = "packagedata"
+type = "list"
+shape = "(nrhospecies)"
+reader = "urword"
+
+[packagedata.packagedata.item]
+name = "packagedata"
+type = "record"
+block = "packagedata"
+reader = "urword"
+
+[packagedata.packagedata.item.fields.iviscspec]
+block = "packagedata"
+name = "iviscspec"
+type = "integer"
+reader = "urword"
+longname = "species number for this entry"
+description = "integer value that defines the species number associated with the specified PACKAGEDATA data entered on each line. IVISCSPECIES must be greater than zero and less than or equal to NVISCSPECIES. Information must be specified for each of the NVISCSPECIES species or the program will terminate with an error.  The program will also terminate with an error if information for a species is specified more than once."
+numeric_index = "true"
+
+[packagedata.packagedata.item.fields.dviscdc]
+block = "packagedata"
+name = "dviscdc"
+type = "double precision"
+reader = "urword"
+longname = "slope of the line that defines the linear relationship between viscosity and temperature or between viscosity and concentration, depending on the type of species entered on each line."
+description = "real value that defines the slope of the line defining the linear relationship between viscosity and temperature or between viscosity and concentration, depending on the type of species entered on each line.  If the value of AUXSPECIESNAME entered on a line corresponds to TEMPERATURE_SPECIES_NAME (in the OPTIONS block), this value will be used when VISCOSITY_FUNC is equal to LINEAR (the default) in the OPTIONS block.  When VISCOSITY_FUNC is set to NONLINEAR, a value for DVISCDC must be specified though it is not used."
+
+[packagedata.packagedata.item.fields.cviscref]
+block = "packagedata"
+name = "cviscref"
+type = "double precision"
+reader = "urword"
+longname = "reference temperature value or reference concentration value"
+description = "real value that defines the reference temperature or reference concentration value used for this species in the viscosity equation of state.  If AUXSPECIESNAME entered on a line corresponds to TEMPERATURE_SPECIES_NAME (in the OPTIONS block), then CVISCREF refers to a reference temperature, otherwise it refers to a reference concentration."
+
+[packagedata.packagedata.item.fields.modelname]
+block = "packagedata"
+name = "modelname"
+type = "string"
+reader = "urword"
+longname = "modelname"
+description = "name of a GWT or GWE model used to simulate a species that will be used in the viscosity equation of state.  This name will have no effect if the simulation does not include a GWT or GWE model that corresponds to this GWF model."
+
+[packagedata.packagedata.item.fields.auxspeciesname]
+block = "packagedata"
+name = "auxspeciesname"
+type = "string"
+reader = "urword"
+longname = "auxspeciesname"
+description = "name of an auxiliary variable in a GWF stress package that will be used for this species to calculate the viscosity values.  If a viscosity value is needed by the Viscosity Package then it will use the temperature or concentration values associated with this AUXSPECIESNAME in the viscosity equation of state.  For advanced stress packages (LAK, SFR, MAW, and UZF) that have an associated advanced transport package (LKT, SFT, MWT, and UZT), the FLOW_PACKAGE_AUXILIARY_NAME option in the advanced transport package can be used to transfer simulated temperature or concentration(s) into the flow package auxiliary variable.  In this manner, the Viscosity Package can calculate viscosity values for lakes, streams, multi-aquifer wells, and unsaturated zone flow cells using simulated concentrations."

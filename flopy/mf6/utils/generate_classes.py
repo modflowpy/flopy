@@ -5,14 +5,17 @@ import time
 from pathlib import Path
 from warnings import warn
 
-from .createpackages import create_packages
-
 thisfilepath = os.path.dirname(os.path.abspath(__file__))
 flopypth = os.path.join(thisfilepath, "..", "..")
 flopypth = os.path.abspath(flopypth)
 protected_dfns = ["flopy.dfn"]
-default_owner = "MODFLOW-USGS"
+default_owner = "MODFLOW-ORG"
 default_repo = "modflow6"
+
+_MF6_PATH = Path(__file__).parents[1]
+_DFN_PATH = _MF6_PATH / "data" / "dfn"
+_TOML_PATH = _DFN_PATH / "toml"
+_TGT_PATH = _MF6_PATH / "modflow"
 
 
 def delete_files(files, pth, allow_failure=False, exclude=None):
@@ -129,7 +132,7 @@ def generate_classes(
 
     Parameters
     ----------
-    owner : str, default "MODFLOW-USGS"
+    owner : str, default "MODFLOW-ORG"
         Owner of the MODFLOW 6 repository to use to update the definition
         files and generate the MODFLOW 6 classes.
     repo : str, default "modflow6"
@@ -198,8 +201,15 @@ def generate_classes(
     print("  Deleting existing mf6 classes")
     delete_mf6_classes()
 
-    print("  Creating mf6 classes using the definition files")
-    create_packages()
+    # convert dfns to toml.. when we
+    # do this upstream, remove this.
+    _TOML_PATH.mkdir(exist_ok=True)
+    from flopy.mf6.utils.dfn2toml import convert as dfn2toml
+    dfn2toml(_DFN_PATH, _TOML_PATH)
+
+    print("  Create mf6 classes using the definition files.")
+    from flopy.mf6.utils.codegen import make_all
+    make_all(_TOML_PATH, _TGT_PATH, version=2)
     list_files(os.path.join(flopypth, "mf6", "modflow"))
 
 

@@ -28,7 +28,7 @@ bindir_options = {
     "python": Path(sys.prefix) / ("Scripts" if system() == "Windows" else "bin"),
     "home": Path.home() / ".local" / "bin",
 }
-owner_options = ["MODFLOW-USGS"]
+owner_options = ["MODFLOW-ORG"]
 repo_options = {
     "executables": [
         "crt",

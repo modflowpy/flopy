@@ -1063,7 +1063,10 @@ class MFArray(MFMultiDimVar):
             external_file_info=None,
         )
         self._resync()
-        if self.structure.layered:
+        if (
+            self.structure.layered
+            and self.structure.name.lower() != "aux"
+        ):
             try:
                 model_grid = self.data_dimensions.get_model_grid()
             except Exception as ex:
@@ -1238,16 +1241,32 @@ class MFArray(MFMultiDimVar):
 
                 layer_min = layer
                 layer_max = shape_ml.inc_shape_idx(layer)
-            for layer in shape_ml.indexes(layer_min, layer_max):
-                file_entry_array.append(
-                    self._get_file_entry_layer(
-                        layer,
-                        data_indent,
-                        data_storage.layer_storage[layer].data_storage_type,
-                        ext_file_action,
-                        layered_aux,
-                    )
+            if layered_aux:
+                aux_var_names = (
+                    self.data_dimensions.package_dim.get_aux_variables()[0]
                 )
+                for layer in range(0, len(aux_var_names)-1):
+                    file_entry_array.append(
+                        self._get_file_entry_layer(
+                            [layer],
+                            data_indent,
+                            data_storage.layer_storage[layer].data_storage_type,
+                            ext_file_action,
+                            layered_aux,
+                        )
+                    )
+
+            else:
+                for layer in shape_ml.indexes(layer_min, layer_max):
+                    file_entry_array.append(
+                        self._get_file_entry_layer(
+                            layer,
+                            data_indent,
+                            data_storage.layer_storage[layer].data_storage_type,
+                            ext_file_action,
+                            layered_aux,
+                        )
+                    )
         else:
             # data is not layered
             if not self.structure.data_item_structures[0].just_data:

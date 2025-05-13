@@ -25,7 +25,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Python
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v6
         with:
           enable-cache: false
 
@@ -172,7 +172,7 @@ jobs:
 
       # actions/download-artifact won't look at previous workflow runs but we need to in order to get changelog
       - name: Download artifacts
-        uses: dawidd6/action-download-artifact@v8
+        uses: dawidd6/action-download-artifact@v9
 
       - name: Draft release
         env:
@@ -208,7 +208,7 @@ jobs:
           ref: master
 
       - name: Setup Python
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v6
         with:
           enable-cache: false
 

@@ -852,7 +852,13 @@ class MFBlock:
             )
 
         # handle special readasarrays case
-        if self._container_package.structure.read_as_arrays:
+        if (
+            self._container_package.structure.read_as_arrays
+            or (
+                hasattr(self._container_package, "aux")
+                and self._container_package.aux.structure.layered
+            )
+        ):
             # auxiliary variables may appear with aux variable name as keyword
             aux_vars = self._container_package.auxiliary.get_data()
             if aux_vars is not None:
@@ -1888,7 +1894,6 @@ class MFPackage(PackageInterface):
     def __init_subclass__(cls):
         """Register package type"""
         super().__init_subclass__()
-        PackageContainer.modflow_packages.append(cls)
         PackageContainer.packages_by_abbr[cls.package_abbr] = cls
 
     def __setattr__(self, name, value):
@@ -3449,7 +3454,6 @@ class MFChildPackages:
     def __init_subclass__(cls):
         """Register package"""
         super().__init_subclass__()
-        PackageContainer.modflow_packages.append(cls)
         PackageContainer.packages_by_abbr[cls.package_abbr] = cls
 
     def __getattr__(self, attr):
