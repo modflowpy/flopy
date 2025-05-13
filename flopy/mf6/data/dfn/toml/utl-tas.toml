@@ -1,0 +1,96 @@
+name = "utl-tas"
+advanced = false
+multi = true
+
+[ref]
+parent = "parent_package"
+key = "tas_filerecord"
+val = "timearrayseries"
+abbr = "tas"
+param = "tas_array"
+
+[attributes.time_series_namerecord]
+block = "attributes"
+name = "time_series_namerecord"
+type = "record"
+reader = "urword"
+optional = false
+description = "xxx"
+
+[attributes.time_series_namerecord.fields.name]
+block = "attributes"
+name = "name"
+type = "keyword"
+reader = "urword"
+optional = "false"
+description = "xxx"
+
+[attributes.time_series_namerecord.fields.time_series_name]
+block = "attributes"
+name = "time_series_name"
+type = "string"
+shape = "any1d"
+reader = "urword"
+optional = "false"
+description = "Name by which a package references a particular time-array series. The name must be unique among all time-array series used in a package."
+
+[attributes.interpolation_methodrecord]
+block = "attributes"
+name = "interpolation_methodrecord"
+type = "record"
+reader = "urword"
+optional = true
+description = "xxx"
+
+[attributes.interpolation_methodrecord.fields.method]
+block = "attributes"
+name = "method"
+type = "keyword"
+reader = "urword"
+optional = "false"
+description = " xxx"
+
+[attributes.interpolation_methodrecord.fields.interpolation_method]
+block = "attributes"
+name = "interpolation_method"
+type = "string"
+valid = "stepwise linear linearend"
+reader = "urword"
+optional = "false"
+description = "Interpolation method, which is either STEPWISE or LINEAR."
+
+[attributes.sfacrecord]
+block = "attributes"
+name = "sfacrecord"
+type = "record"
+reader = "urword"
+optional = true
+description = "xxx"
+
+[attributes.sfacrecord.fields.sfac]
+block = "attributes"
+name = "sfac"
+type = "keyword"
+reader = "urword"
+optional = "false"
+description = " xxx"
+
+[attributes.sfacrecord.fields.sfacval]
+block = "attributes"
+name = "sfacval"
+type = "double precision"
+shape = "time_series_name"
+reader = "urword"
+optional = "false"
+description = "Scale factor, which will multiply all array values in time series. SFAC is an optional attribute; if omitted, SFAC = 1.0."
+
+[time.tas_array]
+block = "time"
+name = "tas_array"
+type = "double precision"
+shape = "(unknown)"
+reader = "readarray"
+optional = false
+description = "an array of numeric, floating-point values, or a constant value, readable by the u2drel array-reading utility."
+just_data = true
+repeating = true

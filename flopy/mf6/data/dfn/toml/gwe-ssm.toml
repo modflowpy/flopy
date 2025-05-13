@@ -1,0 +1,119 @@
+name = "gwe-ssm"
+advanced = false
+multi = false
+
+[options.print_flows]
+block = "options"
+name = "print_flows"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "print calculated flows to listing file"
+description = "keyword to indicate that the list of ssm flow rates will be printed to the listing file for every stress period time step in which 'budget print' is specified in output control.  if there is no output control option and 'print_flows' is specified, then flow rates are printed for the last time step of each stress period."
+
+[options.save_flows]
+block = "options"
+name = "save_flows"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "save calculated flows to budget file"
+description = "keyword to indicate that ssm flow terms will be written to the file specified with 'budget fileout' in output control."
+
+[sources.sources]
+block = "sources"
+name = "sources"
+type = "list"
+reader = "urword"
+optional = false
+longname = "package list"
+
+[sources.sources.item]
+name = "sources"
+type = "record"
+block = "sources"
+reader = "urword"
+optional = false
+longname = "package list"
+
+[sources.sources.item.fields.pname]
+block = "fileinput"
+name = "pname"
+type = "string"
+reader = "urword"
+longname = "package name"
+description = "name of the flow package for which an SPC6 input file contains a source temperature.  If this flow package is represented using an advanced transport package (SFE, LKE, MWE, or UZE), then the advanced transport package will override SSM terms specified here."
+
+[sources.sources.item.fields.srctype]
+block = "sources"
+name = "srctype"
+type = "string"
+optional = "false"
+reader = "urword"
+longname = "source type"
+description = "keyword indicating how temperature will be assigned for sources and sinks.  Keyword must be specified as either AUX or AUXMIXED.  For both options the user must provide an auxiliary variable in the corresponding flow package.  The auxiliary variable must have the same name as the AUXNAME value that follows.  If the AUX keyword is specified, then the auxiliary variable specified by the user will be assigned as the temperature value for groundwater sources (flows with a positive sign).  For negative flow rates (sinks), groundwater will be withdrawn from the cell at the simulated temperature of the cell.  The AUXMIXED option provides an alternative method for how to determine the temperature of sinks.  If the cell temperature is larger than the user-specified auxiliary temperature, then the temperature of groundwater withdrawn from the cell will be assigned as the user-specified temperature.  Alternatively, if the user-specified auxiliary temperature is larger than the cell temperature, then groundwater will be withdrawn at the cell temperature.  Thus, the AUXMIXED option is designed to work with the Evapotranspiration (EVT) and Recharge (RCH) Packages where water may be withdrawn at a temperature that is less than the cell temperature."
+
+[sources.sources.item.fields.auxname]
+block = "sources"
+name = "auxname"
+type = "string"
+reader = "urword"
+optional = "false"
+longname = "auxiliary variable name"
+description = "name of the auxiliary variable in the package PNAME.  This auxiliary variable must exist and be specified by the user in that package.  The values in this auxiliary variable will be used to set the temperature associated with the flows for that boundary package."
+
+[fileinput.fileinput]
+block = "fileinput"
+name = "fileinput"
+type = "list"
+reader = "urword"
+
+[fileinput.fileinput.item]
+name = "fileinput"
+type = "record"
+block = "fileinput"
+reader = "urword"
+
+[fileinput.fileinput.item.fields.pname]
+block = "fileinput"
+name = "pname"
+type = "string"
+reader = "urword"
+longname = "package name"
+description = "name of the flow package for which an SPC6 input file contains a source temperature.  If this flow package is represented using an advanced transport package (SFE, LKE, MWE, or UZE), then the advanced transport package will override SSM terms specified here."
+
+[fileinput.fileinput.item.fields.spc6]
+block = "fileinput"
+name = "spc6"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "head keyword"
+description = "keyword to specify that record corresponds to a source sink mixing input file."
+
+[fileinput.fileinput.item.fields.filein]
+block = "fileinput"
+name = "filein"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "keyword to specify that an input filename is expected next."
+
+[fileinput.fileinput.item.fields.spc6_filename]
+block = "fileinput"
+name = "spc6_filename"
+type = "string"
+reader = "urword"
+optional = "false"
+longname = "spc file name"
+description = "character string that defines the path and filename for the file containing source and sink input data for the flow package. The SPC6_FILENAME file is a flexible input file that allows temperatures to be specified by stress period and with time series. Instructions for creating the SPC6_FILENAME input file are provided in the next section on file input for boundary temperatures."
+
+[fileinput.fileinput.item.fields.mixed]
+block = "fileinput"
+name = "mixed"
+type = "keyword"
+reader = "urword"
+optional = "true"
+longname = "mixed keyword"
+description = "keyword to specify that these stress package boundaries will have the mixed condition.  The MIXED condition is described in the SOURCES block for AUXMIXED.  The MIXED condition allows for water to be withdrawn at a temperature that is less than the cell temperature.  It is intended primarily for representing evapotranspiration."

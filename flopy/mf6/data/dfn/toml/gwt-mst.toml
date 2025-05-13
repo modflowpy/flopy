@@ -1,0 +1,139 @@
+name = "gwt-mst"
+advanced = false
+multi = false
+
+[options.save_flows]
+block = "options"
+name = "save_flows"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "save calculated flows to budget file"
+description = "keyword to indicate that mst flow terms will be written to the file specified with 'budget fileout' in output control."
+
+[options.first_order_decay]
+block = "options"
+name = "first_order_decay"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "activate first-order decay"
+description = "is a text keyword to indicate that first-order decay will occur.  use of this keyword requires that decay and decay_sorbed (if sorption is active) are specified in the griddata block."
+
+[options.zero_order_decay]
+block = "options"
+name = "zero_order_decay"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "activate zero-order decay"
+description = "is a text keyword to indicate that zero-order decay will occur.  use of this keyword requires that decay and decay_sorbed (if sorption is active) are specified in the griddata block."
+
+[options.sorption]
+block = "options"
+name = "sorption"
+type = "string"
+reader = "urword"
+optional = true
+longname = "activate sorption"
+description = "is a text keyword to indicate that sorption will be activated.  valid sorption options include linear, freundlich, and langmuir.  use of this keyword requires that bulk_density and distcoef are specified in the griddata block.  if sorption is specified as freundlich or langmuir then sp2 is also required in the griddata block."
+valid = "linear freundlich langmuir"
+
+[options.sorbate_filerecord]
+block = "options"
+name = "sorbate_filerecord"
+type = "record"
+reader = "urword"
+optional = true
+
+[options.sorbate_filerecord.fields.sorbate]
+block = "options"
+name = "sorbate"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "sorbate keyword"
+description = "keyword to specify that record corresponds to sorbate concentration."
+
+[options.sorbate_filerecord.fields.fileout]
+block = "options"
+name = "fileout"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "keyword to specify that an output filename is expected next."
+
+[options.sorbate_filerecord.fields.sorbatefile]
+block = "options"
+name = "sorbatefile"
+type = "string"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "name of the output file to write sorbate concentration information.  Sorbate concentrations will be written whenever aqueous concentrations are saved, as determined by settings in the Output Control option."
+
+[griddata.porosity]
+block = "griddata"
+name = "porosity"
+type = "double precision"
+shape = "(nodes)"
+reader = "readarray"
+longname = "porosity"
+description = "is the mobile domain porosity, defined as the mobile domain pore volume per mobile domain volume.  additional information on porosity within the context of mobile and immobile domain transport simulations is included in the modflow 6 supplemental technical information document."
+layered = true
+
+[griddata.decay]
+block = "griddata"
+name = "decay"
+type = "double precision"
+shape = "(nodes)"
+reader = "readarray"
+optional = true
+longname = "aqueous phase decay rate coefficient"
+description = "is the rate coefficient for first or zero-order decay for the aqueous phase of the mobile domain.  a negative value indicates solute production.  the dimensions of decay for first-order decay is one over time.  the dimensions of decay for zero-order decay is mass per length cubed per time.  decay will have no effect on simulation results unless either first- or zero-order decay is specified in the options block."
+layered = true
+
+[griddata.decay_sorbed]
+block = "griddata"
+name = "decay_sorbed"
+type = "double precision"
+shape = "(nodes)"
+reader = "readarray"
+optional = true
+longname = "sorbed phase decay rate coefficient"
+description = "is the rate coefficient for first or zero-order decay for the sorbed phase of the mobile domain.  a negative value indicates solute production.  the dimensions of decay_sorbed for first-order decay is one over time.  the dimensions of decay_sorbed for zero-order decay is mass of solute per mass of aquifer per time.  if decay_sorbed is not specified and both decay and sorption are active, then the program will terminate with an error.  decay_sorbed will have no effect on simulation results unless the sorption keyword and either first- or zero-order decay are specified in the options block."
+layered = true
+
+[griddata.bulk_density]
+block = "griddata"
+name = "bulk_density"
+type = "double precision"
+shape = "(nodes)"
+reader = "readarray"
+optional = true
+longname = "bulk density"
+description = "is the bulk density of the aquifer in mass per length cubed.  bulk_density is not required unless the sorption keyword is specified.  bulk density is defined as the mobile domain solid mass per mobile domain volume.  additional information on bulk density is included in the modflow 6 supplemental technical information document."
+layered = true
+
+[griddata.distcoef]
+block = "griddata"
+name = "distcoef"
+type = "double precision"
+shape = "(nodes)"
+reader = "readarray"
+optional = true
+longname = "distribution coefficient"
+description = "is the distribution coefficient for the equilibrium-controlled linear sorption isotherm in dimensions of length cubed per mass.  if the freunchlich isotherm is specified, then discoef is the freundlich constant.  if the langmuir isotherm is specified, then distcoef is the langmuir constant.  distcoef is not required unless the sorption keyword is specified."
+layered = true
+
+[griddata.sp2]
+block = "griddata"
+name = "sp2"
+type = "double precision"
+shape = "(nodes)"
+reader = "readarray"
+optional = true
+longname = "second sorption parameter"
+description = "is the exponent for the freundlich isotherm and the sorption capacity for the langmuir isotherm.  sp2 is not required unless the sorption keyword is specified in the options block.  if the sorption keyword is not specified in the options block, sp2 will have no effect on simulation results."
+layered = true

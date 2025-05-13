@@ -1,0 +1,182 @@
+name = "gwf-evta"
+advanced = false
+multi = true
+
+[fkeys.tas_filerecord]
+parent = "parent_package"
+key = "tas_filerecord"
+val = "timearrayseries"
+abbr = "tas"
+param = "tas_array"
+
+[fkeys.obs_filerecord]
+parent = "parent_model_or_package"
+key = "obs_filerecord"
+val = "observations"
+abbr = "obs"
+param = "continuous"
+
+[options.readasarrays]
+block = "options"
+name = "readasarrays"
+type = "keyword"
+default = true
+reader = "urword"
+optional = false
+longname = "use array-based input"
+description = "indicates that array-based input will be used for the evapotranspiration package.  this keyword must be specified to use array-based input.  when readasarrays is specified, values must be provided for every cell within a model layer, even those cells that have an idomain value less than one.  values assigned to cells with idomain values less than one are not used and have no effect on simulation results."
+
+[options.fixed_cell]
+block = "options"
+name = "fixed_cell"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "if cell is dry do not apply evapotranspiration to underlying cell"
+description = "indicates that evapotranspiration will not be reassigned to a cell underlying the cell specified in the list if the specified cell is inactive."
+
+[options.auxiliary]
+block = "options"
+name = "auxiliary"
+type = "string"
+shape = "(naux)"
+reader = "urword"
+optional = true
+longname = "keyword to specify aux variables"
+description = "defines an array of one or more auxiliary variable names.  there is no limit on the number of auxiliary variables that can be provided on this line; however, lists of information provided in subsequent blocks must have a column of data for each auxiliary variable name defined here.   the number of auxiliary variables detected on this line determines the value for naux.  comments cannot be provided anywhere on this line as they will be interpreted as auxiliary variable names.  auxiliary variables may not be used by the package, but they will be available for use by other parts of the program.  the program will terminate with an error if auxiliary variables are specified on more than one line in the options block."
+
+[options.auxmultname]
+block = "options"
+name = "auxmultname"
+type = "string"
+reader = "urword"
+optional = true
+longname = "name of auxiliary variable for multiplier"
+description = "name of auxiliary variable to be used as multiplier of evapotranspiration rate."
+
+[options.print_input]
+block = "options"
+name = "print_input"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "print input to listing file"
+description = "keyword to indicate that the list of evapotranspiration information will be written to the listing file immediately after it is read."
+mf6internal = "iprpak"
+
+[options.print_flows]
+block = "options"
+name = "print_flows"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "print evapotranspiration rates to listing file"
+description = "keyword to indicate that the list of evapotranspiration flow rates will be printed to the listing file for every stress period time step in which 'budget print' is specified in output control.  if there is no output control option and 'print_flows' is specified, then flow rates are printed for the last time step of each stress period."
+mf6internal = "iprflow"
+
+[options.save_flows]
+block = "options"
+name = "save_flows"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "save chd flows to budget file"
+description = "keyword to indicate that evapotranspiration flow terms will be written to the file specified with 'budget fileout' in output control."
+mf6internal = "ipakcb"
+
+[options.timearrayseries]
+block = "options"
+name = "timearrayseries"
+type = "record tas6 filein tas6_filename"
+reader = "urword"
+optional = true
+description = "Contains data for the tas package. Data can be passed as a dictionary to the tas package with variable names as keys and package data as values. Data for the timearrayseries variable is also acceptable. See tas package documentation for more information."
+
+[options.timearrayseries.ref]
+parent = "parent_package"
+key = "tas_filerecord"
+val = "timearrayseries"
+abbr = "tas"
+param = "tas_array"
+
+[options.observations]
+block = "options"
+name = "observations"
+type = "record obs6 filein obs6_filename"
+reader = "urword"
+optional = true
+description = "Contains data for the obs package. Data can be passed as a dictionary to the obs package with variable names as keys and package data as values. Data for the observations variable is also acceptable. See obs package documentation for more information."
+
+[options.observations.ref]
+parent = "parent_model_or_package"
+key = "obs_filerecord"
+val = "observations"
+abbr = "obs"
+param = "continuous"
+
+[options.export_array_netcdf]
+block = "options"
+name = "export_array_netcdf"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "export array variables to netcdf output files."
+description = "keyword that specifies input griddata arrays should be written to the model output netcdf file."
+mf6internal = "export_nc"
+extended = true
+
+[period]
+transient_block = true
+
+[period.ievt]
+block = "period"
+name = "ievt"
+type = "integer"
+shape = "(ncol*nrow; ncpl)"
+reader = "readarray"
+optional = true
+longname = "layer number for evapotranspiration"
+description = "ievt is the layer number that defines the layer in each vertical column where evapotranspiration is applied. if ievt is omitted, evapotranspiration by default is applied to cells in layer 1.  if ievt is specified, it must be specified as the first variable in the period block or modflow will terminate with an error."
+numeric_index = true
+
+[period.surface]
+block = "period"
+name = "surface"
+type = "double precision"
+shape = "(ncol*nrow; ncpl)"
+default = 0.0
+reader = "readarray"
+longname = "evapotranspiration surface"
+description = "is the elevation of the et surface ($l$)."
+
+[period.rate]
+block = "period"
+name = "rate"
+type = "double precision"
+shape = "(ncol*nrow; ncpl)"
+default = 0.001
+reader = "readarray"
+longname = "evapotranspiration surface"
+description = "is the maximum et flux rate ($lt^{-1}$)."
+time_series = true
+
+[period.depth]
+block = "period"
+name = "depth"
+type = "double precision"
+shape = "(ncol*nrow; ncpl)"
+default = 1.0
+reader = "readarray"
+longname = "extinction depth"
+description = "is the et extinction depth ($l$)."
+
+[period.aux]
+block = "period"
+name = "aux"
+type = "double precision"
+shape = "(ncol*nrow; ncpl)"
+reader = "readarray"
+longname = "evapotranspiration auxiliary variable iaux"
+description = "is an array of values for auxiliary variable aux(iaux), where iaux is a value from 1 to naux, and aux(iaux) must be listed as part of the auxiliary variables.  a separate array can be specified for each auxiliary variable.  if an array is not specified for an auxiliary variable, then a value of zero is assigned.  if the value specified here for the auxiliary variable is the same as auxmultname, then the evapotranspiration rate will be multiplied by this array."
+time_series = true
+mf6internal = "auxvar"

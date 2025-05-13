@@ -1,0 +1,341 @@
+name = "gwt-disu"
+advanced = false
+multi = false
+
+[options.length_units]
+block = "options"
+name = "length_units"
+type = "string"
+reader = "urword"
+optional = true
+longname = "model length units"
+description = "is the length units used for this model.  values can be 'feet', 'meters', or 'centimeters'.  if not specified, the default is 'unknown'."
+
+[options.nogrb]
+block = "options"
+name = "nogrb"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "do not write binary grid file"
+description = "keyword to deactivate writing of the binary grid file."
+
+[options.grb_filerecord]
+block = "options"
+name = "grb_filerecord"
+type = "record"
+reader = "urword"
+optional = true
+
+[options.grb_filerecord.fields.grb6]
+block = "options"
+name = "grb6"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "grb keyword"
+description = "keyword to specify that record corresponds to a binary grid file."
+extended = "true"
+
+[options.grb_filerecord.fields.fileout]
+block = "options"
+name = "fileout"
+type = "keyword"
+reader = "urword"
+optional = "false"
+longname = "file keyword"
+description = "keyword to specify that an output filename is expected next."
+
+[options.grb_filerecord.fields.grb6_filename]
+block = "options"
+name = "grb6_filename"
+type = "string"
+reader = "urword"
+optional = "false"
+longname = "file name of GRB information"
+description = "defines a binary grid output file. If this option is not provided, the output file will have the same name as the discretization input file, plus extension '.grb'."
+extended = "true"
+
+[options.xorigin]
+block = "options"
+name = "xorigin"
+type = "double precision"
+reader = "urword"
+optional = true
+longname = "x-position origin of the model grid coordinate system"
+description = "x-position of the origin used for model grid vertices.  this value should be provided in a real-world coordinate system.  a default value of zero is assigned if not specified.  the value for xorigin does not affect the model simulation, but it is written to the binary grid file so that postprocessors can locate the grid in space."
+
+[options.yorigin]
+block = "options"
+name = "yorigin"
+type = "double precision"
+reader = "urword"
+optional = true
+longname = "y-position origin of the model grid coordinate system"
+description = "y-position of the origin used for model grid vertices.  this value should be provided in a real-world coordinate system.  if not specified, then a default value equal to zero is used.  the value for yorigin does not affect the model simulation, but it is written to the binary grid file so that postprocessors can locate the grid in space."
+
+[options.angrot]
+block = "options"
+name = "angrot"
+type = "double precision"
+reader = "urword"
+optional = true
+longname = "rotation angle"
+description = "counter-clockwise rotation angle (in degrees) of the model grid coordinate system relative to a real-world coordinate system.  if not specified, then a default value of 0.0 is assigned.  the value for angrot does not affect the model simulation, but it is written to the binary grid file so that postprocessors can locate the grid in space."
+
+[options.vertical_offset_tolerance]
+block = "options"
+name = "vertical_offset_tolerance"
+type = "double precision"
+default = 0.0
+reader = "urword"
+optional = true
+longname = "vertical length dimension for top and bottom checking"
+description = "checks are performed to ensure that the top of a cell is not higher than the bottom of an overlying cell.  this option can be used to specify the tolerance that is used for checking.  if top of a cell is above the bottom of an overlying cell by a value less than this tolerance, then the program will not terminate with an error.  the default value is zero.  this option should generally not be used."
+mf6internal = "voffsettol"
+
+[options.export_array_ascii]
+block = "options"
+name = "export_array_ascii"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "export array variables to layered ascii files."
+description = "keyword that specifies input griddata arrays should be written to layered ascii output files."
+mf6internal = "export_ascii"
+
+[dimensions.nodes]
+block = "dimensions"
+name = "nodes"
+type = "integer"
+reader = "urword"
+optional = false
+longname = "number of layers"
+description = "is the number of cells in the model grid."
+
+[dimensions.nja]
+block = "dimensions"
+name = "nja"
+type = "integer"
+reader = "urword"
+optional = false
+longname = "number of columns"
+description = "is the sum of the number of connections and nodes.  when calculating the total number of connections, the connection between cell n and cell m is considered to be different from the connection between cell m and cell n.  thus, nja is equal to the total number of connections, including n to m and m to n, and the total number of cells."
+
+[dimensions.nvert]
+block = "dimensions"
+name = "nvert"
+type = "integer"
+reader = "urword"
+optional = true
+longname = "number of vertices"
+description = "is the total number of (x, y) vertex pairs used to define the plan-view shape of each cell in the model grid.  if nvert is not specified or is specified as zero, then the vertices and cell2d blocks below are not read.  nvert and the accompanying vertices and cell2d blocks should be specified for most simulations.  if the xt3d or save_specific_discharge options are specified in the npf package, then this information is required."
+
+[griddata.top]
+block = "griddata"
+name = "top"
+type = "double precision"
+shape = "(nodes)"
+reader = "readarray"
+longname = "cell top elevation"
+description = "is the top elevation for each cell in the model grid."
+
+[griddata.bot]
+block = "griddata"
+name = "bot"
+type = "double precision"
+shape = "(nodes)"
+reader = "readarray"
+longname = "cell bottom elevation"
+description = "is the bottom elevation for each cell."
+
+[griddata.area]
+block = "griddata"
+name = "area"
+type = "double precision"
+shape = "(nodes)"
+reader = "readarray"
+longname = "cell surface area"
+description = "is the cell surface area (in plan view)."
+
+[griddata.idomain]
+block = "griddata"
+name = "idomain"
+type = "integer"
+shape = "(nodes)"
+reader = "readarray"
+optional = true
+longname = "idomain existence array"
+description = "is an optional array that characterizes the existence status of a cell.  if the idomain array is not specified, then all model cells exist within the solution.  if the idomain value for a cell is 0, the cell does not exist in the simulation.  input and output values will be read and written for the cell, but internal to the program, the cell is excluded from the solution.  if the idomain value for a cell is 1 or greater, the cell exists in the simulation.  idomain values of -1 cannot be specified for the disu package."
+layered = false
+
+[connectiondata.iac]
+block = "connectiondata"
+name = "iac"
+type = "integer"
+shape = "(nodes)"
+reader = "readarray"
+longname = "number of cell connections"
+description = "is the number of connections (plus 1) for each cell.  the sum of all the entries in iac must be equal to nja."
+
+[connectiondata.ja]
+block = "connectiondata"
+name = "ja"
+type = "integer"
+shape = "(nja)"
+reader = "readarray"
+longname = "grid connectivity"
+description = "is a list of cell number (n) followed by its connecting cell numbers (m) for each of the m cells connected to cell n. the number of values to provide for cell n is iac(n).  this list is sequentially provided for the first to the last cell. the first value in the list must be cell n itself, and the remaining cells must be listed in an increasing order (sorted from lowest number to highest).  note that the cell and its connections are only supplied for the gwt cells and their connections to the other gwt cells.  also note that the ja list input may be divided such that every node and its connectivity list can be on a separate line for ease in readability of the file. to further ease readability of the file, the node number of the cell whose connectivity is subsequently listed, may be expressed as a negative number, the sign of which is subsequently converted to positive by the code."
+numeric_index = true
+jagged_array = "iac"
+
+[connectiondata.ihc]
+block = "connectiondata"
+name = "ihc"
+type = "integer"
+shape = "(nja)"
+reader = "readarray"
+longname = "connection type"
+description = "is an index array indicating the direction between node n and all of its m connections.  if ihc = 0 then cell n and cell m are connected in the vertical direction.  cell n overlies cell m if the cell number for n is less than m; cell m overlies cell n if the cell number for m is less than n.  if ihc = 1 then cell n and cell m are connected in the horizontal direction.  if ihc = 2 then cell n and cell m are connected in the horizontal direction, and the connection is vertically staggered.  a vertically staggered connection is one in which a cell is horizontally connected to more than one cell in a horizontal connection."
+jagged_array = "iac"
+
+[connectiondata.cl12]
+block = "connectiondata"
+name = "cl12"
+type = "double precision"
+shape = "(nja)"
+reader = "readarray"
+longname = "connection lengths"
+description = "is the array containing connection lengths between the center of cell n and the shared face with each adjacent m cell."
+jagged_array = "iac"
+
+[connectiondata.hwva]
+block = "connectiondata"
+name = "hwva"
+type = "double precision"
+shape = "(nja)"
+reader = "readarray"
+longname = "connection lengths"
+description = "is a symmetric array of size nja.  for horizontal connections, entries in hwva are the horizontal width perpendicular to flow.  for vertical connections, entries in hwva are the vertical area for flow.  thus, values in the hwva array contain dimensions of both length and area.  entries in the hwva array have a one-to-one correspondence with the connections specified in the ja array.  likewise, there is a one-to-one correspondence between entries in the hwva array and entries in the ihc array, which specifies the connection type (horizontal or vertical).  entries in the hwva array must be symmetric; the program will terminate with an error if the value for hwva for an n to m connection does not equal the value for hwva for the corresponding n to m connection."
+jagged_array = "iac"
+
+[connectiondata.angldegx]
+block = "connectiondata"
+name = "angldegx"
+type = "double precision"
+shape = "(nja)"
+reader = "readarray"
+optional = true
+longname = "angle of face normal to connection"
+description = "is the angle (in degrees) between the horizontal x-axis and the outward normal to the face between a cell and its connecting cells. the angle varies between zero and 360.0 degrees, where zero degrees points in the positive x-axis direction, and 90 degrees points in the positive y-axis direction.  angldegx is only needed if horizontal anisotropy is specified in the npf package, if the xt3d option is used in the npf package, or if the save_specific_discharge option is specified in the npf package.  angldegx does not need to be specified if these conditions are not met.  angldegx is of size nja; values specified for vertical connections and for the diagonal position are not used.  note that angldegx is read in degrees, which is different from modflow-usg, which reads a similar variable (anglex) in radians."
+jagged_array = "iac"
+
+[vertices.vertices]
+block = "vertices"
+name = "vertices"
+type = "list"
+shape = "(nvert)"
+reader = "urword"
+optional = true
+longname = "vertices data"
+
+[vertices.vertices.item]
+name = "vertices"
+type = "record"
+block = "vertices"
+reader = "urword"
+optional = true
+longname = "vertices data"
+
+[vertices.vertices.item.fields.iv]
+block = "vertices"
+name = "iv"
+type = "integer"
+reader = "urword"
+optional = "false"
+longname = "vertex number"
+description = "is the vertex number.  Records in the VERTICES block must be listed in consecutive order from 1 to NVERT."
+numeric_index = "true"
+
+[vertices.vertices.item.fields.xv]
+block = "vertices"
+name = "xv"
+type = "double precision"
+reader = "urword"
+optional = "false"
+longname = "x-coordinate for vertex"
+description = "is the x-coordinate for the vertex."
+
+[vertices.vertices.item.fields.yv]
+block = "vertices"
+name = "yv"
+type = "double precision"
+reader = "urword"
+optional = "false"
+longname = "y-coordinate for vertex"
+description = "is the y-coordinate for the vertex."
+
+[cell2d.cell2d]
+block = "cell2d"
+name = "cell2d"
+type = "list"
+shape = "(nodes)"
+reader = "urword"
+optional = true
+longname = "cell2d data"
+
+[cell2d.cell2d.item]
+name = "cell2d"
+type = "record"
+block = "cell2d"
+reader = "urword"
+optional = true
+longname = "cell2d data"
+
+[cell2d.cell2d.item.fields.icell2d]
+block = "cell2d"
+name = "icell2d"
+type = "integer"
+reader = "urword"
+optional = "false"
+longname = "cell2d number"
+description = "is the cell2d number.  Records in the CELL2D block must be listed in consecutive order from 1 to NODES."
+numeric_index = "true"
+
+[cell2d.cell2d.item.fields.xc]
+block = "cell2d"
+name = "xc"
+type = "double precision"
+reader = "urword"
+optional = "false"
+longname = "x-coordinate for cell center"
+description = "is the x-coordinate for the cell center."
+
+[cell2d.cell2d.item.fields.yc]
+block = "cell2d"
+name = "yc"
+type = "double precision"
+reader = "urword"
+optional = "false"
+longname = "y-coordinate for cell center"
+description = "is the y-coordinate for the cell center."
+
+[cell2d.cell2d.item.fields.ncvert]
+block = "cell2d"
+name = "ncvert"
+type = "integer"
+reader = "urword"
+optional = "false"
+longname = "number of cell vertices"
+description = "is the number of vertices required to define the cell.  There may be a different number of vertices for each cell."
+
+[cell2d.cell2d.item.fields.icvert]
+block = "cell2d"
+name = "icvert"
+type = "integer"
+shape = "(ncvert)"
+reader = "urword"
+optional = "false"
+longname = "array of vertex numbers"
+description = "is an array of integer values containing vertex numbers (in the VERTICES block) used to define the cell.  Vertices must be listed in clockwise order."
+numeric_index = "true"

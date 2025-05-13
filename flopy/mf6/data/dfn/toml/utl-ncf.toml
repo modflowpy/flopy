@@ -1,0 +1,120 @@
+name = "utl-ncf"
+advanced = false
+multi = false
+
+[ref]
+parent = "parent_package"
+key = "ncf_filerecord"
+val = "packagedata"
+abbr = "ncf"
+param = "packagedata"
+
+[options.wkt]
+block = "options"
+name = "wkt"
+type = "string"
+shape = "lenbigline"
+reader = "urword"
+optional = true
+longname = "crs well-known text (wkt) string"
+description = "is the coordinate reference system (crs) well-known text (wkt) string. ignored if latitude and longitude griddata arrays have been provided for netcdf_structured export type."
+
+[options.deflate]
+block = "options"
+name = "deflate"
+type = "integer"
+reader = "urword"
+optional = true
+longname = "variable compression deflate level"
+description = "is the variable deflate level (0=min, 9=max) in the netcdf file. defining this parameter activates per-variable compression at the level specified."
+
+[options.shuffle]
+block = "options"
+name = "shuffle"
+type = "keyword"
+reader = "urword"
+optional = true
+description = "is the keyword used to turn on the netcdf variable shuffle filter when the deflate option is also set. the shuffle filter has the effect of storing the first byte of all of a variable's values in a chunk contiguously, followed by all the second bytes, etc. this can be an optimization for compression with certain types of data."
+
+[options.chunk_time]
+block = "options"
+name = "chunk_time"
+type = "integer"
+reader = "urword"
+optional = true
+longname = "chunking parameter for the time dimension"
+description = "is the keyword used to provide a data chunk size for the time dimension in a netcdf_mesh2d or netcdf_structured output file. must be used in combination with the the chunk_face parameter (netcdf_mesh2d) or the chunk_z, chunk_y, and chunk_x parameter set (netcdf_structured) to have an effect."
+
+[options.chunk_face]
+block = "options"
+name = "chunk_face"
+type = "integer"
+reader = "urword"
+optional = true
+longname = "chunking parameter for the mesh face dimension"
+description = "is the keyword used to provide a data chunk size for the face dimension in a netcdf_mesh2d output file. must be used in combination with the the chunk_time parameter to have an effect."
+
+[options.chunk_z]
+block = "options"
+name = "chunk_z"
+type = "integer"
+reader = "urword"
+optional = true
+longname = "chunking parameter for structured z"
+description = "is the keyword used to provide a data chunk size for the z dimension in a netcdf_structured output file. must be used in combination with the the chunk_time, chunk_x and chunk_y parameter set to have an effect."
+
+[options.chunk_y]
+block = "options"
+name = "chunk_y"
+type = "integer"
+reader = "urword"
+optional = true
+longname = "chunking parameter for structured y"
+description = "is the keyword used to provide a data chunk size for the y dimension in a netcdf_structured output file. must be used in combination with the the chunk_time, chunk_x and chunk_z parameter set to have an effect."
+
+[options.chunk_x]
+block = "options"
+name = "chunk_x"
+type = "integer"
+reader = "urword"
+optional = true
+longname = "chunking parameter for structured x"
+description = "is the keyword used to provide a data chunk size for the x dimension in a netcdf_structured output file. must be used in combination with the the chunk_time, chunk_y and chunk_z parameter set to have an effect."
+
+[options.modflow6_attr_off]
+block = "options"
+name = "modflow6_attr_off"
+type = "keyword"
+reader = "urword"
+optional = true
+description = "is the keyword used to turn off internal input tagging in the model netcdf file. tagging adds internal modflow 6 attribute(s) to variables which facilitate identification. currently this applies to gridded arrays."
+mf6internal = "attr_off"
+
+[dimensions.ncpl]
+block = "dimensions"
+name = "ncpl"
+type = "integer"
+reader = "urword"
+optional = true
+longname = "number of cells in layer"
+description = "is the number of cells in a projected plane layer."
+
+[griddata.latitude]
+block = "griddata"
+name = "latitude"
+type = "double precision"
+shape = "(ncpl)"
+reader = "readarray"
+optional = true
+longname = "cell center latitude"
+description = "cell center latitude. only supported for netcdf_structured export type."
+
+[griddata.longitude]
+block = "griddata"
+name = "longitude"
+type = "double precision"
+shape = "(ncpl)"
+reader = "readarray"
+optional = true
+longname = "cell center longitude"
+description = "cell center longitude. only supported for netcdf_structured export type."

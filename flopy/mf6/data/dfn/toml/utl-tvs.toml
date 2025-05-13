@@ -1,0 +1,101 @@
+name = "utl-tvs"
+advanced = false
+multi = false
+
+[fkeys.ts_filerecord]
+parent = "parent_package"
+key = "ts_filerecord"
+val = "timeseries"
+abbr = "ts"
+param = "timeseries"
+description = "xxx"
+
+[ref]
+parent = "parent_package"
+key = "tvs_filerecord"
+val = "perioddata"
+abbr = "tvs"
+param = "tvs_perioddata"
+
+[options.disable_storage_change_integration]
+block = "options"
+name = "disable_storage_change_integration"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "deactivate storage change integration"
+description = "keyword that deactivates inclusion of storage derivative terms in the sto package matrix formulation.  in the absence of this keyword (the default), the groundwater storage formulation will be modified to correctly adjust heads based on transient variations in stored water volumes arising from changes to ss and sy properties."
+
+[options.print_input]
+block = "options"
+name = "print_input"
+type = "keyword"
+reader = "urword"
+optional = true
+longname = "print input to listing file"
+description = "keyword to indicate that information for each change to a storage property in a cell will be written to the model listing file."
+
+[options.timeseries]
+block = "options"
+name = "timeseries"
+type = "record ts6 filein ts6_filename"
+reader = "urword"
+optional = true
+description = "Contains data for the ts package. Data can be passed as a dictionary to the ts package with variable names as keys and package data as values. Data for the timeseries variable is also acceptable. See ts package documentation for more information."
+
+[options.timeseries.ref]
+parent = "parent_package"
+key = "ts_filerecord"
+val = "timeseries"
+abbr = "ts"
+param = "timeseries"
+description = "xxx"
+
+[period]
+transient_block = true
+
+[period.perioddata]
+block = "period"
+name = "perioddata"
+type = "list"
+reader = "urword"
+
+[period.perioddata.item]
+name = "perioddata"
+type = "record"
+block = "period"
+reader = "urword"
+
+[period.perioddata.item.fields.cellid]
+block = "period"
+name = "cellid"
+type = "integer"
+shape = "(ncelldim)"
+reader = "urword"
+longname = "cell identifier"
+description = "is the cell identifier, and depends on the type of grid that is used for the simulation.  for a structured grid that uses the dis input file, cellid is the layer, row, and column.   for a grid that uses the disv input file, cellid is the layer and cell2d number.  if the model uses the unstructured discretization (disu) input file, cellid is the node number for the cell."
+
+[period.perioddata.item.fields.tvssetting]
+block = "period"
+name = "tvssetting"
+type = "union"
+reader = "urword"
+description = "line of information that is parsed into a property name keyword and values.  property name keywords that can be used to start the tvssetting string include: ss and sy."
+
+[period.perioddata.item.fields.tvssetting.choices.ss]
+block = "period"
+name = "ss"
+type = "double precision"
+reader = "urword"
+longname = "specific storage"
+description = "is the new value to be assigned as the cell's specific storage (or storage coefficient if the storagecoefficient sto package option is specified) from the start of the specified stress period, as per ss in the sto package.  specific storage values must be greater than or equal to 0.  if the options block includes a ts6 entry (see the 'time-variable input' section), values can be obtained from a time series by entering the time-series name in place of a numeric value."
+time_series = true
+
+[period.perioddata.item.fields.tvssetting.choices.sy]
+block = "period"
+name = "sy"
+type = "double precision"
+reader = "urword"
+longname = "specific yield"
+description = "is the new value to be assigned as the cell's specific yield from the start of the specified stress period, as per sy in the sto package.  specific yield values must be greater than or equal to 0.  if the options block includes a ts6 entry (see the 'time-variable input' section), values can be obtained from a time series by entering the time-series name in place of a numeric value."
+time_series = true
