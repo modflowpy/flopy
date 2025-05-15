@@ -1026,7 +1026,15 @@ def transient2d_export(f: Union[str, os.PathLike], t2d, fmt=None, **kwargs):
 
         array = t2d.array
         with np.errstate(invalid="ignore"):
-            if array.dtype not in [int, np.int32, np.int64]:
+            from numpy import dtype
+            if array.dtype not in [
+                int,
+                np.int32,
+                np.int64,
+                dtype('float64'),
+                dtype('int64'),
+                dtype('int32'),
+            ]:
                 if mask is not None:
                     array[:, 0, mask] = np.nan
                 array[array <= min_valid] = np.nan

@@ -219,7 +219,7 @@ class NetCdf:
         self.global_attributes = {}
         self.global_attributes["namefile"] = self.model.namefile
         self.global_attributes["model_ws"] = self.model.model_ws
-        self.global_attributes["exe_name"] = self.model.exe_name
+        self.global_attributes["exe_name"] = self.model.exename
         self.global_attributes["modflow_version"] = self.model.version
 
         self.global_attributes["create_hostname"] = socket.gethostname()
