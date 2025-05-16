@@ -970,36 +970,10 @@ class Mf6Splitter:
                     np.ravel(mapping),
                 ]
         else:
-            try:
-                (
-                    xverts,
-                    yverts,
-                ) = plotutil.UnstructuredPlotUtilities.irregular_shape_patch(
-                    self._modelgrid.xvertices, self._modelgrid.yvertices
-                )
-            except TypeError:
-                xverts, yverts = None, None
-
-            for m in mkeys:
-                cells = np.asarray(array == m).nonzero()[0]
-                mapping = np.zeros((len(cells),), dtype=int)
-                mapping[:] = cells
-                grid_info[m] = [(len(cells),), None, None, mapping]
-
-                # calculate grid offsets
-                if xverts is not None:
-                    mxv = xverts[cells]
-                    myv = yverts[cells]
-                    xmidx = np.asarray(mxv == np.nanmin(mxv)).nonzero()[0]
-                    myv = myv[xmidx]
-                    ymidx = np.asarray(myv == np.nanmin(myv)).nonzero()[0]
-
-                    self._offsets[m] = {
-                        "xorigin": np.nanmin(mxv[xmidx[0]]),
-                        "yorigin": np.nanmin(myv[ymidx][0]),
-                    }
-                else:
-                    self._offsets[m] = {"xorigin": None, "yorigin": None}
+            self._offsets[m] = {
+                "xorigin": self._modelgrid.xoffset,
+                "yorigin": self._modelgrid.yoffset,
+            }
 
         new_ncpl = {}
         for m in mkeys:
