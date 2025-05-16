@@ -167,6 +167,13 @@ class ModelInterface:
 
     @property
     @abc.abstractmethod
+    def modeltime(self):
+        raise NotImplementedError(
+            "must define modeltime in child class to use this base class"
+        )
+
+    @property
+    @abc.abstractmethod
     def modelgrid(self):
         raise NotImplementedError(
             "must define modelgrid in child class to use this base class"
