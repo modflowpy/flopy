@@ -970,10 +970,16 @@ class Mf6Splitter:
                     np.ravel(mapping),
                 ]
         else:
-            self._offsets[m] = {
-                "xorigin": self._modelgrid.xoffset,
-                "yorigin": self._modelgrid.yoffset,
-            }
+            for m in mkeys:
+                cells = np.asarray(array == m).nonzero()[0]
+                mapping = np.zeros((len(cells),), dtype=int)
+                mapping[:] = cells
+                grid_info[m] = [(len(cells),), None, None, mapping]
+
+                self._offsets[m] = {
+                    "xorigin": self._modelgrid.xoffset,
+                    "yorigin": self._modelgrid.yoffset,
+                }
 
         new_ncpl = {}
         for m in mkeys:
