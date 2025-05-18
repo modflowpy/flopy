@@ -1112,7 +1112,10 @@ class Package(PackageInterface):
                 par_dict, current_dict = pak_parms.get(pname)
                 data_dict = current_dict[iname]
 
-                par_current = pak_type.get_empty(par_dict["nlst"], aux_names=aux_names, wellbot=wellbot)
+                if "mfusgwel" in pak_type_str:
+                    par_current = pak_type.get_empty(par_dict["nlst"], aux_names=aux_names, wellbot=wellbot)
+                else:
+                    par_current = pak_type.get_empty(par_dict["nlst"], aux_names=aux_names)
 
                 #  get appropriate parval
                 if model.mfpar.pval is None:
