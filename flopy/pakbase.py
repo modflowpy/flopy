@@ -970,9 +970,13 @@ class Package(PackageInterface):
         partype = ["cond"]
         if "modflowwel" in pak_type_str:
             partype = ["flux"]
+        wellbot = False
+        usg_args = {}
         if "mfusgwel" in pak_type_str:
             partype = ["flux"]
             if "wellbot" in options:
+                wellbot = True
+                usg_args["wellbot"] = wellbot
                 partype += ["wellbot"]
 
         # check for "standard" single line options from mfnwt
@@ -1005,7 +1009,7 @@ class Package(PackageInterface):
         # read parameter data
         if nppak > 0:
             dt = pak_type.get_empty(
-                1, aux_names=aux_names, structured=model.structured
+                1, aux_names=aux_names, structured=model.structured, **usg_args
             ).dtype
             pak_parms = mfparbc.load(f, nppak, dt, model, ext_unit_dict, model.verbose)
 
@@ -1019,9 +1023,6 @@ class Package(PackageInterface):
         bnd_output_cln = None
         stress_period_data_cln = {}
         current_cln = None
-        wellbot = False
-        if "wellbot" in options:
-            wellbot = True
         for iper in range(nper):
             if model.verbose:
                 msg = f"   loading {pak_type} for kper {iper + 1:5d}"
@@ -1035,9 +1036,9 @@ class Package(PackageInterface):
             if nppak > 0:
                 itmpp = int(t[1])
 
-            if not str(t[0]).isnumeric():
+            if not str(t[0]).lstrip("-").isnumeric():
                 raise Exception(
-                    f"{pak_type_str}: Non-numeric ITMP value \
+                    f"{pak_type_str}: Non-numeric ITMP value {t[0]}\
                     encountered (kper {iper + 1:5d})"
                 )
             t = t[
@@ -1055,17 +1056,11 @@ class Package(PackageInterface):
             if itmp == 0:
                 bnd_output = None
                 current = pak_type.get_empty(
-                    itmp,
-                    aux_names=aux_names,
-                    structured=model.structured,
-                    wellbot=wellbot,
+                    itmp, aux_names=aux_names, structured=model.structured, **usg_args
                 )
             elif itmp > 0:
                 current = pak_type.get_empty(
-                    itmp,
-                    aux_names=aux_names,
-                    structured=model.structured,
-                    wellbot=wellbot,
+                    itmp, aux_names=aux_names, structured=model.structured, **usg_args
                 )
                 current = ulstrd(f, itmp, current, model, sfac_columns, ext_unit_dict)
                 if model.structured:
@@ -1084,11 +1079,11 @@ class Package(PackageInterface):
             if itmp_cln == 0:
                 bnd_output_cln = None
                 current_cln = pak_type.get_empty(
-                    itmp_cln, aux_names=aux_names, structured=False, wellbot=wellbot
+                    itmp_cln, aux_names=aux_names, structured=False, **usg_args
                 )
             elif itmp_cln > 0:
                 current_cln = pak_type.get_empty(
-                    itmp_cln, aux_names=aux_names, structured=False, wellbot=wellbot
+                    itmp_cln, aux_names=aux_names, structured=False, **usg_args
                 )
                 current_cln = ulstrd(
                     f, itmp_cln, current_cln, model, sfac_columns, ext_unit_dict
@@ -1121,14 +1116,9 @@ class Package(PackageInterface):
                 par_dict, current_dict = pak_parms.get(pname)
                 data_dict = current_dict[iname]
 
-                if "mfusgwel" in pak_type_str:
-                    par_current = pak_type.get_empty(
-                        par_dict["nlst"], aux_names=aux_names, wellbot=wellbot
-                    )
-                else:
-                    par_current = pak_type.get_empty(
-                        par_dict["nlst"], aux_names=aux_names
-                    )
+                par_current = pak_type.get_empty(
+                    par_dict["nlst"], aux_names=aux_names, **usg_args
+                )
 
                 #  get appropriate parval
                 if model.mfpar.pval is None:
@@ -1173,14 +1163,9 @@ class Package(PackageInterface):
             else:
                 stress_period_data_cln[iper] = bnd_output_cln
 
-        if "mfusgwel" in pak_type_str:
-            dtype = pak_type.get_empty(
-                0, aux_names=aux_names, structured=model.structured, wellbot=wellbot
-            ).dtype
-        else:
-            dtype = pak_type.get_empty(
-                0, aux_names=aux_names, structured=model.structured
-            ).dtype
+        dtype = pak_type.get_empty(
+            0, aux_names=aux_names, structured=model.structured, **usg_args
+        ).dtype
 
         if openfile:
             f.close()
@@ -1197,7 +1182,7 @@ class Package(PackageInterface):
 
         if "mfusgwel" in pak_type_str:
             cln_dtype = pak_type.get_empty(
-                0, aux_names=aux_names, structured=False, wellbot=wellbot
+                0, aux_names=aux_names, structured=False, **usg_args
             ).dtype
             pak = pak_type(
                 model,

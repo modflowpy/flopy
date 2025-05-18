@@ -244,7 +244,7 @@ class MfUsgWel(ModflowWel):
         # determine if any aux variables in cln_dtype
         options = self._check_for_aux(options, cln=True)
         self.cln_stress_period_data = MfList(
-            self, cln_stress_period_data, binary=binary
+            self, cln_stress_period_data, dtype=cln_dtype, binary=binary
         )
 
         # initialize MfList
@@ -267,6 +267,9 @@ class MfUsgWel(ModflowWel):
                 Package options strings
 
         """
+        if options is None:
+            return options
+
         if cln:
             dt = self.get_default_dtype_usg(structured=False, wellbot=self.wellbot)
         else:
