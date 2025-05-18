@@ -7,6 +7,7 @@ pakbase module
 
 import abc
 import os
+from itertools import takewhile
 import webbrowser as wb
 from typing import Union
 
@@ -1027,8 +1028,12 @@ class Package(PackageInterface):
             if nppak > 0:
                 itmpp = int(t[1])
 
-            if len(t) > 1:
-                t = t[:2]  # trap cases with text followed by digits (eg SP 5)
+            if not str(t[0]).isnumeric():
+                raise Exception(
+                    f"{pak_type_str}: Non-numeric ITMP value encountered (kper {iper + 1:5d})"
+                )
+            t = t[:len(list(takewhile(lambda tval: str(tval).isnumeric(), t)))] # trap cases with text followed by digits (eg SP 5)
+
             itmp_cln = 0
             if "mfusgwel" in pak_type_str:
                 try:
