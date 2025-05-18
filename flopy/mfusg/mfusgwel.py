@@ -9,6 +9,7 @@ MODFLOW Guide
 <https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/wel.html>`_.
 """
 
+import numpy as np
 from ..modflow.mfwel import ModflowWel
 from ..utils import MfList
 from .mfusg import MfUsg
