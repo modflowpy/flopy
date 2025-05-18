@@ -11,8 +11,8 @@ MODFLOW Guide
 
 import numpy as np
 
-from ..pakbase import Package
 from ..modflow.mfwel import ModflowWel
+from ..pakbase import Package
 from ..utils import MfList
 from ..utils.recarray_utils import create_empty_recarray
 from .mfusg import MfUsg
@@ -223,14 +223,18 @@ class MfUsgWel(ModflowWel):
         # initialize CLN MfList
         # CLN WELs are always read as CLNNODE Q, so dtype must be of unstructured form
         if cln_dtype is None:
-            cln_dtype = MfUsgWel.get_default_dtype_usg(structured=False, wellbot=self.wellbot)
+            cln_dtype = MfUsgWel.get_default_dtype_usg(
+                structured=False, wellbot=self.wellbot
+            )
         self.dtype = cln_dtype
 
         # reset self.dtype for cases where the model is structured but CLN WELs are used
         if dtype is not None:
             self.dtype = dtype
         else:
-            self.dtype = self.get_default_dtype_usg(structured=self.parent.structured, wellbot=self.wellbot)
+            self.dtype = self.get_default_dtype_usg(
+                structured=self.parent.structured, wellbot=self.wellbot
+            )
 
         # determine if any aux variables in dtype
         options = self._check_for_aux(options)
@@ -266,7 +270,9 @@ class MfUsgWel(ModflowWel):
         if cln:
             dt = self.get_default_dtype_usg(structured=False, wellbot=self.wellbot)
         else:
-            dt = self.get_default_dtype_usg(structured=self.parent.structured, wellbot=self.wellbot)
+            dt = self.get_default_dtype_usg(
+                structured=self.parent.structured, wellbot=self.wellbot
+            )
         if len(self.dtype.names) > len(dt.names):
             for name in self.dtype.names[len(dt.names) :]:
                 ladd = True
@@ -325,7 +331,7 @@ class MfUsgWel(ModflowWel):
                 ("i", int),
                 ("j", int),
                 ("flux", np.float32),
-                ]
+            ]
         else:
             dtype = [("node", int), ("flux", np.float32)]
         if wellbot:
@@ -336,11 +342,12 @@ class MfUsgWel(ModflowWel):
     @staticmethod
     def get_empty(ncells=0, aux_names=None, structured=True, wellbot=False):
         # get an empty recarray that corresponds to dtype
-        if wellbot:            
-            dtype = MfUsgWel.get_default_dtype_usg(structured=structured, wellbot=wellbot)
+        if wellbot:
+            dtype = MfUsgWel.get_default_dtype_usg(
+                structured=structured, wellbot=wellbot
+            )
         else:
             dtype = MfUsgWel.get_default_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
         return create_empty_recarray(ncells, dtype, default_value=-1.0e10)
-    

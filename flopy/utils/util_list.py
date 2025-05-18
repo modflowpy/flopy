@@ -228,7 +228,7 @@ class MfList(DataInterface, DataListInterface):
         if kper not in list(self.__data.keys()):
             return None
         if self.__vtype[kper] is None:
-            if kper==0:
+            if kper == 0:
                 return 0
             else:
                 return -1

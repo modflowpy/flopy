@@ -7,8 +7,8 @@ pakbase module
 
 import abc
 import os
-from itertools import takewhile
 import webbrowser as wb
+from itertools import takewhile
 from typing import Union
 
 import numpy as np
@@ -946,7 +946,7 @@ class Package(PackageInterface):
                     aux_names.append(t[it + 1].lower())
                     it += 1
                 if "mfusgwel" in pak_type_str:
-                    if toption.lower() in ["autoflowreduce","wellbot"]:
+                    if toption.lower() in ["autoflowreduce", "wellbot"]:
                         options.append(toption.lower())
                     elif toption.lower() == "iunitafr":
                         options.append(f"{toption.lower()} {t[it + 1]}")
@@ -969,7 +969,7 @@ class Package(PackageInterface):
         #  and read phiramp for modflow-nwt well package
         partype = ["cond"]
         if "modflowwel" in pak_type_str:
-            partype = ["flux"]            
+            partype = ["flux"]
         if "mfusgwel" in pak_type_str:
             partype = ["flux"]
             if "wellbot" in options:
@@ -1037,9 +1037,12 @@ class Package(PackageInterface):
 
             if not str(t[0]).isnumeric():
                 raise Exception(
-                    f"{pak_type_str}: Non-numeric ITMP value encountered (kper {iper + 1:5d})"
+                    f"{pak_type_str}: Non-numeric ITMP value \
+                    encountered (kper {iper + 1:5d})"
                 )
-            t = t[:len(list(takewhile(lambda tval: str(tval).isnumeric(), t)))] # trap cases with text followed by digits (eg SP 5)
+            t = t[
+                : len(list(takewhile(lambda tval: str(tval).isnumeric(), t)))
+            ]  # trap cases with text followed by digits (eg SP 5)
 
             itmp_cln = 0
             if "mfusgwel" in pak_type_str:
@@ -1052,11 +1055,17 @@ class Package(PackageInterface):
             if itmp == 0:
                 bnd_output = None
                 current = pak_type.get_empty(
-                    itmp, aux_names=aux_names, structured=model.structured, wellbot=wellbot
+                    itmp,
+                    aux_names=aux_names,
+                    structured=model.structured,
+                    wellbot=wellbot,
                 )
             elif itmp > 0:
                 current = pak_type.get_empty(
-                    itmp, aux_names=aux_names, structured=model.structured, wellbot=wellbot
+                    itmp,
+                    aux_names=aux_names,
+                    structured=model.structured,
+                    wellbot=wellbot,
                 )
                 current = ulstrd(f, itmp, current, model, sfac_columns, ext_unit_dict)
                 if model.structured:
@@ -1113,9 +1122,13 @@ class Package(PackageInterface):
                 data_dict = current_dict[iname]
 
                 if "mfusgwel" in pak_type_str:
-                    par_current = pak_type.get_empty(par_dict["nlst"], aux_names=aux_names, wellbot=wellbot)
+                    par_current = pak_type.get_empty(
+                        par_dict["nlst"], aux_names=aux_names, wellbot=wellbot
+                    )
                 else:
-                    par_current = pak_type.get_empty(par_dict["nlst"], aux_names=aux_names)
+                    par_current = pak_type.get_empty(
+                        par_dict["nlst"], aux_names=aux_names
+                    )
 
                 #  get appropriate parval
                 if model.mfpar.pval is None:
@@ -1167,7 +1180,7 @@ class Package(PackageInterface):
         else:
             dtype = pak_type.get_empty(
                 0, aux_names=aux_names, structured=model.structured
-            ).dtype            
+            ).dtype
 
         if openfile:
             f.close()
