@@ -1019,6 +1019,9 @@ class Package(PackageInterface):
         bnd_output_cln = None
         stress_period_data_cln = {}
         current_cln = None
+        wellbot = False
+        if "wellbot" in options:
+            wellbot = True
         for iper in range(nper):
             if model.verbose:
                 msg = f"   loading {pak_type} for kper {iper + 1:5d}"
@@ -1049,11 +1052,11 @@ class Package(PackageInterface):
             if itmp == 0:
                 bnd_output = None
                 current = pak_type.get_empty(
-                    itmp, aux_names=aux_names, structured=model.structured
+                    itmp, aux_names=aux_names, structured=model.structured, wellbot=wellbot
                 )
             elif itmp > 0:
                 current = pak_type.get_empty(
-                    itmp, aux_names=aux_names, structured=model.structured
+                    itmp, aux_names=aux_names, structured=model.structured, wellbot=wellbot
                 )
                 current = ulstrd(f, itmp, current, model, sfac_columns, ext_unit_dict)
                 if model.structured:
@@ -1072,11 +1075,11 @@ class Package(PackageInterface):
             if itmp_cln == 0:
                 bnd_output_cln = None
                 current_cln = pak_type.get_empty(
-                    itmp_cln, aux_names=aux_names, structured=False
+                    itmp_cln, aux_names=aux_names, structured=False, wellbot=wellbot
                 )
             elif itmp_cln > 0:
                 current_cln = pak_type.get_empty(
-                    itmp_cln, aux_names=aux_names, structured=False
+                    itmp_cln, aux_names=aux_names, structured=False, wellbot=wellbot
                 )
                 current_cln = ulstrd(
                     f, itmp_cln, current_cln, model, sfac_columns, ext_unit_dict
@@ -1109,7 +1112,7 @@ class Package(PackageInterface):
                 par_dict, current_dict = pak_parms.get(pname)
                 data_dict = current_dict[iname]
 
-                par_current = pak_type.get_empty(par_dict["nlst"], aux_names=aux_names)
+                par_current = pak_type.get_empty(par_dict["nlst"], aux_names=aux_names, wellbot=wellbot)
 
                 #  get appropriate parval
                 if model.mfpar.pval is None:
@@ -1154,9 +1157,14 @@ class Package(PackageInterface):
             else:
                 stress_period_data_cln[iper] = bnd_output_cln
 
-        dtype = pak_type.get_empty(
-            0, aux_names=aux_names, structured=model.structured
-        ).dtype
+        if "mfusgwel" in pak_type_str:
+            dtype = pak_type.get_empty(
+                0, aux_names=aux_names, structured=model.structured, wellbot=wellbot
+            ).dtype
+        else:
+            dtype = pak_type.get_empty(
+                0, aux_names=aux_names, structured=model.structured
+            ).dtype            
 
         if openfile:
             f.close()
@@ -1173,7 +1181,7 @@ class Package(PackageInterface):
 
         if "mfusgwel" in pak_type_str:
             cln_dtype = pak_type.get_empty(
-                0, aux_names=aux_names, structured=False
+                0, aux_names=aux_names, structured=False, wellbot=wellbot
             ).dtype
             pak = pak_type(
                 model,
