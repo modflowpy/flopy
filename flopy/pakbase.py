@@ -1042,7 +1042,7 @@ class Package(PackageInterface):
                     encountered (kper {iper + 1:5d})"
                 )
             t = t[
-                : len(list(takewhile(lambda tval: str(tval).isnumeric(), t)))
+                : len(list(takewhile(lambda tval: str(tval).lstrip("-").isnumeric(), t)))
             ]  # trap cases with text followed by digits (eg SP 5)
 
             itmp_cln = 0
@@ -1056,11 +1056,17 @@ class Package(PackageInterface):
             if itmp == 0:
                 bnd_output = None
                 current = pak_type.get_empty(
-                    itmp, aux_names=aux_names, structured=model.structured, **usg_args
+                    itmp,
+                    aux_names=aux_names,
+                    structured=model.structured,
+                    **usg_args
                 )
             elif itmp > 0:
                 current = pak_type.get_empty(
-                    itmp, aux_names=aux_names, structured=model.structured, **usg_args
+                    itmp,
+                    aux_names=aux_names,
+                    structured=model.structured,
+                    **usg_args
                 )
                 current = ulstrd(f, itmp, current, model, sfac_columns, ext_unit_dict)
                 if model.structured:
