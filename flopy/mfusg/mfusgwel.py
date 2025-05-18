@@ -196,6 +196,7 @@ class MfUsgWel(ModflowWel):
 
         self.autoflowreduce = False
         self.iunitafr = 0
+        self.wellbot = False
 
         for opt in self.options:
             if "autoflowreduce" in opt.lower():
@@ -203,6 +204,8 @@ class MfUsgWel(ModflowWel):
             if "iunitafr" in opt.lower():
                 line_text = opt.strip().split()
                 self.iunitafr = int(line_text[1])
+            if "wellbot" in opt.lower():
+                self.wellbot = True
 
         if self.iunitafr > 0:
             model.add_output_file(
@@ -309,3 +312,19 @@ class MfUsgWel(ModflowWel):
         )
 
         f_wel.close()
+
+    @staticmethod
+    def get_default_dtype(structured=True):
+        if structured:
+            dtype = [
+                ("k", int),
+                ("i", int),
+                ("j", int),
+                ("flux", np.float32),
+                ]
+        else:
+            dtype = [("node", int), ("flux", np.float32)]
+        if self.wellbot:
+            dtype += [("wellbot", np.float32)]
+        dtype = np.dtype(dtype)
+        return dtype

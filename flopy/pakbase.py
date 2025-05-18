@@ -946,7 +946,7 @@ class Package(PackageInterface):
                     aux_names.append(t[it + 1].lower())
                     it += 1
                 if "mfusgwel" in pak_type_str:
-                    if toption.lower() == "autoflowreduce":
+                    if toption.lower() in ["autoflowreduce","wellbot"]:
                         options.append(toption.lower())
                     elif toption.lower() == "iunitafr":
                         options.append(f"{toption.lower()} {t[it + 1]}")
@@ -969,7 +969,11 @@ class Package(PackageInterface):
         #  and read phiramp for modflow-nwt well package
         partype = ["cond"]
         if "modflowwel" in pak_type_str:
+            partype = ["flux"]            
+        if "mfusgwel" in pak_type_str:
             partype = ["flux"]
+            if "wellbot" in options:
+                partype += ["wellbot"]
 
         # check for "standard" single line options from mfnwt
         if "nwt" in model.version.lower():
