@@ -323,12 +323,12 @@ class ModflowMnwi(Package):
             line += f"{qhbflag:5d} "
             if nitems == 5:
                 concflag = t[4]
-                assert 0 <= concflag <= 3, (
-                    "CONCflag must be an integer between 0 and 3."
-                )
-                assert isinstance(concflag, int), (
-                    "CONCflag must be an integer between 0 and 3."
-                )
+                assert (
+                    0 <= concflag <= 3
+                ), "CONCflag must be an integer between 0 and 3."
+                assert isinstance(
+                    concflag, int
+                ), "CONCflag must be an integer between 0 and 3."
                 line += f"{concflag:5d} "
             line += "\n"
             f.write(line)

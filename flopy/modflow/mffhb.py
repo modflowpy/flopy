@@ -623,7 +623,10 @@ class ModflowFhb(Package):
                 structured=model.structured,
             )
             for n in range(nhed):
-                tds7 = read1d(f, np.empty((nbdtim + 4,)))
+                if model.structured:
+                    tds7 = read1d(f, np.empty((nbdtim + 4,)))
+                else:
+                    tds7 = read1d(f, np.empty((nbdtim + 2,)))
                 ds7[n] = tuple(tds7)
 
             if model.structured:

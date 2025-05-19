@@ -957,9 +957,9 @@ class LgrToDisv:
         """
 
         # check
-        assert self.lgr.ncppl.min() == self.lgr.ncppl.max(), (
-            "Exporting disv grid properties requires ncppl to be 1."
-        )
+        assert (
+            self.lgr.ncppl.min() == self.lgr.ncppl.max()
+        ), "Exporting disv grid properties requires ncppl to be 1."
         assert self.lgr.nlayp == self.lgr.nlay, (
             "Exporting disv grid properties requires parent and child models "
             "to have the same number of layers."

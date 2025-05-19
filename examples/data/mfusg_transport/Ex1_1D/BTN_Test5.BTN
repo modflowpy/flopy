@@ -1,0 +1,17 @@
+         1        55         1         1        04         1         0    999.99    1.0e-6         1         0       0.0         0         3
+         0      0.20                                   PRSITY Layer   1
+         0      0.20                                   PRSITY Layer   2
+         0        1.                                   rhob Layer   1
+         0        1.                                   rhob Layer   2
+         0     001.0                                   DL Layer   1
+         0     001.0                                   DL Layer   2
+         0       00.                                   DT Layer   1
+         0       00.                                   DT Layer   2
+         0      0.20                                   kd Layer   1
+         0      0.20                                   kd Layer   2
+         0 6.9315e-2                                   decay water Layer   1
+         0 6.9315e-2                                   decay water Layer   2
+         0 6.9315e-2                                   decay soil Layer   1
+         0 6.9315e-2                                   decay soil Layer   2
+         0     0.000(10e12.4)                    0     STARTING CONC Layer   1
+         0     0.000(10e12.4)                    0     STARTING CONC Layer   2

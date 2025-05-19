@@ -1622,9 +1622,9 @@ class ModflowSfr2(Package):
 
     def _write_reach_data(self, f_sfr):
         # Write the recarray (data) to the file (or file handle) f
-        assert isinstance(self.reach_data, np.recarray), (
-            "MfList.__tofile() data arg not a recarray"
-        )
+        assert isinstance(
+            self.reach_data, np.recarray
+        ), "MfList.__tofile() data arg not a recarray"
 
         # decide which columns to write
         columns = _get_item2_names(

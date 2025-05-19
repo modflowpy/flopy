@@ -625,9 +625,9 @@ class MfList(DataInterface, DataListInterface):
         # external arrays are not supported (oh hello MNW1!)
         # write the transient sequence described by the data dict
         nr, nc, nl, nper = self._model.get_nrow_ncol_nlay_nper()
-        assert hasattr(f, "read"), (
-            "MfList.write() error: f argument must be a file handle"
-        )
+        assert hasattr(
+            f, "read"
+        ), "MfList.write() error: f argument must be a file handle"
         kpers = list(self.data.keys())
         pak_name_str = self.package.__class__.__name__.lower()
         if (len(kpers) == 0) and (pak_name_str == "mfusgwel"):  # must be cln wels
@@ -728,9 +728,9 @@ class MfList(DataInterface, DataListInterface):
 
     def __tofile(self, f, data):
         # Write the recarray (data) to the file (or file handle) f
-        assert isinstance(data, np.recarray), (
-            "MfList.__tofile() data arg not a recarray"
-        )
+        assert isinstance(
+            data, np.recarray
+        ), "MfList.__tofile() data arg not a recarray"
 
         # Add one to the kij indices
         lnames = [name.lower() for name in self.dtype.names]

@@ -74,9 +74,9 @@ class ArrayFormat:
     """
 
     def __init__(self, u2d, python=None, fortran=None, array_free_format=None):
-        assert isinstance(u2d, Util2d), (
-            f"ArrayFormat only supports Util2d, not {type(u2d)}"
-        )
+        assert isinstance(
+            u2d, Util2d
+        ), f"ArrayFormat only supports Util2d, not {type(u2d)}"
         if len(u2d.shape) == 1:
             self._npl_full = u2d.shape[0]
         else:
@@ -784,10 +784,10 @@ class Util3d(DataInterface):
         if isinstance(self.__value, list) or (
             isinstance(self.__value, np.ndarray) and (self.__value.ndim == 1)
         ):
-            assert len(self.__value) == self.shape[0], (
-                "length of 3d enumerable: {} != to shape[0]: {}".format(
-                    len(self.__value), self.shape[0]
-                )
+            assert (
+                len(self.__value) == self.shape[0]
+            ), "length of 3d enumerable: {} != to shape[0]: {}".format(
+                len(self.__value), self.shape[0]
             )
 
             for i, item in enumerate(self.__value):
@@ -2241,9 +2241,9 @@ class Util2d(DataInterface):
             else:
                 how = "external"
         if how == "internal":
-            assert not self.format.binary, (
-                "Util2d error: 'how' is internal, but format is binary"
-            )
+            assert (
+                not self.format.binary
+            ), "Util2d error: 'how' is internal, but format is binary"
             cr = self.get_internal_cr()
             return cr + self.string
 
@@ -2299,9 +2299,9 @@ class Util2d(DataInterface):
         elif how == "constant":
             if self.vtype not in [np.int32, np.float32]:
                 u = np.unique(self._array)
-                assert u.shape[0] == 1, (
-                    "Util2d error: 'how' is constant, but array is not uniform"
-                )
+                assert (
+                    u.shape[0] == 1
+                ), "Util2d error: 'how' is constant, but array is not uniform"
                 value = u[0]
             else:
                 value = self.__value
@@ -2708,11 +2708,11 @@ class Util2d(DataInterface):
             # then drop the first dimension
             if len(value.shape) == 3 and value.shape[0] == 1:
                 value = value[0]
-            if self.shape != value.shape:
-                raise Exception(
-                    f"Util2d:self.shape: {self.shape} does not match "
-                    f"value.shape: {value.shape}"
-                )
+            # if self.shape != value.shape:
+            #     raise Exception(
+            #         f"Util2d:self.shape: {self.shape} does not match "
+            #         f"value.shape: {value.shape}"
+            #     )
             if self._dtype != value.dtype:
                 value = value.astype(self._dtype)
             self.__value = value
@@ -2782,9 +2782,9 @@ class Util2d(DataInterface):
             fname = fname.replace('"', "")
             fname = fname.replace("\\", os.path.sep)
             fname = os.path.join(model.model_ws, fname)
-            assert os.path.exists(fname), (
-                f"Util2d.load() error: open/close file {fname} not found"
-            )
+            assert os.path.exists(
+                fname
+            ), f"Util2d.load() error: open/close file {fname} not found"
             if "binary" not in cr_dict["fmtin"].lower():
                 f = open(fname, "r")
                 data = Util2d.load_txt(

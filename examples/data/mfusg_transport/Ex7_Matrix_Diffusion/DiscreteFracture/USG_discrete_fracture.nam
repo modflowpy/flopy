@@ -1,0 +1,15 @@
+LIST                7         USG_discrete_fracture.out     
+DISU                29        USG_discrete_fracture.disu    
+BAS6                1         USG_discrete_fracture.ba6     
+LPF                 11        USG_discrete_fracture.lpf     
+OC                  22        USG_discrete_fracture.oc      
+CHD                 40        USG_discrete_fracture.chd     
+SMS                 19        USG_discrete_fracture.sms     
+BCT                 24        USG_discrete_fracture.bct     
+MDT                 2         USG_discrete_fracture.mdt     
+PCB                 25        USG_discrete_fracture.pcb     
+DATA(BINARY)        30        USG_discrete_fracture.hed     
+DATA(BINARY)        31        USG_discrete_fracture.drw     
+DATA(BINARY)        41        USG_discrete_fracture.cbb     
+DATA(BINARY)        132       USG_discrete_fracture001.con  
+DATA(BINARY)        27        USG_discrete_fracture.bct_ccm 

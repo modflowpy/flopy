@@ -384,9 +384,9 @@ class Gridgen:
             )
 
         # make sure shapefile exists
-        assert shapefile_path and shapefile_path.is_file(), (
-            f"Shapefile does not exist: {shapefile_path}"
-        )
+        assert (
+            shapefile_path and shapefile_path.is_file()
+        ), f"Shapefile does not exist: {shapefile_path}"
 
         # store shapefile info
         self._addict[shapefile_path.stem] = relpath_safe(shapefile_path, self.model_ws)
@@ -436,9 +436,9 @@ class Gridgen:
             )
 
         # make sure shapefile exists
-        assert shapefile_path and shapefile_path.is_file(), (
-            f"Shapefile does not exist: {shapefile_path}"
-        )
+        assert (
+            shapefile_path and shapefile_path.is_file()
+        ), f"Shapefile does not exist: {shapefile_path}"
 
         # store shapefile info
         self._rfdict[shapefile_path.stem] = [
@@ -755,7 +755,6 @@ class Gridgen:
         # nodes, nlay, ivsd, itmuni, lenuni, idsymrd, laycbd
         nodes = self.read_qtg_nod(model_ws=self.model_ws, nodes_only=True)
         nlay = self.nlay
-        ivsd = 0
         idsymrd = 0
         laycbd = 0
 
@@ -820,6 +819,15 @@ class Gridgen:
                 )
             area[k] = ark
             istart = istop
+
+        ivsd = -1
+        for array in area[1:]:
+            if not np.array_equal(area[0], array):
+                ivsd = 0
+                break
+
+        if ivsd == -1:
+            area = area[0]
 
         # iac
         iac = self.read_qtg_iac_dat(model_ws=self.model_ws, nodes=nodes)
@@ -1223,6 +1231,31 @@ class Gridgen:
         angldegx = np.where(fldr == -1, 180, angldegx)
         angldegx = np.where(fldr == -2, 270, angldegx)
         return angldegx
+
+    def get_anglex(self, fldr=None):
+        """
+        Get the angldegx array
+
+        Parameters
+        ----------
+        fldr : ndarray
+            Flow direction indicator array.  If None, then it is read from
+            gridgen output.
+
+        Returns
+        -------
+        anglex : ndarray
+            A 1D vector indicating the angle (in radians) between the x
+            axis and an outward normal to the face.
+
+        """
+        if fldr is None:
+            fldr = self.get_fldr()
+        anglex = np.zeros(fldr.shape, dtype=float)
+        anglex = np.where(fldr == 2, 1.5 * np.pi, anglex)
+        anglex = np.where(fldr == -1, np.pi, anglex)
+        anglex = np.where(fldr == -2, 0.5 * np.pi, anglex)
+        return anglex
 
     def get_verts_iverts(self, ncells, verbose=False):
         """

@@ -1,0 +1,14 @@
+ 1 -2 51 52 0 0 2 1    SAVECLNCON 55
+INTERNAL  1  (FREE)  1  Number of Nodes Per Conduit
+ 2
+ 1 1 0     10.000000 -110.000000 0.000000   0  0
+ 2 1 0     10.000000 -130.000000 0.000000   0  0
+ 1 10494 0  0.000000e+000 10.000000 1.000000e+000 0
+ 2 22210 0  0.000000e+000 10.000000 1.000000e+000 0
+  1  1.000000e+000  3.230000e+010
+CONSTANT   1                               IBOUND
+INTERNAL  1.000000e+000  (FREE)  -1  Starting Heads
+ -1.000000e+002 -1.000000e+002
+CONSTANT   0.0                               DLL
+CONSTANT   0.0                               DLM
+CONSTANT   0.0                               CONC
