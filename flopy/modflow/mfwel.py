@@ -193,10 +193,10 @@ class ModflowWel(Package):
         if dtype is not None:
             self.dtype = dtype
         else:
-            self.dtype = self.get_default_dtype()
+            self.dtype = self.get_default_dtype(structured=self.parent.structured)
 
         # determine if any aux variables in dtype
-        dt = self.get_default_dtype()
+        dt = self.get_default_dtype(structured=self.parent.structured)
         if len(self.dtype.names) > len(dt.names):
             for name in self.dtype.names[len(dt.names) :]:
                 ladd = True
@@ -295,21 +295,24 @@ class ModflowWel(Package):
             raise Exception(f"mfwel error adding record to list: {e!s}")
 
     @staticmethod
-    def get_default_dtype():
-        dtype = np.dtype(
-            [
-                ("k", int),
-                ("i", int),
-                ("j", int),
-                ("flux", np.float32),
-            ]
-        )
+    def get_default_dtype(structured=True):
+        if structured:
+            dtype = np.dtype(
+                [
+                    ("k", int),
+                    ("i", int),
+                    ("j", int),
+                    ("flux", np.float32),
+                ]
+            )
+        else:
+            dtype = np.dtype([("node", int), ("flux", np.float32)])
         return dtype
 
     @staticmethod
     def get_empty(ncells=0, aux_names=None, structured=True):
         # get an empty recarray that corresponds to dtype
-        dtype = ModflowWel.get_default_dtype()
+        dtype = ModflowWel.get_default_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
         return create_empty_recarray(ncells, dtype, default_value=-1.0e10)
