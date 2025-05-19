@@ -9,8 +9,12 @@ MODFLOW Guide
 <https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/wel.html>`_.
 """
 
+import numpy as np
+
 from ..modflow.mfwel import ModflowWel
+from ..pakbase import Package
 from ..utils import MfList
+from ..utils.recarray_utils import create_empty_recarray
 from .mfusg import MfUsg
 
 
@@ -196,6 +200,7 @@ class MfUsgWel(ModflowWel):
 
         self.autoflowreduce = False
         self.iunitafr = 0
+        self.wellbot = False
 
         for opt in self.options:
             if "autoflowreduce" in opt.lower():
@@ -203,6 +208,8 @@ class MfUsgWel(ModflowWel):
             if "iunitafr" in opt.lower():
                 line_text = opt.strip().split()
                 self.iunitafr = int(line_text[1])
+            if "wellbot" in opt.lower():
+                self.wellbot = True
 
         if self.iunitafr > 0:
             model.add_output_file(
@@ -216,25 +223,29 @@ class MfUsgWel(ModflowWel):
         # initialize CLN MfList
         # CLN WELs are always read as CLNNODE Q, so dtype must be of unstructured form
         if cln_dtype is None:
-            cln_dtype = MfUsgWel.get_default_dtype(structured=False)
+            cln_dtype = MfUsgWel.get_default_dtype_usg(
+                structured=False, wellbot=self.wellbot
+            )
         self.dtype = cln_dtype
-
-        # determine if any aux variables in cln_dtype
-        options = self._check_for_aux(options, cln=True)
-        self.cln_stress_period_data = MfList(
-            self, cln_stress_period_data, binary=binary
-        )
 
         # reset self.dtype for cases where the model is structured but CLN WELs are used
         if dtype is not None:
             self.dtype = dtype
         else:
-            self.dtype = self.get_default_dtype(structured=self.parent.structured)
+            self.dtype = self.get_default_dtype_usg(
+                structured=self.parent.structured, wellbot=self.wellbot
+            )
 
         # determine if any aux variables in dtype
         options = self._check_for_aux(options)
 
         self.options = options
+
+        # determine if any aux variables in cln_dtype
+        options = self._check_for_aux(options, cln=True)
+        self.cln_stress_period_data = MfList(
+            self, cln_stress_period_data, dtype=cln_dtype, binary=binary
+        )
 
         # initialize MfList
         self.stress_period_data = MfList(self, stress_period_data, binary=binary)
@@ -256,10 +267,15 @@ class MfUsgWel(ModflowWel):
                 Package options strings
 
         """
+        if options is None:
+            return options
+
         if cln:
-            dt = self.get_default_dtype(structured=False)
+            dt = self.get_default_dtype_usg(structured=False, wellbot=self.wellbot)
         else:
-            dt = self.get_default_dtype(structured=self.parent.structured)
+            dt = self.get_default_dtype_usg(
+                structured=self.parent.structured, wellbot=self.wellbot
+            )
         if len(self.dtype.names) > len(dt.names):
             for name in self.dtype.names[len(dt.names) :]:
                 ladd = True
@@ -309,3 +325,27 @@ class MfUsgWel(ModflowWel):
         )
 
         f_wel.close()
+
+    @staticmethod
+    def get_default_dtype_usg(structured=True, wellbot=False):
+        if structured:
+            dtype = [
+                ("k", int),
+                ("i", int),
+                ("j", int),
+                ("flux", np.float32),
+            ]
+        else:
+            dtype = [("node", int), ("flux", np.float32)]
+        if wellbot:
+            dtype += [("wellbot", np.float32)]
+        dtype = np.dtype(dtype)
+        return dtype
+
+    @staticmethod
+    def get_empty(ncells=0, aux_names=None, structured=True, wellbot=False):
+        # get an empty recarray that corresponds to dtype
+        dtype = MfUsgWel.get_default_dtype_usg(structured=structured, wellbot=wellbot)
+        if aux_names is not None:
+            dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
+        return create_empty_recarray(ncells, dtype, default_value=-1.0e10)

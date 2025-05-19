@@ -8,6 +8,7 @@ pakbase module
 import abc
 import os
 import webbrowser as wb
+from itertools import takewhile
 from typing import Union
 
 import numpy as np
@@ -945,7 +946,7 @@ class Package(PackageInterface):
                     aux_names.append(t[it + 1].lower())
                     it += 1
                 if "mfusgwel" in pak_type_str:
-                    if toption.lower() == "autoflowreduce":
+                    if toption.lower() in ["autoflowreduce", "wellbot"]:
                         options.append(toption.lower())
                     elif toption.lower() == "iunitafr":
                         options.append(f"{toption.lower()} {t[it + 1]}")
@@ -969,6 +970,14 @@ class Package(PackageInterface):
         partype = ["cond"]
         if "modflowwel" in pak_type_str:
             partype = ["flux"]
+        wellbot = False
+        usg_args = {}
+        if "mfusgwel" in pak_type_str:
+            partype = ["flux"]
+            if "wellbot" in options:
+                wellbot = True
+                usg_args["wellbot"] = wellbot
+                partype += ["wellbot"]
 
         # check for "standard" single line options from mfnwt
         if "nwt" in model.version.lower():
@@ -1000,7 +1009,7 @@ class Package(PackageInterface):
         # read parameter data
         if nppak > 0:
             dt = pak_type.get_empty(
-                1, aux_names=aux_names, structured=model.structured
+                1, aux_names=aux_names, structured=model.structured, **usg_args
             ).dtype
             pak_parms = mfparbc.load(f, nppak, dt, model, ext_unit_dict, model.verbose)
 
@@ -1027,8 +1036,17 @@ class Package(PackageInterface):
             if nppak > 0:
                 itmpp = int(t[1])
 
-            if len(t) > 1:
-                t = t[:2]  # trap cases with text followed by digits (eg SP 5)
+            if not str(t[0]).lstrip("-").isnumeric():
+                raise Exception(
+                    f"{pak_type_str}: Non-numeric ITMP value {t[0]}\
+                    encountered (kper {iper + 1:5d})"
+                )
+            t = t[
+                : len(
+                    list(takewhile(lambda tval: str(tval).lstrip("-").isnumeric(), t))
+                )
+            ]  # trap cases with text followed by digits (eg SP 5)
+
             itmp_cln = 0
             if "mfusgwel" in pak_type_str:
                 try:
@@ -1040,11 +1058,11 @@ class Package(PackageInterface):
             if itmp == 0:
                 bnd_output = None
                 current = pak_type.get_empty(
-                    itmp, aux_names=aux_names, structured=model.structured
+                    itmp, aux_names=aux_names, structured=model.structured, **usg_args
                 )
             elif itmp > 0:
                 current = pak_type.get_empty(
-                    itmp, aux_names=aux_names, structured=model.structured
+                    itmp, aux_names=aux_names, structured=model.structured, **usg_args
                 )
                 current = ulstrd(f, itmp, current, model, sfac_columns, ext_unit_dict)
                 if model.structured:
@@ -1063,11 +1081,11 @@ class Package(PackageInterface):
             if itmp_cln == 0:
                 bnd_output_cln = None
                 current_cln = pak_type.get_empty(
-                    itmp_cln, aux_names=aux_names, structured=False
+                    itmp_cln, aux_names=aux_names, structured=False, **usg_args
                 )
             elif itmp_cln > 0:
                 current_cln = pak_type.get_empty(
-                    itmp_cln, aux_names=aux_names, structured=False
+                    itmp_cln, aux_names=aux_names, structured=False, **usg_args
                 )
                 current_cln = ulstrd(
                     f, itmp_cln, current_cln, model, sfac_columns, ext_unit_dict
@@ -1100,7 +1118,9 @@ class Package(PackageInterface):
                 par_dict, current_dict = pak_parms.get(pname)
                 data_dict = current_dict[iname]
 
-                par_current = pak_type.get_empty(par_dict["nlst"], aux_names=aux_names)
+                par_current = pak_type.get_empty(
+                    par_dict["nlst"], aux_names=aux_names, **usg_args
+                )
 
                 #  get appropriate parval
                 if model.mfpar.pval is None:
@@ -1146,7 +1166,7 @@ class Package(PackageInterface):
                 stress_period_data_cln[iper] = bnd_output_cln
 
         dtype = pak_type.get_empty(
-            0, aux_names=aux_names, structured=model.structured
+            0, aux_names=aux_names, structured=model.structured, **usg_args
         ).dtype
 
         if openfile:
@@ -1164,7 +1184,7 @@ class Package(PackageInterface):
 
         if "mfusgwel" in pak_type_str:
             cln_dtype = pak_type.get_empty(
-                0, aux_names=aux_names, structured=False
+                0, aux_names=aux_names, structured=False, **usg_args
             ).dtype
             pak = pak_type(
                 model,

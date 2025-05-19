@@ -228,7 +228,10 @@ class MfList(DataInterface, DataListInterface):
         if kper not in list(self.__data.keys()):
             return None
         if self.__vtype[kper] is None:
-            return -1
+            if kper == 0:
+                return 0
+            else:
+                return -1
         # If an external file, have to load it
         if self.__vtype[kper] == str:
             return self.__fromfile(self.__data[kper]).shape[0]
