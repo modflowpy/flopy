@@ -345,12 +345,9 @@ class MfUsgWel(ModflowWel):
     @staticmethod
     def get_empty(ncells=0, aux_names=None, structured=True, wellbot=False):
         # get an empty recarray that corresponds to dtype
-        if wellbot:
-            dtype = MfUsgWel.get_default_dtype_usg(
-                structured=structured, wellbot=wellbot
-            )
-        else:
-            dtype = MfUsgWel.get_default_dtype(structured=structured)
+        dtype = MfUsgWel.get_default_dtype_usg(
+            structured=structured, wellbot=wellbot
+        )
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
         return create_empty_recarray(ncells, dtype, default_value=-1.0e10)
