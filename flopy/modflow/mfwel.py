@@ -196,7 +196,7 @@ class ModflowWel(Package):
             self.dtype = self.get_default_dtype()
 
         # determine if any aux variables in dtype
-        dt = self.get_default_dtype(structured=self.parent.structured)
+        dt = self.get_default_dtype()
         if len(self.dtype.names) > len(dt.names):
             for name in self.dtype.names[len(dt.names) :]:
                 ladd = True
