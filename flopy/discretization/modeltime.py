@@ -568,7 +568,7 @@ class ModelTime:
 
         return self._datetime_dict[(kper, kstp)]
 
-    def intersect(self, datetime_obj=None, totim=None, forgrive=False):
+    def intersect(self, datetime_obj=None, totim=None, forgive=False):
         """
         Method to intersect a datetime or totim value with the model and
         get the model stress-period and time-step associated with that
@@ -643,8 +643,8 @@ class ModelTime:
             )
 
         if totim > self.totim[-1] or totim <= 0:
-            if forgrive:
-                return None
+            if forgive:
+                return None, None
             if datetime_obj is None:
                 msg = (
                     f"supplied totim {totim} is outside of model's "
