@@ -140,6 +140,8 @@ class Modflow(BaseModel):
         if self.version == "mf2k":
             self.glo = ModflowGlobal(self)
 
+        self._exename = exe_name
+
         self.lst = ModflowList(self, unitnumber=listunit)
         # -- check if unstructured is specified for something
         # other than mfusg is specified
