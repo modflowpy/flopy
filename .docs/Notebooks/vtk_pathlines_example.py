@@ -347,19 +347,21 @@ for i in range(1, max_track_len):
             segments.append(track[i - 1][0])
             segments.append(loc)
 
-    p.update_coordinates(np.vstack(pts), render=False)
-    p.update_scalars(np.array(times), mesh=spls, render=False)
+    spls.points = np.vstack(pts)
+    spls.point_data["time"] = np.array(times)
     p.add_lines(np.array(segments), width=1, color="black")
     p.write_frame()  # write frame to file
 
 # close the plotter and the GIF file
 p.close()
+
 # -
 
 # Show the GIF.
 
 # +
-from IPython.display import Image, display
+from IPython.display import display
+from IPython.core.display import Image
 
 display(Image(data=open(gif_path, "rb").read(), format="gif"))
 # -
