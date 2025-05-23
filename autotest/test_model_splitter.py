@@ -13,11 +13,6 @@ from flopy.mf6.utils import Mf6Splitter
 @requires_exe("mf6")
 def test_structured_model_splitter(function_tmpdir):
     sim_path = get_example_data_path() / "mf6-freyberg"
-
-    from pathlib import Path
-
-    function_tmpdir = Path("./temp")
-
     split_path = function_tmpdir / "split_model"
 
     sim = MFSimulation.load(sim_ws=sim_path)
