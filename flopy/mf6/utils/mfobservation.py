@@ -26,7 +26,7 @@ class MFObservation:
     utility data
 
     Returns:
-    --------\
+    -------
     self.data: (xarray) array of observations
     """
 
@@ -261,8 +261,10 @@ class Observations:
                         times = self.get_times()
                         idx = times.index(totim)
                     except ValueError:
-                        err = "Invalid totim value provided: obs.get_times() returns a list of valid times for totim\
+                        err = (
+                            "Invalid totim value provided: obs.get_times() returns a list of valid times for totim\
                          = <>"
+                        )
                         raise ValueError(err)
 
                 d = {
