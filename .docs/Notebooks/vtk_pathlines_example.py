@@ -360,8 +360,8 @@ p.close()
 # Show the GIF.
 
 # +
-from IPython.display import display
 from IPython.core.display import Image
+from IPython.display import display
 
 display(Image(data=open(gif_path, "rb").read(), format="gif"))
 # -
