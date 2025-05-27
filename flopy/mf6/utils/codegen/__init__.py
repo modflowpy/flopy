@@ -112,6 +112,8 @@ def make_all(dfndir: Path, outdir: PathLike, verbose: bool = False, version: int
     if version == 2:
         legacy_dfns = Dfn.load_all(dfndir, version=1)
         for dfn in dfns.values():
+            if dfn.name in ["common"]:
+                continue
             dfn["legacy_dfn"] = legacy_dfns.get(dfn.name, None)
 
     make_init(dfns, outdir, verbose)
