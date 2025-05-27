@@ -74,9 +74,7 @@ class DataDimensions:
                 ).get_model_grid()
             return self.model_grid
         else:
-            return self.get_model_dim(
-                data_item_num, model_num
-            ).get_model_grid()
+            return self.get_model_dim(data_item_num, model_num).get_model_grid()
 
     def get_data_shape(
         self,
@@ -98,9 +96,7 @@ class DataDimensions:
         )
 
     def model_subspace_size(self, subspace_string="", data_item_num=None):
-        return self.get_model_dim(data_item_num).model_subspace_size(
-            subspace_string
-        )
+        return self.get_model_dim(data_item_num).model_subspace_size(subspace_string)
 
     def get_cellid_size(self, data_item_name):
         model_num = DatumUtil.cellid_model_num(
@@ -121,16 +117,12 @@ class DataDimensions:
         else:
             if model_num is None:
                 # see if the name of the data item indicates which model to use
-                item_name = self.structure.data_item_structures[
-                    data_item_num
-                ].name
+                item_name = self.structure.data_item_structures[data_item_num].name
                 if item_name[-2] == "m" and DatumUtil.is_int(item_name[-1]):
                     model_num = int(item_name[-1]) - 1
                 else:
                     return self.package_dim.model_dim[0]
-                if not (
-                    len(self.structure.data_item_structures) > data_item_num
-                ):
+                if not (len(self.structure.data_item_structures) > data_item_num):
                     raise FlopyException(
                         'Data item index "{}" requested which '
                         "is greater than the maximum index of"
@@ -214,9 +206,7 @@ class PackageDimensions:
         aux_path = self.package_path + ("options", "auxiliary")
         if aux_path in self.model_dim[model_num].simulation_data.mfdata:
             ret_val = (
-                self.model_dim[model_num]
-                .simulation_data.mfdata[aux_path]
-                .get_data()
+                self.model_dim[model_num].simulation_data.mfdata[aux_path].get_data()
             )
         else:
             ret_val = None
@@ -231,9 +221,7 @@ class PackageDimensions:
         bound_path = self.package_path + ("options", "boundnames")
         if bound_path in self.model_dim[model_num].simulation_data.mfdata:
             if (
-                self.model_dim[model_num]
-                .simulation_data.mfdata[bound_path]
-                .get_data()
+                self.model_dim[model_num].simulation_data.mfdata[bound_path].get_data()
                 is not None
             ):
                 ret_val = True
@@ -382,9 +370,7 @@ class ModelDimensions:
     # returns model grid
     def get_model_grid(self):
         if not self.locked or self._model_grid is None:
-            grid_type = ModelGrid.get_grid_type(
-                self.simulation_data, self.model_name
-            )
+            grid_type = ModelGrid.get_grid_type(self.simulation_data, self.model_name)
             if not self._model_grid:
                 self._create_model_grid(grid_type)
             else:
@@ -450,9 +436,7 @@ class ModelDimensions:
         min_size=False,
     ):
         if structure is None:
-            raise FlopyException(
-                "get_data_shape requires a valid structure object"
-            )
+            raise FlopyException("get_data_shape requires a valid structure object")
         if self.locked:
             if data_item is not None and data_item.path in self.stored_shapes:
                 return (
@@ -493,9 +477,7 @@ class ModelDimensions:
                             repeating_key=repeating_key,
                         )[0]
                         num_cols = num_cols + num
-                        shape_consistent = (
-                            shape_consistent and consistent_shape
-                        )
+                        shape_consistent = shape_consistent and consistent_shape
                 shape_dimensions = [num_rows, num_cols]
             else:
                 for data_item_struct in structure.data_item_structures:
@@ -574,27 +556,19 @@ class ModelDimensions:
             if deconstruct_axis:
                 shape = self.deconstruct_axis(shape)
             ordered_shape = self._order_shape(shape, data_item_struct)
-            ordered_shape_expression = self.build_shape_expression(
-                ordered_shape
-            )
+            ordered_shape_expression = self.build_shape_expression(ordered_shape)
             for item in ordered_shape_expression:
                 dim_size = self.dimension_size(item[0])
                 if dim_size is not None:
                     if isinstance(dim_size, list):
                         shape_dimensions += dim_size
                     else:
-                        shape_dimensions.append(
-                            self.resolve_exp(item, dim_size)
-                        )
-                elif item[0].lower() == "nstp" and DatumUtil.is_int(
-                    repeating_key
-                ):
+                        shape_dimensions.append(self.resolve_exp(item, dim_size))
+                elif item[0].lower() == "nstp" and DatumUtil.is_int(repeating_key):
                     # repeating_key is a stress period.  get number of time
                     # steps for that stress period
                     shape_dimensions.append(
-                        self.simulation_time.get_sp_time_steps(
-                            int(repeating_key)
-                        )
+                        self.simulation_time.get_sp_time_steps(int(repeating_key))
                     )
                 else:
                     result = None
@@ -658,9 +632,7 @@ class ModelDimensions:
                                         )
                                     else:
                                         shape_dimensions.append(
-                                            self.resolve_exp(
-                                                item, len(data[result[1]])
-                                            )
+                                            self.resolve_exp(item, len(data[result[1]]))
                                         )
                                 else:
                                     if DatumUtil.is_int(data):
@@ -679,9 +651,7 @@ class ModelDimensions:
                                     print(
                                         "INFORMATION: Unable to resolve "
                                         "dimension of {} based on shape "
-                                        '"{}".'.format(
-                                            data_item_struct.path, item[0]
-                                        )
+                                        '"{}".'.format(data_item_struct.path, item[0])
                                     )
                                 shape_dimensions.append(-9999)
                                 consistent_shape = False
@@ -736,10 +706,7 @@ class ModelDimensions:
                 range(0, len(data_set_struct.data_item_structures)),
                 data_set_struct.data_item_structures,
             ):
-                if (
-                    data_item.name.lower() == item.lower()
-                    and len(data[0]) > index
-                ):
+                if data_item.name.lower() == item.lower() and len(data[0]) > index:
                     if min_size:
                         # use the minimum value
                         min_val = sys.maxsize
@@ -852,10 +819,7 @@ class ModelDimensions:
                     deconstructed_shape_array.append("ncol")
                     deconstructed_shape_array.append("nrow")
                     deconstructed_shape_array.append("nlay")
-                elif (
-                    self.get_model_grid().grid_type()
-                    == DiscretizationType.DISV
-                ):
+                elif self.get_model_grid().grid_type() == DiscretizationType.DISV:
                     deconstructed_shape_array.append("ncpl")
                     deconstructed_shape_array.append("nlay")
                 else:

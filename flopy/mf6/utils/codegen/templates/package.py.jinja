@@ -21,7 +21,7 @@ class Modflow{{ title }}(MFPackage):
 {{ macros.docstrings(dfn|variables)|indent(4, first=true) }}
     """
 
-    {% for attr in dfn|attrs(name) %}
+    {% for attr in dfn|attrs(legacy_dfn, name) %}
     {{ attr }}
     {% endfor %}
 

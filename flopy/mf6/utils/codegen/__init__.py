@@ -87,7 +87,7 @@ def make_targets(dfn, outdir: PathLike, verbose: bool = False):
             return "package.py.jinja"
         else:
             raise NotImplementedError(f"Unknown base class: {base}")
-        
+
     for component in ComponentDescriptor.from_dfn(dfn):
         component_name = component["name"]
         target_path = outdir / f"mf{Filters.title(component_name)}.py"
@@ -106,6 +106,14 @@ def make_all(dfndir: Path, outdir: PathLike, verbose: bool = False, version: int
     from flopy.mf6.utils.dfn import Dfn
 
     dfns = Dfn.load_all(dfndir, version=version)
+
+    # TODO: remove this when we no longer attach legacy DFN
+    # format to generated classes
+    if version == 2:
+        legacy_dfns = Dfn.load_all(dfndir, version=1)
+        for dfn in dfns.values():
+            dfn["legacy_dfn"] = legacy_dfns.get(dfn.name, None)
+
     make_init(dfns, outdir, verbose)
     for dfn in dfns.values():
         make_targets(dfn, outdir, verbose)

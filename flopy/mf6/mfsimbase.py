@@ -388,9 +388,7 @@ class MFSimulationData:
         """
         Update floating point formatting strings."""
         self.reg_format_str = f"{{:.{self._float_precision}E}}"
-        self.sci_format_str = (
-            f"{{:{self._float_characters}.{self._float_precision}f}}"
-        )
+        self.sci_format_str = f"{{:{self._float_characters}.{self._float_precision}f}}"
 
 
 class MFSimulationBase:
@@ -618,10 +616,8 @@ class MFSimulationBase:
 
     def _get_data_str(self, formal):
         file_mgt = self.simulation_data.mfpath
-        data_str = (
-            "sim_name = {}\nsim_path = {}\nexe_name = " "{}\n" "\n".format(
-                self.name, file_mgt.get_sim_path(), self.exe_name
-            )
+        data_str = "sim_name = {}\nsim_path = {}\nexe_name = {}\n\n".format(
+            self.name, file_mgt.get_sim_path(), self.exe_name
         )
 
         for package in self._package_container.packagelist:
@@ -994,9 +990,7 @@ class MFSimulationBase:
                     loading_package=True,
                 )
                 if verbosity_level.value >= VerbosityLevel.normal.value:
-                    print(
-                        f"  loading exchange package {exchange_file._get_pname()}..."
-                    )
+                    print(f"  loading exchange package {exchange_file._get_pname()}...")
                 exchange_file.load(strict)
                 instance._package_container.add_package(exchange_file)
                 instance._exchange_files[exgfile[1]] = exchange_file
@@ -1028,9 +1022,7 @@ class MFSimulationBase:
                         instance.simulation_data.verbosity_level.value
                         >= VerbosityLevel.normal.value
                     ):
-                        print(
-                            f"    skipping package {solution_info[0].lower()}..."
-                        )
+                        print(f"    skipping package {solution_info[0].lower()}...")
                     continue
                 # create solution package
                 sln_package_obj = PackageContainer.package_factory(
@@ -1043,10 +1035,7 @@ class MFSimulationBase:
                 )
 
                 if verbosity_level.value >= VerbosityLevel.normal.value:
-                    print(
-                        f"  loading solution package "
-                        f"{sln_package._get_pname()}..."
-                    )
+                    print(f"  loading solution package {sln_package._get_pname()}...")
                 sln_package.load(strict)
 
         instance.simulation_data.mfpath.set_last_accessed_path()
@@ -1220,9 +1209,7 @@ class MFSimulationBase:
                 if pname is not None:
                     dict_package_name = pname
                 else:
-                    dict_package_name = (
-                        f"{ftype}_{self._ftype_num_dict[ftype]}"
-                    )
+                    dict_package_name = f"{ftype}_{self._ftype_num_dict[ftype]}"
         else:
             dict_package_name = ftype
 
@@ -1289,9 +1276,9 @@ class MFSimulationBase:
                 comment,
                 self.simulation_data.debug,
             )
-        valid_model_types = mfstructure.MFStructure().flopy_dict[
-            "solution_packages"
-        ][solution_file.package_type]
+        valid_model_types = mfstructure.MFStructure().flopy_dict["solution_packages"][
+            solution_file.package_type
+        ]
         # remove models from existing solution groups
         if model_list is not None:
             for model in model_list:
@@ -1356,9 +1343,7 @@ class MFSimulationBase:
             # create unique file/package name
             if solution_file.package_name is None:
                 file_num = len(self._solution_files) - 1
-                solution_file.package_name = (
-                    f"{solution_file.package_type}_{file_num}"
-                )
+                solution_file.package_name = f"{solution_file.package_type}_{file_num}"
             if solution_file.filename in self._solution_files:
                 solution_file.filename = MFFileMgmt.unique_file_name(
                     solution_file.filename, self._solution_files
@@ -1377,9 +1362,7 @@ class MFSimulationBase:
             )
         # only allow solution package to be registered to one solution group
         elif model_list is not None:
-            sln_file_in_group = self._is_in_solution_group(
-                solution_file.filename, 1
-            )
+            sln_file_in_group = self._is_in_solution_group(solution_file.filename, 1)
             # add solution group to the simulation name file
             solution_recarray = self.name_file.solutiongroup
             solution_group_list = solution_recarray.get_active_key_list()
@@ -1389,9 +1372,7 @@ class MFSimulationBase:
                 solution_group_num = solution_group_list[-1][0]
 
             if sln_file_in_group:
-                self._append_to_solution_group(
-                    solution_file.filename, model_list
-                )
+                self._append_to_solution_group(solution_file.filename, model_list)
             else:
                 if self.name_file.mxiter.get_data(solution_group_num) is None:
                     self.name_file.mxiter.add_transient_key(solution_group_num)
@@ -1536,25 +1517,16 @@ class MFSimulationBase:
                 Package's new name
 
         """
-        if (
-            self._tdis_file is not None
-            and package.filename == self._tdis_file.filename
-        ):
+        if self._tdis_file is not None and package.filename == self._tdis_file.filename:
             self._set_timing_block(new_name)
         elif package.filename in self._exchange_files:
-            self._exchange_files[new_name] = self._exchange_files.pop(
-                package.filename
-            )
+            self._exchange_files[new_name] = self._exchange_files.pop(package.filename)
             self._rename_exchange_file(package, new_name)
         elif package.filename in self._solution_files:
-            self._solution_files[new_name] = self._solution_files.pop(
-                package.filename
-            )
+            self._solution_files[new_name] = self._solution_files.pop(package.filename)
             self._update_solution_group(package.filename, new_name)
         else:
-            self._other_files[new_name] = self._other_files.pop(
-                package.filename
-            )
+            self._other_files[new_name] = self._other_files.pop(package.filename)
 
     def rename_all_packages(self, name):
         """
@@ -1685,19 +1657,13 @@ class MFSimulationBase:
             self.simulation_data.verbosity_level = VerbosityLevel.quiet
 
         # write simulation name file
-        if (
-            self.simulation_data.verbosity_level.value
-            >= VerbosityLevel.normal.value
-        ):
+        if self.simulation_data.verbosity_level.value >= VerbosityLevel.normal.value:
             print("writing simulation...")
             print("  writing simulation name file...")
         self.name_file.write(ext_file_action=ext_file_action)
 
         # write TDIS file
-        if (
-            self.simulation_data.verbosity_level.value
-            >= VerbosityLevel.normal.value
-        ):
+        if self.simulation_data.verbosity_level.value >= VerbosityLevel.normal.value:
             print("  writing simulation tdis package...")
         self._tdis_file.write(ext_file_action=ext_file_action)
 
@@ -1707,10 +1673,7 @@ class MFSimulationBase:
                 self.simulation_data.verbosity_level.value
                 >= VerbosityLevel.normal.value
             ):
-                print(
-                    f"  writing solution package "
-                    f"{solution_file._get_pname()}..."
-                )
+                print(f"  writing solution package {solution_file._get_pname()}...")
             solution_file.write(ext_file_action=ext_file_action)
 
         # write exchange files
@@ -1859,10 +1822,7 @@ class MFSimulationBase:
             if not isinstance(packages, list):
                 packages = [packages]
         for package in packages:
-            if (
-                self._tdis_file is not None
-                and package.path == self._tdis_file.path
-            ):
+            if self._tdis_file is not None and package.path == self._tdis_file.path:
                 self._tdis_file = None
             if package.filename in self._exchange_files:
                 del self._exchange_files[package.filename]
@@ -2003,10 +1963,7 @@ class MFSimulationBase:
                 range(0, len(exchange_recarray_data)),
                 exchange_recarray_data,
             ):
-                if (
-                    package.filename is not None
-                    and exchange[1] == package.filename
-                ):
+                if package.filename is not None and exchange[1] == package.filename:
                     remove_indices.append(index)
         if len(remove_indices) > 0:
             self.name_file.exchanges.set_data(
@@ -2100,10 +2057,7 @@ class MFSimulationBase:
                     package=package._get_pname(),
                     message=message,
                 )
-            if (
-                package.dimensions is None
-                or package.dimensions.model_dim is None
-            ):
+            if package.dimensions is None or package.dimensions.model_dim is None:
                 # resolve exchange package dimensions object
                 package.dimensions = package.create_package_dimensions()
 
@@ -2203,9 +2157,7 @@ class MFSimulationBase:
         if add_to_package_list and package.package_type.lower != "nam":
             if (
                 package.package_type.lower()
-                not in mfstructure.MFStructure().flopy_dict[
-                    "solution_packages"
-                ]
+                not in mfstructure.MFStructure().flopy_dict["solution_packages"]
             ):
                 # all but solution packages get added here.  solution packages
                 # are added during solution package registration
@@ -2227,9 +2179,7 @@ class MFSimulationBase:
             self._set_timing_block(package.quoted_filename)
             return (
                 path,
-                self.structure.package_struct_objs[
-                    package.package_type.lower()
-                ],
+                self.structure.package_struct_objs[package.package_type.lower()],
             )
         elif package.package_type.lower() in sln_dict:
             supported_packages = sln_dict[package.package_type.lower()]
@@ -2237,12 +2187,9 @@ class MFSimulationBase:
             # first unregistered model
             unregistered_models = []
             for model_name, model in self._models.items():
-                model_registered = self._is_in_solution_group(
-                    model_name, 2, True
-                )
+                model_registered = self._is_in_solution_group(model_name, 2, True)
                 if not model_registered and (
-                    model.model_type in supported_packages
-                    or "*" in supported_packages
+                    model.model_type in supported_packages or "*" in supported_packages
                 ):
                     unregistered_models.append(model_name)
             if unregistered_models:
@@ -2251,9 +2198,7 @@ class MFSimulationBase:
                 self.register_solution_package(package, None)
             return (
                 path,
-                self.structure.package_struct_objs[
-                    package.package_type.lower()
-                ],
+                self.structure.package_struct_objs[package.package_type.lower()],
             )
         else:
             if package.filename not in self._other_files:
@@ -2276,9 +2221,7 @@ class MFSimulationBase:
         if package.package_type.lower() in self.structure.package_struct_objs:
             return (
                 path,
-                self.structure.package_struct_objs[
-                    package.package_type.lower()
-                ],
+                self.structure.package_struct_objs[package.package_type.lower()],
             )
         elif package.package_type.lower() in self.structure.utl_struct_objs:
             return (
@@ -2287,8 +2230,9 @@ class MFSimulationBase:
             )
         else:
             excpt_str = (
-                'Invalid package type "{}".  Unable to register '
-                "package.".format(package.package_type)
+                'Invalid package type "{}".  Unable to register package.'.format(
+                    package.package_type
+                )
             )
             print(excpt_str)
             raise FlopyException(excpt_str)
@@ -2591,9 +2535,7 @@ class MFSimulationBase:
                     "An error occurred while getting solution group"
                     '"{}" from the simulation name file.  The error '
                     'occurred while replacing solution file "{}" with "{}"'
-                    'at index "{}"'.format(
-                        solution_group_num[0], item, new_item, index
-                    )
+                    'at index "{}"'.format(solution_group_num[0], item, new_item, index)
                 )
                 raise MFDataException(
                     mfdata_except=mfde, package="nam", message=message

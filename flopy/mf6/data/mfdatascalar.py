@@ -47,9 +47,7 @@ class MFScalar(mfdata.MFData):
         path=None,
         dimensions=None,
     ):
-        super().__init__(
-            sim_data, model_or_sim, structure, enable, path, dimensions
-        )
+        super().__init__(sim_data, model_or_sim, structure, enable, path, dimensions)
         self._data_type = self.structure.data_item_structures[0].type
         self._data_storage = self._new_storage()
         if data is not None:
@@ -180,9 +178,9 @@ class MFScalar(mfdata.MFData):
                     or isinstance(data, tuple)
                 ):
                     data = data[0]
-                    if (
-                        isinstance(data, list) or isinstance(data, tuple)
-                    ) and len(data) > 1:
+                    if (isinstance(data, list) or isinstance(data, tuple)) and len(
+                        data
+                    ) > 1:
                         self._add_data_line_comment(data[1:], 0)
         storage = self._get_storage_obj()
         if data is None:
@@ -196,8 +194,7 @@ class MFScalar(mfdata.MFData):
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
                 comment = (
-                    f'Could not convert data "{data}" to type '
-                    f'"{self._data_type}".'
+                    f'Could not convert data "{data}" to type "{self._data_type}".'
                 )
                 raise MFDataException(
                     self.structure.get_model(),
@@ -217,9 +214,7 @@ class MFScalar(mfdata.MFData):
             storage.set_data(converted_data, key=self._current_key)
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
-            comment = (
-                f'Could not set data "{data}" to type "{self._data_type}".'
-            )
+            comment = f'Could not set data "{data}" to type "{self._data_type}".'
             raise MFDataException(
                 self.structure.get_model(),
                 self.structure.get_package(),
@@ -298,10 +293,8 @@ class MFScalar(mfdata.MFData):
                         ex,
                     )
         else:
-            message = (
-                "{} of type {} does not support add one " "operation.".format(
-                    self._data_name, self.structure.get_datum_type()
-                )
+            message = "{} of type {} does not support add one operation.".format(
+                self._data_name, self.structure.get_datum_type()
             )
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(
@@ -396,25 +389,19 @@ class MFScalar(mfdata.MFData):
             text_line = []
             index = 0
             for data_item in self.structure.data_item_structures:
-                if (
-                    data_item.type == DatumType.keyword
-                    and not data_item.optional
-                ):
+                if data_item.type == DatumType.keyword and not data_item.optional:
                     if isinstance(data, list) or isinstance(data, tuple):
                         if len(data) == 1 and (
-                            isinstance(data[0], tuple)
-                            or isinstance(data[0], list)
+                            isinstance(data[0], tuple) or isinstance(data[0], list)
                         ):
                             data = data[0]
                         if len(data) > index and (
-                            data[index] is not None
-                            and data[index] is not False
+                            data[index] is not None and data[index] is not False
                         ):
                             text_line.append(data_item.name.upper())
                             if (
                                 isinstance(data[index], str)
-                                and data_item.name.upper()
-                                != data[index].upper()
+                                and data_item.name.upper() != data[index].upper()
                                 and data[index] != ""
                             ):
                                 # since the data does not match the keyword
@@ -427,10 +414,7 @@ class MFScalar(mfdata.MFData):
                     if data is not None and data != "":
                         if isinstance(data, list) or isinstance(data, tuple):
                             if len(data) > index:
-                                if (
-                                    data[index] is not None
-                                    and data[index] is not False
-                                ):
+                                if data[index] is not None and data[index] is not False:
                                     current_data = data[index]
                                 else:
                                     break
@@ -460,14 +444,8 @@ class MFScalar(mfdata.MFData):
                         else:
                             current_data = data
                         if data_item.type == DatumType.keyword:
-                            if (
-                                current_data is not None
-                                and current_data is not False
-                            ):
-                                if (
-                                    isinstance(data[index], str)
-                                    and data[index] == "#"
-                                ):
+                            if current_data is not None and current_data is not False:
+                                if isinstance(data[index], str) and data[index] == "#":
                                     # if data has been commented out,
                                     # keep the comment
                                     text_line.append(data[index])
@@ -560,9 +538,8 @@ class MFScalar(mfdata.MFData):
                     verify_data=self._simulation_data.verify_data,
                 )
             except Exception as ex:
-                message = (
-                    'Could not convert "{}" of type "{}" '
-                    "to a string.".format(data, self._data_type)
+                message = 'Could not convert "{}" of type "{}" to a string.'.format(
+                    data, self._data_type
                 )
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(
@@ -861,9 +838,7 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
             for sto_key in self._data_storage.keys():
                 if self.has_data(sto_key):
                     self._get_file_entry_prep(sto_key)
-                    text_entry = super().get_file_entry(
-                        ext_file_action=ext_file_action
-                    )
+                    text_entry = super().get_file_entry(ext_file_action=ext_file_action)
                     file_entry.append(text_entry)
             if len(file_entry) > 1:
                 return "\n\n".join(file_entry)
@@ -917,10 +892,7 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
             for value in self._data_storage.values():
                 return value
             return None
-        if (
-            self._current_key is None
-            or self._current_key not in self._data_storage
-        ):
+        if self._current_key is None or self._current_key not in self._data_storage:
             return None
         return self._data_storage[self._current_key]
 

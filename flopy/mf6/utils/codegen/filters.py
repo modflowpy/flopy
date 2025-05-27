@@ -18,10 +18,12 @@ def _try_get_enum_value(v: Any) -> Any:
 
 def _get_vars(d: dict) -> dict[str, dict]:
     vars_ = dict()
+
     def visit(p, k, v):
         if isinstance(v, dict) and "type" in v:
             vars_[k] = v
         return True
+
     def enter(p, k, v):
         if isinstance(v, dict) and "type" in v:
             return (v, False)
@@ -32,7 +34,6 @@ def _get_vars(d: dict) -> dict[str, dict]:
 
 
 class Filters:
-
     def base(component_name: tuple[str, str]) -> str:
         """Base class from which the input context should inherit."""
         if component_name == ("sim", "nam"):
@@ -95,9 +96,7 @@ class Filters:
             (None, "gnc"),
         ]:
             return f"gwf-{component_name[1]}.dfn"
-        if tuple(component_name) in [
-            (None, "mvt")
-        ]:
+        if tuple(component_name) in [(None, "mvt")]:
             return f"gwt-{component_name[1]}.dfn"
         return f"{component_name[0] or 'sim'}-{component_name[1]}.dfn"
 
@@ -109,10 +108,12 @@ class Filters:
             return subpkg["parent"]
         if component_name == ("sim", "nam"):
             return None
-        elif (
-            component_name[1] is None
-            or component_name[0] in [None, "sim", "exg", "sln"]
-        ):
+        elif component_name[1] is None or component_name[0] in [
+            None,
+            "sim",
+            "exg",
+            "sln",
+        ]:
             return "simulation"
         return "model"
 
@@ -187,14 +188,10 @@ class Filters:
                     first = list(children.values())[0]
                     if first["type"] in ["record", "union"]:
                         return f"[{Filters.type(first)}]"
-                children = ", ".join(
-                    [v["name"] for v in children.values()]
-                )
+                children = ", ".join([v["name"] for v in children.values()])
                 return f"[{children}]"
             elif _type == "record":
-                children = ", ".join(
-                    [v["name"] for v in children.values()]
-                )
+                children = ", ".join([v["name"] for v in children.values()])
                 return f"({children})"
             elif _type == "union":
                 return " | ".join([v["name"] for v in children.values()])
@@ -227,7 +224,9 @@ class Filters:
     def variables(dfn: dict) -> List[str]:
         return _get_vars(dfn)
 
-    def attrs(dfn: dict, component_name: tuple[str, str]) -> List[str]:
+    def attrs(
+        dfn: dict, legacy_dfn: dict, component_name: tuple[str, str]
+    ) -> List[str]:
         """
         Map the context's input variables to corresponding class attributes,
         where applicable. TODO: this should get much simpler if we can drop
@@ -268,13 +267,15 @@ class Filters:
                     "exg",
                 ]:
                     args.insert(0, f"'{component_name[0]}6'")
-                return f"{var_subpkg['key']} = ListTemplateGenerator(({', '.join(args)}))"
+                return (
+                    f"{var_subpkg['key']} = ListTemplateGenerator(({', '.join(args)}))"
+                )
             is_array = (
-                var_type in ["string", "integer", "double precision"]
-                and var_shape
+                var_type in ["string", "integer", "double precision"] and var_shape
             )
             is_composite = var_type in ["list", "record", "union"]
             if is_array or is_composite:
+
                 def _args():
                     args = [
                         f"'{component_name[1]}'",
@@ -306,20 +307,12 @@ class Filters:
         if dfn.get("sln", None):
             dfn_header.append(["solution_package", "*"])
 
-        dfn_dir = Path(__file__).parents[2] / "data" / "dfn"
-
-        def _dfn(definition, metadata) -> List[List[str]]:
-            def _meta():
-                exclude = ["subpackage", "parent_name_type"]
-                return [
-                    v for v in metadata if not any(p in v for p in exclude)
-                ]
-
-            def __dfn():
-                def _var(var: dict) -> List[str]:
+        def _legacy_dfn_to_list(dfn_) -> list[list[str]]:
+            def _dfn():
+                def _var(var: dict) -> list[str]:
                     exclude = ["longname", "description"]
                     name = var["name"]
-                    subpkg = dfn.get("fkeys", dict()).get(name, None)
+                    subpkg = dfn_.get("fkeys", dict()).get(name, None)
                     if subpkg:
                         var["construct_package"] = subpkg["abbr"]
                         var["construct_data"] = subpkg["val"]
@@ -330,41 +323,30 @@ class Filters:
                         if k not in exclude
                     ]
 
-                return [_var(var) for var in list(definition.values(multi=True))]
+                return [_var(var) for var in list(legacy_dfn.values(multi=True))]
 
-            return [["header"] + _meta()] + __dfn()
-        
-        def _filter_metadata(metadata):
-            meta_ = list()
-            for m in metadata:
-                if "multi" in m:
-                    meta_.append(m)
-                elif "solution" in m:
-                    s = m.split()
-                    meta_.append([s[0], s[2]])
-                elif "package-type" in m:
-                    s = m.split()
-                    meta_.append(" ".join(s))
-            return meta_
+            metadata = []
+            if dfn_.get("multi", False):
+                metadata.append("multi-package")
+            if dfn_.get("advanced", False):
+                metadata.append("package-type advanced-stress-package")
+            if dfn_.get("sln", None):
+                metadata.append(["solution_package", "*"])
 
-        # abominable. cannot be removed soon enough
-        with open(dfn_dir / "common.dfn") as common_f, \
-                open(dfn_dir / dfn_file_name) as f:
-            common, _ = Dfn._load_v1_flat(common_f)
-            legacy_dfn, metadata = Dfn._load_v1_flat(f, common=common)
-            legacy_dfn = _dfn(legacy_dfn, _filter_metadata(metadata))
-            if component_base == "MFPackage":
-                attrs.extend(
-                    [
-                        f"package_abbr = '{Filters.package_abbr(component_name)}'",
-                        f"_package_type = '{component_name[1]}'",
-                        f"dfn_file_name = '{dfn_file_name}'",
-                        f"dfn = {pformat(legacy_dfn, indent=10, width=sys.maxsize)}"
-                    ]
-                )
+            return [["header"] + metadata] + _dfn()
+
+        if component_base == "MFPackage":
+            attrs.extend(
+                [
+                    f"package_abbr = '{Filters.package_abbr(component_name)}'",
+                    f"_package_type = '{component_name[1]}'",
+                    f"dfn_file_name = '{dfn_file_name}'",
+                    f"dfn = {pformat(_legacy_dfn_to_list(dfn), indent=10, width=sys.maxsize)}",
+                ]
+            )
 
         return attrs
-    
+
     def init(dfn: dict, component_name: tuple[str, str]) -> List[str]:
         component_base = Filters.base(component_name)
         component_vars = _get_vars(dfn)
@@ -392,14 +374,10 @@ class Filters:
 
                     if _should_set(var):
                         if name not in ["hpc_data"]:
-                            stmts.append(
-                                f"self.name_file.{name}.set_data({name})"
-                            )
+                            stmts.append(f"self.name_file.{name}.set_data({name})")
                         if not subpkg:
-                            stmts.append(
-                                f"self.{name} = self.name_file.{name}"
-                            )
-                    
+                            stmts.append(f"self.{name} = self.name_file.{name}")
+
                     if subpkg and subpkg["key"] not in refs:
                         refs[subpkg["key"]] = subpkg
                         args = f"'{subpkg['abbr']}', {subpkg['param']}"
@@ -421,12 +399,8 @@ class Filters:
                         name = f"{name}_"
 
                     if _should_set(var):
-                        stmts.append(
-                            f"self.name_file.{name}.set_data({name})"
-                        )
-                        stmts.append(
-                            f"self.{name} = self.name_file.{name}"
-                        )
+                        stmts.append(f"self.name_file.{name}.set_data({name})")
+                        stmts.append(f"self.{name} = self.name_file.{name}")
 
                     subpkg = var.get("ref", None)
                     if subpkg and subpkg["key"] not in refs:
@@ -472,9 +446,7 @@ class Filters:
                                 f"= self.build_mfdata('{subpkg['key']}', None)"
                             )
                         else:
-                            _name = (
-                                name[:-1] if name.endswith("_") else name
-                            )
+                            _name = name[:-1] if name.endswith("_") else name
                             name = name.replace("-", "_")
                             stmts.append(
                                 f"self.{'_' if subpkg else ''}{name} "
@@ -519,10 +491,7 @@ class Filters:
         if "$" in v:
             descsplit = v.split("$")
             mylist = [
-                i.replace("\\", "")
-                + ":math:`"
-                + j.replace("\\", "\\\\")
-                + "`"
+                i.replace("\\", "") + ":math:`" + j.replace("\\", "\\\\") + "`"
                 for i, j in zip(descsplit[::2], descsplit[1::2])
             ]
             mylist.append(descsplit[-1].replace("\\", ""))

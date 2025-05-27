@@ -46,7 +46,14 @@ def generate_classes(
 
     if dfnpath is None and ref is None:
         raise ValueError("Need remote 'ref' or local 'dfnpath'")
-    
+
+    # import here instead of module so we don't
+    # expect optional deps at module init time
+    from modflow_devtools.download import download_and_unzip
+
+    from flopy.mf6.utils.codegen import make_all
+    from flopy.mf6.utils.dfn2toml import convert as dfn2toml
+
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
 
@@ -54,7 +61,8 @@ def generate_classes(
             dfnpath = Path(dfnpath).expanduser().resolve().absolute()
             if not dfnpath.is_dir():
                 raise FileNotFoundError(
-                    f"Specified DFN path '{dfnpath}' does not exist or is not a directory.")
+                    f"Specified DFN path '{dfnpath}' does not exist or is not a directory."
+                )
             if dfnpath != _MF6_DFNS_PATH:
                 if verbose:
                     print(f"Replacing DFNs in: {_MF6_DFNS_PATH}")
@@ -63,34 +71,34 @@ def generate_classes(
         else:
             if verbose:
                 print(f"Fetching MODFLOW 6 definitions from: {owner}/{repo}/{ref}")
-            from modflow_devtools.download import download_and_unzip
+
             url = f"https://github.com/{owner}/{repo}/archive/{ref}.zip"
             dl_path = download_and_unzip(url=url, path=tmpdir, verbose=verbose)
             if (proj_root := next(iter(dl_path.glob("modflow6-*")), None)) is None:
-                raise ValueError(
-                    f"Could not find MODFLOW 6 project root in: {dl_path}"
-                )
+                raise ValueError(f"Could not find MODFLOW 6 project root in: {dl_path}")
             if verbose:
                 print(f"Replacing DFNs in: {_MF6_DFNS_PATH}")
             shutil.rmtree(_MF6_DFNS_PATH)
-            shutil.copytree(proj_root / "doc" / "mf6io" / "mf6ivar" / "dfn", _MF6_DFNS_PATH)
+            shutil.copytree(
+                proj_root / "doc" / "mf6io" / "mf6ivar" / "dfn", _MF6_DFNS_PATH
+            )
 
         if verbose:
             dfns = list(_MF6_DFNS_PATH.glob("*.dfn"))
             module_name = ".".join(_MF6_AUTOGEN_PATH.relative_to(_PROJ_ROOT_PATH).parts)
-            print(f"Generating module {module_name} from {len(dfns)} DFNs in: {_MF6_DFNS_PATH}")
+            print(
+                f"Generating module {module_name} from {len(dfns)} DFNs in: {_MF6_DFNS_PATH}"
+            )
             print()
             _CMD.columnize([f.name for f in dfns])
             print()
 
         tomlpath = tmpdir / "toml"
         tomlpath.mkdir()
-        from flopy.mf6.utils.dfn2toml import convert as dfn2toml
         dfn2toml(_MF6_DFNS_PATH, tomlpath)
 
         shutil.rmtree(_MF6_AUTOGEN_PATH)
         _MF6_AUTOGEN_PATH.mkdir(parents=True)
-        from flopy.mf6.utils.codegen import make_all
         make_all(tomlpath, _MF6_AUTOGEN_PATH, version=2)
         if verbose:
             files = list(_MF6_AUTOGEN_PATH.glob("*.py"))
@@ -108,7 +116,6 @@ def cli_main():
     parser = argparse.ArgumentParser(
         description=generate_classes.__doc__.split("\n\n")[0],
     )
-
     parser.add_argument(
         "--owner",
         type=str,
@@ -137,12 +144,8 @@ def cli_main():
         default=True,
         help="Print information about the code generation process.",
     )
-
-    # removed options
     parser.add_argument(
-        "--exclude",
-        help="Exclude DFNs matching a pattern.",
-        action="append"
+        "--exclude", help="Exclude DFNs matching a pattern.", action="append"
     )
     parser.add_argument(
         "--no-backup",
@@ -152,9 +155,9 @@ def cli_main():
         "dfn_backup with a date and timestamp from when the definition "
         "files were replaced.",
     )
-
     args = vars(parser.parse_args())
 
+    # ignore/warn removed options
     exclude = args.pop("exclude", None)
     no_backup = args.pop("no_backup", None)
     if exclude is not None:

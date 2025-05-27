@@ -315,9 +315,7 @@ class StructuredSpatialReference:
         return self._xcentergrid
 
     def _set_xycentergrid(self):
-        self._xcentergrid, self._ycentergrid = np.meshgrid(
-            self.xcenter, self.ycenter
-        )
+        self._xcentergrid, self._ycentergrid = np.meshgrid(self.xcenter, self.ycenter)
         self._xcentergrid, self._ycentergrid = self.rotate(
             self._xcentergrid,
             self._ycentergrid,
@@ -345,16 +343,8 @@ class StructuredSpatialReference:
 
         """
         theta = -theta * np.pi / 180.0
-        xrot = (
-            xorigin
-            + np.cos(theta) * (x - xorigin)
-            - np.sin(theta) * (y - yorigin)
-        )
-        yrot = (
-            yorigin
-            + np.sin(theta) * (x - xorigin)
-            + np.cos(theta) * (y - yorigin)
-        )
+        xrot = xorigin + np.cos(theta) * (x - xorigin) - np.sin(theta) * (y - yorigin)
+        yrot = yorigin + np.sin(theta) * (x - xorigin) + np.cos(theta) * (y - yorigin)
         return xrot, yrot
 
     def get_extent(self):
@@ -474,9 +464,7 @@ class StructuredSpatialReference:
 
         """
         length_y = np.add.reduce(self.delc)
-        yedge = np.concatenate(
-            ([length_y], length_y - np.add.accumulate(self.delc))
-        )
+        yedge = np.concatenate(([length_y], length_y - np.add.accumulate(self.delc)))
         return yedge
 
     def write_gridSpec(self, filename):
@@ -614,9 +602,9 @@ class VertexSpatialReference:
         proj4_str=None,
         **kwargs,
     ):
-        assert len(xvdict) == len(
-            yvdict
-        ), f"len(xvdict): {len(xvdict)} != len(yvdict): {len(yvdict)}"
+        assert len(xvdict) == len(yvdict), (
+            f"len(xvdict): {len(xvdict)} != len(yvdict): {len(yvdict)}"
+        )
 
         self._xv = np.array([xvdict[idx] for idx, key in enumerate(xvdict)])
         self._yv = np.array([yvdict[idx] for idx, key in enumerate(yvdict)])
@@ -718,16 +706,8 @@ class VertexSpatialReference:
 
         """
         theta = -theta * np.pi / 180.0
-        xrot = (
-            xorigin
-            + np.cos(theta) * (x - xorigin)
-            - np.sin(theta) * (y - yorigin)
-        )
-        yrot = (
-            yorigin
-            + np.sin(theta) * (x - xorigin)
-            + np.cos(theta) * (y - yorigin)
-        )
+        xrot = xorigin + np.cos(theta) * (x - xorigin) - np.sin(theta) * (y - yorigin)
+        yrot = yorigin + np.sin(theta) * (x - xorigin) + np.cos(theta) * (y - yorigin)
         return xrot, yrot
 
     def get_extent(self):
@@ -940,9 +920,7 @@ class SpatialReference:
             )
 
         elif distype == "unstructured":
-            raise NotImplementedError(
-                "Unstructured discretization not yet implemented"
-            )
+            raise NotImplementedError("Unstructured discretization not yet implemented")
 
         else:
             raise TypeError(f"Discretization type {distype} not supported")

@@ -40,9 +40,7 @@ class MF6Output:
         self._methods = []
         self._sim_ws = obj.simulation_data.mfpath.get_sim_path()
         self._budgetkey = (
-            "VOLUME BUDGET FOR ENTIRE MODEL"
-            if budgetkey is None
-            else budgetkey
+            "VOLUME BUDGET FOR ENTIRE MODEL" if budgetkey is None else budgetkey
         )
         self.__budgetcsv = False
 
@@ -57,9 +55,7 @@ class MF6Output:
                 self._model = obj.model_or_sim
             self._mtype = self._model.model_type
             nam_file = self._model.model_nam_file[:-4]
-            self._lst = (
-                self._model.name_file.blocks["options"].datasets["list"].array
-            )
+            self._lst = self._model.name_file.blocks["options"].datasets["list"].array
             if self._lst is None:
                 self._lst = f"{nam_file}.lst"
             setattr(self, "list", self.__list)
@@ -103,9 +99,7 @@ class MF6Output:
                         else:
                             setattr(self, rectype, methods[rectype])
                             if rectype == "budget":
-                                setattr(
-                                    self, "zonebudget", methods["zonebudget"]
-                                )
+                                setattr(self, "zonebudget", methods["zonebudget"])
                                 self._methods.append("zonebudget()")
                             elif rectype == "budgetcsv":
                                 self.__budgetcsv = True
@@ -122,9 +116,9 @@ class MF6Output:
                                             and str(ky[-1]) == "output"
                                         ):
                                             if (
-                                                obj.simulation_data.mfdata[
-                                                    ky
-                                                ].array[0][0]
+                                                obj.simulation_data.mfdata[ky].array[0][
+                                                    0
+                                                ]
                                                 == "fileout"
                                             ):
                                                 data = [
@@ -281,13 +275,8 @@ class MF6Output:
                 ):
                     if self._obj.package_type == "oc":
                         dis = self._obj.model_or_sim.dis
-                        if (
-                            dis.blocks["options"].datasets["nogrb"].array
-                            is None
-                        ):
-                            grb = os.path.join(
-                                self._sim_ws, f"{dis.filename}.grb"
-                            )
+                        if dis.blocks["options"].datasets["nogrb"].array is None:
+                            grb = os.path.join(self._sim_ws, f"{dis.filename}.grb")
             except AttributeError:
                 pass
 

@@ -13,9 +13,7 @@ def read_vertices(vert_file):
     vertrecarray = []
     for line in fd:
         fd_spl = line.strip().split()
-        vertrecarray.append(
-            (int(fd_spl[0]) - 1, float(fd_spl[1]), float(fd_spl[2]))
-        )
+        vertrecarray.append((int(fd_spl[0]) - 1, float(fd_spl[1]), float(fd_spl[2])))
     fd.close()
     return vertrecarray
 
@@ -62,13 +60,10 @@ def read_gncrecarray(gnc_file, cellid_size=3, cellid_size_2=3):
         gncrecarray.append(
             (
                 make_int_tuple(linesp[0:cellid_size]),
-                make_int_tuple(
-                    linesp[cellid_size : cellid_size + cellid_size_2]
-                ),
+                make_int_tuple(linesp[cellid_size : cellid_size + cellid_size_2]),
                 make_int_tuple(
                     linesp[
-                        cellid_size + cellid_size_2 : cellid_size * 2
-                        + cellid_size_2
+                        cellid_size + cellid_size_2 : cellid_size * 2 + cellid_size_2
                     ]
                 ),
                 float(linesp[cellid_size * 2 + cellid_size_2]),
@@ -116,9 +111,7 @@ def read_obs(obs_file, cellid_size=3):
                     fd_spl[0],
                     fd_spl[1],
                     make_int_tuple(fd_spl[2 : 2 + cellid_size]),
-                    make_int_tuple(
-                        fd_spl[2 + cellid_size : 2 + 2 * cellid_size]
-                    ),
+                    make_int_tuple(fd_spl[2 + cellid_size : 2 + 2 * cellid_size]),
                 )
             )
         else:

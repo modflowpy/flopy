@@ -69,9 +69,7 @@ class MFDataException(Exception):
         debug=None,
         mfdata_except=None,
     ):
-        if mfdata_except is not None and isinstance(
-            mfdata_except, MFDataException
-        ):
+        if mfdata_except is not None and isinstance(mfdata_except, MFDataException):
             # copy constructor - copying values from original exception
             self.model = mfdata_except.model
             self.package = mfdata_except.package
@@ -263,9 +261,7 @@ class MFFileMgmt:
                         num_files_copied += 1
         return num_files_copied
 
-    def get_updated_path(
-        self, external_file_path, model_name, ext_file_action
-    ):
+    def get_updated_path(self, external_file_path, model_name, ext_file_action):
         """For internal FloPy use, not intended for end user."""
         return external_file_path
 
@@ -351,9 +347,7 @@ class MFFileMgmt:
             )
         else:
             if key in self.model_relative_path:
-                return os.path.join(
-                    self._sim_path, self.model_relative_path[key]
-                )
+                return os.path.join(self._sim_path, self.model_relative_path[key])
             else:
                 return self._sim_path
 
@@ -509,11 +503,7 @@ class PackageContainer:
         internal FloPy use only, not intended for end users."""
         value = getattr(module, item)
         # verify this is a class
-        if (
-            not value
-            or not inspect.isclass(value)
-            or not hasattr(value, attrb)
-        ):
+        if not value or not inspect.isclass(value) or not hasattr(value, attrb):
             return None
         return value
 
@@ -595,9 +585,7 @@ class PackageContainer:
 
         # fix keys in main dictionary
         for key in items_to_fix:
-            new_key = (
-                package.path[:-1] + (new_name,) + key[len(package.path) - 1 :]
-            )
+            new_key = package.path[:-1] + (new_name,) + key[len(package.path) - 1 :]
             main_dict[new_key] = main_dict.pop(key)
 
     def get_package(self, name=None, type_only=False, name_only=False):
