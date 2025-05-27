@@ -27,7 +27,7 @@ FloPy can generate a MODFLOW 6 compatibility layer for itself, given a set of de
 For instance, to sync with DFNs from the MODFLOW 6 develop branch:
 
 ```shell
-python -m flopy.mf6.utils.generate_classes --ref develop --no-backup
+python -m flopy.mf6.utils.generate_classes --ref develop
 ```
 
 Generated files are created in `flopy/mf6/modflow/`.

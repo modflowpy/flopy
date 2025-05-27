@@ -59,7 +59,7 @@ The `generate_classes()` function has several optional parameters.
 ```bash
 $ python -m flopy.mf6.utils.generate_classes -h
 usage: generate_classes.py [-h] [--owner OWNER] [--repo REPO] [--ref REF]
-                           [--dfnpath DFNPATH] [--no-backup]
+                           [--dfnpath DFNPATH]
 
 Generate the MODFLOW 6 flopy classes using definition files from the MODFLOW 6
 GitHub repository or a set of definition files in a folder provided by the
@@ -73,10 +73,6 @@ options:
                      definition; default is 'master'.
   --dfnpath DFNPATH  Path to a definition file folder that will be used to
                      generate the MODFLOW 6 classes.
-  --no-backup        Set to disable backup. Default behavior is to keep a
-                     backup of the definition files in dfn_backup with a date
-                     and timestamp from when the definition files were
-                     replaced.
 ```
 
 For example, use the develop branch instead:
@@ -97,8 +93,6 @@ $ python -m flopy.mf6.utils.generate_classes --dfnpath ../your/dfn/path
 ```
 
 Branch names, commit hashes, or tags may be provided to `ref`.
-
-By default, a backup is made of FloPy's package classes before rewriting them. To disable backups, use `--no-backup` from command-line, or `backup=False` with the Python function.
 
 ## Testing class generation
 
