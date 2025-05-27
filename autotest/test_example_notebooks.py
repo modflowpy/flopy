@@ -44,6 +44,7 @@ def test_notebooks(notebook):
             pkg = re.findall("No module named '(.*)'", stderr)[0]
             pytest.skip(f"notebook requires package {pkg!r}")
 
-    assert returncode == 0, f"could not run {notebook}"
-    pprint(stdout)
-    pprint(stderr)
+    if returncode != 0:
+        pprint(stdout)
+        pprint(stderr)
+        raise ValueError(f"could not run {notebook}")

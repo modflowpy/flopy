@@ -75,7 +75,7 @@ jobs:
 
       - name: Run example tests
         working-directory: autotest
-        run: pytest -v test_example_scripts.py -n=auto -s --durations=0 --keep-failed=.failed
+        run: pytest -v test_example_notebooks.py -n=auto -s --durations=0 --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
