@@ -138,7 +138,36 @@ def cli_main():
         help="Print information about the code generation process.",
     )
 
+    # removed options
+    parser.add_argument(
+        "--exclude",
+        help="Exclude DFNs matching a pattern.",
+        action="append"
+    )
+    parser.add_argument(
+        "--no-backup",
+        action="store_true",
+        help="Set to disable backup. "
+        "Default behavior is to keep a backup of the definition files in "
+        "dfn_backup with a date and timestamp from when the definition "
+        "files were replaced.",
+    )
+
     args = vars(parser.parse_args())
+
+    exclude = args.pop("exclude", None)
+    no_backup = args.pop("no_backup", None)
+    if exclude is not None:
+        print(
+            "The '--exclude' option is no longer supported. "
+            "Exclude DFNs and corresponding source files manually."
+        )
+    if no_backup is not None:
+        print(
+            "The '--no-backup' option is no longer supported. "
+            "Exclude DFNs and corresponding source files manually."
+        )
+
     try:
         generate_classes(**args)
     except (EOFError, KeyboardInterrupt):
