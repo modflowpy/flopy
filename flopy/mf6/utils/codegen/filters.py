@@ -347,6 +347,7 @@ class Filters:
                     meta_.append(" ".join(s))
             return meta_
 
+        # abominable. cannot be removed soon enough
         with open(dfn_dir / "common.dfn") as common_f, \
                 open(dfn_dir / dfn_file_name) as f:
             common, _ = Dfn._load_v1_flat(common_f)

@@ -1,134 +1,27 @@
-import os
+import cmd
 import shutil
 import tempfile
-import time
 from pathlib import Path
-from warnings import warn
 
-thisfilepath = os.path.dirname(os.path.abspath(__file__))
-flopypth = os.path.join(thisfilepath, "..", "..")
-flopypth = os.path.abspath(flopypth)
-protected_dfns = ["flopy.dfn"]
-default_owner = "MODFLOW-ORG"
-default_repo = "modflow6"
-
-_MF6_PATH = Path(__file__).parents[1]
-_DFN_PATH = _MF6_PATH / "data" / "dfn"
-_TOML_PATH = _DFN_PATH / "toml"
-_TGT_PATH = _MF6_PATH / "modflow"
-
-
-def delete_files(files, pth, allow_failure=False, exclude=None):
-    if exclude is None:
-        exclude = []
-    else:
-        if not isinstance(exclude, list):
-            exclude = [exclude]
-
-    for fn in files:
-        if fn in exclude:
-            continue
-        fpth = os.path.join(pth, fn)
-        try:
-            print(f"  removing...{fn}")
-            os.remove(fpth)
-        except:
-            print(f"could not remove...{fn}")
-            if not allow_failure:
-                return False
-    return True
-
-
-def list_files(pth, exts=["py"]):
-    print(f"\nLIST OF FILES IN {pth}")
-    files = [
-        entry
-        for entry in os.listdir(pth)
-        if os.path.isfile(os.path.join(pth, entry))
-    ]
-    idx = 0
-    for fn in files:
-        ext = os.path.splitext(fn)[1][1:].lower()
-        if ext in exts:
-            idx += 1
-            print(f"    {idx:5d} - {fn}")
-
-
-def download_dfn(owner, repo, ref, new_dfn_pth):
-    try:
-        from modflow_devtools.download import download_and_unzip
-    except ImportError:
-        raise ImportError(
-            "The modflow-devtools package must be installed in order to "
-            "generate the MODFLOW 6 classes. This can be with:\n"
-            "     pip install modflow-devtools"
-        )
-
-    mf6url = f"https://github.com/{owner}/{repo}/archive/{ref}.zip"
-    print(f"  Downloading MODFLOW 6 repository from {mf6url}")
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        dl_path = download_and_unzip(mf6url, tmpdirname, verbose=True)
-        dl_contents = list(dl_path.glob("modflow6-*"))
-        proj_path = next(iter(dl_contents), None)
-        if not proj_path:
-            raise ValueError(
-                f"Could not find modflow6 project dir in {dl_path}: found {dl_contents}"
-            )
-        downloaded_dfn_pth = os.path.join(
-            proj_path, "doc", "mf6io", "mf6ivar", "dfn"
-        )
-        shutil.copytree(downloaded_dfn_pth, new_dfn_pth)
-
-
-def backup_existing_dfns(flopy_dfn_path):
-    parent_folder = os.path.dirname(flopy_dfn_path)
-    timestr = time.strftime("%Y%m%d-%H%M%S")
-    backup_folder = os.path.join(parent_folder, "dfn_backup", timestr)
-    shutil.copytree(flopy_dfn_path, backup_folder)
-    assert os.path.isdir(
-        backup_folder
-    ), f"dfn backup files not found: {backup_folder}"
-
-
-def replace_dfn_files(new_dfn_pth, flopy_dfn_path, exclude):
-    # remove the old files, unless the file is protected
-    filenames = os.listdir(flopy_dfn_path)
-    delete_files(filenames, flopy_dfn_path, exclude=protected_dfns)
-
-    # copy the new ones into the folder
-    filenames = os.listdir(new_dfn_pth)
-    for filename in filenames:
-        if exclude and any(pattern in filename for pattern in exclude):
-            print(f"  excluding..{filename}")
-            continue
-        filename_w_path = os.path.join(new_dfn_pth, filename)
-        print(f"  copying..{filename}")
-        shutil.copy(filename_w_path, flopy_dfn_path)
-
-
-def delete_mf6_classes():
-    pth = os.path.join(flopypth, "mf6", "modflow")
-    files = [
-        entry
-        for entry in os.listdir(pth)
-        if os.path.isfile(os.path.join(pth, entry))
-    ]
-    delete_files(files, pth)
+_PROJ_ROOT_PATH = Path(__file__).parents[3].expanduser().resolve().absolute()
+_MF6_MODULE_PATH = _PROJ_ROOT_PATH / "flopy" / "mf6"
+_MF6_DFNS_PATH = _MF6_MODULE_PATH / "data" / "dfn"
+_MF6_AUTOGEN_PATH = _MF6_MODULE_PATH / "modflow"
+_MF6_REPO_OWNER = "MODFLOW-ORG"
+_MF6_REPO_NAME = "modflow6"
+_CMD = cmd.Cmd()  # for pretty printing
 
 
 def generate_classes(
-    owner=default_owner,
-    repo=default_repo,
-    branch=None,
-    ref="master",
+    owner=_MF6_REPO_OWNER,
+    repo=_MF6_REPO_NAME,
+    ref=None,
     dfnpath=None,
-    backup=True,
-    exclude=None
+    verbose=False,
 ):
     """
-    Generate the MODFLOW 6 flopy classes using definition files from the
-    MODFLOW 6 GitHub repository or a set of definition files in a folder
-    provided by the user.
+    Generate Python classes for MODFLOW 6 using definition files fetched
+    from the MODFLOW 6 repository or available on the local filesystem.
 
     Parameters
     ----------
@@ -137,12 +30,6 @@ def generate_classes(
         files and generate the MODFLOW 6 classes.
     repo : str, default "modflow6"
         Name of the MODFLOW 6 repository to use to update the definition.
-    branch : str, optional
-        Branch name of the MODFLOW 6 repository to use to update the
-        definition files and generate the MODFLOW 6 classes.
-
-        .. deprecated:: 3.5.0
-            Use ref instead.
     ref : str, default "master"
         Branch name, tag, or commit hash to use to update the definition.
     dfnpath : str
@@ -153,64 +40,64 @@ def generate_classes(
     backup : bool, default True
         Keep a backup of the definition files in dfn_backup with a date and
         timestamp from when the definition files were replaced.
-    exclude : list of str, optional, default None
-        Patterns for excluding DFN files and corresponding components.
+    verbose : bool, default False
+        If True, print information about the code generation process.
     """
 
-    # print header
-    print(2 * "\n")
-    print(72 * "*")
-    print("Updating the flopy MODFLOW 6 classes")
-    flopy_dfn_path = (Path(flopypth) / "mf6" / "data" / "dfn").expanduser().absolute()
+    if dfnpath is None and ref is None:
+        raise ValueError("Need remote 'ref' or local 'dfnpath'")
+    
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmpdir = Path(tmpdir)
 
-    # download the dfn files and put them in flopy.mf6.data or update using
-    # user provided dfnpath
-    if dfnpath is None:
-        timestr = time.strftime("%Y%m%d-%H%M%S")
-        new_dfn_pth = os.path.join(flopypth, "mf6", "data", f"dfn_{timestr}")
+        if dfnpath is not None:
+            dfnpath = Path(dfnpath).expanduser().resolve().absolute()
+            if not dfnpath.is_dir():
+                raise FileNotFoundError(
+                    f"Specified DFN path '{dfnpath}' does not exist or is not a directory.")
+            if dfnpath != _MF6_DFNS_PATH:
+                if verbose:
+                    print(f"Replacing DFNs in: {_MF6_DFNS_PATH}")
+                shutil.rmtree(_MF6_DFNS_PATH)
+                shutil.copytree(dfnpath, _MF6_DFNS_PATH)
+        else:
+            if verbose:
+                print(f"Fetching MODFLOW 6 definitions from: {owner}/{repo}/{ref}")
+            from modflow_devtools.download import download_and_unzip
+            url = f"https://github.com/{owner}/{repo}/archive/{ref}.zip"
+            dl_path = download_and_unzip(url=url, path=tmpdir, verbose=verbose)
+            if (proj_root := next(iter(dl_path.glob("modflow6-*")), None)) is None:
+                raise ValueError(
+                    f"Could not find MODFLOW 6 project root in: {dl_path}"
+                )
+            if verbose:
+                print(f"Replacing DFNs in: {_MF6_DFNS_PATH}")
+            shutil.rmtree(_MF6_DFNS_PATH)
+            shutil.copytree(proj_root / "doc" / "mf6io" / "mf6ivar" / "dfn", _MF6_DFNS_PATH)
 
-        # branch deprecated 3.5.0
-        if not ref and not branch:
-            raise ValueError("branch or ref must be provided")
-        if branch:
-            warn("branch is deprecated, use ref instead", DeprecationWarning)
-            ref = branch
+        if verbose:
+            dfns = list(_MF6_DFNS_PATH.glob("*.dfn"))
+            module_name = ".".join(_MF6_AUTOGEN_PATH.relative_to(_PROJ_ROOT_PATH).parts)
+            print(f"Generating module {module_name} from {len(dfns)} DFNs in: {_MF6_DFNS_PATH}")
+            print()
+            _CMD.columnize([f.name for f in dfns])
+            print()
 
-        print(f"  Updating the MODFLOW 6 classes using {owner}/{repo}/{ref}")
+        tomlpath = tmpdir / "toml"
+        tomlpath.mkdir()
+        from flopy.mf6.utils.dfn2toml import convert as dfn2toml
+        dfn2toml(_MF6_DFNS_PATH, tomlpath)
 
-        download_dfn(owner, repo, ref, new_dfn_pth)
-    else:
-        print(f"  Updating the MODFLOW 6 classes using {dfnpath}")
-        assert os.path.isdir(dfnpath)
-        new_dfn_pth = dfnpath
-
-    if backup:
-        print(f"  Backup existing definition files in: {flopy_dfn_path}")
-        backup_existing_dfns(flopy_dfn_path)
-
-    new_dfn_path = Path(new_dfn_pth).expanduser().absolute()
-
-    if (new_dfn_path == flopy_dfn_path):
-        print("  Using pre-existing definition files")
-    else:
-        print("  Replacing existing definition files")
-        replace_dfn_files(new_dfn_pth, flopy_dfn_path, exclude)
-        if dfnpath is None:
-            shutil.rmtree(new_dfn_pth)
-
-    print("  Deleting existing mf6 classes")
-    delete_mf6_classes()
-
-    # convert dfns to toml.. when we
-    # do this upstream, remove this.
-    _TOML_PATH.mkdir(exist_ok=True)
-    from flopy.mf6.utils.dfn2toml import convert as dfn2toml
-    dfn2toml(_DFN_PATH, _TOML_PATH)
-
-    print("  Create mf6 classes using the definition files.")
-    from flopy.mf6.utils.codegen import make_all
-    make_all(_TOML_PATH, _TGT_PATH, version=2)
-    list_files(os.path.join(flopypth, "mf6", "modflow"))
+        shutil.rmtree(_MF6_AUTOGEN_PATH)
+        _MF6_AUTOGEN_PATH.mkdir(parents=True)
+        from flopy.mf6.utils.codegen import make_all
+        make_all(tomlpath, _MF6_AUTOGEN_PATH, version=2)
+        if verbose:
+            files = list(_MF6_AUTOGEN_PATH.glob("*.py"))
+            print(f"Generated {len(files)} module files in: {_MF6_AUTOGEN_PATH}")
+            print()
+            _CMD.columnize([f.name for f in files])
+            print()
 
 
 def cli_main():
@@ -225,13 +112,13 @@ def cli_main():
     parser.add_argument(
         "--owner",
         type=str,
-        default=default_owner,
-        help=f"GitHub repository owner; default is '{default_owner}'.",
+        default=_MF6_REPO_OWNER,
+        help=f"GitHub repository owner; default is '{_MF6_REPO_OWNER}'.",
     )
     parser.add_argument(
         "--repo",
-        default=default_repo,
-        help=f"Name of GitHub repository; default is '{default_repo}'.",
+        default=_MF6_REPO_NAME,
+        help=f"Name of GitHub repository; default is '{_MF6_REPO_NAME}'.",
     )
     parser.add_argument(
         "--ref",
@@ -245,22 +132,13 @@ def cli_main():
         "the MODFLOW 6 classes.",
     )
     parser.add_argument(
-        "--exclude",
-        help="Exclude DFNs matching a pattern.",
-        action="append"
-    )
-    parser.add_argument(
-        "--no-backup",
+        "--verbose",
         action="store_true",
-        help="Set to disable backup. "
-        "Default behavior is to keep a backup of the definition files in "
-        "dfn_backup with a date and timestamp from when the definition "
-        "files were replaced.",
+        default=True,
+        help="Print information about the code generation process.",
     )
 
     args = vars(parser.parse_args())
-    # Handle flipped logic
-    args["backup"] = not args.pop("no_backup")
     try:
         generate_classes(**args)
     except (EOFError, KeyboardInterrupt):
