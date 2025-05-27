@@ -3,8 +3,6 @@ import csv
 import numpy as np
 import pandas as pd
 
-from ...utils import import_optional_dependency
-
 
 def try_float(data):
     try:
