@@ -110,7 +110,7 @@ def make_all(dfndir: Path, outdir: PathLike, verbose: bool = False, version: int
     # TODO: remove this when we no longer attach legacy DFN
     # format to generated classes
     if version == 2:
-        legacy_dfns = Dfn.load_all(dfndir, version=1)
+        legacy_dfns = Dfn.load_all(dfndir.parent, version=1)
         for dfn in dfns.values():
             if dfn.name in ["common"]:
                 continue
