@@ -1,12 +1,9 @@
-from pathlib import Path
 from typing import (
     Iterator,
     TypedDict,
 )
 
 from flopy.mf6.utils.dfn import Dfn
-
-_DFNS_PATH = Path(__file__).parents[2] / "data" / "dfn"
 
 
 def get_component_names(dfn: dict) -> list[tuple[str, str]]:
