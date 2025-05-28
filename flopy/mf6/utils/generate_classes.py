@@ -5,7 +5,6 @@ from pathlib import Path
 
 _PROJ_ROOT_PATH = Path(__file__).parents[3].expanduser().resolve().absolute()
 _MF6_MODULE_PATH = _PROJ_ROOT_PATH / "flopy" / "mf6"
-_MF6_DFNS_PATH = _MF6_MODULE_PATH / "data" / "dfn"
 _MF6_AUTOGEN_PATH = _MF6_MODULE_PATH / "modflow"
 _MF6_REPO_OWNER = "MODFLOW-ORG"
 _MF6_REPO_NAME = "modflow6"
@@ -63,11 +62,6 @@ def generate_classes(
                 raise FileNotFoundError(
                     f"Specified DFN path '{dfnpath}' does not exist or is not a directory."
                 )
-            if dfnpath != _MF6_DFNS_PATH:
-                if verbose:
-                    print(f"Replacing DFNs in: {_MF6_DFNS_PATH}")
-                shutil.rmtree(_MF6_DFNS_PATH)
-                shutil.copytree(dfnpath, _MF6_DFNS_PATH)
         else:
             if verbose:
                 print(f"Fetching MODFLOW 6 definitions from: {owner}/{repo}/{ref}")
@@ -76,30 +70,28 @@ def generate_classes(
             dl_path = download_and_unzip(url=url, path=tmpdir, verbose=verbose)
             if (proj_root := next(iter(dl_path.glob("modflow6-*")), None)) is None:
                 raise ValueError(f"Could not find MODFLOW 6 project root in: {dl_path}")
-            if verbose:
-                print(f"Replacing DFNs in: {_MF6_DFNS_PATH}")
-            shutil.rmtree(_MF6_DFNS_PATH)
+            dfnpath = tmpdir / "dfn"
             shutil.copytree(
-                proj_root / "doc" / "mf6io" / "mf6ivar" / "dfn", _MF6_DFNS_PATH
+                proj_root / "doc" / "mf6io" / "mf6ivar" / "dfn", dfnpath
             )
 
         if verbose:
-            dfns = list(_MF6_DFNS_PATH.glob("*.dfn"))
+            dfns = list(dfnpath.glob("*.dfn"))
             module_name = ".".join(_MF6_AUTOGEN_PATH.relative_to(_PROJ_ROOT_PATH).parts)
             print(
-                f"Generating module {module_name} from {len(dfns)} DFNs in: {_MF6_DFNS_PATH}"
+                f"Generating module {module_name} from {len(dfns)} DFNs in: {dfnpath}"
             )
             print()
             _CMD.columnize([f.name for f in dfns])
             print()
 
-        tomlpath = _MF6_DFNS_PATH / "toml"
+        tomlpath = dfnpath / "toml"
         tomlpath.mkdir()
-        dfn2toml(_MF6_DFNS_PATH, tomlpath)
+        dfn2toml(dfnpath, tomlpath)
 
         shutil.rmtree(_MF6_AUTOGEN_PATH)
         _MF6_AUTOGEN_PATH.mkdir(parents=True)
-        make_all(tomlpath, _MF6_AUTOGEN_PATH, version=2, legacydir=_MF6_DFNS_PATH)
+        make_all(tomlpath, _MF6_AUTOGEN_PATH, version=2, legacydir=dfnpath)
         if verbose:
             files = list(_MF6_AUTOGEN_PATH.glob("*.py"))
             print(f"Generated {len(files)} module files in: {_MF6_AUTOGEN_PATH}")
