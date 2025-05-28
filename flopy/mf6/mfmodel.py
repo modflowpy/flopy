@@ -131,14 +131,18 @@ class MFModel(ModelInterface):
         # check for extraneous kwargs
         if len(kwargs) > 0:
             kwargs_str = ", ".join(kwargs.keys())
-            excpt_str = f'Extraneous kwargs "{kwargs_str}" provided to MFModel.'
+            excpt_str = (
+                f'Extraneous kwargs "{kwargs_str}" provided to MFModel.'
+            )
             raise FlopyException(excpt_str)
 
         # build model name file
         # create name file based on model type - support different model types
         package_obj = PackageContainer.package_factory("nam", model_type[0:3])
         if not package_obj:
-            excpt_str = f"Name file could not be found for model{model_type[0:3]}."
+            excpt_str = (
+                f"Name file could not be found for model{model_type[0:3]}."
+            )
             raise FlopyException(excpt_str)
 
         self.name_file = package_obj(
@@ -374,7 +378,7 @@ class MFModel(ModelInterface):
             tsmult=period_data["tsmult"],
             time_units=itmuni,
             start_datetime=start_date_time,
-            steady_state=steady,
+            steady_state=steady
         )
         return self._model_time
 
@@ -400,7 +404,9 @@ class MFModel(ModelInterface):
             )
         elif self.get_grid_type() == DiscretizationType.DISV:
             dis = self.get_package("disv")
-            return VertexGrid(ncpl=dis.ncpl.get_data(), nlay=dis.nlay.get_data())
+            return VertexGrid(
+                ncpl=dis.ncpl.get_data(), nlay=dis.nlay.get_data()
+            )
         elif self.get_grid_type() == DiscretizationType.DISU:
             dis = self.get_package("disu")
             nodes = dis.nodes.get_data()
@@ -958,7 +964,9 @@ class MFModel(ModelInterface):
                     and not PackageContainer._in_pkg_list(
                         priority_packages, ftype_orig, pname
                     )
-                    and not PackageContainer._in_pkg_list(load_only, ftype_orig, pname)
+                    and not PackageContainer._in_pkg_list(
+                        load_only, ftype_orig, pname
+                    )
                 ):
                     if (
                         simulation.simulation_data.verbosity_level.value
@@ -1057,7 +1065,9 @@ class MFModel(ModelInterface):
             # call the package's "inspect_cells" method
             package_output = pp.inspect_cells(cell_list, stress_period)
             if len(package_output) > 0:
-                output_by_package[f"{pp.package_name} package"] = package_output
+                output_by_package[f"{pp.package_name} package"] = (
+                    package_output
+                )
         # get dependent variable
         if inspect_dependent_var:
             try:
@@ -1114,7 +1124,10 @@ class MFModel(ModelInterface):
                 data_output = DataSearchOutput((string_name,))
                 data_output.output = True
                 for kstp_kper in kstp_kper_lst:
-                    if stress_period is not None and stress_period != kstp_kper[1]:
+                    if (
+                        stress_period is not None
+                        and stress_period != kstp_kper[1]
+                    ):
                         continue
                     budget_array = np.array(
                         bud.get_data(
@@ -1129,7 +1142,9 @@ class MFModel(ModelInterface):
                     # flatten output data in disv and disu cases
                     if len(cell_list[0]) == 2 and len(budget_array.shape) >= 3:
                         budget_array = budget_array[0, :, :]
-                    elif len(cell_list[0]) == 1 and len(budget_array.shape) >= 2:
+                    elif (
+                        len(cell_list[0]) == 1 and len(budget_array.shape) >= 2
+                    ):
                         budget_array = budget_array[0, :]
                     # find data matches
                     if budget_array.shape != model_shape:
@@ -1163,7 +1178,10 @@ class MFModel(ModelInterface):
                     fd.write(f"Results from {package_name}\n")
                     for search_output in matches:
                         # write header line with data name
-                        fd.write(f",Results from {search_output.path_to_data[-1]}\n")
+                        fd.write(
+                            f",Results from "
+                            f"{search_output.path_to_data[-1]}\n"
+                        )
                         # write data header
                         if search_output.transient:
                             if search_output.output:
@@ -1178,16 +1196,22 @@ class MFModel(ModelInterface):
                         else:
                             fd.write(",cellid,data\n")
                         # write data found
-                        for index, data_entry in enumerate(search_output.data_entries):
+                        for index, data_entry in enumerate(
+                            search_output.data_entries
+                        ):
                             if search_output.transient:
-                                sp = search_output.data_entry_stress_period[index]
+                                sp = search_output.data_entry_stress_period[
+                                    index
+                                ]
                                 if search_output.output:
                                     fd.write(f",{sp[1]},{sp[0]}")
                                 else:
                                     fd.write(f",{sp}")
                             if search_output.data_header is not None:
                                 if len(search_output.data_entry_cellids) > 0:
-                                    cells = search_output.data_entry_cellids[index]
+                                    cells = search_output.data_entry_cellids[
+                                        index
+                                    ]
                                     output = " ".join([str(i) for i in cells])
                                     fd.write(f",{output}")
                                 fd.write(self._format_data_entry(data_entry))
@@ -1195,7 +1219,9 @@ class MFModel(ModelInterface):
                                 output = " ".join(
                                     [
                                         str(i)
-                                        for i in search_output.data_entry_ids[index]
+                                        for i in search_output.data_entry_ids[
+                                            index
+                                        ]
                                     ]
                                 )
                                 fd.write(f",{output}")
@@ -1203,7 +1229,9 @@ class MFModel(ModelInterface):
                     fd.write("\n")
         return output_by_package
 
-    def match_array_cells(self, cell_list, data_shape, array_data, key, data_output):
+    def match_array_cells(
+        self, cell_list, data_shape, array_data, key, data_output
+    ):
         # loop through list of cells we are searching for
         for cell in cell_list:
             if len(data_shape) == 3 or data_shape[0] == "nodes":
@@ -1215,7 +1243,9 @@ class MFModel(ModelInterface):
                     data_output.data_entry_ids.append(cell)
                     data_output.data_entry_stress_period.append(key)
                 elif array_data.ndim == 2 and len(cell) == 2:
-                    data_output.data_entries.append(array_data[cell[0], cell[1]])
+                    data_output.data_entries.append(
+                        array_data[cell[0], cell[1]]
+                    )
                     data_output.data_entry_ids.append(cell)
                     data_output.data_entry_stress_period.append(key)
                 elif array_data.ndim == 1 and len(cell) == 1:
@@ -1236,7 +1266,9 @@ class MFModel(ModelInterface):
             elif len(data_shape) == 2:
                 # get data based on ncpl/lay
                 if array_data.ndim == 2 and len(cell) == 2:
-                    data_output.data_entries.append(array_data[cell[0], cell[1]])
+                    data_output.data_entries.append(
+                        array_data[cell[0], cell[1]]
+                    )
                     data_output.data_entry_ids.append(cell)
                     data_output.data_entry_stress_period.append(key)
                 elif array_data.ndim == 1 and len(cell) == 1:
@@ -1278,7 +1310,10 @@ class MFModel(ModelInterface):
         """
 
         # write name file
-        if self.simulation_data.verbosity_level.value >= VerbosityLevel.normal.value:
+        if (
+            self.simulation_data.verbosity_level.value
+            >= VerbosityLevel.normal.value
+        ):
             print("    writing model name file...")
 
         self.name_file.write(ext_file_action=ext_file_action)
@@ -1311,32 +1346,44 @@ class MFModel(ModelInterface):
         package_recarray = self.name_file.packages
         structure = mfstructure.MFStructure()
         if (
-            package_recarray.search_data(f"dis{structure.get_version_string()}", 0)
+            package_recarray.search_data(
+                f"dis{structure.get_version_string()}", 0
+            )
             is not None
         ):
             return DiscretizationType.DIS
         elif (
-            package_recarray.search_data(f"disv{structure.get_version_string()}", 0)
+            package_recarray.search_data(
+                f"disv{structure.get_version_string()}", 0
+            )
             is not None
         ):
             return DiscretizationType.DISV
         elif (
-            package_recarray.search_data(f"disu{structure.get_version_string()}", 0)
+            package_recarray.search_data(
+                f"disu{structure.get_version_string()}", 0
+            )
             is not None
         ):
             return DiscretizationType.DISU
         elif (
-            package_recarray.search_data(f"disv1d{structure.get_version_string()}", 0)
+            package_recarray.search_data(
+                f"disv1d{structure.get_version_string()}", 0
+            )
             is not None
         ):
             return DiscretizationType.DISV1D
         elif (
-            package_recarray.search_data(f"dis2d{structure.get_version_string()}", 0)
+            package_recarray.search_data(
+                f"dis2d{structure.get_version_string()}", 0
+            )
             is not None
         ):
             return DiscretizationType.DIS2D
         elif (
-            package_recarray.search_data(f"disv2d{structure.get_version_string()}", 0)
+            package_recarray.search_data(
+                f"disv2d{structure.get_version_string()}", 0
+            )
             is not None
         ):
             return DiscretizationType.DISV2D
@@ -1356,7 +1403,9 @@ class MFModel(ModelInterface):
                 if name == "slntype" or name == "slnfname":
                     continue
                 if record[name] == self.name:
-                    return self.simulation.get_solution_package(record.slnfname)
+                    return self.simulation.get_solution_package(
+                        record.slnfname
+                    )
         return None
 
     def get_steadystate_list(self):
@@ -1440,7 +1489,11 @@ class MFModel(ModelInterface):
         path = model_ws
         file_mgr.model_relative_path[self.name] = path
 
-        if model_ws and model_ws != "." and self.simulation.name_file is not None:
+        if (
+            model_ws
+            and model_ws != "."
+            and self.simulation.name_file is not None
+        ):
             model_folder_path = file_mgr.get_model_path(self.name)
             if not os.path.exists(model_folder_path):
                 # make new model folder
@@ -1455,7 +1508,9 @@ class MFModel(ModelInterface):
                     old_model_base_name.lower() == self.name.lower()
                     or self.name == entry[2]
                 ):
-                    models_data[index][1] = os.path.join(path, old_model_file_name)
+                    models_data[index][1] = os.path.join(
+                        path, old_model_file_name
+                    )
                     break
             models.set_data(models_data)
 
@@ -1465,7 +1520,9 @@ class MFModel(ModelInterface):
                 if list_file:
                     path, list_file_name = os.path.split(list_file)
                     try:
-                        self.name_file.list.set_data(os.path.join(path, list_file_name))
+                        self.name_file.list.set_data(
+                            os.path.join(path, list_file_name)
+                        )
                     except MFDataException as mfde:
                         message = (
                             "Error occurred while setting relative "
@@ -1626,7 +1683,10 @@ class MFModel(ModelInterface):
             # build list of child packages
             child_package_list = []
             for pkg in self.packagelist:
-                if pkg.parent_file is not None and pkg.parent_file.path == package.path:
+                if (
+                    pkg.parent_file is not None
+                    and pkg.parent_file.path == package.path
+                ):
                     child_package_list.append(pkg)
             # remove child packages
             for child_package in child_package_list:
@@ -1670,7 +1730,9 @@ class MFModel(ModelInterface):
                     item[1] = os.path.join(model_rel_path, new_name)
 
                 if new_rec_array is None:
-                    new_rec_array = np.rec.array([item.tolist()], package_data.dtype)
+                    new_rec_array = np.rec.array(
+                        [item.tolist()], package_data.dtype
+                    )
                 else:
                     new_rec_array = np.hstack((item, new_rec_array))
         except:
@@ -1730,7 +1792,9 @@ class MFModel(ModelInterface):
                     ext = package.package_type
                 new_fileleaf = f"{name}.{ext}"
                 if base_filename != "":
-                    package.filename = os.path.join(base_filename, new_fileleaf)
+                    package.filename = os.path.join(
+                        base_filename, new_fileleaf
+                    )
                 else:
                     package.filename = new_fileleaf
                 package_type_count[package.package_type] = 1
@@ -1825,7 +1889,9 @@ class MFModel(ModelInterface):
             path = package.parent_file.path + (package.package_type,)
         else:
             path = (self.name, package.package_type)
-        package_struct = self.structure.get_package_struct(package.package_type)
+        package_struct = self.structure.get_package_struct(
+            package.package_type
+        )
         if add_to_package_list and path in self._package_paths:
             if (
                 package_struct is not None
@@ -1845,12 +1911,15 @@ class MFModel(ModelInterface):
                     )
             elif (
                 not set_package_name
-                and package.package_name in self._package_container.package_name_dict
+                and package.package_name
+                in self._package_container.package_name_dict
             ):
                 # package of this type with this name already
                 # exists, replace it
                 self.remove_package(
-                    self._package_container.package_name_dict[package.package_name]
+                    self._package_container.package_name_dict[
+                        package.package_name
+                    ]
                 )
                 if (
                     self.simulation_data.verbosity_level.value
@@ -1886,11 +1955,17 @@ class MFModel(ModelInterface):
         package_extension = package.package_type
         if set_package_name:
             # produce a default package name
-            if package_struct is not None and package_struct.multi_package_support:
+            if (
+                package_struct is not None
+                and package_struct.multi_package_support
+            ):
                 # check for other registered packages of this type
                 name_iter = datautil.NameIter(package.package_type, False)
                 for package_name in name_iter:
-                    if package_name not in self._package_container.package_name_dict:
+                    if (
+                        package_name
+                        not in self._package_container.package_name_dict
+                    ):
                         package.package_name = package_name
                         suffix = package_name.split("_")
                         if (
@@ -1899,7 +1974,9 @@ class MFModel(ModelInterface):
                             and suffix[-1] != "0"
                         ):
                             # update file extension to make unique
-                            package_extension = f"{package_extension}_{suffix[-1]}"
+                            package_extension = (
+                                f"{package_extension}_{suffix[-1]}"
+                            )
                         break
             else:
                 package.package_name = package.package_type
@@ -1907,7 +1984,10 @@ class MFModel(ModelInterface):
         if set_package_filename:
             # filename uses model base name
             package._filename = f"{self.name}.{package.package_type}"
-            if package._filename in self._package_container.package_filename_dict:
+            if (
+                package._filename
+                in self._package_container.package_filename_dict
+            ):
                 # auto generate a unique file name and register it
                 file_name = MFFileMgmt.unique_file_name(
                     package._filename,
@@ -1925,9 +2005,9 @@ class MFModel(ModelInterface):
                 # update model name file
                 pkg_type = package.package_type.upper()
                 if (
-                    package.package_type != "obs"
-                    and self.structure.package_struct_objs[
-                        package.package_type
+                    package.package_type != "obs" and
+                    self.structure.package_struct_objs[
+                    package.package_type
                     ].read_as_arrays
                 ):
                     pkg_type = pkg_type[0:-1]
@@ -1936,7 +2016,9 @@ class MFModel(ModelInterface):
                 file_mgr = self.simulation_data.mfpath
                 model_rel_path = file_mgr.model_relative_path[self.name]
                 if model_rel_path != ".":
-                    package_rel_path = os.path.join(model_rel_path, package.filename)
+                    package_rel_path = os.path.join(
+                        model_rel_path, package.filename
+                    )
                 else:
                     package_rel_path = package.filename
                 self.name_file.packages.update_record(
@@ -2027,7 +2109,9 @@ class MFModel(ModelInterface):
                 if pname is not None:
                     dict_package_name = pname
                 else:
-                    dict_package_name = f"{ftype}-{self._ftype_num_dict[ftype]}"
+                    dict_package_name = (
+                        f"{ftype}-{self._ftype_num_dict[ftype]}"
+                    )
         else:
             dict_package_name = ftype
 
@@ -2050,7 +2134,9 @@ class MFModel(ModelInterface):
             package.load(strict)
         except ReadAsArraysException:
             #  create ReadAsArrays package and load it instead
-            package_obj = PackageContainer.package_factory(f"{ftype}a", model_type)
+            package_obj = PackageContainer.package_factory(
+                f"{ftype}a", model_type
+            )
             package = package_obj(
                 self,
                 filename=fname,
@@ -2103,7 +2189,9 @@ class MFModel(ModelInterface):
         """
         from ..plot.plotutil import PlotUtilities
 
-        axes = PlotUtilities._plot_model_helper(self, SelPackList=SelPackList, **kwargs)
+        axes = PlotUtilities._plot_model_helper(
+            self, SelPackList=SelPackList, **kwargs
+        )
 
         return axes
 
