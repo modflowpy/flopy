@@ -288,7 +288,9 @@ class UnstructuredModelCell(ModelCell):
             if list_cellid == connecting_cellid:
                 return connection_number
 
-    def _update_connections(self, old_top_elv, new_top_elv, old_bot_elv, new_bot_elv):
+    def _update_connections(
+        self, old_top_elv, new_top_elv, old_bot_elv, new_bot_elv
+    ):
         # TODO: Support connection angles
         # TODO: Support vertically staggered connections
         old_thickness = old_top_elv - old_bot_elv
@@ -428,32 +430,44 @@ class ModelGrid:
         ]
         structure = MFStructure()
         if (
-            package_recarray.search_data(f"dis{structure.get_version_string()}", 0)
+            package_recarray.search_data(
+                f"dis{structure.get_version_string()}", 0
+            )
             is not None
         ):
             return DiscretizationType.DIS
         elif (
-            package_recarray.search_data(f"disv{structure.get_version_string()}", 0)
+            package_recarray.search_data(
+                f"disv{structure.get_version_string()}", 0
+            )
             is not None
         ):
             return DiscretizationType.DISV
         elif (
-            package_recarray.search_data(f"disu{structure.get_version_string()}", 0)
+            package_recarray.search_data(
+                f"disu{structure.get_version_string()}", 0
+            )
             is not None
         ):
             return DiscretizationType.DISU
         elif (
-            package_recarray.search_data(f"disv1d{structure.get_version_string()}", 0)
+            package_recarray.search_data(
+                f"disv1d{structure.get_version_string()}", 0
+            )
             is not None
         ):
             return DiscretizationType.DISV1D
         elif (
-            package_recarray.search_data(f"dis2d{structure.get_version_string()}", 0)
+            package_recarray.search_data(
+                f"dis2d{structure.get_version_string()}", 0
+            )
             is not None
         ):
             return DiscretizationType.DIS2D
         elif (
-            package_recarray.search_data(f"disv2d{structure.get_version_string()}", 0)
+            package_recarray.search_data(
+                f"disv2d{structure.get_version_string()}", 0
+            )
             is not None
         ):
             return DiscretizationType.DISV2D
@@ -484,8 +498,10 @@ class ModelGrid:
             return self._simulation_data.mfdata[
                 (self._model_name, "disv2d", "griddata", "idomain")
             ].get_data()
-        except_str = "ERROR: Grid type {} for model {} not recognized.".format(
-            self._grid_type, self._model_name
+        except_str = (
+            "ERROR: Grid type {} for model {} not " "recognized.".format(
+                self._grid_type, self._model_name
+            )
         )
         print(except_str)
         raise MFGridException(except_str)
@@ -791,7 +807,9 @@ class UnstructuredModelGrid(ModelGrid):
         super().__init__(model_name, simulation_data, DiscretizationType.DISU)
 
     def __getitem__(self, index):
-        return UnstructuredModelCell(index, self._simulation_data, self._model_name)
+        return UnstructuredModelCell(
+            index, self._simulation_data, self._model_name
+        )
 
     @staticmethod
     def get_unstruct_jagged_array_list():

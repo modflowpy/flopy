@@ -55,9 +55,9 @@ def convert_data(data, data_dimensions, data_type, data_item=None, sub_amt=1):
                 return float(val)
             except (ValueError, TypeError):
                 message = (
-                    'Data "{}" with value "{}" can not be converted to float.'.format(
-                        data_dimensions.structure.name, data
-                    )
+                    'Data "{}" with value "{}" can '
+                    "not be converted to float"
+                    ".".format(data_dimensions.structure.name, data)
                 )
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(
@@ -113,9 +113,9 @@ def convert_data(data, data_dimensions, data_type, data_item=None, sub_amt=1):
                 return int(PyListUtil.clean_numeric(data))
             except (ValueError, TypeError):
                 message = (
-                    'Data "{}" with value "{}" can not be converted to int.'.format(
-                        data_dimensions.structure.name, data
-                    )
+                    'Data "{}" with value "{}" can not be '
+                    "converted to int"
+                    ".".format(data_dimensions.structure.name, data)
                 )
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(
@@ -217,7 +217,9 @@ def list_to_array(sarr, model_grid, kper=0, mask=False):
     return arrays
 
 
-def process_open_close_line(arr_line, data_dim, data_type, sim_data, store=True):
+def process_open_close_line(
+    arr_line, data_dim, data_type, sim_data, store=True
+):
     # process open/close line
     index = 2
     if data_type == DatumType.integer:
@@ -359,7 +361,10 @@ def to_string(
             if val > 0:
                 return str(int(val + 1))
             elif val == 0.0:
-                if struct.pack(">d", val) == b"\x80\x00\x00\x00\x00\x00\x00\x00":
+                if (
+                    struct.pack(">d", val)
+                    == b"\x80\x00\x00\x00\x00\x00\x00\x00"
+                ):
                     # value is negative zero
                     return str(int(val - 1))
                 else:
@@ -523,12 +528,13 @@ class MFComment:
 
     def __init__(self, comment, path, sim_data, line_number=0):
         if not (
-            isinstance(comment, str) or isinstance(comment, list) or comment is None
+            isinstance(comment, str)
+            or isinstance(comment, list)
+            or comment is None
         ):
             raise FlopyException(
-                'Comment "{}" not valid.  Comment must be of type str of list.'.format(
-                    comment
-                )
+                'Comment "{}" not valid.  Comment must be '
+                "of type str of list.".format(comment)
             )
         self.text = comment
         self.path = path
@@ -656,7 +662,9 @@ class MFComment:
         if include_empty_line and not text_clean:
             return True
         if text_clean and (
-            text_clean[0] == "#" or text_clean[0] == "!" or text_clean[0] == "//"
+            text_clean[0] == "#"
+            or text_clean[0] == "!"
+            or text_clean[0] == "//"
         ):
             return True
         return False
@@ -787,7 +795,9 @@ class ArrayTemplateGenerator(TemplateGenerator):
                     "data_storage_type_list specified with the "
                     "wrong size.  Size {} but expected to be "
                     "the same as the number of layers, "
-                    "{}.".format(len(data_storage_type_list), dimension_list[0])
+                    "{}.".format(
+                        len(data_storage_type_list), dimension_list[0]
+                    )
                 )
                 type_, value_, traceback_ = sys.exc_info()
 
@@ -866,7 +876,9 @@ class ArrayTemplateGenerator(TemplateGenerator):
                 if all_layers:
                     data = np.full(dimension_list, default_value, data_type)
                 else:
-                    data = np.full(dimension_list[1:], default_value, data_type)
+                    data = np.full(
+                        dimension_list[1:], default_value, data_type
+                    )
         elif data_storage_type == DataStorageType.internal_constant:
             if default_value is None:
                 if data_type == np.int32:
@@ -950,7 +962,7 @@ class ListTemplateGenerator(TemplateGenerator):
         type_list = data_storage.build_type_list(
             nseg=nseg,
             surf_rate_specified=surf_rate_specified,
-            cellid_expanded=cellid_expanded,
+            cellid_expanded=cellid_expanded
         )
         if data_storage.jagged_record:
             comment = (
@@ -978,7 +990,9 @@ class ListTemplateGenerator(TemplateGenerator):
             )
         if aux_vars is not None:
             if len(aux_vars) > 0:
-                if isinstance(aux_vars[0], list) or isinstance(aux_vars[0], tuple):
+                if isinstance(aux_vars[0], list) or isinstance(
+                    aux_vars[0], tuple
+                ):
                     aux_vars = aux_vars[0]
             for aux_var in aux_vars:
                 type_list.append((aux_var, object))

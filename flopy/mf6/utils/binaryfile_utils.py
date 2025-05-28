@@ -88,7 +88,9 @@ class MFOutputRequester:
         # check if supplied key exists, and model grid type
         if key in self.dataDict:
             if (key[0], "disv", "dimensions", "nvert") in self.mfdict:
-                self.querybinarydata = self._querybinarydata_vertices(self.mfdict, key)
+                self.querybinarydata = self._querybinarydata_vertices(
+                    self.mfdict, key
+                )
             elif (key[0], "disu", "connectiondata", "iac") in self.mfdict:
                 self.querybinarydata = self._querybinarydata_unstructured(key)
             else:
@@ -135,10 +137,14 @@ class MFOutputRequester:
 
             else:
                 try:
-                    data = np.array(bindata.get_data(text=key[-1], full3D=True))
+                    data = np.array(
+                        bindata.get_data(text=key[-1], full3D=True)
+                    )
                 except ValueError:
                     # imeth == 6
-                    data = np.array(bindata.get_data(text=key[-1], full3D=False))
+                    data = np.array(
+                        bindata.get_data(text=key[-1], full3D=False)
+                    )
         else:
             data = np.array(bindata.get_alldata())
 
@@ -327,7 +333,9 @@ class MFOutputRequester:
 
             elif key[1] == "DDN":
                 try:
-                    readddn = bf.HeadFile(path, text="drawdown", precision="double")
+                    readddn = bf.HeadFile(
+                        path, text="drawdown", precision="double"
+                    )
                     self.dataDict[(key[0], key[1], "DRAWDOWN")] = path
                     readddn.close()
 

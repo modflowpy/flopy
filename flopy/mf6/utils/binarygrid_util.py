@@ -317,7 +317,8 @@ class MfGrdFile(FlopyBinaryData):
             if self._grid_type == "DISU":
                 # modify verts
                 verts = [
-                    [idx, verts[idx, 0], verts[idx, 1]] for idx in range(shpvert[0])
+                    [idx, verts[idx, 0], verts[idx, 1]]
+                    for idx in range(shpvert[0])
                 ]
             if self.verbose:
                 print(f"returning verts from {self.file.name}")

@@ -50,7 +50,9 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
     """
 
     if modelgrid.grid_type in ("unstructured",):
-        raise ValueError("unstructured grids not supported in get_lak_connections()")
+        raise ValueError(
+            "unstructured grids not supported in get_lak_connections()"
+        )
 
     embedded = True
     shape3d = modelgrid.shape
@@ -60,7 +62,9 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
     if isinstance(lake_map, (list, tuple)):
         lake_map = np.array(lake_map, dtype=np.int32)
     elif isinstance(lake_map, (int, float)):
-        raise TypeError("lake_map must be a Masked Array, ndarray, list, or tuple")
+        raise TypeError(
+            "lake_map must be a Masked Array, ndarray, list, or tuple"
+        )
 
     # evaluate lake_map shape
     shape_map = lake_map.shape
@@ -83,7 +87,9 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
 
     # check dimensions of idomain
     if idomain.shape != shape3d:
-        raise ValueError(f"shape of idomain ({idomain.shape}) not equal to {shape3d}")
+        raise ValueError(
+            f"shape of idomain ({idomain.shape}) not equal to {shape3d}"
+        )
 
     # convert bedleak to numpy array if necessary
     if bedleak is None:
@@ -96,7 +102,9 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
 
     # check the dimensions of the bedleak array
     if bedleak.shape != shape2d:
-        raise ValueError(f"shape of bedleak ({bedleak.shape}) not equal to {shape2d}")
+        raise ValueError(
+            f"shape of bedleak ({bedleak.shape}) not equal to {shape2d}"
+        )
 
     # get the model grid elevations and reset lake_map using idomain
     # if lake is embedded and in an inactive cell
@@ -191,13 +199,17 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
 
         # reset idomain for lake
         if iconn > 0:
-            idx = np.asarray((lake_map == lake_number) & (idomain > 0)).nonzero()
+            idx = np.asarray(
+                (lake_map == lake_number) & (idomain > 0)
+            ).nonzero()
             idomain[idx] = 0
 
     return idomain, connection_dict, connectiondata
 
 
-def __structured_lake_connections(lake_map, idomain, cell_index, dx, dy, elevations):
+def __structured_lake_connections(
+    lake_map, idomain, cell_index, dx, dy, elevations
+):
     nlay, nrow, ncol = lake_map.shape
     cellids = []
     claktypes = []

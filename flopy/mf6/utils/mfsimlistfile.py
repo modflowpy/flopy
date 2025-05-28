@@ -292,7 +292,8 @@ class MfSimulationList:
             self._rewind_file()
 
             seekpoint = self._seek_to_string(
-                "SUMMARY INFORMATION ON VARIABLES " + "STORED IN THE MEMORY MANAGER"
+                "SUMMARY INFORMATION ON VARIABLES "
+                + "STORED IN THE MEMORY MANAGER"
             )
             self.f.seek(seekpoint)
             line = self.f.readline().strip()
@@ -363,7 +364,8 @@ class MfSimulationList:
             self._rewind_file()
 
             seekpoint = self._seek_to_string(
-                "DETAILED INFORMATION ON VARIABLES " + "STORED IN THE MEMORY MANAGER"
+                "DETAILED INFORMATION ON VARIABLES "
+                + "STORED IN THE MEMORY MANAGER"
             )
             self.f.seek(seekpoint)
             line = self.f.readline().strip()

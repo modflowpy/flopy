@@ -161,7 +161,9 @@ class MFTransient:
         if self._path[0].lower() == "nam":
             return True
         if ("tdis", "dimensions", "nper") not in self._simulation_data.mfdata:
-            raise FlopyException("Could not find number of stress periods (nper).")
+            raise FlopyException(
+                "Could not find number of stress periods (nper)."
+            )
         nper = self._simulation_data.mfdata[("tdis", "dimensions", "nper")]
         if not (sp_num <= nper.get_data()):
             if (
@@ -254,7 +256,9 @@ class MFData(DataInterface):
             self._org_path = self._path
             index = 0
             while self._path in self._simulation_data.mfdata:
-                self._path = self._org_path[:-1] + (f"{self._org_path[-1]}_{index}",)
+                self._path = self._org_path[:-1] + (
+                    f"{self._org_path[-1]}_{index}",
+                )
                 index += 1
         self._structure_init()
         # tie this to the simulation dictionary
@@ -301,7 +305,10 @@ class MFData(DataInterface):
 
     @property
     def model(self):
-        if self._model_or_sim is not None and self._model_or_sim.type == "Model":
+        if (
+            self._model_or_sim is not None
+            and self._model_or_sim.type == "Model"
+        ):
             return self._model_or_sim
         else:
             return None
@@ -374,7 +381,9 @@ class MFData(DataInterface):
 
     def find_dimension_size(self, dimension_name):
         parent_path = self._path[:-1]
-        result = self._simulation_data.mfdata.find_in_path(parent_path, dimension_name)
+        result = self._simulation_data.mfdata.find_in_path(
+            parent_path, dimension_name
+        )
         if result[0] is not None:
             return [result[0].get_data()]
         else:
@@ -512,7 +521,9 @@ class MFData(DataInterface):
                     # data item name is a keyword to look for
                     self._keyword = data_item_struct.name
 
-    def _get_constant_formatting_string(self, const_val, layer, data_type, suffix="\n"):
+    def _get_constant_formatting_string(
+        self, const_val, layer, data_type, suffix="\n"
+    ):
         if (
             self.structure.data_item_structures[0].numeric_index
             or self.structure.data_item_structures[0].is_cellid
@@ -550,7 +561,9 @@ class MFMultiDimVar(MFData):
         path=None,
         dimensions=None,
     ):
-        super().__init__(sim_data, model_or_sim, structure, enable, path, dimensions)
+        super().__init__(
+            sim_data, model_or_sim, structure, enable, path, dimensions
+        )
 
     @property
     def data_type(self):
@@ -612,12 +625,16 @@ class MFMultiDimVar(MFData):
     ):
         file_mgmt = self._simulation_data.mfpath
         model_name = self.data_dimensions.package_dim.model_dim[0].model_name
-        ext_file_path = file_mgmt.get_updated_path(fname, model_name, ext_file_action)
+        ext_file_path = file_mgmt.get_updated_path(
+            fname, model_name, ext_file_action
+        )
         fname = datautil.clean_filename(ext_file_path)
         ext_format = ["OPEN/CLOSE", f"'{ext_file_path}'"]
         if data_type != DataStructureType.recarray:
             if factor is not None:
-                data_type = self.structure.get_datum_type(return_enum_type=True)
+                data_type = self.structure.get_datum_type(
+                    return_enum_type=True
+                )
                 ext_format.append("FACTOR")
                 if data_type == DatumType.integer:
                     ext_format.append(str(int(factor)))

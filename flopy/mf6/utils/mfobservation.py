@@ -3,6 +3,8 @@ import csv
 import numpy as np
 import pandas as pd
 
+from ...utils import import_optional_dependency
+
 
 def try_float(data):
     try:
@@ -26,7 +28,7 @@ class MFObservation:
     utility data
 
     Returns:
-    -------
+    --------\
     self.data: (xarray) array of observations
     """
 
@@ -89,7 +91,9 @@ class Observations:
     def _array_to_dict(self, data, key=None):
         # convert np.array to dictionary of observation names and data
         data = data.T
-        data = {line[0]: [try_float(point) for point in line[1:]] for line in data}
+        data = {
+            line[0]: [try_float(point) for point in line[1:]] for line in data
+        }
         if key is None:
             return data
         else:
@@ -262,7 +266,8 @@ class Observations:
                         idx = times.index(totim)
                     except ValueError:
                         err = (
-                            "Invalid totim value provided: obs.get_times() returns a list of valid times for totim\
+                            "Invalid totim value provided: obs.get_times() "
+                            "returns a list of valid times for totim\
                          = <>"
                         )
                         raise ValueError(err)
@@ -394,7 +399,9 @@ class MFObservationRequester:
         # key for a key request.
         if key in self.obs_dataDict:
             modelpath = path.get_model_path(key[0])
-            self.query_observation_data = self._query_observation_data(modelpath, key)
+            self.query_observation_data = self._query_observation_data(
+                modelpath, key
+            )
             return
 
         elif key == ("model", "OBS8", "IamAdummy"):
@@ -440,7 +447,9 @@ class MFObservationRequester:
                 for i in range(len(multi_observations)):
                     obs8_file = f"OBS8_{i + 1}"
                     # check for single observations, continuous observations
-                    self._get_obsfile_names(multi_observations[i], obs8_file, "SINGLE")
+                    self._get_obsfile_names(
+                        multi_observations[i], obs8_file, "SINGLE"
+                    )
                     self._get_obsfile_names(
                         multi_observations[i], obs8_file, "CONTINUOUS"
                     )
@@ -448,11 +457,14 @@ class MFObservationRequester:
             elif check <= 1:
                 for i in range(len(partial_key)):
                     self._get_obsfile_names(partial_key[i], "OBS8", "SINGLE")
-                    self._get_obsfile_names(partial_key[i], "OBS8", "CONTINUOUS")
+                    self._get_obsfile_names(
+                        partial_key[i], "OBS8", "CONTINUOUS"
+                    )
 
             else:
                 raise KeyError(
-                    "There are no observation files associated with this project"
+                    "There are no observation files associated "
+                    "with this project"
                 )
 
     def _get_obsfile_names(self, partial_key, OBS8, obstype):
@@ -485,9 +497,9 @@ class MFObservationRequester:
                     "obs_output_file_name",
                 )
             ]
-            self.obs_dataDict[(partial_key[0], obspackage, obstype, "Observations")] = (
-                obs_fname
-            )
+            self.obs_dataDict[
+                (partial_key[0], obspackage, obstype, "Observations")
+            ] = obs_fname
         except KeyError:
             pass
 

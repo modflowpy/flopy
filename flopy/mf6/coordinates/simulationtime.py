@@ -83,11 +83,15 @@ class SimulationTime:
         self.simdata = simdata
 
     def get_time_units(self):
-        time_units = self.simdata.mfdata[("tdis", "options", "time_units")].get_data()
+        time_units = self.simdata.mfdata[
+            ("tdis", "options", "time_units")
+        ].get_data()
         return time_units
 
     def get_perioddata(self):
-        return self.simdata.mfdata[("tdis", "perioddata", "perioddata")].get_data()
+        return self.simdata.mfdata[
+            ("tdis", "perioddata", "perioddata")
+        ].get_data()
 
     def get_total_time(self):
         period_data = self.simdata.mfdata[

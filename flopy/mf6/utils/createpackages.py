@@ -88,5 +88,4 @@ _MF6_PATH = Path(__file__).parents[1]
 
 if __name__ == "__main__":
     from flopy.mf6.utils.codegen import make_all
-
     make_all(dfndir=_MF6_PATH / "data" / "dfn", outdir=_MF6_PATH / "modflow")

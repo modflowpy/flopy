@@ -52,12 +52,19 @@ def get_structured_faceflows(
         grb = MfGrdFile(grb_file, verbose=verbose)
         if grb.grid_type != "DIS":
             raise ValueError(
-                "get_structured_faceflows method is only for structured DIS grids"
+                "get_structured_faceflows method "
+                "is only for structured DIS grids"
             )
         ia, ja = grb.ia, grb.ja
         nlay, nrow, ncol = grb.nlay, grb.nrow, grb.ncol
     else:
-        if ia is None or ja is None or nlay is None or nrow is None or ncol is None:
+        if (
+            ia is None
+            or ja is None
+            or nlay is None
+            or nrow is None
+            or ncol is None
+        ):
             raise ValueError(
                 "ia, ja, nlay, nrow, and ncol must be"
                 "specified if a MODFLOW 6 binary grid"
@@ -139,7 +146,9 @@ def get_structured_faceflows(
     return frf.reshape(shape), fff.reshape(shape), flf.reshape(shape)
 
 
-def get_residuals(flowja, grb_file=None, ia=None, ja=None, shape=None, verbose=False):
+def get_residuals(
+    flowja, grb_file=None, ia=None, ja=None, shape=None, verbose=False
+):
     """
     Get the residual from the MODFLOW 6 flowja flows. The residual is stored
     in the diagonal position of the flowja vector.
@@ -208,4 +217,6 @@ def __check_flowja_size(flowja, ja):
     Check the shape of flowja relative to ja.
     """
     if flowja.shape != ja.shape:
-        raise ValueError(f"size of flowja ({flowja.shape}) not equal to {ja.shape}")
+        raise ValueError(
+            f"size of flowja ({flowja.shape}) not equal to {ja.shape}"
+        )
