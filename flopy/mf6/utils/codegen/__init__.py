@@ -68,7 +68,7 @@ def make_targets(dfn, outdir: PathLike, verbose: bool = False):
     """Generate Python source file(s) from the given input definition."""
 
     env = _get_template_env()
-    outdir = Path(outdir).expanduser().absolute()
+    outdir = Path(outdir).expanduser().resolve().absolute()
 
     # import here instead of module so we don't
     # expect optional deps at module init time
@@ -98,25 +98,36 @@ def make_targets(dfn, outdir: PathLike, verbose: bool = False):
                 print(f"Wrote {target_path}")
 
 
-def make_all(dfndir: Path, outdir: PathLike, verbose: bool = False, version: int = 1):
+def make_all(
+    dfndir: PathLike,
+    outdir: PathLike,
+    verbose: bool = False,
+    version: int = 1,
+    legacydir: PathLike | None = None,
+):
     """Generate Python source files from the DFN files in the given location."""
 
     # import here instead of module so we don't
     # expect optional deps at module init time
     from flopy.mf6.utils.dfn import Dfn
 
+    dfndir = Path(dfndir).expanduser().resolve().absolute()
     dfns = Dfn.load_all(dfndir, version=version)
 
     # TODO: remove this when we no longer attach legacy DFN
     # format to generated classes
     if version == 2:
-        with open(dfndir.parent / "common.dfn") as cf:
+        assert legacydir is not None, (
+            "legacydir must be provided for version 2 DFNs"
+        )  # temporary
+        legacydir = Path(legacydir).expanduser().resolve().absolute()
+        with open(legacydir / "common.dfn") as cf:
             common, _ = Dfn._load_v1_flat(cf)
             for dfn in dfns.values():
                 dfn_name = dfn["name"]
                 if dfn_name in ["common"]:
                     continue
-                with open(dfndir.parent / f"{dfn_name}.dfn") as df:
+                with open(legacydir / f"{dfn_name}.dfn") as df:
                     legacy_dfn, legacy_meta = Dfn._load_v1_flat(df, common=common)
                     dfn["legacy_dfn"] = legacy_dfn
                     dfn["legacy_meta"] = legacy_meta

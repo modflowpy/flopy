@@ -99,7 +99,7 @@ def generate_classes(
 
         shutil.rmtree(_MF6_AUTOGEN_PATH)
         _MF6_AUTOGEN_PATH.mkdir(parents=True)
-        make_all(tomlpath, _MF6_AUTOGEN_PATH, version=2)
+        make_all(tomlpath, _MF6_AUTOGEN_PATH, version=2, legacydir=_MF6_DFNS_PATH)
         if verbose:
             files = list(_MF6_AUTOGEN_PATH.glob("*.py"))
             print(f"Generated {len(files)} module files in: {_MF6_AUTOGEN_PATH}")
