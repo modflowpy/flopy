@@ -225,7 +225,7 @@ class Filters:
         return _get_vars(dfn)
 
     def attrs(
-        dfn: dict, legacy_dfn: dict, component_name: tuple[str, str]
+        dfn: dict, component_name: tuple[str, str]
     ) -> List[str]:
         """
         Map the context's input variables to corresponding class attributes,
