@@ -114,19 +114,19 @@ def make_all(
     dfndir = Path(dfndir).expanduser().resolve().absolute()
     dfns = Dfn.load_all(dfndir, version=version)
 
-    # TODO: remove this when we no longer attach legacy DFN
-    # format to generated classes
+    # below is a temporary workaround to attach the legacy DFN
+    # representation to generated classes. at the moment it is
+    # parsed haphazardly throughout the mf6 module. TODO: when
+    # the legacy DFN is no longer needed at runtime, remove.
     if version == 2:
         assert legacydir is not None, (
             "legacydir must be provided for version 2 DFNs"
-        )  # temporary
+        )
         legacydir = Path(legacydir).expanduser().resolve().absolute()
         with open(legacydir / "common.dfn") as cf:
             common, _ = Dfn._load_v1_flat(cf)
             for dfn in dfns.values():
                 dfn_name = dfn["name"]
-                if dfn_name in ["common"]:
-                    continue
                 with open(legacydir / f"{dfn_name}.dfn") as df:
                     legacy_dfn, legacy_meta = Dfn._load_v1_flat(df, common=common)
                     dfn["legacy_dfn"] = legacy_dfn
