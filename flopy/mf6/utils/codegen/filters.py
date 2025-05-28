@@ -351,7 +351,7 @@ class Filters:
             return meta_
 
         legacy_dfn = dfn.get("legacy_dfn", {})
-        legacy_meta = dfn.get("legacy_metadata", [])
+        legacy_meta = dfn.get("legacy_meta", [])
         legacy_dfn = _dfn(legacy_dfn, _filter_metadata(legacy_meta))
         if component_base == "MFPackage":
             attrs.extend(
