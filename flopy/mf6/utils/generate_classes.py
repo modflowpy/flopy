@@ -93,7 +93,7 @@ def generate_classes(
             _CMD.columnize([f.name for f in dfns])
             print()
 
-        tomlpath = tmpdir / "toml"
+        tomlpath = _MF6_DFNS_PATH / "toml"
         tomlpath.mkdir()
         dfn2toml(_MF6_DFNS_PATH, tomlpath)
 
@@ -160,12 +160,12 @@ def cli_main():
     # ignore/warn removed options
     exclude = args.pop("exclude", None)
     no_backup = args.pop("no_backup", None)
-    if exclude is not None:
+    if exclude:
         print(
             "The '--exclude' option is no longer supported. "
             "Exclude DFNs and corresponding source files manually."
         )
-    if no_backup is not None:
+    if no_backup:
         print(
             "The '--no-backup' option is no longer supported. "
             "Exclude DFNs and corresponding source files manually."

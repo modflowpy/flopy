@@ -307,12 +307,12 @@ class Filters:
         if dfn.get("sln", None):
             dfn_header.append(["solution_package", "*"])
 
-        def _legacy_dfn_to_list(dfn_) -> list[list[str]]:
+        def _legacy_dfn_to_list() -> list[list[str]]:
             def _dfn():
                 def _var(var: dict) -> list[str]:
                     exclude = ["longname", "description"]
                     name = var["name"]
-                    subpkg = dfn_.get("fkeys", dict()).get(name, None)
+                    subpkg = dfn.get("fkeys", dict()).get(name, None)
                     if subpkg:
                         var["construct_package"] = subpkg["abbr"]
                         var["construct_data"] = subpkg["val"]
@@ -323,14 +323,14 @@ class Filters:
                         if k not in exclude
                     ]
 
-                return [_var(var) for var in list(legacy_dfn.values(multi=True))]
+                return [_var(var) for var in list(dfn["legacy_dfn"].values(multi=True))]
 
             metadata = []
-            if dfn_.get("multi", False):
+            if dfn.get("multi", False):
                 metadata.append("multi-package")
-            if dfn_.get("advanced", False):
+            if dfn.get("advanced", False):
                 metadata.append("package-type advanced-stress-package")
-            if dfn_.get("sln", None):
+            if dfn.get("sln", None):
                 metadata.append(["solution_package", "*"])
 
             return [["header"] + metadata] + _dfn()
@@ -341,7 +341,7 @@ class Filters:
                     f"package_abbr = '{Filters.package_abbr(component_name)}'",
                     f"_package_type = '{component_name[1]}'",
                     f"dfn_file_name = '{dfn_file_name}'",
-                    f"dfn = {pformat(_legacy_dfn_to_list(dfn), indent=10, width=sys.maxsize)}",
+                    f"dfn = {pformat(_legacy_dfn_to_list(), indent=10, width=sys.maxsize)}",
                 ]
             )
 
