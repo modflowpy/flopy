@@ -3,6 +3,10 @@ import shutil
 import tempfile
 from pathlib import Path
 
+from flopy.mf6.utils.codegen import make_all
+from flopy.mf6.utils.dfn import get_dfns
+from flopy.mf6.utils.dfn2toml import convert as dfn2toml
+
 _PROJ_ROOT_PATH = Path(__file__).parents[3].expanduser().resolve().absolute()
 _MF6_MODULE_PATH = _PROJ_ROOT_PATH / "flopy" / "mf6"
 _MF6_AUTOGEN_PATH = _MF6_MODULE_PATH / "modflow"
@@ -43,13 +47,6 @@ def generate_classes(
     if dfnpath is None and ref is None:
         raise ValueError("Need remote 'ref' or local 'dfnpath'")
 
-    # import here instead of module so we don't
-    # expect optional deps at module init time
-    from modflow_devtools.download import download_and_unzip
-
-    from flopy.mf6.utils.codegen import make_all
-    from flopy.mf6.utils.dfn2toml import convert as dfn2toml
-
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
 
@@ -63,14 +60,8 @@ def generate_classes(
             if verbose:
                 print(f"Fetching MODFLOW 6 definitions from: {owner}/{repo}/{ref}")
 
-            url = f"https://github.com/{owner}/{repo}/archive/{ref}.zip"
-            dl_path = download_and_unzip(url=url, path=tmpdir, verbose=verbose)
-            if (proj_root := next(iter(dl_path.glob("modflow6-*")), None)) is None:
-                raise ValueError(f"Could not find MODFLOW 6 project root in: {dl_path}")
-            dfnpath = tmpdir / "dfn"
-            shutil.copytree(
-                proj_root / "doc" / "mf6io" / "mf6ivar" / "dfn", dfnpath
-            )
+            get_dfns(owner=owner, repo=repo, ref=ref, outdir=tmpdir, verbose=verbose)
+            dfnpath = tmpdir
 
         if verbose:
             dfns = list(dfnpath.glob("*.dfn"))
