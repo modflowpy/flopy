@@ -352,18 +352,7 @@ path = "flopy.mf6.utils.codegen"
 depends_on = []
 
 [[modules]]
-path = "flopy.mf6.utils.createpackages"
-depends_on = [
-    { path = "flopy.mf6.data.mfdatautil" },
-    { path = "flopy.mf6.data.mfstructure" },
-    { path = "flopy.utils.datautil" },
-]
-
-[[modules]]
 path = "flopy.mf6.utils.generate_classes"
-depends_on = [
-    { path = "flopy.mf6.utils.createpackages" },
-]
 
 [[modules]]
 path = "flopy.mf6.utils.lakpak_utils"
