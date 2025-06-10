@@ -102,14 +102,10 @@ app
 # mac files
 **.DS_Store
 
-# Generated class files and dfns
-flopy/mf6/data/dfn/
+# Generated class files
 flopy/mf6/modflow/
-
-# DFN TOML dir
-flopy/mf6/data/toml/
 
 # uv lockfile
 uv.lock
+
 .mypy_cache
-mf6/modflow

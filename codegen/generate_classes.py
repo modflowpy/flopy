@@ -7,7 +7,7 @@ from codegen import make_all
 from codegen.dfn import get_dfns
 from codegen.dfn2toml import convert as dfn2toml
 
-_PROJ_ROOT_PATH = Path(__file__).parents[2].expanduser().resolve().absolute()
+_PROJ_ROOT_PATH = Path(__file__).parents[1].expanduser().resolve().absolute()
 _MF6_MODULE_PATH = _PROJ_ROOT_PATH / "flopy" / "mf6"
 _MF6_AUTOGEN_PATH = _MF6_MODULE_PATH / "modflow"
 _MF6_REPO_OWNER = "MODFLOW-ORG"
