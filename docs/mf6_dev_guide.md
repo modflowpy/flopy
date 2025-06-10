@@ -19,10 +19,7 @@ MODFLOW 6 describes its input specification with definition (DFN) files.
 
 Definition files describe components (e.g. simulations, models, packages) in the MODFLOW 6 input hierarchy. Definition files are used to generate both source code and documentation.
 
-FloPy can generate a MODFLOW 6 compatibility layer for itself, given a set of definition files:
-
-- `flopy/mf6/utils/createpackages.py`: assumes definition files are in `flopy/mf6/data/dfn`
-- `flopy/mf6/utils/generate_classes.py`: downloads DFNs then runs `createpackages.py`
+FloPy can generate a MODFLOW 6 compatibility layer for itself with the `flopy/mf6/utils/generate_classes.py` script.
 
 For instance, to sync with DFNs from the MODFLOW 6 develop branch:
 

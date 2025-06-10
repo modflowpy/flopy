@@ -231,7 +231,6 @@ Contents:
 .. toctree::
    :maxdepth: 4
 
-   ./source/flopy.mf6.utils.createpackages.rst
    ./source/flopy.mf6.utils.generate_classes.rst
 
 
