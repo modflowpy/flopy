@@ -36,7 +36,6 @@ jobs:
       - name: Install FloPy
         run: |
           pip install .
-          pip install ".[codegen]"
 
       - name: OpenGL workaround on Linux
         if: runner.os == 'Linux'
@@ -71,7 +70,7 @@ jobs:
           subset: triangle
 
       - name: Update FloPy packages
-        run: python -m flopy.mf6.utils.generate_classes --ref develop
+        run: uv run generate-mf6-classes --ref develop
 
       - name: Run example tests
         working-directory: autotest

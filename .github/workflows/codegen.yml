@@ -32,5 +32,5 @@ jobs:
       - name: Install FloPy
         run: uv sync --extra test
 
-      - name: Generate classes
-        run: uv run python -m flopy.mf6.utils.generate_classes --ref ${{ matrix.ref }}
+      - name: Generate MODFLOW 6 classes
+        run: uv run generate-mf6-classes --ref ${{ matrix.ref }}

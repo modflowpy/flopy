@@ -39,11 +39,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # NOTE: assumes the MF6 module has been generated already.
-      # we do that manually to exclude models under development.
-      # if this becomes unnecessary, uncomment the lines below.
-      # - name: Sync MF6 module
-      #   run: uv run python -m flopy.mf6.utils.generate_classes
+      - name: Sync MF6 module
+        run: uv run generate-mf6-classes
 
       - name: Update version numbers
         id: version

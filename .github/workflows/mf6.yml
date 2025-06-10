@@ -54,7 +54,7 @@ jobs:
       working-directory: flopy
       run: |
         pixi run --manifest-path=../modflow6/pixi.toml pip install --no-deps -e .
-        pixi run --manifest-path=../modflow6/pixi.toml python -m flopy.mf6.utils.generate_classes --dfnpath ../modflow6/doc/mf6io/mf6ivar/dfn
+        pixi run --manifest-path=../modflow6/pixi.toml genereate-mf6-classes --dfnpath ../modflow6/doc/mf6io/mf6ivar/dfn
 
     - name: Build MF6
       working-directory: modflow6
@@ -135,7 +135,7 @@ jobs:
       working-directory: flopy
       run: |
         pixi run --manifest-path=../modflow6/pixi.toml pip install --no-deps -e .
-        pixi run --manifest-path=../modflow6/pixi.toml python -m flopy.mf6.utils.generate_classes --dfnpath ../modflow6/doc/mf6io/mf6ivar/dfn
+        pixi run --manifest-path=../modflow6/pixi.toml generate-mf6-classes --dfnpath ../modflow6/doc/mf6io/mf6ivar/dfn
 
     - name: Install executables
       uses: modflowpy/install-modflow-action@v1
