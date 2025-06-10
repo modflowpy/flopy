@@ -111,3 +111,5 @@ flopy/mf6/data/toml/
 
 # uv lockfile
 uv.lock
+.mypy_cache
+mf6/modflow

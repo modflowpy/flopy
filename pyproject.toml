@@ -22,27 +22,28 @@ classifiers = [
 ]
 requires-python = ">=3.10"
 dependencies = [
+    "boltons",
+    "Jinja2>=3.0",
     "numpy>=1.20.3",
     "matplotlib >=1.4.0",
     "modflow-devtools",
     "pandas >=2.0.0",
+    "tomli",
+    "tomli-w",
 ]
 dynamic = ["version", "readme"]
 
 [project.optional-dependencies]
-dev = ["flopy[codegen,lint,test,optional,doc]", "tach"]
-codegen = ["Jinja2>=3.0", "boltons", "tomli", "tomli-w"]
+dev = ["flopy[lint,test,optional,doc]", "tach"]
 lint = ["cffconvert", "codespell[toml] >=2.2.2", "ruff"]
 test = [
     "flopy[lint]",
-    "boltons",
     "coverage !=7.6.5",
     "flaky",
     "filelock",
     "jupyter",
     "jupyter_client >=8.4.0", # avoid datetime.utcnow() deprecation warning
     "jupytext",
-    "modflow-devtools",
     "pytest !=8.1.0",
     "pytest-benchmark",
     "pytest-cov",
@@ -50,8 +51,6 @@ test = [
     "pytest-xdist",
     "pyzmq >=25.1.2",
     "syrupy",
-    "tomli",
-    "tomli-w",
     "virtualenv",
 ]
 optional = [
@@ -91,7 +90,7 @@ doc = [
 
 [project.scripts]
 get-modflow = "flopy.utils.get_modflow:cli_main"
-generate-mf6-classes = "flopy.mf6.utils.generate_classes:cli_main"
+generate-mf6-classes = "codegen.generate_classes:cli_main"
 
 [project.urls]
 Documentation = "https://flopy.readthedocs.io"

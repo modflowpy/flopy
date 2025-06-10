@@ -7,6 +7,8 @@ from typing import Any, List, Optional
 
 from boltons.iterutils import default_enter, remap
 
+from codegen.dfn import _MF6_SCALARS
+
 
 def _try_get_enum_value(v: Any) -> Any:
     """
@@ -17,11 +19,13 @@ def _try_get_enum_value(v: Any) -> Any:
 
 
 def _get_vars(d: dict) -> dict[str, dict]:
-    vars_ = dict()
+    vars_ = {}
+
     def visit(p, k, v):
         if isinstance(v, dict) and "type" in v:
             vars_[k] = v
         return True
+
     def enter(p, k, v):
         if isinstance(v, dict) and "type" in v:
             return (v, False)
@@ -35,7 +39,7 @@ def _get_vars(d: dict) -> dict[str, dict]:
 
 
 class Filters:
-
+    @staticmethod
     def base(component_name: tuple[str, str]) -> str:
         """Base class from which the input context should inherit."""
         if component_name == ("sim", "nam"):
@@ -44,6 +48,7 @@ class Filters:
             return "MFModel"
         return "MFPackage"
 
+    @staticmethod
     def title(component_name: tuple[str, str]) -> str:
         """
         The input context's unique title. This is not
@@ -64,11 +69,13 @@ class Filters:
             return r
         return l + r
 
+    @staticmethod
     def package_abbr(component_name: tuple[str, str]) -> str:
         if component_name[0] in ["sim", "sln", "exg", None]:
             return component_name[1]
         return "".join(component_name)
 
+    @staticmethod
     def description(component_name: tuple[str, str]) -> str:
         """A description of the input context."""
         l, r = component_name
@@ -84,12 +91,15 @@ class Filters:
                 " A MFSimulation object must be created before creating any of the MODFLOW"
                 " 6 model objects."
             )
+        return ""
 
+    @staticmethod
     def prefix(component_name: tuple[str, str]) -> str:
         """The input context class name prefix, e.g. 'MF' or 'Modflow'."""
         base = Filters.base(component_name)
         return "MF" if base == "MFSimulationBase" else "Modflow"
 
+    @staticmethod
     def dfn_file_name(component_name: tuple[str, str]) -> str:
         if component_name[0] == "exg":
             return f"{'-'.join(component_name)}.dfn"
@@ -98,12 +108,11 @@ class Filters:
             (None, "gnc"),
         ]:
             return f"gwf-{component_name[1]}.dfn"
-        if tuple(component_name) in [
-            (None, "mvt")
-        ]:
+        if tuple(component_name) in [(None, "mvt")]:
             return f"gwt-{component_name[1]}.dfn"
         return f"{component_name[0] or 'sim'}-{component_name[1]}.dfn"
 
+    @staticmethod
     def parent(dfn: dict, component_name: tuple[str, str]) -> str:
         # TODO should be no longer needed when parents are explicit in dfns
         """The input context's parent context type, if it can have a parent."""
@@ -112,13 +121,16 @@ class Filters:
             return subpkg["parent"]
         if component_name == ("sim", "nam"):
             return None
-        elif (
-            component_name[1] is None
-            or component_name[0] in [None, "sim", "exg", "sln"]
-        ):
+        elif component_name[1] is None or component_name[0] in [
+            None,
+            "sim",
+            "exg",
+            "sln",
+        ]:
             return "simulation"
         return "model"
 
+    @staticmethod
     def skip_init(component_name: tuple[str, str]) -> List[str]:
         """Variables to skip in input context's `__init__` method."""
         base = Filters.base(component_name)
@@ -139,6 +151,7 @@ class Filters:
                 return ["method", "interpolation_method_single", "sfac"]
             return []
 
+    @staticmethod
     def untag(var: dict) -> dict:
         """
         If the variable is a tagged record, remove the leading
@@ -175,6 +188,7 @@ class Filters:
         var["fields"] = fields
         return var
 
+    @staticmethod
     def type(var: dict) -> str:
         """
         Get a readable representation of the variable's type.
@@ -183,21 +197,17 @@ class Filters:
         """
         _type = var["type"]
         shape = var.get("shape", None)
-        children = Filters.children(var)
+        children: Any = Filters.children(var)
         if children:
             if _type == "list":
                 if len(children) == 1:
-                    first = list(children.values())[0]
+                    first = next(iter(children.values()))
                     if first["type"] in ["record", "union"]:
                         return f"[{Filters.type(first)}]"
-                children = ", ".join(
-                    [v["name"] for v in children.values()]
-                )
+                children = ", ".join([v["name"] for v in children.values()])
                 return f"[{children}]"
             elif _type == "record":
-                children = ", ".join(
-                    [v["name"] for v in children.values()]
-                )
+                children = ", ".join([v["name"] for v in children.values()])
                 return f"({children})"
             elif _type == "union":
                 return " | ".join([v["name"] for v in children.values()])
@@ -205,6 +215,7 @@ class Filters:
             return f"[{_type}]"
         return var["type"]
 
+    @staticmethod
     def children(var: dict) -> Optional[dict]:
         _type = var["type"]
         items = var.get("items", None)
@@ -221,22 +232,24 @@ class Filters:
             return choices
         return None
 
+    @staticmethod
     def default_value(var: dict) -> Any:
         _default = var.get("default", None)
         if _default is not None:
             return _default
         return None
 
+    @staticmethod
     def variables(dfn: dict) -> List[str]:
         return _get_vars(dfn)
 
+    @staticmethod
     def attrs(dfn: dict, component_name: tuple[str, str]) -> List[str]:
         """
         Map the context's input variables to corresponding class attributes,
         where applicable. TODO: this should get much simpler if we can drop
         all the `ListTemplateGenerator`/`ArrayTemplateGenerator` attributes.
         """
-        from flopy.mf6.utils.dfn import _MF6_SCALARS, Dfn
 
         component_base = Filters.base(component_name)
         component_vars = _get_vars(dfn)
@@ -271,13 +284,15 @@ class Filters:
                     "exg",
                 ]:
                     args.insert(0, f"'{component_name[0]}6'")
-                return f"{var_subpkg['key']} = ListTemplateGenerator(({', '.join(args)}))"
+                return (
+                    f"{var_subpkg['key']} = ListTemplateGenerator(({', '.join(args)}))"
+                )
             is_array = (
-                var_type in ["string", "integer", "double precision"]
-                and var_shape
+                var_type in ["string", "integer", "double precision"] and var_shape
             )
             is_composite = var_type in ["list", "record", "union"]
             if is_array or is_composite:
+
                 def _args():
                     args = [
                         f"'{component_name[1]}'",
@@ -314,9 +329,7 @@ class Filters:
         def _dfn(definition, metadata) -> List[List[str]]:
             def _meta():
                 exclude = ["subpackage", "parent_name_type"]
-                return [
-                    v for v in metadata if not any(p in v for p in exclude)
-                ]
+                return [v for v in metadata if not any(p in v for p in exclude)]
 
             def __dfn():
                 def _var(var: dict) -> List[str]:
@@ -336,7 +349,7 @@ class Filters:
                 return [_var(var) for var in list(definition.values(multi=True))]
 
             return [["header"] + _meta()] + __dfn()
-        
+
         def _filter_metadata(metadata):
             meta_ = list()
             for m in metadata:
@@ -359,12 +372,13 @@ class Filters:
                     f"package_abbr = '{Filters.package_abbr(component_name)}'",
                     f"_package_type = '{component_name[1]}'",
                     f"dfn_file_name = '{dfn_file_name}'",
-                    f"dfn = {pformat(legacy_dfn, indent=10, width=sys.maxsize)}"
+                    f"dfn = {pformat(legacy_dfn, indent=10, width=sys.maxsize)}",
                 ]
             )
 
         return attrs
-    
+
+    @staticmethod
     def init(dfn: dict, component_name: tuple[str, str]) -> List[str]:
         component_base = Filters.base(component_name)
         component_vars = _get_vars(dfn)
@@ -392,14 +406,10 @@ class Filters:
 
                     if _should_set(var):
                         if name not in ["hpc_data"]:
-                            stmts.append(
-                                f"self.name_file.{name}.set_data({name})"
-                            )
+                            stmts.append(f"self.name_file.{name}.set_data({name})")
                         if not subpkg:
-                            stmts.append(
-                                f"self.{name} = self.name_file.{name}"
-                            )
-                    
+                            stmts.append(f"self.{name} = self.name_file.{name}")
+
                     if subpkg and subpkg["key"] not in refs:
                         refs[subpkg["key"]] = subpkg
                         args = f"'{subpkg['abbr']}', {subpkg['param']}"
@@ -421,12 +431,8 @@ class Filters:
                         name = f"{name}_"
 
                     if _should_set(var):
-                        stmts.append(
-                            f"self.name_file.{name}.set_data({name})"
-                        )
-                        stmts.append(
-                            f"self.{name} = self.name_file.{name}"
-                        )
+                        stmts.append(f"self.name_file.{name}.set_data({name})")
+                        stmts.append(f"self.{name} = self.name_file.{name}")
 
                     subpkg = var.get("ref", None)
                     if subpkg and subpkg["key"] not in refs:
@@ -472,9 +478,7 @@ class Filters:
                                 f"= self.build_mfdata('{subpkg['key']}', None)"
                             )
                         else:
-                            _name = (
-                                name[:-1] if name.endswith("_") else name
-                            )
+                            _name = name[:-1] if name.endswith("_") else name
                             name = name.replace("-", "_")
                             stmts.append(
                                 f"self.{'_' if subpkg else ''}{name} "
@@ -504,6 +508,7 @@ class Filters:
 
         return list(filter(None, _statements()))
 
+    @staticmethod
     def safe_name(v: str) -> str:
         """
         Make sure a string is safe to use as a variable name in Python code.
@@ -512,6 +517,7 @@ class Filters:
         """
         return (f"{v}_" if v in kwlist else v).replace("-", "_")
 
+    @staticmethod
     def math(v: str) -> str:
         """Massage latex equations"""
         v = v.replace("$<$", "<")
@@ -519,10 +525,7 @@ class Filters:
         if "$" in v:
             descsplit = v.split("$")
             mylist = [
-                i.replace("\\", "")
-                + ":math:`"
-                + j.replace("\\", "\\\\")
-                + "`"
+                i.replace("\\", "") + ":math:`" + j.replace("\\", "\\\\") + "`"
                 for i, j in zip(descsplit[::2], descsplit[1::2])
             ]
             mylist.append(descsplit[-1].replace("\\", ""))
@@ -531,6 +534,7 @@ class Filters:
             v = v.replace("\\", "")
         return v
 
+    @staticmethod
     def clean(v: str) -> str:
         """Clean description"""
         replace_pairs = [
@@ -549,6 +553,7 @@ class Filters:
                 v = v.replace(s1, s2)
         return v
 
+    @staticmethod
     def value(v: Any) -> str:
         """
         Format a value to appear in the RHS of an assignment or argument-

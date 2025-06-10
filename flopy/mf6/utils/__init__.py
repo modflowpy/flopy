@@ -1,4 +1,3 @@
-from . import createpackages
 from .binarygrid_util import MfGrdFile
 from .lakpak_utils import get_lak_connections
 from .mfsimlistfile import MfSimulationList

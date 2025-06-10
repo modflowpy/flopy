@@ -2,23 +2,26 @@ from itertools import chain
 from os import PathLike
 from pathlib import Path
 
-__all__ = ["make_init", "make_targets", "make_all"]
+import jinja2
+
+from codegen.component import ComponentDescriptor
+from codegen.dfn import Dfn
+from codegen.filters import Filters
+
+__all__ = ["make_all", "make_init", "make_targets"]
 
 
 def _get_template_env():
     # import here instead of module so we don't
     # expect optional deps at module init time
-    import jinja2
 
-    loader = jinja2.PackageLoader("flopy", "mf6/utils/codegen/templates/")
+    loader = jinja2.PackageLoader("codegen", "templates/")
     env = jinja2.Environment(
         loader=loader,
         trim_blocks=True,
         lstrip_blocks=True,
         keep_trailing_newline=True,
     )
-
-    from flopy.mf6.utils.codegen.filters import Filters
 
     env.filters["base"] = Filters.base
     env.filters["title"] = Filters.title
@@ -48,10 +51,6 @@ def make_init(dfns: dict, outdir: PathLike, verbose: bool = False):
     env = _get_template_env()
     outdir = Path(outdir).expanduser().absolute()
 
-    # import here instead of module so we don't
-    # expect optional deps at module init time
-    from flopy.mf6.utils.codegen.component import ComponentDescriptor
-
     components = list(
         chain.from_iterable(ComponentDescriptor.from_dfn(dfn) for dfn in dfns.values())
     )
@@ -69,11 +68,6 @@ def make_targets(dfn, outdir: PathLike, verbose: bool = False):
 
     env = _get_template_env()
     outdir = Path(outdir).expanduser().resolve().absolute()
-
-    # import here instead of module so we don't
-    # expect optional deps at module init time
-    from flopy.mf6.utils.codegen.component import ComponentDescriptor
-    from flopy.mf6.utils.codegen.filters import Filters
 
     def _get_template_name(component_name) -> str:
         base = Filters.base(component_name)
@@ -109,7 +103,6 @@ def make_all(
 
     # import here instead of module so we don't
     # expect optional deps at module init time
-    from flopy.mf6.utils.dfn import Dfn
 
     dfndir = Path(dfndir).expanduser().resolve().absolute()
     dfns = Dfn.load_all(dfndir, version=version)
@@ -119,9 +112,7 @@ def make_all(
     # parsed haphazardly throughout the mf6 module. TODO: when
     # the legacy DFN is no longer needed at runtime, remove.
     if version == 2:
-        assert legacydir is not None, (
-            "legacydir must be provided for version 2 DFNs"
-        )
+        assert legacydir is not None, "legacydir must be provided for version 2 DFNs"
         legacydir = Path(legacydir).expanduser().resolve().absolute()
         with open(legacydir / "common.dfn") as cf:
             common, _ = Dfn._load_v1_flat(cf)

@@ -1,29 +1,30 @@
 from typing import (
     Iterator,
+    Optional,
     TypedDict,
 )
 
-from flopy.mf6.utils.dfn import Dfn
+from codegen.dfn import Dfn
 
 
-def get_component_names(dfn: dict) -> list[tuple[str, str]]:
+def get_component_names(dfn: dict) -> list[tuple[Optional[str], Optional[str]]]:
     """
     Get the names of components produced by the definition.
     A definition may produce one or more component classes.
     """
     name = dfn.get("name", None)
     if not name:
-        raise ValueError(f"DFN must have a 'name' entry")
+        raise ValueError("DFN must have a 'name' entry")
     name = name.split("-")
     if name[1] == "nam":
         if name[0] == "sim":
             return [
                 (None, name[1]),  # nam pkg
-                tuple([*name]),  # simulation
+                (*name,),  # simulation
             ]
         else:
             return [
-                tuple([*name]),  # nam pkg
+                (*name,),  # nam pkg
                 (name[0], None),  # model
             ]
     elif name in [
@@ -33,10 +34,10 @@ def get_component_names(dfn: dict) -> list[tuple[str, str]]:
     ]:
         # TODO: deduplicate mfmvr.py/mfgwfmvr.py etc and remove special cases
         return [
-            tuple([*name]),
+            (*name,),
             (None, name[1]),
         ]
-    return [tuple([*name])]
+    return [(*name,)]
 
 
 class ComponentDescriptor(TypedDict):

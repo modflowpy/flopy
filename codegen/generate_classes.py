@@ -3,11 +3,11 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from flopy.mf6.utils.codegen import make_all
-from flopy.mf6.utils.dfn import get_dfns
-from flopy.mf6.utils.dfn2toml import convert as dfn2toml
+from codegen import make_all
+from codegen.dfn import get_dfns
+from codegen.dfn2toml import convert as dfn2toml
 
-_PROJ_ROOT_PATH = Path(__file__).parents[3].expanduser().resolve().absolute()
+_PROJ_ROOT_PATH = Path(__file__).parents[2].expanduser().resolve().absolute()
 _MF6_MODULE_PATH = _PROJ_ROOT_PATH / "flopy" / "mf6"
 _MF6_AUTOGEN_PATH = _MF6_MODULE_PATH / "modflow"
 _MF6_REPO_OWNER = "MODFLOW-ORG"
@@ -77,7 +77,7 @@ def generate_classes(
         tomlpath.mkdir()
         dfn2toml(dfnpath, tomlpath)
 
-        shutil.rmtree(_MF6_AUTOGEN_PATH)
+        shutil.rmtree(_MF6_AUTOGEN_PATH, ignore_errors=True)
         _MF6_AUTOGEN_PATH.mkdir(parents=True)
         make_all(tomlpath, _MF6_AUTOGEN_PATH, version=2, legacydir=dfnpath)
         if verbose:

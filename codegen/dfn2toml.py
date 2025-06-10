@@ -7,7 +7,7 @@ from pathlib import Path
 import tomli_w as tomli
 from boltons.iterutils import remap
 
-from flopy.mf6.utils.dfn import Dfn
+from codegen.dfn import Dfn
 
 # mypy: ignore-errors
 
