@@ -67,12 +67,11 @@ After FloPy is installed, MODFLOW and related programs can be installed using th
 See documentation `get_modflow.md <https://github.com/modflowpy/flopy/blob/develop/docs/get_modflow.md>`_
 for more information.
 
-If MODFLOW was already installed, you can use the following command to generate the package classes corresponding to the installed version of MODFLOW.
-This command is also automatically run when running `get-modflow`.
+After MODFLOW is installed, you can use the following command to generate the package classes corresponding to the installed version of MODFLOW.
 
 .. code-block:: bash
 
-    generate-mf6-classes --ref <commit_or_tag>
+    generate-mf6-classes
 
 See documentation `generate_classes.md <https://github.com/modflowpy/flopy/blob/develop/.docs/md/generate_classes.md>`_ for more options when installing specific versions of MODFLOW 6.
 
