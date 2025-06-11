@@ -135,6 +135,9 @@ jobs:
           ostag: mac
           subset: triangle
 
+      - name: Generate MODFLOW 6 classes
+        run: generate-mf6-classes --ref develop
+
       - name: Run tutorial and example notebooks
         working-directory: autotest
         run: |
