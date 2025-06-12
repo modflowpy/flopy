@@ -1451,7 +1451,6 @@ class DataStorage:
             for data_item_index, data_item in enumerate(
                 struct.data_item_structures
             ):
-                print(data_item)
                 if data_item.type == DatumType.keyword:
                     if data_lst[0].lower() != data_item.name.lower():
                         data_lst_updated.append(data_item.name)
@@ -2477,17 +2476,16 @@ class DataStorage:
                         * mult
                     )
                 elif self.layer_storage[layer].nc_dataset is not None:
-                    data_out = (
+                    full_data = (
                         file_access.read_netcdf_array(
                             self.layer_storage[layer].nc_dataset,
                             self._model_or_sim.modeldiscrit,
                             self.data_dimensions.structure.get_package(),
                             self.data_dimensions.structure.name,
                             -1,
-
                         )
-                        * mult
                     )
+                    break
                 else:
                     data_out = (
                         file_access.read_text_data_from_file(

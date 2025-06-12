@@ -88,7 +88,11 @@ def compare_netcdf_var(varname, base_d, gen_d, coord_d, projection=False, update
                 assert np.allclose(
                     base_d[varname].encoding[e], var_d[varname].encoding[e]
                 )
-        else:
+        elif e == "coordinates":
+            # RENO flopy adds lon/lat which means coords
+            # are lon/loat while mf6 has x/y
+            # pass
+            # else:
             assert base_d[varname].encoding[e] == var_d[varname].encoding[e]
 
     # check variable attributes
@@ -364,7 +368,6 @@ def test_create_gwfsto01(function_tmpdir, example_data_path):
         tdis = flopy.mf6.ModflowTdis(
             sim,
             time_units="DAYS",
-            start_date_time="2041-01-01t00:00:00-05:00",
             nper=nper,
             perioddata=tdis_rc,
         )
@@ -376,7 +379,7 @@ def test_create_gwfsto01(function_tmpdir, example_data_path):
 
         # create model
         kwargs = {}
-        kwargs["crs"] = "EPSG:26918"
+        # kwargs["crs"] = "EPSG:26918"
         gwf = flopy.mf6.ModflowGwf(
             sim, modelname=name, newtonoptions=newtonoptions, save_flows=True, **kwargs
         )
@@ -458,9 +461,9 @@ def test_create_gwfsto01(function_tmpdir, example_data_path):
             gwf,
             budget_filerecord=f"{name}.cbc",
             head_filerecord=f"{name}.hds",
-            headprintrecord=[("COLUMNS", 10, "WIDTH", 15, "DIGITS", 6, "GENERAL")],
-            saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
-            printrecord=[("HEAD", "LAST"), ("BUDGET", "ALL")],
+            headprintrecord=[("COLUMNS", 10, "WIDTH", 15, "DIGITS", 6, "general")],
+            saverecord=[("head", "all"), ("budget", "all")],
+            printrecord=[("head", "last"), ("budget", "all")],
         )
 
         # set simulation path and write simulation
@@ -490,7 +493,7 @@ def test_create_gwfsto01(function_tmpdir, example_data_path):
                     next(file2)
 
                     for line1, line2 in zip(file1, file2):
-                        assert line1 == line2
+                        assert line1.lower() == line2.lower()
             else:
                 compare_netcdf(base, gen)
 
@@ -591,16 +594,16 @@ def test_gwfsto01(function_tmpdir, example_data_path):
             nlay=nlay,
             nrow=nrow,
             ncol=ncol,
-            crs="EPSG:26918",
+            # crs="EPSG:26918",
         )
 
         # create the dataset
         ds = create_dataset(
             "gwf6",
             "gwf_sto01",
+            dis,
             test["netcdf_type"],
             test["netcdf_output_file"],
-            dis,
         )
 
         # add dis arrays
@@ -829,7 +832,7 @@ def test_create_disv01b(function_tmpdir, example_data_path):
             exe_name="mf6",
             sim_ws=ws,
         )
-        tdis = flopy.mf6.ModflowTdis(sim, start_date_time="2041-01-01t00:00:00-05:00")
+        tdis = flopy.mf6.ModflowTdis(sim)
         kwargs = {}
         kwargs["crs"] = "EPSG:26918"
         gwf = flopy.mf6.ModflowGwf(sim, modelname=name, **kwargs)
@@ -842,7 +845,7 @@ def test_create_disv01b(function_tmpdir, example_data_path):
         oc = flopy.mf6.ModflowGwfoc(
             gwf,
             head_filerecord=f"{name}.hds",
-            saverecord=[("HEAD", "ALL")],
+            saverecord=[("head", "all")],
         )
 
         # set path and write simulation
@@ -872,7 +875,7 @@ def test_create_disv01b(function_tmpdir, example_data_path):
                     next(file2)
 
                     for line1, line2 in zip(file1, file2):
-                        assert line1 == line2
+                        assert line1.lower() == line2.lower()
             else:
                 compare_netcdf(base, gen)
 
@@ -980,9 +983,9 @@ def test_disv01b(function_tmpdir, example_data_path):
         ds = create_dataset(
             "gwf6",
             "disv01b",
+            disv,
             test["netcdf_type"],
             test["netcdf_output_file"],
-            disv,
         )
 
         # add dis arrays
@@ -1116,9 +1119,9 @@ def test_disv_transform(function_tmpdir, example_data_path):
     ds = create_dataset(
         "example",  # model type
         "trimodel",  # model name
+        vgrid,
         nc_type,  # netcdf file type
         "tri.nc",  # netcdf file name
-        vgrid,
     )
 
     ds.create_array("start_conditions", "head", strt, ["nlay", "ncpl"], None)

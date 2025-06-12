@@ -6,7 +6,6 @@ from typing import Optional
 
 import numpy as np
 import xarray as xr
-from pyproj import CRS, Proj
 
 import flopy
 
@@ -37,8 +36,8 @@ class ModelNetCDFDataset:
 
     Additionally, these files can can be used as MODFLOW 6
     model inputs for variables that define internal attributes
-    designated for that purpose, specifically "modflow6_input"
-    and "modflow6_layer". These attributes are managed internally
+    designated for that purpose, specifically "modflow_input"
+    and "layer". These attributes are managed internally
     for MODFLOW 6 models when the supported data interfaces are
     used.
     """
@@ -48,22 +47,37 @@ class ModelNetCDFDataset:
         self._modeltype = None
         self._dataset = None
         self._modelgrid = None
+        self._meshtype = None
         self._tags = None
         self._fname = None
         self._nc_type = None
 
     @property
-    def gridtype(self):
-        if self._nc_type == "mesh2d":
-            return "LAYERED MESH"
-        elif self._nc_type == "structured":
+    def grid_type(self):
+        if isinstance(self, DisvNetCDFMesh2d):
+            return "VERTEX"
+        else:
             return "STRUCTURED"
+
+    def mesh_type(self):
+        if self._meshtype is not None:
+            return self._meshtype
 
         return ""
 
     @property
     def modelname(self):
-        return self._modelname
+        if self._modelname is not None:
+            return self._modelname
+
+        return ""
+
+    @property
+    def modeltype(self):
+        if self._modeltype is not None:
+            return self._modeltype
+
+        return ""
 
     @property
     def dataset(self):
@@ -75,11 +89,10 @@ class ModelNetCDFDataset:
 
     @property
     def layered(self):
-        res = False
-        if self.nc_type == "mesh2d":
-            res = True
+        if self._meshtype is not None:
+            return self._meshtype == "layered"
 
-        return res
+        return False
 
     def open(self, nc_fpth: str) -> None:
         """
@@ -96,12 +109,13 @@ class ModelNetCDFDataset:
         self._dataset = xr.open_dataset(fpth, engine="netcdf4")
         self._set_mapping()
 
-        self._dataset.attrs["source"] = f"flopy v{flopy.__version__}"
         history = self._dataset.attrs["history"]
-        self._dataset.attrs["history"] = f"{history}; updated {time.ctime(time.time())}"
+        self._dataset.attrs["history"] = (
+            f"{history}; updated by flopy {flopy.__version__} {time.ctime(time.time())}"
+        )
 
     def create(
-        self, modeltype: str, modelname: str, nc_type: str, fname: str, modelgrid: Grid
+        self, modeltype: str, modelname: str, modelgrid: Grid, nc_type: str, fname: str
     ) -> None:
         """
         Create a new dataset.
@@ -109,14 +123,14 @@ class ModelNetCDFDataset:
         Args:
             modeltype (str): A model type, e.g. GWF6.
             modelname (str): The model name.
+            modelgrid (Grid): A FloPy derived discretization object.
             nc_type (str): A supported NetCDF file type: mesh2d or structured.
             fname (str): The generated NetCDF file name.
-            modelgrid (Grid): A FloPy derived discretization object.
         """
         self._modelname = modelname.lower()
         self._modeltype = modeltype.lower()
-        self._nc_type = nc_type.lower()
         self._modelgrid = modelgrid
+        self._nc_type = nc_type.lower()
         self._fname = fname
         self._tags = {}
 
@@ -318,6 +332,8 @@ class ModelNetCDFDataset:
         projection = False
         if self._modelgrid.crs:
             try:
+                from pyproj import CRS
+
                 crs = CRS.from_user_input(self._modelgrid.crs)
                 wkt = crs.to_wkt()
                 projection = True
@@ -370,9 +386,9 @@ class ModelNetCDFDataset:
             for path in self._tags:
                 for l in self._tags[path]:
                     vname = self._tags[path][l]
-                    self._dataset[vname].attrs["modflow6_input"] = path.upper()
+                    self._dataset[vname].attrs["modflow_input"] = path.upper()
                     if l > -1:
-                        self._dataset[vname].attrs["modflow6_layer"] = np.int32(l + 1)
+                        self._dataset[vname].attrs["layer"] = np.int32(l + 1)
 
     def _set_mapping(self):
         var_d = {}
@@ -384,19 +400,35 @@ class ModelNetCDFDataset:
             if "modflow 6" in mtype_str:
                 mtype = re.findall(r"\((.*?)\)", mtype_str)
                 if len(mtype) == 1:
-                    self._modeltype = f"{mtype}6"
+                    self._modeltype = f"{mtype[0].lower()}6"
             gridtype = self._dataset.attrs["modflow_grid"].lower()
-            if gridtype == "layered mesh":
-                self._nc_type = "mesh2d"
+            if "mesh" in self._dataset.attrs:
+                self._meshtype = self._dataset.attrs["mesh"].lower()
+            if gridtype == "vertex":
+                if self._meshtype != "layered":
+                    raise Exception(
+                        f"Invalid NetCDF mesh '{self._meshtype}'"
+                        " for MODFLOW vertex grid"
+                    )
+                else:
+                    self._nc_type = "mesh2d"
             elif gridtype == "structured":
-                self._nc_type = "structured"
+                if self._meshtype == "layered":
+                    self._nc_type = "mesh2d"
+                elif self._meshtype is None:
+                    self._nc_type = "structured"
+                else:
+                    raise Exception(
+                        f"Invalid NetCDF mesh '{self._meshtype}'"
+                        " for MODFLOW structured grid"
+                    )
 
         for varname, da in self._dataset.data_vars.items():
-            if "modflow6_input" in da.attrs:
-                path = da.attrs["modflow6_input"].lower()
+            if "modflow_input" in da.attrs:
+                path = da.attrs["modflow_input"].lower()
 
-                if "modflow6_layer" in da.attrs:
-                    layer = da.attrs["modflow6_layer"]
+                if "layer" in da.attrs:
+                    layer = da.attrs["layer"]
                     # convert indexing to 0-based
                     layer = layer - 1
                 else:
@@ -426,16 +458,23 @@ class ModelNetCDFDataset:
             else:
                 model = model_type.upper()
 
+        if isinstance(self._modelgrid, VertexGrid):
+            grid = "VERTEX"
+        elif isinstance(self._modelgrid, StructuredGrid):
+            grid = "STRUCTURED"
+
         if self._nc_type == "structured":
-            grid = self._nc_type.upper()
+            mesh = None
             conventions = "CF-1.11"
         elif self._nc_type == "mesh2d":
-            grid = "LAYERED MESH"
+            mesh = "LAYERED"
             conventions = "CF-1.11 UGRID-1.0"
 
         self._dataset.attrs["title"] = f"{model_name.upper()} {dep_var} input"
-        self._dataset.attrs["source"] = f"flopy v{flopy.__version__}"
+        self._dataset.attrs["source"] = f"flopy {flopy.__version__}"
         self._dataset.attrs["modflow_grid"] = grid
+        if mesh is not None:
+            self._dataset.attrs["mesh"] = mesh
         self._dataset.attrs["modflow_model"] = f"{model_name.upper()}: {model} model"
         self._dataset.attrs["history"] = "first created " + time.ctime(time.time())
         self._dataset.attrs["Conventions"] = conventions
@@ -533,7 +572,7 @@ class DisNetCDFStructured(ModelNetCDFDataset):
         param: str,
         data: np.typing.ArrayLike,
         shape: list,
-        longname: Optional[str],
+        longname: Optional[str] = None,
     ):
         data = np.array(data)
         nc_shape = None
@@ -641,6 +680,8 @@ class DisNetCDFStructured(ModelNetCDFDataset):
         ydim = self._dataset.sizes["y"]
 
         try:
+            from pyproj import Proj
+
             epsg_code = crs.to_epsg(min_confidence=90)
             proj = Proj(
                 f"EPSG:{epsg_code}",
@@ -698,7 +739,7 @@ class DisNetCDFMesh2d(ModelNetCDFDataset):
         param: str,
         data: np.typing.ArrayLike,
         shape: list,
-        longname: Optional[str],
+        longname: Optional[str] = None,
     ):
         data = np.array(data)
         nc_shape = None
@@ -848,7 +889,7 @@ class DisvNetCDFMesh2d(ModelNetCDFDataset):
         param: str,
         data: np.typing.ArrayLike,
         shape: list,
-        longname: Optional[str],
+        longname: Optional[str] = None,
     ):
         data = np.array(data)
         nc_shape = ["nmesh_face"]
@@ -976,7 +1017,7 @@ class DisvNetCDFMesh2d(ModelNetCDFDataset):
         return "mesh_face_x mesh_face_y"
 
 
-def open_dataset(nc_fpth: str, grid_type: str) -> ModelNetCDFDataset:
+def open_dataset(nc_fpth: str, grid_type: Optional[str] = None) -> ModelNetCDFDataset:
     """
     Open an existing dataset.
 
@@ -989,10 +1030,12 @@ def open_dataset(nc_fpth: str, grid_type: str) -> ModelNetCDFDataset:
         ModelNetCDFDataset: A dataset derived from the base class.
     """
     nc_dataset = None
-    grid_t = grid_type.lower()
+    grid_t = None
+    if grid_type:
+        grid_t = grid_type.lower()
 
     # grid_type corresponds to a flopy.discretization type
-    if grid_t != "vertex" and grid_t != "structured":
+    if grid_t and (grid_t != "vertex" and grid_t != "structured"):
         raise Exception(
             "Supported NetCDF discretication types "
             'are "vertex" (DISV) and "structured" '
@@ -1006,15 +1049,20 @@ def open_dataset(nc_fpth: str, grid_type: str) -> ModelNetCDFDataset:
         modelname = None
         gridtype = None
     else:
+        meshtype = None
         modelname = dataset.attrs["modflow_model"].split(":")[0].lower()
         gridtype = dataset.attrs["modflow_grid"].lower()
-        if grid_t == "vertex":
-            if gridtype == "layered mesh":
+        if "mesh" in dataset.attrs:
+            meshtype = dataset.attrs["mesh"].lower()
+        if grid_t:
+            assert grid_t == gridtype
+        if gridtype == "vertex":
+            if meshtype == "layered":
                 nc_dataset = DisvNetCDFMesh2d()
-        elif grid_t == "structured":
-            if gridtype == "layered mesh":
+        elif gridtype == "structured":
+            if meshtype == "layered":
                 nc_dataset = DisNetCDFMesh2d()
-            elif gridtype == "structured":
+            elif meshtype is None:
                 nc_dataset = DisNetCDFStructured()
 
     dataset.close()
@@ -1023,16 +1071,15 @@ def open_dataset(nc_fpth: str, grid_type: str) -> ModelNetCDFDataset:
         nc_dataset.open(fpth)
     else:
         raise Exception(
-            f"Unable to load netcdf dataset for file grid "
-            f'type "{gridtype}" and discretization grid '
-            f'type "{grid_t}"'
+            f"Unable to load netcdf dataset for modflow grid "
+            f'type "{gridtype}" and mesh type "{meshtype}"'
         )
 
     return nc_dataset
 
 
 def create_dataset(
-    modeltype: str, modelname: str, nc_type: str, nc_fname: str, modelgrid: Grid
+    modeltype: str, modelname: str, modelgrid: Grid, nc_type: str, nc_fname: str
 ) -> ModelNetCDFDataset:
     """
     Create a new dataset.
@@ -1040,9 +1087,9 @@ def create_dataset(
     Args:
         modeltype (str): A model type, e.g. GWF6.
         modelname (str): The model name.
+        modelgrid (Grid): A FloPy derived discretization object.
         nc_type (str): A supported NetCDF file type: mesh2d or structured.
         nc_fname (str): The generated NetCDF file name.
-        modelgrid (Grid): A FloPy derived discretization object.
 
     Returns:
         ModelNetCDFDataset: A dataset derived from the base class.
@@ -1058,7 +1105,7 @@ def create_dataset(
             nc_dataset = DisNetCDFStructured()
 
     if nc_dataset:
-        nc_dataset.create(modeltype, modelname, nc_type, nc_fname, modelgrid)
+        nc_dataset.create(modeltype, modelname, modelgrid, nc_type, nc_fname)
     else:
         raise Exception(
             f"Unable to generate netcdf dataset for file type "

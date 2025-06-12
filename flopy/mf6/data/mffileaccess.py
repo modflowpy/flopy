@@ -538,7 +538,7 @@ class MFFileAccessArray(MFFileAccess):
             # reshape 1d and 2d data associated with mesh
             if (
                 len(self.structure.shape) == 3
-                #or self.structure.shape[0] == "nodes"
+                or self.structure.shape[0] == "nodes"
             ):
                 if layer > -1:
                     data = data.reshape(modelgrid.nrow, modelgrid.ncol)
@@ -546,8 +546,6 @@ class MFFileAccessArray(MFFileAccess):
                     data = data.reshape(modelgrid.nlay, modelgrid.nrow, modelgrid.ncol)
             elif len(self.structure.shape) == 2:
                 data = data.reshape(modelgrid.nrow, modelgrid.ncol)
-        else:
-            data = nc_dataset.array(package, param, layer)
 
         return data
 

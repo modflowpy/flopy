@@ -1362,7 +1362,7 @@ class MFModel(ModelInterface):
 
                 # create netcdf dataset
                 self._nc_dataset = create_dataset(
-                    self.model_type, self.name, netcdf, nc_fname, self.modelgrid
+                    self.model_type, self.name, self.modelgrid, netcdf, nc_fname
                 )
 
                 # reset data storage and populate netcdf file
