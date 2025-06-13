@@ -6,6 +6,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+import shapefile
 from flaky import flaky
 from modflow_devtools.markers import excludes_platform, requires_exe, requires_pkg
 from modflow_devtools.misc import has_pkg
@@ -2123,3 +2124,56 @@ def test_to_shapefile_raises_attributeerror():
     assert isinstance(spd, flopy.utils.MfList)
     with pytest.raises(AttributeError, match="was removed"):
         spd.to_shapefile("nope.shp", kper=1)
+
+
+@pytest.mark.mf6
+@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
+@pytest.mark.parametrize("use_pandas", [True])  # , False])
+@pytest.mark.parametrize("sparse", [True, False])
+def test_mf6_chd_shapefile_export(function_tmpdir, use_pandas, sparse):
+    from flopy.mf6 import (
+        MFSimulation,
+        ModflowGwf,
+        ModflowGwfchd,
+        ModflowGwfdis,
+        ModflowIms,
+        ModflowTdis,
+    )
+
+    # Create a simple structured grid MF6 model with CHD package
+    sim = MFSimulation(sim_name="mf6shp", sim_ws=function_tmpdir, use_pandas=use_pandas)
+    tdis = ModflowTdis(sim)
+    ims = ModflowIms(sim)
+    gwf = ModflowGwf(sim, modelname="gwf1", save_flows=True)
+    nlay, nrow, ncol = 1, 3, 3
+    dis = ModflowGwfdis(gwf, nlay=nlay, nrow=nrow, ncol=ncol, top=10.0, botm=0.0)
+    chd_cells = [((0, 0, 0), 1.0), ((0, 2, 2), 2.0)]
+    chd = ModflowGwfchd(gwf, stress_period_data=chd_cells)
+
+    # Export CHD package to shapefile
+    shpfile = function_tmpdir / f"chd_{use_pandas}_{sparse}.shp"
+    gwf.chd.stress_period_data.export(shpfile, sparse=sparse)
+
+    # Check that shapefile and sidecar files exist
+    for ext in [".shp", ".shx", ".dbf"]:
+        assert shpfile.with_suffix(ext).exists(), f"{shpfile.with_suffix(ext)} missing"
+
+    # Read shapefile and check records
+    with shapefile.Reader(str(shpfile)) as sf:
+        records = list(sf.records())
+        fields = [f[0] for f in sf.fields[1:]]  # skip DeletionFlag
+
+        if sparse:
+            # Only CHD cells should be exported
+            assert len(records) == len(chd_cells)
+        else:
+            # All grid cells should be exported
+            assert len(records) == nlay * nrow * ncol
+
+        # Check attribute values for CHD cells
+        chd_vals = [
+            rec[fields.index(next(f for f in fields if "head" in f))] for rec in records
+        ]
+        if sparse:
+            # Should match the CHD values
+            assert set(chd_vals) == {1.0, 2.0}

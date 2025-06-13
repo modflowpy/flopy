@@ -5,6 +5,9 @@ from typing import Union
 
 import numpy as np
 from packaging.version import Version
+from pandas import DataFrame
+
+from flopy.utils.util_list import MfList
 
 from ..datbase import DataInterface, DataListInterface, DataType
 from ..mbase import BaseModel, ModelInterface
@@ -896,15 +899,23 @@ def mflist_export(f: Union[str, os.PathLike, NetCdf], mfl, **kwargs):
             from ..export.shapefile_utils import recarray2shp
             from ..utils.geometry import Polygon
 
-            df = mfl.get_dataframe(squeeze=squeeze)
+            df = (
+                mfl.get_dataframe(squeeze=squeeze)
+                if isinstance(mfl, MfList)
+                else mfl.get_dataframe()
+            )
+            if isinstance(df, dict):
+                df = df[kper]
             if "kper" in kwargs or df is None:
                 ra = mfl[kper]
                 verts = np.array(modelgrid.get_cell_vertices(ra.i, ra.j))
             elif df is not None:
+                row_index_name = "i" if "i" in df.columns else "cellid_row"
+                col_index_name = "j" if "j" in df.columns else "cellid_column"
                 verts = np.array(
                     [
-                        modelgrid.get_cell_vertices(i, df.j.values[ix])
-                        for ix, i in enumerate(df.i.values)
+                        modelgrid.get_cell_vertices(i, df[col_index_name].values[ix])
+                        for ix, i in enumerate(df[row_index_name].values)
                     ]
                 )
                 ra = df.to_records(index=False)
