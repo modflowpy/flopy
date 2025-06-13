@@ -98,7 +98,7 @@ class Raster:
         elif crs is not None:
             crs = CRS.from_user_input(crs)
         else:
-            TypeError("crs type not understood, provide an epsg or proj4")
+            raise TypeError("crs type not understood, provide an epsg or proj4")
 
         meta["crs"] = crs
 
