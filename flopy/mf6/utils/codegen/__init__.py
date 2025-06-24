@@ -109,7 +109,7 @@ def make_all(
 
     # import here instead of module so we don't
     # expect optional deps at module init time
-    from flopy.mf6.utils.dfn import Dfn
+    from modflow_devtools.dfn import Dfn
 
     dfndir = Path(dfndir).expanduser().resolve().absolute()
     dfns = Dfn.load_all(dfndir, version=version)

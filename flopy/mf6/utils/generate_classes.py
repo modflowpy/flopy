@@ -48,10 +48,10 @@ def generate_classes(
 
     # import here instead of module so we don't
     # expect optional deps at module init time
+    from modflow_devtools.dfn2toml import convert as dfn2toml
     from modflow_devtools.download import download_and_unzip
 
     from flopy.mf6.utils.codegen import make_all
-    from flopy.mf6.utils.dfn2toml import convert as dfn2toml
 
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
