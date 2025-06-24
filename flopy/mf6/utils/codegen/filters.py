@@ -185,10 +185,10 @@ class Filters:
         shape = var.get("shape", None)
         children = Filters.children(var)
         if children:
-            if _type == "list":
+            if _type == "recarray":
                 if len(children) == 1:
                     first = list(children.values())[0]
-                    if first["type"] in ["record", "union"]:
+                    if first["type"] in ["record", "keystring"]:
                         return f"[{Filters.type(first)}]"
                 children = ", ".join(
                     [v["name"] for v in children.values()]
@@ -199,7 +199,7 @@ class Filters:
                     [v["name"] for v in children.values()]
                 )
                 return f"({children})"
-            elif _type == "union":
+            elif _type == "keystring":
                 return " | ".join([v["name"] for v in children.values()])
         elif shape:
             return f"[{_type}]"
@@ -211,13 +211,13 @@ class Filters:
         fields = var.get("fields", None)
         choices = var.get("choices", None)
         if items:
-            assert _type == "list"
+            assert _type == "recarray"
             return items
         if fields:
             assert _type == "record"
             return fields
         if choices:
-            assert _type == "union"
+            assert _type == "keystring"
             return choices
         return None
 
@@ -276,7 +276,7 @@ class Filters:
                 var_type in ["string", "integer", "double precision"]
                 and var_shape
             )
-            is_composite = var_type in ["list", "record", "union"]
+            is_composite = var_type in ["recarray", "record", "keystring"]
             if is_array or is_composite:
                 def _args():
                     args = [
