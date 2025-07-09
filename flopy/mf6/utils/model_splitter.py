@@ -1,6 +1,4 @@
 import inspect
-import json
-import warnings
 
 import numpy as np
 
@@ -1963,8 +1961,27 @@ class Mf6Splitter:
             div_mvr_conn = {}
             sfr_mvr_conn = []
             cellids = packagedata.cellid
-            layers, nodes = self._cellid_to_layer_node(cellids)
 
+            # trap for cells that aren't connected to the GWF model and try to put them
+            #  in the model that makes the most sense
+            messy_val = (-1,)
+            if self._modelgrid.grid_type == "vertex":
+                messy_val += (-1,)
+            elif self._modelgrid.grid_type == "structured":
+                messy_val += (-1, -1)
+            messy_idx = [ix for ix, i in enumerate(cellids) if i in (messy_val, "None", None)]
+            if messy_idx:
+                messy_rch = packagedata.ifno[messy_idx] # store these for later
+                rcids = []
+                for rch in messy_rch:
+                    con = np.abs(connectiondata[connectiondata.ifno == rch].ic_0)[0]
+                    cid = packagedata[packagedata.ifno == con].cellid[0]
+                    # use absolute value in case this is connected to cell(s) that are
+                    # also not connected to the model
+                    rcids.append(tuple(np.abs(cid)))
+                cellids[messy_idx] = rcids
+
+            layers, nodes = self._cellid_to_layer_node(cellids)
             new_model, new_node = self._get_new_model_new_node(nodes)
 
             for mkey, model in self._model_dict.items():
@@ -1980,6 +1997,11 @@ class Mf6Splitter:
                         model, new_node, layers, idx
                     )
                     new_recarray["cellid"] = new_cellids
+                    # here we reset the "messy val", cells not connected to model
+                    if messy_idx:
+                        rp_idx = np.where(np.isin(new_recarray.ifno, messy_rch))[0]
+                        for ix in rp_idx:
+                            new_recarray["cellid"][ix] = messy_val
 
                     new_rno = []
                     old_rno = []
@@ -2704,11 +2726,13 @@ class Mf6Splitter:
                             for ix, i in enumerate(recarray.id)
                             if not isinstance(i, str)
                         ]
-                        layers1, node1 = self._cellid_to_layer_node(
-                            recarray.id[idx]
-                        )
-                        new_node1[idx] = [remapper[i][-1] for i in node1]
-                        new_model1[idx] = [remapper[i][0] for i in node1]
+                        if idx:
+                            layers1, node1 = self._cellid_to_layer_node(
+                                recarray.id[idx]
+                            )
+                            new_node1[idx] = [remapper[i][-1] for i in node1]
+                            new_model1[idx] = [remapper[i][0] for i in node1]
+
                         new_node1[bidx] = [i for i in recarray.id[bidx]]
                         new_model1[bidx] = [
                             remapper[i][0] for i in recarray.id[bidx]
@@ -2730,10 +2754,11 @@ class Mf6Splitter:
                                 for ix in idx
                                 if not isinstance(recarray.id[ix], str)
                             ]
-                            tmp_cellid = self._new_node_to_cellid(
-                                model, new_node1, layers1, idx
-                            )
-                            new_cellid1[idx] = tmp_cellid
+                            if idx:
+                                tmp_cellid = self._new_node_to_cellid(
+                                    model, new_node1, layers1, idx
+                                )
+                                new_cellid1[idx] = tmp_cellid
 
                         new_cellid1[bidx] = new_node1[bidx]
 
@@ -2760,7 +2785,7 @@ class Mf6Splitter:
 
                 cellid2 = recarray.id2
                 conv_idx = np.asarray(cellid2 != None).nonzero()[0]  # noqa: E711
-                if len(conv_idx) > 0:  # do stuff
+                if len(conv_idx) > 0:
                     # need to trap layers...
                     if pkg_type is None:
                         if self._modelgrid.grid_type in (
@@ -3357,20 +3382,6 @@ class Mf6Splitter:
                 elif isinstance(value, mfdatascalar.MFScalar):
                     for mkey in self._model_dict.keys():
                         mapped_data[mkey][item] = value.data
-                elif isinstance(value, modflow.mfutlts.UtltsPackages):
-                    if value._filerecord.array is None:
-                        continue
-                    tspkg = value._packages[0]
-                    for mkey in self._model_dict.keys():
-                        new_fname = tspkg.filename.split(".")
-                        new_fname = f"{'.'.join(new_fname[0:-1])}_{mkey :0{self._fdigits}d}.{new_fname[-1]}"
-                        tsdict = {
-                            "filename": new_fname,
-                            "timeseries": tspkg.timeseries.array,
-                            "time_series_namerecord": tspkg.time_series_namerecord.array["time_series_names"][0],
-                            "interpolation_methodrecord": tspkg.interpolation_methodrecord.array["interpolation_method"][0]
-                        }
-                        mapped_data[mkey]["timeseries"] = tsdict
 
                 else:
                     pass
@@ -3381,7 +3392,9 @@ class Mf6Splitter:
                     if "stress_period_data" in mdict:
                         for _, ra in mdict["stress_period_data"].items():
                             if isinstance(ra, dict):
-                                continue
+                                if "data" not in ra:
+                                    continue
+                                ra = ra["data"]
                             obs_map = self._set_boundname_remaps(
                                 ra, obs_map, list(obs_map.keys()), mkey
                             )
@@ -3394,6 +3407,31 @@ class Mf6Splitter:
                     )
 
         observations = mapped_data.pop("observations", None)
+
+        # trap for timeseries files, in both basic and advanced packages
+        if hasattr(package, "tas"):
+            value = package.tas
+        elif hasattr(package, "ts"):
+            value = package.ts
+        else:
+            value = None
+        if value is not None:
+            if value._filerecord.array is not None:
+                tspkg = value._packages[0]
+                for mkey in self._model_dict.keys():
+                    new_fname = tspkg.filename.split(".")
+                    new_fname = f"{'.'.join(new_fname[0:-1])}_{mkey :0{self._fdigits}d}.{new_fname[-1]}"
+                    tsdict = {
+                        "filename": new_fname,
+                        "timeseries": tspkg.timeseries.array,
+                        "time_series_namerecord": [i for i in
+                                                   tspkg.time_series_namerecord.array[
+                                                       0]],
+                        "interpolation_methodrecord": [i for i in
+                                                       tspkg.interpolation_methodrecord.array[
+                                                           0]]
+                    }
+                    mapped_data[mkey]["timeseries"] = tsdict
 
         if "options" in package.blocks:
             for item, value in package.blocks["options"].datasets.items():
@@ -3778,12 +3816,11 @@ class Mf6Splitter:
 
         if self._new_sim is None:
             self._new_sim = modflow.MFSimulation(
-                version=self._sim.version, exe_name=self._sim.exe_name
+                version=self._sim.version, exe_name=self._sim.exe_name, sim_ws=self._sim.sim_path
             )
             self._create_sln_tdis()
 
         nam_options = {mkey: {} for mkey in self._new_ncpl.keys()}
-        # todo: change this to model by model options bc nc_filerecord stuff
         for item, value in self._model.name_file.blocks[
             "options"
         ].datasets.items():
@@ -3797,7 +3834,6 @@ class Mf6Splitter:
                 for mkey in self._new_ncpl.keys():
                     nam_options[mkey][item] = value.array
         self._model_dict = {}
-        # todo: trap the nc_mesh2d_filerecord stuff...
         for mkey in self._new_ncpl.keys():
             mdl_cls = PackageContainer.model_factory(self._model_type)
             self._model_dict[mkey] = mdl_cls(
