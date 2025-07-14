@@ -336,7 +336,12 @@ class ModflowGmg(Package):
         hclose = float(t[2])
         mxiter = int(t[3])
         # dataset 1
-        line = f.readline()
+        # Skip comments
+        while True:
+            line = f.readline()
+            if line[0] != "#":
+                break
+            
         t = line.strip().split()
         damp = float(t[0])
         iadamp = int(t[1])
@@ -346,7 +351,12 @@ class ModflowGmg(Package):
         except:
             iunitmhc = 0
         # dataset 2
-        line = f.readline()
+        # Skip comments
+        while True:
+            line = f.readline()
+            if line[0] != "#":
+                break
+
         t = line.strip().split()
         ism = int(t[0])
         isc = int(t[1])
@@ -356,7 +366,12 @@ class ModflowGmg(Package):
             dlow = float(t[3])
             chglimit = float(t[4])
         # dataset 3
-        line = f.readline()
+        # Skip comments
+        while True:
+            line = f.readline()
+            if line[0] != "#":
+                break
+   
         t = line.strip().split()
         relax = 1.0
         if ism == 4:
