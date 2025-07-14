@@ -359,8 +359,9 @@ class ModflowGage(Package):
                 if value.filetype == ModflowGage._ftype():
                     unitnumber = key
                     filenames.append(os.path.basename(value.filename))
-        for file in files:
-            filenames.append(os.path.basename(file))
+        if files is not None:
+            for file in files:
+                filenames.append(os.path.basename(file))
 
         return cls(
             model,
