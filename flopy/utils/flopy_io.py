@@ -440,6 +440,8 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
     elif line.strip().lower().startswith("open/close"):
         raw = line.strip().split()
         fname = raw[1]
+        # Strip quotes (single and double) from the filename ends, if present
+        fname = fname.strip("'\"")
         if "/" in fname:
             raw = fname.split("/")
         elif "\\" in fname:
