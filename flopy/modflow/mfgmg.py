@@ -341,7 +341,7 @@ class ModflowGmg(Package):
             line = f.readline()
             if line[0] != "#":
                 break
-            
+
         t = line.strip().split()
         damp = float(t[0])
         iadamp = int(t[1])
@@ -371,7 +371,7 @@ class ModflowGmg(Package):
             line = f.readline()
             if line[0] != "#":
                 break
-   
+
         t = line.strip().split()
         relax = 1.0
         if ism == 4:
