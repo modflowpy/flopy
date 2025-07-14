@@ -1,5 +1,5 @@
 import calendar
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 
@@ -16,15 +16,20 @@ def _maybe_collect(l):
 @dataclass
 class ModelTime:
     """
-    Represents the time discretization of a MODFLOW simulation.
+    Simulation time discretization.
     """
 
-    perlen: NDArray[np.floating]
-    nstp: NDArray[np.integer]
-    tsmult: NDArray[np.floating]
-    time_units: int | str
-    start_datetime: datetime
-    steady_state: NDArray[np.bool_] | None = None
+    _perlen: NDArray[np.floating] = field(init=False)
+    _nstp: NDArray[np.integer] = field(init=False)
+    _tsmult: NDArray[np.floating] = field(init=False)
+    _time_units: int | str = field(init=False)
+    _start_datetime: datetime = field(init=False)
+    _steady_state: NDArray[np.bool_] | None = field(init=False)
+
+    _totim_dict: dict = field(init=False, repr=False, compare=False)
+    _pertim_dict: dict = field(init=False, repr=False, compare=False)
+    _datetime_dict: dict = field(init=False, repr=False, compare=False)
+    _str_format: str = field(init=False, repr=False, compare=False)
 
     """
 
@@ -56,28 +61,31 @@ class ModelTime:
         start_datetime: str | datetime | np.datetime64 | pd.Timestamp | None = None,
         steady_state: ArrayLike | None = None,
     ):
-        self.perlen = np.atleast_1d(_maybe_collect(perlen)).astype(float)
-        self.nstp = np.atleast_1d(_maybe_collect(nstp)).astype(int)
-        if (nrecs := len(self.perlen)) != len(self.nstp):
-            raise ValueError("perlen and nstp must have the same length")
-
-        if tsmult is None:
-            tsmult = np.full((nrecs,), 1.0)
-        self.tsmult = np.atleast_1d(_maybe_collect(tsmult)).astype(float)
-        if nrecs != len(self.tsmult):
-            raise ValueError("tsmult and nstp must have the same length")
-
-        self.time_units = self.parse_timeunits(time_units)
-        self.start_datetime = ModelTime.parse_datetime(start_datetime)
-        if steady_state is not None:
-            self.steady_state = np.atleast_1d(_maybe_collect(steady_state)).astype(bool)
-            if nrecs != len(self.steady_state):
-                raise ValueError("steady_state and perlen must have the same length")
-
         self._totim_dict = {}
         self._pertim_dict = {}
         self._datetime_dict = {}
-        self._str_format = "%Y-%m-%dt%H:%M:%S"
+        self._str_format = "%Y-%m-%dT%H:%M:%S"
+        self._perlen = np.atleast_1d(_maybe_collect(perlen)).astype(float)
+        self._nstp = np.atleast_1d(_maybe_collect(nstp)).astype(int)
+        if tsmult is None:
+            tsmult = np.full((self._perlen.shape[0],), 1.0)
+        self._tsmult = np.atleast_1d(_maybe_collect(tsmult)).astype(float)
+        if len(self._perlen) != len(self._nstp) or len(self._perlen) != len(
+            self._tsmult
+        ):
+            raise ValueError("perlen, nstp and tsmult must have the same length")
+        if steady_state is None:
+            self._steady_state = None
+        else:
+            self._steady_state = np.atleast_1d(_maybe_collect(steady_state)).astype(
+                bool
+            )
+            if len(self._steady_state) != len(self._perlen):
+                raise ValueError(
+                    "perlen, nstp, tsmult and steady_state must have the same length"
+                )
+        self.time_units = time_units
+        self.start_datetime = start_datetime
 
     def __eq__(self, other):
         if not isinstance(other, ModelTime):
@@ -91,6 +99,48 @@ class ModelTime:
             and self.start_datetime == other.start_datetime
             and np.array_equal(self.steady_state, other.steady_state)
         )
+
+    @property
+    def perlen(self) -> NDArray[np.floating]:
+        """Stress period lengths."""
+        return self._perlen
+
+    @property
+    def nstp(self) -> NDArray[np.integer]:
+        """Number of time steps per stress period."""
+        return self._nstp
+
+    @property
+    def tsmult(self) -> NDArray[np.floating]:
+        """ModelTime step multipliers."""
+        return self._tsmult
+
+    @property
+    def time_units(self) -> str:
+        """ModelTime units."""
+        return self._time_units
+
+    @time_units.setter
+    def time_units(self, value: int | str | None):
+        self._time_units = self.parse_timeunits(value)
+        self._datetime_dict = {}  # clear cache when time units change
+
+    @property
+    def start_datetime(self) -> datetime:
+        """Start datetime."""
+        return self._start_datetime
+
+    @start_datetime.setter
+    def start_datetime(
+        self, value: str | datetime | np.datetime64 | pd.Timestamp | None
+    ):
+        self._start_datetime = ModelTime.parse_datetime(value)
+        self._datetime_dict = {}  # clear cache when start datetime changes
+
+    @property
+    def steady_state(self) -> NDArray[np.bool_] | None:
+        """Steady state flags."""
+        return self._steady_state
 
     @property
     def nper(self) -> int:
@@ -403,7 +453,7 @@ class ModelTime:
         '2024/11/12'
         '2024-11-12'
 
-        Time can also be represented in the string object. Example formats
+        ModelTime can also be represented in the string object. Example formats
         representing 2:31 pm on November 12th, 2024 are as follows:
 
         '2024-11-12T14:31:00'
@@ -613,10 +663,7 @@ class ModelTime:
             if forgive:
                 return None, None
             if datetime_obj is None:
-                msg = (
-                    f"supplied totim {totim} is outside of model's "
-                    f"time domain 0 - {self.totim[-1]}"
-                )
+                msg = f"totim {totim} outside of time domain 0 - {self.totim[-1]}"
             else:
                 end_dt = self.get_datetime(self.nper - 1, self.nstp[-1] - 1)
                 msg = (
