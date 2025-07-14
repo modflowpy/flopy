@@ -98,6 +98,7 @@ app
 
 # IDE files
 .vscode
+.vs
 
 # mac files
 **.DS_Store
@@ -110,4 +111,3 @@ flopy/mf6/data/toml/
 
 # uv lockfile
 uv.lock
-/.vs
