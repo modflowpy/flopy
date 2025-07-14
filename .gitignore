@@ -110,3 +110,4 @@ flopy/mf6/data/toml/
 
 # uv lockfile
 uv.lock
+/.vs
