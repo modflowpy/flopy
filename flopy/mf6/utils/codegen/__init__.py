@@ -114,6 +114,16 @@ def make_all(
     dfndir = Path(dfndir).expanduser().resolve().absolute()
     dfns = Dfn.load_all(dfndir, version=version)
 
+    # rename dfn keys with "-nam" for simulations and models.
+    # won't be necessary for 4.x.
+    def _add_nam_suffix(dfn):
+        nam_types = {"sim", "gwf", "gwt", "gwe", "prt", "olf", "chf", "swf"}
+        name = dfn["name"]
+        new_name = name + "-nam" if name in nam_types else name
+        return new_name, {**dfn, "name": new_name}
+    
+    dfns = dict(_add_nam_suffix(dfn) for dfn in dfns.values())
+
     # below is a temporary workaround to attach the legacy DFN
     # representation to generated classes. at the moment it is
     # parsed haphazardly throughout the mf6 module. TODO: when
@@ -125,8 +135,7 @@ def make_all(
         legacydir = Path(legacydir).expanduser().resolve().absolute()
         with open(legacydir / "common.dfn") as cf:
             common, _ = Dfn._load_v1_flat(cf)
-            for dfn in dfns.values():
-                dfn_name = dfn["name"]
+            for dfn_name, dfn in dfns.items():
                 with open(legacydir / f"{dfn_name}.dfn") as df:
                     legacy_dfn, legacy_meta = Dfn._load_v1_flat(df, common=common)
                     dfn["legacy_dfn"] = legacy_dfn
