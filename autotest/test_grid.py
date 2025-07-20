@@ -69,7 +69,9 @@ def minimal_vertex_grid_info(minimal_unstructured_grid_info):
             n,
             usg_info["xcenters"][n],
             usg_info["ycenters"][n],
-        ] + usg_info["iverts"][n]
+        ] + usg_info[
+            "iverts"
+        ][n]
         cell2d.append(cell2d_n)
     d["cell2d"] = cell2d
     d["ncpl"] = len(cell2d)
@@ -426,9 +428,9 @@ def test_structured_from_gridspec(example_data_path, spc_file):
     assert isinstance(modelgrid, StructuredGrid)
 
     lc = modelgrid.plot()
-    assert isinstance(lc, matplotlib.collections.LineCollection), (
-        f"could not plot grid object created from {fn}"
-    )
+    assert isinstance(
+        lc, matplotlib.collections.LineCollection
+    ), f"could not plot grid object created from {fn}"
     plt.close()
 
     extents = modelgrid.extent
@@ -442,9 +444,9 @@ def test_structured_from_gridspec(example_data_path, spc_file):
         8000 + 8000 * np.sin(theta),  # ymax
     )
     errmsg = f"extents {extents} of {fn} does not equal {rotated_extents}"
-    assert all(np.isclose(x, x0) for x, x0 in zip(modelgrid.extent, rotated_extents)), (
-        errmsg
-    )
+    assert all(
+        np.isclose(x, x0) for x, x0 in zip(modelgrid.extent, rotated_extents)
+    ), errmsg
 
     ncpl = modelgrid.ncol * modelgrid.nrow
     assert modelgrid.ncpl == ncpl, f"ncpl ({modelgrid.ncpl}) does not equal {ncpl}"
@@ -454,9 +456,9 @@ def test_structured_from_gridspec(example_data_path, spc_file):
     maxvertex = max([max(sublist[1:]) for sublist in iverts])
     assert maxvertex + 1 == nvert, f"nvert ({maxvertex + 1}) does not equal {nvert}"
     verts = modelgrid.verts
-    assert nvert == verts.shape[0], (
-        f"number of vertex (x, y) pairs ({verts.shape[0]}) does not equal {nvert}"
-    )
+    assert (
+        nvert == verts.shape[0]
+    ), f"number of vertex (x, y) pairs ({verts.shape[0]}) does not equal {nvert}"
 
 
 @requires_pkg("shapely")
@@ -926,6 +928,91 @@ def test_tocvfd3():
 
 
 @requires_pkg("shapely")
+def test_tocvfd4():
+    vertdict = {
+        0: [
+            (5950816.752319336, 18880170.417907715),
+            (5954210.671081543, 18884215.132507324),
+            (5958255.385681152, 18880821.213684082),
+            (5954861.467102051, 18876776.499084473),
+            (5950816.752319336, 18880170.417907715),
+        ],
+        1: [
+            (5954210.671081543, 18884215.132507324),
+            (5957604.58972168, 18888259.846923828),
+            (5961649.304077148, 18884865.928527832),
+            (5958255.385681152, 18880821.213684082),
+            (5954210.671081543, 18884215.132507324),
+        ],
+        2: [
+            (5957604.58972168, 18888259.846923828),
+            (5960998.508300781, 18892304.561523438),
+            (5965043.222900391, 18888910.64312744),
+            (5961649.304077148, 18884865.928527832),
+            (5957604.58972168, 18888259.846923828),
+        ],
+        3: [
+            (5954861.467102051, 18876776.499084473),
+            (5958255.385681152, 18880821.213684082),
+            (5962300.100280762, 18877427.29510498),
+            (5958906.18170166, 18873382.580322266),
+            (5954861.467102051, 18876776.499084473),
+        ],
+        4: [
+            (5958255.385681152, 18880821.213684082),
+            (5961649.304077148, 18884865.928527832),
+            (5965694.018920898, 18881472.00970459),
+            (5962300.100280762, 18877427.29510498),
+            (5958255.385681152, 18880821.213684082),
+        ],
+        5: [
+            (5961649.304077148, 18884865.928527832),
+            (5963346.263671875, 18886888.285705566),
+            (5965368.6209106445, 18885191.32647705),
+            (5963671.661682129, 18883168.96887207),
+            (5961649.304077148, 18884865.928527832),
+        ],
+        6: [
+            (5963671.661682129, 18883168.96887207),
+            (5965368.6209106445, 18885191.32647705),
+            (5967390.978271484, 18883494.366882324),
+            (5965694.018920898, 18881472.00970459),
+            (5963671.661682129, 18883168.96887207),
+        ],
+        7: [
+            (5958906.18170166, 18873382.580322266),
+            (5962300.100280762, 18877427.29510498),
+            (5966344.814697266, 18874033.376708984),
+            (5962950.8963012695, 18869988.66192627),
+            (5958906.18170166, 18873382.580322266),
+        ],
+        8: [
+            (5962300.100280762, 18877427.29510498),
+            (5963997.059692383, 18879449.652526855),
+            (5966019.416687012, 18877752.692871094),
+            (5964322.457519531, 18875730.335876465),
+            (5962300.100280762, 18877427.29510498),
+        ],
+        9: [
+            (5963997.059692383, 18879449.652526855),
+            (5965694.018920898, 18881472.00970459),
+            (5967716.376281738, 18879775.050476074),
+            (5966019.416687012, 18877752.692871094),
+            (5963997.059692383, 18879449.652526855),
+        ],
+        10: [
+            (5965694.018920898, 18881472.00970459),
+            (5967390.978271484, 18883494.366882324),
+            (5969413.335510254, 18881797.407714844),
+            (5967716.376281738, 18879775.050476074),
+            (5965694.018920898, 18881472.00970459),
+        ],
+    }
+    verts, iverts = to_cvfd(vertdict, normalize=True)
+    assert iverts[4] == [2, 5, 13, 10, 17, 8, 2]
+
+
+@requires_pkg("shapely")
 def test_area_centroid_polygon():
     pts = [
         (685053.450097303, 6295544.549730939),
@@ -1149,9 +1236,9 @@ def test_voronoi_grid(request, function_tmpdir, grid_info):
     plt.savefig(function_tmpdir / f"{name}.png")
 
     assert ncpl == gridprops["ncpl"] or almost_right
-    assert len(invalid_cells) == 0, (
-        f"The following cells do not have 3 or more vertices.\n{invalid_cells}"
-    )
+    assert (
+        len(invalid_cells) == 0
+    ), f"The following cells do not have 3 or more vertices.\n{invalid_cells}"
 
 
 @pytest.fixture
@@ -1257,21 +1344,21 @@ def test_structured_ncb_thickness():
     grid = GridCases.structured_cbd_small()
     thickness = grid.cell_thickness
 
-    assert thickness.shape[0] == grid.nlay + np.count_nonzero(grid.laycbd), (
-        "grid cell_thickness attribute returns incorrect shape"
-    )
+    assert thickness.shape[0] == grid.nlay + np.count_nonzero(
+        grid.laycbd
+    ), "grid cell_thickness attribute returns incorrect shape"
 
     thickness = grid.remove_confining_beds(grid.cell_thickness)
     assert thickness.shape == grid.shape, "quasi3d confining beds not properly removed"
 
     sat_thick = grid.saturated_thickness(grid.cell_thickness)
-    assert sat_thick.shape == grid.shape, (
-        "saturated_thickness confining beds not removed"
-    )
+    assert (
+        sat_thick.shape == grid.shape
+    ), "saturated_thickness confining beds not removed"
 
-    assert sat_thick[1, 0, 0] == 20, (
-        "saturated_thickness is not properly indexing confining beds"
-    )
+    assert (
+        sat_thick[1, 0, 0] == 20
+    ), "saturated_thickness is not properly indexing confining beds"
 
 
 @pytest.mark.parametrize(
@@ -1279,9 +1366,9 @@ def test_structured_ncb_thickness():
 )
 def test_unstructured_iverts(grid):
     iverts = grid.iverts
-    assert not any(None in l for l in iverts), (
-        "None type should not be returned in iverts list"
-    )
+    assert not any(
+        None in l for l in iverts
+    ), "None type should not be returned in iverts list"
 
 
 @pytest.mark.parametrize(

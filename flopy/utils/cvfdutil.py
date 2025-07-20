@@ -28,8 +28,36 @@ class Point:
         self.y = y
         return
 
+    def offset(self, x0, y0):
+        self.x -= x0
+        self.y -= y0
 
-def isBetween(a, b, c, epsilon=0.001):
+    def normalize(self, dx, dy):
+        if dx > 0.0:
+            self.x /= dx
+        if dy > 0.0:
+            self.y /= dy
+
+
+def normalize_points(a, b, c):
+    x0, y0 = min(a.x, b.x), min(a.y, b.y)
+    xl, yl = abs(a.x - b.x), abs(a.y - b.y)
+
+    a.offset(x0, y0)
+    b.offset(x0, y0)
+    c.offset(x0, y0)
+
+    a.normalize(xl, yl)
+    b.normalize(xl, yl)
+    c.normalize(xl, yl)
+
+    return a, b, c
+
+
+def isBetween(a, b, c, epsilon=0.001, normalize=False):
+    if normalize:
+        a, b, c = normalize_points(a, b, c)
+
     crossproduct = (c.y - a.y) * (b.x - a.x) - (c.x - a.x) * (b.y - a.y)
     if abs(crossproduct) > epsilon:
         return False  # (or != 0 if using integers)
@@ -55,7 +83,7 @@ def shared_face(ivlist1, ivlist2):
     return False
 
 
-def segment_face(ivert, ivlist1, ivlist2, vertices):
+def segment_face(ivert, ivlist1, ivlist2, vertices, normalize=False):
     """
     Check the vertex lists for cell 1 and cell 2.  Add a new vertex to cell 1
     if necessary.
@@ -70,6 +98,10 @@ def segment_face(ivert, ivlist1, ivlist2, vertices):
         list of vertices for cell2.
     vertices : ndarray
         array of x, y vertices
+    normalize : bool
+        normalize the coordinates when looking for hanging nodes. Normalization may be
+        needed in cases where vertices are in real world coordinates and have large
+        values.  (default is False)
 
     Returns
     -------
@@ -95,15 +127,15 @@ def segment_face(ivert, ivlist1, ivlist2, vertices):
 
     for face in faces_to_check:
         iva, ivb = face
-        x, y = vertices[iva]
-        a = Point(x, y)
-        x, y = vertices[ivb]
-        b = Point(x, y)
+        xa, ya = vertices[iva]
+        xb, yb = vertices[ivb]
         for ivc in points_to_check:
             if ivc not in face:
+                a = Point(xa, ya)
+                b = Point(xb, yb)
                 x, y = vertices[ivc]
                 c = Point(x, y)
-                if isBetween(a, b, c):
+                if isBetween(a, b, c, normalize=normalize):
                     ipos = ivlist1.index(ivb)
                     if ipos == 0:
                         ipos = len(ivlist1) - 1
@@ -119,6 +151,7 @@ def to_cvfd(
     nodestop=None,
     skip_hanging_node_check=False,
     duplicate_decimals=9,
+    normalize=False,
     verbose=False,
 ):
     """
@@ -143,6 +176,11 @@ def to_cvfd(
         decimals to round duplicate vertex checks.  GRIDGEN can occasionally
         produce very-nearly overlapping vertices, this can be used to change
         the sensitivity for filtering out duplicates. (default is 9)
+
+    normalize : bool
+        normalize the coordinates when looking for hanging nodes. Normalization may be
+        needed in cases where vertices are in real world coordinates and have large
+        values.  (default is False)
 
     verbose : bool
         print messages to the screen. (default is False)
@@ -246,7 +284,11 @@ def to_cvfd(
 
                         # don't share a face, so need to segment if necessary
                         segmented = segment_face(
-                            ivert, ivertlist1, ivertlist2, vertexdict_keys
+                            ivert,
+                            ivertlist1,
+                            ivertlist2,
+                            vertexdict_keys,
+                            normalize=normalize,
                         )
                         if segmented:
                             finished = False
