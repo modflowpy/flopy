@@ -402,9 +402,7 @@ class GeoSpatialCollection:
             "type": "FeatureCollection",
         }
         features = [
-            {"id": f"{ix}",
-             "geometry": feat.__geo_interface__,
-             "properties": {}}
+            {"id": f"{ix}", "geometry": feat.__geo_interface__, "properties": {}}
             for ix, feat in enumerate(self.__collection)
         ]
 
