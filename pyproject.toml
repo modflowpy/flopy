@@ -37,7 +37,7 @@ dev = ["flopy[codegen,lint,test,optional,doc]", "tach"]
 codegen = [
     "Jinja2>=3.0",
     "boltons",
-    "modflow-devtools",
+    "modflow-devtools==1.7.0",
     "tomli",
     "tomli-w"
 ]
@@ -51,7 +51,7 @@ test = [
     "jupyter",
     "jupyter_client >=8.4.0", # avoid datetime.utcnow() deprecation warning
     "jupytext",
-    "modflow-devtools",
+    "modflow-devtools==1.7.0",
     "pytest !=8.1.0",
     "pytest-benchmark",
     "pytest-cov",
@@ -117,10 +117,6 @@ only-include = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["flopy"]
-
-[tool.hatch.metadata]
-# temporary, until new devtools release
-allow-direct-references = true
 
 [tool.hatch.metadata.hooks.fancy-pypi-readme]
 content-type = "text/markdown"
