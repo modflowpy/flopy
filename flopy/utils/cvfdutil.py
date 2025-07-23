@@ -54,9 +54,8 @@ def normalize_points(a, b, c):
     return a, b, c
 
 
-def isBetween(a, b, c, epsilon=0.001, normalize=False):
-    if normalize:
-        a, b, c = normalize_points(a, b, c)
+def isBetween(a, b, c, epsilon=0.001):
+    a, b, c = normalize_points(a, b, c)
 
     crossproduct = (c.y - a.y) * (b.x - a.x) - (c.x - a.x) * (b.y - a.y)
     if abs(crossproduct) > epsilon:
@@ -83,7 +82,7 @@ def shared_face(ivlist1, ivlist2):
     return False
 
 
-def segment_face(ivert, ivlist1, ivlist2, vertices, normalize=False):
+def segment_face(ivert, ivlist1, ivlist2, vertices):
     """
     Check the vertex lists for cell 1 and cell 2.  Add a new vertex to cell 1
     if necessary.
@@ -98,10 +97,6 @@ def segment_face(ivert, ivlist1, ivlist2, vertices, normalize=False):
         list of vertices for cell2.
     vertices : ndarray
         array of x, y vertices
-    normalize : bool
-        normalize the coordinates when looking for hanging nodes. Normalization may be
-        needed in cases where vertices are in real world coordinates and have large
-        values.  (default is False)
 
     Returns
     -------
@@ -135,7 +130,7 @@ def segment_face(ivert, ivlist1, ivlist2, vertices, normalize=False):
                 b = Point(xb, yb)
                 x, y = vertices[ivc]
                 c = Point(x, y)
-                if isBetween(a, b, c, normalize=normalize):
+                if isBetween(a, b, c):
                     ipos = ivlist1.index(ivb)
                     if ipos == 0:
                         ipos = len(ivlist1) - 1
@@ -151,7 +146,6 @@ def to_cvfd(
     nodestop=None,
     skip_hanging_node_check=False,
     duplicate_decimals=9,
-    normalize=False,
     verbose=False,
 ):
     """
@@ -176,11 +170,6 @@ def to_cvfd(
         decimals to round duplicate vertex checks.  GRIDGEN can occasionally
         produce very-nearly overlapping vertices, this can be used to change
         the sensitivity for filtering out duplicates. (default is 9)
-
-    normalize : bool
-        normalize the coordinates when looking for hanging nodes. Normalization may be
-        needed in cases where vertices are in real world coordinates and have large
-        values.  (default is False)
 
     verbose : bool
         print messages to the screen. (default is False)
@@ -265,7 +254,7 @@ def to_cvfd(
     if not skip_hanging_node_check:
         if verbose:
             print("Checking for hanging nodes.")
-
+        
         finished = False
         while not finished:
             finished = True
@@ -288,7 +277,6 @@ def to_cvfd(
                             ivertlist1,
                             ivertlist2,
                             vertexdict_keys,
-                            normalize=normalize,
                         )
                         if segmented:
                             finished = False

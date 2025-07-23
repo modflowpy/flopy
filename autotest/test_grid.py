@@ -1006,7 +1006,7 @@ def test_tocvfd4():
             (5965694.018920898, 18881472.00970459),
         ],
     }
-    verts, iverts = to_cvfd(vertdict, normalize=True)
+    verts, iverts = to_cvfd(vertdict)
     assert iverts[4] == [2, 5, 13, 10, 17, 8, 2]
 
 
