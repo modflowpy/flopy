@@ -254,7 +254,7 @@ def to_cvfd(
     if not skip_hanging_node_check:
         if verbose:
             print("Checking for hanging nodes.")
-        
+
         finished = False
         while not finished:
             finished = True
