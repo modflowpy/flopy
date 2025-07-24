@@ -1,5 +1,21 @@
-#!/usr/bin/env python
-# coding: utf-8
+# ---
+# jupyter:
+#   jupytext:
+#     notebook_metadata_filter: all
+#     text_representation:
+#       extension: .py
+#       format_name: light
+#       format_version: '1.5'
+#       jupytext_version: 1.14.5
+#   kernelspec:
+#     display_name: Python 3 (ipykernel)
+#     language: python
+#     name: python3
+#   metadata:
+#     section: mfusg
+#     authors:
+#       - name: Hua Zhang
+# ---
 
 # ## Dual Domain Transport in a One-Dimensional, Uniform Flow Field
 
@@ -42,11 +58,7 @@
 # at the outlet of the domain. The MT3D and BCT Process simulation results
 # are almost the same.
 
-# In[1]:
-
-
-from tempfile import TemporaryDirectory
-
+# +
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -54,19 +66,10 @@ import flopy
 from flopy.mfusg import MfUsg, MfUsgBcf, MfUsgBct, MfUsgDpt, MfUsgOc, MfUsgPcb, MfUsgSms
 from flopy.modflow import ModflowBas, ModflowChd, ModflowDis
 from flopy.utils import HeadFile
+# -
 
-# In[2]:
-
-
+# +
 model_ws = "Ex4_DualDomain"
-
-# temp_dir = TemporaryDirectory()
-# model_ws = temp_dir.name
-
-
-# In[3]:
-
-
 mf = MfUsg(
     version="mfusg",
     structured=True,
@@ -74,11 +77,8 @@ mf = MfUsg(
     modelname="Ex4_DualDomain",
     exe_name="mfusg_gsi",
 )
-
-
-# In[4]:
-
-
+# -
+# +
 nlay = 1
 nrow = 1
 ncol = 300
@@ -110,11 +110,8 @@ dis = ModflowDis(
     tsmult=tsmult,
     lenuni=lenuni,
 )
-
-
-# In[5]:
-
-
+# -
+# +
 ibound = np.ones((nlay, nrow, ncol))
 ibound[:, :, 0] = -1
 ibound[:, :, -1] = -1
@@ -124,18 +121,12 @@ strt[:, :, 0] = 10.0
 strt[:, :, -1] = 9.0
 
 bas = ModflowBas(mf, ibound=ibound, strt=strt)
-
-
-# In[6]:
-
-
+# -
+# +
 tran = 1000.0
 bcf = MfUsgBcf(mf, ipakcb=50, laycon=0, hdry=-999.9, wetfct=0.0, iwetit=0, tran=tran)
-
-
-# In[7]:
-
-
+# -
+# +
 sms = MfUsgSms(
     mf,
     options="MODERATE",
@@ -163,19 +154,13 @@ sms = MfUsgSms(
     idroptol=1,
     epsrn=1.0e-3,
 )
-
-
-# In[8]:
-
-
+# -
+# +
 lrcsc = {0: [[0, 0, 0, 10.0, 10.0], [0, 0, 299, 9.0, 9.0]]}
 
 chd = ModflowChd(mf, ipakcb=50, stress_period_data=lrcsc)
-
-
-# In[9]:
-
-
+# -
+# +
 prsity = 0.35
 bulkd = 1.60
 dl = 0.5
@@ -196,18 +181,12 @@ bct = MfUsgBct(
     adsorb=adsorb,
     conc=conc,
 )
-
-
-# In[10]:
-
-
+# -
+# +
 lrcsc = {0: [0, 0, 0, 1, 1.0], 1: [0, 0, 0, 1, 0.0]}
 pcb = MfUsgPcb(mf, stress_period_data=lrcsc)
-
-
-# In[11]:
-
-
+# -
+# +
 dpt = MfUsgDpt(
     mf,
     ipakcb=55,
@@ -219,12 +198,10 @@ dpt = MfUsgDpt(
     bulkdim=1.6,
     ddtr=0.1,
     adsorbim=0.1,
+    unitnumber=58,
 )
-
-
-# In[12]:
-
-
+# -
+# +
 lrcsc = {
     (0, 0): [
         "DELTAT 4.0E-2",
@@ -241,25 +218,16 @@ lrcsc = {
 oc = MfUsgOc(
     mf, atsa=1, npsteps=1, unitnumber=[14, 30, 31, 0, 0, 35], stress_period_data=lrcsc
 )
-
-
-# In[13]:
-
-
+# -
+# +
 mf.write_input()
 success, buff = mf.run_model()
-
-
-# In[14]:
-
-
+# -
+# +
 concobj = HeadFile(f"{mf.model_ws}/{mf.name}.con", text="conc")
 simconc = concobj.get_ts((0, 0, 299))
-
-
-# In[15]:
-
-
+# -
+# +
 fig = plt.figure(figsize=(8, 5), dpi=150)
 ax = fig.add_subplot(111)
 ax.plot(simconc[:, 0], simconc[:, 1], label="BCT Result")
@@ -269,6 +237,3 @@ ax.set_title(
     "MODFLOW-USG Transport Simulation Results for Dual Domain Transport in a One-Dimensional, Uniform Flow Field"
 )
 ax.legend()
-
-
-# In[ ]:

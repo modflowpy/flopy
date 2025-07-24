@@ -1,5 +1,21 @@
-#!/usr/bin/env python
-# coding: utf-8
+# ---
+# jupyter:
+#   jupytext:
+#     notebook_metadata_filter: all
+#     text_representation:
+#       extension: .py
+#       format_name: light
+#       format_version: '1.5'
+#       jupytext_version: 1.14.5
+#   kernelspec:
+#     display_name: Python 3 (ipykernel)
+#     language: python
+#     name: python3
+#   metadata:
+#     section: mfusg
+#     authors:
+#       - name: Hua Zhang
+# ---
 
 # ## MF-USG Example Problems for Adsorption of PFAS Adsorption on Air-Water Interface in the Unsaturated Zone
 
@@ -17,12 +33,8 @@
 #
 # For all cases, it is noted that the simulations compare very well with the experimental results. Figure AW2 shows a comparison of simulated results versus the laboratory observations for the different saturation conditions. Note that the case of saturation = 0.86 was not simulated, however, the simulation cases for both with and without dispersion are showin for the unsaturated case. Again, it is noted that the simulations compare very well with the experimental results. The simulation case without soil adsorption is also shown on Figure AW2, to note the impact of the various adsorption mechanisms on the movement of PFOA. Retardation due to soil adsorption slows down the breakthrough of PFOA by less than half a pore volume, however, adsorption on the air-water interface slows it down further by more than one pore volume.
 
-# In[ ]:
-
-
+# +
 import os
-import shutil
-from tempfile import TemporaryDirectory
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -42,19 +54,10 @@ from flopy.modflow import ModflowBas, ModflowChd, ModflowDis
 from flopy.plot import PlotCrossSection, PlotMapView
 from flopy.utils import HeadUFile
 from flopy.utils.gridgen import Gridgen
+# -
 
-# In[ ]:
-
-
+# +
 model_ws = "Ex9_PFAS"
-
-# temp_dir = TemporaryDirectory()
-# model_ws = temp_dir.name
-
-
-# In[ ]:
-
-
 mf = MfUsg(
     version="mfusg",
     structured=True,
@@ -62,12 +65,9 @@ mf = MfUsg(
     modelname="Ex9_PFAS",
     exe_name="mfusg_gsi",
 )
-
-
+# -
+# +
 # The setup simulated here consists of a 1-dimensional vertical soil column of 0.35 mm sand, 15 cm long, with a steady-state recharge from the top that gives a pore velocity of 37 cm/hr. The soil column was discretized uniformly into 30 numerical layers of 0.5 cm thickness each with a bottom elevation of zero and a top elevation of 15 cm.
-
-# In[ ]:
-
 
 ms = flopy.modflow.Modflow()
 
@@ -84,21 +84,15 @@ botm = np.linspace(top - delv, 0.0, nlay)
 dis = flopy.modflow.ModflowDis(
     ms, nlay, nrow, ncol, delr=delr, delc=delc, laycbd=0, top=top, botm=botm
 )
-
-
-# In[ ]:
-
-
+# -
+# +
 gridgen_ws = os.path.join(model_ws, "gridgen")
 if not os.path.exists(gridgen_ws):
     os.mkdir(gridgen_ws)
 g = Gridgen(ms.modelgrid, model_ws=gridgen_ws)
 g.build()
-
-
-# In[ ]:
-
-
+# -
+# +
 disu = g.get_disu(mf, itmuni=3, lenuni=3, nper=1, perlen=2.025)
 disu.ivsd = -1
 anglex = g.get_anglex()
@@ -106,28 +100,19 @@ disu.iac.fmtin = "(10I4)"
 disu.ja.fmtin = "(10I4)"
 disu.cl12.fmtin = "(10F6.2)"
 disu.fahl.fmtin = "(10F6.2)"
-
-
-# In[ ]:
-
-
+# -
 # MODFLOW-USG does not have vertices, so we need to create
 # and unstructured grid and then assign it to the model. This
 # will allow plotting and other features to work properly.
+# +
 gridprops_ug = g.get_gridprops_unstructuredgrid()
 ugrid = flopy.discretization.UnstructuredGrid(**gridprops_ug)
 mf.modelgrid = ugrid
-
-
-# In[ ]:
-
-
+# -
+# +
 bas = ModflowBas(mf, ibound=1, strt=15.0, richards=True, unstructured=True)
-
-
-# In[ ]:
-
-
+# -
+# +
 ipakcb = 50
 hk = 100.0
 vka = 100.0
@@ -144,11 +129,8 @@ lpf = MfUsgLpf(
     sr=0.2364,
     brook=4.0,
 )
-
-
-# In[ ]:
-
-
+# -
+# +
 sms = MfUsgSms(
     mf,
     hclose=1.0e-3,
@@ -176,13 +158,8 @@ sms = MfUsgSms(
     epsrn=1.0e-3,
     options2=["SOLVEACTIVE", "DAMPBOT"],
 )
-
-
-# ## Saturated, C=1 at inlet.
-
-# In[ ]:
-
-
+# -
+# +
 bct = MfUsgBct(
     mf,
     itvd=9,
@@ -197,20 +174,14 @@ bct = MfUsgBct(
     bulkd=1.5,
     adsorb=0.0,
 )
-
-
+# -
+# +
 # Recharge was simulated from the top end at a rate of 12.21 cm/hr. For a porosity value of 0.33, the recharge rate is 12.21 cm/hr, and one pore volume (PV) is equal to 0.405 hours.
 
-# In[ ]:
-
-
 rch = MfUsgRch(mf, ipakcb=ipakcb, iconc=1, rech=12.21, rchconc=1.0)
-
-
+# -
+# +
 # a prescribed head boundary condition at the bottom that can control the degree of saturation of the soil column. For the saturated case, the prescribed head condition was above the top of the soil column at 20 cm. For the case of Sw = 0.68, The bottom head was set to -1.8 cm with van Genuchten parameters  = 12.6 cm-1,= 1.16, Sr = 0.22, and the Brooks Corey exponent = 4. The steady-state flow-fields thus generated were used for the transport simulations.
-
-# In[ ]:
-
 
 dtype = np.dtype(
     [("node", int), ("shead", np.float32), ("ehead", np.float32), ("c01", np.float32)]
@@ -226,11 +197,8 @@ lrcsc = {
     ]
 }
 chd = ModflowChd(mf, ipakcb=ipakcb, options=[], dtype=dtype, stress_period_data=lrcsc)
-
-
-# In[ ]:
-
-
+# -
+# +
 lrcsc = {
     (0, 0): [
         "DELTAT 0.0205",
@@ -252,27 +220,18 @@ oc = MfUsgOc(
     stress_period_data=lrcsc,
     compact=False,
 )
-
-
-# In[ ]:
-
-
+# -
+# +
 mf.write_input()
 success, buff = mf.run_model()
-
-
-# In[ ]:
-
-
+# -
+# +
 concobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text="conc")
 simconc1 = concobj.get_ts((119))
-
+# -
 
 # ## Saturated, C=1 at inlet, with adsorption (kd = 0.08).
-
-# In[ ]:
-
-
+# +
 mf.remove_package("BCT")
 bct = MfUsgBct(
     mf,
@@ -288,27 +247,18 @@ bct = MfUsgBct(
     bulkd=1.5,
     adsorb=0.08,
 )
-
-
-# In[ ]:
-
-
+# -
+# +
 mf.write_input()
 success, buff = mf.run_model()
-
-
-# In[ ]:
-
-
+# -
+# +
 concobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text="conc")
 simconc2 = concobj.get_ts((119))
-
+# -
 
 # ## Saturation of 0.68,  A-W adsorption C=1, Kaw = 0.0021
-
-# In[ ]:
-
-
+# +
 mf.remove_package("BCT")
 bct = MfUsgBct(
     mf,
@@ -345,11 +295,8 @@ bct = MfUsgBct(
     alangaw=0.0021,
     blangaw=0.0,
 )
-
-
-# In[ ]:
-
-
+# -
+# +
 mf.remove_package("CHD")
 chead = -1.8
 lrcsc = {
@@ -361,11 +308,8 @@ lrcsc = {
     ]
 }
 chd = ModflowChd(mf, ipakcb=ipakcb, options=[], dtype=dtype, stress_period_data=lrcsc)
-
-
-# In[ ]:
-
-
+# -
+# +
 mf.remove_package("LPF")
 ipakcb = 50
 hk = 100.0
@@ -383,27 +327,19 @@ lpf = MfUsgLpf(
     sr=0.22,
     brook=4.0,
 )
-
-
-# In[ ]:
-
-
+# -
+# +
 mf.write_input()
 success, buff = mf.run_model()
-
-
-# In[ ]:
-
-
+# -
+# +
 concobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text="conc")
 simconc3 = concobj.get_ts((119))
-
+# -
 
 # ## Saturation of 0.68,  A-W adsorption C=0.1, Kaw = 0.0027
 
-# In[ ]:
-
-
+# +
 mf.remove_package("BCT")
 bct = MfUsgBct(
     mf,
@@ -425,27 +361,19 @@ bct = MfUsgBct(
     alangaw=0.0027,
     blangaw=0.0,
 )
-
-
-# In[ ]:
-
-
+# -
+# +
 mf.write_input()
 success, buff = mf.run_model()
-
-
-# In[ ]:
-
-
+# -
+# +
 concobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text="conc")
 simconc4 = concobj.get_ts((119))
-
+# -
 
 # ## Saturation of 0.68,  A-W adsorption C=0.01, Kaw = 0.0040
 
-# In[ ]:
-
-
+# +
 mf.remove_package("BCT")
 bct = MfUsgBct(
     mf,
@@ -467,25 +395,16 @@ bct = MfUsgBct(
     alangaw=0.0040,
     blangaw=0.0,
 )
-
-
-# In[ ]:
-
-
+# -
+# +
 mf.write_input()
 success, buff = mf.run_model()
-
-
-# In[ ]:
-
-
+# -
+# +
 concobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text="conc")
 simconc5 = concobj.get_ts((119))
-
-
-# In[ ]:
-
-
+# -
+# +
 fig = plt.figure(figsize=(8, 5), dpi=150)
 ax = fig.add_subplot(111)
 ax.plot(simconc1[:, 0] / 0.405, simconc1[:, 1], label="S=1, Kd=0")

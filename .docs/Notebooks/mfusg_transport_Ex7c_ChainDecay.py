@@ -1,5 +1,21 @@
-#!/usr/bin/env python
-# coding: utf-8
+# ---
+# jupyter:
+#   jupytext:
+#     notebook_metadata_filter: all
+#     text_representation:
+#       extension: .py
+#       format_name: light
+#       format_version: '1.5'
+#       jupytext_version: 1.14.5
+#   kernelspec:
+#     display_name: Python 3 (ipykernel)
+#     language: python
+#     name: python3
+#   metadata:
+#     section: mfusg
+#     authors:
+#       - name: Hua Zhang
+# ---
 
 # ## MF-USG Example Problems for Matrix Diffusion Transport Package
 
@@ -7,12 +23,8 @@
 #
 # Several benchmark and verification simulations have been conducted with the MDT Package modules to test accuracy and performance. The code has been tested in 1-, 2-, and 3-dimensions, against analytical solutions as well as against other numerical codes; specifically,MT3D (Zheng and Wang, 1999). The following example problems are provided to demonstrate application of the MDT Process. It is recommended that users familiarize themselves with the different simulation options, code accuracy under various conditions, and input/output structures of the MDT Process via these test problems.
 
-# In[1]:
-
-
+# +
 import os
-import shutil
-from tempfile import TemporaryDirectory
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -34,6 +46,7 @@ from flopy.modflow import ModflowBas, ModflowChd, ModflowDis
 from flopy.plot import PlotCrossSection, PlotMapView
 from flopy.utils import HeadUFile
 from flopy.utils.gridgen import Gridgen
+# -
 
 # ## Example MD3: Demonstration of PCE Decay
 
@@ -43,17 +56,8 @@ from flopy.utils.gridgen import Gridgen
 #
 # The MODFLOW-USG MDT model contains 5 layers, 20 rows, and 100 columns. Input parameters are shown in Table 5. Comparison of the MODFLOW-USG MDT model concentrations with the semi-analytical model results over various years is shown on Figure Ex 14. As shown in the figure, the MODFLOW-USG MDT package was able to reproduce the constituent concentrations reasonably well for all constituents.
 
-# In[2]:
-
-
+# +
 model_ws = "Ex7_PCE"
-
-# temp_dir = TemporaryDirectory()
-# model_ws = temp_dir.name
-
-
-# In[3]:
-
 
 mf = MfUsg(
     version="mfusg",
@@ -62,11 +66,9 @@ mf = MfUsg(
     modelname="Ex7_PCE",
     exe_name="mfusg_gsi",
 )
+# -
 
-
-# In[4]:
-
-
+# +
 ms = flopy.modflow.Modflow()
 
 nrow = 20
@@ -82,62 +84,49 @@ botm = np.linspace(top - delv, 0.0, nlay)
 dis = flopy.modflow.ModflowDis(
     ms, nlay, nrow, ncol, delr=delr, delc=delc, laycbd=0, top=top, botm=botm
 )
+# -
 
-
-# In[5]:
-
-
+# +
 gridgen_ws = os.path.join(model_ws, "gridgen")
 if not os.path.exists(gridgen_ws):
     os.mkdir(gridgen_ws)
 g = Gridgen(ms.modelgrid, model_ws=gridgen_ws)
 g.build()
+# -
 
-
-# In[6]:
-
-
+# +
 gridprops = g.get_gridprops_disu5()
 anglex = g.get_anglex()
 nnodes = g.get_nodes()
 gridx = g.get_cellxy(nnodes)[:, 0]
+# -
 
-
-# In[7]:
-
-
+# +
 disu = MfUsgDisU(mf, **gridprops, itmuni=5, lenuni=2, nper=1, perlen=50.0)
+# -
 
 
-# In[8]:
-
-
+# +
 # MODFLOW-USG does not have vertices, so we need to create
 # and unstructured grid and then assign it to the model. This
 # will allow plotting and other features to work properly.
 gridprops_ug = g.get_gridprops_unstructuredgrid()
 ugrid = flopy.discretization.UnstructuredGrid(**gridprops_ug)
 mf.modelgrid = ugrid
+# -
 
-
-# In[9]:
-
-
+# +
 bas = ModflowBas(mf, strt=20.0)
+# -
 
-
-# In[10]:
-
-
+# +
 ipakcb = 50
 hk = 12500.0
 vka = 12500.0
 lpf = MfUsgLpf(mf, ipakcb=ipakcb, constantcv=1, novfc=1, hk=hk, vka=vka)
+# -
 
-
-# In[11]:
-
-
+# +
 sms = MfUsgSms(
     mf,
     hclose=1.0e-6,
@@ -164,11 +153,9 @@ sms = MfUsgSms(
     idroptol=1,
     epsrn=1.0e-3,
 )
+# -
 
-
-# In[12]:
-
-
+# +
 dtype = np.dtype(
     [
         ("node", int),
@@ -197,11 +184,9 @@ for ilay in range(nlay):
                 lrcsc.append([inode, outhead, outhead, 0.0, 0.0, 0.0, 0.0])
 
 chd = ModflowChd(mf, ipakcb=ipakcb, options=[], dtype=dtype, stress_period_data=lrcsc)
+# -
 
-
-# In[13]:
-
-
+# +
 diffnc = 6.694036e-002
 adsorb = [0.19375, 0.1166625, 0.03625, 0.0137]
 fodrw = [0.4, 0.15, 0.1, 0.2]
@@ -228,18 +213,14 @@ bct = MfUsgBct(
     jparent=[0, 1, 2, 3],
     stotio=[0, 0.795, 0.737, 0.640],
 )
+# -
 
-
-# In[14]:
-
-
+# +
 lrcsc = {0: [8000, 1, 0.1]}
 pcb = MfUsgPcb(mf, stress_period_data=lrcsc)
+# -
 
-
-# In[15]:
-
-
+# +
 mdt = MfUsgMdt(
     mf,
     mdflag=2,
@@ -254,11 +235,9 @@ mdt = MfUsgMdt(
     yieldmd=0.0,
     diffmd=0.031558,
 )
+# -
 
-
-# In[16]:
-
-
+# +
 lrcsc = {
     (0, 0): [
         "DELTAT 0.5",
@@ -280,18 +259,14 @@ oc = MfUsgOc(
     stress_period_data=lrcsc,
     compact=False,
 )
+# -
 
-
-# In[17]:
-
-
+# +
 mf.write_input()
 success, buff = mf.run_model()
+# -
 
-
-# In[18]:
-
-
+# +
 ilay = 0
 comps = ["PCE", "TCE", "cis-DCE", "VC"]
 fig = plt.figure(figsize=(8, 8), dpi=150)
@@ -304,10 +279,9 @@ for idx, comp in enumerate(comps):
     ax.set_xlabel("x (m)")
     ax.set_ylabel("y (m)")
     ax.set_title(f"{comp} concentration")
+# -
 
-
-# In[19]:
-
+# +
 
 irow = 0
 comps = ["PCE", "TCE", "cis-DCE", "VC"]
@@ -321,11 +295,9 @@ for idx, comp in enumerate(comps):
     ax.set_xlabel("x (m)")
     ax.set_ylabel("elevation (m)")
     ax.set_title(f"{comp} concentration")
+# -
 
-
-# In[20]:
-
-
+# +
 conc1obj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text="conc01")
 conc2obj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text="conc02")
 conc3obj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text="conc03")
@@ -351,6 +323,3 @@ for idx, t in enumerate(plottime):
     ax.set_ylim(0.001, 100)
     ax.set_title(f"{t} Years After Source Release")
     ax.legend()
-
-
-# In[ ]:

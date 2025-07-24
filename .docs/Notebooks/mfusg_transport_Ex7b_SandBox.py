@@ -1,5 +1,21 @@
-#!/usr/bin/env python
-# coding: utf-8
+# ---
+# jupyter:
+#   jupytext:
+#     notebook_metadata_filter: all
+#     text_representation:
+#       extension: .py
+#       format_name: light
+#       format_version: '1.5'
+#       jupytext_version: 1.14.5
+#   kernelspec:
+#     display_name: Python 3 (ipykernel)
+#     language: python
+#     name: python3
+#   metadata:
+#     section: mfusg
+#     authors:
+#       - name: Hua Zhang
+# ---
 
 # ## MF-USG Example Problems for Matrix Diffusion Transport Package
 
@@ -7,12 +23,8 @@
 #
 # Several benchmark and verification simulations have been conducted with the MDT Package modules to test accuracy and performance. The code has been tested in 1-, 2-, and 3-dimensions, against analytical solutions as well as against other numerical codes; specifically,MT3D (Zheng and Wang, 1999). The following example problems are provided to demonstrate application of the MDT Process. It is recommended that users familiarize themselves with the different simulation options, code accuracy under various conditions, and input/output structures of the MDT Process via these test problems.
 
-# In[1]:
-
-
+# +
 import os
-import shutil
-from tempfile import TemporaryDirectory
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -34,6 +46,7 @@ from flopy.modflow import ModflowBas, ModflowChd, ModflowDis
 from flopy.plot import PlotCrossSection, PlotMapView
 from flopy.utils import HeadUFile
 from flopy.utils.gridgen import Gridgen
+# -
 
 # ## Example MD2: Embedded Low Permeability Zones
 
@@ -50,18 +63,8 @@ from flopy.utils.gridgen import Gridgen
 # " />
 #
 
-# In[2]:
-
-
+# +
 model_ws = "Ex7_SandBox"
-
-# temp_dir = TemporaryDirectory()
-# model_ws = temp_dir.name
-
-
-# In[3]:
-
-
 mf = MfUsg(
     version="mfusg",
     structured=True,
@@ -69,12 +72,9 @@ mf = MfUsg(
     modelname="Ex7_SandBox",
     exe_name="mfusg_gsi",
 )
-
-
+# -
+# +
 # Developed as a 1-D model, the MODFLOW-USG MDT model contains a total of 50 cells (1 row, 50 columns, and 1 layer).
-
-# In[4]:
-
 
 ms = flopy.modflow.Modflow()
 
@@ -90,58 +90,41 @@ botm = 0.0
 dis = flopy.modflow.ModflowDis(
     ms, nlay, nrow, ncol, delr=delr, delc=delc, laycbd=0, top=top, botm=botm
 )
-
-
-# In[5]:
-
-
+# -
+# +
 gridgen_ws = os.path.join(model_ws, "gridgen")
 if not os.path.exists(gridgen_ws):
     os.mkdir(gridgen_ws)
 g = Gridgen(ms.modelgrid, model_ws=gridgen_ws)
 g.build()
-
-
-# In[6]:
-
-
+# -
+# +
 gridprops = g.get_gridprops_disu5()
 anglex = g.get_anglex()
 nnodes = g.get_nodes()
 gridx = g.get_cellxy(nnodes)[:, 0]
-
-
-# In[7]:
-
-
+# -
+# +
 nper = 2
 perlen = [0.060233, 0.273785]
 
 disu = MfUsgDisU(mf, **gridprops, itmuni=5, lenuni=1, nper=nper, perlen=perlen)
-
-
-# In[8]:
-
-
+# -
+# +
 strt = [5.0] * nnodes
 strt[0] = 1.328107
 strt[-1] = 1.0
 
 bas = ModflowBas(mf, strt=strt)
-
-
-# In[9]:
-
+# -
+# +
 
 ipakcb = 50
 hk = 100.0
 vka = 100.0
 lpf = MfUsgLpf(mf, ipakcb=ipakcb, constantcv=1, novfc=1, laytyp=0, hk=hk, vka=vka)
-
-
-# In[10]:
-
-
+# -
+# +
 sms = MfUsgSms(
     mf,
     hclose=1.0e-3,
@@ -168,11 +151,8 @@ sms = MfUsgSms(
     idroptol=1,
     epsrn=1.0e-3,
 )
-
-
-# In[11]:
-
-
+# -
+# +
 dtype = np.dtype(
     [
         ("node", int),
@@ -190,11 +170,8 @@ lrcsc = {
     1: [[0, 1.328107, 1.328107, 1.0, 1.0, -1, 0.0], [49, 1.0, 1.0, 1.0, 1.0, -1, 0.0]],
 }
 chd = ModflowChd(mf, ipakcb=ipakcb, options=[], dtype=dtype, stress_period_data=lrcsc)
-
-
-# In[12]:
-
-
+# -
+# +
 diffnc = 0.03844444
 bct = MfUsgBct(
     mf,
@@ -212,18 +189,13 @@ bct = MfUsgBct(
     iadsorb=1,
     adsorb=0.109693,
 )
-
-
-# In[13]:
-
+# -
+# +
 
 lrcsc = {0: [0, 1, 400.0], 1: [0, 1, 0.0]}
 pcb = MfUsgPcb(mf, ipakcb=27, stress_period_data=lrcsc)
-
-
-# In[14]:
-
-
+# -
+# +
 mdt = MfUsgMdt(
     mf,
     mdflag=2,
@@ -234,11 +206,8 @@ mdt = MfUsgMdt(
     tortmd=0.3,
     diffmd=0.0173,
 )
-
-
-# In[15]:
-
-
+# -
+# +
 lrcsc = {
     (0, 0): [
         "DELTAT 0.001368925",
@@ -265,25 +234,16 @@ lrcsc = {
 oc = MfUsgOc(
     mf, atsa=1, npsteps=1, unitnumber=[14, 30, 31, 0, 0, 132], stress_period_data=lrcsc
 )
-
-
-# In[16]:
-
-
+# -
+# +
 mf.write_input()
 success, buff = mf.run_model()
-
-
-# In[17]:
-
-
+# -
+# +
 concobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text="conc")
 simconc = concobj.get_ts((49))
-
-
-# In[18]:
-
-
+# -
+# +
 fig = plt.figure(figsize=(8, 5), dpi=150)
 ax = fig.add_subplot(111)
 ax.plot(simconc[:, 0], simconc[:, 1])

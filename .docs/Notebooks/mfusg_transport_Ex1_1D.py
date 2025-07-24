@@ -1,5 +1,21 @@
-#!/usr/bin/env python
-# coding: utf-8
+# ---
+# jupyter:
+#   jupytext:
+#     notebook_metadata_filter: all
+#     text_representation:
+#       extension: .py
+#       format_name: light
+#       format_version: '1.5'
+#       jupytext_version: 1.14.5
+#   kernelspec:
+#     display_name: Python 3 (ipykernel)
+#     language: python
+#     name: python3
+#   metadata:
+#     section: mfusg
+#     authors:
+#       - name: Hua Zhang
+# ---
 
 # ## Advection, Dispersion and Decay in a One-Dimensional Uniform Flow Field
 
@@ -20,11 +36,7 @@
 # of 1 mg/L was set at the upstream end of the domain for the duration of the simulation.
 #
 
-# In[1]:
-
-
-from tempfile import TemporaryDirectory
-
+# +
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -32,19 +44,10 @@ import flopy
 from flopy.mfusg import MfUsg, MfUsgBct, MfUsgLpf, MfUsgOc, MfUsgPcb, MfUsgSms
 from flopy.modflow import ModflowBas, ModflowDis
 from flopy.utils import HeadFile
+# -
 
-# In[2]:
-
-
+# +
 model_ws = "Ex1_1D"
-
-# temp_dir = TemporaryDirectory()
-# model_ws = temp_dir.name
-
-
-# In[3]:
-
-
 mf = MfUsg(
     version="mfusg",
     structured=True,
@@ -52,11 +55,9 @@ mf = MfUsg(
     modelname="ex1-1d",
     exe_name="mfusg_gsi",
 )
+# -
 
-
-# In[4]:
-
-
+# +
 nlay = 2
 nrow = 2
 ncol = 101
@@ -83,11 +84,9 @@ dis = ModflowDis(
     nstp=nstp,
     lenuni=lenuni,
 )
+# -
 
-
-# In[5]:
-
-
+# +
 ibound = np.ones((nlay, nrow, ncol))
 ibound[:, :, 0] = -1
 ibound[:, :, -1] = -1
@@ -96,21 +95,17 @@ strt = np.full((nlay, nrow, ncol), 100.0)
 strt[:, :, 0] = 1100.0
 
 bas = ModflowBas(mf, ibound=ibound, strt=strt)
+# -
 
-
-# In[6]:
-
-
+# +
 ipakcb = 50
 hk = 10.0
 vka = 10.0
 
 lpf = MfUsgLpf(mf, ipakcb=ipakcb, laytyp=3, hk=hk, vka=vka)
+# -
 
-
-# In[7]:
-
-
+# +
 sms = MfUsgSms(
     mf,
     hclose=5e-2,
@@ -137,22 +132,18 @@ sms = MfUsgSms(
     idroptol=1,
     epsrn=1.0e-3,
 )
+# -
 
-
-# In[8]:
-
-
+# +
 lrcsc = []
 for ilay in range(nlay):
     for irow in range(nrow):
         lrcsc.append([ilay, irow, 0, 1, 1.0])  # inlet
         lrcsc.append([ilay, irow, ncol - 1, 1, 0.0])  # outlet
 pcb = MfUsgPcb(mf, stress_period_data={0: lrcsc})
+# -
 
-
-# In[9]:
-
-
+# +
 oc = MfUsgOc(
     mf,
     save_conc=1,
@@ -160,13 +151,11 @@ oc = MfUsgOc(
     save_types=["save head", "save budget"],
     unitnumber=[14, 30, 31, 0, 0, 33],
 )
-
+# -
 
 # ### Case 1 conducts the simulation with zero dispersion.
 
-# In[10]:
-
-
+# +
 prsity = 0.2
 dl = 0
 dt = 0
@@ -182,26 +171,20 @@ bct = MfUsgBct(
     dt=dt,
     conc=conc,
 )
+# -
 
-
-# In[11]:
-
-
+# +
 mf.write_input()
 success, buff = mf.run_model(silent=True)
+# -
 
-
-# In[12]:
-
-
+# +
 concobj = HeadFile(f"{mf.model_ws}/{mf.name}.con", text="conc")
 # Get the cocentration data at 10 days
 conc_case1 = concobj.get_data(totim=10.0)[0, 0, :]
+# -
 
-
-# In[13]:
-
-
+# +
 mf.remove_package("BCT")
 bct = MfUsgBct(
     mf,
@@ -216,19 +199,15 @@ bct = MfUsgBct(
 )
 mf.write_input()
 success, buff = mf.run_model(silent=True)
+# -
 
-
-# In[14]:
-
-
+# +
 concobj = HeadFile(f"{mf.model_ws}/{mf.name}.con", text="conc")
 # Get the cocentration data at 10 days
 conc_case1_ups = concobj.get_data(totim=10.0)[0, 0, :]
+# -
 
-
-# In[15]:
-
-
+# +
 mf.remove_package("BCT")
 bct = MfUsgBct(
     mf,
@@ -244,29 +223,24 @@ bct = MfUsgBct(
 )
 mf.write_input()
 success, buff = mf.run_model(silent=True)
+# -
 
-
-# In[16]:
-
-
+# +
 concobj = HeadFile(f"{mf.model_ws}/{mf.name}.con", text="conc")
 # Get the cocentration data at 10 days
 conc_case1_cn = concobj.get_data(totim=10.0)[0, 0, :]
+# -
 
-
-# In[17]:
-
-
+# +
 analytical = np.ones(ncol)
 analytical[50] = 0.5
 analytical[51:] = 0.0
-
+# -
 
 # ### Case 2 includes a retardation of 2 by using a bulk density value of 1 kg/L and an adsorption coefficient (kd) of 0.2 L/kg.
 
-# In[18]:
 
-
+# +
 mf.remove_package("BCT")
 bulkd = 1
 adsorb = 0.2
@@ -284,26 +258,17 @@ bct = MfUsgBct(
     dt=dt,
     conc=conc,
 )
-
-
-# In[19]:
-
-
+# -
+# +
 mf.write_input()
 success, buff = mf.run_model(silent=True)
-
-
-# In[20]:
-
-
+# -
+# +
 concobj = HeadFile(f"{mf.model_ws}/{mf.name}.con", text="conc")
 # Get the cocentration data at 10 days
 conc_case2 = concobj.get_data(totim=20.0)[0, 0, :]
-
-
-# In[21]:
-
-
+# -
+# +
 fig = plt.figure(figsize=(8, 5), dpi=150)
 ax = fig.add_subplot(111)
 ax.plot(xcol, conc_case1, label="case 1 TVD 10d")
@@ -318,7 +283,7 @@ ax.set_title(
 )
 
 ax.legend()
-
+# -
 
 # Figure Ex 1 shows the simulation results after 10 days of simulation, when the advective front of Case 1 moves halfway into the one-dimensional domain. Results are presented for an upstream weighted
 # solution and for a solution using the TVD scheme with 4 TVD iterations. The purely advective analytical solution is also shown on the figure for comparison. It is noted that the TVD scheme
@@ -330,9 +295,7 @@ ax.legend()
 
 # ### Case 3 further includes a longitudinal dispersivity value of 10 feet (grid Peclet number of 1)
 
-# In[22]:
-
-
+# +
 mf.remove_package("BCT")
 dl = 10.0
 
@@ -350,28 +313,19 @@ bct = MfUsgBct(
     dt=dt,
     conc=conc,
 )
-
-
-# In[23]:
-
-
+# -
+# +
 mf.write_input()
 success, buff = mf.run_model(silent=True)
-
-
-# In[24]:
-
-
+# -
+# +
 concobj = HeadFile(f"{mf.model_ws}/{mf.name}.con", text="conc")
 # Get the cocentration data at 10 days
 conc_case3 = concobj.get_data(totim=20.0)[0, 0, :]
-
-
+# -
 # ### Case 4 includes a longitudinal dispersivity value of 1 feet (grid Peclet Number of 10)
 
-# In[25]:
-
-
+# +
 mf.remove_package("BCT")
 dl = 1.0
 
@@ -389,28 +343,21 @@ bct = MfUsgBct(
     dt=dt,
     conc=conc,
 )
+# -
 
-
-# In[26]:
-
-
+# +
 mf.write_input()
 success, buff = mf.run_model(silent=True)
-
-
-# In[27]:
-
-
+# -
+# +
 concobj = HeadFile(f"{mf.model_ws}/{mf.name}.con", text="conc")
 # Get the cocentration data at 10 days
 conc_case4 = concobj.get_data(totim=20.0)[0, 0, :]
-
+# -
 
 # ### Case 5 also includes first order decay with a half-life of 10 days (first order decay rate of 6.9315x 10-2 /day) on the simulation with the high grid Peclet Number.
 
-# In[28]:
-
-
+# +
 mf.remove_package("BCT")
 fodrw = 6.9315e-2
 fodrs = 6.9315e-2
@@ -432,29 +379,21 @@ bct = MfUsgBct(
     dt=dt,
     conc=conc,
 )
+# -
 
-
-# In[29]:
-
-
+# +
 mf.write_input()
 success, buff = mf.run_model(silent=True)
-
-
-# In[30]:
-
-
+# -
+# +
 concobj = HeadFile(f"{mf.model_ws}/{mf.name}.con", text="conc")
 # Get the cocentration data at 10 days
 conc_case5 = concobj.get_data(totim=20.0)[0, 0, :]
-
+# -
 
 # Results for the simulation cases 3, 4 and 5 are shown on Figure Ex 2 along with analytical solution results for the respective cases at 20 days. The Domenico spreadsheet analytical solution was used for comparison (www.elibrary.dep.state.pa.us/dsweb/Get/Version49262/ Quick_Domenico.xls). The simulation results for all three cases are almost the same as the respective analytical solution results. The largest errors occurred for Case 4 with a high Peclet number of 10, however, inclusion of decay diminished that error as noted for Case 5. Thus, it is noted that solution accuracy of advective transport improves substantially if a reasonable amount of dispersion or solute decay is present. Numerical experiments with different numbers of TVD iterations (including use of just two iterations as in a predictor/corrector approach) did not noticeably change the results for any of the cases discussed above.
 #
-
-# In[31]:
-
-
+# +
 fig = plt.figure(figsize=(8, 5), dpi=150)
 ax = fig.add_subplot(111)
 ax.plot(xcol, conc_case3, label="case 3 20d")
@@ -467,3 +406,4 @@ ax.set_title(
 )
 
 ax.legend()
+# -
