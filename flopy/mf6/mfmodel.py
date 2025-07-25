@@ -813,7 +813,7 @@ class MFModel(ModelInterface):
         Parameters
         ----------
         mesh : str
-            mesh type if dataset is ugrid complient
+            mesh type if dataset is ugrid compliant
         """
         attrs = {
             "modflow_grid": "",
