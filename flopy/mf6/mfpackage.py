@@ -2086,6 +2086,72 @@ class MFPackage(PackageInterface):
         )
         return self._package_container.package_filename_dict
 
+    def netcdf_attrs(self, mesh=None):
+        attrs = {}
+
+        def attr_d(tagname, iaux=None, layer=None):
+            tag = tagname
+            name = f"{self.package_name}"
+            if iaux:
+                auxvar = self.dimensions.get_aux_variables()[0]
+                tag = f"{tag}/{iaux}"
+                name = f"{name}_{auxvar[iaux]}"
+            else:
+                name = f"{name}_{tagname}"
+            if layer:
+                tag = f"{tag}/layer{layer}"
+                name = f"{name}_l{layer}"
+
+            a = {}
+            a["varname"] = name
+            a["attrs"] = {}
+            a["attrs"]["modflow_input"] = (
+                f"{self.model_name}/{self.package_name}/{tagname}"
+            ).upper()
+            if iaux:
+                a["attrs"]["modflow_iaux"] = iaux
+            if layer:
+                a["attrs"]["layer"] = layer
+            return tag, a
+
+        for key, block in self.blocks.items():
+            if key != "griddata" and key != "period":
+                continue
+            for dataset in block.datasets.values():
+                if isinstance(dataset, mfdataarray.MFArray):
+                    for index, data_item in enumerate(
+                        dataset.structure.data_item_structures
+                    ):
+                        if not (dataset.structure.netcdf and dataset.has_data()):
+                            continue
+                        if dataset.structure.layered and mesh == "LAYERED":
+                            if data_item.name == "aux" or data_item.name == "auxvar":
+                                for n, auxname in enumerate(
+                                    self.dimensions.get_aux_variables()[0]
+                                ):
+                                    if auxname == "auxiliary" and n == 0:
+                                        continue
+                                    for l in range(self.model_or_sim.modelgrid.nlay):
+                                        key, a = attr_d(data_item.name, n, l + 1)
+                                        attrs[key] = a
+                            else:
+                                for l in range(self.model_or_sim.modelgrid.nlay):
+                                    key, a = attr_d(data_item.name, layer=l + 1)
+                                    attrs[key] = a
+                        else:
+                            if data_item.name == "aux" or data_item.name == "auxvar":
+                                for n, auxname in enumerate(
+                                    self.dimensions.get_aux_variables()[0]
+                                ):
+                                    if auxname == "auxiliary" and n == 0:
+                                        continue
+                                    key, a = attr_d(data_item.name, iaux=n)
+                                    attrs[key] = a
+                            else:
+                                key, a = attr_d(data_item.name)
+                                attrs[key] = a
+        return attrs
+
     def get_package(self, name=None, type_only=False, name_only=False):
         """
         Finds a package by package name, package key, package type, or partial

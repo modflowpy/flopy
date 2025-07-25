@@ -594,6 +594,7 @@ class MFDataItemStructure:
         self.parameter_name = None
         self.one_per_pkg = False
         self.jagged_array = None
+        self.netcdf = False
 
     def set_value(self, line, common):
         arr_line = line.strip().split()
@@ -771,6 +772,8 @@ class MFDataItemStructure:
                 self.one_per_pkg = bool(arr_line[1])
             elif arr_line[0] == "jagged_array":
                 self.jagged_array = arr_line[1]
+            elif arr_line[0] == "netcdf":
+                self.netcdf = arr_line[1]
 
     def get_type_string(self):
         return f"[{self.type_string}]"
@@ -1089,6 +1092,7 @@ class MFDataStructure:
             or "nodes" in data_item.shape
             or len(data_item.layer_dims) > 1
         )
+        self.netcdf = data_item.netcdf
         self.num_data_items = len(data_item.data_items)
         self.record_within_record = False
         self.file_data = False

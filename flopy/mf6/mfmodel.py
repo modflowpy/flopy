@@ -808,6 +808,32 @@ class MFModel(ModelInterface):
 
         return utils.model_export(f, self, **kwargs)
 
+    def netcdf_attrs(self, mesh=None):
+        """Return dictionary of dataset (model) scoped attributes
+        Parameters
+        ----------
+        mesh : str
+            mesh type if dataset is ugrid complient
+        """
+        attrs = {
+            "modflow_grid": "",
+            "modflow_model": "",
+        }
+        if self.get_grid_type() == DiscretizationType.DIS:
+            attrs["modflow_grid"] = "STRUCTURED"
+        elif self.get_grid_type() == DiscretizationType.DISV:
+            attrs["modflow_grid"] = "VERTEX"
+
+        attrs["modflow_model"] = (
+            f"{self.name.upper()}: MODFLOW 6 {self.model_type.upper()[0:3]} model"
+        )
+
+        # supported => LAYERED
+        if mesh:
+            attrs["mesh"] = mesh
+
+        return attrs
+
     @property
     def verbose(self):
         """Verbose setting for model operations (True/False)"""
