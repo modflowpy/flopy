@@ -7,9 +7,16 @@ from flaky import flaky
 from modflow_devtools.markers import requires_exe
 
 from autotest.conftest import get_example_data_path
-from flopy.mfusg import MfUsg, MfUsgDisU, MfUsgLpf, MfUsgSms, MfUsgWel
-from flopy.modflow import ModflowBas, ModflowDis, ModflowDrn, ModflowGhb, ModflowOc
-from flopy.utils import Util2d, Util3d
+from flopy.mfusg import (
+    MfUsg, MfUsgDisU, MfUsgLpf, MfUsgSms, MfUsgWel,MfUsgOc
+)
+from flopy.modflow import (
+    ModflowBas,
+    ModflowDis,
+    ModflowDrn,
+    ModflowGhb,
+)
+from flopy.utils import  Util2d, Util3d
 
 
 @pytest.fixture
@@ -84,9 +91,9 @@ def test_usg_sms_load(function_tmpdir, mfusg_01A_nestedgrid_nognc_model_path):
     for (key1, value1), (key2, value2) in zip(
         sms2.__dict__.items(), sms.__dict__.items()
     ):
-        assert value1 == value2, (
-            f"key1 {key1}, value 1 {value1} != key2 {key2} value 2 {value2}"
-        )
+        assert (
+            value1 == value2
+        ), f"key1 {key1}, value 1 {value1} != key2 {key2} value 2 {value2}"
 
 
 @requires_exe("mfusg")
@@ -111,7 +118,7 @@ def test_usg_model(function_tmpdir):
             ]
         },
     )
-    oc = ModflowOc(mf)
+    oc = MfUsgOc(mf)
     sms = MfUsgSms(mf, options="complex")
 
     # run with defaults
@@ -153,7 +160,7 @@ def test_usg_load_01B(function_tmpdir, mfusg_01A_nestedgrid_nognc_model_path):
     msg = "flopy failed on loading mfusg bas package"
     assert isinstance(m.bas6, ModflowBas), msg
     msg = "flopy failed on loading mfusg oc package"
-    assert isinstance(m.oc, ModflowOc), msg
+    assert isinstance(m.oc, MfUsgOc), msg
     msg = "flopy failed on loading mfusg sms package"
     assert isinstance(m.sms, MfUsgSms), msg
 
@@ -180,7 +187,7 @@ def test_usg_load_45usg(function_tmpdir, example_data_path):
     msg = "flopy failed on loading mfusg bas package"
     assert isinstance(m.bas6, ModflowBas), msg
     msg = "flopy failed on loading mfusg oc package"
-    assert isinstance(m.oc, ModflowOc), msg
+    assert isinstance(m.oc, MfUsgOc), msg
     msg = "flopy failed on loading mfusg sms package"
     assert isinstance(m.sms, MfUsgSms), msg
     msg = "flopy failed on loading mfusg drn package"
