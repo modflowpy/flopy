@@ -373,7 +373,7 @@ def run_main(
         if bindir.startswith(":"):
             bindir = select_bindir(
                 bindir, previous=prev_bindir, quiet=quiet, is_cli=_is_cli
-            ) # returns resolved Path
+            )  # returns resolved Path
         else:
             bindir = Path(bindir).resolve()
     elif isinstance(bindir, Path):
