@@ -2086,72 +2086,6 @@ class MFPackage(PackageInterface):
         )
         return self._package_container.package_filename_dict
 
-    def netcdf_attrs(self, mesh=None):
-        attrs = {}
-
-        def attr_d(tagname, iaux=None, layer=None):
-            tag = tagname
-            name = f"{self.package_name}"
-            if iaux:
-                auxvar = self.dimensions.get_aux_variables()[0]
-                tag = f"{tag}/{iaux}"
-                name = f"{name}_{auxvar[iaux]}"
-            else:
-                name = f"{name}_{tagname}"
-            if layer:
-                tag = f"{tag}/layer{layer}"
-                name = f"{name}_l{layer}"
-
-            a = {}
-            a["varname"] = name
-            a["attrs"] = {}
-            a["attrs"]["modflow_input"] = (
-                f"{self.model_name}/{self.package_name}/{tagname}"
-            ).upper()
-            if iaux:
-                a["attrs"]["modflow_iaux"] = iaux
-            if layer:
-                a["attrs"]["layer"] = layer
-            return tag, a
-
-        for key, block in self.blocks.items():
-            if key != "griddata" and key != "period":
-                continue
-            for dataset in block.datasets.values():
-                if isinstance(dataset, mfdataarray.MFArray):
-                    for index, data_item in enumerate(
-                        dataset.structure.data_item_structures
-                    ):
-                        if not (dataset.structure.netcdf and dataset.has_data()):
-                            continue
-                        if dataset.structure.layered and mesh == "LAYERED":
-                            if data_item.name == "aux" or data_item.name == "auxvar":
-                                for n, auxname in enumerate(
-                                    self.dimensions.get_aux_variables()[0]
-                                ):
-                                    if auxname == "auxiliary" and n == 0:
-                                        continue
-                                    for l in range(self.model_or_sim.modelgrid.nlay):
-                                        key, a = attr_d(data_item.name, n, l + 1)
-                                        attrs[key] = a
-                            else:
-                                for l in range(self.model_or_sim.modelgrid.nlay):
-                                    key, a = attr_d(data_item.name, layer=l + 1)
-                                    attrs[key] = a
-                        else:
-                            if data_item.name == "aux" or data_item.name == "auxvar":
-                                for n, auxname in enumerate(
-                                    self.dimensions.get_aux_variables()[0]
-                                ):
-                                    if auxname == "auxiliary" and n == 0:
-                                        continue
-                                    key, a = attr_d(data_item.name, iaux=n)
-                                    attrs[key] = a
-                            else:
-                                key, a = attr_d(data_item.name)
-                                attrs[key] = a
-        return attrs
-
     def get_package(self, name=None, type_only=False, name_only=False):
         """
         Finds a package by package name, package key, package type, or partial
@@ -3487,6 +3421,121 @@ class MFPackage(PackageInterface):
 
         axes = PlotUtilities._plot_package_helper(self, **kwargs)
         return axes
+
+    @staticmethod
+    def _add_netcdf_entries(
+        attrs, mname, pname, data_item, auxiliary=None, mesh=None, nlay=1
+    ):
+        if auxiliary:
+            auxnames = auxiliary
+        else:
+            auxnames = []
+
+        def add_entry(tagname, iaux=None, layer=None):
+            key = tagname
+            name = f"{pname}"
+            if iaux is not None:
+                key = f"{key}/{iaux}"
+                name = f"{name}_{auxiliary[iaux]}"
+            else:
+                name = f"{name}_{tagname}"
+            if layer is not None:
+                key = f"{key}/layer{layer}"
+                name = f"{name}_l{layer}"
+
+            a = {}
+            a["varname"] = name.lower()
+            a["attrs"] = {}
+            a["attrs"]["modflow_input"] = (f"{mname}/{pname}/{tagname}").upper()
+            if iaux is not None:
+                a["attrs"]["modflow_iaux"] = iaux + 1
+            if layer is not None:
+                a["attrs"]["layer"] = layer
+            attrs[key] = a
+
+        if data_item.layered and mesh == "LAYERED":
+            if data_item.name == "aux" or data_item.name == "auxvar":
+                for n, auxname in enumerate(auxnames):
+                    for l in range(nlay):
+                        add_entry(data_item.name, n, l + 1)
+            else:
+                for l in range(nlay):
+                    add_entry(data_item.name, layer=l + 1)
+        else:
+            if data_item.name == "aux" or data_item.name == "auxvar":
+                for n, auxname in enumerate(auxnames):
+                    add_entry(data_item.name, iaux=n)
+            else:
+                add_entry(data_item.name)
+
+    @staticmethod
+    def netcdf_attrs(mtype, ptype, auxiliary=None, mesh=None, nlay=1):
+        from .data.mfstructure import DfnPackage, MFSimulationStructure
+
+        attrs = {}
+        sim_struct = MFSimulationStructure()
+
+        for package in MFPackage.__subclasses__():
+            sim_struct.process_dfn(DfnPackage(package))
+            p = DfnPackage(package)
+            c, sc = p.dfn_file_name.split(".")[0].split("-")
+            if c == mtype.lower() and sc == ptype.lower():
+                sim_struct.add_package(p, model_file=False)
+                exit
+
+        if ptype.lower() in sim_struct.package_struct_objs:
+            pso = sim_struct.package_struct_objs[ptype.lower()]
+            for key, block in pso.blocks.items():
+                if key != "griddata" and key != "period":
+                    continue
+                for d in block.data_structures:
+                    if block.data_structures[d].netcdf:
+                        MFPackage._add_netcdf_entries(
+                            attrs,
+                            mtype,
+                            ptype,
+                            block.data_structures[d],
+                            auxiliary,
+                            mesh,
+                            nlay,
+                        )
+
+        res_d = {}
+        for k in list(attrs):
+            res_d[k] = attrs[k]["attrs"]
+
+        return res_d
+
+    def netcdf_info(self, mesh=None):
+        attrs = {}
+
+        if self.dimensions.get_aux_variables():
+            auxnames = list(self.dimensions.get_aux_variables()[0])
+            if len(auxnames) and auxnames[0] == "auxiliary":
+                auxnames.pop(0)
+        else:
+            auxnames = []
+
+        for key, block in self.blocks.items():
+            if key != "griddata" and key != "period":
+                continue
+            for dataset in block.datasets.values():
+                if isinstance(dataset, mfdataarray.MFArray):
+                    for index, data_item in enumerate(
+                        dataset.structure.data_item_structures
+                    ):
+                        if dataset.structure.netcdf and dataset.has_data():
+                            MFPackage._add_netcdf_entries(
+                                attrs,
+                                self.model_name,
+                                self.package_name,
+                                dataset.structure,
+                                auxnames,
+                                mesh,
+                                self.model_or_sim.modelgrid.nlay,
+                            )
+
+        return attrs
 
 
 class MFChildPackages:
