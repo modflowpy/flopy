@@ -3485,6 +3485,10 @@ class MFPackage(PackageInterface):
 
         if ptype.lower() in sim_struct.package_struct_objs:
             pso = sim_struct.package_struct_objs[ptype.lower()]
+            if pso.multi_package_support:
+                pname = f"<{ptype}name>"
+            else:
+                pname = ptype
             for key, block in pso.blocks.items():
                 if key != "griddata" and key != "period":
                     continue
@@ -3492,8 +3496,8 @@ class MFPackage(PackageInterface):
                     if block.data_structures[d].netcdf:
                         MFPackage._add_netcdf_entries(
                             attrs,
-                            mtype,
-                            ptype,
+                            f"<{mtype}name>",
+                            pname,
                             block.data_structures[d],
                             auxiliary,
                             mesh,
