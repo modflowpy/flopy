@@ -184,6 +184,21 @@ def create_sim(ws):
     return sim
 
 
+def data_shape(shape):
+    dims = []
+    for d in shape:
+        if d == "time":
+            dims.append(nstp)
+        if d == "z":
+            dims.append(nlay)
+        elif d == "y":
+            dims.append(nrow)
+        elif d == "x":
+            dims.append(ncol)
+
+    return dims
+
+
 temp_dir = TemporaryDirectory()
 workspace = Path(temp_dir.name)
 
@@ -207,11 +222,11 @@ sim.write_simulation()
 ds = xr.Dataset()
 
 # get model netcdf info
-ds_info = gwf.netcdf_info()
+nc_info = gwf.netcdf_info()
 
 # update dataset with required attributes
-for a in ds_info["attrs"]:
-    ds.attrs[a] = ds_info["attrs"][a]
+for a in nc_info["attrs"]:
+    ds.attrs[a] = nc_info["attrs"][a]
 
 # set dimensional info
 dis = gwf.modelgrid
@@ -222,40 +237,119 @@ y = yoff + dis.xycenters[1]
 z = [float(x) for x in range(1, dis.nlay + 1)]
 nstp = sum(gwf.modeltime.nstp)
 time = gwf.modeltime.tslen
+nlay = dis.nlay
+nrow = dis.nrow
+ncol = dis.ncol
 
 # create coordinate vars
 var_d = {"time": (["time"], time), "z": (["z"], z), "y": (["y"], y), "x": (["x"], x)}
 ds = ds.assign(var_d)
 
+# dis
+dis = gwf.get_package("dis")
+nc_info = dis.netcdf_info()
+
+# create dis dataset variables
+for v in nc_info:
+    varname = nc_info[v]["varname"]
+    data = np.full(
+        data_shape(nc_info[v]["nc_shape"]),
+        nc_info[v]["attrs"]["_FillValue"],
+        dtype=nc_info[v]["nc_type"],
+    )
+    var_d = {varname: (nc_info[v]["nc_shape"], data)}
+    ds = ds.assign(var_d)
+    for a in nc_info[v]["attrs"]:
+        ds[varname].attrs[a] = nc_info[v]["attrs"][a]
+
+# update data
+ds["dis_delr"].values = dis.delr.get_data()
+ds["dis_delc"].values = dis.delc.get_data()
+ds["dis_top"].values = dis.top.get_data()
+ds["dis_botm"].values = dis.botm.get_data()
+ds["dis_idomain"].values = dis.idomain.get_data()
+
+# update dis to read from netcdf
+with open(workspace / "netcdf" / "uzf01.dis", "w") as f:
+    f.write("BEGIN options\n")
+    f.write("  crs  EPSG:26916\n")
+    f.write("END options\n\n")
+    f.write("BEGIN dimensions\n")
+    f.write("  NLAY  100\n")
+    f.write("  NROW  1\n")
+    f.write("  NCOL  1\n")
+    f.write("END dimensions\n\n")
+    f.write("BEGIN griddata\n")
+    f.write("  delr NETCDF\n")
+    f.write("  delc NETCDF\n")
+    f.write("  top NETCDF\n")
+    f.write("  botm NETCDF\n")
+    f.write("  idomain NETCDF\n")
+    f.write("END griddata\n")
+
+# npf
+npf = gwf.get_package("npf")
+nc_info = npf.netcdf_info()
+
+# create npf dataset variables
+for v in nc_info:
+    varname = nc_info[v]["varname"]
+    data = np.full(
+        data_shape(nc_info[v]["nc_shape"]),
+        nc_info[v]["attrs"]["_FillValue"],
+        dtype=nc_info[v]["nc_type"],
+    )
+    var_d = {varname: (nc_info[v]["nc_shape"], data)}
+    ds = ds.assign(var_d)
+    for a in nc_info[v]["attrs"]:
+        ds[varname].attrs[a] = nc_info[v]["attrs"][a]
+
+# update data
+ds["npf_icelltype"].values = npf.icelltype.get_data()
+ds["npf_k"].values = npf.k.get_data()
+
+# update npf to read from netcdf
+with open(workspace / "netcdf" / "uzf01.npf", "w") as f:
+    f.write("BEGIN options\n")
+    f.write("END options\n\n")
+    f.write("BEGIN griddata\n")
+    f.write("  icelltype NETCDF\n")
+    f.write("  k NETCDF\n")
+    f.write("END griddata\n")
+
 # get ghbg package netcdf info
 ghbg = gwf.get_package("ghbg_0")
-ghbg_info = ghbg.netcdf_info()
+nc_info = ghbg.netcdf_info()
 
 # create ghbg dataset variables
-shape = nc_shape = ["time", "z", "y", "x"]
-for v in ghbg_info:
-    varname = ghbg_info[v]["varname"]
-    data = np.full((nstp, dis.nlay, dis.nrow, dis.ncol), DNODATA, dtype=float)
-    var_d = {varname: (shape, data)}
+for v in nc_info:
+    varname = nc_info[v]["varname"]
+    data = np.full(
+        data_shape(nc_info[v]["nc_shape"]),
+        nc_info[v]["attrs"]["_FillValue"],
+        dtype=nc_info[v]["nc_type"],
+    )
+    var_d = {varname: (nc_info[v]["nc_shape"], data)}
     ds = ds.assign(var_d)
-    for a in ghbg_info[v]["attrs"]:
-        ds[varname].attrs[a] = ghbg_info[v]["attrs"][a]
-    ds[varname].attrs["_FillValue"] = DNODATA
+    for a in nc_info[v]["attrs"]:
+        ds[varname].attrs[a] = nc_info[v]["attrs"][a]
 
 # update bhead netcdf array from flopy perioddata
 for p in ghbg.bhead.get_data():
-    ds["ghbg_0_bhead"].values[p] = ghbg.bhead.get_data()[p]
+    istp = sum(gwf.modeltime.nstp[0:p])
+    ds["ghbg_0_bhead"].values[istp] = ghbg.bhead.get_data()[p]
 
 # update cond netcdf array from flopy perioddata
 for p in ghbg.cond.get_data():
-    ds["ghbg_0_cond"].values[p] = ghbg.cond.get_data()[p]
+    istp = sum(gwf.modeltime.nstp[0:p])
+    ds["ghbg_0_cond"].values[istp] = ghbg.cond.get_data()[p]
 
 # write the netcdf
 ds.to_netcdf(
     workspace / "netcdf/uzf01.structured.nc", format="NETCDF4", engine="netcdf4"
 )
 
-# update ghbg input to read bhead and cond from netcdf
+# update ghbg to read from netcdf
 with open(workspace / "netcdf/uzf01.ghbg", "w") as f:
     f.write("BEGIN options\n")
     f.write("  READARRAYGRID\n")

@@ -14,7 +14,7 @@ print(f"flopy version: {flopy.__version__}")
 DNODATA = 3.0e30
 
 
-def get_flow_sim(ws):
+def create_sim(ws):
     name = "flow"
     gwfname = name
     sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=ws, exe_name="mf6")
@@ -185,11 +185,26 @@ def get_flow_sim(ws):
     return sim
 
 
+def data_shape(shape):
+    dims = []
+    for d in shape:
+        if d == "time":
+            dims.append(nstp)
+        if d == "z":
+            dims.append(nlay)
+        elif d == "y":
+            dims.append(nrow)
+        elif d == "x":
+            dims.append(ncol)
+
+    return dims
+
+
 temp_dir = TemporaryDirectory()
 workspace = Path(temp_dir.name)
 
 # run the non-netcdf simulation
-sim = get_flow_sim(workspace)
+sim = create_sim(workspace)
 sim.write_simulation()
 success, buff = sim.run_simulation(silent=True, report=True)
 if success:
@@ -221,10 +236,11 @@ yoff = dis.yoffset
 x = xoff + dis.xycenters[0]
 y = yoff + dis.xycenters[1]
 z = [float(x) for x in range(1, dis.nlay + 1)]
-
-# set nstp and time
 nstp = sum(gwf.modeltime.nstp)
 time = gwf.modeltime.tslen
+nlay = dis.nlay
+nrow = dis.nrow
+ncol = dis.ncol
 
 # create coordinate vars
 var_d = {"time": (["time"], time), "z": (["z"], z), "y": (["y"], y), "x": (["x"], x)}
@@ -239,23 +255,27 @@ nc_info = welg.netcdf_info()
 
 for v in nc_info:
     varname = nc_info[v]["varname"]
-    data = np.full((nstp, dis.nlay, dis.nrow, dis.ncol), DNODATA, dtype=float)
-    var_d = {varname: (shape, data)}
+    data = np.full(
+        data_shape(nc_info[v]["nc_shape"]),
+        nc_info[v]["attrs"]["_FillValue"],
+        dtype=nc_info[v]["nc_type"],
+    )
+    var_d = {varname: (nc_info[v]["nc_shape"], data)}
     ds = ds.assign(var_d)
-    # add required modflow 6 param attributes
     for a in nc_info[v]["attrs"]:
         ds[varname].attrs[a] = nc_info[v]["attrs"][a]
-    ds[varname].attrs["_FillValue"] = DNODATA
 
 # update q netcdf array from flopy perioddata
 for p in welg.q.get_data():
     if welg.q.get_data()[p] is not None:
-        ds["wel-1_q"].values[p] = welg.q.get_data()[p]
+        istp = sum(gwf.modeltime.nstp[0:p])
+        ds["wel-1_q"].values[istp] = welg.q.get_data()[p]
 
 # update conc netcdf array from flopy perioddata
 for p in welg.aux.get_data():
     if welg.aux.get_data()[p] is not None:
-        ds["wel-1_concentration"].values[p] = welg.aux.get_data()[p][0]
+        istp = sum(gwf.modeltime.nstp[0:p])
+        ds["wel-1_concentration"].values[istp] = welg.aux.get_data()[p][0]
 
 # update welg input to read from netcdf
 with open(workspace / "netcdf" / "flow.welg", "w") as f:
@@ -278,28 +298,33 @@ for n in range(4):
 
     for v in nc_info:
         varname = nc_info[v]["varname"]
-        data = np.full((nstp, dis.nlay, dis.nrow, dis.ncol), DNODATA, dtype=float)
-        var_d = {varname: (shape, data)}
+        data = np.full(
+            data_shape(nc_info[v]["nc_shape"]),
+            nc_info[v]["attrs"]["_FillValue"],
+            dtype=nc_info[v]["nc_type"],
+        )
+        var_d = {varname: (nc_info[v]["nc_shape"], data)}
         ds = ds.assign(var_d)
-        # add required modflow 6 param attributes
         for a in nc_info[v]["attrs"]:
             ds[varname].attrs[a] = nc_info[v]["attrs"][a]
-        ds[varname].attrs["_FillValue"] = DNODATA
 
     # update bhead netcdf array from flopy perioddata
     for p in ghbg.bhead.get_data():
         if ghbg.bhead.get_data()[p] is not None:
-            ds[f"ghb-{ip}_bhead"].values[p] = ghbg.bhead.get_data()[p]
+            istp = sum(gwf.modeltime.nstp[0:p])
+            ds[f"ghb-{ip}_bhead"].values[istp] = ghbg.bhead.get_data()[p]
 
     # update cond netcdf array from flopy perioddata
     for p in ghbg.cond.get_data():
         if ghbg.cond.get_data()[p] is not None:
-            ds[f"ghb-{ip}_cond"].values[p] = ghbg.cond.get_data()[p]
+            istp = sum(gwf.modeltime.nstp[0:p])
+            ds[f"ghb-{ip}_cond"].values[istp] = ghbg.cond.get_data()[p]
 
     # update conc netcdf array from flopy perioddata
     for p in ghbg.aux.get_data():
         if ghbg.aux.get_data()[p] is not None:
-            ds[f"ghb-{ip}_concentration"].values[p] = ghbg.aux.get_data()[p][0]
+            istp = sum(gwf.modeltime.nstp[0:p])
+            ds[f"ghb-{ip}_concentration"].values[istp] = ghbg.aux.get_data()[p][0]
 
     # update ghbg input to read from netcdf
     with open(workspace / "netcdf" / f"flow.{ip}.ghbg", "w") as f:
@@ -324,23 +349,27 @@ for n in range(3):
 
     for v in nc_info:
         varname = nc_info[v]["varname"]
-        data = np.full((nstp, dis.nlay, dis.nrow, dis.ncol), DNODATA, dtype=float)
-        var_d = {varname: (shape, data)}
+        data = np.full(
+            data_shape(nc_info[v]["nc_shape"]),
+            nc_info[v]["attrs"]["_FillValue"],
+            dtype=nc_info[v]["nc_type"],
+        )
+        var_d = {varname: (nc_info[v]["nc_shape"], data)}
         ds = ds.assign(var_d)
-        # add required modflow 6 param attributes
         for a in nc_info[v]["attrs"]:
             ds[varname].attrs[a] = nc_info[v]["attrs"][a]
-        ds[varname].attrs["_FillValue"] = DNODATA
 
     # update stage netcdf array from flopy perioddata
     for p in rivg.stage.get_data():
         if rivg.stage.get_data()[p] is not None:
-            ds[f"riv-{ip}_stage"].values[p] = rivg.stage.get_data()[p]
+            istp = sum(gwf.modeltime.nstp[0:p])
+            ds[f"riv-{ip}_stage"].values[istp] = rivg.stage.get_data()[p]
 
     # update cond netcdf array from flopy perioddata
     for p in rivg.cond.get_data():
         if rivg.cond.get_data()[p] is not None:
-            ds[f"riv-{ip}_cond"].values[p] = rivg.cond.get_data()[p]
+            istp = sum(gwf.modeltime.nstp[0:p])
+            ds[f"riv-{ip}_cond"].values[istp] = rivg.cond.get_data()[p]
 
     # update rbot netcdf array from flopy perioddata
     for p in rivg.rbot.get_data():
@@ -350,7 +379,8 @@ for n in range(3):
     # update conc netcdf array from flopy perioddata
     for p in rivg.aux.get_data():
         if rivg.aux.get_data()[p] is not None:
-            ds[f"riv-{ip}_concentration"].values[p] = rivg.aux.get_data()[p][0]
+            istp = sum(gwf.modeltime.nstp[0:p])
+            ds[f"riv-{ip}_concentration"].values[istp] = rivg.aux.get_data()[p][0]
 
     # update rivg input to read from netcdf
     with open(workspace / "netcdf" / f"flow.{ip}.rivg", "w") as f:
@@ -376,28 +406,33 @@ for n in range(3):
 
     for v in nc_info:
         varname = nc_info[v]["varname"]
-        data = np.full((nstp, dis.nlay, dis.nrow, dis.ncol), DNODATA, dtype=float)
-        var_d = {varname: (shape, data)}
+        data = np.full(
+            data_shape(nc_info[v]["nc_shape"]),
+            nc_info[v]["attrs"]["_FillValue"],
+            dtype=nc_info[v]["nc_type"],
+        )
+        var_d = {varname: (nc_info[v]["nc_shape"], data)}
         ds = ds.assign(var_d)
-        # add required modflow 6 param attributes
         for a in nc_info[v]["attrs"]:
             ds[varname].attrs[a] = nc_info[v]["attrs"][a]
-        ds[varname].attrs["_FillValue"] = DNODATA
 
     # update elev netcdf array from flopy perioddata
     for p in drng.elev.get_data():
         if drng.elev.get_data()[p] is not None:
-            ds[f"drn-{ip}_elev"].values[p] = drng.elev.get_data()[p]
+            istp = sum(gwf.modeltime.nstp[0:p])
+            ds[f"drn-{ip}_elev"].values[istp] = drng.elev.get_data()[p]
 
     # update cond netcdf array from flopy perioddata
     for p in drng.cond.get_data():
         if drng.cond.get_data()[p] is not None:
-            ds[f"drn-{ip}_cond"].values[p] = drng.cond.get_data()[p]
+            istp = sum(gwf.modeltime.nstp[0:p])
+            ds[f"drn-{ip}_cond"].values[istp] = drng.cond.get_data()[p]
 
     # update conc netcdf array from flopy perioddata
     for p in drng.aux.get_data():
         if drng.aux.get_data()[p] is not None:
-            ds[f"drn-{ip}_concentration"].values[p] = drng.aux.get_data()[p][0]
+            istp = sum(gwf.modeltime.nstp[0:p])
+            ds[f"drn-{ip}_concentration"].values[istp] = drng.aux.get_data()[p][0]
 
     # update drng input to read from netcdf
     with open(workspace / "netcdf" / f"flow.{ip}.drng", "w") as f:

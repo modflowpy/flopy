@@ -3426,6 +3426,10 @@ class MFPackage(PackageInterface):
     def _add_netcdf_entries(
         attrs, mname, pname, data_item, auxiliary=None, mesh=None, nlay=1
     ):
+        DNODATA = 3.0e30    # MF6 DNODATA constant
+        FILLNA_INT32 = np.int32(-2147483647)    # netcdf-fortran NF90_FILL_INT
+        FILLNA_DBL = 9.96920996838687e36    # netcdf-fortran NF90_FILL_DOUBLE
+
         if auxiliary:
             auxnames = auxiliary
         else:
@@ -3445,12 +3449,36 @@ class MFPackage(PackageInterface):
 
             a = {}
             a["varname"] = name.lower()
+            if (data_item.type) == DatumType.integer:
+                a["nc_type"] = np.int32
+            elif (data_item.type) == DatumType.double_precision:
+                a["nc_type"] = np.float64
+            dims = []
+            if data_item.shape[0] == 'nodes':
+                if data_item.block_name == "griddata":
+                    dims += ["x", "y", "z"]
+                elif data_item.block_name == "period":
+                    dims += ["x", "y", "z", "time"]
+            else:
+                map = {"nlay": "z", "nrow": "y", "ncol": "x"}
+                for s in data_item.shape:
+                    for k, v in map.items():
+                        s = s.replace(k, v)
+                    dims.append(s)
+            a["nc_shape"] = dims[::-1]
             a["attrs"] = {}
             a["attrs"]["modflow_input"] = (f"{mname}/{pname}/{tagname}").upper()
             if iaux is not None:
                 a["attrs"]["modflow_iaux"] = iaux + 1
             if layer is not None:
                 a["attrs"]["layer"] = layer
+            if (data_item.type) == DatumType.integer:
+                a["attrs"]["_FillValue"] = FILLNA_INT32
+            elif (data_item.type) == DatumType.double_precision:
+                if data_item.block_name == "griddata":
+                    a["attrs"]["_FillValue"] = FILLNA_DBL
+                elif data_item.block_name == "period":
+                    a["attrs"]["_FillValue"] = DNODATA
             attrs[key] = a
 
         if data_item.layered and mesh == "LAYERED":
