@@ -62,8 +62,8 @@ jobs:
           echo "PYVISTA_OFF_SCREEN=true" >> $GITHUB_ENV
           echo "PYVISTA_USE_PANEL=false" >> $GITHUB_ENV
           echo "VTK_USE_OFFSCREEN=1" >> $GITHUB_ENV
-          echo "MESA_GL_VERSION_OVERRIDE=3.3" >> $GITHUB_ENV
-          echo "MESA_GLSL_VERSION_OVERRIDE=330" >> $GITHUB_ENV
+          echo "VTK_GLSL_VERSION=130" >> $GITHUB_ENV
+          echo "VTK_GL_VERSION=3.0" >> $GITHUB_ENV
           echo "LIBGL_ALWAYS_SOFTWARE=1" >> $GITHUB_ENV
           echo "GALLIUM_DRIVER=softpipe" >> $GITHUB_ENV
 
