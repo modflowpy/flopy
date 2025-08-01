@@ -184,19 +184,27 @@ def create_sim(ws):
     return sim
 
 
-def data_shape(shape):
-    dims = []
-    for d in shape:
-        if d == "time":
-            dims.append(nstp)
-        if d == "z":
-            dims.append(nlay)
-        elif d == "y":
-            dims.append(nrow)
-        elif d == "x":
-            dims.append(ncol)
+def add_netcdf_vars(dataset, nc_info, dimmap):
+    def _data_shape(shape):
+        dims_l = []
+        for d in shape:
+            dims_l.append(dimmap[d])
 
-    return dims
+        return dims_l
+
+    for v in nc_info:
+        varname = nc_info[v]["varname"]
+        data = np.full(
+            _data_shape(nc_info[v]["nc_shape"]),
+            nc_info[v]["attrs"]["_FillValue"],
+            dtype=nc_info[v]["nc_type"],
+        )
+        var_d = {varname: (nc_info[v]["nc_shape"], data)}
+        dataset = dataset.assign(var_d)
+        for a in nc_info[v]["attrs"]:
+            dataset[varname].attrs[a] = nc_info[v]["attrs"][a]
+
+    return dataset
 
 
 temp_dir = TemporaryDirectory()
@@ -240,6 +248,7 @@ time = gwf.modeltime.tslen
 nlay = dis.nlay
 nrow = dis.nrow
 ncol = dis.ncol
+dimmap = {"time": nstp, "z": nlay, "y": nrow, "x": ncol}
 
 # create coordinate vars
 var_d = {"time": (["time"], time), "z": (["z"], z), "y": (["y"], y), "x": (["x"], x)}
@@ -250,17 +259,7 @@ dis = gwf.get_package("dis")
 nc_info = dis.netcdf_info()
 
 # create dis dataset variables
-for v in nc_info:
-    varname = nc_info[v]["varname"]
-    data = np.full(
-        data_shape(nc_info[v]["nc_shape"]),
-        nc_info[v]["attrs"]["_FillValue"],
-        dtype=nc_info[v]["nc_type"],
-    )
-    var_d = {varname: (nc_info[v]["nc_shape"], data)}
-    ds = ds.assign(var_d)
-    for a in nc_info[v]["attrs"]:
-        ds[varname].attrs[a] = nc_info[v]["attrs"][a]
+ds = add_netcdf_vars(ds, nc_info, dimmap)
 
 # update data
 ds["dis_delr"].values = dis.delr.get_data()
@@ -292,17 +291,7 @@ npf = gwf.get_package("npf")
 nc_info = npf.netcdf_info()
 
 # create npf dataset variables
-for v in nc_info:
-    varname = nc_info[v]["varname"]
-    data = np.full(
-        data_shape(nc_info[v]["nc_shape"]),
-        nc_info[v]["attrs"]["_FillValue"],
-        dtype=nc_info[v]["nc_type"],
-    )
-    var_d = {varname: (nc_info[v]["nc_shape"], data)}
-    ds = ds.assign(var_d)
-    for a in nc_info[v]["attrs"]:
-        ds[varname].attrs[a] = nc_info[v]["attrs"][a]
+ds = add_netcdf_vars(ds, nc_info, dimmap)
 
 # update data
 ds["npf_icelltype"].values = npf.icelltype.get_data()
@@ -322,17 +311,7 @@ ghbg = gwf.get_package("ghbg_0")
 nc_info = ghbg.netcdf_info()
 
 # create ghbg dataset variables
-for v in nc_info:
-    varname = nc_info[v]["varname"]
-    data = np.full(
-        data_shape(nc_info[v]["nc_shape"]),
-        nc_info[v]["attrs"]["_FillValue"],
-        dtype=nc_info[v]["nc_type"],
-    )
-    var_d = {varname: (nc_info[v]["nc_shape"], data)}
-    ds = ds.assign(var_d)
-    for a in nc_info[v]["attrs"]:
-        ds[varname].attrs[a] = nc_info[v]["attrs"][a]
+ds = add_netcdf_vars(ds, nc_info, dimmap)
 
 # update bhead netcdf array from flopy perioddata
 for p in ghbg.bhead.get_data():

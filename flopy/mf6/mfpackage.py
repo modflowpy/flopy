@@ -3435,7 +3435,12 @@ class MFPackage(PackageInterface):
         else:
             auxnames = []
 
-        def add_entry(tagname, iaux=None, layer=None):
+        def _add_entry(tagname, iaux=None, layer=None):
+
+            # netcdf variable dictionary
+            a = {}
+
+            # set dict key and netcdf variable name
             key = tagname
             name = f"{pname}"
             if iaux is not None:
@@ -3447,7 +3452,7 @@ class MFPackage(PackageInterface):
                 key = f"{key}/layer{layer}"
                 name = f"{name}_l{layer}"
 
-            a = {}
+            # add non-attrs to dictionary
             a["varname"] = name.lower()
             if (data_item.type) == DatumType.integer:
                 a["nc_type"] = np.int32
@@ -3460,12 +3465,14 @@ class MFPackage(PackageInterface):
                 elif data_item.block_name == "period":
                     dims += ["x", "y", "z", "time"]
             else:
-                map = {"nlay": "z", "nrow": "y", "ncol": "x"}
+                dimmap = {"nlay": "z", "nrow": "y", "ncol": "x"}
                 for s in data_item.shape:
-                    for k, v in map.items():
+                    for k, v in dimmap.items():
                         s = s.replace(k, v)
                     dims.append(s)
             a["nc_shape"] = dims[::-1]
+
+            # add variable attributes dictionary
             a["attrs"] = {}
             a["attrs"]["modflow_input"] = (f"{mname}/{pname}/{tagname}").upper()
             if iaux is not None:
@@ -3479,22 +3486,24 @@ class MFPackage(PackageInterface):
                     a["attrs"]["_FillValue"] = FILLNA_DBL
                 elif data_item.block_name == "period":
                     a["attrs"]["_FillValue"] = DNODATA
+
+            # set dictionary
             attrs[key] = a
 
         if data_item.layered and mesh == "LAYERED":
             if data_item.name == "aux" or data_item.name == "auxvar":
                 for n, auxname in enumerate(auxnames):
                     for l in range(nlay):
-                        add_entry(data_item.name, n, l + 1)
+                        _add_entry(data_item.name, n, l + 1)
             else:
                 for l in range(nlay):
-                    add_entry(data_item.name, layer=l + 1)
+                    _add_entry(data_item.name, layer=l + 1)
         else:
             if data_item.name == "aux" or data_item.name == "auxvar":
                 for n, auxname in enumerate(auxnames):
-                    add_entry(data_item.name, iaux=n)
+                    _add_entry(data_item.name, iaux=n)
             else:
-                add_entry(data_item.name)
+                _add_entry(data_item.name)
 
     @staticmethod
     def netcdf_attrs(mtype, ptype, auxiliary=None, mesh=None, nlay=1):

@@ -185,19 +185,27 @@ def create_sim(ws):
     return sim
 
 
-def data_shape(shape):
-    dims = []
-    for d in shape:
-        if d == "time":
-            dims.append(nstp)
-        if d == "z":
-            dims.append(nlay)
-        elif d == "y":
-            dims.append(nrow)
-        elif d == "x":
-            dims.append(ncol)
+def add_netcdf_vars(dataset, nc_info, dimmap):
+    def _data_shape(shape):
+        dims_l = []
+        for d in shape:
+            dims_l.append(dimmap[d])
 
-    return dims
+        return dims_l
+
+    for v in nc_info:
+        varname = nc_info[v]["varname"]
+        data = np.full(
+            _data_shape(nc_info[v]["nc_shape"]),
+            nc_info[v]["attrs"]["_FillValue"],
+            dtype=nc_info[v]["nc_type"],
+        )
+        var_d = {varname: (nc_info[v]["nc_shape"], data)}
+        dataset = dataset.assign(var_d)
+        for a in nc_info[v]["attrs"]:
+            dataset[varname].attrs[a] = nc_info[v]["attrs"][a]
+
+    return dataset
 
 
 temp_dir = TemporaryDirectory()
@@ -241,6 +249,7 @@ time = gwf.modeltime.tslen
 nlay = dis.nlay
 nrow = dis.nrow
 ncol = dis.ncol
+dimmap = {"time": nstp, "z": nlay, "y": nrow, "x": ncol}
 
 # create coordinate vars
 var_d = {"time": (["time"], time), "z": (["z"], z), "y": (["y"], y), "x": (["x"], x)}
@@ -253,17 +262,8 @@ shape = ["time", "z", "y", "x"]
 welg = gwf.get_package("wel-1")
 nc_info = welg.netcdf_info()
 
-for v in nc_info:
-    varname = nc_info[v]["varname"]
-    data = np.full(
-        data_shape(nc_info[v]["nc_shape"]),
-        nc_info[v]["attrs"]["_FillValue"],
-        dtype=nc_info[v]["nc_type"],
-    )
-    var_d = {varname: (nc_info[v]["nc_shape"], data)}
-    ds = ds.assign(var_d)
-    for a in nc_info[v]["attrs"]:
-        ds[varname].attrs[a] = nc_info[v]["attrs"][a]
+# create welg dataset variables
+ds = add_netcdf_vars(ds, nc_info, dimmap)
 
 # update q netcdf array from flopy perioddata
 for p in welg.q.get_data():
@@ -296,17 +296,8 @@ for n in range(4):
     ghbg = gwf.get_package(f"ghb-{ip}")
     nc_info = ghbg.netcdf_info()
 
-    for v in nc_info:
-        varname = nc_info[v]["varname"]
-        data = np.full(
-            data_shape(nc_info[v]["nc_shape"]),
-            nc_info[v]["attrs"]["_FillValue"],
-            dtype=nc_info[v]["nc_type"],
-        )
-        var_d = {varname: (nc_info[v]["nc_shape"], data)}
-        ds = ds.assign(var_d)
-        for a in nc_info[v]["attrs"]:
-            ds[varname].attrs[a] = nc_info[v]["attrs"][a]
+    # create ghbg dataset variables
+    ds = add_netcdf_vars(ds, nc_info, dimmap)
 
     # update bhead netcdf array from flopy perioddata
     for p in ghbg.bhead.get_data():
@@ -347,17 +338,8 @@ for n in range(3):
     rivg = gwf.get_package(f"riv-{ip}")
     nc_info = rivg.netcdf_info()
 
-    for v in nc_info:
-        varname = nc_info[v]["varname"]
-        data = np.full(
-            data_shape(nc_info[v]["nc_shape"]),
-            nc_info[v]["attrs"]["_FillValue"],
-            dtype=nc_info[v]["nc_type"],
-        )
-        var_d = {varname: (nc_info[v]["nc_shape"], data)}
-        ds = ds.assign(var_d)
-        for a in nc_info[v]["attrs"]:
-            ds[varname].attrs[a] = nc_info[v]["attrs"][a]
+    # create rivg dataset variables
+    ds = add_netcdf_vars(ds, nc_info, dimmap)
 
     # update stage netcdf array from flopy perioddata
     for p in rivg.stage.get_data():
@@ -404,17 +386,8 @@ for n in range(3):
     drng = gwf.get_package(f"drn-{ip}")
     nc_info = drng.netcdf_info()
 
-    for v in nc_info:
-        varname = nc_info[v]["varname"]
-        data = np.full(
-            data_shape(nc_info[v]["nc_shape"]),
-            nc_info[v]["attrs"]["_FillValue"],
-            dtype=nc_info[v]["nc_type"],
-        )
-        var_d = {varname: (nc_info[v]["nc_shape"], data)}
-        ds = ds.assign(var_d)
-        for a in nc_info[v]["attrs"]:
-            ds[varname].attrs[a] = nc_info[v]["attrs"][a]
+    # create drng dataset variables
+    ds = add_netcdf_vars(ds, nc_info, dimmap)
 
     # update elev netcdf array from flopy perioddata
     for p in drng.elev.get_data():
