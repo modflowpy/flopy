@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+from pprint import pformat
 from tempfile import TemporaryDirectory
 
 import numpy as np
@@ -215,11 +216,7 @@ workspace = Path(temp_dir.name)
 sim = create_sim(workspace)
 sim.write_simulation()
 success, buff = sim.run_simulation(silent=True, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+assert success, pformat(buff)
 
 # create directory for netcdf sim
 sim.set_sim_path(workspace / "netcdf")
@@ -426,9 +423,5 @@ ds.to_netcdf(
 
 # TODO need extended modflow 6 to run this simulation
 # run the netcdf sim
-# success, buff = sim.run_simulation(silent=False, report=True)
-# if success:
-#    for line in buff:
-#        print(line)
-# else:
-#    raise ValueError("Failed to run.")
+# success, buff = sim.run_simulation(silent=True, report=True)
+# assert success, pformat(buff)
