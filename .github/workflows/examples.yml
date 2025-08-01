@@ -3,6 +3,7 @@ name: Example script & notebook tests
 on:
   schedule:
     - cron: '0 8 * * *' # run at 8 AM UTC (12 am PST)
+  push:
 
 jobs:
   examples:
@@ -53,6 +54,12 @@ jobs:
           $ErrorActionPreference = "Stop"
           $PSDefaultParameterValues['*:ErrorAction']='Stop'
           powershell .github/install_opengl.ps1
+
+      - name: Set software rendering environment for Windows
+        if: runner.os == 'Windows'
+        run: |
+          echo "PYVISTA_OFF_SCREEN=true" >> $GITHUB_ENV
+          echo "PYVISTA_USE_PANEL=false" >> $GITHUB_ENV
 
       - name: Install Modflow-related executables
         uses: modflowpy/install-modflow-action@v1

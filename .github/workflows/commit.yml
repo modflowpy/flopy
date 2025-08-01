@@ -178,13 +178,13 @@ jobs:
       - name: Run tests
         working-directory: flopy/autotest
         run: |
-          pixi run pytest -v -m="not example" -n=auto --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed --dist loadfile
+          pixi run --manifest-path=../../modflow6/pixi.toml pytest -v -m="not example" -n=auto --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed --dist loadfile
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Report coverage
         working-directory: flopy/autotest
-        run: pixi run coverage report
+        run: pixi run --manifest-path=../../modflow6/pixi.toml coverage report
 
       - name: Upload failed test outputs
         uses: actions/upload-artifact@v4

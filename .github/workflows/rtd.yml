@@ -125,7 +125,7 @@ jobs:
           Set-StrictMode -Version Latest
           $ErrorActionPreference = "Stop"
           $PSDefaultParameterValues['*:ErrorAction']='Stop'
-          powershell .github/install_opengl.ps1
+          powershell flopy/.github/install_opengl.ps1
 
       - name: Install Modflow-related executables
         uses: modflowpy/install-modflow-action@v1
