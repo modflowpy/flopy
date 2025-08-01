@@ -79,6 +79,12 @@ jobs:
           echo $GITHUB_REF
           echo $GITHUB_EVENT_NAME
 
+      - name: Checkout MODFLOW 6
+        uses: actions/checkout@v4
+        with:
+          repository: MODFLOW-ORG/modflow6
+          path: modflow6
+
       - name: Setup Micromamba
         uses: mamba-org/setup-micromamba@v1
         with:
@@ -136,7 +142,8 @@ jobs:
           subset: triangle
 
       - name: Update FloPy packages
-        run: python -m flopy.mf6.utils.generate_classes --ref develop
+        working-directory: modflow6
+        run: python -m flopy.mf6.utils.generate_classes --dfnpath doc/mf6io/mf6ivar/dfn
 
       - name: Run tutorial and example notebooks
         working-directory: autotest
