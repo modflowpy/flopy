@@ -61,6 +61,11 @@ jobs:
         run: |
           echo "PYVISTA_OFF_SCREEN=true" >> $GITHUB_ENV
           echo "PYVISTA_USE_PANEL=false" >> $GITHUB_ENV
+          echo "VTK_USE_OFFSCREEN=1" >> $GITHUB_ENV
+          echo "MESA_GL_VERSION_OVERRIDE=3.3" >> $GITHUB_ENV
+          echo "MESA_GLSL_VERSION_OVERRIDE=330" >> $GITHUB_ENV
+          echo "LIBGL_ALWAYS_SOFTWARE=1" >> $GITHUB_ENV
+          echo "GALLIUM_DRIVER=softpipe" >> $GITHUB_ENV
 
       - name: Install Modflow-related executables
         uses: modflowpy/install-modflow-action@v1
