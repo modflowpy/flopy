@@ -424,10 +424,11 @@ ds.to_netcdf(
     workspace / "netcdf/flow.structured.nc", format="NETCDF4", engine="netcdf4"
 )
 
+# TODO need extended modflow 6 to run this simulation
 # run the netcdf sim
-success, buff = sim.run_simulation(silent=False, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+# success, buff = sim.run_simulation(silent=False, report=True)
+# if success:
+#    for line in buff:
+#        print(line)
+# else:
+#    raise ValueError("Failed to run.")

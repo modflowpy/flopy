@@ -341,10 +341,11 @@ with open(workspace / "netcdf/uzf01.ghbg", "w") as f:
     f.write("  cond NETCDF\n")
     f.write("END period 1\n")
 
+# TODO need extended modflow 6 to run this simulation
 # run the netcdf sim
-success, buff = sim.run_simulation(silent=False, report=True)
-if success:
-    for line in buff:
-        print(line)
-else:
-    raise ValueError("Failed to run.")
+# success, buff = sim.run_simulation(silent=False, report=True)
+# if success:
+#    for line in buff:
+#        print(line)
+# else:
+#    raise ValueError("Failed to run.")
