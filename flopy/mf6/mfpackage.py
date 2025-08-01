@@ -3424,6 +3424,162 @@ class MFPackage(PackageInterface):
         axes = PlotUtilities._plot_package_helper(self, **kwargs)
         return axes
 
+    @staticmethod
+    def _add_netcdf_entries(
+        attrs, mname, pname, data_item, auxiliary=None, mesh=None, nlay=1
+    ):
+        DNODATA = 3.0e30    # MF6 DNODATA constant
+        FILLNA_INT32 = np.int32(-2147483647)    # netcdf-fortran NF90_FILL_INT
+        FILLNA_DBL = 9.96920996838687e36    # netcdf-fortran NF90_FILL_DOUBLE
+
+        if auxiliary:
+            auxnames = auxiliary
+        else:
+            auxnames = []
+
+        def _add_entry(tagname, iaux=None, layer=None):
+
+            # netcdf variable dictionary
+            a = {}
+
+            # set dict key and netcdf variable name
+            key = tagname
+            name = f"{pname}"
+            if iaux is not None:
+                key = f"{key}/{iaux}"
+                name = f"{name}_{auxiliary[iaux]}"
+            else:
+                name = f"{name}_{tagname}"
+            if layer is not None:
+                key = f"{key}/layer{layer}"
+                name = f"{name}_l{layer}"
+
+            # add non-attrs to dictionary
+            a["varname"] = name.lower()
+            if (data_item.type) == DatumType.integer:
+                a["nc_type"] = np.int32
+            elif (data_item.type) == DatumType.double_precision:
+                a["nc_type"] = np.float64
+            dims = []
+            if data_item.shape[0] == 'nodes':
+                if data_item.block_name == "griddata":
+                    dims += ["x", "y", "z"]
+                elif data_item.block_name == "period":
+                    dims += ["x", "y", "z", "time"]
+            else:
+                dimmap = {"nlay": "z", "nrow": "y", "ncol": "x"}
+                for s in data_item.shape:
+                    for k, v in dimmap.items():
+                        s = s.replace(k, v)
+                    dims.append(s)
+            a["nc_shape"] = dims[::-1]
+
+            # add variable attributes dictionary
+            a["attrs"] = {}
+            a["attrs"]["modflow_input"] = (f"{mname}/{pname}/{tagname}").upper()
+            if iaux is not None:
+                a["attrs"]["modflow_iaux"] = iaux + 1
+            if layer is not None:
+                a["attrs"]["layer"] = layer
+            if (data_item.type) == DatumType.integer:
+                a["attrs"]["_FillValue"] = FILLNA_INT32
+            elif (data_item.type) == DatumType.double_precision:
+                if data_item.block_name == "griddata":
+                    a["attrs"]["_FillValue"] = FILLNA_DBL
+                elif data_item.block_name == "period":
+                    a["attrs"]["_FillValue"] = DNODATA
+
+            # set dictionary
+            attrs[key] = a
+
+        if data_item.layered and mesh == "LAYERED":
+            if data_item.name == "aux" or data_item.name == "auxvar":
+                for n, auxname in enumerate(auxnames):
+                    for l in range(nlay):
+                        _add_entry(data_item.name, n, l + 1)
+            else:
+                for l in range(nlay):
+                    _add_entry(data_item.name, layer=l + 1)
+        else:
+            if data_item.name == "aux" or data_item.name == "auxvar":
+                for n, auxname in enumerate(auxnames):
+                    _add_entry(data_item.name, iaux=n)
+            else:
+                _add_entry(data_item.name)
+
+    @staticmethod
+    def netcdf_attrs(mtype, ptype, auxiliary=None, mesh=None, nlay=1):
+        from .data.mfstructure import DfnPackage, MFSimulationStructure
+
+        attrs = {}
+        sim_struct = MFSimulationStructure()
+
+        for package in MFPackage.__subclasses__():
+            sim_struct.process_dfn(DfnPackage(package))
+            p = DfnPackage(package)
+            c, sc = p.dfn_file_name.split(".")[0].split("-")
+            if c == mtype.lower() and sc == ptype.lower():
+                sim_struct.add_package(p, model_file=False)
+                exit
+
+        if ptype.lower() in sim_struct.package_struct_objs:
+            pso = sim_struct.package_struct_objs[ptype.lower()]
+            if pso.multi_package_support:
+                pname = f"<{ptype}name>"
+            else:
+                pname = ptype
+            for key, block in pso.blocks.items():
+                if key != "griddata" and key != "period":
+                    continue
+                for d in block.data_structures:
+                    if block.data_structures[d].netcdf:
+                        MFPackage._add_netcdf_entries(
+                            attrs,
+                            f"<{mtype}name>",
+                            pname,
+                            block.data_structures[d],
+                            auxiliary,
+                            mesh,
+                            nlay,
+                        )
+
+        res_d = {}
+        for k in list(attrs):
+            res_d[k] = attrs[k]["attrs"]
+
+        return res_d
+
+    def netcdf_info(self, mesh=None):
+        attrs = {}
+
+        if self.dimensions.get_aux_variables():
+            auxnames = list(self.dimensions.get_aux_variables()[0])
+            if len(auxnames) and auxnames[0] == "auxiliary":
+                auxnames.pop(0)
+        else:
+            auxnames = []
+
+        for key, block in self.blocks.items():
+            if key != "griddata" and key != "period":
+                continue
+            for dataset in block.datasets.values():
+                if isinstance(dataset, mfdataarray.MFArray):
+                    for index, data_item in enumerate(
+                        dataset.structure.data_item_structures
+                    ):
+                        if dataset.structure.netcdf and dataset.has_data():
+                            MFPackage._add_netcdf_entries(
+                                attrs,
+                                self.model_name,
+                                self.package_name,
+                                dataset.structure,
+                                auxnames,
+                                mesh,
+                                self.model_or_sim.modelgrid.nlay,
+                            )
+
+        return attrs
+
 
 class MFChildPackages:
     """

@@ -2194,3 +2194,49 @@ class MFModel(ModelInterface):
             else:
                 return np.ones_like(botm)
         return idomain
+
+    @staticmethod
+    def netcdf_attrs(mname, mtype, grid_type, mesh=None):
+        """Return dictionary of dataset (model) scoped attributes
+        Parameters
+        ----------
+        mname : str
+            model name
+        mtype : str
+            model type
+        grid_type:
+            DiscretizationType
+        mesh : str
+            mesh type if dataset is ugrid compliant
+        """
+        attrs = {
+            "modflow_grid": "",
+            "modflow_model": "",
+        }
+        if grid_type == DiscretizationType.DIS:
+            attrs["modflow_grid"] = "STRUCTURED"
+        elif grid_type == DiscretizationType.DISV:
+            attrs["modflow_grid"] = "VERTEX"
+
+        attrs["modflow_model"] = f"{mname.upper()}: MODFLOW 6 {mtype.upper()} model"
+
+        # supported => LAYERED
+        if mesh:
+            attrs["mesh"] = mesh
+
+        return attrs
+
+    def netcdf_info(self, mesh=None):
+        """Return dictionary of dataset (model) scoped attributes
+        Parameters
+        ----------
+        mesh : str
+            mesh type if dataset is ugrid compliant
+        """
+        attrs = MFModel.netcdf_attrs(
+            self.name, self.model_type, self.get_grid_type(), mesh
+        )
+
+        res_d = {}
+        res_d["attrs"] = attrs
+        return res_d
