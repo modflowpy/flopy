@@ -86,6 +86,18 @@ jobs:
           echo $GITHUB_REF
           echo $GITHUB_EVENT_NAME
 
+      - name: Setup Micromamba
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: etc/environment.yml
+          cache-environment: true
+          cache-downloads: true
+          create-args: >-
+            python=3.12
+          init-shell: >-
+            bash
+            powershell
+
       - name: Install Python dependencies
         run: |
           pip install --upgrade pip
