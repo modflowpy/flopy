@@ -99,6 +99,7 @@ jobs:
             powershell
 
       - name: Install Python dependencies
+        working-directory: flopy
         run: |
           pip install --upgrade pip
           pip install .
