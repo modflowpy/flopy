@@ -1677,67 +1677,62 @@ class CellBudgetFile:
         for idx, t in enumerate(timesint):
             result[idx, 0] = t
 
-        # Get a sample record to inspect its structure
         full3d = True
         for itim, k in enumerate(kstpkper):
-            try:
-                sample_data = self.get_data(kstpkper=k, text=text)
-                if len(sample_data) > 0:
-                    record = sample_data[0]
-                    if hasattr(record, "dtype") and record.dtype.names:
-                        available_fields = record.dtype.names
-                        if variable in available_fields:
-                            full3d = False
-            except Exception:
-                pass
-
             if full3d:
                 try:
                     v = self.get_data(kstpkper=k, text=text, full3D=True)
-                    if len(v) > 0:
-                        v = v[0]
-                        istat = 1
-                        for k, i, j in kijlist:
-                            result[itim, istat] = v[k, i, j].copy()
-                            istat += 1
+
+                    # skip missing data - required for storage
+                    if len(v) == 0:
                         continue
+
+                    v = v[0]
+                    istat = 1
+                    for k, i, j in kijlist:
+                        result[itim, istat] = v[k, i, j].copy()
+                        istat += 1
+                    continue
                 except ValueError:
                     full3d = False
             if not full3d:
                 v = self.get_data(kstpkper=k, text=text)
-                if len(v) > 0:
-                    if self.modelgrid is None:
-                        s = (
-                            "A modelgrid instance must be provided during "
-                            "instantiation to get IMETH=6 timeseries data"
+
+                # skip missing data - required for storage
+                if len(v) == 0:
+                    continue
+
+                if self.modelgrid is None:
+                    s = (
+                        "A modelgrid instance must be provided during "
+                        "instantiation to get IMETH=6 timeseries data"
+                    )
+                    raise ValueError(s)
+
+                if self.modelgrid.grid_type == "structured":
+                    ndx = [
+                        lrc[0] * (self.modelgrid.nrow * self.modelgrid.ncol)
+                        + lrc[1] * self.modelgrid.ncol
+                        + (lrc[2] + 1)
+                        for lrc in kijlist
+                    ]
+                else:
+                    ndx = [
+                        lrc[0] * self.modelgrid.ncpl + (lrc[-1] + 1) for lrc in kijlist
+                    ]
+
+                for vv in v:
+                    available_fields = vv.dtype.names
+                    if variable not in available_fields:
+                        raise ValueError(
+                            f"Variable '{variable}' not found in budget record. "
+                            f"Available fields: {list(available_fields)}"
                         )
-                        raise AssertionError(s)
 
-                    if self.modelgrid.grid_type == "structured":
-                        ndx = [
-                            lrc[0] * (self.modelgrid.nrow * self.modelgrid.ncol)
-                            + lrc[1] * self.modelgrid.ncol
-                            + (lrc[2] + 1)
-                            for lrc in kijlist
-                        ]
-                    else:
-                        ndx = [
-                            lrc[0] * self.modelgrid.ncpl + (lrc[-1] + 1)
-                            for lrc in kijlist
-                        ]
-
-                    for vv in v:
-                        available_fields = vv.dtype.names
-                        if variable not in available_fields:
-                            raise ValueError(
-                                f"Variable '{variable}' not found in budget record. "
-                                f"Available fields: {list(available_fields)}"
-                            )
-
-                        field = variable
-                        dix = np.asarray(np.isin(vv["node"], ndx)).nonzero()[0]
-                        if len(dix) > 0:
-                            result[itim, 1:] = vv[field][dix]
+                    field = variable
+                    dix = np.asarray(np.isin(vv["node"], ndx)).nonzero()[0]
+                    if len(dix) > 0:
+                        result[itim, 1:] = vv[field][dix]
 
         return result
 
