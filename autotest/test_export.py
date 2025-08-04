@@ -2128,9 +2128,9 @@ def test_to_shapefile_raises_attributeerror():
 
 @pytest.mark.mf6
 @requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
-@pytest.mark.parametrize("use_pandas", [True])  # , False])
+@pytest.mark.parametrize("use_pandas", [True])  # TODO: test non-pandas
 @pytest.mark.parametrize("sparse", [True, False])
-def test_mf6_chd_shapefile_export(function_tmpdir, use_pandas, sparse):
+def test_mf6_chd_shapefile_export_structured(function_tmpdir, use_pandas, sparse):
     from flopy.mf6 import (
         MFSimulation,
         ModflowGwf,
@@ -2140,7 +2140,6 @@ def test_mf6_chd_shapefile_export(function_tmpdir, use_pandas, sparse):
         ModflowTdis,
     )
 
-    # Create a simple structured grid MF6 model with CHD package
     sim = MFSimulation(sim_name="mf6shp", sim_ws=function_tmpdir, use_pandas=use_pandas)
     tdis = ModflowTdis(sim)
     ims = ModflowIms(sim)
@@ -2150,7 +2149,6 @@ def test_mf6_chd_shapefile_export(function_tmpdir, use_pandas, sparse):
     chd_cells = [((0, 0, 0), 1.0), ((0, 2, 2), 2.0)]
     chd = ModflowGwfchd(gwf, stress_period_data=chd_cells)
 
-    # Export CHD package to shapefile
     shpfile = function_tmpdir / f"chd_{use_pandas}_{sparse}.shp"
     gwf.chd.stress_period_data.export(shpfile, sparse=sparse)
 
@@ -2177,3 +2175,139 @@ def test_mf6_chd_shapefile_export(function_tmpdir, use_pandas, sparse):
         if sparse:
             # Should match the CHD values
             assert set(chd_vals) == {1.0, 2.0}
+
+
+@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
+@pytest.mark.parametrize("use_pandas", [True])  # TODO: test non-pandas
+@pytest.mark.parametrize("sparse", [True])  # TODO: test non-sparse
+def test_mf6_chd_shapefile_export_unstructured(function_tmpdir, use_pandas, sparse):
+    """Test CHD package shapefile export for DISU (unstructured) grids"""
+    from flopy.mf6 import (
+        MFSimulation,
+        ModflowGwf,
+        ModflowGwfchd,
+        ModflowGwfdisu,
+        ModflowIms,
+        ModflowTdis,
+    )
+
+    name = "chd_disu_export_test"
+    sim = disu_sim(name, function_tmpdir)
+    gwf = sim.get_model(name)
+
+    chd_cells = [(0, 1.0), (1, 2.0), (5, 3.0)]  # (node, head)
+    chd = ModflowGwfchd(gwf, stress_period_data=chd_cells)
+
+    shpfile = function_tmpdir / f"chd_disu_{use_pandas}_{sparse}.shp"
+    gwf.chd.stress_period_data.export(shpfile, sparse=sparse)
+
+    # Check that shapefile and sidecar files exist
+    for ext in [".shp", ".shx", ".dbf"]:
+        assert shpfile.with_suffix(ext).exists(), f"{shpfile.with_suffix(ext)} missing"
+
+    # Read shapefile and check records
+    with shapefile.Reader(str(shpfile)) as sf:
+        records = list(sf.records())
+        fields = [f[0] for f in sf.fields[1:]]  # skip DeletionFlag
+
+        if sparse:
+            # Only CHD cells should be exported
+            assert len(records) == len(chd_cells)
+        else:
+            # All grid cells should be exported
+            assert len(records) == gwf.modelgrid.nnodes
+
+        # Check attribute values for CHD cells
+        chd_vals = [
+            rec[fields.index(next(f for f in fields if "head" in f))] for rec in records
+        ]
+        if sparse:
+            # Should match the CHD values
+            assert set(chd_vals) == {1.0, 2.0, 3.0}
+
+
+def disv_sim(name, tmpdir):
+    from flopy.discretization import StructuredGrid
+    from flopy.utils.cvfdutil import gridlist_to_disv_gridprops
+
+    nlay, nrow, ncol = 3, 3, 3
+    mg = StructuredGrid(
+        delc=np.array(nrow * [1]),
+        delr=np.array(ncol * [1]),
+        top=np.zeros((nrow, ncol)),
+        botm=np.zeros((nlay, nrow, ncol)) - 1,
+        idomain=np.ones((nlay, nrow, ncol)),
+    )
+
+    with pytest.deprecated_call():
+        gridprops = gridlist_to_disv_gridprops([mg])
+        gridprops["top"] = 0
+        ncpl = gridprops["ncpl"]
+        gridprops["botm"] = np.zeros((nlay, ncpl), dtype=float) - 1
+        gridprops["nlay"] = nlay
+
+    sim = MFSimulation(sim_name=name, sim_ws=tmpdir, exe_name="mf6")
+    tdis = ModflowTdis(sim)
+    ims = ModflowIms(sim)
+    gwf = ModflowGwf(sim, modelname=name, save_flows=True)
+    disv = ModflowGwfdisv(gwf, **gridprops)
+
+    ic = ModflowGwfic(gwf, strt=np.random.random_sample(gwf.modelgrid.nnodes) * 350)
+    npf = ModflowGwfnpf(gwf, k=np.random.random_sample(gwf.modelgrid.nnodes) * 10)
+    oc = ModflowGwfoc(
+        gwf,
+        budget_filerecord=f"{name}.bud",
+        head_filerecord=f"{name}.hds",
+        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    )
+
+    return sim
+
+
+@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
+@pytest.mark.parametrize("use_pandas", [True])  # TODO: test non-pandas
+@pytest.mark.parametrize("sparse", [True])  # TODO: test non-sparse
+def test_mf6_chd_shapefile_export_vertex(function_tmpdir, use_pandas, sparse):
+    """Test CHD package shapefile export for DISV (vertex) grids"""
+    from flopy.mf6 import (
+        MFSimulation,
+        ModflowGwf,
+        ModflowGwfchd,
+        ModflowGwfdisv,
+        ModflowIms,
+        ModflowTdis,
+    )
+
+    name = "chd_disv_export_test"
+    sim = disv_sim(name, function_tmpdir)
+    gwf = sim.get_model(name)
+
+    chd_cells = [(0, 0, 1.0), (1, 2, 2.0), (2, 5, 3.0)]  # (layer, cell, head)
+    chd = ModflowGwfchd(gwf, stress_period_data=chd_cells)
+
+    shpfile = function_tmpdir / f"chd_disv_{use_pandas}_{sparse}.shp"
+    gwf.chd.stress_period_data.export(shpfile, sparse=sparse)
+
+    # Check that shapefile and sidecar files exist
+    for ext in [".shp", ".shx", ".dbf"]:
+        assert shpfile.with_suffix(ext).exists(), f"{shpfile.with_suffix(ext)} missing"
+
+    # Read shapefile and check records
+    with shapefile.Reader(str(shpfile)) as sf:
+        records = list(sf.records())
+        fields = [f[0] for f in sf.fields[1:]]  # skip DeletionFlag
+
+        if sparse:
+            # Only CHD cells should be exported
+            assert len(records) == len(chd_cells)
+        else:
+            # All grid cells should be exported
+            assert len(records) == gwf.modelgrid.nnodes
+
+        # Check attribute values for CHD cells
+        chd_vals = [
+            rec[fields.index(next(f for f in fields if "head" in f))] for rec in records
+        ]
+        if sparse:
+            # Should match the CHD values
+            assert set(chd_vals) == {1.0, 2.0, 3.0}
