@@ -147,6 +147,10 @@ jobs:
           meson test --verbose --no-rebuild -C builddir
           echo "$(pwd)/bin" >> $GITHUB_PATH
 
+      - name: Update FloPy packages
+        working-directory: modflow6
+        run: python -m flopy.mf6.utils.generate_classes --dfnpath doc/mf6io/mf6ivar/dfn
+
       - name: Run tutorial and example notebooks
         working-directory: flopy/autotest
         run: pytest -v -n auto test_example_notebooks.py
