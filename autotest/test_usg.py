@@ -8,10 +8,10 @@ from modflow_devtools.markers import requires_exe
 
 from autotest.conftest import get_example_data_path
 from flopy.mfusg import (
-    MfUsg, MfUsgDisU, MfUsgLpf, MfUsgSms, MfUsgWel,MfUsgOc
+    MfUsg, MfUsgDisU, MfUsgLpf, MfUsgSms, MfUsgWel, MfUsgOc, MfUsgBas
 )
 from flopy.modflow import (
-    ModflowBas,
+#    ModflowBas,
     ModflowDis,
     ModflowDrn,
     ModflowGhb,
@@ -106,7 +106,7 @@ def test_usg_model(function_tmpdir):
         exe_name="mfusg",
     )
     dis = ModflowDis(mf, nlay=1, nrow=11, ncol=11)
-    bas = ModflowBas(mf)
+    bas = MfUsgBas(mf)
     lpf = MfUsgLpf(mf)
     wel = MfUsgWel(mf, stress_period_data={0: [[0, 5, 5, -1.0]]})
     ghb = ModflowGhb(
@@ -158,7 +158,7 @@ def test_usg_load_01B(function_tmpdir, mfusg_01A_nestedgrid_nognc_model_path):
     msg = "flopy failed on loading mfusg lpf package"
     assert isinstance(m.lpf, MfUsgLpf), msg
     msg = "flopy failed on loading mfusg bas package"
-    assert isinstance(m.bas6, ModflowBas), msg
+    assert isinstance(m.bas6, MfUsgBas), msg
     msg = "flopy failed on loading mfusg oc package"
     assert isinstance(m.oc, MfUsgOc), msg
     msg = "flopy failed on loading mfusg sms package"
@@ -185,7 +185,7 @@ def test_usg_load_45usg(function_tmpdir, example_data_path):
     msg = "flopy failed on loading mfusg lpf package"
     assert isinstance(m.lpf, MfUsgLpf), msg
     msg = "flopy failed on loading mfusg bas package"
-    assert isinstance(m.bas6, ModflowBas), msg
+    assert isinstance(m.bas6, MfUsgBas), msg
     msg = "flopy failed on loading mfusg oc package"
     assert isinstance(m.oc, MfUsgOc), msg
     msg = "flopy failed on loading mfusg sms package"
@@ -399,3 +399,6 @@ def test_load_usg(function_tmpdir, fpth):
 
     m.change_model_ws(function_tmpdir)
     m.write_input()
+
+
+

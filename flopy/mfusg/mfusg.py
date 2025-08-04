@@ -69,15 +69,15 @@ class MfUsg(Modflow):
     ):
 
         super().__init__(
-            modelname,
-            namefile_ext,
-            version,
-            exe_name,
-            structured,
-            listunit,
-            model_ws,
-            external_path,
-            verbose,
+            modelname=modelname,
+            namefile_ext=namefile_ext,
+            version=version,
+            exe_name=exe_name,
+            structured=structured,
+            listunit=listunit,
+            model_ws=model_ws,
+            external_path=external_path,
+            verbose=verbose,
             **kwargs,
         )
 
@@ -93,8 +93,8 @@ class MfUsg(Modflow):
             "zone": flopy.modflow.ModflowZon,
             "mult": flopy.modflow.ModflowMlt,
             "pval": flopy.modflow.ModflowPval,
-            "bas6": flopy.modflow.ModflowBas,
-            "dis": flopy.modflow.ModflowDis,
+            "bas6": flopy.mfusg.MfUsgBas,
+            "dis": flopy.mfusg.MfUsgDis,
             "hfb6": flopy.modflow.ModflowHfb,
             "fhb": flopy.modflow.ModflowFhb,
             "drn": flopy.modflow.ModflowDrn,

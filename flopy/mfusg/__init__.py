@@ -2,10 +2,12 @@
 
 from .cln_dtypes import MfUsgClnDtypes
 from .mfusg import MfUsg
+from .mfusgbas import MfUsgBas
 from .mfusgbcf import MfUsgBcf
 from .mfusgbct import MfUsgBct
 from .mfusgcln import MfUsgCln
 from .mfusgddf import MfUsgDdf
+from .mfusgdis import MfUsgDis
 from .mfusgdisu import MfUsgDisU
 from .mfusgdpf import MfUsgDpf
 from .mfusgdpt import MfUsgDpt
@@ -22,10 +24,12 @@ from .mfusgevt import MfUsgEvt
 
 __all__ = [
     "MfUsg",
+    "MfUsgBas",
     "MfUsgBcf",
     "MfUsgCln",
     "MfUsgClnDtypes",
     "MfUsgDisU",
+    "MfUsgDis",
     "MfUsgGnc",
     "MfUsgLpf",
     "MfUsgSms",
@@ -42,3 +46,4 @@ __all__ = [
     "MfUsgEvt",
     "MfUsgWel",
 ]
+
