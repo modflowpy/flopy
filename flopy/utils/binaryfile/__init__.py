@@ -1604,7 +1604,7 @@ class CellBudgetFile:
             if t
         ]
 
-    def get_ts(self, idx, text=None, times=None):
+    def get_ts(self, idx, text=None, times=None, variable="q"):
         """
         Get a time series from the binary budget file.
 
@@ -1619,6 +1619,11 @@ class CellBudgetFile:
             'RIVER LEAKAGE', 'STORAGE', 'FLOW RIGHT FACE', etc.
         times : iterable of floats
             List of times to from which to get time series.
+        variable : str, optional
+            Variable name to extract from the budget record. Default is 'q'.
+            For records with auxiliary variables (e.g., 'DATA-SPDIS', 'DATA-SAT'),
+            this can be used to access auxiliary data. Examples include 'qx',
+            'qy', 'qz' for specific discharge components.
 
         Returns
         -------
@@ -1637,6 +1642,9 @@ class CellBudgetFile:
 
         Examples
         --------
+
+        >>> # Get specific discharge x-component from DATA-SPDIS record
+        >>> ts = cbb.get_ts(idx=(0, 5, 5), text='DATA-SPDIS', variable='qx')
 
         """
         # issue exception if text not provided
@@ -1669,19 +1677,34 @@ class CellBudgetFile:
         for idx, t in enumerate(timesint):
             result[idx, 0] = t
 
+        # Get a sample record to inspect its structure
+        full3d = True
         for itim, k in enumerate(kstpkper):
             try:
-                v = self.get_data(kstpkper=k, text=text, full3D=True)
-                # skip missing data - required for storage
-                if len(v) > 0:
-                    v = v[0]
-                    istat = 1
-                    for k, i, j in kijlist:
-                        result[itim, istat] = v[k, i, j].copy()
-                        istat += 1
-            except ValueError:
+                sample_data = self.get_data(kstpkper=k, text=text)
+                if len(sample_data) > 0:
+                    record = sample_data[0]
+                    if hasattr(record, "dtype") and record.dtype.names:
+                        available_fields = record.dtype.names
+                        if variable in available_fields:
+                            full3d = False
+            except Exception:
+                pass
+
+            if full3d:
+                try:
+                    v = self.get_data(kstpkper=k, text=text, full3D=True)
+                    if len(v) > 0:
+                        v = v[0]
+                        istat = 1
+                        for k, i, j in kijlist:
+                            result[itim, istat] = v[k, i, j].copy()
+                            istat += 1
+                        continue
+                except ValueError:
+                    full3d = False
+            if not full3d:
                 v = self.get_data(kstpkper=k, text=text)
-                # skip missing data - required for storage
                 if len(v) > 0:
                     if self.modelgrid is None:
                         s = (
@@ -1704,7 +1727,14 @@ class CellBudgetFile:
                         ]
 
                     for vv in v:
-                        field = vv.dtype.names[2]
+                        available_fields = vv.dtype.names
+                        if variable not in available_fields:
+                            raise ValueError(
+                                f"Variable '{variable}' not found in budget record. "
+                                f"Available fields: {list(available_fields)}"
+                            )
+
+                        field = variable
                         dix = np.asarray(np.isin(vv["node"], ndx)).nonzero()[0]
                         if len(dix) > 0:
                             result[itim, 1:] = vv[field][dix]
