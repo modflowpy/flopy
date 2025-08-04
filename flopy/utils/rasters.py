@@ -578,7 +578,9 @@ class Raster:
                 ryc = ryc[idx]
                 arr = arr[idx]
 
-            extrapolate = griddata((rxc, ryc), arr, (xc, yc), method="nearest", rescale=True)
+            extrapolate = griddata(
+                (rxc, ryc), arr, (xc, yc), method="nearest", rescale=True
+            )
             data = np.where(np.isnan(data), extrapolate, data)
 
         # step 4: return grid to user in shape provided
