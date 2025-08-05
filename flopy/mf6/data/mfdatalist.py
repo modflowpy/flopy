@@ -145,6 +145,78 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         model_grid = self.data_dimensions.get_model_grid()
         return list_to_array(sarr, model_grid, kper, mask)
 
+    def to_geo_dataframe(self, gdf=None, sparse=False):
+        """
+        Method to add data to a GeoDataFrame for exporting as a geospatial file
+
+        Parameters
+        ----------
+        gdf : GeoDataFrame
+            optional GeoDataFrame instance. If GeoDataFrame is None, one will be
+            constructed from modelgrid information
+        sparse : bool
+            boolean flag for sparse dataframe construction. Default is False
+
+        Returns
+        -------
+            GeoDataFrame
+        """
+        import pandas as pd
+
+        if self.model is None:
+            return gdf
+        else:
+            modelgrid = self.model.modelgrid
+            if modelgrid is None:
+                return gdf
+
+            if gdf is None:
+                gdf = modelgrid.geo_dataframe
+
+            # name = self.name
+            recarray = self.array
+            if "cellid" not in recarray.dtype.names:
+                return gdf
+
+            cellid = recarray["cellid"]
+            df = pd.DataFrame.from_records(recarray)
+
+            grid_type = modelgrid.grid_type()
+            if grid_type != "unstructured":
+                layer = [cid[0] for cid in cellid]
+                if grid_type == "structured":
+                    cids = [(0,) + cid[1:] for cid in cellid]
+                    nodes = modelgrid.get_node(cids)
+                else:
+                    nodes = [cid[1] for cid in cellid]
+
+                df["layer"] = layer
+                df["node"] = nodes
+                df = df.drop(columns=["cellid", ])
+                for layer in df.layer.unique():
+                    tmp = df[df.layer == layer]
+                    tmp = tmp.drop(columns=["layer"])
+                    renames = {
+                        nm: f"{nm}_{layer}" for nm in list(df) if nm not in ("node",)
+                    }
+                    tmp = tmp.set_index("node")
+                    tmp = tmp.rename(columns=renames)
+                    gdf = pd.merge(gdf, tmp, how="left", left_index=True, right_index=True)
+
+            else:
+                nodes = [cid[0] for cid in cellid]
+                df["node"] = nodes
+                df = df.drop(columns=["cellid",])
+                df = df.set_index("node")
+                gdf = pd.merge(gdf, df, how="left", left_index=True, right_index=True)
+
+            if sparse:
+                cols = [col for col in list(df) if col != "node"]
+                if cols:
+                    gdf = gdf[~np.isnan(gdf[cols[0]])]
+
+            return gdf
+
     def new_simulation(self, sim_data):
         """Initialize MFList object for a new simulation.
 

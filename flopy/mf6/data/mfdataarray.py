@@ -323,6 +323,54 @@ class MFArray(MFMultiDimVar):
         """Returns array data.  Calls get_data with default parameters."""
         return self._get_data()
 
+    def to_geo_dataframe(self, gdf=None):
+        """
+        Method to add data to a GeoDataFrame for exporting as a geospatial file
+
+        Parameters
+        ----------
+        gdf : GeoDataFrame
+            optional GeoDataFrame instance. If GeoDataFrame is None, one will be
+            constructed from modelgrid information
+
+        Returns
+        -------
+            GeoDataFrame
+        """
+        if self.model is None:
+            return gdf
+        else:
+            modelgrid = self.model.modelgrid
+            if gdf is None:
+                if modelgrid is None:
+                    return gdf
+                gdf = modelgrid.geo_dataframe
+
+            if modelgrid is not None:
+                if modelgrid.grid_type() != "unstructured":
+                    ncpl = modelgrid.ncpl
+                else:
+                    ncpl = modelgrid.nnodes
+            else:
+                ncpl = len(gdf)
+
+            name = self.name
+            data = self.array
+            if data.size == ncpl:
+                gdf[name] = data.ravel()
+
+            elif data.size % ncpl == 0:
+                data = data.reshape((-1, ncpl))
+                for ix, dat in enumerate(data):
+                    aname = f"{name}_{ix}"
+                    gdf[aname] = dat
+            else:
+                raise ValueError(
+                    f"Data size {data.size} not compatible with dataframe length {ncpl}"
+                )
+
+            return gdf
+
     def new_simulation(self, sim_data):
         """Initialize MFArray object for a new simulation
 

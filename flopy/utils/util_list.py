@@ -123,6 +123,59 @@ class MfList(DataInterface, DataListInterface):
         d = create_empty_recarray(ncell, self.dtype, default_value=-1.0e10)
         return d
 
+    def to_geo_dataframe(self, gdf=None, kper=0, sparse=False, **kwargs):
+        """
+        Method to add data to a GeoDataFrame for exporting as a geospatial file
+
+        Parameters
+        ----------
+        gdf : GeoDataFrame
+            optional GeoDataFrame instance. If GeoDataFrame is None, one will be
+            constructed from modelgrid information
+        kper : int
+            stress period to export
+        sparse : bool
+            boolean flag for sparse dataframe construction. Default is False
+
+        Returns
+        -------
+            GeoDataFrame
+        """
+        if self.model is None:
+            return gdf
+        else:
+            modelgrid = self.model.modelgrid
+            if modelgrid is None:
+                return gdf
+
+            if gdf is None:
+                gdf = modelgrid.geo_dataframe
+
+            data = self.array
+
+            active = []
+            for name, array4d in data.items():
+                aname = f"{self.name[0].lower()}_{name}"
+                array = array4d[kper]
+                if modelgrid.grid_type == "unstructured":
+                    array = array.ravel()
+                    if sparse:
+                        idx = np.where(~np.isnan(array))[0]
+                        active.extend(idx)
+                    gdf[aname] = array
+                else:
+                    for lay in range(modelgrid.nlay):
+                        arr = array[lay].ravel()
+                        if sparse:
+                            idx = np.where(~np.isnan(arr))[0]
+                            active.extend(idx)
+                        gdf[f"{aname}_{lay}"] = arr.ravel()
+
+            if sparse:
+                gdf = gdf.iloc[active]
+
+            return gdf
+
     def export(self, f, **kwargs):
         from .. import export
 

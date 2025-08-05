@@ -633,6 +633,40 @@ class Util3d(DataInterface):
     def plottable(self):
         return True
 
+    def to_geo_dataframe(self, gdf=None, forgive=False, **kwargs):
+        """
+        Method to add data to a GeoDataFrame for exporting as a geospatial file
+
+        Parameters
+        ----------
+        gdf : GeoDataFrame
+            optional GeoDataFrame instance. If GeoDataFrame is None, one will be
+            constructed from modelgrid information
+        forgive : bool
+            optional flag to continue running and pass data that is not compatible
+            with the geodataframe shape
+
+        Returns
+        -------
+            GeoDataFrame
+        """
+        if self.model is None:
+            return gdf
+        else:
+            modelgrid = self.model.modelgrid
+            if modelgrid is None:
+                return gdf
+
+            if gdf is None:
+                gdf = modelgrid.geo_dataframe
+
+            names = self.name
+            for lay, u2d in enumerate(self.util_2ds):
+                name = f"{names[lay]}_{lay}"
+                gdf = u2d.to_geo_dataframe(gdf=gdf, name=name, forgive=forgive)
+
+            return gdf
+
     def export(self, f, **kwargs):
         from .. import export
 
@@ -1874,6 +1908,56 @@ class Util2d(DataInterface):
                 self._how = "external"
         else:
             self._how = "internal"
+
+    def to_geo_dataframe(self, gdf=None, name=None, forgive=False, **kwargs):
+        """
+        Method to add an input array to a geopandas GeoDataFrame
+
+        Parameters
+        ----------
+        gdf : GeoDataFrame
+            optional GeoDataFrame object
+        name : str
+            optional attribute name, default uses util2d name
+        forgive : bool
+            optional flag to continue if data shape not compatible with GeoDataFrame
+
+        Returns
+        -------
+            geopandas GeoDataFrame
+        """
+        if self.model is None:
+            return gdf
+        else:
+            modelgrid = self.model.modelgrid
+            if gdf is None:
+                if modelgrid is None:
+                    return gdf
+                gdf = modelgrid.geo_dataframe
+
+            if modelgrid is not None:
+                if modelgrid.grid_type != "unstructured":
+                    ncpl = modelgrid.ncpl
+                else:
+                    ncpl = modelgrid.nnodes
+            else:
+                ncpl = len(gdf)
+
+            if name is None:
+                name = self.name
+
+            data = self.array
+
+            if data.size == ncpl:
+                gdf[name] = data.ravel()
+            elif forgive:
+                return gdf
+            else:
+                raise AssertionError(
+                    f"Data size {data.size} not compatible with dataframe length {ncpl}"
+                )
+
+            return gdf
 
     def plot(
         self,

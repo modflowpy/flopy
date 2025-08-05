@@ -673,6 +673,44 @@ class Package(PackageInterface):
 
         return export.utils.package_export(f, self, **kwargs)
 
+    def to_geo_dataframe(self, gdf=None, kper=0):
+        """
+        Method to create a GeoDataFrame from a modflow package
+
+        Parameters
+        ----------
+        gdf : GeoDataFrame
+            optional geopandas geodataframe object to add data to. Default is None
+        kper : int
+            stress period to get transient data from
+
+        Returns
+        -------
+            gdf : GeoDataFrame
+        """
+        from .mbase import BaseModel
+        if gdf is None:
+            if isinstance(self.parent, BaseModel):
+                modelgrid = self.parent.modelgrid
+                if modelgrid is not None:
+                    gdf = modelgrid.geo_dataframe
+                else:
+                    raise AttributeError(
+                        "model does not have a grid instance, "
+                        "please supply a geodataframe"
+                    )
+            else:
+                raise AssertionError(
+                    "Package does not have a model instance, "
+                    "please supply a geodataframe"
+                )
+
+        for attr, value in self.__dict__.items():
+            if callable(getattr(value, "to_geo_dataframe", None)):
+                gdf = value.to_geo_dataframe(gdf, forgive=True, kper=kper)
+
+        return gdf
+
     def _generate_heading(self):
         """Generate heading."""
         from . import __version__
