@@ -208,15 +208,14 @@ class ModflowHfb(Package):
             f = f_hfb
 
         for a in self.hfb_data:
+            line = ""
             if structured:
-                line = ""
                 for ipos, v in enumerate(a):
                     if ipos < 5:
                         line += f"{v + 1:10d}"
                     else:
                         line += f"{v:13.6g}\n"
             else:
-                line = ""
                 for ipos, v in enumerate(a):
                     if ipos < 2:
                         line += f"{v + 1:10d}"
