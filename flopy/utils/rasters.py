@@ -530,7 +530,8 @@ class Raster:
             arr = arr.flatten()
 
             # step 3: use griddata interpolation to snap to grid
-            data = griddata((rxc, ryc), arr, (xc, yc), method=method, rescale=True)
+            rescale = method in ("linear", "nearest")
+            data = griddata((rxc, ryc), arr, (xc, yc), method=method, rescale=rescale)
 
         elif method in ("median", "mean", "min", "max", "mode"):
             # these methods are slow and could use speed ups
