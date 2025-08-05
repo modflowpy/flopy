@@ -19,6 +19,7 @@ from flopy.modflow import (
     ModflowDis,
     ModflowDrn,
     ModflowGhb,
+    ModflowHfb,
     ModflowLpf,
     ModflowOc,
     ModflowPcg,
@@ -1350,3 +1351,25 @@ def test_model_load_time(function_tmpdir, benchmark):
     benchmark(
         lambda: Modflow.load(f"{name}.nam", model_ws=function_tmpdir, check=False)
     )
+
+
+def test_hfb_external(function_tmpdir):
+    hfb_data = [(0, 0, 5, 0, 6, 1e-3)]
+    ws = function_tmpdir
+    m = Modflow(
+        "test",
+        model_ws=ws,
+    )
+    ext_ws = ws / "ref"
+    ext_ws.mkdir(parents=True, exist_ok=True)
+    m.external_path = ext_ws
+
+    ModflowDis(m, 1, 1, 11)
+    ModflowHfb(m, nhfbnp=1, hfb_data=hfb_data)
+    m.write_input()
+    mm = Modflow.load("test.nam", model_ws=ws)
+    test = mm.hfb6.hfb_data
+    for name in test.dtype.names:
+        assert np.allclose(test[name], m.hfb6.hfb_data[name]), (
+            f"{name}: {hfb_data[name]} != {test[name]}"
+        )
