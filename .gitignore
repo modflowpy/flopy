@@ -77,6 +77,8 @@ autotest/*.dat
 autotest/temp
 autotest/tempbin
 autotest/.noseids
+autotest/.temp
+autotest/.failed
 
 *.chk
 *.chk.csv
