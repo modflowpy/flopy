@@ -200,6 +200,7 @@ class ModflowHfb(Package):
 
         openclose = False
         if self.parent.external_path is not None:
+            openclose = True
             fpth = pl.Path(self.parent.external_path) / "hfb.ref"
             f_hfb.write(f"OPEN/CLOSE {fpth}\n")
             f = open(fpth, "w")
@@ -208,13 +209,20 @@ class ModflowHfb(Package):
 
         for a in self.hfb_data:
             if structured:
-                f.write(
-                    "{:10d}{:10d}{:10d}{:10d}{:10d}{:13.6g}\n".format(
-                        a[0] + 1, a[1] + 1, a[2] + 1, a[3] + 1, a[4] + 1, a[5]
-                    )
-                )
+                line = ""
+                for ipos, v in enumerate(a):
+                    if ipos < 5:
+                        line += f"{v + 1:10d}"
+                    else:
+                        line += f"{v:13.6g}\n"
             else:
-                f.write("{:10d}{:10d}{:13.6g}\n".format(a[0] + 1, a[1] + 1, a[2]))
+                line = ""
+                for ipos, v in enumerate(a):
+                    if ipos < 2:
+                        line += f"{v + 1:10d}"
+                    else:
+                        line += f"{v:13.6g}\n"
+            f.write(line)
         f_hfb.write(f"{self.nacthfb:10d}")
         f_hfb.close()
 
