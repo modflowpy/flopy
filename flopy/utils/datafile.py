@@ -197,18 +197,18 @@ class LayerFile:
 
         self.model = None
         self.dis = None
-        self.mg = None
+        self.modelgrid = None
         if "model" in kwargs.keys():
             self.model = kwargs.pop("model")
-            self.mg = self.model.modelgrid
+            self.modelgrid = self.model.modelgrid
             self.dis = self.model.dis
         if "dis" in kwargs.keys():
             self.dis = kwargs.pop("dis")
-            self.mg = self.dis.parent.modelgrid
+            self.modelgrid = self.dis.parent.modelgrid
         if "tdis" in kwargs.keys():
             self.tdis = kwargs.pop("tdis")
         if "modelgrid" in kwargs.keys():
-            self.mg = kwargs.pop("modelgrid")
+            self.modelgrid = kwargs.pop("modelgrid")
         if len(kwargs.keys()) > 0:
             args = ",".join(kwargs.keys())
             raise Exception(f"LayerFile error: unrecognized kwargs: {args}")
@@ -218,8 +218,8 @@ class LayerFile:
 
         # now that we read the data and know nrow and ncol,
         # we can make a generic mg if needed
-        if self.mg is None:
-            self.mg = StructuredGrid(
+        if self.modelgrid is None:
+            self.modelgrid = StructuredGrid(
                 delc=np.ones((self.nrow,)),
                 delr=np.ones(self.ncol),
                 nlay=self.nlay,
@@ -272,11 +272,11 @@ class LayerFile:
         """
         if gdf is None:
             if modelgrid is None:
-                if self.mg is None:
+                if self.modelgrid is None:
                     raise AssertionError(
                         "A geodataframe or modelgrid instance must be supplied"
                     )
-                modelgrid = self.mg
+                modelgrid = self.modelgrid
 
             gdf = modelgrid.geo_dataframe
 
@@ -357,7 +357,7 @@ class LayerFile:
 
         from ..export.shapefile_utils import write_grid_shapefile
 
-        write_grid_shapefile(filename, self.mg, attrib_dict, verbose)
+        write_grid_shapefile(filename, self.modelgrid, attrib_dict, verbose)
 
     def plot(
         self,
@@ -469,7 +469,7 @@ class LayerFile:
             axes=axes,
             filenames=filenames,
             mflay=mflay,
-            modelgrid=self.mg,
+            modelgrid=self.modelgrid,
             **kwargs,
         )
 

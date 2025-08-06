@@ -1604,6 +1604,57 @@ class CellBudgetFile:
             if t
         ]
 
+    def to_geo_dataframe(
+        self,
+        gdf=None,
+        modelgrid=None,
+        idx=None,
+        kstpkper=None,
+        totim=None,
+        text=None,
+    ):
+        if (idx, kstpkper, totim) == (None, None, None):
+            raise AssertionError(
+                "to_geo_dataframe() missing 1 required argument: "
+                "please provide 'idx', 'kstpkper', or 'totim'"
+            )
+
+
+        if gdf is None:
+            if modelgrid is None:
+                if self.modelgrid is None:
+                    raise AssertionError(
+                        "A geodataframe or modelgrid instance must be supplied"
+                    )
+                modelgrid = self.modelgrid
+
+            gdf = modelgrid.geo_dataframe
+
+        col_names = []
+        if text is None:
+            textlist = [i.decode() for i in self.textlist]
+            for text in textlist:
+                data = self.get_data(
+                    idx=idx, kstpkper=kstpkper, totim=totim, text=text, full3D=True
+                )
+
+                text = text.strip().lower().replace(" ", "_")
+                for ix, arr in enumerate(data[0]):
+                    name = f"{text}_{ix}"
+                    gdf[name] = arr.ravel()
+                    col_names.append(name)
+        else:
+            data = self.get_data(
+                idx=idx, kstpkper=kstpkper, totim=totim, text=text, full3D=True
+            )
+            text = text.strip().lower().replace(" ", "_")
+            for ix, arr in enumerate(data[0]):
+                name = f"{text}_{ix}"
+                gdf[name] = arr.ravel()
+                col_names.append(name)
+
+        return gdf
+
     def get_ts(self, idx, text=None, times=None):
         """
         Get a time series from the binary budget file.
