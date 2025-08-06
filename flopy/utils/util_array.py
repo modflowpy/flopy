@@ -633,7 +633,7 @@ class Util3d(DataInterface):
     def plottable(self):
         return True
 
-    def to_geo_dataframe(self, gdf=None, forgive=False, **kwargs):
+    def to_geo_dataframe(self, gdf=None, forgive=False, name=None, **kwargs):
         """
         Method to add data to a GeoDataFrame for exporting as a geospatial file
 
@@ -645,6 +645,8 @@ class Util3d(DataInterface):
         forgive : bool
             optional flag to continue running and pass data that is not compatible
             with the geodataframe shape
+        name : str
+            optional array name base. If None, method uses the .name attribute
 
         Returns
         -------
@@ -660,7 +662,10 @@ class Util3d(DataInterface):
             if gdf is None:
                 gdf = modelgrid.geo_dataframe
 
-            names = self.name
+            if name is not None:
+                names = [name for _ in range(len(self.util_2ds))]
+            else:
+                names = self.name
             for lay, u2d in enumerate(self.util_2ds):
                 name = f"{names[lay]}_{lay}"
                 gdf = u2d.to_geo_dataframe(gdf=gdf, name=name, forgive=forgive)
@@ -1092,6 +1097,32 @@ class Transient3d(DataInterface):
     def plottable(self):
         return False
 
+    def to_geo_dataframe(self, gdf=None, kper=0, forgive=False, **kwargs):
+        """
+        Method to add data to a GeoDataFrame for exporting as a geospatial file
+
+        Parameters
+        ----------
+        gdf : GeoDataFrame
+            optional GeoDataFrame instance. If GeoDataFrame is None, one will be
+            constructed from modelgrid information
+        kper : int
+            stress period to export
+        forgive : bool
+            boolean flag for sparse dataframe construction. Default is False
+
+        Returns
+        -------
+            GeoDataFrame
+        """
+        u3d = self.transient_3ds[kper]
+        # note: may need to provide a pass through name for u3d to avoid s.p.
+        # number being tacked on. Test this on a model with the LAK package...
+        name = self.name_base[:-1].lower()
+        gdf = u3d.to_geo_dataframe(gdf=gdf, forgive=forgive, name=name, **kwargs)
+        return gdf
+
+
     def get_zero_3d(self, kper):
         name = f"{self.name_base}{kper + 1}(filled zero)"
         return Util3d(
@@ -1431,6 +1462,29 @@ class Transient2d(DataInterface):
             dtype=m4d.dtype.type,
             name=name,
         )
+
+    def to_geo_dataframe(self, gdf=None, kper=0, forgive=False, **kwargs):
+        """
+        Method to add data to a GeoDataFrame for exporting as a geospatial file
+
+        Parameters
+        ----------
+        gdf : GeoDataFrame
+            optional GeoDataFrame instance. If GeoDataFrame is None, one will be
+            constructed from modelgrid information
+        kper : int
+            stress period to export
+        forgive : bool
+            boolean flag for sparse dataframe construction. Default is False
+
+        Returns
+        -------
+            GeoDataFrame
+        """
+        u2d = self.transient_2ds[kper]
+        name = self.name_base[:-1]
+        gdf = u2d.to_geo_dataframe(gdf=gdf, name=name, forgive=forgive, **kwargs)
+        return gdf
 
     def __setattr__(self, key, value):
         if hasattr(self, "transient_2ds") and key == "cnstnt":

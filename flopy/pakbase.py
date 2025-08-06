@@ -673,7 +673,7 @@ class Package(PackageInterface):
 
         return export.utils.package_export(f, self, **kwargs)
 
-    def to_geo_dataframe(self, gdf=None, kper=0):
+    def to_geo_dataframe(self, gdf=None, kper=0, **kwargs):
         """
         Method to create a GeoDataFrame from a modflow package
 
@@ -707,7 +707,9 @@ class Package(PackageInterface):
 
         for attr, value in self.__dict__.items():
             if callable(getattr(value, "to_geo_dataframe", None)):
-                gdf = value.to_geo_dataframe(gdf, forgive=True, kper=kper)
+                if isinstance(value, (BaseModel, PackageInterface)):
+                    continue
+                gdf = value.to_geo_dataframe(gdf, forgive=True, kper=kper, sparse=False)
 
         return gdf
 

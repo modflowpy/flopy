@@ -153,26 +153,23 @@ class MfList(DataInterface, DataListInterface):
 
             data = self.array
 
-            active = []
+            col_names = []
             for name, array4d in data.items():
                 aname = f"{self.name[0].lower()}_{name}"
                 array = array4d[kper]
                 if modelgrid.grid_type == "unstructured":
                     array = array.ravel()
-                    if sparse:
-                        idx = np.where(~np.isnan(array))[0]
-                        active.extend(idx)
                     gdf[aname] = array
+                    col_names.append(aname)
                 else:
                     for lay in range(modelgrid.nlay):
                         arr = array[lay].ravel()
-                        if sparse:
-                            idx = np.where(~np.isnan(arr))[0]
-                            active.extend(idx)
                         gdf[f"{aname}_{lay}"] = arr.ravel()
+                        col_names.append(f"{aname}_{lay}")
 
             if sparse:
-                gdf = gdf.iloc[active]
+                gdf = gdf.dropna(subset=col_names, how="all")
+                gdf = gdf.dropna(axis="columns", how="all")
 
             return gdf
 

@@ -759,6 +759,40 @@ class BaseModel(ModelInterface):
             f"{txt2} the output list."
         )
 
+    def to_geo_dataframe(self, gdf=None, kper=0):
+        """
+        Method to build a Geodataframe from model inputs. Note: transient data
+        will only be exported for a sinlge stress period.
+
+        Parameters
+        ----------
+        gdf : GeoDataFrame
+            optional geopandas geodataframe object to add data to. Default is None
+        kper : int
+            stress period to get transient data from
+
+        Returns
+        -------
+            gdf : GeoDataFrame
+        """
+        if gdf is None:
+            modelgrid = self.modelgrid
+            if modelgrid is not None:
+                gdf = modelgrid.geo_dataframe
+            else:
+                raise AttributeError(
+                    "model does not have a grid instance, "
+                    "please supply a geodataframe"
+                )
+
+        for package in self.packagelist:
+            if package.package_type in ("hfb6",):
+                continue
+            if callable(getattr(package, "to_geo_dataframe", None)):
+                gdf = package.to_geo_dataframe(gdf, kper=kper, sparse=False)
+
+        return gdf
+
     def add_output_file(
         self,
         unit,

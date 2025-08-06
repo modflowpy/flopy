@@ -623,6 +623,44 @@ class ModflowSfr2(Package):
     def df(self):
         return pd.DataFrame(self.reach_data)
 
+    def to_geo_dataframe(self, gdf=None, sparse=True, **kwargs):
+        """
+        Method to export SFR reach data to a GeoDataFrame
+
+        Parameters
+        ----------
+        gdf : GeoDataFrame
+            optional GeoDataFrame instance. If GeoDataFrame is None, one will be
+            constructed from modelgrid information
+        sparse : bool
+            boolean flag for sparse dataframe construction. Default is True
+        """
+        modelgrid = self.parent.modelgrid
+        if modelgrid is None:
+            return gdf
+
+        if gdf is None:
+            gdf = modelgrid.geo_dataframe
+
+        df = self.df
+        if "k" in list(df):
+            df["node"] = df["node"] - (modelgrid.ncpl * df["k"])
+            df = df.drop(columns=["k", "i", "j"])
+
+        df["node"] += 1
+        gdf = gdf.merge(df, how="left", on="node")
+
+
+        if sparse:
+            col_names = [col for col in list(df) if col != "node"]
+            gdf = gdf.dropna(subset=col_names, how="all")
+            gdf = gdf.dropna(axis="columns", how="all")
+        else:
+            gdf = gdf.drop_duplicates(subset=["node"])
+            gdf = gdf.reset_index(drop=True)
+
+        return gdf
+
     def _make_graph(self):
         # get all segments and their outseg
         graph = {}

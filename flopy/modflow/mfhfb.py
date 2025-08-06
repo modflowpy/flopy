@@ -179,6 +179,81 @@ class ModflowHfb(Package):
         """
         return self.nhfbnp
 
+    def _get_hfb_lines(self):
+        """
+        Method to get hfb lines. Lines are ordered by recarray index
+
+        Returns
+        -------
+            list : list of hfb lines
+        """
+        modelgrid = self.parent.modelgrid
+        hfbs = self.hfb_data
+        iverts = modelgrid.iverts
+        verts = modelgrid.verts
+        nodes = []
+        if "k" in self.hfb_data.dtype.names:
+            for rec in hfbs:
+                node1 = modelgrid.get_node([(0, rec["irow1"], rec["icol1"])])[0]
+                node2 = modelgrid.get_node([(0, rec["irow2"], rec["icol2"])])[0]
+                nodes.append((node1, node2))
+        else:
+            nodes = list(zip(hfbs["node1"], hfbs["node2"]))
+
+        shared_edges = []
+        for (node0, node1) in nodes:
+            iv0 = iverts[node0]
+            iv1 = iverts[node1]
+            edges = []
+            for ix in range(len(iv0)):
+                edges.append(tuple(sorted((iv0[ix - 1], iv0[ix]))))
+
+            for ix in range(len(iv1)):
+                edge = tuple(sorted((iv1[ix - 1], iv1[ix])))
+                if edge in edges:
+                    shared_edges.append(edge)
+                    break
+
+            if not shared_edges:
+                raise AssertionError(
+                    f"No shared cell edges found. Cannot represent HFB for nodes {node0} and {node1}"
+                )
+
+        lines = []
+        for edge in shared_edges:
+            lines.append((tuple(verts[edge[0]]), tuple(verts[edge[1]])))
+
+        return lines
+
+    def to_geo_dataframe(self, **kwargs):
+        """
+        Method to create a LineString based geodataframe of horizontal flow barriers
+
+        Returns
+        -------
+            GeoDataFrame
+
+        """
+        import geopandas as gpd
+
+        lines = self._get_hfb_lines()
+        geo_interface = {"type": "FeatureCollection"}
+        features = [
+            {
+                "id": f"{ix}",
+                "geometry": {"coordinates": line, "type": "LineString"},
+                "properties": {}
+            }
+            for ix, line in enumerate(lines)
+        ]
+        geo_interface["features"] = features
+        gdf = gpd.GeoDataFrame.from_features(geo_interface)
+        hfbs = self.hfb_data
+        for name in hfbs.dtype.names:
+            gdf[name] = hfbs[name]
+
+        return gdf
+
     def write_file(self):
         """
         Write the package file.
