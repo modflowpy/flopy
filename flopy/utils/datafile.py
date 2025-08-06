@@ -240,6 +240,59 @@ class LayerFile:
     def __exit__(self, *exc):
         self.close()
 
+    def to_geo_dataframe(
+        self,
+        gdf=None,
+        modelgrid=None,
+        kstpkper=None,
+        totim=None,
+        attrib_name=None
+    ):
+        """
+        Generate a GeoDataFrame with data from a LayerFile instance
+
+        Parameters
+        ----------
+        gdf : GeoDataFrame
+            optional, existing geodataframe with NCPL geometries
+        modelgrid : Grid
+            optional modelgrid instance to generate a GeoDataFrame from
+        kstpkper : tuple of ints
+            A tuple containing the time step and stress period (kstp, kper).
+            These are zero-based kstp and kper values.
+        totim : float
+            The simulation time.
+        attrib_name : str
+            optional base name of attribute columns. (default is text attribute)
+
+
+        Returns
+        -------
+            GeoDataFrame
+        """
+        if gdf is None:
+            if modelgrid is None:
+                if self.mg is None:
+                    raise AssertionError(
+                        "A geodataframe or modelgrid instance must be supplied"
+                    )
+                modelgrid = self.mg
+
+            gdf = modelgrid.geo_dataframe
+
+        array = np.atleast_3d(
+            self.get_data(kstpkper=kstpkper, totim=totim).transpose()
+        ).transpose()
+
+        if attrib_name is None:
+            attrib_name = self.text.decode()
+
+        for ix, arr in enumerate(array):
+            name = f"{attrib_name}_{ix}"
+            gdf[name] = np.ravel(arr)
+
+        return gdf
+
     def to_shapefile(
         self,
         filename: Union[str, os.PathLike],
@@ -287,7 +340,10 @@ class LayerFile:
         >>> times = hdobj.get_times()
         >>> hdobj.to_shapefile('test_heads_sp6.shp', totim=times[-1])
         """
-
+        warnings.warn(
+            "to_shapefile() is deprecated and is being replaced by to_geo_dataframe()",
+            DeprecationWarning
+        )
         plotarray = np.atleast_3d(
             self.get_data(kstpkper=kstpkper, totim=totim, mflay=mflay).transpose()
         ).transpose()
