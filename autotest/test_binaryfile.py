@@ -275,7 +275,7 @@ def test_load_binary_head_file(example_data_path):
 
 def test_plot_binary_head_file(example_data_path):
     hf = HeadFile(example_data_path / "freyberg" / "freyberg.githds")
-    hf.mg.set_coord_info(xoff=1000.0, yoff=200.0, angrot=15.0)
+    hf.modelgrid.set_coord_info(xoff=1000.0, yoff=200.0, angrot=15.0)
 
     assert isinstance(hf.plot(), Axes)
     plt.close()

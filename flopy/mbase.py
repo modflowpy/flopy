@@ -781,8 +781,7 @@ class BaseModel(ModelInterface):
                 gdf = modelgrid.geo_dataframe
             else:
                 raise AttributeError(
-                    "model does not have a grid instance, "
-                    "please supply a geodataframe"
+                    "model does not have a grid instance, please supply a geodataframe"
                 )
 
         for package in self.packagelist:

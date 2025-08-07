@@ -2107,6 +2107,7 @@ class MFPackage(PackageInterface):
                 if modelgrid is not None:
                     if self.package_type == "hfb":
                         import geopandas as gpd
+
                         from ..plot.plotutil import hfb_data_to_linework
 
                         recarray = self.stress_period_data.data[kper]

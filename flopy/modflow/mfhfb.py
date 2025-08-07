@@ -188,6 +188,7 @@ class ModflowHfb(Package):
             list : list of hfb lines
         """
         from ..plot.plotutil import hfb_data_to_linework
+
         return hfb_data_to_linework(self.hfb_data, self.parent.modelgrid)
 
     def to_geo_dataframe(self, **kwargs):
@@ -207,7 +208,7 @@ class ModflowHfb(Package):
             {
                 "id": f"{ix}",
                 "geometry": {"coordinates": line, "type": "LineString"},
-                "properties": {}
+                "properties": {},
             }
             for ix, line in enumerate(lines)
         ]

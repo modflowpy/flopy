@@ -241,12 +241,7 @@ class LayerFile:
         self.close()
 
     def to_geo_dataframe(
-        self,
-        gdf=None,
-        modelgrid=None,
-        kstpkper=None,
-        totim=None,
-        attrib_name=None
+        self, gdf=None, modelgrid=None, kstpkper=None, totim=None, attrib_name=None
     ):
         """
         Generate a GeoDataFrame with data from a LayerFile instance
@@ -342,7 +337,7 @@ class LayerFile:
         """
         warnings.warn(
             "to_shapefile() is deprecated and is being replaced by to_geo_dataframe()",
-            DeprecationWarning
+            DeprecationWarning,
         )
         plotarray = np.atleast_3d(
             self.get_data(kstpkper=kstpkper, totim=totim, mflay=mflay).transpose()

@@ -2998,7 +2998,7 @@ def hfb_data_to_linework(recarray, modelgrid):
                 nodes.append((rec["cellid1"][0], rec["cellid2"][0]))
 
     shared_edges = []
-    for (node0, node1) in nodes:
+    for node0, node1 in nodes:
         iv0 = iverts[node0]
         iv1 = iverts[node1]
         edges = []
@@ -3013,7 +3013,8 @@ def hfb_data_to_linework(recarray, modelgrid):
 
         if not shared_edges:
             raise AssertionError(
-                f"No shared cell edges found. Cannot represent HFB for nodes {node0} and {node1}"
+                f"No shared cell edges found. Cannot represent HFB "
+                f"for nodes {node0} and {node1}"
             )
 
     lines = []

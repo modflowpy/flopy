@@ -689,6 +689,7 @@ class Package(PackageInterface):
             gdf : GeoDataFrame
         """
         from .mbase import BaseModel
+
         if gdf is None:
             if isinstance(self.parent, BaseModel):
                 modelgrid = self.parent.modelgrid

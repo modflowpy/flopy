@@ -69,7 +69,7 @@ def test_headfile_build_index(example_data_path):
 def test_formattedfile_reference(example_data_path):
     h = FormattedHeadFile(example_data_path / "mf2005_test" / "test1tr.githds")
     assert isinstance(h, FormattedHeadFile)
-    h.mg.set_coord_info(xoff=1000.0, yoff=200.0, angrot=15.0)
+    h.modelgrid.set_coord_info(xoff=1000.0, yoff=200.0, angrot=15.0)
 
     assert isinstance(h.plot(masked_values=[6999.000]), Axes)
     plt.close()

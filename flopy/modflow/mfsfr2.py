@@ -650,7 +650,6 @@ class ModflowSfr2(Package):
         df["node"] += 1
         gdf = gdf.merge(df, how="left", on="node")
 
-
         if sparse:
             col_names = [col for col in list(df) if col != "node"]
             gdf = gdf.dropna(subset=col_names, how="all")

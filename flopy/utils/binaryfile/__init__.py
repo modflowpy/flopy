@@ -1619,7 +1619,6 @@ class CellBudgetFile:
                 "please provide 'idx', 'kstpkper', or 'totim'"
             )
 
-
         if gdf is None:
             if modelgrid is None:
                 if self.modelgrid is None:
