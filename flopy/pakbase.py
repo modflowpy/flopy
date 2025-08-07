@@ -673,7 +673,7 @@ class Package(PackageInterface):
 
         return export.utils.package_export(f, self, **kwargs)
 
-    def to_geo_dataframe(self, gdf=None, kper=0, **kwargs):
+    def to_geo_dataframe(self, gdf=None, kper=0, sparse=False, **kwargs):
         """
         Method to create a GeoDataFrame from a modflow package
 
@@ -709,7 +709,14 @@ class Package(PackageInterface):
             if callable(getattr(value, "to_geo_dataframe", None)):
                 if isinstance(value, (BaseModel, PackageInterface)):
                     continue
+                # do not pass sparse in here, make sparse after all data has been
+                #  added to geodataframe
                 gdf = value.to_geo_dataframe(gdf, forgive=True, kper=kper, sparse=False)
+
+        if sparse:
+            col_names = [i for i in gdf if i not in ("geometry", "node", "row", "col")]
+            gdf = gdf.dropna(subset=col_names, how="all")
+            gdf = gdf.dropna(axis="columns", how="all")
 
         return gdf
 

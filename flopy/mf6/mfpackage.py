@@ -2086,7 +2086,7 @@ class MFPackage(PackageInterface):
         )
         return self._package_container.package_filename_dict
 
-    def to_geo_dataframe(self, gdf=None, kper=0, **kwargs):
+    def to_geo_dataframe(self, gdf=None, kper=0, sparse=False, **kwargs):
         """
         Method to create a GeoDataFrame from a modflow package
 
@@ -2117,11 +2117,18 @@ class MFPackage(PackageInterface):
                     "please supply a geodataframe"
                 )
 
-            for attr, value in self.__dict__.items():
-                if callable(getattr(value, "to_geo_dataframe", None)):
-                    if isinstance(value, (ModelInterface, PackageInterface)):
-                        continue
-                    gdf = value.to_geo_dataframe(gdf, forgive=True, kper=kper, sparse=False)
+        for attr, value in self.__dict__.items():
+            if callable(getattr(value, "to_geo_dataframe", None)):
+                if isinstance(value, (ModelInterface, PackageInterface)):
+                    continue
+                # do not pass sparse in here, "sparsify" after all data has been
+                #  added to geodataframe
+                gdf = value.to_geo_dataframe(gdf, forgive=True, kper=kper, sparse=False)
+
+        if sparse:
+            col_names = [i for i in gdf if i not in ("geometry", "node", "row", "col")]
+            gdf = gdf.dropna(subset=col_names, how="all")
+            gdf = gdf.dropna(axis="columns", how="all")
 
         return gdf
 

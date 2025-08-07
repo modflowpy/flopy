@@ -161,8 +161,6 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         -------
             GeoDataFrame
         """
-        import pandas as pd
-
         if self.model is None:
             return gdf
         else:
@@ -1675,19 +1673,20 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             if gdf is None:
                 gdf = modelgrid.geo_dataframe
 
-            data = self.masked_4D_arrays
+            data = self.to_array(kper=kper, mask=True)
+            if data is None:
+                return gdf
 
             col_names = []
-            for name, array4d in data.items():
+            for name, array3d in data.items():
                 aname = f"{self.path[1].lower()}_{name}"
-                array = array4d[kper]
                 if modelgrid.grid_type == "unstructured":
-                    array = array.ravel()
+                    array = array3d.ravel()
                     gdf[aname] = array
                     col_names.append(aname)
                 else:
                     for lay in range(modelgrid.nlay):
-                        arr = array[lay].ravel()
+                        arr = array3d[lay].ravel()
                         gdf[f"{aname}_{lay}"] = arr.ravel()
                         col_names.append(f"{aname}_{lay}")
 

@@ -202,6 +202,8 @@ def list_to_array(sarr, model_grid, kper=0, mask=False):
         cnt = np.zeros(shape, dtype=np.float64)
         for sp_rec in sarr:
             if sp_rec is not None:
+                if "cellid" not in sp_rec.dtype.names:
+                    return None
                 for rec in sp_rec:
                     arr[rec["cellid"]] += rec[name]
                     cnt[rec["cellid"]] += 1.0

@@ -839,6 +839,55 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
         model_grid = self.data_dimensions.get_model_grid()
         return list_to_array(sarr, model_grid, kper, mask)
 
+    def to_geo_dataframe(self, gdf=None, sparse=False, **kwargs):
+        """
+        Method to add data to a GeoDataFrame for exporting as a geospatial file
+
+        Parameters
+        ----------
+        gdf : GeoDataFrame
+            optional GeoDataFrame instance. If GeoDataFrame is None, one will be
+            constructed from modelgrid information
+        sparse : bool
+            boolean flag for sparse dataframe construction. Default is False
+
+        Returns
+        -------
+            GeoDataFrame
+        """
+        if self.model is None:
+            return gdf
+        else:
+            modelgrid = self.model.modelgrid
+            if modelgrid is None:
+                return gdf
+
+            if gdf is None:
+                gdf = modelgrid.geo_dataframe
+
+            data = self.to_array(mask=True)
+            if data is None:
+                return gdf
+
+            col_names = []
+            for name, array3d in data.items():
+                aname = f"{self.path[1].lower()}_{name}"
+                if modelgrid.grid_type == "unstructured":
+                    array = array3d.ravel()
+                    gdf[aname] = array
+                    col_names.append(aname)
+                else:
+                    for lay in range(modelgrid.nlay):
+                        arr = array3d[lay].ravel()
+                        gdf[f"{aname}_{lay}"] = arr.ravel()
+                        col_names.append(f"{aname}_{lay}")
+
+            if sparse:
+                gdf = gdf.dropna(subset=col_names, how="all")
+                gdf = gdf.dropna(axis="columns", how="all")
+
+            return gdf
+
     def set_record(self, record, autofill=False, check_data=True):
         """Sets the contents of the data and metadata to "data_record".
         Data_record is a dictionary with has the following format:
@@ -1935,9 +1984,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
         )
 
 
-class MFPandasTransientList(
-    MFPandasList, mfdata.MFTransient, DataListInterface
-):
+class MFPandasTransientList(MFPandasList, mfdata.MFTransient, DataListInterface):
     """
     Provides an interface for the user to access and update MODFLOW transient
     pandas list data.
@@ -2018,6 +2065,55 @@ class MFPandasTransientList(
     def to_array(self, kper=0, mask=False):
         """Returns list data as an array."""
         return super().to_array(kper, mask)
+
+    def to_geo_dataframe(self, gdf=None, kper=0, sparse=False, **kwargs):
+        """
+        Method to add data to a GeoDataFrame for exporting as a geospatial file
+
+        Parameters
+        ----------
+        gdf : GeoDataFrame
+            optional GeoDataFrame instance. If GeoDataFrame is None, one will be
+            constructed from modelgrid information
+        kper : int
+            stress period to export
+        sparse : bool
+            boolean flag for sparse dataframe construction. Default is False
+
+        Returns
+        -------
+            GeoDataFrame
+        """
+        if self.model is None:
+            return gdf
+        else:
+            modelgrid = self.model.modelgrid
+            if modelgrid is None:
+                return gdf
+
+            if gdf is None:
+                gdf = modelgrid.geo_dataframe
+
+            data = self.to_array(kper=kper, mask=True)
+
+            col_names = []
+            for name, array3d in data.items():
+                aname = f"{self.path[1].lower()}_{name}"
+                if modelgrid.grid_type == "unstructured":
+                    array = array3d.ravel()
+                    gdf[aname] = array
+                    col_names.append(aname)
+                else:
+                    for lay in range(modelgrid.nlay):
+                        arr = array3d[lay].ravel()
+                        gdf[f"{aname}_{lay}"] = arr.ravel()
+                        col_names.append(f"{aname}_{lay}")
+
+            if sparse:
+                gdf = gdf.dropna(subset=col_names, how="all")
+                gdf = gdf.dropna(axis="columns", how="all")
+
+            return gdf
 
     def remove_transient_key(self, transient_key):
         """Remove transient stress period key.  Method is used
