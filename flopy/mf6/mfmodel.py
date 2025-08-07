@@ -792,7 +792,7 @@ class MFModel(ModelInterface):
     def to_geo_dataframe(self, gdf=None, kper=0):
         """
         Method to build a Geodataframe from model inputs. Note: transient data
-        will only be exported for a sinlge stress period.
+        will only be exported for a single stress period.
 
         Parameters
         ----------
