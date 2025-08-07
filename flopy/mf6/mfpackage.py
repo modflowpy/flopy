@@ -2105,7 +2105,31 @@ class MFPackage(PackageInterface):
             if isinstance(self.parent, ModelInterface):
                 modelgrid = self.parent.modelgrid
                 if modelgrid is not None:
-                    gdf = modelgrid.geo_dataframe
+                    if self.package_type == "hfb":
+                        import geopandas as gpd
+                        from ..plot.plotutil import hfb_data_to_linework
+
+                        recarray = self.stress_period_data.data[kper]
+                        lines = hfb_data_to_linework(recarray, modelgrid)
+                        geo_interface = {"type": "FeatureCollection"}
+                        features = [
+                            {
+                                "id": f"{ix}",
+                                "geometry": {"coordinates": line, "type": "LineString"},
+                                "properties": {}
+                            }
+                            for ix, line in enumerate(lines)
+                        ]
+                        geo_interface["features"] = features
+                        gdf = gpd.GeoDataFrame.from_features(geo_interface)
+
+                        for name in recarray.dtype.names:
+                            gdf[name] = recarray[name]
+
+                        return gdf
+
+                    else:
+                        gdf = modelgrid.geo_dataframe
                 else:
                     raise AttributeError(
                         "model does not have a grid instance, "

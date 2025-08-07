@@ -187,43 +187,8 @@ class ModflowHfb(Package):
         -------
             list : list of hfb lines
         """
-        modelgrid = self.parent.modelgrid
-        hfbs = self.hfb_data
-        iverts = modelgrid.iverts
-        verts = modelgrid.verts
-        nodes = []
-        if "k" in self.hfb_data.dtype.names:
-            for rec in hfbs:
-                node1 = modelgrid.get_node([(0, rec["irow1"], rec["icol1"])])[0]
-                node2 = modelgrid.get_node([(0, rec["irow2"], rec["icol2"])])[0]
-                nodes.append((node1, node2))
-        else:
-            nodes = list(zip(hfbs["node1"], hfbs["node2"]))
-
-        shared_edges = []
-        for (node0, node1) in nodes:
-            iv0 = iverts[node0]
-            iv1 = iverts[node1]
-            edges = []
-            for ix in range(len(iv0)):
-                edges.append(tuple(sorted((iv0[ix - 1], iv0[ix]))))
-
-            for ix in range(len(iv1)):
-                edge = tuple(sorted((iv1[ix - 1], iv1[ix])))
-                if edge in edges:
-                    shared_edges.append(edge)
-                    break
-
-            if not shared_edges:
-                raise AssertionError(
-                    f"No shared cell edges found. Cannot represent HFB for nodes {node0} and {node1}"
-                )
-
-        lines = []
-        for edge in shared_edges:
-            lines.append((tuple(verts[edge[0]]), tuple(verts[edge[1]])))
-
-        return lines
+        from ..plot.plotutil import hfb_data_to_linework
+        return hfb_data_to_linework(self.hfb_data, self.parent.modelgrid)
 
     def to_geo_dataframe(self, **kwargs):
         """
@@ -289,6 +254,9 @@ class ModflowHfb(Package):
         been extended to include aux variables and associated
         aux names.
 
+        Returns
+        -------
+            np.recarray
         """
         dtype = ModflowHfb.get_default_dtype(structured=structured)
         if aux_names is not None:
