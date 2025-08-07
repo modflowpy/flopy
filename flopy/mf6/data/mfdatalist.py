@@ -145,7 +145,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         model_grid = self.data_dimensions.get_model_grid()
         return list_to_array(sarr, model_grid, kper, mask)
 
-    def to_geo_dataframe(self, gdf=None, sparse=False):
+    def to_geo_dataframe(self, gdf=None, sparse=False, **kwargs):
         """
         Method to add data to a GeoDataFrame for exporting as a geospatial file
 
@@ -173,47 +173,26 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             if gdf is None:
                 gdf = modelgrid.geo_dataframe
 
-            # name = self.name
-            recarray = self.array
-            if "cellid" not in recarray.dtype.names:
+            data = self.to_array(mask=True)
+            if data is None:
                 return gdf
 
-            cellid = recarray["cellid"]
-            df = pd.DataFrame.from_records(recarray)
-
-            grid_type = modelgrid.grid_type()
-            if grid_type != "unstructured":
-                layer = [cid[0] for cid in cellid]
-                if grid_type == "structured":
-                    cids = [(0,) + cid[1:] for cid in cellid]
-                    nodes = modelgrid.get_node(cids)
+            col_names = []
+            for name, array3d in data.items():
+                aname = f"{self.path[1].lower()}_{name}"
+                if modelgrid.grid_type == "unstructured":
+                    array = array3d.ravel()
+                    gdf[aname] = array
+                    col_names.append(aname)
                 else:
-                    nodes = [cid[1] for cid in cellid]
-
-                df["layer"] = layer
-                df["node"] = nodes
-                df = df.drop(columns=["cellid", ])
-                for layer in df.layer.unique():
-                    tmp = df[df.layer == layer]
-                    tmp = tmp.drop(columns=["layer"])
-                    renames = {
-                        nm: f"{nm}_{layer}" for nm in list(df) if nm not in ("node",)
-                    }
-                    tmp = tmp.set_index("node")
-                    tmp = tmp.rename(columns=renames)
-                    gdf = pd.merge(gdf, tmp, how="left", left_index=True, right_index=True)
-
-            else:
-                nodes = [cid[0] for cid in cellid]
-                df["node"] = nodes
-                df = df.drop(columns=["cellid",])
-                df = df.set_index("node")
-                gdf = pd.merge(gdf, df, how="left", left_index=True, right_index=True)
+                    for lay in range(modelgrid.nlay):
+                        arr = array3d[lay].ravel()
+                        gdf[f"{aname}_{lay}"] = arr.ravel()
+                        col_names.append(f"{aname}_{lay}")
 
             if sparse:
-                cols = [col for col in list(df) if col != "node"]
-                if cols:
-                    gdf = gdf[~np.isnan(gdf[cols[0]])]
+                gdf = gdf.dropna(subset=col_names, how="all")
+                gdf = gdf.dropna(axis="columns", how="all")
 
             return gdf
 
@@ -1667,6 +1646,56 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
     def to_array(self, kper=0, mask=False):
         """Returns list data as an array."""
         return super().to_array(kper, mask)
+
+    def to_geo_dataframe(self, gdf=None, kper=0, sparse=False, **kwargs):
+        """
+        Method to add data to a GeoDataFrame for exporting as a geospatial file
+
+        Parameters
+        ----------
+        gdf : GeoDataFrame
+            optional GeoDataFrame instance. If GeoDataFrame is None, one will be
+            constructed from modelgrid information
+        kper : int
+            stress period to export
+        sparse : bool
+            boolean flag for sparse dataframe construction. Default is False
+
+        Returns
+        -------
+            GeoDataFrame
+        """
+        if self.model is None:
+            return gdf
+        else:
+            modelgrid = self.model.modelgrid
+            if modelgrid is None:
+                return gdf
+
+            if gdf is None:
+                gdf = modelgrid.geo_dataframe
+
+            data = self.masked_4D_arrays
+
+            col_names = []
+            for name, array4d in data.items():
+                aname = f"{self.path[1].lower()}_{name}"
+                array = array4d[kper]
+                if modelgrid.grid_type == "unstructured":
+                    array = array.ravel()
+                    gdf[aname] = array
+                    col_names.append(aname)
+                else:
+                    for lay in range(modelgrid.nlay):
+                        arr = array[lay].ravel()
+                        gdf[f"{aname}_{lay}"] = arr.ravel()
+                        col_names.append(f"{aname}_{lay}")
+
+            if sparse:
+                gdf = gdf.dropna(subset=col_names, how="all")
+                gdf = gdf.dropna(axis="columns", how="all")
+
+            return gdf
 
     def remove_transient_key(self, transient_key):
         """Remove transient stress period key.  Method is used

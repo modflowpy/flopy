@@ -2086,6 +2086,45 @@ class MFPackage(PackageInterface):
         )
         return self._package_container.package_filename_dict
 
+    def to_geo_dataframe(self, gdf=None, kper=0, **kwargs):
+        """
+        Method to create a GeoDataFrame from a modflow package
+
+        Parameters
+        ----------
+        gdf : GeoDataFrame
+            optional geopandas geodataframe object to add data to. Default is None
+        kper : int
+            stress period to get transient data from
+
+        Returns
+        -------
+            gdf : GeoDataFrame
+        """
+        if gdf is None:
+            if isinstance(self.parent, ModelInterface):
+                modelgrid = self.parent.modelgrid
+                if modelgrid is not None:
+                    gdf = modelgrid.geo_dataframe
+                else:
+                    raise AttributeError(
+                        "model does not have a grid instance, "
+                        "please supply a geodataframe"
+                    )
+            else:
+                raise AssertionError(
+                    "Package does not have a model instance, "
+                    "please supply a geodataframe"
+                )
+
+            for attr, value in self.__dict__.items():
+                if callable(getattr(value, "to_geo_dataframe", None)):
+                    if isinstance(value, (ModelInterface, PackageInterface)):
+                        continue
+                    gdf = value.to_geo_dataframe(gdf, forgive=True, kper=kper, sparse=False)
+
+        return gdf
+
     def get_package(self, name=None, type_only=False, name_only=False):
         """
         Finds a package by package name, package key, package type, or partial

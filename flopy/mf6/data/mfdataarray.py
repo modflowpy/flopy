@@ -323,19 +323,22 @@ class MFArray(MFMultiDimVar):
         """Returns array data.  Calls get_data with default parameters."""
         return self._get_data()
 
-    def to_geo_dataframe(self, gdf=None):
+    def to_geo_dataframe(self, gdf=None, name=None, forgive=False, **kwargs):
         """
-        Method to add data to a GeoDataFrame for exporting as a geospatial file
+        Method to add an input array to a geopandas GeoDataFrame
 
         Parameters
         ----------
         gdf : GeoDataFrame
-            optional GeoDataFrame instance. If GeoDataFrame is None, one will be
-            constructed from modelgrid information
+            optional GeoDataFrame object
+        name : str
+            optional attribute name, default uses util2d name
+        forgive : bool
+            optional flag to continue if data shape not compatible with GeoDataFrame
 
         Returns
         -------
-            GeoDataFrame
+            geopandas GeoDataFrame
         """
         if self.model is None:
             return gdf
@@ -347,23 +350,27 @@ class MFArray(MFMultiDimVar):
                 gdf = modelgrid.geo_dataframe
 
             if modelgrid is not None:
-                if modelgrid.grid_type() != "unstructured":
+                if modelgrid.grid_type != "unstructured":
                     ncpl = modelgrid.ncpl
                 else:
                     ncpl = modelgrid.nnodes
             else:
                 ncpl = len(gdf)
 
-            name = self.name
+            if name is None:
+                name = self.name
+
             data = self.array
             if data.size == ncpl:
                 gdf[name] = data.ravel()
 
             elif data.size % ncpl == 0:
                 data = data.reshape((-1, ncpl))
-                for ix, dat in enumerate(data):
+                for ix, arr in enumerate(data):
                     aname = f"{name}_{ix}"
-                    gdf[aname] = dat
+                    gdf[aname] = arr
+            elif forgive:
+                return gdf
             else:
                 raise ValueError(
                     f"Data size {data.size} not compatible with dataframe length {ncpl}"
