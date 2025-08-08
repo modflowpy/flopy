@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from pprint import pformat
+from pprint import pformat, pprint
 from tempfile import TemporaryDirectory
 
 import numpy as np
@@ -15,6 +15,8 @@ print(f"flopy version: {flopy.__version__}")
 DNODATA = 3.0e30
 
 
+# A FloPy simulation ASCII sim that will be updated
+# use netcdf inputs
 def create_sim(ws):
     name = "flow"
     gwfname = name
@@ -186,6 +188,8 @@ def create_sim(ws):
     return sim
 
 
+# A subroutine that can update an xarray dataset
+# with package netcdf information stored in a dict
 def add_netcdf_vars(dataset, nc_info, dimmap):
     def _data_shape(shape):
         dims_l = []
@@ -197,11 +201,11 @@ def add_netcdf_vars(dataset, nc_info, dimmap):
     for v in nc_info:
         varname = nc_info[v]["varname"]
         data = np.full(
-            _data_shape(nc_info[v]["nc_shape"]),
+            _data_shape(nc_info[v]["netcdf_shape"]),
             nc_info[v]["attrs"]["_FillValue"],
-            dtype=nc_info[v]["nc_type"],
+            dtype=nc_info[v]["xarray_type"],
         )
-        var_d = {varname: (nc_info[v]["nc_shape"], data)}
+        var_d = {varname: (nc_info[v]["netcdf_shape"], data)}
         dataset = dataset.assign(var_d)
         for a in nc_info[v]["attrs"]:
             dataset[varname].attrs[a] = nc_info[v]["attrs"][a]
@@ -209,6 +213,7 @@ def add_netcdf_vars(dataset, nc_info, dimmap):
     return dataset
 
 
+# create temporary directories
 temp_dir = TemporaryDirectory()
 workspace = Path(temp_dir.name)
 
@@ -229,6 +234,7 @@ ds = xr.Dataset()
 
 # get model netcdf info
 nc_info = gwf.netcdf_info()
+pprint(nc_info)
 
 # update dataset with required attributes
 for a in nc_info["attrs"]:
@@ -258,6 +264,7 @@ shape = ["time", "z", "y", "x"]
 # update for welg
 welg = gwf.get_package("wel-1")
 nc_info = welg.netcdf_info()
+pprint(nc_info)
 
 # create welg dataset variables
 ds = add_netcdf_vars(ds, nc_info, dimmap)
@@ -292,6 +299,7 @@ for n in range(4):
     # get ghbg package netcdf info
     ghbg = gwf.get_package(f"ghb-{ip}")
     nc_info = ghbg.netcdf_info()
+    pprint(nc_info)
 
     # create ghbg dataset variables
     ds = add_netcdf_vars(ds, nc_info, dimmap)
@@ -334,6 +342,7 @@ for n in range(3):
     # get rivg package netcdf info
     rivg = gwf.get_package(f"riv-{ip}")
     nc_info = rivg.netcdf_info()
+    pprint(nc_info)
 
     # create rivg dataset variables
     ds = add_netcdf_vars(ds, nc_info, dimmap)
@@ -382,6 +391,7 @@ for n in range(3):
     # get drng package netcdf info
     drng = gwf.get_package(f"drn-{ip}")
     nc_info = drng.netcdf_info()
+    pprint(nc_info)
 
     # create drng dataset variables
     ds = add_netcdf_vars(ds, nc_info, dimmap)
@@ -415,6 +425,9 @@ for n in range(3):
         f.write("  cond NETCDF\n")
         f.write("  concentration NETCDF\n")
         f.write("END period  1\n\n")
+
+# show the dataset
+print(ds)
 
 # write the netcdf
 ds.to_netcdf(

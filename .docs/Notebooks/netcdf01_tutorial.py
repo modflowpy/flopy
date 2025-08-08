@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from pprint import pformat
+from pprint import pformat, pprint
 from tempfile import TemporaryDirectory
 
 import numpy as np
@@ -14,6 +14,8 @@ print(f"flopy version: {flopy.__version__}")
 DNODATA = 3.0e30
 
 
+# A FloPy simulation ASCII sim that will be updated
+# use netcdf inputs
 def create_sim(ws):
     name = "uzf01"
     perlen = [500.0]
@@ -185,6 +187,8 @@ def create_sim(ws):
     return sim
 
 
+# A subroutine that can update an xarray dataset
+# with package netcdf information stored in a dict
 def add_netcdf_vars(dataset, nc_info, dimmap):
     def _data_shape(shape):
         dims_l = []
@@ -196,11 +200,11 @@ def add_netcdf_vars(dataset, nc_info, dimmap):
     for v in nc_info:
         varname = nc_info[v]["varname"]
         data = np.full(
-            _data_shape(nc_info[v]["nc_shape"]),
+            _data_shape(nc_info[v]["netcdf_shape"]),
             nc_info[v]["attrs"]["_FillValue"],
-            dtype=nc_info[v]["nc_type"],
+            dtype=nc_info[v]["xarray_type"],
         )
-        var_d = {varname: (nc_info[v]["nc_shape"], data)}
+        var_d = {varname: (nc_info[v]["netcdf_shape"], data)}
         dataset = dataset.assign(var_d)
         for a in nc_info[v]["attrs"]:
             dataset[varname].attrs[a] = nc_info[v]["attrs"][a]
@@ -208,6 +212,7 @@ def add_netcdf_vars(dataset, nc_info, dimmap):
     return dataset
 
 
+# create temporary directories
 temp_dir = TemporaryDirectory()
 workspace = Path(temp_dir.name)
 
@@ -228,6 +233,7 @@ ds = xr.Dataset()
 
 # get model netcdf info
 nc_info = gwf.netcdf_info()
+pprint(nc_info)
 
 # update dataset with required attributes
 for a in nc_info["attrs"]:
@@ -254,6 +260,7 @@ ds = ds.assign(var_d)
 # dis
 dis = gwf.get_package("dis")
 nc_info = dis.netcdf_info()
+pprint(nc_info)
 
 # create dis dataset variables
 ds = add_netcdf_vars(ds, nc_info, dimmap)
@@ -286,6 +293,7 @@ with open(workspace / "netcdf" / "uzf01.dis", "w") as f:
 # npf
 npf = gwf.get_package("npf")
 nc_info = npf.netcdf_info()
+pprint(nc_info)
 
 # create npf dataset variables
 ds = add_netcdf_vars(ds, nc_info, dimmap)
@@ -306,6 +314,7 @@ with open(workspace / "netcdf" / "uzf01.npf", "w") as f:
 # get ghbg package netcdf info
 ghbg = gwf.get_package("ghbg_0")
 nc_info = ghbg.netcdf_info()
+pprint(nc_info)
 
 # create ghbg dataset variables
 ds = add_netcdf_vars(ds, nc_info, dimmap)
@@ -319,6 +328,9 @@ for p in ghbg.bhead.get_data():
 for p in ghbg.cond.get_data():
     istp = sum(gwf.modeltime.nstp[0:p])
     ds["ghbg_0_cond"].values[istp] = ghbg.cond.get_data()[p]
+
+# show the dataset
+print(ds)
 
 # write the netcdf
 ds.to_netcdf(

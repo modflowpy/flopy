@@ -2196,14 +2196,14 @@ class MFModel(ModelInterface):
         return idomain
 
     @staticmethod
-    def netcdf_attrs(mname, mtype, grid_type, mesh=None):
+    def netcdf_model(mname, mtype, grid_type, mesh=None):
         """Return dictionary of dataset (model) scoped attributes
         Parameters
         ----------
         mname : str
             model name
         mtype : str
-            model type
+            model type, e.g. GWF6
         grid_type:
             DiscretizationType
         mesh : str
@@ -2218,7 +2218,7 @@ class MFModel(ModelInterface):
         elif grid_type == DiscretizationType.DISV:
             attrs["modflow_grid"] = "VERTEX"
 
-        attrs["modflow_model"] = f"{mname.upper()}: MODFLOW 6 {mtype.upper()} model"
+        attrs["modflow_model"] = f"{mtype.upper()}: {mname.upper()}"
 
         # supported => LAYERED
         if mesh:
@@ -2233,7 +2233,7 @@ class MFModel(ModelInterface):
         mesh : str
             mesh type if dataset is ugrid compliant
         """
-        attrs = MFModel.netcdf_attrs(
+        attrs = MFModel.netcdf_model(
             self.name, self.model_type, self.get_grid_type(), mesh
         )
 

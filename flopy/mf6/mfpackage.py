@@ -3457,9 +3457,9 @@ class MFPackage(PackageInterface):
             # add non-attrs to dictionary
             a["varname"] = name.lower()
             if (data_item.type) == DatumType.integer:
-                a["nc_type"] = np.int32
+                a["xarray_type"] = np.int32
             elif (data_item.type) == DatumType.double_precision:
-                a["nc_type"] = np.float64
+                a["xarray_type"] = np.float64
             dims = []
             if data_item.shape[0] == 'nodes':
                 if data_item.block_name == "griddata":
@@ -3472,7 +3472,7 @@ class MFPackage(PackageInterface):
                     for k, v in dimmap.items():
                         s = s.replace(k, v)
                     dims.append(s)
-            a["nc_shape"] = dims[::-1]
+            a["netcdf_shape"] = dims[::-1]
 
             # add variable attributes dictionary
             a["attrs"] = {}
@@ -3492,7 +3492,7 @@ class MFPackage(PackageInterface):
             # set dictionary
             attrs[key] = a
 
-        if data_item.layered and mesh == "LAYERED":
+        if data_item.layered and mesh and mesh.upper() == "LAYERED":
             if data_item.name == "aux" or data_item.name == "auxvar":
                 for n, auxname in enumerate(auxnames):
                     for l in range(nlay):
@@ -3508,7 +3508,7 @@ class MFPackage(PackageInterface):
                 _add_entry(data_item.name)
 
     @staticmethod
-    def netcdf_attrs(mtype, ptype, auxiliary=None, mesh=None, nlay=1):
+    def netcdf_package(mtype, ptype, auxiliary=None, mesh=None, nlay=1):
         from .data.mfstructure import DfnPackage, MFSimulationStructure
 
         attrs = {}
@@ -3543,11 +3543,7 @@ class MFPackage(PackageInterface):
                             nlay,
                         )
 
-        res_d = {}
-        for k in list(attrs):
-            res_d[k] = attrs[k]["attrs"]
-
-        return res_d
+        return attrs
 
     def netcdf_info(self, mesh=None):
         attrs = {}
