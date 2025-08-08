@@ -2222,9 +2222,9 @@ class MFModel(ModelInterface):
 
         # supported => LAYERED
         if mesh:
-            attrs["mesh"] = mesh
+            attrs["mesh"] = mesh.upper()
 
-        return attrs
+        return {"attrs": attrs}
 
     def netcdf_info(self, mesh=None):
         """Return dictionary of dataset (model) scoped attributes
@@ -2233,10 +2233,6 @@ class MFModel(ModelInterface):
         mesh : str
             mesh type if dataset is ugrid compliant
         """
-        attrs = MFModel.netcdf_model(
+        return MFModel.netcdf_model(
             self.name, self.model_type, self.get_grid_type(), mesh
         )
-
-        res_d = {}
-        res_d["attrs"] = attrs
-        return res_d
