@@ -38,7 +38,6 @@ def freyberg_usg_model_path(example_data_path):
 def test_usg_disu_load(function_tmpdir, mfusg_01A_nestedgrid_nognc_model_path):
     fname = mfusg_01A_nestedgrid_nognc_model_path / "flow.disu"
     assert os.path.isfile(fname), f"disu file not found {fname}"
-
     # Create the model
     m = MfUsg(modelname="usgload", verbose=True)
 

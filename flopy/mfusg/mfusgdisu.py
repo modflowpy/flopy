@@ -252,7 +252,7 @@ class MfUsgDisU(Package):
         # Set values of all parameters
         self._generate_heading()
 
-        model.structured = False
+        #model.structured = False # todo: why?
 
         self.nodes = nodes
         self.nlay = nlay
@@ -293,6 +293,7 @@ class MfUsgDisU(Package):
         ncol = self.nodelay.array[:]
 
         # Top and bot are both 1d arrays of size nodes
+
         self.top = Util3d(
             model,
             (nlay, nrow, ncol),
@@ -594,10 +595,10 @@ class MfUsgDisU(Package):
         top = [0] * nlay
         for k in range(nlay):
             tpk = Util2d.load(f, model, (nodelay[k],), np.float32, "top", ext_unit_dict)
-            top[k] = tpk
+            top[k] = tpk.array.squeeze()
         if model.verbose:
             for k, tpk in enumerate(top):
-                print(f"   TOP layer {k}: {tpk.array}")
+                print(f"   TOP layer {k}: {tpk}")
 
         # dataset 5 -- bot
         if model.verbose:
@@ -605,10 +606,10 @@ class MfUsgDisU(Package):
         bot = [0] * nlay
         for k in range(nlay):
             btk = Util2d.load(f, model, (nodelay[k],), np.float32, "btk", ext_unit_dict)
-            bot[k] = btk
+            bot[k] = btk.array.squeeze()
         if model.verbose:
             for k, btk in enumerate(bot):
-                print(f"   BOT layer {k}: {btk.array}")
+                print(f"   BOT layer {k}: {btk}")
 
         # dataset 6 -- area
         if model.verbose:
@@ -623,7 +624,7 @@ class MfUsgDisU(Package):
                 ak = Util2d.load(
                     f, model, (nodelay[k],), np.float32, "ak", ext_unit_dict
                 )
-                area[k] = ak
+                area[k] = ak.array.squeeze()
         if model.verbose:
             for k, ak in enumerate(area):
                 print(f"   AREA layer {k}: {ak}")
