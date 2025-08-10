@@ -49,8 +49,8 @@ def test_modflow_unstructured(function_tmpdir):
     )
     assert isinstance(disu, flopy.mfusg.MfUsgDisU)
 
-    bas = flopy.modflow.ModflowBas(mf)
-    assert isinstance(bas, flopy.modflow.ModflowBas)
+    bas = flopy.mfusg.MfUsgBas(mf)
+    assert isinstance(bas, flopy.mfusg.MfUsgBas)
 
     lpf = flopy.mfusg.MfUsgLpf(mf)
     assert isinstance(lpf, flopy.mfusg.MfUsgLpf)

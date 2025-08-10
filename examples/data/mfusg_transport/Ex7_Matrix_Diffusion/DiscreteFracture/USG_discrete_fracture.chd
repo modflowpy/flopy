@@ -1,0 +1,8 @@
+#
+    2 AUX SHEADFACT AUX EHEADFACT AUX CELLGRP AUX C01                              #  2. MXACTC  [Option]
+    2     0                                                                        #  5. ITMP NP          Stress Period   1
+    1         11.0         11.0          1.0          1.0    -1           1.0      # 6b. Node Shead Ehead [xyz]
+   61         10.0         10.0          1.0          1.0    -1           0.0      # 6b. Node Shead Ehead [xyz]
+    2     0                                                                        #  5. ITMP NP          Stress Period   2
+    1         11.0         11.0          1.0          1.0    -1           0.0      # 6b. Node Shead Ehead [xyz]
+   61         10.0         10.0          1.0          1.0    -1           0.0      # 6b. Node Shead Ehead [xyz]

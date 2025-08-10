@@ -104,7 +104,7 @@ dis = flopy.modflow.ModflowDis(
     nstp=1,
     steady=True,
 )
-bas = flopy.modflow.ModflowBas(mf, ibound=ibound, strt=strt)
+bas = flopy.mfusg.MfUsgBas(mf, ibound=ibound, strt=strt)
 lpf = flopy.mfusg.MfUsgLpf(mf, hk=0.0001, laytyp=4)
 oc = flopy.modflow.ModflowOc(
     mf,

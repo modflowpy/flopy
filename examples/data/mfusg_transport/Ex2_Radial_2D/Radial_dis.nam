@@ -1,0 +1,15 @@
+LIST 7 Radial_dis.lst
+BAS6  1 Radial.bas
+DIS  29 Radial.dis
+LPF 11 Radial.lpf
+WEL 12 Radial.wel
+CHD 16 Radial.chd
+sms 13 Radial.sms
+BCT 15 Radial_dis.bct
+OC  22 Radial.oc
+DATA(BINARY) 50 Radial_dis.cbb
+DATA(BINARY) 54 Radial_dis.cbw
+DATA(BINARY) 55 Radial_dis.cbT
+DATA(BINARY) 30 Radial_dis.hds
+DATA(BINARY) 31 Radial_dis.ddn
+DATA(BINARY) 33 Radial_dis.CON

@@ -488,7 +488,7 @@ def test_mfusg(function_tmpdir):
         structured=False,
     )
     disu = flopy.mfusg.MfUsgDisU(m, **gridprops)
-    bas = flopy.modflow.ModflowBas(m)
+    bas = flopy.mfusg.MfUsgBas(m)
     lpf = flopy.mfusg.MfUsgLpf(m)
     chd = flopy.modflow.ModflowChd(m, stress_period_data=chdspd)
     sms = flopy.mfusg.MfUsgSms(m)
