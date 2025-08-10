@@ -26,6 +26,7 @@
 
 # +
 import os
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -45,6 +46,7 @@ from flopy.modflow import ModflowBas, ModflowChd, ModflowDis
 from flopy.plot import PlotCrossSection
 from flopy.utils import HeadUFile
 from flopy.utils.gridgen import Gridgen
+
 # -
 # +
 model_ws = "Ex6a_Stallman_Heat"

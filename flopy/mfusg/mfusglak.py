@@ -220,7 +220,7 @@ class MfUsgLak(Package):
                 concentration of solute in overland runoff directly into the lake
             CAUG : float
                 concentration of solute in water used to augment the lake volume
-        if 
+        if
     options : list of strings
         Package options. (default is None).
     extension : string
@@ -463,7 +463,7 @@ class MfUsgLak(Package):
         mcomp = model.mcomp
         if isinstance(clake, (int, float)):
             self.clake = [[clake] * mcomp for _ in range(self.nlakes)]
-        else :
+        else:
             self.clake = clake
 
         if conc_data is not None:
@@ -896,7 +896,7 @@ class MfUsgLak(Package):
                             ds9b[(n, icomp)] = tds
 
                     if mcomp > 0 and transportboundary:
-                        ## CLAKBC–The concentration of solute for lake boundary
+                        ## CLAKBC The concentration of solute for lake boundary
                         line = f.readline().rstrip()
                         t = line.split()
                         for icomp in range(mcomp):

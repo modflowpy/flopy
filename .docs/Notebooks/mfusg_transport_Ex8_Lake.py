@@ -55,6 +55,7 @@ from flopy.modflow import ModflowBas, ModflowChd, ModflowDis, ModflowFhb, Modflo
 from flopy.plot import PlotCrossSection, PlotMapView
 from flopy.utils import HeadUFile
 from flopy.utils.gridgen import Gridgen
+
 # -
 
 # +
@@ -344,6 +345,7 @@ got = np.genfromtxt(f"{mf.model_ws}/{mf.name}.got", skip_header=2)
 
 # +
 from autotest.conftest import get_example_data_path
+
 txtfile = get_example_data_path() / "mfusg_transport" / "Ex8_Lake" / "Analytical_Soln.txt"
 soln = np.genfromtxt(txtfile, skip_header=2)
 # -

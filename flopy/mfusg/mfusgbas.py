@@ -99,16 +99,16 @@ class MfUsgBas(Package):
         ixsec=False,
         ichflg=False,
         stoper=None,
-        iprintfv = False,
-        iprinttime = False,
-        structured = True,
-        converge = False,
-        richards = False,
-        double_prec = False,
-        double_out = False,
-        double_io = False,
-        ihm = 0,
-        sy_all = False,
+        iprintfv=False,
+        iprinttime=False,
+        structured=True,
+        converge=False,
+        richards=False,
+        double_prec=False,
+        double_out=False,
+        double_io=False,
+        ihm=0,
+        sy_all=False,
         hnoflo=-999.99,
         extension="bas",
         unitnumber=None,
@@ -352,21 +352,21 @@ class MfUsgBas(Package):
         ichflg = "CHTOCH" in opts
         ifrefm = "FREE" in opts
         iprinttime = "PRINTTIME" in opts
-        ishowp = "SHOWPROGRESS" in opts # todo: not in the documentation
+        ishowp = "SHOWPROGRESS" in opts  # todo: not in the documentation
 
         ####
         iprintfv = "PRINTFV" in opts
-        structured = not("UNSTRUCTURED" in opts)
+        structured = "UNSTRUCTURED" not in opts
         converge = "CONVERGE" in opts
         richards = "RICHARDS" in opts
         double_prec = "DPIN" in opts
         double_out = "DPOUT" in opts
         double_io = "DPIO" in opts
-        ihm = 0 # todo: ask sorab
+        ihm = 0  # todo: ask sorab
         sy_all = "SY-ALL" in opts
         ####
 
-        if "STOPERROR" in opts: # todo: Ayman: this is not in documentation
+        if "STOPERROR" in opts:  # todo: Ayman: this is not in documentation
             i = opts.index("STOPERROR")
             stoper = np.float32(opts[i + 1])
         else:

@@ -233,11 +233,11 @@ class MfUsgLpf(ModflowLpf):
         novfc=False,
         bubblept=False,
         fullydry=False,
-        alpha = 0,
-        beta = 0,
-        sr = 0,
-        brook = 0,
-        bp = 0,
+        alpha=0,
+        beta=0,
+        sr=0,
+        brook=0,
+        bp=0,
         extension="lpf",
         unitnumber=None,
         filenames=None,
@@ -323,7 +323,7 @@ class MfUsgLpf(ModflowLpf):
         bas = model.get_package("BAS6")
         self.richards = bas.richards
         self.bubblept = bubblept
-        self.fullydry=fullydry
+        self.fullydry = fullydry
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         if self.richards:
@@ -551,20 +551,21 @@ class MfUsgLpf(ModflowLpf):
             )
 
         # load layer properties
-        (hk, hani, vka, ss, sy, vkcb, wetdry, 
-         alpha, beta, sr, brook, bp) = cls._load_layer_properties(
-            cls,
-            f_obj,
-            model,
-            dis,
-            ikcflag,
-            layvka,
-            chani,
-            laytyp,
-            laywet,
-            nplpf,
-            bubblept,
-            ext_unit_dict,
+        (hk, hani, vka, ss, sy, vkcb, wetdry, alpha, beta, sr, brook, bp) = (
+            cls._load_layer_properties(
+                cls,
+                f_obj,
+                model,
+                dis,
+                ikcflag,
+                layvka,
+                chani,
+                laytyp,
+                laywet,
+                nplpf,
+                bubblept,
+                ext_unit_dict,
+            )
         )
 
         # Ksat  mfusg
@@ -606,11 +607,11 @@ class MfUsgLpf(ModflowLpf):
             wetdry=wetdry,
             bubblept=bubblept,
             fullydry=fullydry,
-            alpha = alpha,
-            beta = beta,
-            sr = sr,
-            brook = brook, 
-            bp = bp,
+            alpha=alpha,
+            beta=beta,
+            sr=sr,
+            brook=brook,
+            bp=bp,
             ksat=ksat,
             storagecoefficient=storagecoefficient,
             constantcv=constantcv,
@@ -647,15 +648,15 @@ class MfUsgLpf(ModflowLpf):
         bubblept = "BUBBLEPT" in text_list
         fullydry = "FULLYDRY" in text_list
 
-        ### Not implemented --- Richards equation uses a tabular input for the 
+        ### Not implemented --- Richards equation uses a tabular input for the
         ### moisture retention and relative permeability curves
         if "TABRICH" in text_list:
             i = text_list.index("TABRICH")
             nuzones = np.float32(text_list[i + 1])
             nutabrows = np.float32(text_list[i + 1])
         else:
-            nuzones=None
-            nutabrows=None
+            nuzones = None
+            nutabrows = None
 
         return (
             ipakcb,
@@ -828,7 +829,7 @@ class MfUsgLpf(ModflowLpf):
         bas = model.get_package("BAS6")
         richards = bas.richards
         transient = not dis.steady.all()
-        
+
         nlay = model.nlay
         hk = [0] * nlay
         hani = [0] * nlay
@@ -840,7 +841,7 @@ class MfUsgLpf(ModflowLpf):
         alpha = [0] * nlay
         beta = [0] * nlay
         sr = [0] * nlay
-        brook = [0] * nlay 
+        brook = [0] * nlay
         bp = [0] * nlay
 
         # load by layer
@@ -887,7 +888,7 @@ class MfUsgLpf(ModflowLpf):
                 wetdry[layer] = Util2d.load(
                     f_obj, model, util2d_shape, np.float32, "wetdry", ext_unit_dict
                 )
-            
+
             # Richards equation
             if richards:
                 if model.verbose:

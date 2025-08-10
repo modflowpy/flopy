@@ -144,7 +144,7 @@ class MfUsgDis(Package):
         nstp=1,
         tsmult=1,
         steady=True,
-        Trtoss = False,
+        Trtoss=False,
         itmuni=4,
         lenuni=2,
         extension="dis",

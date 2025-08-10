@@ -335,14 +335,14 @@ class MfUsgSms(Package):
             if not isinstance(options, list):
                 options = [options]
             self.options = options
-        
+
         if options2 is None:
             self.options2 = []
         else:
             if not isinstance(options2, list):
                 options2 = [options2]
             self.options2 = options2
-        
+
         self.parent.add_package(self)
         return
 
@@ -477,17 +477,17 @@ class MfUsgSms(Package):
         # OPTIONS2
         options2 = []
         if "SOLVEACTIVE" in ll:
-            options2.append(' SOLVEACTIVE')
+            options2.append(" SOLVEACTIVE")
         if "DAMPBOT" in ll:
-            options2.append(' DAMPBOT')
+            options2.append(" DAMPBOT")
         if "SHIFT" in ll:
-            options2.append(' DAMPBOT')
+            options2.append(" DAMPBOT")
         if "TRUNCATEDNEWTON" in ll:
-            options2.append(' TRUNCATEDNEWTON')
+            options2.append(" TRUNCATEDNEWTON")
         if "TRUNCATEDNEWTONCUTOFF" in ll:
             idx = ll.index("TRUNCATEDNEWTONCUTOFF")
             val = float(ll[idx + 1])
-            options2.append(f' TRUNCATEDNEWTONCUTOFF {val}')
+            options2.append(f" TRUNCATEDNEWTONCUTOFF {val}")
 
         # Record 2
         theta = None

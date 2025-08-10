@@ -8,8 +8,9 @@ import numpy as np
 from ..discretization.unstructuredgrid import UnstructuredGrid
 from ..pakbase import Package
 from ..utils import Util2d, Util3d, read1d
-#todo: check
-#from ..utils.reference import TemporalReference
+
+# todo: check
+# from ..utils.reference import TemporalReference
 from .mfusg import MfUsg
 
 ITMUNI = {"u": 0, "s": 1, "m": 2, "h": 3, "d": 4, "y": 5}
@@ -252,7 +253,7 @@ class MfUsgDisU(Package):
         # Set values of all parameters
         self._generate_heading()
 
-        #model.structured = False # todo: why?
+        # model.structured = False # todo: why?
 
         self.nodes = nodes
         self.nlay = nlay
@@ -422,8 +423,8 @@ class MfUsgDisU(Package):
                 lenuni=self.lenuni,
             )
 
-        #todo: check
-        #self.tr = TemporalReference(itmuni=self.itmuni, start_datetime=start_datetime)
+        # todo: check
+        # self.tr = TemporalReference(itmuni=self.itmuni, start_datetime=start_datetime)
 
         self.start_datetime = start_datetime
 

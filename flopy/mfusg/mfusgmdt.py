@@ -236,7 +236,7 @@ class MfUsgMdt(Package):
             f_obj = open(self.fn_path, "w")
 
         f_obj.write(f"{self.heading}\n")
-        f_obj.write(f"{ self.ipakcb:9d} {self.imdtcf:9d}")
+        f_obj.write(f"{self.ipakcb:9d} {self.imdtcf:9d}")
 
         # Options
         if self.frahk:

@@ -8,14 +8,30 @@ from modflow_devtools.markers import requires_exe
 
 from autotest.conftest import get_example_data_path
 from flopy.mfusg import (
-    MfUsg, MfUsgDisU, MfUsgDis, MfUsgBas, MfUsgLpf, MfUsgSms, MfUsgWel,
-    MfUsgBcf, MfUsgBct, MfUsgCln, MfUsgDdf, MfUsgDpf,
-    MfUsgDpt, MfUsgMdt, MfUsgLak, MfUsgRch, MfUsgPcb,
-    MfUsgGnc, MfUsgOc,MfUsgEvt
+    MfUsg,
+    MfUsgBas,
+    MfUsgBcf,
+    MfUsgBct,
+    MfUsgCln,
+    MfUsgDdf,
+    MfUsgDis,
+    MfUsgDisU,
+    MfUsgDpf,
+    MfUsgDpt,
+    MfUsgEvt,
+    MfUsgGnc,
+    MfUsgLak,
+    MfUsgLpf,
+    MfUsgMdt,
+    MfUsgOc,
+    MfUsgPcb,
+    MfUsgRch,
+    MfUsgSms,
+    MfUsgWel,
 )
 from flopy.modflow import (
-#    ModflowBas,
-#    ModflowDis,
+    #    ModflowBas,
+    #    ModflowDis,
     ModflowChd,
     ModflowFhb,
     ModflowGhb,
@@ -27,33 +43,41 @@ from flopy.utils import Util2d, Util3d
 def mfusg_transport_Ex1_1D_model_path(example_data_path: Path):
     return example_data_path / "mfusg_transport" / "Ex1_1D"
 
+
 @pytest.fixture
 def mfusg_transport_Ex2_Radial_2D_model_path(example_data_path: Path):
     return example_data_path / "mfusg_transport" / "Ex2_Radial_2D"
+
 
 @pytest.fixture
 def mfusg_transport_Ex3_CLN_Conduit_model_path(example_data_path: Path):
     return example_data_path / "mfusg_transport" / "Ex3_CLN_Conduit"
 
+
 @pytest.fixture
 def mfusg_transport_Ex4_Dual_Domain_model_path(example_data_path: Path):
     return example_data_path / "mfusg_transport" / "Ex4_Dual_Domain"
+
 
 @pytest.fixture
 def mfusg_transport_Ex5_Henry_model_path(example_data_path: Path):
     return example_data_path / "mfusg_transport" / "Ex5_Henry"
 
+
 @pytest.fixture
 def mfusg_transport_Ex6_Stallman_model_path(example_data_path: Path):
     return example_data_path / "mfusg_transport" / "Ex6_Stallman"
+
 
 @pytest.fixture
 def mfusg_transport_Ex7_Matrix_Diffusion_model_path(example_data_path: Path):
     return example_data_path / "mfusg_transport" / "Ex7_Matrix_Diffusion"
 
+
 @pytest.fixture
 def mfusg_transport_Ex8_Lake_model_path(example_data_path: Path):
     return example_data_path / "mfusg_transport" / "Ex8_Lake"
+
 
 @pytest.fixture
 def mfusg_transport_Ex9_PFAS_model_path(example_data_path: Path):
@@ -69,11 +93,8 @@ def test_usg_load_Ex1_1D(function_tmpdir, mfusg_transport_Ex1_1D_model_path):
 
     # Create the model
     m = MfUsg.load(
-        fname,
-        exe_name = "mfusg_gsi",
-        verbose=True,
-        model_ws=function_tmpdir,
-        check=True)
+        fname, exe_name="mfusg_gsi", verbose=True, model_ws=function_tmpdir, check=True
+    )
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading modflow dis package"
@@ -96,8 +117,11 @@ def test_usg_load_Ex1_1D(function_tmpdir, mfusg_transport_Ex1_1D_model_path):
     msg = "flopy failed on running BTN_Test1.nam"
     assert success, msg
 
+
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex2_Radial_adv(function_tmpdir, mfusg_transport_Ex2_Radial_2D_model_path):
+def test_usg_load_Ex2_Radial_adv(
+    function_tmpdir, mfusg_transport_Ex2_Radial_2D_model_path
+):
     print("testing mfusg transport model loading: Radial-adv.nam")
 
     fname = mfusg_transport_Ex2_Radial_2D_model_path / "Radial_adv.nam"
@@ -106,11 +130,8 @@ def test_usg_load_Ex2_Radial_adv(function_tmpdir, mfusg_transport_Ex2_Radial_2D_
 
     # Create the model
     m = MfUsg.load(
-        fname,
-        exe_name = "mfusg_gsi",
-        verbose=True, 
-        model_ws=function_tmpdir,
-        check=True)
+        fname, exe_name="mfusg_gsi", verbose=True, model_ws=function_tmpdir, check=True
+    )
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading modflow dis package"
@@ -132,8 +153,11 @@ def test_usg_load_Ex2_Radial_adv(function_tmpdir, mfusg_transport_Ex2_Radial_2D_
     success, buff = m.run_model()
     assert success
 
+
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex2_Radial_Disp(function_tmpdir, mfusg_transport_Ex2_Radial_2D_model_path):
+def test_usg_load_Ex2_Radial_Disp(
+    function_tmpdir, mfusg_transport_Ex2_Radial_2D_model_path
+):
     print("testing mfusg transport model loading: Radial-dis.nam")
 
     fname = mfusg_transport_Ex2_Radial_2D_model_path / "Radial_dis.nam"
@@ -142,11 +166,8 @@ def test_usg_load_Ex2_Radial_Disp(function_tmpdir, mfusg_transport_Ex2_Radial_2D
 
     # Create the model
     m = MfUsg.load(
-        fname,
-        exe_name = "mfusg_gsi",
-        verbose=True, 
-        model_ws=function_tmpdir,
-        check=True)
+        fname, exe_name="mfusg_gsi", verbose=True, model_ws=function_tmpdir, check=True
+    )
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading modflow dis package"
@@ -168,8 +189,11 @@ def test_usg_load_Ex2_Radial_Disp(function_tmpdir, mfusg_transport_Ex2_Radial_2D
     success, buff = m.run_model()
     assert success
 
+
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex3_CLN_Conduit(function_tmpdir, mfusg_transport_Ex3_CLN_Conduit_model_path):
+def test_usg_load_Ex3_CLN_Conduit(
+    function_tmpdir, mfusg_transport_Ex3_CLN_Conduit_model_path
+):
     print("testing mfusg transport model loading: Conduit.nam")
 
     fname = mfusg_transport_Ex3_CLN_Conduit_model_path / "Conduit/Conduit.nam"
@@ -177,11 +201,8 @@ def test_usg_load_Ex3_CLN_Conduit(function_tmpdir, mfusg_transport_Ex3_CLN_Condu
 
     # Create the model
     m = MfUsg.load(
-        fname,
-        exe_name = "mfusg_gsi",
-        verbose=True, 
-        model_ws=function_tmpdir,
-        check=True)
+        fname, exe_name="mfusg_gsi", verbose=True, model_ws=function_tmpdir, check=True
+    )
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading modflow dis package"
@@ -208,20 +229,22 @@ def test_usg_load_Ex3_CLN_Conduit(function_tmpdir, mfusg_transport_Ex3_CLN_Condu
     msg = "flopy failed on running CLN Conduit.nam"
     assert success, msg
 
+
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex3_CLN_Conduit_Dispersion(function_tmpdir, mfusg_transport_Ex3_CLN_Conduit_model_path):
+def test_usg_load_Ex3_CLN_Conduit_Dispersion(
+    function_tmpdir, mfusg_transport_Ex3_CLN_Conduit_model_path
+):
     print("testing mfusg transport model loading: Conduit.nam")
 
-    fname = mfusg_transport_Ex3_CLN_Conduit_model_path / "Dispersion/Conduit_Dispersion.nam"
+    fname = (
+        mfusg_transport_Ex3_CLN_Conduit_model_path / "Dispersion/Conduit_Dispersion.nam"
+    )
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
     m = MfUsg.load(
-        fname,
-        exe_name = "mfusg_gsi",
-        verbose=True, 
-        model_ws=function_tmpdir,
-        check=True)
+        fname, exe_name="mfusg_gsi", verbose=True, model_ws=function_tmpdir, check=True
+    )
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading modflow dis package"
@@ -248,8 +271,11 @@ def test_usg_load_Ex3_CLN_Conduit_Dispersion(function_tmpdir, mfusg_transport_Ex
     msg = "flopy failed on running CLN Conduit_Dispersion.nam"
     assert success, msg
 
+
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex3_CLN_Conduit_Nest(function_tmpdir, mfusg_transport_Ex3_CLN_Conduit_model_path):
+def test_usg_load_Ex3_CLN_Conduit_Nest(
+    function_tmpdir, mfusg_transport_Ex3_CLN_Conduit_model_path
+):
     print("testing mfusg transport model loading: Conduit.nam")
 
     fname = mfusg_transport_Ex3_CLN_Conduit_model_path / "Nest/Conduit_Nest.nam"
@@ -257,11 +283,8 @@ def test_usg_load_Ex3_CLN_Conduit_Nest(function_tmpdir, mfusg_transport_Ex3_CLN_
 
     # Create the model
     m = MfUsg.load(
-        fname,
-        exe_name = "mfusg_gsi",
-        verbose=True, 
-        model_ws=function_tmpdir,
-        check=True)
+        fname, exe_name="mfusg_gsi", verbose=True, model_ws=function_tmpdir, check=True
+    )
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg dis package"
@@ -288,8 +311,11 @@ def test_usg_load_Ex3_CLN_Conduit_Nest(function_tmpdir, mfusg_transport_Ex3_CLN_
     msg = "flopy failed on running CLN Conduit_Nest.nam"
     assert success, msg
 
+
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex4_Dual_Domain(function_tmpdir, mfusg_transport_Ex4_Dual_Domain_model_path):
+def test_usg_load_Ex4_Dual_Domain(
+    function_tmpdir, mfusg_transport_Ex4_Dual_Domain_model_path
+):
     print("testing mfusg transport model loading: Conduit.nam")
 
     fname = mfusg_transport_Ex4_Dual_Domain_model_path / "DualDomain.nam"
@@ -297,11 +323,8 @@ def test_usg_load_Ex4_Dual_Domain(function_tmpdir, mfusg_transport_Ex4_Dual_Doma
 
     # Create the model
     m = MfUsg.load(
-        fname,
-        exe_name = "mfusg_gsi",
-        verbose=True, 
-        model_ws=function_tmpdir,
-        check=True)
+        fname, exe_name="mfusg_gsi", verbose=True, model_ws=function_tmpdir, check=True
+    )
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading modflow dis package"
@@ -328,6 +351,7 @@ def test_usg_load_Ex4_Dual_Domain(function_tmpdir, mfusg_transport_Ex4_Dual_Doma
     msg = "flopy failed on running DualDomain.nam"
     assert success, msg
 
+
 @requires_exe("mfusg_gsi")
 def test_usg_load_Ex5_Henry(function_tmpdir, mfusg_transport_Ex5_Henry_model_path):
     print("testing mfusg transport model loading: Conduit.nam")
@@ -337,11 +361,8 @@ def test_usg_load_Ex5_Henry(function_tmpdir, mfusg_transport_Ex5_Henry_model_pat
 
     # Create the model
     m = MfUsg.load(
-        fname,
-        exe_name = "mfusg_gsi",
-        verbose=True, 
-        model_ws=function_tmpdir,
-        check=True)
+        fname, exe_name="mfusg_gsi", verbose=True, model_ws=function_tmpdir, check=True
+    )
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
@@ -370,8 +391,11 @@ def test_usg_load_Ex5_Henry(function_tmpdir, mfusg_transport_Ex5_Henry_model_pat
     msg = "flopy failed on running Henry.nam"
     assert success, msg
 
+
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex6_Stallman_Heat(function_tmpdir, mfusg_transport_Ex6_Stallman_model_path):
+def test_usg_load_Ex6_Stallman_Heat(
+    function_tmpdir, mfusg_transport_Ex6_Stallman_model_path
+):
     print("testing mfusg transport model loading: Stallman_Heat.nam")
 
     fname = mfusg_transport_Ex6_Stallman_model_path / "Heat/Stallman_Heat.nam"
@@ -379,11 +403,8 @@ def test_usg_load_Ex6_Stallman_Heat(function_tmpdir, mfusg_transport_Ex6_Stallma
 
     # Create the model
     m = MfUsg.load(
-        fname,
-        exe_name = "mfusg_gsi",
-        verbose=True, 
-        model_ws=function_tmpdir,
-        check=True)
+        fname, exe_name="mfusg_gsi", verbose=True, model_ws=function_tmpdir, check=True
+    )
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
@@ -408,8 +429,11 @@ def test_usg_load_Ex6_Stallman_Heat(function_tmpdir, mfusg_transport_Ex6_Stallma
     msg = "flopy failed on running Stallman_Heat.nam"
     assert success, msg
 
+
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex6_Stallman_Solute(function_tmpdir, mfusg_transport_Ex6_Stallman_model_path):
+def test_usg_load_Ex6_Stallman_Solute(
+    function_tmpdir, mfusg_transport_Ex6_Stallman_model_path
+):
     print("testing mfusg transport model loading: Stallman_Solute.nam")
 
     fname = mfusg_transport_Ex6_Stallman_model_path / "Solute/Stallman_Solute.nam"
@@ -417,11 +441,8 @@ def test_usg_load_Ex6_Stallman_Solute(function_tmpdir, mfusg_transport_Ex6_Stall
 
     # Create the model
     m = MfUsg.load(
-        fname,
-        exe_name = "mfusg_gsi",
-        verbose=True, 
-        model_ws=function_tmpdir,
-        check=True)
+        fname, exe_name="mfusg_gsi", verbose=True, model_ws=function_tmpdir, check=True
+    )
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
@@ -446,8 +467,11 @@ def test_usg_load_Ex6_Stallman_Solute(function_tmpdir, mfusg_transport_Ex6_Stall
     msg = "flopy failed on running Stallman_Solute.nam"
     assert success, msg
 
+
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex6_Stallman_Solute_Heat(function_tmpdir, mfusg_transport_Ex6_Stallman_model_path):
+def test_usg_load_Ex6_Stallman_Solute_Heat(
+    function_tmpdir, mfusg_transport_Ex6_Stallman_model_path
+):
     print("testing mfusg transport model loading: Stallman.nam")
 
     fname = mfusg_transport_Ex6_Stallman_model_path / "Solute_Heat/Stallman.nam"
@@ -455,11 +479,8 @@ def test_usg_load_Ex6_Stallman_Solute_Heat(function_tmpdir, mfusg_transport_Ex6_
 
     # Create the model
     m = MfUsg.load(
-        fname,
-        exe_name = "mfusg_gsi",
-        verbose=True, 
-        model_ws=function_tmpdir,
-        check=True)
+        fname, exe_name="mfusg_gsi", verbose=True, model_ws=function_tmpdir, check=True
+    )
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
@@ -484,20 +505,23 @@ def test_usg_load_Ex6_Stallman_Solute_Heat(function_tmpdir, mfusg_transport_Ex6_
     msg = "flopy failed on running Stallman.nam"
     assert success, msg
 
+
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex7_Matrix_Diffusion_DiscreteFracture(function_tmpdir, mfusg_transport_Ex7_Matrix_Diffusion_model_path):
+def test_usg_load_Ex7_Matrix_Diffusion_DiscreteFracture(
+    function_tmpdir, mfusg_transport_Ex7_Matrix_Diffusion_model_path
+):
     print("testing mfusg transport model loading: USG_discrete_fracture.nam")
 
-    fname = mfusg_transport_Ex7_Matrix_Diffusion_model_path / "DiscreteFracture/USG_discrete_fracture.nam"
+    fname = (
+        mfusg_transport_Ex7_Matrix_Diffusion_model_path
+        / "DiscreteFracture/USG_discrete_fracture.nam"
+    )
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
     m = MfUsg.load(
-        fname,
-        exe_name = "mfusg_gsi",
-        verbose=True, 
-        model_ws=function_tmpdir,
-        check=True)
+        fname, exe_name="mfusg_gsi", verbose=True, model_ws=function_tmpdir, check=True
+    )
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
@@ -524,20 +548,23 @@ def test_usg_load_Ex7_Matrix_Diffusion_DiscreteFracture(function_tmpdir, mfusg_t
     msg = "flopy failed on running USG_discrete_fracture.nam"
     assert success, msg
 
+
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex7_Matrix_Diffusion(function_tmpdir, mfusg_transport_Ex7_Matrix_Diffusion_model_path):
+def test_usg_load_Ex7_Matrix_Diffusion(
+    function_tmpdir, mfusg_transport_Ex7_Matrix_Diffusion_model_path
+):
     print("testing mfusg transport model loading: USG_Multispecies.nam")
 
-    fname = mfusg_transport_Ex7_Matrix_Diffusion_model_path / "Multispecies/USG_Multispecies.nam"
+    fname = (
+        mfusg_transport_Ex7_Matrix_Diffusion_model_path
+        / "Multispecies/USG_Multispecies.nam"
+    )
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
     m = MfUsg.load(
-        fname,
-        exe_name = "mfusg_gsi",
-        verbose=True, 
-        model_ws=function_tmpdir,
-        check=True)
+        fname, exe_name="mfusg_gsi", verbose=True, model_ws=function_tmpdir, check=True
+    )
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
@@ -564,20 +591,22 @@ def test_usg_load_Ex7_Matrix_Diffusion(function_tmpdir, mfusg_transport_Ex7_Matr
     msg = "flopy failed on running USG_Multispecies.nam"
     assert success, msg
 
+
 @requires_exe("mfusg_gsi")
-def test_usg_load_Ex7_SandTank(function_tmpdir, mfusg_transport_Ex7_Matrix_Diffusion_model_path):
+def test_usg_load_Ex7_SandTank(
+    function_tmpdir, mfusg_transport_Ex7_Matrix_Diffusion_model_path
+):
     print("testing mfusg transport model loading: usg_sand_tank.nam")
 
-    fname = mfusg_transport_Ex7_Matrix_Diffusion_model_path / "SandTank/usg_sand_tank.nam"
+    fname = (
+        mfusg_transport_Ex7_Matrix_Diffusion_model_path / "SandTank/usg_sand_tank.nam"
+    )
     assert os.path.isfile(fname), f"nam file not found {fname}"
 
     # Create the model
     m = MfUsg.load(
-        fname,
-        exe_name = "mfusg_gsi",
-        verbose=True, 
-        model_ws=function_tmpdir,
-        check=True)
+        fname, exe_name="mfusg_gsi", verbose=True, model_ws=function_tmpdir, check=True
+    )
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
@@ -606,6 +635,7 @@ def test_usg_load_Ex7_SandTank(function_tmpdir, mfusg_transport_Ex7_Matrix_Diffu
     msg = "flopy failed on running usg_sand_tank.nam"
     assert success, msg
 
+
 @requires_exe("mfusg_gsi")
 def test_usg_load_Ex8_Lake(function_tmpdir, mfusg_transport_Ex8_Lake_model_path):
     print("testing mfusg transport model loading: lak_usg_01.nam")
@@ -615,11 +645,8 @@ def test_usg_load_Ex8_Lake(function_tmpdir, mfusg_transport_Ex8_Lake_model_path)
 
     # Create the model
     m = MfUsg.load(
-        fname,
-        exe_name = "mfusg_gsi",
-        verbose=True, 
-        model_ws=function_tmpdir,
-        check=True)
+        fname, exe_name="mfusg_gsi", verbose=True, model_ws=function_tmpdir, check=True
+    )
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"
@@ -651,6 +678,7 @@ def test_usg_load_Ex8_Lake(function_tmpdir, mfusg_transport_Ex8_Lake_model_path)
     # msg = "flopy failed on running lak_usg_01.nam"
     # assert success, msg
 
+
 @requires_exe("mfusg_gsi")
 def test_usg_load_Ex9_PFAS(function_tmpdir, mfusg_transport_Ex9_PFAS_model_path):
     print("testing mfusg transport model loading: PFAS_C1.nam")
@@ -660,11 +688,8 @@ def test_usg_load_Ex9_PFAS(function_tmpdir, mfusg_transport_Ex9_PFAS_model_path)
 
     # Create the model
     m = MfUsg.load(
-        fname,
-        exe_name = "mfusg_gsi",
-        verbose=True, 
-        model_ws=function_tmpdir,
-        check=True)
+        fname, exe_name="mfusg_gsi", verbose=True, model_ws=function_tmpdir, check=True
+    )
 
     # assert disu, lpf, bas packages have been loaded
     msg = "flopy failed on loading mfusg disu package"

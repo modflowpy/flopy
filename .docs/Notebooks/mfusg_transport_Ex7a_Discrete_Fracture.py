@@ -48,6 +48,7 @@ from flopy.modflow import ModflowBas, ModflowChd, ModflowDis
 from flopy.plot import PlotCrossSection, PlotMapView
 from flopy.utils import HeadUFile
 from flopy.utils.gridgen import Gridgen
+
 # -
 
 # Matrix diffusion from a single fracture (Figure Ex 10) is used to demonstrate the MODFLOWUSG MDT package's ability to duplicate the semi-analytical solution method detailed in Falta and Wang (2017). This combination of an extremely small fracture in a much larger unfractured surface area for diffusion represents an extreme case for matrix diffusion. In this example, tritium flows through a 100 μm fracture with a Darcy velocity of 0.1 m/day at a constant concentration for 30 years (Falta and Wang, 2017; Sudicky and Frind, 1982).
