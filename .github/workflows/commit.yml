@@ -122,26 +122,19 @@ jobs:
         shell: bash -l {0}
     timeout-minutes: 60
     steps:
-
       - name: Checkout repo
         uses: actions/checkout@v4
-
-      - name: Setup Python ${{ matrix.python-version }}
-        uses: astral-sh/setup-uv@v6
         with:
-          cache-dependency-glob: "**/pyproject.toml"
-          python-version: ${{ matrix.python-version }}
+          path: flopy
 
-      - name: Install FloPy
-        run: uv sync --all-extras
+      - name: Checkout MODFLOW 6
+        uses: actions/checkout@v4
+        with:
+          repository: MODFLOW-ORG/modflow6
+          path: modflow6
 
       - name: Install Modflow-related executables
         uses: modflowpy/install-modflow-action@v1
-
-      - name: Install Modflow dev build executables
-        uses: modflowpy/install-modflow-action@v1
-        with:
-          repo: modflow6-nightly-build
 
       - name: Install triangle (macOS workaround)
         if: runner.os == 'macOS'
@@ -151,29 +144,57 @@ jobs:
           ostag: mac
           subset: triangle
 
-      - name: Update package classes
-        run: uv run python -m flopy.mf6.utils.generate_classes --ref develop
+      - name: Setup GNU Fortran
+        uses: fortran-lang/setup-fortran@v1
+        with:
+          compiler: gcc
+          version: 13
+
+      - name: Setup pixi
+        uses: prefix-dev/setup-pixi@v0.8.14
+        with:
+          pixi-version: v0.41.4
+          manifest-path: modflow6/pixi.toml
+
+      - name: Install dependencies
+        working-directory: modflow6
+        run: |
+          pixi run install
+          pixi run pip install coverage pytest-cov netcdf4
+
+      - name: Install FloPy
+        working-directory: flopy
+        run: |
+          pixi run --manifest-path=../modflow6/pixi.toml pip install --no-deps -e .
+          pixi run --manifest-path=../modflow6/pixi.toml python -m flopy.mf6.utils.generate_classes --dfnpath ../modflow6/doc/mf6io/mf6ivar/dfn
+
+      - name: Build MF6
+        working-directory: modflow6
+        run: |
+          pixi run meson setup builddir --buildtype=debugoptimized --prefix=$(pwd) --libdir=bin
+          pixi run meson install -C builddir
+          pixi run meson test --verbose --no-rebuild -C builddir
 
       - name: Run tests
-        working-directory: autotest
+        working-directory: flopy/autotest
         run: |
-          uv run pytest -v -m="not example" -n=auto --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed --dist loadfile
+          pixi run --manifest-path=../../modflow6/pixi.toml pytest -v -m="not example" -n=auto --cov=flopy --cov-append --cov-report=xml --durations=0 --keep-failed=.failed --dist loadfile
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Report coverage
-        working-directory: autotest
-        run: uv run coverage report
+        working-directory: flopy/autotest
+        run: pixi run --manifest-path=../../modflow6/pixi.toml coverage report
 
       - name: Upload failed test outputs
         uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: failed-${{ matrix.os }}-${{ matrix.python-version }}
-          path: autotest/.failed/**
+          path: flopy/autotest/.failed/**
 
       - name: Upload coverage
         if: github.repository_owner == 'modflowpy' && (github.event_name == 'push' || github.event_name == 'pull_request')
         uses: codecov/codecov-action@v5
         with:
-          files: autotest/coverage.xml
+          files: flopy/autotest/coverage.xml

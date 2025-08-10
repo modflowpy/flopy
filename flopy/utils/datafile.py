@@ -562,8 +562,10 @@ class LayerFile:
         data = self._get_data_array(totim1)
         if mflay is None:
             return data
+        elif isinstance(data, list):  # unstructured model, list form
+            return data[mflay]
         else:
-            return data[mflay, :, :]
+            return data[mflay, :, :]  # structured model, np.array form
 
     def get_alldata(self, mflay=None, nodata=-9999):
         """

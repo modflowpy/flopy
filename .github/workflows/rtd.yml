@@ -71,6 +71,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ needs.set_options.outputs.ref }}
+          path: flopy
+
+      - name: Checkout MODFLOW 6
+        uses: actions/checkout@v4
+        with:
+          repository: MODFLOW-ORG/modflow6
+          path: modflow6
 
       - name: Output repo information
         run: |
@@ -82,7 +89,7 @@ jobs:
       - name: Setup Micromamba
         uses: mamba-org/setup-micromamba@v1
         with:
-          environment-file: etc/environment.yml
+          environment-file: flopy/etc/environment.yml
           cache-environment: true
           cache-downloads: true
           create-args: >-
@@ -92,9 +99,11 @@ jobs:
             powershell
 
       - name: Install Python dependencies
+        working-directory: flopy
         run: |
           pip install --upgrade pip
           pip install .
+          pip install meson ninja
       
       - name: Workaround OpenGL issue on Linux
         if: runner.os == 'Linux'
@@ -109,23 +118,9 @@ jobs:
           echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true | sudo debconf-set-selections
           sudo apt-get install ttf-mscorefonts-installer fonts-liberation
           sudo rm -rf ~/.cache/matplotlib
-      
-      - name: Install OpenGL on Windows
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          Set-StrictMode -Version Latest
-          $ErrorActionPreference = "Stop"
-          $PSDefaultParameterValues['*:ErrorAction']='Stop'
-          powershell .github/install_opengl.ps1
 
       - name: Install Modflow-related executables
         uses: modflowpy/install-modflow-action@v1
-
-      - name: Install Modflow dev build executables
-        uses: modflowpy/install-modflow-action@v1
-        with:
-          repo: modflow6-nightly-build
 
       - name: Install triangle (macOS workaround)
         if: runner.os == 'macOS'
@@ -135,15 +130,26 @@ jobs:
           ostag: mac
           subset: triangle
 
-      - name: Run tutorial and example notebooks
-        working-directory: autotest
+      - name: Setup GNU Fortran
+        uses: fortran-lang/setup-fortran@v1
+        with:
+          compiler: gcc
+          version: 13
+
+      - name: Set up headless display
+        uses: pyvista/setup-headless-display-action@v4
+
+      - name: Build MODFLOW 6
+        working-directory: modflow6
         run: |
-          filters=""
-          if [[ ${{ runner.os }} == "Windows" ]]; then
-            # TODO figure out VTK error: GLSL 1.50 is not supported. Supported versions are: 1.10, 1.20, 1.30, and 1.00 ES
-            filters="not vtk_pathlines"
-          fi
-          pytest -v -n auto test_example_notebooks.py -k "$filters"
+          meson setup builddir --buildtype=debugoptimized --prefix=$(pwd) --libdir=bin
+          meson install -C builddir
+          meson test --verbose --no-rebuild -C builddir
+          echo "$(pwd)/bin" >> $GITHUB_PATH
+
+      - name: Run tutorial and example notebooks
+        working-directory: flopy/autotest
+        run: pytest -v -n auto test_example_notebooks.py
 
       - name: Upload notebooks artifact for ReadtheDocs
         if: |
@@ -156,7 +162,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: notebooks-for-${{ needs.set_options.outputs.sha }}
-          path: .docs/Notebooks/*.ipynb
+          path: flopy/.docs/Notebooks/*.ipynb
 
   # trigger rtd if previous job was successful
   rtd:

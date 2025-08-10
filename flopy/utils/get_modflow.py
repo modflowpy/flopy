@@ -369,13 +369,17 @@ def run_main(
     exe_suffix, lib_suffix = get_suffixes(ostag)
 
     # select bindir if path not provided
-    if bindir.startswith(":"):
-        bindir = select_bindir(
-            bindir, previous=prev_bindir, quiet=quiet, is_cli=_is_cli
-        )
-    elif not isinstance(bindir, (str, Path)):
+    if isinstance(bindir, str):
+        if bindir.startswith(":"):
+            bindir = select_bindir(
+                bindir, previous=prev_bindir, quiet=quiet, is_cli=_is_cli
+            )  # returns resolved Path
+        else:
+            bindir = Path(bindir).resolve()
+    elif isinstance(bindir, Path):
+        bindir = bindir.resolve()
+    else:
         raise ValueError("Invalid bindir option (expected string or Path)")
-    bindir = Path(bindir).resolve()
 
     # make sure bindir exists
     if bindir == flopy_bin:

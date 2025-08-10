@@ -311,6 +311,19 @@ def test_headu_file_data(function_tmpdir, example_data_path):
         t1 = np.array([d.min(), d.max()])
         assert np.allclose(t1, minmaxtrue[i])
 
+    # try get_data(mflay=k) mode, across all output times
+    kstpkper = headobj.get_kstpkper()
+    hds = headobj.get_alldata(mflay=1)  # returns a list for all times
+    assert len(hds) == len(headobj.get_kstpkper())
+    assert np.all([isinstance(h, np.ndarray) for h in hds])
+
+    # try get_data(mflay=k) mode, for a given output time
+    for k in range(headobj.nlay):
+        hds = headobj.get_data(
+            mflay=k, kstpkper=kstpkper[-1]
+        )  # returns a numpy ndarray
+        assert isinstance(hds, np.ndarray)
+
 
 @pytest.mark.slow
 def test_headufile_get_ts(example_data_path):

@@ -8,6 +8,8 @@ MODFLOW Guide
 
 """
 
+import pathlib as pl
+
 import numpy as np
 from numpy.lib.recfunctions import stack_arrays
 
@@ -195,17 +197,36 @@ class ModflowHfb(Package):
         for option in self.options:
             f_hfb.write(f"  {option}")
         f_hfb.write("\n")
+
+        openclose = False
+        if self.parent.external_path is not None:
+            openclose = True
+            fpth = pl.Path(self.parent.external_path) / "hfb.ref"
+            f_hfb.write(f"OPEN/CLOSE {fpth}\n")
+            f = open(fpth, "w")
+        else:
+            f = f_hfb
+
         for a in self.hfb_data:
+            line = ""
             if structured:
-                f_hfb.write(
-                    "{:10d}{:10d}{:10d}{:10d}{:10d}{:13.6g}\n".format(
-                        a[0] + 1, a[1] + 1, a[2] + 1, a[3] + 1, a[4] + 1, a[5]
-                    )
-                )
+                for ipos, v in enumerate(a):
+                    if ipos < 5:
+                        line += f"{v + 1:10d}"
+                    else:
+                        line += f"{v:13.6g}\n"
             else:
-                f_hfb.write("{:10d}{:10d}{:13.6g}\n".format(a[0] + 1, a[1] + 1, a[2]))
+                for ipos, v in enumerate(a):
+                    if ipos < 2:
+                        line += f"{v + 1:10d}"
+                    else:
+                        line += f"{v:13.6g}\n"
+            f.write(line)
         f_hfb.write(f"{self.nacthfb:10d}")
         f_hfb.close()
+
+        if openclose:
+            f.close()
 
     @staticmethod
     def get_empty(ncells=0, aux_names=None, structured=True):
@@ -331,16 +352,25 @@ class ModflowHfb(Package):
             )
         # data set 4
         bnd_output = None
+        openclose = False
         if nhfbnp > 0:
             specified = ModflowHfb.get_empty(nhfbnp, structured=structured)
+            ipos = f.tell()
+            line = f.readline()
+            if "open/close" in line.lower():
+                openclose = True
+                fname = line.split()[1]
+                ff = open(pl.Path(model.model_ws) / fname, "r")
+            else:
+                f.seek(ipos)
+                ff = f
             for ibnd in range(nhfbnp):
-                line = f.readline()
-                if "open/close" in line.lower():
-                    raise NotImplementedError(
-                        "load() method does not support 'open/close'"
-                    )
+                line = ff.readline()
                 t = line.strip().split()
                 specified[ibnd] = tuple(t[: len(specified.dtype.names)])
+
+            if openclose:
+                ff.close()
 
             # convert indices to zero-based
             if structured:

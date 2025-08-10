@@ -910,14 +910,42 @@ def mflist_export(f: Union[str, os.PathLike, NetCdf], mfl, **kwargs):
                 ra = mfl[kper]
                 verts = np.array(modelgrid.get_cell_vertices(ra.i, ra.j))
             elif df is not None:
-                row_index_name = "i" if "i" in df.columns else "cellid_row"
-                col_index_name = "j" if "j" in df.columns else "cellid_column"
-                verts = np.array(
-                    [
-                        modelgrid.get_cell_vertices(i, df[col_index_name].values[ix])
-                        for ix, i in enumerate(df[row_index_name].values)
-                    ]
-                )
+                if modelgrid.grid_type == "unstructured":
+                    node_index_name = (
+                        "cellid_node" if "cellid_node" in df.columns else "node"
+                    )
+                    verts = np.array(
+                        [
+                            modelgrid.get_cell_vertices(node)
+                            for node in df[node_index_name].values
+                        ]
+                    )
+                elif modelgrid.grid_type == "vertex":
+                    layer_index_name = (
+                        "cellid_layer" if "cellid_layer" in df.columns else "layer"
+                    )
+                    cell_index_name = (
+                        "cellid_cell" if "cellid_cell" in df.columns else "cell"
+                    )
+                    verts = np.array(
+                        [
+                            modelgrid.get_cell_vertices(layer * modelgrid.ncpl + cell)
+                            for layer, cell in zip(
+                                df[layer_index_name].values, df[cell_index_name].values
+                            )
+                        ]
+                    )
+                else:
+                    row_index_name = "i" if "i" in df.columns else "cellid_row"
+                    col_index_name = "j" if "j" in df.columns else "cellid_column"
+                    verts = np.array(
+                        [
+                            modelgrid.get_cell_vertices(
+                                i, df[col_index_name].values[ix]
+                            )
+                            for ix, i in enumerate(df[row_index_name].values)
+                        ]
+                    )
                 ra = df.to_records(index=False)
             crs = kwargs.get("crs", None)
             prjfile = kwargs.get("prjfile", None)

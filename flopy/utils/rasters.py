@@ -530,7 +530,8 @@ class Raster:
             arr = arr.flatten()
 
             # step 3: use griddata interpolation to snap to grid
-            data = griddata((rxc, ryc), arr, (xc, yc), method=method)
+            rescale = method in ("linear", "nearest")
+            data = griddata((rxc, ryc), arr, (xc, yc), method=method, rescale=rescale)
 
         elif method in ("median", "mean", "min", "max", "mode"):
             # these methods are slow and could use speed ups
@@ -578,7 +579,9 @@ class Raster:
                 ryc = ryc[idx]
                 arr = arr[idx]
 
-            extrapolate = griddata((rxc, ryc), arr, (xc, yc), method="nearest")
+            extrapolate = griddata(
+                (rxc, ryc), arr, (xc, yc), method="nearest", rescale=True
+            )
             data = np.where(np.isnan(data), extrapolate, data)
 
         # step 4: return grid to user in shape provided

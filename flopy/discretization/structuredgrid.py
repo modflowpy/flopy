@@ -769,6 +769,8 @@ class StructuredGrid(Grid):
         """
         polys = [[list(zip(*i))] for i in zip(*self.cross_section_vertices)]
         gdf = super().geo_dataframe(polys)
+        gdf["row"] = sorted(list(range(1, self.nrow + 1)) * self.ncol)
+        gdf["col"] = list(range(1, self.ncol + 1)) * self.nrow
         return gdf
 
     def convert_grid(self, factor):
