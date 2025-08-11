@@ -1311,7 +1311,7 @@ class BaseModel(ModelInterface):
                     fpth = ext_file
                 ao = os.path.abspath(os.path.dirname(fpth))
                 ep = os.path.abspath(pth)
-                relp = os.path.relpath(ao, ep)
+                relp = flopy_io.relpath_safe(ao, ep)
                 new_ext_file = os.path.join(relp, os.path.basename(ext_file))
             new_ext_fnames.append(new_ext_file)
         self.external_fnames = new_ext_fnames
