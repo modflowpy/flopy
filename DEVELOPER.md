@@ -223,8 +223,8 @@ All tutorials and examples should include a header with the following format:
 Contents above the `metadata` attribute can be auto-generated with `jupytext` by first-converting an example script to a notebook, and then back to a script (i.e. a round-trip conversion). For instance:
 
 ```sh
-jupytext --from py --to ipynb .docs/Notebooks/your_example.py
-jupytext --from ipynb --to py .docs/Notebooks/your_example.ipynb
+jupytext --from py --to ipynb --set-formats ipynb,py:light .docs/Notebooks/your_example.py
+jupytext --from ipynb --to py --set-formats ipynb,py:light .docs/Notebooks/your_example.ipynb
 ```
 
 The `metadata` attribute should be filled by the example developer, and should contain at minimum:

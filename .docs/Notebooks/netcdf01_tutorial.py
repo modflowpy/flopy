@@ -1,3 +1,39 @@
+# ---
+# jupyter:
+#   jupytext:
+#     cell_metadata_filter: -all
+#     formats: ipynb,py:light
+#     text_representation:
+#       extension: .py
+#       format_name: light
+#       format_version: '1.5'
+#       jupytext_version: 1.17.2
+#   kernelspec:
+#     display_name: Python 3
+#     language: python
+#     name: python3
+#   metadata:
+#     section: mf6
+# ---
+
+# # MODFLOW 6: Generate MODFLOW 6 NetCDF input from existing FloPy sim
+#
+# ## NetCDF tutorial 1: MODFLOW 6 structured input file
+#
+# This tutorial demonstrates how to generate a MODFLOW 6 NetCDF file from
+# an existing FloPy simulation. In the tutorial, candidate array data is
+# added to an xarray dataset and annotated so that the generated NetCDF
+# file can be read by MODFLOW 6 as model input.
+#
+# This tutorial generates a structured NetCDF variant - for more information
+# on supported MODFLOW 6 NetCDF formats see:
+# [MODFLOW NetCDF Format](https://github.com/MODFLOW-ORG/modflow6/wiki/MODFLOW-NetCDF-Format).
+#
+# Note that NetCDF is only supported by the Extended version of MODFLOW 6.
+# A nightly windows build of Extended MODFLOW 6 is available from
+# [nightly build](https://github.com/MODFLOW-ORG/modflow6-nightly-build).
+
+# package import
 import sys
 from pathlib import Path
 from pprint import pformat, pprint
@@ -11,11 +47,29 @@ import flopy
 print(sys.version)
 print(f"flopy version: {flopy.__version__}")
 
+# ## Define DNODATA constant
+#
+# DNODATA is an important constant for MODFLOW 6 timeseries grid input
+# data. It signifies that the cell has no data defined for the time step
+# in question. These cell values are discared and have no impact on the
+# simulation.
+
+# DNODATA constant
 DNODATA = 3.0e30
 
+# ## Define ASCII input baseline simulation
+#
+# For the purposes of this tutorial, the specifics of this simulation
+# other than it is a candidate for NetCDF input are not a focus. It
+# is a NetCDF input candidate because it defines a candidate model type
+# (GWF6) with packages that support NetCDF input parameters.
+#
+# A NetCDF dataset will be created from array data in the DIS, NPF and
+# GHBG packages. Data will be copied from the package objects into dataset
+# arrays.
 
-# A FloPy simulation ASCII sim that will be updated
-# use netcdf inputs
+
+# A FloPy ASCII base simulation that will be updated use netcdf inputs
 def create_sim(ws):
     name = "uzf01"
     perlen = [500.0]
@@ -187,8 +241,16 @@ def create_sim(ws):
     return sim
 
 
-# A subroutine that can update an xarray dataset
-# with package netcdf information stored in a dict
+# ## Create helper function to update dataset
+#
+# This function updates an Xarray dataset to add variables described
+# in a FloPy provided dictionary.
+#
+# A dimension map variable relates FloPy and NetCDF dimensions names.
+
+
+# A subroutine that can update an xarray dataset with package
+# netcdf information stored in a dict
 def add_netcdf_vars(dataset, nc_info, dimmap):
     def _data_shape(shape):
         dims_l = []
@@ -223,13 +285,24 @@ success, buff = sim.run_simulation(silent=True, report=True)
 assert success, pformat(buff)
 
 # create directory for netcdf sim
+# set model name file nc_filerecord attribute to export name
 sim.set_sim_path(workspace / "netcdf")
 gwf = sim.get_model("uzf01")
 gwf.name_file.nc_filerecord = "uzf01.structured.nc"
 sim.write_simulation()
 
-# create the netcdf dataset
+# create the dataset
 ds = xr.Dataset()
+
+# ## Access model NetCDF attributes
+#
+# Access model scoped NetCDF details by storing the dictionary
+# returned from netcdf_info(). In particular, we need to set dataset
+# scoped attributes that are stored in the model netcdf info dict.
+#
+# First, retrieve and store the netcdf info dictionary and display
+# its contents. Then, in the following step, update the dataset with
+# the model scoped attributes defined in the dictionary.
 
 # get model netcdf info
 nc_info = gwf.netcdf_info()
@@ -239,7 +312,7 @@ pprint(nc_info)
 for a in nc_info["attrs"]:
     ds.attrs[a] = nc_info["attrs"][a]
 
-# set dimensional info
+# define dimensional info
 dis = gwf.modelgrid
 xoff = dis.xoffset
 yoff = dis.yoffset
@@ -253,11 +326,22 @@ nrow = dis.nrow
 ncol = dis.ncol
 dimmap = {"time": nstp, "z": nlay, "y": nrow, "x": ncol}
 
-# create coordinate vars
+# create dataset coordinate vars
 var_d = {"time": (["time"], time), "z": (["z"], z), "y": (["y"], y), "x": (["x"], x)}
 ds = ds.assign(var_d)
 
-# dis
+# ## Access package NetCDF attributes
+#
+# Access package scoped NetCDF details by storing the dictionary returned
+# from netcdf_info(). We need to set package variable attributes that are
+# stored in the package netcdf info dict, but we also need other information
+# that is relevant to creating the variables themselves.
+#
+# The contents of the info dictionary are shown and then, in the following
+# step, the dictionary and the dataset are passed to a helper routine that
+# create the intended array variables.
+
+# get dis package netcdf info
 dis = gwf.get_package("dis")
 nc_info = dis.netcdf_info()
 pprint(nc_info)
@@ -265,14 +349,30 @@ pprint(nc_info)
 # create dis dataset variables
 ds = add_netcdf_vars(ds, nc_info, dimmap)
 
-# update data
+# ## Update array data
+#
+# We have created dataset array variables for the package but they do not yet
+# define the expected input data for MODFLOW 6. We will take advantage of the
+# existing simulation objects and update the dataset.
+
+# update dataset from dis arrays
 ds["dis_delr"].values = dis.delr.get_data()
 ds["dis_delc"].values = dis.delc.get_data()
 ds["dis_top"].values = dis.top.get_data()
 ds["dis_botm"].values = dis.botm.get_data()
 ds["dis_idomain"].values = dis.idomain.get_data()
 
-# update dis to read from netcdf
+# ## Update MODFLOW 6 package input file
+#
+# MODFLOW 6 input data for the package is now in the dataset. Once the NetCDF
+# file is generated, we need to configure MODFLOW 6 so that it looks to that
+# file for the package array input. The ASCII will no longer defined the arrays-
+# instead the array names will be followed by the NETCDF keyword.
+#
+# We will simply overwrite the entire MODFLOW 6 DIS package input file with the
+# following code block.
+
+# rewrite mf6 dis input to read from netcdf
 with open(workspace / "netcdf" / "uzf01.dis", "w") as f:
     f.write("BEGIN options\n")
     f.write("  crs  EPSG:26916\n")
@@ -290,7 +390,11 @@ with open(workspace / "netcdf" / "uzf01.dis", "w") as f:
     f.write("  idomain NETCDF\n")
     f.write("END griddata\n")
 
-# npf
+# ## Update MODFLOW 6 package input file
+#
+# Follow the same process as above for the NPF package.
+
+# get npf package netcdf info
 npf = gwf.get_package("npf")
 nc_info = npf.netcdf_info()
 pprint(nc_info)
@@ -298,11 +402,11 @@ pprint(nc_info)
 # create npf dataset variables
 ds = add_netcdf_vars(ds, nc_info, dimmap)
 
-# update data
+# update dataset from npf arrays
 ds["npf_icelltype"].values = npf.icelltype.get_data()
 ds["npf_k"].values = npf.k.get_data()
 
-# update npf to read from netcdf
+# rewrite mf6 npf input to read from netcdf
 with open(workspace / "netcdf" / "uzf01.npf", "w") as f:
     f.write("BEGIN options\n")
     f.write("END options\n\n")
@@ -310,6 +414,14 @@ with open(workspace / "netcdf" / "uzf01.npf", "w") as f:
     f.write("  icelltype NETCDF\n")
     f.write("  k NETCDF\n")
     f.write("END griddata\n")
+
+# ## Update MODFLOW 6 package input file
+#
+# Follow the same process as above for the GHBG package. The difference is
+# that this is PERIOD input and therefore stored as timeseries data in the
+# NetCDF file. As NETCDF timeseries and defined in terms of total number of
+# simulation steps, care must be taken in the translation of FloPy period
+# data to the timeseries.
 
 # get ghbg package netcdf info
 ghbg = gwf.get_package("ghbg_0")
@@ -320,11 +432,13 @@ pprint(nc_info)
 ds = add_netcdf_vars(ds, nc_info, dimmap)
 
 # update bhead netcdf array from flopy perioddata
+# timeseries step index is first of stress period
 for p in ghbg.bhead.get_data():
     istp = sum(gwf.modeltime.nstp[0:p])
     ds["ghbg_0_bhead"].values[istp] = ghbg.bhead.get_data()[p]
 
 # update cond netcdf array from flopy perioddata
+# timeseries step index is first of stress period
 for p in ghbg.cond.get_data():
     istp = sum(gwf.modeltime.nstp[0:p])
     ds["ghbg_0_cond"].values[istp] = ghbg.cond.get_data()[p]
@@ -332,12 +446,12 @@ for p in ghbg.cond.get_data():
 # show the dataset
 print(ds)
 
-# write the netcdf
+# write dataset to netcdf
 ds.to_netcdf(
     workspace / "netcdf/uzf01.structured.nc", format="NETCDF4", engine="netcdf4"
 )
 
-# update ghbg to read from netcdf
+# rewrite mf6 ghbg input to read from netcdf
 with open(workspace / "netcdf/uzf01.ghbg", "w") as f:
     f.write("BEGIN options\n")
     f.write("  READARRAYGRID\n")
