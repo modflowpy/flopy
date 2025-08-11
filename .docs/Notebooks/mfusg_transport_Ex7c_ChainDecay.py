@@ -273,7 +273,7 @@ comps = ["PCE", "TCE", "cis-DCE", "VC"]
 fig = plt.figure(figsize=(8, 8), dpi=150)
 for idx, comp in enumerate(comps):
     ax = fig.add_subplot(2, 2, idx + 1)
-    concobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text=f"conc0{idx+1}")
+    concobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text=f"conc0{idx + 1}")
     simconc = concobj.get_data()
     pmv = PlotMapView(mf, layer=ilay, ax=ax)
     pmv.plot_array(simconc, cmap="jet")
@@ -289,7 +289,7 @@ comps = ["PCE", "TCE", "cis-DCE", "VC"]
 fig = plt.figure(figsize=(8, 8), dpi=150)
 for idx, comp in enumerate(comps):
     ax = fig.add_subplot(2, 2, idx + 1)
-    concobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text=f"conc0{idx+1}")
+    concobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text=f"conc0{idx + 1}")
     simconc = concobj.get_data()
     pxs = PlotCrossSection(ms, line={"row": irow}, ax=ax)
     pxs.plot_array(simconc, cmap="jet")

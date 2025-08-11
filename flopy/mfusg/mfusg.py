@@ -67,7 +67,6 @@ class MfUsg(Modflow):
         verbose=False,
         **kwargs,
     ):
-
         super().__init__(
             modelname=modelname,
             namefile_ext=namefile_ext,

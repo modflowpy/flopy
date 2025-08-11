@@ -386,9 +386,7 @@ class MfUsgEvt(Package):
             if insurf >= 0:
                 if model.verbose:
                     print(f"   loading surf stress period {iper + 1:3d}...")
-                t = Util2d.load(f, model, u2d_shape, np.float32,
-                                "surf", ext_unit_dict
-                                )
+                t = Util2d.load(f, model, u2d_shape, np.float32, "surf", ext_unit_dict)
                 current_surf = t
             surf[iper] = current_surf
 

@@ -181,10 +181,10 @@ ddf = MfUsgDdf(mf)
 # +
 outconc = 35.0
 lrcsc = []
-for ilay in range(nlay) :
-    outnode = mf.modelgrid.get_layer_node_range(ilay)[1]-1
-    lrcsc.append([outnode,1,outconc])
-pcb = MfUsgPcb(mf,stress_period_data=lrcsc)
+for ilay in range(nlay):
+    outnode = mf.modelgrid.get_layer_node_range(ilay)[1] - 1
+    lrcsc.append([outnode, 1, outconc])
+pcb = MfUsgPcb(mf, stress_period_data=lrcsc)
 # -
 # +
 oc = MfUsgOc(
