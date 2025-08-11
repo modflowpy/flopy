@@ -9,7 +9,7 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.17.2
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 #   metadata:
@@ -47,11 +47,11 @@ import flopy
 print(sys.version)
 print(f"flopy version: {flopy.__version__}")
 
-# ## Define DNODATA constant
+# ## Define `DNODATA` constant
 #
-# DNODATA is an important constant for MODFLOW 6 timeseries grid input
+# `DNODATA` is an important constant for MODFLOW 6 timeseries grid input
 # data. It signifies that the cell has no data defined for the time step
-# in question. These cell values are discared and have no impact on the
+# in question. These cell values are discarded and have no impact on the
 # simulation.
 
 # DNODATA constant
@@ -62,10 +62,10 @@ DNODATA = 3.0e30
 # For the purposes of this tutorial, the specifics of this simulation
 # other than it is a candidate for NetCDF input are not a focus. It
 # is a NetCDF input candidate because it defines a candidate model type
-# (GWF6) with packages that support NetCDF input parameters.
+# (`GWF6`) with packages that support NetCDF input parameters.
 #
-# A NetCDF dataset will be created from array data in the DIS, NPF and
-# GHBG packages. Data will be copied from the package objects into dataset
+# A NetCDF dataset will be created from array data in the `DIS`, `NPF` and
+# `GHBG` packages. Data will be copied from the package objects into dataset
 # arrays.
 
 
@@ -284,12 +284,22 @@ sim.write_simulation()
 success, buff = sim.run_simulation(silent=True, report=True)
 assert success, pformat(buff)
 
+# ## Create NetCDF based simulation
+#
+# Reset the simulation path and set the GWF name file `nc_filerecord`
+# attribute to the name of the intended input NetCDF file. Display
+# the resultant name file changes.
+
 # create directory for netcdf sim
 # set model name file nc_filerecord attribute to export name
 sim.set_sim_path(workspace / "netcdf")
 gwf = sim.get_model("uzf01")
 gwf.name_file.nc_filerecord = "uzf01.structured.nc"
 sim.write_simulation()
+with open(workspace / "netcdf" / "uzf01.nam", "r") as fh:
+    print(fh.read())
+
+# ## Create dataset
 
 # create the dataset
 ds = xr.Dataset()
@@ -297,7 +307,7 @@ ds = xr.Dataset()
 # ## Access model NetCDF attributes
 #
 # Access model scoped NetCDF details by storing the dictionary
-# returned from netcdf_info(). In particular, we need to set dataset
+# returned from `netcdf_info()`. In particular, we need to set dataset
 # scoped attributes that are stored in the model netcdf info dict.
 #
 # First, retrieve and store the netcdf info dictionary and display
@@ -311,6 +321,8 @@ pprint(nc_info)
 # update dataset with required attributes
 for a in nc_info["attrs"]:
     ds.attrs[a] = nc_info["attrs"][a]
+
+# ## Define dimensions relevant to NetCDF input file
 
 # define dimensional info
 dis = gwf.modelgrid
@@ -326,6 +338,8 @@ nrow = dis.nrow
 ncol = dis.ncol
 dimmap = {"time": nstp, "z": nlay, "y": nrow, "x": ncol}
 
+# ## Create dataset dimensions
+
 # create dataset coordinate vars
 var_d = {"time": (["time"], time), "z": (["z"], z), "y": (["y"], y), "x": (["x"], x)}
 ds = ds.assign(var_d)
@@ -333,7 +347,7 @@ ds = ds.assign(var_d)
 # ## Access package NetCDF attributes
 #
 # Access package scoped NetCDF details by storing the dictionary returned
-# from netcdf_info(). We need to set package variable attributes that are
+# from `netcdf_info()`. We need to set package variable attributes that are
 # stored in the package netcdf info dict, but we also need other information
 # that is relevant to creating the variables themselves.
 #
@@ -369,7 +383,7 @@ ds["dis_idomain"].values = dis.idomain.get_data()
 # file for the package array input. The ASCII will no longer defined the arrays-
 # instead the array names will be followed by the NETCDF keyword.
 #
-# We will simply overwrite the entire MODFLOW 6 DIS package input file with the
+# We will simply overwrite the entire MODFLOW 6 `DIS` package input file with the
 # following code block.
 
 # rewrite mf6 dis input to read from netcdf
@@ -389,10 +403,13 @@ with open(workspace / "netcdf" / "uzf01.dis", "w") as f:
     f.write("  botm NETCDF\n")
     f.write("  idomain NETCDF\n")
     f.write("END griddata\n")
+with open(workspace / "netcdf" / "uzf01.dis", "r") as fh:
+    print(fh.read())
+
 
 # ## Update MODFLOW 6 package input file
 #
-# Follow the same process as above for the NPF package.
+# Follow the same process as above for the `NPF` package.
 
 # get npf package netcdf info
 npf = gwf.get_package("npf")
@@ -414,10 +431,12 @@ with open(workspace / "netcdf" / "uzf01.npf", "w") as f:
     f.write("  icelltype NETCDF\n")
     f.write("  k NETCDF\n")
     f.write("END griddata\n")
+with open(workspace / "netcdf" / "uzf01.npf", "r") as fh:
+    print(fh.read())
 
 # ## Update MODFLOW 6 package input file
 #
-# Follow the same process as above for the GHBG package. The difference is
+# Follow the same process as above for the `GHBG` package. The difference is
 # that this is PERIOD input and therefore stored as timeseries data in the
 # NetCDF file. As NETCDF timeseries and defined in terms of total number of
 # simulation steps, care must be taken in the translation of FloPy period
@@ -443,8 +462,12 @@ for p in ghbg.cond.get_data():
     istp = sum(gwf.modeltime.nstp[0:p])
     ds["ghbg_0_cond"].values[istp] = ghbg.cond.get_data()[p]
 
+# ## Display generated dataset
+
 # show the dataset
 print(ds)
+
+# ## Export generated dataset to NetCDF
 
 # write dataset to netcdf
 ds.to_netcdf(
@@ -463,8 +486,14 @@ with open(workspace / "netcdf/uzf01.ghbg", "w") as f:
     f.write("  bhead NETCDF\n")
     f.write("  cond NETCDF\n")
     f.write("END period 1\n")
+with open(workspace / "netcdf" / "uzf01.ghbg", "r") as fh:
+    print(fh.read())
 
-# TODO need extended modflow 6 to run this simulation
-# run the netcdf sim
+# ## Run MODFLOW 6 simulation with NetCDF input
+#
+# The simulation generated by this tutorial should be runnable by
+# Extended MODFLOW 6, available from the nightly-build repository
+# (linked above).
+
 # success, buff = sim.run_simulation(silent=True, report=True)
 # assert success, pformat(buff)
