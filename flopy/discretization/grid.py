@@ -1288,6 +1288,20 @@ class Grid:
         )
         return
 
+    def dataset(self, mesh=None):
+        """
+        Method to generate baseline Xarray dataset
+
+        Parameters
+        ----------
+        mesh
+
+        Returns
+        -------
+            Xarray dataset
+        """
+        raise NotImplementedError("dataset must be defined in the child class")
+
     # initialize grid from a grb file
     @classmethod
     def from_binary_grid_file(cls, file_path, verbose=False):

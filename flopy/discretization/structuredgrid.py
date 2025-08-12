@@ -1770,6 +1770,69 @@ class StructuredGrid(Grid):
         assert plotarray.shape == required_shape, msg
         return plotarray
 
+    def dataset(self, modeltime=None, mesh=None):
+        import xarray as xr
+
+        lenunits = {0: "m", 1: "ft", 2: "m", 3: "m"}
+
+        ds = xr.Dataset()
+
+        x = self.xoffset + self.xycenters[0]
+        y = self.yoffset + self.xycenters[1]
+        z = [float(x) for x in range(1, self.nlay + 1)]
+
+        # set coordinate var bounds
+        x_bnds = []
+        xv = self.xoffset + self.xyedges[0]
+        for idx, val in enumerate(xv):
+            if idx + 1 < len(xv):
+                bnd = []
+                bnd.append(xv[idx])
+                bnd.append(xv[idx + 1])
+                x_bnds.append(bnd)
+
+        y_bnds = []
+        yv = self.yoffset + self.xyedges[1]
+        for idx, val in enumerate(yv):
+            if idx + 1 < len(yv):
+                bnd = []
+                bnd.append(yv[idx + 1])
+                bnd.append(yv[idx])
+                y_bnds.append(bnd)
+
+        # create dataset coordinate vars
+        var_d = {
+            "time": (["time"], modeltime.totim),
+            "z": (["z"], z),
+            "y": (["y"], y),
+            "x": (["x"], x),
+        }
+        ds = ds.assign(var_d)
+
+        # create bound vars
+        var_d = {"x_bnds": (["x", "bnd"], x_bnds), "y_bnds": (["y", "bnd"], y_bnds)}
+        ds = ds.assign(var_d)
+
+        ds["time"].attrs["calendar"] = "standard"
+        ds["time"].attrs["units"] = f"days since {modeltime.start_datetime}"
+        ds["time"].attrs["axis"] = "T"
+        ds["time"].attrs["standard_name"] = "time"
+        ds["time"].attrs["long_name"] = "time"
+        ds["z"].attrs["units"] = "layer"
+        ds["z"].attrs["long_name"] = "layer number"
+        ds["y"].attrs["units"] = lenunits[self.lenuni]
+        ds["y"].attrs["axis"] = "Y"
+        ds["y"].attrs["standard_name"] = "projection_y_coordinate"
+        ds["y"].attrs["long_name"] = "Northing"
+        ds["y"].attrs["bounds"] = "y_bnds"
+        ds["x"].attrs["units"] = lenunits[self.lenuni]
+        ds["x"].attrs["axis"] = "X"
+        ds["x"].attrs["standard_name"] = "projection_x_coordinate"
+        ds["x"].attrs["long_name"] = "Easting"
+        ds["x"].attrs["bounds"] = "x_bnds"
+
+        return ds
+
     def _set_structured_iverts(self):
         """
         Build a list of the vertices that define each model cell and the x, y

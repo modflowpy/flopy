@@ -62,7 +62,8 @@ DNODATA = 3.0e30
 # For the purposes of this tutorial, the specifics of this simulation
 # other than it is a candidate for NetCDF input are not a focus. It
 # is a NetCDF input candidate because it defines a candidate model type
-# (`GWF6`) with packages that support NetCDF input parameters.
+# (`GWF6`) with a structured discretization and packages that support
+# NetCDF input parameters.
 #
 # A NetCDF dataset will be created from array data in the `DIS`, `NPF` and
 # `GHBG` packages. Data will be copied from the package objects into dataset
@@ -274,9 +275,13 @@ def add_netcdf_vars(dataset, nc_info, dimmap):
     return dataset
 
 
+# ## Create simulation workspace
+
 # create temporary directories
 temp_dir = TemporaryDirectory()
 workspace = Path(temp_dir.name)
+
+# ## Write and run baseline simulation
 
 # run the non-netcdf simulation
 sim = create_sim(ws=workspace)
@@ -300,9 +305,14 @@ with open(workspace / "netcdf" / "uzf01.nam", "r") as fh:
     print(fh.read())
 
 # ## Create dataset
+#
+# Create the base xarray dataset from the modelgrid object. This
+# will add required dimensions and coordinate variables to the
+# dataset according to the grid specification. Modeltime is needed
+# to for timeseries support.
 
 # create the dataset
-ds = xr.Dataset()
+ds = gwf.modelgrid.dataset(modeltime=gwf.modeltime)
 
 # ## Access model NetCDF attributes
 #
@@ -322,27 +332,15 @@ pprint(nc_info)
 for a in nc_info["attrs"]:
     ds.attrs[a] = nc_info["attrs"][a]
 
-# ## Define dimensions relevant to NetCDF input file
+# ## Map dataset dimension names to values
 
 # define dimensional info
-dis = gwf.modelgrid
-xoff = dis.xoffset
-yoff = dis.yoffset
-x = xoff + dis.xycenters[0]
-y = yoff + dis.xycenters[1]
-z = [float(x) for x in range(1, dis.nlay + 1)]
-nstp = sum(gwf.modeltime.nstp)
-time = gwf.modeltime.tslen
-nlay = dis.nlay
-nrow = dis.nrow
-ncol = dis.ncol
-dimmap = {"time": nstp, "z": nlay, "y": nrow, "x": ncol}
-
-# ## Create dataset dimensions
-
-# create dataset coordinate vars
-var_d = {"time": (["time"], time), "z": (["z"], z), "y": (["y"], y), "x": (["x"], x)}
-ds = ds.assign(var_d)
+dimmap = {
+    "time": sum(gwf.modeltime.nstp),
+    "z": gwf.modelgrid.nlay,
+    "y": gwf.modelgrid.nrow,
+    "x": gwf.modelgrid.ncol,
+}
 
 # ## Access package NetCDF attributes
 #
@@ -405,7 +403,6 @@ with open(workspace / "netcdf" / "uzf01.dis", "w") as f:
     f.write("END griddata\n")
 with open(workspace / "netcdf" / "uzf01.dis", "r") as fh:
     print(fh.read())
-
 
 # ## Update MODFLOW 6 package input file
 #
