@@ -1876,6 +1876,8 @@ class StructuredGrid(Grid):
         ds["mesh_face_nodes"].attrs["_FillValue"] = FILLNA_INT32
         ds["mesh_face_nodes"].attrs["start_index"] = np.int32(1)
 
+        return ds
+
     def _structured_dataset(self, ds, modeltime=None):
         lenunits = {0: "m", 1: "ft", 2: "m", 3: "m"}
 
@@ -1932,6 +1934,8 @@ class StructuredGrid(Grid):
         ds["x"].attrs["standard_name"] = "projection_x_coordinate"
         ds["x"].attrs["long_name"] = "Easting"
         ds["x"].attrs["bounds"] = "x_bnds"
+
+        return ds
 
     def _set_structured_iverts(self):
         """
