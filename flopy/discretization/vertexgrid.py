@@ -607,7 +607,14 @@ class VertexGrid(Grid):
         FILLNA_DBL = 9.96920996838687e36
         lenunits = {0: "m", 1: "ft", 2: "m", 3: "m"}
 
+        if mesh is None or mesh.upper() != "LAYERED":
+            raise ValueError("Vextex grid only supports layered mesh datasets")
+
+        if modeltime is None:
+            raise ValueError("modeltime required for dataset timeseries")
+
         ds = xr.Dataset()
+        ds.attrs["modflow_grid"] = "VERTEX"
 
         # mesh container variable
         ds = ds.assign({"mesh": ([], np.int32(1))})

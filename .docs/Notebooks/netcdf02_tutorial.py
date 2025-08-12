@@ -66,7 +66,7 @@ DNODATA = 3.0e30
 # NetCDF input parameters.
 #
 # A NetCDF dataset will be created from array data in the `IC`, and
-# 'GHBG' packages. Data will be copied from the package objects into
+# `GHBG` packages. Data will be copied from the package objects into
 # dataset arrays.
 
 
@@ -278,10 +278,10 @@ def create_sim(ws):
 
 # ## Create helper function to update dataset
 #
-# This function updates an Xarray dataset to add variables described
+# This function updates an xarray dataset to add variables described
 # in a FloPy provided dictionary.
 #
-# A dimension map variable relates FloPy and NetCDF dimensions names.
+# The dimmap variable relates NetCDF dimension names to a value.
 
 
 # A subroutine that can update an xarray dataset with package
@@ -329,7 +329,7 @@ assert success, pformat(buff)
 
 # ## Create NetCDF based simulation
 #
-# Reset the simulation path and set the GWF name file `nc_filerecord`
+# Reset the simulation path and set the `GWF` name file `nc_filerecord`
 # attribute to the name of the intended input NetCDF file. Display
 # the resultant name file changes.
 
@@ -347,7 +347,7 @@ with open(workspace / "netcdf" / "uzf02.nam", "r") as fh:
 # Create the base xarray dataset from the modelgrid object. This
 # will add required dimensions and coordinate variables to the
 # dataset according to the grid specification. Modeltime is needed
-# to for timeseries support.
+# for timeseries support.
 
 # create the dataset
 ds = gwf.modelgrid.dataset(modeltime=gwf.modeltime, mesh="layered")
@@ -412,8 +412,8 @@ for l in range(gwf.modelgrid.nlay):
 #
 # MODFLOW 6 input data for the package is now in the dataset. Once the NetCDF
 # file is generated, we need to configure MODFLOW 6 so that it looks to that
-# file for the package array input. The ASCII will no longer defined the arrays-
-# instead the array names will be followed by the NETCDF keyword.
+# file for the package array input. The ASCII file will no longer defined the
+# arrays- instead the array names will be followed by the NETCDF keyword.
 #
 # We will simply overwrite the entire MODFLOW 6 `IC` package input file with the
 # following code block.
@@ -432,7 +432,7 @@ with open(workspace / "netcdf" / "uzf02.ic", "r") as fh:
 #
 # Follow the same process as above for the `GHBG` package. The difference is
 # that this is PERIOD input and therefore stored as timeseries data in the
-# NetCDF file. As NETCDF timeseries and defined in terms of total number of
+# NetCDF file. As NETCDF timeseries are defined in terms of total number of
 # simulation steps, care must be taken in the translation of FloPy period
 # data to the timeseries.
 
