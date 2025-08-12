@@ -12,6 +12,7 @@ from numpy.lib.recfunctions import append_fields, repack_fields
 from flopy.utils.particletrackfile import ParticleTrackFile
 
 from ..utils.flopy_io import loadtxt
+from ..utils.utl_import import import_optional_dependency
 
 
 class ModpathFile(ParticleTrackFile):
@@ -671,6 +672,61 @@ class EndpointFile(ModpathFile):
         inds = np.isin(raslice, dest_cells)
         return data[inds].copy().view(np.recarray)
 
+    def to_geo_dataframe(
+        self,
+        modelgrid,
+        data=None,
+        direction="ending",
+    ):
+        """
+        Create a geodataframe of particle starting / ending locations.
+
+        Parameters
+        ----------
+        modelgrid : flopy.discretization.grid instance
+            Used to scale and rotate Global x,y,z values in MODPATH Endpoint
+            file.
+        data : np.recarray
+            Record array of same form as that returned by EndpointFile.get_alldata.
+            (if none, EndpointFile.get_alldata() is exported).
+        direction : str
+            String defining if 'starting' or 'ending' particle locations should be
+            considered. (default is 'ending')
+        """
+        from ..utils import geometry
+        gpd = import_optional_dependency("geopandas")
+        shapely_geo = import_optional_dependency("shapely.geometry")
+        if data is None:
+            data = self.get_alldata()
+
+        if direction.lower() == "ending":
+            xcol, ycol, zcol = "x", "y", "z"
+        elif direction.lower() == "starting":
+            xcol, ycol, zcol = "x0", "y0", "z0"
+        else:
+            raise Exception(
+                'flopy.map.plot_endpoint direction must be "ending" or "starting".'
+            )
+        x, y = geometry.transform(
+            data[xcol],
+            data[ycol],
+            xoff=modelgrid.xoffset,
+            yoff=modelgrid.yoffset,
+            angrot_radians=modelgrid.angrot_radians,
+        )
+        z = data[zcol]
+
+        geoms = [shapely_geo.Point(p) for p in zip(z, y, z)]
+        gdf = gpd.GeoDataFrame(data, geometry=geoms, crs=modelgrid.crs)
+
+        # adjust to 1 based node numbers
+        for col in list(gdf):
+            if col in self.kijnames:
+                gdf[col] += 1
+
+        return gdf
+
+
     def write_shapefile(
         self,
         data=None,
@@ -715,44 +771,20 @@ class EndpointFile(ModpathFile):
                 - ``epsg`` (int): use ``crs`` instead.
 
         """
-        from ..discretization import StructuredGrid
-        from ..export.shapefile_utils import recarray2shp
-        from ..utils import geometry
-        from ..utils.geometry import Point
-
+        import warnings
+        warnings.warn(
+            "write_shapefile is Deprecated, please use to_geo_dataframe() in the future"
+        )
         epd = (data if data is not None else endpoint_data).copy()
-        if epd is None:
-            epd = self.get_alldata()
+        gdf = self.to_geo_dataframe(modelgrid=mg, data=epd, direction=direction)
 
-        if direction.lower() == "ending":
-            xcol, ycol, zcol = "x", "y", "z"
-        elif direction.lower() == "starting":
-            xcol, ycol, zcol = "x0", "y0", "z0"
-        else:
-            raise Exception(
-                'flopy.map.plot_endpoint direction must be "ending" or "starting".'
-            )
-        if mg is None:
-            raise ValueError("A modelgrid object was not provided.")
+        if crs is not None:
+            if gdf.crs is None:
+                gdf = gdf.set_crs(crs)
+            else:
+                gdf = gdf.to_crs(crs)
 
-        if isinstance(mg, StructuredGrid):
-            x, y = geometry.transform(
-                epd[xcol],
-                epd[ycol],
-                xoff=mg.xoffset,
-                yoff=mg.yoffset,
-                angrot_radians=mg.angrot_radians,
-            )
-        else:
-            x, y = mg.get_coords(epd[xcol], epd[ycol])
-        z = epd[zcol]
-
-        geoms = [Point(x[i], y[i], z[i]) for i in range(len(epd))]
-        # convert back to one-based
-        for n in self.kijnames:
-            if n in epd.dtype.names:
-                epd[n] += 1
-        recarray2shp(epd, geoms, shpname=shpname, crs=crs, **kwargs)
+        gdf.to_file(shpname)
 
 
 class TimeseriesFile(ModpathFile):

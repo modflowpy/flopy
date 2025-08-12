@@ -9,6 +9,7 @@ from typing import Union
 
 import numpy as np
 from numpy.lib.recfunctions import stack_arrays
+from .utl_import import import_optional_dependency
 
 MIN_PARTICLE_TRACK_DTYPE = np.dtype(
     [
@@ -183,6 +184,114 @@ class ParticleTrackFile(ABC):
         """Find intersection of pathlines with cells."""
         pass
 
+    def to_geo_dataframe(
+        self,
+        modelgrid,
+        data=None,
+        one_per_particle=True,
+        direction="ending",
+    ):
+        """
+        Create a geodataframe of particle tracks.
+
+        Parameters
+        ----------
+        modelgrid : flopy.discretization.Grid instance
+            Used to scale and rotate Global x, y, z values.
+        data : np.recarray
+            Record array of same form as that returned by
+            get_alldata(). (if none, get_alldata() is exported).
+        one_per_particle : boolean (default True)
+            True writes a single LineString with a single set of attribute
+            data for each particle. False writes a record/geometry for each
+            pathline segment (each row in the PathLine file). This option can
+            be used to visualize attribute information (time, model layer,
+            etc.) across a pathline in a GIS.
+        direction : str
+            String defining if starting or ending particle locations should be
+            included in shapefile attribute information. Only used if
+            one_per_particle=False. (default is 'ending')
+
+        Returns
+        -------
+            GeoDataFrame
+        """
+        from . import geometry
+        shapely_geo = import_optional_dependency("shapely.geometry")
+        gpd = import_optional_dependency("geopandas")
+
+        if data is None:
+            data = self._data.view(np.recarray)
+        else:
+            # convert pathline list to a single recarray
+            if isinstance(data, list):
+                s = data[0]
+                print(s.dtype)
+                for n in range(1, len(data)):
+                    s = stack_arrays((s, data[n]))
+                data = s.view(np.recarray)
+
+        data = data.copy()
+        data.sort(order=["particleid", "time"])
+
+        particles = np.unique(data.particleid)
+        geoms = []
+
+        # create a dict of attrs?
+        headings = ["particleid", "particlegroup", "time", "k", "i", "j", "node"]
+        attrs = []
+        for h in headings:
+            if h in data.dtype.names:
+                attrs.append(h)
+
+        if one_per_particle:
+            dfdata = {a: [] for a in attrs}
+            if direction == "ending":
+                idx = -1
+            else:
+                idx = 0
+
+            for p in particles:
+                ra = data[data.particleid == p]
+                for k in dfdata.keys():
+                    if k == "time":
+                        dfdata[k].append(np.max(ra[k]))
+                    else:
+                        dfdata[k].append(ra[k][idx])
+
+                x, y = geometry.transform(
+                    ra.x, ra.y, modelgrid.xoffset, modelgrid.yoffset, modelgrid.angrot_radians
+                )
+                z = ra.z
+
+                line = list(zip(x, y, z))
+                geoms.append(shapely_geo.LineString(line))
+
+        else:
+            dfdata = {a: [] for a in attrs}
+            for pid in particles:
+                ra = data[data.particleid == pid]
+                x, y = geometry.transform(
+                    ra.x, ra.y, modelgrid.xoffset, modelgrid.yoffset, modelgrid.angrot_radians
+                )
+                z = ra.z
+                geoms += [
+                    shapely_geo.LineString([(x[i - 1], y[i - 1], z[i - 1]), (x[i], y[i], z[i])])
+                    for i in np.arange(1, (len(ra)))
+                ]
+                for k in dfdata.keys():
+                    dfdata[k].extend(ra[k][1:])
+
+        # now create a geodataframe
+        gdf = gpd.GeoDataFrame(dfdata, geometry=geoms, crs=modelgrid.crs)
+
+        # adjust to 1 based node numbers
+        for col in list(gdf):
+            if col in self.kijnames:
+                gdf[col] += 1
+
+        return gdf
+
     def write_shapefile(
         self,
         data=None,
@@ -227,102 +336,21 @@ class ParticleTrackFile(ABC):
                - ``epsg`` (int): use ``crs`` instead.
 
         """
-        from ..export.shapefile_utils import recarray2shp
-        from . import geometry
-        from .geometry import LineString
+        import warnings
+        warnings.warn(
+            "write_shapefile will be Deprecated, please use to_geo_dataframe()",
+            DeprecationWarning
+        )
+        gdf = self.to_geo_dataframe(
+            modelgrid=mg,
+            data=data,
+            one_per_particle=one_per_particle,
+            direction=direction
+        )
+        if crs is not None:
+            if gdf.crs is None:
+                gdf = gdf.set_crs(crs)
+            else:
+                gdf = gdf.to_crs(crs)
 
-        series = data
-        if series is None:
-            series = self._data.view(np.recarray)
-        else:
-            # convert pathline list to a single recarray
-            if isinstance(series, list):
-                s = series[0]
-                print(s.dtype)
-                for n in range(1, len(series)):
-                    s = stack_arrays((s, series[n]))
-                series = s.view(np.recarray)
-
-        series = series.copy()
-        series.sort(order=["particleid", "time"])
-
-        if mg is None:
-            raise ValueError("A modelgrid object was not provided.")
-
-        particles = np.unique(series.particleid)
-        geoms = []
-
-        # create dtype with select attributes in pth
-        names = series.dtype.names
-        dtype = []
-        atts = ["particleid", "particlegroup", "time", "k", "i", "j", "node"]
-        for att in atts:
-            if att in names:
-                t = np.int32
-                if att == "time":
-                    t = np.float32
-                dtype.append((att, t))
-        dtype = np.dtype(dtype)
-
-        # reset names to the selected names in the created dtype
-        names = dtype.names
-
-        # 1 geometry for each path
-        if one_per_particle:
-            loc_inds = 0
-            if direction == "ending":
-                loc_inds = -1
-
-            sdata = []
-            for pid in particles:
-                ra = series[series.particleid == pid]
-
-                x, y = geometry.transform(
-                    ra.x, ra.y, mg.xoffset, mg.yoffset, mg.angrot_radians
-                )
-                z = ra.z
-                geoms.append(LineString(list(zip(x, y, z))))
-
-                t = [pid]
-                if "particlegroup" in names:
-                    t.append(ra.particlegroup[0])
-                t.append(ra.time.max())
-                if "k" in names:
-                    t.append(ra.k[loc_inds])
-                if "node" in names:
-                    t.append(ra.node[loc_inds])
-                else:
-                    if "i" in names:
-                        t.append(ra.i[loc_inds])
-                    if "j" in names:
-                        t.append(ra.j[loc_inds])
-                sdata.append(tuple(t))
-
-            sdata = np.array(sdata, dtype=dtype).view(np.recarray)
-
-        # geometry for each row in PathLine file
-        else:
-            dtype = series.dtype
-            sdata = []
-            for pid in particles:
-                ra = series[series.particleid == pid]
-                if mg is not None:
-                    x, y = geometry.transform(
-                        ra.x, ra.y, mg.xoffset, mg.yoffset, mg.angrot_radians
-                    )
-                else:
-                    x, y = geometry.transform(ra.x, ra.y, 0, 0, 0)
-                z = ra.z
-                geoms += [
-                    LineString([(x[i - 1], y[i - 1], z[i - 1]), (x[i], y[i], z[i])])
-                    for i in np.arange(1, (len(ra)))
-                ]
-                sdata += ra[1:].tolist()
-            sdata = np.array(sdata, dtype=dtype).view(np.recarray)
-
-        # convert back to one-based
-        for n in set(self.kijnames).intersection(set(sdata.dtype.names)):
-            sdata[n] += 1
-
-        # write the final recarray to a shapefile
-        recarray2shp(sdata, geoms, shpname=shpname, crs=crs, **kwargs)
+        gdf.to_file(shpname)

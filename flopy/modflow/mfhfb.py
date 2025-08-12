@@ -14,6 +14,7 @@ from numpy.lib.recfunctions import stack_arrays
 from ..pakbase import Package
 from ..utils.flopy_io import line_parse
 from ..utils.recarray_utils import create_empty_recarray
+from ..utils.utl_import import import_optional_dependency
 from .mfparbc import ModflowParBc as mfparbc
 
 
@@ -200,7 +201,7 @@ class ModflowHfb(Package):
             GeoDataFrame
 
         """
-        import geopandas as gpd
+        gpd = import_optional_dependency("geopandas")
 
         lines = self._get_hfb_lines()
         geo_interface = {"type": "FeatureCollection"}

@@ -12,6 +12,7 @@ from ..mbase import ModelInterface
 from ..pakbase import PackageInterface
 from ..utils import datautil
 from ..utils.check import mf6check
+from ..utils.utl_import import import_optional_dependency
 from ..version import __version__
 from .coordinates import modeldimensions
 from .data import (
@@ -2106,8 +2107,7 @@ class MFPackage(PackageInterface):
                 modelgrid = self.parent.modelgrid
                 if modelgrid is not None:
                     if self.package_type == "hfb":
-                        import geopandas as gpd
-
+                        gpd = import_optional_dependency("geopandas")
                         from ..plot.plotutil import hfb_data_to_linework
 
                         recarray = self.stress_period_data.data[kper]
