@@ -9,6 +9,7 @@ from typing import Union
 
 import numpy as np
 from numpy.lib.recfunctions import stack_arrays
+
 from .utl_import import import_optional_dependency
 
 MIN_PARTICLE_TRACK_DTYPE = np.dtype(
@@ -217,6 +218,7 @@ class ParticleTrackFile(ABC):
             GeoDataFrame
         """
         from . import geometry
+
         shapely_geo = import_optional_dependency("shapely.geometry")
         gpd = import_optional_dependency("geopandas")
 
@@ -260,7 +262,11 @@ class ParticleTrackFile(ABC):
                         dfdata[k].append(ra[k][idx])
 
                 x, y = geometry.transform(
-                    ra.x, ra.y, modelgrid.xoffset, modelgrid.yoffset, modelgrid.angrot_radians
+                    ra.x,
+                    ra.y,
+                    modelgrid.xoffset,
+                    modelgrid.yoffset,
+                    modelgrid.angrot_radians,
                 )
                 z = ra.z
 
@@ -272,11 +278,17 @@ class ParticleTrackFile(ABC):
             for pid in particles:
                 ra = data[data.particleid == pid]
                 x, y = geometry.transform(
-                    ra.x, ra.y, modelgrid.xoffset, modelgrid.yoffset, modelgrid.angrot_radians
+                    ra.x,
+                    ra.y,
+                    modelgrid.xoffset,
+                    modelgrid.yoffset,
+                    modelgrid.angrot_radians,
                 )
                 z = ra.z
                 geoms += [
-                    shapely_geo.LineString([(x[i - 1], y[i - 1], z[i - 1]), (x[i], y[i], z[i])])
+                    shapely_geo.LineString(
+                        [(x[i - 1], y[i - 1], z[i - 1]), (x[i], y[i], z[i])]
+                    )
                     for i in np.arange(1, (len(ra)))
                 ]
                 for k in dfdata.keys():
@@ -337,15 +349,16 @@ class ParticleTrackFile(ABC):
 
         """
         import warnings
+
         warnings.warn(
             "write_shapefile will be Deprecated, please use to_geo_dataframe()",
-            DeprecationWarning
+            DeprecationWarning,
         )
         gdf = self.to_geo_dataframe(
             modelgrid=mg,
             data=data,
             one_per_particle=one_per_particle,
-            direction=direction
+            direction=direction,
         )
         if crs is not None:
             if gdf.crs is None:

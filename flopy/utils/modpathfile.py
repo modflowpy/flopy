@@ -694,6 +694,7 @@ class EndpointFile(ModpathFile):
             considered. (default is 'ending')
         """
         from ..utils import geometry
+
         gpd = import_optional_dependency("geopandas")
         shapely_geo = import_optional_dependency("shapely.geometry")
         if data is None:
@@ -725,7 +726,6 @@ class EndpointFile(ModpathFile):
                 gdf[col] += 1
 
         return gdf
-
 
     def write_shapefile(
         self,
@@ -772,6 +772,7 @@ class EndpointFile(ModpathFile):
 
         """
         import warnings
+
         warnings.warn(
             "write_shapefile is Deprecated, please use to_geo_dataframe() in the future"
         )
