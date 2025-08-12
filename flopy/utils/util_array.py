@@ -2709,7 +2709,7 @@ class Util2d(DataInterface):
             if len(value.shape) == 3 and value.shape[0] == 1:
                 value = value[0]
 
-            if self.model.version == 'mfusg':
+            if self.model.version == "mfusg":
                 if self.shape != value.shape:
                     value = np.array([np.squeeze(value)])
 
