@@ -39,7 +39,7 @@ jobs:
           echo "ref=$ref" >> $GITHUB_OUTPUT
 
       - name: Checkout flopy repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ steps.set_ref.outputs.ref }}
 
@@ -68,13 +68,13 @@ jobs:
 
     steps:
       - name: Checkout flopy repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ needs.set_options.outputs.ref }}
           path: flopy
 
       - name: Checkout MODFLOW 6
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: MODFLOW-ORG/modflow6
           path: modflow6
