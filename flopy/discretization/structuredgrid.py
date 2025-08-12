@@ -1773,63 +1773,154 @@ class StructuredGrid(Grid):
     def dataset(self, modeltime=None, mesh=None):
         import xarray as xr
 
+        FILLNA_INT32 = np.int32(-2147483647)
+        FILLNA_DBL = 9.96920996838687e36
         lenunits = {0: "m", 1: "ft", 2: "m", 3: "m"}
 
         ds = xr.Dataset()
 
-        x = self.xoffset + self.xycenters[0]
-        y = self.yoffset + self.xycenters[1]
-        z = [float(x) for x in range(1, self.nlay + 1)]
+        if mesh and mesh.upper() == "LAYERED":
+            # mesh container variable
+            ds = ds.assign({"mesh": ([], np.int32(1))})
+            ds["mesh"].attrs["cf_role"] = "mesh_topology"
+            ds["mesh"].attrs["long_name"] = "2D mesh topology"
+            ds["mesh"].attrs["topology_dimension"] = np.int32(2)
+            ds["mesh"].attrs["face_dimension"] = "nmesh_face"
+            ds["mesh"].attrs["node_coordinates"] = "mesh_node_x mesh_node_y"
+            ds["mesh"].attrs["face_coordinates"] = "mesh_face_x mesh_face_y"
+            ds["mesh"].attrs["face_node_connectivity"] = "mesh_face_nodes"
 
-        # set coordinate var bounds
-        x_bnds = []
-        xv = self.xoffset + self.xyedges[0]
-        for idx, val in enumerate(xv):
-            if idx + 1 < len(xv):
-                bnd = []
-                bnd.append(xv[idx])
-                bnd.append(xv[idx + 1])
-                x_bnds.append(bnd)
+            # mesh node x and y
+            var_d = {
+                "mesh_node_x": (["nmesh_node"], self.verts[:, 0]),
+                "mesh_node_y": (["nmesh_node"], self.verts[:, 1]),
+            }
+            ds = ds.assign(var_d)
+            ds["mesh_node_x"].attrs["units"] = lenunits[self.lenuni]
+            ds["mesh_node_x"].attrs["standard_name"] = "projection_x_coordinate"
+            ds["mesh_node_x"].attrs["long_name"] = "Easting"
+            ds["mesh_node_y"].attrs["units"] = lenunits[self.lenuni]
+            ds["mesh_node_y"].attrs["standard_name"] = "projection_y_coordinate"
+            ds["mesh_node_y"].attrs["long_name"] = "Northing"
 
-        y_bnds = []
-        yv = self.yoffset + self.xyedges[1]
-        for idx, val in enumerate(yv):
-            if idx + 1 < len(yv):
-                bnd = []
-                bnd.append(yv[idx + 1])
-                bnd.append(yv[idx])
-                y_bnds.append(bnd)
+            # mesh face x and y
+            x_bnds = []
+            x_verts = self.verts[:, 0].reshape(self.nrow + 1, self.ncol + 1)
+            for i in range(self.nrow):
+                if i + 1 > self.nrow:
+                    break
+                for j in range(self.ncol):
+                    if j + 1 <= self.ncol:
+                        bnd = []
+                        bnd.append(x_verts[i + 1][j])
+                        bnd.append(x_verts[i + 1][j + 1])
+                        bnd.append(x_verts[i][j + 1])
+                        bnd.append(x_verts[i][j])
+                        x_bnds.append(bnd)
 
-        # create dataset coordinate vars
-        var_d = {
-            "time": (["time"], modeltime.totim),
-            "z": (["z"], z),
-            "y": (["y"], y),
-            "x": (["x"], x),
-        }
-        ds = ds.assign(var_d)
+            y_bnds = []
+            y_verts = self.verts[:, 1].reshape(self.nrow + 1, self.ncol + 1)
+            for i in range(self.nrow):
+                if i + 1 > self.nrow:
+                    break
+                for j in range(self.ncol):
+                    if j + 1 <= self.ncol:
+                        bnd = []
+                        bnd.append(y_verts[i + 1][j])
+                        bnd.append(y_verts[i + 1][j + 1])
+                        bnd.append(y_verts[i][j + 1])
+                        bnd.append(y_verts[i][j])
+                        y_bnds.append(bnd)
 
-        # create bound vars
-        var_d = {"x_bnds": (["x", "bnd"], x_bnds), "y_bnds": (["y", "bnd"], y_bnds)}
-        ds = ds.assign(var_d)
+            var_d = {
+                "mesh_face_x": (["nmesh_face"], self.xcellcenters.flatten()),
+                "mesh_face_xbnds": (["nmesh_face", "max_nmesh_face_nodes"], x_bnds),
+                "mesh_face_y": (["nmesh_face"], self.ycellcenters.flatten()),
+                "mesh_face_ybnds": (["nmesh_face", "max_nmesh_face_nodes"], y_bnds),
+            }
+            ds = ds.assign(var_d)
+            ds["mesh_face_x"].attrs["units"] = lenunits[self.lenuni]
+            ds["mesh_face_x"].attrs["standard_name"] = "projection_x_coordinate"
+            ds["mesh_face_x"].attrs["long_name"] = "Easting"
+            ds["mesh_face_x"].attrs["bounds"] = "mesh_face_xbnds"
+            ds["mesh_face_y"].attrs["units"] = lenunits[self.lenuni]
+            ds["mesh_face_y"].attrs["standard_name"] = "projection_y_coordinate"
+            ds["mesh_face_y"].attrs["long_name"] = "Northing"
+            ds["mesh_face_y"].attrs["bounds"] = "mesh_face_ybnds"
 
-        ds["time"].attrs["calendar"] = "standard"
-        ds["time"].attrs["units"] = f"days since {modeltime.start_datetime}"
-        ds["time"].attrs["axis"] = "T"
-        ds["time"].attrs["standard_name"] = "time"
-        ds["time"].attrs["long_name"] = "time"
-        ds["z"].attrs["units"] = "layer"
-        ds["z"].attrs["long_name"] = "layer number"
-        ds["y"].attrs["units"] = lenunits[self.lenuni]
-        ds["y"].attrs["axis"] = "Y"
-        ds["y"].attrs["standard_name"] = "projection_y_coordinate"
-        ds["y"].attrs["long_name"] = "Northing"
-        ds["y"].attrs["bounds"] = "y_bnds"
-        ds["x"].attrs["units"] = lenunits[self.lenuni]
-        ds["x"].attrs["axis"] = "X"
-        ds["x"].attrs["standard_name"] = "projection_x_coordinate"
-        ds["x"].attrs["long_name"] = "Easting"
-        ds["x"].attrs["bounds"] = "x_bnds"
+            # mesh face nodes
+            max_face_nodes = 4
+            face_nodes = []
+            for r in self.iverts:
+                nodes = [np.int32(x + 1) for x in r]
+                nodes.reverse()
+                face_nodes.append(nodes)
+
+            var_d = {
+                "mesh_face_nodes": (["nmesh_face", "max_nmesh_face_nodes"], face_nodes),
+            }
+            ds = ds.assign(var_d)
+            ds["mesh_face_nodes"].attrs["cf_role"] = "face_node_connectivity"
+            ds["mesh_face_nodes"].attrs["long_name"] = (
+                "Vertices bounding cell (counterclockwise)"
+            )
+            ds["mesh_face_nodes"].attrs["_FillValue"] = FILLNA_INT32
+            ds["mesh_face_nodes"].attrs["start_index"] = np.int32(1)
+
+        elif mesh is None:
+            x = self.xoffset + self.xycenters[0]
+            y = self.yoffset + self.xycenters[1]
+            z = [float(x) for x in range(1, self.nlay + 1)]
+
+            # set coordinate var bounds
+            x_bnds = []
+            xv = self.xoffset + self.xyedges[0]
+            for idx, val in enumerate(xv):
+                if idx + 1 < len(xv):
+                    bnd = []
+                    bnd.append(xv[idx])
+                    bnd.append(xv[idx + 1])
+                    x_bnds.append(bnd)
+
+            y_bnds = []
+            yv = self.yoffset + self.xyedges[1]
+            for idx, val in enumerate(yv):
+                if idx + 1 < len(yv):
+                    bnd = []
+                    bnd.append(yv[idx + 1])
+                    bnd.append(yv[idx])
+                    y_bnds.append(bnd)
+
+            # create dataset coordinate vars
+            var_d = {
+                "time": (["time"], modeltime.totim),
+                "z": (["z"], z),
+                "y": (["y"], y),
+                "x": (["x"], x),
+            }
+            ds = ds.assign(var_d)
+
+            # create bound vars
+            var_d = {"x_bnds": (["x", "bnd"], x_bnds), "y_bnds": (["y", "bnd"], y_bnds)}
+            ds = ds.assign(var_d)
+
+            ds["time"].attrs["calendar"] = "standard"
+            ds["time"].attrs["units"] = f"days since {modeltime.start_datetime}"
+            ds["time"].attrs["axis"] = "T"
+            ds["time"].attrs["standard_name"] = "time"
+            ds["time"].attrs["long_name"] = "time"
+            ds["z"].attrs["units"] = "layer"
+            ds["z"].attrs["long_name"] = "layer number"
+            ds["y"].attrs["units"] = lenunits[self.lenuni]
+            ds["y"].attrs["axis"] = "Y"
+            ds["y"].attrs["standard_name"] = "projection_y_coordinate"
+            ds["y"].attrs["long_name"] = "Northing"
+            ds["y"].attrs["bounds"] = "y_bnds"
+            ds["x"].attrs["units"] = lenunits[self.lenuni]
+            ds["x"].attrs["axis"] = "X"
+            ds["x"].attrs["standard_name"] = "projection_x_coordinate"
+            ds["x"].attrs["long_name"] = "Easting"
+            ds["x"].attrs["bounds"] = "x_bnds"
 
         return ds
 

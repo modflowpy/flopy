@@ -1288,7 +1288,7 @@ class Grid:
         )
         return
 
-    def dataset(self, mesh=None):
+    def dataset(self, modeltime=None, mesh=None):
         """
         Method to generate baseline Xarray dataset
 

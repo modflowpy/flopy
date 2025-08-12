@@ -3463,15 +3463,34 @@ class MFPackage(PackageInterface):
             dims = []
             if data_item.shape[0] == 'nodes':
                 if data_item.block_name == "griddata":
-                    dims += ["x", "y", "z"]
+                    if mesh is None:
+                        dims += ["x", "y", "z"]
+                    elif mesh.upper() == "LAYERED":
+                        dims += ["nmesh_face"]
                 elif data_item.block_name == "period":
-                    dims += ["x", "y", "z", "time"]
+                    if mesh is None:
+                        dims += ["x", "y", "z", "time"]
+                    elif mesh.upper() == "LAYERED":
+                        dims += ["nmesh_face", "time"]
             else:
-                dimmap = {"nlay": "z", "nrow": "y", "ncol": "x"}
-                for s in data_item.shape:
-                    for k, v in dimmap.items():
-                        s = s.replace(k, v)
-                    dims.append(s)
+                if mesh is None:
+                    dimmap = {"nlay": "z", "nrow": "y", "ncol": "x"}
+                    for s in data_item.shape:
+                        for k, v in dimmap.items():
+                            s = s.replace(k, v)
+                        dims.append(s)
+                elif mesh.upper() == "LAYERED":
+                    if (
+                        len(data_item.shape) == 3 or
+                        len(data_item.shape) == 2 or
+                        data_item.shape[0] == 'ncpl'
+                    ):
+                        dims.append("nmesh_face")
+                    elif data_item.shape[0] == 'ncol':
+                        dims.append("x")
+                    elif data_item.shape[0] == 'nrow':
+                        dims.append("y")
+
             a["netcdf_shape"] = dims[::-1]
 
             # add variable attributes dictionary
