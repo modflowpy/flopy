@@ -16,6 +16,7 @@ import pandas as pd
 from ..pakbase import Package
 from ..utils import read_fixed_var, write_fixed_var
 from ..utils.recarray_utils import create_empty_recarray
+from ..utils.flopy_io import relpath_safe
 
 
 class ModflowGage(Package):
@@ -344,7 +345,7 @@ class ModflowGage(Package):
                 for key, value in ext_unit_dict.items():
                     if key == abs(iu):
                         model.add_pop_key_list(abs(iu))
-                        relpth = os.path.relpath(value.filename, model.model_ws)
+                        relpth = relpath_safe(value.filename, model.model_ws)
                         files.append(relpth)
                         break
 

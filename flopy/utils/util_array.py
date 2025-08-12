@@ -2707,12 +2707,17 @@ class Util2d(DataInterface):
             # if value is 3d, but dimension 1 is only length 1,
             # then drop the first dimension
             if len(value.shape) == 3 and value.shape[0] == 1:
-                value = value[0]  # todo: AA: deactivate
-            # if self.shape != value.shape:
-            #     raise Exception(
-            #         f"Util2d:self.shape: {self.shape} does not match "
-            #         f"value.shape: {value.shape}"
-            #     )
+                value = value[0]
+
+            if self.model.version == 'mfusg':
+                if self.shape != value.shape:
+                    value = np.array([np.squeeze(value)])
+
+            if self.shape != value.shape:
+                raise Exception(
+                    f"Util2d:self.shape: {self.shape} does not match "
+                    f"value.shape: {value.shape}"
+                )
             if self._dtype != value.dtype:
                 value = value.astype(self._dtype)
             self.__value = value
