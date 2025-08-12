@@ -15,8 +15,8 @@ import pandas as pd
 
 from ..pakbase import Package
 from ..utils import read_fixed_var, write_fixed_var
-from ..utils.recarray_utils import create_empty_recarray
 from ..utils.flopy_io import relpath_safe
+from ..utils.recarray_utils import create_empty_recarray
 
 
 class ModflowGage(Package):
