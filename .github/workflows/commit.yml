@@ -151,7 +151,7 @@ jobs:
           version: 13
 
       - name: Setup pixi
-        uses: prefix-dev/setup-pixi@v0.8.14
+        uses: prefix-dev/setup-pixi@v0.9.0
         with:
           pixi-version: v0.41.4
           manifest-path: modflow6/pixi.toml
