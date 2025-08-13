@@ -14,7 +14,7 @@
 #     section: mf2005
 # ---
 
-# # Lake Package Example
+# # MODFLOW Boundaries Example
 #
 # First set the path and import the required packages. The flopy path doesn't have to be set if you install flopy from a binary installer. If you want to run this notebook, you have to set the path to your own flopy path.
 
