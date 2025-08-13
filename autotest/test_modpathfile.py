@@ -306,7 +306,6 @@ def test_get_destination_endpoint_data(
     )
 
 
-
 @requires_exe("mf6", "mp7")
 @requires_pkg("geopandas", "shapely")
 def test_write_shapefile(function_tmpdir, mp7_small):
@@ -348,4 +347,3 @@ def test_write_shapefile(function_tmpdir, mp7_small):
     fieldnames = list(gdf)
     for fname in pline_names:
         assert fname in fieldnames
-
