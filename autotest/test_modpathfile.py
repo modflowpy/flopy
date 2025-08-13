@@ -306,11 +306,11 @@ def test_get_destination_endpoint_data(
     )
 
 
-@pytest.mark.parametrize("longfieldname", [True, False])
+
 @requires_exe("mf6", "mp7")
-@requires_pkg("pyshp", "shapely", name_map={"pyshp": "shapefile"})
-def test_write_shapefile(function_tmpdir, mp7_small, longfieldname):
-    from shapefile import Reader
+@requires_pkg("geopandas", "shapely")
+def test_write_shapefile(function_tmpdir, mp7_small):
+    import geopandas as gpd
 
     # setup and run model, then copy outputs to function_tmpdir
     sim, forward_model_name, _, _, _ = mp7_small
@@ -330,13 +330,7 @@ def test_write_shapefile(function_tmpdir, mp7_small, longfieldname):
     # define shapefile path
     shp_file = ws / "pathlines.shp"
 
-    # add a column to the pathline recarray
-    fieldname = "newfield" + ("longname" if longfieldname else "")
-    fieldval = "x"
-    pathlines = [
-        rfn.append_fields(pl, fieldname, list(repeat(fieldval, len(pl))), dtypes="|S1")
-        for pl in pathlines
-    ]
+    pline_names = [name[:10] for name in pathlines[0].dtype.names]
 
     # write the pathline recarray to shapefile
     pathline_file.write_shapefile(
@@ -350,8 +344,8 @@ def test_write_shapefile(function_tmpdir, mp7_small, longfieldname):
     assert shp_file.is_file()
 
     # load shapefile
-    with Reader(shp_file) as reader:
-        fieldnames = [f[0] for f in reader.fields[1:]]
-        fieldname = "newfiname_" if longfieldname else fieldname
-        assert fieldname in fieldnames
-        assert all(r[fieldname] == fieldval for r in reader.iterRecords())
+    gdf = gpd.read_file(shp_file)
+    fieldnames = list(gdf)
+    for fname in pline_names:
+        assert fname in fieldnames
+

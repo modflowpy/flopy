@@ -274,7 +274,7 @@ class ParticleTrackFile(ABC):
                 geoms.append(shapely_geo.LineString(line))
 
         else:
-            dfdata = {a: [] for a in attrs}
+            dfdata = {a: [] for a in data.dtype.names}
             for pid in particles:
                 ra = data[data.particleid == pid]
                 x, y = geometry.transform(

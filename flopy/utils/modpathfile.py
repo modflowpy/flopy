@@ -717,7 +717,7 @@ class EndpointFile(ModpathFile):
         )
         z = data[zcol]
 
-        geoms = [shapely_geo.Point(p) for p in zip(z, y, z)]
+        geoms = [shapely_geo.Point(p) for p in zip(x, y, z)]
         gdf = gpd.GeoDataFrame(data, geometry=geoms, crs=modelgrid.crs)
 
         # adjust to 1 based node numbers
