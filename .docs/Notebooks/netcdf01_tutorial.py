@@ -242,44 +242,12 @@ def create_sim(ws):
     return sim
 
 
-# ## Create helper function to update dataset
-#
-# This function updates an xarray dataset to add variables described
-# in a FloPy provided dictionary.
-#
-# The dimmap variable relates NetCDF dimension names to a value.
-
-
-# A subroutine that can update an xarray dataset with package
-# netcdf information stored in a dict
-def add_netcdf_vars(dataset, nc_info, dimmap):
-    def _data_shape(shape):
-        dims_l = []
-        for d in shape:
-            dims_l.append(dimmap[d])
-
-        return dims_l
-
-    for v in nc_info:
-        varname = nc_info[v]["varname"]
-        data = np.full(
-            _data_shape(nc_info[v]["netcdf_shape"]),
-            nc_info[v]["attrs"]["_FillValue"],
-            dtype=nc_info[v]["xarray_type"],
-        )
-        var_d = {varname: (nc_info[v]["netcdf_shape"], data)}
-        dataset = dataset.assign(var_d)
-        for a in nc_info[v]["attrs"]:
-            dataset[varname].attrs[a] = nc_info[v]["attrs"][a]
-
-    return dataset
-
-
 # ## Create simulation workspace
 
 # create temporary directories
-temp_dir = TemporaryDirectory()
-workspace = Path(temp_dir.name)
+# temp_dir = TemporaryDirectory()
+# workspace = Path(temp_dir.name)
+workspace = Path("./working")
 
 # ## Write and run baseline simulation
 
@@ -323,49 +291,39 @@ ds = gwf.modelgrid.dataset(modeltime=gwf.modeltime)
 # First, retrieve and store the netcdf info dictionary and display
 # its contents. Then, in the following step, update the dataset with
 # the model scoped attributes defined in the dictionary.
+#
+# These 2 operations can also be accomplised by calling `update_dataset()`
+# on the model object. Analogous functions for the package are shown
+# below.
 
 # get model netcdf info
 nc_info = gwf.netcdf_info()
 pprint(nc_info)
 
-# update dataset with required attributes
+# update dataset directly with required attributes
 for a in nc_info["attrs"]:
     ds.attrs[a] = nc_info["attrs"][a]
 
-# ## Map dataset dimension names to values
-
-# define dimensional info
-dimmap = {
-    "time": sum(gwf.modeltime.nstp),
-    "z": gwf.modelgrid.nlay,
-    "y": gwf.modelgrid.nrow,
-    "x": gwf.modelgrid.ncol,
-}
-
-# ## Access package NetCDF attributes
+# ## Update the dataset with supported `DIS` arrays
 #
-# Access package scoped NetCDF details by storing the dictionary returned
-# from `netcdf_info()`. We need to set package variable attributes that are
-# stored in the package netcdf info dict, but we also need other information
-# that is relevant to creating the variables themselves.
-#
-# The contents of the info dictionary are shown and then, in the following
-# step, the dictionary and the dataset are passed to a helper routine that
-# create the intended array variables.
+# Add NetCDF supported data arrays in package to dataset. Internally, this call
+# uses a `netcdf_info()` package dictionary to determine candidate variables
+# and relevant information about them. Alternatively, this dictionary can
+# be directly accessed, updated, and passed to the `update_dataset()` function.
+# That workflow will be demonstrated in the `NPF` package update which follows.
 
-# get dis package netcdf info
+# update dataset with `DIS` arrays
 dis = gwf.get_package("dis")
-nc_info = dis.netcdf_info()
-pprint(nc_info)
-
-# create dis dataset variables
-ds = add_netcdf_vars(ds, nc_info, dimmap)
+ds = dis.update_dataset(ds)
 
 # ## Update array data
 #
 # We have created dataset array variables for the package but they do not yet
 # define the expected input data for MODFLOW 6. We will take advantage of the
 # existing simulation objects and update the dataset.
+#
+# Default dataset variable names are defined in the package `netcdf_info()`
+# dictionary.
 
 # update dataset from dis arrays
 ds["dis_delr"].values = dis.delr.get_data()
@@ -378,7 +336,7 @@ ds["dis_idomain"].values = dis.idomain.get_data()
 #
 # MODFLOW 6 input data for the package is now in the dataset. Once the NetCDF
 # file is generated, we need to configure MODFLOW 6 so that it looks to that
-# file for the package array input. The ASCII file will no longer defined the
+# file for the package array input. The ASCII file will no longer define the
 # arrays- instead the array names will be followed by the NETCDF keyword.
 #
 # We will simply overwrite the entire MODFLOW 6 `DIS` package input file with the
@@ -404,21 +362,46 @@ with open(workspace / "netcdf" / "uzf01.dis", "w") as f:
 with open(workspace / "netcdf" / "uzf01.dis", "r") as fh:
     print(fh.read())
 
-# ## Update MODFLOW 6 package input file
+# ## Access `NPF` package NetCDF attributes
 #
-# Follow the same process as above for the `NPF` package.
+# Access package scoped NetCDF details by storing the dictionary returned
+# from `netcdf_info()`. We need to set package variable attributes that are
+# stored in the package netcdf info dict, but we also need other information
+# that is relevant to creating the variables themselves.
+#
+# The contents of the info dictionary are shown and then, in the following
+# step, the dictionary and the dataset are passed to a helper routine that
+# create the intended array variables.
 
 # get npf package netcdf info
 npf = gwf.get_package("npf")
 nc_info = npf.netcdf_info()
 pprint(nc_info)
 
-# create npf dataset variables
-ds = add_netcdf_vars(ds, nc_info, dimmap)
+# ## Update package `netcdf_info` dictionary and dataset
+#
+# Here we replace the default name for the `NPF K` input parameter and add
+# the `standard_name` attribute to it's attribute dictionary.  The dictionary
+# is then passed to the `update_dataset()` function. Note the udpated name
+# is used in the subsequent block when updating the array values.
+
+# update dataset with `NPF` arrays
+nc_info["k"]["varname"] = "npf_k_updated"
+nc_info["k"]["attrs"]["standard_name"] = "soil_hydraulic_conductivity_at_saturation"
+ds = npf.update_dataset(ds, netcdf_info=nc_info)
+
+# ## Update array data
 
 # update dataset from npf arrays
 ds["npf_icelltype"].values = npf.icelltype.get_data()
-ds["npf_k"].values = npf.k.get_data()
+ds["npf_k_updated"].values = npf.k.get_data()
+
+# ## Show dataset `NPF K` parameter with udpates
+
+# print dataset npf k variable
+print(ds["npf_k_updated"])
+
+# ## Update MODFLOW 6 package input file
 
 # rewrite mf6 npf input to read from netcdf
 with open(workspace / "netcdf" / "uzf01.npf", "w") as f:
@@ -431,21 +414,13 @@ with open(workspace / "netcdf" / "uzf01.npf", "w") as f:
 with open(workspace / "netcdf" / "uzf01.npf", "r") as fh:
     print(fh.read())
 
-# ## Update MODFLOW 6 package input file
-#
-# Follow the same process as above for the `GHBG` package. The difference is
-# that this is PERIOD input and therefore stored as timeseries data in the
-# NetCDF file. As NETCDF timeseries are defined in terms of total number of
-# simulation steps, care must be taken in the translation of FloPy period
-# data to the timeseries.
+# ## Update the dataset with supported `GHBG` arrays
 
-# get ghbg package netcdf info
+# update dataset with 'GHBG' arrays
 ghbg = gwf.get_package("ghbg_0")
-nc_info = ghbg.netcdf_info()
-pprint(nc_info)
+ds = ghbg.update_dataset(ds)
 
-# create ghbg dataset variables
-ds = add_netcdf_vars(ds, nc_info, dimmap)
+# ## Update array data
 
 # update bhead netcdf array from flopy perioddata
 # timeseries step index is first of stress period
@@ -459,17 +434,7 @@ for p in ghbg.cond.get_data():
     istp = sum(gwf.modeltime.nstp[0:p])
     ds["ghbg_0_cond"].values[istp] = ghbg.cond.get_data()[p]
 
-# ## Display generated dataset
-
-# show the dataset
-print(ds)
-
-# ## Export generated dataset to NetCDF
-
-# write dataset to netcdf
-ds.to_netcdf(
-    workspace / "netcdf/uzf01.structured.nc", format="NETCDF4", engine="netcdf4"
-)
+# ## Update MODFLOW 6 package input file
 
 # rewrite mf6 ghbg input to read from netcdf
 with open(workspace / "netcdf/uzf01.ghbg", "w") as f:
@@ -485,6 +450,18 @@ with open(workspace / "netcdf/uzf01.ghbg", "w") as f:
     f.write("END period 1\n")
 with open(workspace / "netcdf" / "uzf01.ghbg", "r") as fh:
     print(fh.read())
+
+# ## Display generated dataset
+
+# show the dataset
+print(ds)
+
+# ## Export generated dataset to NetCDF
+
+# write dataset to netcdf
+ds.to_netcdf(
+    workspace / "netcdf/uzf01.structured.nc", format="NETCDF4", engine="netcdf4"
+)
 
 # ## Run MODFLOW 6 simulation with NetCDF input
 #

@@ -12,8 +12,6 @@
 #     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
-#   metadata:
-#     section: mf6
 # ---
 
 # # MODFLOW 6: Generate MODFLOW 6 NetCDF input from existing FloPy sim
@@ -165,7 +163,7 @@ def create_sim(ws):
 
         uzf_spd.update({t: spd})
 
-    # Work up the GHB / GHBG boundary
+    # Work up the GHBG boundary
     ghb_ids = [(ncol - 1) + i * ncol for i in range(nrow)]
     abhead = np.full((nlay, ncpl), DNODATA, dtype=float)
     acond = np.full((nlay, ncpl), DNODATA, dtype=float)
@@ -464,16 +462,6 @@ for p in ghbg.cond.get_data():
                 l
             ].flatten()
 
-# ## Display generated dataset
-
-# show the dataset
-print(ds)
-
-# ## Export generated dataset to NetCDF
-
-# write dataset to netcdf
-ds.to_netcdf(workspace / "netcdf/uzf02.layered.nc", format="NETCDF4", engine="netcdf4")
-
 # rewrite mf6 ghbg input to read from netcdf
 with open(workspace / "netcdf/uzf02.ghbg", "w") as f:
     f.write("BEGIN options\n")
@@ -486,6 +474,16 @@ with open(workspace / "netcdf/uzf02.ghbg", "w") as f:
     f.write("END period 1\n")
 with open(workspace / "netcdf" / "uzf02.ghbg", "r") as fh:
     print(fh.read())
+
+# ## Display generated dataset
+
+# show the dataset
+print(ds)
+
+# ## Export generated dataset to NetCDF
+
+# write dataset to netcdf
+ds.to_netcdf(workspace / "netcdf/uzf02.layered.nc", format="NETCDF4", engine="netcdf4")
 
 # ## Run MODFLOW 6 simulation with NetCDF input
 #

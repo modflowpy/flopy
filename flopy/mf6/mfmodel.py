@@ -2236,3 +2236,14 @@ class MFModel(ModelInterface):
         return MFModel.netcdf_model(
             self.name, self.model_type, self.get_grid_type(), mesh
         )
+
+    def update_dataset(self, dataset, netcdf_info=None, mesh=None):
+        if netcdf_info is None:
+            nc_info = self.netcdf_info(mesh=mesh)
+        else:
+            nc_info = netcdf_info
+
+        for a in nc_info["attrs"]:
+            dataset.attrs[a] = nc_info["attrs"][a]
+
+        return dataset

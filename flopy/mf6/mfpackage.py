@@ -3507,6 +3507,8 @@ class MFPackage(PackageInterface):
                     a["attrs"]["_FillValue"] = FILLNA_DBL
                 elif data_item.block_name == "period":
                     a["attrs"]["_FillValue"] = DNODATA
+            if data_item.longname is not None:
+                a["attrs"]["longname"] = data_item.longname
 
             # set dictionary
             attrs[key] = a
@@ -3594,6 +3596,50 @@ class MFPackage(PackageInterface):
                             )
 
         return attrs
+
+    def update_dataset(self, dataset, netcdf_info=None, mesh=None):
+        if netcdf_info is None:
+            nc_info = self.netcdf_info(mesh=mesh)
+        else:
+            nc_info = netcdf_info
+
+        modelgrid = self.model_or_sim.modelgrid
+        modeltime = self.model_or_sim.modeltime
+
+        if mesh is None:
+            dimmap = {
+                "time": sum(modeltime.nstp),
+                "z": modelgrid.nlay,
+                "y": modelgrid.nrow,
+                "x": modelgrid.ncol,
+            }
+        elif mesh.upper() == "LAYERED":
+            dimmap = {
+                "time": sum(gwf.modeltime.nstp),
+                "z": gwf.modelgrid.nlay,
+                "nmesh_face": gwf.modelgrid.ncpl,
+            }
+
+        def _data_shape(shape):
+            dims_l = []
+            for d in shape:
+                dims_l.append(dimmap[d])
+
+            return dims_l
+
+        for v in nc_info:
+            varname = nc_info[v]["varname"]
+            data = np.full(
+                _data_shape(nc_info[v]["netcdf_shape"]),
+                nc_info[v]["attrs"]["_FillValue"],
+                dtype=nc_info[v]["xarray_type"],
+            )
+            var_d = {varname: (nc_info[v]["netcdf_shape"], data)}
+            dataset = dataset.assign(var_d)
+            for a in nc_info[v]["attrs"]:
+                dataset[varname].attrs[a] = nc_info[v]["attrs"][a]
+
+        return dataset
 
 
 class MFChildPackages:
