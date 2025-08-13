@@ -244,14 +244,14 @@ def test_lake(function_tmpdir, example_data_path):
         bedleak=5e-9,
     )
 
-    assert pakdata_dict[0] == 54, (
-        f"number of lake connections ({pakdata_dict[0]}) not equal to 54."
-    )
+    assert (
+        pakdata_dict[0] == 54
+    ), f"number of lake connections ({pakdata_dict[0]}) not equal to 54."
 
-    assert len(connectiondata) == 54, (
-        "number of lake connectiondata entries ({}) not equal to 54.".format(
-            len(connectiondata)
-        )
+    assert (
+        len(connectiondata) == 54
+    ), "number of lake connectiondata entries ({}) not equal to 54.".format(
+        len(connectiondata)
     )
 
     lak_pak_data = []
@@ -433,14 +433,14 @@ def test_embedded_lak_ex01(function_tmpdir, example_data_path):
         bedleak=0.1,
     )
 
-    assert pakdata_dict[0] == 57, (
-        f"number of lake connections ({pakdata_dict[0]}) not equal to 57."
-    )
+    assert (
+        pakdata_dict[0] == 57
+    ), f"number of lake connections ({pakdata_dict[0]}) not equal to 57."
 
-    assert len(connectiondata) == 57, (
-        "number of lake connectiondata entries ({}) not equal to 57.".format(
-            len(connectiondata)
-        )
+    assert (
+        len(connectiondata) == 57
+    ), "number of lake connectiondata entries ({}) not equal to 57.".format(
+        len(connectiondata)
     )
 
     lak_pak_data = []
@@ -554,9 +554,9 @@ def test_embedded_lak_prudic(example_data_path):
     idomain0_test[lakibd > 0] = 0
     idomain_test = idomain.copy()
     idomain[0, :, :] = idomain0_test
-    assert np.array_equal(idomain_rev, idomain_test), (
-        "idomain not updated correctly with lakibd"
-    )
+    assert np.array_equal(
+        idomain_rev, idomain_test
+    ), "idomain not updated correctly with lakibd"
 
 
 @requires_exe("mf6")

@@ -346,10 +346,10 @@ class NetCdf:
                             attrs["long_name"] += " " + suffix
                     else:
                         continue
-                assert new_vname not in self.nc.variables.keys(), (
-                    "var already exists:{} in {}".format(
-                        new_vname, ",".join(self.nc.variables.keys())
-                    )
+                assert (
+                    new_vname not in self.nc.variables.keys()
+                ), "var already exists:{} in {}".format(
+                    new_vname, ",".join(self.nc.variables.keys())
                 )
                 attrs["max"] = var[:].max()
                 attrs["min"] = var[:].min()
@@ -479,9 +479,9 @@ class NetCdf:
 
         """
 
-        assert self.nc is not None, (
-            "can't call difference() if nc hasn't been populated"
-        )
+        assert (
+            self.nc is not None
+        ), "can't call difference() if nc hasn't been populated"
 
         netCDF4 = import_optional_dependency("netCFD4")
 
@@ -1131,10 +1131,10 @@ class NetCdf:
             raise Exception(f"duplicate variable name: {name}")
 
         self.log(f"creating variable: {name}")
-        assert precision_str in PRECISION_STRS, (
-            "netcdf.create_variable() error: precision string {} not in {}".format(
-                precision_str, PRECISION_STRS
-            )
+        assert (
+            precision_str in PRECISION_STRS
+        ), "netcdf.create_variable() error: precision string {} not in {}".format(
+            precision_str, PRECISION_STRS
         )
 
         if self.nc is None:

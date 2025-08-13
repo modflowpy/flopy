@@ -1,0 +1,33 @@
+# MODFLOW-USG Block-Centered Transport (BCT) Package
+ 1 0 1 1 00 1 0   -1.000000e+000 1.000000e-006    1 0 0.000000e+000 0 0 0
+CONSTANT   2.00000E-001            Porosity Layer 1
+CONSTANT   2.00000E-001            Porosity Layer 2
+CONSTANT   2.00000E-001            Porosity Layer 3
+CONSTANT   2.00000E-001            Porosity Layer 4
+CONSTANT   2.00000E-001            Porosity Layer 5
+CONSTANT   1.70000E+000            BULKD Layer 1
+CONSTANT   1.70000E+000            BULKD Layer 2
+CONSTANT   1.70000E+000            BULKD Layer 3
+CONSTANT   1.70000E+000            BULKD Layer 4
+CONSTANT   1.70000E+000            BULKD Layer 5
+CONSTANT            0.0            ANGLEX by NJAG
+CONSTANT   0.00000E-004            DL Layer 1
+CONSTANT   0.00000E-004            DL Layer 2
+CONSTANT   0.00000E-004            DL Layer 3
+CONSTANT   0.00000E-004            DL Layer 4
+CONSTANT   0.00000E-004            DL Layer 5
+CONSTANT   0.00000E-004            DT Layer 1
+CONSTANT   0.00000E-004            DT Layer 2
+CONSTANT   0.00000E-004            DT Layer 3
+CONSTANT   0.00000E-004            DT Layer 4
+CONSTANT   0.00000E-004            DT Layer 5
+CONSTANT   0.00000E+000           ADSORB Layer 1
+CONSTANT   0.00000E+000           ADSORB Layer 2
+CONSTANT   0.00000E+000           ADSORB Layer 3
+CONSTANT   0.00000E+000           ADSORB Layer 4
+CONSTANT   0.00000E+000           ADSORB Layer 5
+CONSTANT   0.00000E+000           CONC Layer 1
+CONSTANT   0.00000E+000           CONC Layer 2
+CONSTANT   0.00000E+000           CONC Layer 3
+CONSTANT   0.00000E+000           CONC Layer 4
+CONSTANT   0.00000E+000           CONC Layer 5

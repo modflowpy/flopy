@@ -137,6 +137,6 @@ def test_run_mfnwt_model(function_tmpdir, namfile):
     assert compare_heads(fn0, fn1, outfile=fsum), "head comparison failure"
 
     fsum = function_tmpdir / f"{base_name}.budget.out"
-    assert compare_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum), (
-        "budget comparison failure"
-    )
+    assert compare_budget(
+        fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum
+    ), "budget comparison failure"

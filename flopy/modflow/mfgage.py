@@ -344,8 +344,7 @@ class ModflowGage(Package):
                 for key, value in ext_unit_dict.items():
                     if key == abs(iu):
                         model.add_pop_key_list(abs(iu))
-                        relpth = os.path.relpath(value.filename, model.model_ws)
-                        files.append(relpth)
+                        files.append(os.path.basename(value.filename))
                         break
 
         if openfile:

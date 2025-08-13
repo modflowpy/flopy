@@ -1,0 +1,14 @@
+# Case 2 BCT
+         1        55         1         1        04         1         0    999.99    1.0e-6         1         0       0.0
+         0      0.20                                   PRSITY Layer   1
+         0      0.20                                   PRSITY Layer   2
+         0        1.                                   rhob Layer   2
+         0        1.                                   rhob Layer   2
+         0     000.0                                   DL Layer   1
+         0     000.0                                   DL Layer   2
+         0       00.                                   DT Layer   1
+         0       00.                                   DT Layer   2
+         0      0.20                                   kd Layer   1
+         0      0.20                                   kd Layer   2
+         0     0.000(10e12.4)                    0     STARTING CONC Layer   1
+         0     0.000(10e12.4)                    0     STARTING CONC Layer   2

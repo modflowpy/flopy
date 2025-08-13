@@ -1,0 +1,15 @@
+# MODFLOW-USG name file written by Groundwater Vistas
+#xll:0.000000; yll:0.000000; rotation:0.000000;
+LIST  7 PFAS_Cp01.lst
+BAS6  1 PFAS_Cp01.bas
+SMS  19 PFAS_Cp01.sms
+DISU 29 PFAS_Cp01.dis
+OC   22 PFAS_Cp01.oc
+BCT  45 PFAS_Cp01.bct
+RCH  18 PFAS_Cp01.rch
+CHD  199 PFAS_Cp01.chd
+LPF  11 PFAS_Cp01.lpf
+DATA(BINARY) 132 PFAS_Cp01.con
+DATA(BINARY) 50 PFAS_Cp01.cbb
+DATA(BINARY) 30 PFAS_Cp01.hds
+DATA(BINARY) 31 PFAS_Cp01.ddn
