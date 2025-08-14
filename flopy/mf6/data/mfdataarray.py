@@ -1160,7 +1160,7 @@ class MFArray(MFMultiDimVar):
         if (
             data_storage is None
             or data_storage.layer_storage.get_total_size() == 0
-            or not data_storage.has_data()
+            or (not data_storage.has_data() and not data_storage.netcdf)
         ):
             return ""
 
@@ -1206,7 +1206,7 @@ class MFArray(MFMultiDimVar):
                 f"{indent}{self.structure.name}{indent}{data}\n"
             )
         elif data_storage.layered:
-            if not layered_aux:
+            if not layered_aux and not data_storage.netcdf:
                 if not self.structure.data_item_structures[0].just_data:
                     name = self.structure.name
                     file_entry_array.append(f"{indent}{name}{indent}LAYERED\n")
@@ -1241,7 +1241,11 @@ class MFArray(MFMultiDimVar):
 
                 layer_min = layer
                 layer_max = shape_ml.inc_shape_idx(layer)
-            if layered_aux:
+
+            if data_storage.netcdf:
+                file_entry_array.append(f"{indent}{self.structure.name}{indent}NETCDF\n")
+
+            elif layered_aux:
                 aux_var_names = (
                     self.data_dimensions.package_dim.get_aux_variables()[0]
                 )
@@ -1274,15 +1278,18 @@ class MFArray(MFMultiDimVar):
                     file_entry_array.append(
                         f"{indent}{self._get_aux_var_name([0])}\n"
                     )
+                elif data_storage.netcdf:
+                    file_entry_array.append(f"{indent}{self.structure.name}{indent}NETCDF\n")
                 else:
                     file_entry_array.append(f"{indent}{self.structure.name}\n")
 
             data_storage_type = data_storage.layer_storage[0].data_storage_type
-            file_entry_array.append(
-                self._get_file_entry_layer(
-                    None, data_indent, data_storage_type, ext_file_action
+            if not data_storage.netcdf:
+                file_entry_array.append(
+                    self._get_file_entry_layer(
+                        None, data_indent, data_storage_type, ext_file_action
+                    )
                 )
-            )
 
         return "".join(file_entry_array)
 
@@ -1395,6 +1402,9 @@ class MFArray(MFMultiDimVar):
                 const_val, layer, self._data_type
             ).upper()
             file_entry = f"{file_entry}{indent_string}{const_str}"
+        elif self._get_storage_obj().netcdf:
+            indent = self._simulation_data.indent_string
+            file_entry = f"{indent}{self.structure.name}{indent_string}NETCDF\n"
         else:
             #  external data
             ext_str = self._get_external_formatting_string(
@@ -1589,6 +1599,17 @@ class MFArray(MFMultiDimVar):
             axes = None
 
         return axes
+
+    def _set_storage_netcdf(self, reset=False):
+
+        if isinstance(self, MFTransientArray):
+            storage = self._get_storage_obj()
+            for key in self._data_storage.keys():
+                self.get_data_prep(key)
+                self._data_storage[key]._set_storage_netcdf(reset=reset)
+        else:
+            storage = self._get_storage_obj()
+            storage._set_storage_netcdf(reset=reset)
 
 
 class MFTransientArray(MFArray, MFTransient):

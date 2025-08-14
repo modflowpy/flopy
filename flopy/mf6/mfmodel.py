@@ -25,6 +25,7 @@ from .mfbase import (
     MFFileMgmt,
     PackageContainer,
     PackageContainerType,
+    ReadArrayGridException,
     ReadAsArraysException,
     VerbosityLevel,
 )
@@ -931,6 +932,17 @@ class MFModel(ModelInterface):
 
         # load name file
         instance.name_file.load(strict)
+        if hasattr(instance.name_file, "nc_filerecord"):
+            nc_filerecord = instance.name_file.nc_filerecord.get_data()
+            if nc_filerecord:
+                message = (
+                    "NetCDF input file is currently "
+                    "unsupported for model load."
+                )
+                raise MFDataException(
+                    model=modelname,
+                    message=message,
+                )
 
         # order packages
         # FIX: Transport - Priority packages maybe should not be hard coded
@@ -1299,7 +1311,11 @@ class MFModel(ModelInterface):
         else:
             return f",{data_entry}\n"
 
-    def write(self, ext_file_action=ExtFileAction.copy_relative_paths):
+    def write(
+        self,
+        ext_file_action=ExtFileAction.copy_relative_paths,
+        netcdf=None,
+    ):
         """
         Writes out model's package files.
 
@@ -1309,7 +1325,9 @@ class MFModel(ModelInterface):
             Defines what to do with external files when the simulation path has
             changed.  defaults to copy_relative_paths which copies only files
             with relative paths, leaving files defined by absolute paths fixed.
-
+        netcdf : str
+            ASCII package files will be written as configured for NetCDF input. 
+            'mesh2d' and 'structured' are supported types.
         """
 
         # write name file
@@ -1328,14 +1346,28 @@ class MFModel(ModelInterface):
                 self.simulation_data.max_columns_user_set = False
                 self.simulation_data.max_columns_auto_set = True
 
+        write_netcdf = netcdf and (
+            self.model_type == "gwf6"
+            or self.model_type == "gwt6"
+            or self.model_type == "gwe6"
+        )
+
         # write packages
         for pp in self.packagelist:
+            if write_netcdf:
+                # reset data storage to write ascii for netcdf
+                pp._set_netcdf_storage()
+
             if (
                 self.simulation_data.verbosity_level.value
                 >= VerbosityLevel.normal.value
             ):
                 print(f"    writing package {pp._get_pname()}...")
             pp.write(ext_file_action=ext_file_action)
+
+            if write_netcdf:
+                # reset data storage
+                pp._set_netcdf_storage(reset=True)
 
     def get_grid_type(self):
         """
@@ -2123,11 +2155,17 @@ class MFModel(ModelInterface):
         )
         try:
             package.load(strict)
-        except ReadAsArraysException:
+        except (ReadAsArraysException, ReadArrayGridException) as e:
             #  create ReadAsArrays package and load it instead
-            package_obj = PackageContainer.package_factory(
-                f"{ftype}a", model_type
-            )
+            if isinstance(e, ReadAsArraysException):
+                package_obj = PackageContainer.package_factory(
+                    f"{ftype}a", model_type
+                )
+            #  create ReadArrayGrid package and load it instead
+            elif isinstance(e, ReadArrayGridException):
+                package_obj = PackageContainer.package_factory(
+                    f"{ftype}g", model_type
+                )
             package = package_obj(
                 self,
                 filename=fname,

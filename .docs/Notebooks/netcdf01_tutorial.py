@@ -12,8 +12,6 @@
 #     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
-#   metadata:
-#     section: mf6
 # ---
 
 # # MODFLOW 6: Generate MODFLOW 6 NetCDF input from existing FloPy sim
@@ -39,7 +37,9 @@ from pathlib import Path
 from pprint import pformat, pprint
 from tempfile import TemporaryDirectory
 
+import git
 import numpy as np
+import pooch
 import xarray as xr
 
 import flopy
@@ -47,212 +47,60 @@ import flopy
 print(sys.version)
 print(f"flopy version: {flopy.__version__}")
 
-# ## Define `DNODATA` constant
-#
-# `DNODATA` is an important constant for MODFLOW 6 timeseries grid input
-# data. It signifies that the cell has no data defined for the time step
-# in question. These cell values are discarded and have no impact on the
-# simulation.
+sim_name = "uzf01"
 
-# DNODATA constant
-DNODATA = 3.0e30
+# Check if we are in the repository and define the data path.
 
-# ## Define ASCII input baseline simulation
-#
-# For the purposes of this tutorial, the specifics of this simulation
-# other than it is a candidate for NetCDF input are not a focus. It
-# is a NetCDF input candidate because it defines a candidate model type
-# (`GWF6`) with a structured discretization and packages that support
-# NetCDF input parameters.
-#
-# A NetCDF dataset will be created from array data in the `DIS`, `NPF` and
-# `GHBG` packages. Data will be copied from the package objects into dataset
-# arrays.
+try:
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
+except:
+    root = None
 
+data_path = root / "examples" / "data" / "mf6" / "netcdf" if root else Path.cwd()
+print(data_path)
 
-# A FloPy ASCII base simulation that will be updated use netcdf inputs
-def create_sim(ws):
-    name = "uzf01"
-    perlen = [500.0]
-    nper = len(perlen)
-    nstp = [10]
-    tsmult = nper * [1.0]
-    crs = "EPSG:26916"
-    nlay, nrow, ncol = 100, 1, 1
-    delr = 1.0
-    delc = 1.0
-    delv = 1.0
-    top = 100.0
-    botm = [top - (k + 1) * delv for k in range(nlay)]
-    strt = 0.5
-    hk = 1.0
-    laytyp = 1
-    ss = 0.0
-    sy = 0.1
+file_names = {
+    "mfsim.nam": None,
+    "uzf01.dis": None,
+    "uzf01.ghb.obs": None,
+    "uzf01.ghbg": None,
+    "uzf01.ic": None,
+    "uzf01.ims": None,
+    "uzf01.nam": None,
+    "uzf01.npf": None,
+    "uzf01.obs": None,
+    "uzf01.oc": None,
+    "uzf01.sto": None,
+    "uzf01.tdis": None,
+    "uzf01.uzf": None,
+    "uzf01.uzf.obs": None,
+}
 
-    tdis_rc = []
-    for i in range(nper):
-        tdis_rc.append((perlen[i], nstp[i], tsmult[i]))
-
-    # build MODFLOW 6 files
-    sim = flopy.mf6.MFSimulation(
-        sim_name=name, version="mf6", exe_name="mf6", sim_ws=ws
-    )
-
-    # create tdis package
-    tdis = flopy.mf6.ModflowTdis(sim, time_units="DAYS", nper=nper, perioddata=tdis_rc)
-
-    # create iterative model solution and register the gwf model with it
-    nouter, ninner = 100, 10
-    hclose, rclose, relax = 1.5e-6, 1e-6, 0.97
-    imsgwf = flopy.mf6.ModflowIms(
-        sim,
-        print_option="SUMMARY",
-        outer_dvclose=hclose,
-        outer_maximum=nouter,
-        under_relaxation="DBD",
-        under_relaxation_theta=0.7,
-        inner_maximum=ninner,
-        inner_dvclose=hclose,
-        rcloserecord=rclose,
-        linear_acceleration="BICGSTAB",
-        scaling_method="NONE",
-        reordering_method="NONE",
-        relaxation_factor=relax,
-    )
-
-    # create gwf model
-    newtonoptions = "NEWTON UNDER_RELAXATION"
-    gwf = flopy.mf6.ModflowGwf(
-        sim,
-        modelname=name,
-        newtonoptions=newtonoptions,
-        save_flows=True,
-    )
-
-    dis = flopy.mf6.ModflowGwfdis(
-        gwf,
-        crs=crs,
-        nlay=nlay,
-        nrow=nrow,
-        ncol=ncol,
-        delr=delr,
-        delc=delc,
-        top=top,
-        botm=botm,
-        idomain=np.ones((nlay, nrow, ncol), dtype=int),
-    )
-
-    # initial conditions
-    ic = flopy.mf6.ModflowGwfic(gwf, strt=strt)
-
-    # node property flow
-    npf = flopy.mf6.ModflowGwfnpf(gwf, save_flows=False, icelltype=laytyp, k=hk)
-    # storage
-    sto = flopy.mf6.ModflowGwfsto(
-        gwf,
-        save_flows=False,
-        iconvert=laytyp,
-        ss=ss,
-        sy=sy,
-        steady_state={0: False},
-        transient={0: True},
-    )
-
-    # ghbg
-    ghb_obs = {f"{name}.ghb.obs.csv": [("100_1_1", "GHB", (99, 0, 0))]}
-    bhead = np.full(nlay * nrow * ncol, DNODATA, dtype=float)
-    cond = np.full(nlay * nrow * ncol, DNODATA, dtype=float)
-    bhead[nlay - 1] = 1.5
-    cond[nlay - 1] = 1.0
-    ghb = flopy.mf6.ModflowGwfghbg(
-        gwf,
-        print_input=True,
-        print_flows=True,
-        bhead=bhead,
-        cond=cond,
-        save_flows=False,
-    )
-
-    ghb.obs.initialize(
-        filename=f"{name}.ghb.obs",
-        digits=20,
-        print_input=True,
-        continuous=ghb_obs,
-    )
-
-    # note: for specifying lake number, use fortran indexing!
-    uzf_obs = {
-        f"{name}.uzf.obs.csv": [
-            ("wc 02", "water-content", 2, 0.5),
-            ("wc 50", "water-content", 50, 0.5),
-            ("wcbn 02", "water-content", "uzf 002", 0.5),
-            ("wcbn 50", "water-content", "UZF 050", 0.5),
-            ("rch 02", "uzf-gwrch", "uzf 002"),
-            ("rch 50", "uzf-gwrch", "uzf 050"),
-        ]
-    }
-
-    sd = 0.1
-    vks = hk
-    thtr = 0.05
-    thti = thtr
-    thts = sy
-    eps = 4
-    uzf_pkdat = [[0, (0, 0, 0), 1, 1, sd, vks, thtr, thts, thti, eps, "uzf 001"]] + [
-        [k, (k, 0, 0), 0, k + 1, sd, vks, thtr, thts, thti, eps, f"uzf {k + 1:03d}"]
-        for k in range(1, nlay - 1)
-    ]
-    uzf_pkdat[-1][3] = -1
-    infiltration = 2.01
-    uzf_spd = {0: [[0, infiltration, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]}
-    uzf = flopy.mf6.ModflowGwfuzf(
-        gwf,
-        print_input=True,
-        print_flows=True,
-        save_flows=True,
-        boundnames=True,
-        ntrailwaves=15,
-        nwavesets=40,
-        nuzfcells=len(uzf_pkdat),
-        packagedata=uzf_pkdat,
-        perioddata=uzf_spd,
-        budget_filerecord=f"{name}.uzf.bud",
-        budgetcsv_filerecord=f"{name}.uzf.bud.csv",
-        observations=uzf_obs,
-        filename=f"{name}.uzf",
-    )
-
-    # output control
-    oc = flopy.mf6.ModflowGwfoc(
-        gwf,
-        budget_filerecord=f"{name}.bud",
-        head_filerecord=f"{name}.hds",
-        headprintrecord=[("COLUMNS", 10, "WIDTH", 15, "DIGITS", 6, "GENERAL")],
-        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
-        printrecord=[("HEAD", "LAST"), ("BUDGET", "ALL")],
-    )
-
-    obs_lst = []
-    obs_lst.append(["obs1", "head", (0, 0, 0)])
-    obs_lst.append(["obs2", "head", (1, 0, 0)])
-    obs_dict = {f"{name}.obs.csv": obs_lst}
-    obs = flopy.mf6.ModflowUtlobs(gwf, pname="head_obs", digits=20, continuous=obs_dict)
-
-    return sim
-
+# for fname, fhash in file_names.items():
+#    pooch.retrieve(
+#        url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{sim_name}/{fname}",
+#        fname=fname,
+#        path=data_path / sim_name,
+#        known_hash=fhash,
+#    )
 
 # ## Create simulation workspace
 
 # create temporary directories
-# temp_dir = TemporaryDirectory()
-# workspace = Path(temp_dir.name)
-workspace = Path("./working")
+temp_dir = TemporaryDirectory()
+workspace = Path(temp_dir.name)
 
-# ## Write and run baseline simulation
+# ## Load and run baseline simulation
+#
+# For the purposes of this tutorial, the specifics of this simulation
+# other than it is a candidate for NetCDF input are not a focus. It
+# is a NetCDF input candidate because it defines a supported model type
+# (`GWF6`) with a structured discretization and packages that support
+# NetCDF input parameters.
 
-# run the non-netcdf simulation
-sim = create_sim(ws=workspace)
+# load and run the non-netcdf simulation
+sim = flopy.mf6.MFSimulation.load(sim_ws=data_path / sim_name)
+sim.set_sim_path(workspace)
 sim.write_simulation()
 success, buff = sim.run_simulation(silent=True, report=True)
 assert success, pformat(buff)
@@ -262,14 +110,28 @@ assert success, pformat(buff)
 # Reset the simulation path and set the `GWF` name file `nc_filerecord`
 # attribute to the name of the intended input NetCDF file. Display
 # the resultant name file changes.
+#
+# When we write the updated simulation, all packages that support NetCDF
+# input parameters will be converted. We will therefore need to create a
+# NetCDF input file containing arrays for the `DIS`, `NPF`, `IC`, `STO`,
+# and `GHBG` packages. Data will be copied from the package objects into
+# dataset arrays.
+#
+# Flopy does not currently generate the NetCDF input file. This tutorial
+# shows one way that can be accomplished. 
 
 # create directory for netcdf sim
-# set model name file nc_filerecord attribute to export name
 sim.set_sim_path(workspace / "netcdf")
+# set model name file nc_filerecord attribute to export name
 gwf = sim.get_model("uzf01")
 gwf.name_file.nc_filerecord = "uzf01.structured.nc"
-sim.write_simulation()
+# write simulation with ASCII inputs tagged for NetCDF
+sim.write_simulation(netcdf=True)
+# show name file with NetCDF input configured
 with open(workspace / "netcdf" / "uzf01.nam", "r") as fh:
+    print(fh.read())
+# show example package file with NetCDF input configured
+with open(workspace / "netcdf" / "uzf01.ic", "r") as fh:
     print(fh.read())
 
 # ## Create dataset
@@ -292,7 +154,7 @@ ds = gwf.modelgrid.dataset(modeltime=gwf.modeltime)
 # its contents. Then, in the following step, update the dataset with
 # the model scoped attributes defined in the dictionary.
 #
-# These 2 operations can also be accomplised by calling `update_dataset()`
+# These 2 operations can also be accomplished by calling `update_dataset()`
 # on the model object. Analogous functions for the package are shown
 # below.
 
@@ -332,36 +194,6 @@ ds["dis_top"].values = dis.top.get_data()
 ds["dis_botm"].values = dis.botm.get_data()
 ds["dis_idomain"].values = dis.idomain.get_data()
 
-# ## Update MODFLOW 6 package input file
-#
-# MODFLOW 6 input data for the package is now in the dataset. Once the NetCDF
-# file is generated, we need to configure MODFLOW 6 so that it looks to that
-# file for the package array input. The ASCII file will no longer define the
-# arrays- instead the array names will be followed by the NETCDF keyword.
-#
-# We will simply overwrite the entire MODFLOW 6 `DIS` package input file with the
-# following code block.
-
-# rewrite mf6 dis input to read from netcdf
-with open(workspace / "netcdf" / "uzf01.dis", "w") as f:
-    f.write("BEGIN options\n")
-    f.write("  crs  EPSG:26916\n")
-    f.write("END options\n\n")
-    f.write("BEGIN dimensions\n")
-    f.write("  NLAY  100\n")
-    f.write("  NROW  1\n")
-    f.write("  NCOL  1\n")
-    f.write("END dimensions\n\n")
-    f.write("BEGIN griddata\n")
-    f.write("  delr NETCDF\n")
-    f.write("  delc NETCDF\n")
-    f.write("  top NETCDF\n")
-    f.write("  botm NETCDF\n")
-    f.write("  idomain NETCDF\n")
-    f.write("END griddata\n")
-with open(workspace / "netcdf" / "uzf01.dis", "r") as fh:
-    print(fh.read())
-
 # ## Access `NPF` package NetCDF attributes
 #
 # Access package scoped NetCDF details by storing the dictionary returned
@@ -382,7 +214,7 @@ pprint(nc_info)
 #
 # Here we replace the default name for the `NPF K` input parameter and add
 # the `standard_name` attribute to it's attribute dictionary.  The dictionary
-# is then passed to the `update_dataset()` function. Note the udpated name
+# is then passed to the `update_dataset()` function. Note the updated name
 # is used in the subsequent block when updating the array values.
 
 # update dataset with `NPF` arrays
@@ -396,23 +228,26 @@ ds = npf.update_dataset(ds, netcdf_info=nc_info)
 ds["npf_icelltype"].values = npf.icelltype.get_data()
 ds["npf_k_updated"].values = npf.k.get_data()
 
-# ## Show dataset `NPF K` parameter with udpates
+# ## Show dataset `NPF K` parameter with updates
 
 # print dataset npf k variable
 print(ds["npf_k_updated"])
 
-# ## Update MODFLOW 6 package input file
+# # Update the dataset with supported `IC` arrays
 
-# rewrite mf6 npf input to read from netcdf
-with open(workspace / "netcdf" / "uzf01.npf", "w") as f:
-    f.write("BEGIN options\n")
-    f.write("END options\n\n")
-    f.write("BEGIN griddata\n")
-    f.write("  icelltype NETCDF\n")
-    f.write("  k NETCDF\n")
-    f.write("END griddata\n")
-with open(workspace / "netcdf" / "uzf01.npf", "r") as fh:
-    print(fh.read())
+# ic
+ic = gwf.get_package("ic")
+ds = ic.update_dataset(ds)
+ds["ic_strt"].values = ic.strt.get_data()
+
+# # Update the dataset with supported `STO` arrays
+
+# storage
+sto = gwf.get_package("sto")
+ds = sto.update_dataset(ds)
+ds["sto_iconvert"].values = sto.iconvert.get_data()
+ds["sto_sy"].values = sto.sy.get_data()
+ds["sto_ss"].values = sto.ss.get_data()
 
 # ## Update the dataset with supported `GHBG` arrays
 
@@ -434,23 +269,6 @@ for p in ghbg.cond.get_data():
     istp = sum(gwf.modeltime.nstp[0:p])
     ds["ghbg_0_cond"].values[istp] = ghbg.cond.get_data()[p]
 
-# ## Update MODFLOW 6 package input file
-
-# rewrite mf6 ghbg input to read from netcdf
-with open(workspace / "netcdf/uzf01.ghbg", "w") as f:
-    f.write("BEGIN options\n")
-    f.write("  READARRAYGRID\n")
-    f.write("  PRINT_INPUT\n")
-    f.write("  PRINT_FLOWS\n")
-    f.write("  OBS6  FILEIN  uzf01.ghb.obs\n")
-    f.write("END options\n\n")
-    f.write("BEGIN period 1\n")
-    f.write("  bhead NETCDF\n")
-    f.write("  cond NETCDF\n")
-    f.write("END period 1\n")
-with open(workspace / "netcdf" / "uzf01.ghbg", "r") as fh:
-    print(fh.read())
-
 # ## Display generated dataset
 
 # show the dataset
@@ -471,3 +289,5 @@ ds.to_netcdf(
 
 # success, buff = sim.run_simulation(silent=True, report=True)
 # assert success, pformat(buff)
+
+

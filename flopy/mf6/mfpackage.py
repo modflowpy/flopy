@@ -33,6 +33,7 @@ from .mfbase import (
     MFInvalidTransientBlockHeaderException,
     PackageContainer,
     PackageContainerType,
+    ReadArrayGridException,
     ReadAsArraysException,
     VerbosityLevel,
 )
@@ -1132,6 +1133,17 @@ class MFBlock:
                     "package {}".format(self.path)
                 )
                 raise ReadAsArraysException(error_msg)
+            elif (
+                arr_line[0].lower() == "readarraygrid"
+                and self.path[-1].lower() == "options"
+                and self._container_package.structure.read_array_grid is False
+            ):
+                error_msg = (
+                    "ERROR: Attempting to read a ReadArrayGrid "
+                    "package as a non-ReadArrayGrid "
+                    "package {}".format(self.path)
+                )
+                raise ReadArrayGridException(error_msg)
             else:
                 nothing_found = True
 
@@ -1685,6 +1697,34 @@ class MFBlock:
                 # Enabled blocks must be valid
                 if dataset.enabled and not dataset.is_valid():
                     return False
+
+    def _set_netcdf_storage(self, reset=False):
+        """Set the dataset storage to netcdf if supported for the dataset.
+
+        Parameters
+        ----------
+            reset : bool
+                reset netcdf storage to not set.
+
+        """
+
+        for key, dataset in self.datasets.items():
+            if (
+                isinstance(dataset, mfdataarray.MFArray)
+                or isinstance(dataset, mfdataarray.MFTransientArray)
+            ):
+                if dataset.structure.netcdf and dataset.has_data():
+                    try:
+                        dataset._set_storage_netcdf(reset)
+                    except MFDataException as mfde:
+                        raise MFDataException(
+                            mfdata_except=mfde,
+                            model=self._container_package.model_name,
+                            package=self._container_package._get_pname(),
+                            message="Error setting netcdf storage: "
+                            ' data of dataset "{}" in block '
+                            '"{}"'.format(dataset.structure.name, self.structure.name),
+                        )
 
 
 class MFPackage(PackageInterface):
@@ -3640,6 +3680,21 @@ class MFPackage(PackageInterface):
                 dataset[varname].attrs[a] = nc_info[v]["attrs"][a]
 
         return dataset
+
+    def _set_netcdf_storage(self, reset=False):
+        """Set griddata array dataset storage to netcdf.
+
+        Parameters
+        ----------
+            reset : bool
+                reset netcdf storage to not set.
+
+        """
+
+        # update blocks
+        for key, block in self.blocks.items():
+            if key == "griddata" or key == "period":
+                block._set_netcdf_storage(reset)
 
 
 class MFChildPackages:

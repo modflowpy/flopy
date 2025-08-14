@@ -203,6 +203,8 @@ class DataStorage:
         what internal type is the data stored in (ndarray, recarray, scalar)
     layered : bool
         is the data layered
+    netcdf : bool
+        is the data stored in netcdf
     pre_data_comments : string
         any comments before the start of the data
     comments : dict
@@ -327,6 +329,7 @@ class DataStorage:
             self.build_type_list(resolve_data_shape=False)
 
         self.layered = layered
+        self.netcdf = False
 
         # initialize comments
         self.pre_data_comments = None
@@ -1445,7 +1448,6 @@ class DataStorage:
             for data_item_index, data_item in enumerate(
                 struct.data_item_structures
             ):
-                print(data_item)
                 if data_item.type == DatumType.keyword:
                     if data_lst[0].lower() != data_item.name.lower():
                         data_lst_updated.append(data_item.name)
@@ -1832,6 +1834,7 @@ class DataStorage:
                         self._data_path,
                         self._stress_period,
                     )
+
                     file_access.write_text_file(
                         data,
                         fp,
@@ -1870,6 +1873,12 @@ class DataStorage:
         ) = self.process_open_close_line(arr_line, layer, store=False)
         self.set_ext_file_attributes(layer, data_file, print_format, binary)
         self.layer_storage[layer].factor = multiplier
+
+    def _set_storage_netcdf(self, reset=False):
+        if reset:
+            self.netcdf = False
+        else:
+            self.netcdf = True
 
     def external_to_external(
         self, new_external_file, multiplier=None, layer=None, binary=None
