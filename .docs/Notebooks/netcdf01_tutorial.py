@@ -57,7 +57,6 @@ except:
     root = None
 
 data_path = root / "examples" / "data" / "mf6" / "netcdf" if root else Path.cwd()
-print(data_path)
 
 file_names = {
     "mfsim.nam": None,
@@ -233,14 +232,14 @@ ds["npf_k_updated"].values = npf.k.get_data()
 # print dataset npf k variable
 print(ds["npf_k_updated"])
 
-# # Update the dataset with supported `IC` arrays
+# ## Update the dataset with supported `IC` arrays
 
 # ic
 ic = gwf.get_package("ic")
 ds = ic.update_dataset(ds)
 ds["ic_strt"].values = ic.strt.get_data()
 
-# # Update the dataset with supported `STO` arrays
+# ## Update the dataset with supported `STO` arrays
 
 # storage
 sto = gwf.get_package("sto")

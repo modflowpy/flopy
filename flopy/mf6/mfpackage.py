@@ -3655,9 +3655,9 @@ class MFPackage(PackageInterface):
             }
         elif mesh.upper() == "LAYERED":
             dimmap = {
-                "time": sum(gwf.modeltime.nstp),
-                "z": gwf.modelgrid.nlay,
-                "nmesh_face": gwf.modelgrid.ncpl,
+                "time": sum(modeltime.nstp),
+                "z": modelgrid.nlay,
+                "nmesh_face": modelgrid.ncpl,
             }
 
         def _data_shape(shape):

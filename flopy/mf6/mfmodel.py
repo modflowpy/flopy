@@ -1355,7 +1355,7 @@ class MFModel(ModelInterface):
         # write packages
         for pp in self.packagelist:
             if write_netcdf:
-                # reset data storage to write ascii for netcdf
+                # set data storage to write ascii for netcdf
                 pp._set_netcdf_storage()
 
             if (
@@ -2029,9 +2029,12 @@ class MFModel(ModelInterface):
                 pkg_type = package.package_type.upper()
                 if (
                     package.package_type != "obs" and
+                    (self.structure.pkg_spec[
+                    package.package_type
+                    ].read_as_arrays or
                     self.structure.pkg_spec[
                     package.package_type
-                    ].read_as_arrays
+                    ].read_array_grid)
                 ):
                     pkg_type = pkg_type[0:-1]
                 # Model Assumption - assuming all name files have a package
