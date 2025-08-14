@@ -118,7 +118,7 @@ assert success, pformat(buff)
 # dataset arrays.
 #
 # Flopy does not currently generate the NetCDF input file. This tutorial
-# shows one way that can be accomplished. 
+# shows one way that can be accomplished.
 
 # create directory for netcdf sim
 sim.set_sim_path(workspace / "netcdf")
@@ -289,5 +289,3 @@ ds.to_netcdf(
 
 # success, buff = sim.run_simulation(silent=True, report=True)
 # assert success, pformat(buff)
-
-
