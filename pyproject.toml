@@ -85,6 +85,7 @@ optional = [
     "xmipy",
     "h5py",
     "scikit-learn"
+    "xarray",
 ]
 doc = [
     "flopy[optional]",

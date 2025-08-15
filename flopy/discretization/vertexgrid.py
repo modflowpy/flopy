@@ -601,7 +601,8 @@ class VertexGrid(Grid):
         return plotarray
 
     def dataset(self, modeltime=None, mesh=None):
-        import xarray as xr
+        from ..utils import import_optional_dependency
+        xr = import_optional_dependency("xarray")
 
         FILLNA_INT32 = np.int32(-2147483647)
         FILLNA_DBL = 9.96920996838687e36

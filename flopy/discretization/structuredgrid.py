@@ -1771,7 +1771,8 @@ class StructuredGrid(Grid):
         return plotarray
 
     def dataset(self, modeltime=None, mesh=None):
-        import xarray as xr
+        from ..utils import import_optional_dependency
+        xr = import_optional_dependency("xarray")
 
         if modeltime is None:
             raise ValueError("modeltime required for dataset timeseries")
