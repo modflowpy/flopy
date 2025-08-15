@@ -602,6 +602,7 @@ class VertexGrid(Grid):
 
     def dataset(self, modeltime=None, mesh=None):
         from ..utils import import_optional_dependency
+
         xr = import_optional_dependency("xarray")
 
         FILLNA_INT32 = np.int32(-2147483647)

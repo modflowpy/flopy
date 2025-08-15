@@ -1772,6 +1772,7 @@ class StructuredGrid(Grid):
 
     def dataset(self, modeltime=None, mesh=None):
         from ..utils import import_optional_dependency
+
         xr = import_optional_dependency("xarray")
 
         if modeltime is None:
