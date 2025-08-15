@@ -234,6 +234,7 @@ def test_uzf01_model_scope_nomesh(function_tmpdir, example_data_path):
 
     check_netcdf(ws / fname)
 
+
 @pytest.mark.regression
 def test_uzf01_model_scope_mesh(function_tmpdir, example_data_path):
     sim_name = "uzf01"
