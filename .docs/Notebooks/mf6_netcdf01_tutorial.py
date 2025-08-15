@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.17.2
+#       jupytext_version: 1.16.4
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -16,15 +16,17 @@
 
 # # MODFLOW 6: Generate MODFLOW 6 NetCDF input from existing FloPy sim
 #
-# ## NetCDF tutorial 2: MODFLOW 6 UGRID layered mesh input file
+# ## NetCDF tutorial 1: MODFLOW 6 structured input file
 #
-# This tutorial demonstrates how to generate a MODFLOW 6 NetCDF file from
-# an existing FloPy simulation. In the tutorial, candidate array data is
-# added to an xarray dataset and annotated so that the generated NetCDF
-# file can be read by MODFLOW 6 as model input.
+# This tutorial shows how to generate a MODFLOW 6 NetCDF file from
+# an existing FloPy simulation. Two methods will be demonstrated that
+# generate a simulation with package data stored in a model NetCDF
+# file. The first method is non-interactive- FloPy will generate the
+# file with a modified `write_simulation()` call.  The second method
+# is interactive, which provides an oppurtinity to modify the dataset
+# before it is written to NetCDF.
 #
-# This tutorial generates a UGRID layered mesh NetCDF variant - for more
-# information on supported MODFLOW 6 NetCDF formats see:
+# For more information on supported MODFLOW 6 NetCDF formats see:
 # [MODFLOW NetCDF Format](https://github.com/MODFLOW-ORG/modflow6/wiki/MODFLOW-NetCDF-Format).
 #
 # Note that NetCDF is only supported by the Extended version of MODFLOW 6.
@@ -47,7 +49,7 @@ import flopy
 print(sys.version)
 print(f"flopy version: {flopy.__version__}")
 
-sim_name = "uzf02"
+sim_name = "uzf01"
 
 # Check if we are in the repository and define the data path.
 
@@ -60,19 +62,19 @@ data_path = root / "examples" / "data" / "mf6" / "netcdf" if root else Path.cwd(
 
 file_names = {
     "mfsim.nam": None,
-    "uzf02.disv": None,
-    "uzf02.ghbg": None,
-    "uzf02.ic": None,
-    "uzf02.ims": None,
-    "uzf02.nam": None,
-    "uzf02.npf": None,
-    "uzf02.obs": None,
-    "uzf02.oc": None,
-    "uzf02.sto": None,
-    "uzf02.tdis": None,
-    "uzf02.uzf": None,
-    "uzf02.uzf.obs": None,
-    "uzf02.uzfobs": None,
+    "uzf01.dis": None,
+    "uzf01.ghb.obs": None,
+    "uzf01.ghbg": None,
+    "uzf01.ic": None,
+    "uzf01.ims": None,
+    "uzf01.nam": None,
+    "uzf01.npf": None,
+    "uzf01.obs": None,
+    "uzf01.oc": None,
+    "uzf01.sto": None,
+    "uzf01.tdis": None,
+    "uzf01.uzf": None,
+    "uzf01.uzf.obs": None,
 }
 
 for fname, fhash in file_names.items():
@@ -94,21 +96,54 @@ workspace = Path(temp_dir.name)
 # For the purposes of this tutorial, the specifics of this simulation
 # other than it is a candidate for NetCDF input are not a focus. It
 # is a NetCDF input candidate because it defines a supported model type
-# (`GWF6`) with a vertex discretization and packages that support
-# NetCDF input parameters. Vertex (`DISV`) discretizations are only
-# supported by the `UGRID layered mesh` NetCDF format and as such, the
-# `mesh` attribute will be set to `layered` when passed to FloPy functions
-# in this tutorial.
+# (`GWF6`) with a structured discretization and packages that support
+# NetCDF input parameters.
 
 # load and run the non-netcdf simulation
 sim = flopy.mf6.MFSimulation.load(sim_ws=data_path / sim_name)
-# sim = flopy.mf6.MFSimulation.load(sim_ws=Path("./netcdf02"))
 sim.set_sim_path(workspace)
 sim.write_simulation()
 success, buff = sim.run_simulation(silent=True, report=True)
 assert success, pformat(buff)
 
-# ## Create NetCDF based simulation
+# ## Create NetCDF based simulation method 1
+#
+# This is the most straightforward way to create a NetCDF simulation
+# from the loaded ascii input simulation. Simply define the `netcdf`
+# argument to `write_simulation()` to be either `structured` or
+# `layered`, depending on the desired format of the generated NetCDF
+# file.
+#
+# The name of the created file can be specified by first setting the
+# model `name_file.nc_filerecord` attribute to the desired name. If
+# this step is not taken, the default name of `{model_name}.input.nc`
+# is used.
+
+# create directory for netcdf sim
+sim.set_sim_path(workspace / "netcdf1")
+# set model name file nc_filerecord attribute to export name
+gwf = sim.get_model("uzf01")
+gwf.name_file.nc_filerecord = "uzf01.structured.nc"
+# write simulation with structured NetCDF file
+sim.write_simulation(netcdf="structured")
+
+# success, buff = sim.run_simulation(silent=True, report=True)
+# assert success, pformat(buff)
+
+# ## Repeat method 1 with layered mesh NetCDF format
+
+# create directory for netcdf sim
+sim.set_sim_path(workspace / "netcdf2")
+# set model name file nc_filerecord attribute to export name
+gwf = sim.get_model("uzf01")
+gwf.name_file.nc_filerecord = "uzf01.layered.nc"
+# write simulation with with layered mesh NetCDF file
+sim.write_simulation(netcdf="layered")
+
+# success, buff = sim.run_simulation(silent=True, report=True)
+# assert success, pformat(buff)
+
+# ## Create NetCDF based simulation method 2
 #
 # Reset the simulation path and set the `GWF` name file `nc_filerecord`
 # attribute to the name of the intended input NetCDF file. Display
@@ -120,21 +155,30 @@ assert success, pformat(buff)
 # and `GHBG` packages. Data will be copied from the package objects into
 # dataset arrays.
 #
-# Flopy does not currently generate the NetCDF input file. This tutorial
-# shows one way that can be accomplished.
+# Flopy will not generate the NetCDF input file when the `netcdf` argument
+# to `write_simulation()` is set to `nofile`. This step is needed, however,
+# to update ascii input with the keywords required to support the model
+# NetCDF file that we will generate.
 
 # create directory for netcdf sim
-sim.set_sim_path(workspace / "netcdf")
+sim.set_sim_path(workspace / "netcdf3")
 # set model name file nc_filerecord attribute to export name
-gwf = sim.get_model("uzf02")
-gwf.name_file.nc_filerecord = "uzf02.layered.nc"
+gwf = sim.get_model("uzf01")
+gwf.name_file.nc_filerecord = "uzf01.structured.nc"
 # write simulation with ASCII inputs tagged for NetCDF
-sim.write_simulation(netcdf=True)
+# but do not create NetCDF file
+sim.write_simulation(netcdf="nofile")
+
+# ## Show name file with NetCDF input configured
+
 # show name file with NetCDF input configured
-with open(workspace / "netcdf" / "uzf02.nam", "r") as fh:
+with open(workspace / "netcdf3" / "uzf01.nam", "r") as fh:
     print(fh.read())
+
+# ## Show example package file with NetCDF keywords
+
 # show example package file with NetCDF input configured
-with open(workspace / "netcdf" / "uzf02.ic", "r") as fh:
+with open(workspace / "netcdf3" / "uzf01.ic", "r") as fh:
     print(fh.read())
 
 # ## Create dataset
@@ -145,7 +189,7 @@ with open(workspace / "netcdf" / "uzf02.ic", "r") as fh:
 # for timeseries support.
 
 # create the dataset
-ds = gwf.modelgrid.dataset(modeltime=gwf.modeltime, mesh="layered")
+ds = gwf.modelgrid.dataset(modeltime=gwf.modeltime)
 
 # ## Access model NetCDF attributes
 #
@@ -162,7 +206,7 @@ ds = gwf.modelgrid.dataset(modeltime=gwf.modeltime, mesh="layered")
 # below.
 
 # get model netcdf info
-nc_info = gwf.netcdf_info(mesh="layered")
+nc_info = gwf.netcdf_info()
 pprint(nc_info)
 
 # update dataset directly with required attributes
@@ -178,8 +222,8 @@ for a in nc_info["attrs"]:
 # That workflow will be demonstrated in the `NPF` package update which follows.
 
 # update dataset with `DIS` arrays
-disv = gwf.get_package("disv")
-ds = disv.update_dataset(ds, mesh="layered")
+dis = gwf.get_package("dis")
+ds = dis.update_dataset(ds)
 
 # ## Update array data
 #
@@ -188,12 +232,15 @@ ds = disv.update_dataset(ds, mesh="layered")
 # existing simulation objects and update the dataset.
 #
 # Default dataset variable names are defined in the package `netcdf_info()`
-# dictionary.
+# dictionary. Here we will use the info dictionary to programmatically update
+# the dataset- for remaining packages we will hardcode the variable names
+# being updated for maximum clarity.
 
-# update dataset from dis arrays
-ds["disv_top"].values = disv.top.get_data()
-for l in range(gwf.modelgrid.nlay):
-    ds[f"disv_botm_l{l + 1}"].values = disv.botm.get_data()[l]
+nc_info = dis.netcdf_info()
+for v in nc_info:
+    name = nc_info[v]["attrs"]["modflow_input"].rsplit("/", 1)[1].lower()
+    d = getattr(dis, name)
+    ds[nc_info[v]["varname"]].values = d.get_data()
 
 # ## Access `NPF` package NetCDF attributes
 #
@@ -208,76 +255,67 @@ for l in range(gwf.modelgrid.nlay):
 
 # get npf package netcdf info
 npf = gwf.get_package("npf")
-nc_info = npf.netcdf_info(mesh="layered")
+nc_info = npf.netcdf_info()
 pprint(nc_info)
 
 # ## Update package `netcdf_info` dictionary and dataset
 #
-# Here we update the `NPF K` layer 1 input parameter to add the
-# `standard_name` attribute to it's attribute dictionary.  The dictionary
+# Here we replace the default name for the `NPF K` input parameter and add
+# the `standard_name` attribute to it's attribute dictionary.  The dictionary
 # is then passed to the `update_dataset()` function. Note the updated name
 # is used in the subsequent block when updating the array values.
 
 # update dataset with `NPF` arrays
-nc_info["k/layer1"]["attrs"]["standard_name"] = (
-    "soil_hydraulic_conductivity_at_saturation"
-)
-ds = npf.update_dataset(ds, netcdf_info=nc_info, mesh="layered")
+nc_info["k"]["varname"] = "npf_k_updated"
+nc_info["k"]["attrs"]["standard_name"] = "soil_hydraulic_conductivity_at_saturation"
+ds = npf.update_dataset(ds, netcdf_info=nc_info)
 
-# ## Update `NPF` array data
+# ## Update array data
 
 # update dataset from npf arrays
-for l in range(gwf.modelgrid.nlay):
-    ds[f"npf_icelltype_l{l + 1}"].values = npf.icelltype.get_data()[l]
-    ds[f"npf_k_l{l + 1}"].values = npf.k.get_data()[l]
-    ds[f"npf_k33_l{l + 1}"].values = npf.k33.get_data()[l]
+ds["npf_icelltype"].values = npf.icelltype.get_data()
+ds["npf_k_updated"].values = npf.k.get_data()
 
 # ## Show dataset `NPF K` parameter with updates
 
 # print dataset npf k variable
-print(ds["npf_k_l1"])
+print(ds["npf_k_updated"])
 
 # ## Update the dataset with supported `IC` arrays
 
 # ic
 ic = gwf.get_package("ic")
-ds = ic.update_dataset(ds, mesh="layered")
-for l in range(gwf.modelgrid.nlay):
-    ds[f"ic_strt_l{l + 1}"].values = ic.strt.get_data()[l]
+ds = ic.update_dataset(ds)
+ds["ic_strt"].values = ic.strt.get_data()
 
 # ## Update the dataset with supported `STO` arrays
 
 # storage
 sto = gwf.get_package("sto")
-ds = sto.update_dataset(ds, mesh="layered")
-for l in range(gwf.modelgrid.nlay):
-    ds[f"sto_iconvert_l{l + 1}"].values = sto.iconvert.get_data()[l]
-    ds[f"sto_sy_l{l + 1}"].values = sto.sy.get_data()[l]
-    ds[f"sto_ss_l{l + 1}"].values = sto.ss.get_data()[l]
+ds = sto.update_dataset(ds)
+ds["sto_iconvert"].values = sto.iconvert.get_data()
+ds["sto_sy"].values = sto.sy.get_data()
+ds["sto_ss"].values = sto.ss.get_data()
 
 # ## Update the dataset with supported `GHBG` arrays
 
 # update dataset with 'GHBG' arrays
 ghbg = gwf.get_package("ghbg_0")
-ds = ghbg.update_dataset(ds, mesh="layered")
+ds = ghbg.update_dataset(ds)
 
-# ## Update `GHBG` array data
+# ## Update array data
 
 # update bhead netcdf array from flopy perioddata
 # timeseries step index is first of stress period
 for p in ghbg.bhead.get_data():
-    if ghbg.bhead.get_data()[p] is not None:
-        istp = sum(gwf.modeltime.nstp[0:p])
-        for l in range(gwf.modelgrid.nlay):
-            ds[f"ghbg_0_bhead_l{l + 1}"].values[istp] = ghbg.bhead.get_data()[p][l]
+    istp = sum(gwf.modeltime.nstp[0:p])
+    ds["ghbg_0_bhead"].values[istp] = ghbg.bhead.get_data()[p]
 
 # update cond netcdf array from flopy perioddata
 # timeseries step index is first of stress period
 for p in ghbg.cond.get_data():
-    if ghbg.cond.get_data()[p] is not None:
-        istp = sum(gwf.modeltime.nstp[0:p])
-        for l in range(gwf.modelgrid.nlay):
-            ds[f"ghbg_0_cond_l{l + 1}"].values[istp] = ghbg.cond.get_data()[p][l]
+    istp = sum(gwf.modeltime.nstp[0:p])
+    ds["ghbg_0_cond"].values[istp] = ghbg.cond.get_data()[p]
 
 # ## Display generated dataset
 
@@ -287,7 +325,9 @@ print(ds)
 # ## Export generated dataset to NetCDF
 
 # write dataset to netcdf
-ds.to_netcdf(workspace / "netcdf/uzf02.layered.nc", format="NETCDF4", engine="netcdf4")
+ds.to_netcdf(
+    workspace / "netcdf3" / "uzf01.structured.nc", format="NETCDF4", engine="netcdf4"
+)
 
 # ## Run MODFLOW 6 simulation with NetCDF input
 #

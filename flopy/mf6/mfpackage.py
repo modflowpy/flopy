@@ -3638,6 +3638,7 @@ class MFPackage(PackageInterface):
         return attrs
 
     def update_dataset(self, dataset, netcdf_info=None, mesh=None):
+        from ..discretization.vertexgrid import VertexGrid
         if netcdf_info is None:
             nc_info = self.netcdf_info(mesh=mesh)
         else:
@@ -3646,17 +3647,18 @@ class MFPackage(PackageInterface):
         modelgrid = self.model_or_sim.modelgrid
         modeltime = self.model_or_sim.modeltime
 
-        if mesh is None:
+        if isinstance(modelgrid, VertexGrid):
+            dimmap = {
+                "time": sum(modeltime.nstp),
+                "z": modelgrid.nlay,
+                "nmesh_face": modelgrid.ncpl,
+            }
+        else:
             dimmap = {
                 "time": sum(modeltime.nstp),
                 "z": modelgrid.nlay,
                 "y": modelgrid.nrow,
                 "x": modelgrid.ncol,
-            }
-        elif mesh.upper() == "LAYERED":
-            dimmap = {
-                "time": sum(modeltime.nstp),
-                "z": modelgrid.nlay,
                 "nmesh_face": modelgrid.ncpl,
             }
 

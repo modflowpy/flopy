@@ -1330,6 +1330,19 @@ class MFModel(ModelInterface):
             'mesh2d' and 'structured' are supported types.
         """
 
+        write_netcdf = netcdf and (
+            self.model_type == "gwf6"
+            or self.model_type == "gwt6"
+            or self.model_type == "gwe6"
+        )
+
+        if write_netcdf:
+            nc_fname = None
+            if self.name_file.nc_filerecord.get_data() is None:
+                # update name file for netcdf input
+                nc_fname = f"{self.name}.input.nc"
+                self.name_file.nc_filerecord = nc_fname
+
         # write name file
         if (
             self.simulation_data.verbosity_level.value
@@ -1346,12 +1359,6 @@ class MFModel(ModelInterface):
                 self.simulation_data.max_columns_user_set = False
                 self.simulation_data.max_columns_auto_set = True
 
-        write_netcdf = netcdf and (
-            self.model_type == "gwf6"
-            or self.model_type == "gwt6"
-            or self.model_type == "gwe6"
-        )
-
         # write packages
         for pp in self.packagelist:
             if write_netcdf:
@@ -1365,9 +1372,34 @@ class MFModel(ModelInterface):
                 print(f"    writing package {pp._get_pname()}...")
             pp.write(ext_file_action=ext_file_action)
 
-            if write_netcdf:
-                # reset data storage
-                pp._set_netcdf_storage(reset=True)
+            # reset data storage
+            pp._set_netcdf_storage(reset=True)
+
+        # write netcdf file
+        if write_netcdf and netcdf.lower() != "nofile":
+            mesh = netcdf
+            if mesh.upper() == "STRUCTURED":
+                mesh = None
+
+            ds = self.modelgrid.dataset(
+                modeltime=self.modeltime,
+                mesh=mesh,
+            )
+
+            ds = self.update_dataset(ds, mesh=mesh)
+
+            # write dataset to netcdf
+            fname = self.name_file.nc_filerecord.get_data()[0][0]
+            ds.to_netcdf(
+                os.path.join(self.model_ws, fname),
+                format="NETCDF4",
+                engine="netcdf4"
+            )
+
+            if nc_fname is not None:
+                self.name_file.nc_filerecord = None
+
+
 
     def get_grid_type(self):
         """
@@ -2286,5 +2318,42 @@ class MFModel(ModelInterface):
 
         for a in nc_info["attrs"]:
             dataset.attrs[a] = nc_info["attrs"][a]
+
+        # add all packages and update data
+        for p in self.packagelist:
+            # add package var to dataset
+            dataset = p.update_dataset(dataset, mesh=mesh)
+
+            # update dataset var values
+            nc_info = p.netcdf_info(mesh=mesh)
+            for v in nc_info:
+                name = nc_info[v]["attrs"]["modflow_input"].split("/")[2].lower()
+                if mesh == None:
+                    #name = nc_info[v]["varname"].rsplit("_", 1)[1]
+                    d = getattr(p, name)
+                    if d.repeating:
+                        for per in d.get_data():
+                            istp = sum(self.modeltime.nstp[0:per])
+                            dataset[nc_info[v]["varname"]].values[istp] = d.get_data()[per]
+                    else:
+                        dataset[nc_info[v]["varname"]].values = d.get_data()
+                elif mesh.upper() == "LAYERED":
+                    if "layer" in nc_info[v]["attrs"]:
+                        #name = nc_info[v]["varname"].rsplit("_", 2)[1]
+                        layer = nc_info[v]["attrs"]["layer"] - 1
+                    else:
+                        #name = nc_info[v]["varname"].rsplit("_", 1)[1]
+                        layer = -1
+                    d = getattr(p, name)
+                    if d.repeating:
+                        for per in d.get_data():
+                            if d.get_data()[per] is not None:
+                                istp = sum(self.modeltime.nstp[0:per])
+                                dataset[nc_info[v]["varname"]].values[istp] = d.get_data()[per][layer]
+                    else:
+                        if layer >= 0:
+                            dataset[nc_info[v]["varname"]].values = d.get_data()[layer].flatten()
+                        else:
+                            dataset[nc_info[v]["varname"]].values = d.get_data().flatten()
 
         return dataset
