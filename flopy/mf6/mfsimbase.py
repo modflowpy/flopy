@@ -1675,7 +1675,7 @@ class MFSimulationBase:
                 Writes out the simulation in silent mode (verbosity_level = 0)
             netcdf : str
                 ASCII package files will be written as configured for NetCDF input.
-                'mesh2d' and 'structured' are supported types.
+                'layered' and 'structured' are supported types.
 
         """
         sim_data = self.simulation_data

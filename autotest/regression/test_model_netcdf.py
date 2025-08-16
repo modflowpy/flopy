@@ -14,7 +14,7 @@ from flopy.discretization.vertexgrid import VertexGrid
 from flopy.utils.gridutil import get_disv_kwargs
 
 
-def check_netcdf(path, mesh=None):
+def check_netcdf(path, mobj, mesh=None):
     """Check for functional equivalence"""
     ds = xr.open_dataset(path, engine="netcdf4")
     packages = [
@@ -47,6 +47,7 @@ def check_netcdf(path, mesh=None):
             p = varname.rsplit("_", 2)[0]
 
         if p in packages:
+            l = -1
             assert "modflow_input" in da.attrs
             if mesh is None:
                 assert "layer" not in da.attrs
@@ -54,6 +55,31 @@ def check_netcdf(path, mesh=None):
                 lstr = varname.rsplit("_", 1)[1]
                 if lstr[0] == "l":
                     assert "layer" in da.attrs
+                    l = da.attrs["layer"] - 1
+
+            tag = da.attrs["modflow_input"].rsplit("/", 1)[1].lower()
+            pobj = getattr(mobj, p)
+            d = getattr(pobj, tag)
+            if p == "ghbg_0":
+                spd = d.get_data()
+                for per in spd:
+                    if spd[per] is not None:
+                        istp = sum(mobj.modeltime.nstp[0:per])
+                        if l >= 0:
+                            assert np.allclose(
+                                ds.data_vars[varname][istp].fillna(3.00000000e30).data,
+                                spd[per][l],
+                            )
+                        else:
+                            assert np.allclose(
+                                ds.data_vars[varname][istp].fillna(3.00000000e30).data,
+                                spd[per],
+                            )
+            else:
+                if l >= 0:
+                    assert np.allclose(ds.data_vars[varname].values, d.get_data()[l])
+                else:
+                    assert np.allclose(ds.data_vars[varname].values, d.get_data())
 
 
 def update_dataset(dataset, pobj):
@@ -120,7 +146,7 @@ def test_uzf01_sim_scope_nomesh(function_tmpdir, example_data_path):
     sim.set_sim_path(ws)
     sim.write_simulation(netcdf=netcdf)
 
-    check_netcdf(ws / fname)
+    check_netcdf(ws / fname, sim.get_model(sim_name))
 
 
 @pytest.mark.regression
@@ -139,7 +165,7 @@ def test_uzf01_sim_scope_mesh(function_tmpdir, example_data_path):
     sim.set_sim_path(ws)
     sim.write_simulation(netcdf=netcdf)
 
-    check_netcdf(ws / fname, mesh=netcdf)
+    check_netcdf(ws / fname, sim.get_model(sim_name), mesh=netcdf)
 
 
 @pytest.mark.regression
@@ -162,7 +188,7 @@ def test_uzf01_sim_scope_fname(function_tmpdir, example_data_path):
     sim.set_sim_path(ws)
     sim.write_simulation(netcdf=netcdf)
 
-    check_netcdf(ws / fname)
+    check_netcdf(ws / fname, sim.get_model(sim_name))
 
 
 @pytest.mark.regression
@@ -181,7 +207,7 @@ def test_uzf02_sim_scope(function_tmpdir, example_data_path):
     sim.set_sim_path(ws)
     sim.write_simulation(netcdf=netcdf)
 
-    check_netcdf(ws / fname, mesh=netcdf)
+    check_netcdf(ws / fname, sim.get_model(sim_name), mesh=netcdf)
 
 
 @pytest.mark.regression
@@ -204,7 +230,7 @@ def test_uzf02_sim_scope_fname(function_tmpdir, example_data_path):
     sim.set_sim_path(ws)
     sim.write_simulation(netcdf=netcdf)
 
-    check_netcdf(ws / fname, mesh=netcdf)
+    check_netcdf(ws / fname, sim.get_model(sim_name), mesh=netcdf)
 
 
 @pytest.mark.regression
@@ -232,7 +258,7 @@ def test_uzf01_model_scope_nomesh(function_tmpdir, example_data_path):
     # write dataset to netcdf
     ds.to_netcdf(ws / fname, format="NETCDF4", engine="netcdf4")
 
-    check_netcdf(ws / fname)
+    check_netcdf(ws / fname, sim.get_model(sim_name))
 
 
 @pytest.mark.regression
@@ -261,7 +287,7 @@ def test_uzf01_model_scope_mesh(function_tmpdir, example_data_path):
     # write dataset to netcdf
     ds.to_netcdf(ws / fname, format="NETCDF4", engine="netcdf4")
 
-    check_netcdf(ws / fname, mesh=mesh)
+    check_netcdf(ws / fname, sim.get_model(sim_name), mesh=mesh)
 
 
 @pytest.mark.regression
@@ -290,7 +316,7 @@ def test_uzf02_model_scope(function_tmpdir, example_data_path):
     # write dataset to netcdf
     ds.to_netcdf(ws / fname, format="NETCDF4", engine="netcdf4")
 
-    check_netcdf(ws / fname, mesh=mesh)
+    check_netcdf(ws / fname, sim.get_model(sim_name), mesh=mesh)
 
 
 @pytest.mark.regression
@@ -338,7 +364,7 @@ def test_uzf01_pkg_scope(function_tmpdir, example_data_path):
     # write dataset to netcdf
     ds.to_netcdf(ws / fname, format="NETCDF4", engine="netcdf4")
 
-    check_netcdf(ws / fname)
+    check_netcdf(ws / fname, sim.get_model(sim_name))
 
 
 @pytest.mark.regression
@@ -417,7 +443,7 @@ def test_uzf01_pkg_scope_modify(function_tmpdir, example_data_path):
     # write dataset to netcdf
     ds.to_netcdf(ws / fname, format="NETCDF4", engine="netcdf4")
 
-    check_netcdf(ws / fname)
+    check_netcdf(ws / fname, sim.get_model(sim_name))
     assert (
         ds["npf_k_updated"].attrs["standard_name"]
         == "soil_hydraulic_conductivity_at_saturation"
@@ -440,15 +466,14 @@ def test_uzf01_cycle(function_tmpdir, example_data_path):
     sim.set_sim_path(ws)
     sim.write_simulation(netcdf=netcdf)
 
-    check_netcdf(ws / fname)
+    check_netcdf(ws / fname, sim.get_model(sim_name))
 
     # set simulation path and rewrite base simulation
     sim.set_sim_path(ws / "mf6")
-    # gwf = sim.get_model(sim_name)
-    # gwf.name_file.nc_filerecord = None
     sim.write_simulation()
 
     assert not (ws / "mf6" / fname).exists()
 
+    # codegen isn't using latest modflow dev branch
     # success, buff = sim.run_simulation(silent=True, report=True)
     # assert success, pformat(buff)

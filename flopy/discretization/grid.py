@@ -1290,15 +1290,16 @@ class Grid:
 
     def dataset(self, modeltime=None, mesh=None):
         """
-        Method to generate baseline Xarray dataset
+        Method to generate baseline xarray dataset
 
         Parameters
         ----------
-        mesh
+        modeltime : FloPy ModelTime object
+        mesh : mesh type
 
         Returns
         -------
-            Xarray dataset
+            xarray dataset
         """
         raise NotImplementedError("dataset must be defined in the child class")
 

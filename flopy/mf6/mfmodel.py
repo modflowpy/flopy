@@ -1327,7 +1327,7 @@ class MFModel(ModelInterface):
             with relative paths, leaving files defined by absolute paths fixed.
         netcdf : str
             ASCII package files will be written as configured for NetCDF input. 
-            'mesh2d' and 'structured' are supported types.
+            'layered' and 'structured' are supported types.
         """
 
         write_netcdf = netcdf and (
@@ -2329,7 +2329,6 @@ class MFModel(ModelInterface):
             for v in nc_info:
                 name = nc_info[v]["attrs"]["modflow_input"].split("/")[2].lower()
                 if mesh == None:
-                    #name = nc_info[v]["varname"].rsplit("_", 1)[1]
                     d = getattr(p, name)
                     if d.repeating:
                         for per in d.get_data():
@@ -2339,10 +2338,8 @@ class MFModel(ModelInterface):
                         dataset[nc_info[v]["varname"]].values = d.get_data()
                 elif mesh.upper() == "LAYERED":
                     if "layer" in nc_info[v]["attrs"]:
-                        #name = nc_info[v]["varname"].rsplit("_", 2)[1]
                         layer = nc_info[v]["attrs"]["layer"] - 1
                     else:
-                        #name = nc_info[v]["varname"].rsplit("_", 1)[1]
                         layer = -1
                     d = getattr(p, name)
                     if d.repeating:

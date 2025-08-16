@@ -3466,7 +3466,7 @@ class MFPackage(PackageInterface):
 
     @staticmethod
     def _add_netcdf_entries(
-        attrs, mname, pname, data_item, auxiliary=None, mesh=None, nlay=1
+        entries, mname, pname, data_item, auxiliary=None, mesh=None, nlay=1
     ):
         DNODATA = 3.0e30    # MF6 DNODATA constant
         FILLNA_INT32 = np.int32(-2147483647)    # netcdf-fortran NF90_FILL_INT
@@ -3480,7 +3480,7 @@ class MFPackage(PackageInterface):
         def _add_entry(tagname, iaux=None, layer=None):
 
             # netcdf variable dictionary
-            a = {}
+            e = {}
 
             # set dict key and netcdf variable name
             key = tagname
@@ -3495,11 +3495,11 @@ class MFPackage(PackageInterface):
                 name = f"{name}_l{layer}"
 
             # add non-attrs to dictionary
-            a["varname"] = name.lower()
+            e["varname"] = name.lower()
             if (data_item.type) == DatumType.integer:
-                a["xarray_type"] = np.int32
+                e["xarray_type"] = np.int32
             elif (data_item.type) == DatumType.double_precision:
-                a["xarray_type"] = np.float64
+                e["xarray_type"] = np.float64
             dims = []
             if data_item.shape[0] == 'nodes':
                 if data_item.block_name == "griddata":
@@ -3531,27 +3531,30 @@ class MFPackage(PackageInterface):
                     elif data_item.shape[0] == 'nrow':
                         dims.append("y")
 
-            a["netcdf_shape"] = dims[::-1]
+            e["netcdf_shape"] = dims[::-1]
 
             # add variable attributes dictionary
-            a["attrs"] = {}
-            a["attrs"]["modflow_input"] = (f"{mname}/{pname}/{tagname}").upper()
+            e["attrs"] = {}
+            e["attrs"]["modflow_input"] = (f"{mname}/{pname}/{tagname}").upper()
             if iaux is not None:
-                a["attrs"]["modflow_iaux"] = iaux + 1
+                e["attrs"]["modflow_iaux"] = iaux + 1
             if layer is not None:
-                a["attrs"]["layer"] = layer
+                e["attrs"]["layer"] = layer
             if (data_item.type) == DatumType.integer:
-                a["attrs"]["_FillValue"] = FILLNA_INT32
+                e["attrs"]["_FillValue"] = FILLNA_INT32
             elif (data_item.type) == DatumType.double_precision:
                 if data_item.block_name == "griddata":
-                    a["attrs"]["_FillValue"] = FILLNA_DBL
+                    e["attrs"]["_FillValue"] = FILLNA_DBL
                 elif data_item.block_name == "period":
-                    a["attrs"]["_FillValue"] = DNODATA
+                    e["attrs"]["_FillValue"] = DNODATA
             if data_item.longname is not None:
-                a["attrs"]["longname"] = data_item.longname
+                if layer is not None:
+                    e["attrs"]["longname"] = f"{data_item.longname} layer {layer}"
+                else:
+                    e["attrs"]["longname"] = data_item.longname
 
             # set dictionary
-            attrs[key] = a
+            entries[key] = e
 
         if data_item.layered and mesh and mesh.upper() == "LAYERED":
             if data_item.name == "aux" or data_item.name == "auxvar":
@@ -3572,7 +3575,7 @@ class MFPackage(PackageInterface):
     def netcdf_package(mtype, ptype, auxiliary=None, mesh=None, nlay=1):
         from .data.mfstructure import DfnPackage, MFSimulationStructure
 
-        attrs = {}
+        entries = {}
         sim_struct = MFSimulationStructure()
 
         for package in MFPackage.__subclasses__():
@@ -3595,7 +3598,7 @@ class MFPackage(PackageInterface):
                 for d in block.data_structures:
                     if block.data_structures[d].netcdf:
                         MFPackage._add_netcdf_entries(
-                            attrs,
+                            entries,
                             f"<{mtype}name>",
                             pname,
                             block.data_structures[d],
@@ -3604,10 +3607,10 @@ class MFPackage(PackageInterface):
                             nlay,
                         )
 
-        return attrs
+        return entries
 
     def netcdf_info(self, mesh=None):
-        attrs = {}
+        entries = {}
 
         if self.dimensions.get_aux_variables():
             auxnames = list(self.dimensions.get_aux_variables()[0])
@@ -3626,7 +3629,7 @@ class MFPackage(PackageInterface):
                     ):
                         if dataset.structure.netcdf and dataset.has_data():
                             MFPackage._add_netcdf_entries(
-                                attrs,
+                                entries,
                                 self.model_name,
                                 self.package_name,
                                 dataset.structure,
@@ -3635,7 +3638,7 @@ class MFPackage(PackageInterface):
                                 self.model_or_sim.modelgrid.nlay,
                             )
 
-        return attrs
+        return entries
 
     def update_dataset(self, dataset, netcdf_info=None, mesh=None):
         from ..discretization.vertexgrid import VertexGrid
@@ -3684,7 +3687,7 @@ class MFPackage(PackageInterface):
         return dataset
 
     def _set_netcdf_storage(self, reset=False):
-        """Set griddata array dataset storage to netcdf.
+        """set array dataset storage to netcdf.
 
         Parameters
         ----------

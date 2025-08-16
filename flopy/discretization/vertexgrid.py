@@ -601,6 +601,12 @@ class VertexGrid(Grid):
         return plotarray
 
     def dataset(self, modeltime=None, mesh=None):
+        """
+        modeltime : FloPy ModelTime object
+        mesh : mesh type
+               valid mesh types are "layered" or None
+               VertexGrid objects only support layered mesh
+        """
         from ..utils import import_optional_dependency
 
         xr = import_optional_dependency("xarray")
@@ -617,6 +623,17 @@ class VertexGrid(Grid):
 
         ds = xr.Dataset()
         ds.attrs["modflow_grid"] = "VERTEX"
+
+        # create dataset coordinate vars
+        var_d = {
+            "time": (["time"], modeltime.totim),
+        }
+        ds = ds.assign(var_d)
+        ds["time"].attrs["calendar"] = "standard"
+        ds["time"].attrs["units"] = f"days since {modeltime.start_datetime}"
+        ds["time"].attrs["axis"] = "T"
+        ds["time"].attrs["standard_name"] = "time"
+        ds["time"].attrs["long_name"] = "time"
 
         # mesh container variable
         ds = ds.assign({"mesh": ([], np.int32(1))})

@@ -23,6 +23,7 @@ def _get_template_env(developmode: bool = True):
     env.filters["base"] = filters.base
     env.filters["title"] = filters.title
     env.filters["description"] = filters.description
+    env.filters["longname"] = filters.longname
     env.filters["prefix"] = filters.prefix
     env.filters["parent"] = filters.parent
     env.filters["skip_init"] = filters.skip_init

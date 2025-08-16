@@ -1771,6 +1771,11 @@ class StructuredGrid(Grid):
         return plotarray
 
     def dataset(self, modeltime=None, mesh=None):
+        """
+        modeltime : FloPy ModelTime object
+        mesh : mesh type
+               valid mesh types are "layered" or None
+        """
         from ..utils import import_optional_dependency
 
         xr = import_optional_dependency("xarray")
@@ -1790,6 +1795,17 @@ class StructuredGrid(Grid):
         FILLNA_INT32 = np.int32(-2147483647)
         FILLNA_DBL = 9.96920996838687e36
         lenunits = {0: "m", 1: "ft", 2: "m", 3: "m"}
+
+        # create dataset coordinate vars
+        var_d = {
+            "time": (["time"], modeltime.totim),
+        }
+        ds = ds.assign(var_d)
+        ds["time"].attrs["calendar"] = "standard"
+        ds["time"].attrs["units"] = f"days since {modeltime.start_datetime}"
+        ds["time"].attrs["axis"] = "T"
+        ds["time"].attrs["standard_name"] = "time"
+        ds["time"].attrs["long_name"] = "time"
 
         # mesh container variable
         ds = ds.assign({"mesh": ([], np.int32(1))})
