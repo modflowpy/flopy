@@ -1722,17 +1722,16 @@ class CellBudgetFile:
                     ]
 
                 for vv in v:
-                    available_fields = vv.dtype.names
-                    if variable not in available_fields:
+                    available = vv.dtype.names
+                    if variable not in available:
                         raise ValueError(
                             f"Variable '{variable}' not found in budget record. "
-                            f"Available fields: {list(available_fields)}"
+                            f"Available variables: {list(available)}"
                         )
 
-                    field = variable
                     dix = np.asarray(np.isin(vv["node"], ndx)).nonzero()[0]
                     if len(dix) > 0:
-                        result[itim, 1:] = vv[field][dix]
+                        result[itim, 1:] = vv[variable][dix]
 
         return result
 
