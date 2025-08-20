@@ -936,13 +936,10 @@ class MFModel(ModelInterface):
             nc_filerecord = instance.name_file.nc_filerecord.get_data()
             if nc_filerecord:
                 message = (
-                    "NetCDF input file is currently "
-                    "unsupported for model load."
+                    "NetCDF input file is currently unsupported "
+                    f"for model load ({modelname})."
                 )
-                raise MFDataException(
-                    model=modelname,
-                    message=message,
-                )
+                raise FlopyException(message)
 
         # order packages
         # FIX: Transport - Priority packages maybe should not be hard coded
@@ -1316,6 +1313,7 @@ class MFModel(ModelInterface):
         ext_file_action=ExtFileAction.copy_relative_paths,
         netcdf=None,
     ):
+        from ..version import __version__
         """
         Writes out model's package files.
 
@@ -1386,7 +1384,10 @@ class MFModel(ModelInterface):
                 mesh=mesh,
             )
 
-            ds = self.update_dataset(ds, mesh=mesh)
+            nc_info = self.netcdf_info(mesh=mesh)
+            nc_info["attrs"]["title"] = f"{self.name.upper()} input"
+            nc_info["attrs"]["source"] = f"flopy {__version__}"
+            ds = self.update_dataset(ds, netcdf_info=nc_info, mesh=mesh)
 
             # write dataset to netcdf
             fname = self.name_file.nc_filerecord.get_data()[0][0]
@@ -2310,7 +2311,7 @@ class MFModel(ModelInterface):
             self.name, self.model_type, self.get_grid_type(), mesh
         )
 
-    def update_dataset(self, dataset, netcdf_info=None, mesh=None):
+    def update_dataset(self, dataset, netcdf_info=None, mesh=None, update_data=True):
         if netcdf_info is None:
             nc_info = self.netcdf_info(mesh=mesh)
         else:
@@ -2322,35 +2323,6 @@ class MFModel(ModelInterface):
         # add all packages and update data
         for p in self.packagelist:
             # add package var to dataset
-            dataset = p.update_dataset(dataset, mesh=mesh)
-
-            # update dataset var values
-            nc_info = p.netcdf_info(mesh=mesh)
-            for v in nc_info:
-                name = nc_info[v]["attrs"]["modflow_input"].split("/")[2].lower()
-                if mesh == None:
-                    d = getattr(p, name)
-                    if d.repeating:
-                        for per in d.get_data():
-                            istp = sum(self.modeltime.nstp[0:per])
-                            dataset[nc_info[v]["varname"]].values[istp] = d.get_data()[per]
-                    else:
-                        dataset[nc_info[v]["varname"]].values = d.get_data()
-                elif mesh.upper() == "LAYERED":
-                    if "layer" in nc_info[v]["attrs"]:
-                        layer = nc_info[v]["attrs"]["layer"] - 1
-                    else:
-                        layer = -1
-                    d = getattr(p, name)
-                    if d.repeating:
-                        for per in d.get_data():
-                            if d.get_data()[per] is not None:
-                                istp = sum(self.modeltime.nstp[0:per])
-                                dataset[nc_info[v]["varname"]].values[istp] = d.get_data()[per][layer]
-                    else:
-                        if layer >= 0:
-                            dataset[nc_info[v]["varname"]].values = d.get_data()[layer].flatten()
-                        else:
-                            dataset[nc_info[v]["varname"]].values = d.get_data().flatten()
+            dataset = p.update_dataset(dataset, mesh=mesh, update_data=update_data)
 
         return dataset

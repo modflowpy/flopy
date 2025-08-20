@@ -1242,23 +1242,26 @@ class MFArray(MFMultiDimVar):
                 layer_min = layer
                 layer_max = shape_ml.inc_shape_idx(layer)
 
-            if data_storage.netcdf:
-                file_entry_array.append(f"{indent}{self.structure.name}{indent}NETCDF\n")
-
-            elif layered_aux:
+            if layered_aux:
                 aux_var_names = (
                     self.data_dimensions.package_dim.get_aux_variables()[0]
                 )
                 for layer in range(0, len(aux_var_names)-1):
-                    file_entry_array.append(
-                        self._get_file_entry_layer(
-                            [layer],
-                            data_indent,
-                            data_storage.layer_storage[layer].data_storage_type,
-                            ext_file_action,
-                            layered_aux,
+                    if data_storage.netcdf:
+                        if data_storage.has_data():
+                            file_entry_array.append(f"{indent}{aux_var_names[layer+1]}{indent}NETCDF\n")
+                    else:
+                        file_entry_array.append(
+                            self._get_file_entry_layer(
+                                [layer],
+                                data_indent,
+                                data_storage.layer_storage[layer].data_storage_type,
+                                ext_file_action,
+                                layered_aux,
+                            )
                         )
-                    )
+            elif data_storage.netcdf:
+                file_entry_array.append(f"{indent}{self.structure.name}{indent}NETCDF\n")
 
             else:
                 for layer in shape_ml.indexes(layer_min, layer_max):

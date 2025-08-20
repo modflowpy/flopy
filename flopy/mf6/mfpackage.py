@@ -3512,6 +3512,14 @@ class MFPackage(PackageInterface):
                         dims += ["x", "y", "z", "time"]
                     elif mesh.upper() == "LAYERED":
                         dims += ["nmesh_face", "time"]
+            elif (
+                data_item.block_name == "period" and
+                'ncpl' in data_item.shape
+                ):
+                    if mesh is None:
+                        dims += ["x", "y", "time"]
+                    elif mesh.upper() == "LAYERED":
+                        dims += ["nmesh_face", "time"]
             else:
                 if mesh is None:
                     dimmap = {"nlay": "z", "nrow": "y", "ncol": "x"}
@@ -3584,7 +3592,7 @@ class MFPackage(PackageInterface):
             c, sc = p.dfn_file_name.split(".")[0].split("-")
             if c == mtype.lower() and sc == ptype.lower():
                 sim_struct.add_package(p, model_file=False)
-                exit
+                break
 
         if ptype.lower() in sim_struct.package_struct_objs:
             pso = sim_struct.package_struct_objs[ptype.lower()]
@@ -3640,7 +3648,7 @@ class MFPackage(PackageInterface):
 
         return entries
 
-    def update_dataset(self, dataset, netcdf_info=None, mesh=None):
+    def update_dataset(self, dataset, netcdf_info=None, mesh=None, update_data=True):
         from ..discretization.vertexgrid import VertexGrid
         if netcdf_info is None:
             nc_info = self.netcdf_info(mesh=mesh)
@@ -3655,6 +3663,7 @@ class MFPackage(PackageInterface):
                 "time": sum(modeltime.nstp),
                 "z": modelgrid.nlay,
                 "nmesh_face": modelgrid.ncpl,
+                "ncpl": modelgrid.ncpl,
             }
         else:
             dimmap = {
@@ -3663,7 +3672,88 @@ class MFPackage(PackageInterface):
                 "y": modelgrid.nrow,
                 "x": modelgrid.ncol,
                 "nmesh_face": modelgrid.ncpl,
+                "ncpl": modelgrid.ncpl,
             }
+
+        def _update_data(nc_info, key, pobj=None, data=None):
+            if "modflow_iaux" in nc_info[key]["attrs"]:
+                iaux = nc_info[key]["attrs"]["modflow_iaux"] - 1
+            else:
+                iaux = -1
+            if mesh == None:
+                if pobj.repeating:
+                    if iaux >= 0:
+                        for k in pobj._data_storage.keys():
+                            istp = sum(modeltime.nstp[0:k])
+                            pobj.get_data_prep(k)
+                            auxdata = pobj._data_storage[k].get_data(iaux)
+                            dataset[nc_info[key]["varname"]].values[istp, :] = (
+                                auxdata)
+                    else:
+                        for per in data:
+                            if data[per] is None:
+                                continue
+                            istp = sum(modeltime.nstp[0:per])
+                            if (
+                                pobj.structure.data_item_structures[0].numeric_index or
+                                pobj.structure.data_item_structures[0].is_cellid):
+                                dataset[nc_info[key]["varname"]].values[istp, :] = (
+                                    data[per] + 1)
+                            else:
+                                dataset[nc_info[key]["varname"]].values[istp, :] = (
+                                    data[per])
+                else:
+                    dataset[nc_info[key]["varname"]].values = data
+            elif mesh.upper() == "LAYERED":
+                if "layer" in nc_info[key]["attrs"]:
+                    layer = nc_info[key]["attrs"]["layer"] - 1
+                else:
+                    layer = -1
+                if pobj.repeating:
+                    if iaux >= 0:
+                        for k in pobj._data_storage.keys():
+                            istp = sum(modeltime.nstp[0:k])
+                            pobj.get_data_prep(k)
+                            auxdata = pobj._data_storage[k].get_data(iaux)
+                            if self.structure.read_as_arrays:
+                                uidx = istp + auxdata.size
+                                dataset[nc_info[key]["varname"]].values[istp:uidx] = (
+                                    auxdata.flatten())
+                            elif self.structure.read_array_grid:
+                                uidx = istp + auxdata[layer].size
+                                dataset[nc_info[key]["varname"]].values[istp:uidx] = (
+                                    auxdata[layer].flatten())
+                    else:
+                        for per in data:
+                            if data[per] is None:
+                                continue
+                            istp = sum(modeltime.nstp[0:per])
+                            if layer >= 0 and (
+                                len(pobj.structure.shape) == 3 or
+                                pobj.structure.shape[0] == 'nodes'):
+                                uidx = istp + data[per][layer].size
+                                dataset[nc_info[key]["varname"]].values[istp:uidx] = (
+                                    data[per][layer].flatten())
+                            else:
+                                uidx = istp + data[per].size
+                                if (
+                                    pobj.structure.data_item_structures[0].numeric_index or
+                                    pobj.structure.data_item_structures[0].is_cellid):
+                                    dataset[nc_info[key]["varname"]].values[istp:uidx] = (
+                                        data[per].flatten() + 1)
+                                else:
+                                    dataset[nc_info[key]["varname"]].values[istp:uidx] = (
+                                        data[per].flatten())
+                else:
+                    if layer >= 0 and (
+                        'nlay' in pobj.structure.shape or
+                        pobj.structure.shape[0] == 'nodes'):
+                        dataset[nc_info[key]["varname"]].values = (
+                            data[layer].flatten())
+                    else:
+                        dataset[nc_info[key]["varname"]].values = (
+                            data.flatten())
+
 
         def _data_shape(shape):
             dims_l = []
@@ -3672,6 +3762,9 @@ class MFPackage(PackageInterface):
 
             return dims_l
 
+        last_path = ''
+        pkg = None
+        pdata = None
         for v in nc_info:
             varname = nc_info[v]["varname"]
             data = np.full(
@@ -3683,6 +3776,18 @@ class MFPackage(PackageInterface):
             dataset = dataset.assign(var_d)
             for a in nc_info[v]["attrs"]:
                 dataset[varname].attrs[a] = nc_info[v]["attrs"][a]
+
+            if update_data:
+                path = nc_info[v]["attrs"]["modflow_input"]
+                tag = path.split("/")[2].lower()
+                if path != last_path:
+                    pkg = None
+                    pdata = None
+                    pkg = getattr(self, tag)
+                    if tag != "aux":
+                        pdata = pkg.get_data()
+                    last_path = path
+                _update_data(nc_info, v, pkg, pdata)
 
         return dataset
 

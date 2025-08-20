@@ -2371,8 +2371,15 @@ class DataStorage:
         else:
             fill_value = None
         full_data = np.full(dimensions, fill_value, np_full_data_type)
-        is_aux = self.data_dimensions.structure.name == "aux"
-        if is_aux:
+        layer_aux = (
+            self.data_dimensions.structure.name == "aux"
+            and not self.layered
+        )
+        grid_aux = (
+            self.data_dimensions.structure.name == "aux"
+            and self.layered
+        )
+        if layer_aux:
             aux_data = []
         if not self.layered:
             layers_to_process = [0]
@@ -2398,7 +2405,7 @@ class DataStorage:
                     or len(self.layer_storage[layer].internal_data) > 0
                     and self.layer_storage[layer].internal_data[0] is None
                 ):
-                    if is_aux:
+                    if layer_aux:
                         full_data = None
                     else:
                         return None
@@ -2409,9 +2416,14 @@ class DataStorage:
                 ):
                     full_data = self.layer_storage[layer].internal_data * mult
                 else:
-                    full_data[layer] = (
-                        self.layer_storage[layer].internal_data * mult
-                    )
+                    if grid_aux:
+                        full_data = (
+                            self.layer_storage[layer].internal_data * mult
+                        )
+                    else:
+                        full_data[layer] = (
+                            self.layer_storage[layer].internal_data * mult
+                        )
             elif (
                 self.layer_storage[layer].data_storage_type
                 == DataStorageType.internal_constant
@@ -2469,11 +2481,11 @@ class DataStorage:
                 ):
                     full_data = data_out
                 else:
-                    if is_aux and full_data.shape == data_out.shape:
+                    if layer_aux and full_data.shape == data_out.shape:
                         full_data = data_out
                     else:
                         full_data[layer] = data_out
-            if is_aux:
+            if layer_aux:
                 if full_data is not None:
                     all_none = False
                 aux_data.append(full_data)
@@ -2482,7 +2494,7 @@ class DataStorage:
                     np.nan,
                     self.data_dimensions.structure.get_datum_type(True),
                 )
-        if is_aux:
+        if layer_aux:
             if all_none:
                 return None
             else:
