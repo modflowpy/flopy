@@ -2373,11 +2373,11 @@ class DataStorage:
         full_data = np.full(dimensions, fill_value, np_full_data_type)
         layer_aux = (
             self.data_dimensions.structure.name == "aux"
-            and not self.layered
+            and not self.data_dimensions.structure.layered
         )
         grid_aux = (
             self.data_dimensions.structure.name == "aux"
-            and self.layered
+            and self.data_dimensions.structure.layered
         )
         if layer_aux:
             aux_data = []
