@@ -1,6 +1,6 @@
 from dataclasses import dataclass, replace
+from functools import partial
 from itertools import repeat
-from pathlib import Path
 from pprint import pformat
 from typing import Literal, get_args
 
@@ -111,31 +111,30 @@ def disu_sim(case, ws) -> flopy.mf6.MFSimulation:
 
 
 def pytest_generate_tests(metafunc):
-    tmp_path_factory = metafunc.config._tmp_path_factory
     cases = []
-    sims = []
+    makes = []
     names = []
     if "case" in metafunc.fixturenames:
         for case in CASES:
             for dis_type in get_args(DisType):
                 name = f"{case.name}_{dis_type}"
                 case_ = replace(case, name=name)
-                ws = tmp_path_factory.mktemp(name)
                 if dis_type == "dis":
-                    sim = dis_sim(case_, ws)
+                    make = partial(dis_sim, case_)
                 elif dis_type == "disv":
-                    sim = disv_sim(case_, ws)
+                    make = partial(disv_sim, case_)
                 elif dis_type == "disu":
-                    sim = disu_sim(case_, ws)
+                    make = partial(disu_sim, case_)
                 cases.append(case_)
-                sims.append(sim)
+                makes.append(make)
                 names.append(name)
-        metafunc.parametrize("case, sim", zip(cases, sims), ids=names)
+        metafunc.parametrize("case, make_sim", zip(cases, makes), ids=names)
 
 
 @requires_exe("mf6")
 @requires_pkg("shapely")
-def test_reverse(case, sim):
+def test_reverse(case, make_sim, function_tmpdir):
+    sim = make_sim(function_tmpdir)
     gwf = sim.get_model(case.name)
     sim.write_simulation(silent=True)
     success, buff = sim.run_simulation(silent=True, report=True)
