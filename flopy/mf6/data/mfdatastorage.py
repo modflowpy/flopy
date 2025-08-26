@@ -2379,10 +2379,15 @@ class DataStorage:
             self.data_dimensions.structure.name == "aux"
             and self.data_dimensions.structure.layered
         )
-        if layer_aux:
+        if layer_aux or grid_aux:
             aux_data = []
         if not self.layered:
             layers_to_process = [0]
+        elif grid_aux:
+            layers_to_process = []
+            auxvar = self.data_dimensions.package_dim.get_aux_variables()[0]
+            for i in range(len(auxvar) - 1):
+                layers_to_process.append(i)
         else:
             layers_to_process = self.layer_storage.indexes()
         for layer in layers_to_process:
@@ -2420,6 +2425,7 @@ class DataStorage:
                         full_data = (
                             self.layer_storage[layer].internal_data * mult
                         )
+                        aux_data.append(full_data)
                     else:
                         full_data[layer] = (
                             self.layer_storage[layer].internal_data * mult
@@ -2434,6 +2440,9 @@ class DataStorage:
                     or not self._has_layer_dim()
                 ):
                     full_data = self._fill_const_layer(layer) * mult
+                elif grid_aux:
+                    full_data = self._fill_const_grid(layer) * mult
+                    aux_data.append(full_data)
                 else:
                     full_data[layer] = self._fill_const_layer(layer) * mult
             else:
@@ -2499,6 +2508,11 @@ class DataStorage:
                 return None
             else:
                 return np.stack(aux_data, axis=0)
+        elif grid_aux:
+            if len(aux_data) == 0:
+                return [full_data]
+            else:
+                return aux_data
         else:
             return full_data
 
@@ -2519,6 +2533,18 @@ class DataStorage:
             ls = self.layer_storage.first_item()
         else:
             ls = self.layer_storage[layer]
+        if data_dimensions[0] < 0:
+            return ls.data_const_value[0]
+        else:
+            data_type = self.data_dimensions.structure.get_datum_type(
+                numpy_type=True
+            )
+            return np.full(data_dimensions, ls.data_const_value[0], data_type)
+
+    def _fill_const_grid(self, layer):
+        data_dimensions = self.get_data_dimensions(None)
+        #ls = self.layer_storage.first_item()
+        ls = self.layer_storage[layer]
         if data_dimensions[0] < 0:
             return ls.data_const_value[0]
         else:
@@ -3012,12 +3038,15 @@ class DataStorage:
 
     def get_data_dimensions(self, layer):
         data_dimensions = self.data_dimensions.get_data_shape()[0]
-        is_aux = self.data_dimensions.structure.name == "aux"
+        grid_aux = (
+            self.data_dimensions.structure.name == "aux"
+            and self.data_dimensions.structure.layered
+        )
         if (
-            not is_aux
-            and layer is not None
+            layer is not None
             and self.layer_storage.get_total_size() > 1
             and self._has_layer_dim()
+            and not grid_aux
         ):
             # remove all "layer" dimensions from the list
             layer_dims = self.data_dimensions.structure.data_item_structures[

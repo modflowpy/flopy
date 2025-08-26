@@ -734,6 +734,8 @@ class MFArray(MFMultiDimVar):
                     and kwargs["array"]
                     and isinstance(self, MFTransientArray)
                     and data is not []  # noqa: F632
+                    and not self._is_grid_aux()
+                    and not self._is_layered_aux()
                 ):
                     data = np.expand_dims(data, 0)
                 return data
@@ -1131,6 +1133,16 @@ class MFArray(MFMultiDimVar):
         else:
             return False
 
+    def _is_grid_aux(self):
+        # determine if this is a full grid aux variable
+        if (
+            self.structure.name.lower() == "aux"
+            and self.structure.layered
+        ):
+            return True
+        else:
+            return False
+
     def get_file_entry(
         self, layer=None, ext_file_action=ExtFileAction.copy_relative_paths
     ):
@@ -1469,7 +1481,12 @@ class MFArray(MFMultiDimVar):
             self._path,
             self._current_key,
         )
-        return file_access.get_data_string(data, self._data_type, data_indent)
+        if self._is_grid_aux():
+            return file_access.get_data_string(
+                [a.ravel().tolist() for a in data], self._data_type, data_indent
+            )
+        else:
+            return file_access.get_data_string(data, self._data_type, data_indent)
 
     def _resolve_layer_index(self, layer, allow_multiple_layers=False):
         # handle layered vs non-layered data
@@ -1796,11 +1813,13 @@ class MFTransientArray(MFArray, MFTransient):
         """
         data = None
         output = None
+        baseshape = None
         for sp in range(0, num_sp):
             if sp in self._data_storage:
                 self.get_data_prep(sp)
                 data = super().get_data(apply_mult=apply_mult, **kwargs)
-                data = np.expand_dims(data, 0)
+                if not (self._is_grid_aux() or self._is_layered_aux()):
+                    data = np.expand_dims(data, 0)
             else:
                 # if there is no previous data provide array of
                 # zeros, otherwise provide last array of data found
@@ -1818,11 +1837,29 @@ class MFTransientArray(MFArray, MFTransient):
                             data = np.full_like(data, 1)
                         else:
                             data = np.full_like(data, 0.0)
-                        data = np.expand_dims(data, 0)
+                        if not (self._is_grid_aux() or self._is_layered_aux()):
+                            data = np.expand_dims(data, 0)
             if output is None or data is None:
                 output = data
+                if data is not None:
+                    baseshape = np.shape(data)
+                    if self._is_grid_aux():
+                        output = np.expand_dims(output, 0)
             else:
-                output = np.concatenate((output, data))
+                if np.all(output == None):
+                    baseshape = np.shape(data)
+                    output = np.full(np.shape(data), np.nan, self.dtype)
+                    output = np.concatenate((output, data))
+                    if self._is_grid_aux():
+                        output = np.expand_dims(output, 0)
+                elif np.all(data == None):
+                    anone = np.full(baseshape, np.nan, self.dtype)
+                    output = np.append(output, anone, axis=0)
+                else:
+                    if self._is_grid_aux() and np.shape(data) == baseshape:
+                        data = np.expand_dims(data, 0)
+                    output = np.concatenate((output, data))
+
         return output
 
     def has_data(self, layer=None):

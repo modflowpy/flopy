@@ -1325,16 +1325,13 @@ class MFModel(ModelInterface):
             with relative paths, leaving files defined by absolute paths fixed.
         netcdf : str
             ASCII package files will be written as configured for NetCDF input. 
-            'layered' and 'structured' are supported types.
+            'layered', 'structured' and 'nofile' are supported arguments.
         """
 
-        write_netcdf = netcdf and (
-            self.model_type == "gwf6"
-            or self.model_type == "gwt6"
-            or self.model_type == "gwe6"
-        )
+        write_netcdf = netcdf and hasattr(self.name_file, "nc_filerecord")
 
         if write_netcdf:
+            # update name file for input even if "nofile" is configured
             nc_fname = None
             if self.name_file.nc_filerecord.get_data() is None:
                 # update name file for netcdf input
@@ -1387,6 +1384,8 @@ class MFModel(ModelInterface):
             nc_info = self.netcdf_info(mesh=mesh)
             nc_info["attrs"]["title"] = f"{self.name.upper()} input"
             nc_info["attrs"]["source"] = f"flopy {__version__}"
+            # :history = "first created 2025/8/21 9:46:2.909" ;
+            # :Conventions = "CF-1.11 UGRID-1.0" ;
             ds = self.update_dataset(ds, netcdf_info=nc_info, mesh=mesh)
 
             # write dataset to netcdf
