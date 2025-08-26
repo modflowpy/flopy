@@ -166,7 +166,6 @@ jobs:
         working-directory: flopy
         run: |
           pixi run --manifest-path=../modflow6/pixi.toml pip install --no-deps -e .
-          pixi run --manifest-path=../modflow6/pixi.toml python -m flopy.mf6.utils.generate_classes --dfnpath ../modflow6/doc/mf6io/mf6ivar/dfn
 
       - name: Build MF6
         working-directory: modflow6
@@ -174,6 +173,10 @@ jobs:
           pixi run meson setup builddir --buildtype=debugoptimized --prefix=$(pwd) --libdir=bin
           pixi run meson install -C builddir
           pixi run meson test --verbose --no-rebuild -C builddir
+
+      - name: Update FloPy packages
+        working-directory: modflow6
+        run: python -m flopy.mf6.utils.generate_classes --dfnpath doc/mf6io/mf6ivar/dfn
 
       - name: Run tests
         working-directory: flopy/autotest
