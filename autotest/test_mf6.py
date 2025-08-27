@@ -39,7 +39,6 @@ from flopy.mf6 import (
     ModflowGwfsto,
     ModflowGwfuzf,
     ModflowGwfwel,
-    ModflowGwfwelg,
     ModflowGwtadv,
     ModflowGwtdis,
     ModflowGwtic,
@@ -1963,8 +1962,17 @@ def test_array(function_tmpdir):
 
 
 @requires_exe("mf6")
-@pytest.mark.slow
 def test_grid_array(function_tmpdir):
+    try:
+        from flopy.mf6 import (
+            ModflowGwfchdg,
+            ModflowGwfdrng,
+            ModflowGwfghbg,
+            ModflowGwfrivg,
+            ModflowGwfwelg,
+        )
+    except ImportError:
+        return
     # get_data
     # empty data in period block vs data repeating
     # array
@@ -2388,14 +2396,25 @@ def test_grid_array(function_tmpdir):
 
     # TODO
     wel_q_array = wel.q.array
+    assert np.all(wel_q_array[0][0] == 0.0)
     assert wel_q_array[1][0][0, 0, 0] == 0.25
     assert wel_q_array[2][0][0, 0, 0] == 0.1
-    # assert wel_array[3][0][1] == 0.1
+    assert wel_q_array[3][0][0, 0, 0] == 0.1
     welg_q_per = wel.q.get_data()
     assert welg_q_per[0] is None
     assert welg_q_per[1][0, 0, 0] == 0.25
     assert welg_q_per[2][0, 0, 0] == 0.1
-    # assert welg_q_per[3][0, 0, 0] == 0.1
+    assert welg_q_per[3] is None
+    wel_aux_array = wel.aux.array
+    assert np.all(wel_aux_array[0][0] == 0.0)
+    assert wel_aux_array[1][0][0, 0, 0] == 0.0
+    assert wel_aux_array[2][0][0, 0, 0] == 0.0
+    assert wel_aux_array[3][0][0, 0, 0] == 0.0
+    welg_aux_per = wel.aux.get_data()
+    assert welg_aux_per[0] is None
+    assert welg_aux_per[1][0][0, 0, 0] == 0.0
+    assert welg_aux_per[2][0][0, 0, 0] == 0.0
+    assert welg_aux_per[3] is None
 
     welg_q_per1 = wel.q.get_data(1)
     # print(wel.q.array)
