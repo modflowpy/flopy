@@ -3678,8 +3678,7 @@ class MFPackage(PackageInterface):
             if mesh == None:
                 if dobj.repeating:
                     if iaux >= 0:
-                        auxkeys = list(data)
-                        for k in auxkeys:
+                        for k in data:
                             if data[k] is None:
                                 continue
                             istp = sum(modeltime.nstp[0:k])
@@ -3708,8 +3707,7 @@ class MFPackage(PackageInterface):
                     layer = -1
                 if dobj.repeating:
                     if iaux >= 0:
-                        auxkeys = list(data)
-                        for k in auxkeys:
+                        for k in data:
                             if data[k] is None:
                                 continue
                             auxdata = data[k][iaux]
