@@ -494,7 +494,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
                 data_item.type == DatumType.integer
                 and data_item.name.lower() == "cellid"
             ):
-                if isinstance(pdata.iloc[0, data_idx], tuple):
+                if isinstance(pdata.iloc[0, data_idx], (list, tuple)):
                     fields_to_correct.append((data_idx, columns[data_idx]))
                     data_idx += 1
                 else:

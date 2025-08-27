@@ -2425,11 +2425,41 @@ def test_issue_2583(function_tmpdir, form, mode, list_):
     )
     if mode == "external":
         chd.set_all_data_external()
+
     sim.write_simulation()
 
     chd_file_path = function_tmpdir / f"{name}.chd"
-    chd_lines = chd_file_path.open().readlines()
-    assert any(chd_lines)
-    from pprint import pprint
+    data_lines = []
 
-    pprint(chd_lines)
+    if mode == "internal":
+        chd_lines = chd_file_path.open().readlines()
+        read = False
+        for line in chd_lines:
+            if line.startswith("#"):
+                continue
+            if line.startswith("BEGIN period  1"):
+                read = True
+                continue
+            if line.startswith("END"):
+                read = False
+            if read:
+                data_lines.append(line.strip().split())
+    else:
+        data_file_path = function_tmpdir / "2583.chd_stress_period_data_1.txt"
+        data_lines = [l.strip().split() for l in data_file_path.open().readlines()]
+
+    assert len(data_lines) == 2
+
+    first = data_lines[0]
+    assert first[0] == "1"
+    assert first[1] == "1"
+    assert first[2] == "1"
+    assert float(first[3]) == 1.0
+    assert float(first[4]) == 1.0
+
+    second = data_lines[1]
+    assert second[0] == "1"
+    assert second[1] == "10"
+    assert second[2] == "10"
+    assert float(second[3]) == 0.0
+    assert float(second[4]) == 0.0
