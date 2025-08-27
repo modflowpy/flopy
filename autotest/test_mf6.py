@@ -2388,9 +2388,15 @@ def test_issue_2283(function_tmpdir):
 
 @pytest.mark.parametrize("form", ["flat", "list", "tuple"])
 @pytest.mark.parametrize("mode", ["internal", "external"])
-def test_issue_2583(function_tmpdir, form, mode):
+@pytest.mark.parametrize("list_", ["legacy", "pandas"])
+def test_issue_2583(function_tmpdir, form, mode, list_):
     name = "2583"
-    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=function_tmpdir, exe_name="mf6")
+    sim = flopy.mf6.MFSimulation(
+        sim_name=name,
+        sim_ws=function_tmpdir,
+        exe_name="mf6",
+        use_pandas=list_ == "pandas",
+    )
     tdis = flopy.mf6.ModflowTdis(sim)
     ims = flopy.mf6.ModflowIms(sim)
     gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
