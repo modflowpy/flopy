@@ -2334,7 +2334,7 @@ def test_remove_model(function_tmpdir, example_data_path):
 
 @requires_pkg("shapely")
 @requires_exe("triangle")
-def test_flopy_2283(function_tmpdir):
+def test_issue_2283(function_tmpdir):
     # create triangular grid
     triangle_ws = function_tmpdir / "triangle"
     triangle_ws.mkdir()
@@ -2384,3 +2384,46 @@ def test_flopy_2283(function_tmpdir):
     assert gwf.modelgrid.xoffset == disv.xorigin.get_data()
     assert gwf.modelgrid.yoffset == disv.yorigin.get_data()
     assert gwf.modelgrid.angrot == disv.angrot.get_data()
+
+
+@pytest.mark.parametrize("form", ["flat", "list", "tuple"])
+@pytest.mark.parametrize("mode", ["internal", "external"])
+def test_issue_2583(function_tmpdir, form, mode):
+    name = "2583"
+    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=function_tmpdir, exe_name="mf6")
+    tdis = flopy.mf6.ModflowTdis(sim)
+    ims = flopy.mf6.ModflowIms(sim)
+    gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
+    dis = flopy.mf6.ModflowGwfdis(gwf, nrow=10, ncol=10)
+    ic = flopy.mf6.ModflowGwfic(gwf)
+    npf = flopy.mf6.ModflowGwfnpf(
+        gwf, save_specific_discharge=True, save_saturation=True
+    )
+    if form == "flat":
+        chd_spd = {
+            0: [[0, 0, 0, 1.0, 1.0], [0, 9, 9, 0.0, 0.0]],
+            1: [[0, 0, 0, 0.0, 0.0], [0, 9, 9, 1.0, 2.0]],
+        }
+    elif form == "list":
+        chd_spd = {
+            0: [[[0, 0, 0], 1.0, 1.0], [[0, 9, 9], 0.0, 0.0]],
+            1: [[[0, 0, 0], 0.0, 0.0], [[0, 9, 9], 1.0, 2.0]],
+        }
+    elif form == "tuple":
+        chd_spd = {
+            0: [[(0, 0, 0), 1.0, 1.0], [(0, 9, 9), 0.0, 0.0]],
+            1: [[(0, 0, 0), 0.0, 0.0], [(0, 9, 9), 1.0, 2.0]],
+        }
+    chd = flopy.mf6.ModflowGwfchd(
+        gwf, pname="CHD-1", stress_period_data=chd_spd, auxiliary=["concentration"]
+    )
+    if mode == "external":
+        chd.set_all_data_external()
+    sim.write_simulation()
+
+    chd_file_path = function_tmpdir / f"{name}.chd"
+    chd_lines = chd_file_path.open().readlines()
+    assert any(chd_lines)
+    from pprint import pprint
+
+    pprint(chd_lines)
