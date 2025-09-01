@@ -1017,6 +1017,14 @@ class DataStorage:
         ):
             data = [data]
 
+        grid_aux = (
+            self.data_dimensions.structure.name == "aux"
+            and self.data_dimensions.structure.layered
+        )
+        if grid_aux:
+            model_grid = self.data_dimensions.get_model_grid()
+            nlay = model_grid.num_layers()
+
         success = False
         if preserve_record:
             if isinstance(data, np.ndarray):
@@ -1037,14 +1045,24 @@ class DataStorage:
             elif isinstance(data, dict):
                 first_key = list(data.keys())[0]
                 if isinstance(first_key, int):
-                    for layer_num, data_layer in data.items():
-                        success = self._set_array_layer(
-                            data_layer,
-                            layer_num,
-                            multiplier,
-                            key,
-                            preserve_record,
-                        )
+                    if grid_aux:
+                        for l in range(nlay):
+                           success = self._set_array_layer(
+                                data[l],
+                                layer,
+                                multiplier,
+                                key,
+                                preserve_record,
+                            )
+                    else:
+                        for layer_num, data_layer in data.items():
+                            success = self._set_array_layer(
+                                data_layer,
+                                layer_num,
+                                multiplier,
+                                key,
+                                preserve_record,
+                            )
 
         if not success:
             # storing while preserving the record failed, try storing as a
@@ -2355,6 +2373,21 @@ class DataStorage:
         if self.data_structure_type == DataStructureType.scalar:
             return self.layer_storage.first_item().internal_data
         dimensions = self.get_data_dimensions(None)
+        layer_aux = (
+            self.data_dimensions.structure.name == "aux"
+            and not self.data_dimensions.structure.layered
+        )
+        grid_aux = (
+            self.data_dimensions.structure.name == "aux"
+            and self.data_dimensions.structure.layered
+        )
+        if grid_aux:
+            model_grid = self.data_dimensions.get_model_grid()
+            nlay = model_grid.num_layers()
+            package_dim = self.data_dimensions.package_dim
+            naux = len(package_dim.get_aux_variables()[0]) - 1
+            if len(dimensions) <= 3 and dimensions[0] == nlay:
+                dimensions.insert(0, naux)
         if dimensions[0] < 0:
             # dimensions can not be determined from dfn file, use
             # the size of the data provided as the dimensions
@@ -2371,24 +2404,13 @@ class DataStorage:
         else:
             fill_value = None
         full_data = np.full(dimensions, fill_value, np_full_data_type)
-        layer_aux = (
-            self.data_dimensions.structure.name == "aux"
-            and not self.data_dimensions.structure.layered
-        )
-        grid_aux = (
-            self.data_dimensions.structure.name == "aux"
-            and self.data_dimensions.structure.layered
-        )
-        if layer_aux or grid_aux:
+        is_aux = self.data_dimensions.structure.name == "aux"
+        if is_aux:
             aux_data = []
         if not self.layered:
             layers_to_process = [0]
-        elif grid_aux:
-            layers_to_process = []
-            auxvar = self.data_dimensions.package_dim.get_aux_variables()[0]
-            for i in range(len(auxvar) - 1):
-                layers_to_process.append(i)
         else:
+            layers_to_process = self.layer_storage.indexes()
             layers_to_process = self.layer_storage.indexes()
         for layer in layers_to_process:
             if (
@@ -2410,7 +2432,7 @@ class DataStorage:
                     or len(self.layer_storage[layer].internal_data) > 0
                     and self.layer_storage[layer].internal_data[0] is None
                 ):
-                    if layer_aux:
+                    if is_aux:
                         full_data = None
                     else:
                         return None
@@ -2420,16 +2442,16 @@ class DataStorage:
                     or not self._has_layer_dim()
                 ):
                     full_data = self.layer_storage[layer].internal_data * mult
+                elif grid_aux:
+                    ilayer = (layer[0]) % nlay
+                    iaux = int((layer[0]) / nlay)
+                    full_data[iaux][ilayer] = (
+                        self.layer_storage[layer].internal_data * mult
+                    )
                 else:
-                    if grid_aux:
-                        full_data = (
-                            self.layer_storage[layer].internal_data * mult
-                        )
-                        aux_data.append(full_data)
-                    else:
-                        full_data[layer] = (
-                            self.layer_storage[layer].internal_data * mult
-                        )
+                    full_data[layer] = (
+                        self.layer_storage[layer].internal_data * mult
+                    )
             elif (
                 self.layer_storage[layer].data_storage_type
                 == DataStorageType.internal_constant
@@ -2440,9 +2462,6 @@ class DataStorage:
                     or not self._has_layer_dim()
                 ):
                     full_data = self._fill_const_layer(layer) * mult
-                elif grid_aux:
-                    full_data = self._fill_const_grid(layer) * mult
-                    aux_data.append(full_data)
                 else:
                     full_data[layer] = self._fill_const_layer(layer) * mult
             else:
@@ -2490,7 +2509,7 @@ class DataStorage:
                 ):
                     full_data = data_out
                 else:
-                    if layer_aux and full_data.shape == data_out.shape:
+                    if is_aux and full_data.shape == data_out.shape:
                         full_data = data_out
                     else:
                         full_data[layer] = data_out
@@ -2508,11 +2527,6 @@ class DataStorage:
                 return None
             else:
                 return np.stack(aux_data, axis=0)
-        elif grid_aux:
-            if len(aux_data) == 0:
-                return [full_data]
-            else:
-                return aux_data
         else:
             return full_data
 
@@ -2533,18 +2547,6 @@ class DataStorage:
             ls = self.layer_storage.first_item()
         else:
             ls = self.layer_storage[layer]
-        if data_dimensions[0] < 0:
-            return ls.data_const_value[0]
-        else:
-            data_type = self.data_dimensions.structure.get_datum_type(
-                numpy_type=True
-            )
-            return np.full(data_dimensions, ls.data_const_value[0], data_type)
-
-    def _fill_const_grid(self, layer):
-        data_dimensions = self.get_data_dimensions(None)
-        #ls = self.layer_storage.first_item()
-        ls = self.layer_storage[layer]
         if data_dimensions[0] < 0:
             return ls.data_const_value[0]
         else:
@@ -3038,15 +3040,10 @@ class DataStorage:
 
     def get_data_dimensions(self, layer):
         data_dimensions = self.data_dimensions.get_data_shape()[0]
-        grid_aux = (
-            self.data_dimensions.structure.name == "aux"
-            and self.data_dimensions.structure.layered
-        )
         if (
             layer is not None
             and self.layer_storage.get_total_size() > 1
             and self._has_layer_dim()
-            and not grid_aux
         ):
             # remove all "layer" dimensions from the list
             layer_dims = self.data_dimensions.structure.data_item_structures[

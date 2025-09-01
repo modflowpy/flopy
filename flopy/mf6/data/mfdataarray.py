@@ -735,7 +735,6 @@ class MFArray(MFMultiDimVar):
                     and isinstance(self, MFTransientArray)
                     and data is not []  # noqa: F632
                     and not self._is_grid_aux()
-                    and not self._is_layered_aux()
                 ):
                     data = np.expand_dims(data, 0)
                 return data
@@ -921,6 +920,38 @@ class MFArray(MFMultiDimVar):
                 return
 
         storage = self._get_storage_obj()
+
+        def _aux_storage_set(layer_storage, layer_storage_data):
+            if (
+                layer > 0
+                and layer >= storage.layer_storage.get_total_size()
+            ):
+                storage.add_layer()
+            try:
+                storage.set_data(
+                    layer_storage_data,
+                    [layer_storage],
+                    multiplier,
+                    self._current_key,
+                    preserve_record=preserve_record,
+                )
+            except Exception as ex:
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(
+                    self.structure.get_model(),
+                    self.structure.get_package(),
+                    self._path,
+                    "setting data",
+                    self.structure.name,
+                    inspect.stack()[0][3],
+                    type_,
+                    value_,
+                    traceback_,
+                    None,
+                    self._simulation_data.debug,
+                    ex,
+                )
+
         if self.structure.name == "aux" and layer is None:
             if isinstance(data, dict):
                 aux_data = copy.deepcopy(data["data"])
@@ -938,48 +969,48 @@ class MFArray(MFMultiDimVar):
             aux_var_names = (
                 self.data_dimensions.package_dim.get_aux_variables()
             )
-            if len(aux_data) == len(aux_var_names[0]) - 1:
-                for layer, aux_var_data in enumerate(aux_data):
-                    if (
-                        layer > 0
-                        and layer >= storage.layer_storage.get_total_size()
-                    ):
-                        storage.add_layer()
-                    if isinstance(data, dict):
-                        # put layer data back in dictionary
-                        layer_data = data
-                        layer_data["data"] = aux_var_data
-                    else:
-                        layer_data = aux_var_data
-                    try:
-                        storage.set_data(
-                            layer_data,
-                            [layer],
-                            multiplier,
-                            self._current_key,
-                            preserve_record=preserve_record,
-                        )
-                    except Exception as ex:
-                        type_, value_, traceback_ = sys.exc_info()
-                        raise MFDataException(
-                            self.structure.get_model(),
-                            self.structure.get_package(),
-                            self._path,
-                            "setting data",
-                            self.structure.name,
-                            inspect.stack()[0][3],
-                            type_,
-                            value_,
-                            traceback_,
-                            None,
-                            self._simulation_data.debug,
-                            ex,
-                        )
+            if len(aux_data) == (len(aux_var_names[0]) - 1):
+                if self._is_grid_aux():
+                    modelgrid = self.data_dimensions.get_model_grid()
+                    nlayer = modelgrid.num_layers()
+
+                    for iaux, grid_aux in enumerate(aux_data):
+                        if nlayer == 1:
+                            layer = iaux
+                            if isinstance(data, dict):
+                                # put layer data back in dictionary
+                                layer_data = data
+                                layer_data["data"] = grid_aux
+                            else:
+                                layer_data = grid_aux
+
+                            _aux_storage_set(layer, layer_data)
+                        else:
+                            for ilayer, aux_layer_data in enumerate(grid_aux):
+                                layer = iaux * nlayer + ilayer
+                                if isinstance(data, dict):
+                                    # put layer data back in dictionary
+                                    layer_data = data
+                                    layer_data["data"] = aux_layer_data
+                                else:
+                                    layer_data = aux_layer_data
+
+                                _aux_storage_set(layer, layer_data)
+                else:
+                    for layer, aux_var_data in enumerate(aux_data):
+                        if isinstance(data, dict):
+                            # put layer data back in dictionary
+                            layer_data = data
+                            layer_data["data"] = aux_var_data
+                        else:
+                            layer_data = aux_var_data
+
+                        _aux_storage_set(layer, layer_data)
             else:
                 message = (
                     "Unable to set data for aux variable. "
                     "Expected {} aux variables but got "
-                    "{}.".format(len(aux_var_names[0]), len(data))
+                    "{}.".format(len(aux_var_names[0])-1, len(data))
                 )
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(
@@ -1090,6 +1121,11 @@ class MFArray(MFMultiDimVar):
             if self._layer_shape[-1] != model_grid.num_layers():
                 if model_grid.grid_type() == DiscretizationType.DISU:
                     self._layer_shape = (1,)
+                #elif self._is_grid_aux():
+                #    self._layer_shape = (
+                #        model_grid.num_layers() *
+                #        (len(self.data_dimensions.package_dim.get_aux_variables()[0]) - 1)
+                #    )
                 else:
                     self._layer_shape = (model_grid.num_layers(),)
                     if self._layer_shape[-1] is None:
@@ -1098,6 +1134,7 @@ class MFArray(MFMultiDimVar):
                 self._set_storage_obj(
                     self._new_storage(shape_ml.get_total_size() != 1, True)
                 )
+
         storage = self._get_storage_obj()
         if external_file_info is not None:
             storage.point_to_existing_external_file(
@@ -1127,6 +1164,7 @@ class MFArray(MFMultiDimVar):
         # determine if this is the special aux variable case
         if (
             self.structure.name.lower() == "aux"
+            #and not self.structure.layered
             and self._get_storage_obj().layered
         ):
             return True
@@ -1177,6 +1215,7 @@ class MFArray(MFMultiDimVar):
             return ""
 
         layered_aux = self._is_layered_aux()
+        grid_aux = self._is_grid_aux()
 
         # prepare indent
         indent = self._simulation_data.indent_string
@@ -1254,7 +1293,34 @@ class MFArray(MFMultiDimVar):
                 layer_min = layer
                 layer_max = shape_ml.inc_shape_idx(layer)
 
-            if layered_aux:
+            if grid_aux:
+                modelgrid = self.data_dimensions.get_model_grid()
+                nlayer = modelgrid.num_layers()
+                aux_var_names = (
+                    self.data_dimensions.package_dim.get_aux_variables()[0]
+                )
+                for iaux in range(0, len(aux_var_names)-1):
+                    auxname = aux_var_names[iaux + 1]
+                    if data_storage.netcdf:
+                        if data_storage.has_data():
+                            file_entry_array.append(f"{indent}{auxname}{indent}NETCDF\n")
+                    else:
+                        if nlayer > 1:
+                            file_entry_array.append(f"{indent}{auxname}{indent}LAYERED\n")
+                        else:
+                            file_entry_array.append(f"{indent}{auxname}\n")
+                        for ilayer in range(nlayer):
+                            sto_layer = iaux * nlayer + ilayer
+                            file_entry_array.append(
+                                self._get_file_entry_layer(
+                                    (sto_layer,),
+                                    data_indent,
+                                    data_storage.layer_storage[sto_layer].data_storage_type,
+                                    ext_file_action,
+                                )
+                            )
+
+            elif layered_aux:
                 aux_var_names = (
                     self.data_dimensions.package_dim.get_aux_variables()[0]
                 )
@@ -1272,6 +1338,7 @@ class MFArray(MFMultiDimVar):
                                 layered_aux,
                             )
                         )
+
             elif data_storage.netcdf:
                 file_entry_array.append(f"{indent}{self.structure.name}{indent}NETCDF\n")
 
@@ -1481,12 +1548,7 @@ class MFArray(MFMultiDimVar):
             self._path,
             self._current_key,
         )
-        if self._is_grid_aux():
-            return file_access.get_data_string(
-                [a.ravel().tolist() for a in data], self._data_type, data_indent
-            )
-        else:
-            return file_access.get_data_string(data, self._data_type, data_indent)
+        return file_access.get_data_string(data, self._data_type, data_indent)
 
     def _resolve_layer_index(self, layer, allow_multiple_layers=False):
         # handle layered vs non-layered data
@@ -1818,8 +1880,7 @@ class MFTransientArray(MFArray, MFTransient):
             if sp in self._data_storage:
                 self.get_data_prep(sp)
                 data = super().get_data(apply_mult=apply_mult, **kwargs)
-                if not (self._is_grid_aux() or self._is_layered_aux()):
-                    data = np.expand_dims(data, 0)
+                data = np.expand_dims(data, 0)
             else:
                 # if there is no previous data provide array of
                 # zeros, otherwise provide last array of data found
@@ -1837,29 +1898,18 @@ class MFTransientArray(MFArray, MFTransient):
                             data = np.full_like(data, 1)
                         else:
                             data = np.full_like(data, 0.0)
-                        if not (self._is_grid_aux() or self._is_layered_aux()):
-                            data = np.expand_dims(data, 0)
+                        data = np.expand_dims(data, 0)
             if output is None or data is None:
                 output = data
-                if data is not None:
-                    baseshape = np.shape(data)
-                    if self._is_grid_aux():
-                        output = np.expand_dims(output, 0)
             else:
-                if np.all(output == None):
-                    baseshape = np.shape(data)
-                    output = np.full(np.shape(data), np.nan, self.dtype)
-                    output = np.concatenate((output, data))
-                    if self._is_grid_aux():
-                        output = np.expand_dims(output, 0)
-                elif np.all(data == None):
-                    anone = np.full(baseshape, np.nan, self.dtype)
+                if np.all(data == None):
+                    anone = np.full(baseshape, np.nan, np.float64)
                     output = np.append(output, anone, axis=0)
                 else:
-                    if self._is_grid_aux() and np.shape(data) == baseshape:
-                        data = np.expand_dims(data, 0)
+                    if np.all(output == None):
+                        baseshape = np.shape(data)
+                        output = np.full(baseshape, np.nan, self.dtype)
                     output = np.concatenate((output, data))
-
         return output
 
     def has_data(self, layer=None):

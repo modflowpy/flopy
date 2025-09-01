@@ -856,6 +856,7 @@ class MFBlock:
         # handle special readasarrays case
         if (
             self._container_package.structure.read_as_arrays
+            or self._container_package.structure.read_array_grid
             or (
                 hasattr(self._container_package, "aux")
                 and self._container_package.aux.structure.layered
@@ -3670,7 +3671,6 @@ class MFPackage(PackageInterface):
             dimmap["x"] = modelgrid.ncol
 
         def _update_data(nc_info, key, dobj=None, data=None):
-            from types import MappingProxyType
             if "modflow_iaux" in nc_info[key]["attrs"]:
                 iaux = nc_info[key]["attrs"]["modflow_iaux"] - 1
             else:
@@ -3678,11 +3678,11 @@ class MFPackage(PackageInterface):
             if mesh == None:
                 if dobj.repeating:
                     if iaux >= 0:
-                        for k in data:
-                            if data[k] is None:
+                        for per in data:
+                            if data[per] is None:
                                 continue
-                            istp = sum(modeltime.nstp[0:k])
-                            auxdata = data[k][iaux]
+                            istp = sum(modeltime.nstp[0:per])
+                            auxdata = data[per][iaux]
                             dataset[nc_info[key]["varname"]].values[istp, :] = (
                                 auxdata)
                     else:
@@ -3707,17 +3707,22 @@ class MFPackage(PackageInterface):
                     layer = -1
                 if dobj.repeating:
                     if iaux >= 0:
-                        for k in data:
-                            if data[k] is None:
+                        for per in data:
+                            if data[per] is None:
                                 continue
-                            auxdata = data[k][iaux]
-                            istp = sum(modeltime.nstp[0:k])
+                            auxdata = data[per][iaux]
+                            istp = sum(modeltime.nstp[0:per])
                             if self.structure.read_as_arrays:
                                 dataset[nc_info[key]["varname"]].values[istp, :] = (
                                     auxdata.flatten())
                             elif self.structure.read_array_grid:
-                                dataset[nc_info[key]["varname"]].values[istp, :] = (
-                                    auxdata[layer].flatten())
+                                uidx = istp + auxdata[layer].size
+                                if modelgrid.nlay > 1:
+                                    dataset[nc_info[key]["varname"]].values[istp, :] = (
+                                        auxdata[layer].flatten())
+                                else:
+                                    dataset[nc_info[key]["varname"]].values[istp, :] = (
+                                        auxdata.flatten())
                     else:
                         for per in data:
                             if data[per] is None:

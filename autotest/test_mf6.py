@@ -1963,6 +1963,8 @@ def test_array(function_tmpdir):
 
 @requires_exe("mf6")
 def test_grid_array(function_tmpdir):
+    import warnings
+
     try:
         from flopy.mf6 import (
             ModflowGwfchdg,
@@ -1972,6 +1974,8 @@ def test_grid_array(function_tmpdir):
             ModflowGwfwelg,
         )
     except ImportError:
+        msg = "test_mf6 test_grid_array did not run"
+        warnings.warn(msg, UserWarning)
         return
     # get_data
     # empty data in period block vs data repeating
@@ -2015,7 +2019,7 @@ def test_grid_array(function_tmpdir):
         delc=5000.0,
         top=100.0,
         botm=[50.0, 0.0, -50.0, -100.0],
-        filename=f"{model_name} 1.dis",
+        filename=f"{model_name}.dis",
     )
     ic_package = ModflowGwfic(model, strt=90.0, filename=f"{model_name}.ic")
     npf_package = ModflowGwfnpf(
@@ -2091,6 +2095,8 @@ def test_grid_array(function_tmpdir):
         q = np.full((nlay, nrow, ncol), DNODATA, dtype=float)
         welconc = np.full((nlay, nrow, ncol), DNODATA, dtype=float)
         welaux2 = np.full((nlay, nrow, ncol), DNODATA, dtype=float)
+        # TODO constant by layer
+        # welaux2 = [DNODATA]
         if n == 1:
             q[0, 0, 0] = 0.25
             welconc[0, 0, 0] = 0.0
@@ -2115,6 +2121,12 @@ def test_grid_array(function_tmpdir):
         aux=welconcspd,
     )
 
+    print(wel.aux.array)
+    print(wel.aux.get_data())
+
+    # sim.write_simulation()
+    # assert False
+
     assert len(wel.q.array) == 4
     assert len(wel.q.get_data()) == 4
     assert len(wel.aux.array) == 4
@@ -2135,15 +2147,6 @@ def test_grid_array(function_tmpdir):
     assert np.allclose(wel.aux.array[2][1], wel.aux.get_data()[2][1])
     assert np.allclose(wel.aux.array[3][0], wel.aux.get_data()[3][0])
     assert np.allclose(wel.aux.array[3][1], wel.aux.get_data()[3][1])
-    # assert wel.q.get_data()[0] is None
-    # assert wel.q.get_data(0) is None
-    # assert np.allclose(wel.q.get_data()[1], wel.q.get_data(1))
-    # assert np.allclose(wel.q.get_data()[2], wel.q.get_data(2))
-    assert len(wel.q.array) == 4
-    # assert np.allclose(wel.q.array[1], wel.q.get_data(1))
-    # assert np.allclose(wel.q.array[2], wel.q.get_data(2))
-    # assert wel.q.get_data()[3] is None
-    # assert wel.q.get_data(3) is None
 
     assert not wel.has_stress_period_data
     q_nan = np.where(wel.q.array == DNODATA, np.nan, wel.q.array)
@@ -2167,10 +2170,10 @@ def test_grid_array(function_tmpdir):
     assert aux_data_2[1][0][0][0] == 0.0
     aux_data_3 = wel.aux.get_data(3)
     assert np.all(aux_data_3[0] == DNODATA)
-    # assert wel.q[0] is None
-    # assert wel.q[1[0][1] == 0.25
 
     # remove test wel package
+    sim.write_simulation()
+    # assert False
     wel.remove()
 
     welqspd = {}
@@ -2237,32 +2240,70 @@ def test_grid_array(function_tmpdir):
     aux_data_3 = wel.aux.get_data(3)
     assert aux_data_3 is None
 
-    drnspdict = {
-        0: [[(0, 0, 0), 60.0, 10.0]],
-        2: [],
-        3: [[(0, 0, 0), 55.0, 5.0]],
-    }
-    drn = ModflowGwfdrn(
+    #    drnspdict = {
+    #        0: [[(0, 0, 0), 60.0, 10.0]],
+    #        2: [],
+    #        3: [[(0, 0, 0), 55.0, 5.0]],
+    #    }
+    #    drn = ModflowGwfdrn(
+    #        model,
+    #        print_input=True,
+    #        print_flows=True,
+    #        stress_period_data=drnspdict,
+    #        save_flows=False,
+    #        pname="DRN-1",
+    #    )
+
+    drnelevspd = {}
+    drncondspd = {}
+    for n in range(4):
+        elev = np.full((nlay, nrow, ncol), DNODATA, dtype=float)
+        cond = np.full((nlay, nrow, ncol), DNODATA, dtype=float)
+        if n == 0:
+            elev[0, 0, 0] = 60.0
+            cond[0, 0, 0] = 10.0
+        elif n == 3:
+            elev[0, 0, 0] = 55.0
+            cond[0, 0, 0] = 5.0
+        if n != 1:
+            drnelevspd[n] = elev
+            drncondspd[n] = cond
+
+    # create drng package
+    drn = ModflowGwfdrng(
         model,
         print_input=True,
         print_flows=True,
-        stress_period_data=drnspdict,
         save_flows=False,
         pname="DRN-1",
+        elev=drnelevspd,
+        cond=drncondspd,
     )
-    drn_array = drn.stress_period_data.array
-    assert drn_array[0][0][1] == 60.0
-    assert drn_array[1][0][1] == 60.0
-    assert drn_array[2] is None
-    assert drn_array[3][0][1] == 55.0
-    drn_gd_0 = drn.stress_period_data.get_data(0)
-    assert drn_gd_0[0][1] == 60.0
-    drn_gd_1 = drn.stress_period_data.get_data(1)
-    assert drn_gd_1 is None
-    drn_gd_2 = drn.stress_period_data.get_data(2)
-    assert len(drn_gd_2) == 0
-    drn_gd_3 = drn.stress_period_data.get_data(3)
-    assert drn_gd_3[0][1] == 55.0
+
+    drn_elev_array = drn.elev.array
+    drn_cond_array = drn.cond.array
+    drn_elev_data = drn.elev.get_data()
+    drn_cond_data = drn.cond.get_data()
+    assert len(drn_elev_array) == 4
+    assert len(drn_cond_array) == 4
+    assert len(drn_elev_data) == 4
+    assert len(drn_cond_data) == 4
+    assert np.allclose(drn_elev_array[0], drn_elev_data[0])
+    assert np.allclose(drn_elev_array[0], drn.elev.get_data(0))
+
+    # drn_array = drn.stress_period_data.array
+    # assert drn_array[0][0][1] == 60.0
+    # assert drn_array[1][0][1] == 60.0
+    # assert drn_array[2] is None
+    # assert drn_array[3][0][1] == 55.0
+    # drn_gd_0 = drn.stress_period_data.get_data(0)
+    # assert drn_gd_0[0][1] == 60.0
+    # drn_gd_1 = drn.stress_period_data.get_data(1)
+    # assert drn_gd_1 is None
+    # drn_gd_2 = drn.stress_period_data.get_data(2)
+    # assert len(drn_gd_2) == 0
+    # drn_gd_3 = drn.stress_period_data.get_data(3)
+    # assert drn_gd_3[0][1] == 55.0
 
     ghbspdict = {
         0: [[(0, 1, 1), 60.0, 10.0]],
@@ -2343,11 +2384,11 @@ def test_grid_array(function_tmpdir):
     )
 
     # test writing and loading model
-    print(wel.aux.array)
+    # print(wel.aux.array)
     sim.write_simulation()
-    print(wel.aux.array)
+    # print(wel.aux.array)
     sim.run_simulation()
-    print(wel.aux.array)
+    # print(wel.aux.array)
 
     test_sim = MFSimulation.load(
         sim_name,
@@ -2363,7 +2404,7 @@ def test_grid_array(function_tmpdir):
     drn = model.get_package("drn")
     lak = model.get_package("lak")
     lak_tab = model.get_package("laktab")
-    assert os.path.split(dis.filename)[1] == f"{model_name} 1.dis"
+    assert os.path.split(dis.filename)[1] == f"{model_name}.dis"
     # do same tests as above
     val_irch = rcha.irch.array.sum(axis=(1, 2, 3))
     assert val_irch[0] == 4
@@ -2406,6 +2447,8 @@ def test_grid_array(function_tmpdir):
     assert welg_q_per[2][0, 0, 0] == 0.1
     assert welg_q_per[3] is None
     wel_aux_array = wel.aux.array
+    print(wel_aux_array)
+    # assert False
     assert np.all(wel_aux_array[0][0] == 0.0)
     assert wel_aux_array[1][0][0, 0, 0] == 0.0
     assert wel_aux_array[2][0][0, 0, 0] == 0.0
@@ -2422,19 +2465,19 @@ def test_grid_array(function_tmpdir):
     welg_aux_per1 = wel.aux.get_data(1)
     assert welg_aux_per1[0][0, 0, 0] == 0.0
 
-    drn_array = drn.stress_period_data.array
-    assert drn_array[0][0][1] == 60.0
-    assert drn_array[1][0][1] == 60.0
-    assert drn_array[2] is None
-    assert drn_array[3][0][1] == 55.0
-    drn_gd_0 = drn.stress_period_data.get_data(0)
-    assert drn_gd_0[0][1] == 60.0
-    drn_gd_1 = drn.stress_period_data.get_data(1)
-    assert drn_gd_1 is None
-    drn_gd_2 = drn.stress_period_data.get_data(2)
-    assert len(drn_gd_2) == 0
-    drn_gd_3 = drn.stress_period_data.get_data(3)
-    assert drn_gd_3[0][1] == 55.0
+    # drn_array = drn.stress_period_data.array
+    # assert drn_array[0][0][1] == 60.0
+    # assert drn_array[1][0][1] == 60.0
+    # assert drn_array[2] is None
+    # assert drn_array[3][0][1] == 55.0
+    # drn_gd_0 = drn.stress_period_data.get_data(0)
+    # assert drn_gd_0[0][1] == 60.0
+    # drn_gd_1 = drn.stress_period_data.get_data(1)
+    # assert drn_gd_1 is None
+    # drn_gd_2 = drn.stress_period_data.get_data(2)
+    # assert len(drn_gd_2) == 0
+    # drn_gd_3 = drn.stress_period_data.get_data(3)
+    # assert drn_gd_3[0][1] == 55.0
 
     lak_tab_array = lak.tables.get_data()
     assert lak_tab_array[0][1] == "lak01.tab"

@@ -742,6 +742,10 @@ class MFFileAccessArray(MFFileAccess):
         else:
             index_num = 0
             aux_var_index = None
+        grid_aux = (
+            self._data_dimensions.structure.name == "aux"
+            and self._data_dimensions.structure.layered
+        )
 
         # TODO: Add species support
         # if layered supported, look for layered flag
@@ -749,6 +753,7 @@ class MFFileAccessArray(MFFileAccess):
             if (
                 len(arr_line) > index_num
                 and arr_line[index_num].lower() == "layered"
+                and not grid_aux
             ):
                 storage.layered = True
                 try:
@@ -771,6 +776,19 @@ class MFFileAccessArray(MFFileAccess):
                     )
                 if len(layers) > 0:
                     storage.init_layers(layers)
+
+            elif grid_aux:
+                #if layer_shape[0] > 1:
+                storage.layered = True
+                auxidx = self._get_aux_var_index(arr_line[0])
+                if auxidx == 0:
+                    layers = (
+                        layer_shape[0] *
+                        (len(self._data_dimensions.package_dim.get_aux_variables()[0]) - 1)
+                    )
+                    while layers > storage.layer_storage.get_total_size():
+                        storage.add_layer()
+
             elif aux_var_index is not None:
                 # each layer stores a different aux variable
                 layers = len(package_dim.get_aux_variables()[0]) - 1
@@ -778,6 +796,7 @@ class MFFileAccessArray(MFFileAccess):
                 storage.layered = True
                 while storage.layer_storage.list_shape[0] < layers:
                     storage.add_layer()
+
             else:
                 storage.flatten()
         try:
@@ -805,7 +824,17 @@ class MFFileAccessArray(MFFileAccess):
         for dimension in dimensions:
             layer_size *= dimension
 
-        if aux_var_index is None:
+        if grid_aux:
+            for l in range(layer_shape[0]):
+                self._load_layer(
+                    (layer_shape[0] * auxidx + l,),
+                    layer_size,
+                    storage,
+                    arr_line,
+                    file_handle,
+                    layer_shape,
+                )
+        elif aux_var_index is None:
             # loop through the number of layers
             for layer in storage.layer_storage.indexes():
                 self._load_layer(
