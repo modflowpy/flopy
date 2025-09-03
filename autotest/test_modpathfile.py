@@ -334,7 +334,7 @@ def test_write_shapefile(function_tmpdir, mp7_small, longfieldname):
     fieldname = "newfield" + ("longname" if longfieldname else "")
     fieldval = "x"
     pathlines = [
-        rfn.append_fields(pl, fieldname, list(repeat(fieldval, len(pl))), dtypes="|S1")
+        rfn.append_fields(pl, fieldname, list(repeat(fieldval, len(pl))), dtypes="|U1")
         for pl in pathlines
     ]
 
