@@ -39,26 +39,29 @@ class MFModel(ModelInterface):
 
     Parameters
     ----------
-    simulation_data : MFSimulationData
-        Simulation data object of the simulation this model will belong to
+    simulation : MFSimulation
+        Simulation object that this model is a part of.
+    model_type : str, default "gwf6"
+        Model type.
+    modelname : str, default "model"
+        Name of the model.
+    model_nam_file : str, optional
+        Relative path to the model name file from model working folder.
+    version : str, default "mf6"
+        Version of modflow.
+    exe_name : str, default "mf6"
+        Model executable name.
+    add_to_simulation : bool, default True
+        Adds model to simulation.
     structure : MFModelStructure
-        Structure of this type of model
-    modelname : str
-        Name of the model
-    model_nam_file : str
-        Relative path to the model name file from model working folder
-    version : str
-        Version of modflow
-    exe_name : str
-        Model executable name
-    model_ws : str
-        Model working folder path
-    disfile : str
-        Relative path to dis file from model working folder
-    grid_type : str
-        Type of grid the model will use (structured, unstructured, vertices)
-    verbose : bool
-        Verbose setting for model operations (default False)
+        Structure of this type of model.
+    model_rel_path : str or PathLike, default "." (curdir)
+        Relative path of model folder to simulation folder.
+    verbose : bool, default False
+        Verbose setting for model operations.
+    **kwargs
+        Extra keyword options to support spatial referencing, including
+        ``xll``, ``yll``, ``xul``, ``yul``, ``rotation``, and ``crs``.
 
     Attributes
     ----------
@@ -880,30 +883,30 @@ class MFModel(ModelInterface):
         Parameters
         ----------
         simulation : MFSimulation
-            simulation object that this model is a part of
-        simulation_data : MFSimulationData
-            simulation data object
+            Simulation object that this model is a part of.
         structure : MFModelStructure
-            structure of this type of model
-        model_name : str
-            name of the model
-        model_nam_file : str
-            relative path to the model name file from model working folder
-        version : str
-            version of modflow
+            Structure of this type of model.
+        modelname : str, default "NewModel"
+            Name of the model.
+        model_nam_file : str, default "modflowtest.nam"
+            Relative path to the model name file from model working folder.
+        mtype : str, default "gwf"
+            Not used.
+        version : str, default "mf6"
+            Version of modflow.
         exe_name : str or PathLike, default "mf6"
-            model executable name or path
-        strict : bool
-            strict mode when loading files
+            Model executable name or path.
+        strict : bool, default True
+            Strict mode when loading files.
         model_rel_path : str, default "." (curdir)
-            relative path of model folder to simulation folder
+            relative path of model folder to simulation folder.
         load_only : list
-            list of package abbreviations or package names corresponding to
+            List of package abbreviations or package names corresponding to
             packages that flopy will load. default is None, which loads all
-            packages. the discretization packages will load regardless of this
-            setting. subpackages, like time series and observations, will also
+            packages. The discretization packages will load regardless of this
+            setting. Subpackages, like time series and observations, will also
             load regardless of this setting.
-            example list: ['ic', 'maw', 'npf', 'oc', 'my_well_package_1']
+            Example list: ``['ic', 'maw', 'npf', 'oc', 'my_well_package_1']``
 
         Returns
         -------

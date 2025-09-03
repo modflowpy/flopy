@@ -1694,18 +1694,20 @@ class MFPackage(PackageInterface):
     Parameters
     ----------
     parent : MFModel, MFSimulation, or MFPackage
-        The parent model, simulation, or package containing this package
+        The parent model, simulation, or package containing this package.
     package_type : str
-        String defining the package type
-    filename : str or PathLike
-        Name or path of file where this package is stored
+        String defining the package type.
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
     quoted_filename : str
         Filename with quotes around it when there is a space in the name
-    pname : str
-        Package name
-    loading_package : bool
+    pname : str, optional
+        Package name.
+    loading_package : bool, default False
         Whether or not to add this package to the parent container's package
         list during initialization
+    **kwargs
+        Extra keyword arguments.
 
     Attributes
     ----------

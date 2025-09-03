@@ -17,7 +17,26 @@ class Modflow{{ title }}(MFPackage):
 
     Parameters
     ----------
+    simulation : MFSimulation
+        Simulation that this package is a part of. Package is automatically
+        added to simulation when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
+    exgtype : str, default "{{ name[1][:3].upper() }}6-{{ name[1][3:].upper() }}6"
+        The exchange type (GWF-GWF or GWF-GWT).
+    exgmnamea : str, optional
+        The name of the first model that is part of this exchange.
+    exgmnameb : str, optional
+        The name of the second model that is part of this exchange.
 {{ macros.docstrings(dfn|variables)|indent(4, first=true) }}
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
+
     """
 
     {% for attr in dfn|attrs(name) %}
@@ -36,41 +55,14 @@ class Modflow{{ title }}(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        {{ description }}
-
-        simulation : MFSimulation
-            Simulation that this package is a part of. Package is automatically
-            added to simulation when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        exgtype : str
-            The exchange type (GWF-GWF or GWF-GWT).
-        exgmnamea : str
-            The name of the first model that is part of this exchange.
-        exgmnameb : str
-            The name of the second model that is part of this exchange.
-        gwfmodelname1 : str
-            Name of first GWF Model. In the simulation name file, the GWE6-GWE6
-            entry contains names for GWE Models (exgmnamea and exgmnameb). The
-            GWE Model with the name exgmnamea must correspond to the GWF Model
-            with the name gwfmodelname1.
-        gwfmodelname2 : str
-            Name of second GWF Model. In the simulation name file, the GWE6-GWE6
-            entry contains names for GWE Models (exgmnamea and exgmnameb). The
-            GWE Model with the name exgmnameb must correspond to the GWF Model
-            with the name gwfmodelname2.
-{{ macros.docstrings(dfn|variables)|indent(8, first=true) }}
-        """
-
+        """Initialize Modflow{{ title }}."""
         super().__init__(
-            {{ parent }},
-            "{{ name[1] }}",
-            filename,
-            pname,
-            loading_package,
-            **kwargs
+            parent={{ parent }},
+            package_type="{{ name[1] }}",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
         )
 
         self.exgtype = exgtype

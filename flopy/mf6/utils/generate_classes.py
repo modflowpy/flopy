@@ -91,7 +91,7 @@ def generate_classes(
 
         shutil.rmtree(_MF6_AUTOGEN_PATH)
         _MF6_AUTOGEN_PATH.mkdir(parents=True)
-        make_all(tomlpath, _MF6_AUTOGEN_PATH, version=2, legacydir=dfnpath)
+        make_all(tomlpath, _MF6_AUTOGEN_PATH, version=2, legacydir=dfnpath, verbose=verbose)
         if verbose:
             files = list(_MF6_AUTOGEN_PATH.glob("*.py"))
             print(f"Generated {len(files)} module files in: {_MF6_AUTOGEN_PATH}")
@@ -132,9 +132,10 @@ def cli_main():
     )
     parser.add_argument(
         "--verbose",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
         default=True,
-        help="Print information about the code generation process.",
+        help="Print information about the code generation process; "
+        "default shows verbose output.",
     )
     parser.add_argument(
         "--exclude", help="Exclude DFNs matching a pattern.", action="append"

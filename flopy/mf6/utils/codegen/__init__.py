@@ -18,26 +18,26 @@ def _get_template_env():
         keep_trailing_newline=True,
     )
 
-    from flopy.mf6.utils.codegen.filters import Filters
+    from flopy.mf6.utils.codegen import filters
 
-    env.filters["base"] = Filters.base
-    env.filters["title"] = Filters.title
-    env.filters["description"] = Filters.description
-    env.filters["prefix"] = Filters.prefix
-    env.filters["parent"] = Filters.parent
-    env.filters["skip_init"] = Filters.skip_init
-    env.filters["package_abbr"] = Filters.package_abbr
-    env.filters["variables"] = Filters.variables
-    env.filters["attrs"] = Filters.attrs
-    env.filters["init"] = Filters.init
-    env.filters["untag"] = Filters.untag
-    env.filters["type"] = Filters.type
-    env.filters["children"] = Filters.children
-    env.filters["default_value"] = Filters.default_value
-    env.filters["safe_name"] = Filters.safe_name
-    env.filters["value"] = Filters.value
-    env.filters["math"] = Filters.math
-    env.filters["clean"] = Filters.clean
+    env.filters["base"] = filters.base
+    env.filters["title"] = filters.title
+    env.filters["description"] = filters.description
+    env.filters["prefix"] = filters.prefix
+    env.filters["parent"] = filters.parent
+    env.filters["skip_init"] = filters.skip_init
+    env.filters["package_abbr"] = filters.package_abbr
+    env.filters["variables"] = filters.variables
+    env.filters["attrs"] = filters.attrs
+    env.filters["init"] = filters.init
+    env.filters["untag"] = filters.untag
+    env.filters["type"] = filters.type
+    env.filters["children"] = filters.children
+    env.filters["default_value"] = filters.default_value
+    env.filters["safe_name"] = filters.safe_name
+    env.filters["value"] = filters.value
+    env.filters["math"] = filters.math
+    env.filters["clean"] = filters.clean
 
     return env
 
@@ -72,11 +72,11 @@ def make_targets(dfn, outdir: PathLike, verbose: bool = False):
 
     # import here instead of module so we don't
     # expect optional deps at module init time
+    from flopy.mf6.utils.codegen import filters
     from flopy.mf6.utils.codegen.component import ComponentDescriptor
-    from flopy.mf6.utils.codegen.filters import Filters
 
     def _get_template_name(component_name) -> str:
-        base = Filters.base(component_name)
+        base = filters.base(component_name)
         if base == "MFSimulationBase":
             return "simulation.py.jinja"
         elif base == "MFModel":
@@ -88,9 +88,12 @@ def make_targets(dfn, outdir: PathLike, verbose: bool = False):
         else:
             raise NotImplementedError(f"Unknown base class: {base}")
 
+    if verbose:
+        print(f"Making target for DFN {dfn['name']!r} ...")
+
     for component in ComponentDescriptor.from_dfn(dfn):
         component_name = component["name"]
-        target_path = outdir / f"mf{Filters.title(component_name)}.py"
+        target_path = outdir / f"mf{filters.title(component_name)}.py"
         template = env.get_template(_get_template_name(component_name))
         with open(target_path, "w") as f:
             f.write(template.render(**component))

@@ -16,14 +16,22 @@ class Modflow{{ title }}(MFModel):
 
     Parameters
     ----------
+    simulation : MFSimulation
+        Simulation object that this model is a part of.
+    modelname : str, default "model"
+        Name of the model.
+    model_nam_file : str, optional
+        Relative path to the model name file from model working folder.
+    version : str, default "mf6"
+        Version of modflow.
+    exe_name : str, default "mf6"
+        Model executable name.
+    model_rel_path : str or PathLike, default "." (curdir)
+        Relative path of model folder to simulation folder.
 {{ macros.docstrings(dfn|variables)|indent(4, first=true) }}
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfmodel.MFModel`.
 
-    Methods
-    -------
-    load : (simulation : MFSimulationData, model_name : string,
-        namfile : string, version : string, exe_name : string,
-        model_ws : string, strict : boolean) : MFSimulation
-        a class method that loads a model from files
     """
 
     model_type = "{{ title.lower() }}"
@@ -35,32 +43,11 @@ class Modflow{{ title }}(MFModel):
         model_nam_file=None,
         version="mf6",
         exe_name="mf6",
-        model_rel_path=".",
+        model_rel_path=curdir,
 {{ macros.init_params(dfn|variables, skip=name|skip_init)|indent(8, first=true) }}
         **kwargs,
     ):
-        """
-        {{ description }}
-
-        Parameters
-        ----------
-        modelname : string
-            name of the model
-        model_nam_file : string
-            relative path to the model name file from model working folder
-        version : string
-            version of modflow
-        exe_name : string
-            model executable name
-        model_ws : string
-            model working folder path
-        sim : MFSimulation
-            Simulation that this model is a part of.  Model is automatically
-            added to simulation when it is initialized.
-
-{{ macros.docstrings(dfn|variables)|indent(8, first=true) }}
-        """
-
+        """Initialize Modflow{{ title }}."""
         super().__init__(
             simulation,
             model_type="{{ title.lower() }}6",
@@ -89,6 +76,32 @@ class Modflow{{ title }}(MFModel):
         model_rel_path=curdir,
         load_only=None,
     ):
+        """
+        Load an existing {{ title }} model.
+
+        Parameters
+        ----------
+        simulation : MFSimulation
+            Simulation object that this model is a part of.
+        structure : MFModelStructure
+            Structure of this type of model.
+        modelname : str, default "NewModel"
+            Name of the model.
+        model_nam_file : str, default "modflowtest.nam"
+            Relative path to the model name file from model working folder.
+        version : str, default "mf6"
+            Version of modflow.
+        exe_name : str or PathLike, default "mf6"
+            Model executable name or path.
+        strict : bool, default True
+            Strict mode when loading files.
+        model_rel_path : str or PathLike, default "." (curdir)
+            Relative path of model folder to simulation folder.
+        load_only : list of str, optional
+            Packages to load (e.g. ['btn', 'adv']). Default None
+            means that all packages will be loaded.
+
+        """
         return MFModel.load_base(
             cls,
             simulation,

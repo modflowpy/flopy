@@ -404,48 +404,51 @@ class MFSimulationBase:
 
     Parameters
     ----------
-    sim_name : str
+    sim_name : str, default "sim"
         Name of the simulation.
-    version : str
-        Version of MODFLOW 6 executable
-    exe_name : str
-        Path to MODFLOW 6 executable
-    sim_ws : str
+    version : str, default "mf6"
+        Version of MODFLOW 6 executable.
+    exe_name : str, default "mf6"
+        Path to MODFLOW 6 executable.
+    sim_ws : str or PathLike, default ".' (curdir)
         Path to MODFLOW 6 simulation working folder.  This is the folder
         containing the simulation name file.
-    verbosity_level : int
-        Verbosity level of standard output from 0 to 2. When 0 is specified no
-        standard output is written.  When 1 is specified standard
-        error/warning messages with some informational messages are written.
-        When 2 is specified full error/warning/informational messages are
-        written (this is ideal for debugging).
-    continue_ : bool
+    verbosity_level : int, default 1
+        Verbosity level of standard output:
+
+            0. No standard output
+            1. Standard error/warning messages with some informational
+               messages
+            2. Verbose mode with full error/warning/informational messages.
+               This is ideal for debugging.
+    continue_ : bool, optional
         Sets the continue option in the simulation name file. The continue
         option is a keyword flag to indicate that the simulation should
         continue even if one or more solutions do not converge.
-    nocheck : bool
-         Sets the nocheck option in the simulation name file. The nocheck
-         option is a keyword flag to indicate that the model input check
-         routines should not be called prior to each time step. Checks
-         are performed by default.
-    memory_print_option : str
-         Sets memory_print_option in the simulation name file.
-         Memory_print_option is a flag that controls printing of detailed
-         memory manager usage to the end of the simulation list file.  NONE
-         means do not print detailed information. SUMMARY means print only
-         the total memory for each simulation component. ALL means print
-         information for each variable stored in the memory manager. NONE is
-         default if memory_print_option is not specified.
-    write_headers: bool
-        When true flopy writes a header to each package file indicating that
+    nocheck : bool, optional
+        Sets the nocheck option in the simulation name file. The nocheck
+        option is a keyword flag to indicate that the model input check
+        routines should not be called prior to each time step. Checks
+        are performed by default.
+    memory_print_option : str, optional
+        Sets memory_print_option in the simulation name file.
+        Memory_print_option is a flag that controls printing of detailed
+        memory manager usage to the end of the simulation list file.  None
+        means do not print detailed information. SUMMARY means print only
+        the total memory for each simulation component. ALL means print
+        information for each variable stored in the memory manager. None is
+        default if memory_print_option is not specified.
+    write_headers: bool, default True
+        When True flopy writes a header to each package file indicating that
         it was created by flopy.
-    lazy_io: bool
-        When true flopy only reads external data when the data is requested
+    lazy_io: bool, default False
+        When True flopy only reads external data when the data is requested
         and only writes external data if the data has changed.  This option
         automatically overrides the verify_data and auto_set_sizes, turning
         both off.
-    use_pandas: bool
-        Load/save data using pandas dataframes (for supported data)
+    use_pandas: bool, default True
+        Load/save data using pandas dataframes (for supported data).
+
     Examples
     --------
     >>> s = MFSimulationBase.load('my simulation', 'simulation.nam')
@@ -779,48 +782,48 @@ class MFSimulationBase:
 
         Parameters
         ----------
-        cls_child :
-            cls object of child class calling load
-        sim_name : str
+        sim_name : str, default "modflowsim"
             Name of the simulation.
-        version : str
-            MODFLOW version
-        exe_name : str or PathLike
-            Path to MODFLOW executable (relative to the simulation workspace or absolute)
-        sim_ws : str or PathLike
-            Path to simulation workspace
-        strict : bool
-            Strict enforcement of file formatting
-        verbosity_level : int
-            Verbosity level of standard output
-                0: No standard output
-                1: Standard error/warning messages with some informational
+        version : str, default "mf6"
+            Version of MODFLOW 6 executable.
+        exe_name : str or PathLike, default "mf6"
+            Path to MODFLOW 6 executable.
+        sim_ws : str or PathLike, default "." (curdir)
+            Path to MODFLOW 6 simulation working folder.  This is the folder
+            containing the simulation name file.
+        strict : bool, default True
+            Strict enforcement of file formatting.
+        verbosity_level : int, default 1
+            Verbosity level of standard output:
+
+                0. No standard output
+                1. Standard error/warning messages with some informational
                    messages
-                2: Verbose mode with full error/warning/informational
-                   messages.  This is ideal for debugging.
-        load_only : list
+                2. Verbose mode with full error/warning/informational messages.
+                   This is ideal for debugging.
+        load_only : list, optional
             List of package abbreviations or package names corresponding to
             packages that flopy will load. default is None, which loads all
             packages. the discretization packages will load regardless of this
             setting. subpackages, like time series and observations, will also
             load regardless of this setting.
             example list: ['ic', 'maw', 'npf', 'oc', 'ims', 'gwf6-gwf6']
-        verify_data : bool
-            Verify data when it is loaded. this can slow down loading
-        write_headers: bool
-            When true flopy writes a header to each package file indicating
-            that it was created by flopy
-        lazy_io: bool
-            When true flopy only reads external data when the data is requested
+        verify_data : bool, default False
+            Verify data when it is loaded. This can slow down loading.
+        write_headers: bool, default True
+            When True flopy writes a header to each package file indicating
+            that it was created by flopy.
+        lazy_io: bool, default False
+            When True flopy only reads external data when the data is requested
             and only writes external data if the data has changed.  This option
             automatically overrides the verify_data and auto_set_sizes, turning
             both off.
-        use_pandas: bool
-            Load/save data using pandas dataframes (for supported data)
+        use_pandas: bool, default True
+            Load/save data using pandas dataframes (for supported data).
 
         Returns
         -------
-        sim : MFSimulation object
+        MFSimulation object
 
         Examples
         --------

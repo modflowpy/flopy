@@ -15,16 +15,35 @@ class MF{{ title }}(MFSimulationBase):
 
     Parameters
     ----------
+    sim_name : str, default "sim"
+        Name of the simulation.
+    version : str, default "mf6"
+        Version of MODFLOW 6 executable.
+    exe_name : str, default "mf6"
+        Path to MODFLOW 6 executable.
+    sim_ws : str or PathLike, default ".' (curdir)
+        Path to MODFLOW 6 simulation working folder.  This is the folder
+        containing the simulation name file.
+    verbosity_level : int, default 1
+        Verbosity level of standard output:
+
+            0. No standard output
+            1. Standard error/warning messages with some informational
+               messages
+            2. Verbose mode with full error/warning/informational messages.
+               This is ideal for debugging.
+    write_headers: bool, default True
+        When True flopy writes a header to each package file indicating that
+        it was created by flopy.
+    lazy_io: bool, default False
+        When True flopy only reads external data when the data is requested
+        and only writes external data if the data has changed.  This option
+        automatically overrides the verify_data and auto_set_sizes, turning
+        both off.
+    use_pandas: bool, default True
+        Load/save data using pandas dataframes (for supported data).
 {{ macros.docstrings(dfn|variables)|indent(4, first=true) }}
 
-    Methods
-    -------
-    load : (sim_name : str, version : string,
-        exe_name : str or PathLike, sim_ws : str or PathLike, strict : bool,
-        verbosity_level : int, load_only : list, verify_data : bool,
-        write_headers : bool, lazy_io : bool, use_pandas : bool,
-        ) : MFSimulation
-        a class method that loads a simulation from files
     """
 
     def __init__(
@@ -39,30 +58,7 @@ class MF{{ title }}(MFSimulationBase):
         lazy_io: bool = False,
 {{ macros.init_params(dfn|variables, skip=name|skip_init)|indent(8, first=true) }}
     ):
-        """
-        {{ description }}
-
-        Parameters
-        ----------
-        sim_name
-            The name of the simulation
-        version
-            The simulation version
-        exe_name
-            The executable name
-        sim_ws
-            The simulation workspace
-        verbosity_level
-            The verbosity level
-        write_headers
-            Whether to write
-        use_pandas
-            Whether to use pandas
-        lazy_io
-            Whether to use lazy IO
-{{ macros.docstrings(dfn|variables)|indent(8, first=true) }}
-        """
-
+        """Initialize MF{{ title }}."""
         super().__init__(
             sim_name=sim_name,
             version=version,
@@ -71,7 +67,7 @@ class MF{{ title }}(MFSimulationBase):
             verbosity_level=verbosity_level,
             write_headers=write_headers,
             lazy_io=lazy_io,
-            use_pandas=use_pandas
+            use_pandas=use_pandas,
         )
 
         {% for statement in dfn|init(name) %}
@@ -93,17 +89,62 @@ class MF{{ title }}(MFSimulationBase):
         lazy_io=False,
         use_pandas=True,
     ):
+        """
+        Load an existing simulation.
+
+        Parameters
+        ----------
+        sim_name : str, default "modflowsim"
+            Name of the simulation.
+        version : str, default "mf6"
+            Version of MODFLOW 6 executable.
+        exe_name : str or PathLike, default "mf6"
+            Path to MODFLOW 6 executable.
+        sim_ws : str or PathLike, default "." (curdir)
+            Path to MODFLOW 6 simulation working folder.  This is the folder
+            containing the simulation name file.
+        strict : bool, default True
+            Strict enforcement of file formatting.
+        verbosity_level : int, default 1
+            Verbosity level of standard output:
+
+                0. No standard output
+                1. Standard error/warning messages with some informational
+                   messages
+                2. Verbose mode with full error/warning/informational messages.
+                   This is ideal for debugging.
+        load_only : list, optional
+            List of package abbreviations or package names corresponding to
+            packages that flopy will load. default is None, which loads all
+            packages. The discretization packages will load regardless of this
+            setting. Subpackages, like time series and observations, will also
+            load regardless of this setting.
+            Example list: ``['ic', 'maw', 'npf', 'oc', 'ims', 'gwf6-gwf6']``
+        verify_data : bool, default False
+            Verify data when it is loaded. This can slow down loading.
+        write_headers: bool, default True
+            When True flopy writes a header to each package file indicating
+            that it was created by flopy.
+        lazy_io: bool, default False
+            When True flopy only reads external data when the data is requested
+            and only writes external data if the data has changed.  This option
+            automatically overrides the verify_data and auto_set_sizes, turning
+            both off.
+        use_pandas: bool, default True
+            Load/save data using pandas dataframes (for supported data).
+
+        """
         return MFSimulationBase.load(
             cls,
-            sim_name,
-            version,
-            exe_name,
-            sim_ws,
-            strict,
-            verbosity_level,
-            load_only,
-            verify_data,
-            write_headers,
-            lazy_io,
-            use_pandas,
+            sim_name=sim_name,
+            version=version,
+            exe_name=exe_name,
+            sim_ws=sim_ws,
+            strict=strict,
+            verbosity_level=verbosity_level,
+            load_only=load_only,
+            verify_data=verify_data,
+            write_headers=write_headers,
+            lazy_io=lazy_io,
+            use_pandas=use_pandas,
         )
