@@ -2462,6 +2462,10 @@ class DataStorage:
                     or not self._has_layer_dim()
                 ):
                     full_data = self._fill_const_layer(layer) * mult
+                elif grid_aux:
+                    ilayer = (layer[0]) % nlay
+                    iaux = int((layer[0]) / nlay)
+                    full_data[iaux][ilayer] = self._fill_const_layer(layer)[0] * mult
                 else:
                     full_data[layer] = self._fill_const_layer(layer) * mult
             else:

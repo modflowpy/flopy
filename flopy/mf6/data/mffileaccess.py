@@ -778,7 +778,6 @@ class MFFileAccessArray(MFFileAccess):
                     storage.init_layers(layers)
 
             elif grid_aux:
-                #if layer_shape[0] > 1:
                 storage.layered = True
                 auxidx = self._get_aux_var_index(arr_line[0])
                 if auxidx == 0:
