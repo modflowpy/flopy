@@ -295,10 +295,10 @@ class MfUsgBcf(ModflowBcf):
             if self.ikcflag == 0:
                 self._write_hy_tran_vcont_kv(f_obj, layer)
 
-            if transient and (self.laycon[layer] in [2, 3, 4]):
+            if transient and (self.laycon[layer] in {2, 3, 4}):
                 f_obj.write(self.sf2[layer].get_file_entry())
 
-            if (self.iwdflg != 0) and (self.laycon[layer] in [1, 3]):
+            if (self.iwdflg != 0) and (self.laycon[layer] in {1, 3}):
                 f_obj.write(self.wetdry[layer].get_file_entry())
 
         # <KSAT> (if ikcflag==1)
@@ -316,7 +316,7 @@ class MfUsgBcf(ModflowBcf):
         f_obj : open file object.
         k : model layer index (base 0)
         """
-        if self.laycon[layer] in [0, 2]:
+        if self.laycon[layer] in {0, 2}:
             f_obj.write(self.tran[layer].get_file_entry())
         else:
             f_obj.write(self.hy[layer].get_file_entry())
@@ -657,7 +657,7 @@ class MfUsgBcf(ModflowBcf):
                     vcont[layer] = vcont_k
 
             # sf2
-            if transient and (laycon[layer] in [2, 3, 4]):
+            if transient and (laycon[layer] in {2, 3, 4}):
                 if model.verbose:
                     print(f"   loading sf2 layer {layer + 1:3d}...")
                 sf2[layer] = Util2d.load(
@@ -665,7 +665,7 @@ class MfUsgBcf(ModflowBcf):
                 )
 
             # wetdry
-            if (iwdflg != 0) and (laycon[layer] in [1, 3]):
+            if (iwdflg != 0) and (laycon[layer] in {1, 3}):
                 if model.verbose:
                     print(f"   loading sf2 layer {layer + 1:3d}...")
                 wetdry[layer] = Util2d.load(
@@ -705,7 +705,7 @@ class MfUsgBcf(ModflowBcf):
         # hy or tran
         _tran = 0
         _hy = 0
-        if laycon_k in [0, 2]:
+        if laycon_k in {0, 2}:
             if model.verbose:
                 print(f"   loading tran layer {layer + 1:3d}...")
             _tran = Util2d.load(

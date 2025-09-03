@@ -72,7 +72,7 @@ class ModpathFile(ParticleTrackFile):
                     if version is None:
                         modpath = False
                 skiprows += 1
-                if version in [6, 7]:
+                if version in {6, 7}:
                     if file_type.lower() == "endpoint":
                         if idx == 1:
                             direction = 1
@@ -850,7 +850,7 @@ class TimeseriesFile(ModpathFile):
 
     def _load(self) -> tuple[np.dtype, np.ndarray]:
         dtype = self.dtypes[self.version]
-        if self.version in [3, 5] and not self.compact:
+        if self.version in {3, 5} and not self.compact:
             dtype = np.dtype(
                 [
                     ("timestepindex", np.int32),

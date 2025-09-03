@@ -50,11 +50,11 @@ def model_is_copy(m1, m2):
                         return False
             else:
                 return False
-        if k in [
+        if k in {
             "_packagelist",
             "_package_paths",
             "_ftype_num_dict",
-        ]:
+        }:
             continue
         elif k not in m2.__dict__:
             return False
@@ -82,17 +82,16 @@ def package_is_copy(pk1, pk2):
             # Deep copy doesn't work for ModflowUtltas
             if not inspect.isclass(v):
                 return False
-        if k in [
+        if k in {
             "_child_package_groups",
             "_data_list",
-            "simulation_data",
             "blocks",
             "dimensions",
             "post_block_comments",
             "simulation_data",
             "structure",
             "_package_container",
-        ]:
+        }:
             continue
         elif isinstance(v, MFPackage):
             continue

@@ -102,7 +102,7 @@ class Shape:
         -------
             Polygon, LineString, or Point
         """
-        if geo_interface["type"] in ("Polygon", "MultiPolygon"):
+        if geo_interface["type"] in {"Polygon", "MultiPolygon"}:
             coord_list = geo_interface["coordinates"]
             if geo_interface["type"] == "Polygon":
                 coord_list = [coord_list]

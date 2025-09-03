@@ -273,8 +273,8 @@ class Vtk:
                 else:
                     elevations[v] = [zv]
 
-        for key in elevations:
-            elevations[key] = np.mean(elevations[key])
+        for key, value in elevations.items():
+            elevations[key] = np.mean(value)
 
         return elevations
 
@@ -789,7 +789,7 @@ class Vtk:
         k = next(iter(d.keys()))
         transient = {}
         if isinstance(d[k], DataInterface):
-            if d[k].data_type in (DataType.array2d, DataType.array3d):
+            if d[k].data_type in {DataType.array2d, DataType.array3d}:
                 if name is None:
                     name = d[k].name
                     if isinstance(name, list):
@@ -989,7 +989,7 @@ class Vtk:
                         self.add_array(v.array, item, masked_values)
 
             if isinstance(value, DataInterface):
-                if value.data_type in (DataType.array2d, DataType.array3d):
+                if value.data_type in {DataType.array2d, DataType.array3d}:
                     if value.array is not None:
                         if value.array.size < self.nnodes:
                             if value.array.size < self.ncpl:
@@ -1407,7 +1407,7 @@ class Vtk:
             if grid is None:
                 continue
 
-            if f.suffix not in (".vtk", ".vtu"):
+            if f.suffix not in {".vtk", ".vtu"}:
                 foo = f.parent / f"{f.name}{suffix[ix]}{extension}"
             else:
                 foo = f.parent / f"{f.stem}{suffix[ix]}{f.suffix}"
@@ -1483,7 +1483,7 @@ class Vtk:
                     w.Update()
 
         if not isinstance(self.pvd, bool):
-            if f.suffix not in (".vtk", ".vtu"):
+            if f.suffix not in {".vtk", ".vtu"}:
                 pvdfile = f.parent / f"{f.name}.pvd"
             else:
                 pvdfile = f.with_suffix(".pvd")

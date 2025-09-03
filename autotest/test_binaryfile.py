@@ -202,7 +202,6 @@ def test_binaryfile_writeread(function_tmpdir, nwt_model_path):
     ml = flopy.modflow.Modflow.load(model, version="mfnwt", model_ws=nwt_model_path)
     # change the model work space
     ml.change_model_ws(function_tmpdir)
-    #
     ncol = ml.dis.ncol
     nrow = ml.dis.nrow
     text = "head"

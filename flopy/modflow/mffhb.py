@@ -372,7 +372,7 @@ class ModflowFhb(Package):
             for n in range(self.nflw):
                 for name in self.ds5.dtype.names:
                     v = self.ds5[n][name]
-                    if name in ["k", "i", "j", "node"]:
+                    if name in {"k", "i", "j", "node"}:
                         v += 1
                     f.write(f"{v} ")
                 f.write("\n")
@@ -392,7 +392,7 @@ class ModflowFhb(Package):
             for n in range(self.nhed):
                 for name in self.ds7.dtype.names:
                     v = self.ds7[n][name]
-                    if name in ["k", "i", "j", "node"]:
+                    if name in {"k", "i", "j", "node"}:
                         v += 1
                     f.write(f"{v} ")
                 f.write("\n")

@@ -107,7 +107,7 @@ ipakcb = 50
 bcf = MfUsgBcf(mf, ipakcb=ipakcb, wetfct=1.0, iwetit=5, hy=[100.0, 400.0], vcont=0.0)
 # -
 # +
-##Generate a list of chd cells
+# Generate a list of chd cells
 lrcsc = [
     (
         ilay,

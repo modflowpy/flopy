@@ -396,7 +396,7 @@ ax.set_ylabel("Elevation, in meters")
 # plot stratified swi2 and seawat results
 ax = axes[1]
 ax.text(-0.075, 1.05, "B", transform=ax.transAxes, va="center", ha="center", size="8")
-#
+
 zp = zeta[0, 0, :]
 p = (zp < 0.0) & (zp > -40.0)
 ax.plot(x[p], zp[p], "b", linewidth=1.5, drawstyle="steps-mid")

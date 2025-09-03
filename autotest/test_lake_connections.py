@@ -539,7 +539,7 @@ def test_embedded_lak_prudic(example_data_path):
     for idx, (cd, cdbase) in enumerate(zip(connectiondata, cdata)):
         for jdx in (0, 1, 2, 3, 7, 8):
             match = True
-            if jdx not in (7, 8):
+            if jdx not in {7, 8}:
                 if cd[jdx] != cdbase[jdx]:
                     match = False
             else:

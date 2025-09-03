@@ -621,7 +621,7 @@ class ModelTime:
             elif self.time_units == "days":
                 totim = timedelta.days
 
-            elif self.time_units in ("hours", "minutes", "seconds"):
+            elif self.time_units in {"hours", "minutes", "seconds"}:
                 totim = timedelta.total_seconds()
                 if self.time_units == "minutes":
                     totim /= 60
@@ -758,7 +758,7 @@ class ModelTime:
             nonlocal tsmult
             tslens = [l for l in tslens if l > 0]
 
-            if len(tslens) in (0, 1):
+            if len(tslens) in {0, 1}:
                 tsmult[kper] = 1.0
             else:
                 tsmult[kper] = tslens[-1] / tslens[-2]

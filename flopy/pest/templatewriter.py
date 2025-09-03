@@ -1,4 +1,4 @@
-from ..pest import tplarray as tplarray
+from ..pest import tplarray
 
 
 class TemplateWriter:

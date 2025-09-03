@@ -1719,7 +1719,7 @@ class ZoneBudget6:
         return run_model(exe_name, nam_file, model_ws=self._model_ws, silent=silent)
 
     def __setattr__(self, key, value):
-        if key in ("zon", "bud", "grb", "cbc"):
+        if key in {"zon", "bud", "grb", "cbc"}:
             self.add_package(key, value)
             return
         elif key == "model_ws":
@@ -1729,7 +1729,7 @@ class ZoneBudget6:
         super().__setattr__(key, value)
 
     def __getattr__(self, item):
-        if item in ("zon", "bud", "grb", "name", "model_ws"):
+        if item in {"zon", "bud", "grb", "name", "model_ws"}:
             item = f"_{item}"
         return super().__getattribute__(item)
 
@@ -1757,7 +1757,7 @@ class ZoneBudget6:
                 pkg = os.path.join(self._model_ws, pkg)
 
             func = self.zbnam_packages[pkg_name]
-            if pkg_name in ("bud", "grb"):
+            if pkg_name in {"bud", "grb"}:
                 pkg = func(pkg, precision="double")
             else:
                 pkg = func.load(pkg, self)
@@ -1944,7 +1944,7 @@ class ZoneBudget6:
         """
         nam = []
         for pkg_nam, pkg in self.package_dict.items():
-            if pkg_nam in ("grb", "bud"):
+            if pkg_nam in {"grb", "bud"}:
                 path = os.path.relpath(pkg.filename, self._model_ws)
             else:
                 path = pkg.filename
@@ -2148,7 +2148,7 @@ class ZoneFile6:
 
             method = multi_line_strip(foo).split()[0]
 
-            if method in ("internal", "open/close"):
+            if method in {"internal", "open/close"}:
                 izone = np.zeros((ncells,), dtype=int)
                 i = 0
                 fobj = foo
@@ -2407,7 +2407,7 @@ def _get_record_names(recarray, stripped=False):
     else:
         seen = []
         for recname in rec_names:
-            if recname in ["IN-OUT", "TOTAL_IN", "TOTAL_OUT", "IN_OUT"]:
+            if recname in {"IN-OUT", "TOTAL_IN", "TOTAL_OUT", "IN_OUT"}:
                 continue
             if recname.endswith("_IN"):
                 recname = recname[:-3]
@@ -2503,7 +2503,7 @@ def _read_zb_zblst(fname):
                     data["KSTP"].append(kstp)
                     data["KPER"].append(kper)
 
-            elif line in ("", " "):
+            elif line in {"", " "}:
                 empty += 1
 
             elif read_data:
@@ -2633,7 +2633,7 @@ def _read_zb_csv(fname):
 
                         data[label].append(float(val))
 
-            elif line in ("", " "):
+            elif line in {"", " "}:
                 empty += 1
 
             else:
@@ -2670,8 +2670,8 @@ def _read_zb_csv2(fname, add_prefix=True, aliases=None):
             col = col.replace("-", "_")
             if not add_prefix:
                 prefix = ""
-            if col in ("TOTIM", "PERIOD", "STEP", "KSTP", "KPER", "ZONE"):
-                if col in ("ZONE", "STEP", "KPER", "KSTP", "PERIOD"):
+            if col in {"TOTIM", "PERIOD", "STEP", "KSTP", "KPER", "ZONE"}:
+                if col in {"ZONE", "STEP", "KPER", "KSTP", "PERIOD"}:
                     if col == "STEP":
                         col = "KSTP"
                     elif col == "PERIOD":
@@ -2687,7 +2687,7 @@ def _read_zb_csv2(fname, add_prefix=True, aliases=None):
             elif col == "TOTAL OUT":
                 dtype.append(("_".join(col.split()), float))
                 prefix = ""
-            elif col in ("FROM OTHER ZONES", "TO OTHER ZONES"):
+            elif col in {"FROM OTHER ZONES", "TO OTHER ZONES"}:
                 dtype.append(("_".join(col.split()), float))
             elif col == "IN_OUT":
                 dtype.append(("IN-OUT", float))
@@ -2758,7 +2758,7 @@ def _zb_dict_to_recarray(data, aliases=None):
             totim = data["TOTIM"][strt]
 
         for name, values in data.items():
-            if name in ("KSTP", "KPER", "TOTIM", "ZONE"):
+            if name in {"KSTP", "KPER", "TOTIM", "ZONE"}:
                 continue
             rec = [kstp, kper, name]
             if totim is not None:
@@ -2923,7 +2923,7 @@ def _volumetric_flux(recarray, modeltime, extrapolate_kper=False):
             recarray["totim"] = ltotim
 
         for name in recarray.dtype.names:
-            if name in ("zone", "kstp", "kper", "tslen", "totim"):
+            if name in {"zone", "kstp", "kper", "tslen", "totim"}:
                 volumetric_data[name] = recarray[name]
             else:
                 volumetric_data[name] = recarray[name] * ltslen
@@ -2959,7 +2959,7 @@ def dataframe_to_netcdf_fmt(df, zone_array, flux=True):
 
     data = {}
     for col in df.columns:
-        if col in ("totim", "zone", "kper", "kstp", "perlen"):
+        if col in {"totim", "zone", "kper", "kstp", "perlen"}:
             pass
         else:
             data[col] = np.zeros((totim.size, zones.size), dtype=float)
@@ -2969,7 +2969,7 @@ def dataframe_to_netcdf_fmt(df, zone_array, flux=True):
         tdf = tdf.sort_values(by=["zone"])
 
         for col in df.columns:
-            if col in ("totim", "zone", "kper", "kstp", "perlen"):
+            if col in {"totim", "zone", "kper", "kstp", "perlen"}:
                 pass
             else:
                 data[col][i, :] = tdf[col].values

@@ -113,8 +113,8 @@ sim_data = {
     },
 }
 
-for sim_name in sim_data:
-    for fname, fhash in sim_data[sim_name].items():
+for sim_name, sim_files in sim_data.items():
+    for fname, fhash in sim_files.items():
         pooch.retrieve(
             url=f"https://github.com/modflowpy/flopy/raw/develop/examples/data/{sim_name}/{fname}",
             fname=fname,

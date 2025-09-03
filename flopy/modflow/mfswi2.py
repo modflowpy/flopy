@@ -338,7 +338,6 @@ class ModflowSwi2(Package):
 
         # set solver parameters
         self.solver2params = solver2params
-        #
         self.toeslope = toeslope
         self.tipslope = tipslope
         self.alpha = alpha
@@ -363,12 +362,10 @@ class ModflowSwi2(Package):
         self.isource = Util3d(
             model, (nlay, nrow, ncol), np.int32, isource, name="isource"
         )
-        #
         self.obsnam = obsnam
         self.obslrc = obslrc
         if nobs != 0:
             self.nobs = self.obslrc.shape[0]
-        #
         self.parent.add_package(self)
 
     def write_file(self, check=True, f=None):

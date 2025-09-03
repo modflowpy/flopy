@@ -362,13 +362,13 @@ class MfUsgBct(Package):
                 model, shape_3d, np.float32, flich, "flich", mcomp
             )
 
-        if self.izod in (1, 3, 4):
+        if self.izod in {1, 3, 4}:
             zodrw = kwargs["zodrw"]
             self.zodrw = self.mcomp_Util3d(
                 model, shape_3d, np.float32, zodrw, "zodrw", mcomp
             )
 
-        if self.iadsorb and self.izod in (2, 3, 4):
+        if self.iadsorb and self.izod in {2, 3, 4}:
             zodrs = kwargs["zodrs"]
             self.zodrs = self.mcomp_Util3d(
                 model, shape_3d, np.float32, zodrs, "zodrs", mcomp
@@ -380,13 +380,13 @@ class MfUsgBct(Package):
                 model, shape_3d, np.float32, zodraw, "zodraw", mcomp
             )
 
-        if self.ifod in (1, 3, 4):
+        if self.ifod in {1, 3, 4}:
             fodrw = kwargs["fodrw"]
             self.fodrw = self.mcomp_Util3d(
                 model, shape_3d, np.float32, fodrw, "fodrw", mcomp
             )
 
-        if self.iadsorb and self.ifod in (2, 3, 4):
+        if self.iadsorb and self.ifod in {2, 3, 4}:
             fodrs = kwargs["fodrs"]
             self.fodrs = self.mcomp_Util3d(
                 model, shape_3d, np.float32, fodrs, "fodrs", mcomp
@@ -408,7 +408,7 @@ class MfUsgBct(Package):
                 model, shape_3d, np.float32, kwargs["grain_dia"], name="grain_dia"
             )
 
-        if self.aw_adsorb and self.iarea_fn in (1, 2, 3):
+        if self.aw_adsorb and self.iarea_fn in {1, 2, 3}:
             alangaw = kwargs["alangaw"]
             self.alangaw = self.mcomp_Util3d(
                 model, shape_3d, np.float32, alangaw, "alangaw", mcomp
@@ -558,7 +558,7 @@ class MfUsgBct(Package):
                         f_obj.write(self.sptlrct[icomp].get_file_entry())
 
             # Item A6-A7: ALANGAW, BLANGAW
-            if self.aw_adsorb and self.iarea_fn in (1, 2, 3):
+            if self.aw_adsorb and self.iarea_fn in {1, 2, 3}:
                 f_obj.write(self.alangaw[icomp].get_file_entry())
                 f_obj.write(self.blangaw[icomp].get_file_entry())
 
@@ -943,7 +943,7 @@ class MfUsgBct(Package):
                         )
 
             # item A6  - A8 if AW_ADSORB option is on
-            if kwargs["aw_adsorb"] == 1 and kwargs["iarea_fn"] in (1, 2, 3):
+            if kwargs["aw_adsorb"] == 1 and kwargs["iarea_fn"] in {1, 2, 3}:
                 alangaw[icomp] = cls._load_prop_arrays(
                     f_obj, model, nlay, np.float32, "alangaw", ext_unit_dict
                 )

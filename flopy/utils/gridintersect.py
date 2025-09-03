@@ -219,7 +219,7 @@ class GridIntersect:
         gu = GeoSpatialUtil(shp, shapetype=shapetype)
         shp = gu.shapely
 
-        if gu.shapetype in ("Point", "MultiPoint"):
+        if gu.shapetype in {"Point", "MultiPoint"}:
             if self.method == "structured" and self.mfgrid.grid_type == "structured":
                 rec = self._intersect_point_structured(
                     shp, return_all_intersections=return_all_intersections
@@ -230,7 +230,7 @@ class GridIntersect:
                     sort_by_cellid=sort_by_cellid,
                     return_all_intersections=return_all_intersections,
                 )
-        elif gu.shapetype in ("LineString", "MultiLineString"):
+        elif gu.shapetype in {"LineString", "MultiLineString"}:
             if self.method == "structured" and self.mfgrid.grid_type == "structured":
                 rec = self._intersect_linestring_structured(
                     shp,
@@ -244,7 +244,7 @@ class GridIntersect:
                     sort_by_cellid=sort_by_cellid,
                     return_all_intersections=return_all_intersections,
                 )
-        elif gu.shapetype in ("Polygon", "MultiPolygon"):
+        elif gu.shapetype in {"Polygon", "MultiPolygon"}:
             if self.method == "structured" and self.mfgrid.grid_type == "structured":
                 rec = self._intersect_polygon_structured(
                     shp,

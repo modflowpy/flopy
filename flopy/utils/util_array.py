@@ -1809,7 +1809,7 @@ class Util2d(DataInterface):
             ext_filename = ext_filename.lower()
 
         self._model = model
-        if len(shape) not in (1, 2):
+        if len(shape) not in {1, 2}:
             raise ValueError(
                 "Util2d: shape must describe 1- or 2-dimensions, e.g. (nrow, ncol)"
             )
@@ -2231,10 +2231,10 @@ class Util2d(DataInterface):
             )
             how = "external"
 
-        if (self.format.binary or self._model.external_path) and how in [
+        if (self.format.binary or self._model.external_path) and how in {
             "constant",
             "internal",
-        ]:
+        }:
             print(f"Util2d:{self._name}: resetting 'how' to external")
             if self.format.array_free_format:
                 how = "openclose"

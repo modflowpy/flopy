@@ -119,7 +119,7 @@ z[0, 24:] = -40
 z = [z]  # zeta needs to be
 isource = np.ones((nrow, ncol), int)
 isource[0, 0] = 2
-#
+
 swi = flopy.modflow.ModflowSwi2(
     ml,
     nsrf=1,

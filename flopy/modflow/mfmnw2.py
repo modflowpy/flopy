@@ -520,7 +520,6 @@ class Mnw:
             Recarray
 
         """
-        #
         dtype = Mnw.get_default_spd_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
@@ -689,13 +688,13 @@ class Mnw:
 
         """
         chk = self._get_check(f, verbose, level, checktype)
-        if self.losstype.lower() not in [
+        if self.losstype.lower() not in {
             "none",
             "thiem",
             "skin",
             "general",
             "sepecifycwc",
-        ]:
+        }:
             chk._add_to_summary(
                 type="Error",
                 k=self.k,

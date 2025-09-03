@@ -882,7 +882,7 @@ class MfUsgLpf(ModflowLpf):
                     )
 
             # wetdry
-            if laywet[layer] != 0 and not (laytyp[layer] not in [0, 4]):
+            if laywet[layer] != 0 and not (laytyp[layer] not in {0, 4}):
                 if model.verbose:
                     print(f"   loading wetdry layer {layer + 1:3d}...")
                 wetdry[layer] = Util2d.load(

@@ -72,10 +72,10 @@ def features_to_shapefile(features, featuretype, filename: Union[str, os.PathLik
 
     features = GeoSpatialCollection(features, featuretype).flopy_geometry
 
-    if featuretype.lower() not in ["point", "line", "linestring", "polygon"]:
+    if featuretype.lower() not in {"point", "line", "linestring", "polygon"}:
         raise ValueError(f"Unrecognized feature type: {featuretype}")
 
-    if featuretype.lower() in ("line", "linestring"):
+    if featuretype.lower() in {"line", "linestring"}:
         wr = shapefile.Writer(str(filename), shapeType=shapefile.POLYLINE)
         wr.field("SHAPEID", "N", 20, 0)
         for i, line in enumerate(features):
@@ -244,7 +244,7 @@ class Gridgen:
 
         # Set default surface interpolation for all surfaces (nlay + 1)
         surface_interpolation = surface_interpolation.upper()
-        if surface_interpolation not in ["INTERPOLATE", "REPLICATE"]:
+        if surface_interpolation not in {"INTERPOLATE", "REPLICATE"}:
             raise ValueError(
                 f"Unknown surface interpolation method {surface_interpolation}, "
                 "expected 'INTERPOLATE' or 'REPLICATE'"
@@ -297,7 +297,7 @@ class Gridgen:
 
         assert 0 <= isurf <= self.nlay + 1
         type = type.upper()
-        if type not in ["INTERPOLATE", "REPLICATE", "ASCIIGRID"]:
+        if type not in {"INTERPOLATE", "REPLICATE", "ASCIIGRID"}:
             raise ValueError(
                 "Unknown surface interpolation type "
                 f"{type}, expected 'INTERPOLATE',"

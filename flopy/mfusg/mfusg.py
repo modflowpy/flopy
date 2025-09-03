@@ -547,7 +547,7 @@ def fmt_string(array):
     fmts = []
     for field in array.dtype.descr:
         vtype = field[1][1].lower()
-        if vtype in ("i", "b"):
+        if vtype in {"i", "b"}:
             fmts.append("%10d")
         elif vtype == "f":
             fmts.append("%10.2e")

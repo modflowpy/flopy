@@ -204,7 +204,7 @@ class NetCdf:
         self.z_positive = z_positive
         if self.grid_units is None:
             self.grid_units = "undefined"
-        assert self.grid_units in ["feet", "meters", "undefined"], (
+        assert self.grid_units in {"feet", "meters", "undefined"}, (
             "unsupported length units: " + self.grid_units
         )
 
@@ -1256,7 +1256,7 @@ class NetCdf:
             for i, l in enumerate(ds):
                 if "Parameters" in l and "----" in ds[i + 1]:
                     start = i + 2
-                if l.strip() in ["Attributes", "Methods", "Returns", "Notes"]:
+                if l.strip() in {"Attributes", "Methods", "Returns", "Notes"}:
                     stop = i - 1
                     break
                 if i >= start and "----" in l:

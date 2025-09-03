@@ -1,3 +1,7 @@
+"""
+test MNW1 and MNW2 packages
+"""
+
 import os
 import shutil
 
@@ -7,10 +11,6 @@ import pytest
 from modflow_devtools.markers import requires_pkg
 
 from flopy.modflow import Mnw, Modflow, ModflowDis, ModflowMnw2
-
-"""
-test MNW1 and MNW2 packages
-"""
 
 
 @pytest.fixture

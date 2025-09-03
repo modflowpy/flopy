@@ -597,7 +597,7 @@ def test_gridgen(function_tmpdir):
     )
 
     sim = flopy.mf6.MFSimulation()
-    gwf = gwf = flopy.mf6.ModflowGwf(sim)
+    gwf = flopy.mf6.ModflowGwf(sim)
     dis6 = flopy.mf6.ModflowGwfdis(
         gwf,
         nlay=nlay,

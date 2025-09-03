@@ -3,12 +3,11 @@ import sys
 from pathlib import Path
 from pprint import pprint
 
-import matplotlib.dates as dates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib import cm
+from matplotlib import cm, dates
 from matplotlib.lines import Line2D
 
 indir = Path(sys.argv[1])

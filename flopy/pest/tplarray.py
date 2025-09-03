@@ -1,7 +1,6 @@
 import numpy as np
 
-from ..utils.util_array import Transient2d as Transient2d
-from ..utils.util_array import Util3d as Util3d
+from ..utils.util_array import Transient2d, Util3d
 
 
 def get_template_array(pakarray):

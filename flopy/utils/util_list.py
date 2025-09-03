@@ -263,7 +263,7 @@ class MfList(DataInterface, DataListInterface):
         fmts = []
         for field in self.dtype.descr:
             vtype = field[1][1].lower()
-            if vtype in ("i", "b"):
+            if vtype in {"i", "b"}:
                 if use_free:
                     fmts.append("%9d")
                 else:
@@ -588,9 +588,10 @@ class MfList(DataInterface, DataListInterface):
     def get_filenames(self):
         kpers = list(self.data.keys())
         kpers.sort()
+        max_kpers = max(kpers)
         filenames = []
         first = kpers[0]
-        for kper in list(range(0, max(self._model.nper, max(kpers) + 1))):
+        for kper in range(0, max(self._model.nper, max_kpers + 1)):
             # Fill missing early kpers with 0
             if kper < first:
                 itmp = 0
@@ -633,9 +634,10 @@ class MfList(DataInterface, DataListInterface):
         if (len(kpers) == 0) and (pak_name_str == "mfusgwel"):  # must be cln wels
             kpers += [kper for kper in list(cln_data.data.keys()) if kper not in kpers]
         kpers.sort()
+        max_kpers = max(kpers)
         first = kpers[0]
         if single_per is None:
-            loop_over_kpers = list(range(0, max(nper, max(kpers) + 1)))
+            loop_over_kpers = list(range(0, max(nper, max_kpers + 1)))
         else:
             if not isinstance(single_per, list):
                 single_per = [single_per]
@@ -833,11 +835,12 @@ class MfList(DataInterface, DataListInterface):
             assert idx_val[0] in self.dtype.names
         kpers = list(self.data.keys())
         kpers.sort()
+        max_kpers = max(kpers)
         values = []
-        for kper in range(0, max(self._model.nper, max(kpers))):
+        for kper in range(0, max(self._model.nper, max_kpers)):
             if kper < min(kpers):
                 values.append(0)
-            elif kper > max(kpers) or kper not in kpers:
+            elif kper > max_kpers or kper not in kpers:
                 values.append(values[-1])
             else:
                 kper_data = self.__data[kper]
@@ -1045,7 +1048,7 @@ class MfList(DataInterface, DataListInterface):
                     arr[rec["k"], rec["i"], rec["j"]] += rec[name]
                     cnt[rec["k"], rec["i"], rec["j"]] += 1.0
             # average keys that should not be added
-            if name not in ("cond", "flux"):
+            if name not in {"cond", "flux"}:
                 idx = cnt > 0.0
                 arr[idx] /= cnt[idx]
             if mask:

@@ -3459,9 +3459,9 @@ class Mf6Splitter:
         paks = {}
         for mdl, data in mapped_data.items():
             _ = mapped_data.pop("maxbound", None)
-            if mapped_data[mdl]:
-                if "stress_period_data" in mapped_data[mdl]:
-                    if not mapped_data[mdl]["stress_period_data"]:
+            if data:
+                if "stress_period_data" in data:
+                    if not data["stress_period_data"]:
                         continue
                 paks[mdl] = pak_cls(
                     self._model_dict[mdl], pname=package.name[0], **data

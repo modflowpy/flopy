@@ -1,9 +1,8 @@
-from ..mfbase import FlopyException
-
 """
 simulationtime module.  Contains the simulationtime and
 stress period classes
 """
+from ..mfbase import FlopyException
 
 
 class StressPeriod:

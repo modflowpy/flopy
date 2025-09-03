@@ -157,6 +157,11 @@ select = [
     "F",    # Pyflakes
     "I001", # isort - unsorted-imports
     # "ISC001",  # implicitly concatenated string literals
+    "PLC",  # Pylint - Convention
+    "PLE",  # Pylint - Error
+    "PLR0402", # Pylint - Refactor - manual-from-import
+    "PLR2044", # Pylint - Refactor - empty-comment
+    "PLW",  # Pylint - Warning
     "RUF",  # Ruff-specific rules
 ]
 ignore = [
@@ -170,6 +175,9 @@ ignore = [
     "F524", # `.format` missing argument(s) for placeholder(s)
     "F811", # Redefinition of unused variable
     "F841", # local variable assigned but never used
+    "PLC0415", # `import` should be at the top-level of a file
+    "PLW1641", # Object does not implement `__hash__` method
+    "PLW2901", # `for` loop variable `col` overwritten by assignment target
     "RUF005", # collection literal concatenation
     "RUF012", # mutable class default
     "RUF017", # quadratic-list-summation

@@ -306,7 +306,7 @@ class MtListBudget:
                 else:
                     continue
             else:
-                blank_count = 0  #
+                blank_count = 0
             try:
                 item, ival, oval = self._parse_gw_line(line)
             except Exception as e:

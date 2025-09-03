@@ -174,7 +174,7 @@ def test_create_uzf(function_tmpdir, mf2005_test_path, uzf_test_path):
         if isinstance(a1, Util2d):
             a2 = m2.uzf.__getattribute__(attr)
             assert np.array_equal(a1.array, a2.array)
-        elif attr in ["finf", "extwc", "pet", "extdp"]:
+        elif attr in {"finf", "extwc", "pet", "extdp"}:
             if isinstance(a1, list):
                 l2 = m2.uzf.__getattribute__(attr)
                 for i, a in enumerate(a1):
@@ -207,7 +207,7 @@ def test_create_uzf(function_tmpdir, mf2005_test_path, uzf_test_path):
             a2 = uzf2.__getattribute__(attr)
             assert a1 == a2
         # some parameters such as finf are stored as lists of util2d arrays
-        elif attr in ["finf", "extwc", "pet", "extdp"]:
+        elif attr in {"finf", "extwc", "pet", "extdp"}:
             if isinstance(a1, list):
                 l2 = uzf2.__getattribute__(attr)
                 for i, a in enumerate(a1):

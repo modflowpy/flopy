@@ -401,7 +401,6 @@ class ModflowHfb(Package):
                     par_dict["nlst"], structured=structured
                 )
 
-                #
                 if model.mfpar.pval is None:
                     parval = float(par_dict["parval"])
                 else:

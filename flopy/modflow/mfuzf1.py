@@ -524,7 +524,7 @@ class ModflowUzf1(Package):
         # IF the absolute value of IUZFOPT = 1: Read item 4.
         # Data Set 4
         # [VKS (NCOL, NROW)] -- U2DREL
-        if abs(iuzfopt) in [0, 1]:
+        if abs(iuzfopt) in {0, 1}:
             self.vks = Util2d(model, (nrow, ncol), np.float32, vks, name="vks")
 
         if seepsurfk or specifysurfk:
@@ -720,7 +720,7 @@ class ModflowUzf1(Package):
         # IF the absolute value of IUZFOPT = 1: Read item 4.
         # Data Set 4
         # [VKS (NCOL, NROW)] -- U2DREL
-        if abs(self.iuzfopt) in [0, 1]:
+        if abs(self.iuzfopt) in {0, 1}:
             f_uzf.write(self.vks.get_file_entry())
 
         # Dataset 4b modflow 2005 v. 1.12 and modflow-nwt v. 1.1
@@ -923,7 +923,7 @@ class ModflowUzf1(Package):
             load_util2d("irunbnd", np.int32)
 
         # dataset 4
-        if np.abs(iuzfopt) in [0, 1]:
+        if np.abs(iuzfopt) in {0, 1}:
             load_util2d("vks", np.float32)
 
         # dataset 4b

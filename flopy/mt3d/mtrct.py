@@ -432,9 +432,9 @@ class Mt3dRct(Package):
         f_rct.write(
             "%10i%10i%10i%10i\n" % (self.isothm, self.ireact, self.irctop, self.igetsc)
         )
-        if self.isothm in [1, 2, 3, 4, 6]:
+        if self.isothm in {1, 2, 3, 4, 6}:
             f_rct.write(self.rhob.get_file_entry())
-        if self.isothm in [5, 6]:
+        if self.isothm in {5, 6}:
             f_rct.write(self.prsity2.get_file_entry())
         if self.igetsc > 0:
             for icomp in range(len(self.srconc)):
@@ -554,7 +554,7 @@ class Mt3dRct(Package):
         rhob = None
         if model.verbose:
             print("   loading RHOB...")
-        if isothm in [1, 2, 3, 4, 6]:
+        if isothm in {1, 2, 3, 4, 6}:
             rhob = Util3d.load(
                 f,
                 model,
@@ -571,7 +571,7 @@ class Mt3dRct(Package):
         prsity2 = None
         if model.verbose:
             print("   loading PRSITY2...")
-        if isothm in [5, 6]:
+        if isothm in {5, 6}:
             prsity2 = Util3d.load(
                 f,
                 model,

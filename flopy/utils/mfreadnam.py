@@ -390,7 +390,7 @@ def get_input_files(namefile):
         ll = line.strip().split()
         if len(ll) < 2:
             continue
-        if line.strip()[0] in ["#", "!"]:
+        if line.strip()[0] in {"#", "!"}:
             continue
         ext = os.path.splitext(ll[2])[1]
         if ext.lower() not in ignore_ext:
@@ -412,7 +412,7 @@ def get_input_files(namefile):
                 ll = line.strip().split()
                 if len(ll) < 2:
                     continue
-                if line.strip()[0] in ["#", "!"]:
+                if line.strip()[0] in {"#", "!"}:
                     continue
 
                 if "OPEN/CLOSE" in line.upper():
@@ -506,7 +506,7 @@ def get_mf6_mshape(disfile):
         ll = line.strip().split()
         if len(ll) < 2:
             continue
-        if line.strip()[0] in ["#", "!"]:
+        if line.strip()[0] in {"#", "!"}:
             continue
 
         for key in ["NODES", "NCPL", "NLAY", "NROW", "NCOL"]:
@@ -556,7 +556,7 @@ def get_mf6_files(mfnamefile):
         ll = line.strip().split()
         if len(ll) < 2:
             continue
-        if line.strip()[0] in ["#", "!"]:
+        if line.strip()[0] in {"#", "!"}:
             continue
 
         for key in filekeys:
@@ -590,7 +590,7 @@ def get_mf6_files(mfnamefile):
                 ll = line.strip().split()
                 if len(ll) < 2:
                     continue
-                if line.strip()[0] in ["#", "!"]:
+                if line.strip()[0] in {"#", "!"}:
                     continue
                 filelist.append(ll[1])
 
@@ -639,7 +639,7 @@ def _get_mf6_external_files(srcdir, outplist, files):
                 ll = line.strip().split()
                 if len(ll) < 2:
                     continue
-                if line.strip()[0] in ["#", "!"]:
+                if line.strip()[0] in {"#", "!"}:
                     continue
 
                 if "OPEN/CLOSE" in line.upper():
@@ -733,7 +733,7 @@ def get_mf6_ftypes(namefile, ftypekeys):
         ll = line.strip().split()
         if len(ll) < 2:
             continue
-        if line.strip()[0] in ["#", "!"]:
+        if line.strip()[0] in {"#", "!"}:
             continue
 
         for key in ftypekeys:

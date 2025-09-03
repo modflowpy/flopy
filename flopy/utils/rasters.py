@@ -507,7 +507,7 @@ class Raster:
             )
 
         method = method.lower()
-        if method in ("linear", "nearest", "cubic"):
+        if method in {"linear", "nearest", "cubic"}:
             xc = modelgrid.xcellcenters
             yc = modelgrid.ycellcenters
 
@@ -530,10 +530,10 @@ class Raster:
             arr = arr.flatten()
 
             # step 3: use griddata interpolation to snap to grid
-            rescale = method in ("linear", "nearest")
+            rescale = method in {"linear", "nearest"}
             data = griddata((rxc, ryc), arr, (xc, yc), method=method, rescale=rescale)
 
-        elif method in ("median", "mean", "min", "max", "mode"):
+        elif method in {"median", "mean", "min", "max", "mode"}:
             # these methods are slow and could use speed ups
             data_shape = modelgrid.xcellcenters.shape
 

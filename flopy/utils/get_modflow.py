@@ -121,7 +121,7 @@ def get_releases(owner=None, repo=None, quiet=False, per_page=None) -> List[str]
                 raise ValueError(
                     f"use GITHUB_TOKEN env to bypass rate limit ({err})"
                 ) from err
-            elif err.code in (404, 503) and num_tries < max_http_tries:
+            elif err.code in {404, 503} and num_tries < max_http_tries:
                 # GitHub sometimes returns this error for valid URLs, so retry
                 print(f"URL request {num_tries} did not work ({err})")
                 continue

@@ -671,7 +671,6 @@ class ModflowOc(Package):
                 # dataset 2
                 elif "PERIOD" in lnlst[0].upper():
                     break
-        #
         if ext_unit_dict is not None:
             if ihedun in ext_unit_dict:
                 fhead = ext_unit_dict[ihedun]

@@ -181,7 +181,7 @@ for i, line in enumerate(lines):
     ax = fig.add_subplot(1, len(lines), i + 1)
     ax.set_title(f"Freyberg head cross-section (line {i})")
     xsect = flopy.plot.PlotCrossSection(
-        modelgrid=mfgrid, ax=ax, line={"line": lines[i]}, geographic_coords=True
+        modelgrid=mfgrid, ax=ax, line={"line": line}, geographic_coords=True
     )
     xsect.plot_array(head, head=head, alpha=0.4)
     xsect.plot_ibound(ibound=ibound, head=head)

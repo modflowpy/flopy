@@ -162,7 +162,7 @@ class OptionBlock:
             )
 
         err_msg = "Data type must be compatible with {}"
-        if key in ("_context", "_attr_types", "options_line"):
+        if key in {"_context", "_attr_types", "options_line"}:
             self.__dict__[key] = value
 
         elif value is None:
@@ -203,7 +203,7 @@ class OptionBlock:
         recarray if the user calls <.tabfiles>
 
         """
-        if item in ("__dict__", "_context", "package"):
+        if item in {"__dict__", "_context", "package"}:
             value = object.__getattribute__(self, item)
 
         elif item in object.__getattribute__(self, "_context"):

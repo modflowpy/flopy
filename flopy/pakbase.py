@@ -272,7 +272,7 @@ class PackageInterface:
                     chk.property_threshold_values[kp],
                     name,
                 )
-        if self.name[0] in ["UPW", "LPF"]:
+        if self.name[0] in {"UPW", "LPF"}:
             storage_coeff = "STORAGECOEFFICIENT" in self.options or (
                 "storagecoefficient" in self.__dict__
                 and self.storagecoefficient.get_data()
@@ -946,7 +946,7 @@ class Package(PackageInterface):
                     aux_names.append(t[it + 1].lower())
                     it += 1
                 if "mfusgwel" in pak_type_str:
-                    if toption.lower() in ["autoflowreduce", "wellbot"]:
+                    if toption.lower() in {"autoflowreduce", "wellbot"}:
                         options.append(toption.lower())
                     elif toption.lower() == "iunitafr":
                         options.append(f"{toption.lower()} {t[it + 1]}")

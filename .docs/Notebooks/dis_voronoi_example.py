@@ -35,7 +35,7 @@ from shapely.geometry import LineString, Point
 
 import flopy
 from flopy.discretization import VertexGrid
-from flopy.utils.triangle import Triangle as Triangle
+from flopy.utils.triangle import Triangle
 from flopy.utils.voronoi import VoronoiGrid
 
 temp_dir = TemporaryDirectory()

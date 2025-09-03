@@ -653,7 +653,7 @@ def _build_dtype(obsnames, floattype="f4"):
         else:
             site_name = site.strip()
 
-        if site_name in ("KPER", "KSTP", "NULL"):
+        if site_name in {"KPER", "KSTP", "NULL"}:
             dtype.append((site_name, int))
         else:
             dtype.append((site_name, floattype))

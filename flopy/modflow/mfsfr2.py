@@ -530,7 +530,7 @@ class ModflowSfr2(Package):
         # nested dictionary of format {per: {segment: outlet}}
         self.outlets = {}
         # input format checks:
-        assert isfropt in [0, 1, 2, 3, 4, 5]
+        assert isfropt in {0, 1, 2, 3, 4, 5}
 
         # derived attributes
         self._paths = None
@@ -897,8 +897,8 @@ class ModflowSfr2(Package):
                     # of this logic
                     # https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/sfr.htm
                     dataset_6b, dataset_6c = (0,) * 9, (0,) * 9
-                    if not (isfropt in [2, 3] and icalc == 1 and i > 1) and not (
-                        isfropt in [1, 2, 3] and icalc >= 2
+                    if not (isfropt in {2, 3} and icalc == 1 and i > 1) and not (
+                        isfropt in {1, 2, 3} and icalc >= 2
                     ):
                         dataset_6b = _parse_6bc(
                             f.readline(),
@@ -1691,7 +1691,7 @@ class ModflowSfr2(Package):
 
         f_sfr.write(" ".join(fmts[6:10]).format(flow, runoff, etsw, pptsw) + " ")
 
-        if icalc in [1, 2]:
+        if icalc in {1, 2}:
             f_sfr.write(fmts[10].format(roughch) + " ")
         if icalc == 2:
             f_sfr.write(fmts[11].format(roughbk) + " ")
@@ -1742,17 +1742,17 @@ class ModflowSfr2(Package):
             0 if v == self.default_value else v for v in seg_dat
         )
 
-        if self.isfropt in [0, 4, 5] and icalc <= 0:
+        if self.isfropt in {0, 4, 5} and icalc <= 0:
             f_sfr.write(
                 " ".join(fmts[0:5]).format(hcond, thickm, elevupdn, width, depth) + " "
             )
 
-        elif self.isfropt in [0, 4, 5] and icalc == 1:
+        elif self.isfropt in {0, 4, 5} and icalc == 1:
             f_sfr.write(fmts[0].format(hcond) + " ")
 
             if i == 0:
                 f_sfr.write(" ".join(fmts[1:4]).format(thickm, elevupdn, width) + " ")
-                if self.isfropt in [4, 5]:
+                if self.isfropt in {4, 5}:
                     f_sfr.write(" ".join(fmts[5:8]).format(thts, thti, eps) + " ")
 
                 if self.isfropt == 5:
@@ -1761,15 +1761,15 @@ class ModflowSfr2(Package):
             elif i > 0 and self.isfropt == 0:
                 f_sfr.write(" ".join(fmts[1:4]).format(thickm, elevupdn, width) + " ")
 
-        elif self.isfropt in [0, 4, 5] and icalc >= 2:
+        elif self.isfropt in {0, 4, 5} and icalc >= 2:
             f_sfr.write(fmts[0].format(hcond) + " ")
 
-            if self.isfropt in [4, 5] and i > 0 and icalc == 2:
+            if self.isfropt in {4, 5} and i > 0 and icalc == 2:
                 pass
             else:
                 f_sfr.write(" ".join(fmts[1:3]).format(thickm, elevupdn) + " ")
 
-                if self.isfropt in [4, 5] and icalc == 2 and i == 0:
+                if self.isfropt in {4, 5} and icalc == 2 and i == 0:
                     f_sfr.write(" ".join(fmts[3:6]).format(thts, thti, eps) + " ")
 
                     if self.isfropt == 5:
@@ -1780,7 +1780,7 @@ class ModflowSfr2(Package):
             f_sfr.write(fmts[3].format(width) + " ")
             if icalc <= 0:
                 f_sfr.write(fmts[4].format(depth) + " ")
-        elif self.isfropt in [2, 3]:
+        elif self.isfropt in {2, 3}:
             if icalc <= 0:
                 f_sfr.write(fmts[3].format(width) + " ")
                 f_sfr.write(fmts[4].format(depth) + " ")
@@ -2400,7 +2400,7 @@ class check:
                     c
                     for c in reach_data.dtype.names
                     if c
-                    in [
+                    in {
                         "k",
                         "i",
                         "j",
@@ -2411,7 +2411,7 @@ class check:
                         "strhc1",
                         "width",
                         "conductance",
-                    ]
+                    }
                 ]
 
                 reach_data = recfunctions.append_fields(
@@ -2445,7 +2445,7 @@ class check:
             print(headertxt.strip())
 
         passed = False
-        if self.sfr.isfropt in [1, 2, 3]:
+        if self.sfr.isfropt in {1, 2, 3}:
             if np.diff(self.reach_data.strtop).max() == 0:
                 txt += "isfropt setting of 1,2 or 3 requires strtop information!\n"
             else:
@@ -2473,7 +2473,7 @@ class check:
             print(headertxt.strip())
 
         passed = False
-        if self.sfr.isfropt in [1, 2, 3]:
+        if self.sfr.isfropt in {1, 2, 3}:
             if np.diff(self.reach_data.strtop).max() == 0:
                 txt += "isfropt setting of 1,2 or 3 requires strtop information!\n"
             else:
@@ -2504,7 +2504,7 @@ class check:
         # decide whether to check elevup and elevdn from items 6b/c
         # (see online guide to SFR input; Data Set 6b description)
         passed = False
-        if self.sfr.isfropt in [0, 4, 5]:
+        if self.sfr.isfropt in {0, 4, 5}:
             pers = sorted(self.segment_data.keys())
             for per in pers:
                 segment_data = self.segment_data[per][
@@ -2582,7 +2582,7 @@ class check:
             print(headertxt.strip())
         passed = False
         if self.sfr.nstrm < 0 or (
-            self.sfr.reachinput and self.sfr.isfropt in [1, 2, 3]
+            self.sfr.reachinput and self.sfr.isfropt in {1, 2, 3}
         ):
             # see SFR input instructions
             # compute outreaches if they aren't there already
@@ -2661,7 +2661,7 @@ class check:
         passed = False
         warning = True
         if self.sfr.nstrm < 0 or (
-            self.sfr.reachinput and self.sfr.isfropt in [1, 2, 3]
+            self.sfr.reachinput and self.sfr.isfropt in {1, 2, 3}
         ):
             # see SFR input instructions
             reach_data = np.array(self.reach_data)
@@ -2753,7 +2753,7 @@ class check:
         if self.verbose:
             print(headertxt.strip())
         passed = False
-        if self.sfr.isfropt in [0, 4, 5]:
+        if self.sfr.isfropt in {0, 4, 5}:
             reach_data = self.reach_data
             pers = sorted(self.segment_data.keys())
             for per in pers:
@@ -2823,7 +2823,7 @@ class check:
             print(headertxt.strip())
 
         passed = False
-        if self.sfr.isfropt in [1, 2, 3]:
+        if self.sfr.isfropt in {1, 2, 3}:
             if np.diff(self.reach_data.slope).max() == 0:
                 txt += "isfropt setting of 1,2 or 3 requires slope information!\n"
             else:
@@ -2852,7 +2852,7 @@ class check:
             print(headertxt.strip())
 
         passed = False
-        if self.sfr.isfropt in [1, 2, 3]:
+        if self.sfr.isfropt in {1, 2, 3}:
             if np.diff(self.reach_data.slope).max() == 0:
                 txt += "isfropt setting of 1,2 or 3 requires slope information!\n"
             else:
@@ -2984,9 +2984,9 @@ def _get_item2_names(nstrm, reachinput, isfropt, structured=False):
         names += ["node"]
     names += ["iseg", "ireach", "rchlen"]
     if nstrm < 0 or reachinput:
-        if isfropt in [1, 2, 3]:
+        if isfropt in {1, 2, 3}:
             names += ["strtop", "slope", "strthick", "strhc1"]
-            if isfropt in [2, 3]:
+            if isfropt in {2, 3}:
                 names += ["thts", "thti", "eps"]
                 if isfropt == 3:
                     names += ["uhc"]
@@ -3170,7 +3170,7 @@ def _parse_6a(line, option):
     roughch = na
     roughbk = na
 
-    if icalc in [1, 2]:
+    if icalc in {1, 2}:
         roughch = _pop_item(line)
     if icalc == 2:
         roughbk = _pop_item(line)
@@ -3219,15 +3219,15 @@ def _parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
 
     hcond, thickm, elevupdn, width, depth, thts, thti, eps, uhc = [0.0] * 9
 
-    if isfropt in [0, 4, 5] and icalc <= 0:
+    if isfropt in {0, 4, 5} and icalc <= 0:
         hcond = line.pop(0)
         thickm = line.pop(0)
         elevupdn = line.pop(0)
         width = line.pop(0)
         depth = line.pop(0)
-    elif isfropt in [0, 4, 5] and icalc == 1:
+    elif isfropt in {0, 4, 5} and icalc == 1:
         hcond = line.pop(0)
-        if isfropt in [4, 5] and per > 0:
+        if isfropt in {4, 5} and per > 0:
             pass
         else:
             thickm = line.pop(0)
@@ -3239,14 +3239,14 @@ def _parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
             eps = _pop_item(line)
         if isfropt == 5 and per == 0:
             uhc = line.pop(0)
-    elif isfropt in [0, 4, 5] and icalc >= 2:
+    elif isfropt in {0, 4, 5} and icalc >= 2:
         hcond = line.pop(0)
-        if isfropt in [4, 5] and per > 0 and icalc == 2:
+        if isfropt in {4, 5} and per > 0 and icalc == 2:
             pass
         else:
             thickm = line.pop(0)
             elevupdn = line.pop(0)
-            if isfropt in [4, 5] and per == 0:
+            if isfropt in {4, 5} and per == 0:
                 # table in online guide suggests that the following items
                 # should be present in this case but in the example
                 thts = _pop_item(line)
@@ -3260,7 +3260,7 @@ def _parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
         width = line.pop(0)
         if icalc <= 0:
             depth = line.pop(0)
-    elif isfropt in [2, 3]:
+    elif isfropt in {2, 3}:
         if icalc <= 0:
             width = line.pop(0)
             depth = line.pop(0)

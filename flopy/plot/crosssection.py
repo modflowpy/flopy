@@ -122,7 +122,7 @@ class PlotCrossSection:
             inverse=True,
         )
 
-        if onkey in ("row", "column"):
+        if onkey in {"row", "column"}:
             eps = 1.0e-4
             xedge, yedge = self.mg.xyedges
             if onkey == "row":
@@ -559,7 +559,7 @@ class PlotCrossSection:
         contour_set : matplotlib.pyplot.contour
 
         """
-        import matplotlib.tri as tri
+        from matplotlib import tri
 
         if not isinstance(a, np.ndarray):
             a = np.array(a)
@@ -826,7 +826,7 @@ class PlotCrossSection:
 
             idx = np.array([])
             for pp in p:
-                if pp.package_type in ("lak", "sfr", "maw", "uzf"):
+                if pp.package_type in {"lak", "sfr", "maw", "uzf"}:
                     t = plotutil.advanced_package_bc_helper(pp, self.mg, kper)
                 else:
                     try:
@@ -845,7 +845,7 @@ class PlotCrossSection:
 
         else:
             # modflow-2005 structured and unstructured grid
-            if p.package_type in ("uzf", "lak"):
+            if p.package_type in {"uzf", "lak"}:
                 idx = plotutil.advanced_package_bc_helper(p, self.mg, kper)
             else:
                 try:

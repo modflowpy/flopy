@@ -232,12 +232,12 @@ ax.fill(
     fc=[0.8, 0.8, 0.8],
     ec=[0.8, 0.8, 0.8],
 )
-#
+
 z = np.copy(zini[0, :])
 zr = z.copy()
 p = (zr < -9.0) & (zr > -50.0)
 ax.plot(x[p], zr[p], color=cc[0], linewidth=lw, drawstyle="steps-mid")
-#
+
 for i in range(5):
     zt = MergeData(ncol, [zeta[i, 0, 0, :], zeta[i, 1, 0, :], zeta[i, 2, 0, :]], zedge)
     dr = zt.copy()
@@ -258,7 +258,7 @@ ax.fill(
     fc=[0.8, 0.8, 0.8],
     ec=[0.8, 0.8, 0.8],
 )
-#
+
 for i in range(4, 10):
     zt = MergeData(ncol, [zeta[i, 0, 0, :], zeta[i, 1, 0, :], zeta[i, 2, 0, :]], zedge)
     dr = zt.copy()
@@ -279,7 +279,7 @@ ax.fill(
     fc=[0.8, 0.8, 0.8],
     ec=[0.8, 0.8, 0.8],
 )
-#
+
 zt = MergeData(ncol, [zeta[4, 0, 0, :], zeta[4, 1, 0, :], zeta[4, 2, 0, :]], zedge)
 ax.plot(
     x,

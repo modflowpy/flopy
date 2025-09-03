@@ -304,7 +304,7 @@ class ModflowAg(Package):
                 fmt = "{}   {:d}   {:d}\n"
                 foo.write("TIME SERIES \n")
                 for record in self.time_series:
-                    if record["keyword"] in ("welletall", "wellall"):
+                    if record["keyword"] in {"welletall", "wellall"}:
                         foo.write(f"{record['keyword']}   {record['unit']}\n".upper())
                     else:
                         foo.write(fmt.format(*record).upper())
@@ -674,7 +674,7 @@ class ModflowAg(Package):
                 time_series = ModflowAg.get_empty(nrec, block="time series")
 
                 for ix, rec in enumerate(t):
-                    if rec[0] in ("welletall", "wellall"):
+                    if rec[0] in {"welletall", "wellall"}:
                         time_series[ix] = (rec[0], -999, rec[-1])
                     else:
                         time_series[ix] = tuple(rec[:3])
@@ -868,13 +868,13 @@ def _read_block_21_25_or_29(fobj, nrec, recarray, block):
     for _ in range(nrec):
         t1 = []
         ll = multi_line_strip(fobj).split()
-        if block in (21,):
+        if block == 21:
             # do not zero adjust segid
             ll[0] = int(ll[0])
         else:
             ll[0] = int(ll[0]) - 1
 
-        if block in (21, 25):
+        if block in {21, 25}:
             # correct list length if not using trigger factor
             if len(ll) == 2:
                 ll += [0, 0]
