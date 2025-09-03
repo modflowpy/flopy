@@ -23,7 +23,7 @@ jobs:
       ref: ${{ steps.set_ref.outputs.ref }}
       sha: ${{ steps.set_sha.outputs.sha }}
     steps:
-      
+
       - name: Set ref
         id: set_ref
         run: |
@@ -104,14 +104,14 @@ jobs:
           pip install --upgrade pip
           pip install .
           pip install meson ninja
-      
+
       - name: Workaround OpenGL issue on Linux
         if: runner.os == 'Linux'
         run: |
           # referenced from https://github.com/pyvista/pyvista/blob/main/.github/workflows/vtk-pre-test.yml#L53
           pip uninstall -y vtk
           pip install --extra-index-url https://wheels.vtk.org trame vtk-osmesa
-      
+
       - name: Install fonts on Linux
         if: runner.os == 'Linux'
         run: |
@@ -153,7 +153,7 @@ jobs:
 
       - name: Upload notebooks artifact for ReadtheDocs
         if: |
-          github.repository_owner == 'modflowpy' && 
+          github.repository_owner == 'modflowpy' &&
           runner.os == 'Linux' &&
           (
             github.event_name == 'push' ||
@@ -167,7 +167,7 @@ jobs:
   # trigger rtd if previous job was successful
   rtd:
     name: Read the Docs trigger
-    needs: 
+    needs:
       - rtd_build
       - set_options
     runs-on: ubuntu-latest

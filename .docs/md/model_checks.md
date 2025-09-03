@@ -10,10 +10,10 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-## Available model checks  
+## Available model checks
 
 |Package  | Check | Implemented | Type |
-| :-----------| :------------| :------------------ | :-------------|  
+| :-----------| :------------| :------------------ | :-------------|
 | NAM | unit number conflicts | Supported | Error |
 | NAM | compatible solver package | Supported | Error |
 | NAM | minimum packages needed to run the model | Not supported | Error |
@@ -65,7 +65,7 @@
 ## Visualizations
 
 |Package  | Check | Implemented | Type |
-| :-----------| :------------| :------------------ | :-------------|  
+| :-----------| :------------| :------------------ | :-------------|
 | All | Shapefile with detected errors | Not supported | Information |
 | All | Shapefile with detected warnings | Not supported | Information |
 | SFR/STR | Segment Connectivity | Not supported | Information |
@@ -73,7 +73,6 @@
 | SFR/STR | Identification of outlet tributaries | Not supported | Information |
 
 
-## Additional model checks and visualizations 
+## Additional model checks and visualizations
 
 Please submit additional proposed model checks as issues on the FloPy development branch on [github](https://github.com/modflowpy/flopy/tree/develop).
-

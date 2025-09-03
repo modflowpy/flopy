@@ -149,5 +149,3 @@ Miscellaneous examples
 
    Notebooks/seawat_henry_example
    Notebooks/zonebudget_example
-
-

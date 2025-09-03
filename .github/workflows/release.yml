@@ -51,14 +51,14 @@ jobs:
           # extract version from branch name
           ref="${{ github.ref_name }}"
           ver="${ref#"v"}"
-          
+
           # update version files
           if [[ "$ver" == *"rc"* ]]; then
             uv run scripts/update_version.py -v "${ver%"rc"}"
           else
             uv run scripts/update_version.py -v "$ver"
           fi
-          
+
           # show version and set output
           uv run python -c "import flopy; print(f'FloPy version: {flopy.__version__}')"
           echo "version=${ver#"v"}" >> $GITHUB_OUTPUT
@@ -101,7 +101,7 @@ jobs:
           sed -i 's/#### Fix/#### Bug fixes/' CHANGELOG.md
           sed -i 's/#### Refactor/#### Refactoring/' CHANGELOG.md
           sed -i 's/#### Test/#### Testing/' CHANGELOG.md
-          
+
           # prepend release changelog to cumulative changelog
           clog=".docs/md/version_changes.md"
           temp="version_changes.md"
@@ -122,7 +122,7 @@ jobs:
           git config core.sharedRepository true
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add flopy docs .docs CITATION.cff README.md version.txt 
+          git add flopy docs .docs CITATION.cff README.md version.txt
           git commit -m "ci(release): set version to ${{ steps.version.outputs.version }}, update components from DFN files, update changelog"
           git push origin "${{ github.ref_name }}"
 
@@ -153,7 +153,7 @@ jobs:
           title="Release $ver"
           body='
           # FloPy '$ver'
-          
+
           The release can be approved by merging this pull request into `master`. This will trigger a final job to publish the release to PyPI.
           '
           gh pr create -B "master" -H "$ref" --title "$title" --draft --body "$body"

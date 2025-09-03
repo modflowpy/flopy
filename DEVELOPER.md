@@ -104,7 +104,7 @@ VSCode users on Windows may need to run `conda init`, then open a fresh terminal
 
 To locate a Conda environment's Python executable, run `where python` with the environment activated.
 
-The [Debugging tests in VS Code](#debugging-tests-in-vs-code) section below has additional tips for using VS Code to debug tests interactively.  
+The [Debugging tests in VS Code](#debugging-tests-in-vs-code) section below has additional tips for using VS Code to debug tests interactively.
 
 See also this [VS Code Tutorial](https://doi-usgs.github.io/python-for-hydrology/latest/notebooks/part0_python_intro/07b_VSCode.html) from the USGS Python for Hydrology course.
 
@@ -337,14 +337,14 @@ When writing tests to develop a new feature or reproduce and fix a bug, it can o
 - Add the following to the `settings.json` file:
 
     ```json
-    "python.testing.pytestArgs": ["."],  
-    "python.testing.unittestEnabled": false,  
-    "python.testing.pytestEnabled": true,  
-    "python.testing.cwd": "${workspaceFolder}/autotest"  
+    "python.testing.pytestArgs": ["."],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.testing.cwd": "${workspaceFolder}/autotest"
     ```
 
-    Notes:  
-        - The first three may be already set correctly by default, but the last item is needed for VS Code to discover the tests correctly and run the tests from the `autotest` folder.  
+    Notes:
+        - The first three may be already set correctly by default, but the last item is needed for VS Code to discover the tests correctly and run the tests from the `autotest` folder.
         - The first three settings can also be set via the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) by entering `Python: Configure Tests`, and following the prompts.
 - Make sure the python interpreter is set correctly.
 - If test discovery is taking too long or not working, it may be helpful to install the [Python Tests Explorer for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=LittleFoxTeam.vscode-python-test-adapter) extension.

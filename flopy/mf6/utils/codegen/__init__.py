@@ -121,7 +121,7 @@ def make_all(
         name = dfn["name"]
         new_name = name + "-nam" if name in nam_types else name
         return new_name, {**dfn, "name": new_name}
-    
+
     dfns = dict(_add_nam_suffix(dfn) for dfn in dfns.values())
 
     # below is a temporary workaround to attach the legacy DFN

@@ -25,7 +25,7 @@ Contents:
    md/model_checks
    md/optional_dependencies
    md/version_changes
-   code 
+   code
 
 Indices and tables
 ==================

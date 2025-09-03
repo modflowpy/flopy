@@ -85,10 +85,10 @@ jobs:
       - name: Install Python dependencies
         # temp. allow prereleases for vtk on aarch64
         run: uv sync --all-extras --prerelease=allow
-      
+
       - name: Install Modflow executables
         uses: modflowpy/install-modflow-action@v1
-      
+
       - name: Smoke test
         working-directory: autotest
         run: uv run pytest -v -n=auto --smoke --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
@@ -101,7 +101,7 @@ jobs:
         with:
           name: failed-smoke-${{ runner.os }}-${{ env.PYTHON_VERSION }}
           path: autotest/.failed/**
-      
+
       - name: Upload coverage
         if: github.repository_owner == 'modflowpy' && (github.event_name == 'push' || github.event_name == 'pull_request')
         uses: codecov/codecov-action@v5

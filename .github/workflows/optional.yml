@@ -50,7 +50,7 @@ jobs:
             cat removed_dependencies.txt
             uv pip uninstall --yes $rmvd
           fi
-      
+
       - name: Upload removed dependencies log
         uses: actions/upload-artifact@v4
         with:
@@ -59,7 +59,7 @@ jobs:
 
       - name: Install Modflow executables
         uses: modflowpy/install-modflow-action@v1
-      
+
       - name: Smoke test (${{ matrix.optdeps }})
         working-directory: autotest
         run: uv run pytest -v -n=auto -m "not regression and not example" --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
@@ -72,4 +72,3 @@ jobs:
         with:
           name: failed-smoke-${{ runner.os }}-${{ env.PYTHON_VERSION }}
           path: ./autotest/.failed/**
-      

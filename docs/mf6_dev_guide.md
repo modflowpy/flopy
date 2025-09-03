@@ -69,7 +69,7 @@ MFTransientData <|-- MFTransientArray
 MFTransientData <|-- MFTransientList
 MFTransientData <|-- MFTransientScalar
 ```
-							 
+
 Figure 2:  FPMF6 package and data classes.  Lines connecting classes show a relationship defined between the two connected classes.  A "*" next to the class means that the  class is a sub-class of the connected class.  A "+" next to the class means that the class is contained within the connected class.
 
 There are three main types of data, MFList, MFArray, and MFScalar data.  All three of these data types are derived from the MFData abstract base class.  MFList data is the type of data stored in a spreadsheet with different column headings.  For example, the data describing a flow barrier are of type MFList.  MFList data is stored in numpy recarrays.  MFArray data is data of a single type (eg. all integer values).  For example, the model's HK values are of type MFArray.  MFArrays are stored in numpy ndarrays.  MFScalar data is a single data item.  Most MFScalar data are options.  All MFData subclasses contain an MFDataStructure object that defines the expected structure and types of the data.

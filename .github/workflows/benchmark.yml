@@ -117,7 +117,7 @@ jobs:
           echo $artifact_json \
             | python -c "$get_artifact_ids" \
             | xargs -I@ bash -c "gh api -H 'Accept: application/vnd.github+json' /repos/$repo/actions/artifacts/@/zip >> $path/@.zip"
-          
+
           # unzip artifacts
           zipfiles=( $path/*.zip )
           if (( ${#zipfiles[@]} )); then

@@ -17,7 +17,7 @@ If the executable is found, its path is returned, otherwise the function returns
 #. Check the that you have spelled the executable correctly.
 #. If you have spelled the executable correctly then you need to move the executable into your working directory or into a directory in your path.
 #. If you have spelled the executable correctly but don't have the executable. Your options are:
-     * Download a precompiled version of the executable. Precompiled versions of MODFLOW-based codes are available from the U.S. Geological Survey for the Windows operating system. 
+     * Download a precompiled version of the executable. Precompiled versions of MODFLOW-based codes are available from the U.S. Geological Survey for the Windows operating system.
      * Compile the source code (available from the U.S. Geological Survey) for the Windows, OS X, Linux, and UNIX operating systems and place the compiled executable in the working directory or a directory contained in your path (for example, `/Users/jdhughes/.local/bin/` as indicated above).
 
 You can get a list of the directories in your system path using:

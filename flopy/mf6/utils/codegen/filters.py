@@ -336,7 +336,7 @@ class Filters:
                 return [_var(var) for var in list(definition.values(multi=True))]
 
             return [["header"] + _meta()] + __dfn()
-        
+
         def _filter_metadata(metadata):
             meta_ = list()
             for m in metadata:
@@ -364,7 +364,7 @@ class Filters:
             )
 
         return attrs
-    
+
     def init(dfn: dict, component_name: tuple[str, str]) -> List[str]:
         component_base = Filters.base(component_name)
         component_vars = _get_vars(dfn)
@@ -399,7 +399,7 @@ class Filters:
                             stmts.append(
                                 f"self.{name} = self.name_file.{name}"
                             )
-                    
+
                     if subpkg and subpkg["key"] not in refs:
                         refs[subpkg["key"]] = subpkg
                         args = f"'{subpkg['abbr']}', {subpkg['param']}"

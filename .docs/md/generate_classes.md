@@ -32,7 +32,7 @@ Deleting zipfile C:\Users\***\AppData\Local\Temp\***\master.zip
 Done downloading and extracting master.zip to C:\Users\***\AppData\Local\Temp\***
   Backup existing definition files in: C:\Users\***\flopy\flopy\mf6\data\dfn
   Replacing existing definition files with new ones.
-  removing...common.dfn    
+  removing...common.dfn
   removing...exg-gwfgwf.dfn
   ...
   copying..common.dfn

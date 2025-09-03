@@ -62,7 +62,7 @@ jobs:
         pixi run meson setup builddir --buildtype=debugoptimized --prefix=$(pwd) --libdir=bin
         pixi run meson install -C builddir
         pixi run meson test --verbose --no-rebuild -C builddir
-      
+
     - name: Build mf5to6 converter
       working-directory: modflow6/utils/mf5to6
       run: |
