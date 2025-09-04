@@ -21,3 +21,6 @@ b142b081516e6ac78e426257c7472dd4a9994b89
 
 # apply ruff updates (#2411)
 d67e3519d522207938e99d58c9985c3807b58f07
+
+# use CR EOLs, trailing whitespace (#2585)
+05c5745234fac29931ca238cdc4ceae4f62a0ebd
