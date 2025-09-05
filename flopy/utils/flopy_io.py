@@ -5,6 +5,7 @@ Module for input/output utilities
 import os
 import platform
 import sys
+from os import PathLike, curdir
 from pathlib import Path
 from shutil import which
 from typing import Union
@@ -543,8 +544,8 @@ def get_ts_sp(line):
 
 
 def relpath_safe(
-    path: Union[str, os.PathLike],
-    start: Union[str, os.PathLike] = os.curdir,
+    path: Union[str, PathLike],
+    start: Union[str, PathLike] = curdir,
     scrub: bool = False,
 ) -> str:
     """
@@ -560,7 +561,7 @@ def relpath_safe(
     ----------
     path : str or PathLike
         the path to truncate relative to the start path
-    start : str or PathLike, default "."
+    start : str or PathLike, default "." (curdir)
         the starting path, defaults to the current working directory
     scrub : bool, default False
         whether to remove the current login name from paths
@@ -571,7 +572,7 @@ def relpath_safe(
         with elements before and including usernames removed and obfuscated
     """
 
-    if start == os.curdir:
+    if start == curdir:
         start = os.getcwd()
 
     if platform.system() == "Windows":

@@ -46,7 +46,7 @@
 # - `sim_ws`: `os.curdir` ('.')
 # - `sim_tdis_file`: 'modflow6.tdis'
 #
-# The `sim_ws` parameter accepts `str` or `os.PathLike` arguments.
+# The `sim_ws` parameter accepts `str` or `PathLike` arguments.
 
 # +
 import os
@@ -495,7 +495,7 @@ pth.mkdir(exist_ok=True)
 model.dis.export(pth / "dis.nc")
 
 # export the botm array to a shapefile
-model.dis.botm.export(str(pth / "botm.shp"))  # supports os.PathLike or str
+model.dis.botm.export(pth / "botm.shp")  # supports PathLike or str
 # -
 
 # ## Loading an Existing MF6 Simulation

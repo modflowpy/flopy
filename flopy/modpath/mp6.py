@@ -1,4 +1,5 @@
 import os
+from os import PathLike
 from typing import Optional, Union
 
 import numpy as np
@@ -43,14 +44,16 @@ class Modpath6(BaseModel):
         The name of the executable to use.
     modflowmodel : flopy.modflow.Modflow
         MODFLOW model object with one of LPF, BCF6, or UPW packages.
-    dis_file : str or PathLike
-        Required dis file name.
+    dis_file : str or PathLike, optional
+        dis file name. If not provided, this is obtained from modflowmodel.
     dis_unit : int, default 87
         Optional dis file unit number.
-    head_file : str or PathLike
-        Required filename of the MODFLOW output head file.
-    budget_file : str or PathLike
-        Required filename of the MODFLOW output cell-by-cell budget file.
+    head_file : str or PathLike, optional
+        Filename of the MODFLOW output head file.
+        If not provided, this is obtained from modflowmodel.
+    budget_file : str or PathLike, optional
+        Filename of the MODFLOW output cell-by-cell budget file.
+        If not provided, this is obtained from modflowmodel.
     model_ws : str or PathLike, optional
         Model workspace.  Directory name to create model data sets.
         Default is the current working directory.
@@ -71,14 +74,14 @@ class Modpath6(BaseModel):
         simfile_ext="mpsim",
         namefile_ext="mpnam",
         version="modpath",
-        exe_name: Union[str, os.PathLike] = "mp6",
+        exe_name: Union[str, PathLike] = "mp6",
         modflowmodel=None,
-        dis_file: Optional[Union[str, os.PathLike]] = None,
+        dis_file: Union[str, PathLike, None] = None,
         dis_unit=87,
-        head_file: Optional[Union[str, os.PathLike]] = None,
-        budget_file: Optional[Union[str, os.PathLike]] = None,
-        model_ws: Optional[Union[str, os.PathLike]] = None,
-        external_path: Optional[Union[str, os.PathLike]] = None,
+        head_file: Union[str, PathLike, None] = None,
+        budget_file: Union[str, PathLike, None] = None,
+        model_ws: Union[str, PathLike, None] = None,
+        external_path: Union[str, PathLike, None] = None,
         verbose=False,
         load=True,
         listunit=7,

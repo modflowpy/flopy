@@ -1,4 +1,4 @@
-import os
+from os import PathLike
 from pathlib import Path
 
 import numpy as np
@@ -312,7 +312,7 @@ class GeoSpatialCollection:
                     self.__collection.append(GeoSpatialUtil(geom, shapetype[ix]))
 
         elif self.__shapefile is not None:
-            if isinstance(obj, (str, os.PathLike)):
+            if isinstance(obj, (str, PathLike)):
                 with self.__shapefile.Reader(
                     str(Path(obj).expanduser().absolute())
                 ) as r:

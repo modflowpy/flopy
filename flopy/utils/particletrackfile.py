@@ -2,8 +2,8 @@
 Utilities for parsing particle tracking output files.
 """
 
-import os
 from abc import ABC, abstractmethod
+from os import PathLike
 from pathlib import Path
 from typing import Union
 
@@ -49,7 +49,7 @@ class ParticleTrackFile(ABC):
 
     def __init__(
         self,
-        filename: Union[str, os.PathLike],
+        filename: Union[str, PathLike],
         verbose: bool = False,
     ):
         self.fname = Path(filename).expanduser().absolute()

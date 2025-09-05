@@ -574,7 +574,7 @@ class PlotMapView:
 
         Parameters
         ----------
-        shp : str, os.PathLike or pyshp shapefile object
+        shp : str, PathLike or pyshp shapefile object
             Path of the shapefile to plot
 
         kwargs : dictionary

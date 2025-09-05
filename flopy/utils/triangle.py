@@ -1,5 +1,6 @@
 import os
 import subprocess
+from os import curdir
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,8 +18,8 @@ class Triangle:
 
     Parameters
     ----------
-    model_ws : str
-        workspace location for creating triangle files (default is '.')
+    model_ws : str or PathLike, default "." (curdir)
+        workspace location for creating triangle files
     exe_name : str
         path and name of the triangle program. (default is triangle, which
         means that the triangle program must be in your path)
@@ -43,7 +44,7 @@ class Triangle:
 
     def __init__(
         self,
-        model_ws=".",
+        model_ws=curdir,
         exe_name="triangle",
         maximum_area=None,
         angle=20.0,

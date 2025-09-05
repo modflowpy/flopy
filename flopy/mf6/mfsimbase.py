@@ -1,8 +1,9 @@
 import errno
 import inspect
-import os.path
+import os
 import sys
 import warnings
+from os import PathLike, curdir
 from pathlib import Path
 from typing import Optional, Union, cast
 
@@ -238,7 +239,7 @@ class MFSimulationData:
 
     """
 
-    def __init__(self, path: Union[str, os.PathLike], mfsim):
+    def __init__(self, path: Union[str, PathLike], mfsim):
         # --- formatting variables ---
         self.indent_string = "  "
         self.constant_formatting = ["constant", ""]
@@ -462,8 +463,8 @@ class MFSimulationBase:
         self,
         sim_name="sim",
         version="mf6",
-        exe_name: Union[str, os.PathLike] = "mf6",
-        sim_ws: Union[str, os.PathLike] = os.curdir,
+        exe_name: Union[str, PathLike] = "mf6",
+        sim_ws: Union[str, PathLike] = curdir,
         verbosity_level=1,
         continue_=None,
         nocheck=None,
@@ -762,8 +763,8 @@ class MFSimulationBase:
         cls_child: type["MFSimulationBase"],
         sim_name="modflowsim",
         version="mf6",
-        exe_name: Union[str, os.PathLike] = "mf6",
-        sim_ws: Union[str, os.PathLike] = os.curdir,
+        exe_name: Union[str, PathLike] = "mf6",
+        sim_ws: Union[str, PathLike] = curdir,
         strict=True,
         verbosity_level=1,
         load_only=None,
@@ -1078,7 +1079,7 @@ class MFSimulationBase:
 
     def check(
         self,
-        f: Optional[Union[str, os.PathLike]] = None,
+        f: Union[str, PathLike, None] = None,
         verbose=True,
         level=1,
     ):
@@ -1095,7 +1096,7 @@ class MFSimulationBase:
         ----------
         f : str or PathLike, optional
             String defining file name or file handle for summary file
-            of check method output. If str or pathlike, a file handle
+            of check method output. If str or PathLike, a file handle
             is created. If None, the method does not write results to
             a summary file. (default is None)
         verbose : bool
@@ -1162,10 +1163,10 @@ class MFSimulationBase:
     def load_package(
         self,
         ftype,
-        fname: Union[str, os.PathLike],
+        fname: Union[str, PathLike],
         pname,
         strict,
-        ref_path: Union[str, os.PathLike],
+        ref_path: Union[str, PathLike],
         dict_package_name=None,
         parent_package: Optional[MFPackage] = None,
     ):
@@ -1742,7 +1743,7 @@ class MFSimulationBase:
         if silent:
             self.simulation_data.verbosity_level = saved_verb_lvl
 
-    def set_sim_path(self, path: Union[str, os.PathLike]):
+    def set_sim_path(self, path: Union[str, PathLike]):
         """Return a list of output data keys.
 
         Parameters
@@ -2633,7 +2634,7 @@ class MFSimulationBase:
 
     def plot(
         self,
-        model_list: Optional[Union[str, list[str]]] = None,
+        model_list: Union[str, list[str], None] = None,
         SelPackList=None,
         **kwargs,
     ):
@@ -2645,28 +2646,28 @@ class MFSimulationBase:
 
         Parameters
         ----------
-            model_list: list, optional
-                List of model names to plot, if none all models will be plotted
-            SelPackList: list, optional
-                List of package names to plot, if none all packages will be
-                plotted
-            kwargs:
-                filename_base : str
-                    Base file name that will be used to automatically
-                    generate file names for output image files. Plots will be
-                    exported as image files if file_name_base is not None.
-                    (default is None)
-                file_extension : str
-                    Valid matplotlib.pyplot file extension for savefig().
-                    Only used if filename_base is not None. (default is 'png')
-                mflay : int
-                    MODFLOW zero-based layer number to return.  If None, then
-                    all layers will be included. (default is None)
-                kper : int
-                    MODFLOW zero-based stress period number to return.
-                    (default is zero)
-                key : str
-                    MFList dictionary key. (default is None)
+        model_list : list, optional
+            List of model names to plot, if none all models will be plotted
+        SelPackList : list, optional
+            List of package names to plot, if none all packages will be
+            plotted
+        **kwargs : dict, optional
+            filename_base : str
+                Base file name that will be used to automatically
+                generate file names for output image files. Plots will be
+                exported as image files if file_name_base is not None.
+                (default is None)
+            file_extension : str
+                Valid matplotlib.pyplot file extension for savefig().
+                Only used if filename_base is not None. (default is 'png')
+            mflay : int
+                MODFLOW zero-based layer number to return.  If None, then
+                all layers will be included. (default is None)
+            kper : int
+                MODFLOW zero-based stress period number to return.
+                (default is zero)
+            key : str
+                MFList dictionary key. (default is None)
 
         Returns
         -------

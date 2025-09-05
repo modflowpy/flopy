@@ -5,9 +5,10 @@ shapefiles are also included.
 
 """
 
-import os
+import os.path
 import warnings
 from itertools import repeat
+from os import PathLike
 from typing import Union
 
 import matplotlib.pyplot as plt
@@ -1999,7 +2000,7 @@ def shapefile_get_vertices(shp):
     return vertices
 
 
-def shapefile_to_patch_collection(shp: Union[str, os.PathLike], radius=500.0, idx=None):
+def shapefile_to_patch_collection(shp: Union[str, PathLike], radius=500.0, idx=None):
     """
     Create a patch collection from the shapes in a shapefile
 
@@ -2125,7 +2126,7 @@ def plot_shapefile(
 
     Parameters
     ----------
-    shp : string or os.PathLike
+    shp : str or PathLike
         Path of the shapefile to plot.
     ax : matplolib.pyplot.axes object
 

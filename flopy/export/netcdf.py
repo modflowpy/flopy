@@ -5,6 +5,7 @@ import platform
 import socket
 import time
 from datetime import datetime
+from os import PathLike
 from pathlib import Path
 from typing import Optional, Union
 
@@ -150,7 +151,7 @@ class NetCdf:
 
     def __init__(
         self,
-        output_filename: Union[str, os.PathLike],
+        output_filename: Union[str, PathLike],
         model,
         time_values=None,
         z_positive="up",
@@ -170,9 +171,9 @@ class NetCdf:
             self.logger = Logger(verbose)
         self.var_attr_dict = {}
         self.log = self.logger.log
-        if os.path.exists(output_filename):
+        if output_filename.exists():
             self.logger.warn(f"removing existing nc file: {output_filename}")
-            os.remove(output_filename)
+            output_filename.unlink()
         self.output_filename = output_filename
 
         self.forgive = bool(forgive)

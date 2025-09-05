@@ -1,16 +1,16 @@
-import os
-import pathlib as pl
 import re
 import warnings
+from os import PathLike
+from pathlib import Path
 
 import numpy as np
 
 
 class MfSimulationList:
-    def __init__(self, file_name: os.PathLike):
+    def __init__(self, file_name: PathLike):
         # Set up file reading
         if isinstance(file_name, str):
-            file_name = pl.Path(file_name)
+            file_name = Path(file_name)
         if not file_name.is_file():
             raise FileNotFoundError(f"file_name `{file_name}` not found")
         self.file_name = file_name

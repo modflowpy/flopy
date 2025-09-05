@@ -9,6 +9,7 @@ import os
 import shutil
 import sys
 import warnings
+from os import PathLike
 from pathlib import Path
 from typing import Optional, Union
 from warnings import warn
@@ -21,7 +22,7 @@ from ..utils import Util3d, flopy_io, import_optional_dependency
 from ..utils.crs import get_crs
 
 
-def write_gridlines_shapefile(filename: Union[str, os.PathLike], mg):
+def write_gridlines_shapefile(filename: Union[str, PathLike], mg):
     """
     Write a polyline shapefile of the grid lines - a lightweight alternative
     to polygons.
@@ -59,12 +60,12 @@ def write_gridlines_shapefile(filename: Union[str, os.PathLike], mg):
 
 
 def write_grid_shapefile(
-    path: Union[str, os.PathLike],
+    path: Union[str, PathLike],
     mg,
     array_dict,
     nan_val=np.nan,
     crs=None,
-    prjfile: Optional[Union[str, os.PathLike]] = None,
+    prjfile: Union[str, PathLike, None] = None,
     verbose=False,
     **kwargs,
 ):
@@ -87,7 +88,7 @@ def write_grid_shapefile(
         The value can be anything accepted by
         :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
         such as an authority string (eg "EPSG:26916") or a WKT string.
-    prjfile : str or pathlike, optional if `crs` is specified
+    prjfile : str or PathLike, optional if `crs` is specified
         ESRI-style projection file with well-known text defining the CRS
         for the model grid (must be projected; geographic CRS are not supported).
     **kwargs : dict, optional
@@ -224,7 +225,7 @@ def write_grid_shapefile(
 
 
 def model_attributes_to_shapefile(
-    path: Union[str, os.PathLike],
+    path: Union[str, PathLike],
     ml,
     package_names=None,
     array_dict=None,
@@ -259,7 +260,7 @@ def model_attributes_to_shapefile(
             The value can be anything accepted by
             :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
             such as an authority string (eg "EPSG:26916") or a WKT string.
-        prjfile : str or pathlike, optional if `crs` is specified
+        prjfile : str or PathLike, optional if `crs` is specified
             ESRI-style projection file with well-known text defining the CRS
             for the model grid (must be projected; geographic CRS are not supported).
 
@@ -535,7 +536,7 @@ def get_pyshp_field_dtypes(code):
     return dtypes.get(code, object)
 
 
-def shp2recarray(shpname: Union[str, os.PathLike]):
+def shp2recarray(shpname: Union[str, PathLike]):
     """Read a shapefile into a numpy recarray.
 
     Parameters
@@ -566,10 +567,10 @@ def shp2recarray(shpname: Union[str, os.PathLike]):
 def recarray2shp(
     recarray,
     geoms,
-    shpname: Union[str, os.PathLike] = "recarray.shp",
+    shpname: Union[str, PathLike] = "recarray.shp",
     mg=None,
     crs=None,
-    prjfile: Optional[Union[str, os.PathLike]] = None,
+    prjfile: Union[str, PathLike, None] = None,
     verbose=False,
     **kwargs,
 ):
@@ -599,7 +600,7 @@ def recarray2shp(
         The value can be anything accepted by
         :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
         such as an authority string (eg "EPSG:26916") or a WKT string.
-    prjfile : str or pathlike, optional if `crs` is specified
+    prjfile : str or PathLike, optional if `crs` is specified
         ESRI-style projection file with well-known text defining the CRS
         for the model grid (must be projected; geographic CRS are not supported).
     **kwargs : dict, optional

@@ -3,6 +3,7 @@ import os
 import re
 import warnings
 from collections import defaultdict
+from os import PathLike
 
 import numpy as np
 
@@ -70,7 +71,7 @@ class Grid:
         The value can be anything accepted by
         :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
         such as an authority string (eg "EPSG:26916") or a WKT string.
-    prjfile : str or pathlike, optional if `crs` is specified
+    prjfile : str or PathLike, optional if `crs` is specified
         ESRI-style projection file with well-known text defining the CRS
         for the model grid (must be projected; geographic CRS are not supported).
     xoff : float
@@ -87,7 +88,7 @@ class Grid:
         .. deprecated:: 3.5
            The following keyword options will be removed for FloPy 3.6:
 
-             - ``prj`` (str or pathlike): use ``prjfile`` instead.
+             - ``prj`` (str or PathLike): use ``prjfile`` instead.
              - ``epsg`` (int): use ``crs`` instead.
              - ``proj4`` (str): use ``crs`` instead.
 
@@ -381,7 +382,7 @@ class Grid:
         if prjfile is None:
             self._prjfile = None
             return
-        if not isinstance(prjfile, (str, os.PathLike)):
+        if not isinstance(prjfile, (str, PathLike)):
             raise ValueError("prjfile property must be str, PathLike or None")
         self._prjfile = prjfile
         # If crs was previously unset, use .prj file input
@@ -997,7 +998,7 @@ class Grid:
             The value can be anything accepted by
             :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
             such as an authority string (eg "EPSG:26916") or a WKT string.
-        prjfile : str or pathlike, optional
+        prjfile : str or PathLike, optional
             ESRI-style projection file with well-known text defining the CRS
             for the model grid (must be projected; geographic CRS are not
             supported).

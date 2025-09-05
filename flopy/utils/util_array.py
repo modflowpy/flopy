@@ -7,8 +7,9 @@ util_array module.  Contains the util_2d, util_3d and transient_2d classes.
 """
 
 import copy
-import os
+import os.path
 import shutil
+from os import PathLike
 from warnings import warn
 
 import numpy as np
@@ -2665,7 +2666,7 @@ class Util2d(DataInterface):
                     )
             else:
                 raise Exception("Util2d:value type is bool, but dtype not set as bool")
-        elif isinstance(value, (str, os.PathLike)):
+        elif isinstance(value, (str, PathLike)):
             if os.path.exists(value):
                 self.__value = str(value)
                 return

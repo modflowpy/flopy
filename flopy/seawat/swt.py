@@ -1,4 +1,5 @@
 import os
+from os import PathLike, curdir
 from typing import Union
 
 from ..discretization.modeltime import ModelTime
@@ -50,9 +51,8 @@ class Seawat(BaseModel):
         Specify if model grid is structured (default) or unstructured.
     listunit : int, default 2
         Unit number for the list file.
-    model_ws : str, default "."
+    model_ws : str or PathLike, default "." (curdir)
         Model workspace.  Directory name to create model data sets.
-        Default is the present working directory.
     external_path : str, optional
         Location for external files.
     verbose : bool, default False
@@ -91,7 +91,7 @@ class Seawat(BaseModel):
         exe_name="swtv4",
         structured=True,
         listunit=2,
-        model_ws=".",
+        model_ws=curdir,
         external_path=None,
         verbose=False,
         load=True,
@@ -403,9 +403,9 @@ class Seawat(BaseModel):
         cls,
         f: str,
         version="seawat",
-        exe_name: Union[str, os.PathLike] = "swtv4",
+        exe_name: Union[str, PathLike] = "swtv4",
         verbose=False,
-        model_ws: Union[str, os.PathLike] = os.curdir,
+        model_ws: Union[str, PathLike] = curdir,
         load_only=None,
     ):
         """
@@ -421,9 +421,8 @@ class Seawat(BaseModel):
             The name of the executable to use.
         verbose : bool, default False
             Print additional information to the screen.
-        model_ws : str or PathLike, default "."
+        model_ws : str or PathLike, default "." (curdir)
             Model workspace.  Directory to create model data sets.
-            Default is the present working directory.
         load_only : list of str, optional
             Packages to load (e.g. ["lpf", "adv"]). Default None
             means that all packages will be loaded.

@@ -1,6 +1,7 @@
 import copy
-import os
+import os.path
 from itertools import groupby
+from os import PathLike, curdir
 from typing import Union
 
 import numpy as np
@@ -16,7 +17,7 @@ class ZoneBudget:
 
     Parameters
     ----------
-    cbc_file : str or CellBudgetFile object
+    cbc_file : str, PathLike or CellBudgetFile object
         The file name or CellBudgetFile object for which budgets will be
         computed.
     z : ndarray
@@ -61,7 +62,7 @@ class ZoneBudget:
 
         if isinstance(cbc_file, CellBudgetFile):
             self.cbc = cbc_file
-        elif isinstance(cbc_file, (str, os.PathLike)) and os.path.isfile(cbc_file):
+        elif isinstance(cbc_file, (str, PathLike)) and os.path.isfile(cbc_file):
             self.cbc = CellBudgetFile(cbc_file)
         else:
             raise Exception(f"Cannot load cell budget file: {cbc_file}.")
@@ -1545,7 +1546,7 @@ class ZoneBudget:
 
         Parameters
         ----------
-        f : str or flopy.export.netcdf.NetCdf object
+        f : str, PathLike or flopy.export.netcdf.NetCdf object
         ml : flopy.modflow.Modflow or flopy.mf6.ModflowGwf object
         **kwargs :
             logger : flopy.export.netcdf.Logger instance
@@ -1559,7 +1560,8 @@ class ZoneBudget:
         """
         from ..export.utils import output_helper
 
-        if isinstance(f, str):
+        if isinstance(f, (str, PathLike)):
+            f = str(f)
             if not f.endswith(".nc"):
                 raise AssertionError(
                     "File extension must end with .nc to export a netcdf file"
@@ -1649,7 +1651,7 @@ class ZoneBudget6:
     ----------
     name : str
         model name for zonebudget
-    model_ws : str
+    model_ws : str or PathLike, default "." (curdir)
         path to model
     exe_name : str
         executable name
@@ -1660,7 +1662,7 @@ class ZoneBudget6:
     def __init__(
         self,
         name="zonebud",
-        model_ws=".",
+        model_ws=curdir,
         exe_name="zbud6",
         extension=".zbnam",
     ):
@@ -1777,7 +1779,7 @@ class ZoneBudget6:
 
         Parameters
         ----------
-        model_ws : str
+        model_ws : str or PathLike
             new model directory
 
         """
@@ -1958,7 +1960,7 @@ class ZoneBudget6:
             foo.write("END ZONEBUDGET\n")
 
     @staticmethod
-    def load(nam_file, model_ws: Union[str, os.PathLike] = os.curdir):
+    def load(nam_file, model_ws: Union[str, PathLike] = curdir):
         """
         Method to load a zonebudget model from namefile
 
@@ -1966,7 +1968,7 @@ class ZoneBudget6:
         ----------
         nam_file : str
             zonebudget name file
-        model_ws : str or PathLike, default "."
+        model_ws : str or PathLike, default "." (curdir)
             model workspace path
 
         Returns
@@ -2011,7 +2013,7 @@ class ZoneBudget6:
         """
         from ..export.utils import output_helper
 
-        if isinstance(f, (str, os.PathLike)):
+        if isinstance(f, (str, PathLike)):
             f = str(f)
             if not f.endswith(".nc"):
                 raise AssertionError(
@@ -2116,7 +2118,7 @@ class ZoneFile6:
             foo.write("\nEND GRIDDATA\n")
 
     @staticmethod
-    def load(f: Union[str, os.PathLike], model):
+    def load(f: Union[str, PathLike], model):
         """
         Method to load a Zone file for zonebudget 6.
 

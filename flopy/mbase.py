@@ -14,6 +14,7 @@ import sys
 import threading
 import warnings
 from datetime import datetime
+from os import PathLike, curdir
 from pathlib import Path
 from shutil import which
 from subprocess import PIPE, STDOUT, Popen
@@ -45,7 +46,7 @@ iprn = -1
 
 
 def resolve_exe(
-    exe_name: Union[str, os.PathLike], forgive: bool = False
+    exe_name: Union[str, PathLike], forgive: bool = False
 ) -> Union[str, None]:
     """
     Resolves the absolute path of the executable, raising FileNotFoundError
@@ -367,7 +368,7 @@ class BaseModel(ModelInterface):
     exe_name : str or PathLike, default "mf2005"
         Name or path of the modflow executable. If a name is provided,
         the executable must be on the system path.
-    model_ws : str or PathLike, optional, default "."
+    model_ws : str or PathLike, default "." (curdir)
         Path to the model workspace.  Model files will be created in this
         directory.  Default is the current working directory.
     structured : bool, default True
@@ -388,8 +389,8 @@ class BaseModel(ModelInterface):
         self,
         modelname="modflowtest",
         namefile_ext="nam",
-        exe_name: Union[str, os.PathLike] = "mf2005",
-        model_ws: Union[str, os.PathLike] = os.curdir,
+        exe_name: Union[str, PathLike] = "mf2005",
+        model_ws: Union[str, PathLike] = curdir,
         structured=True,
         verbose=False,
         **kwargs,
@@ -500,7 +501,7 @@ class BaseModel(ModelInterface):
         return self._model_ws
 
     @model_ws.setter
-    def model_ws(self, model_ws: Union[str, os.PathLike]):
+    def model_ws(self, model_ws: Union[str, PathLike]):
         self._model_ws = str(Path(model_ws).expanduser().absolute())
 
     @property
@@ -580,7 +581,7 @@ class BaseModel(ModelInterface):
         self._next_ext_unit += 1
         return next_unit
 
-    def export(self, f: Union[str, os.PathLike], **kwargs):
+    def export(self, f: Union[str, PathLike], **kwargs):
         """
         Method to export a model to netcdf or shapefile based on the
         extension of the file name (.shp for shapefile, .nc for netcdf)
@@ -762,7 +763,7 @@ class BaseModel(ModelInterface):
     def add_output_file(
         self,
         unit,
-        fname: Optional[Union[str, os.PathLike]] = None,
+        fname: Union[str, PathLike, None] = None,
         extension="cbc",
         binflag=True,
         package=None,
@@ -828,7 +829,7 @@ class BaseModel(ModelInterface):
             self.add_output(fname, unit, binflag=binflag, package=package)
 
     def add_output(
-        self, fname: Union[str, os.PathLike], unit, binflag=False, package=None
+        self, fname: Union[str, PathLike], unit, binflag=False, package=None
     ):
         """
         Assign an external array so that it will be listed as a DATA or
@@ -871,7 +872,7 @@ class BaseModel(ModelInterface):
         if self.verbose:
             self._output_msg(-1, add=True)
 
-    def remove_output(self, fname: Optional[Union[str, os.PathLike]] = None, unit=None):
+    def remove_output(self, fname: Union[str, PathLike, None] = None, unit=None):
         """
         Remove an output file from the model by specifying either the
         file name or the unit number.
@@ -906,7 +907,7 @@ class BaseModel(ModelInterface):
             msg = "either fname or unit must be passed to remove_output()"
             raise TypeError(msg)
 
-    def get_output(self, fname: Optional[Union[str, os.PathLike]] = None, unit=None):
+    def get_output(self, fname: Union[str, PathLike, None] = None, unit=None):
         """
         Get an output file from the model by specifying either the
         file name or the unit number.
@@ -935,7 +936,7 @@ class BaseModel(ModelInterface):
 
     def set_output_attribute(
         self,
-        fname: Optional[Union[str, os.PathLike]] = None,
+        fname: Union[str, PathLike, None] = None,
         unit=None,
         attr=None,
     ):
@@ -980,7 +981,7 @@ class BaseModel(ModelInterface):
 
     def get_output_attribute(
         self,
-        fname: Optional[Union[str, os.PathLike]] = None,
+        fname: Union[str, PathLike, None] = None,
         unit=None,
         attr=None,
     ):
@@ -1023,7 +1024,7 @@ class BaseModel(ModelInterface):
         return v
 
     def add_external(
-        self, fname: Union[str, os.PathLike], unit, binflag=False, output=False
+        self, fname: Union[str, PathLike], unit, binflag=False, output=False
     ):
         """
         Assign an external array so that it will be listed as a DATA or
@@ -1067,9 +1068,7 @@ class BaseModel(ModelInterface):
         self.external_binflag.append(binflag)
         self.external_output.append(output)
 
-    def remove_external(
-        self, fname: Optional[Union[str, os.PathLike]] = None, unit=None
-    ):
+    def remove_external(self, fname: Union[str, PathLike, None] = None, unit=None):
         """
         Remove an external file from the model by specifying either the
         file name or the unit number.
@@ -1105,7 +1104,7 @@ class BaseModel(ModelInterface):
 
     def add_existing_package(
         self,
-        filename: Union[str, os.PathLike],
+        filename: Union[str, PathLike],
         ptype=None,
         copy_to_model_ws=True,
     ):
@@ -1242,7 +1241,7 @@ class BaseModel(ModelInterface):
 
     def change_model_ws(
         self,
-        new_pth: Optional[Union[str, os.PathLike]] = os.curdir,
+        new_pth: Union[str, PathLike] = curdir,
         reset_external=False,
     ):
         """
@@ -1250,10 +1249,9 @@ class BaseModel(ModelInterface):
 
         Parameters
         ----------
-        new_pth : str or PathLike
+        new_pth : str or PathLike, default "." (curdir)
             Path of the new model workspace. If this path does not exist,
-            it will be created. If no value (None) is given, the default
-            is the present working directory.
+            it will be created. The default is the present working directory.
 
         Returns
         -------
@@ -1263,7 +1261,7 @@ class BaseModel(ModelInterface):
 
         """
         if new_pth is None:
-            new_pth = os.curdir
+            new_pth = curdir
         if not os.path.exists(new_pth):
             try:
                 print(
@@ -1497,7 +1495,7 @@ class BaseModel(ModelInterface):
 
     def check(
         self,
-        f: Optional[Union[str, os.PathLike]] = None,
+        f: Union[str, PathLike, None] = None,
         verbose=True,
         level=1,
     ):
@@ -1506,7 +1504,7 @@ class BaseModel(ModelInterface):
 
         Parameters
         ----------
-        f : str or PathLike, optional, default None
+        f : str or PathLike, optional
             String defining file name or file handle for summary file
             of check method output. If a string is passed a file handle
             is created. If f is None, check method does not write
@@ -1612,9 +1610,9 @@ class BaseModel(ModelInterface):
 
 
 def run_model(
-    exe_name: Union[str, os.PathLike],
+    exe_name: Union[str, PathLike],
     namefile: Optional[str],
-    model_ws: Union[str, os.PathLike] = os.curdir,
+    model_ws: Union[str, PathLike] = curdir,
     silent=False,
     pause=False,
     report=False,
@@ -1639,9 +1637,8 @@ def run_model(
     namefile : str, optional
         Name of the name file of model to run. The name may be None
         to run models that don't require a control file (name file)
-    model_ws : str or PathLike, optional, default '.'
-        Path to the parent directory of the namefile. (default is the
-        current working directory '.')
+    model_ws : str or PathLike, default "." (curdir)
+        Path to the parent directory of the namefile.
     silent : boolean, default True
         Whether to suppress model output. (Default is True)
     pause : boolean, optional, default False

@@ -1,6 +1,7 @@
 import os
 import textwrap
-from typing import Optional, Union
+from os import PathLike
+from typing import Union
 
 import numpy as np
 
@@ -79,13 +80,13 @@ def _difftol(v1, v2, tol):
 
 
 def compare_budget(
-    namefile1: Optional[Union[str, os.PathLike]],
-    namefile2: Optional[Union[str, os.PathLike]],
+    namefile1: Union[str, PathLike, None] = None,
+    namefile2: Union[str, PathLike, None] = None,
     max_cumpd=0.01,
     max_incpd=0.01,
-    outfile: Optional[Union[str, os.PathLike]] = None,
-    files1: Optional[Union[str, os.PathLike, list[Union[str, os.PathLike]]]] = None,
-    files2: Optional[Union[str, os.PathLike, list[Union[str, os.PathLike]]]] = None,
+    outfile: Union[str, PathLike, None] = None,
+    files1: Union[str, PathLike, list[Union[str, PathLike]], None] = None,
+    files2: Union[str, PathLike, list[Union[str, PathLike]], None] = None,
 ):
     """Compare the budget results from two simulations.
 
@@ -136,7 +137,7 @@ def compare_budget(
         lst_file = get_entries_from_namefile(namefile1, "list")
         lst_file1 = lst_file[0][0] if any(lst_file) else None
     else:
-        if isinstance(files1, (str, os.PathLike)):
+        if isinstance(files1, (str, PathLike)):
             files1 = [files1]
         for file in files1:
             if (
@@ -150,7 +151,7 @@ def compare_budget(
         lst_file = get_entries_from_namefile(namefile2, "list")
         lst_file2 = lst_file[0][0] if any(lst_file) else None
     else:
-        if isinstance(files2, (str, os.PathLike)):
+        if isinstance(files2, (str, PathLike)):
             files2 = [files2]
         for file in files2:
             if (
@@ -279,13 +280,13 @@ def compare_budget(
 
 
 def compare_swrbudget(
-    namefile1: Optional[Union[str, os.PathLike]],
-    namefile2: Optional[Union[str, os.PathLike]],
+    namefile1: Union[str, PathLike, None] = None,
+    namefile2: Union[str, PathLike, None] = None,
     max_cumpd=0.01,
     max_incpd=0.01,
-    outfile: Optional[Union[str, os.PathLike]] = None,
-    files1: Optional[Union[str, os.PathLike, list[Union[str, os.PathLike]]]] = None,
-    files2: Optional[Union[str, os.PathLike, list[Union[str, os.PathLike]]]] = None,
+    outfile: Union[str, PathLike, None] = None,
+    files1: Union[str, PathLike, list[Union[str, PathLike]], None] = None,
+    files2: Union[str, PathLike, list[Union[str, PathLike]], None] = None,
 ):
     """Compare the SWR budget results from two simulations.
 
@@ -471,18 +472,18 @@ def compare_swrbudget(
 
 
 def compare_heads(
-    namefile1: Optional[Union[str, os.PathLike]],
-    namefile2: Optional[Union[str, os.PathLike]],
+    namefile1: Union[str, PathLike, None] = None,
+    namefile2: Union[str, PathLike, None] = None,
     precision="auto",
     text="head",
     text2=None,
     htol=0.001,
-    outfile: Optional[Union[str, os.PathLike]] = None,
-    files1: Optional[Union[str, os.PathLike, list[Union[str, os.PathLike]]]] = None,
-    files2: Optional[Union[str, os.PathLike, list[Union[str, os.PathLike]]]] = None,
+    outfile: Union[str, PathLike, None] = None,
+    files1: Union[str, PathLike, list[Union[str, PathLike]], None] = None,
+    files2: Union[str, PathLike, list[Union[str, PathLike]], None] = None,
     difftol=False,
     verbose=False,
-    exfile: Optional[Union[str, os.PathLike]] = None,
+    exfile: Union[str, PathLike, None] = None,
     exarr=None,
     maxerr=None,
 ):
@@ -560,7 +561,7 @@ def compare_heads(
             status1 = entries[0][1] if any(entries) else None
 
     else:
-        if isinstance(files1, (str, os.PathLike)):
+        if isinstance(files1, (str, PathLike)):
             files1 = [files1]
         for file in files1:
             if text.lower() == "head":
@@ -601,7 +602,7 @@ def compare_heads(
             hfpth2 = entries[0][0] if any(entries) else None
             status2 = entries[0][1] if any(entries) else None
     else:
-        if isinstance(files2, (str, os.PathLike)):
+        if isinstance(files2, (str, PathLike)):
             files2 = [files2]
         for file in files2:
             if text2.lower() == "head":
@@ -665,7 +666,7 @@ def compare_heads(
     # get data from exclusion file
     if exfile is not None:
         e = None
-        if isinstance(exfile, (str, os.PathLike)):
+        if isinstance(exfile, (str, PathLike)):
             try:
                 exd = np.genfromtxt(exfile).flatten()
             except:
@@ -853,13 +854,13 @@ def compare_heads(
 
 
 def compare_concentrations(
-    namefile1: Union[str, os.PathLike],
-    namefile2: Union[str, os.PathLike],
+    namefile1: Union[str, PathLike],
+    namefile2: Union[str, PathLike],
     precision="auto",
     ctol=0.001,
-    outfile: Optional[Union[str, os.PathLike]] = None,
-    files1: Optional[Union[str, os.PathLike, list[Union[str, os.PathLike]]]] = None,
-    files2: Optional[Union[str, os.PathLike, list[Union[str, os.PathLike]]]] = None,
+    outfile: Union[str, PathLike, None] = None,
+    files1: Union[str, PathLike, list[Union[str, PathLike]], None] = None,
+    files2: Union[str, PathLike, list[Union[str, PathLike]], None] = None,
     difftol=False,
     verbose=False,
 ):
@@ -926,7 +927,7 @@ def compare_concentrations(
         if ufpth1 is None:
             ufpth1 = os.path.join(os.path.dirname(namefile1), "MT3D001.UCN")
     else:
-        if isinstance(files1, (str, os.PathLike)):
+        if isinstance(files1, (str, PathLike)):
             files1 = [files1]
         for file in files1:
             for ext in valid_ext:
@@ -946,7 +947,7 @@ def compare_concentrations(
         if ufpth2 is None:
             ufpth2 = os.path.join(os.path.dirname(namefile2), "MT3D001.UCN")
     else:
-        if isinstance(files2, (str, os.PathLike)):
+        if isinstance(files2, (str, PathLike)):
             files2 = [files2]
         for file in files2:
             for ext in valid_ext:
@@ -1083,12 +1084,12 @@ def compare_concentrations(
 
 
 def compare_stages(
-    namefile1: Optional[Union[str, os.PathLike]] = None,
-    namefile2: Optional[Union[str, os.PathLike]] = None,
-    files1: Optional[Union[str, os.PathLike, list[Union[str, os.PathLike]]]] = None,
-    files2: Optional[Union[str, os.PathLike, list[Union[str, os.PathLike]]]] = None,
+    namefile1: Union[str, PathLike, None] = None,
+    namefile2: Union[str, PathLike, None] = None,
+    files1: Union[str, PathLike, list[Union[str, PathLike]], None] = None,
+    files2: Union[str, PathLike, list[Union[str, PathLike]], None] = None,
     htol=0.001,
-    outfile: Optional[Union[str, os.PathLike]] = None,
+    outfile: Union[str, PathLike, None] = None,
     difftol=False,
     verbose=False,
 ):
@@ -1148,7 +1149,7 @@ def compare_stages(
                 sfpth1 = sfpth
                 break
     elif files1 is not None:
-        if isinstance(files1, (str, os.PathLike)):
+        if isinstance(files1, (str, PathLike)):
             files1 = [files1]
         for file in files1:
             for ext in valid_ext:
@@ -1166,7 +1167,7 @@ def compare_stages(
                 sfpth2 = sfpth
                 break
     elif files2 is not None:
-        if isinstance(files2, (str, os.PathLike)):
+        if isinstance(files2, (str, PathLike)):
             files2 = [files2]
         for file in files2:
             for ext in valid_ext:
@@ -1295,16 +1296,16 @@ def compare_stages(
 
 
 def compare(
-    namefile1: Optional[Union[str, os.PathLike]] = None,
-    namefile2: Optional[Union[str, os.PathLike]] = None,
+    namefile1: Union[str, PathLike, None] = None,
+    namefile2: Union[str, PathLike, None] = None,
     precision="auto",
     max_cumpd=0.01,
     max_incpd=0.01,
     htol=0.001,
-    outfile1: Optional[Union[str, os.PathLike]] = None,
-    outfile2: Optional[Union[str, os.PathLike]] = None,
-    files1: Optional[Union[str, os.PathLike, list[Union[str, os.PathLike]]]] = None,
-    files2: Optional[Union[str, os.PathLike, list[Union[str, os.PathLike]]]] = None,
+    outfile1: Union[str, PathLike, None] = None,
+    outfile2: Union[str, PathLike, None] = None,
+    files1: Union[str, PathLike, list[Union[str, PathLike]], None] = None,
+    files2: Union[str, PathLike, list[Union[str, PathLike]], None] = None,
 ):
     """Compare the budget and head results for two MODFLOW-based model
     simulations.
@@ -1374,7 +1375,7 @@ def compare(
     return success
 
 
-def eval_bud_diff(fpth: Union[str, os.PathLike], b0, b1, ia=None, dtol=1e-6):
+def eval_bud_diff(fpth: Union[str, PathLike], b0, b1, ia=None, dtol=1e-6):
     # To use this eval_bud_diff function on a gwf or gwt budget file,
     # the function may need ia, in order to exclude comparison of the residual
     # term, which is stored in the diagonal position of the flowja array.

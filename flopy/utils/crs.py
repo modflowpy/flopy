@@ -52,7 +52,7 @@ def get_shapefile_crs(shapefile):
 
     Parameters
     ----------
-    shapefile : str or pathlike
+    shapefile : str or PathLike
         Path to a shapefile or an associated projection (.prj) file.
 
     Returns
@@ -83,7 +83,7 @@ def get_crs(prjfile=None, crs=None, **kwargs):
 
     Parameters
     ----------
-    prjfile : str or pathlike, optional
+    prjfile : str or PathLike, optional
         ESRI-style projection file with well-known text defining the CRS
         for the model grid (must be projected; geographic CRS are not supported).
     crs : pyproj.CRS, int, str, optional if `prjfile` is specified
@@ -98,7 +98,7 @@ def get_crs(prjfile=None, crs=None, **kwargs):
         .. deprecated:: 3.4
            The following keyword options will be removed for FloPy 3.6:
 
-             - ``prj`` (str or pathlike): use ``prjfile`` instead.
+             - ``prj`` (str or PathLike): use ``prjfile`` instead.
              - ``epsg`` (int): use ``crs`` instead.
              - ``proj4`` (str): use ``crs`` instead.
              - ``wkt_string`` (str): use ``crs`` instead.

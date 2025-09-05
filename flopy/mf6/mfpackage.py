@@ -5,6 +5,7 @@ import inspect
 import os
 import sys
 import warnings
+from os import PathLike
 
 import numpy as np
 
@@ -1823,11 +1824,10 @@ class MFPackage(PackageInterface):
                 # filename uses model base name
                 self._filename = f"{self.model_or_sim.name}.{package_type}"
         else:
-            if not isinstance(filename, (str, os.PathLike)):
+            if not isinstance(filename, (str, PathLike)):
                 message = (
-                    "Invalid fname parameter. Expecting type str. "
-                    'Instead type "{}" was '
-                    "given.".format(type(filename))
+                    "Invalid fname parameter. Expecting type str or PathLike. "
+                    f'Instead type "{type(filename)}" was given.'
                 )
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(

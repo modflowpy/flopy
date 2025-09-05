@@ -8,6 +8,7 @@ import traceback
 import warnings
 from collections.abc import Iterable
 from enum import Enum
+from os import PathLike, curdir
 from pathlib import Path
 from shutil import copyfile
 from typing import Union
@@ -191,19 +192,17 @@ class MFFileMgmt:
 
     Parameters
     ----------
-
     path : str or PathLike
         Path on disk to the simulation
 
     Attributes
     ----------
-
     model_relative_path : dict
         Dictionary of relative paths to each model folder
 
     """
 
-    def __init__(self, path: Union[str, os.PathLike], mfsim=None):
+    def __init__(self, path: Union[str, PathLike], mfsim=None):
         self.simulation = mfsim
         self._sim_path = ""
         self.set_sim_path(path, True)
@@ -285,7 +284,7 @@ class MFFileMgmt:
             model_rel_path is None
             or model_rel_path.is_absolute()
             or not any(str(model_rel_path))
-            or str(model_rel_path) == os.curdir
+            or str(model_rel_path) == curdir
         ):
             return path
 
@@ -374,7 +373,7 @@ class MFFileMgmt:
             new_file_path = MFFilePath(file_path, model_name)
             self.existing_file_dict[file_path] = new_file_path
 
-    def set_sim_path(self, path: Union[str, os.PathLike], internal_use=False):
+    def set_sim_path(self, path: Union[str, PathLike], internal_use=False):
         """
         Set the file path to the simulation files.  Internal use only,
         call MFSimulation's set_sim_path method instead.

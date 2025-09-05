@@ -3,8 +3,8 @@ The vtk module provides functionality for exporting model inputs and
 outputs to VTK.
 """
 
-import os
 import warnings
+from os import PathLike
 from pathlib import Path
 from typing import Union
 
@@ -53,7 +53,7 @@ class Pvd:
 
         Parameters
         ----------
-        file : os.PathLike or str
+        file : PathLike or str
             vtu file name
         timevalue : float
             time step value in model time
@@ -73,7 +73,7 @@ class Pvd:
 
         Parameters
         ----------
-        f : os.PathLike or str
+        f : PathLike or str
             PVD file name
 
         """
@@ -666,7 +666,7 @@ class Vtk:
         ----------
         index : int, tuple
             integer representing kper or a tuple of (kstp, kper)
-        fname : os.PathLike or str
+        fname : PathLike or str
             path to the vtu file
 
         """
@@ -1367,7 +1367,7 @@ class Vtk:
             vtk_array.SetName(name)
             self.vtk_pathlines.GetPointData().AddArray(vtk_array)
 
-    def write(self, f: Union[str, os.PathLike], kper=None):
+    def write(self, f: Union[str, PathLike], kper=None):
         """
         Method to write a vtk file from the VTK object
 

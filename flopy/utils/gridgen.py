@@ -1,6 +1,7 @@
 import os
 import subprocess
 import warnings
+from os import PathLike, curdir
 from pathlib import Path
 from typing import Union
 
@@ -38,7 +39,7 @@ def read1d(f, a):
     return a
 
 
-def features_to_shapefile(features, featuretype, filename: Union[str, os.PathLike]):
+def features_to_shapefile(features, featuretype, filename: Union[str, PathLike]):
     """
     Write a shapefile for the features of type featuretype.
 
@@ -99,7 +100,7 @@ def features_to_shapefile(features, featuretype, filename: Union[str, os.PathLik
     wr.close()
 
 
-def ndarray_to_asciigrid(fname: Union[str, os.PathLike], a, extent, nodata=1.0e30):
+def ndarray_to_asciigrid(fname: Union[str, PathLike], a, extent, nodata=1.0e30):
     # extent info
     xmin, xmax, ymin, ymax = extent
     ncol, nrow = a.shape
@@ -175,8 +176,8 @@ class Gridgen:
         Flopy StructuredGrid object. Note this also accepts ModflowDis and
         ModflowGwfdis objects, however it is deprecated and support will be
         removed in version 3.3.7
-    model_ws : str or PathLike
-        workspace location for creating gridgen files (default is '.')
+    model_ws : str or PathLike, default "." (curdir)
+        workspace location for creating gridgen files
     exe_name : str
         path and name of the gridgen program. (default is gridgen)
     surface_interpolation : str
@@ -206,8 +207,8 @@ class Gridgen:
     def __init__(
         self,
         modelgrid,
-        model_ws: Union[str, os.PathLike] = os.curdir,
-        exe_name: Union[str, os.PathLike] = "gridgen",
+        model_ws: Union[str, PathLike] = curdir,
+        exe_name: Union[str, PathLike] = "gridgen",
         surface_interpolation="replicate",
         vertical_pass_through=False,
         **kwargs,
@@ -350,9 +351,9 @@ class Gridgen:
         """
         Parameters
         ----------
-        feature : str, path-like or array-like
+        feature : str, PathLike or array-like
             feature can be:
-                a shapefile name (str) or Pathlike
+                a shapefile name (str) or PathLike
                 a list of polygons
                 a flopy.utils.geometry.Collection object of Polygons
                 a shapely.geometry.Collection object of Polygons
@@ -373,14 +374,14 @@ class Gridgen:
         self.nja = 0
 
         # expand shapefile path or create one from polygon feature
-        if isinstance(feature, (str, os.PathLike)):
+        if isinstance(feature, (str, PathLike)):
             shapefile_path = self.resolve_shapefile_path(feature)
         elif isinstance(feature, (list, tuple, np.ndarray)):
             shapefile_path = self.model_ws / f"ad{len(self._addict)}.shp"
             features_to_shapefile(feature, "polygon", shapefile_path)
         else:
             raise ValueError(
-                "Feature must be a pathlike (shapefile) or array-like of geometries"
+                "Feature must be a PathLike (shapefile) or array-like of geometries"
             )
 
         # make sure shapefile exists
@@ -397,9 +398,9 @@ class Gridgen:
         """
         Parameters
         ----------
-        features : str, path-like or array-like
+        features : str, PathLike or array-like
             features can be
-                a shapefile name (str) or Pathlike
+                a shapefile name (str) or PathLike
                 a list of points, lines, or polygons
                 a flopy.utils.geometry.Collection object
                 a list of flopy.utils.geometry objects
@@ -425,14 +426,14 @@ class Gridgen:
         self.nja = 0
 
         # Create shapefile or set shapefile to feature
-        if isinstance(features, (str, os.PathLike)):
+        if isinstance(features, (str, PathLike)):
             shapefile_path = self.resolve_shapefile_path(features)
         elif isinstance(features, (list, tuple, np.ndarray)):
             shapefile_path = self.model_ws / f"rf{len(self._rfdict)}.shp"
             features_to_shapefile(features, featuretype, shapefile_path)
         else:
             raise ValueError(
-                "Features must be a pathlike (shapefile) or array-like of geometries"
+                "Features must be a PathLike (shapefile) or array-like of geometries"
             )
 
         # make sure shapefile exists
@@ -1830,12 +1831,12 @@ class Gridgen:
             self._vertdict[nodenumber] = shapes[i].points
 
     @staticmethod
-    def read_qtg_nod(model_ws: Union[str, os.PathLike], nodes_only: bool = False):
+    def read_qtg_nod(model_ws: Union[str, PathLike], nodes_only: bool = False):
         """Read qtg.nod file
 
         Parameters
         ----------
-        model_ws : Union[str, os.PathLike]
+        model_ws : str or PathLike
             Directory where file is stored
         nodes_only : bool, optional
             Read only the number of nodes from file, by default False which
@@ -1873,12 +1874,12 @@ class Gridgen:
             return nodes
 
     @staticmethod
-    def read_qtgrid_shp(model_ws: Union[str, os.PathLike]):
+    def read_qtgrid_shp(model_ws: Union[str, PathLike]):
         """Read qtgrid.shp file
 
         Parameters
         ----------
-        model_ws : Union[str, os.PathLike]
+        model_ws : str or PathLike
             Directory where file is stored
 
         Returns
@@ -1893,12 +1894,12 @@ class Gridgen:
         return shapefile.Reader(fname)
 
     @staticmethod
-    def read_qtg_nodesperlay_dat(model_ws: Union[str, os.PathLike], nlay: int):
+    def read_qtg_nodesperlay_dat(model_ws: Union[str, PathLike], nlay: int):
         """Read qtgrid.shp file
 
         Parameters
         ----------
-        model_ws : Union[str, os.PathLike]
+        model_ws : str or PathLike
             Directory where file is stored
         nlay : int
             Number of layers
@@ -1913,13 +1914,13 @@ class Gridgen:
 
     @staticmethod
     def read_quadtreegrid_top_dat(
-        model_ws: Union[str, os.PathLike], nodelay: list[int], lay: int
+        model_ws: Union[str, PathLike], nodelay: list[int], lay: int
     ):
         """Read quadtreegrid.top_.dat file
 
         Parameters
         ----------
-        model_ws : Union[str, os.PathLike]
+        model_ws : str or PathLike
             Directory where file is stored
         nodelay : list[int]
             Number of nodes in each layer
@@ -1936,13 +1937,13 @@ class Gridgen:
 
     @staticmethod
     def read_quadtreegrid_bot_dat(
-        model_ws: Union[str, os.PathLike], nodelay: list[int], lay: int
+        model_ws: Union[str, PathLike], nodelay: list[int], lay: int
     ):
         """Read quadtreegrid.bot_.dat file
 
         Parameters
         ----------
-        model_ws : Union[str, os.PathLike]
+        model_ws : str or PathLike
             Directory where file is stored
         nodelay : list[int]
             Number of nodes in each layer
@@ -1958,12 +1959,12 @@ class Gridgen:
             return read1d(f=f, a=np.empty((nodelay[lay]), dtype=np.float32))
 
     @staticmethod
-    def read_qtg_area_dat(model_ws: Union[str, os.PathLike], nodes: int):
+    def read_qtg_area_dat(model_ws: Union[str, PathLike], nodes: int):
         """Read qtg.area.dat file
 
         Parameters
         ----------
-        model_ws : Union[str, os.PathLike]
+        model_ws : str or PathLike
             Directory where file is stored
         nodes : int
             Number of nodes
@@ -1977,12 +1978,12 @@ class Gridgen:
             return read1d(f=f, a=np.empty((nodes), dtype=np.float32))
 
     @staticmethod
-    def read_qtg_iac_dat(model_ws: Union[str, os.PathLike], nodes: int):
+    def read_qtg_iac_dat(model_ws: Union[str, PathLike], nodes: int):
         """Read qtg.iac.dat file
 
         Parameters
         ----------
-        model_ws : Union[str, os.PathLike]
+        model_ws : str or PathLike
             Directory where file is stored
         nodes : int
             Number of nodes
@@ -1996,12 +1997,12 @@ class Gridgen:
             return read1d(f=f, a=np.empty((nodes), dtype=int))
 
     @staticmethod
-    def read_qtg_ja_dat(model_ws: Union[str, os.PathLike], nja: int):
+    def read_qtg_ja_dat(model_ws: Union[str, PathLike], nja: int):
         """Read qtg.ja.dat file
 
         Parameters
         ----------
-        model_ws : Union[str, os.PathLike]
+        model_ws : str or PathLike
             Directory where file is stored
         nja : int
             Number of connections
@@ -2016,12 +2017,12 @@ class Gridgen:
             return ja
 
     @staticmethod
-    def read_qtg_fldr_dat(model_ws: Union[str, os.PathLike], nja: int):
+    def read_qtg_fldr_dat(model_ws: Union[str, PathLike], nja: int):
         """Read qtg.fldr.dat file
 
         Parameters
         ----------
-        model_ws : Union[str, os.PathLike]
+        model_ws : str or PathLike
             Directory where file is stored
         nja : int
             Number of connections
@@ -2035,12 +2036,12 @@ class Gridgen:
             return read1d(f=f, a=np.empty((nja), dtype=int))
 
     @staticmethod
-    def read_qtg_cl_dat(model_ws: Union[str, os.PathLike], nja: int):
+    def read_qtg_cl_dat(model_ws: Union[str, PathLike], nja: int):
         """Read qtg.c1.dat file
 
         Parameters
         ----------
-        model_ws : Union[str, os.PathLike]
+        model_ws : str or PathLike
             Directory where file is stored
         nja : int
             Number of connections
@@ -2054,12 +2055,12 @@ class Gridgen:
             return read1d(f=f, a=np.empty((nja), dtype=np.float32))
 
     @staticmethod
-    def read_qtg_fahl_dat(model_ws: Union[str, os.PathLike], nja: int):
+    def read_qtg_fahl_dat(model_ws: Union[str, PathLike], nja: int):
         """Read qtg.fahl.dat file
 
         Parameters
         ----------
-        model_ws : Union[str, os.PathLike]
+        model_ws : str or PathLike
             Directory where file is stored
         nja : int
             Number of connections

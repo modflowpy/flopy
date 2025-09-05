@@ -1,4 +1,5 @@
 import os
+from os import curdir
 
 import numpy as np
 
@@ -68,9 +69,8 @@ class Mt3dms(BaseModel):
         Unit number for the list file.
     ftlunit : int, default 10
         Unit number for flow-transport link file.
-    model_ws : str, optional
+    model_ws : str or PathLike, default "." (curdir)
         Model workspace.  Directory name to create model data sets.
-        Default is the present working directory.
     external_path : str, optional
         Location for external files.
     verbose : bool, default False
@@ -112,7 +112,7 @@ class Mt3dms(BaseModel):
         structured=True,
         listunit=16,
         ftlunit=10,
-        model_ws=".",
+        model_ws=curdir,
         external_path=None,
         verbose=False,
         load=True,
@@ -416,7 +416,7 @@ class Mt3dms(BaseModel):
         version="mt3dms",
         exe_name="mt3dms",
         verbose=False,
-        model_ws=".",
+        model_ws=curdir,
         load_only=None,
         forgive=False,
         modflowmodel=None,
@@ -434,8 +434,8 @@ class Mt3dms(BaseModel):
             The name of the executable to use.
         verbose : bool, default False
             Print information on the load process if True.
-        model_ws : str, default "."
-            Model workspace path. Default is the current directory.
+        model_ws : str or PathLike, default "." (curdir)
+            Model workspace path.
         load_only : list of str, optional
             Packages to load (e.g. ['btn', 'adv']). Default None
             means that all packages will be loaded.

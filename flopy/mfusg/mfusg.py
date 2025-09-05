@@ -1,7 +1,8 @@
 """Mfusg module."""
 
-import os
+import os.path
 from inspect import getfullargspec
+from os import PathLike, curdir
 from typing import Union
 
 import flopy
@@ -16,7 +17,7 @@ class MfUsg(Modflow):
 
     Parameters
     ----------
-    modelname : str or PathLike, default "modflowusgtest".
+    modelname : str or PathLike, default "modflowusgtest"
         Name of model.  This string will be used to name the MODFLOW input
         that are created with write_model.
     namefile_ext : str, default "nam"
@@ -27,9 +28,8 @@ class MfUsg(Modflow):
         Specify if model grid is structured (default) or unstructured.
     listunit : int, default 2
         Unit number for the list file.
-    model_ws : str, default "."
+    model_ws : str, default "." (curdir)
         Model workspace.  Directory name to create model data sets.
-        Default is the present working directory.
     external_path : str, optional
         Location for external files.
     verbose : bool, default False
@@ -59,10 +59,10 @@ class MfUsg(Modflow):
         modelname="mfusgtest",
         namefile_ext="nam",
         version="mfusg",
-        exe_name: Union[str, os.PathLike] = "mfusg",
+        exe_name: Union[str, PathLike] = "mfusg",
         structured=True,
         listunit=2,
-        model_ws: Union[str, os.PathLike] = os.curdir,
+        model_ws: Union[str, PathLike] = curdir,
         external_path=None,
         verbose=False,
         **kwargs,
@@ -150,9 +150,9 @@ class MfUsg(Modflow):
         cls,
         f: str,
         version="mfusg",
-        exe_name: Union[str, os.PathLike] = "mfusg",
+        exe_name: Union[str, PathLike] = "mfusg",
         verbose=False,
-        model_ws: Union[str, os.PathLike] = os.curdir,
+        model_ws: Union[str, PathLike] = curdir,
         load_only=None,
         forgive=False,
         check=True,
@@ -169,7 +169,7 @@ class MfUsg(Modflow):
             MODFLOW executable name.
         verbose : bool, default False
             Show messages that can be useful for debugging.
-        model_ws : str or PathLike, default "."
+        model_ws : str or PathLike, default "." (curdir)
             Model workspace path. Default is the current directory.
         load_only : list, str or None
             List of case insensitive packages to load, e.g. ["bas6", "lpf"].

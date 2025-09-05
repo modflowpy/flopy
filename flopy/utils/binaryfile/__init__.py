@@ -9,9 +9,9 @@ important classes that can be accessed by the user.
 
 """
 
-import os
 import tempfile
 import warnings
+from os import PathLike
 from pathlib import Path
 from shutil import move
 from typing import Optional, Union
@@ -226,7 +226,7 @@ def join_struct_arrays(arrays):
     return newrecarray
 
 
-def get_headfile_precision(filename: Union[str, os.PathLike]):
+def get_headfile_precision(filename: Union[str, PathLike]):
     """
     Determine precision of a MODFLOW head file.
 
@@ -310,7 +310,7 @@ class BinaryLayerFile(LayerFile):
     pointing to the 1st byte of data for the corresponding data arrays.
     """
 
-    def __init__(self, filename: Union[str, os.PathLike], precision, verbose, **kwargs):
+    def __init__(self, filename: Union[str, PathLike], precision, verbose, **kwargs):
         super().__init__(filename, precision, verbose, **kwargs)
 
     def _build_index(self):
@@ -493,7 +493,7 @@ class HeadFile(BinaryLayerFile):
 
     def __init__(
         self,
-        filename: Union[str, os.PathLike],
+        filename: Union[str, PathLike],
         text="head",
         precision="auto",
         verbose=False,
@@ -509,7 +509,7 @@ class HeadFile(BinaryLayerFile):
         self.header_dtype = BinaryHeader.set_dtype(bintype="Head", precision=precision)
         super().__init__(filename, precision, verbose, **kwargs)
 
-    def reverse(self, filename: Optional[os.PathLike] = None):
+    def reverse(self, filename: Optional[PathLike] = None):
         """
         Reverse the time order of the currently loaded binary head file. If a head
         file name is not provided or the provided name is the same as the existing
@@ -518,7 +518,7 @@ class HeadFile(BinaryLayerFile):
         Parameters
         ----------
 
-        filename : str or PathLike
+        filename : str or PathLike, optional
             Path of the reversed binary head file.
         """
 
@@ -712,7 +712,7 @@ class HeadUFile(BinaryLayerFile):
 
     def __init__(
         self,
-        filename: Union[str, os.PathLike],
+        filename: Union[str, PathLike],
         text="headu",
         precision="auto",
         verbose=False,
@@ -860,7 +860,7 @@ class CellBudgetFile:
 
     def __init__(
         self,
-        filename: Union[str, os.PathLike],
+        filename: Union[str, PathLike],
         precision="auto",
         verbose=False,
         **kwargs,
@@ -2058,7 +2058,7 @@ class CellBudgetFile:
         """
         self.file.close()
 
-    def reverse(self, filename: Optional[os.PathLike] = None):
+    def reverse(self, filename: Optional[PathLike] = None):
         """
         Reverse the time order and signs of the currently loaded binary cell budget
         file. If a file name is not provided or if the provided name is the same as

@@ -22,8 +22,8 @@
 #
 
 import os
-import pathlib as pl
 import sys
+from pathlib import Path
 
 import git
 import matplotlib as mpl
@@ -111,11 +111,11 @@ def set_idomain(grid, boundary):
 # Check if we are in the repository and define the data path.
 
 try:
-    root = pl.Path(git.Repo(".", search_parent_directories=True).working_dir)
+    root = Path(git.Repo(".", search_parent_directories=True).working_dir)
 except:
     root = None
 
-data_path = root / "examples" / "data" if root else pl.Path.cwd()
+data_path = root / "examples" / "data" if root else Path.cwd()
 folder_name = "groundwater2023"
 fname = "geometries.yml"
 pooch.retrieve(

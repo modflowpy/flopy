@@ -1,5 +1,5 @@
-import os
 import warnings
+from os import PathLike
 from typing import Union
 
 import numpy as np
@@ -846,7 +846,7 @@ class Raster:
                 foo.write(arr, band)
 
     @staticmethod
-    def load(raster: Union[str, os.PathLike]):
+    def load(raster: Union[str, PathLike]):
         """
         Static method to load a raster file
         into the raster object

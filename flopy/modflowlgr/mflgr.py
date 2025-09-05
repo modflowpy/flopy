@@ -5,6 +5,7 @@ mflgr module.
 """
 
 import os
+from os import PathLike, curdir
 
 from ..mbase import BaseModel
 from ..modflow import Modflow
@@ -81,9 +82,8 @@ class ModflowLgr(BaseModel):
         List of instances of 1 or more Modflow objects.
     children_data : list, optional
         List of LgrChild objects.
-    model_ws : str, default "."
+    model_ws : str or PathLike, default "." (curdir)
         Model workspace.  Directory name to create model data sets.
-        Default is the present working directory.
     external_path : str, optional
         Location for external files.
     verbose : bool, default False
@@ -120,7 +120,7 @@ class ModflowLgr(BaseModel):
         parent=None,
         children=None,
         children_data=None,
-        model_ws=".",
+        model_ws=curdir,
         external_path=None,
         verbose=False,
         **kwargs,
@@ -245,7 +245,7 @@ class ModflowLgr(BaseModel):
         lpth = os.path.abspath(bpth)
         mpth = os.path.abspath(pth)
         rpth = os.path.relpath(mpth, lpth)
-        if rpth == ".":
+        if rpth == curdir:
             rpth = fpth
         else:
             rpth = os.path.join(rpth, fpth)
@@ -455,7 +455,7 @@ class ModflowLgr(BaseModel):
         version="mflgr",
         exe_name="mflgr",
         verbose=False,
-        model_ws=".",
+        model_ws=curdir,
         load_only=None,
         forgive=False,
         check=True,
@@ -473,9 +473,8 @@ class ModflowLgr(BaseModel):
             The name of the executable to use.
         verbose : bool, default False
             Print additional information to the screen.
-        model_ws : str, default "."
+        model_ws : str or PathLike, default "." (curdir)
             Model workspace.  Directory name to create model data sets.
-            Default is the present working directory.
         load_only : list of str, optional
             Packages to load (e.g. ["bas6", "lpf"]). Default None
             means that all packages will be loaded.
@@ -491,6 +490,8 @@ class ModflowLgr(BaseModel):
 
         """
         # test if name file is passed with extension (i.e., is a valid file)
+        if isinstance(f, PathLike):
+            f = str(f)
         if os.path.isfile(os.path.join(model_ws, f)):
             modelname = f.rpartition(".")[0]
         else:

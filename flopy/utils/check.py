@@ -1,5 +1,6 @@
 import os
-from typing import Optional, Union
+from os import PathLike
+from typing import Union
 from warnings import warn
 
 import numpy as np
@@ -95,7 +96,7 @@ class check:
     def __init__(
         self,
         package,
-        f: Optional[Union[str, os.PathLike]] = None,
+        f: Union[str, PathLike, None] = None,
         verbose=True,
         level=1,
         property_threshold_values={},
@@ -122,7 +123,7 @@ class check:
 
         self.f = None
         if f is not None:
-            if isinstance(f, (str, os.PathLike)):
+            if isinstance(f, (str, PathLike)):
                 if os.path.split(f)[0] == "":
                     self.summaryfile = os.path.join(self.model.model_ws, f)
                 else:  # if a path is supplied with summary file, save there

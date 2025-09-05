@@ -3,7 +3,8 @@ mp7 module.  Contains the Modpath7List and Modpath7 classes.
 
 """
 
-import os
+import os.path
+from os import curdir
 
 import numpy as np
 
@@ -63,9 +64,8 @@ class Modpath7(BaseModel):
         Filename of the MODFLOW output cell-by-cell budget file.
         If budgetfilename is not provided then it will be set
         from the flowmodel.
-    model_ws : str, default "."
+    model_ws : str or PathLike, default "." (curdir)
         Model workspace.  Directory name to create model data sets.
-        Default is the current working directory.
     verbose : bool, default False
         Print additional information to the screen.
 
@@ -87,7 +87,7 @@ class Modpath7(BaseModel):
         flowmodel=None,
         headfilename=None,
         budgetfilename=None,
-        model_ws=None,
+        model_ws=curdir,
         verbose=False,
     ):
         super().__init__(
@@ -385,7 +385,7 @@ class Modpath7(BaseModel):
         trackdir="forward",
         flowmodel=None,
         exe_name="mp7",
-        model_ws=".",
+        model_ws=curdir,
         verbose=False,
         columncelldivisions=2,
         rowcelldivisions=2,
@@ -411,9 +411,8 @@ class Modpath7(BaseModel):
             MODFLOW model
         exe_name : str
             The name of the executable to use (the default is 'mp7').
-        model_ws : str
+        model_ws : str or PathLike, default "." (curdir)
             model workspace.  Directory name to create model data sets.
-            (default is the current working directory).
         verbose : bool
             Print additional information to the screen (default is False).
         columncelldivisions : int

@@ -3,6 +3,7 @@ __author__ = "aleaf"
 import copy
 import os
 import warnings
+from os import PathLike
 
 import numpy as np
 import pandas as pd
@@ -1012,7 +1013,7 @@ class ModflowSfr2(Package):
 
         Parameters
         ----------
-        f : str or file handle
+        f : str, PathLike or file handle
             String defining file name or file handle for summary file
             of check method output. If a string is passed a file handle
             is created. If f is None, check method does not write
@@ -1045,7 +1046,7 @@ class ModflowSfr2(Package):
         chk.slope()
 
         if f is not None:
-            if isinstance(f, str):
+            if isinstance(f, (str, PathLike)):
                 pth = os.path.join(self.parent.model_ws, f)
                 f = open(pth, "w")
             f.write(f"{chk.txt}\n")
@@ -1875,6 +1876,8 @@ class ModflowSfr2(Package):
         f_sfr.close()
 
     def export(self, f, **kwargs):
+        if isinstance(f, PathLike):
+            f = str(f)
         if isinstance(f, str) and f.lower().endswith(".shp"):
             from ..export.shapefile_utils import recarray2shp
             from ..utils.geometry import Polygon
