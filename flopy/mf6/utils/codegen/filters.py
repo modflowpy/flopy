@@ -205,8 +205,7 @@ def type(var: dict) -> str:
 
 def children(var: dict) -> Optional[dict]:
     _type = var["type"]
-    assert "items" not in var, 'TODO: fix bug to use "item" (not "items")'
-    items = var.get("items", None)  # TODO: item = var.get("item", None)
+    items = var.get("items", None)  # TODO: fix to use "item" or "items"
     fields = var.get("fields", None)
     choices = var.get("choices", None)
     if items:
