@@ -33,133 +33,131 @@ class MfUsgCln(Package):
 
     Parameters
     ----------
-    model : model object
-        The model object (of type :class:`flopy.modflowusg.mf.Modflow`) to which
-        this package will be added.
-    ncln : int
-        is a flag or the number of CLN segments. If NCLN = 0, this flag
-        indicates that the CLN domain connectivity is input in a general IA-JA
-        manner as is used for the GWF Process.If NCLN > 0, linear CLN segments
-        (for instance multi-aquifer wells) or simple CLN networks are simulated
-        and NCLN is the total number of CLN segments in the domain.
-    iclnnds : int
-        is a flag or number of CLN-nodes simulated in the model. Multiple
-        CLN-nodes constitute a segment.If ICLNNDS < 0, the CLN-nodes are
-        ordered in a sequential manner from the first CLN node to the last
-        CLN node. Therefore, only linear CLN segments are simulated since a
-        CLN segment does not share any of its nodes with another CLN segment.
-        If ICLNNDS > 0, CLN networks can be simulated and ICLNNDS is
-        the total number of CLN-nodes simulated by the model (NCLNNDS). CLN
-        nodes can be shared among CLN segments and therefore, the CLN-nodal
+    model : flopy.mfusg.MfUsg
+        The model object to which this package will be added.
+    ncln : int, optional
+        A flag or number of CLN segments.
+
+        * If NCLN = 0, this flag indicates that the CLN domain connectivity is
+          input in a general IA-JA manner as is used for the GWF Process.
+        * If NCLN > 0, linear CLN segments (for instance multi-aquifer wells)
+          or simple CLN networks are simulated and NCLN is the total number of
+          CLN segments in the domain.
+    iclnnds : int, optional
+        A flag or number of CLN-nodes simulated in the model. Multiple
+        CLN-nodes constitute a segment.
+
+        * If ICLNNDS < 0, the CLN-nodes are ordered in a sequential manner from
+          the first CLN node to the last CLN node. Therefore, only linear
+          CLN segments are simulated since a CLN segment does not share any of
+          its nodes with another CLN segment.
+        * If ICLNNDS > 0, CLN networks can be simulated and ICLNNDS is
+          the total number of CLN-nodes simulated by the model (NCLNNDS).
+        CLN nodes can be shared among CLN segments and therefore, the CLN-nodal
         connectivity for the network is also required as input.
-    nndcln : list of int
-        is the number of CLN-nodes that are associated with each CLN segment.
+    nndcln : int, optional
+        The number of CLN-nodes that are associated with each CLN segment.
         Only read if NCLN > 0. If ICLNNDS < 0, sum of nndcln is the total number
-        of CLN-nodes (NCLNNDS)
-    clncon : list of list
-        are the CLN-node numbers associated with each CLN segment. Only read
+        of CLN-nodes (NCLNNDS).
+    clncon : list of list, optional
+        The CLN-node numbers associated with each CLN segment. Only read
         if NCLN > 0 and ICLNNDS > 0. It is read NCLN times, once for each CLN
         segment. The number of entries for each sublist is the number of CLN
         cells (NNDCLN) associated with each CLN segment
-    nja_cln : int
-        is the total number of connections of the CLN domain. NJA_CLN is used
+    nja_cln : int, optional
+        The total number of connections of the CLN domain. NJA_CLN is used
         to dimension the sparse matrix in a compressed row storage format.
-    iac_cln : list of int
-        is a matrix indicating the number of connections plus 1 for each CLN
+    iac_cln : list of int, optional
+        A matrix indicating the number of connections plus 1 for each CLN
         node to another CLN node. Note that the IAC_CLN array is only supplied
         for the CLN cells; the IAC_CLN array is internally expanded to include
         other domains if present in a simulation. sum(IAC)=NJAG
-    ja_cln : list of list
-        is a list of CLN cell number (n) followed by its connecting CLN cell
+    ja_cln : list of list, optional
+        A list of CLN cell number (n) followed by its connecting CLN cell
         numbers (m) for each of the m CLN cells connected to CLN cell n. This
         list is sequentially provided for the first to the last CLN cell.
         Note that the cell and its connections are only supplied for the CLN
         cells and their connections to the other CLN cells using the local CLN
         cell numbers.
-    node_prop : matrix
+    node_prop : matrix, optional
         [IFNO IFTYP IFDIR FLENG FELEV FANGLE IFLIN ICCWADI X1 Y1 Z1 X2 Y2 Z2]
-        is a table of the node properties. Total rows equal the total number
+        A table of the node properties. Total rows equal the total number
         of CLN-nodes (NCLNNDS). The first 6 fields is required for running
         model. Rest of fields have default value of 0.
-    nclngwc : int
+    nclngwc : int, optional
         is the number of CLN to porous-medium grid-block connections present
         in the model. A CLN node need not be connected to any groundwater node.
         Conversely, a CLN node may be connected to multiple groundwater nodes,
         or multiple CLN nodes may be connected to the same porous medium mode.
-    cln_gwc : matrix
-        unstructured: [IFNOD IGWNOD IFCON FSKIN FLENGW FANISO ICGWADI]
-        structured: [IFNOD IGWLAY IGWROW IGWFCOL IFCON FSKIN FLENGW FANISO
-                     ICGWADI]
-        is a table define connections between CLN nodes and groundwater cells.
+    cln_gwc : matrix, optional
+        * unstructured: [IFNOD IGWNOD IFCON FSKIN FLENGW FANISO ICGWADI]
+        * structured: [IFNOD IGWLAY IGWROW IGWFCOL IFCON FSKIN FLENGW FANISO ICGWADI]
+        A table define connections between CLN nodes and groundwater cells.
         Total rows of the table equals nclngwc.
-    nconduityp : int
-        is the number of circular conduit-geometry types.
-    cln_circ :
+    nconduityp : int, default 1
+        The number of circular conduit-geometry types.
+    cln_circ : optional
         [ICONDUITYP FRAD CONDUITK TCOND TTHK TCFLUID TCONV]
-        is a table define the circular conduit properties. Total rows of the
+        A table that defines the circular conduit properties. Total rows of the
         table equals nconduityp. Last 4 fields only needed for heat transport
         simulation.
-    ibound : 1-D array
-        is the boundary array for CLN-nodes. Length equal NCLNNDS
-    strt : 1-D array
-        is initial head at the beginning of the simulation in CLN nodes.
-        Length equal NCLNNDS
-    transient : bool
-        if there is transient IBOUND for each stress period
-    printiaja : bool
-        whether to print IA_CLN and JA_CLN to listing file
-    nrectyp : int
-        is the number of rectangular conduit-geometry types.
-    cln_rect : rectangular fracture properties
+    ibound : int or array_like, default 1
+        The boundary array for CLN-nodes. Length equal NCLNNDS.
+    strt : float or array_like, default 1.0
+        Initial head at the beginning of the simulation in CLN nodes.
+        Length equal NCLNNDS.
+    transient : bool, default False
+        Specifies if there is transient IBOUND for each stress period.
+    printiaja : bool, default False
+        Whether to print IA_CLN and JA_CLN to listing file.
+    nrectyp : int, default 0
+        The number of rectangular conduit-geometry types.
+    cln_rect : rectangular fracture properties, optional
         [IRECTYP FLENGTH FHEIGHT CONDUITK TCOND TTHK TCFLUID TCONV]
-        is read for each rectangular conduit.  Total rows of the table equals
+        Read for each rectangular conduit.  Total rows of the table equals
         nrectyp. Last 4 fields only needed for heat transport simulation.
-    bhe : bool
-        is a flag indicating that bhe details are also included in a heat transport
+    bhe : bool, default False
+        A flag indicating that bhe details are also included in a heat transport
         model. Specifically, the thermal conductance and bhe tube thickness are
         included in transfer of heat between groundwater and CLN cells along with
         the heat conductivity of the bhe fluid and the convective heat transfer
         coefficient.
-    grav : float
+    grav : float, optional
         is the gravitational acceleration constant in model simulation units.
         The value of the constant follows the keyword GRAVITY. Note that the
         constant value is 9.81 m/s2 in SI units; 32.2 ft/s2 in fps units.
-    visk : float
-        is the kinematic viscosity of water in model simulation units [L2/T].
+    visk : float, optional
+        The kinematic viscosity of water in model simulation units [L2/T].
         The value of kinematic viscosity follows the keyword VISCOSITY. Note
         that the constant value is 1.787 x 10-6 m2/s in SI units;
         1.924 x 10-5 ft2/s in fps units.
-    extension : list of strings
-        (default is ['cln','clncb','clnhd','clndd','clnib','clncn','clnmb']).
-    unitnumber : list of int
-        File unit number for the package and the output files.
-        (default is [71, 0, 0, 0, 0, 0, 0] ).
-    filenames : list of str
+    extension : list of str, default ['cln', 'clncb', 'clnhd', 'clndd', \
+    'clnib', 'clncn', 'clnmb']
+        List of seven output file extensions.
+    unitnumber : list of int, optional
+        File unit number for the package and the seven output files.
+        Default None uses ``[71, 0, 0, 0, 0, 0, 0]``.
+    filenames : list of str, optional
         Filenames to use for the package and the output files. If filenames
-        = None the package name will be created using the model name and package
-        extensions.
-
-    Attributes
-    ----------
-
-    Methods
-    -------
-
-    See Also
-    --------
-
-    Notes
-    -----
+        is None, the package name will be created using the model name and
+        package extensions.
 
     Examples
     --------
-
     >>> import flopy
     >>> ml = flopy.mfusg.MfUsg()
-    >>> node_prop = [[1,1,0,10.0,-110.0,1.57,0,0],[2,1,0,10.0,-130.0,1.57,0,0]]
-    >>> cln_gwc = [[1,1,50,50,0,0,10.0,1.0,0],[2,2,50,50,0,0,10.0,1.0,0]]
+    >>> node_prop = [
+    ...     [1, 1, 0, 10.0, -110.0, 1.57, 0, 0],
+    ...     [2, 1, 0, 10.0, -130.0, 1.57, 0, 0],
+    ... ]
+    >>> cln_gwc = [
+    ...     [1, 1, 50, 50, 0, 0, 10.0, 1.0, 0],
+    ...     [2, 2, 50, 50, 0, 0, 10.0, 1.0, 0],
+    ... ]
+    >>> cln_circ = [[1, 0.5, 3.23e10]]
     >>> cln = flopy.mfusg.MfUsgCln(ml, ncln=1, iclnnds=-1, nndcln=2,
-            nclngwc = 2, node_prop =node_prop, cln_gwc =cln_gwc)"""
+    ...     nclngwc=2, node_prop=node_prop, cln_gwc=cln_gwc, cln_circ=cln_circ)
+    """
 
     def __init__(
         self,
@@ -185,15 +183,7 @@ class MfUsgCln(Package):
         bhe=False,  # OPTIONS2: borehole heat exchanger (BHE)
         grav=None,  # OPTIONS2: gravitational acceleration constant
         visk=None,  # OPTIONS2: kinematic viscosity of water
-        extension=(
-            "cln",
-            "clncb",
-            "clnhd",
-            "clndd",
-            "clnib",
-            "clncn",
-            "clnmb",
-        ),
+        extension=["cln", "clncb", "clnhd", "clndd", "clnib", "clncn", "clnmb"],
         unitnumber=None,
         filenames=None,
         **kwargs,
@@ -207,7 +197,7 @@ class MfUsgCln(Package):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            self.unitnumber = self._defaultunit()
+            unitnumber = self._defaultunit()
         elif isinstance(unitnumber, list):
             if len(unitnumber) < 7:
                 for idx in range(len(unitnumber), 7):

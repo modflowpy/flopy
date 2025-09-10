@@ -39,6 +39,30 @@ from flopy.modflow import (
 from flopy.utils import Util2d, Util3d
 
 
+def test_mfusgcln():
+    ml = MfUsg()
+    node_prop = [
+        [1, 1, 0, 10.0, -110.0, 1.57, 0, 0],
+        [2, 1, 0, 10.0, -130.0, 1.57, 0, 0],
+    ]
+    cln_gwc = [
+        [1, 1, 50, 50, 0, 0, 10.0, 1.0, 0],
+        [2, 2, 50, 50, 0, 0, 10.0, 1.0, 0],
+    ]
+    cln_circ = [[1, 0.5, 3.23e10]]
+    cln = MfUsgCln(
+        ml,
+        ncln=1,
+        iclnnds=-1,
+        nndcln=2,
+        nclngwc=2,
+        node_prop=node_prop,
+        cln_gwc=cln_gwc,
+        cln_circ=cln_circ,
+    )
+    assert cln is not None
+
+
 @pytest.fixture
 def mfusg_transport_Ex1_1D_model_path(example_data_path: Path):
     return example_data_path / "mfusg_transport" / "Ex1_1D"
