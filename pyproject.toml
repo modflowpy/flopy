@@ -181,6 +181,7 @@ ignore = [
     "RUF005", # collection literal concatenation
     "RUF012", # mutable class default
     "RUF017", # quadratic-list-summation
+    "RUF059", # Unpacked variable `name` is never used
 ]
 
 [tool.ruff.lint.per-file-ignores]

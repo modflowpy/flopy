@@ -2221,7 +2221,7 @@ def test_multi_model(function_tmpdir):
 
     with pytest.raises(
         flopy.mf6.mfbase.FlopyException,
-        match='Extraneous kwargs "param_does_not_exist" provided to MFPackage.',
+        match=r'Extraneous kwargs "param_does_not_exist" provided to MFPackage.',
     ):
         # test kwargs error checking
         wel = ModflowGwfwel(
