@@ -648,8 +648,8 @@ class MfUsgLpf(ModflowLpf):
         bubblept = "BUBBLEPT" in text_list
         fullydry = "FULLYDRY" in text_list
 
-        ### Not implemented --- Richards equation uses a tabular input for the
-        ### moisture retention and relative permeability curves
+        # Not implemented --- Richards equation uses a tabular input for the
+        # moisture retention and relative permeability curves
         if "TABRICH" in text_list:
             i = text_list.index("TABRICH")
             nuzones = np.float32(text_list[i + 1])

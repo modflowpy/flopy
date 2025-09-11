@@ -1016,7 +1016,7 @@ class GridIntersect:
                 if inode in parsed_nodes:
                     continue
                 templengths.append(
-                    sum([l for l, i in zip(lengths, nodelist) if i == inode])
+                    sum(l for l, i in zip(lengths, nodelist) if i == inode)
                 )
                 tempverts.append([v for v, i in zip(vertices, nodelist) if i == inode])
                 tempshapes.append(

@@ -759,7 +759,7 @@ class ListBudget:
                 return self.null_entries
 
             # --if there are two '=' in this line, then it is a budget line
-            if len(re.findall("=", line)) == 2:
+            if len(re.findall(r"=", line)) == 2:
                 break
 
         tag = "IN"
@@ -773,7 +773,7 @@ class ListBudget:
                     f"information for ts,sp: {ts} {sp}"
                 )
                 return self.null_entries
-            if len(re.findall("=", line)) == 2:
+            if len(re.findall(r"=", line)) == 2:
                 try:
                     entry, flux, cumu = self._parse_budget_line(line)
                 except Exception:

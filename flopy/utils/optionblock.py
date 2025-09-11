@@ -91,12 +91,12 @@ class OptionBlock:
         for key, ctx in self._context.items():
             if key in pak.__dict__:
                 val = pak.__dict__[key]
-                self.__setattr__(key, val)
+                setattr(self, key, val)
                 if ctx[OptionBlock.nested]:
                     for k2, ctx2 in ctx[OptionBlock.vars].items():
                         if k2 in pak.__dict__:
                             v2 = pak.__dict__[k2]
-                            self.__setattr__(k2, v2)
+                            setattr(self, k2, v2)
 
     def __repr__(self):
         """
@@ -252,17 +252,17 @@ class OptionBlock:
         """
         # set up all attributes for the class!
         for key, ctx in self._context.items():
+            val = None
             if ctx[OptionBlock.dtype] in (np.bool_, bool):
-                self.__setattr__(key, False)
-            else:
-                self.__setattr__(key, None)
+                val = False
+            setattr(self, key, val)
 
             if ctx[OptionBlock.nested]:
                 for k, d in ctx[OptionBlock.vars].items():
+                    val = None
                     if d[OptionBlock.dtype] in (np.bool_, bool):
-                        self.__setattr__(k, False)
-                    else:
-                        self.__setattr__(k, None)
+                        val = False
+                    setattr(self, k, val)
 
         t = self.options_line.split()
         nested = False
@@ -278,9 +278,10 @@ class OptionBlock:
                     OptionUtil.isvalid(dtype, t[ix])
 
                     if dtype == np.bool_:
-                        self.__setattr__(key, True)
+                        val = True
                     else:
-                        self.__setattr__(key, dtype(t[ix]))
+                        val = dtype(t[ix])
+                    setattr(self, key, val)
 
                     ix += 1
 
@@ -305,9 +306,10 @@ class OptionBlock:
                     OptionUtil.isvalid(dtype, t[ix])
 
                     if dtype == np.bool_:
-                        self.__setattr__(key, True)
+                        val = True
                     else:
-                        self.__setattr__(key, dtype(t[ix]))
+                        val = dtype(t[ix])
+                    setattr(self, key, val)
 
                     ix += 1
 
@@ -484,8 +486,6 @@ class OptionUtil:
                 valid = OptionUtil.isint(val)
             elif dtype == float:
                 valid = OptionUtil.isfloat(val)
-            else:
-                pass
 
         if not valid:
             err_msg = f"Invalid type set to variable {val} in option block"

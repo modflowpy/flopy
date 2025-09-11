@@ -1032,9 +1032,6 @@ class Vtk:
                 elif value.data_type == DataType.transientlist:
                     self.add_transient_list(value, masked_values)
 
-                else:
-                    pass
-
     def add_model(self, model, selpaklist=None, masked_values=None):
         """
         Method to add all array and transient list data from a modflow model
@@ -1194,8 +1191,6 @@ class Vtk:
         elif isinstance(kstpkper, (list, tuple)):
             if not isinstance(kstpkper[0], (list, tuple)):
                 kstpkper = [kstpkper]
-        else:
-            pass
 
         # reset totim based on values read from head file
         times = hds.get_times()
@@ -1252,8 +1247,6 @@ class Vtk:
         elif isinstance(kstpkper, tuple):
             if not isinstance(kstpkper[0], (list, tuple)):
                 kstpkper = [kstpkper]
-        else:
-            pass
 
         # reset totim based on values read from budget file
         times = cbc.get_times()

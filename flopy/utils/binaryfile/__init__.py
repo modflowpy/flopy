@@ -547,8 +547,8 @@ class HeadFile(BinaryLayerFile):
             kper = header["kper"] - 1
             kstp = header["kstp"] - 1
             seen.add((kper, kstp))
-            header["pertim"] = trev._pertim_dict[(kper, kstp)]
-            header["totim"] = trev._totim_dict[(kper, kstp)]
+            header["pertim"] = trev._pertim_dict[kper, kstp]
+            header["totim"] = trev._totim_dict[kper, kstp]
             return header
 
         target = filename
@@ -2126,8 +2126,8 @@ class CellBudgetFile:
             kper = header["kper"] - 1
             kstp = header["kstp"] - 1
             seen.add((kper, kstp))
-            header["pertim"] = trev._pertim_dict[(kper, kstp)]
-            header["totim"] = trev._totim_dict[(kper, kstp)]
+            header["pertim"] = trev._pertim_dict[kper, kstp]
+            header["totim"] = trev._totim_dict[kper, kstp]
             return header
 
         # if rewriting the same file, write
@@ -2206,4 +2206,4 @@ class CellBudgetFile:
         # if we rewrote the original file, reinitialize
         if inplace:
             move(target, filename)
-            self.__init__(filename, self.precision, self.verbose)
+            self(filename, self.precision, self.verbose)

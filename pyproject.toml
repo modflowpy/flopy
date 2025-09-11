@@ -176,17 +176,22 @@ ignore = [
     "F811", # Redefinition of unused variable
     "F841", # local variable assigned but never used
     "PLC0415", # `import` should be at the top-level of a file
+    "PLC1901", # `var == ""` can be simplified to `not var` as an empty string
+    "PLW1514", # `open` in text mode without explicit `encoding` argument
     "PLW1641", # Object does not implement `__hash__` method
     "PLW2901", # `for` loop variable `col` overwritten by assignment target
     "RUF005", # collection literal concatenation
     "RUF012", # mutable class default
     "RUF017", # quadratic-list-summation
     "RUF059", # Unpacked variable `name` is never used
+    "RUF100", # Unused `noqa` directive
 ]
 
 [tool.ruff.lint.per-file-ignores]
 ".docs/**/*.py" = ["E501"]
 "flopy/mf6/**/*.py" = ["C4", "E", "F", "ISC", "RUF"]
+"flopy/utils/geometry.py" = ["PLW3201"]
+"flopy/utils/geospatial_utils.py" = ["PLW3201"]
 
 [tool.codespell]
 skip = "cliff.toml,./examples/data/*,./autotest/test_modeltime.py"

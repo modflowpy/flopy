@@ -38,10 +38,10 @@ def test_notebooks(notebook):
     # expect all dependencies to be present and notebooks to pass in ci tests.
     if returncode != 0 and not is_in_ci():
         if "Missing optional dependency" in stderr:
-            pkg = re.findall("Missing optional dependency '(.*)'", stderr)[0]
+            pkg = re.findall(r"Missing optional dependency '(.*)'", stderr)[0]
             pytest.skip(f"notebook requires optional dependency {pkg!r}")
         elif "No module named " in stderr:
-            pkg = re.findall("No module named '(.*)'", stderr)[0]
+            pkg = re.findall(r"No module named '(.*)'", stderr)[0]
             pytest.skip(f"notebook requires package {pkg!r}")
 
     if returncode != 0:

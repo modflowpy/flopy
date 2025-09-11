@@ -1340,7 +1340,7 @@ def test_model_init_time(function_tmpdir, benchmark):
 def test_model_write_time(function_tmpdir, benchmark):
     name = inspect.getframeinfo(inspect.currentframe()).function
     model = get_perftest_model(ws=function_tmpdir, name=name)
-    benchmark(lambda: model.write_input())
+    benchmark(model.write_input)
 
 
 @pytest.mark.slow

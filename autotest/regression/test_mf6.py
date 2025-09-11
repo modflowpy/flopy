@@ -3508,11 +3508,11 @@ def test001a_tharmonic(function_tmpdir, example_data_path):
     head_new = function_tmpdir / "flow15_flow.hds"
     assert compare_heads(None, None, files1=[expected_head_file_a], files2=[head_new])
 
-    budget_frf = sim.simulation_data.mfdata[(model_name, "CBC", "FLOW-JA-FACE")]
+    budget_frf = sim.simulation_data.mfdata[model_name, "CBC", "FLOW-JA-FACE"]
     assert array_util.array_comp(budget_frf_valid, budget_frf)
 
     # change some settings
-    hk_data = sim.simulation_data.mfdata[(model_name, "npf", "griddata", "k")]
+    hk_data = sim.simulation_data.mfdata[model_name, "npf", "griddata", "k"]
     hk_array = hk_data.get_data()
     hk_array[0, 0, 1] = 20.0
     hk_data.set_data(hk_array)
@@ -3558,7 +3558,7 @@ def test001a_tharmonic(function_tmpdir, example_data_path):
     head_new = os.path.join(save_folder, "flow15_flow.hds")
     assert compare_heads(None, None, files1=[expected_head_file_b], files2=[head_new])
 
-    budget_frf = sim.simulation_data.mfdata[(model_name, "CBC", "FLOW-JA-FACE")]
+    budget_frf = sim.simulation_data.mfdata[model_name, "CBC", "FLOW-JA-FACE"]
     assert array_util.array_comp(budget_frf_valid, budget_frf)
 
 
@@ -3600,7 +3600,7 @@ def test003_gwfs_disv(function_tmpdir, example_data_path):
     head_new = os.path.join(function_tmpdir, "model.hds")
     assert compare_heads(None, None, files1=[expected_head_file_a], files2=[head_new])
 
-    budget_frf = sim.simulation_data.mfdata[(model_name, "CBC", "FLOW-JA-FACE")]
+    budget_frf = sim.simulation_data.mfdata[model_name, "CBC", "FLOW-JA-FACE"]
     assert array_util.array_comp(budget_fjf_valid, budget_frf)
 
     model = sim.get_model(model_name)
@@ -3636,7 +3636,7 @@ def test003_gwfs_disv(function_tmpdir, example_data_path):
     head_new = os.path.join(save_folder, "model.hds")
     assert compare_heads(None, None, files1=[expected_head_file_b], files2=[head_new])
 
-    budget_frf = sim.simulation_data.mfdata[(model_name, "CBC", "FLOW-JA-FACE")]
+    budget_frf = sim.simulation_data.mfdata[model_name, "CBC", "FLOW-JA-FACE"]
     assert array_util.array_comp(budget_fjf_valid, budget_frf)
 
 
@@ -3965,9 +3965,7 @@ def test006_gwf3(function_tmpdir, example_data_path):
         files2=[head_new],
     )
 
-    budget_fjf = np.array(
-        sim.simulation_data.mfdata[(model_name, "CBC", "FLOW-JA-FACE")]
-    )
+    budget_fjf = np.array(sim.simulation_data.mfdata[model_name, "CBC", "FLOW-JA-FACE"])
     assert array_util.array_comp(np.array(budget_fjf_valid), np.array(budget_fjf))
 
     # change some settings
@@ -4010,9 +4008,7 @@ def test006_gwf3(function_tmpdir, example_data_path):
         files2=[head_new],
     )
 
-    budget_fjf = np.array(
-        sim.simulation_data.mfdata[(model_name, "CBC", "FLOW-JA-FACE")]
-    )
+    budget_fjf = np.array(sim.simulation_data.mfdata[model_name, "CBC", "FLOW-JA-FACE"])
     assert array_util.array_comp(np.array(budget_fjf_valid), np.array(budget_fjf))
 
     # confirm that files did move
@@ -4054,9 +4050,7 @@ def test006_gwf3(function_tmpdir, example_data_path):
         files2=[head_new],
     )
 
-    budget_fjf = np.array(
-        sim.simulation_data.mfdata[(model_name, "CBC", "FLOW-JA-FACE")]
-    )
+    budget_fjf = np.array(sim.simulation_data.mfdata[model_name, "CBC", "FLOW-JA-FACE"])
     assert array_util.array_comp(np.array(budget_fjf_valid), np.array(budget_fjf))
 
     # confirm that files did not move
@@ -4550,22 +4544,20 @@ def test036_twrihfb(function_tmpdir, example_data_path):
 
     # change some settings
     hydchr = sim.simulation_data.mfdata[
-        (model_name, "hfb", "period", "stress_period_data")
+        model_name, "hfb", "period", "stress_period_data"
     ]
     hydchr_data = hydchr.get_data()
     hydchr_data[0][2][2] = 0.000002
     hydchr_data[0][3][2] = 0.000003
     hydchr_data[0][4][2] = 0.0000004
     hydchr.set_data(hydchr_data[0], 0)
-    cond = sim.simulation_data.mfdata[
-        (model_name, "drn", "period", "stress_period_data")
-    ]
+    cond = sim.simulation_data.mfdata[model_name, "drn", "period", "stress_period_data"]
     cond_data = cond.get_data()
     for index in range(0, len(cond_data[0])):
         cond_data[0][index][2] = 2.1
     cond.set_data(cond_data[0], 0)
 
-    rch = sim.simulation_data.mfdata[(model_name, "rcha", "period", "recharge")]
+    rch = sim.simulation_data.mfdata[model_name, "rcha", "period", "recharge"]
     rch_data = rch.get_data()
     assert rch_data[0][5, 1] == 0.00000003
 

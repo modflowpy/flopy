@@ -37,7 +37,7 @@ else:
     flopy_bin = os.path.join(os.path.expanduser("~"), ".local/share/flopy/bin")
 os.environ["PATH"] = os.environ.get("PATH", "") + os.path.pathsep + flopy_bin
 
-## Global variables
+# Global variables
 # Multiplier for individual array elements in integer and real arrays read by
 # MODFLOW's U2DREL, U1DREL and U2DINT.
 iconst = 1

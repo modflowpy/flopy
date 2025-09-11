@@ -137,7 +137,7 @@ def singleModel(
     spd = {}
     for kper in range(nper):
         for kstp in range(nstp[kper]):
-            spd[(kper, kstp)] = ["save head", "save budget"]
+            spd[kper, kstp] = ["save head", "save budget"]
     oc = flopy.modflow.ModflowOc(
         mf,
         stress_period_data=spd,

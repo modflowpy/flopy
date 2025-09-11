@@ -521,7 +521,7 @@ loaded_sim = flopy.mf6.MFSimulation.load(sim_name, "mf6", "mf6", sim_path)
 
 # +
 # get hydraulic conductivity data object from the data dictionary
-hk = sim.simulation_data.mfdata[(model_name, "npf", "griddata", "k")]
+hk = sim.simulation_data.mfdata[model_name, "npf", "griddata", "k"]
 
 # get specific yield data object from the storage package
 sy = sto_package.sy

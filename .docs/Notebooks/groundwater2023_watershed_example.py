@@ -101,7 +101,7 @@ def set_idomain(grid, boundary):
     nr = idx.shape[0]
     if idx.ndim == 1:
         idx = idx.reshape((nr, 1))
-    idx = tuple([idx[:, i] for i in range(idx.shape[1])])
+    idx = tuple(idx[:, i] for i in range(idx.shape[1]))
     idomain = np.zeros(grid.shape[1:], dtype=int)
     idomain[idx] = 1
     idomain = idomain.reshape(grid.shape)

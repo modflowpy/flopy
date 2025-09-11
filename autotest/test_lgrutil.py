@@ -197,10 +197,10 @@ def test_lgrutil3():
     lgrtodisv = LgrToDisv(lgr)
 
     # test guts of LgrToDisv to make sure hanging vertices added correctly
-    assert lgrtodisv.right_face_hanging[(1, 0)] == [0, 4, 8, 12]
-    assert lgrtodisv.left_face_hanging[(1, 2)] == [3, 7, 11, 15]
-    assert lgrtodisv.back_face_hanging[(2, 1)] == [12, 13, 14, 15]
-    assert lgrtodisv.front_face_hanging[(0, 1)] == [0, 1, 2, 3]
+    assert lgrtodisv.right_face_hanging[1, 0] == [0, 4, 8, 12]
+    assert lgrtodisv.left_face_hanging[1, 2] == [3, 7, 11, 15]
+    assert lgrtodisv.back_face_hanging[2, 1] == [12, 13, 14, 15]
+    assert lgrtodisv.front_face_hanging[0, 1] == [0, 1, 2, 3]
 
     assert lgrtodisv.iverts[1] == [1, 2, 6, 18, 17, 5]
     assert lgrtodisv.iverts[3] == [4, 5, 20, 24, 9, 8]

@@ -51,7 +51,7 @@ def get_lni(ncpl, nodes) -> list[tuple[int, int]]:
     for nn in nodes if nodes else range(sum(counts)):
         csum = np.cumsum([0] + counts)
         layer = max(0, np.searchsorted(csum, nn) - 1)
-        nidx = nn - sum([counts[l] for l in range(0, layer)])
+        nidx = nn - sum(counts[l] for l in range(0, layer))
 
         # np.searchsorted assigns the first index of each layer
         # to the previous layer in layer 2+, so correct for it

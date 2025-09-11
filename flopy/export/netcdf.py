@@ -313,9 +313,6 @@ class NetCdf:
         new_net.nc.sync()
         return new_net
 
-    def __div__(self, other):
-        return self.__truediv__(other)
-
     def __truediv__(self, other):
         new_net = NetCdf.zeros_like(self)
         with np.errstate(invalid="ignore"):
@@ -950,7 +947,7 @@ class NetCdf:
 
         self.log(f"created {group} group dimensions")
 
-        dim_names = tuple([i for i in dimensions if i != "time"])
+        dim_names = tuple(i for i in dimensions if i != "time")
         for dim in dimensions:
             if dim.lower() == "time":
                 if "time" not in attributes:
@@ -1213,7 +1210,7 @@ class NetCdf:
             }
             towrite = sorted(attr.difference(skip))
             for k in towrite:
-                v = md.__getattribute__(k)
+                v = getattr(md, k)
                 if v is not None:
                     # convert everything to strings
                     if not isinstance(v, str):

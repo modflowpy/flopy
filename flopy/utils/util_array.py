@@ -2032,7 +2032,7 @@ class Util2d(DataInterface):
                 if len(k) == 1:
                     return self.array[k]
             else:
-                return self.array[(k,)]
+                return self.array[k,]
 
     def __setitem__(self, k, value):
         """

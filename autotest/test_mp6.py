@@ -589,9 +589,9 @@ def get_mf2005_model(name, ws, alt=False):
 
     ocspd = {}
     for p in range(nper):
-        ocspd[(p, 0)] = ["save head", "save budget"]
+        ocspd[p, 0] = ["save head", "save budget"]
     # pretty sure it just uses the last for everything
-    ocspd[(0, 0)] = ["save head", "save budget"]
+    ocspd[0, 0] = ["save head", "save budget"]
     flopy.modflow.ModflowOc(m, stress_period_data=ocspd)
 
     return m, ctx

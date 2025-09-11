@@ -451,7 +451,7 @@ def test_structured_from_gridspec(example_data_path, spc_file):
 
     nvert = modelgrid.nvert
     iverts = modelgrid.iverts
-    maxvertex = max([max(sublist[1:]) for sublist in iverts])
+    maxvertex = max(max(sublist[1:]) for sublist in iverts)
     assert maxvertex + 1 == nvert, f"nvert ({maxvertex + 1}) does not equal {nvert}"
     verts = modelgrid.verts
     assert nvert == verts.shape[0], (
@@ -554,8 +554,8 @@ def unstructured_from_gridspec_driver(example_data_path, gsf_file):
             assert any(ycc == en[2] for ycc in grid.ycellcenters)
 
         # check elevation
-        assert max(grid.top) == max([xyz[2] for xyz in expected_verts])
-        assert min(grid.botm) == min([xyz[2] for xyz in expected_verts])
+        assert max(grid.top) == max(xyz[2] for xyz in expected_verts)
+        assert min(grid.botm) == min(xyz[2] for xyz in expected_verts)
 
 
 def test_unstructured_from_gridspec(example_data_path):

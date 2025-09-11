@@ -764,6 +764,6 @@ class Triangle:
         edgedict = {}
         for _, iv1, iv2, iseg in self.edge:
             if iseg != 0:
-                edgedict[(iv1, iv2)] = iseg
-                edgedict[(iv2, iv1)] = iseg
+                edgedict[iv1, iv2] = iseg
+                edgedict[iv2, iv1] = iseg
         self.edgedict = edgedict

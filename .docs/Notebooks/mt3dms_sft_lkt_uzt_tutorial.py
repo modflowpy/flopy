@@ -208,7 +208,7 @@ iphdry = 0
 
 # Next variables are: LAYTYP, LAYAVG, CHANI, LAYVKA, LAYWET
 laytyp = [1, 3, 3]  # >0: convertible
-layavg = 0  #  0: harmonic mean
+layavg = 0  # 0: harmonic mean
 chani = 1.0  # >0: CHANI is the horizontal anisotropy for the entire layer
 layvka = 0  # =0: indicates VKA is vertical hydraulic conductivity
 laywet = 0  # Always set equal to zero in UPW package

@@ -234,7 +234,10 @@ def attrs(dfn: dict, component_name: tuple[str, str]) -> List[str]:
     where applicable. TODO: this should get much simpler if we can drop
     all the `ListTemplateGenerator`/`ArrayTemplateGenerator` attributes.
     """
-    from modflow_devtools.dfn import _SCALAR_TYPES
+    try:
+        from modflow_devtools.dfn import SCALAR_TYPES
+    except ImportError:
+        from modflow_devtools.dfn import _SCALAR_TYPES as SCALAR_TYPES  # noqa: PLC2701
 
     component_base = base(component_name)
     component_vars = _get_vars(dfn)
@@ -247,7 +250,7 @@ def attrs(dfn: dict, component_name: tuple[str, str]) -> List[str]:
         var_subpkg = var.get("ref", None)
 
         if (
-            (var_type in _SCALAR_TYPES and not var_shape)
+            (var_type in SCALAR_TYPES and not var_shape)
             or var_name in ["cvoptions", "output"]
             # or (component_name[1] == "dis" and var_name == "packagedata")
         ):

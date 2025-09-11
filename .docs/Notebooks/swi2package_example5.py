@@ -186,10 +186,10 @@ for i in range(0, nper):
     for j in range(0, nstp[i]):
         icnt += 1
         if icnt == 365:
-            ocspd[(i, j)] = ["save head"]
+            ocspd[i, j] = ["save head"]
             icnt = 0
         else:
-            ocspd[(i, j)] = []
+            ocspd[i, j] = []
 
 solver2params = {
     "mxiter": 100,

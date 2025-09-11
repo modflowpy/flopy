@@ -85,7 +85,7 @@ mf.remove_package("OC")
 spd = {}
 for i in range(mf.nper):
     for j in range(mf.dis.nstp[i]):
-        spd[(i, j)] = ["save head", "save budget"]
+        spd[i, j] = ["save head", "save budget"]
 
 oc = flopy.modflow.ModflowOc(mf, stress_period_data=spd, unitnumber=[22, 30, 31, 50])
 
@@ -240,7 +240,7 @@ sms = flopy.mfusg.MfUsgSms(
 spd = {}
 for i in range(mf.nper):
     for j in range(mf.dis.nstp[i]):
-        spd[(i, j)] = ["save head", "save budget"]
+        spd[i, j] = ["save head", "save budget"]
 
 oc = flopy.modflow.ModflowOc(mf, stress_period_data=spd)
 

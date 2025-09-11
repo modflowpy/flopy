@@ -224,7 +224,7 @@ ax.set_title(fname)
 # +
 from flopy.utils.geometry import LineString
 
-### make up a linestring shapefile of the river reaches
+# make up a linestring shapefile of the river reaches
 i, j = m.riv.stress_period_data[0].i, m.riv.stress_period_data[0].j
 x0 = grid.xyzcellcenters[0][i[0], j[0]]
 x1 = grid.xyzcellcenters[0][i[-1], j[-1]]

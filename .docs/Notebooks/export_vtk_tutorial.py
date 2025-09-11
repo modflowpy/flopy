@@ -211,16 +211,16 @@ vtkobj
 # Create a vtk object
 vtkobj = vtk.Vtk(ml, vertical_exageration=10)
 
-## create some random array data
+# create some random array data
 r_array = np.random.random(ml.modelgrid.nnodes) * 100
 
-## add random data to the VTK object
+# add random data to the VTK object
 vtkobj.add_array(r_array, "random_data")
 
-## add the model botom data to the VTK object
+# add the model botom data to the VTK object
 vtkobj.add_array(ml.dis.botm.array, "botm")
 
-## write the vtk object to file
+# write the vtk object to file
 vtkobj.write(output_dir / "Array_example" / "model.vtu")
 # -
 
@@ -237,12 +237,12 @@ vtkobj.write(output_dir / "Array_example" / "model.vtu")
 # create a vtk object
 vtkobj = vtk.Vtk(ml, xml=True, pvd=True, vertical_exageration=10)
 
-## add recharge to the VTK object
+# add recharge to the VTK object
 subset = list(range(10))
 recharge = {k: v for k, v in ml.rch.rech.transient_2ds.items() if k in subset}
 vtkobj.add_transient_array(recharge, "recharge", masked_values=[0])
 
-## write vtk files
+# write vtk files
 vtkobj.write(output_dir / "tr_array_example" / "recharge.vtu")
 # -
 
@@ -258,11 +258,11 @@ vtkobj.write(output_dir / "tr_array_example" / "recharge.vtu")
 # create the vtk object
 vtkobj = vtk.Vtk(ml, xml=True, pvd=True, vertical_exageration=10)
 
-## add well fluxes to the VTK object
+# add well fluxes to the VTK object
 spd = ml.wel.stress_period_data
 vtkobj.add_transient_list(spd, masked_values=[0])
 
-## write vtk files (skipped, slow)
+# write vtk files (skipped, slow)
 # vtkobj.write(output_dir / "tr_list_example" / "wel_flux.vtu")
 # -
 

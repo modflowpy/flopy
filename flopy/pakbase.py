@@ -648,7 +648,7 @@ class Package(PackageInterface):
         for attr in attrs:
             if "__" in attr or "data_list" in attr:
                 continue
-            dl.append(self.__getattribute__(attr))
+            dl.append(getattr(self, attr))
         return dl
 
     def export(self, f, **kwargs):

@@ -176,7 +176,7 @@ wel = flopy.modflow.ModflowWel(mf, stress_period_data=stress_period_data)
 stress_period_data = {}
 for kper in range(nper):
     for kstp in range(nstp[kper]):
-        stress_period_data[(kper, kstp)] = [
+        stress_period_data[kper, kstp] = [
             "save head",
             "save drawdown",
             "save budget",

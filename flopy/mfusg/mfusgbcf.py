@@ -703,35 +703,35 @@ class MfUsgBcf(ModflowBcf):
         util2d_shape = get_util2d_shape_for_layer(model, layer=layer)
 
         # hy or tran
-        _tran = 0
-        _hy = 0
+        tran = 0
+        hy = 0
         if laycon_k in {0, 2}:
             if model.verbose:
                 print(f"   loading tran layer {layer + 1:3d}...")
-            _tran = Util2d.load(
+            tran = Util2d.load(
                 f_obj, model, util2d_shape, np.float32, "tran", ext_unit_dict
             )
         else:
             if model.verbose:
                 print(f"   loading hy layer {layer + 1:3d}...")
-            _hy = Util2d.load(
+            hy = Util2d.load(
                 f_obj, model, util2d_shape, np.float32, "hy", ext_unit_dict
             )
 
         # kv or vcont
-        _kv = 0
-        _vcont = 0
+        kv = 0
+        vcont = 0
         if layer < (model.nlay - 1):
             if model.verbose:
                 print(f"   loading vcont layer {layer + 1:3d}...")
-            _vcont = Util2d.load(
+            vcont = Util2d.load(
                 f_obj, model, util2d_shape, np.float32, "vcont", ext_unit_dict
             )
         elif (ikvflag == 1) and (model.nlay > 1):
             if model.verbose:
                 print(f"   loading kv layer {layer + 1:3d}...")
-            _kv = Util2d.load(
+            kv = Util2d.load(
                 f_obj, model, util2d_shape, np.float32, "kv", ext_unit_dict
             )
 
-        return _hy, _tran, _kv, _vcont
+        return hy, tran, kv, vcont

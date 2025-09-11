@@ -299,7 +299,7 @@ def model_attributes_to_shapefile(
             if "start_datetime" in attrs:
                 attrs.remove("start_datetime")
             for attr in attrs:
-                a = pak.__getattribute__(attr)
+                a = getattr(pak, attr)
                 if a is None or not hasattr(a, "data_type") or a.name == "thickness":
                     continue
                 if a.data_type == DataType.array2d:

@@ -32,7 +32,7 @@ file_paths = {pth.name: pth for pth in file_paths_list}  # keys for each file
 
 
 def split_nonnumeric(s):
-    match = re.compile("[^0-9]").search(s)
+    match = re.compile(r"[^0-9]").search(s)
     return [s[: match.start()], s[match.start() :]] if match else s
 
 

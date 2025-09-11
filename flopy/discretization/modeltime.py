@@ -533,7 +533,7 @@ class ModelTime:
                 f"stress period and time step"
             )
 
-        return self._totim_dict[(kper, kstp)]
+        return self._totim_dict[kper, kstp]
 
     def get_datetime(
         self, kper: int, kstp: int | None = None, start: bool = False
@@ -578,7 +578,7 @@ class ModelTime:
                 f"stress period and time step"
             )
 
-        return self._datetime_dict[(kper, kstp)]
+        return self._datetime_dict[kper, kstp]
 
     def intersect(
         self,

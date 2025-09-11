@@ -170,13 +170,13 @@ def test_create_uzf(function_tmpdir, mf2005_test_path, uzf_test_path):
         if not callable(getattr(uzf, attr)) and not attr.startswith("__")
     ]
     for attr in attrs:
-        a1 = uzf.__getattribute__(attr)
+        a1 = getattr(uzf, attr)
         if isinstance(a1, Util2d):
-            a2 = m2.uzf.__getattribute__(attr)
+            a2 = getattr(m2.uzf, attr)
             assert np.array_equal(a1.array, a2.array)
         elif attr in {"finf", "extwc", "pet", "extdp"}:
             if isinstance(a1, list):
-                l2 = m2.uzf.__getattribute__(attr)
+                l2 = getattr(m2.uzf, attr)
                 for i, a in enumerate(a1):
                     # the created finf arrays all have a mult of 1
                     assert np.array_equal(a.array, l2[i].array)
@@ -202,14 +202,14 @@ def test_create_uzf(function_tmpdir, mf2005_test_path, uzf_test_path):
     uzf2 = ModflowUzf1.load(os.path.join(ws, "UZFtest2.uzf"), m2)
     attrs = dir(uzf)
     for attr in attrs:
-        a1 = uzf.__getattribute__(attr)
+        a1 = getattr(uzf, attr)
         if isinstance(a1, Util2d):
-            a2 = uzf2.__getattribute__(attr)
+            a2 = getattr(uzf2, attr)
             assert a1 == a2
         # some parameters such as finf are stored as lists of util2d arrays
         elif attr in {"finf", "extwc", "pet", "extdp"}:
             if isinstance(a1, list):
-                l2 = uzf2.__getattribute__(attr)
+                l2 = getattr(uzf2, attr)
                 for i, a in enumerate(a1):
                     assert a == l2[i]
 

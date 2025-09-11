@@ -165,10 +165,10 @@ class MfUsgOc(Package):
                 icnt = save_start
                 for kstp in range(dis.nstp[kper]):
                     if icnt == save_every:
-                        stress_period_data[(kper, kstp)] = save_types
+                        stress_period_data[kper, kstp] = save_types
                         icnt = 0
                     else:
-                        stress_period_data[(kper, kstp)] = []
+                        stress_period_data[kper, kstp] = []
                     icnt += 1
 
         # adaptive time stepping
@@ -971,7 +971,7 @@ class MfUsgOc(Package):
                     #  less than 0.
                     if incode < 0:
                         if len(lines) > 0:
-                            stress_period_data[(iperoc, itsoc)] = list(lines)
+                            stress_period_data[iperoc, itsoc] = list(lines)
                         continue
                     # set print and save budget flags
                     if ibudfl != 0:
@@ -1035,7 +1035,7 @@ class MfUsgOc(Package):
                             lines.append(f"PRINT CONC{spcprint}")
                         if len(spcsave) > 0:
                             lines.append(f"SAVE CONC{spcsave}")
-                    stress_period_data[(iperoc, itsoc)] = list(lines)
+                    stress_period_data[iperoc, itsoc] = list(lines)
 
         # Output Control Using Words
         else:
@@ -1045,7 +1045,7 @@ class MfUsgOc(Package):
                 line = f.readline().upper()
                 if not line:
                     if len(lines) > 0:
-                        stress_period_data[(iperoc, itsoc)] = list(lines)
+                        stress_period_data[iperoc, itsoc] = list(lines)
                     break
                 lnlst = line.strip().split()
                 if line[0] == "#":

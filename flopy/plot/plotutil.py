@@ -490,12 +490,6 @@ class PlotUtilities:
                             )
                         )
 
-                else:
-                    pass
-
-            else:
-                pass
-
             # unroll nested lists os axes into a single list of axes
             if isinstance(caxs, list):
                 for c in caxs:
@@ -1620,8 +1614,6 @@ class UnstructuredPlotUtilities:
                             cvert_ix.append(vx - 1)
                         elif cpv[vx - 1] == 0 and cpv[vx] == 0:
                             cvert_ix += [vx - 1, vx]
-                        else:
-                            pass
 
                     if cvert_ix:
                         cells.append(cell)

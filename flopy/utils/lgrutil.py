@@ -691,7 +691,7 @@ class LgrToDisv:
                         for iv in (ivlist[0], ivlist[3]):
                             if iv not in hlist:
                                 hlist.append(iv)
-                        self.right_face_hanging[(ip, jp)] = hlist
+                        self.right_face_hanging[ip, jp] = hlist
 
                     elif idir == 1:
                         # child vertices 1 and 2 added as hanging nodes
@@ -703,7 +703,7 @@ class LgrToDisv:
                         for iv in (ivlist[1], ivlist[2]):
                             if iv not in hlist:
                                 hlist.append(iv)
-                        self.left_face_hanging[(ip, jp)] = hlist
+                        self.left_face_hanging[ip, jp] = hlist
 
                     elif idir == 2:
                         # child vertices 0 and 1 added as hanging nodes
@@ -715,7 +715,7 @@ class LgrToDisv:
                         for iv in (ivlist[0], ivlist[1]):
                             if iv not in hlist:
                                 hlist.append(iv)
-                        self.front_face_hanging[(ip, jp)] = hlist
+                        self.front_face_hanging[ip, jp] = hlist
 
                     elif idir == -2:
                         # child vertices 3 and 2 added as hanging nodes
@@ -727,7 +727,7 @@ class LgrToDisv:
                         for iv in (ivlist[3], ivlist[2]):
                             if iv not in hlist:
                                 hlist.append(iv)
-                        self.back_face_hanging[(ip, jp)] = hlist
+                        self.back_face_hanging[ip, jp] = hlist
 
                 nodec += 1
 
@@ -762,7 +762,7 @@ class LgrToDisv:
                     ivlist = self.merge_hanging_vertices(i, j, ivlist)
 
                     iverts.append(ivlist)
-                    self.parent_ij_to_global[(i, j)] = iglo
+                    self.parent_ij_to_global[i, j] = iglo
                     iglo += 1
 
         # now add active child cells
@@ -774,7 +774,7 @@ class LgrToDisv:
                         for iv in self.cgrid._build_structured_iverts(i, j)
                     ]
                     iverts.append(ivlist)
-                    self.child_ij_to_global[(i, j)] = iglo
+                    self.child_ij_to_global[i, j] = iglo
                     iglo += 1
         self.verts = verts
         self.iverts = iverts
@@ -814,7 +814,7 @@ class LgrToDisv:
         face_hanging = self.back_face_hanging
         back_edge = [ivlist[idx]]
         if (ip, jp) in face_hanging:
-            hlist = face_hanging[(ip, jp)]
+            hlist = face_hanging[ip, jp]
             if len(hlist) > 2:
                 hlist = hlist[1:-1]  # do not include two ends
                 hlist = [h + child_ivlist_offset for h in hlist]
@@ -830,7 +830,7 @@ class LgrToDisv:
         face_hanging = self.right_face_hanging
         right_edge = [ivlist[idx]]
         if (ip, jp) in face_hanging:
-            hlist = face_hanging[(ip, jp)]
+            hlist = face_hanging[ip, jp]
             if len(hlist) > 2:
                 hlist = hlist[1:-1]  # do not include two ends
                 hlist = [h + child_ivlist_offset for h in hlist]
@@ -846,7 +846,7 @@ class LgrToDisv:
         face_hanging = self.front_face_hanging
         front_edge = [ivlist[idx]]
         if (ip, jp) in face_hanging:
-            hlist = face_hanging[(ip, jp)]
+            hlist = face_hanging[ip, jp]
             if len(hlist) > 2:
                 hlist = hlist[1:-1]  # do not include two ends
                 hlist = [h + child_ivlist_offset for h in hlist]
@@ -862,7 +862,7 @@ class LgrToDisv:
         face_hanging = self.left_face_hanging
         left_edge = [ivlist[idx]]
         if (ip, jp) in face_hanging:
-            hlist = face_hanging[(ip, jp)]
+            hlist = face_hanging[ip, jp]
             if len(hlist) > 2:
                 hlist = hlist[1:-1]  # do not include two ends
                 hlist = [h + child_ivlist_offset for h in hlist]

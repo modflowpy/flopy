@@ -172,8 +172,6 @@ class ModflowMnw1(Package):
                     ("label", object),
                 ]
             )
-        else:
-            pass
 
     @classmethod
     def load(cls, f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):

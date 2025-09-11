@@ -273,12 +273,12 @@ class ModflowAg(Package):
         for key, ctx in options._context.items():
             if key in options.__dict__:
                 val = options.__dict__[key]
-                self.__setattr__(key, val)
+                setattr(self, key, val)
                 if ctx[OptionBlock.nested]:
                     for k2, _ in ctx[OptionBlock.vars].items():
                         if k2 in options.__dict__:
                             v2 = options.__dict__[k2]
-                            self.__setattr__(k2, v2)
+                            setattr(self, k2, v2)
 
     def write_file(self, check=False):
         """

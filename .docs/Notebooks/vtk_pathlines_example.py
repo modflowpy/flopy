@@ -279,7 +279,7 @@ for i, t in enumerate(pathlines["time"]):
 
 release_locs = np.array(release_locs)
 tracks = {k: np.array(v, dtype=object) for k, v in tracks.items()}
-max_track_len = max([len(v) for v in tracks.values()])
+max_track_len = max(len(v) for v in tracks.values())
 print("The maximum number of locations per particle track is", max_track_len)
 # -
 

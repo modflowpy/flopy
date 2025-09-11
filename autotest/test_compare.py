@@ -15,8 +15,8 @@ from flopy.modflow import (
     ModflowWel,
 )
 from flopy.utils.compare import (
-    _diffmax,
-    _difftol,
+    _diffmax,  # noqa: PLC2701
+    _difftol,  # noqa: PLC2701
     compare_budget,
     compare_heads,
 )

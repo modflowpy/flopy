@@ -412,8 +412,6 @@ class ModflowSfr2(Package):
                 nss = len(segment_data)
                 segment_data = {0: segment_data}
             nss = len(set(reach_data["iseg"]))
-        else:
-            pass
         # use atleast_1d for length since segment_data might be a 0D array
         # this seems to be OK, because self.segment_data is produced by the
         # constructor (never 0D)
@@ -1775,8 +1773,6 @@ class ModflowSfr2(Package):
 
                     if self.isfropt == 5:
                         f_sfr.write(fmts[8].format(uhc) + " ")
-                else:
-                    pass
         elif self.isfropt == 1 and icalc <= 1:
             f_sfr.write(fmts[3].format(width) + " ")
             if icalc <= 0:
@@ -1823,8 +1819,6 @@ class ModflowSfr2(Package):
             self.options.update_from_package(self)
             self.options.block = False
             self.options.write_options(f_sfr)
-        else:
-            pass
 
         self._write_1c(f_sfr)
 
@@ -2357,8 +2351,8 @@ class check:
         uniquerc = {}
         for i, (r, c) in enumerate(reach_data[["i", "j"]]):
             if (r, c) not in uniquerc:
-                uniquerc[(r, c)] = i + 1
-        reach_data["node"] = [uniquerc[(r, c)] for r, c in reach_data[["i", "j"]]]
+                uniquerc[r, c] = i + 1
+        reach_data["node"] = [uniquerc[r, c] for r, c in reach_data[["i", "j"]]]
 
         K = reach_data["strhc1"]
         if K.max() == 0:
@@ -3217,7 +3211,7 @@ def _parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
         a list of length 9 containing all variables for Data Set 6b
 
     """
-    nvalues = sum([_isnumeric(s) for s in line_parse(line)])
+    nvalues = sum(_isnumeric(s) for s in line_parse(line))
     line = _get_dataset(line, [0] * nvalues)
 
     hcond, thickm, elevupdn, width, depth, thts, thti, eps, uhc = [0.0] * 9
@@ -3257,8 +3251,6 @@ def _parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
                 eps = _pop_item(line)
                 if isfropt == 5:
                     uhc = _pop_item(line)
-            else:
-                pass
     elif isfropt == 1 and icalc <= 1:
         width = line.pop(0)
         if icalc <= 0:
@@ -3274,10 +3266,6 @@ def _parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
             else:
                 width = line.pop(0)
 
-        else:
-            pass
-    else:
-        pass
     return hcond, thickm, elevupdn, width, depth, thts, thti, eps, uhc
 
 

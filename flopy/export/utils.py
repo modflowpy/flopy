@@ -544,8 +544,6 @@ def output_helper(
                         attrib_name = "FFF"
                     elif attrib_name == "FLOW LOWER FACE":
                         attrib_name = "FLF"
-                    else:
-                        pass
                     for per in range(plotarray.shape[0]):
                         for k in range(plotarray.shape[1]):
                             if kper is not None and per != kper:

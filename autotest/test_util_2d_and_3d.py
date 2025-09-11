@@ -559,7 +559,7 @@ def test_mflist(function_tmpdir, example_data_path):
     assert len(df.groupby("per").sum()) == 4
     assert df.groupby("per")["cond"].sum().loc[3] == 100.0
     assert df.groupby("per")["stage"].mean().loc[0] == 2.0
-    assert df.groupby(["k", "i", "j"])["rbot"].count()[(1, 2, 4)] == 10
+    assert df.groupby(["k", "i", "j"])["rbot"].count()[1, 2, 4] == 10
 
 
 def test_how(function_tmpdir):

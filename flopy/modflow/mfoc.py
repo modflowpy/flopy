@@ -200,10 +200,10 @@ class ModflowOc(Package):
                 icnt = save_start
                 for kstp in range(dis.nstp[kper]):
                     if icnt == save_every:
-                        stress_period_data[(kper, kstp)] = save_types
+                        stress_period_data[kper, kstp] = save_types
                         icnt = 0
                     else:
-                        stress_period_data[(kper, kstp)] = []
+                        stress_period_data[kper, kstp] = []
                     icnt += 1
 
         # set output unit numbers based on oc settings
@@ -824,7 +824,7 @@ class ModflowOc(Package):
                     # use print options from the last time step
                     else:
                         if len(lines) > 0:
-                            stress_period_data[(iperoc, itsoc)] = list(lines)
+                            stress_period_data[iperoc, itsoc] = list(lines)
                         continue
                     # set print and save budget flags
                     if ibudfl != 0:
@@ -870,7 +870,7 @@ class ModflowOc(Package):
                             lines.append(f"SAVE HEAD{headsave}")
                         if len(ddnsave) > 0:
                             lines.append(f"SAVE DRAWDOWN{ddnsave}")
-                    stress_period_data[(iperoc, itsoc)] = list(lines)
+                    stress_period_data[iperoc, itsoc] = list(lines)
         else:
             iperoc, itsoc = 0, 0
             while True:

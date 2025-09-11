@@ -623,7 +623,7 @@ def test_lkt_with_multispecies(function_tmpdir):
         options="SIMPLE",
     )
 
-    ## discretization (DIS) package
+    # discretization (DIS) package
     top1 = np.array(
         [
             0,
@@ -3077,11 +3077,11 @@ def test_lkt_with_multispecies(function_tmpdir):
         perlen=86400.0,
     )
 
-    ## Instantiate upstream weighting (UPW) flow package
+    # Instantiate upstream weighting (UPW) flow package
     upw = ModflowUpw(
         mf,
         laytyp=[1, 1, 1],  # >0: convertible
-        layavg=0,  #  0: harmonic mean
+        layavg=0,  # 0: harmonic mean
         chani=1.0,  # >0: CHANI is the horizontal anis for entire layer
         layvka=0,  # =0: indicates VKA is vertical hydraulic conductivity
         laywet=0,  # Always set equal to zero in UPW package
@@ -3094,7 +3094,7 @@ def test_lkt_with_multispecies(function_tmpdir):
         sy=0.30,
     )
 
-    ## Instantiate basic (BAS or BA6) package for MODFLOW-NWT
+    # Instantiate basic (BAS or BA6) package for MODFLOW-NWT
 
     ibnd1 = [
         0,
@@ -12805,7 +12805,7 @@ def test_lkt_with_multispecies(function_tmpdir):
         strt=np.array([sthd1, sthd2, sthd3]),
     )
 
-    ## Instantiate Lake (LAK) package for MODFLOW-NWT
+    # Instantiate Lake (LAK) package for MODFLOW-NWT
 
     lkarr1 = [
         0,
@@ -17705,7 +17705,7 @@ def test_lkt_with_multispecies(function_tmpdir):
         package_flows=["lak"],
     )
 
-    ## Now work on MT3D-USGS file creation
+    # Now work on MT3D-USGS file creation
 
     mt = Mt3dms(
         modflowmodel=mf,
@@ -17718,7 +17718,7 @@ def test_lkt_with_multispecies(function_tmpdir):
         ftlfree=True,
     )
 
-    ## Instantiate basic transport (BTN) package for MT3D-USGS
+    # Instantiate basic transport (BTN) package for MT3D-USGS
 
     ncomp = 2
     mcomp = 2
@@ -17764,7 +17764,7 @@ def test_lkt_with_multispecies(function_tmpdir):
         sconc2=sconc2,
     )
 
-    ## Instantiate advection (ADV) package for MT3D-USGS
+    # Instantiate advection (ADV) package for MT3D-USGS
 
     mixelm = 0
     percel = 0.7500
@@ -17773,7 +17773,7 @@ def test_lkt_with_multispecies(function_tmpdir):
 
     adv = Mt3dAdv(mt, mixelm=mixelm, percel=percel, mxpart=mxpart, nadvfd=nadvfd)
 
-    ## Instantiate generalized conjugate gradient solver (GCG)
+    # Instantiate generalized conjugate gradient solver (GCG)
     # package for MT3D-USGS
 
     mxiter = 1
@@ -17795,12 +17795,12 @@ def test_lkt_with_multispecies(function_tmpdir):
         iprgcg=iprgcg,
     )
 
-    ## Instantiate source-sink mixing (SSM) package for MT3D-USGS
+    # Instantiate source-sink mixing (SSM) package for MT3D-USGS
 
     mxss = 0
     ssm = Mt3dSsm(mt, mxss=mxss)
 
-    ## Instantiate LKT package
+    # Instantiate LKT package
 
     nlkinit = 3
     mxlkbc = 12

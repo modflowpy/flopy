@@ -147,13 +147,13 @@ pxs.plot_grid()
 ibound = []
 for ilay in range(nlay):
     laybnd = np.ones((nrow, ncol))
-    laybnd[0, :] = -1  ##CHD cells
-    laybnd[-1, :] = -1  ##CHD cells
-    laybnd[:, 0] = -1  ##CHD cells
-    laybnd[:, -1] = -1  ##CHD cells
-    if ilay == 0:  ##Lake cells
+    laybnd[0, :] = -1  # CHD cells
+    laybnd[-1, :] = -1  # CHD cells
+    laybnd[:, 0] = -1  # CHD cells
+    laybnd[:, -1] = -1  # CHD cells
+    if ilay == 0:  # Lake cells
         laybnd[6:11, 6:11] = 0
-    if ilay == 1:  ##Lake cells
+    if ilay == 1:  # Lake cells
         laybnd[7:10, 7:10] = 0
     laybnd = laybnd.reshape(-1)
     ibound.append(laybnd)
@@ -166,13 +166,13 @@ ipakcb = 50
 wetdry = []
 for ilay in range(nlay):
     layv = np.ones((nrow, ncol))
-    layv[0, :] = 0.0  ##CHD cells
-    layv[-1, :] = 0.0  ##CHD cells
-    layv[:, 0] = 0.0  ##CHD cells
-    layv[:, -1] = 0.0  ##CHD cells
-    if ilay == 0:  ##Lake cells
+    layv[0, :] = 0.0  # CHD cells
+    layv[-1, :] = 0.0  # CHD cells
+    layv[:, 0] = 0.0  # CHD cells
+    layv[:, -1] = 0.0  # CHD cells
+    if ilay == 0:  # Lake cells
         layv[6:11, 6:11] = 0.0
-    if ilay == 1:  ##Lake cells
+    if ilay == 1:  # Lake cells
         layv[7:10, 7:10] = 0.0
     layv = layv.reshape(-1)
     wetdry.append(layv)

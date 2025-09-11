@@ -44,11 +44,11 @@ def test_uzf_unit_numbers(function_tmpdir, uzf_example_path):
     spd = {}
     for iper in range(1, m.dis.nper):
         for istp in [0, 4, 9, 14]:
-            spd[(iper, istp)] = output
-    spd[(0, 0)] = output
-    spd[(1, 1)] = output
-    spd[(1, 2)] = output
-    spd[(1, 3)] = output
+            spd[iper, istp] = output
+    spd[0, 0] = output
+    spd[1, 1] = output
+    spd[1, 2] = output
+    spd[1, 3] = output
     oc = ModflowOc(m, stress_period_data=spd)
     oc.write_file()
 

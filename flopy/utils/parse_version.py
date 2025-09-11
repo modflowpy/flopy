@@ -398,18 +398,18 @@ class Version(_BaseVersion):
 
     @property
     def epoch(self) -> int:
-        _epoch: int = self._version.epoch
-        return _epoch
+        epoch: int = self._version.epoch
+        return epoch
 
     @property
     def release(self) -> tuple[int, ...]:
-        _release: tuple[int, ...] = self._version.release
-        return _release
+        release: tuple[int, ...] = self._version.release
+        return release
 
     @property
     def pre(self) -> tuple[str, int] | None:
-        _pre: tuple[str, int] | None = self._version.pre
-        return _pre
+        pre: tuple[str, int] | None = self._version.pre
+        return pre
 
     @property
     def post(self) -> int | None:
@@ -531,7 +531,7 @@ def _cmpkey(
     # leading zeros until we come to something non zero, then take the rest
     # re-reverse it back into the correct order and make it a tuple and use
     # that for our sorting key.
-    _release = tuple(
+    release_ = tuple(
         reversed(list(itertools.dropwhile(lambda x: x == 0, reversed(release))))
     )
 
@@ -540,31 +540,31 @@ def _cmpkey(
     # if there is not a pre or a post segment. If we have one of those then
     # the normal sorting rules will handle this case correctly.
     if pre is None and post is None and dev is not None:
-        _pre: PrePostDevType = NegativeInfinity
+        pre_: PrePostDevType = NegativeInfinity
     # Versions without a pre-release (except as noted above) should sort after
     # those with one.
     elif pre is None:
-        _pre = Infinity
+        pre_ = Infinity
     else:
-        _pre = pre
+        pre_ = pre
 
     # Versions without a post segment should sort before those with one.
     if post is None:
-        _post: PrePostDevType = NegativeInfinity
+        post_: PrePostDevType = NegativeInfinity
 
     else:
-        _post = post
+        post_ = post
 
     # Versions without a development segment should sort after those with one.
     if dev is None:
-        _dev: PrePostDevType = Infinity
+        dev_: PrePostDevType = Infinity
 
     else:
-        _dev = dev
+        dev_ = dev
 
     if local is None:
         # Versions without a local segment should sort before those with one.
-        _local: LocalType = NegativeInfinity
+        local_: LocalType = NegativeInfinity
     else:
         # Versions with a local segment need that segment parsed to implement
         # the sorting rules in PEP440.
@@ -573,8 +573,8 @@ def _cmpkey(
         # - Numeric segments sort numerically
         # - Shorter versions sort before longer versions when the prefixes
         #   match exactly
-        _local = tuple(
+        local_ = tuple(
             (i, "") if isinstance(i, int) else (NegativeInfinity, i) for i in local
         )
 
-    return epoch, _release, _pre, _post, _dev, _local
+    return epoch, release_, pre_, post_, dev_, local_

@@ -113,7 +113,7 @@ def package_is_copy(pk1, pk2):
                         return False
         elif isinstance(v, ModelInterface):
             # weak, but calling model_eq would result in recursion
-            if v.__repr__() != v2.__repr__():
+            if repr(v) != repr(v2):
                 return False
         elif isinstance(v, DataInterface):
             if v != v2:

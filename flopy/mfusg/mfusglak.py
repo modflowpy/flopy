@@ -892,14 +892,14 @@ class MfUsgLak(Package):
                             tds.append(float(t[1]))  # CRNF
                             if wthdrw < 0:
                                 tds.append(float(t[2]))  # CAUG
-                            ds9b[(n, icomp)] = tds
+                            ds9b[n, icomp] = tds
 
                     if mcomp > 0 and transportboundary:
-                        ## CLAKBC The concentration of solute for lake boundary
+                        # CLAKBC The concentration of solute for lake boundary
                         line = f.readline().rstrip()
                         t = line.split()
                         for icomp in range(mcomp):
-                            ds9b[(n, icomp)] = t[icomp]
+                            ds9b[n, icomp] = t[icomp]
 
                 flux_data[iper] = ds9
                 conc_data[iper] = ds9b

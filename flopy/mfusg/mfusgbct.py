@@ -243,7 +243,7 @@ class MfUsgBct(Package):
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         shape_3d = (nlay, nrow, ncol)
 
-        ## Options
+        # Options
         opts = []
         self.timeweight = None
         if "timeweight" in kwargs:
@@ -313,7 +313,7 @@ class MfUsgBct(Package):
 
         self.options = " ".join(opts)
 
-        ## Assign input parameter array values
+        # Assign input parameter array values
         if self.iheat:
             self.htcondw = kwargs["htcondw"]
             self.rhow = kwargs["rhow"]

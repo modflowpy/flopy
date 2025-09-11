@@ -1612,16 +1612,6 @@ class ZoneBudget:
         newobj._budget = newbud
         return newobj
 
-    def __div__(self, other):
-        newbud = self._budget.copy()
-        for f in self._zonenamedict.values():
-            newbud[f] = np.array(list(newbud[f])) / float(other)
-        idx = np.isin(self._budget["name"], "PERCENT_DISCREPANCY")
-        newbud[:][idx] = self._budget[:][idx]
-        newobj = self.copy()
-        newobj._budget = newbud
-        return newobj
-
     def __add__(self, other):
         newbud = self._budget.copy()
         for f in self._zonenamedict.values():
@@ -1764,11 +1754,8 @@ class ZoneBudget6:
             else:
                 pkg = func.load(pkg, self)
 
-        else:
-            pass
-
         pkg_name = f"_{pkg_name}"
-        self.__setattr__(pkg_name, pkg)
+        setattr(self, pkg_name, pkg)
         if pkg is not None:
             self.package_dict[pkg_name[1:]] = pkg
 
@@ -2544,17 +2531,11 @@ def _read_zb_zblst(fname):
                 elif "OUT:" in line:
                     prefix = "TO_"
 
-                else:
-                    pass
-
             elif flow_budget:
                 if "IN:" in line:
                     prefix = "FROM_"
                     read_data = True
                     flow_budget = False
-
-            else:
-                pass
 
             if empty >= 30:
                 break
@@ -2637,9 +2618,6 @@ def _read_zb_csv(fname):
 
             elif line in {"", " "}:
                 empty += 1
-
-            else:
-                pass
 
             if empty >= 25:
                 break
@@ -2913,15 +2891,15 @@ def _volumetric_flux(recarray, modeltime, extrapolate_kper=False):
                 if len(idx[0]) == 0:
                     continue
                 elif n == 0:
-                    tslen[(stp, ix)] = totim[n]
+                    tslen[stp, ix] = totim[n]
                 else:
-                    tslen[(stp, ix)] = totim[n] - totim[n - 1]
-                dtotim[(stp, ix)] = totim[n]
+                    tslen[stp, ix] = totim[n] - totim[n - 1]
+                dtotim[stp, ix] = totim[n]
                 n += 1
 
-        ltslen = [tslen[(rec["kstp"], rec["kper"])] for rec in recarray]
+        ltslen = [tslen[rec["kstp"], rec["kper"]] for rec in recarray]
         if len(np.unique(recarray["totim"])) == 1:
-            ltotim = [dtotim[(rec["kstp"], rec["kper"])] for rec in recarray]
+            ltotim = [dtotim[rec["kstp"], rec["kper"]] for rec in recarray]
             recarray["totim"] = ltotim
 
         for name in recarray.dtype.names:

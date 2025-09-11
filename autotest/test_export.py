@@ -1545,7 +1545,7 @@ def test_vtk_to_pyvista(function_tmpdir):
 
     vtk.add_pathline_points(pls)
     grid, pathlines = vtk.to_pyvista()
-    n_pts = sum([pl.shape[0] for pl in pls])
+    n_pts = sum(pl.shape[0] for pl in pls)
     assert pathlines.n_points == n_pts
     assert pathlines.n_cells == n_pts + len(pls)
     assert "particleid" in pathlines.point_data

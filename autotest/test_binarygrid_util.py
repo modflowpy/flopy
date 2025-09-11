@@ -51,7 +51,7 @@ def test_mfgrddis_modelgrid(mfgrd_test_path):
 
     nvert = modelgrid.nvert
     iverts = modelgrid.iverts
-    maxvertex = max([max(sublist[1:]) for sublist in iverts])
+    maxvertex = max(max(sublist[1:]) for sublist in iverts)
     assert maxvertex + 1 == nvert, f"nvert ({maxvertex + 1}) does not equal {nvert}"
     verts = modelgrid.verts
     assert nvert == verts.shape[0], (
@@ -99,7 +99,7 @@ def test_mfgrddisv_modelgrid(mfgrd_test_path):
 
     nvert = mg.nvert
     iverts = mg.iverts
-    maxvertex = max([max(sublist[1:]) for sublist in iverts])
+    maxvertex = max(max(sublist[1:]) for sublist in iverts)
     assert maxvertex + 1 == nvert, f"nvert ({maxvertex + 1}) does not equal {nvert}"
     verts = mg.verts
     assert nvert == verts.shape[0], (
@@ -153,7 +153,7 @@ def test_mfgrddisu_modelgrid(mfgrd_test_path):
 
     nvert = mg.nvert
     iverts = mg.iverts
-    maxvertex = max([max(sublist[1:]) for sublist in iverts])
+    maxvertex = max(max(sublist[1:]) for sublist in iverts)
     assert maxvertex + 1 == nvert, f"nvert ({maxvertex + 1}) does not equal {nvert}"
     verts = mg.verts
     assert nvert == verts.shape[0], (

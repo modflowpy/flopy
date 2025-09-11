@@ -114,7 +114,7 @@ def pytest_report_header(config):
     extra = {}
     for item in metadata.requires("flopy"):
         pkg_name = re.findall(r"[a-z0-9_\-]+", item, re.IGNORECASE)[0]
-        if res := re.findall("extra == ['\"](.+)['\"]", item):
+        if res := re.findall(r"extra == ['\"](.+)['\"]", item):
             assert len(res) == 1, item
             pkg_extra = res[0]
             if pkg_extra not in extra:
