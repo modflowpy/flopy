@@ -189,3 +189,7 @@ def test_reverse(case, make_sim, function_tmpdir):
         bud = budget_file.get_data(text=BUDTXT, totim=t)[0]
         bud_rev = budget_file_rev.get_data(text=BUDTXT, totim=rt)[0]
         assert np.allclose(bud, -bud_rev)
+
+    # reverse inplace
+    budget_file_rev = CellBudgetFile(budget_file_rev_path)
+    budget_file_rev.reverse(budget_file_rev_path)
