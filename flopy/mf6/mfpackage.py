@@ -3623,7 +3623,7 @@ class MFPackage(PackageInterface):
 
         if self.dimensions.get_aux_variables():
             auxnames = list(self.dimensions.get_aux_variables()[0])
-            if len(auxnames) and auxnames[0] == "auxiliary":
+            if len(auxnames) > 0 and auxnames[0] == "auxiliary":
                 auxnames.pop(0)
         else:
             auxnames = []
