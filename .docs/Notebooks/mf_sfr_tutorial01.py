@@ -11,7 +11,7 @@
 #     language: python
 #     name: python3
 #   metadata:
-#     section: mf6
+#     section: mf2005
 # ---
 
 # # SFR2 package loading and querying

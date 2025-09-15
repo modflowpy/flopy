@@ -36,9 +36,7 @@ MODFLOW 6
    Notebooks/mf6_data_tutorial08
    Notebooks/mf6_data_tutorial09
    Notebooks/mf6_data_tutorial10
-   Notebooks/mf6_mnw2_tutorial01
    Notebooks/mf6_output_tutorial01
-   Notebooks/mf6_sfr_tutorial01
    Notebooks/mf6_tutorial01
    Notebooks/mf6_lgr_tutorial01
 
@@ -54,6 +52,8 @@ MODFLOW-2005
    Notebooks/mf_load_tutorial
    Notebooks/mf_tutorial01
    Notebooks/mf_tutorial02
+   Notebooks/mf_mnw2_tutorial01
+   Notebooks/mf_sfr_tutorial01
 
 
 MODFLOW-NWT

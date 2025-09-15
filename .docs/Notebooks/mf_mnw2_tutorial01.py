@@ -11,7 +11,7 @@
 #     language: python
 #     name: python3
 #   metadata:
-#     section: mf6
+#     section: mf2005
 # ---
 
 # # Working with the Multi-node Well (MNW2) Package
