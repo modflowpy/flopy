@@ -339,22 +339,7 @@ def attrs(dfn: dict, component_name: tuple[str, str], developmode: bool = True) 
                     if k not in exclude
                 ]
 
-            def __dfn():
-                def _var(var: dict) -> List[str]:
-                    exclude = ["description"]
-                    name = var["name"]
-                    subpkg = dfn.get("fkeys", dict()).get(name, None)
-                    if subpkg:
-                        var["construct_package"] = subpkg["abbr"]
-                        var["construct_data"] = subpkg["val"]
-                        var["parameter_name"] = subpkg["param"]
-                    return [
-                        " ".join([k, v]).strip()
-                        for k, v in var.items()
-                        if k not in exclude
-                    ]
-
-                return [_var(var) for var in list(definition.values(multi=True))]
+            return [_var(var) for var in list(definition.values(multi=True))]
 
         return [["header"] + _meta()] + __dfn()
 
