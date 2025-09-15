@@ -326,7 +326,7 @@ def attrs(dfn: dict, component_name: tuple[str, str], developmode: bool = True) 
 
         def __dfn():
             def _var(var: dict) -> List[str]:
-                exclude = ["longname", "description"]
+                exclude = ["description"]
                 name = var["name"]
                 subpkg = dfn.get("fkeys", dict()).get(name, None)
                 if subpkg:
