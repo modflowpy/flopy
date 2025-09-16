@@ -64,3 +64,4 @@ dependencies:
   - vtk
   - xmipy
   - h5py
+  - scikit-learn

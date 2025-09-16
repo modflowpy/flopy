@@ -221,7 +221,10 @@ def test_metis_splitting_with_lak_sfr(function_tmpdir):
 @requires_exe("mf6")
 @requires_pkg("pymetis")
 @requires_pkg("h5py")
+# @requires_pkg("sklearn")
 def test_save_load_node_mapping_structured(function_tmpdir):
+    import pymetis
+    
     sim_path = get_example_data_path() / "mf6-freyberg"
     new_sim_path = function_tmpdir / "mf6-freyberg/split_model"
     hdf_file = new_sim_path / "node_map.hdf5"
@@ -235,7 +238,9 @@ def test_save_load_node_mapping_structured(function_tmpdir):
     original_heads = sim.get_model().output.head().get_alldata()[-1]
 
     mfsplit = Mf6Splitter(sim)
-    array = mfsplit.optimize_splitting_mask(nparts=nparts)
+    array = mfsplit.optimize_splitting_mask(
+        nparts=nparts, active_only=True, options=pymetis.Options(seed=42, contig=1)
+    )
     new_sim = mfsplit.split_model(array)
     new_sim.set_sim_path(new_sim_path)
     new_sim.write_simulation()

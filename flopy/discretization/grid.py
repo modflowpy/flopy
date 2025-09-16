@@ -3,7 +3,6 @@ import os
 import re
 import warnings
 from collections import defaultdict
-from os import PathLike
 
 import numpy as np
 
@@ -71,7 +70,7 @@ class Grid:
         The value can be anything accepted by
         :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
         such as an authority string (eg "EPSG:26916") or a WKT string.
-    prjfile : str or PathLike, optional if `crs` is specified
+    prjfile : str or pathlike, optional if `crs` is specified
         ESRI-style projection file with well-known text defining the CRS
         for the model grid (must be projected; geographic CRS are not supported).
     xoff : float
@@ -88,7 +87,7 @@ class Grid:
         .. deprecated:: 3.5
            The following keyword options will be removed for FloPy 3.6:
 
-             - ``prj`` (str or PathLike): use ``prjfile`` instead.
+             - ``prj`` (str or pathlike): use ``prjfile`` instead.
              - ``epsg`` (int): use ``crs`` instead.
              - ``proj4`` (str): use ``crs`` instead.
 
@@ -382,7 +381,7 @@ class Grid:
         if prjfile is None:
             self._prjfile = None
             return
-        if not isinstance(prjfile, (str, PathLike)):
+        if not isinstance(prjfile, (str, os.PathLike)):
             raise ValueError("prjfile property must be str, PathLike or None")
         self._prjfile = prjfile
         # If crs was previously unset, use .prj file input
@@ -648,7 +647,7 @@ class Grid:
         ----------
         reset : bool
             flag to recalculate neighbors
-        method: str
+        method : str
             "rook" for shared edges and "queen" for shared vertex
 
         Returns
@@ -722,6 +721,7 @@ class Grid:
         """
         method = kwargs.pop("method", None)
         reset = kwargs.pop("reset", False)
+
         if method is None:
             self._set_neighbors(reset=reset)
         else:
@@ -743,6 +743,32 @@ class Grid:
             return neighbors
 
         return self._neighbors
+
+    def get_shared_edge(self, node0, node1, iverts=True):
+        """
+        Method to get the shared iverts or vertices between two cells. The shared
+        edge defines the shared cell face.
+
+        Parameters
+        ----------
+        node0 : int
+        node1 : int
+        iverts : bool
+            boolean flag to return shared iverts (True) or shared vertices (False)
+
+        Returns
+        -------
+            tuple : iverts or vertices that define the shared face
+        """
+        iv0 = set(self.iverts[node0])
+        iv1 = set(self.iverts[node1])
+        shared = tuple(iv0 & iv1)
+
+        if iverts:
+            return tuple(shared)
+        else:
+            verts = [self.verts[shared[0]], self.verts[shared[1]]]
+            return tuple(verts)
 
     def remove_confining_beds(self, array):
         """
@@ -998,7 +1024,7 @@ class Grid:
             The value can be anything accepted by
             :meth:`pyproj.CRS.from_user_input() <pyproj.crs.CRS.from_user_input>`,
             such as an authority string (eg "EPSG:26916") or a WKT string.
-        prjfile : str or PathLike, optional
+        prjfile : str or pathlike, optional
             ESRI-style projection file with well-known text defining the CRS
             for the model grid (must be projected; geographic CRS are not
             supported).
