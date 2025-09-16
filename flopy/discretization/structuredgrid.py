@@ -834,6 +834,7 @@ class StructuredGrid(Grid):
         """
         nn = None
         as_nodes = kwargs.pop("as_nodes", False)
+        memhog = kwargs.pop("fast", False)
 
         if kwargs:
             if "node" in kwargs:
@@ -863,11 +864,103 @@ class StructuredGrid(Grid):
         else:
             as_nodes = True
 
-        neighbors = super().neighbors(nn, **kwargs)
-        if not as_nodes:
-            neighbors = self.get_lrc(neighbors)
+        if memhog:
+            neighbors = self._fast_neighbors(**kwargs)
+        else:
+            neighbors = super().neighbors(nn, **kwargs)
+            if not as_nodes:
+                neighbors = self.get_lrc(neighbors)
 
         return neighbors
+
+    def _fast_neighbors(self, **kwargs):
+        """
+        Memory intensive and not elegent in any sense, but very fast method to get
+        neighbors for Structured Grids
+
+        Returns
+        -------
+        dict
+        """
+        from collections import defaultdict
+        if self._neighbors is None or kwargs.pop("reset", False):
+            nrow = self.nrow
+            ncol = self.ncol
+
+            ncpl = nrow * ncol
+
+            arr = np.arange(ncpl, dtype=np.int32).reshape((nrow, ncol))
+
+            # general case
+            arr2 = arr[1:-1, 1:-1].ravel()
+            neighs2 = np.empty((4, (nrow - 2) * (ncol - 2)), dtype=np.int32)
+            neighs2[0] = arr2 - ncol # u
+            neighs2[1] = arr2 + 1 # r
+            neighs2[2] = arr2 + ncol # d
+            neighs2[3] = arr2 - 1 # l
+            neighs2 = neighs2.T.tolist()
+            neighbors = {v: neighs2[ix] for ix, v in enumerate(arr2)}
+
+            # ecase 1
+            arr2 = arr[0, 1:-1].ravel()
+            neighs2 = np.empty((3, ncol - 2), dtype=np.int32)
+            # no up
+            neighs2[0] = arr2 + 1 # r
+            neighs2[1] = arr2 + ncol # d
+            neighs2[2] = arr2 - 1 # l
+            neighs2 = neighs2.T.tolist()
+
+            for ix, v in enumerate(arr2):
+                neighbors[v] = neighs2[ix]
+
+            # ecase 2
+            arr2 = arr[-1, 1: -1].ravel()
+            neighs2 = np.empty((3, ncol - 2), dtype=np.int32)
+            neighs2[0] = arr2 - ncol  # u
+            neighs2[1] = arr2 + 1 # r
+            # no down
+            neighs2[2] = arr2 - 1 # l
+            neighs2 = neighs2.T.tolist()
+
+            for ix, v in enumerate(arr2):
+                neighbors[v] = neighs2[ix]
+
+            # ecase 3
+            arr2 = arr[1: -1, 0].ravel()
+            neighs2 = np.empty((3, nrow - 2), dtype=np.int32)
+            neighs2[0] = arr2 - ncol # u
+            neighs2[1] = arr2 + 1 # r
+            neighs2[2] = arr2 + ncol # d
+            # no left
+            neighs2 = neighs2.T.tolist()
+
+            for ix, v in enumerate(arr2):
+                neighbors[v] = neighs2[ix]
+
+            # ecase 4
+            arr2 = arr[1: -1, -1].ravel()
+            neighs2 = np.empty((3, nrow - 2), dtype=np.int32)
+            neighs2[0] = arr2 - ncol  # u
+            # no right
+            neighs2[1] = arr2 + ncol # d
+            neighs2[2] = arr2 - 1 # l
+
+            neighs2 = neighs2.T.tolist()
+
+            for ix, v in enumerate(arr2):
+                neighbors[v] = neighs2[ix]
+
+            del arr
+
+            # corners
+            neighbors[0] = [1, ncol] # r, d
+            neighbors[ncol - 1] = [(ncol - 1) + ncol, ncol - 2] # d, l
+            neighbors[ncpl - ncol] = [(ncpl - ncol) - ncol, (ncpl - ncol) + 1] # u, r
+            neighbors[ncpl - 1] = [(ncpl - 1) - ncol, ncpl - 2] # u, l
+
+            self._neighbors = neighbors
+
+        return self._neighbors
 
     def intersect(self, x, y, z=None, local=False, forgive=False):
         """
@@ -1681,11 +1774,15 @@ class StructuredGrid(Grid):
         pair for each vertex
 
         """
-        iverts = []
-        for i in range(self.nrow):
-            for j in range(self.ncol):
-                iverts.append(self._build_structured_iverts(i, j))
-        self._iverts = iverts
+        rowarr = np.repeat(np.arange(self.nrow, dtype=int), self.ncol)
+        colarr = np.tile(np.arange(self.ncol, dtype=int), self.nrow)
+
+        iverts = np.empty((4, self.ncpl), dtype=int)
+        iverts[0] = rowarr * (self.ncol + 1) + colarr
+        iverts[1] = rowarr * (self.ncol + 1) + colarr + 1
+        iverts[2] = (rowarr + 1) * (self.ncol + 1) + colarr + 1
+        iverts[3] = (rowarr + 1) * (self.ncol + 1) + colarr
+        self._iverts = iverts.T.tolist()
         return
 
     def _build_structured_iverts(self, i, j):

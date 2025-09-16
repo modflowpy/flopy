@@ -744,6 +744,32 @@ class Grid:
 
         return self._neighbors
 
+    def get_shared_edge(self, node0, node1, iverts=True):
+        """
+        Method to get the shared iverts or vertices between two cells. The shared
+        edge defines the shared cell face.
+
+        Parameters
+        ----------
+        node0 : int
+        node1 : int
+        iverts : bool
+            boolean flag to return shared iverts (True) or shared vertices (False)
+
+        Returns
+        -------
+            tuple : iverts or vertices that define the shared face
+        """
+        iv0 = set(self.iverts[node0])
+        iv1 = set(self.iverts[node1])
+        shared = tuple(iv0 & iv1)
+
+        if iverts:
+            return tuple(shared)
+        else:
+            verts = [self.verts[shared[0]], self.verts[shared[1]]]
+            return tuple(verts)
+
     def remove_confining_beds(self, array):
         """
         Method to remove confining bed layers from an array
