@@ -883,6 +883,7 @@ class StructuredGrid(Grid):
         dict
         """
         from collections import defaultdict
+
         if self._neighbors is None or kwargs.pop("reset", False):
             nrow = self.nrow
             ncol = self.ncol
@@ -894,10 +895,10 @@ class StructuredGrid(Grid):
             # general case
             arr2 = arr[1:-1, 1:-1].ravel()
             neighs2 = np.empty((4, (nrow - 2) * (ncol - 2)), dtype=np.int32)
-            neighs2[0] = arr2 - ncol # u
-            neighs2[1] = arr2 + 1 # r
-            neighs2[2] = arr2 + ncol # d
-            neighs2[3] = arr2 - 1 # l
+            neighs2[0] = arr2 - ncol  # u
+            neighs2[1] = arr2 + 1  # r
+            neighs2[2] = arr2 + ncol  # d
+            neighs2[3] = arr2 - 1  # l
             neighs2 = neighs2.T.tolist()
             neighbors = {v: neighs2[ix] for ix, v in enumerate(arr2)}
 
@@ -905,32 +906,32 @@ class StructuredGrid(Grid):
             arr2 = arr[0, 1:-1].ravel()
             neighs2 = np.empty((3, ncol - 2), dtype=np.int32)
             # no up
-            neighs2[0] = arr2 + 1 # r
-            neighs2[1] = arr2 + ncol # d
-            neighs2[2] = arr2 - 1 # l
+            neighs2[0] = arr2 + 1  # r
+            neighs2[1] = arr2 + ncol  # d
+            neighs2[2] = arr2 - 1  # l
             neighs2 = neighs2.T.tolist()
 
             for ix, v in enumerate(arr2):
                 neighbors[v] = neighs2[ix]
 
             # ecase 2
-            arr2 = arr[-1, 1: -1].ravel()
+            arr2 = arr[-1, 1:-1].ravel()
             neighs2 = np.empty((3, ncol - 2), dtype=np.int32)
             neighs2[0] = arr2 - ncol  # u
-            neighs2[1] = arr2 + 1 # r
+            neighs2[1] = arr2 + 1  # r
             # no down
-            neighs2[2] = arr2 - 1 # l
+            neighs2[2] = arr2 - 1  # l
             neighs2 = neighs2.T.tolist()
 
             for ix, v in enumerate(arr2):
                 neighbors[v] = neighs2[ix]
 
             # ecase 3
-            arr2 = arr[1: -1, 0].ravel()
+            arr2 = arr[1:-1, 0].ravel()
             neighs2 = np.empty((3, nrow - 2), dtype=np.int32)
-            neighs2[0] = arr2 - ncol # u
-            neighs2[1] = arr2 + 1 # r
-            neighs2[2] = arr2 + ncol # d
+            neighs2[0] = arr2 - ncol  # u
+            neighs2[1] = arr2 + 1  # r
+            neighs2[2] = arr2 + ncol  # d
             # no left
             neighs2 = neighs2.T.tolist()
 
@@ -938,12 +939,12 @@ class StructuredGrid(Grid):
                 neighbors[v] = neighs2[ix]
 
             # ecase 4
-            arr2 = arr[1: -1, -1].ravel()
+            arr2 = arr[1:-1, -1].ravel()
             neighs2 = np.empty((3, nrow - 2), dtype=np.int32)
             neighs2[0] = arr2 - ncol  # u
             # no right
-            neighs2[1] = arr2 + ncol # d
-            neighs2[2] = arr2 - 1 # l
+            neighs2[1] = arr2 + ncol  # d
+            neighs2[2] = arr2 - 1  # l
 
             neighs2 = neighs2.T.tolist()
 
@@ -953,10 +954,10 @@ class StructuredGrid(Grid):
             del arr
 
             # corners
-            neighbors[0] = [1, ncol] # r, d
-            neighbors[ncol - 1] = [(ncol - 1) + ncol, ncol - 2] # d, l
-            neighbors[ncpl - ncol] = [(ncpl - ncol) - ncol, (ncpl - ncol) + 1] # u, r
-            neighbors[ncpl - 1] = [(ncpl - 1) - ncol, ncpl - 2] # u, l
+            neighbors[0] = [1, ncol]  # r, d
+            neighbors[ncol - 1] = [(ncol - 1) + ncol, ncol - 2]  # d, l
+            neighbors[ncpl - ncol] = [(ncpl - ncol) - ncol, (ncpl - ncol) + 1]  # u, r
+            neighbors[ncpl - 1] = [(ncpl - 1) - ncol, ncpl - 2]  # u, l
 
             self._neighbors = neighbors
 
