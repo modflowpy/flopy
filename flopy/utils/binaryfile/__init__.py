@@ -2206,4 +2206,4 @@ class CellBudgetFile:
         # if we rewrote the original file, reinitialize
         if inplace:
             move(target, filename)
-            self.__init__(filename, self.precision, self.verbose)  # noqa: PLC2801
+            self.__init__(filename, self.precision, self.verbose)

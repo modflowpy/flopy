@@ -224,7 +224,7 @@ def test_metis_splitting_with_lak_sfr(function_tmpdir):
 # @requires_pkg("sklearn")
 def test_save_load_node_mapping_structured(function_tmpdir):
     import pymetis
-    
+
     sim_path = get_example_data_path() / "mf6-freyberg"
     new_sim_path = function_tmpdir / "mf6-freyberg/split_model"
     hdf_file = new_sim_path / "node_map.hdf5"
