@@ -38,7 +38,7 @@ def get_notebooks(pattern=None, exclude=None):
 @pytest.mark.parametrize(
     "notebook",
     get_notebooks(pattern="tutorial", exclude=EXCLUDE)
-    + get_notebooks(pattern="example"),
+    + get_notebooks(pattern="example", exclude=EXCLUDE),
 )
 def test_notebooks(notebook):
     args = ["jupytext", "--from", "py", "--to", "ipynb", "--execute", notebook]
