@@ -1,13 +1,12 @@
 import re
-from pprint import pprint
 from platform import system
+from pprint import pprint
 
 import pytest
 from flaky import flaky
 from modflow_devtools.misc import is_in_ci, run_cmd
 
 from autotest.conftest import get_project_root_path
-
 
 EXCLUDE = [
     "mf6_lgr",
