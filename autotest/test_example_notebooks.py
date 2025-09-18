@@ -1,11 +1,22 @@
 import re
 from pprint import pprint
+from platform import system
 
 import pytest
 from flaky import flaky
 from modflow_devtools.misc import is_in_ci, run_cmd
 
 from autotest.conftest import get_project_root_path
+
+
+EXCLUDE = [
+    "mf6_lgr",
+]
+# skip pyvista notebooks on windows/mac in CI due to persistent issues
+# first with offscreen rendering, then with finding pyvista even after
+# using pyvista/setup-headless-display-action
+if is_in_ci() and system() != "Linux":
+    EXCLUDE.append("vtk_pathlines")
 
 
 def get_notebooks(pattern=None, exclude=None):
