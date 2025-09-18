@@ -37,7 +37,7 @@ def get_notebooks(pattern=None, exclude=None):
 @pytest.mark.example
 @pytest.mark.parametrize(
     "notebook",
-    get_notebooks(pattern="tutorial", exclude=["mf6_lgr"])
+    get_notebooks(pattern="tutorial", exclude=EXCLUDE)
     + get_notebooks(pattern="example"),
 )
 def test_notebooks(notebook):
