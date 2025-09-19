@@ -1358,7 +1358,10 @@ class MFModel(ModelInterface):
             if write_netcdf:
                 # set data storage to write ascii for netcdf
                 pp._set_netcdf_storage()
-            if pp.package_type.startswith("dis"):
+            if (
+                pp.package_type.startswith("dis")
+                and hasattr(pp, "crs")
+            ):
                 crs = pp.crs.get_data()
                 if crs is not None and self.modelgrid.crs is None:
                     self.modelgrid.crs = crs[0][1]
