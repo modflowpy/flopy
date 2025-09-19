@@ -1313,7 +1313,6 @@ class MFModel(ModelInterface):
         ext_file_action=ExtFileAction.copy_relative_paths,
         netcdf=None,
     ):
-        from ..version import __version__
         """
         Writes out model's package files.
 
@@ -1359,7 +1358,10 @@ class MFModel(ModelInterface):
             if write_netcdf:
                 # set data storage to write ascii for netcdf
                 pp._set_netcdf_storage()
-
+            if pp.package_type.startswith("dis"):
+                crs = pp.crs.get_data()
+                if crs is not None and self.modelgrid.crs is None:
+                    self.modelgrid.crs = crs[0][1]
             if (
                 self.simulation_data.verbosity_level.value
                 >= VerbosityLevel.normal.value
@@ -1372,33 +1374,9 @@ class MFModel(ModelInterface):
 
         # write netcdf file
         if write_netcdf and netcdf.lower() != "nofile":
-            mesh = netcdf
-            if mesh.upper() == "STRUCTURED":
-                mesh = None
-
-            ds = self.modelgrid.dataset(
-                modeltime=self.modeltime,
-                mesh=mesh,
-            )
-
-            nc_info = self.netcdf_info(mesh=mesh)
-            nc_info["attrs"]["title"] = f"{self.name.upper()} input"
-            nc_info["attrs"]["source"] = f"flopy {__version__}"
-            # :history = "first created 2025/8/21 9:46:2.909" ;
-            # :Conventions = "CF-1.11 UGRID-1.0" ;
-            ds = self.update_dataset(ds, netcdf_info=nc_info, mesh=mesh)
-
-            # write dataset to netcdf
-            fname = self.name_file.nc_filerecord.get_data()[0][0]
-            ds.to_netcdf(
-                os.path.join(self.model_ws, fname),
-                format="NETCDF4",
-                engine="netcdf4"
-            )
-
+            self._write_netcdf(mesh=netcdf)
             if nc_fname is not None:
                 self.name_file.nc_filerecord = None
-
 
 
     def get_grid_type(self):
@@ -2316,12 +2294,142 @@ class MFModel(ModelInterface):
         else:
             nc_info = netcdf_info
 
+        if (
+            self.simulation.simulation_data.verbosity_level.value
+            >= VerbosityLevel.normal.value
+        ):
+            print(f"    updating model dataset...")
+
         for a in nc_info["attrs"]:
             dataset.attrs[a] = nc_info["attrs"][a]
 
         # add all packages and update data
         for p in self.packagelist:
             # add package var to dataset
+            if (
+                self.simulation.simulation_data.verbosity_level.value
+                >= VerbosityLevel.normal.value
+            ):
+                print(f"    updating dataset for package {p._get_pname()}...")
             dataset = p.update_dataset(dataset, mesh=mesh, update_data=update_data)
 
         return dataset
+
+    def _write_netcdf(self, mesh=None):
+        import datetime
+
+        from ..version import __version__
+        if mesh is not None and mesh.upper() == "STRUCTURED":
+            mesh = None
+
+        encode = {}
+        for pp in self.packagelist:
+            if pp.package_type == "ncf":
+                encode["shuffle"] = pp.shuffle.get_data()
+                encode["deflate"] = pp.deflate.get_data()
+                encode["chunk_time"] = pp.chunk_time.get_data()
+                encode["chunk_face"] = pp.chunk_face.get_data()
+                encode["chunk_x"] = pp.chunk_x.get_data()
+                encode["chunk_y"] = pp.chunk_y.get_data()
+                encode["chunk_z"] = pp.chunk_z.get_data()
+                wkt = pp.wkt.get_data()
+                if wkt is not None:
+                    wkt = wkt[0][1]
+                encode["wkt"] = wkt
+
+        if (
+            self.simulation.simulation_data.verbosity_level.value
+            >= VerbosityLevel.normal.value
+        ):
+            print(f"    creating model dataset...")
+
+        ds = self.modelgrid.dataset(
+            modeltime=self.modeltime,
+            mesh=mesh,
+            encoding=encode,
+        )
+
+        dt = datetime.datetime.now()
+        timestamp = dt.strftime("%m/%d/%Y %H:%M:%S")
+
+        nc_info = self.netcdf_info(mesh=mesh)
+        nc_info["attrs"]["title"] = f"{self.name.upper()} input"
+        nc_info["attrs"]["source"] = f"flopy {__version__}"
+        nc_info["attrs"]["history"] = f"first created {timestamp}"
+        if mesh is None:
+            nc_info["attrs"]["Conventions"] = "CF-1.11"
+        elif mesh.upper() is "LAYERED":
+            nc_info["attrs"]["Conventions"] = "CF-1.11 UGRID-1.0"
+
+        ds = self.update_dataset(
+            ds,
+            netcdf_info=nc_info,
+            mesh=mesh,
+        )
+
+        chunk = False
+        chunk_t = False
+        if mesh is None:
+            if (
+                "chunk_x" in encode
+                and encode["chunk_x"] is not None
+                and "chunk_y" in encode
+                and encode["chunk_y"] is not None
+                and "chunk_z" in encode
+                and encode["chunk_z"] is not None
+            ):
+                chunk = True
+        elif mesh.upper() == "LAYERED":
+            if "chunk_face" in encode and encode["chunk_face"] is not None:
+                chunk = True
+        if "chunk_time" in encode and encode["chunk_time"] is not None:
+            chunk_t = True
+
+        base_encode = {}
+        if "deflate" in encode and encode["deflate"] is not None:
+            base_encode["zlib"] = True
+            base_encode["complevel"] = encode["deflate"]
+        if "shuffle" in encode and encode["deflate"] is not None:
+            base_encode["shuffle"] = True
+
+        encoding = {}
+        chunk_dims = {'time', 'nmesh_face', 'z', 'y', 'x'}
+        for varname, da in ds.data_vars.items():
+            dims = ds.data_vars[varname].dims
+            codes = dict(base_encode)
+            if (
+                not set(dims).issubset(chunk_dims)
+                or not chunk or not chunk_t
+            ):
+                encoding[varname] = codes
+                continue
+            chunksizes = []
+            if "time" in dims:
+                chunksizes.append(encode["chunk_time"])
+            if mesh is None:
+                if "z" in dims:
+                    chunksizes.append(encode["chunk_z"])
+                if "y" in dims:
+                    chunksizes.append(encode["chunk_y"])
+                if "x" in dims:
+                    chunksizes.append(encode["chunk_x"])
+            elif mesh.upper() == "LAYERED" and "nmesh_face" in dims:
+                chunksizes.append(encode["chunk_face"])
+            if len(chunksizes) > 0:
+                codes["chunksizes"] = chunksizes
+            encoding[varname] = codes
+
+        fname = self.name_file.nc_filerecord.get_data()[0][0]
+
+        if (
+            self.simulation.simulation_data.verbosity_level.value
+            >= VerbosityLevel.normal.value
+        ):
+            print(f"    writing NetCDF file {fname}...")
+        # write dataset to netcdf
+        ds.to_netcdf(
+            os.path.join(self.model_ws, fname),
+            format="NETCDF4",
+            engine="netcdf4",
+            encoding=encoding,
+        )

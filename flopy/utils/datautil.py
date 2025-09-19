@@ -305,6 +305,7 @@ class PyListUtil:
 
     @staticmethod
     def split_data_line(line, external_file=False, delimiter_conf_length=15):
+        no_split_keys = ['crs', 'wkt']
         if PyListUtil.line_num > delimiter_conf_length and PyListUtil.consistent_delim:
             # consistent delimiter has been found.  continue using that
             # delimiter without doing further checks
@@ -358,7 +359,11 @@ class PyListUtil:
                     max_split_size = len(max_split_list)
                     max_split_type = "combo"
 
-            if max_split_type is not None and max_split_size > 1:
+            if (
+                max_split_type is not None
+                and max_split_size > 1
+                and clean_line[0].lower() not in no_split_keys
+            ):
                 clean_line = max_split_list
                 if PyListUtil.line_num == 0:
                     PyListUtil.delimiter_used = max_split_type

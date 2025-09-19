@@ -600,12 +600,13 @@ class VertexGrid(Grid):
         assert plotarray.shape == required_shape, msg
         return plotarray
 
-    def dataset(self, modeltime=None, mesh=None):
+    def dataset(self, modeltime=None, mesh=None, encoding=None):
         """
         modeltime : FloPy ModelTime object
         mesh : mesh type
                valid mesh types are "layered" or None
                VertexGrid objects only support layered mesh
+        encoding : variable encoding dictionary
         """
         from ..utils import import_optional_dependency
 
@@ -716,6 +717,22 @@ class VertexGrid(Grid):
         )
         ds["mesh_face_nodes"].attrs["_FillValue"] = FILLNA_INT32
         ds["mesh_face_nodes"].attrs["start_index"] = np.int32(1)
+
+        if encoding is not None and "wkt" in encoding and encoding["wkt"] is not None:
+            ds = ds.assign({"projection": ([], np.int32(1))})
+            # wkt override to existing crs
+            ds["projection"].attrs["wkt"] = encoding["wkt"]
+            ds["mesh_node_x"].attrs["grid_mapping"] = "projection"
+            ds["mesh_node_y"].attrs["grid_mapping"] = "projection"
+            ds["mesh_face_x"].attrs["grid_mapping"] = "projection"
+            ds["mesh_face_y"].attrs["grid_mapping"] = "projection"
+        elif self.crs is not None:
+            ds = ds.assign({"projection": ([], np.int32(1))})
+            ds["projection"].attrs["wkt"] = self.crs.to_wkt()
+            ds["mesh_node_x"].attrs["grid_mapping"] = "projection"
+            ds["mesh_node_y"].attrs["grid_mapping"] = "projection"
+            ds["mesh_face_x"].attrs["grid_mapping"] = "projection"
+            ds["mesh_face_y"].attrs["grid_mapping"] = "projection"
 
         return ds
 

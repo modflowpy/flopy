@@ -1770,11 +1770,12 @@ class StructuredGrid(Grid):
         assert plotarray.shape == required_shape, msg
         return plotarray
 
-    def dataset(self, modeltime=None, mesh=None):
+    def dataset(self, modeltime=None, mesh=None, encoding=None):
         """
         modeltime : FloPy ModelTime object
         mesh : mesh type
                valid mesh types are "layered" or None
+        encoding : variable encoding dictionary
         """
         from ..utils import import_optional_dependency
 
@@ -1787,11 +1788,11 @@ class StructuredGrid(Grid):
         ds.attrs["modflow_grid"] = "STRUCTURED"
 
         if mesh and mesh.upper() == "LAYERED":
-            return self._layered_mesh_dataset(ds, modeltime)
+            return self._layered_mesh_dataset(ds, modeltime, encoding)
         elif mesh is None:
-            return self._structured_dataset(ds, modeltime)
+            return self._structured_dataset(ds, modeltime, encoding)
 
-    def _layered_mesh_dataset(self, ds, modeltime=None):
+    def _layered_mesh_dataset(self, ds, modeltime=None, encoding=None):
         FILLNA_INT32 = np.int32(-2147483647)
         FILLNA_DBL = 9.96920996838687e36
         lenunits = {0: "m", 1: "ft", 2: "m", 3: "m"}
@@ -1894,9 +1895,25 @@ class StructuredGrid(Grid):
         ds["mesh_face_nodes"].attrs["_FillValue"] = FILLNA_INT32
         ds["mesh_face_nodes"].attrs["start_index"] = np.int32(1)
 
+        if encoding is not None and "wkt" in encoding and encoding["wkt"] is not None:
+            ds = ds.assign({"projection": ([], np.int32(1))})
+            # wkt override to existing crs
+            ds["projection"].attrs["wkt"] = encoding["wkt"]
+            ds["mesh_node_x"].attrs["grid_mapping"] = "projection"
+            ds["mesh_node_y"].attrs["grid_mapping"] = "projection"
+            ds["mesh_face_x"].attrs["grid_mapping"] = "projection"
+            ds["mesh_face_y"].attrs["grid_mapping"] = "projection"
+        elif self.crs is not None:
+            ds = ds.assign({"projection": ([], np.int32(1))})
+            ds["projection"].attrs["wkt"] = self.crs.to_wkt()
+            ds["mesh_node_x"].attrs["grid_mapping"] = "projection"
+            ds["mesh_node_y"].attrs["grid_mapping"] = "projection"
+            ds["mesh_face_x"].attrs["grid_mapping"] = "projection"
+            ds["mesh_face_y"].attrs["grid_mapping"] = "projection"
+
         return ds
 
-    def _structured_dataset(self, ds, modeltime=None):
+    def _structured_dataset(self, ds, modeltime=None, encoding=None):
         lenunits = {0: "m", 1: "ft", 2: "m", 3: "m"}
 
         x = self.xoffset + self.xycenters[0]
@@ -1952,6 +1969,18 @@ class StructuredGrid(Grid):
         ds["x"].attrs["standard_name"] = "projection_x_coordinate"
         ds["x"].attrs["long_name"] = "Easting"
         ds["x"].attrs["bounds"] = "x_bnds"
+
+        if encoding is not None and "wkt" in encoding and encoding["wkt"] is not None:
+            ds = ds.assign({"projection": ([], np.int32(1))})
+            # wkt override to existing crs
+            ds["projection"].attrs["crs_wkt"] = encoding["wkt"]
+            ds["x"].attrs["grid_mapping"] = "projection"
+            ds["y"].attrs["grid_mapping"] = "projection"
+        elif self.crs is not None:
+            ds = ds.assign({"projection": ([], np.int32(1))})
+            ds["projection"].attrs["crs_wkt"] = self.crs.to_wkt()
+            ds["x"].attrs["grid_mapping"] = "projection"
+            ds["y"].attrs["grid_mapping"] = "projection"
 
         return ds
 

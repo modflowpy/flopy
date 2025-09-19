@@ -3760,6 +3760,8 @@ class MFPackage(PackageInterface):
 
             return dims_l
 
+        projection = "projection" in dataset.data_vars
+
         last_path = ''
         pitem = None
         pdata = None
@@ -3774,6 +3776,15 @@ class MFPackage(PackageInterface):
             dataset = dataset.assign(var_d)
             for a in nc_info[v]["attrs"]:
                 dataset[varname].attrs[a] = nc_info[v]["attrs"][a]
+            if projection:
+                dims = dataset[varname].dims
+                if "nmesh_face" in dims or "nmesh_node" in dims:
+                    dataset[varname].attrs["grid_mapping"] = "projection"
+                    dataset[varname].attrs["coordinates"] = "mesh_face_x mesh_face_y"
+                elif mesh is None and len(dims) > 1:
+                    # TODO don't set if lon / lat?
+                    dataset[varname].attrs["grid_mapping"] = "projection"
+                    dataset[varname].attrs["coordinates"] = "x y"
 
             if update_data:
                 path = nc_info[v]["attrs"]["modflow_input"]
