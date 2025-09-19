@@ -19,7 +19,7 @@ def _try_get_enum_value(v: Any) -> Any:
 def _get_vars(d: dict) -> dict[str, dict]:
     vars_ = dict()
     def visit(p, k, v):
-        if isinstance(v, dict) and "type" in v:
+        if isinstance(v, dict) and "type" in v and v.get("prerelease", "") != "true":
             vars_[k] = v
         return True
     def enter(p, k, v):
