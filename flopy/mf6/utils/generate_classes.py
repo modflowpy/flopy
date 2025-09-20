@@ -75,15 +75,14 @@ def generate_classes(
                 proj_root / "doc" / "mf6io" / "mf6ivar" / "dfn", dfnpath
             )
 
-        if verbose:
-            dfns = list(dfnpath.glob("*.dfn"))
-            module_name = ".".join(_MF6_AUTOGEN_PATH.relative_to(_PROJ_ROOT_PATH).parts)
-            print(
-                f"Generating module {module_name} from {len(dfns)} DFNs in: {dfnpath}"
-            )
-            print()
-            _CMD.columnize([f.name for f in dfns])
-            print()
+        dfns = list(dfnpath.glob("*.dfn"))
+        module_name = ".".join(_MF6_AUTOGEN_PATH.relative_to(_PROJ_ROOT_PATH).parts)
+        print(
+            f"Generating module {module_name} from {len(dfns)} DFNs in: {dfnpath}"
+        )
+        print()
+        _CMD.columnize([f.name for f in dfns])
+        print()
 
         tomlpath = dfnpath / "toml"
         tomlpath.mkdir(exist_ok=True)
@@ -92,12 +91,12 @@ def generate_classes(
         shutil.rmtree(_MF6_AUTOGEN_PATH)
         _MF6_AUTOGEN_PATH.mkdir(parents=True)
         make_all(tomlpath, _MF6_AUTOGEN_PATH, version=2, legacydir=dfnpath, verbose=verbose)
-        if verbose:
-            files = list(_MF6_AUTOGEN_PATH.glob("*.py"))
-            print(f"Generated {len(files)} module files in: {_MF6_AUTOGEN_PATH}")
-            print()
-            _CMD.columnize([f.name for f in files])
-            print()
+
+        files = list(_MF6_AUTOGEN_PATH.glob("*.py"))
+        print(f"Generated {len(files)} module files in: {_MF6_AUTOGEN_PATH}")
+        print()
+        _CMD.columnize([f.name for f in files])
+        print()
 
 
 def cli_main():
@@ -134,7 +133,7 @@ def cli_main():
         "--verbose",
         action=argparse.BooleanOptionalAction,
         default=True,
-        help="Print information about the code generation process; "
+        help="Print extra information about the code generation process; "
         "default shows verbose output.",
     )
     parser.add_argument(

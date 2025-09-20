@@ -19,7 +19,7 @@ def _try_get_enum_value(v: Any) -> Any:
 def _get_vars(d: dict) -> dict[str, dict]:
     vars_ = dict()
     def visit(p, k, v):
-        if isinstance(v, dict) and "type" in v and v.get("prerelease", "") != "true":
+        if isinstance(v, dict) and "type" in v and not v.get("prerelease", False):
             vars_[k] = v
         return True
     def enter(p, k, v):
@@ -240,7 +240,7 @@ def attrs(dfn: dict, component_name: tuple[str, str]) -> List[str]:
         from modflow_devtools.dfn import _SCALAR_TYPES as SCALAR_TYPES  # noqa: PLC2701
 
     component_base = base(component_name)
-    component_vars = _get_vars(dfn)
+    component_vars = variables(dfn)
 
     def _attr(var: dict) -> Optional[str]:
         var_name = var["name"]
@@ -367,7 +367,7 @@ def attrs(dfn: dict, component_name: tuple[str, str]) -> List[str]:
 
 def init(dfn: dict, component_name: tuple[str, str]) -> List[str]:
     component_base = base(component_name)
-    component_vars = _get_vars(dfn)
+    component_vars = variables(dfn)
 
     def _statements() -> Optional[List[str]]:
         if component_base == "MFSimulationBase":
