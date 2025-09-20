@@ -132,7 +132,7 @@ def cli_main():
     parser.add_argument(
         "--verbose",
         action=argparse.BooleanOptionalAction,
-        default=True,
+        default=False,
         help="Print extra information about the code generation process; "
         "default shows verbose output.",
     )
