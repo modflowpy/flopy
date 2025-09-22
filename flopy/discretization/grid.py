@@ -1288,7 +1288,7 @@ class Grid:
         )
         return
 
-    def dataset(self, modeltime=None, mesh=None, encoding=None):
+    def dataset(self, modeltime=None, mesh=None, configuration=None):
         """
         Method to generate baseline xarray dataset
 
@@ -1296,7 +1296,7 @@ class Grid:
         ----------
         modeltime : FloPy ModelTime object
         mesh : mesh type
-        encoding : variable encoding dictionary
+        configuration : configuration dictionary
 
         Returns
         -------

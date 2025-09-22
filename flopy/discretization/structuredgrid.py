@@ -1770,12 +1770,12 @@ class StructuredGrid(Grid):
         assert plotarray.shape == required_shape, msg
         return plotarray
 
-    def dataset(self, modeltime=None, mesh=None, encoding=None):
+    def dataset(self, modeltime=None, mesh=None, configuration=None):
         """
         modeltime : FloPy ModelTime object
         mesh : mesh type
                valid mesh types are "layered" or None
-        encoding : variable encoding dictionary
+        configuration : configuration dictionary
         """
         from ..utils import import_optional_dependency
 
@@ -1788,11 +1788,11 @@ class StructuredGrid(Grid):
         ds.attrs["modflow_grid"] = "STRUCTURED"
 
         if mesh and mesh.upper() == "LAYERED":
-            return self._layered_mesh_dataset(ds, modeltime, encoding)
+            return self._layered_mesh_dataset(ds, modeltime, configuration)
         elif mesh is None:
-            return self._structured_dataset(ds, modeltime, encoding)
+            return self._structured_dataset(ds, modeltime, configuration)
 
-    def _layered_mesh_dataset(self, ds, modeltime=None, encoding=None):
+    def _layered_mesh_dataset(self, ds, modeltime=None, configuration=None):
         FILLNA_INT32 = np.int32(-2147483647)
         FILLNA_DBL = 9.96920996838687e36
         lenunits = {0: "m", 1: "ft", 2: "m", 3: "m"}
@@ -1895,29 +1895,31 @@ class StructuredGrid(Grid):
         ds["mesh_face_nodes"].attrs["_FillValue"] = FILLNA_INT32
         ds["mesh_face_nodes"].attrs["start_index"] = np.int32(1)
 
-        if encoding is not None and "wkt" in encoding and encoding["wkt"] is not None:
-            ds = ds.assign({"projection": ([], np.int32(1))})
-            # wkt override to existing crs
-            ds["projection"].attrs["wkt"] = encoding["wkt"]
+        wkt_configured = (
+            configuration is not None
+            and "wkt" in configuration
+            and configuration["wkt"] is not None
+        )
+
+        if wkt_configured or self.crs is not None:
             ds["mesh_node_x"].attrs["grid_mapping"] = "projection"
             ds["mesh_node_y"].attrs["grid_mapping"] = "projection"
             ds["mesh_face_x"].attrs["grid_mapping"] = "projection"
             ds["mesh_face_y"].attrs["grid_mapping"] = "projection"
-        elif self.crs is not None:
             ds = ds.assign({"projection": ([], np.int32(1))})
-            ds["projection"].attrs["wkt"] = self.crs.to_wkt()
-            ds["mesh_node_x"].attrs["grid_mapping"] = "projection"
-            ds["mesh_node_y"].attrs["grid_mapping"] = "projection"
-            ds["mesh_face_x"].attrs["grid_mapping"] = "projection"
-            ds["mesh_face_y"].attrs["grid_mapping"] = "projection"
+            if wkt_configured:
+                # wkt override to existing crs
+                ds["projection"].attrs["wkt"] = configuration["wkt"]
+            else:
+                ds["projection"].attrs["wkt"] = self.crs.to_wkt()
 
         return ds
 
-    def _structured_dataset(self, ds, modeltime=None, encoding=None):
+    def _structured_dataset(self, ds, modeltime=None, configuration=None):
         lenunits = {0: "m", 1: "ft", 2: "m", 3: "m"}
 
-        x = self.xoffset + self.xycenters[0]
-        y = self.yoffset + self.xycenters[1]
+        xc = self.xoffset + self.xycenters[0]
+        yc = self.yoffset + self.xycenters[1]
         z = [float(x) for x in range(1, self.nlay + 1)]
 
         # set coordinate var bounds
@@ -1943,8 +1945,8 @@ class StructuredGrid(Grid):
         var_d = {
             "time": (["time"], modeltime.totim),
             "z": (["z"], z),
-            "y": (["y"], y),
-            "x": (["x"], x),
+            "y": (["y"], yc),
+            "x": (["x"], xc),
         }
         ds = ds.assign(var_d)
 
@@ -1970,17 +1972,78 @@ class StructuredGrid(Grid):
         ds["x"].attrs["long_name"] = "Easting"
         ds["x"].attrs["bounds"] = "x_bnds"
 
-        if encoding is not None and "wkt" in encoding and encoding["wkt"] is not None:
-            ds = ds.assign({"projection": ([], np.int32(1))})
-            # wkt override to existing crs
-            ds["projection"].attrs["crs_wkt"] = encoding["wkt"]
+        latlon_cfg = (
+            configuration is not None
+            and "latitude" in configuration
+            and configuration["latitude"] is not None
+            and "longitude" in configuration
+            and configuration["longitude"] is not None
+        )
+
+        if latlon_cfg or self.crs is not None:
+            if latlon_cfg:
+                lats = configuration["latitude"]
+                lons = configuration["longitude"]
+            else:
+                try:
+                    import warnings
+
+                    from pyproj import Proj
+
+                    epsg_code = self.crs.to_epsg(min_confidence=90)
+                    proj = Proj(
+                        f"EPSG:{epsg_code}",
+                    )
+
+                    lats = []
+                    lons = []
+                    x_local = []
+                    y_local = []
+                    for y in self.xycenters[1]:
+                        for x in self.xycenters[0]:
+                            x_local.append(x)
+                            y_local.append(y)
+
+                    x_global, y_global = self.get_coords(x_local, y_local)
+
+                    for i, x in enumerate(x_global):
+                        lon, lat = proj(x, y_global[i], inverse=True)
+                        lats.append(lat)
+                        lons.append(lon)
+
+                    lats = np.array(lats)
+                    lons = np.array(lons)
+
+                except Exception as e:
+                    warnings.warn(
+                        f"Cannot create coordinates from CRS: {e}",
+                        UserWarning,
+                    )
+
+            # create coordinate vars
+            var_d = {
+                "lat": (["y", "x"], lats.reshape(yc.size, xc.size)),
+                "lon": (["y", "x"], lons.reshape(yc.size, xc.size)),
+            }
+            ds = ds.assign(var_d)
+
+            # set coordinate attributes
+            ds["lat"].attrs["units"] = "degrees_north"
+            ds["lat"].attrs["standard_name"] = "latitude"
+            ds["lat"].attrs["long_name"] = "latitude"
+            ds["lon"].attrs["units"] = "degrees_east"
+            ds["lon"].attrs["standard_name"] = "longitude"
+            ds["lon"].attrs["long_name"] = "longitude"
+
+        elif (
+            configuration is not None
+            and "wkt" in configuration
+            and configuration["wkt"] is not None
+        ):
             ds["x"].attrs["grid_mapping"] = "projection"
             ds["y"].attrs["grid_mapping"] = "projection"
-        elif self.crs is not None:
             ds = ds.assign({"projection": ([], np.int32(1))})
-            ds["projection"].attrs["crs_wkt"] = self.crs.to_wkt()
-            ds["x"].attrs["grid_mapping"] = "projection"
-            ds["y"].attrs["grid_mapping"] = "projection"
+            ds["projection"].attrs["crs_wkt"] = configuration["wkt"]
 
         return ds
 

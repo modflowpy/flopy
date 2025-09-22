@@ -1675,7 +1675,7 @@ class MFSimulationBase:
                 Writes out the simulation in silent mode (verbosity_level = 0)
             netcdf : str
                 ASCII package files will be written as configured for NetCDF input.
-                'layered', 'structured' and 'nofile' are supported arguments.
+                'layered', 'structured' and '' (empty string) are supported arguments.
 
         """
         sim_data = self.simulation_data

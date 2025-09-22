@@ -3618,7 +3618,7 @@ class MFPackage(PackageInterface):
 
         return entries
 
-    def netcdf_info(self, mesh=None):
+    def netcdf_meta(self, mesh=None):
         entries = {}
 
         if self.dimensions.get_aux_variables():
@@ -3649,12 +3649,12 @@ class MFPackage(PackageInterface):
 
         return entries
 
-    def update_dataset(self, dataset, netcdf_info=None, mesh=None, update_data=True):
+    def update_dataset(self, dataset, netcdf_meta=None, mesh=None, update_data=True):
         from ..discretization.structuredgrid import StructuredGrid
-        if netcdf_info is None:
-            nc_info = self.netcdf_info(mesh=mesh)
+        if netcdf_meta is None:
+            nc_meta = self.netcdf_meta(mesh=mesh)
         else:
-            nc_info = netcdf_info
+            nc_meta = netcdf_meta
 
         modelgrid = self.model_or_sim.modelgrid
         modeltime = self.model_or_sim.modeltime
@@ -3670,88 +3670,96 @@ class MFPackage(PackageInterface):
             dimmap["y"] = modelgrid.nrow
             dimmap["x"] = modelgrid.ncol
 
-        def _update_data(nc_info, key, dobj=None, data=None):
-            if "modflow_iaux" in nc_info[key]["attrs"]:
-                iaux = nc_info[key]["attrs"]["modflow_iaux"] - 1
+        def _update_layered(key, iaux, dobj=None, data=None):
+            if "layer" in nc_meta[key]["attrs"]:
+                layer = nc_meta[key]["attrs"]["layer"] - 1
+            else:
+                layer = -1
+
+            if not dobj.repeating:
+                if layer >= 0 and (
+                    'nlay' in dobj.structure.shape or
+                    dobj.structure.shape[0] == 'nodes'):
+                    dataset[nc_meta[key]["varname"]].values = (
+                        data[layer].flatten())
+                else:
+                    dataset[nc_meta[key]["varname"]].values = (
+                        data.flatten())
+                return
+
+            if iaux >= 0:
+                for per in data:
+                    if data[per] is None:
+                        continue
+                    auxdata = data[per][iaux]
+                    istp = sum(modeltime.nstp[0:per])
+                    if self.structure.read_as_arrays:
+                        dataset[nc_meta[key]["varname"]].values[istp, :] = (
+                            auxdata.flatten())
+                    elif self.structure.read_array_grid:
+                        uidx = istp + auxdata[layer].size
+                        if modelgrid.nlay > 1:
+                            dataset[nc_meta[key]["varname"]].values[istp, :] = (
+                                auxdata[layer].flatten())
+                        else:
+                            dataset[nc_meta[key]["varname"]].values[istp, :] = (
+                                auxdata.flatten())
+            else:
+                for per in data:
+                    if data[per] is None:
+                        continue
+                    istp = sum(modeltime.nstp[0:per])
+                    if layer >= 0 and (
+                        len(dobj.structure.shape) == 3 or
+                        dobj.structure.shape[0] == 'nodes'):
+                        dataset[nc_meta[key]["varname"]].values[istp, :] = (
+                            data[per][layer].flatten())
+                    else:
+                        if (
+                            dobj.structure.data_item_structures[0].numeric_index or
+                            dobj.structure.data_item_structures[0].is_cellid):
+                            dataset[nc_meta[key]["varname"]].values[istp, :] = (
+                                data[per].flatten() + 1)
+                        else:
+                            dataset[nc_meta[key]["varname"]].values[istp, :] = (
+                                data[per].flatten())
+
+        def _update_structured(key, iaux, dobj=None, data=None):
+            if not dobj.repeating:
+                dataset[nc_meta[key]["varname"]].values = data
+                return
+
+            if iaux >= 0:
+                for per in data:
+                    if data[per] is None:
+                        continue
+                    istp = sum(modeltime.nstp[0:per])
+                    auxdata = data[per][iaux]
+                    dataset[nc_meta[key]["varname"]].values[istp, :] = (
+                        auxdata)
+            else:
+                for per in data:
+                    if data[per] is None:
+                        continue
+                    istp = sum(modeltime.nstp[0:per])
+                    if (
+                        dobj.structure.data_item_structures[0].numeric_index or
+                        dobj.structure.data_item_structures[0].is_cellid):
+                        dataset[nc_meta[key]["varname"]].values[istp, :] = (
+                            data[per] + 1)
+                    else:
+                        dataset[nc_meta[key]["varname"]].values[istp, :] = (
+                            data[per])
+
+        def _update_data(key, dobj=None, data=None):
+            if "modflow_iaux" in nc_meta[key]["attrs"]:
+                iaux = nc_meta[key]["attrs"]["modflow_iaux"] - 1
             else:
                 iaux = -1
             if mesh == None:
-                if dobj.repeating:
-                    if iaux >= 0:
-                        for per in data:
-                            if data[per] is None:
-                                continue
-                            istp = sum(modeltime.nstp[0:per])
-                            auxdata = data[per][iaux]
-                            dataset[nc_info[key]["varname"]].values[istp, :] = (
-                                auxdata)
-                    else:
-                        for per in data:
-                            if data[per] is None:
-                                continue
-                            istp = sum(modeltime.nstp[0:per])
-                            if (
-                                dobj.structure.data_item_structures[0].numeric_index or
-                                dobj.structure.data_item_structures[0].is_cellid):
-                                dataset[nc_info[key]["varname"]].values[istp, :] = (
-                                    data[per] + 1)
-                            else:
-                                dataset[nc_info[key]["varname"]].values[istp, :] = (
-                                    data[per])
-                else:
-                    dataset[nc_info[key]["varname"]].values = data
+                _update_structured(key, iaux, dobj, data)
             elif mesh.upper() == "LAYERED":
-                if "layer" in nc_info[key]["attrs"]:
-                    layer = nc_info[key]["attrs"]["layer"] - 1
-                else:
-                    layer = -1
-                if dobj.repeating:
-                    if iaux >= 0:
-                        for per in data:
-                            if data[per] is None:
-                                continue
-                            auxdata = data[per][iaux]
-                            istp = sum(modeltime.nstp[0:per])
-                            if self.structure.read_as_arrays:
-                                dataset[nc_info[key]["varname"]].values[istp, :] = (
-                                    auxdata.flatten())
-                            elif self.structure.read_array_grid:
-                                uidx = istp + auxdata[layer].size
-                                if modelgrid.nlay > 1:
-                                    dataset[nc_info[key]["varname"]].values[istp, :] = (
-                                        auxdata[layer].flatten())
-                                else:
-                                    dataset[nc_info[key]["varname"]].values[istp, :] = (
-                                        auxdata.flatten())
-                    else:
-                        for per in data:
-                            if data[per] is None:
-                                continue
-                            istp = sum(modeltime.nstp[0:per])
-                            if layer >= 0 and (
-                                len(dobj.structure.shape) == 3 or
-                                dobj.structure.shape[0] == 'nodes'):
-                                dataset[nc_info[key]["varname"]].values[istp, :] = (
-                                    data[per][layer].flatten())
-                            else:
-                                if (
-                                    dobj.structure.data_item_structures[0].numeric_index or
-                                    dobj.structure.data_item_structures[0].is_cellid):
-                                    dataset[nc_info[key]["varname"]].values[istp, :] = (
-                                        data[per].flatten() + 1)
-                                else:
-                                    dataset[nc_info[key]["varname"]].values[istp, :] = (
-                                        data[per].flatten())
-                else:
-                    if layer >= 0 and (
-                        'nlay' in dobj.structure.shape or
-                        dobj.structure.shape[0] == 'nodes'):
-                        dataset[nc_info[key]["varname"]].values = (
-                            data[layer].flatten())
-                    else:
-                        dataset[nc_info[key]["varname"]].values = (
-                            data.flatten())
-
+                _update_layered(key, iaux, dobj, data)
 
         def _data_shape(shape):
             dims_l = []
@@ -3761,41 +3769,41 @@ class MFPackage(PackageInterface):
             return dims_l
 
         projection = "projection" in dataset.data_vars
+        latlon = "lat" in dataset.data_vars and "lon" in dataset.data_vars
 
         last_path = ''
         pitem = None
         pdata = None
-        for v in nc_info:
-            varname = nc_info[v]["varname"]
+        for v in nc_meta:
+            varname = nc_meta[v]["varname"]
             data = np.full(
-                _data_shape(nc_info[v]["netcdf_shape"]),
-                nc_info[v]["attrs"]["_FillValue"],
-                dtype=nc_info[v]["xarray_type"],
+                _data_shape(nc_meta[v]["netcdf_shape"]),
+                nc_meta[v]["attrs"]["_FillValue"],
+                dtype=nc_meta[v]["xarray_type"],
             )
-            var_d = {varname: (nc_info[v]["netcdf_shape"], data)}
+            var_d = {varname: (nc_meta[v]["netcdf_shape"], data)}
             dataset = dataset.assign(var_d)
-            for a in nc_info[v]["attrs"]:
-                dataset[varname].attrs[a] = nc_info[v]["attrs"][a]
+            for a in nc_meta[v]["attrs"]:
+                dataset[varname].attrs[a] = nc_meta[v]["attrs"][a]
+            dims = dataset[varname].dims
             if projection:
-                dims = dataset[varname].dims
                 if "nmesh_face" in dims or "nmesh_node" in dims:
                     dataset[varname].attrs["grid_mapping"] = "projection"
                     dataset[varname].attrs["coordinates"] = "mesh_face_x mesh_face_y"
                 elif mesh is None and len(dims) > 1:
-                    # TODO don't set if lon / lat?
                     dataset[varname].attrs["grid_mapping"] = "projection"
                     dataset[varname].attrs["coordinates"] = "x y"
+            elif latlon and mesh is None and len(dims) > 1:
+                dataset[varname].attrs["coordinates"] = "lon lat"
 
             if update_data:
-                path = nc_info[v]["attrs"]["modflow_input"]
+                path = nc_meta[v]["attrs"]["modflow_input"]
                 tag = path.split("/")[2].lower()
                 if path != last_path:
-                    pitem = None
-                    pdata = None
                     pitem = getattr(self, tag)
                     pdata = pitem.get_data()
                     last_path = path
-                _update_data(nc_info, v, pitem, pdata)
+                _update_data(v, pitem, pdata)
 
         return dataset
 

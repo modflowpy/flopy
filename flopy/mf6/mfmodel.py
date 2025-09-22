@@ -1324,13 +1324,16 @@ class MFModel(ModelInterface):
             with relative paths, leaving files defined by absolute paths fixed.
         netcdf : str
             ASCII package files will be written as configured for NetCDF input. 
-            'layered', 'structured' and 'nofile' are supported arguments.
+            'layered', 'structured' and '' (empty string) are supported arguments.
         """
 
-        write_netcdf = netcdf and hasattr(self.name_file, "nc_filerecord")
+        write_netcdf = (
+            hasattr(self.name_file, "nc_filerecord")
+            and netcdf is not None
+        )
 
         if write_netcdf:
-            # update name file for input even if "nofile" is configured
+            # update name file for input even if "" is configured
             nc_fname = None
             if self.name_file.nc_filerecord.get_data() is None:
                 # update name file for netcdf input
@@ -1376,7 +1379,7 @@ class MFModel(ModelInterface):
             pp._set_netcdf_storage(reset=True)
 
         # write netcdf file
-        if write_netcdf and netcdf.lower() != "nofile":
+        if write_netcdf and netcdf != "":
             self._write_netcdf(mesh=netcdf)
             if nc_fname is not None:
                 self.name_file.nc_filerecord = None
@@ -2280,7 +2283,7 @@ class MFModel(ModelInterface):
 
         return {"attrs": attrs}
 
-    def netcdf_info(self, mesh=None):
+    def netcdf_meta(self, mesh=None):
         """Return dictionary of dataset (model) scoped attributes
         Parameters
         ----------
@@ -2291,11 +2294,11 @@ class MFModel(ModelInterface):
             self.name, self.model_type, self.get_grid_type(), mesh
         )
 
-    def update_dataset(self, dataset, netcdf_info=None, mesh=None, update_data=True):
-        if netcdf_info is None:
-            nc_info = self.netcdf_info(mesh=mesh)
+    def update_dataset(self, dataset, netcdf_meta=None, mesh=None, update_data=True):
+        if netcdf_meta is None:
+            nc_meta = self.netcdf_meta(mesh=mesh)
         else:
-            nc_info = netcdf_info
+            nc_meta = netcdf_meta
 
         if (
             self.simulation.simulation_data.verbosity_level.value
@@ -2303,8 +2306,8 @@ class MFModel(ModelInterface):
         ):
             print(f"    updating model dataset...")
 
-        for a in nc_info["attrs"]:
-            dataset.attrs[a] = nc_info["attrs"][a]
+        for a in nc_meta["attrs"]:
+            dataset.attrs[a] = nc_meta["attrs"][a]
 
         # add all packages and update data
         for p in self.packagelist:
@@ -2325,20 +2328,22 @@ class MFModel(ModelInterface):
         if mesh is not None and mesh.upper() == "STRUCTURED":
             mesh = None
 
-        encode = {}
+        config = {}
         for pp in self.packagelist:
             if pp.package_type == "ncf":
-                encode["shuffle"] = pp.shuffle.get_data()
-                encode["deflate"] = pp.deflate.get_data()
-                encode["chunk_time"] = pp.chunk_time.get_data()
-                encode["chunk_face"] = pp.chunk_face.get_data()
-                encode["chunk_x"] = pp.chunk_x.get_data()
-                encode["chunk_y"] = pp.chunk_y.get_data()
-                encode["chunk_z"] = pp.chunk_z.get_data()
+                config["shuffle"] = pp.shuffle.get_data()
+                config["deflate"] = pp.deflate.get_data()
+                config["chunk_time"] = pp.chunk_time.get_data()
+                config["chunk_face"] = pp.chunk_face.get_data()
+                config["chunk_x"] = pp.chunk_x.get_data()
+                config["chunk_y"] = pp.chunk_y.get_data()
+                config["chunk_z"] = pp.chunk_z.get_data()
                 wkt = pp.wkt.get_data()
                 if wkt is not None:
                     wkt = wkt[0][1]
-                encode["wkt"] = wkt
+                config["wkt"] = wkt
+                config["latitude"] = pp.latitude.get_data()
+                config["longitude"] = pp.longitude.get_data()
 
         if (
             self.simulation.simulation_data.verbosity_level.value
@@ -2349,24 +2354,24 @@ class MFModel(ModelInterface):
         ds = self.modelgrid.dataset(
             modeltime=self.modeltime,
             mesh=mesh,
-            encoding=encode,
+            configuration=config,
         )
 
         dt = datetime.datetime.now()
         timestamp = dt.strftime("%m/%d/%Y %H:%M:%S")
 
-        nc_info = self.netcdf_info(mesh=mesh)
-        nc_info["attrs"]["title"] = f"{self.name.upper()} input"
-        nc_info["attrs"]["source"] = f"flopy {__version__}"
-        nc_info["attrs"]["history"] = f"first created {timestamp}"
+        nc_meta = self.netcdf_meta(mesh=mesh)
+        nc_meta["attrs"]["title"] = f"{self.name.upper()} input"
+        nc_meta["attrs"]["source"] = f"flopy {__version__}"
+        nc_meta["attrs"]["history"] = f"first created {timestamp}"
         if mesh is None:
-            nc_info["attrs"]["Conventions"] = "CF-1.11"
+            nc_meta["attrs"]["Conventions"] = "CF-1.11"
         elif mesh.upper() is "LAYERED":
-            nc_info["attrs"]["Conventions"] = "CF-1.11 UGRID-1.0"
+            nc_meta["attrs"]["Conventions"] = "CF-1.11 UGRID-1.0"
 
         ds = self.update_dataset(
             ds,
-            netcdf_info=nc_info,
+            netcdf_meta=nc_meta,
             mesh=mesh,
         )
 
@@ -2374,53 +2379,53 @@ class MFModel(ModelInterface):
         chunk_t = False
         if mesh is None:
             if (
-                "chunk_x" in encode
-                and encode["chunk_x"] is not None
-                and "chunk_y" in encode
-                and encode["chunk_y"] is not None
-                and "chunk_z" in encode
-                and encode["chunk_z"] is not None
+                "chunk_x" in config
+                and config["chunk_x"] is not None
+                and "chunk_y" in config
+                and config["chunk_y"] is not None
+                and "chunk_z" in config
+                and config["chunk_z"] is not None
             ):
                 chunk = True
         elif mesh.upper() == "LAYERED":
-            if "chunk_face" in encode and encode["chunk_face"] is not None:
+            if "chunk_face" in config and config["chunk_face"] is not None:
                 chunk = True
-        if "chunk_time" in encode and encode["chunk_time"] is not None:
+        if "chunk_time" in config and config["chunk_time"] is not None:
             chunk_t = True
 
         base_encode = {}
-        if "deflate" in encode and encode["deflate"] is not None:
+        if "deflate" in config and config["deflate"] is not None:
             base_encode["zlib"] = True
-            base_encode["complevel"] = encode["deflate"]
-        if "shuffle" in encode and encode["deflate"] is not None:
+            base_encode["complevel"] = config["deflate"]
+        if "shuffle" in config and config["deflate"] is not None:
             base_encode["shuffle"] = True
 
         encoding = {}
         chunk_dims = {'time', 'nmesh_face', 'z', 'y', 'x'}
         for varname, da in ds.data_vars.items():
             dims = ds.data_vars[varname].dims
-            codes = dict(base_encode)
+            encode = dict(base_encode)
             if (
                 not set(dims).issubset(chunk_dims)
                 or not chunk or not chunk_t
             ):
-                encoding[varname] = codes
+                encoding[varname] = encode
                 continue
             chunksizes = []
             if "time" in dims:
-                chunksizes.append(encode["chunk_time"])
+                chunksizes.append(config["chunk_time"])
             if mesh is None:
                 if "z" in dims:
-                    chunksizes.append(encode["chunk_z"])
+                    chunksizes.append(config["chunk_z"])
                 if "y" in dims:
-                    chunksizes.append(encode["chunk_y"])
+                    chunksizes.append(config["chunk_y"])
                 if "x" in dims:
-                    chunksizes.append(encode["chunk_x"])
+                    chunksizes.append(config["chunk_x"])
             elif mesh.upper() == "LAYERED" and "nmesh_face" in dims:
-                chunksizes.append(encode["chunk_face"])
+                chunksizes.append(config["chunk_face"])
             if len(chunksizes) > 0:
-                codes["chunksizes"] = chunksizes
-            encoding[varname] = codes
+                encode["chunksizes"] = chunksizes
+            encoding[varname] = encode
 
         fname = self.name_file.nc_filerecord.get_data()[0][0]
 

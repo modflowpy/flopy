@@ -87,7 +87,7 @@ def check_netcdf(path, mobj, mesh=None):
 @pytest.mark.regression
 def test_uzf01_model_scope_nofile(function_tmpdir, example_data_path):
     sim_name = "uzf01"
-    netcdf = "nofile"
+    netcdf = ""
     fname = f"{sim_name}.structured.nc"
     data_path_base = example_data_path / "mf6" / "netcdf"
     ws = function_tmpdir / sim_name
@@ -108,7 +108,7 @@ def test_uzf01_model_scope_nofile(function_tmpdir, example_data_path):
 @pytest.mark.regression
 def test_uzf02_model_scope_nofile(function_tmpdir, example_data_path):
     sim_name = "uzf02"
-    netcdf = "nofile"
+    netcdf = ""
     fname = f"{sim_name}.input.nc"  # default
     data_path_base = example_data_path / "mf6" / "netcdf"
     ws = function_tmpdir / sim_name
@@ -230,7 +230,7 @@ def test_uzf02_sim_scope_fname(function_tmpdir, example_data_path):
 @pytest.mark.regression
 def test_uzf01_model_scope_nomesh(function_tmpdir, example_data_path):
     sim_name = "uzf01"
-    netcdf = "nofile"
+    netcdf = ""
     fname = f"{sim_name}.structured.nc"
     data_path_base = example_data_path / "mf6" / "netcdf"
     ws = function_tmpdir / sim_name
@@ -258,7 +258,7 @@ def test_uzf01_model_scope_nomesh(function_tmpdir, example_data_path):
 @pytest.mark.regression
 def test_uzf01_model_scope_mesh(function_tmpdir, example_data_path):
     sim_name = "uzf01"
-    netcdf = "nofile"
+    netcdf = ""
     mesh = "layered"
     fname = f"{sim_name}.layered.nc"
     data_path_base = example_data_path / "mf6" / "netcdf"
@@ -287,7 +287,7 @@ def test_uzf01_model_scope_mesh(function_tmpdir, example_data_path):
 @pytest.mark.regression
 def test_uzf02_model_scope(function_tmpdir, example_data_path):
     sim_name = "uzf02"
-    netcdf = "nofile"
+    netcdf = ""
     mesh = "layered"
     fname = f"{sim_name}.layered.nc"
     data_path_base = example_data_path / "mf6" / "netcdf"
@@ -335,11 +335,11 @@ def test_uzf01_pkg_scope(function_tmpdir, example_data_path):
     ds = gwf.modelgrid.dataset(modeltime=gwf.modeltime)
 
     # get model netcdf info
-    nc_info = gwf.netcdf_info()
+    nc_meta = gwf.netcdf_meta()
 
     # update dataset directly with required attributes
-    for a in nc_info["attrs"]:
-        ds.attrs[a] = nc_info["attrs"][a]
+    for a in nc_meta["attrs"]:
+        ds.attrs[a] = nc_meta["attrs"][a]
 
     # add all packages and update data
     for p in gwf.packagelist:
@@ -373,11 +373,11 @@ def test_uzf01_pkg_scope_modify(function_tmpdir, example_data_path):
     ds = gwf.modelgrid.dataset(modeltime=gwf.modeltime)
 
     # get model netcdf info
-    nc_info = gwf.netcdf_info()
+    nc_meta = gwf.netcdf_meta()
 
     # update dataset directly with required attributes
-    for a in nc_info["attrs"]:
-        ds.attrs[a] = nc_info["attrs"][a]
+    for a in nc_meta["attrs"]:
+        ds.attrs[a] = nc_meta["attrs"][a]
 
     # update dataset with `DIS` arrays
     dis = gwf.get_package("dis")
@@ -385,13 +385,13 @@ def test_uzf01_pkg_scope_modify(function_tmpdir, example_data_path):
 
     # get npf package netcdf info
     npf = gwf.get_package("npf")
-    nc_info = npf.netcdf_info()
+    nc_meta = npf.netcdf_meta()
 
     # update dataset with `NPF` arrays
     # change k varname and add attribute
-    nc_info["k"]["varname"] = "npf_k_updated"
-    nc_info["k"]["attrs"]["standard_name"] = "soil_hydraulic_conductivity_at_saturation"
-    ds = npf.update_dataset(ds, netcdf_info=nc_info)
+    nc_meta["k"]["varname"] = "npf_k_updated"
+    nc_meta["k"]["attrs"]["standard_name"] = "soil_hydraulic_conductivity_at_saturation"
+    ds = npf.update_dataset(ds, netcdf_meta=nc_meta)
 
     # ic
     ic = gwf.get_package("ic")

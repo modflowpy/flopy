@@ -164,10 +164,10 @@ sim.write_simulation(netcdf="layered")
 
 # ## Create NetCDF based simulation method 2
 #
-# In this method we will set the FloPy `netcdf` argument to `nofile`
-# when `write_simulation()` is called. As such, FloPy will not generate
-# the NetCDF file automatically. We will manage the NetCDF file
-# generation ourselves in method 2.
+# In this method we will set the FloPy `netcdf` argument to `` (empty
+# string) when `write_simulation()` is called. As such, FloPy will
+# not generate the NetCDF file automatically. We will manage the NetCDF
+# file generation ourselves in method 2.
 #
 # Reset the simulation path and set the `GWF` name file `nc_filerecord`
 # attribute to the name of the intended input NetCDF file. Display
@@ -188,7 +188,7 @@ gwf = sim.get_model("uzf01")
 gwf.name_file.nc_filerecord = "uzf01.structured.nc"
 # write simulation with ASCII inputs tagged for NetCDF
 # but do not create NetCDF file
-sim.write_simulation(netcdf="nofile")
+sim.write_simulation(netcdf="")
 
 # ## Show name file with NetCDF input configured
 
@@ -223,7 +223,7 @@ ds = gwf.modelgrid.dataset(modeltime=gwf.modeltime)
 # details related to creating the variable, including dimensions,
 # shape and data type.
 #
-# The dictionaries are available via the `netcdf_info()` call. Their
+# The dictionaries are available via the `netcdf_meta()` call. Their
 # content also varies depending on the desired type of dataset (i.e.
 # `structured` or `layered`). In this step we will access the model
 # NetCDF metadata and use it to update dataset scoped attributes.
@@ -238,12 +238,12 @@ ds = gwf.modelgrid.dataset(modeltime=gwf.modeltime)
 # Examples of this approach (with package objects) are shown below.
 
 # get model netcdf info
-nc_info = gwf.netcdf_info()
-pprint(nc_info)
+nc_meta = gwf.netcdf_meta()
+pprint(nc_meta)
 
 # update dataset directly with required attributes
-for a in nc_info["attrs"]:
-    ds.attrs[a] = nc_info["attrs"][a]
+for a in nc_meta["attrs"]:
+    ds.attrs[a] = nc_meta["attrs"][a]
 
 # ## Update the dataset with supported `DIS` arrays
 #
@@ -260,7 +260,7 @@ ds = dis.update_dataset(ds)
 # ## Access `NPF` package NetCDF attributes
 #
 # Access package scoped NetCDF details by storing the dictionary returned
-# from `netcdf_info()`.
+# from `netcdf_meta()`.
 #
 # The contents of the info dictionary are shown and then, in the following
 # step, the dictionary and the dataset are passed to a helper routine that
@@ -268,8 +268,8 @@ ds = dis.update_dataset(ds)
 
 # get npf package netcdf info
 npf = gwf.get_package("npf")
-nc_info = npf.netcdf_info()
-pprint(nc_info)
+nc_meta = npf.netcdf_meta()
+pprint(nc_meta)
 
 # ## Update package NetCDF metadata dictionary and dataset
 #
@@ -284,9 +284,9 @@ pprint(nc_info)
 # values.
 
 # update dataset with `NPF` arrays
-nc_info["k"]["varname"] = "npf_k_updated"
-nc_info["k"]["attrs"]["standard_name"] = "soil_hydraulic_conductivity_at_saturation"
-ds = npf.update_dataset(ds, netcdf_info=nc_info)
+nc_meta["k"]["varname"] = "npf_k_updated"
+nc_meta["k"]["attrs"]["standard_name"] = "soil_hydraulic_conductivity_at_saturation"
+ds = npf.update_dataset(ds, netcdf_meta=nc_meta)
 
 # ## Show dataset `NPF K` parameter with updates
 
@@ -335,7 +335,7 @@ ds.to_netcdf(
 # ## Method 3: DIY with xarray
 #
 # The above method still uses FloPy objects to update the dataset arrays
-# to values consistent with the state of the objects. The `netcdf_info`
+# to values consistent with the state of the objects. The `netcdf_meta`
 # dictionary is intended to supported creation of the dataset without
 # an existing simulation defined. The base dataset can be defined with
 # `modelgrid` and `modeltime` objects, while the full package netcdf
@@ -345,16 +345,16 @@ ds.to_netcdf(
 
 # ## Demonstrate static call on MFPackage (structured dataset):
 
-netcdf_info = flopy.mf6.mfpackage.MFPackage.netcdf_package(
+netcdf_meta = flopy.mf6.mfpackage.MFPackage.netcdf_package(
     mtype="GWF",
     ptype="NPF",
     auxiliary=["CONCENTRATION"],
 )
-pprint(netcdf_info)
+pprint(netcdf_meta)
 
 # ## Demonstrate static call on MFPackage (layered dataset):
 
-netcdf_info = flopy.mf6.mfpackage.MFPackage.netcdf_package(
+netcdf_meta = flopy.mf6.mfpackage.MFPackage.netcdf_package(
     mtype="GWF", ptype="NPF", mesh="LAYERED", auxiliary=["CONCENTRATION"], nlay=2
 )
-pprint(netcdf_info)
+pprint(netcdf_meta)
