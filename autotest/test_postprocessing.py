@@ -522,8 +522,8 @@ def test_get_transmissivities_mf6_structured(function_tmpdir):
         botm[nl - i - 1, :, :] = i
 
     ws = function_tmpdir
-    name = 'test_mf6_transmissivity'
-    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=ws, exe_name='mf6')
+    name = "test_mf6_transmissivity"
+    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=ws, exe_name="mf6")
     gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
     dis = flopy.mf6.ModflowGwfdis(gwf, nlay=nl, nrow=nr, ncol=nc, botm=botm, top=top)
     npf = flopy.mf6.ModflowGwfnpf(gwf, k=hk, save_specific_discharge=True)
@@ -609,4 +609,3 @@ def test_get_sat_thickness_gradients(function_tmpdir):
     assert np.abs(np.sum(sat_thick[:, 1, 1] - np.array([0.2, 1.0, 1.0]))) < 1e-6, (
         "failed saturated thickness comparison (grid.thick())"
     )
-
