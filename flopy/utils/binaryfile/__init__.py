@@ -1604,7 +1604,7 @@ class CellBudgetFile:
             if t
         ]
 
-    def get_ts(self, idx, text=None, times=None):
+    def get_ts(self, idx, text=None, times=None, variable="q"):
         """
         Get a time series from the binary budget file.
 
@@ -1619,6 +1619,11 @@ class CellBudgetFile:
             'RIVER LEAKAGE', 'STORAGE', 'FLOW RIGHT FACE', etc.
         times : iterable of floats
             List of times to from which to get time series.
+        variable : str, optional
+            Variable name to extract from the budget record. Default is 'q'.
+            For records with auxiliary variables (e.g., 'DATA-SPDIS', 'DATA-SAT'),
+            this can be used to access auxiliary data. Examples include 'qx',
+            'qy', 'qz' for specific discharge components.
 
         Returns
         -------
@@ -1637,6 +1642,9 @@ class CellBudgetFile:
 
         Examples
         --------
+
+        >>> # Get specific discharge x-component from DATA-SPDIS record
+        >>> ts = cbb.get_ts(idx=(0, 5, 5), text='DATA-SPDIS', variable='qx')
 
         """
         # issue exception if text not provided
@@ -1669,45 +1677,61 @@ class CellBudgetFile:
         for idx, t in enumerate(timesint):
             result[idx, 0] = t
 
+        full3d = True
         for itim, k in enumerate(kstpkper):
-            try:
-                v = self.get_data(kstpkper=k, text=text, full3D=True)
-                # skip missing data - required for storage
-                if len(v) > 0:
+            if full3d:
+                try:
+                    v = self.get_data(kstpkper=k, text=text, full3D=True)
+
+                    # skip missing data - required for storage
+                    if len(v) == 0:
+                        continue
+
                     v = v[0]
                     istat = 1
                     for k, i, j in kijlist:
                         result[itim, istat] = v[k, i, j].copy()
                         istat += 1
-            except ValueError:
+                    continue
+                except ValueError:
+                    full3d = False
+            if not full3d:
                 v = self.get_data(kstpkper=k, text=text)
+
                 # skip missing data - required for storage
-                if len(v) > 0:
-                    if self.modelgrid is None:
-                        s = (
-                            "A modelgrid instance must be provided during "
-                            "instantiation to get IMETH=6 timeseries data"
+                if len(v) == 0:
+                    continue
+
+                if self.modelgrid is None:
+                    s = (
+                        "A modelgrid instance must be provided during "
+                        "instantiation to get IMETH=6 timeseries data"
+                    )
+                    raise ValueError(s)
+
+                if self.modelgrid.grid_type == "structured":
+                    ndx = [
+                        lrc[0] * (self.modelgrid.nrow * self.modelgrid.ncol)
+                        + lrc[1] * self.modelgrid.ncol
+                        + (lrc[2] + 1)
+                        for lrc in kijlist
+                    ]
+                else:
+                    ndx = [
+                        lrc[0] * self.modelgrid.ncpl + (lrc[-1] + 1) for lrc in kijlist
+                    ]
+
+                for vv in v:
+                    available = vv.dtype.names
+                    if variable not in available:
+                        raise ValueError(
+                            f"Variable '{variable}' not found in budget record. "
+                            f"Available variables: {list(available)}"
                         )
-                        raise AssertionError(s)
 
-                    if self.modelgrid.grid_type == "structured":
-                        ndx = [
-                            lrc[0] * (self.modelgrid.nrow * self.modelgrid.ncol)
-                            + lrc[1] * self.modelgrid.ncol
-                            + (lrc[2] + 1)
-                            for lrc in kijlist
-                        ]
-                    else:
-                        ndx = [
-                            lrc[0] * self.modelgrid.ncpl + (lrc[-1] + 1)
-                            for lrc in kijlist
-                        ]
-
-                    for vv in v:
-                        field = vv.dtype.names[2]
-                        dix = np.asarray(np.isin(vv["node"], ndx)).nonzero()[0]
-                        if len(dix) > 0:
-                            result[itim, 1:] = vv[field][dix]
+                    dix = np.asarray(np.isin(vv["node"], ndx)).nonzero()[0]
+                    if len(dix) > 0:
+                        result[itim, 1:] = vv[variable][dix]
 
         return result
 

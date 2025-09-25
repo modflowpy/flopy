@@ -209,6 +209,7 @@ class Mt3dUzt(Package):
             )
 
         # Note: list is used for multi-species, NOT for stress periods!
+        self.cuzinf = None
         if cuzinf is not None:
             self.cuzinf = []
             t2d = Transient2d(
@@ -242,6 +243,7 @@ class Mt3dUzt(Package):
                     )
                     self.cuzinf.append(t2d)
 
+        self.cuzet = None
         if cuzet is not None:
             self.cuzet = []
             t2d = Transient2d(
@@ -275,6 +277,7 @@ class Mt3dUzt(Package):
                     )
                     self.cuzet.append(t2d)
 
+        self.cgwet = None
         if cgwet is not None:
             self.cgwet = []
             t2d = Transient2d(
@@ -309,7 +312,6 @@ class Mt3dUzt(Package):
                     self.cgwet.append(t2d)
 
         self.parent.add_package(self)
-        return
 
     def write_file(self):
         """

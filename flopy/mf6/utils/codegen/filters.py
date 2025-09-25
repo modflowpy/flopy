@@ -16,10 +16,10 @@ def _try_get_enum_value(v: Any) -> Any:
     return v.value if isinstance(v, Enum) else v
 
 
-def _get_vars(d: dict) -> dict[str, dict]:
+def _get_vars(d: dict, developmode: bool = True) -> dict[str, dict]:
     vars_ = dict()
     def visit(p, k, v):
-        if isinstance(v, dict) and "type" in v:
+        if isinstance(v, dict) and "type" in v and (developmode or not v.get("prerelease", False)):
             vars_[k] = v
         return True
     def enter(p, k, v):
@@ -225,10 +225,10 @@ def default_value(var: dict) -> Any:
         return _default
     return None
 
-def variables(dfn: dict) -> List[str]:
-    return _get_vars(dfn)
+def variables(dfn: dict, developmode: bool = True) -> List[str]:
+    return _get_vars(dfn, developmode=developmode)
 
-def attrs(dfn: dict, component_name: tuple[str, str]) -> List[str]:
+def attrs(dfn: dict, component_name: tuple[str, str], developmode: bool = True) -> List[str]:
     """
     Map the context's input variables to corresponding class attributes,
     where applicable. TODO: this should get much simpler if we can drop
@@ -240,7 +240,7 @@ def attrs(dfn: dict, component_name: tuple[str, str]) -> List[str]:
         from modflow_devtools.dfn import _SCALAR_TYPES as SCALAR_TYPES  # noqa: PLC2701
 
     component_base = base(component_name)
-    component_vars = _get_vars(dfn)
+    component_vars = variables(dfn, developmode=developmode)
 
     def _attr(var: dict) -> Optional[str]:
         var_name = var["name"]
@@ -365,9 +365,9 @@ def attrs(dfn: dict, component_name: tuple[str, str]) -> List[str]:
 
     return attrs
 
-def init(dfn: dict, component_name: tuple[str, str]) -> List[str]:
+def init(dfn: dict, component_name: tuple[str, str], developmode: bool = True) -> List[str]:
     component_base = base(component_name)
-    component_vars = _get_vars(dfn)
+    component_vars = variables(dfn, developmode=developmode)
 
     def _statements() -> Optional[List[str]]:
         if component_base == "MFSimulationBase":

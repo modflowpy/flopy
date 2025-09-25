@@ -656,3 +656,105 @@ def test_read_mf6_budgetfile(example_data_path):
     assert len(rch_zone_1) == 120 * 3 + 1
     assert len(rch_zone_2) == 120 * 3 + 1
     assert len(rch_zone_3) == 120 * 3 + 1
+
+
+def test_cellbudgetfile_get_ts_auxiliary_variables(example_data_path):
+    from flopy.discretization import StructuredGrid
+
+    mf2005_model_path = example_data_path / "mf2005_test"
+    cbc_fname = mf2005_model_path / "test1tr.gitcbc"
+
+    # modelgrid for test1tr (1 layer, 15 rows, 10 cols)
+    modelgrid = StructuredGrid(nrow=15, ncol=10, nlay=1)
+
+    with CellBudgetFile(cbc_fname, modelgrid=modelgrid) as v:
+        node = 54 - 1
+        k = node // (15 * 10)
+        i = (node % (15 * 10)) // 10
+        j = node % 10
+
+        ts_default = v.get_ts(idx=(k, i, j), text="WELLS")
+        ts_q_explicit = v.get_ts(idx=(k, i, j), text="WELLS", variable="q")
+        assert ts_default.shape[1] == 2  # time + 1 data column
+        np.testing.assert_array_equal(ts_default, ts_q_explicit)
+
+        ts_iface = v.get_ts(idx=(k, i, j), text="WELLS", variable="IFACE")
+        assert ts_iface.shape[1] == 2  # time + 1 data column
+        assert not np.array_equal(ts_default[:, 1], ts_iface[:, 1])
+        np.testing.assert_array_equal(ts_default[:, 0], ts_iface[:, 0])
+
+
+@pytest.mark.requires_exe("mf6")
+def test_cellbudgetfile_get_ts_spdis_auxiliary_variables(function_tmpdir):
+    from flopy.mf6 import (
+        MFSimulation,
+        ModflowGwf,
+        ModflowGwfchd,
+        ModflowGwfdis,
+        ModflowGwfic,
+        ModflowGwfnpf,
+        ModflowGwfoc,
+        ModflowIms,
+        ModflowTdis,
+    )
+
+    sim_name = "spdis_test"
+    sim = MFSimulation(sim_name=sim_name, sim_ws=function_tmpdir, exe_name="mf6")
+    tdis = ModflowTdis(sim, nper=2, perioddata=[(1.0, 1, 1.0), (1.0, 1, 1.0)])
+    ims = ModflowIms(sim)
+    gwf = ModflowGwf(sim, modelname=sim_name, save_flows=True)
+    nrow, ncol, nlay = 5, 5, 1
+    dis = ModflowGwfdis(
+        gwf,
+        nrow=nrow,
+        ncol=ncol,
+        nlay=nlay,
+        delr=10.0,
+        delc=10.0,
+        top=10.0,
+        botm=[0.0],
+    )
+    ic = ModflowGwfic(gwf, strt=5.0)
+    npf = ModflowGwfnpf(gwf, k=1.0, save_specific_discharge=True)
+    chd_spd = [[(0, 0, 0), 10.0], [(0, 4, 4), 0.0]]
+    chd = ModflowGwfchd(gwf, stress_period_data=chd_spd)
+    budget_file = f"{sim_name}.cbc"
+    head_file = f"{sim_name}.hds"
+    oc = ModflowGwfoc(
+        gwf,
+        budget_filerecord=budget_file,
+        head_filerecord=head_file,
+        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    )
+
+    sim.write_simulation()
+    success, _ = sim.run_simulation(silent=True)
+
+    cbc_file = function_tmpdir / budget_file
+    with CellBudgetFile(cbc_file, modelgrid=gwf.modelgrid) as cbc:
+        spdis_data = cbc.get_data(text="DATA-SPDIS")
+        if len(spdis_data) == 0:
+            pytest.skip("No DATA-SPDIS records found")
+
+        available_fields = list(spdis_data[0].dtype.names)
+        expected_fields = ["node", "q", "qx", "qy", "qz"]
+
+        for field in ["qx", "qy", "qz"]:
+            assert field in available_fields, (
+                f"Expected field '{field}' not found in {available_fields}"
+            )
+
+        test_cell = (0, 2, 2)
+        ts_q = cbc.get_ts(idx=test_cell, text="DATA-SPDIS", variable="q")
+        ts_qx = cbc.get_ts(idx=test_cell, text="DATA-SPDIS", variable="qx")
+        ts_qy = cbc.get_ts(idx=test_cell, text="DATA-SPDIS", variable="qy")
+        ts_qz = cbc.get_ts(idx=test_cell, text="DATA-SPDIS", variable="qz")
+
+        assert ts_q.shape[1] == 2  # time + 1 data column
+        assert ts_qx.shape[1] == 2
+        assert ts_qy.shape[1] == 2
+        assert ts_qz.shape[1] == 2
+
+        np.testing.assert_array_equal(ts_q[:, 0], ts_qx[:, 0])
+        np.testing.assert_array_equal(ts_q[:, 0], ts_qy[:, 0])
+        np.testing.assert_array_equal(ts_q[:, 0], ts_qz[:, 0])

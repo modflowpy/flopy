@@ -17,6 +17,7 @@ def generate_classes(
     ref=None,
     dfnpath=None,
     verbose=False,
+    developmode=True,
 ):
     """
     Generate Python classes for MODFLOW 6 using definition files fetched
@@ -41,6 +42,9 @@ def generate_classes(
         timestamp from when the definition files were replaced.
     verbose : bool, default False
         If True, print information about the code generation process.
+    developmode : bool, default True
+        If True, include all variables, including prerelease variables.
+        If False, omit prerelease variables from generated modules.
     """
 
     if dfnpath is None and ref is None:
@@ -75,15 +79,14 @@ def generate_classes(
                 proj_root / "doc" / "mf6io" / "mf6ivar" / "dfn", dfnpath
             )
 
-        if verbose:
-            dfns = list(dfnpath.glob("*.dfn"))
-            module_name = ".".join(_MF6_AUTOGEN_PATH.relative_to(_PROJ_ROOT_PATH).parts)
-            print(
-                f"Generating module {module_name} from {len(dfns)} DFNs in: {dfnpath}"
-            )
-            print()
-            _CMD.columnize([f.name for f in dfns])
-            print()
+        dfns = list(dfnpath.glob("*.dfn"))
+        module_name = ".".join(_MF6_AUTOGEN_PATH.relative_to(_PROJ_ROOT_PATH).parts)
+        print(
+            f"Generating module {module_name} from {len(dfns)} DFNs in: {dfnpath}"
+        )
+        print()
+        _CMD.columnize([f.name for f in dfns])
+        print()
 
         tomlpath = dfnpath / "toml"
         tomlpath.mkdir(exist_ok=True)
@@ -91,13 +94,13 @@ def generate_classes(
 
         shutil.rmtree(_MF6_AUTOGEN_PATH)
         _MF6_AUTOGEN_PATH.mkdir(parents=True)
-        make_all(tomlpath, _MF6_AUTOGEN_PATH, version=2, legacydir=dfnpath, verbose=verbose)
-        if verbose:
-            files = list(_MF6_AUTOGEN_PATH.glob("*.py"))
-            print(f"Generated {len(files)} module files in: {_MF6_AUTOGEN_PATH}")
-            print()
-            _CMD.columnize([f.name for f in files])
-            print()
+        make_all(tomlpath, _MF6_AUTOGEN_PATH, version=2, legacydir=dfnpath, verbose=verbose, developmode=developmode)
+
+        files = list(_MF6_AUTOGEN_PATH.glob("*.py"))
+        print(f"Generated {len(files)} module files in: {_MF6_AUTOGEN_PATH}")
+        print()
+        _CMD.columnize([f.name for f in files])
+        print()
 
 
 def cli_main():
@@ -133,8 +136,8 @@ def cli_main():
     parser.add_argument(
         "--verbose",
         action=argparse.BooleanOptionalAction,
-        default=True,
-        help="Print information about the code generation process; "
+        default=False,
+        help="Print extra information about the code generation process; "
         "default shows verbose output.",
     )
     parser.add_argument(
@@ -148,7 +151,16 @@ def cli_main():
         "dfn_backup with a date and timestamp from when the definition "
         "files were replaced.",
     )
+    parser.add_argument(
+        "-r",
+        "--releasemode",
+        required=False,
+        action="store_true",
+        help="Omit prerelease variables from generated modules. "
+        "Only relevant if --dfnpath is provided. Defaults false.",
+    )
     args = vars(parser.parse_args())
+    args["developmode"] = not args.pop("releasemode", False)
 
     # ignore/warn removed options
     exclude = args.pop("exclude", None)
