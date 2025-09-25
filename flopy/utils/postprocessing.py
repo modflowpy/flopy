@@ -24,8 +24,8 @@ def get_transmissivities(
     heads : 2D array OR 3D array
         numpy array of shape nlay by n locations (2D) OR complete heads array
         of the model for one time (3D)
-    m : flopy.modflow.Modflow object
-        Must have dis and lpf or upw packages.
+    m : flopy.modflow.Modflow or flopy.mf6.ModflowGwf object
+        Must have dis and lpf, upw, or npf packages.
     r : 1D array-like of ints, of length n locations
         row indices (optional; alternately specify x, y)
     c : 1D array-like of ints, of length n locations
@@ -61,12 +61,26 @@ def get_transmissivities(
         hk = m.lpf.hk.array[:, r, c]
     elif "UPW" in paklist:
         hk = m.upw.hk.array[:, r, c]
+    elif "NPF" in paklist:
+        hk = m.npf.k.array[:, r, c]
     else:
-        raise ValueError("No LPF or UPW package.")
+        raise ValueError("No LPF, UPW, or NPF package.")
 
+    if (modelgrid := getattr(m, "modelgrid", None)) is not None:
+        if modelgrid.grid_type != "structured":
+            raise NotImplementedError(
+                "get_transmissivities not implemented for unstructured grids"
+            )
+        nlay = m.modelgrid.nlay
+        nrow = m.modelgrid.nrow
+        ncol = m.modelgrid.ncol
+    else:
+        nlay = m.nlay
+        nrow = m.nrow
+        ncol = m.ncol
     botm = m.dis.botm.array[:, r, c]
 
-    if heads.shape == (m.nlay, m.nrow, m.ncol):
+    if heads.shape == (nlay, nrow, ncol):
         heads = heads[:, r, c]
 
     msg = "Shape of heads array must be nlay x nhyd"

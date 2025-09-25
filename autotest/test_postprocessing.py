@@ -499,6 +499,57 @@ def test_get_transmissivities(function_tmpdir):
     ).sum() < 1e-3
 
 
+def test_get_transmissivities_mf6_structured(function_tmpdir):
+    """
+    Test that get_transmissivities() works with MODFLOW 6 models.
+    https://github.com/modflowpy/flopy/issues/2170
+    """
+    sctop = [-0.25, 0.5, 1.7, 1.5, 3.0, 2.5, 3.0, -10.0]
+    scbot = [-1.0, -0.5, 1.2, 0.5, 1.5, -0.2, 2.5, -11.0]
+    heads = np.array(
+        [
+            [1.0, 2.0, 2.05, 3.0, 4.0, 2.5, 2.5, 2.5],
+            [1.1, 2.1, 2.2, 2.0, 3.5, 3.0, 3.0, 3.0],
+            [1.2, 2.3, 2.4, 0.6, 3.4, 3.2, 3.2, 3.2],
+        ]
+    )
+    nl, nr = heads.shape
+    nc = nr
+    botm = np.ones((nl, nr, nc), dtype=float)
+    top = np.ones((nr, nc), dtype=float) * 2.1
+    hk = np.ones((nl, nr, nc), dtype=float) * 2.0
+    for i in range(nl):
+        botm[nl - i - 1, :, :] = i
+
+    ws = function_tmpdir
+    name = 'test_mf6_transmissivity'
+    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=ws, exe_name='mf6')
+    gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
+    dis = flopy.mf6.ModflowGwfdis(gwf, nlay=nl, nrow=nr, ncol=nc, botm=botm, top=top)
+    npf = flopy.mf6.ModflowGwfnpf(gwf, k=hk, save_specific_discharge=True)
+
+    r, c = np.arange(nr), np.arange(nc)
+    T_mf6 = get_transmissivities(heads, gwf, r=r, c=c, sctop=sctop, scbot=scbot)
+    expected_T_with_intervals = np.array(
+        [
+            [0.0, 0, 0.0, 0.0, 0.2, 0.2, 2.0, 0.0],
+            [0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 0.0, 0.0],
+            [2.0, 1.0, 0.0, 0.2, 0.0, 2.0, 0.0, 2.0],
+        ]
+    )
+    assert (T_mf6 - expected_T_with_intervals).sum() < 1e-3
+
+    T_mf6_no_intervals = get_transmissivities(heads, gwf, r=r, c=c)
+    expected_T_no_intervals = np.array(
+        [
+            [0.0, 0.0, 0.1, 0.2, 0.2, 0.2, 0.2, 0.2],
+            [0.2, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0],
+            [2.0, 2.0, 2.0, 1.2, 2.0, 2.0, 2.0, 2.0],
+        ]
+    )
+    assert (T_mf6_no_intervals - expected_T_no_intervals).sum() < 1e-3
+
+
 def test_get_water_table():
     hdry = -1e30
     hds = np.ones((3, 3, 3), dtype=float) * hdry
@@ -558,3 +609,4 @@ def test_get_sat_thickness_gradients(function_tmpdir):
     assert np.abs(np.sum(sat_thick[:, 1, 1] - np.array([0.2, 1.0, 1.0]))) < 1e-6, (
         "failed saturated thickness comparison (grid.thick())"
     )
+
