@@ -631,7 +631,9 @@ class VertexGrid(Grid):
         }
         ds = ds.assign(var_d)
         ds["time"].attrs["calendar"] = "standard"
-        ds["time"].attrs["units"] = f"days since {modeltime.start_datetime}"
+        ds["time"].attrs["units"] = (
+            f"{modeltime.time_units} since {modeltime.start_datetime}"
+        )
         ds["time"].attrs["axis"] = "T"
         ds["time"].attrs["standard_name"] = "time"
         ds["time"].attrs["long_name"] = "time"

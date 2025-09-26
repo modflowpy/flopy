@@ -1,4 +1,5 @@
 import calendar
+import os
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from difflib import SequenceMatcher
@@ -802,3 +803,39 @@ class ModelTime:
             self.start_datetime,
             self.steady_state[::-1] if self.steady_state is not None else None,
         )
+
+    def read_usgs_model_reference_file(self, reffile="usgs.model.reference"):
+        """read spatial reference info from the usgs.model.reference file
+        https://water.usgs.gov/ogw/policy/gw-model/modelers-setup.html"""
+        if os.path.exists(reffile):
+            start_date_time = ""
+            with open(reffile) as input:
+                print(f"Updating modeltime based on reference: {reffile}")
+                for line in input:
+                    if len(line) > 1:
+                        if line.strip()[0] != "#":
+                            info = line.strip().split("#")[0].split()
+                            if len(info) > 1:
+                                data = " ".join(info[1:]).strip("'").strip('"')
+                                print(f"ModelTime update on reference: {info}")
+                                if info[0].lower() == "time_units":
+                                    self.time_units = data.lower()
+                                elif info[0] == "start_date":
+                                    if len(start_date_time) > 0:
+                                        start_date_time = f"{data} {start_date_time}"
+                                    else:
+                                        start_date_time = data
+                                elif info[0] == "start_time":
+                                    if len(start_date_time) > 0:
+                                        start_date_time = f"{start_date_time} {data}"
+                                    else:
+                                        start_date_time = data
+                                else:
+                                    print("   ->warn: update not applied.")
+
+            if len(start_date_time) > 0:
+                self.start_datetime = start_date_time
+
+            return True
+        else:
+            return False

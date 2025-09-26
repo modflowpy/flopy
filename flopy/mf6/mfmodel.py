@@ -458,6 +458,11 @@ class MFModel(ModelInterface):
                 if idomain is None:
                     force_resync = True
                     idomain = self._resolve_idomain(idomain, botm)
+                crs = self._modelgrid.crs
+                if crs is None and hasattr(dis, "crs"):
+                    crs = dis.crs.get_data()
+                    if crs is not None:
+                        crs = crs[0][1]
                 self._modelgrid = StructuredGrid(
                     delc=dis.delc.array,
                     delr=dis.delr.array,
@@ -465,7 +470,7 @@ class MFModel(ModelInterface):
                     botm=botm,
                     idomain=idomain,
                     lenuni=dis.length_units.array,
-                    crs=self._modelgrid.crs,
+                    crs=crs,
                     xoff=self._modelgrid.xoffset,
                     yoff=self._modelgrid.yoffset,
                     angrot=self._modelgrid.angrot,
@@ -496,6 +501,11 @@ class MFModel(ModelInterface):
                 if idomain is None:
                     force_resync = True
                     idomain = self._resolve_idomain(idomain, botm)
+                crs = self._modelgrid.crs
+                if crs is None and hasattr(dis, "crs"):
+                    crs = dis.crs.get_data()
+                    if crs is not None:
+                        crs = crs[0][1]
                 self._modelgrid = VertexGrid(
                     vertices=dis.vertices.array,
                     cell2d=dis.cell2d.array,
@@ -503,7 +513,7 @@ class MFModel(ModelInterface):
                     botm=botm,
                     idomain=idomain,
                     lenuni=dis.length_units.array,
-                    crs=self._modelgrid.crs,
+                    crs=crs,
                     xoff=self._modelgrid.xoffset,
                     yoff=self._modelgrid.yoffset,
                     angrot=self._modelgrid.angrot,
@@ -525,6 +535,11 @@ class MFModel(ModelInterface):
             idomain = dis.idomain.array
             if idomain is None:
                 idomain = np.ones(dis.nodes.array, dtype=int)
+            crs = self._modelgrid.crs
+            if crs is None and hasattr(dis, "crs"):
+                crs = dis.crs.get_data()
+                if crs is not None:
+                    crs = crs[0][1]
             if cell2d is None:
                 if (
                     self.simulation.simulation_data.verbosity_level.value
@@ -557,7 +572,7 @@ class MFModel(ModelInterface):
                 idomain=idomain,
                 lenuni=dis.length_units.array,
                 ncpl=ncpl,
-                crs=self._modelgrid.crs,
+                crs=crs,
                 xoff=self._modelgrid.xoffset,
                 yoff=self._modelgrid.yoffset,
                 angrot=self._modelgrid.angrot,
@@ -590,6 +605,11 @@ class MFModel(ModelInterface):
                 if idomain is None:
                     force_resync = True
                     idomain = self._resolve_idomain(idomain, botm)
+                crs = self._modelgrid.crs
+                if crs is None and hasattr(dis, "crs"):
+                    crs = dis.crs.get_data()
+                    if crs is not None:
+                        crs = crs[0][1]
                 self._modelgrid = VertexGrid(
                     vertices=dis.vertices.array,
                     cell1d=dis.cell1d.array,
@@ -597,7 +617,7 @@ class MFModel(ModelInterface):
                     botm=botm,
                     idomain=idomain,
                     lenuni=dis.length_units.array,
-                    crs=self._modelgrid.crs,
+                    crs=crs,
                     xoff=self._modelgrid.xoffset,
                     yoff=self._modelgrid.yoffset,
                     angrot=self._modelgrid.angrot,
@@ -628,6 +648,11 @@ class MFModel(ModelInterface):
                 if idomain is None:
                     force_resync = True
                     idomain = self._resolve_idomain(idomain, botm)
+                crs = self._modelgrid.crs
+                if crs is None and hasattr(dis, "crs"):
+                    crs = dis.crs.get_data()
+                    if crs is not None:
+                        crs = crs[0][1]
                 self._modelgrid = StructuredGrid(
                     delc=dis.delc.array,
                     delr=dis.delr.array,
@@ -635,7 +660,7 @@ class MFModel(ModelInterface):
                     botm=botm,
                     idomain=idomain,
                     lenuni=dis.length_units.array,
-                    crs=self._modelgrid.crs,
+                    crs=crs,
                     xoff=self._modelgrid.xoffset,
                     yoff=self._modelgrid.yoffset,
                     angrot=self._modelgrid.angrot,
@@ -666,6 +691,11 @@ class MFModel(ModelInterface):
                 if idomain is None:
                     force_resync = True
                     idomain = self._resolve_idomain(idomain, botm)
+                crs = self._modelgrid.crs
+                if crs is None and hasattr(dis, "crs"):
+                    crs = dis.crs.get_data()
+                    if crs is not None:
+                        crs = crs[0][1]
                 self._modelgrid = VertexGrid(
                     vertices=dis.vertices.array,
                     cell2d=dis.cell2d.array,
@@ -673,7 +703,7 @@ class MFModel(ModelInterface):
                     botm=botm,
                     idomain=idomain,
                     lenuni=dis.length_units.array,
-                    crs=self._modelgrid.crs,
+                    crs=crs,
                     xoff=self._modelgrid.xoffset,
                     yoff=self._modelgrid.yoffset,
                     angrot=self._modelgrid.angrot,
@@ -1361,13 +1391,6 @@ class MFModel(ModelInterface):
             if write_netcdf:
                 # set data storage to write ascii for netcdf
                 pp._set_netcdf_storage()
-            if (
-                pp.package_type.startswith("dis")
-                and hasattr(pp, "crs")
-            ):
-                crs = pp.crs.get_data()
-                if crs is not None and self.modelgrid.crs is None:
-                    self.modelgrid.crs = crs[0][1]
             if (
                 self.simulation_data.verbosity_level.value
                 >= VerbosityLevel.normal.value
@@ -2366,7 +2389,7 @@ class MFModel(ModelInterface):
         nc_meta["attrs"]["history"] = f"first created {timestamp}"
         if mesh is None:
             nc_meta["attrs"]["Conventions"] = "CF-1.11"
-        elif mesh.upper() is "LAYERED":
+        elif mesh.upper() == "LAYERED":
             nc_meta["attrs"]["Conventions"] = "CF-1.11 UGRID-1.0"
 
         ds = self.update_dataset(

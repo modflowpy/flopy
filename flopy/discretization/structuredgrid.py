@@ -1770,6 +1770,46 @@ class StructuredGrid(Grid):
         assert plotarray.shape == required_shape, msg
         return plotarray
 
+    def latlon(self):
+        try:
+            import warnings
+
+            from pyproj import Proj
+
+            epsg = None
+            if self.crs is not None:
+                epsg = self.crs.to_epsg()
+
+            proj = Proj(
+                f"EPSG:{epsg}",
+            )
+
+            lats = []
+            lons = []
+            x_local = []
+            y_local = []
+            for y in self.xycenters[1]:
+                for x in self.xycenters[0]:
+                    x_local.append(x)
+                    y_local.append(y)
+
+            x_global, y_global = self.get_coords(x_local, y_local)
+
+            for i, x in enumerate(x_global):
+                lon, lat = proj(x, y_global[i], inverse=True)
+                lats.append(lat)
+                lons.append(lon)
+
+            return np.array(lats), np.array(lons)
+
+        except Exception as e:
+            warnings.warn(
+                f"Cannot create coordinates from CRS: {e}",
+                UserWarning,
+            )
+
+            return None, None
+
     def dataset(self, modeltime=None, mesh=None, configuration=None):
         """
         modeltime : FloPy ModelTime object
@@ -1803,7 +1843,9 @@ class StructuredGrid(Grid):
         }
         ds = ds.assign(var_d)
         ds["time"].attrs["calendar"] = "standard"
-        ds["time"].attrs["units"] = f"days since {modeltime.start_datetime}"
+        ds["time"].attrs["units"] = (
+            f"{modeltime.time_units} since {modeltime.start_datetime}"
+        )
         ds["time"].attrs["axis"] = "T"
         ds["time"].attrs["standard_name"] = "time"
         ds["time"].attrs["long_name"] = "time"
@@ -1955,7 +1997,9 @@ class StructuredGrid(Grid):
         ds = ds.assign(var_d)
 
         ds["time"].attrs["calendar"] = "standard"
-        ds["time"].attrs["units"] = f"days since {modeltime.start_datetime}"
+        ds["time"].attrs["units"] = (
+            f"{modeltime.time_units} since {modeltime.start_datetime}"
+        )
         ds["time"].attrs["axis"] = "T"
         ds["time"].attrs["standard_name"] = "time"
         ds["time"].attrs["long_name"] = "time"
@@ -1980,46 +2024,13 @@ class StructuredGrid(Grid):
             and configuration["longitude"] is not None
         )
 
-        if latlon_cfg or self.crs is not None:
-            if latlon_cfg:
-                lats = configuration["latitude"]
-                lons = configuration["longitude"]
-            else:
-                try:
-                    import warnings
+        if latlon_cfg:
+            lats = configuration["latitude"]
+            lons = configuration["longitude"]
+        elif self.crs is not None:
+            lats, lons = self.latlon()
 
-                    from pyproj import Proj
-
-                    epsg_code = self.crs.to_epsg(min_confidence=90)
-                    proj = Proj(
-                        f"EPSG:{epsg_code}",
-                    )
-
-                    lats = []
-                    lons = []
-                    x_local = []
-                    y_local = []
-                    for y in self.xycenters[1]:
-                        for x in self.xycenters[0]:
-                            x_local.append(x)
-                            y_local.append(y)
-
-                    x_global, y_global = self.get_coords(x_local, y_local)
-
-                    for i, x in enumerate(x_global):
-                        lon, lat = proj(x, y_global[i], inverse=True)
-                        lats.append(lat)
-                        lons.append(lon)
-
-                    lats = np.array(lats)
-                    lons = np.array(lons)
-
-                except Exception as e:
-                    warnings.warn(
-                        f"Cannot create coordinates from CRS: {e}",
-                        UserWarning,
-                    )
-
+        if lats is not None and lons is not None:
             # create coordinate vars
             var_d = {
                 "lat": (["y", "x"], lats.reshape(yc.size, xc.size)),
