@@ -84,7 +84,7 @@ optional = [
     "vtk >=9.4.0",
     "xmipy",
     "h5py",
-    "scikit-learn"
+    "scikit-learn",
     "xarray",
 ]
 doc = [
