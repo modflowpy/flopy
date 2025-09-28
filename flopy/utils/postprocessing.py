@@ -23,17 +23,20 @@ def get_transmissivities(
     ----------
     heads : 2D array OR 3D array
         numpy array of shape nlay by n locations (2D) OR complete heads array
-        of the model for one time (3D)
+        with the correct shape for structured grids (nlay, nrow, ncol) or for
+        vertex grids (nlay, ncpl).
     m : flopy.modflow.Modflow or flopy.mf6.ModflowGwf object
         Must have dis and lpf, upw, or npf packages.
     r : 1D array-like of ints, of length n locations
-        row indices (optional; alternately specify x, y)
+        row indices (optional; alternately specify x, y).
+        Only valid for structured grids.
     c : 1D array-like of ints, of length n locations
-        column indices (optional; alternately specify x, y)
+        column indices (optional; alternately specify x, y).
+        Only valid for structured grids.
     x : 1D array-like of floats, of length n locations
-        x locations in real world coordinates (optional)
+        x locations in real world coordinates (optional).
     y : 1D array-like of floats, of length n locations
-        y locations in real world coordinates (optional)
+        y locations in real world coordinates (optional).
     sctop : 1D array-like of floats, of length n locations
         open interval tops (optional; default is model top)
     scbot : 1D array-like of floats, of length n locations
@@ -46,55 +49,82 @@ def get_transmissivities(
     T : 2D array of same shape as heads (nlay x n locations)
         Transmissivities in each layer at each location
 
+    Notes
+    -----
+    For structured grids, locations can be specified with either:
+    - r, c (row, column indices)
+    - x, y (real world coordinates)
+
+    For vertex grids only x, y coordinates are supported.
+
+    The function automatically detects the grid type and handles indexing
+    appropriately for each grid type.
+
+    Examples
+    --------
+    >>> T = get_transmissivities(heads, model, r=[0, 1], c=[0, 1])
+    >>> T = get_transmissivities(heads, model, x=[100.0, 200.0], y=[50.0, 150.0])
     """
-    if r is not None and c is not None:
-        pass
-    elif x is not None and y is not None:
-        # get row, col for observation locations
-        r, c = m.modelgrid.intersect(x, y)
+
+    if (modelgrid := getattr(m, "modelgrid", None)) is not None:
+        grid_type = modelgrid.grid_type
+        nlay = m.modelgrid.nlay
+        if grid_type == "structured":
+            nrow = m.modelgrid.nrow
+            ncol = m.modelgrid.ncol
+        elif (ncpl := getattr(m.modelgrid, "ncpl", None)) is None:
+            raise ValueError(f"Unsupported grid type: {grid_type}")
     else:
-        raise ValueError("Must specify row, column or x, y locations.")
+        grid_type = "structured"
+        nlay = m.nlay
+        nrow = m.nrow
+        ncol = m.ncol
+
+    # get cell indices based on input parameters and grid type
+    if r is not None and c is not None:
+        if grid_type != "structured":
+            raise ValueError("r, c parameters only valid for structured grids")
+        indices = (r, c)
+    elif x is not None and y is not None:
+        points = zip(np.atleast_1d(x), np.atleast_1d(y))
+        if grid_type == "structured":
+            indices = [m.modelgrid.intersect(xi, yi) for xi, yi in points]
+            indices = tuple(np.array(idcs) for idcs in zip(*indices))
+        else:
+            indices = (np.array([m.modelgrid.intersect(xi, yi) for xi, yi in points]),)
+    else:
+        raise ValueError("Must specify r, c indices or x, y locations.")
 
     # get k-values and botms at those locations
     paklist = m.get_package_list()
     if "LPF" in paklist:
-        hk = m.lpf.hk.array[:, r, c]
+        hk = m.lpf.hk.array[(slice(None),) + indices]
     elif "UPW" in paklist:
-        hk = m.upw.hk.array[:, r, c]
+        hk = m.upw.hk.array[(slice(None),) + indices]
     elif "NPF" in paklist:
-        hk = m.npf.k.array[:, r, c]
+        hk = m.npf.k.array[(slice(None),) + indices]
     else:
         raise ValueError("No LPF, UPW, or NPF package.")
 
-    if (modelgrid := getattr(m, "modelgrid", None)) is not None:
-        if modelgrid.grid_type != "structured":
-            raise NotImplementedError(
-                "get_transmissivities not implemented for unstructured grids"
-            )
-        nlay = m.modelgrid.nlay
-        nrow = m.modelgrid.nrow
-        ncol = m.modelgrid.ncol
-    else:
-        nlay = m.nlay
-        nrow = m.nrow
-        ncol = m.ncol
-    botm = m.dis.botm.array[:, r, c]
+    botm = m.dis.botm.array[(slice(None),) + indices]
 
-    if heads.shape == (nlay, nrow, ncol):
-        heads = heads[:, r, c]
-
-    msg = "Shape of heads array must be nlay x nhyd"
-    assert heads.shape == botm.shape, msg
+    # extract heads for the specified locations
+    if grid_type == "structured" and heads.shape == (nlay, nrow, ncol):
+        heads = heads[(slice(None),) + indices]
+    elif grid_type != "structured" and heads.shape == (nlay, ncpl):
+        heads = heads[(slice(None),) + indices]
+    if heads.shape != botm.shape:
+        raise ValueError("Shape of heads array must be nlay x nhyd")
 
     # set open interval tops/bottoms to model top/bottom if None
     if sctop is None:
-        sctop = m.dis.top.array[r, c]
+        sctop = m.dis.top.array[indices]
     if scbot is None:
-        scbot = m.dis.botm.array[-1, r, c]
+        scbot = m.dis.botm.array[(-1,) + indices]
 
     # make an array of layer tops
     tops = np.empty_like(botm, dtype=float)
-    tops[0, :] = m.dis.top.array[r, c]
+    tops[0, :] = m.dis.top.array[indices]
     tops[1:, :] = botm[:-1]
 
     # expand top and bottom arrays to be same shape as botm, thickness, etc.
