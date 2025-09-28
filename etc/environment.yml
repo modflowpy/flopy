@@ -40,7 +40,7 @@ dependencies:
   - pytest-dotenv
   - pytest-xdist
   - pyzmq>=25.1.2
-  - syrupy
+  - syrupy<5.0.0
   - virtualenv
 
   # optional
