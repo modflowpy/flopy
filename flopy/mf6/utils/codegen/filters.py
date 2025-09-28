@@ -205,9 +205,13 @@ def type(var: dict) -> str:
 
 def children(var: dict) -> Optional[dict]:
     _type = var["type"]
-    items = var.get("items", None)  # TODO: fix to use "item" or "items"
+    item = var.get("item", None)
+    items = var.get("items", None)
     fields = var.get("fields", None)
     choices = var.get("choices", None)
+    if item:
+        assert _type == "recarray"
+        return {item["name"]: item}
     if items:
         assert _type == "recarray"
         return items

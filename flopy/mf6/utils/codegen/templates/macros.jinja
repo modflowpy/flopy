@@ -16,9 +16,12 @@
 {{ v.description|clean|math|wordwrap|indent(loop.depth * 4, first=true) }}
 {% endif %}
 {% if recurse and children is not none %}
-{% if v.type == "list" and children|length == 1 and (children.values()|first).type in ["record", "union"] %}
+{% if v.type == "recarray" and children|length == 1 and (children.values()|first).name == v.name and (children.values()|first).type in ["record", "keystring"] %}
+{# For recarray with single record item of same name, show the record's fields directly #}
 {% set grandchildren = (children.values()|first)|children %}
+{% if grandchildren %}
 {{ loop(grandchildren.values())|indent(loop.depth * 4, first=true) }}
+{% endif %}
 {% else %}
 {{ loop(children.values())|indent(loop.depth * 4, first=true) }}
 {% endif %}
