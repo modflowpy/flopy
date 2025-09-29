@@ -62,7 +62,7 @@ from flopy.utils.gridgen import Gridgen
 model_ws = "Ex9_PFAS"
 mf = MfUsg(
     version="mfusg",
-    structured=True,
+    structured=False,
     model_ws=model_ws,
     modelname="Ex9_PFAS",
     exe_name="mfusg_gsi",
@@ -112,7 +112,7 @@ ugrid = flopy.discretization.UnstructuredGrid(**gridprops_ug)
 mf.modelgrid = ugrid
 # -
 # +
-bas = MfUsgBas(mf, ibound=1, strt=15.0, richards=True, unstructured=True)
+bas = MfUsgBas(mf, ibound=1, strt=15.0, richards=True)
 # -
 # +
 ipakcb = 50

@@ -33,6 +33,7 @@
 
 # +
 import os
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -345,11 +346,10 @@ got = np.genfromtxt(f"{mf.model_ws}/{mf.name}.got", skip_header=2)
 # -
 
 # +
-from autotest.conftest import get_example_data_path
 
-txtfile = (
-    get_example_data_path() / "mfusg_transport" / "Ex8_Lake" / "Analytical_Soln.txt"
-)
+# from autotest.conftest import get_example_data_path
+example_data_path = Path(__file__).parent.parent.parent / "examples/data"
+txtfile = example_data_path / "mfusg_transport" / "Ex8_Lake" / "Analytical_Soln.txt"
 soln = np.genfromtxt(txtfile, skip_header=2)
 # -
 
