@@ -459,7 +459,7 @@ class MfUsgBct(Package):
         if f is None:
             f_obj = open(self.fn_path, "w")
 
-        # Item 1: ITRNSP ipakcb MCOMP ICBNDFLG ITVD IADSORB ICT CINACT CICLOSE
+        # Item 1a: ITRNSP ipakcb MCOMP ICBNDFLG ITVD IADSORB ICT CINACT CICLOSE
         # IDISP IXDISP DIFFNC IZOD IFOD IFMBC IHEAT IMCOMP IDISPCLN NSEQITR
         f_obj.write(f"{self.heading}\n")
 
@@ -488,6 +488,7 @@ class MfUsgBct(Package):
 
         f_obj.write(self.options + "\n")
 
+        # Item 1b.
         if self.ifmbc:
             f_obj.write(
                 f" {self.unit_number[1]:9d} {self.unit_number[2]:9d}"
