@@ -1225,6 +1225,34 @@ class Gridgen:
         angldegx = np.where(fldr == -2, 270, angldegx)
         return angldegx
 
+    def get_anglex(self, fldr=None):
+        """
+        Get the anglex array
+
+        Parameters
+        ----------
+        fldr : ndarray
+            Flow direction indicator array.  If None, then it is read from
+            gridgen output.
+
+        Returns
+        -------
+        anglex : ndarray
+            A 1D vector indicating the angle (in radians) between the x
+            axis and an outward normal to the face.
+
+        """
+
+        if fldr is None:
+            fldr = self.get_fldr()
+        anglex = np.zeros(fldr.shape, dtype=float)
+        anglex = np.where(fldr == 0, 0.0, anglex)
+        anglex = np.where(abs(fldr) == 3, 0.0, anglex)
+        anglex = np.where(fldr == -2, 1.570796, anglex)
+        anglex = np.where(fldr == -1, 3.141593, anglex)
+        anglex = np.where(fldr == 2, 4.712389, anglex)
+        return anglex
+
     def get_verts_iverts(self, ncells, verbose=False):
         """
         Return a 2d array of x and y vertices and a list of size ncells that
