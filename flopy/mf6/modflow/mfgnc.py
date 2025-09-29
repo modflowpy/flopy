@@ -13,6 +13,12 @@ class ModflowGnc(MFPackage):
 
     Parameters
     ----------
+    parent_model_or_package
+        Parent_model_or_package that this package is a part of. Package is automatically
+        added to parent_model_or_package when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     print_input : keyword
         keyword to indicate that the list of gnc information will be written to the
         listing file immediately after it is read.
@@ -35,7 +41,47 @@ class ModflowGnc(MFPackage):
         is the number of gnc entries.
     numalphaj : integer
         is the number of contributing factors.
-    gncdata : [list]
+    gncdata : [(cellidn, cellidm, cellidsj, alphasj)]
+        * cellidn : integer
+                is the cellid of the cell, :math:`n`, in which the ghost node is located. For a
+                structured grid that uses the DIS input file, CELLIDN is the layer, row, and
+                column numbers of the cell.   For a grid that uses the DISV input file, CELLIDN
+                is the layer number and CELL2D number for the two cells.  If the model uses the
+                unstructured discretization (DISU) input file, then CELLIDN is the node number
+                for the cell.
+        * cellidm : integer
+                is the cellid of the connecting cell, :math:`m`, to which flow occurs from the
+                ghost node. For a structured grid that uses the DIS input file, CELLIDM is the
+                layer, row, and column numbers of the cell.   For a grid that uses the DISV
+                input file, CELLIDM is the layer number and CELL2D number for the two cells.
+                If the model uses the unstructured discretization (DISU) input file, then
+                CELLIDM is the node number for the cell.
+        * cellidsj : [integer]
+                is the array of CELLIDS for the contributing j cells, which contribute to the
+                interpolated head value at the ghost node. This item contains one CELLID for
+                each of the contributing cells of the ghost node. Note that if the number of
+                actual contributing cells needed by the user is less than NUMALPHAJ for any
+                ghost node, then a dummy CELLID of zero(s) should be inserted with an
+                associated contributing factor of zero. For a structured grid that uses the DIS
+                input file, CELLID is the layer, row, and column numbers of the cell.   For a
+                grid that uses the DISV input file, CELLID is the layer number and cell2d
+                number for the two cells.  If the model uses the unstructured discretization
+                (DISU) input file, then CELLID is the node number for the cell.
+        * alphasj : [double precision]
+                is the contributing factors for each contributing node in CELLIDSJ. Note that
+                if the number of actual contributing cells is less than NUMALPHAJ for any ghost
+                node, then dummy CELLIDS should be inserted with an associated contributing
+                factor of zero.  The sum of ALPHASJ should be less than one.  This is because
+                one minus the sum of ALPHASJ is equal to the alpha term (alpha n in equation
+                4-61 of the GWF Model report) that is multiplied by the head in cell n.
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -143,53 +189,14 @@ class ModflowGnc(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGnc defines a GNC package.
-
-        Parameters
-        ----------
-        parent_model_or_package
-            Parent_model_or_package that this package is a part of. Package is automatically
-            added to parent_model_or_package when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        print_input : keyword
-            keyword to indicate that the list of gnc information will be written to the
-            listing file immediately after it is read.
-        print_flows : keyword
-            keyword to indicate that the list of gnc flow rates will be printed to the
-            listing file for every stress period time step in which 'budget print' is
-            specified in output control.  if there is no output control option and
-            'print_flows' is specified, then flow rates are printed for the last time step
-            of each stress period.
-        explicit : keyword
-            keyword to indicate that the ghost node correction is applied in an explicit
-            manner on the right-hand side of the matrix.  the explicit approach will likely
-            require additional outer iterations.  if the keyword is not specified, then the
-            correction will be applied in an implicit manner on the left-hand side.  the
-            implicit approach will likely converge better, but may require additional
-            memory.  if the explicit keyword is not specified, then the bicgstab linear
-            acceleration option should be specified within the linear block of the sparse
-            matrix solver.
-        numgnc : integer
-            is the number of gnc entries.
-        numalphaj : integer
-            is the number of contributing factors.
-        gncdata : [list]
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
+        """Initialize ModflowGnc."""
         super().__init__(
-            parent_model_or_package, "gnc", filename, pname, loading_package, **kwargs
+            parent=parent_model_or_package,
+            package_type="gnc",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
         )
 
         self.print_input = self.build_mfdata("print_input", print_input)
@@ -205,17 +212,6 @@ class ModflowGnc(MFPackage):
 class GncPackages(MFChildPackages):
     """
     GncPackages is a container class for the ModflowGnc class.
-
-    Methods
-    -------
-    initialize
-        Initializes a new ModflowGnc package removing any sibling child
-        packages attached to the same parent package. See ModflowGnc init
-        documentation for definition of parameters.
-    append_package
-        Adds a new ModflowGnc package to the container. See ModflowGnc
-        init documentation for definition of parameters.
-
     """
 
     package_abbr = "gncpackages"
@@ -231,6 +227,12 @@ class GncPackages(MFChildPackages):
         filename=None,
         pname=None,
     ):
+        """
+        Initialize a new ModflowGnc package, removing any sibling
+        child packages attached to the same parent package.
+
+        See :class:`ModflowGnc` for parameter definitions.
+        """
         new_package = ModflowGnc(
             self._cpparent,
             print_input=print_input,
@@ -256,6 +258,11 @@ class GncPackages(MFChildPackages):
         filename=None,
         pname=None,
     ):
+        """
+        Add a new ModflowGnc package to the container.
+
+        See :class:`ModflowGnc` for parameter definitions.
+        """
         new_package = ModflowGnc(
             self._cpparent,
             print_input=print_input,

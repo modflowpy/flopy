@@ -13,6 +13,12 @@ class ModflowGwtmst(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     save_flows : keyword
         keyword to indicate that mst flow terms will be written to the file specified
         with 'budget fileout' in output control.
@@ -36,6 +42,12 @@ class ModflowGwtmst(MFPackage):
                 concentrations will be written whenever aqueous concentrations are saved, as
                 determined by settings in the Output Control option.
 
+    export_array_ascii : keyword
+        keyword that specifies input griddata arrays should be written to layered ascii
+        output files.
+    export_array_netcdf : keyword
+        keyword that specifies input griddata arrays should be written to the model
+        output netcdf file.
     porosity : [double precision]
         is the mobile domain porosity, defined as the mobile domain pore volume per
         mobile domain volume.  additional information on porosity within the context of
@@ -75,6 +87,13 @@ class ModflowGwtmst(MFPackage):
         specified in the options block.  if the sorption keyword is not specified in
         the options block, sp2 will have no effect on simulation results.
 
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
+
     """
 
     sorbate_filerecord = ListTemplateGenerator(
@@ -104,6 +123,7 @@ class ModflowGwtmst(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal order1_decay",
         ],
         [
             "block options",
@@ -111,6 +131,7 @@ class ModflowGwtmst(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal order0_decay",
         ],
         [
             "block options",
@@ -128,6 +149,7 @@ class ModflowGwtmst(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal sorbate_rec",
         ],
         [
             "block options",
@@ -161,12 +183,30 @@ class ModflowGwtmst(MFPackage):
             "optional false",
         ],
         [
+            "block options",
+            "name export_array_ascii",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_ascii",
+        ],
+        [
+            "block options",
+            "name export_array_netcdf",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_nc",
+            "extended true",
+        ],
+        [
             "block griddata",
             "name porosity",
             "type double precision",
             "shape (nodes)",
             "reader readarray",
             "layered true",
+            "netcdf true",
         ],
         [
             "block griddata",
@@ -175,6 +215,7 @@ class ModflowGwtmst(MFPackage):
             "shape (nodes)",
             "reader readarray",
             "layered true",
+            "netcdf true",
             "optional true",
         ],
         [
@@ -185,6 +226,7 @@ class ModflowGwtmst(MFPackage):
             "reader readarray",
             "optional true",
             "layered true",
+            "netcdf true",
         ],
         [
             "block griddata",
@@ -194,6 +236,7 @@ class ModflowGwtmst(MFPackage):
             "reader readarray",
             "optional true",
             "layered true",
+            "netcdf true",
         ],
         [
             "block griddata",
@@ -202,6 +245,7 @@ class ModflowGwtmst(MFPackage):
             "shape (nodes)",
             "reader readarray",
             "layered true",
+            "netcdf true",
             "optional true",
         ],
         [
@@ -211,6 +255,7 @@ class ModflowGwtmst(MFPackage):
             "shape (nodes)",
             "reader readarray",
             "layered true",
+            "netcdf true",
             "optional true",
         ],
     ]
@@ -224,6 +269,8 @@ class ModflowGwtmst(MFPackage):
         zero_order_decay=None,
         sorption=None,
         sorbate_filerecord=None,
+        export_array_ascii=None,
+        export_array_netcdf=None,
         porosity=None,
         decay=None,
         decay_sorbed=None,
@@ -234,85 +281,15 @@ class ModflowGwtmst(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwtmst defines a MST package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        save_flows : keyword
-            keyword to indicate that mst flow terms will be written to the file specified
-            with 'budget fileout' in output control.
-        first_order_decay : keyword
-            is a text keyword to indicate that first-order decay will occur.  use of this
-            keyword requires that decay and decay_sorbed (if sorption is active) are
-            specified in the griddata block.
-        zero_order_decay : keyword
-            is a text keyword to indicate that zero-order decay will occur.  use of this
-            keyword requires that decay and decay_sorbed (if sorption is active) are
-            specified in the griddata block.
-        sorption : string
-            is a text keyword to indicate that sorption will be activated.  valid sorption
-            options include linear, freundlich, and langmuir.  use of this keyword requires
-            that bulk_density and distcoef are specified in the griddata block.  if
-            sorption is specified as freundlich or langmuir then sp2 is also required in
-            the griddata block.
-        sorbate_filerecord : record
-        porosity : [double precision]
-            is the mobile domain porosity, defined as the mobile domain pore volume per
-            mobile domain volume.  additional information on porosity within the context of
-            mobile and immobile domain transport simulations is included in the modflow 6
-            supplemental technical information document.
-        decay : [double precision]
-            is the rate coefficient for first or zero-order decay for the aqueous phase of
-            the mobile domain.  a negative value indicates solute production.  the
-            dimensions of decay for first-order decay is one over time.  the dimensions of
-            decay for zero-order decay is mass per length cubed per time.  decay will have
-            no effect on simulation results unless either first- or zero-order decay is
-            specified in the options block.
-        decay_sorbed : [double precision]
-            is the rate coefficient for first or zero-order decay for the sorbed phase of
-            the mobile domain.  a negative value indicates solute production.  the
-            dimensions of decay_sorbed for first-order decay is one over time.  the
-            dimensions of decay_sorbed for zero-order decay is mass of solute per mass of
-            aquifer per time.  if decay_sorbed is not specified and both decay and sorption
-            are active, then the program will terminate with an error.  decay_sorbed will
-            have no effect on simulation results unless the sorption keyword and either
-            first- or zero-order decay are specified in the options block.
-        bulk_density : [double precision]
-            is the bulk density of the aquifer in mass per length cubed.  bulk_density is
-            not required unless the sorption keyword is specified.  bulk density is defined
-            as the mobile domain solid mass per mobile domain volume.  additional
-            information on bulk density is included in the modflow 6 supplemental technical
-            information document.
-        distcoef : [double precision]
-            is the distribution coefficient for the equilibrium-controlled linear sorption
-            isotherm in dimensions of length cubed per mass.  if the freunchlich isotherm
-            is specified, then discoef is the freundlich constant.  if the langmuir
-            isotherm is specified, then distcoef is the langmuir constant.  distcoef is not
-            required unless the sorption keyword is specified.
-        sp2 : [double precision]
-            is the exponent for the freundlich isotherm and the sorption capacity for the
-            langmuir isotherm.  sp2 is not required unless the sorption keyword is
-            specified in the options block.  if the sorption keyword is not specified in
-            the options block, sp2 will have no effect on simulation results.
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "mst", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowGwtmst."""
+        super().__init__(
+            parent=model,
+            package_type="mst",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.save_flows = self.build_mfdata("save_flows", save_flows)
         self.first_order_decay = self.build_mfdata(
@@ -322,6 +299,12 @@ class ModflowGwtmst(MFPackage):
         self.sorption = self.build_mfdata("sorption", sorption)
         self.sorbate_filerecord = self.build_mfdata(
             "sorbate_filerecord", sorbate_filerecord
+        )
+        self.export_array_ascii = self.build_mfdata(
+            "export_array_ascii", export_array_ascii
+        )
+        self.export_array_netcdf = self.build_mfdata(
+            "export_array_netcdf", export_array_netcdf
         )
         self.porosity = self.build_mfdata("porosity", porosity)
         self.decay = self.build_mfdata("decay", decay)

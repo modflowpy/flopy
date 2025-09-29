@@ -14,6 +14,18 @@ class ModflowGwtgwt(MFPackage):
 
     Parameters
     ----------
+    simulation : MFSimulation
+        Simulation that this package is a part of. Package is automatically
+        added to simulation when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
+    exgtype : str, default "GWT6-GWT6"
+        The exchange type (GWF-GWF or GWF-GWT).
+    exgmnamea : str, optional
+        The name of the first model that is part of this exchange.
+    exgmnameb : str, optional
+        The name of the second model that is part of this exchange.
     gwfmodelname1 : string
         keyword to specify name of first corresponding gwf model.  in the simulation
         name file, the gwt6-gwt6 entry contains names for gwt models (exgmnamea and
@@ -75,7 +87,53 @@ class ModflowGwtgwt(MFPackage):
         development purposes.
     nexg : integer
         keyword and integer value specifying the number of gwt-gwt exchanges.
-    exchangedata : [list]
+    exchangedata : [(cellidm1, cellidm2, ihc, cl1, cl2, hwva, aux, boundname)]
+        * cellidm1 : integer
+                is the cellid of the cell in model 1 as specified in the simulation name file.
+                For a structured grid that uses the DIS input file, CELLIDM1 is the layer, row,
+                and column numbers of the cell.   For a grid that uses the DISV input file,
+                CELLIDM1 is the layer number and CELL2D number for the two cells.  If the model
+                uses the unstructured discretization (DISU) input file, then CELLIDM1 is the
+                node number for the cell.
+        * cellidm2 : integer
+                is the cellid of the cell in model 2 as specified in the simulation name file.
+                For a structured grid that uses the DIS input file, CELLIDM2 is the layer, row,
+                and column numbers of the cell.   For a grid that uses the DISV input file,
+                CELLIDM2 is the layer number and CELL2D number for the two cells.  If the model
+                uses the unstructured discretization (DISU) input file, then CELLIDM2 is the
+                node number for the cell.
+        * ihc : integer
+                is an integer flag indicating the direction between node n and all of its m
+                connections. If IHC = 0 then the connection is vertical.  If IHC = 1 then the
+                connection is horizontal. If IHC = 2 then the connection is horizontal for a
+                vertically staggered grid.
+        * cl1 : double precision
+                is the distance between the center of cell 1 and the its shared face with cell
+                2.
+        * cl2 : double precision
+                is the distance between the center of cell 2 and the its shared face with cell
+                1.
+        * hwva : double precision
+                is the horizontal width of the flow connection between cell 1 and cell 2 if IHC
+                > 0, or it is the area perpendicular to flow of the vertical connection between
+                cell 1 and cell 2 if IHC = 0.
+        * aux : [double precision]
+                represents the values of the auxiliary variables for each GWTGWT Exchange. The
+                values of auxiliary variables must be present for each exchange. The values
+                must be specified in the order of the auxiliary variables specified in the
+                OPTIONS block.
+        * boundname : string
+                name of the GWT Exchange cell.  BOUNDNAME is an ASCII character variable that
+                can contain as many as 40 characters.  If BOUNDNAME contains spaces in it, then
+                the entire name must be enclosed within single quotes.
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -368,98 +426,14 @@ class ModflowGwtgwt(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwtgwt defines a GWTGWT package.
-
-        simulation : MFSimulation
-            Simulation that this package is a part of. Package is automatically
-            added to simulation when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        exgtype : str
-            The exchange type (GWF-GWF or GWF-GWT).
-        exgmnamea : str
-            The name of the first model that is part of this exchange.
-        exgmnameb : str
-            The name of the second model that is part of this exchange.
-        gwfmodelname1 : str
-            Name of first GWF Model. In the simulation name file, the GWE6-GWE6
-            entry contains names for GWE Models (exgmnamea and exgmnameb). The
-            GWE Model with the name exgmnamea must correspond to the GWF Model
-            with the name gwfmodelname1.
-        gwfmodelname2 : str
-            Name of second GWF Model. In the simulation name file, the GWE6-GWE6
-            entry contains names for GWE Models (exgmnamea and exgmnameb). The
-            GWE Model with the name exgmnameb must correspond to the GWF Model
-            with the name gwfmodelname2.
-        gwfmodelname1 : string
-            keyword to specify name of first corresponding gwf model.  in the simulation
-            name file, the gwt6-gwt6 entry contains names for gwt models (exgmnamea and
-            exgmnameb).  the gwt model with the name exgmnamea must correspond to the gwf
-            model with the name gwfmodelname1.
-        gwfmodelname2 : string
-            keyword to specify name of second corresponding gwf model.  in the simulation
-            name file, the gwt6-gwt6 entry contains names for gwt models (exgmnamea and
-            exgmnameb).  the gwt model with the name exgmnameb must correspond to the gwf
-            model with the name gwfmodelname2.
-        auxiliary : [string]
-            an array of auxiliary variable names.  there is no limit on the number of
-            auxiliary variables that can be provided. most auxiliary variables will not be
-            used by the gwt-gwt exchange, but they will be available for use by other parts
-            of the program.  if an auxiliary variable with the name 'angldegx' is found,
-            then this information will be used as the angle (provided in degrees) between
-            the connection face normal and the x axis, where a value of zero indicates that
-            a normal vector points directly along the positive x axis.  the connection face
-            normal is a normal vector on the cell face shared between the cell in model 1
-            and the cell in model 2 pointing away from the model 1 cell.  additional
-            information on 'angldegx' is provided in the description of the disu package.
-            angldegx must be specified if dispersion is simulated in the connected gwt
-            models.
-        boundnames : keyword
-            keyword to indicate that boundary names may be provided with the list of gwt
-            exchange cells.
-        print_input : keyword
-            keyword to indicate that the list of exchange entries will be echoed to the
-            listing file immediately after it is read.
-        print_flows : keyword
-            keyword to indicate that the list of exchange flow rates will be printed to the
-            listing file for every stress period in which 'save budget' is specified in
-            output control.
-        save_flows : keyword
-            keyword to indicate that cell-by-cell flow terms will be written to the budget
-            file for each model provided that the output control for the models are set up
-            with the 'budget save file' option.
-        adv_scheme : string
-            scheme used to solve the advection term.  can be upstream, central, or tvd.  if
-            not specified, upstream weighting is the default weighting scheme.
-        dsp_xt3d_off : keyword
-            deactivate the xt3d method for the dispersive flux and use the faster and less
-            accurate approximation for this exchange.
-        dsp_xt3d_rhs : keyword
-            add xt3d dispersion terms to right-hand side, when possible, for this exchange.
-        perioddata : record mvt6 filein mvt6_filename
-            Contains data for the mvt package. Data can be passed as a dictionary to the
-            mvt package with variable names as keys and package data as values. Data for
-            the perioddata variable is also acceptable. See mvt package documentation for
-            more information.
-        observations : record obs6 filein obs6_filename
-            Contains data for the obs package. Data can be passed as a dictionary to the
-            obs package with variable names as keys and package data as values. Data for
-            the observations variable is also acceptable. See obs package documentation for
-            more information.
-        dev_interfacemodel_on : keyword
-            activates the interface model mechanism for calculating the coefficients at
-            (and possibly near) the exchange. this keyword should only be used for
-            development purposes.
-        nexg : integer
-            keyword and integer value specifying the number of gwt-gwt exchanges.
-        exchangedata : [list]
-
-        """
-
+        """Initialize ModflowGwtgwt."""
         super().__init__(
-            simulation, "gwtgwt", filename, pname, loading_package, **kwargs
+            parent=simulation,
+            package_type="gwtgwt",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
         )
 
         self.exgtype = exgtype

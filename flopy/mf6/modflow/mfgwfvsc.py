@@ -13,6 +13,12 @@ class ModflowGwfvsc(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     viscref : double precision
         fluid reference viscosity used in the equation of state.  this value is set to
         1.0 if not specified as an option.
@@ -47,9 +53,54 @@ class ModflowGwfvsc(MFPackage):
 
     nviscspecies : integer
         number of species used in the viscosity equation of state.  if either
-        concentrations or temperature (or both) are used to update viscosity then then
-        nrhospecies needs to be at least one.
-    packagedata : [list]
+        concentrations or temperature (or both) are used to update viscosity then
+        nviscspecies needs to be at least one.
+    packagedata : [(iviscspec, dviscdc, cviscref, modelname, auxspeciesname)]
+        * iviscspec : integer
+                integer value that defines the species number associated with the specified
+                PACKAGEDATA data entered on each line. IVISCSPECIES must be greater than zero
+                and less than or equal to NVISCSPECIES. Information must be specified for each
+                of the NVISCSPECIES species or the program will terminate with an error.  The
+                program will also terminate with an error if information for a species is
+                specified more than once.
+        * dviscdc : double precision
+                real value that defines the slope of the line defining the linear relationship
+                between viscosity and temperature or between viscosity and concentration,
+                depending on the type of species entered on each line.  If the value of
+                AUXSPECIESNAME entered on a line corresponds to TEMPERATURE_SPECIES_NAME (in
+                the OPTIONS block), this value will be used when VISCOSITY_FUNC is equal to
+                LINEAR (the default) in the OPTIONS block.  When VISCOSITY_FUNC is set to
+                NONLINEAR, a value for DVISCDC must be specified though it is not used.
+        * cviscref : double precision
+                real value that defines the reference temperature or reference concentration
+                value used for this species in the viscosity equation of state.  If
+                AUXSPECIESNAME entered on a line corresponds to TEMPERATURE_SPECIES_NAME (in
+                the OPTIONS block), then CVISCREF refers to a reference temperature, otherwise
+                it refers to a reference concentration.
+        * modelname : string
+                name of a GWT or GWE model used to simulate a species that will be used in the
+                viscosity equation of state.  This name will have no effect if the simulation
+                does not include a GWT or GWE model that corresponds to this GWF model.
+        * auxspeciesname : string
+                name of an auxiliary variable in a GWF stress package that will be used for
+                this species to calculate the viscosity values.  If a viscosity value is needed
+                by the Viscosity Package then it will use the temperature or concentration
+                values associated with this AUXSPECIESNAME in the viscosity equation of state.
+                For advanced stress packages (LAK, SFR, MAW, and UZF) that have an associated
+                advanced transport package (LKT, SFT, MWT, and UZT), the
+                FLOW_PACKAGE_AUXILIARY_NAME option in the advanced transport package can be
+                used to transfer simulated temperature or concentration(s) into the flow
+                package auxiliary variable.  In this manner, the Viscosity Package can
+                calculate viscosity values for lakes, streams, multi-aquifer wells, and
+                unsaturated zone flow cells using simulated concentrations.
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -77,6 +128,7 @@ class ModflowGwfvsc(MFPackage):
             "shape",
             "reader urword",
             "optional true",
+            "mf6internal temp_specname",
         ],
         [
             "block options",
@@ -86,6 +138,7 @@ class ModflowGwfvsc(MFPackage):
             "reader urword",
             "optional true",
             "valid linear nonlinear",
+            "mf6internal thermal_form",
         ],
         [
             "block options",
@@ -119,6 +172,7 @@ class ModflowGwfvsc(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal viscosity_fr",
         ],
         [
             "block options",
@@ -162,7 +216,7 @@ class ModflowGwfvsc(MFPackage):
             "block packagedata",
             "name packagedata",
             "type recarray iviscspec dviscdc cviscref modelname auxspeciesname",
-            "shape (nrhospecies)",
+            "shape (nviscspecies)",
             "reader urword",
         ],
         [
@@ -230,59 +284,15 @@ class ModflowGwfvsc(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwfvsc defines a VSC package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        viscref : double precision
-            fluid reference viscosity used in the equation of state.  this value is set to
-            1.0 if not specified as an option.
-        temperature_species_name : string
-            string used to identify the auxspeciesname in packagedata that corresponds to
-            the temperature species.  there can be only one occurrence of this temperature
-            species name in the packagedata block or the program will terminate with an
-            error.  this value has no effect if viscosity does not depend on temperature.
-        thermal_formulation : string
-            may be used for specifying which viscosity formulation to use for the
-            temperature species. can be either linear or nonlinear. the linear viscosity
-            formulation is the default.
-        thermal_a2 : double precision
-            is an empirical parameter specified by the user for calculating viscosity using
-            a nonlinear formulation.  if a2 is not specified, a default value of 10.0 is
-            assigned (voss, 1984).
-        thermal_a3 : double precision
-            is an empirical parameter specified by the user for calculating viscosity using
-            a nonlinear formulation.  if a3 is not specified, a default value of 248.37 is
-            assigned (voss, 1984).
-        thermal_a4 : double precision
-            is an empirical parameter specified by the user for calculating viscosity using
-            a nonlinear formulation.  if a4 is not specified, a default value of 133.15 is
-            assigned (voss, 1984).
-        viscosity_filerecord : record
-        nviscspecies : integer
-            number of species used in the viscosity equation of state.  if either
-            concentrations or temperature (or both) are used to update viscosity then then
-            nrhospecies needs to be at least one.
-        packagedata : [list]
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "vsc", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowGwfvsc."""
+        super().__init__(
+            parent=model,
+            package_type="vsc",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.viscref = self.build_mfdata("viscref", viscref)
         self.temperature_species_name = self.build_mfdata(

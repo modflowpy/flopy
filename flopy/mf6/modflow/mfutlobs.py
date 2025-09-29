@@ -13,6 +13,12 @@ class ModflowUtlobs(MFPackage):
 
     Parameters
     ----------
+    parent_model_or_package
+        Parent_model_or_package that this package is a part of. Package is automatically
+        added to parent_model_or_package when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     digits : integer
         keyword and an integer digits specifier used for conversion of simulated values
         to text on output. if not specified, the default is the maximum number of
@@ -27,7 +33,34 @@ class ModflowUtlobs(MFPackage):
     print_input : keyword
         keyword to indicate that the list of observation information will be written to
         the listing file immediately after it is read.
-    continuous : list
+    continuous : [(obsname, obstype, id, id2)]
+        * obsname : string
+                string of 1 to 40 nonblank characters used to identify the observation. The
+                identifier need not be unique; however, identification and post-processing of
+                observations in the output files are facilitated if each observation is given a
+                unique name.
+        * obstype : string
+                a string of characters used to identify the observation type.
+        * id : string
+                Text identifying cell where observation is located. For packages other than
+                NPF, if boundary names are defined in the corresponding package input file, ID
+                can be a boundary name. Otherwise ID is a cellid. If the model discretization
+                is type DIS, cellid is three integers (layer, row, column). If the
+                discretization is DISV, cellid is two integers (layer, cell number). If the
+                discretization is DISU, cellid is one integer (node number).
+        * id2 : string
+                Text identifying cell adjacent to cell identified by ID. The form of ID2 is as
+                described for ID. ID2 is used for intercell-flow observations of a GWF model,
+                for three observation types of the LAK Package, for two observation types of
+                the MAW Package, and one observation type of the UZF Package.
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -151,45 +184,14 @@ class ModflowUtlobs(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowUtlobs defines a OBS package.
-
-        Parameters
-        ----------
-        parent_model_or_package
-            Parent_model_or_package that this package is a part of. Package is automatically
-            added to parent_model_or_package when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        digits : integer
-            keyword and an integer digits specifier used for conversion of simulated values
-            to text on output. if not specified, the default is the maximum number of
-            digits stored in the program (as written with the g0 fortran specifier). when
-            simulated values are written to a comma-separated value text file specified in
-            a continuous block below, the digits specifier controls the number of
-            significant digits with which simulated values are written to the output file.
-            the digits specifier has no effect on the number of significant digits with
-            which the simulation time is written for continuous observations.  if digits is
-            specified as zero, then observations are written with the default setting,
-            which is the maximum number of digits.
-        print_input : keyword
-            keyword to indicate that the list of observation information will be written to
-            the listing file immediately after it is read.
-        continuous : list
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
+        """Initialize ModflowUtlobs."""
         super().__init__(
-            parent_model_or_package, "obs", filename, pname, loading_package, **kwargs
+            parent=parent_model_or_package,
+            package_type="obs",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
         )
 
         self.digits = self.build_mfdata("digits", digits)
@@ -202,17 +204,6 @@ class ModflowUtlobs(MFPackage):
 class UtlobsPackages(MFChildPackages):
     """
     UtlobsPackages is a container class for the ModflowUtlobs class.
-
-    Methods
-    -------
-    initialize
-        Initializes a new ModflowUtlobs package removing any sibling child
-        packages attached to the same parent package. See ModflowUtlobs init
-        documentation for definition of parameters.
-    append_package
-        Adds a new ModflowUtlobs package to the container. See ModflowUtlobs
-        init documentation for definition of parameters.
-
     """
 
     package_abbr = "utlobspackages"
@@ -225,6 +216,12 @@ class UtlobsPackages(MFChildPackages):
         filename=None,
         pname=None,
     ):
+        """
+        Initialize a new ModflowUtlobs package, removing any sibling
+        child packages attached to the same parent package.
+
+        See :class:`ModflowUtlobs` for parameter definitions.
+        """
         new_package = ModflowUtlobs(
             self._cpparent,
             digits=digits,

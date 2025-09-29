@@ -13,6 +13,12 @@ class ModflowGwedis(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     length_units : string
         is the length units used for this model.  values can be 'feet', 'meters', or
         'centimeters'.  if not specified, the default is 'unknown'.
@@ -45,6 +51,13 @@ class ModflowGwedis(MFPackage):
     export_array_netcdf : keyword
         keyword that specifies input griddata arrays should be written to the model
         output netcdf file.
+    crs : [string]
+        is a real-world coordinate reference system (crs) for the model, for example,
+        an epsg integer code (e.g. 26915), authority string (i.e. epsg:26915), or open
+        geospatial consortium well-known text (wkt) specification. limited to 5000
+        characters. the entry for crs does not affect the model simulation, but it is
+        written to the binary grid file so that postprocessors can locate the grid in
+        space.
     packagedata : record ncf6 filein ncf6_filename
         Contains data for the ncf package. Data can be passed as a dictionary to the
         ncf package with variable names as keys and package data as values. Data for
@@ -76,9 +89,17 @@ class ModflowGwedis(MFPackage):
         existing cell below.  this type of cell is referred to as a 'vertical pass
         through' cell.
 
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
+
     """
 
     grb_filerecord = ListTemplateGenerator(("gwe6", "dis", "options", "grb_filerecord"))
+    crs = ArrayTemplateGenerator(("gwe6", "dis", "options", "crs"))
     ncf_filerecord = ListTemplateGenerator(("gwe6", "dis", "options", "ncf_filerecord"))
     delr = ArrayTemplateGenerator(("gwe6", "dis", "griddata", "delr"))
     delc = ArrayTemplateGenerator(("gwe6", "dis", "griddata", "delc"))
@@ -120,7 +141,6 @@ class ModflowGwedis(MFPackage):
             "reader urword",
             "tagged true",
             "optional false",
-            "extended true",
         ],
         [
             "block options",
@@ -140,7 +160,6 @@ class ModflowGwedis(MFPackage):
             "reader urword",
             "optional false",
             "tagged false",
-            "extended true",
         ],
         [
             "block options",
@@ -179,6 +198,16 @@ class ModflowGwedis(MFPackage):
             "optional true",
             "mf6internal export_nc",
             "extended true",
+        ],
+        [
+            "block options",
+            "name crs",
+            "type string",
+            "shape lenbigline",
+            "preserve_case true",
+            "reader urword",
+            "optional true",
+            "prerelease true",
         ],
         [
             "block options",
@@ -306,6 +335,7 @@ class ModflowGwedis(MFPackage):
         angrot=None,
         export_array_ascii=None,
         export_array_netcdf=None,
+        crs=None,
         packagedata=None,
         nlay=1,
         nrow=2,
@@ -319,86 +349,15 @@ class ModflowGwedis(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwedis defines a DIS package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        length_units : string
-            is the length units used for this model.  values can be 'feet', 'meters', or
-            'centimeters'.  if not specified, the default is 'unknown'.
-        nogrb : keyword
-            keyword to deactivate writing of the binary grid file.
-        grb_filerecord : record
-        xorigin : double precision
-            x-position of the lower-left corner of the model grid.  a default value of zero
-            is assigned if not specified.  the value for xorigin does not affect the model
-            simulation, but it is written to the binary grid file so that postprocessors
-            can locate the grid in space.
-        yorigin : double precision
-            y-position of the lower-left corner of the model grid.  if not specified, then
-            a default value equal to zero is used.  the value for yorigin does not affect
-            the model simulation, but it is written to the binary grid file so that
-            postprocessors can locate the grid in space.
-        angrot : double precision
-            counter-clockwise rotation angle (in degrees) of the lower-left corner of the
-            model grid.  if not specified, then a default value of 0.0 is assigned.  the
-            value for angrot does not affect the model simulation, but it is written to the
-            binary grid file so that postprocessors can locate the grid in space.
-        export_array_ascii : keyword
-            keyword that specifies input griddata arrays should be written to layered ascii
-            output files.
-        export_array_netcdf : keyword
-            keyword that specifies input griddata arrays should be written to the model
-            output netcdf file.
-        packagedata : record ncf6 filein ncf6_filename
-            Contains data for the ncf package. Data can be passed as a dictionary to the
-            ncf package with variable names as keys and package data as values. Data for
-            the packagedata variable is also acceptable. See ncf package documentation for
-            more information.
-        nlay : integer
-            is the number of layers in the model grid.
-        nrow : integer
-            is the number of rows in the model grid.
-        ncol : integer
-            is the number of columns in the model grid.
-        delr : [double precision]
-            is the column spacing in the row direction.
-        delc : [double precision]
-            is the row spacing in the column direction.
-        top : [double precision]
-            is the top elevation for each cell in the top model layer.
-        botm : [double precision]
-            is the bottom elevation for each cell.
-        idomain : [integer]
-            is an optional array that characterizes the existence status of a cell.  if the
-            idomain array is not specified, then all model cells exist within the solution.
-            if the idomain value for a cell is 0, the cell does not exist in the
-            simulation.  input and output values will be read and written for the cell, but
-            internal to the program, the cell is excluded from the solution.  if the
-            idomain value for a cell is 1, the cell exists in the simulation.  if the
-            idomain value for a cell is -1, the cell does not exist in the simulation.
-            furthermore, the first existing cell above will be connected to the first
-            existing cell below.  this type of cell is referred to as a 'vertical pass
-            through' cell.
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "dis", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowGwedis."""
+        super().__init__(
+            parent=model,
+            package_type="dis",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.length_units = self.build_mfdata("length_units", length_units)
         self.nogrb = self.build_mfdata("nogrb", nogrb)
@@ -412,6 +371,7 @@ class ModflowGwedis(MFPackage):
         self.export_array_netcdf = self.build_mfdata(
             "export_array_netcdf", export_array_netcdf
         )
+        self.crs = self.build_mfdata("crs", crs)
         self._ncf_filerecord = self.build_mfdata("ncf_filerecord", None)
         self._ncf_package = self.build_child_package(
             "ncf", packagedata, "packagedata", self._ncf_filerecord

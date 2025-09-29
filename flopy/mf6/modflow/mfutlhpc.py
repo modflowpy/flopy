@@ -13,13 +13,32 @@ class ModflowUtlhpc(MFPackage):
 
     Parameters
     ----------
+    parent_package
+        Parent_package that this package is a part of. Package is automatically
+        added to parent_package when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     print_table : keyword
         keyword to indicate that the partition table will be printed to the listing
         file.
     dev_log_mpi : keyword
         keyword to enable (extremely verbose) logging of mpi traffic to file.
-    partitions : list
+    partitions : [(mname, mrank)]
         is the list of zero-based partition numbers.
+        * mname : string
+                is the unique model name.
+        * mrank : integer
+                is the zero-based partition number (also: MPI rank or processor id) to which
+                the model will be assigned.
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -79,37 +98,14 @@ class ModflowUtlhpc(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowUtlhpc defines a HPC package.
-
-        Parameters
-        ----------
-        parent_package
-            Parent_package that this package is a part of. Package is automatically
-            added to parent_package when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        print_table : keyword
-            keyword to indicate that the partition table will be printed to the listing
-            file.
-        dev_log_mpi : keyword
-            keyword to enable (extremely verbose) logging of mpi traffic to file.
-        partitions : list
-            is the list of zero-based partition numbers.
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
+        """Initialize ModflowUtlhpc."""
         super().__init__(
-            parent_package, "hpc", filename, pname, loading_package, **kwargs
+            parent=parent_package,
+            package_type="hpc",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
         )
 
         self.print_table = self.build_mfdata("print_table", print_table)

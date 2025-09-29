@@ -13,6 +13,12 @@ class ModflowGweest(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     save_flows : keyword
         keyword to indicate that est flow terms will be written to the file specified
         with 'budget fileout' in output control.
@@ -75,6 +81,13 @@ class ModflowGweest(MFPackage):
         the voids. value will remain fixed for the entire simulation.  for example, if
         working in si units, values may be entered as kilograms per cubic meter.
 
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
+
     """
 
     porosity = ArrayTemplateGenerator(("gwe6", "est", "griddata", "porosity"))
@@ -102,6 +115,7 @@ class ModflowGweest(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal ord0_decay_water",
         ],
         [
             "block options",
@@ -109,6 +123,7 @@ class ModflowGweest(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal ord0_decay_solid",
         ],
         [
             "block options",
@@ -202,90 +217,15 @@ class ModflowGweest(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGweest defines a EST package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        save_flows : keyword
-            keyword to indicate that est flow terms will be written to the file specified
-            with 'budget fileout' in output control.
-        zero_order_decay_water : keyword
-            is a text keyword to indicate that zero-order decay will occur in the aqueous
-            phase. that is, decay occurs in the water and is a rate per volume of water
-            only, not per volume of aquifer (i.e., grid cell).  use of this keyword
-            requires that decay_water is specified in the griddata block.
-        zero_order_decay_solid : keyword
-            is a text keyword to indicate that zero-order decay will occur in the solid
-            phase. that is, decay occurs in the solid and is a rate per mass (not volume)
-            of solid only.  use of this keyword requires that decay_solid is specified in
-            the griddata block.
-        density_water : double precision
-            density of water used by calculations related to heat storage and conduction.
-            this value is set to 1,000 kg/m3 if no overriding value is specified.  a user-
-            specified value should be provided for models that use units other than
-            kilograms and meters or if it is necessary to use a value other than the
-            default.
-        heat_capacity_water : double precision
-            heat capacity of water used by calculations related to heat storage and
-            conduction.  this value is set to 4,184 j/kg/c if no overriding value is
-            specified.  a user-specified value should be provided for models that use units
-            other than kilograms, joules, and degrees celsius or it is necessary to use a
-            value other than the default.
-        latent_heat_vaporization : double precision
-            latent heat of vaporization is the amount of energy that is required to convert
-            a given quantity of liquid into a gas and is associated with evaporative
-            cooling.  while the est package does not simulate evaporation, multiple other
-            packages in a gwe simulation may.  to avoid having to specify the latent heat
-            of vaporization in multiple packages, it is specified in a single location and
-            accessed wherever it is needed.  for example, evaporation may occur from the
-            surface of streams or lakes and the energy consumed by the change in phase
-            would be needed in both the sfe and lke packages.  this value is set to
-            2,453,500 j/kg if no overriding value is specified.  a user-specified value
-            should be provided for models that use units other than joules and kilograms or
-            if it is necessary to use a value other than the default.
-        porosity : [double precision]
-            is the mobile domain porosity, defined as the mobile domain pore volume per
-            mobile domain volume.  the gwe model does not support the concept of an
-            immobile domain in the context of heat transport.
-        decay_water : [double precision]
-            is the rate coefficient for zero-order decay for the aqueous phase of the
-            mobile domain.  a negative value indicates heat (energy) production.  the
-            dimensions of zero-order decay in the aqueous phase are energy per length cubed
-            (volume of water) per time.  zero-order decay in the aqueous phase will have no
-            effect on simulation results unless zero_order_decay_water is specified in the
-            options block.
-        decay_solid : [double precision]
-            is the rate coefficient for zero-order decay for the solid phase.  a negative
-            value indicates heat (energy) production. the dimensions of zero-order decay in
-            the solid phase are energy per mass of solid per time. zero-order decay in the
-            solid phase will have no effect on simulation results unless
-            zero_order_decay_solid is specified in the options block.
-        heat_capacity_solid : [double precision]
-            is the mass-based heat capacity of dry solids (aquifer material). for example,
-            units of j/kg/c may be used (or equivalent).
-        density_solid : [double precision]
-            is a user-specified value of the density of aquifer material not considering
-            the voids. value will remain fixed for the entire simulation.  for example, if
-            working in si units, values may be entered as kilograms per cubic meter.
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "est", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowGweest."""
+        super().__init__(
+            parent=model,
+            package_type="est",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.save_flows = self.build_mfdata("save_flows", save_flows)
         self.zero_order_decay_water = self.build_mfdata(

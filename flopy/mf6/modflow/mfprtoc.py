@@ -13,6 +13,12 @@ class ModflowPrtoc(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     budget_filerecord : (budgetfile)
         * budgetfile : string
                 name of the output file to write budget information.
@@ -36,7 +42,12 @@ class ModflowPrtoc(MFPackage):
         particle is released
     track_exit : keyword
         keyword to indicate that particle tracking output is to be written when a
-        particle exits a feature (a model, cell, or subcell)
+        particle exits a grid feature (e.g. model, cell)
+    track_subfeature_exit : keyword
+        keyword to indicate that particle tracking output is to be written when a
+        particle exits a sub-grid-scale feature. such features are considered
+        implementation details of the tracking algorithm employed for particular grid
+        types, and reporting for exit events from such features is disabled by default.
     track_timestep : keyword
         keyword to indicate that particle tracking output is to be written at the end
         of each time step
@@ -50,6 +61,9 @@ class ModflowPrtoc(MFPackage):
     track_usertime : keyword
         keyword to indicate that particle tracking output is to be written at user-
         specified times, provided as double precision values in the tracktimes block.
+    track_dropped : keyword
+        keyword to indicate that particle tracking output is to be written when a
+        particle is dropped to the water table via dry_tracking_method drop.
     track_timesrecord : (track_times, times)
         * track_times : keyword
                 keyword indicating tracking times will follow
@@ -60,10 +74,16 @@ class ModflowPrtoc(MFPackage):
         * timesfile : string
                 name of the tracking times file
 
+    dev_dump_event_trace : keyword
+        print a verbose particle tracking event trace to standard output
     ntracktimes : integer
         is the number of user-specified particle tracking times in the tracktimes
         block.
-    tracktimes : [list]
+    tracktimes : [(time)]
+        * time : double precision
+                real value that defines the tracking time with respect to the simulation start
+                time.
+
     saverecord : (save, rtype, ocsetting)
         * save : keyword
                 keyword to indicate that information will be saved this stress period.
@@ -80,6 +100,13 @@ class ModflowPrtoc(MFPackage):
         * ocsetting : keystring all first last frequency steps
                 specifies the steps for which the data will be saved.
 
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -255,6 +282,13 @@ class ModflowPrtoc(MFPackage):
         ],
         [
             "block options",
+            "name track_subfeature_exit",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
             "name track_timestep",
             "type keyword",
             "reader urword",
@@ -283,13 +317,20 @@ class ModflowPrtoc(MFPackage):
         ],
         [
             "block options",
+            "name track_dropped",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
             "name track_timesrecord",
             "type record track_times times",
             "shape",
             "reader urword",
             "tagged true",
             "optional true",
-            "removed 6.6.1",
+            "removed 6.6.0",
         ],
         [
             "block options",
@@ -299,18 +340,18 @@ class ModflowPrtoc(MFPackage):
             "in_record true",
             "tagged true",
             "shape",
-            "removed 6.6.1",
+            "removed 6.6.0",
         ],
         [
             "block options",
             "name times",
             "type double precision",
-            "shape (unknown)",
+            "shape (any1d)",
             "reader urword",
             "in_record true",
             "tagged false",
             "repeating true",
-            "removed 6.6.1",
+            "removed 6.6.0",
         ],
         [
             "block options",
@@ -320,7 +361,7 @@ class ModflowPrtoc(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
-            "removed 6.6.1",
+            "removed 6.6.0",
         ],
         [
             "block options",
@@ -330,7 +371,7 @@ class ModflowPrtoc(MFPackage):
             "in_record true",
             "tagged true",
             "shape",
-            "removed 6.6.1",
+            "removed 6.6.0",
         ],
         [
             "block options",
@@ -342,7 +383,14 @@ class ModflowPrtoc(MFPackage):
             "reader urword",
             "tagged false",
             "optional false",
-            "removed 6.6.1",
+            "removed 6.6.0",
+        ],
+        [
+            "block options",
+            "name dev_dump_event_trace",
+            "type keyword",
+            "reader urword",
+            "optional true",
         ],
         [
             "block dimensions",
@@ -371,7 +419,7 @@ class ModflowPrtoc(MFPackage):
             "block period",
             "name iper",
             "type integer",
-            "block_variable True",
+            "block_variable true",
             "in_record true",
             "tagged false",
             "shape",
@@ -490,12 +538,15 @@ class ModflowPrtoc(MFPackage):
         trackcsv_filerecord=None,
         track_release=None,
         track_exit=None,
+        track_subfeature_exit=None,
         track_timestep=None,
         track_terminate=None,
         track_weaksink=None,
         track_usertime=None,
+        track_dropped=None,
         track_timesrecord=None,
         track_timesfilerecord=None,
+        dev_dump_event_trace=None,
         ntracktimes=None,
         tracktimes=None,
         saverecord=None,
@@ -504,79 +555,15 @@ class ModflowPrtoc(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowPrtoc defines a OC package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        budget_filerecord : record
-        budgetcsv_filerecord : record
-        track_filerecord : record
-        trackcsv_filerecord : record
-        track_release : keyword
-            keyword to indicate that particle tracking output is to be written when a
-            particle is released
-        track_exit : keyword
-            keyword to indicate that particle tracking output is to be written when a
-            particle exits a feature (a model, cell, or subcell)
-        track_timestep : keyword
-            keyword to indicate that particle tracking output is to be written at the end
-            of each time step
-        track_terminate : keyword
-            keyword to indicate that particle tracking output is to be written when a
-            particle terminates for any reason
-        track_weaksink : keyword
-            keyword to indicate that particle tracking output is to be written when a
-            particle exits a weak sink (a cell which removes some but not all inflow from
-            adjacent cells)
-        track_usertime : keyword
-            keyword to indicate that particle tracking output is to be written at user-
-            specified times, provided as double precision values in the tracktimes block.
-        track_timesrecord : (track_times, times)
-            * track_times : keyword
-                    keyword indicating tracking times will follow
-            * times : [double precision]
-                    times to track, relative to the beginning of the simulation.
-
-        track_timesfilerecord : record
-        ntracktimes : integer
-            is the number of user-specified particle tracking times in the tracktimes
-            block.
-        tracktimes : [list]
-        saverecord : (save, rtype, ocsetting)
-            * save : keyword
-                    keyword to indicate that information will be saved this stress period.
-            * rtype : string
-                    type of information to save or print.  Can only be BUDGET.
-            * ocsetting : keystring all first last frequency steps
-                    specifies the steps for which the data will be saved.
-
-        printrecord : (print, rtype, ocsetting)
-            * print : keyword
-                    keyword to indicate that information will be printed this stress period.
-            * rtype : string
-                    type of information to save or print.  Can only be BUDGET.
-            * ocsetting : keystring all first last frequency steps
-                    specifies the steps for which the data will be saved.
-
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "oc", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowPrtoc."""
+        super().__init__(
+            parent=model,
+            package_type="oc",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.budget_filerecord = self.build_mfdata(
             "budget_filerecord", budget_filerecord
@@ -590,15 +577,22 @@ class ModflowPrtoc(MFPackage):
         )
         self.track_release = self.build_mfdata("track_release", track_release)
         self.track_exit = self.build_mfdata("track_exit", track_exit)
+        self.track_subfeature_exit = self.build_mfdata(
+            "track_subfeature_exit", track_subfeature_exit
+        )
         self.track_timestep = self.build_mfdata("track_timestep", track_timestep)
         self.track_terminate = self.build_mfdata("track_terminate", track_terminate)
         self.track_weaksink = self.build_mfdata("track_weaksink", track_weaksink)
         self.track_usertime = self.build_mfdata("track_usertime", track_usertime)
+        self.track_dropped = self.build_mfdata("track_dropped", track_dropped)
         self.track_timesrecord = self.build_mfdata(
             "track_timesrecord", track_timesrecord
         )
         self.track_timesfilerecord = self.build_mfdata(
             "track_timesfilerecord", track_timesfilerecord
+        )
+        self.dev_dump_event_trace = self.build_mfdata(
+            "dev_dump_event_trace", dev_dump_event_trace
         )
         self.ntracktimes = self.build_mfdata("ntracktimes", ntracktimes)
         self.tracktimes = self.build_mfdata("tracktimes", tracktimes)

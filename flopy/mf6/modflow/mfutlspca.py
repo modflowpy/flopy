@@ -13,6 +13,12 @@ class ModflowUtlspca(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     readasarrays : keyword
         indicates that array-based input will be used for the spc package.  this
         keyword must be specified to use array-based input.  when readasarrays is
@@ -37,6 +43,13 @@ class ModflowUtlspca(MFPackage):
         package.  the temperature array may be defined by a time-array series (see the
         "using time-array series in a package" section).
 
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
+
     """
 
     tas_filerecord = ListTemplateGenerator(("spca", "options", "tas_filerecord"))
@@ -54,7 +67,7 @@ class ModflowUtlspca(MFPackage):
             "shape",
             "reader urword",
             "optional false",
-            "default True",
+            "default true",
         ],
         [
             "block options",
@@ -109,7 +122,7 @@ class ModflowUtlspca(MFPackage):
             "block period",
             "name iper",
             "type integer",
-            "block_variable True",
+            "block_variable true",
             "in_record true",
             "tagged false",
             "shape",
@@ -148,52 +161,15 @@ class ModflowUtlspca(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowUtlspca defines a SPCA package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        readasarrays : keyword
-            indicates that array-based input will be used for the spc package.  this
-            keyword must be specified to use array-based input.  when readasarrays is
-            specified, values must be provided for every cell within a model layer, even
-            those cells that have an idomain value less than one.  values assigned to cells
-            with idomain values less than one are not used and have no effect on simulation
-            results.
-        print_input : keyword
-            keyword to indicate that the list of spc information will be written to the
-            listing file immediately after it is read.
-        timearrayseries : record tas6 filein tas6_filename
-            Contains data for the tas package. Data can be passed as a dictionary to the
-            tas package with variable names as keys and package data as values. Data for
-            the timearrayseries variable is also acceptable. See tas package documentation
-            for more information.
-        concentration : [double precision]
-            is the concentration of the associated recharge or evapotranspiration stress
-            package.  the concentration array may be defined by a time-array series (see
-            the "using time-array series in a package" section).
-        temperature : [double precision]
-            is the temperature of the associated recharge or evapotranspiration stress
-            package.  the temperature array may be defined by a time-array series (see the
-            "using time-array series in a package" section).
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "spca", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowUtlspca."""
+        super().__init__(
+            parent=model,
+            package_type="spca",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.readasarrays = self.build_mfdata("readasarrays", readasarrays)
         self.print_input = self.build_mfdata("print_input", print_input)

@@ -13,6 +13,12 @@ class ModflowGwtlkt(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     flow_package_name : string
         keyword to specify the name of the corresponding flow package.  if not
         specified, then the corresponding flow package must have the same name as this
@@ -81,8 +87,100 @@ class ModflowGwtlkt(MFPackage):
         obs package with variable names as keys and package data as values. Data for
         the observations variable is also acceptable. See obs package documentation for
         more information.
-    packagedata : [list]
-    lakeperioddata : list
+    packagedata : [(ifno, strt, aux, boundname)]
+        * ifno : integer
+                integer value that defines the feature (lake) number associated with the
+                specified PERIOD data on the line. IFNO must be greater than zero and less than
+                or equal to NLAKES.
+        * strt : double precision
+                real value that defines the starting concentration for the lake.
+        * aux : [double precision]
+                represents the values of the auxiliary variables for each lake. The values of
+                auxiliary variables must be present for each lake. The values must be specified
+                in the order of the auxiliary variables specified in the OPTIONS block.  If the
+                package supports time series and the Options block includes a TIMESERIESFILE
+                entry (see the 'Time-Variable Input' section), values can be obtained from a
+                time series by entering the time-series name in place of a numeric value.
+        * boundname : string
+                name of the lake cell.  BOUNDNAME is an ASCII character variable that can
+                contain as many as 40 characters.  If BOUNDNAME contains spaces in it, then the
+                entire name must be enclosed within single quotes.
+
+    lakeperioddata : [(ifno, laksetting)]
+        * ifno : integer
+                integer value that defines the feature (lake) number associated with the
+                specified period data on the line. ifno must be greater than zero and less than
+                or equal to nlakes.
+        * laksetting : concentration | status | rainfall | evaporation | runoff | ext-inflow | auxiliaryrecord
+                line of information that is parsed into a keyword and values.  keyword values
+                that can be used to start the laksetting string include: status, concentration,
+                rainfall, evaporation, runoff, ext-inflow, and auxiliary.  these settings are
+                used to assign the concentration of associated with the corresponding flow
+                terms.  concentrations cannot be specified for all flow terms.  for example,
+                the lake package supports a 'withdrawal' flow term.  if this withdrawal term is
+                active, then water will be withdrawn from the lake at the calculated
+                concentration of the lake.
+                * concentration : string
+                            real or character value that defines the concentration for the lake. the
+                            specified concentration is only applied if the lake is a constant concentration
+                            lake. if the options block includes a timeseriesfile entry (see the 'time-
+                            variable input' section), values can be obtained from a time series by entering
+                            the time-series name in place of a numeric value.
+                * status : string
+                            keyword option to define lake status.  status can be active, inactive, or
+                            constant. by default, status is active, which means that concentration will be
+                            calculated for the lake.  if a lake is inactive, then there will be no solute
+                            mass fluxes into or out of the lake and the inactive value will be written for
+                            the lake concentration.  if a lake is constant, then the concentration for the
+                            lake will be fixed at the user specified value.
+                * rainfall : string
+                            real or character value that defines the rainfall solute concentration
+                            :math:`(ml^{-3})` for the lake. if the options block includes a timeseriesfile
+                            entry (see the 'time-variable input' section), values can be obtained from a
+                            time series by entering the time-series name in place of a numeric value.
+                * evaporation : string
+                            real or character value that defines the concentration of evaporated water
+                            :math:`(ml^{-3})` for the lake. if this concentration value is larger than the
+                            simulated concentration in the lake, then the evaporated water will be removed
+                            at the same concentration as the lake.  if the options block includes a
+                            timeseriesfile entry (see the 'time-variable input' section), values can be
+                            obtained from a time series by entering the time-series name in place of a
+                            numeric value.
+                * runoff : string
+                            real or character value that defines the concentration of runoff
+                            :math:`(ml^{-3})` for the lake. value must be greater than or equal to zero. if
+                            the options block includes a timeseriesfile entry (see the 'time-variable
+                            input' section), values can be obtained from a time series by entering the
+                            time-series name in place of a numeric value.
+                * ext_inflow : string
+                            real or character value that defines the concentration of external inflow
+                            :math:`(ml^{-3})` for the lake. value must be greater than or equal to zero. if
+                            the options block includes a timeseriesfile entry (see the 'time-variable
+                            input' section), values can be obtained from a time series by entering the
+                            time-series name in place of a numeric value.
+                * auxiliaryrecord : (auxiliary, auxname, auxval)
+                            * auxiliary : keyword
+                                            keyword for specifying auxiliary variable.
+                            * auxname : string
+                                            name for the auxiliary variable to be assigned AUXVAL.  AUXNAME must match one
+                                            of the auxiliary variable names defined in the OPTIONS block. If AUXNAME does
+                                            not match one of the auxiliary variable names defined in the OPTIONS block the
+                                            data are ignored.
+                            * auxval : double precision
+                                            value for the auxiliary variable. If the Options block includes a
+                                            TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be
+                                            obtained from a time series by entering the time-series name in place of a
+                                            numeric value.
+
+
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -390,7 +488,7 @@ class ModflowGwtlkt(MFPackage):
             "block period",
             "name iper",
             "type integer",
-            "block_variable True",
+            "block_variable true",
             "in_record true",
             "tagged false",
             "shape",
@@ -544,88 +642,15 @@ class ModflowGwtlkt(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwtlkt defines a LKT package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        flow_package_name : string
-            keyword to specify the name of the corresponding flow package.  if not
-            specified, then the corresponding flow package must have the same name as this
-            advanced transport package (the name associated with this package in the gwt
-            name file).
-        auxiliary : [string]
-            defines an array of one or more auxiliary variable names.  there is no limit on
-            the number of auxiliary variables that can be provided on this line; however,
-            lists of information provided in subsequent blocks must have a column of data
-            for each auxiliary variable name defined here.   the number of auxiliary
-            variables detected on this line determines the value for naux.  comments cannot
-            be provided anywhere on this line as they will be interpreted as auxiliary
-            variable names.  auxiliary variables may not be used by the package, but they
-            will be available for use by other parts of the program.  the program will
-            terminate with an error if auxiliary variables are specified on more than one
-            line in the options block.
-        flow_package_auxiliary_name : string
-            keyword to specify the name of an auxiliary variable in the corresponding flow
-            package.  if specified, then the simulated concentrations from this advanced
-            transport package will be copied into the auxiliary variable specified with
-            this name.  note that the flow package must have an auxiliary variable with
-            this name or the program will terminate with an error.  if the flows for this
-            advanced transport package are read from a file, then this option will have no
-            effect.
-        boundnames : keyword
-            keyword to indicate that boundary names may be provided with the list of lake
-            cells.
-        print_input : keyword
-            keyword to indicate that the list of lake information will be written to the
-            listing file immediately after it is read.
-        print_concentration : keyword
-            keyword to indicate that the list of lake {#2} will be printed to the listing
-            file for every stress period in which 'concentration print' is specified in
-            output control.  if there is no output control option and print_{#3} is
-            specified, then {#2} are printed for the last time step of each stress period.
-        print_flows : keyword
-            keyword to indicate that the list of lake flow rates will be printed to the
-            listing file for every stress period time step in which 'budget print' is
-            specified in output control.  if there is no output control option and
-            'print_flows' is specified, then flow rates are printed for the last time step
-            of each stress period.
-        save_flows : keyword
-            keyword to indicate that lake flow terms will be written to the file specified
-            with 'budget fileout' in output control.
-        concentration_filerecord : record
-        budget_filerecord : record
-        budgetcsv_filerecord : record
-        timeseries : record ts6 filein ts6_filename
-            Contains data for the ts package. Data can be passed as a dictionary to the ts
-            package with variable names as keys and package data as values. Data for the
-            timeseries variable is also acceptable. See ts package documentation for more
-            information.
-        observations : record obs6 filein obs6_filename
-            Contains data for the obs package. Data can be passed as a dictionary to the
-            obs package with variable names as keys and package data as values. Data for
-            the observations variable is also acceptable. See obs package documentation for
-            more information.
-        packagedata : [list]
-        lakeperioddata : list
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "lkt", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowGwtlkt."""
+        super().__init__(
+            parent=model,
+            package_type="lkt",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.flow_package_name = self.build_mfdata(
             "flow_package_name", flow_package_name

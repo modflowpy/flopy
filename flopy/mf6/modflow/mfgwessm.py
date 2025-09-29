@@ -13,6 +13,12 @@ class ModflowGwessm(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     print_flows : keyword
         keyword to indicate that the list of ssm flow rates will be printed to the
         listing file for every stress period time step in which 'budget print' is
@@ -22,8 +28,66 @@ class ModflowGwessm(MFPackage):
     save_flows : keyword
         keyword to indicate that ssm flow terms will be written to the file specified
         with 'budget fileout' in output control.
-    sources : list
-    fileinput : list
+    sources : [(pname, srctype, auxname)]
+        * pname : string
+                name of the flow package for which an SPC6 input file contains a source
+                temperature.  If this flow package is represented using an advanced transport
+                package (SFE, LKE, MWE, or UZE), then the advanced transport package will
+                override SSM terms specified here.
+        * srctype : string
+                keyword indicating how temperature will be assigned for sources and sinks.
+                Keyword must be specified as either AUX or AUXMIXED.  For both options the user
+                must provide an auxiliary variable in the corresponding flow package.  The
+                auxiliary variable must have the same name as the AUXNAME value that follows.
+                If the AUX keyword is specified, then the auxiliary variable specified by the
+                user will be assigned as the temperature value for groundwater sources (flows
+                with a positive sign).  For negative flow rates (sinks), groundwater will be
+                withdrawn from the cell at the simulated temperature of the cell.  The AUXMIXED
+                option provides an alternative method for how to determine the temperature of
+                sinks.  If the cell temperature is larger than the user-specified auxiliary
+                temperature, then the temperature of groundwater withdrawn from the cell will
+                be assigned as the user-specified temperature.  Alternatively, if the user-
+                specified auxiliary temperature is larger than the cell temperature, then
+                groundwater will be withdrawn at the cell temperature.  Thus, the AUXMIXED
+                option is designed to work with the Evapotranspiration (EVT) and Recharge (RCH)
+                Packages where water may be withdrawn at a temperature that is less than the
+                cell temperature.
+        * auxname : string
+                name of the auxiliary variable in the package PNAME.  This auxiliary variable
+                must exist and be specified by the user in that package.  The values in this
+                auxiliary variable will be used to set the temperature associated with the
+                flows for that boundary package.
+
+    fileinput : [(pname, spc6, filein, spc6_filename, mixed)]
+        * pname : string
+                name of the flow package for which an SPC6 input file contains a source
+                temperature.  If this flow package is represented using an advanced transport
+                package (SFE, LKE, MWE, or UZE), then the advanced transport package will
+                override SSM terms specified here.
+        * spc6 : keyword
+                keyword to specify that record corresponds to a source sink mixing input file.
+        * filein : keyword
+                keyword to specify that an input filename is expected next.
+        * spc6_filename : string
+                character string that defines the path and filename for the file containing
+                source and sink input data for the flow package. The SPC6_FILENAME file is a
+                flexible input file that allows temperatures to be specified by stress period
+                and with time series. Instructions for creating the SPC6_FILENAME input file
+                are provided in the next section on file input for boundary temperatures.
+        * mixed : keyword
+                keyword to specify that these stress package boundaries will have the mixed
+                condition.  The MIXED condition is described in the SOURCES block for AUXMIXED.
+                The MIXED condition allows for water to be withdrawn at a temperature that is
+                less than the cell temperature.  It is intended primarily for representing
+                evapotranspiration.
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -62,6 +126,7 @@ class ModflowGwessm(MFPackage):
             "type string",
             "tagged false",
             "reader urword",
+            "mf6internal pname_sources",
         ],
         [
             "block sources",
@@ -86,6 +151,7 @@ class ModflowGwessm(MFPackage):
             "name fileinput",
             "type recarray pname spc6 filein spc6_filename mixed",
             "reader urword",
+            "optional true",
         ],
         [
             "block fileinput",
@@ -149,40 +215,15 @@ class ModflowGwessm(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwessm defines a SSM package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        print_flows : keyword
-            keyword to indicate that the list of ssm flow rates will be printed to the
-            listing file for every stress period time step in which 'budget print' is
-            specified in output control.  if there is no output control option and
-            'print_flows' is specified, then flow rates are printed for the last time step
-            of each stress period.
-        save_flows : keyword
-            keyword to indicate that ssm flow terms will be written to the file specified
-            with 'budget fileout' in output control.
-        sources : list
-        fileinput : list
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "ssm", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowGwessm."""
+        super().__init__(
+            parent=model,
+            package_type="ssm",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.print_flows = self.build_mfdata("print_flows", print_flows)
         self.save_flows = self.build_mfdata("save_flows", save_flows)

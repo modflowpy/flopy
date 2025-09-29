@@ -13,6 +13,12 @@ class ModflowNam(MFPackage):
 
     Parameters
     ----------
+    simulation
+        Simulation that this package is a part of. Package is automatically
+        added to simulation when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     continue_ : keyword
         keyword flag to indicate that the simulation should continue even if one or
         more solutions do not converge.
@@ -44,16 +50,51 @@ class ModflowNam(MFPackage):
         more information.
     tdis6 : string
         is the name of the temporal discretization (tdis) input file.
-    models : list
+    models : [(mtype, mfname, mname)]
         is the list of model types, model name files, and model names.
-    exchanges : list
+        * mtype : string
+                is the type of model to add to simulation.
+        * mfname : string
+                is the file name of the model name file.
+        * mname : string
+                is the user-assigned name of the model.  The model name cannot exceed 16
+                characters and must not have blanks within the name.  The model name is case
+                insensitive; any lowercase letters are converted and stored as upper case
+                letters.
+
+    exchanges : [(exgtype, exgfile, exgmnamea, exgmnameb)]
         is the list of exchange types, exchange files, and model names.
+        * exgtype : string
+                is the exchange type.
+        * exgfile : string
+                is the input file for the exchange.
+        * exgmnamea : string
+                is the name of the first model that is part of this exchange.
+        * exgmnameb : string
+                is the name of the second model that is part of this exchange.
+
     mxiter : integer
         is the maximum number of outer iterations for this solution group.  the default
         value is 1.  if there is only one solution in the solution group, then mxiter
         must be 1.
-    solutiongroup : list
+    solutiongroup : [(slntype, slnfname, slnmnames)]
         is the list of solution types and models in the solution.
+        * slntype : string
+                is the type of solution.  The Integrated Model Solution (IMS6) and Explicit
+                Model Solution (EMS6) are the only supported options in this version.
+        * slnfname : string
+                name of file containing solution input.
+        * slnmnames : [string]
+                is the array of model names to add to this solution.  The number of model names
+                is determined by the number of model names the user provides on this line.
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -238,7 +279,7 @@ class ModflowNam(MFPackage):
             "block solutiongroup",
             "name group_num",
             "type integer",
-            "block_variable True",
+            "block_variable true",
             "in_record true",
             "tagged false",
             "shape",
@@ -280,7 +321,7 @@ class ModflowNam(MFPackage):
             "name slnmnames",
             "type string",
             "in_record true",
-            "shape (:)",
+            "shape (any1d)",
             "tagged false",
             "reader urword",
         ],
@@ -306,70 +347,15 @@ class ModflowNam(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowNam defines a NAM package.
-
-        Parameters
-        ----------
-        simulation
-            Simulation that this package is a part of. Package is automatically
-            added to simulation when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        continue_ : keyword
-            keyword flag to indicate that the simulation should continue even if one or
-            more solutions do not converge.
-        nocheck : keyword
-            keyword flag to indicate that the model input check routines should not be
-            called prior to each time step. checks are performed by default.
-        memory_print_option : string
-            is a flag that controls printing of detailed memory manager usage to the end of
-            the simulation list file.  none means do not print detailed information.
-            summary means print only the total memory for each simulation component. all
-            means print information for each variable stored in the memory manager. none is
-            default if memory_print_option is not specified.
-        profile_option : string
-            is a flag that controls performance profiling and reporting.  none disables
-            profiling. summary means to measure and print a coarse performance profile.
-            detail means collect and print information with the highest resolution
-            available. none is default if profile_option is not specified.
-        maxerrors : integer
-            maximum number of errors that will be stored and printed.
-        print_input : keyword
-            keyword to activate printing of simulation input summaries to the simulation
-            list file (mfsim.lst). with this keyword, input summaries will be written for
-            those packages that support newer input data model routines.  not all packages
-            are supported yet by the newer input data model routines.
-        hpc_data : record hpc6 filein hpc6_filename
-            Contains data for the hpc package. Data can be passed as a dictionary to the
-            hpc package with variable names as keys and package data as values. Data for
-            the hpc_data variable is also acceptable. See hpc package documentation for
-            more information.
-        tdis6 : string
-            is the name of the temporal discretization (tdis) input file.
-        models : list
-            is the list of model types, model name files, and model names.
-        exchanges : list
-            is the list of exchange types, exchange files, and model names.
-        mxiter : integer
-            is the maximum number of outer iterations for this solution group.  the default
-            value is 1.  if there is only one solution in the solution group, then mxiter
-            must be 1.
-        solutiongroup : list
-            is the list of solution types and models in the solution.
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(simulation, "nam", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowNam."""
+        super().__init__(
+            parent=simulation,
+            package_type="nam",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.continue_ = self.build_mfdata("continue", continue_)
         self.nocheck = self.build_mfdata("nocheck", nocheck)

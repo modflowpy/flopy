@@ -13,6 +13,12 @@ class ModflowGwectp(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     auxiliary : [string]
         defines an array of one or more auxiliary variable names.  there is no limit on
         the number of auxiliary variables that can be provided on this line; however,
@@ -54,7 +60,38 @@ class ModflowGwectp(MFPackage):
     maxbound : integer
         integer value specifying the maximum number of constant temperature cells that
         will be specified for use during any stress period.
-    stress_period_data : [list]
+    stress_period_data : [(cellid, temp, aux, boundname)]
+        * cellid : [integer]
+                is the cell identifier, and depends on the type of grid that is used for the
+                simulation.  For a structured grid that uses the DIS input file, CELLID is the
+                layer, row, and column.   For a grid that uses the DISV input file, CELLID is
+                the layer and CELL2D number.  If the model uses the unstructured discretization
+                (DISU) input file, CELLID is the node number for the cell.
+        * temp : double precision
+                is the constant temperature value. If the Options block includes a
+                TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be
+                obtained from a time series by entering the time-series name in place of a
+                numeric value.
+        * aux : [double precision]
+                represents the values of the auxiliary variables for each constant temperature.
+                The values of auxiliary variables must be present for each constant
+                temperature. The values must be specified in the order of the auxiliary
+                variables specified in the OPTIONS block.  If the package supports time series
+                and the Options block includes a TIMESERIESFILE entry (see the 'Time-Variable
+                Input' section), values can be obtained from a time series by entering the
+                time-series name in place of a numeric value.
+        * boundname : string
+                name of the constant temperature cell.  BOUNDNAME is an ASCII character
+                variable that can contain as many as 40 characters.  If BOUNDNAME contains
+                spaces in it, then the entire name must be enclosed within single quotes.
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -202,7 +239,7 @@ class ModflowGwectp(MFPackage):
             "block period",
             "name iper",
             "type integer",
-            "block_variable True",
+            "block_variable true",
             "in_record true",
             "tagged false",
             "shape",
@@ -280,71 +317,15 @@ class ModflowGwectp(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwectp defines a CTP package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        auxiliary : [string]
-            defines an array of one or more auxiliary variable names.  there is no limit on
-            the number of auxiliary variables that can be provided on this line; however,
-            lists of information provided in subsequent blocks must have a column of data
-            for each auxiliary variable name defined here.   the number of auxiliary
-            variables detected on this line determines the value for naux.  comments cannot
-            be provided anywhere on this line as they will be interpreted as auxiliary
-            variable names.  auxiliary variables may not be used by the package, but they
-            will be available for use by other parts of the program.  the program will
-            terminate with an error if auxiliary variables are specified on more than one
-            line in the options block.
-        auxmultname : string
-            name of auxiliary variable to be used as multiplier of temperature value.
-        boundnames : keyword
-            keyword to indicate that boundary names may be provided with the list of
-            constant temperature cells.
-        print_input : keyword
-            keyword to indicate that the list of constant temperature information will be
-            written to the listing file immediately after it is read.
-        print_flows : keyword
-            keyword to indicate that the list of constant temperature flow rates will be
-            printed to the listing file for every stress period time step in which 'budget
-            print' is specified in output control.  if there is no output control option
-            and 'print_flows' is specified, then flow rates are printed for the last time
-            step of each stress period.
-        save_flows : keyword
-            keyword to indicate that constant temperature flow terms will be written to the
-            file specified with 'budget fileout' in output control.
-        timeseries : record ts6 filein ts6_filename
-            Contains data for the ts package. Data can be passed as a dictionary to the ts
-            package with variable names as keys and package data as values. Data for the
-            timeseries variable is also acceptable. See ts package documentation for more
-            information.
-        observations : record obs6 filein obs6_filename
-            Contains data for the obs package. Data can be passed as a dictionary to the
-            obs package with variable names as keys and package data as values. Data for
-            the observations variable is also acceptable. See obs package documentation for
-            more information.
-        maxbound : integer
-            integer value specifying the maximum number of constant temperature cells that
-            will be specified for use during any stress period.
-        stress_period_data : [list]
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "ctp", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowGwectp."""
+        super().__init__(
+            parent=model,
+            package_type="ctp",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.auxiliary = self.build_mfdata("auxiliary", auxiliary)
         self.auxmultname = self.build_mfdata("auxmultname", auxmultname)

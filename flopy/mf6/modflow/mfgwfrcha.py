@@ -13,6 +13,12 @@ class ModflowGwfrcha(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     readasarrays : keyword
         indicates that array-based input will be used for the recharge package.  this
         keyword must be specified to use array-based input.  when readasarrays is
@@ -80,6 +86,13 @@ class ModflowGwfrcha(MFPackage):
         assigned.  if the value specified here for the auxiliary variable is the same
         as auxmultname, then the recharge array will be multiplied by this array.
 
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
+
     """
 
     auxiliary = ArrayTemplateGenerator(("gwf6", "rcha", "options", "auxiliary"))
@@ -104,7 +117,7 @@ class ModflowGwfrcha(MFPackage):
             "shape",
             "reader urword",
             "optional false",
-            "default True",
+            "default true",
         ],
         [
             "block options",
@@ -241,7 +254,7 @@ class ModflowGwfrcha(MFPackage):
             "block period",
             "name iper",
             "type integer",
-            "block_variable True",
+            "block_variable true",
             "in_record true",
             "tagged false",
             "shape",
@@ -300,95 +313,15 @@ class ModflowGwfrcha(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwfrcha defines a RCHA package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        readasarrays : keyword
-            indicates that array-based input will be used for the recharge package.  this
-            keyword must be specified to use array-based input.  when readasarrays is
-            specified, values must be provided for every cell within a model layer, even
-            those cells that have an idomain value less than one.  values assigned to cells
-            with idomain values less than one are not used and have no effect on simulation
-            results.
-        fixed_cell : keyword
-            indicates that recharge will not be reassigned to a cell underlying the cell
-            specified in the list if the specified cell is inactive.
-        auxiliary : [string]
-            defines an array of one or more auxiliary variable names.  there is no limit on
-            the number of auxiliary variables that can be provided on this line; however,
-            lists of information provided in subsequent blocks must have a column of data
-            for each auxiliary variable name defined here.   the number of auxiliary
-            variables detected on this line determines the value for naux.  comments cannot
-            be provided anywhere on this line as they will be interpreted as auxiliary
-            variable names.  auxiliary variables may not be used by the package, but they
-            will be available for use by other parts of the program.  the program will
-            terminate with an error if auxiliary variables are specified on more than one
-            line in the options block.
-        auxmultname : string
-            name of auxiliary variable to be used as multiplier of recharge.
-        print_input : keyword
-            keyword to indicate that the list of recharge information will be written to
-            the listing file immediately after it is read.
-        print_flows : keyword
-            keyword to indicate that the list of recharge flow rates will be printed to the
-            listing file for every stress period time step in which 'budget print' is
-            specified in output control.  if there is no output control option and
-            'print_flows' is specified, then flow rates are printed for the last time step
-            of each stress period.
-        save_flows : keyword
-            keyword to indicate that recharge flow terms will be written to the file
-            specified with 'budget fileout' in output control.
-        timearrayseries : record tas6 filein tas6_filename
-            Contains data for the tas package. Data can be passed as a dictionary to the
-            tas package with variable names as keys and package data as values. Data for
-            the timearrayseries variable is also acceptable. See tas package documentation
-            for more information.
-        observations : record obs6 filein obs6_filename
-            Contains data for the obs package. Data can be passed as a dictionary to the
-            obs package with variable names as keys and package data as values. Data for
-            the observations variable is also acceptable. See obs package documentation for
-            more information.
-        export_array_netcdf : keyword
-            keyword that specifies input griddata arrays should be written to the model
-            output netcdf file.
-        irch : [integer]
-            irch is the layer number that defines the layer in each vertical column where
-            recharge is applied. if irch is omitted, recharge by default is applied to
-            cells in layer 1.  irch can only be used if readasarrays is specified in the
-            options block.  if irch is specified, it must be specified as the first
-            variable in the period block or modflow will terminate with an error.
-        recharge : [double precision]
-            is the recharge flux rate (:math:`lt^{-1}`).  this rate is multiplied inside
-            the program by the surface area of the cell to calculate the volumetric
-            recharge rate. the recharge array may be defined by a time-array series (see
-            the 'using time-array series in a package' section).
-        aux : [double precision]
-            is an array of values for auxiliary variable aux(iaux), where iaux is a value
-            from 1 to naux, and aux(iaux) must be listed as part of the auxiliary
-            variables.  a separate array can be specified for each auxiliary variable.  if
-            an array is not specified for an auxiliary variable, then a value of zero is
-            assigned.  if the value specified here for the auxiliary variable is the same
-            as auxmultname, then the recharge array will be multiplied by this array.
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "rcha", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowGwfrcha."""
+        super().__init__(
+            parent=model,
+            package_type="rcha",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.readasarrays = self.build_mfdata("readasarrays", readasarrays)
         self.fixed_cell = self.build_mfdata("fixed_cell", fixed_cell)

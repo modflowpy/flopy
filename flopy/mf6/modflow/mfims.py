@@ -13,6 +13,12 @@ class ModflowIms(MFPackage):
 
     Parameters
     ----------
+    simulation
+        Simulation that this package is a part of. Package is automatically
+        added to simulation when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     print_option : string
         is a flag that controls printing of convergence information from the solver.
         none means print nothing. summary means print only the total number of
@@ -320,6 +326,13 @@ class ModflowIms(MFPackage):
         an optional keyword that defines the matrix reordering approach used. by
         default, matrix reordering is not applied.  none - original ordering.  rcm -
         reverse cuthill mckee ordering.  md - minimum degree ordering.
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -718,314 +731,15 @@ class ModflowIms(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowIms defines a IMS package.
-
-        Parameters
-        ----------
-        simulation
-            Simulation that this package is a part of. Package is automatically
-            added to simulation when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        print_option : string
-            is a flag that controls printing of convergence information from the solver.
-            none means print nothing. summary means print only the total number of
-            iterations and nonlinear residual reduction summaries. all means print linear
-            matrix solver convergence information to the solution listing file and model
-            specific linear matrix solver convergence information to each model listing
-            file in addition to summary information. none is default if print_option is not
-            specified.
-        complexity : string
-            is an optional keyword that defines default non-linear and linear solver
-            parameters.  simple - indicates that default solver input values will be
-            defined that work well for nearly linear models. this would be used for models
-            that do not include nonlinear stress packages and models that are either
-            confined or consist of a single unconfined layer that is thick enough to
-            contain the water table within a single layer. moderate - indicates that
-            default solver input values will be defined that work well for moderately
-            nonlinear models. this would be used for models that include nonlinear stress
-            packages and models that consist of one or more unconfined layers. the moderate
-            option should be used when the simple option does not result in successful
-            convergence.  complex - indicates that default solver input values will be
-            defined that work well for highly nonlinear models. this would be used for
-            models that include nonlinear stress packages and models that consist of one or
-            more unconfined layers representing complex geology and surface-
-            water/groundwater interaction. the complex option should be used when the
-            moderate option does not result in successful convergence.  non-linear and
-            linear solver parameters assigned using a specified complexity can be modified
-            in the nonlinear and linear blocks. if the complexity option is not specified,
-            nonlinear and linear variables will be assigned the simple complexity values.
-        csv_output_filerecord : record
-        csv_outer_output_filerecord : record
-        csv_inner_output_filerecord : record
-        no_ptcrecord : (no_ptc, no_ptc_option)
-            * no_ptc : keyword
-                    is a flag that is used to disable pseudo-transient continuation (PTC). Option
-                    only applies to steady-state stress periods for models using the Newton-Raphson
-                    formulation. For many problems, PTC can significantly improve convergence
-                    behavior for steady-state simulations, and for this reason it is active by
-                    default.  In some cases, however, PTC can worsen the convergence behavior,
-                    especially when the initial conditions are similar to the solution.  When the
-                    initial conditions are similar to, or exactly the same as, the solution and
-                    convergence is slow, then the NO_PTC FIRST option should be used to deactivate
-                    PTC for the first stress period.  The NO_PTC ALL option should also be used in
-                    order to compare convergence behavior with other MODFLOW versions, as PTC is
-                    only available in MODFLOW 6.
-            * no_ptc_option : string
-                    is an optional keyword that is used to define options for disabling pseudo-
-                    transient continuation (PTC). FIRST is an optional keyword to disable PTC for
-                    the first stress period, if steady-state and one or more model is using the
-                    Newton-Raphson formulation. ALL is an optional keyword to disable PTC for all
-                    steady-state stress periods for models using the Newton-Raphson formulation. If
-                    NO_PTC_OPTION is not specified, the NO_PTC ALL option is used.
-
-        ats_outer_maximum_fraction : double precision
-            real value defining the fraction of the maximum allowable outer iterations used
-            with the adaptive time step (ats) capability if it is active.  if this value is
-            set to zero by the user, then this solution will have no effect on ats
-            behavior.  this value must be greater than or equal to zero and less than or
-            equal to 0.5 or the program will terminate with an error.  if it is not
-            specified by the user, then it is assigned a default value of one third.  when
-            the number of outer iterations for this solution is less than the product of
-            this value and the maximum allowable outer iterations, then ats will increase
-            the time step length by a factor of dtadj in the ats input file.  when the
-            number of outer iterations for this solution is greater than the maximum
-            allowable outer iterations minus the product of this value and the maximum
-            allowable outer iterations, then the ats (if active) will decrease the time
-            step length by a factor of 1 / dtadj.
-        outer_hclose : double precision
-            real value defining the head change criterion for convergence of the outer
-            (nonlinear) iterations, in units of length. when the maximum absolute value of
-            the head change at all nodes during an iteration is less than or equal to
-            outer_hclose, iteration stops. commonly, outer_hclose equals 0.01.  the
-            outer_hclose option has been deprecated in favor of the more general
-            outer_dvclose (for dependent variable), however either one can be specified in
-            order to maintain backward compatibility.
-        outer_dvclose : double precision
-            real value defining the dependent-variable (for example, head) change criterion
-            for convergence of the outer (nonlinear) iterations, in units of the dependent-
-            variable (for example, length for head). when the maximum absolute value of the
-            dependent-variable change at all nodes during an iteration is less than or
-            equal to outer_dvclose, iteration stops. commonly, outer_dvclose equals 0.01.
-            the keyword, outer_hclose can be still be specified instead of outer_dvclose
-            for backward compatibility with previous versions of modflow 6 but eventually
-            outer_hclose will be deprecated and specification of outer_hclose will cause
-            modflow 6 to terminate with an error.
-        outer_rclosebnd : double precision
-            real value defining the residual tolerance for convergence of model packages
-            that solve a separate equation not solved by the ims linear solver. this value
-            represents the maximum allowable residual between successive outer iterations
-            at any single model package element. an example of a model package that would
-            use outer_rclosebnd to evaluate convergence is the sfr package which solves a
-            continuity equation for each reach.  the outer_rclosebnd option is deprecated
-            and has no effect on simulation results as of version 6.1.1.  the keyword,
-            outer_rclosebnd can be still be specified for backward compatibility with
-            previous versions of modflow 6 but eventually specification of outer_rclosebnd
-            will cause modflow 6 to terminate with an error.
-        outer_maximum : integer
-            integer value defining the maximum number of outer (nonlinear) iterations --
-            that is, calls to the solution routine. for a linear problem outer_maximum
-            should be 1.
-        under_relaxation : string
-            is an optional keyword that defines the nonlinear under-relaxation schemes
-            used. under-relaxation is also known as dampening, and is used to reduce the
-            size of the calculated dependent variable before proceeding to the next outer
-            iteration.  under-relaxation can be an effective tool for highly nonlinear
-            models when there are large and often counteracting changes in the calculated
-            dependent variable between successive outer iterations.  by default under-
-            relaxation is not used.  none - under-relaxation is not used (default). simple
-            - simple under-relaxation scheme with a fixed relaxation factor
-            (under_relaxation_gamma) is used.  cooley - cooley under-relaxation scheme is
-            used.  dbd - delta-bar-delta under-relaxation is used.  note that the under-
-            relaxation schemes are often used in conjunction with problems that use the
-            newton-raphson formulation, however, experience has indicated that they also
-            work well for non-newton problems, such as those with the wet/dry options of
-            modflow 6.
-        under_relaxation_gamma : double precision
-            real value defining either the relaxation factor for the simple scheme or the
-            history or memory term factor of the cooley and delta-bar-delta algorithms. for
-            the simple scheme, a value of one indicates that there is no under-relaxation
-            and the full head change is applied.  this value can be gradually reduced from
-            one as a way to improve convergence; for well behaved problems, using a value
-            less than one can increase the number of outer iterations required for
-            convergence and needlessly increase run times.  under_relaxation_gamma must be
-            greater than zero for the simple scheme or the program will terminate with an
-            error.  for the cooley and delta-bar-delta schemes, under_relaxation_gamma is a
-            memory term that can range between zero and one. when under_relaxation_gamma is
-            zero, only the most recent history (previous iteration value) is maintained. as
-            under_relaxation_gamma is increased, past history of iteration changes has
-            greater influence on the memory term. the memory term is maintained as an
-            exponential average of past changes. retaining some past history can overcome
-            granular behavior in the calculated function surface and therefore helps to
-            overcome cyclic patterns of non-convergence. the value usually ranges from 0.1
-            to 0.3; a value of 0.2 works well for most problems. under_relaxation_gamma
-            only needs to be specified if under_relaxation is not none.
-        under_relaxation_theta : double precision
-            real value defining the reduction factor for the learning rate (under-
-            relaxation term) of the delta-bar-delta algorithm. the value of
-            under_relaxation_theta is between zero and one. if the change in the dependent-
-            variable (for example, head) is of opposite sign to that of the previous
-            iteration, the under-relaxation term is reduced by a factor of
-            under_relaxation_theta. the value usually ranges from 0.3 to 0.9; a value of
-            0.7 works well for most problems. under_relaxation_theta only needs to be
-            specified if under_relaxation is dbd.
-        under_relaxation_kappa : double precision
-            real value defining the increment for the learning rate (under-relaxation term)
-            of the delta-bar-delta algorithm. the value of under_relaxation_kappa is
-            between zero and one. if the change in the dependent-variable (for example,
-            head) is of the same sign to that of the previous iteration, the under-
-            relaxation term is increased by an increment of under_relaxation_kappa. the
-            value usually ranges from 0.03 to 0.3; a value of 0.1 works well for most
-            problems. under_relaxation_kappa only needs to be specified if under_relaxation
-            is dbd.
-        under_relaxation_momentum : double precision
-            real value defining the fraction of past history changes that is added as a
-            momentum term to the step change for a nonlinear iteration. the value of
-            under_relaxation_momentum is between zero and one. a large momentum term should
-            only be used when small learning rates are expected. small amounts of the
-            momentum term help convergence. the value usually ranges from 0.0001 to 0.1; a
-            value of 0.001 works well for most problems. under_relaxation_momentum only
-            needs to be specified if under_relaxation is dbd.
-        backtracking_number : integer
-            integer value defining the maximum number of backtracking iterations allowed
-            for residual reduction computations. if backtracking_number = 0 then the
-            backtracking iterations are omitted. the value usually ranges from 2 to 20; a
-            value of 10 works well for most problems.
-        backtracking_tolerance : double precision
-            real value defining the tolerance for residual change that is allowed for
-            residual reduction computations. backtracking_tolerance should not be less than
-            one to avoid getting stuck in local minima. a large value serves to check for
-            extreme residual increases, while a low value serves to control step size more
-            severely. the value usually ranges from 1.0 to 10:math:`^6`; a value of
-            10:math:`^4` works well for most problems but lower values like 1.1 may be
-            required for harder problems. backtracking_tolerance only needs to be specified
-            if backtracking_number is greater than zero.
-        backtracking_reduction_factor : double precision
-            real value defining the reduction in step size used for residual reduction
-            computations. the value of backtracking_reduction_factor is between zero and
-            one. the value usually ranges from 0.1 to 0.3; a value of 0.2 works well for
-            most problems. backtracking_reduction_factor only needs to be specified if
-            backtracking_number is greater than zero.
-        backtracking_residual_limit : double precision
-            real value defining the limit to which the residual is reduced with
-            backtracking. if the residual is smaller than backtracking_residual_limit, then
-            further backtracking is not performed. a value of 100 is suitable for large
-            problems and residual reduction to smaller values may only slow down
-            computations. backtracking_residual_limit only needs to be specified if
-            backtracking_number is greater than zero.
-        inner_maximum : integer
-            integer value defining the maximum number of inner (linear) iterations. the
-            number typically depends on the characteristics of the matrix solution scheme
-            being used. for nonlinear problems, inner_maximum usually ranges from 60 to
-            600; a value of 100 will be sufficient for most linear problems.
-        inner_hclose : double precision
-            real value defining the head change criterion for convergence of the inner
-            (linear) iterations, in units of length. when the maximum absolute value of the
-            head change at all nodes during an iteration is less than or equal to
-            inner_hclose, the matrix solver assumes convergence. commonly, inner_hclose is
-            set equal to or an order of magnitude less than the outer_hclose value
-            specified for the nonlinear block.  the inner_hclose keyword has been
-            deprecated in favor of the more general inner_dvclose (for dependent variable),
-            however either one can be specified in order to maintain backward
-            compatibility.
-        inner_dvclose : double precision
-            real value defining the dependent-variable (for example, head) change criterion
-            for convergence of the inner (linear) iterations, in units of the dependent-
-            variable (for example, length for head). when the maximum absolute value of the
-            dependent-variable change at all nodes during an iteration is less than or
-            equal to inner_dvclose, the matrix solver assumes convergence. commonly,
-            inner_dvclose is set equal to or an order of magnitude less than the
-            outer_dvclose value specified for the nonlinear block. the keyword,
-            inner_hclose can be still be specified instead of inner_dvclose for backward
-            compatibility with previous versions of modflow 6 but eventually inner_hclose
-            will be deprecated and specification of inner_hclose will cause modflow 6 to
-            terminate with an error.
-        rcloserecord : (inner_rclose, rclose_option)
-            * inner_rclose : double precision
-                    real value that defines the flow residual tolerance for convergence of the IMS
-                    linear solver and specific flow residual criteria used. This value represents
-                    the maximum allowable residual at any single node.  Value is in units of length
-                    cubed per time, and must be consistent with mf length and time units. Usually a
-                    value of :math:`1.0 times 10^{-1}` is sufficient for the flow-residual criteria
-                    when meters and seconds are the defined mf length and time.
-            * rclose_option : string
-                    an optional keyword that defines the specific flow residual criterion used.
-                    STRICT--an optional keyword that is used to specify that INNER_RCLOSE
-                    represents a infinity-Norm (absolute convergence criteria) and that the
-                    dependent-variable (for example, head) and flow convergence criteria must be
-                    met on the first inner iteration (this criteria is equivalent to the criteria
-                    used by the MODFLOW-2005 PCG package citep{hill1990preconditioned}).
-                    L2NORM_RCLOSE--an optional keyword that is used to specify that INNER_RCLOSE
-                    represents a L-2 Norm closure criteria instead of a infinity-Norm (absolute
-                    convergence criteria). When L2NORM_RCLOSE is specified, a reasonable initial
-                    INNER_RCLOSE value is 0.1 times the number of active cells when meters and
-                    seconds are the defined mf length and time.  RELATIVE_RCLOSE--an optional
-                    keyword that is used to specify that INNER_RCLOSE represents a relative L-2
-                    Norm reduction closure criteria instead of a infinity-Norm (absolute
-                    convergence criteria). When RELATIVE_RCLOSE is specified, a reasonable initial
-                    INNER_RCLOSE value is :math:`1.0 times 10^{-4}` and convergence is achieved for
-                    a given inner (linear) iteration when :math:`Delta h le` INNER_DVCLOSE and the
-                    current L-2 Norm is :math:`le` the product of the RELATIVE_RCLOSE and the
-                    initial L-2 Norm for the current inner (linear) iteration. If RCLOSE_OPTION is
-                    not specified, an absolute residual (infinity-norm) criterion is used.
-
-        linear_acceleration : string
-            a keyword that defines the linear acceleration method used by the default ims
-            linear solvers.  cg - preconditioned conjugate gradient method.  bicgstab -
-            preconditioned bi-conjugate gradient stabilized method.
-        relaxation_factor : double precision
-            optional real value that defines the relaxation factor used by the incomplete
-            lu factorization preconditioners (milu(0) and milut). relaxation_factor is
-            unitless and should be greater than or equal to 0.0 and less than or equal to
-            1.0. relaxation_factor values of about 1.0 are commonly used, and experience
-            suggests that convergence can be optimized in some cases with relax values of
-            0.97. a relaxation_factor value of 0.0 will result in either ilu(0) or ilut
-            preconditioning (depending on the value specified for preconditioner_levels
-            and/or preconditioner_drop_tolerance). by default,  relaxation_factor is zero.
-        preconditioner_levels : integer
-            optional integer value defining the level of fill for ilu decomposition used in
-            the ilut and milut preconditioners. higher levels of fill provide more
-            robustness but also require more memory. for optimal performance, it is
-            suggested that a large level of fill be applied (7 or 8) with use of a drop
-            tolerance. specification of a preconditioner_levels value greater than zero
-            results in use of the ilut preconditioner. by default, preconditioner_levels is
-            zero and the zero-fill incomplete lu factorization preconditioners (ilu(0) and
-            milu(0)) are used.
-        preconditioner_drop_tolerance : double precision
-            optional real value that defines the drop tolerance used to drop preconditioner
-            terms based on the magnitude of matrix entries in the ilut and milut
-            preconditioners. a value of :math:`10^{-4}` works well for most problems. by
-            default, preconditioner_drop_tolerance is zero and the zero-fill incomplete lu
-            factorization preconditioners (ilu(0) and milu(0)) are used.
-        number_orthogonalizations : integer
-            optional integer value defining the interval used to explicitly recalculate the
-            residual of the flow equation using the solver coefficient matrix, the latest
-            dependent-variable (for example, head) estimates, and the right hand side. for
-            problems that benefit from explicit recalculation of the residual, a number
-            between 4 and 10 is appropriate. by default, number_orthogonalizations is zero.
-        scaling_method : string
-            an optional keyword that defines the matrix scaling approach used. by default,
-            matrix scaling is not applied.  none - no matrix scaling applied.  diagonal -
-            symmetric matrix scaling using the polcg preconditioner scaling method in hill
-            (1992).  l2norm - symmetric matrix scaling using the l2 norm.
-        reordering_method : string
-            an optional keyword that defines the matrix reordering approach used. by
-            default, matrix reordering is not applied.  none - original ordering.  rcm -
-            reverse cuthill mckee ordering.  md - minimum degree ordering.
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(simulation, "ims", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowIms."""
+        super().__init__(
+            parent=simulation,
+            package_type="ims",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.print_option = self.build_mfdata("print_option", print_option)
         self.complexity = self.build_mfdata("complexity", complexity)

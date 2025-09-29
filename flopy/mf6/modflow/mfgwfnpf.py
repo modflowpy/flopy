@@ -13,6 +13,12 @@ class ModflowGwfnpf(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     save_flows : keyword
         keyword to indicate that budget flow terms will be written to the file
         specified with 'budget save file' in output control.
@@ -214,6 +220,13 @@ class ModflowGwfnpf(MFPackage):
         wetted.  wetdry must be specified if 'rewet' is specified in the options block.
         if 'rewet' is not specified in the options block, then wetdry can be entered,
         and memory will be allocated for it, even though it is not used.
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -594,230 +607,15 @@ class ModflowGwfnpf(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwfnpf defines a NPF package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        save_flows : keyword
-            keyword to indicate that budget flow terms will be written to the file
-            specified with 'budget save file' in output control.
-        print_flows : keyword
-            keyword to indicate that calculated flows between cells will be printed to the
-            listing file for every stress period time step in which 'budget print' is
-            specified in output control. if there is no output control option and
-            'print_flows' is specified, then flow rates are printed for the last time step
-            of each stress period.  this option can produce extremely large list files
-            because all cell-by-cell flows are printed.  it should only be used with the
-            npf package for models that have a small number of cells.
-        alternative_cell_averaging : string
-            is a text keyword to indicate that an alternative method will be used for
-            calculating the conductance for horizontal cell connections.  the text value
-            for alternative_cell_averaging can be 'logarithmic', 'amt-lmk', or 'amt-hmk'.
-            'amt-lmk' signifies that the conductance will be calculated using arithmetic-
-            mean thickness and logarithmic-mean hydraulic conductivity.  'amt-hmk'
-            signifies that the conductance will be calculated using arithmetic-mean
-            thickness and harmonic-mean hydraulic conductivity. if the user does not
-            specify a value for alternative_cell_averaging, then the harmonic-mean method
-            will be used.  this option cannot be used if the xt3d option is invoked.
-        thickstrt : keyword
-            indicates that cells having a negative icelltype are confined, and their cell
-            thickness for conductance calculations will be computed as strt-bot rather than
-            top-bot.  this option should be used with caution as it only affects
-            conductance calculations in the npf package.
-        cvoptions : (variablecv, dewatered)
-            none
-            * variablecv : keyword
-                    keyword to indicate that the vertical conductance will be calculated using the
-                    saturated thickness and properties of the overlying cell and the thickness and
-                    properties of the underlying cell.  If the DEWATERED keyword is also specified,
-                    then the vertical conductance is calculated using only the saturated thickness
-                    and properties of the overlying cell if the head in the underlying cell is
-                    below its top.  If these keywords are not specified, then the default condition
-                    is to calculate the vertical conductance at the start of the simulation using
-                    the initial head and the cell properties.  The vertical conductance remains
-                    constant for the entire simulation.
-            * dewatered : keyword
-                    If the DEWATERED keyword is specified, then the vertical conductance is
-                    calculated using only the saturated thickness and properties of the overlying
-                    cell if the head in the underlying cell is below its top.
-
-        perched : keyword
-            keyword to indicate that when a cell is overlying a dewatered convertible cell,
-            the head difference used in darcy's law is equal to the head in the overlying
-            cell minus the bottom elevation of the overlying cell.  if not specified, then
-            the default is to use the head difference between the two cells.
-        rewet_record : (rewet, wetfct, iwetit, ihdwet)
-            * rewet : keyword
-                    activates model rewetting.  Rewetting is off by default.
-            * wetfct : double precision
-                    is a keyword and factor that is included in the calculation of the head that is
-                    initially established at a cell when that cell is converted from dry to wet.
-            * iwetit : integer
-                    is a keyword and iteration interval for attempting to wet cells. Wetting is
-                    attempted every IWETIT iteration. This applies to outer iterations and not
-                    inner iterations. If IWETIT is specified as zero or less, then the value is
-                    changed to 1.
-            * ihdwet : integer
-                    is a keyword and integer flag that determines which equation is used to define
-                    the initial head at cells that become wet.  If IHDWET is 0, h = BOT + WETFCT
-                    (hm - BOT). If IHDWET is not 0, h = BOT + WETFCT (THRESH).
-
-        xt3doptions : (xt3d, rhs)
-            none
-            * xt3d : keyword
-                    keyword indicating that the XT3D formulation will be used.  If the RHS keyword
-                    is also included, then the XT3D additional terms will be added to the right-
-                    hand side.  If the RHS keyword is excluded, then the XT3D terms will be put
-                    into the coefficient matrix.  Use of XT3D will substantially increase the
-                    computational effort, but will result in improved accuracy for anisotropic
-                    conductivity fields and for unstructured grids in which the CVFD requirement is
-                    violated.  XT3D requires additional information about the shapes of grid cells.
-                    If XT3D is active and the DISU Package is used, then the user will need to
-                    provide in the DISU Package the angldegx array in the CONNECTIONDATA block and
-                    the VERTICES and CELL2D blocks.
-            * rhs : keyword
-                    If the RHS keyword is also included, then the XT3D additional terms will be
-                    added to the right-hand side.  If the RHS keyword is excluded, then the XT3D
-                    terms will be put into the coefficient matrix.
-
-        save_specific_discharge : keyword
-            keyword to indicate that x, y, and z components of specific discharge will be
-            calculated at cell centers and written to the budget file, which is specified
-            with 'budget save file' in output control.  if this option is activated, then
-            additional information may be required in the discretization packages and the
-            gwf exchange package (if gwf models are coupled).  specifically, angldegx must
-            be specified in the connectiondata block of the disu package; angldegx must
-            also be specified for the gwf exchange as an auxiliary variable.
-        save_saturation : keyword
-            keyword to indicate that cell saturation will be written to the budget file,
-            which is specified with 'budget save file' in output control.  saturation will
-            be saved to the budget file as an auxiliary variable saved with the data-sat
-            text label.  saturation is a cell variable that ranges from zero to one and can
-            be used by post processing programs to determine how much of a cell volume is
-            saturated.  if icelltype is 0, then saturation is always one.
-        k22overk : keyword
-            keyword to indicate that specified k22 is a ratio of k22 divided by k.  if this
-            option is specified, then the k22 array entered in the npf package will be
-            multiplied by k after being read.
-        k33overk : keyword
-            keyword to indicate that specified k33 is a ratio of k33 divided by k.  if this
-            option is specified, then the k33 array entered in the npf package will be
-            multiplied by k after being read.
-        perioddata : record tvk6 filein tvk6_filename
-            Contains data for the tvk package. Data can be passed as a dictionary to the
-            tvk package with variable names as keys and package data as values. Data for
-            the perioddata variable is also acceptable. See tvk package documentation for
-            more information.
-        export_array_ascii : keyword
-            keyword that specifies input griddata arrays should be written to layered ascii
-            output files.
-        export_array_netcdf : keyword
-            keyword that specifies input griddata arrays should be written to the model
-            output netcdf file.
-        dev_no_newton : keyword
-            turn off newton for unconfined cells
-        dev_omega : double precision
-            set saturation omega value
-        icelltype : [integer]
-            flag for each cell that specifies how saturated thickness is treated.  0 means
-            saturated thickness is held constant;  >0 means saturated thickness varies with
-            computed head when head is below the cell top; <0 means saturated thickness
-            varies with computed head unless the thickstrt option is in effect.  when
-            thickstrt is in effect, a negative value for icelltype indicates that the
-            saturated thickness value used in conductance calculations in the npf package
-            will be computed as strt-bot and held constant.  if the thickstrt option is not
-            in effect, then negative values provided by the user for icelltype are
-            automatically reassigned by the program to a value of one.
-        k : [double precision]
-            is the hydraulic conductivity.  for the common case in which the user would
-            like to specify the horizontal hydraulic conductivity and the vertical
-            hydraulic conductivity, then k should be assigned as the horizontal hydraulic
-            conductivity, k33 should be assigned as the vertical hydraulic conductivity,
-            and k22 and the three rotation angles should not be specified.  when more
-            sophisticated anisotropy is required, then k corresponds to the k11 hydraulic
-            conductivity axis.  all included cells (idomain > 0) must have a k value
-            greater than zero.
-        k22 : [double precision]
-            is the hydraulic conductivity of the second ellipsoid axis (or the ratio of
-            k22/k if the k22overk option is specified); for an unrotated case this is the
-            hydraulic conductivity in the y direction.  if k22 is not included in the
-            griddata block, then k22 is set equal to k.  for a regular modflow grid (dis
-            package is used) in which no rotation angles are specified, k22 is the
-            hydraulic conductivity along columns in the y direction. for an unstructured
-            disu grid, the user must assign principal x and y axes and provide the angle
-            for each cell face relative to the assigned x direction.  all included cells
-            (idomain > 0) must have a k22 value greater than zero.
-        k33 : [double precision]
-            is the hydraulic conductivity of the third ellipsoid axis (or the ratio of
-            k33/k if the k33overk option is specified); for an unrotated case, this is the
-            vertical hydraulic conductivity.  when anisotropy is applied, k33 corresponds
-            to the k33 tensor component.  all included cells (idomain > 0) must have a k33
-            value greater than zero.
-        angle1 : [double precision]
-            is a rotation angle of the hydraulic conductivity tensor in degrees. the angle
-            represents the first of three sequential rotations of the hydraulic
-            conductivity ellipsoid. with the k11, k22, and k33 axes of the ellipsoid
-            initially aligned with the x, y, and z coordinate axes, respectively, angle1
-            rotates the ellipsoid about its k33 axis (within the x - y plane). a positive
-            value represents counter-clockwise rotation when viewed from any point on the
-            positive k33 axis, looking toward the center of the ellipsoid. a value of zero
-            indicates that the k11 axis lies within the x - z plane. if angle1 is not
-            specified, default values of zero are assigned to angle1, angle2, and angle3,
-            in which case the k11, k22, and k33 axes are aligned with the x, y, and z axes,
-            respectively.
-        angle2 : [double precision]
-            is a rotation angle of the hydraulic conductivity tensor in degrees. the angle
-            represents the second of three sequential rotations of the hydraulic
-            conductivity ellipsoid. following the rotation by angle1 described above,
-            angle2 rotates the ellipsoid about its k22 axis (out of the x - y plane). an
-            array can be specified for angle2 only if angle1 is also specified. a positive
-            value of angle2 represents clockwise rotation when viewed from any point on the
-            positive k22 axis, looking toward the center of the ellipsoid. a value of zero
-            indicates that the k11 axis lies within the x - y plane. if angle2 is not
-            specified, default values of zero are assigned to angle2 and angle3;
-            connections that are not user-designated as vertical are assumed to be strictly
-            horizontal (that is, to have no z component to their orientation); and
-            connection lengths are based on horizontal distances.
-        angle3 : [double precision]
-            is a rotation angle of the hydraulic conductivity tensor in degrees. the angle
-            represents the third of three sequential rotations of the hydraulic
-            conductivity ellipsoid. following the rotations by angle1 and angle2 described
-            above, angle3 rotates the ellipsoid about its k11 axis. an array can be
-            specified for angle3 only if angle1 and angle2 are also specified. an array
-            must be specified for angle3 if angle2 is specified. a positive value of angle3
-            represents clockwise rotation when viewed from any point on the positive k11
-            axis, looking toward the center of the ellipsoid. a value of zero indicates
-            that the k22 axis lies within the x - y plane.
-        wetdry : [double precision]
-            is a combination of the wetting threshold and a flag to indicate which
-            neighboring cells can cause a cell to become wet. if wetdry < 0, only a cell
-            below a dry cell can cause the cell to become wet. if wetdry > 0, the cell
-            below a dry cell and horizontally adjacent cells can cause a cell to become
-            wet. if wetdry is 0, the cell cannot be wetted. the absolute value of wetdry is
-            the wetting threshold. when the sum of bot and the absolute value of wetdry at
-            a dry cell is equaled or exceeded by the head at an adjacent cell, the cell is
-            wetted.  wetdry must be specified if 'rewet' is specified in the options block.
-            if 'rewet' is not specified in the options block, then wetdry can be entered,
-            and memory will be allocated for it, even though it is not used.
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "npf", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowGwfnpf."""
+        super().__init__(
+            parent=model,
+            package_type="npf",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.save_flows = self.build_mfdata("save_flows", save_flows)
         self.print_flows = self.build_mfdata("print_flows", print_flows)

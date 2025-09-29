@@ -13,6 +13,12 @@ class ModflowUtlncf(MFPackage):
 
     Parameters
     ----------
+    parent_package
+        Parent_package that this package is a part of. Package is automatically
+        added to parent_package when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     wkt : [string]
         is the coordinate reference system (crs) well-known text (wkt) string. ignored
         if latitude and longitude griddata arrays have been provided for
@@ -57,6 +63,13 @@ class ModflowUtlncf(MFPackage):
         cell center latitude. only supported for netcdf_structured export type.
     longitude : [double precision]
         cell center longitude. only supported for netcdf_structured export type.
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -178,74 +191,14 @@ class ModflowUtlncf(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowUtlncf defines a NCF package.
-
-        Parameters
-        ----------
-        parent_package
-            Parent_package that this package is a part of. Package is automatically
-            added to parent_package when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        wkt : [string]
-            is the coordinate reference system (crs) well-known text (wkt) string. ignored
-            if latitude and longitude griddata arrays have been provided for
-            netcdf_structured export type.
-        deflate : integer
-            is the variable deflate level (0=min, 9=max) in the netcdf file. defining this
-            parameter activates per-variable compression at the level specified.
-        shuffle : keyword
-            is the keyword used to turn on the netcdf variable shuffle filter when the
-            deflate option is also set. the shuffle filter has the effect of storing the
-            first byte of all of a variable's values in a chunk contiguously, followed by
-            all the second bytes, etc. this can be an optimization for compression with
-            certain types of data.
-        chunk_time : integer
-            is the keyword used to provide a data chunk size for the time dimension in a
-            netcdf_mesh2d or netcdf_structured output file. must be used in combination
-            with the the chunk_face parameter (netcdf_mesh2d) or the chunk_z, chunk_y, and
-            chunk_x parameter set (netcdf_structured) to have an effect.
-        chunk_face : integer
-            is the keyword used to provide a data chunk size for the face dimension in a
-            netcdf_mesh2d output file. must be used in combination with the the chunk_time
-            parameter to have an effect.
-        chunk_z : integer
-            is the keyword used to provide a data chunk size for the z dimension in a
-            netcdf_structured output file. must be used in combination with the the
-            chunk_time, chunk_x and chunk_y parameter set to have an effect.
-        chunk_y : integer
-            is the keyword used to provide a data chunk size for the y dimension in a
-            netcdf_structured output file. must be used in combination with the the
-            chunk_time, chunk_x and chunk_z parameter set to have an effect.
-        chunk_x : integer
-            is the keyword used to provide a data chunk size for the x dimension in a
-            netcdf_structured output file. must be used in combination with the the
-            chunk_time, chunk_y and chunk_z parameter set to have an effect.
-        modflow6_attr_off : keyword
-            is the keyword used to turn off internal input tagging in the model netcdf
-            file. tagging adds internal modflow 6 attribute(s) to variables which
-            facilitate identification. currently this applies to gridded arrays.
-        ncpl : integer
-            is the number of cells in a projected plane layer.
-        latitude : [double precision]
-            cell center latitude. only supported for netcdf_structured export type.
-        longitude : [double precision]
-            cell center longitude. only supported for netcdf_structured export type.
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
+        """Initialize ModflowUtlncf."""
         super().__init__(
-            parent_package, "ncf", filename, pname, loading_package, **kwargs
+            parent=parent_package,
+            package_type="ncf",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
         )
 
         self.wkt = self.build_mfdata("wkt", wkt)
@@ -269,17 +222,6 @@ class ModflowUtlncf(MFPackage):
 class UtlncfPackages(MFChildPackages):
     """
     UtlncfPackages is a container class for the ModflowUtlncf class.
-
-    Methods
-    -------
-    initialize
-        Initializes a new ModflowUtlncf package removing any sibling child
-        packages attached to the same parent package. See ModflowUtlncf init
-        documentation for definition of parameters.
-    append_package
-        Adds a new ModflowUtlncf package to the container. See ModflowUtlncf
-        init documentation for definition of parameters.
-
     """
 
     package_abbr = "utlncfpackages"
@@ -301,6 +243,12 @@ class UtlncfPackages(MFChildPackages):
         filename=None,
         pname=None,
     ):
+        """
+        Initialize a new ModflowUtlncf package, removing any sibling
+        child packages attached to the same parent package.
+
+        See :class:`ModflowUtlncf` for parameter definitions.
+        """
         new_package = ModflowUtlncf(
             self._cpparent,
             wkt=wkt,
@@ -338,6 +286,11 @@ class UtlncfPackages(MFChildPackages):
         filename=None,
         pname=None,
     ):
+        """
+        Add a new ModflowUtlncf package to the container.
+
+        See :class:`ModflowUtlncf` for parameter definitions.
+        """
         new_package = ModflowUtlncf(
             self._cpparent,
             wkt=wkt,

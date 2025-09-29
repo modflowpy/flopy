@@ -13,6 +13,12 @@ class ModflowUtlsfrtab(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     nrow : integer
         integer value specifying the number of rows in the reach cross-section table.
         there must be nrow rows of data in the table block.
@@ -20,7 +26,36 @@ class ModflowUtlsfrtab(MFPackage):
         integer value specifying the number of columns in the reach cross-section
         table. there must be ncol columns of data in the table block. ncol must be
         equal to 2 if manfraction is not specified or 3 otherwise.
-    table : [list]
+    table : [(xfraction, height, manfraction)]
+        * xfraction : double precision
+                real value that defines the station (x) data for the cross-section as a
+                fraction of the width (RWID) of the reach. XFRACTION must be greater than or
+                equal to zero but can be greater than one. XFRACTION values can be used to
+                decrease or increase the width of a reach from the specified reach width
+                (RWID).
+        * height : double precision
+                real value that is the height relative to the top of the lowest elevation of
+                the streambed (RTP) and corresponding to the station data on the same line.
+                HEIGHT must be greater than or equal to zero and at least one cross-section
+                height must be equal to zero.
+        * manfraction : double precision
+                real value that defines the Manning's roughness coefficient data for the cross-
+                section as a fraction of the Manning's roughness coefficient for the reach
+                (MAN) and corresponding to the station data on the same line. MANFRACTION must
+                be greater than zero. MANFRACTION is applied from the XFRACTION value on the
+                same line to the XFRACTION value on the next line. Although a MANFRACTION value
+                is specified on the last line, any value greater than zero can be applied to
+                MANFRACTION(NROW). MANFRACTION is only specified if NCOL is 3. If MANFRACTION
+                is not specified, the Manning's roughness coefficient for the reach (MAN) is
+                applied to the entire cross-section.
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -92,37 +127,15 @@ class ModflowUtlsfrtab(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowUtlsfrtab defines a SFRTAB package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        nrow : integer
-            integer value specifying the number of rows in the reach cross-section table.
-            there must be nrow rows of data in the table block.
-        ncol : integer
-            integer value specifying the number of columns in the reach cross-section
-            table. there must be ncol columns of data in the table block. ncol must be
-            equal to 2 if manfraction is not specified or 3 otherwise.
-        table : [list]
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "sfrtab", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowUtlsfrtab."""
+        super().__init__(
+            parent=model,
+            package_type="sfrtab",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.nrow = self.build_mfdata("nrow", nrow)
         self.ncol = self.build_mfdata("ncol", ncol)

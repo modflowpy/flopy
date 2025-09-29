@@ -13,6 +13,12 @@ class ModflowGweadv(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     scheme : string
         scheme used to solve the advection term.  can be upstream, central, or tvd.  if
         not specified, upstream weighting is the default weighting scheme.
@@ -28,6 +34,13 @@ class ModflowGweadv(MFPackage):
         value of zero is specified for ats_percel the program will automatically reset
         it to an internal no data value to indicate that time steps should not be
         subject to this constraint.
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -63,44 +76,15 @@ class ModflowGweadv(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGweadv defines a ADV package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        scheme : string
-            scheme used to solve the advection term.  can be upstream, central, or tvd.  if
-            not specified, upstream weighting is the default weighting scheme.
-        ats_percel : double precision
-            fractional cell distance submitted by the adv package to the adaptive time
-            stepping (ats) package.  if ats_percel is specified and the ats package is
-            active, a time step calculation will be made for each cell based on flow
-            through the cell and cell properties.  the largest time step will be calculated
-            such that the advective fractional cell distance (ats_percel) is not exceeded
-            for any active cell in the grid.  this time-step constraint will be submitted
-            to the ats package, perhaps with constraints submitted by other packages, in
-            the calculation of the time step.  ats_percel must be greater than zero.  if a
-            value of zero is specified for ats_percel the program will automatically reset
-            it to an internal no data value to indicate that time steps should not be
-            subject to this constraint.
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "adv", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowGweadv."""
+        super().__init__(
+            parent=model,
+            package_type="adv",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.scheme = self.build_mfdata("scheme", scheme)
         self.ats_percel = self.build_mfdata("ats_percel", ats_percel)

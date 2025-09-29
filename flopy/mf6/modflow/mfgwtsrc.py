@@ -13,6 +13,12 @@ class ModflowGwtsrc(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     auxiliary : [string]
         defines an array of one or more auxiliary variable names.  there is no limit on
         the number of auxiliary variables that can be provided on this line; however,
@@ -51,10 +57,56 @@ class ModflowGwtsrc(MFPackage):
         obs package with variable names as keys and package data as values. Data for
         the observations variable is also acceptable. See obs package documentation for
         more information.
+    highest_saturated : keyword
+        apply mass source loading rate to specified cellid or highest underlying cell
+        with a cell saturation greater than zero. the highest_saturated option has an
+        additional complication for certain types of grids specified using the disu
+        package. when the disu package is used, a cell may have more than one cell
+        underlying it. if the overlying cell were to become inactive, there is no
+        straightforward method for determining how to apportion the mass source loading
+        rate to the underlying cells. in this case, the approach described by
+        cite{modflowusg} is used. the mass source loading rate is assigned to the first
+        active cell encountered (determined by searching through the underlying cell
+        numbers from the lowest number to the highest number). in this manner, the
+        total mass source loading rate is conserved; however, the spatial distribution
+        of the applied mass source loading rate may not be maintained as layers become
+        dry or wet during a simulation.
     maxbound : integer
         integer value specifying the maximum number of sources cells that will be
         specified for use during any stress period.
-    stress_period_data : [list]
+    stress_period_data : [(cellid, smassrate, aux, boundname)]
+        * cellid : [integer]
+                is the cell identifier, and depends on the type of grid that is used for the
+                simulation.  For a structured grid that uses the DIS input file, CELLID is the
+                layer, row, and column.   For a grid that uses the DISV input file, CELLID is
+                the layer and CELL2D number.  If the model uses the unstructured discretization
+                (DISU) input file, CELLID is the node number for the cell.
+        * smassrate : double precision
+                is the mass source loading rate. A positive value indicates addition of solute
+                mass and a negative value indicates removal of solute mass. If the Options
+                block includes a TIMESERIESFILE entry (see the 'Time-Variable Input' section),
+                values can be obtained from a time series by entering the time-series name in
+                place of a numeric value.
+        * aux : [double precision]
+                represents the values of the auxiliary variables for each mass source. The
+                values of auxiliary variables must be present for each mass source. The values
+                must be specified in the order of the auxiliary variables specified in the
+                OPTIONS block.  If the package supports time series and the Options block
+                includes a TIMESERIESFILE entry (see the 'Time-Variable Input' section), values
+                can be obtained from a time series by entering the time-series name in place of
+                a numeric value.
+        * boundname : string
+                name of the mass source cell.  BOUNDNAME is an ASCII character variable that
+                can contain as many as 40 characters.  If BOUNDNAME contains spaces in it, then
+                the entire name must be enclosed within single quotes.
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -68,7 +120,7 @@ class ModflowGwtsrc(MFPackage):
     _package_type = "src"
     dfn_file_name = "gwt-src.dfn"
     dfn = [
-        ["header"],
+        ["header", "multi-package"],
         [
             "block options",
             "name auxiliary",
@@ -99,6 +151,7 @@ class ModflowGwtsrc(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprpak",
         ],
         [
             "block options",
@@ -106,6 +159,7 @@ class ModflowGwtsrc(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprflow",
         ],
         [
             "block options",
@@ -113,6 +167,7 @@ class ModflowGwtsrc(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal ipakcb",
         ],
         [
             "block options",
@@ -189,6 +244,15 @@ class ModflowGwtsrc(MFPackage):
             "optional false",
         ],
         [
+            "block options",
+            "name highest_saturated",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "prerelease true",
+            "mf6internal highest_sat",
+        ],
+        [
             "block dimensions",
             "name maxbound",
             "type integer",
@@ -199,7 +263,7 @@ class ModflowGwtsrc(MFPackage):
             "block period",
             "name iper",
             "type integer",
-            "block_variable True",
+            "block_variable true",
             "in_record true",
             "tagged false",
             "shape",
@@ -213,6 +277,7 @@ class ModflowGwtsrc(MFPackage):
             "type recarray cellid smassrate aux boundname",
             "shape (maxbound)",
             "reader urword",
+            "mf6internal spd",
         ],
         [
             "block period",
@@ -243,6 +308,7 @@ class ModflowGwtsrc(MFPackage):
             "reader urword",
             "optional true",
             "time_series true",
+            "mf6internal auxvar",
         ],
         [
             "block period",
@@ -268,77 +334,22 @@ class ModflowGwtsrc(MFPackage):
         save_flows=None,
         timeseries=None,
         observations=None,
+        highest_saturated=None,
         maxbound=None,
         stress_period_data=None,
         filename=None,
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwtsrc defines a SRC package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        auxiliary : [string]
-            defines an array of one or more auxiliary variable names.  there is no limit on
-            the number of auxiliary variables that can be provided on this line; however,
-            lists of information provided in subsequent blocks must have a column of data
-            for each auxiliary variable name defined here.   the number of auxiliary
-            variables detected on this line determines the value for naux.  comments cannot
-            be provided anywhere on this line as they will be interpreted as auxiliary
-            variable names.  auxiliary variables may not be used by the package, but they
-            will be available for use by other parts of the program.  the program will
-            terminate with an error if auxiliary variables are specified on more than one
-            line in the options block.
-        auxmultname : string
-            name of auxiliary variable to be used as multiplier of mass loading rate.
-        boundnames : keyword
-            keyword to indicate that boundary names may be provided with the list of mass
-            source cells.
-        print_input : keyword
-            keyword to indicate that the list of mass source information will be written to
-            the listing file immediately after it is read.
-        print_flows : keyword
-            keyword to indicate that the list of mass source flow rates will be printed to
-            the listing file for every stress period time step in which 'budget print' is
-            specified in output control.  if there is no output control option and
-            'print_flows' is specified, then flow rates are printed for the last time step
-            of each stress period.
-        save_flows : keyword
-            keyword to indicate that mass source flow terms will be written to the file
-            specified with 'budget fileout' in output control.
-        timeseries : record ts6 filein ts6_filename
-            Contains data for the ts package. Data can be passed as a dictionary to the ts
-            package with variable names as keys and package data as values. Data for the
-            timeseries variable is also acceptable. See ts package documentation for more
-            information.
-        observations : record obs6 filein obs6_filename
-            Contains data for the obs package. Data can be passed as a dictionary to the
-            obs package with variable names as keys and package data as values. Data for
-            the observations variable is also acceptable. See obs package documentation for
-            more information.
-        maxbound : integer
-            integer value specifying the maximum number of sources cells that will be
-            specified for use during any stress period.
-        stress_period_data : [list]
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "src", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowGwtsrc."""
+        super().__init__(
+            parent=model,
+            package_type="src",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.auxiliary = self.build_mfdata("auxiliary", auxiliary)
         self.auxmultname = self.build_mfdata("auxmultname", auxmultname)
@@ -353,6 +364,9 @@ class ModflowGwtsrc(MFPackage):
         self._obs_filerecord = self.build_mfdata("obs_filerecord", None)
         self._obs_package = self.build_child_package(
             "obs", observations, "continuous", self._obs_filerecord
+        )
+        self.highest_saturated = self.build_mfdata(
+            "highest_saturated", highest_saturated
         )
         self.maxbound = self.build_mfdata("maxbound", maxbound)
         self.stress_period_data = self.build_mfdata(

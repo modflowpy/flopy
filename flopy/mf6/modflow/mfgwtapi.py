@@ -13,6 +13,12 @@ class ModflowGwtapi(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     boundnames : keyword
         keyword to indicate that boundary names may be provided with the list of api
         boundary cells.
@@ -42,6 +48,13 @@ class ModflowGwtapi(MFPackage):
         integer value specifying the maximum number of api boundary cells that will be
         specified for use during any stress period.
 
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
+
     """
 
     obs_filerecord = ListTemplateGenerator(("gwt6", "api", "options", "obs_filerecord"))
@@ -49,7 +62,7 @@ class ModflowGwtapi(MFPackage):
     _package_type = "api"
     dfn_file_name = "gwt-api.dfn"
     dfn = [
-        ["header"],
+        ["header", "multi-package"],
         [
             "block options",
             "name boundnames",
@@ -64,6 +77,7 @@ class ModflowGwtapi(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprpak",
         ],
         [
             "block options",
@@ -71,6 +85,7 @@ class ModflowGwtapi(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprflow",
         ],
         [
             "block options",
@@ -78,6 +93,7 @@ class ModflowGwtapi(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal ipakcb",
         ],
         [
             "block options",
@@ -153,57 +169,15 @@ class ModflowGwtapi(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwtapi defines a API package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        boundnames : keyword
-            keyword to indicate that boundary names may be provided with the list of api
-            boundary cells.
-        print_input : keyword
-            keyword to indicate that the list of api boundary information will be written
-            to the listing file immediately after it is read.
-        print_flows : keyword
-            keyword to indicate that the list of api boundary flow rates will be printed to
-            the listing file for every stress period time step in which 'budget print' is
-            specified in output control.  if there is no output control option and
-            'print_flows' is specified, then flow rates are printed for the last time step
-            of each stress period.
-        save_flows : keyword
-            keyword to indicate that api boundary flow terms will be written to the file
-            specified with 'budget fileout' in output control.
-        observations : record obs6 filein obs6_filename
-            Contains data for the obs package. Data can be passed as a dictionary to the
-            obs package with variable names as keys and package data as values. Data for
-            the observations variable is also acceptable. See obs package documentation for
-            more information.
-        mover : keyword
-            keyword to indicate that this instance of the api boundary package can be used
-            with the water mover (mvr) package.  when the mover option is specified,
-            additional memory is allocated within the package to store the available,
-            provided, and received water.
-        maxbound : integer
-            integer value specifying the maximum number of api boundary cells that will be
-            specified for use during any stress period.
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "api", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowGwtapi."""
+        super().__init__(
+            parent=model,
+            package_type="api",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.boundnames = self.build_mfdata("boundnames", boundnames)
         self.print_input = self.build_mfdata("print_input", print_input)

@@ -13,6 +13,12 @@ class ModflowGwtist(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     save_flows : keyword
         keyword to indicate that ist flow terms will be written to the file specified
         with 'budget fileout' in output control.
@@ -54,6 +60,12 @@ class ModflowGwtist(MFPackage):
                 concentrations are saved, as determined by settings in the Output Control
                 option.
 
+    export_array_ascii : keyword
+        keyword that specifies input griddata arrays should be written to layered ascii
+        output files.
+    export_array_netcdf : keyword
+        keyword that specifies input griddata arrays should be written to the model
+        output netcdf file.
     porosity : [double precision]
         porosity of the immobile domain specified as the immobile domain pore volume
         per immobile domain volume.
@@ -101,6 +113,13 @@ class ModflowGwtist(MFPackage):
         langmuir. if the sorption keyword is not specified in the options block, or if
         sorption is specified as linear, sp2 will have no effect on simulation results.
 
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
+
     """
 
     budget_filerecord = ListTemplateGenerator(
@@ -127,7 +146,7 @@ class ModflowGwtist(MFPackage):
     _package_type = "ist"
     dfn_file_name = "gwt-ist.dfn"
     dfn = [
-        ["header"],
+        ["header", "multi-package"],
         [
             "block options",
             "name save_flows",
@@ -143,6 +162,7 @@ class ModflowGwtist(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal budfilerec",
         ],
         [
             "block options",
@@ -183,6 +203,7 @@ class ModflowGwtist(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal budcsvfilerec",
         ],
         [
             "block options",
@@ -219,6 +240,7 @@ class ModflowGwtist(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal order1_decay",
         ],
         [
             "block options",
@@ -226,6 +248,7 @@ class ModflowGwtist(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal order0_decay",
         ],
         [
             "block options",
@@ -235,6 +258,7 @@ class ModflowGwtist(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal cimfilerec",
         ],
         [
             "block options",
@@ -245,6 +269,7 @@ class ModflowGwtist(MFPackage):
             "reader urword",
             "tagged true",
             "optional false",
+            "mf6internal cimopt",
         ],
         [
             "block options",
@@ -333,6 +358,7 @@ class ModflowGwtist(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal sorbatefilerec",
         ],
         [
             "block options",
@@ -356,12 +382,30 @@ class ModflowGwtist(MFPackage):
             "optional false",
         ],
         [
+            "block options",
+            "name export_array_ascii",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_ascii",
+        ],
+        [
+            "block options",
+            "name export_array_netcdf",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_nc",
+            "extended true",
+        ],
+        [
             "block griddata",
             "name porosity",
             "type double precision",
             "shape (nodes)",
             "reader readarray",
             "layered true",
+            "netcdf true",
         ],
         [
             "block griddata",
@@ -370,6 +414,7 @@ class ModflowGwtist(MFPackage):
             "shape (nodes)",
             "reader readarray",
             "layered true",
+            "netcdf true",
         ],
         [
             "block griddata",
@@ -378,6 +423,7 @@ class ModflowGwtist(MFPackage):
             "shape (nodes)",
             "reader readarray",
             "layered true",
+            "netcdf true",
         ],
         [
             "block griddata",
@@ -387,6 +433,7 @@ class ModflowGwtist(MFPackage):
             "reader readarray",
             "optional true",
             "layered true",
+            "netcdf true",
         ],
         [
             "block griddata",
@@ -395,6 +442,7 @@ class ModflowGwtist(MFPackage):
             "shape (nodes)",
             "reader readarray",
             "layered true",
+            "netcdf true",
             "optional true",
         ],
         [
@@ -405,6 +453,7 @@ class ModflowGwtist(MFPackage):
             "reader readarray",
             "optional true",
             "layered true",
+            "netcdf true",
         ],
         [
             "block griddata",
@@ -414,6 +463,7 @@ class ModflowGwtist(MFPackage):
             "reader readarray",
             "optional true",
             "layered true",
+            "netcdf true",
         ],
         [
             "block griddata",
@@ -423,6 +473,7 @@ class ModflowGwtist(MFPackage):
             "reader readarray",
             "optional true",
             "layered true",
+            "netcdf true",
         ],
         [
             "block griddata",
@@ -431,6 +482,7 @@ class ModflowGwtist(MFPackage):
             "shape (nodes)",
             "reader readarray",
             "layered true",
+            "netcdf true",
             "optional true",
         ],
     ]
@@ -448,6 +500,8 @@ class ModflowGwtist(MFPackage):
         cim_filerecord=None,
         cimprintrecord=None,
         sorbate_filerecord=None,
+        export_array_ascii=None,
+        export_array_netcdf=None,
         porosity=None,
         volfrac=None,
         zetaim=None,
@@ -461,102 +515,15 @@ class ModflowGwtist(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwtist defines a IST package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        save_flows : keyword
-            keyword to indicate that ist flow terms will be written to the file specified
-            with 'budget fileout' in output control.
-        budget_filerecord : record
-        budgetcsv_filerecord : record
-        sorption : string
-            is a text keyword to indicate that sorption will be activated.  valid sorption
-            options include linear, freundlich, and langmuir.  use of this keyword requires
-            that bulk_density and distcoef are specified in the griddata block.  if
-            sorption is specified as freundlich or langmuir then sp2 is also required in
-            the griddata block.  the sorption option must be consistent with the sorption
-            option specified in the mst package or the program will terminate with an
-            error.
-        first_order_decay : keyword
-            is a text keyword to indicate that first-order decay will occur.  use of this
-            keyword requires that decay and decay_sorbed (if sorption is active) are
-            specified in the griddata block.
-        zero_order_decay : keyword
-            is a text keyword to indicate that zero-order decay will occur.  use of this
-            keyword requires that decay and decay_sorbed (if sorption is active) are
-            specified in the griddata block.
-        cim_filerecord : record
-        cimprintrecord : (print_format)
-            * print_format : keyword
-                    keyword to specify format for printing to the listing file.
-
-        sorbate_filerecord : record
-        porosity : [double precision]
-            porosity of the immobile domain specified as the immobile domain pore volume
-            per immobile domain volume.
-        volfrac : [double precision]
-            fraction of the cell volume that consists of this immobile domain.  the sum of
-            all immobile domain volume fractions must be less than one.
-        zetaim : [double precision]
-            mass transfer rate coefficient between the mobile and immobile domains, in
-            dimensions of per time.
-        cim : [double precision]
-            initial concentration of the immobile domain in mass per length cubed.  if cim
-            is not specified, then it is assumed to be zero.
-        decay : [double precision]
-            is the rate coefficient for first or zero-order decay for the aqueous phase of
-            the immobile domain.  a negative value indicates solute production.  the
-            dimensions of decay for first-order decay is one over time.  the dimensions of
-            decay for zero-order decay is mass per length cubed per time.  decay will have
-            no effect on simulation results unless either first- or zero-order decay is
-            specified in the options block.
-        decay_sorbed : [double precision]
-            is the rate coefficient for first or zero-order decay for the sorbed phase of
-            the immobile domain.  a negative value indicates solute production.  the
-            dimensions of decay_sorbed for first-order decay is one over time.  the
-            dimensions of decay_sorbed for zero-order decay is mass of solute per mass of
-            aquifer per time.  if decay_sorbed is not specified and both decay and sorption
-            are active, then the program will terminate with an error.  decay_sorbed will
-            have no effect on simulation results unless the sorption keyword and either
-            first- or zero-order decay are specified in the options block.
-        bulk_density : [double precision]
-            is the bulk density of this immobile domain in mass per length cubed.  bulk
-            density is defined as the immobile domain solid mass per volume of the immobile
-            domain.  bulk_density is not required unless the sorption keyword is specified
-            in the options block.  if the sorption keyword is not specified in the options
-            block, bulk_density will have no effect on simulation results.
-        distcoef : [double precision]
-            is the distribution coefficient for the equilibrium-controlled linear sorption
-            isotherm in dimensions of length cubed per mass.  distcoef is not required
-            unless the sorption keyword is specified in the options block.  if the sorption
-            keyword is not specified in the options block, distcoef will have no effect on
-            simulation results.
-        sp2 : [double precision]
-            is the exponent for the freundlich isotherm and the sorption capacity for the
-            langmuir isotherm.  sp2 is not required unless the sorption keyword is
-            specified in the options block and sorption is specified as freundlich or
-            langmuir. if the sorption keyword is not specified in the options block, or if
-            sorption is specified as linear, sp2 will have no effect on simulation results.
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "ist", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowGwtist."""
+        super().__init__(
+            parent=model,
+            package_type="ist",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.save_flows = self.build_mfdata("save_flows", save_flows)
         self.budget_filerecord = self.build_mfdata(
@@ -574,6 +541,12 @@ class ModflowGwtist(MFPackage):
         self.cimprintrecord = self.build_mfdata("cimprintrecord", cimprintrecord)
         self.sorbate_filerecord = self.build_mfdata(
             "sorbate_filerecord", sorbate_filerecord
+        )
+        self.export_array_ascii = self.build_mfdata(
+            "export_array_ascii", export_array_ascii
+        )
+        self.export_array_netcdf = self.build_mfdata(
+            "export_array_netcdf", export_array_netcdf
         )
         self.porosity = self.build_mfdata("porosity", porosity)
         self.volfrac = self.build_mfdata("volfrac", volfrac)

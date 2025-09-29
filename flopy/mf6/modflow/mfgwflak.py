@@ -13,6 +13,12 @@ class ModflowGwflak(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     auxiliary : [string]
         defines an array of one or more auxiliary variable names.  there is no limit on
         the number of auxiliary variables that can be provided on this line; however,
@@ -119,11 +125,275 @@ class ModflowGwflak(MFPackage):
         value specifying the number of lakes tables that will be used to define the
         lake stage, volume relation, and surface area. if ntables is not specified, a
         default value of zero is used.
-    packagedata : [list]
-    connectiondata : [list]
-    tables : [list]
-    outlets : [list]
-    perioddata : list
+    packagedata : [(ifno, strt, nlakeconn, aux, boundname)]
+        * ifno : integer
+                integer value that defines the feature (lake) number associated with the
+                specified TABLES data on the line. IFNO must be greater than zero and less than
+                or equal to NLAKES. The program will terminate with an error if table
+                information for a lake is specified more than once or the number of specified
+                tables is less than NTABLES.
+        * strt : double precision
+                real value that defines the starting stage for the lake.
+        * nlakeconn : integer
+                integer value that defines the number of GWF cells connected to this (IFNO)
+                lake. There can only be one vertical lake connection to each GWF cell.
+                NLAKECONN must be greater than zero.
+        * aux : [double precision]
+                represents the values of the auxiliary variables for each lake. The values of
+                auxiliary variables must be present for each lake. The values must be specified
+                in the order of the auxiliary variables specified in the OPTIONS block.  If the
+                package supports time series and the Options block includes a TIMESERIESFILE
+                entry (see the 'Time-Variable Input' section), values can be obtained from a
+                time series by entering the time-series name in place of a numeric value.
+        * boundname : string
+                name of the lake cell.  BOUNDNAME is an ASCII character variable that can
+                contain as many as 40 characters.  If BOUNDNAME contains spaces in it, then the
+                entire name must be enclosed within single quotes.
+
+    connectiondata : [(ifno, iconn, cellid, claktype, bedleak, belev, telev, connlen, connwidth)]
+        * ifno : integer
+                integer value that defines the feature (lake) number associated with the
+                specified TABLES data on the line. IFNO must be greater than zero and less than
+                or equal to NLAKES. The program will terminate with an error if table
+                information for a lake is specified more than once or the number of specified
+                tables is less than NTABLES.
+        * iconn : integer
+                integer value that defines the GWF connection number for this lake connection
+                entry. ICONN must be greater than zero and less than or equal to NLAKECONN for
+                lake IFNO.
+        * cellid : [integer]
+                is the cell identifier, and depends on the type of grid that is used for the
+                simulation.  For a structured grid that uses the DIS input file, CELLID is the
+                layer, row, and column.   For a grid that uses the DISV input file, CELLID is
+                the layer and CELL2D number.  If the model uses the unstructured discretization
+                (DISU) input file, CELLID is the node number for the cell.
+        * claktype : string
+                character string that defines the lake-GWF connection type for the lake
+                connection. Possible lake-GWF connection type strings include:  VERTICAL--
+                character keyword to indicate the lake-GWF connection is vertical  and
+                connection conductance calculations use the hydraulic conductivity
+                corresponding to the :math:`K_{33}` tensor component defined for CELLID in the
+                NPF package. HORIZONTAL--character keyword to indicate the lake-GWF connection
+                is horizontal and connection conductance calculations use the hydraulic
+                conductivity corresponding to the :math:`K_{11}` tensor component defined for
+                CELLID in the NPF package. EMBEDDEDH--character keyword to indicate the lake-
+                GWF connection is embedded in a single cell and connection conductance
+                calculations use the hydraulic conductivity corresponding to the :math:`K_{11}`
+                tensor component defined for CELLID in the NPF package. EMBEDDEDV--character
+                keyword to indicate the lake-GWF connection is embedded in a single cell and
+                connection conductance calculations use the hydraulic conductivity
+                corresponding to the :math:`K_{33}` tensor component defined for CELLID in the
+                NPF package. Embedded lakes can only be connected to a single cell (NLAKECONN =
+                1) and there must be a lake table associated with each embedded lake.
+        * bedleak : string
+                real value or character string that defines the bed leakance for the lake-GWF
+                connection. BEDLEAK must be greater than or equal to zero, equal to the DNODATA
+                value (3.0E+30), or specified to be NONE. If DNODATA or NONE is specified for
+                BEDLEAK, the lake-GWF connection conductance is solely a function of aquifer
+                properties in the connected GWF cell and lakebed sediments are assumed to be
+                absent. Warning messages will be issued if NONE is specified. Eventually the
+                ability to specify NONE will be deprecated and cause MODFLOW 6 to terminate
+                with an error.
+        * belev : double precision
+                real value that defines the bottom elevation for a HORIZONTAL lake-GWF
+                connection. Any value can be specified if CLAKTYPE is VERTICAL, EMBEDDEDH, or
+                EMBEDDEDV. If CLAKTYPE is HORIZONTAL and BELEV is not equal to TELEV, BELEV
+                must be greater than or equal to the bottom of the GWF cell CELLID. If BELEV is
+                equal to TELEV, BELEV is reset to the bottom of the GWF cell CELLID.
+        * telev : double precision
+                real value that defines the top elevation for a HORIZONTAL lake-GWF connection.
+                Any value can be specified if CLAKTYPE is VERTICAL, EMBEDDEDH, or EMBEDDEDV. If
+                CLAKTYPE is HORIZONTAL and TELEV is not equal to BELEV, TELEV must be less than
+                or equal to the top of the GWF cell CELLID. If TELEV is equal to BELEV, TELEV
+                is reset to the top of the GWF cell CELLID.
+        * connlen : double precision
+                real value that defines the distance between the connected GWF CELLID node and
+                the lake for a HORIZONTAL, EMBEDDEDH, or EMBEDDEDV lake-GWF connection. CONLENN
+                must be greater than zero for a HORIZONTAL, EMBEDDEDH, or EMBEDDEDV lake-GWF
+                connection. Any value can be specified if CLAKTYPE is VERTICAL.
+        * connwidth : double precision
+                real value that defines the connection face width for a HORIZONTAL lake-GWF
+                connection. CONNWIDTH must be greater than zero for a HORIZONTAL lake-GWF
+                connection. Any value can be specified if CLAKTYPE is VERTICAL, EMBEDDEDH, or
+                EMBEDDEDV.
+
+    tables : [(ifno, tab6, filein, tab6_filename)]
+        * ifno : integer
+                integer value that defines the feature (lake) number associated with the
+                specified TABLES data on the line. IFNO must be greater than zero and less than
+                or equal to NLAKES. The program will terminate with an error if table
+                information for a lake is specified more than once or the number of specified
+                tables is less than NTABLES.
+        * tab6 : keyword
+                keyword to specify that record corresponds to a table file.
+        * filein : keyword
+                keyword to specify that an input filename is expected next.
+        * tab6_filename : string
+                character string that defines the path and filename for the file containing
+                lake table data for the lake connection. The TAB6_FILENAME file includes the
+                number of entries in the file and the relation between stage, volume, and
+                surface area for each entry in the file. Lake table files for EMBEDDEDH and
+                EMBEDDEDV lake-GWF connections also include lake-GWF exchange area data for
+                each entry in the file. Instructions for creating the TAB6_FILENAME input file
+                are provided in Lake Table Input File section.
+
+    outlets : [(outletno, lakein, lakeout, couttype, invert, width, rough, slope)]
+        * outletno : integer
+                integer value that defines the outlet number associated with the specified
+                OUTLETS data on the line. OUTLETNO must be greater than zero and less than or
+                equal to NOUTLETS. Outlet information must be specified for every outlet or the
+                program will terminate with an error. The program will also terminate with an
+                error if information for a outlet is specified more than once.
+        * lakein : integer
+                integer value that defines the lake number that outlet is connected to. LAKEIN
+                must be greater than zero and less than or equal to NLAKES.
+        * lakeout : integer
+                integer value that defines the lake number that outlet discharge from lake
+                outlet OUTLETNO is routed to. LAKEOUT must be greater than or equal to zero and
+                less than or equal to NLAKES. If LAKEOUT is zero, outlet discharge from lake
+                outlet OUTLETNO is discharged to an external boundary.
+        * couttype : string
+                character string that defines the outlet type for the outlet OUTLETNO. Possible
+                COUTTYPE strings include: SPECIFIED--character keyword to indicate the outlet
+                is defined as a specified flow.  MANNING--character keyword to indicate the
+                outlet is defined using Manning's equation. WEIR--character keyword to indicate
+                the outlet is defined using a sharp weir equation.
+        * invert : string
+                real or character value that defines the invert elevation for the lake outlet.
+                A specified INVERT value is only used for active lakes if COUTTYPE for lake
+                outlet OUTLETNO is not SPECIFIED. If the Options block includes a
+                TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be
+                obtained from a time series by entering the time-series name in place of a
+                numeric value.
+        * width : string
+                real or character value that defines the width of the lake outlet. A specified
+                WIDTH value is only used for active lakes if COUTTYPE for lake outlet OUTLETNO
+                is not SPECIFIED. If the Options block includes a TIMESERIESFILE entry (see the
+                'Time-Variable Input' section), values can be obtained from a time series by
+                entering the time-series name in place of a numeric value.
+        * rough : string
+                real value that defines the roughness coefficient for the lake outlet. Any
+                value can be specified if COUTTYPE is not MANNING. If the Options block
+                includes a TIMESERIESFILE entry (see the 'Time-Variable Input' section), values
+                can be obtained from a time series by entering the time-series name in place of
+                a numeric value.
+        * slope : string
+                real or character value that defines the bed slope for the lake outlet. A
+                specified SLOPE value is only used for active lakes if COUTTYPE for lake outlet
+                OUTLETNO is MANNING. If the Options block includes a TIMESERIESFILE entry (see
+                the 'Time-Variable Input' section), values can be obtained from a time series
+                by entering the time-series name in place of a numeric value.
+
+    perioddata : [(number, laksetting)]
+        * number : integer
+                integer value that defines the lake or outlet number associated with the
+                specified period data on the line.  number must be greater than zero and less
+                than or equal to nlakes for a lake number and less than or equal to noutlets
+                for an outlet number.
+        * laksetting : stage | invert | width | rough | slope | status | rainfall | evaporation | runoff | inflow | withdrawal | rate | auxiliaryrecord
+                line of information that is parsed into a keyword and values.  keyword values
+                that can be used to start the laksetting string include both keywords for lake
+                settings and keywords for outlet settings.  keywords for lake settings include:
+                status, stage, rainfall, evaporation, runoff, inflow, withdrawal, and
+                auxiliary.  keywords for outlet settings include rate, invert, width, slope,
+                and rough.
+                * stage : string
+                            real or character value that defines the stage for the lake. the specified
+                            stage is only applied if the lake is a constant stage lake. if the options
+                            block includes a timeseriesfile entry (see the 'time-variable input' section),
+                            values can be obtained from a time series by entering the time-series name in
+                            place of a numeric value.
+                * invert : string
+                            real or character value that defines the invert elevation for the lake outlet.
+                            a specified invert value is only used for active lakes if couttype for lake
+                            outlet outletno is not specified. if the options block includes a
+                            timeseriesfile entry (see the 'time-variable input' section), values can be
+                            obtained from a time series by entering the time-series name in place of a
+                            numeric value.
+                * width : string
+                            real or character value that defines the width of the lake outlet. a specified
+                            width value is only used for active lakes if couttype for lake outlet outletno
+                            is not specified. if the options block includes a timeseriesfile entry (see the
+                            'time-variable input' section), values can be obtained from a time series by
+                            entering the time-series name in place of a numeric value.
+                * rough : string
+                            real value that defines the roughness coefficient for the lake outlet. any
+                            value can be specified if couttype is not manning. if the options block
+                            includes a timeseriesfile entry (see the 'time-variable input' section), values
+                            can be obtained from a time series by entering the time-series name in place of
+                            a numeric value.
+                * slope : string
+                            real or character value that defines the bed slope for the lake outlet. a
+                            specified slope value is only used for active lakes if couttype for lake outlet
+                            outletno is manning. if the options block includes a timeseriesfile entry (see
+                            the 'time-variable input' section), values can be obtained from a time series
+                            by entering the time-series name in place of a numeric value.
+                * status : string
+                            keyword option to define lake status.  status can be active, inactive, or
+                            constant. by default, status is active.
+                * rainfall : string
+                            real or character value that defines the rainfall rate :math:`(lt^{-1})` for
+                            the lake. value must be greater than or equal to zero. if the options block
+                            includes a timeseriesfile entry (see the 'time-variable input' section), values
+                            can be obtained from a time series by entering the time-series name in place of
+                            a numeric value.
+                * evaporation : string
+                            real or character value that defines the maximum evaporation rate
+                            :math:`(lt^{-1})` for the lake. value must be greater than or equal to zero. if
+                            the options block includes a timeseriesfile entry (see the 'time-variable
+                            input' section), values can be obtained from a time series by entering the
+                            time-series name in place of a numeric value.
+                * runoff : string
+                            real or character value that defines the runoff rate :math:`(l^3 t^{-1})` for
+                            the lake. value must be greater than or equal to zero. if the options block
+                            includes a timeseriesfile entry (see the 'time-variable input' section), values
+                            can be obtained from a time series by entering the time-series name in place of
+                            a numeric value.
+                * inflow : string
+                            real or character value that defines the volumetric inflow rate :math:`(l^3
+                            t^{-1})` for the lake. value must be greater than or equal to zero. if the
+                            options block includes a timeseriesfile entry (see the 'time-variable input'
+                            section), values can be obtained from a time series by entering the time-series
+                            name in place of a numeric value. by default, inflow rates are zero for each
+                            lake.
+                * withdrawal : string
+                            real or character value that defines the maximum withdrawal rate :math:`(l^3
+                            t^{-1})` for the lake. value must be greater than or equal to zero. if the
+                            options block includes a timeseriesfile entry (see the 'time-variable input'
+                            section), values can be obtained from a time series by entering the time-series
+                            name in place of a numeric value.
+                * rate : string
+                            real or character value that defines the extraction rate for the lake outflow.
+                            a positive value indicates inflow and a negative value indicates outflow from
+                            the lake. rate only applies to outlets associated with active lakes (status is
+                            active). a specified rate is only applied if couttype for the outletno is
+                            specified. if the options block includes a timeseriesfile entry (see the 'time-
+                            variable input' section), values can be obtained from a time series by entering
+                            the time-series name in place of a numeric value. by default, the rate for each
+                            specified lake outlet is zero.
+                * auxiliaryrecord : (auxiliary, auxname, auxval)
+                            * auxiliary : keyword
+                                            keyword for specifying auxiliary variable.
+                            * auxname : string
+                                            name for the auxiliary variable to be assigned AUXVAL.  AUXNAME must match one
+                                            of the auxiliary variable names defined in the OPTIONS block. If AUXNAME does
+                                            not match one of the auxiliary variable names defined in the OPTIONS block the
+                                            data are ignored.
+                            * auxval : double precision
+                                            value for the auxiliary variable. If the Options block includes a
+                                            TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be
+                                            obtained from a time series by entering the time-series name in place of a
+                                            numeric value.
+
+
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -748,7 +1018,7 @@ class ModflowGwflak(MFPackage):
             "block period",
             "name iper",
             "type integer",
-            "block_variable True",
+            "block_variable true",
             "in_record true",
             "tagged false",
             "shape",
@@ -973,125 +1243,15 @@ class ModflowGwflak(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwflak defines a LAK package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        auxiliary : [string]
-            defines an array of one or more auxiliary variable names.  there is no limit on
-            the number of auxiliary variables that can be provided on this line; however,
-            lists of information provided in subsequent blocks must have a column of data
-            for each auxiliary variable name defined here.   the number of auxiliary
-            variables detected on this line determines the value for naux.  comments cannot
-            be provided anywhere on this line as they will be interpreted as auxiliary
-            variable names.  auxiliary variables may not be used by the package, but they
-            will be available for use by other parts of the program.  the program will
-            terminate with an error if auxiliary variables are specified on more than one
-            line in the options block.
-        boundnames : keyword
-            keyword to indicate that boundary names may be provided with the list of lake
-            cells.
-        print_input : keyword
-            keyword to indicate that the list of lake information will be written to the
-            listing file immediately after it is read.
-        print_stage : keyword
-            keyword to indicate that the list of lake {#2} will be printed to the listing
-            file for every stress period in which 'head print' is specified in output
-            control.  if there is no output control option and print_{#3} is specified,
-            then {#2} are printed for the last time step of each stress period.
-        print_flows : keyword
-            keyword to indicate that the list of lake flow rates will be printed to the
-            listing file for every stress period time step in which 'budget print' is
-            specified in output control.  if there is no output control option and
-            'print_flows' is specified, then flow rates are printed for the last time step
-            of each stress period.
-        save_flows : keyword
-            keyword to indicate that lake flow terms will be written to the file specified
-            with 'budget fileout' in output control.
-        stage_filerecord : record
-        budget_filerecord : record
-        budgetcsv_filerecord : record
-        package_convergence_filerecord : record
-        timeseries : record ts6 filein ts6_filename
-            Contains data for the ts package. Data can be passed as a dictionary to the ts
-            package with variable names as keys and package data as values. Data for the
-            timeseries variable is also acceptable. See ts package documentation for more
-            information.
-        observations : record obs6 filein obs6_filename
-            Contains data for the obs package. Data can be passed as a dictionary to the
-            obs package with variable names as keys and package data as values. Data for
-            the observations variable is also acceptable. See obs package documentation for
-            more information.
-        mover : keyword
-            keyword to indicate that this instance of the lak package can be used with the
-            water mover (mvr) package.  when the mover option is specified, additional
-            memory is allocated within the package to store the available, provided, and
-            received water.
-        surfdep : double precision
-            real value that defines the surface depression depth for vertical lake-gwf
-            connections. if specified, surfdep must be greater than or equal to zero. if
-            surfdep is not specified, a default value of zero is used for all vertical
-            lake-gwf connections.
-        maximum_iterations : integer
-            integer value that defines the maximum number of newton-raphson iterations
-            allowed for a lake. by default, maximum_iterations is equal to 100.
-            maximum_iterations would only need to be increased from the default value if
-            one or more lakes in a simulation has a large water budget error.
-        maximum_stage_change : double precision
-            real value that defines the lake stage closure tolerance. by default,
-            maximum_stage_change is equal to :math:`1 times 10^{-5}`. the
-            maximum_stage_change would only need to be increased or decreased from the
-            default value if the water budget error for one or more lakes is too small or
-            too large, respectively.
-        time_conversion : double precision
-            real value that is used to convert user-specified manning's roughness
-            coefficients or gravitational acceleration used to calculate outlet flows from
-            seconds to model time units. time_conversion should be set to 1.0, 60.0,
-            3,600.0, 86,400.0, and 31,557,600.0 when using time units (time_units) of
-            seconds, minutes, hours, days, or years in the simulation, respectively.
-            convtime does not need to be specified if no lake outlets are specified or
-            time_units are seconds.
-        length_conversion : double precision
-            real value that is used to convert outlet user-specified manning's roughness
-            coefficients or gravitational acceleration used to calculate outlet flows from
-            meters to model length units. length_conversion should be set to 3.28081, 1.0,
-            and 100.0 when using length units (length_units) of feet, meters, or
-            centimeters in the simulation, respectively. length_conversion does not need to
-            be specified if no lake outlets are specified or length_units are meters.
-        nlakes : integer
-            value specifying the number of lakes that will be simulated for all stress
-            periods.
-        noutlets : integer
-            value specifying the number of outlets that will be simulated for all stress
-            periods. if noutlets is not specified, a default value of zero is used.
-        ntables : integer
-            value specifying the number of lakes tables that will be used to define the
-            lake stage, volume relation, and surface area. if ntables is not specified, a
-            default value of zero is used.
-        packagedata : [list]
-        connectiondata : [list]
-        tables : [list]
-        outlets : [list]
-        perioddata : list
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "lak", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowGwflak."""
+        super().__init__(
+            parent=model,
+            package_type="lak",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.auxiliary = self.build_mfdata("auxiliary", auxiliary)
         self.boundnames = self.build_mfdata("boundnames", boundnames)

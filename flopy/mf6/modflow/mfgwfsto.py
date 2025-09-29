@@ -13,6 +13,12 @@ class ModflowGwfsto(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     save_flows : keyword
         keyword to indicate that cell-by-cell flow terms will be written to the file
         specified with 'budget save file' in output control.
@@ -65,6 +71,13 @@ class ModflowGwfsto(MFPackage):
         keyword to indicate that stress period iper is transient. transient conditions
         will apply until the steady-state keyword is specified in a subsequent begin
         period block.
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -215,7 +228,7 @@ class ModflowGwfsto(MFPackage):
             "block period",
             "name iper",
             "type integer",
-            "block_variable True",
+            "block_variable true",
             "in_record true",
             "tagged false",
             "shape",
@@ -265,81 +278,15 @@ class ModflowGwfsto(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwfsto defines a STO package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        save_flows : keyword
-            keyword to indicate that cell-by-cell flow terms will be written to the file
-            specified with 'budget save file' in output control.
-        storagecoefficient : keyword
-            keyword to indicate that the ss array is read as storage coefficient rather
-            than specific storage.
-        ss_confined_only : keyword
-            keyword to indicate that compressible storage is only calculated for a
-            convertible cell (iconvert>0) when the cell is under confined conditions (head
-            greater than or equal to the top of the cell). this option has no effect on
-            cells that are marked as being always confined (iconvert=0).  this option is
-            identical to the approach used to calculate storage changes under confined
-            conditions in modflow-2005.
-        perioddata : record tvs6 filein tvs6_filename
-            Contains data for the tvs package. Data can be passed as a dictionary to the
-            tvs package with variable names as keys and package data as values. Data for
-            the perioddata variable is also acceptable. See tvs package documentation for
-            more information.
-        export_array_ascii : keyword
-            keyword that specifies input grid arrays, which already support the layered
-            keyword, should be written to layered ascii output files.
-        export_array_netcdf : keyword
-            keyword that specifies input griddata arrays should be written to the model
-            output netcdf file.
-        dev_original_specific_storage : keyword
-            flag indicating the original storage specific storage formulation should be
-            used
-        dev_oldstorageformulation : keyword
-            development option flag for old storage formulation
-        iconvert : [integer]
-            is a flag for each cell that specifies whether or not a cell is convertible for
-            the storage calculation. 0 indicates confined storage is used. >0 indicates
-            confined storage is used when head is above cell top and a mixed formulation of
-            unconfined and confined storage is used when head is below cell top.
-        ss : [double precision]
-            is specific storage (or the storage coefficient if storagecoefficient is
-            specified as an option). specific storage values must be greater than or equal
-            to 0. if the csub package is included in the gwf model, specific storage must
-            be zero for every cell.
-        sy : [double precision]
-            is specific yield. specific yield values must be greater than or equal to 0.
-            specific yield does not have to be specified if there are no convertible cells
-            (iconvert=0 in every cell).
-        steady_state : keyword
-            keyword to indicate that stress period iper is steady-state. steady-state
-            conditions will apply until the transient keyword is specified in a subsequent
-            begin period block. if the csub package is included in the gwf model, only the
-            first and last stress period can be steady-state.
-        transient : keyword
-            keyword to indicate that stress period iper is transient. transient conditions
-            will apply until the steady-state keyword is specified in a subsequent begin
-            period block.
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "sto", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowGwfsto."""
+        super().__init__(
+            parent=model,
+            package_type="sto",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.save_flows = self.build_mfdata("save_flows", save_flows)
         self.storagecoefficient = self.build_mfdata(

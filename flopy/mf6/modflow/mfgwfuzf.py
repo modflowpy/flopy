@@ -13,6 +13,12 @@ class ModflowGwfuzf(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     auxiliary : [string]
         defines an array of one or more auxiliary variable names.  there is no limit on
         the number of auxiliary variables that can be provided on this line; however,
@@ -116,8 +122,131 @@ class ModflowGwfuzf(MFPackage):
         is the number of wave sets.  a recommended value of 40 can be used for
         nwavesets.  this value can be increased if more waves are required to resolve
         variations in water content within the unsaturated zone.
-    packagedata : [list]
-    perioddata : list
+    packagedata : [(ifno, cellid, landflag, ivertcon, surfdep, vks, thtr, thts, thti, eps, boundname)]
+        * ifno : integer
+                integer value that defines the feature (UZF object) number associated with the
+                specified PERIOD data on the line.
+        * cellid : [integer]
+                is the cell identifier, and depends on the type of grid that is used for the
+                simulation.  For a structured grid that uses the DIS input file, CELLID is the
+                layer, row, and column.   For a grid that uses the DISV input file, CELLID is
+                the layer and CELL2D number.  If the model uses the unstructured discretization
+                (DISU) input file, CELLID is the node number for the cell.
+        * landflag : integer
+                integer value set to one for land surface cells indicating that boundary
+                conditions can be applied and data can be specified in the PERIOD block. A
+                value of 0 specifies a non-land surface cell.
+        * ivertcon : integer
+                integer value set to specify underlying UZF cell that receives water flowing to
+                bottom of cell. If unsaturated zone flow reaches the water table before the
+                cell bottom, then water is added to the GWF cell instead of flowing to the
+                underlying UZF cell. A value of 0 indicates the UZF cell is not connected to an
+                underlying UZF cell.
+        * surfdep : double precision
+                is the surface depression depth of the UZF cell.
+        * vks : double precision
+                is the saturated vertical hydraulic conductivity of the UZF cell.  This value
+                is used with the Brooks-Corey function and the simulated water content to
+                calculate the partially saturated hydraulic conductivity.
+        * thtr : double precision
+                is the residual (irreducible) water content of the UZF cell.  This residual
+                water is not available to plants and will not drain into underlying aquifer
+                cells.
+        * thts : double precision
+                is the saturated water content of the UZF cell.  The values for saturated and
+                residual water content should be set in a manner that is consistent with the
+                specific yield value specified in the Storage Package.  The saturated water
+                content must be greater than the residual content.
+        * thti : double precision
+                is the initial water content of the UZF cell.  The value must be greater than
+                or equal to the residual water content and less than or equal to the saturated
+                water content.
+        * eps : double precision
+                is the exponent used in the Brooks-Corey function.  The Brooks-Corey function
+                is used by UZF to calculated hydraulic conductivity under partially saturated
+                conditions as a function of water content and the user-specified saturated
+                hydraulic conductivity.
+        * boundname : string
+                name of the UZF cell cell.  BOUNDNAME is an ASCII character variable that can
+                contain as many as 40 characters.  If BOUNDNAME contains spaces in it, then the
+                entire name must be enclosed within single quotes.
+
+    perioddata : [(ifno, finf, pet, extdp, extwc, ha, hroot, rootact, aux)]
+        * ifno : integer
+                integer value that defines the feature (UZF object) number associated with the
+                specified PERIOD data on the line.
+        * finf : string
+                real or character value that defines the applied infiltration rate of the UZF
+                cell (:math:`LT^{-1}`). If the Options block includes a TIMESERIESFILE entry
+                (see the 'Time-Variable Input' section), values can be obtained from a time
+                series by entering the time-series name in place of a numeric value.
+        * pet : string
+                real or character value that defines the potential evapotranspiration rate of
+                the UZF cell and specified GWF cell. Evapotranspiration is first removed from
+                the unsaturated zone and any remaining potential evapotranspiration is applied
+                to the saturated zone. If IVERTCON is greater than zero then residual potential
+                evapotranspiration not satisfied in the UZF cell is applied to the underlying
+                UZF and GWF cells. PET is always specified, but is only used if SIMULATE_ET is
+                specified in the OPTIONS block. If the Options block includes a TIMESERIESFILE
+                entry (see the 'Time-Variable Input' section), values can be obtained from a
+                time series by entering the time-series name in place of a numeric value.
+        * extdp : string
+                real or character value that defines the evapotranspiration extinction depth of
+                the UZF cell. If IVERTCON is greater than zero and EXTDP extends below the GWF
+                cell bottom then remaining potential evapotranspiration is applied to the
+                underlying UZF and GWF cells. EXTDP is always specified, but is only used if
+                SIMULATE_ET is specified in the OPTIONS block. If the Options block includes a
+                TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be
+                obtained from a time series by entering the time-series name in place of a
+                numeric value.
+        * extwc : string
+                real or character value that defines the evapotranspiration extinction water
+                content of the UZF cell. EXTWC is always specified, but is only used if
+                SIMULATE_ET and UNSAT_ETWC are specified in the OPTIONS block. The
+                evapotranspiration rate from the unsaturated zone will be set to zero when the
+                calculated water content is at or less than this value.  The value for EXTWC
+                cannot be less than the residual water content, and if it is specified as being
+                less than the residual water content it is set to the residual water content.
+                If the Options block includes a TIMESERIESFILE entry (see the 'Time-Variable
+                Input' section), values can be obtained from a time series by entering the
+                time-series name in place of a numeric value.
+        * ha : string
+                real or character value that defines the air entry potential (head) of the UZF
+                cell. HA is always specified, but is only used if SIMULATE_ET and UNSAT_ETAE
+                are specified in the OPTIONS block. If the Options block includes a
+                TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be
+                obtained from a time series by entering the time-series name in place of a
+                numeric value.
+        * hroot : string
+                real or character value that defines the root potential (head) of the UZF cell.
+                HROOT is always specified, but is only used if SIMULATE_ET and UNSAT_ETAE are
+                specified in the OPTIONS block. If the Options block includes a TIMESERIESFILE
+                entry (see the 'Time-Variable Input' section), values can be obtained from a
+                time series by entering the time-series name in place of a numeric value.
+        * rootact : string
+                real or character value that defines the root activity function of the UZF
+                cell. ROOTACT is the length of roots in a given volume of soil divided by that
+                volume. Values range from 0 to about 3 :math:`cm^{-2}`, depending on the plant
+                community and its stage of development. ROOTACT is always specified, but is
+                only used if SIMULATE_ET and UNSAT_ETAE are specified in the OPTIONS block. If
+                the Options block includes a TIMESERIESFILE entry (see the 'Time-Variable
+                Input' section), values can be obtained from a time series by entering the
+                time-series name in place of a numeric value.
+        * aux : [double precision]
+                represents the values of the auxiliary variables for each UZF. The values of
+                auxiliary variables must be present for each UZF. The values must be specified
+                in the order of the auxiliary variables specified in the OPTIONS block.  If the
+                package supports time series and the Options block includes a TIMESERIESFILE
+                entry (see the 'Time-Variable Input' section), values can be obtained from a
+                time series by entering the time-series name in place of a numeric value.
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -582,7 +711,7 @@ class ModflowGwfuzf(MFPackage):
             "block period",
             "name iper",
             "type integer",
-            "block_variable True",
+            "block_variable true",
             "in_record true",
             "tagged false",
             "shape",
@@ -722,119 +851,15 @@ class ModflowGwfuzf(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwfuzf defines a UZF package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        auxiliary : [string]
-            defines an array of one or more auxiliary variable names.  there is no limit on
-            the number of auxiliary variables that can be provided on this line; however,
-            lists of information provided in subsequent blocks must have a column of data
-            for each auxiliary variable name defined here.   the number of auxiliary
-            variables detected on this line determines the value for naux.  comments cannot
-            be provided anywhere on this line as they will be interpreted as auxiliary
-            variable names.  auxiliary variables may not be used by the package, but they
-            will be available for use by other parts of the program.  the program will
-            terminate with an error if auxiliary variables are specified on more than one
-            line in the options block.
-        auxmultname : string
-            name of auxiliary variable to be used as multiplier of gwf cell area used by
-            uzf cell.
-        boundnames : keyword
-            keyword to indicate that boundary names may be provided with the list of uzf
-            cells.
-        print_input : keyword
-            keyword to indicate that the list of uzf information will be written to the
-            listing file immediately after it is read.
-        print_flows : keyword
-            keyword to indicate that the list of uzf flow rates will be printed to the
-            listing file for every stress period time step in which 'budget print' is
-            specified in output control.  if there is no output control option and
-            'print_flows' is specified, then flow rates are printed for the last time step
-            of each stress period.
-        save_flows : keyword
-            keyword to indicate that uzf flow terms will be written to the file specified
-            with 'budget fileout' in output control.
-        wc_filerecord : record
-        budget_filerecord : record
-        budgetcsv_filerecord : record
-        package_convergence_filerecord : record
-        timeseries : record ts6 filein ts6_filename
-            Contains data for the ts package. Data can be passed as a dictionary to the ts
-            package with variable names as keys and package data as values. Data for the
-            timeseries variable is also acceptable. See ts package documentation for more
-            information.
-        observations : record obs6 filein obs6_filename
-            Contains data for the obs package. Data can be passed as a dictionary to the
-            obs package with variable names as keys and package data as values. Data for
-            the observations variable is also acceptable. See obs package documentation for
-            more information.
-        mover : keyword
-            keyword to indicate that this instance of the uzf package can be used with the
-            water mover (mvr) package.  when the mover option is specified, additional
-            memory is allocated within the package to store the available, provided, and
-            received water.
-        simulate_et : keyword
-            keyword specifying that et in the unsaturated (uzf) and saturated zones (gwf)
-            will be simulated. et can be simulated in the uzf cell and not the gwf cell by
-            omitting keywords linear_gwet and square_gwet.
-        linear_gwet : keyword
-            keyword specifying that groundwater et will be simulated using the original et
-            formulation of modflow-2005.
-        square_gwet : keyword
-            keyword specifying that groundwater et will be simulated by assuming a constant
-            et rate for groundwater levels between land surface (top) and land surface
-            minus the et extinction depth (top-extdp). groundwater et is smoothly reduced
-            from the pet rate to zero over a nominal interval at top-extdp.
-        simulate_gwseep : keyword
-            keyword specifying that groundwater discharge (gwseep) to land surface will be
-            simulated. groundwater discharge is nonzero when groundwater head is greater
-            than land surface.  this option is no longer recommended; a better approach is
-            to use the drain package with discharge scaling as a way to handle seepage to
-            land surface.  the drain package with discharge scaling is described in chapter
-            3 of the supplemental technical information.
-        unsat_etwc : keyword
-            keyword specifying that et in the unsaturated zone will be simulated as a
-            function of the specified pet rate while the water content (theta) is greater
-            than the et extinction water content (extwc).
-        unsat_etae : keyword
-            keyword specifying that et in the unsaturated zone will be simulated using a
-            capillary pressure based formulation. capillary pressure is calculated using
-            the brooks-corey retention function.
-        nuzfcells : integer
-            is the number of uzf cells.  more than one uzf cell can be assigned to a gwf
-            cell; however, only one gwf cell can be assigned to a single uzf cell. if more
-            than one uzf cell is assigned to a gwf cell, then an auxiliary variable should
-            be used to reduce the surface area of the uzf cell with the auxmultname option.
-        ntrailwaves : integer
-            is the number of trailing waves.  a recommended value of 7 can be used for
-            ntrailwaves.  this value can be increased to lower mass balance error in the
-            unsaturated zone.
-        nwavesets : integer
-            is the number of wave sets.  a recommended value of 40 can be used for
-            nwavesets.  this value can be increased if more waves are required to resolve
-            variations in water content within the unsaturated zone.
-        packagedata : [list]
-        perioddata : list
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "uzf", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowGwfuzf."""
+        super().__init__(
+            parent=model,
+            package_type="uzf",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.auxiliary = self.build_mfdata("auxiliary", auxiliary)
         self.auxmultname = self.build_mfdata("auxmultname", auxmultname)

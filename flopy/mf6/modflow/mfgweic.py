@@ -13,6 +13,12 @@ class ModflowGweic(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     export_array_ascii : keyword
         keyword that specifies input griddata arrays should be written to layered ascii
         output files.
@@ -23,6 +29,13 @@ class ModflowGweic(MFPackage):
         is the initial (starting) temperature---that is, the temperature at the
         beginning of the gwe model simulation.  strt must be specified for all gwe
         model simulations. one value is read for every model cell.
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -72,39 +85,15 @@ class ModflowGweic(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGweic defines a IC package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        export_array_ascii : keyword
-            keyword that specifies input griddata arrays should be written to layered ascii
-            output files.
-        export_array_netcdf : keyword
-            keyword that specifies input griddata arrays should be written to the model
-            output netcdf file.
-        strt : [double precision]
-            is the initial (starting) temperature---that is, the temperature at the
-            beginning of the gwe model simulation.  strt must be specified for all gwe
-            model simulations. one value is read for every model cell.
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "ic", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowGweic."""
+        super().__init__(
+            parent=model,
+            package_type="ic",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.export_array_ascii = self.build_mfdata(
             "export_array_ascii", export_array_ascii

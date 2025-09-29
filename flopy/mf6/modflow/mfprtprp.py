@@ -13,6 +13,12 @@ class ModflowPrtprp(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     boundnames : keyword
         keyword to indicate that boundary names may be provided with the list of
         particle release points.
@@ -118,6 +124,17 @@ class ModflowPrtprp(MFPackage):
         releasesetting selections. if none of these are provided, a single release time
         is configured at the beginning of the first time step of the simulation's first
         stress period.
+    coordinate_check_method : string
+        approach for verifying that release point coordinates are in the cell with the
+        specified id. by default, release point coordinates are checked at release
+        time.
+    dev_cycle_detection_window : integer
+        integer value defining the size of the window (number of consecutive exit
+        events) used for cycle detection. defaults to 0, disabling cycle detection.
+        with detection enabled, particle pathlines with duplicate cell exit events
+        (i.e., exiting the same cell through the same face twice) will cause the
+        program to terminate with an error. a larger window size provides more robust
+        cycle detection at the cost of more runtime operations per cell exit.
     nreleasepts : integer
         is the number of particle release points.
     nreleasetimes : integer
@@ -125,9 +142,86 @@ class ModflowPrtprp(MFPackage):
         this is not necessarily the total number of release times; release times are
         the union of release_time_frequency, releasetimes block, and period block
         releasesetting selections.
-    packagedata : [list]
-    releasetimes : [list]
-    perioddata : list
+    packagedata : [(irptno, cellid, xrpt, yrpt, zrpt, boundname)]
+        * irptno : integer
+                integer value that defines the PRP release point number associated with the
+                specified PACKAGEDATA data on the line. IRPTNO must be greater than zero and
+                less than or equal to NRELEASEPTS.  The program will terminate with an error if
+                information for a PRP release point number is specified more than once.
+        * cellid : [integer]
+                is the cell identifier, and depends on the type of grid that is used for the
+                simulation.  For a structured grid that uses the DIS input file, CELLID is the
+                layer, row, and column.   For a grid that uses the DISV input file, CELLID is
+                the layer and CELL2D number.  If the model uses the unstructured discretization
+                (DISU) input file, CELLID is the node number for the cell.
+        * xrpt : double precision
+                real value that defines the x coordinate of the release point in model
+                coordinates.  The (x, y, z) location specified for the release point must lie
+                within the cell that is identified by the specified cellid.
+        * yrpt : double precision
+                real value that defines the y coordinate of the release point in model
+                coordinates.  The (x, y, z) location specified for the release point must lie
+                within the cell that is identified by the specified cellid.
+        * zrpt : double precision
+                real value that defines the z coordinate of the release point in model
+                coordinates or, if the LOCAL_Z option is active, in local cell coordinates.
+                The (x, y, z) location specified for the release point must lie within the cell
+                that is identified by the specified cellid.
+        * boundname : string
+                name of the particle release point. BOUNDNAME is an ASCII character variable
+                that can contain as many as 40 characters. If BOUNDNAME contains spaces in it,
+                then the entire name must be enclosed within single quotes.
+
+    releasetimes : [(time)]
+        * time : double precision
+                real value that defines the release time with respect to the simulation start
+                time.
+
+    perioddata : [all | first | last | frequency | steps | fraction]
+        * releasesetting : all | first | last | frequency | steps | fraction
+                specifies time steps at which to release a particle. a particle is released at
+                the beginning of each specified time step. for fine control over release
+                timing, specify times explicitly using the releasetimes block. if the beginning
+                of a specified time step coincides with a release time specified in the
+                releasetimes block or configured via release_time_frequency, only one particle
+                is released at that time. coincidence is evaluated up to the tolerance
+                specified in release_time_tolerance, or :math:`epsilon times 10^{11}` by
+                default, where :math:`epsilon` is machine precision. if no release times are
+                configured via this setting, the releasetimes block, or the
+                release_time_frequency option, a single release time is configured at the
+                beginning of the first time step of the simulation's first stress period.
+                * all : keyword
+                            keyword to indicate release at the start of all time steps in the period.
+                * first : keyword
+                            keyword to indicate release at the start of the first time step in the period.
+                            this keyword may be used in conjunction with other releasesetting options.
+                * last : keyword
+                            keyword to indicate release at the start of the last time step in the period.
+                            this keyword may be used in conjunction with other releasesetting options.
+                * frequency : integer
+                            release at the specified time step frequency. this keyword may be used in
+                            conjunction with other releasesetting options.
+                * steps : [integer]
+                            release at the start of each step specified in steps. this option may be used
+                            in conjunction with other releasesetting options.
+                * fraction : [double precision]
+                            release particles after the specified fraction of the time step has elapsed. if
+                            fraction is not set, particles are released at the start of the specified time
+                            step(s). fraction must be a single value when used with all, first, or
+                            frequency. when used with steps, fraction may be a single value or an array of
+                            the same length as steps. if a single fraction value is provided with steps,
+                            the fraction applies to all steps. note: the fraction option has been removed.
+                            for fine control over release timing, specify times explicitly using the
+                            releasetimes block.
+
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -167,6 +261,7 @@ class ModflowPrtprp(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprpak",
         ],
         [
             "block options",
@@ -174,6 +269,7 @@ class ModflowPrtprp(MFPackage):
             "type integer",
             "reader urword",
             "optional true",
+            "mf6internal iexmeth",
         ],
         [
             "block options",
@@ -181,6 +277,7 @@ class ModflowPrtprp(MFPackage):
             "type double precision",
             "reader urword",
             "optional true",
+            "mf6internal extol",
             "default 1e-5",
         ],
         [
@@ -189,6 +286,7 @@ class ModflowPrtprp(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal localz",
         ],
         [
             "block options",
@@ -196,6 +294,7 @@ class ModflowPrtprp(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal extend",
         ],
         [
             "block options",
@@ -244,6 +343,7 @@ class ModflowPrtprp(MFPackage):
             "shape",
             "reader urword",
             "tagged true",
+            "mf6internal trackcsvfr",
             "optional true",
         ],
         [
@@ -287,6 +387,7 @@ class ModflowPrtprp(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal istopweaksink",
         ],
         [
             "block options",
@@ -310,7 +411,8 @@ class ModflowPrtprp(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
-            "removed 6.6.1",
+            "mf6internal releasetr",
+            "removed 6.6.0",
         ],
         [
             "block options",
@@ -320,18 +422,18 @@ class ModflowPrtprp(MFPackage):
             "in_record true",
             "tagged true",
             "shape",
-            "removed 6.6.1",
+            "removed 6.6.0",
         ],
         [
             "block options",
             "name times",
             "type double precision",
-            "shape (unknown)",
+            "shape (any1d)",
             "reader urword",
             "in_record true",
             "tagged false",
             "repeating true",
-            "removed 6.6.1",
+            "removed 6.6.0",
         ],
         [
             "block options",
@@ -341,7 +443,8 @@ class ModflowPrtprp(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
-            "removed 6.6.1",
+            "mf6internal release_timesfr",
+            "removed 6.6.0",
         ],
         [
             "block options",
@@ -351,7 +454,8 @@ class ModflowPrtprp(MFPackage):
             "in_record true",
             "tagged true",
             "shape",
-            "removed 6.6.1",
+            "mf6internal release_timesfn",
+            "removed 6.6.0",
         ],
         [
             "block options",
@@ -363,7 +467,7 @@ class ModflowPrtprp(MFPackage):
             "reader urword",
             "tagged false",
             "optional false",
-            "removed 6.6.1",
+            "removed 6.6.0",
         ],
         [
             "block options",
@@ -372,6 +476,7 @@ class ModflowPrtprp(MFPackage):
             "valid drop stop stay",
             "reader urword",
             "optional true",
+            "mf6internal idrymeth",
         ],
         [
             "block options",
@@ -379,7 +484,7 @@ class ModflowPrtprp(MFPackage):
             "type keyword",
             "reader urword",
             "optional false",
-            "mf6internal ifrctrn",
+            "mf6internal frctrn",
         ],
         [
             "block options",
@@ -387,6 +492,7 @@ class ModflowPrtprp(MFPackage):
             "type double precision",
             "reader urword",
             "optional true",
+            "mf6internal rttol",
         ],
         [
             "block options",
@@ -394,6 +500,26 @@ class ModflowPrtprp(MFPackage):
             "type double precision",
             "reader urword",
             "optional true",
+            "mf6internal rtfreq",
+        ],
+        [
+            "block options",
+            "name coordinate_check_method",
+            "type string",
+            "valid none eager",
+            "reader urword",
+            "optional true",
+            "prerelease true",
+            "mf6internal ichkmeth",
+            "default eager",
+        ],
+        [
+            "block options",
+            "name dev_cycle_detection_window",
+            "type integer",
+            "reader urword",
+            "optional true",
+            "mf6internal icycwin",
         ],
         [
             "block dimensions",
@@ -478,6 +604,7 @@ class ModflowPrtprp(MFPackage):
             "type recarray time",
             "shape (nreleasetimes)",
             "reader urword",
+            "optional true",
         ],
         [
             "block releasetimes",
@@ -492,7 +619,7 @@ class ModflowPrtprp(MFPackage):
             "block period",
             "name iper",
             "type integer",
-            "block_variable True",
+            "block_variable true",
             "in_record true",
             "tagged false",
             "shape",
@@ -594,6 +721,8 @@ class ModflowPrtprp(MFPackage):
         dev_forceternary=None,
         release_time_tolerance=None,
         release_time_frequency=None,
+        coordinate_check_method="eager",
+        dev_cycle_detection_window=None,
         nreleasepts=None,
         nreleasetimes=None,
         packagedata=None,
@@ -603,134 +732,15 @@ class ModflowPrtprp(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowPrtprp defines a PRP package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        boundnames : keyword
-            keyword to indicate that boundary names may be provided with the list of
-            particle release points.
-        print_input : keyword
-            keyword to indicate that the list of all model stress package information will
-            be written to the listing file immediately after it is read.
-        dev_exit_solve_method : integer
-            the method for iterative solution of particle exit location and time in the
-            generalized pollock's method.  0 default, 1 brent, 2 chandrupatla.  the default
-            is brent's method.
-        exit_solve_tolerance : double precision
-            the convergence tolerance for iterative solution of particle exit location and
-            time in the generalized pollock's method.  a value of 0.00001 works well for
-            many problems, but the value that strikes the best balance between accuracy and
-            runtime is problem-dependent.
-        local_z : keyword
-            indicates that 'zrpt' defines the local z coordinate of the release point
-            within the cell, with value of 0 at the bottom and 1 at the top of the cell.
-            if the cell is partially saturated at release time, the top of the cell is
-            considered to be the water table elevation (the head in the cell) rather than
-            the top defined by the user.
-        extend_tracking : keyword
-            indicates that particles should be tracked beyond the end of the simulation's
-            final time step (using that time step's flows) until particles terminate or
-            reach a specified stop time.  by default, particles are terminated at the end
-            of the simulation's final time step.
-        track_filerecord : record
-        trackcsv_filerecord : record
-        stoptime : double precision
-            real value defining the maximum simulation time to which particles in the
-            package can be tracked.  particles that have not terminated earlier due to
-            another termination condition will terminate when simulation time stoptime is
-            reached.  if the last stress period in the simulation consists of more than one
-            time step, particles will not be tracked past the ending time of the last
-            stress period, regardless of stoptime.  if the extend_tracking option is
-            enabled and the last stress period in the simulation is steady-state, the
-            simulation ending time will not limit the time to which particles can be
-            tracked, but stoptime and stoptraveltime will continue to apply.  if stoptime
-            and stoptraveltime are both provided, particles will be stopped if either is
-            reached.
-        stoptraveltime : double precision
-            real value defining the maximum travel time over which particles in the model
-            can be tracked.  particles that have not terminated earlier due to another
-            termination condition will terminate when their travel time reaches
-            stoptraveltime.  if the last stress period in the simulation consists of more
-            than one time step, particles will not be tracked past the ending time of the
-            last stress period, regardless of stoptraveltime.  if the extend_tracking
-            option is enabled and the last stress period in the simulation is steady-state,
-            the simulation ending time will not limit the time to which particles can be
-            tracked, but stoptime and stoptraveltime will continue to apply.  if stoptime
-            and stoptraveltime are both provided, particles will be stopped if either is
-            reached.
-        stop_at_weak_sink : keyword
-            is a text keyword to indicate that a particle is to terminate when it enters a
-            cell that is a weak sink.  by default, particles are allowed to pass though
-            cells that are weak sinks.
-        istopzone : integer
-            integer value defining the stop zone number.  if cells have been assigned izone
-            values in the griddata block, a particle terminates if it enters a cell whose
-            izone value matches istopzone.  an istopzone value of zero indicates that there
-            is no stop zone.  the default value is zero.
-        drape : keyword
-            is a text keyword to indicate that if a particle's release point is in a cell
-            that happens to be inactive at release time, the particle is to be moved to the
-            topmost active cell below it, if any. by default, a particle is not released
-            into the simulation if its release point's cell is inactive at release time.
-        release_timesrecord : (release_times, times)
-            * release_times : keyword
-                    keyword indicating release times will follow
-            * times : [double precision]
-                    times to release, relative to the beginning of the simulation.  RELEASE_TIMES
-                    and RELEASE_TIMESFILE are mutually exclusive.
-
-        release_timesfilerecord : record
-        dry_tracking_method : string
-            is a string indicating how particles should behave in dry-but-active cells (as
-            can occur with the newton formulation).  the value can be 'drop', 'stop', or
-            'stay'.  the default is 'drop', which passes particles vertically and
-            instantaneously to the water table. 'stop' causes particles to terminate.
-            'stay' causes particles to remain stationary but active.
-        dev_forceternary : keyword
-            force use of the ternary tracking method regardless of cell type in disv grids.
-        release_time_tolerance : double precision
-            real number indicating the tolerance within which to consider consecutive
-            release times coincident. coincident release times will be merged into a single
-            release time. the default is :math:`epsilon times 10^{11}`, where
-            :math:`epsilon` is machine precision.
-        release_time_frequency : double precision
-            real number indicating the time frequency at which to release particles. this
-            option can be used to schedule releases at a regular interval for the duration
-            of the simulation, starting at the simulation start time. the release schedule
-            is the union of this option, the releasetimes block, and period block
-            releasesetting selections. if none of these are provided, a single release time
-            is configured at the beginning of the first time step of the simulation's first
-            stress period.
-        nreleasepts : integer
-            is the number of particle release points.
-        nreleasetimes : integer
-            is the number of particle release times specified in the releasetimes block.
-            this is not necessarily the total number of release times; release times are
-            the union of release_time_frequency, releasetimes block, and period block
-            releasesetting selections.
-        packagedata : [list]
-        releasetimes : [list]
-        perioddata : list
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "prp", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowPrtprp."""
+        super().__init__(
+            parent=model,
+            package_type="prp",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.boundnames = self.build_mfdata("boundnames", boundnames)
         self.print_input = self.build_mfdata("print_input", print_input)
@@ -768,6 +778,12 @@ class ModflowPrtprp(MFPackage):
         )
         self.release_time_frequency = self.build_mfdata(
             "release_time_frequency", release_time_frequency
+        )
+        self.coordinate_check_method = self.build_mfdata(
+            "coordinate_check_method", coordinate_check_method
+        )
+        self.dev_cycle_detection_window = self.build_mfdata(
+            "dev_cycle_detection_window", dev_cycle_detection_window
         )
         self.nreleasepts = self.build_mfdata("nreleasepts", nreleasepts)
         self.nreleasetimes = self.build_mfdata("nreleasetimes", nreleasetimes)

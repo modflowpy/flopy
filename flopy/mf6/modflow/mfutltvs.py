@@ -13,6 +13,12 @@ class ModflowUtltvs(MFPackage):
 
     Parameters
     ----------
+    parent_package
+        Parent_package that this package is a part of. Package is automatically
+        added to parent_package when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     disable_storage_change_integration : keyword
         keyword that deactivates inclusion of storage derivative terms in the sto
         package matrix formulation.  in the absence of this keyword (the default), the
@@ -27,7 +33,40 @@ class ModflowUtltvs(MFPackage):
         package with variable names as keys and package data as values. Data for the
         timeseries variable is also acceptable. See ts package documentation for more
         information.
-    perioddata : list
+    perioddata : [(cellid, tvssetting)]
+        * cellid : [integer]
+                is the cell identifier, and depends on the type of grid that is used for the
+                simulation.  for a structured grid that uses the dis input file, cellid is the
+                layer, row, and column.   for a grid that uses the disv input file, cellid is
+                the layer and cell2d number.  if the model uses the unstructured discretization
+                (disu) input file, cellid is the node number for the cell.
+        * tvssetting : ss | sy
+                line of information that is parsed into a property name keyword and values.
+                property name keywords that can be used to start the tvssetting string include:
+                ss and sy.
+                * ss : double precision
+                            is the new value to be assigned as the cell's specific storage (or storage
+                            coefficient if the storagecoefficient sto package option is specified) from the
+                            start of the specified stress period, as per ss in the sto package.  specific
+                            storage values must be greater than or equal to 0.  if the options block
+                            includes a ts6 entry (see the 'time-variable input' section), values can be
+                            obtained from a time series by entering the time-series name in place of a
+                            numeric value.
+                * sy : double precision
+                            is the new value to be assigned as the cell's specific yield from the start of
+                            the specified stress period, as per sy in the sto package.  specific yield
+                            values must be greater than or equal to 0.  if the options block includes a ts6
+                            entry (see the 'time-variable input' section), values can be obtained from a
+                            time series by entering the time-series name in place of a numeric value.
+
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -98,7 +137,7 @@ class ModflowUtltvs(MFPackage):
             "block period",
             "name iper",
             "type integer",
-            "block_variable True",
+            "block_variable true",
             "in_record true",
             "tagged false",
             "shape",
@@ -165,45 +204,14 @@ class ModflowUtltvs(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowUtltvs defines a TVS package.
-
-        Parameters
-        ----------
-        parent_package
-            Parent_package that this package is a part of. Package is automatically
-            added to parent_package when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        disable_storage_change_integration : keyword
-            keyword that deactivates inclusion of storage derivative terms in the sto
-            package matrix formulation.  in the absence of this keyword (the default), the
-            groundwater storage formulation will be modified to correctly adjust heads
-            based on transient variations in stored water volumes arising from changes to
-            ss and sy properties.
-        print_input : keyword
-            keyword to indicate that information for each change to a storage property in a
-            cell will be written to the model listing file.
-        timeseries : record ts6 filein ts6_filename
-            Contains data for the ts package. Data can be passed as a dictionary to the ts
-            package with variable names as keys and package data as values. Data for the
-            timeseries variable is also acceptable. See ts package documentation for more
-            information.
-        perioddata : list
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
+        """Initialize ModflowUtltvs."""
         super().__init__(
-            parent_package, "tvs", filename, pname, loading_package, **kwargs
+            parent=parent_package,
+            package_type="tvs",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
         )
 
         self.disable_storage_change_integration = self.build_mfdata(
@@ -222,17 +230,6 @@ class ModflowUtltvs(MFPackage):
 class UtltvsPackages(MFChildPackages):
     """
     UtltvsPackages is a container class for the ModflowUtltvs class.
-
-    Methods
-    -------
-    initialize
-        Initializes a new ModflowUtltvs package removing any sibling child
-        packages attached to the same parent package. See ModflowUtltvs init
-        documentation for definition of parameters.
-    append_package
-        Adds a new ModflowUtltvs package to the container. See ModflowUtltvs
-        init documentation for definition of parameters.
-
     """
 
     package_abbr = "utltvspackages"
@@ -246,6 +243,12 @@ class UtltvsPackages(MFChildPackages):
         filename=None,
         pname=None,
     ):
+        """
+        Initialize a new ModflowUtltvs package, removing any sibling
+        child packages attached to the same parent package.
+
+        See :class:`ModflowUtltvs` for parameter definitions.
+        """
         new_package = ModflowUtltvs(
             self._cpparent,
             disable_storage_change_integration=disable_storage_change_integration,
@@ -267,6 +270,11 @@ class UtltvsPackages(MFChildPackages):
         filename=None,
         pname=None,
     ):
+        """
+        Add a new ModflowUtltvs package to the container.
+
+        See :class:`ModflowUtltvs` for parameter definitions.
+        """
         new_package = ModflowUtltvs(
             self._cpparent,
             disable_storage_change_integration=disable_storage_change_integration,

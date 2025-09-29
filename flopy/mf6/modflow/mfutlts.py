@@ -13,6 +13,12 @@ class ModflowUtlts(MFPackage):
 
     Parameters
     ----------
+    parent_package
+        Parent_package that this package is a part of. Package is automatically
+        added to parent_package when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     time_series_namerecord : (names, time_series_names)
         xxx
         * names : keyword
@@ -50,8 +56,22 @@ class ModflowUtlts(MFPackage):
 
     sfac : keyword
          xxx
-    timeseries : list
+    timeseries : [(ts_time, ts_array)]
         xxx
+        * ts_time : double precision
+                A numeric time relative to the start of the simulation, in the time unit used
+                in the simulation. Times must be strictly increasing.
+        * ts_array : [double precision]
+                A 2-D array of numeric, floating-point values, or a constant value, readable by
+                the U2DREL array-reading utility.
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -95,7 +115,7 @@ class ModflowUtlts(MFPackage):
             "block attributes",
             "name time_series_names",
             "type string",
-            "shape any1d",
+            "shape (any1d)",
             "tagged false",
             "reader urword",
             "optional false",
@@ -124,7 +144,7 @@ class ModflowUtlts(MFPackage):
             "name interpolation_method",
             "type string",
             "valid stepwise linear linearend",
-            "shape time_series_names",
+            "shape (time_series_names)",
             "tagged false",
             "reader urword",
             "optional false",
@@ -179,7 +199,7 @@ class ModflowUtlts(MFPackage):
             "block attributes",
             "name sfacval",
             "type double precision",
-            "shape <time_series_name",
+            "shape (<time_series_name)",
             "tagged false",
             "reader urword",
             "optional false",
@@ -227,7 +247,7 @@ class ModflowUtlts(MFPackage):
             "block timeseries",
             "name ts_array",
             "type double precision",
-            "shape time_series_names",
+            "shape (time_series_names)",
             "tagged false",
             "reader urword",
             "optional false",
@@ -249,69 +269,14 @@ class ModflowUtlts(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowUtlts defines a TS package.
-
-        Parameters
-        ----------
-        parent_package
-            Parent_package that this package is a part of. Package is automatically
-            added to parent_package when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        time_series_namerecord : (names, time_series_names)
-            xxx
-            * names : keyword
-                    xxx
-            * time_series_names : [string]
-                    Name by which a package references a particular time-array series. The name
-                    must be unique among all time-array series used in a package.
-
-        interpolation_methodrecord : (methods, interpolation_method)
-            xxx
-            * methods : keyword
-                     xxx
-            * interpolation_method : [string]
-                    Interpolation method, which is either STEPWISE or LINEAR.
-
-        interpolation_methodrecord_single : record
-            xxx
-        method : keyword
-             xxx
-        interpolation_method_single : string
-            interpolation method, which is either stepwise or linear.
-        sfacrecord : (sfacs, sfacval)
-            xxx
-            * sfacs : keyword
-                     xxx
-            * sfacval : [double precision]
-                    Scale factor, which will multiply all array values in time series. SFAC is an
-                    optional attribute; if omitted, SFAC = 1.0.
-
-        sfacrecord_single : (sfacval)
-            xxx
-            * sfacval : [double precision]
-                    Scale factor, which will multiply all array values in time series. SFAC is an
-                    optional attribute; if omitted, SFAC = 1.0.
-
-        sfac : keyword
-             xxx
-        timeseries : list
-            xxx
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
+        """Initialize ModflowUtlts."""
         super().__init__(
-            parent_package, "ts", filename, pname, loading_package, **kwargs
+            parent=parent_package,
+            package_type="ts",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
         )
 
         self.time_series_namerecord = self.build_mfdata(
@@ -335,17 +300,6 @@ class ModflowUtlts(MFPackage):
 class UtltsPackages(MFChildPackages):
     """
     UtltsPackages is a container class for the ModflowUtlts class.
-
-    Methods
-    -------
-    initialize
-        Initializes a new ModflowUtlts package removing any sibling child
-        packages attached to the same parent package. See ModflowUtlts init
-        documentation for definition of parameters.
-    append_package
-        Adds a new ModflowUtlts package to the container. See ModflowUtlts
-        init documentation for definition of parameters.
-
     """
 
     package_abbr = "utltspackages"
@@ -361,6 +315,12 @@ class UtltsPackages(MFChildPackages):
         filename=None,
         pname=None,
     ):
+        """
+        Initialize a new ModflowUtlts package, removing any sibling
+        child packages attached to the same parent package.
+
+        See :class:`ModflowUtlts` for parameter definitions.
+        """
         new_package = ModflowUtlts(
             self._cpparent,
             time_series_namerecord=time_series_namerecord,
@@ -386,6 +346,11 @@ class UtltsPackages(MFChildPackages):
         filename=None,
         pname=None,
     ):
+        """
+        Add a new ModflowUtlts package to the container.
+
+        See :class:`ModflowUtlts` for parameter definitions.
+        """
         new_package = ModflowUtlts(
             self._cpparent,
             time_series_namerecord=time_series_namerecord,

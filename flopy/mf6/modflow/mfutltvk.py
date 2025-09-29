@@ -13,6 +13,12 @@ class ModflowUtltvk(MFPackage):
 
     Parameters
     ----------
+    parent_package
+        Parent_package that this package is a part of. Package is automatically
+        added to parent_package when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     print_input : keyword
         keyword to indicate that information for each change to the hydraulic
         conductivity in a cell will be written to the model listing file.
@@ -21,7 +27,48 @@ class ModflowUtltvk(MFPackage):
         package with variable names as keys and package data as values. Data for the
         timeseries variable is also acceptable. See ts package documentation for more
         information.
-    perioddata : list
+    perioddata : [(cellid, tvksetting)]
+        * cellid : [integer]
+                is the cell identifier, and depends on the type of grid that is used for the
+                simulation.  for a structured grid that uses the dis input file, cellid is the
+                layer, row, and column.   for a grid that uses the disv input file, cellid is
+                the layer and cell2d number.  if the model uses the unstructured discretization
+                (disu) input file, cellid is the node number for the cell.
+        * tvksetting : k | k22 | k33
+                line of information that is parsed into a property name keyword and values.
+                property name keywords that can be used to start the tvksetting string include:
+                k, k22, and k33.
+                * k : double precision
+                            is the new value to be assigned as the cell's hydraulic conductivity from the
+                            start of the specified stress period, as per k in the npf package.  if the
+                            options block includes a ts6 entry (see the 'time-variable input' section),
+                            values can be obtained from a time series by entering the time-series name in
+                            place of a numeric value.
+                * k22 : double precision
+                            is the new value to be assigned as the cell's hydraulic conductivity of the
+                            second ellipsoid axis (or the ratio of k22/k if the k22overk npf package option
+                            is specified) from the start of the specified stress period, as per k22 in the
+                            npf package.  for an unrotated case this is the hydraulic conductivity in the y
+                            direction.  if the options block includes a ts6 entry (see the 'time-variable
+                            input' section), values can be obtained from a time series by entering the
+                            time-series name in place of a numeric value.
+                * k33 : double precision
+                            is the new value to be assigned as the cell's hydraulic conductivity of the
+                            third ellipsoid axis (or the ratio of k33/k if the k33overk npf package option
+                            is specified) from the start of the specified stress period, as per k33 in the
+                            npf package.  for an unrotated case, this is the vertical hydraulic
+                            conductivity.  if the options block includes a ts6 entry (see the 'time-
+                            variable input' section), values can be obtained from a time series by entering
+                            the time-series name in place of a numeric value.
+
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -85,7 +132,7 @@ class ModflowUtltvk(MFPackage):
             "block period",
             "name iper",
             "type integer",
-            "block_variable True",
+            "block_variable true",
             "in_record true",
             "tagged false",
             "shape",
@@ -161,39 +208,14 @@ class ModflowUtltvk(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowUtltvk defines a TVK package.
-
-        Parameters
-        ----------
-        parent_package
-            Parent_package that this package is a part of. Package is automatically
-            added to parent_package when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        print_input : keyword
-            keyword to indicate that information for each change to the hydraulic
-            conductivity in a cell will be written to the model listing file.
-        timeseries : record ts6 filein ts6_filename
-            Contains data for the ts package. Data can be passed as a dictionary to the ts
-            package with variable names as keys and package data as values. Data for the
-            timeseries variable is also acceptable. See ts package documentation for more
-            information.
-        perioddata : list
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
+        """Initialize ModflowUtltvk."""
         super().__init__(
-            parent_package, "tvk", filename, pname, loading_package, **kwargs
+            parent=parent_package,
+            package_type="tvk",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
         )
 
         self.print_input = self.build_mfdata("print_input", print_input)
@@ -209,17 +231,6 @@ class ModflowUtltvk(MFPackage):
 class UtltvkPackages(MFChildPackages):
     """
     UtltvkPackages is a container class for the ModflowUtltvk class.
-
-    Methods
-    -------
-    initialize
-        Initializes a new ModflowUtltvk package removing any sibling child
-        packages attached to the same parent package. See ModflowUtltvk init
-        documentation for definition of parameters.
-    append_package
-        Adds a new ModflowUtltvk package to the container. See ModflowUtltvk
-        init documentation for definition of parameters.
-
     """
 
     package_abbr = "utltvkpackages"
@@ -232,6 +243,12 @@ class UtltvkPackages(MFChildPackages):
         filename=None,
         pname=None,
     ):
+        """
+        Initialize a new ModflowUtltvk package, removing any sibling
+        child packages attached to the same parent package.
+
+        See :class:`ModflowUtltvk` for parameter definitions.
+        """
         new_package = ModflowUtltvk(
             self._cpparent,
             print_input=print_input,
@@ -251,6 +268,11 @@ class UtltvkPackages(MFChildPackages):
         filename=None,
         pname=None,
     ):
+        """
+        Add a new ModflowUtltvk package to the container.
+
+        See :class:`ModflowUtltvk` for parameter definitions.
+        """
         new_package = ModflowUtltvk(
             self._cpparent,
             print_input=print_input,

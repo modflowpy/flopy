@@ -13,10 +13,34 @@ class ModflowPrtfmi(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     save_flows : keyword
         keyword to indicate that fmi flow terms will be written to the file specified
         with 'budget fileout' in output control.
-    packagedata : list
+    packagedata : [(flowtype, filein, fname)]
+        * flowtype : string
+                is the word GWFBUDGET, GWFHEAD, or GWFGRID.  If GWFBUDGET is specified, then
+                the corresponding file must be a budget file.  If GWFHEAD is specified, the
+                file must be a head file.  If GWFGRID is specified, the file must be a binary
+                grid file.
+        * filein : keyword
+                keyword to specify that an input filename is expected next.
+        * fname : string
+                is the name of the file containing flows.  The path to the file should be
+                included if the file is not located in the folder where the program was run.
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -38,7 +62,7 @@ class ModflowPrtfmi(MFPackage):
             "name packagedata",
             "type recarray flowtype filein fname",
             "reader urword",
-            "optional false",
+            "optional true",
         ],
         [
             "block packagedata",
@@ -79,33 +103,15 @@ class ModflowPrtfmi(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowPrtfmi defines a FMI package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        save_flows : keyword
-            keyword to indicate that fmi flow terms will be written to the file specified
-            with 'budget fileout' in output control.
-        packagedata : list
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "fmi", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowPrtfmi."""
+        super().__init__(
+            parent=model,
+            package_type="fmi",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.save_flows = self.build_mfdata("save_flows", save_flows)
         self.packagedata = self.build_mfdata("packagedata", packagedata)

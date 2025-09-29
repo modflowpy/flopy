@@ -13,6 +13,12 @@ class ModflowPts(MFPackage):
 
     Parameters
     ----------
+    simulation
+        Simulation that this package is a part of. Package is automatically
+        added to simulation when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     print_option : string
         is a flag that controls printing of convergence information from the solver.
         none means print nothing. summary means print only the total number of
@@ -105,6 +111,13 @@ class ModflowPts(MFPackage):
         integer value defining the maximum number of outer (nonlinear) iterations --
         that is, calls to the solution routine. for a linear problem outer_maximum
         should be 1.
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -297,99 +310,15 @@ class ModflowPts(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowPts defines a PTS package.
-
-        Parameters
-        ----------
-        simulation
-            Simulation that this package is a part of. Package is automatically
-            added to simulation when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        print_option : string
-            is a flag that controls printing of convergence information from the solver.
-            none means print nothing. summary means print only the total number of
-            iterations and nonlinear residual reduction summaries. all means print linear
-            matrix solver convergence information to the solution listing file and model
-            specific linear matrix solver convergence information to each model listing
-            file in addition to summary information. none is default if print_option is not
-            specified.
-        complexity : string
-            is an optional keyword that defines default non-linear and linear solver
-            parameters.  simple - indicates that default solver input values will be
-            defined that work well for nearly linear models. this would be used for models
-            that do not include nonlinear stress packages and models that are either
-            confined or consist of a single unconfined layer that is thick enough to
-            contain the water table within a single layer. moderate - indicates that
-            default solver input values will be defined that work well for moderately
-            nonlinear models. this would be used for models that include nonlinear stress
-            packages and models that consist of one or more unconfined layers. the moderate
-            option should be used when the simple option does not result in successful
-            convergence.  complex - indicates that default solver input values will be
-            defined that work well for highly nonlinear models. this would be used for
-            models that include nonlinear stress packages and models that consist of one or
-            more unconfined layers representing complex geology and surface-
-            water/groundwater interaction. the complex option should be used when the
-            moderate option does not result in successful convergence.  non-linear and
-            linear solver parameters assigned using a specified complexity can be modified
-            in the nonlinear and linear blocks. if the complexity option is not specified,
-            nonlinear and linear variables will be assigned the simple complexity values.
-        csv_output_filerecord : record
-        csv_outer_output_filerecord : record
-        csv_inner_output_filerecord : record
-        no_ptcrecord : (no_ptc, no_ptc_option)
-            * no_ptc : keyword
-                    is a flag that is used to disable pseudo-transient continuation (PTC). Option
-                    only applies to steady-state stress periods for models using the Newton-Raphson
-                    formulation. For many problems, PTC can significantly improve convergence
-                    behavior for steady-state simulations, and for this reason it is active by
-                    default.  In some cases, however, PTC can worsen the convergence behavior,
-                    especially when the initial conditions are similar to the solution.  When the
-                    initial conditions are similar to, or exactly the same as, the solution and
-                    convergence is slow, then the NO_PTC FIRST option should be used to deactivate
-                    PTC for the first stress period.  The NO_PTC ALL option should also be used in
-                    order to compare convergence behavior with other MODFLOW versions, as PTC is
-                    only available in MODFLOW 6.
-            * no_ptc_option : string
-                    is an optional keyword that is used to define options for disabling pseudo-
-                    transient continuation (PTC). FIRST is an optional keyword to disable PTC for
-                    the first stress period, if steady-state and one or more model is using the
-                    Newton-Raphson formulation. ALL is an optional keyword to disable PTC for all
-                    steady-state stress periods for models using the Newton-Raphson formulation. If
-                    NO_PTC_OPTION is not specified, the NO_PTC ALL option is used.
-
-        ats_outer_maximum_fraction : double precision
-            real value defining the fraction of the maximum allowable outer iterations used
-            with the adaptive time step (ats) capability if it is active.  if this value is
-            set to zero by the user, then this solution will have no effect on ats
-            behavior.  this value must be greater than or equal to zero and less than or
-            equal to 0.5 or the program will terminate with an error.  if it is not
-            specified by the user, then it is assigned a default value of one third.  when
-            the number of outer iterations for this solution is less than the product of
-            this value and the maximum allowable outer iterations, then ats will increase
-            the time step length by a factor of dtadj in the ats input file.  when the
-            number of outer iterations for this solution is greater than the maximum
-            allowable outer iterations minus the product of this value and the maximum
-            allowable outer iterations, then the ats (if active) will decrease the time
-            step length by a factor of 1 / dtadj.
-        outer_maximum : integer
-            integer value defining the maximum number of outer (nonlinear) iterations --
-            that is, calls to the solution routine. for a linear problem outer_maximum
-            should be 1.
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(simulation, "pts", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowPts."""
+        super().__init__(
+            parent=simulation,
+            package_type="pts",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.print_option = self.build_mfdata("print_option", print_option)
         self.complexity = self.build_mfdata("complexity", complexity)

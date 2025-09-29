@@ -13,6 +13,12 @@ class ModflowUtlspc(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     print_input : keyword
         keyword to indicate that the list of spc information will be written to the
         listing file immediately after it is read.
@@ -24,7 +30,34 @@ class ModflowUtlspc(MFPackage):
     maxbound : integer
         integer value specifying the maximum number of spc cells that will be specified
         for use during any stress period.
-    perioddata : list
+    perioddata : [(bndno, spcsetting)]
+        * bndno : integer
+                integer value that defines the boundary package feature number associated with
+                the specified period data on the line. bndno must be greater than zero and less
+                than or equal to maxbound.
+        * spcsetting : concentration | temperature
+                line of information that is parsed into a keyword and values.  keyword values
+                that can be used to start the spcsetting string include: concentration and
+                temperature.
+                * concentration : double precision
+                            is the boundary concentration. if the options block includes a timeseriesfile
+                            entry (see the 'time-variable input' section), values can be obtained from a
+                            time series by entering the time-series name in place of a numeric value. by
+                            default, the concentration for each boundary feature is zero.
+                * temperature : double precision
+                            is the user-supplied boundary temperature. if the options block includes a
+                            timeseriesfile entry (see the 'time-variable input' section), values can be
+                            obtained from a time series by entering the time-series name in place of a
+                            numeric value. by default, the temperature for each boundary feature is zero.
+
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -95,7 +128,7 @@ class ModflowUtlspc(MFPackage):
             "block period",
             "name iper",
             "type integer",
-            "block_variable True",
+            "block_variable true",
             "in_record true",
             "tagged false",
             "shape",
@@ -163,41 +196,15 @@ class ModflowUtlspc(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowUtlspc defines a SPC package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        print_input : keyword
-            keyword to indicate that the list of spc information will be written to the
-            listing file immediately after it is read.
-        timeseries : record ts6 filein ts6_filename
-            Contains data for the ts package. Data can be passed as a dictionary to the ts
-            package with variable names as keys and package data as values. Data for the
-            timeseries variable is also acceptable. See ts package documentation for more
-            information.
-        maxbound : integer
-            integer value specifying the maximum number of spc cells that will be specified
-            for use during any stress period.
-        perioddata : list
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "spc", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowUtlspc."""
+        super().__init__(
+            parent=model,
+            package_type="spc",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.print_input = self.build_mfdata("print_input", print_input)
         self._ts_filerecord = self.build_mfdata("ts_filerecord", None)

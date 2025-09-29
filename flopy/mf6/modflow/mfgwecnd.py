@@ -13,6 +13,12 @@ class ModflowGwecnd(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     xt3d_off : keyword
         deactivate the xt3d method and use the faster and less accurate approximation.
         this option may provide a fast and accurate solution under some circumstances,
@@ -69,6 +75,13 @@ class ModflowGwecnd(MFPackage):
         specified for ktw.
     kts : [double precision]
         thermal conductivity of the solid aquifer material
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -208,85 +221,15 @@ class ModflowGwecnd(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwecnd defines a CND package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        xt3d_off : keyword
-            deactivate the xt3d method and use the faster and less accurate approximation.
-            this option may provide a fast and accurate solution under some circumstances,
-            such as when flow aligns with the model grid, there is no mechanical
-            dispersion, or when the longitudinal and transverse dispersivities are equal.
-            this option may also be used to assess the computational demand of the xt3d
-            approach by noting the run time differences with and without this option on.
-        xt3d_rhs : keyword
-            add xt3d terms to right-hand side, when possible.  this option uses less
-            memory, but may require more iterations.
-        export_array_ascii : keyword
-            keyword that specifies input griddata arrays should be written to layered ascii
-            output files.
-        export_array_netcdf : keyword
-            keyword that specifies input griddata arrays should be written to the model
-            output netcdf file.
-        alh : [double precision]
-            longitudinal dispersivity in horizontal direction.  if flow is strictly
-            horizontal, then this is the longitudinal dispersivity that will be used.  if
-            flow is not strictly horizontal or strictly vertical, then the longitudinal
-            dispersivity is a function of both alh and alv.  if mechanical dispersion is
-            represented (by specifying any dispersivity values) then this array is
-            required.
-        alv : [double precision]
-            longitudinal dispersivity in vertical direction.  if flow is strictly vertical,
-            then this is the longitudinal dispsersivity value that will be used.  if flow
-            is not strictly horizontal or strictly vertical, then the longitudinal
-            dispersivity is a function of both alh and alv.  if this value is not specified
-            and mechanical dispersion is represented, then this array is set equal to alh.
-        ath1 : [double precision]
-            transverse dispersivity in horizontal direction.  this is the transverse
-            dispersivity value for the second ellipsoid axis.  if flow is strictly
-            horizontal and directed in the x direction (along a row for a regular grid),
-            then this value controls spreading in the y direction.  if mechanical
-            dispersion is represented (by specifying any dispersivity values) then this
-            array is required.
-        ath2 : [double precision]
-            transverse dispersivity in horizontal direction.  this is the transverse
-            dispersivity value for the third ellipsoid axis.  if flow is strictly
-            horizontal and directed in the x direction (along a row for a regular grid),
-            then this value controls spreading in the z direction.  if this value is not
-            specified and mechanical dispersion is represented, then this array is set
-            equal to ath1.
-        atv : [double precision]
-            transverse dispersivity when flow is in vertical direction.  if flow is
-            strictly vertical and directed in the z direction, then this value controls
-            spreading in the x and y directions.  if this value is not specified and
-            mechanical dispersion is represented, then this array is set equal to ath2.
-        ktw : [double precision]
-            thermal conductivity of the simulated fluid.   note that the cnd package does
-            not account for the tortuosity of the flow paths when solving for the
-            conductive spread of heat.  if tortuosity plays an important role in the
-            thermal conductivity calculation, its effect should be reflected in the value
-            specified for ktw.
-        kts : [double precision]
-            thermal conductivity of the solid aquifer material
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "cnd", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowGwecnd."""
+        super().__init__(
+            parent=model,
+            package_type="cnd",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.xt3d_off = self.build_mfdata("xt3d_off", xt3d_off)
         self.xt3d_rhs = self.build_mfdata("xt3d_rhs", xt3d_rhs)

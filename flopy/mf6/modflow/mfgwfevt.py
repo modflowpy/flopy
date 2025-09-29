@@ -13,6 +13,12 @@ class ModflowGwfevt(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     fixed_cell : keyword
         indicates that evapotranspiration will not be reassigned to a cell underlying
         the cell specified in the list if the specified cell is inactive.
@@ -67,7 +73,68 @@ class ModflowGwfevt(MFPackage):
         values for petm.  pxdp defines the extinction-depth proportion at the bottom of
         a segment. petm defines the proportion of the maximum et flux rate at the
         bottom of a segment.
-    stress_period_data : [list]
+    stress_period_data : [(cellid, surface, rate, depth, pxdp, petm, petm0, aux, boundname)]
+        * cellid : [integer]
+                is the cell identifier, and depends on the type of grid that is used for the
+                simulation.  For a structured grid that uses the DIS input file, CELLID is the
+                layer, row, and column.   For a grid that uses the DISV input file, CELLID is
+                the layer and CELL2D number.  If the model uses the unstructured discretization
+                (DISU) input file, CELLID is the node number for the cell.
+        * surface : double precision
+                is the elevation of the ET surface (:math:`L`). If the Options block includes a
+                TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be
+                obtained from a time series by entering the time-series name in place of a
+                numeric value.
+        * rate : double precision
+                is the maximum ET flux rate (:math:`LT^{-1}`). If the Options block includes a
+                TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be
+                obtained from a time series by entering the time-series name in place of a
+                numeric value.
+        * depth : double precision
+                is the ET extinction depth (:math:`L`). If the Options block includes a
+                TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be
+                obtained from a time series by entering the time-series name in place of a
+                numeric value.
+        * pxdp : [double precision]
+                is the proportion of the ET extinction depth at the bottom of a segment
+                (dimensionless). pxdp is an array of size (nseg - 1).  Values in pxdp must be
+                greater than 0.0 and less than 1.0.  pxdp values for a cell must increase
+                monotonically.  If the Options block includes a TIMESERIESFILE entry (see the
+                'Time-Variable Input' section), values can be obtained from a time series by
+                entering the time-series name in place of a numeric value.
+        * petm : [double precision]
+                is the proportion of the maximum ET flux rate at the bottom of a segment
+                (dimensionless). petm is an array of size (nseg - 1).  If the Options block
+                includes a TIMESERIESFILE entry (see the 'Time-Variable Input' section), values
+                can be obtained from a time series by entering the time-series name in place of
+                a numeric value.
+        * petm0 : double precision
+                is the proportion of the maximum ET flux rate that will apply when head is at
+                or above the ET surface (dimensionless). PETM0 is read only when the
+                SURF_RATE_SPECIFIED option is used. If the Options block includes a
+                TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be
+                obtained from a time series by entering the time-series name in place of a
+                numeric value.
+        * aux : [double precision]
+                represents the values of the auxiliary variables for each evapotranspiration.
+                The values of auxiliary variables must be present for each evapotranspiration.
+                The values must be specified in the order of the auxiliary variables specified
+                in the OPTIONS block.  If the package supports time series and the Options
+                block includes a TIMESERIESFILE entry (see the 'Time-Variable Input' section),
+                values can be obtained from a time series by entering the time-series name in
+                place of a numeric value.
+        * boundname : string
+                name of the evapotranspiration cell.  BOUNDNAME is an ASCII character variable
+                that can contain as many as 40 characters.  If BOUNDNAME contains spaces in it,
+                then the entire name must be enclosed within single quotes.
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -238,7 +305,7 @@ class ModflowGwfevt(MFPackage):
             "block period",
             "name iper",
             "type integer",
-            "block_variable True",
+            "block_variable true",
             "in_record true",
             "tagged false",
             "shape",
@@ -371,84 +438,15 @@ class ModflowGwfevt(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwfevt defines a EVT package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        fixed_cell : keyword
-            indicates that evapotranspiration will not be reassigned to a cell underlying
-            the cell specified in the list if the specified cell is inactive.
-        auxiliary : [string]
-            defines an array of one or more auxiliary variable names.  there is no limit on
-            the number of auxiliary variables that can be provided on this line; however,
-            lists of information provided in subsequent blocks must have a column of data
-            for each auxiliary variable name defined here.   the number of auxiliary
-            variables detected on this line determines the value for naux.  comments cannot
-            be provided anywhere on this line as they will be interpreted as auxiliary
-            variable names.  auxiliary variables may not be used by the package, but they
-            will be available for use by other parts of the program.  the program will
-            terminate with an error if auxiliary variables are specified on more than one
-            line in the options block.
-        auxmultname : string
-            name of auxiliary variable to be used as multiplier of evapotranspiration rate.
-        boundnames : keyword
-            keyword to indicate that boundary names may be provided with the list of
-            evapotranspiration cells.
-        print_input : keyword
-            keyword to indicate that the list of evapotranspiration information will be
-            written to the listing file immediately after it is read.
-        print_flows : keyword
-            keyword to indicate that the list of evapotranspiration flow rates will be
-            printed to the listing file for every stress period time step in which 'budget
-            print' is specified in output control.  if there is no output control option
-            and 'print_flows' is specified, then flow rates are printed for the last time
-            step of each stress period.
-        save_flows : keyword
-            keyword to indicate that evapotranspiration flow terms will be written to the
-            file specified with 'budget fileout' in output control.
-        timeseries : record ts6 filein ts6_filename
-            Contains data for the ts package. Data can be passed as a dictionary to the ts
-            package with variable names as keys and package data as values. Data for the
-            timeseries variable is also acceptable. See ts package documentation for more
-            information.
-        observations : record obs6 filein obs6_filename
-            Contains data for the obs package. Data can be passed as a dictionary to the
-            obs package with variable names as keys and package data as values. Data for
-            the observations variable is also acceptable. See obs package documentation for
-            more information.
-        surf_rate_specified : keyword
-            indicates that the proportion of the evapotranspiration rate at the et surface
-            will be specified as petm0 in list input.
-        maxbound : integer
-            integer value specifying the maximum number of evapotranspiration cells cells
-            that will be specified for use during any stress period.
-        nseg : integer
-            number of et segments.  default is one.  when nseg is greater than 1, the pxdp
-            and petm arrays must be of size nseg - 1 and be listed in order from the
-            uppermost segment down. values for pxdp must be listed first followed by the
-            values for petm.  pxdp defines the extinction-depth proportion at the bottom of
-            a segment. petm defines the proportion of the maximum et flux rate at the
-            bottom of a segment.
-        stress_period_data : [list]
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "evt", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowGwfevt."""
+        super().__init__(
+            parent=model,
+            package_type="evt",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.fixed_cell = self.build_mfdata("fixed_cell", fixed_cell)
         self.auxiliary = self.build_mfdata("auxiliary", auxiliary)

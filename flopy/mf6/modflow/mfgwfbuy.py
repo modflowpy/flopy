@@ -13,6 +13,12 @@ class ModflowGwfbuy(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     hhformulation_rhs : keyword
         use the variable-density hydraulic head formulation and add off-diagonal terms
         to the right-hand.  this option will prevent the buy package from adding
@@ -34,7 +40,43 @@ class ModflowGwfbuy(MFPackage):
     nrhospecies : integer
         number of species used in density equation of state.  this value must be one or
         greater if the buy package is activated.
-    packagedata : [list]
+    packagedata : [(irhospec, drhodc, crhoref, modelname, auxspeciesname)]
+        * irhospec : integer
+                integer value that defines the species number associated with the specified
+                PACKAGEDATA data on the line. IRHOSPECIES must be greater than zero and less
+                than or equal to NRHOSPECIES. Information must be specified for each of the
+                NRHOSPECIES species or the program will terminate with an error.  The program
+                will also terminate with an error if information for a species is specified
+                more than once.
+        * drhodc : double precision
+                real value that defines the slope of the density-concentration line for this
+                species used in the density equation of state.
+        * crhoref : double precision
+                real value that defines the reference concentration value used for this species
+                in the density equation of state.
+        * modelname : string
+                name of a GWT or GWE model used to simulate a species that will be used in the
+                density equation of state.  This name will have no effect if the simulation
+                does not include a GWT or GWE model that corresponds to this GWF model.
+        * auxspeciesname : string
+                name of an auxiliary variable in a GWF stress package that will be used for
+                this species to calculate a density value.  If a density value is needed by the
+                Buoyancy Package then it will use the concentration values in this
+                AUXSPECIESNAME column in the density equation of state.  For advanced stress
+                packages (LAK, SFR, MAW, and UZF) that have an associated advanced transport
+                package (LKT, SFT, MWT, and UZT), the FLOW_PACKAGE_AUXILIARY_NAME option in the
+                advanced transport package can be used to transfer simulated concentrations
+                into the flow package auxiliary variable.  In this manner, the Buoyancy Package
+                can calculate density values for lakes, streams, multi-aquifer wells, and
+                unsaturated zone flow cells using simulated concentrations.
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -53,6 +95,7 @@ class ModflowGwfbuy(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal hhform_rhs",
         ],
         [
             "block options",
@@ -70,6 +113,7 @@ class ModflowGwfbuy(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal density_fr",
         ],
         [
             "block options",
@@ -108,6 +152,7 @@ class ModflowGwfbuy(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal dev_efh_form",
         ],
         [
             "block dimensions",
@@ -185,45 +230,15 @@ class ModflowGwfbuy(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwfbuy defines a BUY package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        hhformulation_rhs : keyword
-            use the variable-density hydraulic head formulation and add off-diagonal terms
-            to the right-hand.  this option will prevent the buy package from adding
-            asymmetric terms to the flow matrix.
-        denseref : double precision
-            fluid reference density used in the equation of state.  this value is set to
-            1000. if not specified as an option.
-        density_filerecord : record
-        dev_efh_formulation : keyword
-            use the variable-density equivalent freshwater head formulation instead of the
-            hydraulic head head formulation.  this dev option has only been implemented for
-            confined aquifer conditions and should generally not be used.
-        nrhospecies : integer
-            number of species used in density equation of state.  this value must be one or
-            greater if the buy package is activated.
-        packagedata : [list]
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "buy", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowGwfbuy."""
+        super().__init__(
+            parent=model,
+            package_type="buy",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.hhformulation_rhs = self.build_mfdata(
             "hhformulation_rhs", hhformulation_rhs

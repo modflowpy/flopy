@@ -14,6 +14,18 @@ class ModflowGwfgwf(MFPackage):
 
     Parameters
     ----------
+    simulation : MFSimulation
+        Simulation that this package is a part of. Package is automatically
+        added to simulation when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
+    exgtype : str, default "GWF6-GWF6"
+        The exchange type (GWF-GWF or GWF-GWT).
+    exgmnamea : str, optional
+        The name of the first model that is part of this exchange.
+    exgmnameb : str, optional
+        The name of the second model that is part of this exchange.
     auxiliary : [string]
         an array of auxiliary variable names.  there is no limit on the number of
         auxiliary variables that can be provided. most auxiliary variables will not be
@@ -99,7 +111,53 @@ class ModflowGwfgwf(MFPackage):
         development purposes.
     nexg : integer
         keyword and integer value specifying the number of gwf-gwf exchanges.
-    exchangedata : [list]
+    exchangedata : [(cellidm1, cellidm2, ihc, cl1, cl2, hwva, aux, boundname)]
+        * cellidm1 : integer
+                is the cellid of the cell in model 1 as specified in the simulation name file.
+                For a structured grid that uses the DIS input file, CELLIDM1 is the layer, row,
+                and column numbers of the cell.   For a grid that uses the DISV input file,
+                CELLIDM1 is the layer number and CELL2D number for the two cells.  If the model
+                uses the unstructured discretization (DISU) input file, then CELLIDM1 is the
+                node number for the cell.
+        * cellidm2 : integer
+                is the cellid of the cell in model 2 as specified in the simulation name file.
+                For a structured grid that uses the DIS input file, CELLIDM2 is the layer, row,
+                and column numbers of the cell.   For a grid that uses the DISV input file,
+                CELLIDM2 is the layer number and CELL2D number for the two cells.  If the model
+                uses the unstructured discretization (DISU) input file, then CELLIDM2 is the
+                node number for the cell.
+        * ihc : integer
+                is an integer flag indicating the direction between node n and all of its m
+                connections. If IHC = 0 then the connection is vertical.  If IHC = 1 then the
+                connection is horizontal. If IHC = 2 then the connection is horizontal for a
+                vertically staggered grid.
+        * cl1 : double precision
+                is the distance between the center of cell 1 and the its shared face with cell
+                2.
+        * cl2 : double precision
+                is the distance between the center of cell 2 and the its shared face with cell
+                1.
+        * hwva : double precision
+                is the horizontal width of the flow connection between cell 1 and cell 2 if IHC
+                > 0, or it is the area perpendicular to flow of the vertical connection between
+                cell 1 and cell 2 if IHC = 0.
+        * aux : [double precision]
+                represents the values of the auxiliary variables for each GWFGWF Exchange. The
+                values of auxiliary variables must be present for each exchange. The values
+                must be specified in the order of the auxiliary variables specified in the
+                OPTIONS block.
+        * boundname : string
+                name of the GWF Exchange cell.  BOUNDNAME is an ASCII character variable that
+                can contain as many as 40 characters.  If BOUNDNAME contains spaces in it, then
+                the entire name must be enclosed within single quotes.
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -431,122 +489,14 @@ class ModflowGwfgwf(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwfgwf defines a GWFGWF package.
-
-        simulation : MFSimulation
-            Simulation that this package is a part of. Package is automatically
-            added to simulation when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        exgtype : str
-            The exchange type (GWF-GWF or GWF-GWT).
-        exgmnamea : str
-            The name of the first model that is part of this exchange.
-        exgmnameb : str
-            The name of the second model that is part of this exchange.
-        gwfmodelname1 : str
-            Name of first GWF Model. In the simulation name file, the GWE6-GWE6
-            entry contains names for GWE Models (exgmnamea and exgmnameb). The
-            GWE Model with the name exgmnamea must correspond to the GWF Model
-            with the name gwfmodelname1.
-        gwfmodelname2 : str
-            Name of second GWF Model. In the simulation name file, the GWE6-GWE6
-            entry contains names for GWE Models (exgmnamea and exgmnameb). The
-            GWE Model with the name exgmnameb must correspond to the GWF Model
-            with the name gwfmodelname2.
-        auxiliary : [string]
-            an array of auxiliary variable names.  there is no limit on the number of
-            auxiliary variables that can be provided. most auxiliary variables will not be
-            used by the gwf-gwf exchange, but they will be available for use by other parts
-            of the program.  if an auxiliary variable with the name 'angldegx' is found,
-            then this information will be used as the angle (provided in degrees) between
-            the connection face normal and the x axis, where a value of zero indicates that
-            a normal vector points directly along the positive x axis.  the connection face
-            normal is a normal vector on the cell face shared between the cell in model 1
-            and the cell in model 2 pointing away from the model 1 cell.  additional
-            information on 'angldegx' and when it is required is provided in the
-            description of the disu package.  if an auxiliary variable with the name
-            'cdist' is found, then this information will be used in the calculation of
-            specific discharge within model cells connected by the exchange.  for a
-            horizontal connection, cdist should be specified as the horizontal distance
-            between the cell centers, and should not include the vertical component.  for
-            vertical connections, cdist should be specified as the difference in elevation
-            between the two cell centers.  both angldegx and cdist are required if specific
-            discharge is calculated for either of the groundwater models.
-        boundnames : keyword
-            keyword to indicate that boundary names may be provided with the list of gwf
-            exchange cells.
-        print_input : keyword
-            keyword to indicate that the list of exchange entries will be echoed to the
-            listing file immediately after it is read.
-        print_flows : keyword
-            keyword to indicate that the list of exchange flow rates will be printed to the
-            listing file for every stress period in which 'save budget' is specified in
-            output control.
-        save_flows : keyword
-            keyword to indicate that cell-by-cell flow terms will be written to the budget
-            file for each model provided that the output control for the models are set up
-            with the 'budget save file' option.
-        cell_averaging : string
-            is a keyword and text keyword to indicate the method that will be used for
-            calculating the conductance for horizontal cell connections.  the text value
-            for cell_averaging can be 'harmonic', 'logarithmic', or 'amt-lmk', which means
-            'arithmetic-mean thickness and logarithmic-mean hydraulic conductivity'. if the
-            user does not specify a value for cell_averaging, then the harmonic-mean method
-            will be used.
-        cvoptions : (variablecv, dewatered)
-            none
-            * variablecv : keyword
-                    keyword to indicate that the vertical conductance will be calculated using the
-                    saturated thickness and properties of the overlying cell and the thickness and
-                    properties of the underlying cell.  If the DEWATERED keyword is also specified,
-                    then the vertical conductance is calculated using only the saturated thickness
-                    and properties of the overlying cell if the head in the underlying cell is
-                    below its top.  If these keywords are not specified, then the default condition
-                    is to calculate the vertical conductance at the start of the simulation using
-                    the initial head and the cell properties.  The vertical conductance remains
-                    constant for the entire simulation.
-            * dewatered : keyword
-                    If the DEWATERED keyword is specified, then the vertical conductance is
-                    calculated using only the saturated thickness and properties of the overlying
-                    cell if the head in the underlying cell is below its top.
-
-        newton : keyword
-            keyword that activates the newton-raphson formulation for groundwater flow
-            between connected, convertible groundwater cells. cells will not dry when this
-            option is used.
-        xt3d : keyword
-            keyword that activates the xt3d formulation between the cells connected with
-            this gwf-gwf exchange.
-        gncdata : record gnc6 filein gnc6_filename
-            Contains data for the gnc package. Data can be passed as a dictionary to the
-            gnc package with variable names as keys and package data as values. Data for
-            the gncdata variable is also acceptable. See gnc package documentation for more
-            information.
-        perioddata : record mvr6 filein mvr6_filename
-            Contains data for the mvr package. Data can be passed as a dictionary to the
-            mvr package with variable names as keys and package data as values. Data for
-            the perioddata variable is also acceptable. See mvr package documentation for
-            more information.
-        observations : record obs6 filein obs6_filename
-            Contains data for the obs package. Data can be passed as a dictionary to the
-            obs package with variable names as keys and package data as values. Data for
-            the observations variable is also acceptable. See obs package documentation for
-            more information.
-        dev_interfacemodel_on : keyword
-            activates the interface model mechanism for calculating the coefficients at
-            (and possibly near) the exchange. this keyword should only be used for
-            development purposes.
-        nexg : integer
-            keyword and integer value specifying the number of gwf-gwf exchanges.
-        exchangedata : [list]
-
-        """
-
+        """Initialize ModflowGwfgwf."""
         super().__init__(
-            simulation, "gwfgwf", filename, pname, loading_package, **kwargs
+            parent=simulation,
+            package_type="gwfgwf",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
         )
 
         self.exgtype = exgtype

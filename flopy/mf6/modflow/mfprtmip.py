@@ -13,6 +13,12 @@ class ModflowPrtmip(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     export_array_ascii : keyword
         keyword that specifies input griddata arrays should be written to layered ascii
         output files.
@@ -38,6 +44,13 @@ class ModflowPrtmip(MFPackage):
         is set to zero in a prp package, izone has no effect on the termination of
         particles released by that prp package.  each prp package may configure a
         single istopzone value.
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -97,54 +110,15 @@ class ModflowPrtmip(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowPrtmip defines a MIP package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        export_array_ascii : keyword
-            keyword that specifies input griddata arrays should be written to layered ascii
-            output files.
-        porosity : [double precision]
-            is the aquifer porosity.
-        retfactor : [double precision]
-            is a real value by which velocity is divided within a given cell.  retfactor
-            can be used to account for solute retardation, i.e., the apparent effect of
-            linear sorption on the velocity of particles that track solute advection.
-            retfactor may be assigned any real value.  a retfactor value greater than 1
-            represents particle retardation (slowing), and a value of 1 represents no
-            retardation.  the effect of specifying a retfactor value for each cell is the
-            same as the effect of directly multiplying the porosity in each cell by the
-            proposed retfactor value for each cell.  retfactor allows conceptual isolation
-            of effects such as retardation from the effect of porosity.  the default value
-            is 1.
-        izone : [integer]
-            is an integer zone number assigned to each cell.  izone may be positive,
-            negative, or zero.  the current cell's zone number is recorded with each
-            particle track datum.  if a prp package's istopzone option is set to any value
-            other than zero, particles released by that prp package terminate if they enter
-            a cell whose izone value matches istopzone.  if istopzone is not specified or
-            is set to zero in a prp package, izone has no effect on the termination of
-            particles released by that prp package.  each prp package may configure a
-            single istopzone value.
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "mip", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowPrtmip."""
+        super().__init__(
+            parent=model,
+            package_type="mip",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.export_array_ascii = self.build_mfdata(
             "export_array_ascii", export_array_ascii

@@ -13,6 +13,12 @@ class ModflowMvt(MFPackage):
 
     Parameters
     ----------
+    parent_model_or_package
+        Parent_model_or_package that this package is a part of. Package is automatically
+        added to parent_model_or_package when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     print_input : keyword
         keyword to indicate that the list of mover information will be written to the
         listing file immediately after it is read.
@@ -27,6 +33,13 @@ class ModflowMvt(MFPackage):
         with 'budget fileout' in output control.
     budget_filerecord : record
     budgetcsv_filerecord : record
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -145,44 +158,14 @@ class ModflowMvt(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowMvt defines a MVT package.
-
-        Parameters
-        ----------
-        parent_model_or_package
-            Parent_model_or_package that this package is a part of. Package is automatically
-            added to parent_model_or_package when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        print_input : keyword
-            keyword to indicate that the list of mover information will be written to the
-            listing file immediately after it is read.
-        print_flows : keyword
-            keyword to indicate that the list of lake flow rates will be printed to the
-            listing file for every stress period time step in which 'budget print' is
-            specified in output control.  if there is no output control option and
-            'print_flows' is specified, then flow rates are printed for the last time step
-            of each stress period.
-        save_flows : keyword
-            keyword to indicate that lake flow terms will be written to the file specified
-            with 'budget fileout' in output control.
-        budget_filerecord : record
-        budgetcsv_filerecord : record
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
+        """Initialize ModflowMvt."""
         super().__init__(
-            parent_model_or_package, "mvt", filename, pname, loading_package, **kwargs
+            parent=parent_model_or_package,
+            package_type="mvt",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
         )
 
         self.print_input = self.build_mfdata("print_input", print_input)
@@ -201,17 +184,6 @@ class ModflowMvt(MFPackage):
 class MvtPackages(MFChildPackages):
     """
     MvtPackages is a container class for the ModflowMvt class.
-
-    Methods
-    -------
-    initialize
-        Initializes a new ModflowMvt package removing any sibling child
-        packages attached to the same parent package. See ModflowMvt init
-        documentation for definition of parameters.
-    append_package
-        Adds a new ModflowMvt package to the container. See ModflowMvt
-        init documentation for definition of parameters.
-
     """
 
     package_abbr = "mvtpackages"
@@ -226,6 +198,12 @@ class MvtPackages(MFChildPackages):
         filename=None,
         pname=None,
     ):
+        """
+        Initialize a new ModflowMvt package, removing any sibling
+        child packages attached to the same parent package.
+
+        See :class:`ModflowMvt` for parameter definitions.
+        """
         new_package = ModflowMvt(
             self._cpparent,
             print_input=print_input,
@@ -249,6 +227,11 @@ class MvtPackages(MFChildPackages):
         filename=None,
         pname=None,
     ):
+        """
+        Add a new ModflowMvt package to the container.
+
+        See :class:`ModflowMvt` for parameter definitions.
+        """
         new_package = ModflowMvt(
             self._cpparent,
             print_input=print_input,

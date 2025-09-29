@@ -13,10 +13,61 @@ class ModflowUtlats(MFPackage):
 
     Parameters
     ----------
+    parent_package
+        Parent_package that this package is a part of. Package is automatically
+        added to parent_package when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     maxats : integer
         is the number of records in the subsequent perioddata block that will be used
         for adaptive time stepping.
-    perioddata : list
+    perioddata : [(iperats, dt0, dtmin, dtmax, dtadj, dtfailadj)]
+        * iperats : integer
+                is the period number to designate for adaptive time stepping.  The remaining
+                ATS values on this line will apply to period iperats.  iperats must be greater
+                than zero.  A warning is printed if iperats is greater than nper.
+        * dt0 : double precision
+                is the initial time step length for period iperats.  If dt0 is zero, then the
+                final step from the previous stress period will be used as the initial time
+                step.  The program will terminate with an error message if dt0 is negative.
+        * dtmin : double precision
+                is the minimum time step length for this period.  This value must be greater
+                than zero and less than dtmax.  dtmin must be a small value in order to ensure
+                that simulation times end at the end of stress periods and the end of the
+                simulation.  A small value, such as 1.e-5, is recommended.
+        * dtmax : double precision
+                is the maximum time step length for this period.  This value must be greater
+                than dtmin.
+        * dtadj : double precision
+                is the time step multiplier factor for this period.  If the number of outer
+                solver iterations are less than the product of the maximum number of outer
+                iterations (OUTER_MAXIMUM) and ATS_OUTER_MAXIMUM_FRACTION (an optional variable
+                in the IMS input file with a default value of 1/3), then the time step length
+                is multiplied by dtadj.  If the number of outer solver iterations are greater
+                than the product of the maximum number of outer iterations and 1.0 minus
+                ATS_OUTER_MAXIMUM_FRACTION, then the time step length is divided by dtadj.
+                dtadj must be zero, one, or greater than one.  If dtadj is zero or one, then it
+                has no effect on the simulation.  A value between 2.0 and 5.0 can be used as an
+                initial estimate.
+        * dtfailadj : double precision
+                is the divisor of the time step length when a time step fails to converge.  If
+                there is solver failure, then the time step will be tried again with a shorter
+                time step length calculated as the previous time step length divided by
+                dtfailadj.  dtfailadj must be zero, one, or greater than one.  If dtfailadj is
+                zero or one, then time steps will not be retried with shorter lengths.  In this
+                case, the program will terminate with an error, or it will continue of the
+                CONTINUE option is set in the simulation name file.  Initial tests with this
+                variable should be set to 5.0 or larger to determine if convergence can be
+                achieved.
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -108,34 +159,14 @@ class ModflowUtlats(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowUtlats defines a ATS package.
-
-        Parameters
-        ----------
-        parent_package
-            Parent_package that this package is a part of. Package is automatically
-            added to parent_package when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        maxats : integer
-            is the number of records in the subsequent perioddata block that will be used
-            for adaptive time stepping.
-        perioddata : list
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
+        """Initialize ModflowUtlats."""
         super().__init__(
-            parent_package, "ats", filename, pname, loading_package, **kwargs
+            parent=parent_package,
+            package_type="ats",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
         )
 
         self.maxats = self.build_mfdata("maxats", maxats)
@@ -147,17 +178,6 @@ class ModflowUtlats(MFPackage):
 class UtlatsPackages(MFChildPackages):
     """
     UtlatsPackages is a container class for the ModflowUtlats class.
-
-    Methods
-    -------
-    initialize
-        Initializes a new ModflowUtlats package removing any sibling child
-        packages attached to the same parent package. See ModflowUtlats init
-        documentation for definition of parameters.
-    append_package
-        Adds a new ModflowUtlats package to the container. See ModflowUtlats
-        init documentation for definition of parameters.
-
     """
 
     package_abbr = "utlatspackages"
@@ -169,6 +189,12 @@ class UtlatsPackages(MFChildPackages):
         filename=None,
         pname=None,
     ):
+        """
+        Initialize a new ModflowUtlats package, removing any sibling
+        child packages attached to the same parent package.
+
+        See :class:`ModflowUtlats` for parameter definitions.
+        """
         new_package = ModflowUtlats(
             self._cpparent,
             maxats=maxats,
@@ -186,6 +212,11 @@ class UtlatsPackages(MFChildPackages):
         filename=None,
         pname=None,
     ):
+        """
+        Add a new ModflowUtlats package to the container.
+
+        See :class:`ModflowUtlats` for parameter definitions.
+        """
         new_package = ModflowUtlats(
             self._cpparent,
             maxats=maxats,

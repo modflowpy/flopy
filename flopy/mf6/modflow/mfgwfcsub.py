@@ -13,6 +13,12 @@ class ModflowGwfcsub(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     boundnames : keyword
         keyword to indicate that boundary names may be provided with the list of csub
         cells.
@@ -164,8 +170,92 @@ class ModflowGwfcsub(MFPackage):
     sgs : [double precision]
         is the specific gravity of saturated sediments. if not specified, then a
         default value of 2.0 is assigned.
-    packagedata : [list]
-    stress_period_data : [list]
+    packagedata : [(icsubno, cellid, cdelay, pcs0, thick_frac, rnb, ssv_cc, sse_cr, theta, kv, h0, boundname)]
+        * icsubno : integer
+                integer value that defines the CSUB interbed number associated with the
+                specified PACKAGEDATA data on the line. CSUBNO must be greater than zero and
+                less than or equal to NINTERBEDS.  CSUB information must be specified for every
+                CSUB cell or the program will terminate with an error.  The program will also
+                terminate with an error if information for a CSUB interbed number is specified
+                more than once.
+        * cellid : [integer]
+                is the cell identifier, and depends on the type of grid that is used for the
+                simulation.  For a structured grid that uses the DIS input file, CELLID is the
+                layer, row, and column.   For a grid that uses the DISV input file, CELLID is
+                the layer and CELL2D number.  If the model uses the unstructured discretization
+                (DISU) input file, CELLID is the node number for the cell.
+        * cdelay : string
+                character string that defines the subsidence delay type for the interbed.
+                Possible subsidence package CDELAY strings include: NODELAY--character keyword
+                to indicate that delay will not be simulated in the interbed.  DELAY--character
+                keyword to indicate that delay will be simulated in the interbed.
+        * pcs0 : double precision
+                is the initial offset from the calculated initial effective stress or initial
+                preconsolidation stress in the interbed, in units of height of a column of
+                water. PCS0 is the initial preconsolidation stress if
+                SPECIFIED_INITIAL_INTERBED_STATE or SPECIFIED_INITIAL_PRECONSOLIDATION_STRESS
+                are specified in the OPTIONS block. If HEAD_BASED is specified in the OPTIONS
+                block, PCS0 is the initial offset from the calculated initial head or initial
+                preconsolidation head in the CSUB interbed and the initial preconsolidation
+                stress is calculated from the calculated initial effective stress or calculated
+                initial geostatic stress, respectively.
+        * thick_frac : double precision
+                is the interbed thickness or cell fraction of the interbed. Interbed thickness
+                is specified as a fraction of the cell thickness if CELL_FRACTION is specified
+                in the OPTIONS block.
+        * rnb : double precision
+                is the interbed material factor equivalent number of interbeds in the interbed
+                system represented by the interbed. RNB must be greater than or equal to 1 if
+                CDELAY is DELAY. Otherwise, RNB can be any value.
+        * ssv_cc : double precision
+                is the initial inelastic specific storage or compression index of the interbed.
+                The compression index is specified if COMPRESSION_INDICES is specified in the
+                OPTIONS block. Specified or calculated interbed inelastic specific storage
+                values are not adjusted from initial values if HEAD_BASED is specified in the
+                OPTIONS block.
+        * sse_cr : double precision
+                is the initial elastic coarse-grained material specific storage or
+                recompression index of the interbed. The recompression index is specified if
+                COMPRESSION_INDICES is specified in the OPTIONS block. Specified or calculated
+                interbed elastic specific storage values are not adjusted from initial values
+                if HEAD_BASED is specified in the OPTIONS block.
+        * theta : double precision
+                is the initial porosity of the interbed.
+        * kv : double precision
+                is the vertical hydraulic conductivity of the delay interbed. KV must be
+                greater than 0 if CDELAY is DELAY. Otherwise, KV can be any value.
+        * h0 : double precision
+                is the initial offset from the head in cell cellid or the initial head in the
+                delay interbed. H0 is the initial head in the delay bed if
+                SPECIFIED_INITIAL_INTERBED_STATE or SPECIFIED_INITIAL_DELAY_HEAD are specified
+                in the OPTIONS block. H0 can be any value if CDELAY is NODELAY.
+        * boundname : string
+                name of the CSUB cell.  BOUNDNAME is an ASCII character variable that can
+                contain as many as 40 characters.  If BOUNDNAME contains spaces in it, then the
+                entire name must be enclosed within single quotes.
+
+    stress_period_data : [(cellid, sig0)]
+        * cellid : [integer]
+                is the cell identifier, and depends on the type of grid that is used for the
+                simulation.  For a structured grid that uses the DIS input file, CELLID is the
+                layer, row, and column.   For a grid that uses the DISV input file, CELLID is
+                the layer and CELL2D number.  If the model uses the unstructured discretization
+                (DISU) input file, CELLID is the node number for the cell.
+        * sig0 : double precision
+                is the stress offset for the cell. SIG0 is added to the calculated geostatic
+                stress for the cell. SIG0 is specified only if MAXSIG0 is specified to be
+                greater than 0 in the DIMENSIONS block. If the Options block includes a
+                TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be
+                obtained from a time series by entering the time-series name in place of a
+                numeric value.
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -264,6 +354,7 @@ class ModflowGwfcsub(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal precon_head",
         ],
         [
             "block options",
@@ -278,6 +369,7 @@ class ModflowGwfcsub(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal icompress",
         ],
         [
             "block options",
@@ -285,6 +377,7 @@ class ModflowGwfcsub(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal matprop",
         ],
         [
             "block options",
@@ -299,6 +392,7 @@ class ModflowGwfcsub(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal interbed_state",
         ],
         [
             "block options",
@@ -306,6 +400,7 @@ class ModflowGwfcsub(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal precon_stress",
         ],
         [
             "block options",
@@ -313,6 +408,7 @@ class ModflowGwfcsub(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal delay_head",
         ],
         [
             "block options",
@@ -320,6 +416,7 @@ class ModflowGwfcsub(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal stress_lag",
         ],
         [
             "block options",
@@ -329,6 +426,7 @@ class ModflowGwfcsub(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal strainibfr",
         ],
         [
             "block options",
@@ -339,6 +437,7 @@ class ModflowGwfcsub(MFPackage):
             "reader urword",
             "tagged true",
             "optional false",
+            "mf6internal csvinterbed",
         ],
         [
             "block options",
@@ -354,11 +453,13 @@ class ModflowGwfcsub(MFPackage):
             "block options",
             "name interbedstrain_filename",
             "type string",
+            "preserve_case true",
             "shape",
             "in_record true",
             "reader urword",
             "tagged false",
             "optional false",
+            "mf6internal interbedstrainfn",
         ],
         [
             "block options",
@@ -368,6 +469,7 @@ class ModflowGwfcsub(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal straincgfr",
         ],
         [
             "block options",
@@ -378,16 +480,19 @@ class ModflowGwfcsub(MFPackage):
             "reader urword",
             "tagged true",
             "optional false",
+            "mf6internal csvcoarse",
         ],
         [
             "block options",
             "name coarsestrain_filename",
             "type string",
+            "preserve_case true",
             "shape",
             "in_record true",
             "reader urword",
             "tagged false",
             "optional false",
+            "mf6internal coarsestrainfn",
         ],
         [
             "block options",
@@ -397,6 +502,7 @@ class ModflowGwfcsub(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal cmpfr",
         ],
         [
             "block options",
@@ -412,11 +518,13 @@ class ModflowGwfcsub(MFPackage):
             "block options",
             "name compaction_filename",
             "type string",
+            "preserve_case true",
             "shape",
             "in_record true",
             "reader urword",
             "tagged false",
             "optional false",
+            "mf6internal cmpfn",
         ],
         [
             "block options",
@@ -426,6 +534,7 @@ class ModflowGwfcsub(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal cmpelasticfr",
         ],
         [
             "block options",
@@ -436,16 +545,19 @@ class ModflowGwfcsub(MFPackage):
             "reader urword",
             "tagged true",
             "optional false",
+            "mf6internal cmpelastic",
         ],
         [
             "block options",
             "name elastic_compaction_filename",
             "type string",
+            "preserve_case true",
             "shape",
             "in_record true",
             "reader urword",
             "tagged false",
             "optional false",
+            "mf6internal elasticcmpfn",
         ],
         [
             "block options",
@@ -455,6 +567,7 @@ class ModflowGwfcsub(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal cmpinelasticfr",
         ],
         [
             "block options",
@@ -465,16 +578,19 @@ class ModflowGwfcsub(MFPackage):
             "reader urword",
             "tagged true",
             "optional false",
+            "mf6internal cmpinelastic",
         ],
         [
             "block options",
             "name inelastic_compaction_filename",
             "type string",
+            "preserve_case true",
             "shape",
             "in_record true",
             "reader urword",
             "tagged false",
             "optional false",
+            "mf6internal inelasticcmpfn",
         ],
         [
             "block options",
@@ -484,6 +600,7 @@ class ModflowGwfcsub(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal cmpinterbedfr",
         ],
         [
             "block options",
@@ -494,16 +611,19 @@ class ModflowGwfcsub(MFPackage):
             "reader urword",
             "tagged true",
             "optional false",
+            "mf6internal cmpinterbed",
         ],
         [
             "block options",
             "name interbed_compaction_filename",
             "type string",
+            "preserve_case true",
             "shape",
             "in_record true",
             "reader urword",
             "tagged false",
             "optional false",
+            "mf6internal interbedcmpfn",
         ],
         [
             "block options",
@@ -513,6 +633,7 @@ class ModflowGwfcsub(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal cmpcoarsefr",
         ],
         [
             "block options",
@@ -523,16 +644,19 @@ class ModflowGwfcsub(MFPackage):
             "reader urword",
             "tagged true",
             "optional false",
+            "mf6internal cmpcoarse",
         ],
         [
             "block options",
             "name coarse_compaction_filename",
             "type string",
+            "preserve_case true",
             "shape",
             "in_record true",
             "reader urword",
             "tagged false",
             "optional false",
+            "mf6internal cmpcoarsefn",
         ],
         [
             "block options",
@@ -542,6 +666,7 @@ class ModflowGwfcsub(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal zdispfr",
         ],
         [
             "block options",
@@ -557,11 +682,13 @@ class ModflowGwfcsub(MFPackage):
             "block options",
             "name zdisplacement_filename",
             "type string",
+            "preserve_case true",
             "shape",
             "in_record true",
             "reader urword",
             "tagged false",
             "optional false",
+            "mf6internal zdispfn",
         ],
         [
             "block options",
@@ -571,6 +698,7 @@ class ModflowGwfcsub(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal pkgconvergefr",
         ],
         [
             "block options",
@@ -581,16 +709,19 @@ class ModflowGwfcsub(MFPackage):
             "reader urword",
             "tagged true",
             "optional false",
+            "mf6internal pkgconverge",
         ],
         [
             "block options",
             "name package_convergence_filename",
             "type string",
+            "preserve_case true",
             "shape",
             "in_record true",
             "reader urword",
             "tagged false",
             "optional false",
+            "mf6internal pkgconvergefn",
         ],
         [
             "block options",
@@ -628,6 +759,7 @@ class ModflowGwfcsub(MFPackage):
             "block options",
             "name ts6_filename",
             "type string",
+            "preserve_case true",
             "in_record true",
             "reader urword",
             "optional false",
@@ -659,6 +791,7 @@ class ModflowGwfcsub(MFPackage):
             "block options",
             "name obs6_filename",
             "type string",
+            "preserve_case true",
             "in_record true",
             "tagged false",
             "reader urword",
@@ -677,6 +810,7 @@ class ModflowGwfcsub(MFPackage):
             "type integer",
             "reader urword",
             "optional true",
+            "mf6internal maxbound",
         ],
         [
             "block griddata",
@@ -685,6 +819,8 @@ class ModflowGwfcsub(MFPackage):
             "shape (nodes)",
             "valid",
             "reader readarray",
+            "layered true",
+            "netcdf true",
             "default 1e-5",
         ],
         [
@@ -694,6 +830,8 @@ class ModflowGwfcsub(MFPackage):
             "shape (nodes)",
             "valid",
             "reader readarray",
+            "layered true",
+            "netcdf true",
             "default 0.2",
         ],
         [
@@ -703,6 +841,8 @@ class ModflowGwfcsub(MFPackage):
             "shape (nodes)",
             "valid",
             "reader readarray",
+            "layered true",
+            "netcdf true",
             "optional true",
         ],
         [
@@ -712,6 +852,8 @@ class ModflowGwfcsub(MFPackage):
             "shape (nodes)",
             "valid",
             "reader readarray",
+            "layered true",
+            "netcdf true",
             "optional true",
         ],
         [
@@ -720,6 +862,7 @@ class ModflowGwfcsub(MFPackage):
             "type recarray icsubno cellid cdelay pcs0 thick_frac rnb ssv_cc sse_cr theta kv h0 boundname",
             "shape (ninterbeds)",
             "reader urword",
+            "optional true",
         ],
         [
             "block packagedata",
@@ -739,6 +882,7 @@ class ModflowGwfcsub(MFPackage):
             "tagged false",
             "in_record true",
             "reader urword",
+            "mf6internal cellid_pkgdata",
         ],
         [
             "block packagedata",
@@ -836,7 +980,7 @@ class ModflowGwfcsub(MFPackage):
             "block period",
             "name iper",
             "type integer",
-            "block_variable True",
+            "block_variable true",
             "in_record true",
             "tagged false",
             "shape",
@@ -850,6 +994,7 @@ class ModflowGwfcsub(MFPackage):
             "type recarray cellid sig0",
             "shape (maxsig0)",
             "reader urword",
+            "mf6internal spd",
         ],
         [
             "block period",
@@ -914,149 +1059,15 @@ class ModflowGwfcsub(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwfcsub defines a CSUB package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        boundnames : keyword
-            keyword to indicate that boundary names may be provided with the list of csub
-            cells.
-        print_input : keyword
-            keyword to indicate that the list of csub information will be written to the
-            listing file immediately after it is read.
-        save_flows : keyword
-            keyword to indicate that cell-by-cell flow terms will be written to the file
-            specified with 'budget save file' in output control.
-        gammaw : double precision
-            unit weight of water. for freshwater, gammaw is 9806.65 newtons/cubic meters or
-            62.48 lb/cubic foot in si and english units, respectively. by default, gammaw
-            is 9806.65 newtons/cubic meters.
-        beta : double precision
-            compressibility of water. typical values of beta are 4.6512e-10 1/pa or
-            2.2270e-8 lb/square foot in si and english units, respectively. by default,
-            beta is 4.6512e-10 1/pa.
-        head_based : keyword
-            keyword to indicate the head-based formulation will be used to simulate coarse-
-            grained aquifer materials and no-delay and delay interbeds. specifying
-            head_based also specifies the initial_preconsolidation_head option.
-        initial_preconsolidation_head : keyword
-            keyword to indicate that preconsolidation heads will be specified for no-delay
-            and delay interbeds in the packagedata block. if the
-            specified_initial_interbed_state option is specified in the options block,
-            user-specified preconsolidation heads in the packagedata block are absolute
-            values. otherwise, user-specified preconsolidation heads in the packagedata
-            block are relative to steady-state or initial heads.
-        ndelaycells : integer
-            number of nodes used to discretize delay interbeds. if not specified, then a
-            default value of 19 is assigned.
-        compression_indices : keyword
-            keyword to indicate that the recompression (cr) and compression (cc) indices
-            are specified instead of the elastic specific storage (sse) and inelastic
-            specific storage (ssv) coefficients. if not specified, then elastic specific
-            storage (sse) and inelastic specific storage (ssv) coefficients must be
-            specified.
-        update_material_properties : keyword
-            keyword to indicate that the thickness and void ratio of coarse-grained and
-            interbed sediments (delay and no-delay) will vary during the simulation. if not
-            specified, the thickness and void ratio of coarse-grained and interbed
-            sediments will not vary during the simulation.
-        cell_fraction : keyword
-            keyword to indicate that the thickness of interbeds will be specified in terms
-            of the fraction of cell thickness. if not specified, interbed thicknness must
-            be specified.
-        specified_initial_interbed_state : keyword
-            keyword to indicate that absolute preconsolidation stresses (heads) and delay
-            bed heads will be specified for interbeds defined in the packagedata block. the
-            specified_initial_interbed_state option is equivalent to specifying the
-            specified_initial_preconsolitation_stress and specified_initial_delay_head. if
-            specified_initial_interbed_state is not specified then preconsolidation stress
-            (head) and delay bed head values specified in the packagedata block are
-            relative to simulated values of the first stress period if steady-state or
-            initial stresses and gwf heads if the first stress period is transient.
-        specified_initial_preconsolidation_stress : keyword
-            keyword to indicate that absolute preconsolidation stresses (heads) will be
-            specified for interbeds defined in the packagedata block. if
-            specified_initial_preconsolitation_stress and specified_initial_interbed_state
-            are not specified then preconsolidation stress (head) values specified in the
-            packagedata block are relative to simulated values if the first stress period
-            is steady-state or initial stresses (heads) if the first stress period is
-            transient.
-        specified_initial_delay_head : keyword
-            keyword to indicate that absolute initial delay bed head will be specified for
-            interbeds defined in the packagedata block. if specified_initial_delay_head and
-            specified_initial_interbed_state are not specified then delay bed head values
-            specified in the packagedata block are relative to simulated values if the
-            first stress period is steady-state or initial gwf heads if the first stress
-            period is transient.
-        effective_stress_lag : keyword
-            keyword to indicate the effective stress from the previous time step will be
-            used to calculate specific storage values. this option can 1) help with
-            convergence in models with thin cells and water table elevations close to land
-            surface; 2) is identical to the approach used in the subwt package for
-            modflow-2005; and 3) is only used if the effective-stress formulation is being
-            used. by default, current effective stress values are used to calculate
-            specific storage values.
-        strainib_filerecord : record
-        straincg_filerecord : record
-        compaction_filerecord : record
-        compaction_elastic_filerecord : record
-        compaction_inelastic_filerecord : record
-        compaction_interbed_filerecord : record
-        compaction_coarse_filerecord : record
-        zdisplacement_filerecord : record
-        package_convergence_filerecord : record
-        timeseries : record ts6 filein ts6_filename
-            Contains data for the ts package. Data can be passed as a dictionary to the ts
-            package with variable names as keys and package data as values. Data for the
-            timeseries variable is also acceptable. See ts package documentation for more
-            information.
-        observations : record obs6 filein obs6_filename
-            Contains data for the obs package. Data can be passed as a dictionary to the
-            obs package with variable names as keys and package data as values. Data for
-            the observations variable is also acceptable. See obs package documentation for
-            more information.
-        ninterbeds : integer
-            is the number of csub interbed systems.  more than 1 csub interbed systems can
-            be assigned to a gwf cell; however, only 1 gwf cell can be assigned to a single
-            csub interbed system.
-        maxsig0 : integer
-            is the maximum number of cells that can have a specified stress offset.  more
-            than 1 stress offset can be assigned to a gwf cell. by default, maxsig0 is 0.
-        cg_ske_cr : [double precision]
-            is the initial elastic coarse-grained material specific storage or
-            recompression index. the recompression index is specified if
-            compression_indices is specified in the options block.  specified or calculated
-            elastic coarse-grained material specific storage values are not adjusted from
-            initial values if head_based is specified in the options block.
-        cg_theta : [double precision]
-            is the initial porosity of coarse-grained materials.
-        sgm : [double precision]
-            is the specific gravity of moist or unsaturated sediments.  if not specified,
-            then a default value of 1.7 is assigned.
-        sgs : [double precision]
-            is the specific gravity of saturated sediments. if not specified, then a
-            default value of 2.0 is assigned.
-        packagedata : [list]
-        stress_period_data : [list]
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "csub", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowGwfcsub."""
+        super().__init__(
+            parent=model,
+            package_type="csub",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.boundnames = self.build_mfdata("boundnames", boundnames)
         self.print_input = self.build_mfdata("print_input", print_input)

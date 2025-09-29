@@ -13,6 +13,12 @@ class ModflowGwedisu(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     length_units : string
         is the length units used for this model.  values can be 'feet', 'meters', or
         'centimeters'.  if not specified, the default is 'unknown'.
@@ -52,6 +58,13 @@ class ModflowGwedisu(MFPackage):
     export_array_ascii : keyword
         keyword that specifies input griddata arrays should be written to layered ascii
         output files.
+    crs : [string]
+        is a real-world coordinate reference system (crs) for the model, for example,
+        an epsg integer code (e.g. 26915), authority string (i.e. epsg:26915), or open
+        geospatial consortium well-known text (wkt) specification. limited to 5000
+        characters. the entry for crs does not affect the model simulation, but it is
+        written to the binary grid file so that postprocessors can locate the grid in
+        space.
     nodes : integer
         is the number of cells in the model grid.
     nja : integer
@@ -134,14 +147,44 @@ class ModflowGwedisu(MFPackage):
         vertical connections and for the diagonal position are not used.  note that
         angldegx is read in degrees, which is different from modflow-usg, which reads a
         similar variable (anglex) in radians.
-    vertices : [list]
-    cell2d : [list]
+    vertices : [(iv, xv, yv)]
+        * iv : integer
+                is the vertex number.  Records in the VERTICES block must be listed in
+                consecutive order from 1 to NVERT.
+        * xv : double precision
+                is the x-coordinate for the vertex.
+        * yv : double precision
+                is the y-coordinate for the vertex.
+
+    cell2d : [(icell2d, xc, yc, ncvert, icvert)]
+        * icell2d : integer
+                is the cell2d number.  Records in the CELL2D block must be listed in
+                consecutive order from 1 to NODES.
+        * xc : double precision
+                is the x-coordinate for the cell center.
+        * yc : double precision
+                is the y-coordinate for the cell center.
+        * ncvert : integer
+                is the number of vertices required to define the cell.  There may be a
+                different number of vertices for each cell.
+        * icvert : [integer]
+                is an array of integer values containing vertex numbers (in the VERTICES block)
+                used to define the cell.  Vertices must be listed in clockwise order.
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
     grb_filerecord = ListTemplateGenerator(
         ("gwe6", "disu", "options", "grb_filerecord")
     )
+    crs = ArrayTemplateGenerator(("gwe6", "disu", "options", "crs"))
     top = ArrayTemplateGenerator(("gwe6", "disu", "griddata", "top"))
     bot = ArrayTemplateGenerator(("gwe6", "disu", "griddata", "bot"))
     area = ArrayTemplateGenerator(("gwe6", "disu", "griddata", "area"))
@@ -189,7 +232,6 @@ class ModflowGwedisu(MFPackage):
             "reader urword",
             "tagged true",
             "optional false",
-            "extended true",
         ],
         [
             "block options",
@@ -209,7 +251,6 @@ class ModflowGwedisu(MFPackage):
             "reader urword",
             "optional false",
             "tagged false",
-            "extended true",
         ],
         [
             "block options",
@@ -248,6 +289,16 @@ class ModflowGwedisu(MFPackage):
             "reader urword",
             "optional true",
             "mf6internal export_ascii",
+        ],
+        [
+            "block options",
+            "name crs",
+            "type string",
+            "shape lenbigline",
+            "preserve_case true",
+            "reader urword",
+            "optional true",
+            "prerelease true",
         ],
         [
             "block dimensions",
@@ -455,6 +506,7 @@ class ModflowGwedisu(MFPackage):
         angrot=None,
         vertical_offset_tolerance=0.0,
         export_array_ascii=None,
+        crs=None,
         nodes=None,
         nja=None,
         nvert=None,
@@ -474,147 +526,15 @@ class ModflowGwedisu(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwedisu defines a DISU package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        length_units : string
-            is the length units used for this model.  values can be 'feet', 'meters', or
-            'centimeters'.  if not specified, the default is 'unknown'.
-        nogrb : keyword
-            keyword to deactivate writing of the binary grid file.
-        grb_filerecord : record
-        xorigin : double precision
-            x-position of the origin used for model grid vertices.  this value should be
-            provided in a real-world coordinate system.  a default value of zero is
-            assigned if not specified.  the value for xorigin does not affect the model
-            simulation, but it is written to the binary grid file so that postprocessors
-            can locate the grid in space.
-        yorigin : double precision
-            y-position of the origin used for model grid vertices.  this value should be
-            provided in a real-world coordinate system.  if not specified, then a default
-            value equal to zero is used.  the value for yorigin does not affect the model
-            simulation, but it is written to the binary grid file so that postprocessors
-            can locate the grid in space.
-        angrot : double precision
-            counter-clockwise rotation angle (in degrees) of the model grid coordinate
-            system relative to a real-world coordinate system.  if not specified, then a
-            default value of 0.0 is assigned.  the value for angrot does not affect the
-            model simulation, but it is written to the binary grid file so that
-            postprocessors can locate the grid in space.
-        vertical_offset_tolerance : double precision
-            checks are performed to ensure that the top of a cell is not higher than the
-            bottom of an overlying cell.  this option can be used to specify the tolerance
-            that is used for checking.  if top of a cell is above the bottom of an
-            overlying cell by a value less than this tolerance, then the program will not
-            terminate with an error.  the default value is zero.  this option should
-            generally not be used.
-        export_array_ascii : keyword
-            keyword that specifies input griddata arrays should be written to layered ascii
-            output files.
-        nodes : integer
-            is the number of cells in the model grid.
-        nja : integer
-            is the sum of the number of connections and nodes.  when calculating the total
-            number of connections, the connection between cell n and cell m is considered
-            to be different from the connection between cell m and cell n.  thus, nja is
-            equal to the total number of connections, including n to m and m to n, and the
-            total number of cells.
-        nvert : integer
-            is the total number of (x, y) vertex pairs used to define the plan-view shape
-            of each cell in the model grid.  if nvert is not specified or is specified as
-            zero, then the vertices and cell2d blocks below are not read.  nvert and the
-            accompanying vertices and cell2d blocks should be specified for most
-            simulations.  if the xt3d or save_specific_discharge options are specified in
-            the npf package, then this information is required.
-        top : [double precision]
-            is the top elevation for each cell in the model grid.
-        bot : [double precision]
-            is the bottom elevation for each cell.
-        area : [double precision]
-            is the cell surface area (in plan view).
-        idomain : [integer]
-            is an optional array that characterizes the existence status of a cell.  if the
-            idomain array is not specified, then all model cells exist within the solution.
-            if the idomain value for a cell is 0, the cell does not exist in the
-            simulation.  input and output values will be read and written for the cell, but
-            internal to the program, the cell is excluded from the solution.  if the
-            idomain value for a cell is 1 or greater, the cell exists in the simulation.
-            idomain values of -1 cannot be specified for the disu package.
-        iac : [integer]
-            is the number of connections (plus 1) for each cell.  the sum of all the
-            entries in iac must be equal to nja.
-        ja : [integer]
-            is a list of cell number (n) followed by its connecting cell numbers (m) for
-            each of the m cells connected to cell n. the number of values to provide for
-            cell n is iac(n).  this list is sequentially provided for the first to the last
-            cell. the first value in the list must be cell n itself, and the remaining
-            cells must be listed in an increasing order (sorted from lowest number to
-            highest).  note that the cell and its connections are only supplied for the gwe
-            cells and their connections to the other gwe cells.  also note that the ja list
-            input may be divided such that every node and its connectivity list can be on a
-            separate line for ease in readability of the file. to further ease readability
-            of the file, the node number of the cell whose connectivity is subsequently
-            listed, may be expressed as a negative number, the sign of which is
-            subsequently converted to positive by the code.
-        ihc : [integer]
-            is an index array indicating the direction between node n and all of its m
-            connections.  if ihc = 0 then cell n and cell m are connected in the vertical
-            direction.  cell n overlies cell m if the cell number for n is less than m;
-            cell m overlies cell n if the cell number for m is less than n.  if ihc = 1
-            then cell n and cell m are connected in the horizontal direction.  if ihc = 2
-            then cell n and cell m are connected in the horizontal direction, and the
-            connection is vertically staggered.  a vertically staggered connection is one
-            in which a cell is horizontally connected to more than one cell in a horizontal
-            connection.
-        cl12 : [double precision]
-            is the array containing connection lengths between the center of cell n and the
-            shared face with each adjacent m cell.
-        hwva : [double precision]
-            is a symmetric array of size nja.  for horizontal connections, entries in hwva
-            are the horizontal width perpendicular to flow.  for vertical connections,
-            entries in hwva are the vertical area for flow.  thus, values in the hwva array
-            contain dimensions of both length and area.  entries in the hwva array have a
-            one-to-one correspondence with the connections specified in the ja array.
-            likewise, there is a one-to-one correspondence between entries in the hwva
-            array and entries in the ihc array, which specifies the connection type
-            (horizontal or vertical).  entries in the hwva array must be symmetric; the
-            program will terminate with an error if the value for hwva for an n to m
-            connection does not equal the value for hwva for the corresponding n to m
-            connection.
-        angldegx : [double precision]
-            is the angle (in degrees) between the horizontal x-axis and the outward normal
-            to the face between a cell and its connecting cells. the angle varies between
-            zero and 360.0 degrees, where zero degrees points in the positive x-axis
-            direction, and 90 degrees points in the positive y-axis direction.  angldegx is
-            only needed if horizontal anisotropy is specified in the npf package, if the
-            xt3d option is used in the npf package, or if the save_specific_discharge
-            option is specified in the npf package.  angldegx does not need to be specified
-            if these conditions are not met.  angldegx is of size nja; values specified for
-            vertical connections and for the diagonal position are not used.  note that
-            angldegx is read in degrees, which is different from modflow-usg, which reads a
-            similar variable (anglex) in radians.
-        vertices : [list]
-        cell2d : [list]
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "disu", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowGwedisu."""
+        super().__init__(
+            parent=model,
+            package_type="disu",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.length_units = self.build_mfdata("length_units", length_units)
         self.nogrb = self.build_mfdata("nogrb", nogrb)
@@ -628,6 +548,7 @@ class ModflowGwedisu(MFPackage):
         self.export_array_ascii = self.build_mfdata(
             "export_array_ascii", export_array_ascii
         )
+        self.crs = self.build_mfdata("crs", crs)
         self.nodes = self.build_mfdata("nodes", nodes)
         self.nja = self.build_mfdata("nja", nja)
         self.nvert = self.build_mfdata("nvert", nvert)

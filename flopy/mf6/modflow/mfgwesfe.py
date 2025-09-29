@@ -13,6 +13,12 @@ class ModflowGwesfe(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     flow_package_name : string
         keyword to specify the name of the corresponding flow package.  if not
         specified, then the corresponding flow package must have the same name as this
@@ -81,8 +87,106 @@ class ModflowGwesfe(MFPackage):
         obs package with variable names as keys and package data as values. Data for
         the observations variable is also acceptable. See obs package documentation for
         more information.
-    packagedata : [list]
-    reachperioddata : list
+    packagedata : [(rno, strt, ktf, rbthcnd, aux, boundname)]
+        * rno : integer
+                integer value that defines the reach number associated with the specified
+                PERIOD data on the line. RNO must be greater than zero and less than or equal
+                to NREACHES.
+        * strt : double precision
+                real value that defines the starting temperature for the reach.
+        * ktf : double precision
+                is the thermal conductivity of the material between the aquifer cell and the
+                stream reach. The thickness of the material is defined by the variable RBTHCND.
+        * rbthcnd : double precision
+                real value that defines the thickness of the streambed material through which
+                conduction occurs.  Must be greater than 0.
+        * aux : [double precision]
+                represents the values of the auxiliary variables for each reach. The values of
+                auxiliary variables must be present for each reach. The values must be
+                specified in the order of the auxiliary variables specified in the OPTIONS
+                block.  If the package supports time series and the Options block includes a
+                TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be
+                obtained from a time series by entering the time-series name in place of a
+                numeric value.
+        * boundname : string
+                name of the reach cell.  BOUNDNAME is an ASCII character variable that can
+                contain as many as 40 characters.  If BOUNDNAME contains spaces in it, then the
+                entire name must be enclosed within single quotes.
+
+    reachperioddata : [(rno, reachsetting)]
+        * rno : integer
+                integer value that defines the reach number associated with the specified
+                period data on the line. rno must be greater than zero and less than or equal
+                to nreaches.
+        * reachsetting : temperature | status | rainfall | evaporation | runoff | inflow | auxiliaryrecord
+                line of information that is parsed into a keyword and values.  keyword values
+                that can be used to start the reachsetting string include: status, temperature,
+                rainfall, evaporation, runoff, and auxiliary.  these settings are used to
+                assign the temperature of associated with the corresponding flow terms.
+                temperatures cannot be specified for all flow terms.  for example, the
+                streamflow package supports a 'diversion' flow term.  diversion water will be
+                routed using the calculated temperature of the reach.
+                * temperature : string
+                            real or character value that defines the temperature for the reach. the
+                            specified temperature is only applied if the reach is a constant temperature
+                            reach. if the options block includes a timeseriesfile entry (see the 'time-
+                            variable input' section), values can be obtained from a time series by entering
+                            the time-series name in place of a numeric value.
+                * status : string
+                            keyword option to define reach status.  status can be active, inactive, or
+                            constant. by default, status is active, which means that temperature will be
+                            calculated for the reach.  if a reach is inactive, then there will be no energy
+                            fluxes into or out of the reach and the inactive value will be written for the
+                            reach temperature.  if a reach is constant, then the temperature for the reach
+                            will be fixed at the user specified value.
+                * rainfall : string
+                            real or character value that defines the rainfall temperature
+                            :math:`(e.g.,:^{circ}c:or:^{circ}f)` for the reach. if the options block
+                            includes a timeseriesfile entry (see the 'time-variable input' section), values
+                            can be obtained from a time series by entering the time-series name in place of
+                            a numeric value.
+                * evaporation : string
+                            use of the evaporation keyword is allowed in the sfe package; however, the
+                            specified value is not currently used in sfe calculations.  instead, the latent
+                            heat of evaporation is multiplied by the simulated evaporation rate for
+                            determining the thermal energy lost from a stream reach.
+                * runoff : string
+                            real or character value that defines the temperature of runoff
+                            :math:`(e.g.,:^{circ}c:or:^{circ}f)` for the reach.  users are free to use
+                            whatever temperature scale they want, which might include negative
+                            temperatures.  if the options block includes a timeseriesfile entry (see the
+                            'time-variable input' section), values can be obtained from a time series by
+                            entering the time-series name in place of a numeric value.
+                * inflow : string
+                            real or character value that defines the temperature of inflow
+                            :math:`(e.g.,:^{circ}c:or:^{circ}f)` for the reach. users are free to use
+                            whatever temperature scale they want, which might include negative
+                            temperatures.  if the options block includes a timeseriesfile entry (see the
+                            'time-variable input' section), values can be obtained from a time series by
+                            entering the time-series name in place of a numeric value.
+                * auxiliaryrecord : (auxiliary, auxname, auxval)
+                            * auxiliary : keyword
+                                            keyword for specifying auxiliary variable.
+                            * auxname : string
+                                            name for the auxiliary variable to be assigned AUXVAL.  AUXNAME must match one
+                                            of the auxiliary variable names defined in the OPTIONS block. If AUXNAME does
+                                            not match one of the auxiliary variable names defined in the OPTIONS block the
+                                            data are ignored.
+                            * auxval : double precision
+                                            value for the auxiliary variable. If the Options block includes a
+                                            TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be
+                                            obtained from a time series by entering the time-series name in place of a
+                                            numeric value.
+
+
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -410,7 +514,7 @@ class ModflowGwesfe(MFPackage):
             "block period",
             "name iper",
             "type integer",
-            "block_variable True",
+            "block_variable true",
             "in_record true",
             "tagged false",
             "shape",
@@ -564,88 +668,15 @@ class ModflowGwesfe(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwesfe defines a SFE package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        flow_package_name : string
-            keyword to specify the name of the corresponding flow package.  if not
-            specified, then the corresponding flow package must have the same name as this
-            advanced transport package (the name associated with this package in the gwe
-            name file).
-        auxiliary : [string]
-            defines an array of one or more auxiliary variable names.  there is no limit on
-            the number of auxiliary variables that can be provided on this line; however,
-            lists of information provided in subsequent blocks must have a column of data
-            for each auxiliary variable name defined here.   the number of auxiliary
-            variables detected on this line determines the value for naux.  comments cannot
-            be provided anywhere on this line as they will be interpreted as auxiliary
-            variable names.  auxiliary variables may not be used by the package, but they
-            will be available for use by other parts of the program.  the program will
-            terminate with an error if auxiliary variables are specified on more than one
-            line in the options block.
-        flow_package_auxiliary_name : string
-            keyword to specify the name of an auxiliary variable provided in the
-            corresponding flow package (i.e., flow_package_name).  if specified, then the
-            simulated temperatures from this advanced energy transport package will be
-            copied into the auxiliary variable specified with this name.  note that the
-            flow package must have an auxiliary variable with this name or the program will
-            terminate with an error.  if the flows for this advanced energy transport
-            package are read from a file, then this option will have no effect.
-        boundnames : keyword
-            keyword to indicate that boundary names may be provided with the list of reach
-            cells.
-        print_input : keyword
-            keyword to indicate that the list of reach information will be written to the
-            listing file immediately after it is read.
-        print_temperature : keyword
-            keyword to indicate that the list of reach {#2} will be printed to the listing
-            file for every stress period in which 'temperature print' is specified in
-            output control.  if there is no output control option and print_{#3} is
-            specified, then {#2} are printed for the last time step of each stress period.
-        print_flows : keyword
-            keyword to indicate that the list of reach flow rates will be printed to the
-            listing file for every stress period time step in which 'budget print' is
-            specified in output control.  if there is no output control option and
-            'print_flows' is specified, then flow rates are printed for the last time step
-            of each stress period.
-        save_flows : keyword
-            keyword to indicate that reach flow terms will be written to the file specified
-            with 'budget fileout' in output control.
-        temperature_filerecord : record
-        budget_filerecord : record
-        budgetcsv_filerecord : record
-        timeseries : record ts6 filein ts6_filename
-            Contains data for the ts package. Data can be passed as a dictionary to the ts
-            package with variable names as keys and package data as values. Data for the
-            timeseries variable is also acceptable. See ts package documentation for more
-            information.
-        observations : record obs6 filein obs6_filename
-            Contains data for the obs package. Data can be passed as a dictionary to the
-            obs package with variable names as keys and package data as values. Data for
-            the observations variable is also acceptable. See obs package documentation for
-            more information.
-        packagedata : [list]
-        reachperioddata : list
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "sfe", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowGwesfe."""
+        super().__init__(
+            parent=model,
+            package_type="sfe",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.flow_package_name = self.build_mfdata(
             "flow_package_name", flow_package_name

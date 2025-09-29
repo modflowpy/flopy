@@ -13,6 +13,12 @@ class ModflowGwemve(MFPackage):
 
     Parameters
     ----------
+    parent_model_or_package
+        Parent_model_or_package that this package is a part of. Package is automatically
+        added to parent_model_or_package when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     print_input : keyword
         keyword to indicate that the list of mover information will be written to the
         listing file immediately after it is read.
@@ -35,6 +41,13 @@ class ModflowGwemve(MFPackage):
                 information.  A budget summary record will be written to this file for each
                 time step of the simulation.
 
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -155,44 +168,14 @@ class ModflowGwemve(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwemve defines a MVE package.
-
-        Parameters
-        ----------
-        parent_model_or_package
-            Parent_model_or_package that this package is a part of. Package is automatically
-            added to parent_model_or_package when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        print_input : keyword
-            keyword to indicate that the list of mover information will be written to the
-            listing file immediately after it is read.
-        print_flows : keyword
-            keyword to indicate that the list of lake flow rates will be printed to the
-            listing file for every stress period time step in which 'budget print' is
-            specified in output control.  if there is no output control option and
-            'print_flows' is specified, then flow rates are printed for the last time step
-            of each stress period.
-        save_flows : keyword
-            keyword to indicate that lake flow terms will be written to the file specified
-            with 'budget fileout' in output control.
-        budget_filerecord : record
-        budgetcsv_filerecord : record
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
+        """Initialize ModflowGwemve."""
         super().__init__(
-            parent_model_or_package, "mve", filename, pname, loading_package, **kwargs
+            parent=parent_model_or_package,
+            package_type="mve",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
         )
 
         self.print_input = self.build_mfdata("print_input", print_input)
@@ -211,17 +194,6 @@ class ModflowGwemve(MFPackage):
 class GwemvePackages(MFChildPackages):
     """
     GwemvePackages is a container class for the ModflowGwemve class.
-
-    Methods
-    -------
-    initialize
-        Initializes a new ModflowGwemve package removing any sibling child
-        packages attached to the same parent package. See ModflowGwemve init
-        documentation for definition of parameters.
-    append_package
-        Adds a new ModflowGwemve package to the container. See ModflowGwemve
-        init documentation for definition of parameters.
-
     """
 
     package_abbr = "gwemvepackages"
@@ -236,6 +208,12 @@ class GwemvePackages(MFChildPackages):
         filename=None,
         pname=None,
     ):
+        """
+        Initialize a new ModflowGwemve package, removing any sibling
+        child packages attached to the same parent package.
+
+        See :class:`ModflowGwemve` for parameter definitions.
+        """
         new_package = ModflowGwemve(
             self._cpparent,
             print_input=print_input,
@@ -259,6 +237,11 @@ class GwemvePackages(MFChildPackages):
         filename=None,
         pname=None,
     ):
+        """
+        Add a new ModflowGwemve package to the container.
+
+        See :class:`ModflowGwemve` for parameter definitions.
+        """
         new_package = ModflowGwemve(
             self._cpparent,
             print_input=print_input,

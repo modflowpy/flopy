@@ -13,6 +13,33 @@ class MFSimulation(MFSimulationBase):
 
     Parameters
     ----------
+    sim_name : str, default "sim"
+        Name of the simulation.
+    version : str, default "mf6"
+        Version of MODFLOW 6 executable.
+    exe_name : str, default "mf6"
+        Path to MODFLOW 6 executable.
+    sim_ws : str or PathLike, default ".' (curdir)
+        Path to MODFLOW 6 simulation working folder.  This is the folder
+        containing the simulation name file.
+    verbosity_level : int, default 1
+        Verbosity level of standard output:
+
+            0. No standard output
+            1. Standard error/warning messages with some informational
+               messages
+            2. Verbose mode with full error/warning/informational messages.
+               This is ideal for debugging.
+    write_headers: bool, default True
+        When True flopy writes a header to each package file indicating that
+        it was created by flopy.
+    lazy_io: bool, default False
+        When True flopy only reads external data when the data is requested
+        and only writes external data if the data has changed.  This option
+        automatically overrides the verify_data and auto_set_sizes, turning
+        both off.
+    use_pandas: bool, default True
+        Load/save data using pandas dataframes (for supported data).
     continue_ : keyword
         keyword flag to indicate that the simulation should continue even if one or
         more solutions do not converge.
@@ -44,26 +71,46 @@ class MFSimulation(MFSimulationBase):
         more information.
     tdis6 : string
         is the name of the temporal discretization (tdis) input file.
-    models : list
+    models : [(mtype, mfname, mname)]
         is the list of model types, model name files, and model names.
-    exchanges : list
+        * mtype : string
+                is the type of model to add to simulation.
+        * mfname : string
+                is the file name of the model name file.
+        * mname : string
+                is the user-assigned name of the model.  The model name cannot exceed 16
+                characters and must not have blanks within the name.  The model name is case
+                insensitive; any lowercase letters are converted and stored as upper case
+                letters.
+
+    exchanges : [(exgtype, exgfile, exgmnamea, exgmnameb)]
         is the list of exchange types, exchange files, and model names.
+        * exgtype : string
+                is the exchange type.
+        * exgfile : string
+                is the input file for the exchange.
+        * exgmnamea : string
+                is the name of the first model that is part of this exchange.
+        * exgmnameb : string
+                is the name of the second model that is part of this exchange.
+
     mxiter : integer
         is the maximum number of outer iterations for this solution group.  the default
         value is 1.  if there is only one solution in the solution group, then mxiter
         must be 1.
-    solutiongroup : list
+    solutiongroup : [(slntype, slnfname, slnmnames)]
         is the list of solution types and models in the solution.
+        * slntype : string
+                is the type of solution.  The Integrated Model Solution (IMS6) and Explicit
+                Model Solution (EMS6) are the only supported options in this version.
+        * slnfname : string
+                name of file containing solution input.
+        * slnmnames : [string]
+                is the array of model names to add to this solution.  The number of model names
+                is determined by the number of model names the user provides on this line.
 
 
-    Methods
-    -------
-    load : (sim_name : str, version : string,
-        exe_name : str or PathLike, sim_ws : str or PathLike, strict : bool,
-        verbosity_level : int, load_only : list, verify_data : bool,
-        write_headers : bool, lazy_io : bool, use_pandas : bool,
-        ) : MFSimulation
-        a class method that loads a simulation from files
+
     """
 
     def __init__(
@@ -84,71 +131,7 @@ class MFSimulation(MFSimulationBase):
         print_input=None,
         hpc_data=None,
     ):
-        """
-        MFSimulation is used to load, build, and/or save a MODFLOW 6 simulation. A MFSimulation object must be created before creating any of the MODFLOW 6 model objects.
-
-        Parameters
-        ----------
-        sim_name
-            The name of the simulation
-        version
-            The simulation version
-        exe_name
-            The executable name
-        sim_ws
-            The simulation workspace
-        verbosity_level
-            The verbosity level
-        write_headers
-            Whether to write
-        use_pandas
-            Whether to use pandas
-        lazy_io
-            Whether to use lazy IO
-        continue_ : keyword
-            keyword flag to indicate that the simulation should continue even if one or
-            more solutions do not converge.
-        nocheck : keyword
-            keyword flag to indicate that the model input check routines should not be
-            called prior to each time step. checks are performed by default.
-        memory_print_option : string
-            is a flag that controls printing of detailed memory manager usage to the end of
-            the simulation list file.  none means do not print detailed information.
-            summary means print only the total memory for each simulation component. all
-            means print information for each variable stored in the memory manager. none is
-            default if memory_print_option is not specified.
-        profile_option : string
-            is a flag that controls performance profiling and reporting.  none disables
-            profiling. summary means to measure and print a coarse performance profile.
-            detail means collect and print information with the highest resolution
-            available. none is default if profile_option is not specified.
-        maxerrors : integer
-            maximum number of errors that will be stored and printed.
-        print_input : keyword
-            keyword to activate printing of simulation input summaries to the simulation
-            list file (mfsim.lst). with this keyword, input summaries will be written for
-            those packages that support newer input data model routines.  not all packages
-            are supported yet by the newer input data model routines.
-        hpc_data : record hpc6 filein hpc6_filename
-            Contains data for the hpc package. Data can be passed as a dictionary to the
-            hpc package with variable names as keys and package data as values. Data for
-            the hpc_data variable is also acceptable. See hpc package documentation for
-            more information.
-        tdis6 : string
-            is the name of the temporal discretization (tdis) input file.
-        models : list
-            is the list of model types, model name files, and model names.
-        exchanges : list
-            is the list of exchange types, exchange files, and model names.
-        mxiter : integer
-            is the maximum number of outer iterations for this solution group.  the default
-            value is 1.  if there is only one solution in the solution group, then mxiter
-            must be 1.
-        solutiongroup : list
-            is the list of solution types and models in the solution.
-
-        """
-
+        """Initialize MFSimulation."""
         super().__init__(
             sim_name=sim_name,
             version=version,
@@ -189,17 +172,62 @@ class MFSimulation(MFSimulationBase):
         lazy_io=False,
         use_pandas=True,
     ):
+        """
+        Load an existing simulation.
+
+        Parameters
+        ----------
+        sim_name : str, default "modflowsim"
+            Name of the simulation.
+        version : str, default "mf6"
+            Version of MODFLOW 6 executable.
+        exe_name : str or PathLike, default "mf6"
+            Path to MODFLOW 6 executable.
+        sim_ws : str or PathLike, default "." (curdir)
+            Path to MODFLOW 6 simulation working folder.  This is the folder
+            containing the simulation name file.
+        strict : bool, default True
+            Strict enforcement of file formatting.
+        verbosity_level : int, default 1
+            Verbosity level of standard output:
+
+                0. No standard output
+                1. Standard error/warning messages with some informational
+                   messages
+                2. Verbose mode with full error/warning/informational messages.
+                   This is ideal for debugging.
+        load_only : list, optional
+            List of package abbreviations or package names corresponding to
+            packages that flopy will load. default is None, which loads all
+            packages. The discretization packages will load regardless of this
+            setting. Subpackages, like time series and observations, will also
+            load regardless of this setting.
+            Example list: ``['ic', 'maw', 'npf', 'oc', 'ims', 'gwf6-gwf6']``
+        verify_data : bool, default False
+            Verify data when it is loaded. This can slow down loading.
+        write_headers: bool, default True
+            When True flopy writes a header to each package file indicating
+            that it was created by flopy.
+        lazy_io: bool, default False
+            When True flopy only reads external data when the data is requested
+            and only writes external data if the data has changed.  This option
+            automatically overrides the verify_data and auto_set_sizes, turning
+            both off.
+        use_pandas: bool, default True
+            Load/save data using pandas dataframes (for supported data).
+
+        """
         return MFSimulationBase.load(
             cls,
-            sim_name,
-            version,
-            exe_name,
-            sim_ws,
-            strict,
-            verbosity_level,
-            load_only,
-            verify_data,
-            write_headers,
-            lazy_io,
-            use_pandas,
+            sim_name=sim_name,
+            version=version,
+            exe_name=exe_name,
+            sim_ws=sim_ws,
+            strict=strict,
+            verbosity_level=verbosity_level,
+            load_only=load_only,
+            verify_data=verify_data,
+            write_headers=write_headers,
+            lazy_io=lazy_io,
+            use_pandas=use_pandas,
         )

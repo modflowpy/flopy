@@ -13,6 +13,12 @@ class ModflowTdis(MFPackage):
 
     Parameters
     ----------
+    simulation
+        Simulation that this package is a part of. Package is automatically
+        added to simulation when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     time_units : string
         is the time units of the simulation.  this is a text string that is used as a
         label within model output files.  values for time_units may be 'unknown',
@@ -30,7 +36,25 @@ class ModflowTdis(MFPackage):
         for more information.
     nper : integer
         is the number of stress periods for the simulation.
-    perioddata : list
+    perioddata : [(perlen, nstp, tsmult)]
+        * perlen : double precision
+                is the length of a stress period.
+        * nstp : integer
+                is the number of time steps in a stress period.
+        * tsmult : double precision
+                is the multiplier for the length of successive time steps. The length of a time
+                step is calculated by multiplying the length of the previous time step by
+                TSMULT. The length of the first time step, :math:`Delta t_1`, is related to
+                PERLEN, NSTP, and TSMULT by the relation :math:`Delta t_1= perlen frac{tsmult -
+                1}{tsmult^{nstp}-1}`.
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -155,47 +179,15 @@ class ModflowTdis(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowTdis defines a TDIS package.
-
-        Parameters
-        ----------
-        simulation
-            Simulation that this package is a part of. Package is automatically
-            added to simulation when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        time_units : string
-            is the time units of the simulation.  this is a text string that is used as a
-            label within model output files.  values for time_units may be 'unknown',
-            'seconds', 'minutes', 'hours', 'days', or 'years'.  the default time unit is
-            'unknown'.
-        start_date_time : string
-            is the starting date and time of the simulation.  this is a text string that is
-            used as a label within the simulation list file.  the value has no effect on
-            the simulation.  the recommended format for the starting date and time is
-            described at https://www.w3.org/tr/note-datetime.
-        ats_perioddata : record ats6 filein ats6_filename
-            Contains data for the ats package. Data can be passed as a dictionary to the
-            ats package with variable names as keys and package data as values. Data for
-            the ats_perioddata variable is also acceptable. See ats package documentation
-            for more information.
-        nper : integer
-            is the number of stress periods for the simulation.
-        perioddata : list
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(simulation, "tdis", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowTdis."""
+        super().__init__(
+            parent=simulation,
+            package_type="tdis",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.time_units = self.build_mfdata("time_units", time_units)
         self.start_date_time = self.build_mfdata("start_date_time", start_date_time)

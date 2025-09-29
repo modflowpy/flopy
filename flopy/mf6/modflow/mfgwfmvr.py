@@ -13,6 +13,12 @@ class ModflowGwfmvr(MFPackage):
 
     Parameters
     ----------
+    parent_model_or_package
+        Parent_model_or_package that this package is a part of. Package is automatically
+        added to parent_model_or_package when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     print_input : keyword
         keyword to indicate that the list of mvr information will be written to the
         listing file immediately after it is read.
@@ -43,8 +49,65 @@ class ModflowGwfmvr(MFPackage):
     maxpackages : integer
         integer value specifying the number of unique packages that are included in
         this water mover input file.
-    packages : [list]
-    perioddata : [list]
+    packages : [(mname, pname)]
+        * mname : string
+                name of model containing the package.  Model names are assigned by the user in
+                the simulation name file.
+        * pname : string
+                is the name of a package that may be included in a subsequent stress period
+                block.  The package name is assigned in the name file for the GWF Model.
+                Package names are optionally provided in the name file.  If they are not
+                provided by the user, then packages are assigned a default value, which is the
+                package acronym followed by a hyphen and the package number.  For example, the
+                first Drain Package is named DRN-1.  The second Drain Package is named DRN-2,
+                and so forth.
+
+    perioddata : [(mname1, pname1, id1, mname2, pname2, id2, mvrtype, value)]
+        * mname1 : string
+                name of model containing the package, PNAME1.
+        * pname1 : string
+                is the package name for the provider.  The package PNAME1 must be designated to
+                provide water through the MVR Package by specifying the keyword 'MOVER' in its
+                OPTIONS block.
+        * id1 : integer
+                is the identifier for the provider.  For the standard boundary packages, the
+                provider identifier is the number of the boundary as it is listed in the
+                package input file. (Note that the order of these boundaries may change by
+                stress period, which must be accounted for in the Mover Package.)  So the first
+                well has an identifier of one.  The second is two, and so forth.  For the
+                advanced packages, the identifier is the reach number (SFR Package), well
+                number (MAW Package), or UZF cell number.  For the Lake Package, ID1 is the
+                lake outlet number.  Thus, outflows from a single lake can be routed to
+                different streams, for example.
+        * mname2 : string
+                name of model containing the package, PNAME2.
+        * pname2 : string
+                is the package name for the receiver.  The package PNAME2 must be designated to
+                receive water from the MVR Package by specifying the keyword 'MOVER' in its
+                OPTIONS block.
+        * id2 : integer
+                is the identifier for the receiver.  The receiver identifier is the reach
+                number (SFR Package), Lake number (LAK Package), well number (MAW Package), or
+                UZF cell number.
+        * mvrtype : string
+                is the character string signifying the method for determining how much water
+                will be moved.  Supported values are 'FACTOR' 'EXCESS' 'THRESHOLD' and 'UPTO'.
+                These four options determine how the receiver flow rate, :math:`Q_R`, is
+                calculated.  These options mirror the options defined for the cprior variable
+                in the SFR package, with the term 'FACTOR' being functionally equivalent to the
+                'FRACTION' option for cprior.
+        * value : double precision
+                is the value to be used in the equation for calculating the amount of water to
+                move.  For the 'FACTOR' option, VALUE is the :math:`alpha` factor.  For the
+                remaining options, VALUE is the specified flow rate, :math:`Q_S`.
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -198,7 +261,7 @@ class ModflowGwfmvr(MFPackage):
             "block period",
             "name iper",
             "type integer",
-            "block_variable True",
+            "block_variable true",
             "in_record true",
             "tagged false",
             "shape",
@@ -308,54 +371,14 @@ class ModflowGwfmvr(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwfmvr defines a MVR package.
-
-        Parameters
-        ----------
-        parent_model_or_package
-            Parent_model_or_package that this package is a part of. Package is automatically
-            added to parent_model_or_package when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        print_input : keyword
-            keyword to indicate that the list of mvr information will be written to the
-            listing file immediately after it is read.
-        print_flows : keyword
-            keyword to indicate that the list of mvr flow rates will be printed to the
-            listing file for every stress period time step in which 'budget print' is
-            specified in output control.  if there is no output control option and
-            'print_flows' is specified, then flow rates are printed for the last time step
-            of each stress period.
-        modelnames : keyword
-            keyword to indicate that all package names will be preceded by the model name
-            for the package.  model names are required when the mover package is used with
-            a gwf-gwf exchange.  the modelname keyword should not be used for a mover
-            package that is for a single gwf model.
-        budget_filerecord : record
-        budgetcsv_filerecord : record
-        maxmvr : integer
-            integer value specifying the maximum number of water mover entries that will
-            specified for any stress period.
-        maxpackages : integer
-            integer value specifying the number of unique packages that are included in
-            this water mover input file.
-        packages : [list]
-        perioddata : [list]
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
+        """Initialize ModflowGwfmvr."""
         super().__init__(
-            parent_model_or_package, "mvr", filename, pname, loading_package, **kwargs
+            parent=parent_model_or_package,
+            package_type="mvr",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
         )
 
         self.print_input = self.build_mfdata("print_input", print_input)
@@ -378,17 +401,6 @@ class ModflowGwfmvr(MFPackage):
 class GwfmvrPackages(MFChildPackages):
     """
     GwfmvrPackages is a container class for the ModflowGwfmvr class.
-
-    Methods
-    -------
-    initialize
-        Initializes a new ModflowGwfmvr package removing any sibling child
-        packages attached to the same parent package. See ModflowGwfmvr init
-        documentation for definition of parameters.
-    append_package
-        Adds a new ModflowGwfmvr package to the container. See ModflowGwfmvr
-        init documentation for definition of parameters.
-
     """
 
     package_abbr = "gwfmvrpackages"
@@ -407,6 +419,12 @@ class GwfmvrPackages(MFChildPackages):
         filename=None,
         pname=None,
     ):
+        """
+        Initialize a new ModflowGwfmvr package, removing any sibling
+        child packages attached to the same parent package.
+
+        See :class:`ModflowGwfmvr` for parameter definitions.
+        """
         new_package = ModflowGwfmvr(
             self._cpparent,
             print_input=print_input,
@@ -438,6 +456,11 @@ class GwfmvrPackages(MFChildPackages):
         filename=None,
         pname=None,
     ):
+        """
+        Add a new ModflowGwfmvr package to the container.
+
+        See :class:`ModflowGwfmvr` for parameter definitions.
+        """
         new_package = ModflowGwfmvr(
             self._cpparent,
             print_input=print_input,

@@ -13,6 +13,12 @@ class ModflowGwedisv(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     length_units : string
         is the length units used for this model.  values can be 'feet', 'meters', or
         'centimeters'.  if not specified, the default is 'unknown'.
@@ -48,6 +54,13 @@ class ModflowGwedisv(MFPackage):
     export_array_netcdf : keyword
         keyword that specifies input griddata arrays should be written to the model
         output netcdf file.
+    crs : [string]
+        is a real-world coordinate reference system (crs) for the model, for example,
+        an epsg integer code (e.g. 26915), authority string (i.e. epsg:26915), or open
+        geospatial consortium well-known text (wkt) specification. limited to 5000
+        characters. the entry for crs does not affect the model simulation, but it is
+        written to the binary grid file so that postprocessors can locate the grid in
+        space.
     packagedata : record ncf6 filein ncf6_filename
         Contains data for the ncf package. Data can be passed as a dictionary to the
         ncf package with variable names as keys and package data as values. Data for
@@ -76,14 +89,45 @@ class ModflowGwedisv(MFPackage):
         furthermore, the first existing cell above will be connected to the first
         existing cell below.  this type of cell is referred to as a 'vertical pass
         through' cell.
-    vertices : [list]
-    cell2d : [list]
+    vertices : [(iv, xv, yv)]
+        * iv : integer
+                is the vertex number.  Records in the VERTICES block must be listed in
+                consecutive order from 1 to NVERT.
+        * xv : double precision
+                is the x-coordinate for the vertex.
+        * yv : double precision
+                is the y-coordinate for the vertex.
+
+    cell2d : [(icell2d, xc, yc, ncvert, icvert)]
+        * icell2d : integer
+                is the CELL2D number.  Records in the CELL2D block must be listed in
+                consecutive order from the first to the last.
+        * xc : double precision
+                is the x-coordinate for the cell center.
+        * yc : double precision
+                is the y-coordinate for the cell center.
+        * ncvert : integer
+                is the number of vertices required to define the cell.  There may be a
+                different number of vertices for each cell.
+        * icvert : [integer]
+                is an array of integer values containing vertex numbers (in the VERTICES block)
+                used to define the cell.  Vertices must be listed in clockwise order.  Cells
+                that are connected must share vertices.
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
     grb_filerecord = ListTemplateGenerator(
         ("gwe6", "disv", "options", "grb_filerecord")
     )
+    crs = ArrayTemplateGenerator(("gwe6", "disv", "options", "crs"))
     ncf_filerecord = ListTemplateGenerator(
         ("gwe6", "disv", "options", "ncf_filerecord")
     )
@@ -127,7 +171,6 @@ class ModflowGwedisv(MFPackage):
             "reader urword",
             "tagged true",
             "optional false",
-            "extended true",
         ],
         [
             "block options",
@@ -147,7 +190,6 @@ class ModflowGwedisv(MFPackage):
             "reader urword",
             "optional false",
             "tagged false",
-            "extended true",
         ],
         [
             "block options",
@@ -186,6 +228,16 @@ class ModflowGwedisv(MFPackage):
             "optional true",
             "mf6internal export_nc",
             "extended true",
+        ],
+        [
+            "block options",
+            "name crs",
+            "type string",
+            "shape lenbigline",
+            "preserve_case true",
+            "reader urword",
+            "optional true",
+            "prerelease true",
         ],
         [
             "block options",
@@ -382,6 +434,7 @@ class ModflowGwedisv(MFPackage):
         angrot=None,
         export_array_ascii=None,
         export_array_netcdf=None,
+        crs=None,
         packagedata=None,
         nlay=None,
         ncpl=None,
@@ -395,89 +448,15 @@ class ModflowGwedisv(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowGwedisv defines a DISV package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        length_units : string
-            is the length units used for this model.  values can be 'feet', 'meters', or
-            'centimeters'.  if not specified, the default is 'unknown'.
-        nogrb : keyword
-            keyword to deactivate writing of the binary grid file.
-        grb_filerecord : record
-        xorigin : double precision
-            x-position of the origin used for model grid vertices.  this value should be
-            provided in a real-world coordinate system.  a default value of zero is
-            assigned if not specified.  the value for xorigin does not affect the model
-            simulation, but it is written to the binary grid file so that postprocessors
-            can locate the grid in space.
-        yorigin : double precision
-            y-position of the origin used for model grid vertices.  this value should be
-            provided in a real-world coordinate system.  if not specified, then a default
-            value equal to zero is used.  the value for yorigin does not affect the model
-            simulation, but it is written to the binary grid file so that postprocessors
-            can locate the grid in space.
-        angrot : double precision
-            counter-clockwise rotation angle (in degrees) of the model grid coordinate
-            system relative to a real-world coordinate system.  if not specified, then a
-            default value of 0.0 is assigned.  the value for angrot does not affect the
-            model simulation, but it is written to the binary grid file so that
-            postprocessors can locate the grid in space.
-        export_array_ascii : keyword
-            keyword that specifies input griddata arrays should be written to layered ascii
-            output files.
-        export_array_netcdf : keyword
-            keyword that specifies input griddata arrays should be written to the model
-            output netcdf file.
-        packagedata : record ncf6 filein ncf6_filename
-            Contains data for the ncf package. Data can be passed as a dictionary to the
-            ncf package with variable names as keys and package data as values. Data for
-            the packagedata variable is also acceptable. See ncf package documentation for
-            more information.
-        nlay : integer
-            is the number of layers in the model grid.
-        ncpl : integer
-            is the number of cells per layer.  this is a constant value for the grid and it
-            applies to all layers.
-        nvert : integer
-            is the total number of (x, y) vertex pairs used to characterize the horizontal
-            configuration of the model grid.
-        top : [double precision]
-            is the top elevation for each cell in the top model layer.
-        botm : [double precision]
-            is the bottom elevation for each cell.
-        idomain : [integer]
-            is an optional array that characterizes the existence status of a cell.  if the
-            idomain array is not specified, then all model cells exist within the solution.
-            if the idomain value for a cell is 0, the cell does not exist in the
-            simulation.  input and output values will be read and written for the cell, but
-            internal to the program, the cell is excluded from the solution.  if the
-            idomain value for a cell is 1, the cell exists in the simulation.  if the
-            idomain value for a cell is -1, the cell does not exist in the simulation.
-            furthermore, the first existing cell above will be connected to the first
-            existing cell below.  this type of cell is referred to as a 'vertical pass
-            through' cell.
-        vertices : [list]
-        cell2d : [list]
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "disv", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowGwedisv."""
+        super().__init__(
+            parent=model,
+            package_type="disv",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.length_units = self.build_mfdata("length_units", length_units)
         self.nogrb = self.build_mfdata("nogrb", nogrb)
@@ -491,6 +470,7 @@ class ModflowGwedisv(MFPackage):
         self.export_array_netcdf = self.build_mfdata(
             "export_array_netcdf", export_array_netcdf
         )
+        self.crs = self.build_mfdata("crs", crs)
         self._ncf_filerecord = self.build_mfdata("ncf_filerecord", None)
         self._ncf_package = self.build_child_package(
             "ncf", packagedata, "packagedata", self._ncf_filerecord

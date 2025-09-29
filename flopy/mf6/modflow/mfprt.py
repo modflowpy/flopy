@@ -13,6 +13,18 @@ class ModflowPrt(MFModel):
 
     Parameters
     ----------
+    simulation : MFSimulation
+        Simulation object that this model is a part of.
+    modelname : str, default "model"
+        Name of the model.
+    model_nam_file : str, optional
+        Relative path to the model name file from model working folder.
+    version : str, default "mf6"
+        Version of modflow.
+    exe_name : str, default "mf6"
+        Model executable name.
+    model_rel_path : str or PathLike, default "." (curdir)
+        Relative path of model folder to simulation folder.
     list : string
         is name of the listing file to create for this prt model.  if not specified,
         then the name of the list file will be the basename of the prt model name file
@@ -30,15 +42,29 @@ class ModflowPrt(MFModel):
     save_flows : keyword
         keyword to indicate that all model package flow terms will be written to the
         file specified with 'budget fileout' in output control.
-    packages : list
+    packages : [(ftype, fname, pname)]
+        * ftype : string
+                is the file type, which must be one of the following character values shown in
+                table ref{table:ftype-prt}. Ftype may be entered in any combination of
+                uppercase and lowercase.
+        * fname : string
+                is the name of the file containing the package input.  The path to the file
+                should be included if the file is not located in the folder where the program
+                was run.
+        * pname : string
+                is the user-defined name for the package. PNAME is restricted to 16 characters.
+                No spaces are allowed in PNAME.  PNAME character values are read and stored by
+                the program for stress packages only.  These names may be useful for labeling
+                purposes when multiple stress packages of the same type are located within a
+                single PRT Model.  If PNAME is specified for a stress package, then PNAME will
+                be used in the flow budget table in the listing file; it will also be used for
+                the text entry in the cell-by-cell budget file.  PNAME is case insensitive and
+                is stored in all upper case letters.
 
 
-    Methods
-    -------
-    load : (simulation : MFSimulationData, model_name : string,
-        namfile : string, version : string, exe_name : string,
-        model_ws : string, strict : boolean) : MFSimulation
-        a class method that loads a model from files
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfmodel.MFModel`.
+
     """
 
     model_type = "prt"
@@ -50,53 +76,14 @@ class ModflowPrt(MFModel):
         model_nam_file=None,
         version="mf6",
         exe_name="mf6",
-        model_rel_path=".",
+        model_rel_path=curdir,
         list=None,
         print_input=None,
         print_flows=None,
         save_flows=None,
         **kwargs,
     ):
-        """
-        ModflowPrt defines a PRT model.
-
-        Parameters
-        ----------
-        modelname : string
-            name of the model
-        model_nam_file : string
-            relative path to the model name file from model working folder
-        version : string
-            version of modflow
-        exe_name : string
-            model executable name
-        model_ws : string
-            model working folder path
-        sim : MFSimulation
-            Simulation that this model is a part of.  Model is automatically
-            added to simulation when it is initialized.
-
-        list : string
-            is name of the listing file to create for this prt model.  if not specified,
-            then the name of the list file will be the basename of the prt model name file
-            and the '.lst' extension.  for example, if the prt name file is called
-            'my.model.nam' then the list file will be called 'my.model.lst'.
-        print_input : keyword
-            keyword to indicate that the list of all model stress package information will
-            be written to the listing file immediately after it is read.
-        print_flows : keyword
-            keyword to indicate that the list of all model package flow rates will be
-            printed to the listing file for every stress period time step in which 'budget
-            print' is specified in output control.  if there is no output control option
-            and 'print_flows' is specified, then flow rates are printed for the last time
-            step of each stress period.
-        save_flows : keyword
-            keyword to indicate that all model package flow terms will be written to the
-            file specified with 'budget fileout' in output control.
-        packages : list
-
-        """
-
+        """Initialize ModflowPrt."""
         super().__init__(
             simulation,
             model_type="prt6",
@@ -130,6 +117,32 @@ class ModflowPrt(MFModel):
         model_rel_path=curdir,
         load_only=None,
     ):
+        """
+        Load an existing ModflowPrt model.
+
+        Parameters
+        ----------
+        simulation : MFSimulation
+            Simulation object that this model is a part of.
+        structure : MFModelStructure
+            Structure of this type of model.
+        modelname : str, default "NewModel"
+            Name of the model.
+        model_nam_file : str, default "modflowtest.nam"
+            Relative path to the model name file from model working folder.
+        version : str, default "mf6"
+            Version of modflow.
+        exe_name : str or PathLike, default "mf6"
+            Model executable name or path.
+        strict : bool, default True
+            Strict mode when loading files.
+        model_rel_path : str or PathLike, default "." (curdir)
+            Relative path of model folder to simulation folder.
+        load_only : list of str, optional
+            Packages to load (e.g. ['btn', 'adv']). Default None
+            means that all packages will be loaded.
+
+        """
         return MFModel.load_base(
             cls,
             simulation,

@@ -13,6 +13,19 @@ class ModflowEms(MFPackage):
 
     Parameters
     ----------
+    simulation
+        Simulation that this package is a part of. Package is automatically
+        added to simulation when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -29,28 +42,14 @@ class ModflowEms(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowEms defines a EMS package.
-
-        Parameters
-        ----------
-        simulation
-            Simulation that this package is a part of. Package is automatically
-            added to simulation when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(simulation, "ems", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowEms."""
+        super().__init__(
+            parent=simulation,
+            package_type="ems",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self._init_complete = True

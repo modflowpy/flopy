@@ -13,6 +13,12 @@ class ModflowPrtnam(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     list : string
         is name of the listing file to create for this prt model.  if not specified,
         then the name of the list file will be the basename of the prt model name file
@@ -30,7 +36,32 @@ class ModflowPrtnam(MFPackage):
     save_flows : keyword
         keyword to indicate that all model package flow terms will be written to the
         file specified with 'budget fileout' in output control.
-    packages : list
+    packages : [(ftype, fname, pname)]
+        * ftype : string
+                is the file type, which must be one of the following character values shown in
+                table ref{table:ftype-prt}. Ftype may be entered in any combination of
+                uppercase and lowercase.
+        * fname : string
+                is the name of the file containing the package input.  The path to the file
+                should be included if the file is not located in the folder where the program
+                was run.
+        * pname : string
+                is the user-defined name for the package. PNAME is restricted to 16 characters.
+                No spaces are allowed in PNAME.  PNAME character values are read and stored by
+                the program for stress packages only.  These names may be useful for labeling
+                purposes when multiple stress packages of the same type are located within a
+                single PRT Model.  If PNAME is specified for a stress package, then PNAME will
+                be used in the flow budget table in the listing file; it will also be used for
+                the text entry in the cell-by-cell budget file.  PNAME is case insensitive and
+                is stored in all upper case letters.
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -110,47 +141,15 @@ class ModflowPrtnam(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowPrtnam defines a NAM package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        list : string
-            is name of the listing file to create for this prt model.  if not specified,
-            then the name of the list file will be the basename of the prt model name file
-            and the '.lst' extension.  for example, if the prt name file is called
-            'my.model.nam' then the list file will be called 'my.model.lst'.
-        print_input : keyword
-            keyword to indicate that the list of all model stress package information will
-            be written to the listing file immediately after it is read.
-        print_flows : keyword
-            keyword to indicate that the list of all model package flow rates will be
-            printed to the listing file for every stress period time step in which 'budget
-            print' is specified in output control.  if there is no output control option
-            and 'print_flows' is specified, then flow rates are printed for the last time
-            step of each stress period.
-        save_flows : keyword
-            keyword to indicate that all model package flow terms will be written to the
-            file specified with 'budget fileout' in output control.
-        packages : list
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "nam", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowPrtnam."""
+        super().__init__(
+            parent=model,
+            package_type="nam",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.list = self.build_mfdata("list", list)
         self.print_input = self.build_mfdata("print_input", print_input)

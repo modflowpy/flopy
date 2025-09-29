@@ -13,6 +13,12 @@ class ModflowUtllaktab(MFPackage):
 
     Parameters
     ----------
+    model
+        Model that this package is a part of. Package is automatically
+        added to model when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     nrow : integer
         integer value specifying the number of rows in the lake table. there must be
         nrow rows of data in the table block.
@@ -21,7 +27,28 @@ class ModflowUtllaktab(MFPackage):
         ncol columns of data in the table block. for lakes with horizontal and/or
         vertical ctype connections, ncol must be equal to 3. for lakes with embeddedh
         or embeddedv ctype connections, ncol must be equal to 4.
-    table : [list]
+    table : [(stage, volume, sarea, barea)]
+        * stage : double precision
+                real value that defines the stage corresponding to the remaining data on the
+                line.
+        * volume : double precision
+                real value that defines the lake volume corresponding to the stage specified on
+                the line.
+        * sarea : double precision
+                real value that defines the lake surface area corresponding to the stage
+                specified on the line.
+        * barea : double precision
+                real value that defines the lake-GWF exchange area corresponding to the stage
+                specified on the line. BAREA is only specified if the CLAKTYPE for the lake is
+                EMBEDDEDH or EMBEDDEDV.
+
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -102,38 +129,15 @@ class ModflowUtllaktab(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowUtllaktab defines a LAKTAB package.
-
-        Parameters
-        ----------
-        model
-            Model that this package is a part of. Package is automatically
-            added to model when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        nrow : integer
-            integer value specifying the number of rows in the lake table. there must be
-            nrow rows of data in the table block.
-        ncol : integer
-            integer value specifying the number of columns in the lake table. there must be
-            ncol columns of data in the table block. for lakes with horizontal and/or
-            vertical ctype connections, ncol must be equal to 3. for lakes with embeddedh
-            or embeddedv ctype connections, ncol must be equal to 4.
-        table : [list]
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
-        super().__init__(model, "laktab", filename, pname, loading_package, **kwargs)
+        """Initialize ModflowUtllaktab."""
+        super().__init__(
+            parent=model,
+            package_type="laktab",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
+        )
 
         self.nrow = self.build_mfdata("nrow", nrow)
         self.ncol = self.build_mfdata("ncol", ncol)

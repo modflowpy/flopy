@@ -13,6 +13,12 @@ class ModflowUtltas(MFPackage):
 
     Parameters
     ----------
+    parent_package
+        Parent_package that this package is a part of. Package is automatically
+        added to parent_package when it is initialized.
+    loading_package : bool, default False
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     time_series_namerecord : (name, time_series_name)
         xxx
         * name : keyword
@@ -39,6 +45,13 @@ class ModflowUtltas(MFPackage):
     tas_array : [double precision]
         an array of numeric, floating-point values, or a constant value, readable by
         the u2drel array-reading utility.
+
+    filename : str or PathLike, optional
+        Name or path of file where this package is stored.
+    pname : str, optional
+        Package name.
+    **kwargs
+        Extra keywords for :class:`flopy.mf6.mfpackage.MFPackage`.
 
     """
 
@@ -77,7 +90,7 @@ class ModflowUtltas(MFPackage):
             "block attributes",
             "name time_series_name",
             "type string",
-            "shape any1d",
+            "shape (any1d)",
             "tagged false",
             "reader urword",
             "optional false",
@@ -144,7 +157,7 @@ class ModflowUtltas(MFPackage):
             "block time",
             "name time_from_model_start",
             "type double precision",
-            "block_variable True",
+            "block_variable true",
             "in_record true",
             "shape",
             "tagged false",
@@ -177,56 +190,14 @@ class ModflowUtltas(MFPackage):
         pname=None,
         **kwargs,
     ):
-        """
-        ModflowUtltas defines a TAS package.
-
-        Parameters
-        ----------
-        parent_package
-            Parent_package that this package is a part of. Package is automatically
-            added to parent_package when it is initialized.
-        loading_package : bool
-            Do not set this parameter. It is intended for debugging and internal
-            processing purposes only.
-        time_series_namerecord : (name, time_series_name)
-            xxx
-            * name : keyword
-                    xxx
-            * time_series_name : [string]
-                    Name by which a package references a particular time-array series. The name
-                    must be unique among all time-array series used in a package.
-
-        interpolation_methodrecord : (method, interpolation_method)
-            xxx
-            * method : keyword
-                     xxx
-            * interpolation_method : string
-                    Interpolation method, which is either STEPWISE or LINEAR.
-
-        sfacrecord : (sfac, sfacval)
-            xxx
-            * sfac : keyword
-                     xxx
-            * sfacval : [double precision]
-                    Scale factor, which will multiply all array values in time series. SFAC is an
-                    optional attribute; if omitted, SFAC = 1.0.
-
-        tas_array : [double precision]
-            an array of numeric, floating-point values, or a constant value, readable by
-            the u2drel array-reading utility.
-
-        filename : str
-            File name for this package.
-        pname : str
-            Package name for this package.
-        parent_file : MFPackage
-            Parent package file that references this package. Only needed for
-            utility packages (mfutl*). For example, mfutllaktab package must have
-            a mfgwflak package parent_file.
-        """
-
+        """Initialize ModflowUtltas."""
         super().__init__(
-            parent_package, "tas", filename, pname, loading_package, **kwargs
+            parent=parent_package,
+            package_type="tas",
+            filename=filename,
+            pname=pname,
+            loading_package=loading_package,
+            **kwargs,
         )
 
         self.time_series_namerecord = self.build_mfdata(
@@ -244,17 +215,6 @@ class ModflowUtltas(MFPackage):
 class UtltasPackages(MFChildPackages):
     """
     UtltasPackages is a container class for the ModflowUtltas class.
-
-    Methods
-    -------
-    initialize
-        Initializes a new ModflowUtltas package removing any sibling child
-        packages attached to the same parent package. See ModflowUtltas init
-        documentation for definition of parameters.
-    append_package
-        Adds a new ModflowUtltas package to the container. See ModflowUtltas
-        init documentation for definition of parameters.
-
     """
 
     package_abbr = "utltaspackages"
@@ -268,6 +228,12 @@ class UtltasPackages(MFChildPackages):
         filename=None,
         pname=None,
     ):
+        """
+        Initialize a new ModflowUtltas package, removing any sibling
+        child packages attached to the same parent package.
+
+        See :class:`ModflowUtltas` for parameter definitions.
+        """
         new_package = ModflowUtltas(
             self._cpparent,
             time_series_namerecord=time_series_namerecord,
@@ -289,6 +255,11 @@ class UtltasPackages(MFChildPackages):
         filename=None,
         pname=None,
     ):
+        """
+        Add a new ModflowUtltas package to the container.
+
+        See :class:`ModflowUtltas` for parameter definitions.
+        """
         new_package = ModflowUtltas(
             self._cpparent,
             time_series_namerecord=time_series_namerecord,
