@@ -53,7 +53,7 @@ from flopy.utils.gridgen import Gridgen
 model_ws = "Ex6a_Stallman_Heat"
 mf = MfUsg(
     version="mfusg",
-    structured=True,
+    structured=False,
     model_ws=model_ws,
     modelname="Ex6_Stallman",
     exe_name="mfusg_gsi",

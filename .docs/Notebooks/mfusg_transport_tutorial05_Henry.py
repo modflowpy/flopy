@@ -53,7 +53,7 @@ from flopy.utils.gridgen import Gridgen
 model_ws = "Ex5_Henry"
 mf = MfUsg(
     version="mfusg",
-    structured=True,
+    structured=False,
     model_ws=model_ws,
     modelname="Ex5_Henry",
     exe_name="mfusg_gsi",

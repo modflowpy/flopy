@@ -67,7 +67,7 @@ model_ws = "Ex7_MD"
 
 mf = MfUsg(
     version="mfusg",
-    structured=True,
+    structured=False,
     model_ws=model_ws,
     modelname="Ex7_MD",
     exe_name="mfusg_gsi",

@@ -68,7 +68,7 @@ from flopy.utils.gridgen import Gridgen
 model_ws = "Ex7_SandBox"
 mf = MfUsg(
     version="mfusg",
-    structured=True,
+    structured=False,
     model_ws=model_ws,
     modelname="Ex7_SandBox",
     exe_name="mfusg_gsi",

@@ -64,7 +64,7 @@ model_ws = "Ex8_Lake"
 
 mf = MfUsg(
     version="mfusg",
-    structured=True,
+    structured=False,
     model_ws=model_ws,
     modelname="Ex8_Lake",
     exe_name="mfusg",
