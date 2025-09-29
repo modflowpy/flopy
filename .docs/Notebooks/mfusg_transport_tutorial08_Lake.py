@@ -116,33 +116,30 @@ g.build()
 # -
 
 # +
-disu = g.get_disu(
-    mf, itmuni=4, lenuni=0, nper=1, perlen=5000.0, nstp=100, tsmult=1.02, steady=False
+disu = MfUsgDisU(
+    mf,
+    itmuni=4,
+    lenuni=0,
+    nper=1,
+    perlen=5000.0,
+    nstp=100,
+    tsmult=1.02,
+    steady=False,
+    **g.get_gridprops_disu5(),
 )
-disu.ivsd = -1
-anglex = g.get_anglex()
-# -
-
-# +
-# MODFLOW-USG does not have vertices, so we need to create
-# and unstructured grid and then assign it to the model. This
-# will allow plotting and other features to work properly.
-gridprops_ug = g.get_gridprops_unstructuredgrid()
-ugrid = flopy.discretization.UnstructuredGrid(**gridprops_ug)
-mf.modelgrid = ugrid
 # -
 
 # +
 
 # A 17-row by 17-column by 5-layer grid is used in the Lake Transport benchmark problem in A, plan and B, profile views. This problem first appeared in Merritt and Konikow (2000).
 
-pmv = PlotMapView(mf)
-pmv.plot_grid()
-# -
+# pmv = PlotMapView(ms)
+# pmv.plot_grid()
+# # -
 
-# +
-pxs = PlotCrossSection(ms, line={"row": 8})
-pxs.plot_grid()
+# # +
+# pxs = PlotCrossSection(ms, line={"row": 8})
+# pxs.plot_grid()
 # -
 
 # +
@@ -263,8 +260,8 @@ inhead = 115.0
 for ilay in range(nlay):
     istart, istop = mf.modelgrid.get_layer_node_range(ilay)
     for inode in range(istart, istop):
-        xcenters = mf.modelgrid.xcellcenters[inode]
-        ycenters = mf.modelgrid.ycellcenters[inode]
+        xcenters = ms.modelgrid.xcellcenters[inode]
+        ycenters = ms.modelgrid.ycellcenters[inode]
         if xcenters < 200 or ycenters < 200 or xcenters > 12800 or ycenters > 12800:
             lrcsc.append([inode, 0, fhbhead[inode]])
 
@@ -324,7 +321,7 @@ lak.lakarr[0].fmtin = "(17I3)"
 
 # +
 gages = [[-1, -37, 3]]
-files = [f"{model_ws}.got"]
+files = [f"{mf.name}.got"]
 gage = ModflowGage(mf, numgage=1, gage_data=gages, files=files)
 
 # -
@@ -347,17 +344,220 @@ got = np.genfromtxt(f"{mf.model_ws}/{mf.name}.got", skip_header=2)
 
 # +
 
-# from autotest.conftest import get_example_data_path
-example_data_path = Path(__file__).parent.parent.parent / "examples/data"
-txtfile = example_data_path / "mfusg_transport" / "Ex8_Lake" / "Analytical_Soln.txt"
-soln = np.genfromtxt(txtfile, skip_header=2)
+time = [
+    0.00e00,
+    1.60e01,
+    3.23e01,
+    4.90e01,
+    6.60e01,
+    8.33e01,
+    1.01e02,
+    1.19e02,
+    1.37e02,
+    1.56e02,
+    1.75e02,
+    1.95e02,
+    2.15e02,
+    2.35e02,
+    2.56e02,
+    2.77e02,
+    2.98e02,
+    3.20e02,
+    3.43e02,
+    3.66e02,
+    3.89e02,
+    4.13e02,
+    4.37e02,
+    4.62e02,
+    4.87e02,
+    5.13e02,
+    5.39e02,
+    5.66e02,
+    5.93e02,
+    6.21e02,
+    6.50e02,
+    6.79e02,
+    7.08e02,
+    7.38e02,
+    7.69e02,
+    8.01e02,
+    8.33e02,
+    8.65e02,
+    8.99e02,
+    9.33e02,
+    9.67e02,
+    1.00e03,
+    1.04e03,
+    1.08e03,
+    1.11e03,
+    1.15e03,
+    1.19e03,
+    1.23e03,
+    1.27e03,
+    1.31e03,
+    1.35e03,
+    1.40e03,
+    1.44e03,
+    1.49e03,
+    1.53e03,
+    1.58e03,
+    1.63e03,
+    1.67e03,
+    1.72e03,
+    1.77e03,
+    1.83e03,
+    1.88e03,
+    1.93e03,
+    1.99e03,
+    2.04e03,
+    2.10e03,
+    2.16e03,
+    2.22e03,
+    2.28e03,
+    2.34e03,
+    2.40e03,
+    2.47e03,
+    2.53e03,
+    2.60e03,
+    2.67e03,
+    2.74e03,
+    2.81e03,
+    2.88e03,
+    2.95e03,
+    3.03e03,
+    3.10e03,
+    3.18e03,
+    3.26e03,
+    3.34e03,
+    3.42e03,
+    3.51e03,
+    3.60e03,
+    3.68e03,
+    3.77e03,
+    3.86e03,
+    3.96e03,
+    4.05e03,
+    4.15e03,
+    4.25e03,
+    4.35e03,
+    4.45e03,
+    4.56e03,
+    4.67e03,
+    4.77e03,
+    4.89e03,
+    5.00e03,
+]
+manual_calculation = [
+    100.000,
+    96.6139,
+    93.3794,
+    90.1930,
+    87.0376,
+    83.9044,
+    80.7895,
+    77.6918,
+    74.6126,
+    71.5545,
+    68.5221,
+    65.5215,
+    62.5610,
+    59.6505,
+    56.8017,
+    54.0276,
+    51.3421,
+    48.7593,
+    46.2923,
+    43.9523,
+    41.7488,
+    39.6872,
+    37.7690,
+    35.9925,
+    34.3533,
+    32.8457,
+    31.4636,
+    30.2008,
+    29.0501,
+    28.0026,
+    27.0492,
+    26.1808,
+    25.3893,
+    24.6672,
+    24.0078,
+    23.4050,
+    22.8535,
+    22.3485,
+    21.8857,
+    21.4614,
+    21.0721,
+    20.7148,
+    20.3868,
+    20.0856,
+    19.8090,
+    19.5550,
+    19.3218,
+    19.1075,
+    18.9085,
+    18.7227,
+    18.5489,
+    18.3852,
+    18.2304,
+    18.0836,
+    17.9438,
+    17.8102,
+    17.6823,
+    17.5596,
+    17.4411,
+    17.3260,
+    17.2140,
+    17.1047,
+    16.9978,
+    16.8929,
+    16.7899,
+    16.6884,
+    16.5882,
+    16.4888,
+    16.3900,
+    16.2914,
+    16.1930,
+    16.0946,
+    15.9961,
+    15.8974,
+    15.7982,
+    15.6986,
+    15.5984,
+    15.4976,
+    15.3960,
+    15.2936,
+    15.1904,
+    15.0862,
+    14.9810,
+    14.8747,
+    14.7674,
+    14.6589,
+    14.5493,
+    14.4386,
+    14.3266,
+    14.2134,
+    14.0990,
+    13.9833,
+    13.8663,
+    13.7481,
+    13.6287,
+    13.5079,
+    13.3859,
+    13.2626,
+    13.1381,
+    13.0123,
+    12.8852,
+]
+
 # -
 
 # +
 fig = plt.figure(figsize=(8, 5), dpi=150)
 ax = fig.add_subplot(111)
 ax.plot(got[:, 0], got[:, 3])
-ax.plot(soln[:, 0], soln[:, 1], linestyle="--")
+ax.plot(time, manual_calculation, linestyle="--")
 
 ax2 = ax.twinx()
 ax2.plot(got[:, 0], got[:, 2], color="b")
