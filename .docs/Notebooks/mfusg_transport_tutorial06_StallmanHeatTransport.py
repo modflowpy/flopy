@@ -311,29 +311,29 @@ mf.write_input()
 success, buff = mf.run_model(silent=True)
 # -
 # +
-# vartype = [
-#     ("kstp", "<i4"),
-#     ("kper", "<i4"),
-#     ("pertim", "<f4"),
-#     ("totim", "<f4"),
-#     ("text", "S16"),
-#     ("nstrt", "<i4"),
-#     ("nndlay", "<i4"),
-#     ("ilay", "<i4"),
-#     ("data", "<f4"),
-# ]
-# hdr = np.fromfile(f"{mf.model_ws}/{mf.name}.con", vartype)
+vartype = [
+    ("kstp", "<i4"),
+    ("kper", "<i4"),
+    ("pertim", "<f4"),
+    ("totim", "<f4"),
+    ("text", "S16"),
+    ("nstrt", "<i4"),
+    ("nndlay", "<i4"),
+    ("ilay", "<i4"),
+    ("data", "<f4"),
+]
+hdr = np.fromfile(f"{mf.model_ws}/{mf.name}.con", vartype)
 
-# tmpr_data = hdr[np.char.strip(hdr['text'].astype(str)) == 'TMPR']
-# conc_data = hdr[np.char.strip(hdr['text'].astype(str)) == 'CONC']
-# simtemp = tmpr_data[(tmpr_data['kper']==601) & (tmpr_data['kstp']==6)]['data']
-# simconc = conc_data[(conc_data['kper']==601) & (conc_data['kstp']==6)]['data']
+tmpr_data = hdr[np.char.strip(hdr["text"].astype(str)) == "TMPR"]
+conc_data = hdr[np.char.strip(hdr["text"].astype(str)) == "CONC"]
+simtemp = tmpr_data[(tmpr_data["kper"] == 601) & (tmpr_data["kstp"] == 6)]["data"]
+simconc = conc_data[(conc_data["kper"] == 601) & (conc_data["kstp"] == 6)]["data"]
 
-tempobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text="tmpr")
-simtemp = np.concatenate(tempobj.get_data())
-
-concobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text="conc")
-simconc = concobj.get_data()
+# tempobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", precision="single", text=' TMPR           ')
+# simtemp = np.concatenate(tempobj.get_data())
+#
+# concobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text="CONC")
+# simconc = concobj.get_data()
 # -
 # +
 depth = top - np.squeeze(dis.botm.array)
