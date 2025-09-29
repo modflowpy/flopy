@@ -39,8 +39,8 @@ import numpy as np
 
 import flopy
 from flopy.mfusg import (
-    MfUsgBas,
     MfUsg,
+    MfUsgBas,
     MfUsgBcf,
     MfUsgBct,
     MfUsgCln,

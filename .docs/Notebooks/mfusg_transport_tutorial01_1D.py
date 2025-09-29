@@ -41,7 +41,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import flopy
-from flopy.mfusg import MfUsg, MfUsgBas MfUsgBct, MfUsgLpf, MfUsgOc, MfUsgPcb, MfUsgSms
+from flopy.mfusg import MfUsg, MfUsgBas, MfUsgBct, MfUsgLpf, MfUsgOc, MfUsgPcb, MfUsgSms
 from flopy.modflow import ModflowDis
 from flopy.utils import HeadFile
 

@@ -44,11 +44,13 @@ class MfUsgLpf(ModflowLpf):
         (default is -1.e30).
     laytyp : int or array of ints (nlay)
         Layer type, contains a flag for each layer that specifies the layer
-        type.
-        0 confined
-        >0 convertible
-        <0 convertible unless the THICKSTRT option is in effect.
-        (default is 0).
+        type (default is 0).
+        0 is confined
+        >0 is convertible
+        <0 is convertible unless the THICKSTRT option is in effect.
+        =4 is convertible, with transmissivity computed using upstream
+        water-table depth.
+        =5 is richards equation for variably saturated flow.
     layavg : int or array of ints (nlay)
         Layer average
         0 is harmonic mean
@@ -123,7 +125,7 @@ class MfUsgLpf(ModflowLpf):
         When STORAGECOEFFICIENT is used, Ss is confined storage coefficient.
         (default is 1.e-5).
     sy : float or array of floats (nlay, nrow, ncol)
-        is specific yield.
+        is specific yield or the saturated water content if richards is used.
         (default is 0.15).
     vkcb : float or array of floats (nlay, nrow, ncol)
         is the vertical hydraulic conductivity of a Quasi-three-dimensional
@@ -160,7 +162,20 @@ class MfUsgLpf(ModflowLpf):
          5-8 of USGS Techniques and Methods Report 6-A16 and the vertical
          conductance correction described on p. 5-18 of that report.
          (default is False).
-    extension : string
+    bubblept : boolean
+        turns on the use of the bubbling point pressure in the unsaturated zone
+        calculation such that gas saturations are represented.
+    alpha : float or array of floats (nlay, nrow, ncol)
+        is the van Genuchten shape parameter alpha
+    beta : float or array of floats (nlay, nrow, ncol)
+        is the van Genuchten shape parameter beta (also called n sometimes)
+    sr : float or array of floats (nlay, nrow, ncol)
+        is the residual saturation (equal to theta_r/theta_s)
+    brook : float or array of floats (nlay, nrow, ncol)
+        is the Brooks-Corey shape parameter for the hydraulic conductivity function
+    bp : float or array of floats (nlay, nrow, ncol)
+        is the bubbling point pressure / air entry head. Requires bubblept to be True.
+        extension : string
         Filename extension (default is 'lpf')
     unitnumber : int
         File unit number (default is None).
@@ -233,11 +248,11 @@ class MfUsgLpf(ModflowLpf):
         novfc=False,
         bubblept=False,
         fullydry=False,
-        alpha=0,
-        beta=0,
-        sr=0,
-        brook=0,
-        bp=0,
+        alpha=1.0,
+        beta=7.0,
+        sr=0.05,
+        brook=6.0,
+        bp=0.0,
         extension="lpf",
         unitnumber=None,
         filenames=None,
@@ -320,8 +335,17 @@ class MfUsgLpf(ModflowLpf):
                 model, (njag,), np.float32, ksat, "ksat", locat=self.unit_number[0]
             )
 
-        bas = model.get_package("BAS6")
-        self.richards = bas.richards
+        if self.laytyp == 5:
+            self.richards = True
+            bas = model.get_package("BAS6")
+            if not hasattr(bas, "richards") or not bas.richards:
+                raise ValueError(
+                    "The MfUsgBas package must have richards=True"
+                    "when using laytyp=5 in the LPF package."
+                )
+        else:
+            self.richards = False
+
         self.bubblept = bubblept
         self.fullydry = fullydry
 

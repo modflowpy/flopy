@@ -38,6 +38,9 @@ class MfUsgBas(Package):
     ichflg : bool, optional
         Flag indicating that flows between constant head cells should be
         calculated (the default is False).
+    richards: bool, optional
+        Flag indicating that Richards equation is being solved (the default
+        is False). This is equivalent to using laytyp=5 in the LPF package.
     stoper : float
         percent discrepancy that is compared to the budget percent discrepancy
         continue when the solver convergence criteria are not met.  Execution
