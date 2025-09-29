@@ -65,6 +65,23 @@ MODFLOW-NWT
    Notebooks/nwt_option_blocks_tutorial
 
 
+MODFLOW-USG
+-----------
+
+.. toctree::
+   :maxdepth: 2
+
+   Notebooks/mfusg_transport_tutorial01_1D
+   Notebooks/mfusg_transport_tutorial02_Radial
+   Notebooks/mfusg_transport_tutorial03_Conduit
+   Notebooks/mfusg_transport_tutorial04_DualDomain
+   Notebooks/mfusg_transport_tutorial05_Henry
+   Notebooks/mfusg_transport_tutorial06_StallmanHeatTransport
+   Notebooks/mfusg_transport_tutorial07a_DiscreteFracture
+   Notebooks/mfusg_transport_tutorial07b_SandBox
+   Notebooks/mfusg_transport_tutorial09_PFAS
+
+
 MT3DMS
 ------
 
