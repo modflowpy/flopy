@@ -93,23 +93,11 @@ if not os.path.exists(gridgen_ws):
     os.mkdir(gridgen_ws)
 g = Gridgen(ms.modelgrid, model_ws=gridgen_ws)
 g.build()
-# -
-# +
-disu = g.get_disu(mf, itmuni=3, lenuni=3, nper=1, perlen=2.025)
-disu.ivsd = -1
+gridprops = g.get_gridprops_disu5()
 anglex = g.get_anglex()
-disu.iac.fmtin = "(10I4)"
-disu.ja.fmtin = "(10I4)"
-disu.cl12.fmtin = "(10F6.2)"
-disu.fahl.fmtin = "(10F6.2)"
 # -
-# MODFLOW-USG does not have vertices, so we need to create
-# and unstructured grid and then assign it to the model. This
-# will allow plotting and other features to work properly.
 # +
-gridprops_ug = g.get_gridprops_unstructuredgrid()
-ugrid = flopy.discretization.UnstructuredGrid(**gridprops_ug)
-mf.modelgrid = ugrid
+disu = MfUsgDisU(mf, **gridprops)
 # -
 # +
 bas = MfUsgBas(mf, ibound=1, strt=15.0, richards=True)
@@ -225,10 +213,10 @@ oc = MfUsgOc(
 # -
 # +
 mf.write_input()
-success, buff = mf.run_model()
+success, buff = mf.run_model(silent=False)
 # -
 # +
-concobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text="conc")
+concobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text="CONC")
 simconc1 = concobj.get_ts((119))
 # -
 
