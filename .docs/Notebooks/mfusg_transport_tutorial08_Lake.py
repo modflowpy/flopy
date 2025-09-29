@@ -116,30 +116,33 @@ g.build()
 # -
 
 # +
-disu = MfUsgDisU(
-    mf,
-    itmuni=4,
-    lenuni=0,
-    nper=1,
-    perlen=5000.0,
-    nstp=100,
-    tsmult=1.02,
-    steady=False,
-    **g.get_gridprops_disu5(),
+disu = g.get_disu(
+    mf, itmuni=4, lenuni=0, nper=1, perlen=5000.0, nstp=100, tsmult=1.02, steady=False
 )
+disu.ivsd = -1
+anglex = g.get_anglex()
+# -
+
+# +
+# MODFLOW-USG does not have vertices, so we need to create
+# and unstructured grid and then assign it to the model. This
+# will allow plotting and other features to work properly.
+gridprops_ug = g.get_gridprops_unstructuredgrid()
+ugrid = flopy.discretization.UnstructuredGrid(**gridprops_ug)
+mf.modelgrid = ugrid
 # -
 
 # +
 
 # A 17-row by 17-column by 5-layer grid is used in the Lake Transport benchmark problem in A, plan and B, profile views. This problem first appeared in Merritt and Konikow (2000).
 
-# pmv = PlotMapView(ms)
-# pmv.plot_grid()
-# # -
+pmv = PlotMapView(mf)
+pmv.plot_grid()
+# -
 
-# # +
-# pxs = PlotCrossSection(ms, line={"row": 8})
-# pxs.plot_grid()
+# +
+pxs = PlotCrossSection(ms, line={"row": 8})
+pxs.plot_grid()
 # -
 
 # +
@@ -260,8 +263,8 @@ inhead = 115.0
 for ilay in range(nlay):
     istart, istop = mf.modelgrid.get_layer_node_range(ilay)
     for inode in range(istart, istop):
-        xcenters = ms.modelgrid.xcellcenters[inode]
-        ycenters = ms.modelgrid.ycellcenters[inode]
+        xcenters = mf.modelgrid.xcellcenters[inode]
+        ycenters = mf.modelgrid.ycellcenters[inode]
         if xcenters < 200 or ycenters < 200 or xcenters > 12800 or ycenters > 12800:
             lrcsc.append([inode, 0, fhbhead[inode]])
 
