@@ -33,6 +33,7 @@ import flopy
 import flopy.utils.binaryfile as bf
 from flopy.mfusg import (
     MfUsg,
+    MfUsgBas,
     MfUsgBct,
     MfUsgDisU,
     MfUsgLpf,
@@ -42,7 +43,7 @@ from flopy.mfusg import (
     MfUsgSms,
     MfUsgWel,
 )
-from flopy.modflow import ModflowBas, ModflowChd, ModflowDis
+from flopy.modflow import ModflowChd, ModflowDis
 from flopy.plot import PlotCrossSection, PlotMapView
 from flopy.utils import HeadUFile
 from flopy.utils.gridgen import Gridgen
@@ -117,7 +118,7 @@ mf.modelgrid = ugrid
 # -
 
 # +
-bas = ModflowBas(mf, strt=20.0)
+bas = MfUsgBas(mf, strt=20.0)
 # -
 
 # +

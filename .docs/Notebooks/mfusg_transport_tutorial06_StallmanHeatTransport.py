@@ -33,6 +33,7 @@ import numpy as np
 import flopy
 from flopy.mfusg import (
     MfUsg,
+    MfUsgBas,
     MfUsgBct,
     MfUsgDdf,
     MfUsgDisU,
@@ -42,7 +43,7 @@ from flopy.mfusg import (
     MfUsgSms,
     MfUsgWel,
 )
-from flopy.modflow import ModflowBas, ModflowChd, ModflowDis
+from flopy.modflow import ModflowChd, ModflowDis
 from flopy.plot import PlotCrossSection
 from flopy.utils import HeadUFile
 from flopy.utils.gridgen import Gridgen
@@ -103,7 +104,7 @@ disu = MfUsgDisU(
 # -
 # +
 
-bas = ModflowBas(mf, strt=60.0)
+bas = MfUsgBas(mf, strt=60.0)
 # -
 
 # +

@@ -41,6 +41,7 @@ import flopy
 import flopy.utils.binaryfile as bf
 from flopy.mfusg import (
     MfUsg,
+    MfUsgBas,
     MfUsgBcf,
     MfUsgBct,
     MfUsgDisU,
@@ -51,7 +52,7 @@ from flopy.mfusg import (
     MfUsgRch,
     MfUsgSms,
 )
-from flopy.modflow import ModflowBas, ModflowChd, ModflowDis, ModflowFhb, ModflowGage
+from flopy.modflow import ModflowChd, ModflowDis, ModflowFhb, ModflowGage
 from flopy.plot import PlotCrossSection, PlotMapView
 from flopy.utils import HeadUFile
 from flopy.utils.gridgen import Gridgen
@@ -157,7 +158,7 @@ for ilay in range(nlay):
         laybnd[7:10, 7:10] = 0
     laybnd = laybnd.reshape(-1)
     ibound.append(laybnd)
-bas = ModflowBas(mf, ibound=ibound, strt=115.0)
+bas = MfUsgBas(mf, ibound=ibound, strt=115.0)
 bas.ibound.fmtin = "(17I4)"
 # -
 

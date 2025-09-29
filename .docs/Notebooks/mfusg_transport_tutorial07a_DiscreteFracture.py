@@ -35,6 +35,7 @@ import flopy
 import flopy.utils.binaryfile as bf
 from flopy.mfusg import (
     MfUsg,
+    MfUsgBas,
     MfUsgBct,
     MfUsgDisU,
     MfUsgLpf,
@@ -44,7 +45,7 @@ from flopy.mfusg import (
     MfUsgSms,
     MfUsgWel,
 )
-from flopy.modflow import ModflowBas, ModflowChd, ModflowDis
+from flopy.modflow import ModflowChd, ModflowDis
 from flopy.plot import PlotCrossSection, PlotMapView
 from flopy.utils import HeadUFile
 from flopy.utils.gridgen import Gridgen
@@ -107,7 +108,7 @@ perlen = [30.0, 20.0]
 disu = MfUsgDisU(mf, **gridprops, itmuni=5, lenuni=1, nper=nper, perlen=perlen)
 # -
 # +
-bas = ModflowBas(mf, strt=10.0)
+bas = MfUsgBas(mf, strt=10.0)
 # -
 # +
 

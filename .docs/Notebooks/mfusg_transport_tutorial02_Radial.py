@@ -44,8 +44,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import flopy
-from flopy.mfusg import MfUsg, MfUsgBct, MfUsgLpf, MfUsgOc, MfUsgSms, MfUsgWel
-from flopy.modflow import ModflowBas, ModflowChd, ModflowDis
+from flopy.mfusg import MfUsg, MfUsgBas, MfUsgBct, MfUsgLpf, MfUsgOc, MfUsgSms, MfUsgWel
+from flopy.modflow import ModflowChd, ModflowDis
 from flopy.utils import HeadFile
 
 # -
@@ -101,7 +101,7 @@ strt[:, -1, :] = 20.0
 strt[:, :, 0] = 20.0
 strt[:, :, -1] = 20.0
 
-bas = ModflowBas(mf, ibound=ibound, strt=strt)
+bas = MfUsgBas(mf, ibound=ibound, strt=strt)
 # -
 # +
 ipakcb = 50

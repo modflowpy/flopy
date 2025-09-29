@@ -43,6 +43,7 @@ import flopy
 import flopy.utils.binaryfile as bf
 from flopy.mfusg import (
     MfUsg,
+    MfUsgBas,
     MfUsgBct,
     MfUsgDisU,
     MfUsgLpf,
@@ -50,7 +51,7 @@ from flopy.mfusg import (
     MfUsgRch,
     MfUsgSms,
 )
-from flopy.modflow import ModflowBas, ModflowChd, ModflowDis
+from flopy.modflow import ModflowChd, ModflowDis
 from flopy.plot import PlotCrossSection, PlotMapView
 from flopy.utils import HeadUFile
 from flopy.utils.gridgen import Gridgen
@@ -111,7 +112,7 @@ ugrid = flopy.discretization.UnstructuredGrid(**gridprops_ug)
 mf.modelgrid = ugrid
 # -
 # +
-bas = ModflowBas(mf, ibound=1, strt=15.0, richards=True, unstructured=True)
+bas = MfUsgBas(mf, ibound=1, strt=15.0, richards=True, unstructured=True)
 # -
 # +
 ipakcb = 50
