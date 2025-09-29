@@ -1775,10 +1775,14 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
             return ""
 
         # Write out pre-data comments (including headers) like MFList does
+        mode = "w"
         if fd_data_file is not None and data_storage.pre_data_comments:
-            if not hasattr(fd_data_file, "write"):
-                fd_data_file = open(fd_data_file, "w")
-            fd_data_file.write(data_storage.pre_data_comments.get_file_entry())
+            if hasattr(fd_data_file, "write"):
+                fd_data_file.write(data_storage.pre_data_comments.get_file_entry())
+            else:
+                mode = "a"
+                with open(fd_data_file, "w") as f:
+                    f.write(data_storage.pre_data_comments.get_file_entry())
 
         # Loop through data pieces
         data = self._remove_cellid_fields(data_storage.internal_data)
@@ -1828,6 +1832,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
                         sep=" ",
                         header=False,
                         index=False,
+                        mode=mode,
                         float_format=float_format,
                         lineterminator="\n",
                     )
