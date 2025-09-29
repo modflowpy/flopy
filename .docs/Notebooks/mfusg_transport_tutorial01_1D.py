@@ -41,8 +41,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import flopy
-from flopy.mfusg import MfUsg, MfUsgBct, MfUsgLpf, MfUsgOc, MfUsgPcb, MfUsgSms
-from flopy.modflow import ModflowBas, ModflowDis
+from flopy.mfusg import MfUsg, MfUsgBas MfUsgBct, MfUsgLpf, MfUsgOc, MfUsgPcb, MfUsgSms
+from flopy.modflow import ModflowDis
 from flopy.utils import HeadFile
 
 # -
@@ -95,7 +95,7 @@ ibound[:, :, -1] = -1
 strt = np.full((nlay, nrow, ncol), 100.0)
 strt[:, :, 0] = 1100.0
 
-bas = ModflowBas(mf, ibound=ibound, strt=strt)
+bas = MfUsgBas(mf, ibound=ibound, strt=strt)
 # -
 
 # +

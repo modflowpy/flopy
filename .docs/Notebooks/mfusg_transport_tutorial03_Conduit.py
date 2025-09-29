@@ -38,8 +38,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import flopy
-from flopy.mfusg import MfUsg, MfUsgBcf, MfUsgBct, MfUsgCln, MfUsgOc, MfUsgSms, MfUsgWel
-from flopy.modflow import ModflowBas, ModflowChd, ModflowDis
+from flopy.mfusg import (
+    MfUsgBas,
+    MfUsg,
+    MfUsgBcf,
+    MfUsgBct,
+    MfUsgCln,
+    MfUsgOc,
+    MfUsgSms,
+    MfUsgWel,
+)
+from flopy.modflow import ModflowChd, ModflowDis
 from flopy.plot import PlotCrossSection, PlotMapView
 from flopy.utils import HeadFile
 
@@ -98,7 +107,7 @@ strt[1, -1, :] = 60.0
 strt[1, :, 0] = 60.0
 strt[1, :, -1] = 60.0
 
-bas = ModflowBas(mf, ibound=ibound, strt=strt)
+bas = MfUsgBas(mf, ibound=ibound, strt=strt)
 bas.ibound.fmtin = "(25I3)"
 bas.strt.fmtin = "(10e12.4)"
 # -
