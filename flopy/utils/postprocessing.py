@@ -57,15 +57,13 @@ def get_transmissivities(
 
     For vertex grids only x, y coordinates are supported.
 
-    The function automatically detects the grid type and handles indexing
-    appropriately for each grid type.
-
     Examples
     --------
     >>> T = get_transmissivities(heads, model, r=[0, 1], c=[0, 1])
     >>> T = get_transmissivities(heads, model, x=[100.0, 200.0], y=[50.0, 150.0])
     """
 
+    # get grid dims
     if (modelgrid := getattr(m, "modelgrid", None)) is not None:
         grid_type = modelgrid.grid_type
         nlay = m.modelgrid.nlay
@@ -80,7 +78,7 @@ def get_transmissivities(
         nrow = m.nrow
         ncol = m.ncol
 
-    # get cell indices based on input parameters and grid type
+    # get slicing indices
     if r is not None and c is not None:
         if grid_type != "structured":
             raise ValueError("r, c parameters only valid for structured grids")
@@ -95,7 +93,7 @@ def get_transmissivities(
     else:
         raise ValueError("Must specify r, c indices or x, y locations.")
 
-    # get k-values and botms at those locations
+    # slice k
     paklist = m.get_package_list()
     if "LPF" in paklist:
         hk = m.lpf.hk.array[(slice(None),) + indices]
@@ -106,9 +104,10 @@ def get_transmissivities(
     else:
         raise ValueError("No LPF, UPW, or NPF package.")
 
+    # slice botm
     botm = m.dis.botm.array[(slice(None),) + indices]
 
-    # extract heads for the specified locations
+    # slice heads
     if grid_type == "structured" and heads.shape == (nlay, nrow, ncol):
         heads = heads[(slice(None),) + indices]
     elif grid_type != "structured" and heads.shape == (nlay, ncpl):
@@ -116,7 +115,7 @@ def get_transmissivities(
     if heads.shape != botm.shape:
         raise ValueError("Shape of heads array must be nlay x nhyd")
 
-    # set open interval tops/bottoms to model top/bottom if None
+    # open interval tops/bottoms default to model top/bottom
     if sctop is None:
         sctop = m.dis.top.array[indices]
     if scbot is None:
