@@ -8,7 +8,7 @@ FloPy
 
 .. image:: _images/flopylogo.png
 
-**Documentation for version 3.6.0.dev0**
+**Documentation for version 3.10.0.dev4**
 
 Documentation is generated with Sphinx from the `FloPy repository <https://github.com/modflowpy/flopy>`_.
 

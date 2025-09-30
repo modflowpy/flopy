@@ -50,6 +50,7 @@ def create_tutorials_rst():
             "mf2005": {"title": "MODFLOW-2005", "files": []},
             "lgr": {"title": "MODFLOW-LGR", "files": []},
             "nwt": {"title": "MODFLOW-NWT", "files": []},
+            "mfusg": {"title": "MODFLOW USG", "files": []},
             "mt3dms": {"title": "MT3DMS", "files": []},
             "pest": {"title": "PEST", "files": []},
             "misc": {"title": "Miscellaneous", "files": []},

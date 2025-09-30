@@ -10,8 +10,8 @@ from autotest.conftest import get_project_root_path
 
 EXCLUDE = [
     "mf6_lgr",
-    "mfusg_transport_tutorial07c_ChainDecay",
-    "mfusg_transport_tutorial08_Lake",
+    "mfusg_transport_07c_ChainDecay",
+    "mfusg_transport_08_Lake",
 ]
 # skip pyvista notebooks on windows/mac in CI due to persistent issues
 # first with offscreen rendering, then with finding pyvista even after

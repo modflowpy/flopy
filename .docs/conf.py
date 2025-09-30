@@ -92,13 +92,15 @@ cmd = ("python", "create_rstfiles.py")
 print(" ".join(cmd))
 os.system(" ".join(cmd))
 
-# -- convert tutorial scripts and run example notebooks ----------------------
+# -- convert and run tutorial and example notebooks ----------------------
 if not on_rtd:
-    nbs_py = Path("Notebooks").glob("*.py")
-    for py in nbs_py:
+    for py in Path("Notebooks").glob("*.py"):
+        if not ("tutorial" in py.name or "example" in py.name):
+            print(f"skipping {py}")
+            continue
         ipynb = py.with_suffix(".ipynb")
         if ipynb.exists():
-            print(f"{ipynb} already exists, skipping")
+            print(f"Notebook {ipynb} already exists, skipping")
             continue
         cmd = ("jupytext", "--to", "ipynb", "--execute", str(py))
         print(" ".join(cmd))
