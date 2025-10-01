@@ -220,7 +220,7 @@ concobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text="CONC")
 simconc1 = concobj.get_ts((119))
 # -
 
-# ## Saturated, C=1 at inlet, with adsorption (kd = 0.08).
+# ### Saturated, C=1 at inlet, with adsorption (kd = 0.08).
 # +
 mf.remove_package("BCT")
 bct = MfUsgBct(
@@ -361,7 +361,7 @@ concobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text="conc")
 simconc4 = concobj.get_ts((119))
 # -
 
-# ## Saturation of 0.68,  A-W adsorption C=0.01, Kaw = 0.0040
+# ### Saturation of 0.68,  A-W adsorption C=0.01, Kaw = 0.0040
 
 # +
 mf.remove_package("BCT")
