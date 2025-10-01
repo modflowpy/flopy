@@ -57,20 +57,6 @@ class ModflowGwtsrc(MFPackage):
         obs package with variable names as keys and package data as values. Data for
         the observations variable is also acceptable. See obs package documentation for
         more information.
-    highest_saturated : keyword
-        apply mass source loading rate to specified cellid or highest underlying cell
-        with a cell saturation greater than zero. the highest_saturated option has an
-        additional complication for certain types of grids specified using the disu
-        package. when the disu package is used, a cell may have more than one cell
-        underlying it. if the overlying cell were to become inactive, there is no
-        straightforward method for determining how to apportion the mass source loading
-        rate to the underlying cells. in this case, the approach described by
-        cite{modflowusg} is used. the mass source loading rate is assigned to the first
-        active cell encountered (determined by searching through the underlying cell
-        numbers from the lowest number to the highest number). in this manner, the
-        total mass source loading rate is conserved; however, the spatial distribution
-        of the applied mass source loading rate may not be maintained as layers become
-        dry or wet during a simulation.
     maxbound : integer
         integer value specifying the maximum number of sources cells that will be
         specified for use during any stress period.
@@ -334,7 +320,6 @@ class ModflowGwtsrc(MFPackage):
         save_flows=None,
         timeseries=None,
         observations=None,
-        highest_saturated=None,
         maxbound=None,
         stress_period_data=None,
         filename=None,
@@ -364,9 +349,6 @@ class ModflowGwtsrc(MFPackage):
         self._obs_filerecord = self.build_mfdata("obs_filerecord", None)
         self._obs_package = self.build_child_package(
             "obs", observations, "continuous", self._obs_filerecord
-        )
-        self.highest_saturated = self.build_mfdata(
-            "highest_saturated", highest_saturated
         )
         self.maxbound = self.build_mfdata("maxbound", maxbound)
         self.stress_period_data = self.build_mfdata(

@@ -58,13 +58,6 @@ class ModflowGwfdisu(MFPackage):
     export_array_ascii : keyword
         keyword that specifies input griddata arrays should be written to layered ascii
         output files.
-    crs : [string]
-        is a real-world coordinate reference system (crs) for the model, for example,
-        an epsg integer code (e.g. 26915), authority string (i.e. epsg:26915), or open
-        geospatial consortium well-known text (wkt) specification. limited to 5000
-        characters. the entry for crs does not affect the model simulation, but it is
-        written to the binary grid file so that postprocessors can locate the grid in
-        space.
     nodes : integer
         is the number of cells in the model grid.
     nja : integer
@@ -184,7 +177,6 @@ class ModflowGwfdisu(MFPackage):
     grb_filerecord = ListTemplateGenerator(
         ("gwf6", "disu", "options", "grb_filerecord")
     )
-    crs = ArrayTemplateGenerator(("gwf6", "disu", "options", "crs"))
     top = ArrayTemplateGenerator(("gwf6", "disu", "griddata", "top"))
     bot = ArrayTemplateGenerator(("gwf6", "disu", "griddata", "bot"))
     area = ArrayTemplateGenerator(("gwf6", "disu", "griddata", "area"))
@@ -506,7 +498,6 @@ class ModflowGwfdisu(MFPackage):
         angrot=None,
         vertical_offset_tolerance=0.0,
         export_array_ascii=None,
-        crs=None,
         nodes=None,
         nja=None,
         nvert=None,
@@ -548,7 +539,6 @@ class ModflowGwfdisu(MFPackage):
         self.export_array_ascii = self.build_mfdata(
             "export_array_ascii", export_array_ascii
         )
-        self.crs = self.build_mfdata("crs", crs)
         self.nodes = self.build_mfdata("nodes", nodes)
         self.nja = self.build_mfdata("nja", nja)
         self.nvert = self.build_mfdata("nvert", nvert)

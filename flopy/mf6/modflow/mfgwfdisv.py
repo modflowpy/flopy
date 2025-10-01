@@ -54,13 +54,6 @@ class ModflowGwfdisv(MFPackage):
     export_array_netcdf : keyword
         keyword that specifies input griddata arrays should be written to the model
         output netcdf file.
-    crs : [string]
-        is a real-world coordinate reference system (crs) for the model, for example,
-        an epsg integer code (e.g. 26915), authority string (i.e. epsg:26915), or open
-        geospatial consortium well-known text (wkt) specification. limited to 5000
-        characters. the entry for crs does not affect the model simulation, but it is
-        written to the binary grid file so that postprocessors can locate the grid in
-        space.
     packagedata : record ncf6 filein ncf6_filename
         Contains data for the ncf package. Data can be passed as a dictionary to the
         ncf package with variable names as keys and package data as values. Data for
@@ -127,7 +120,6 @@ class ModflowGwfdisv(MFPackage):
     grb_filerecord = ListTemplateGenerator(
         ("gwf6", "disv", "options", "grb_filerecord")
     )
-    crs = ArrayTemplateGenerator(("gwf6", "disv", "options", "crs"))
     ncf_filerecord = ListTemplateGenerator(
         ("gwf6", "disv", "options", "ncf_filerecord")
     )
@@ -434,7 +426,6 @@ class ModflowGwfdisv(MFPackage):
         angrot=None,
         export_array_ascii=None,
         export_array_netcdf=None,
-        crs=None,
         packagedata=None,
         nlay=None,
         ncpl=None,
@@ -470,7 +461,6 @@ class ModflowGwfdisv(MFPackage):
         self.export_array_netcdf = self.build_mfdata(
             "export_array_netcdf", export_array_netcdf
         )
-        self.crs = self.build_mfdata("crs", crs)
         self._ncf_filerecord = self.build_mfdata("ncf_filerecord", None)
         self._ncf_package = self.build_child_package(
             "ncf", packagedata, "packagedata", self._ncf_filerecord

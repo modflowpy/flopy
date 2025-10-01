@@ -42,9 +42,6 @@ class ModflowGwt(MFModel):
     save_flows : keyword
         keyword to indicate that all model package flow terms will be written to the
         file specified with 'budget fileout' in output control.
-    dependent_variable_scaling : keyword
-        flag to scale x and rhs to avoid very large positive or negative dependent
-        variable values
     nc_mesh2d_filerecord : record
         netcdf layered mesh fileout record.
     nc_structured_filerecord : record
@@ -90,7 +87,6 @@ class ModflowGwt(MFModel):
         print_input=None,
         print_flows=None,
         save_flows=None,
-        dependent_variable_scaling=None,
         nc_mesh2d_filerecord=None,
         nc_structured_filerecord=None,
         nc_filerecord=None,
@@ -116,8 +112,6 @@ class ModflowGwt(MFModel):
         self.print_flows = self.name_file.print_flows
         self.name_file.save_flows.set_data(save_flows)
         self.save_flows = self.name_file.save_flows
-        self.name_file.dependent_variable_scaling.set_data(dependent_variable_scaling)
-        self.dependent_variable_scaling = self.name_file.dependent_variable_scaling
         self.name_file.nc_mesh2d_filerecord.set_data(nc_mesh2d_filerecord)
         self.nc_mesh2d_filerecord = self.name_file.nc_mesh2d_filerecord
         self.name_file.nc_structured_filerecord.set_data(nc_structured_filerecord)

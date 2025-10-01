@@ -124,10 +124,6 @@ class ModflowPrtprp(MFPackage):
         releasesetting selections. if none of these are provided, a single release time
         is configured at the beginning of the first time step of the simulation's first
         stress period.
-    coordinate_check_method : string
-        approach for verifying that release point coordinates are in the cell with the
-        specified id. by default, release point coordinates are checked at release
-        time.
     dev_cycle_detection_window : integer
         integer value defining the size of the window (number of consecutive exit
         events) used for cycle detection. defaults to 0, disabling cycle detection.
@@ -721,7 +717,6 @@ class ModflowPrtprp(MFPackage):
         dev_forceternary=None,
         release_time_tolerance=None,
         release_time_frequency=None,
-        coordinate_check_method="eager",
         dev_cycle_detection_window=None,
         nreleasepts=None,
         nreleasetimes=None,
@@ -778,9 +773,6 @@ class ModflowPrtprp(MFPackage):
         )
         self.release_time_frequency = self.build_mfdata(
             "release_time_frequency", release_time_frequency
-        )
-        self.coordinate_check_method = self.build_mfdata(
-            "coordinate_check_method", coordinate_check_method
         )
         self.dev_cycle_detection_window = self.build_mfdata(
             "dev_cycle_detection_window", dev_cycle_detection_window
