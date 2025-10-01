@@ -247,7 +247,7 @@ concobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text="conc")
 simconc2 = concobj.get_ts((119))
 # -
 
-# ## Saturation of 0.68,  A-W adsorption C=1, Kaw = 0.0021
+# ### Saturation of 0.68,  A-W adsorption C=1, Kaw = 0.0021
 # +
 mf.remove_package("BCT")
 bct = MfUsgBct(
@@ -327,7 +327,7 @@ concobj = HeadUFile(f"{mf.model_ws}/{mf.name}.con", text="conc")
 simconc3 = concobj.get_ts((119))
 # -
 
-# ## Saturation of 0.68,  A-W adsorption C=0.1, Kaw = 0.0027
+# ### Saturation of 0.68,  A-W adsorption C=0.1, Kaw = 0.0027
 
 # +
 mf.remove_package("BCT")

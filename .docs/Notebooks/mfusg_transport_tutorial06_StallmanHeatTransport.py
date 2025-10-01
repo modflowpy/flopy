@@ -157,7 +157,7 @@ for iper in range(nper):
 chd = ModflowChd(mf, ipakcb=ipakcb, stress_period_data=lrcsc)
 # -
 
-# ## Heat Transport
+# ### Heat Transport
 
 # Porosity (unitless)	0.35
 # Longitudinal dispersivity (m)	0

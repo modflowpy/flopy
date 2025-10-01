@@ -19,7 +19,7 @@
 
 # ## MF-USG Example Problems for Matrix Diffusion Transport Package
 
-# ## Example MD1: Single Discrete Fracture
+# ### Example MD1: Single Discrete Fracture
 
 # Panday, S., 2024; USG-Transport Version 2.4.0: Transport and Other Enhancements to MODFLOW-USG, GSI Environmental, July 2024 http://www.gsi-net.com/en/software/free-software/USG-Transport.html
 #

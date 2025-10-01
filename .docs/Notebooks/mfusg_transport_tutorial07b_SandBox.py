@@ -49,7 +49,7 @@ from flopy.utils.gridgen import Gridgen
 
 # -
 
-# ## Example MD2: Embedded Low Permeability Zones
+# ### Example MD2: Embedded Low Permeability Zones
 
 # Flow of fluorescein through a sand tank embedded with several low permeability zones is used to demonstrate the MODFLOW-USG MDT package's ability to model the effects of diffusion into and from low-k zones. The sand tank study is described in detail in Chapman et al. (2012) and a comparison with the semi-analytical solution is described in Muskus and Falta (2018). In this laboratory experiment, a tracer solution containing fluorescein and bromide was flushed through a 1.07x0.03x0.84 m sand tank embedded with four clay lenses (Figure Ex 12). Twenty-two days of tracer flushing through the system were followed by 100 days of flushing with clean water. A flow rate of 0.9 mL/min was used for the first 10 days after which a constant rate of 1.5 mL/min was employed.
 #
