@@ -156,8 +156,8 @@ def cli_main():
         "--releasemode",
         required=False,
         action="store_true",
-        help="Omit prerelease variables from generated modules. "
-        "Only relevant if --dfnpath is provided. Defaults false.",
+        help="Omit prerelease variables from generated modules "
+        "(DFN variables with 'prerelease true'). Defaults to false.",
     )
     args = vars(parser.parse_args())
     args["developmode"] = not args.pop("releasemode", False)
