@@ -3,32 +3,42 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-- [Initial steps](#initial-steps)
-- [Release procedure](#release-procedure)
-  - [Automated releases](#automated-releases)
-    - [Dry runs](#dry-runs)
-    - [Production mode](#production-mode)
-  - [Manual releases](#manual-releases)
-    - [Release from `master` branch](#release-from-master-branch)
-    - [Reinitialize `develop` branch](#reinitialize-develop-branch)
-    - [Publish the release](#publish-the-release)
-      - [PyPI](#pypi)
-      - [Conda](#conda)
+- [Steps](#steps)
+  - [Update citations](#update-citations)
+  - [Review deprecations](#review-deprecations)
+  - [Regenerate MF6 module](#regenerate-mf6-module)
+  - [Create a release branch](#create-a-release-branch)
+  - [Merge release branch to master](#merge-release-branch-to-master)
+  - [Publish the release](#publish-the-release)
+  - [Reset the develop branch](#reset-the-develop-branch)
+- [Conda](#conda)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 
-## Initial steps
+## Steps
 
-The FloPy release procedure is mostly automated with GitHub Actions in [`release.yml`](../.github/workflows/release.yml), but there are a few manual steps to complete first:
+The FloPy release procedure is largely automated with GitHub Actions in [`release.yml`](../.github/workflows/release.yml), but there are a few manual steps.
 
-1.  Update `usgsprograms.txt` in the [GitHub pymake repository](https://github.com/modflowpy/pymake) with the path to the new MODFLOW 6 release. Also update all other targets in `usgsprograms.txt` with the path to new releases.
+A [local development environment](../DEVELOPER.md) is assumed in this document.
 
-2.  Trigger a new release for the [executables repository](https://github.com/MODFLOW-ORG/executables), either via the GitHub Actions UI or GitHub CLI. See the executables repo's `DEVELOPER.md` for more information. Wait for the release to be published.
+To make a release,
 
-3. Update the authors in `CITATION.cff` for the Software/Code citation for FloPy, if required.
+1. Update citations
+2. Review deprecations
+3. Regenerate MF6 module
+4. Create a release branch 
+5. Merge release branch to master
+6. Publish the release
+7. Reset the develop branch
 
-4. If this is a minor or major release, review deprecation warnings (if this is a patch release, skip this step). Correct any deprecation version numbers if necessary &mdash; for instance, if the warning was added in the latest development cycle but incorrectly anticipated the forthcoming release number (e.g., if this release was expected to be minor but was promoted to major). If any deprecations are due this release, remove the corresponding features. FloPy loosely follows [NEP 23](https://numpy.org/neps/nep-0023-backwards-compatibility.html) deprecation guidelines: removal is recommended after at least 1 year or 2 non-patch releases.
+### Update citations
+
+Update the authors in `CITATION.cff` for the Software/Code citation for FloPy, if required.
+
+### Review deprecations
+
+If this is a patch release, skip this step. If this is a minor or major release, review deprecation warnings. Correct any deprecation version numbers if necessary &mdash; for instance, if the warning was added in the latest development cycle but incorrectly anticipated the forthcoming release number (e.g., if this release was expected to be minor but was promoted to major). If any deprecations are due this release, remove the corresponding features. FloPy loosely follows [NEP 23](https://numpy.org/neps/nep-0023-backwards-compatibility.html) deprecation guidelines: removal is recommended after at least 1 year or 2 non-patch releases.
 
     To search for deprecation warnings with git: `git grep [-[A/B/C]N] <pattern>`, where N is the optional number of extra lines of context and A/B/C selects post-context/pre-context/both, respectively. Some terms to search for:
 
@@ -38,25 +48,21 @@ The FloPy release procedure is mostly automated with GitHub Actions in [`release
     - DeprecationWarning
     - FutureWarning
 
+### Regenerate MF6 module
 
-## Release procedure
+The `flopy.mf6.modflow` module must be regenerated to match the latest MF6 version's input specification.
 
-Once initial tasks are completed, making a new release involves the following steps:
+```shell
+python -m flopy.mf6.utils.generate_classes --releasemode
+```
 
-1. Release from `master` branch
-2. Reinitialize `develop` branch
-3. Publish the package to PyPI
-4. Publish the package to Conda
+The `--releasemode` flag omits prerelease variables from generated modules.
 
-These steps are automated with GitHub Actions in [`release.yml`](../.github/workflows/release.yml), but documentation for running the steps manually is provided in the [Manual releases](#manual-releases) section below.
+### Create a release branch
 
-### Automated releases
+Create a release branch from `develop`. The release branch name should be the version number with a `v` prefix (e.g. `v3.3.6`), with an optional `rc` suffix.
 
-To begin an automated release, create a release branch from `develop`. The release branch name should be the version number with a `v` prefix (e.g. `v3.3.6`), with an optional `rc` suffix. If the branch name ends with `rc` it is considered a preliminary release candidate. If the branch name does not end with `rc` the release is considered production-ready. The automated workflow for approved, production-ready releases includes more steps than for release candidates.
-
-Pushing the release branch starts the automated workflow. Manual intervention is only necessary to approve autogenerated pull requests and publish the autogenerated release post.
-
-When the release branch is pushed to the `modflowpy/flopy` repository, the release workflow begins with the following steps:
+Pushing the release branch to the repository triggers the workflow. 
 
 - update version strings to match the version number in the release branch name
 - regenerate plugin classes from MODFLOW 6 DFN files
@@ -64,95 +70,48 @@ When the release branch is pushed to the `modflowpy/flopy` repository, the relea
 - generate and update changelogs
 - build and test the FloPy package
 
-For more detail regarding specific steps, see the [Manual releases](#manual-releases) section below.
+If the branch name ends with `rc`, it's a dry run and the workflow stops here. If the branch name does not end with `rc` the workflow creates a draft PR from the release branch into the `master` branch.
 
-#### Dry runs
+### Merge release branch to master
 
-If the branch name ends with `rc`, the workflow is a dry run, and ends here. No PRs are opened, a release is not created, and the release is not published to PyPI or Conda. The `flopy` package and the changelog are uploaded as artifacts, allowing manual inspection.
-
-#### Production mode
-
-If the branch name does not end with `rc`, the workflow will proceed to open a PR updating `master` from the release branch. Merging this PR to `master` triggers another job to draft a release.
+Review the PR and merging if it passes inspection.
 
 **Note:** the PR should be merged, not squashed. Squashing removes the commit history from the `master` branch and causes `develop` and `master` to diverge, which can cause future PRs updating `master` to replay commits from previous releases.
 
-Publishing the release triggers a final job to publish the `flopy` package to PyPI.
+Merging the PR triggers a job to draft a release.
 
-##### Trusted publishing
+### Publish the release
 
-The automated release workflow assumes [trusted publishing](https://docs.pypi.org/trusted-publishers/) has been configured in the PyPI admin interface. A GitHub environment called `release` is also required (however it needs no secrets or environment variables).
+Review the release and publish it. Publishing the release triggers a final job to publish the `flopy` package to PyPI.
 
-### Manual releases
+The release workflow assumes [trusted publishing](https://docs.pypi.org/trusted-publishers/) has been configured in the PyPI admin interface. A GitHub environment called `release` is required (however it needs no secrets or environment variables).
 
-As described above, making a release manually involves the following steps:
+For the Conda distribution, there [is a bot](https://github.com/regro-cf-autotick-bot) which will [automatically detect new package versions uploaded to PyPI and create a PR](https://github.com/conda-forge/flopy-feedstock/pull/50) to update the `conda-forge/flopy-feedstock` repository. This PR can be reviewed, updated if needed, and merged to update the package on the `conda-forge` channel. If it becomes necessary to manually publish an update to conda forge, see below.
 
-1. Release from `master` branch
-2. Reinitialize `develop` branch
-3. Publish the package to PyPI
-4. Publish the package to Conda
+### Reset the develop branch
 
+Make a new branch from `master`:
 
-#### Release from `master` branch
+```shell
+git checkout master
+git switch -c post-x.y.z-release-reset
+```
 
-- Run `python scripts/update_version.py -v <semver>` to update the version number stored in `version.txt` and `flopy/version.py`. For an approved release use the `--approve` flag.
+Update the version number for the next development cycle:
 
-- Update MODFLOW 6 dfn files in the repository and MODFLOW 6 package classes by running `python -m flopy.mf6.utils.generate_classes --ref master`
+```shell
+python scripts/update_version.py -v x.y.z.dev0
+```
 
-- Run `ruff check .` and `ruff format .` from the project root.
+The version number must comply with [PEP 440](https://peps.python.org/pep-0440/).
 
-- Generate a changelog starting from the last release with [git cliff](https://github.com/orhun/git-cliff), for instance: `git cliff --config cliff.toml --unreleased --tag=<release version number>`.
+Lint and format Python files: `ruff check .` and `ruff format .` from the project root.
 
-- Prepend the release changelog to the comprehensive changelog file `docs/version_changes.md`.
+Create and merge (don't squash) a pull request from this branch into `develop`.
 
-- Commit changes to the release branch and push the commit to the [`modflowpy/flopy` GitHub repository](https://github.com/modflowpy/flopy) (you must have write permissions on the repo).
+## Conda
 
-- Update master branch from the release branch, e.g. by opening and merging a pull request into `master`. The pull request should be merged, *not* squashed, in order to preserve the project's commit history.
-
-- [Make a release](https://github.com/modflowpy/flopy/releases) from the `master` branch. Add the release changelog as the release post contents. Publish the release.
-
-- GitHub should have tagged the most recent revision of `master` with the release number &mdash; if for some reason this did not occur automatically, tag `master` with the version number (`git tag <version>`) and push the tag to `modflowpy/flopy` (e.g., if you have your fork's remote named `origin` and `modflowpy/flopy` as `upstream`, as is typical, use `git push upstream --tags`).
-
-
-#### Reinitialize `develop` branch
-
-1.  Merge the `master` branch into the `develop` branch.
-
-2.  Set the development version as appropriate: `python scripts/update_version.py -v <version>`. The version number must comply with [PEP 440](https://peps.python.org/pep-0440/).
-
-3.  Lint and format Python files: `ruff check .` and `ruff format .` from the project root.
-
-4.  Commit and push the updated `develop` branch.
-
-
-#### Publish the release
-
-##### PyPI
-
-1.  Make sure the latest `build` and `twine` tools are installed using:
-
-    ```
-    pip install --upgrade build twine
-    ```
-
-2.  Create the source and wheel packages with:
-
-    ```
-    rm -rf dist
-    python -m build
-    ```
-
-3.  Check and upload the release to PyPI using:
-
-    ```
-    twine check --strict dist/*
-    twine upload dist/*
-    ```
-
-##### Conda
-
-For the Conda distribution, there [is a bot](https://github.com/regro-cf-autotick-bot) which will [automatically detect new package versions uploaded to PyPI and create a PR](https://github.com/conda-forge/flopy-feedstock/pull/50) to update the `conda-forge/flopy-feedstock` repository. This PR can be reviewed, updated if needed, and merged to update the package on the `conda-forge` channel.
-
-A Conda update can be performed manually with the following steps, substituting one's own fork of `conda-forge/flopy-feedstock`:
+To manually publish a new version to conda forge, substitute one's own fork of `conda-forge/flopy-feedstock` into the following steps:
 
 1.  Download the `*.tar.gz` file for the just-created release from the [GitHub website](https://github.com/modflowpy/flopy/releases).
 
