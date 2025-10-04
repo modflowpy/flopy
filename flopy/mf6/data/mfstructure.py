@@ -2137,8 +2137,6 @@ class MFStructure:
 
     Parameters
     ----------
-    valid : bool
-        whether the structure information loaded from the dfn files is valid
     sim_struct : MFSimulationStructure
         Object containing file structure for all simulation files
     dimension_dict : dict
@@ -2151,22 +2149,14 @@ class MFStructure:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-
-            # Initialize variables
             cls._instance.sim_struct = None
             cls._instance.dimension_dict = {}
             cls._instance.flopy_dict = {}
-
-            # Read metadata from file
-            cls._instance.valid = cls._instance._load_structure()
-
+            cls._instance._load_structure()
         return cls._instance
 
     def _load_structure(self):
-        # set up structure classes
         self.sim_struct = MFSimulationStructure()
-
-        # initialize flopy dict keys
         MFStructure().flopy_dict["solution_packages"] = {}
 
         from ..mfpackage import MFPackage
@@ -2183,5 +2173,3 @@ class MFStructure:
             # process each package
             self.sim_struct.process_dfn(DfnPackage(package))
         self.sim_struct.tag_read_as_arrays()
-
-        return True
