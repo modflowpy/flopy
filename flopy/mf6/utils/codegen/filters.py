@@ -350,8 +350,9 @@ def attrs(dfn: dict, component_name: tuple[str, str], developmode: bool = True) 
                 meta_.append(" ".join(s))
         return meta_
 
-    legacy_dfn = dfn.get("legacy_dfn", {})
-    legacy_meta = dfn.get("legacy_meta", [])
+    dfn_copy = dfn.copy()
+    legacy_dfn = dfn_copy.pop("legacy_dfn", {})
+    legacy_meta = dfn_copy.pop("legacy_meta", [])
     legacy_dfn = _dfn(legacy_dfn, _filter_metadata(legacy_meta))
     if component_base == "MFPackage":
         attrs.extend(
@@ -359,7 +360,8 @@ def attrs(dfn: dict, component_name: tuple[str, str], developmode: bool = True) 
                 f"package_abbr = '{package_abbr(component_name)}'",
                 f"_package_type = '{component_name[1]}'",
                 f"dfn_file_name = '{dfn_file_name(component_name)}'",
-                f"dfn = {pformat(legacy_dfn, indent=10, width=sys.maxsize)}"
+                f"dfn = {pformat(legacy_dfn, indent=10, width=sys.maxsize)}",
+                f"spec = {pformat(dfn_copy, indent=10, width=sys.maxsize)}",
             ]
         )
 
