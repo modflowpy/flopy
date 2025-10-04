@@ -2311,3 +2311,51 @@ def test_mf6_chd_shapefile_export_vertex(function_tmpdir, use_pandas, sparse):
         if sparse:
             # Should match the CHD values
             assert set(chd_vals) == {1.0, 2.0, 3.0}
+
+
+@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
+def test_issue_2628(function_tmpdir):
+    import shapefile
+
+    from flopy.discretization import StructuredGrid
+    from flopy.export.shapefile_utils import write_grid_shapefile
+
+    nrow, ncol = 3, 3
+    idomain = np.ones((nrow, ncol), dtype=int)
+    idomain[1, 1] = 0
+    grid = StructuredGrid(
+        nrow=nrow, ncol=ncol, delc=np.ones(nrow), delr=np.ones(ncol), idomain=idomain
+    )
+
+    sy = np.full((nrow, ncol), 0.2)
+    sy[0, :] = 0.1
+
+    thickness = np.full((nrow, ncol), 10.0)
+    thickness[:, 0] = 5.0
+
+    k = np.full((nrow, ncol), 1e-4)
+    k[2, :] = 2e-4
+
+    props = {"idomain": idomain, "sy": sy, "thickness": thickness, "k": k}
+    prop_names = list(props.keys())
+
+    outshp = function_tmpdir / "test_dict_handling.shp"
+    write_grid_shapefile(outshp, grid, props)
+
+    for suffix in [".dbf", ".shp", ".shx"]:
+        assert outshp.with_suffix(suffix).exists()
+
+    with shapefile.Reader(str(outshp)) as sf:
+        records = list(sf.records())
+        fields = [f[0] for f in sf.fields[1:]]  # skip DeletionFlag
+
+        assert len(records) == nrow * ncol
+        assert [f for f in fields if f in prop_names] == prop_names
+
+        for record in records:
+            row = record[fields.index("row")] - 1
+            col = record[fields.index("column")] - 1
+            assert record[fields.index("idomain")] == idomain[row, col]
+            assert np.isclose(record[fields.index("sy")], sy[row, col])
+            assert np.isclose(record[fields.index("thickness")], thickness[row, col])
+            assert np.isclose(record[fields.index("k")], k[row, col])
