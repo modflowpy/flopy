@@ -953,14 +953,14 @@ class MFModel(ModelInterface):
                 packages_ordered.append((item[0], item[1], item[2]))
 
         # load packages
-        sim_struct = mfstructure.MFStructure().sim_struct
+        sim_struct = mfstructure.MFStructure().sim_spec
         instance._ftype_num_dict = {}
         for ftype, fname, pname in packages_ordered:
             ftype_orig = ftype
             ftype = ftype[0:-1].lower()
             if (
-                ftype in structure.package_struct_objs
-                or ftype in sim_struct.utl_struct_objs
+                ftype in structure.pkg_spec
+                or ftype in sim_struct.utl_spec
             ):
                 if (
                     load_only is not None
@@ -1002,8 +1002,8 @@ class MFModel(ModelInterface):
                 modelname
             ].values():
                 if (
-                    ref_file.file_type in structure.package_struct_objs
-                    or ref_file.file_type in sim_struct.utl_struct_objs
+                    ref_file.file_type in structure.pkg_spec
+                    or ref_file.file_type in sim_struct.utl_spec
                 ) and not ref_file.loaded:
                     instance.load_package(
                         ref_file.file_type,
@@ -1449,10 +1449,10 @@ class MFModel(ModelInterface):
                 return False
 
         # required packages exist
-        for package_struct in self.structure.package_struct_objs.values():
+        for pkg_spec in self.structure.pkg_spec.values():
             if (
-                not package_struct.optional
-                and package_struct.file_type
+                not pkg_spec.optional
+                and pkg_spec.file_type
                 not in self._package_container.package_type_dict
             ):
                 return False
@@ -1880,13 +1880,13 @@ class MFModel(ModelInterface):
             path = package.parent_file.path + (package.package_type,)
         else:
             path = (self.name, package.package_type)
-        package_struct = self.structure.get_package_struct(
+        pkg_spec = self.structure.get_pkg_spec(
             package.package_type
         )
         if add_to_package_list and path in self._package_paths:
             if (
-                package_struct is not None
-                and not package_struct.multi_package_support
+                pkg_spec is not None
+                and not pkg_spec.multi_package_support
                 and not isinstance(package.parent_file, MFPackage)
             ):
                 # package of this type already exists, replace it
@@ -1941,14 +1941,14 @@ class MFModel(ModelInterface):
                 print(excpt_str)
                 raise FlopyException(excpt_str)
 
-            return path, self.structure.name_file_struct_obj
+            return path, self.structure.nam_spec
 
         package_extension = package.package_type
         if set_package_name:
             # produce a default package name
             if (
-                package_struct is not None
-                and package_struct.multi_package_support
+                pkg_spec is not None
+                and pkg_spec.multi_package_support
             ):
                 # check for other registered packages of this type
                 name_iter = datautil.NameIter(package.package_type, False)
@@ -1990,14 +1990,14 @@ class MFModel(ModelInterface):
             self._package_container.add_package(package)
 
             # add obs file to name file if it does not have a parent
-            if package.package_type in self.structure.package_struct_objs or (
+            if package.package_type in self.structure.pkg_spec or (
                 package.package_type == "obs" and package.parent_file is None
             ):
                 # update model name file
                 pkg_type = package.package_type.upper()
                 if (
                     package.package_type != "obs" and
-                    self.structure.package_struct_objs[
+                    self.structure.pkg_spec[
                     package.package_type
                     ].read_as_arrays
                 ):
@@ -2020,8 +2020,8 @@ class MFModel(ModelInterface):
                     ],
                     0,
                 )
-        if package_struct is not None:
-            return (path, package_struct)
+        if pkg_spec is not None:
+            return (path, pkg_spec)
         else:
             if (
                 self.simulation_data.verbosity_level.value
@@ -2069,13 +2069,13 @@ class MFModel(ModelInterface):
         """
         if ref_path is not None:
             fname = os.path.join(ref_path, fname)
-        sim_struct = mfstructure.MFStructure().sim_struct
+        sim_spec = mfstructure.MFStructure().sim_spec
         if (
-            ftype in self.structure.package_struct_objs
-            and self.structure.package_struct_objs[ftype].multi_package_support
+            ftype in self.structure.pkg_spec
+            and self.structure.pkg_spec[ftype].multi_package_support
         ) or (
-            ftype in sim_struct.utl_struct_objs
-            and sim_struct.utl_struct_objs[ftype].multi_package_support
+            ftype in sim_spec.utl_spec
+            and sim_spec.utl_spec[ftype].multi_package_support
         ):
             # resolve dictionary name for package
             if dict_package_name is not None:

@@ -498,7 +498,7 @@ class MFSimulationBase:
         self._exchange_files = {}
         self._solution_files = {}
         self._other_files = {}
-        self.structure = mfstructure.MFStructure().sim_struct
+        self.structure = mfstructure.MFStructure().sim_spec
         self.model_type = None
 
         self._exg_file_num = {}
@@ -900,7 +900,7 @@ class MFSimulationBase:
                 print(f"  loading model {item[0].lower()}...")
             instance._models[item[2]] = model_obj.load(
                 instance,
-                instance.structure.model_struct_objs[item[0].lower()],
+                instance.structure.mdl_spec[item[0].lower()],
                 item[2],
                 name_file,
                 version,
@@ -1195,11 +1195,11 @@ class MFSimulationBase:
 
         """
         if (
-            ftype in self.structure.package_struct_objs
-            and self.structure.package_struct_objs[ftype].multi_package_support
+            ftype in self.structure.pkg_spec
+            and self.structure.pkg_spec[ftype].multi_package_support
         ) or (
-            ftype in self.structure.utl_struct_objs
-            and self.structure.utl_struct_objs[ftype].multi_package_support
+            ftype in self.structure.utl_spec
+            and self.structure.utl_spec[ftype].multi_package_support
         ):
             # resolve dictionary name for package
             if dict_package_name is not None:
@@ -2223,13 +2223,13 @@ class MFSimulationBase:
                 )
                 print(excpt_str)
                 raise FlopyException(excpt_str)
-            return path, self.structure.name_file_struct_obj
+            return path, self.structure.nam_spec
         elif package.package_type.lower() == "tdis":
             self._tdis_file = package
             self._set_timing_block(package.quoted_filename)
             return (
                 path,
-                self.structure.package_struct_objs[
+                self.structure.pkg_spec[
                     package.package_type.lower()
                 ],
             )
@@ -2253,7 +2253,7 @@ class MFSimulationBase:
                 self.register_solution_package(package, None)
             return (
                 path,
-                self.structure.package_struct_objs[
+                self.structure.pkg_spec[
                     package.package_type.lower()
                 ],
             )
@@ -2275,17 +2275,17 @@ class MFSimulationBase:
                 fr_obj = getattr(self.name_file, file_record)
                 fr_obj.set_data(package.filename)
 
-        if package.package_type.lower() in self.structure.package_struct_objs:
+        if package.package_type.lower() in self.structure.pkg_spec:
             return (
                 path,
-                self.structure.package_struct_objs[
+                self.structure.pkg_spec[
                     package.package_type.lower()
                 ],
             )
-        elif package.package_type.lower() in self.structure.utl_struct_objs:
+        elif package.package_type.lower() in self.structure.utl_spec:
             return (
                 path,
-                self.structure.utl_struct_objs[package.package_type.lower()],
+                self.structure.utl_spec[package.package_type.lower()],
             )
         else:
             excpt_str = (
@@ -2333,7 +2333,7 @@ class MFSimulationBase:
         """
 
         # get model structure from model type
-        if model_type not in self.structure.model_struct_objs:
+        if model_type not in self.structure.mdl_spec:
             message = f'Invalid model type: "{model_type}".'
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(
@@ -2365,7 +2365,7 @@ class MFSimulationBase:
                 self._solution_files[first_solution_key], model_name
             )
 
-        return self.structure.model_struct_objs[model_type]
+        return self.structure.mdl_spec[model_type]
 
     def get_solution_package(self, key):
         """

@@ -2682,7 +2682,7 @@ class MFPackage(PackageInterface):
             )
         if child_pkgs_obj is None:
             # see if the package is part of one of the supported model types
-            for model_type in MFStructure().sim_struct.model_types:
+            for model_type in MFStructure().sim_spec.model_types:
                 child_pkgs_name = f"{model_type}{pkg_type}packages"
                 child_pkgs_obj = PackageContainer.package_factory(
                     child_pkgs_name, ""

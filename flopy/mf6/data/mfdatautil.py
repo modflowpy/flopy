@@ -700,7 +700,7 @@ class TemplateGenerator:
         from ..data import mfstructure
 
         # get structure info
-        sim_struct = mfstructure.MFStructure().sim_struct
+        sim_struct = mfstructure.MFStructure().sim_spec
         package_struct = sim_struct.get_data_structure(self.path[0:-2])
 
         # get dimension info
