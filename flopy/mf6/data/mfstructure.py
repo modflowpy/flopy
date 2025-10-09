@@ -1725,9 +1725,6 @@ class MFSimulationStructure:
     get_data_structure(path : string)
         Returns a data structure if it exists, otherwise returns None.  Data
         structure type returned is based on the tuple/list "path"
-    tag_read_array
-        Searches through all packages and tags any packages with a name that
-        indicates they are the READASARRAYS or READARRAYGRID version of a package.
     """
 
     def __init__(self):
@@ -1825,29 +1822,26 @@ class MFSimulationStructure:
         else:
             return None
 
-    def tag_read_array(self):
-        for key, package_struct in self.package_struct_objs.items():
+    def _tag_read_array(self):
+        for pkg_spec in self.pkg_spec.values():
             if (
-                package_struct.get_data_structure(('options', 'readasarrays'))
+                pkg_spec.get_data_structure(('options', 'readasarrays'))
             ):
-                package_struct.read_as_arrays = True
+                pkg_spec.read_as_arrays = True
             elif (
-                package_struct.get_data_structure(('options', 'readarraygrid'))
+                pkg_spec.get_data_structure(('options', 'readarraygrid'))
             ):
-                package_struct.read_array_grid = True
-        for model_key, model_struct in self.model_struct_objs.items():
-            for (
-                key,
-                package_struct,
-            ) in model_struct.package_struct_objs.items():
+                pkg_spec.read_array_grid = True
+        for mdl_spec in self.mdl_spec.values():
+            for pkg_spec in mdl_spec.pkg_spec.values():
                 if (
-                    package_struct.get_data_structure(('options', 'readasarrays'))
+                    pkg_spec.get_data_structure(('options', 'readasarrays'))
                 ):
-                    package_struct.read_as_arrays = True
+                    pkg_spec.read_as_arrays = True
                 elif (
-                    package_struct.get_data_structure(('options', 'readarraygrid'))
+                    pkg_spec.get_data_structure(('options', 'readarraygrid'))
                 ):
-                    package_struct.read_array_grid = True
+                    pkg_spec.read_array_grid = True
 
 
 class MFStructure:
@@ -1890,5 +1884,5 @@ class MFStructure:
                         package.package_abbr
                     ] = entry[1:]
             # process each package
-            self.sim_struct.process_dfn(DfnPackage(package))
-        self.sim_struct.tag_read_array()
+            self.sim_spec.register(Dfn(package))
+        self.sim_spec._tag_read_array()
