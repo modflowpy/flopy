@@ -3582,26 +3582,29 @@ class MFPackage(PackageInterface):
 
     @staticmethod
     def netcdf_package(mtype, ptype, auxiliary=None, mesh=None, nlay=1):
-        from .data.mfstructure import DfnPackage, MFSimulationStructure
+        from .data.mfstructure import Dfn, MFSimulationStructure
 
         entries = {}
-        sim_struct = MFSimulationStructure()
+        sim_spec = MFSimulationStructure()
 
         for package in MFPackage.__subclasses__():
-            sim_struct.process_dfn(DfnPackage(package))
-            p = DfnPackage(package)
+            p = Dfn(package)
             c, sc = p.dfn_file_name.split(".")[0].split("-")
             if c == mtype.lower() and sc == ptype.lower():
-                sim_struct.add_package(p, model_file=False)
+                sim_spec.register(Dfn(package))
                 break
 
-        if ptype.lower() in sim_struct.package_struct_objs:
-            pso = sim_struct.package_struct_objs[ptype.lower()]
-            if pso.multi_package_support:
+        pkg_spec = None
+        if f"{mtype.lower()}6" in sim_spec.mdl_spec:
+            mdl_spec = sim_spec.mdl_spec[f"{mtype.lower()}6"]
+            if f"{ptype.lower()}" in mdl_spec.pkg_spec:
+                pkg_spec = mdl_spec.pkg_spec[f"{ptype.lower()}"]
+        if pkg_spec is not None:
+            if pkg_spec.multi_package_support:
                 pname = f"<{ptype}name>"
             else:
                 pname = ptype
-            for key, block in pso.blocks.items():
+            for key, block in pkg_spec.blocks.items():
                 if key != "griddata" and key != "period":
                     continue
                 for d in block.data_structures:
