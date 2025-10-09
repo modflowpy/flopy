@@ -1962,6 +1962,516 @@ def test_array(function_tmpdir):
 
 
 @requires_exe("mf6")
+def test_grid_array(function_tmpdir):
+    import warnings
+
+    try:
+        from flopy.mf6 import (
+            ModflowGwfchdg,
+            ModflowGwfdrng,
+            ModflowGwfghbg,
+            ModflowGwfrivg,
+            ModflowGwfwelg,
+        )
+    except ImportError:
+        msg = "test_mf6 test_grid_array did not run"
+        warnings.warn(msg, UserWarning)
+        return
+
+    sim_name = "test_grid_array"
+    model_name = "test_grid_array"
+    out_dir = function_tmpdir
+    tdis_name = f"{sim_name}.tdis"
+    sim = MFSimulation(sim_name=sim_name, version="mf6", exe_name="mf6", sim_ws=out_dir)
+    tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0), (6.0, 3, 1.0), (6.0, 3, 1.0)]
+    tdis = ModflowTdis(sim, time_units="DAYS", nper=4, perioddata=tdis_rc)
+    ims_package = ModflowIms(
+        sim,
+        pname="my_ims_file",
+        filename=f"{sim_name}.ims",
+        print_option="ALL",
+        complexity="SIMPLE",
+        outer_dvclose=0.0001,
+        outer_maximum=50,
+        under_relaxation="NONE",
+        inner_maximum=30,
+        inner_dvclose=0.0001,
+        linear_acceleration="CG",
+        preconditioner_levels=7,
+        preconditioner_drop_tolerance=0.01,
+        number_orthogonalizations=2,
+    )
+    model = ModflowGwf(sim, modelname=model_name, model_nam_file=f"{model_name}.nam")
+
+    dis = ModflowGwfdis(
+        model,
+        length_units="FEET",
+        nlay=4,
+        nrow=2,
+        ncol=2,
+        delr=5000.0,
+        delc=5000.0,
+        top=100.0,
+        botm=[50.0, 0.0, -50.0, -100.0],
+        filename=f"{model_name}.dis",
+    )
+    ic_package = ModflowGwfic(model, strt=90.0, filename=f"{model_name}.ic")
+    npf_package = ModflowGwfnpf(
+        model,
+        pname="npf_1",
+        save_flows=True,
+        alternative_cell_averaging="logarithmic",
+        icelltype=1,
+        k=50.0,
+    )
+
+    oc_package = ModflowGwfoc(
+        model,
+        budget_filerecord=[("test_array.cbc",)],
+        head_filerecord=[("test_array.hds",)],
+        saverecord={
+            0: [("HEAD", "ALL"), ("BUDGET", "ALL")],
+            1: [],
+        },
+        printrecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    )
+
+    aux = {1: [[50.0], [1.3]], 3: [[200.0], [1.5]]}
+    irch = {1: [[0, 2], [2, 1]], 2: [[0, 1], [2, 3]]}
+    rcha = ModflowGwfrcha(
+        model,
+        print_input=True,
+        print_flows=True,
+        auxiliary=[("var1", "var2")],
+        irch=irch,
+        recharge={1: 0.0001, 2: 0.00001},
+        aux=aux,
+    )
+    val_irch = rcha.irch.array.sum(axis=(1, 2, 3))
+    assert val_irch[0] == 4
+    assert val_irch[1] == 5
+    assert val_irch[2] == 6
+    assert val_irch[3] == 6
+    val_irch_2 = rcha.irch.get_data()
+    assert val_irch_2[0] is None
+    assert val_irch_2[1][1, 1] == 1
+    assert val_irch_2[2][1, 1] == 3
+    assert val_irch_2[3] is None
+    val_irch_2_3 = rcha.irch.get_data(3)
+    assert val_irch_2_3 is None
+    val_rch = rcha.recharge.array.sum(axis=(1, 2, 3))
+    assert val_rch[0] == 0.0
+    assert val_rch[1] == 0.0004
+    assert val_rch[2] == 0.00004
+    assert val_rch[3] == 0.00004
+    val_rch_2 = rcha.recharge.get_data()
+    assert val_rch_2[0] is None
+    assert val_rch_2[1][0, 0] == 0.0001
+    assert val_rch_2[2][0, 0] == 0.00001
+    assert val_rch_2[3] is None
+    aux_data_0 = rcha.aux.get_data(0)
+    assert aux_data_0 is None
+    aux_data_1 = rcha.aux.get_data(1)
+    assert aux_data_1[0][0][0] == 50.0
+    aux_data_2 = rcha.aux.get_data(2)
+    assert aux_data_2 is None
+    aux_data_3 = rcha.aux.get_data(3)
+    assert aux_data_3[0][0][0] == 200.0
+
+    nlay = dis.nlay.get_data()
+    nrow = dis.nrow.get_data()
+    ncol = dis.ncol.get_data()
+
+    DNODATA = 3.0e30  # MF6 DNODATA constant
+    nper = 4
+    welqspd = {}
+    welconcspd = {}
+    for n in range(4):
+        q = np.full((nlay, nrow, ncol), DNODATA, dtype=float)
+        welconc = np.full((nlay, nrow, ncol), DNODATA, dtype=float)
+        welaux2 = np.full((nlay, nrow, ncol), DNODATA, dtype=float)
+        # welcaux2 = np.full((nlay), DNODATA, dtype=float)
+        if n == 1:
+            q[0, 0, 0] = 0.25
+            welconc[0, 0, 0] = 0.0
+            welaux2[0, 0, 0] = 9.0
+            # welcaux2[0] = 9.0
+        elif n == 2:
+            q[0, 0, 0] = 0.1
+            welconc[0, 0, 0] = 9.0
+            welaux2[0, 0, 0] = 0.0
+            # welcaux2[0] = 0.0
+        welqspd[n] = q
+        welconcspd[n] = [welconc, welaux2]
+        # welconcspd[n] = [welconc, welcaux2]
+
+    # first create test package with multiple auxvars
+    wel = ModflowGwfwelg(
+        model,
+        print_input=True,
+        print_flows=True,
+        mover=True,
+        save_flows=False,
+        auxiliary=["var1", "var2"],
+        pname="WEL-1",
+        q=welqspd,
+        aux=welconcspd,
+    )
+
+    # sim.write_simulation()
+
+    assert len(wel.q.array) == 4
+    assert len(wel.q.get_data()) == 4
+    assert len(wel.aux.array) == 4
+    assert len(wel.aux.get_data()) == 4
+    for p in range(nper):
+        for iaux in range(2):  # naux
+            assert np.allclose(wel.aux.array[p][iaux], wel.aux.get_data(p)[iaux])
+            assert np.allclose(wel.aux.array[p][iaux], wel.aux.get_data()[p][iaux])
+
+    assert not wel.has_stress_period_data
+    q_nan = np.where(wel.q.array == DNODATA, np.nan, wel.q.array)
+    val_q = np.nansum(q_nan, axis=(1, 2, 3))
+    assert val_q[0] == 0.0
+    assert val_q[1] == 0.25
+    assert val_q[2] == 0.1
+    assert val_q[3] == 0.0
+    val_q_2 = wel.q.get_data()
+    assert np.all(val_q_2[0] == DNODATA)
+    assert val_q_2[1][0, 0, 0] == 0.25
+    assert val_q_2[2][0, 0, 0] == 0.1
+    assert np.all(val_q_2[3] == DNODATA)
+    aux_data_0 = wel.aux.get_data(0)
+    assert np.all(aux_data_0[0] == DNODATA)
+    aux_data_1 = wel.aux.get_data(1)
+    assert aux_data_1[0][0][0][0] == 0.0
+    assert aux_data_1[1][0][0][0] == 9.0
+    aux_data_2 = wel.aux.get_data(2)
+    assert aux_data_2[0][0][0][0] == 9.0
+    assert aux_data_2[1][0][0][0] == 0.0
+    aux_data_3 = wel.aux.get_data(3)
+    assert np.all(aux_data_3[0] == DNODATA)
+
+    # remove test wel package
+    sim.write_simulation()
+    wel.remove()
+
+    welqspd = {}
+    welconcspd = {}
+    for n in range(2):
+        q = np.full((nlay, nrow, ncol), DNODATA, dtype=float)
+        welconc = np.full((nlay, nrow, ncol), DNODATA, dtype=float)
+        if n == 0:
+            q[0, 0, 0] = 0.25
+            welconc[0, 0, 0] = 0.0
+        elif n == 1:
+            q[0, 0, 0] = 0.1
+            welconc[0, 0, 0] = 0.0
+        welqspd[n + 1] = q
+        welconcspd[n + 1] = [welconc]
+
+    # create welg package
+    wel = ModflowGwfwelg(
+        model,
+        print_input=True,
+        print_flows=True,
+        mover=True,
+        save_flows=False,
+        auxiliary=["CONCENTRATION"],
+        pname="WEL-1",
+        q=welqspd,
+        aux=welconcspd,
+    )
+
+    assert len(wel.q.array) == 4
+    assert len(wel.q.get_data()) == 4
+    assert len(wel.aux.array) == 4
+    assert len(wel.aux.get_data()) == 4
+    assert wel.q.get_data()[0] is None
+    assert wel.q.get_data(0) is None
+    assert np.allclose(wel.q.get_data()[1], wel.q.get_data(1))
+    assert np.allclose(wel.q.get_data()[2], wel.q.get_data(2))
+    assert np.allclose(wel.q.array[1], wel.q.get_data(1))
+    assert np.allclose(wel.q.array[2], wel.q.get_data(2))
+    assert wel.q.get_data()[3] is None
+    assert wel.q.get_data(3) is None
+    assert np.allclose(wel.aux.array[1][0], wel.aux.get_data(1)[0])
+    assert np.allclose(wel.aux.array[2][0], wel.aux.get_data(2)[0])
+    assert not wel.has_stress_period_data
+    wel_q_array = wel.q.array
+    print(wel_q_array)
+    q_nan = np.where(wel_q_array == DNODATA, np.nan, wel_q_array)
+    val_q = np.nansum(q_nan, axis=(1, 2, 3))
+    print(val_q)
+    assert val_q[0] == 0.0
+    assert val_q[1] == 0.25
+    assert val_q[2] == 0.1
+    assert val_q[3] == 0.0
+    val_q_2 = wel.q.get_data()
+    assert val_q_2[0] is None
+    assert val_q_2[1][0, 0, 0] == 0.25
+    assert val_q_2[2][0, 0, 0] == 0.1
+    assert val_q_2[3] is None
+    aux_data_0 = wel.aux.get_data(0)
+    assert aux_data_0 is None
+    aux_data_1 = wel.aux.get_data(1)
+    assert aux_data_1[0][0][0][0] == 0.0
+    assert aux_data_1[0][0, 0, 0] == 0.0
+    aux_data_2 = wel.aux.get_data(2)
+    assert aux_data_2[0][0, 0, 0] == 0.0
+    aux_data_3 = wel.aux.get_data(3)
+    assert aux_data_3 is None
+
+    drnelevspd = {}
+    drncondspd = {}
+    for n in range(4):
+        elev = np.full((nlay, nrow, ncol), DNODATA, dtype=float)
+        cond = np.full((nlay, nrow, ncol), DNODATA, dtype=float)
+        if n == 0:
+            elev[0, 0, 0] = 60.0
+            cond[0, 0, 0] = 10.0
+        elif n == 3:
+            elev[0, 0, 0] = 55.0
+            cond[0, 0, 0] = 5.0
+        if n != 1:
+            drnelevspd[n] = elev
+            drncondspd[n] = cond
+
+    # create drng package
+    drn = ModflowGwfdrng(
+        model,
+        print_input=True,
+        print_flows=True,
+        save_flows=False,
+        pname="DRN-1",
+        elev=drnelevspd,
+        cond=drncondspd,
+    )
+
+    drn_elev_array = drn.elev.array
+    drn_cond_array = drn.cond.array
+    drn_elev_data = drn.elev.get_data()
+    drn_cond_data = drn.cond.get_data()
+    assert len(drn_elev_array) == 4
+    assert len(drn_cond_array) == 4
+    assert len(drn_elev_data) == 4
+    assert len(drn_cond_data) == 4
+    assert np.allclose(drn_elev_array[0], drn_elev_data[0])
+    assert np.allclose(drn_elev_array[0], drn.elev.get_data(0))
+    for p in range(nper):
+        if p == 1:
+            assert drn_elev_data[p] is None
+            assert drn.elev.get_data(p) is None
+        else:
+            assert np.allclose(drn_elev_array[p], drn_elev_data[p])
+            assert np.allclose(drn_elev_array[p], drn.elev.get_data()[p])
+            assert np.allclose(drn_elev_array[p], drn.elev.get_data(p))
+
+    ghbbheadspd = {}
+    ghbcondspd = {}
+    bhead = np.full((nlay, nrow, ncol), DNODATA, dtype=float)
+    cond = np.full((nlay, nrow, ncol), DNODATA, dtype=float)
+    bhead[0, 1, 1] = 60.0
+    cond[0, 1, 1] = 10.0
+    ghbbheadspd[0] = bhead
+    ghbcondspd[0] = cond
+
+    ghb = ModflowGwfghbg(
+        model,
+        print_input=True,
+        print_flows=True,
+        save_flows=False,
+        pname="GHB-1",
+        bhead=ghbbheadspd,
+        cond=ghbcondspd,
+    )
+
+    ghb_bhead_array = ghb.bhead.array
+    assert np.allclose(ghb.bhead.array[0], ghb.bhead.get_data()[0])
+    assert np.allclose(ghb.bhead.array[0], ghb.bhead.get_data(0))
+    assert np.allclose(ghb.cond.array[0], ghb.cond.get_data()[0])
+    assert np.allclose(ghb.cond.array[0], ghb.cond.get_data(0))
+    for p in range(1, nper):
+        assert ghb.bhead.get_data()[p] is None
+        assert ghb.bhead.get_data(p) is None
+        assert ghb.cond.get_data()[p] is None
+        assert ghb.cond.get_data(p) is None
+        assert len(ghb_bhead_array[p]) == len(ghb_bhead_array[0])
+        assert ghb_bhead_array[p].shape == ghb_bhead_array[0].shape
+        assert np.allclose(ghb_bhead_array[p], ghb_bhead_array[0])
+
+    lakpd = [(0, 70.0, 1), (1, 65.0, 1)]
+    lakecn = [
+        (0, 0, (0, 0, 0), "HORIZONTAL", 1.0, 60.0, 90.0, 10.0, 1.0),
+        (1, 0, (0, 1, 1), "HORIZONTAL", 1.0, 60.0, 90.0, 10.0, 1.0),
+    ]
+    lak_tables = [(0, "lak01.tab"), (1, "lak02.tab")]
+    lak = ModflowGwflak(
+        model,
+        pname="lak",
+        print_input=True,
+        mover=True,
+        nlakes=2,
+        noutlets=0,
+        ntables=1,
+        packagedata=lakpd,
+        connectiondata=lakecn,
+        tables=lak_tables,
+    )
+
+    table_01 = [
+        (30.0, 100000.0, 10000.0),
+        (40.0, 200500.0, 10100.0),
+        (50.0, 301200.0, 10130.0),
+        (60.0, 402000.0, 10180.0),
+        (70.0, 503000.0, 10200.0),
+        (80.0, 700000.0, 20000.0),
+    ]
+    lak_tab = ModflowUtllaktab(
+        model,
+        filename="lak01.tab",
+        nrow=6,
+        ncol=3,
+        table=table_01,
+    )
+
+    table_02 = [
+        (40.0, 100000.0, 10000.0),
+        (50.0, 200500.0, 10100.0),
+        (60.0, 301200.0, 10130.0),
+        (70.0, 402000.0, 10180.0),
+        (80.0, 503000.0, 10200.0),
+        (90.0, 700000.0, 20000.0),
+    ]
+    lak_tab_2 = ModflowUtllaktab(
+        model,
+        filename="lak02.tab",
+        nrow=6,
+        ncol=3,
+        table=table_02,
+    )
+    wel_name_1 = wel.name[0]
+    lak_name_2 = lak.name[0]
+    package_data = [(wel_name_1,), (lak_name_2,)]
+    period_data = [(wel_name_1, 0, lak_name_2, 0, "FACTOR", 1.0)]
+    fname = f"{model.name}.input.mvr"
+    mvr = ModflowGwfmvr(
+        parent_model_or_package=model,
+        filename=fname,
+        print_input=True,
+        print_flows=True,
+        maxpackages=2,
+        maxmvr=1,
+        packages=package_data,
+        perioddata=period_data,
+    )
+
+    # test writing and loading model
+    sim.write_simulation()
+    sim.run_simulation()
+
+    test_sim = MFSimulation.load(
+        sim_name,
+        "mf6",
+        "mf6",
+        out_dir,
+        write_headers=False,
+    )
+    model = test_sim.get_model()
+    dis = model.get_package("dis")
+    rcha = model.get_package("rcha")
+    wel = model.get_package("wel")
+    drn = model.get_package("drn")
+    ghb = model.get_package("ghb")
+    lak = model.get_package("lak")
+    lak_tab = model.get_package("laktab")
+    assert os.path.split(dis.filename)[1] == f"{model_name}.dis"
+    # do same tests as above
+    val_irch = rcha.irch.array.sum(axis=(1, 2, 3))
+    assert val_irch[0] == 4
+    assert val_irch[1] == 5
+    assert val_irch[2] == 6
+    assert val_irch[3] == 6
+    val_irch_2 = rcha.irch.get_data()
+    assert val_irch_2[0] is None
+    assert val_irch_2[1][1, 1] == 1
+    assert val_irch_2[2][1, 1] == 3
+    assert val_irch_2[3] is None
+    val_rch = rcha.recharge.array.sum(axis=(1, 2, 3))
+    assert val_rch[0] == 0.0
+    assert val_rch[1] == 0.0004
+    assert val_rch[2] == 0.00004
+    assert val_rch[3] == 0.00004
+    val_rch_2 = rcha.recharge.get_data()
+    assert val_rch_2[0] is None
+    assert val_rch_2[1][0, 0] == 0.0001
+    assert val_rch_2[2][0, 0] == 0.00001
+    assert val_rch_2[3] is None
+    aux_data_0 = rcha.aux.get_data(0)
+    assert aux_data_0 is None
+    aux_data_1 = rcha.aux.get_data(1)
+    assert aux_data_1[0][0][0] == 50.0
+    aux_data_2 = rcha.aux.get_data(2)
+    assert aux_data_2 is None
+    aux_data_3 = rcha.aux.get_data(3)
+    assert aux_data_3[0][0][0] == 200.0
+
+    wel_q_array = wel.q.array
+    assert np.all(wel_q_array[0][0] == 0.0)
+    assert wel_q_array[1][0, 0, 0] == 0.25
+    assert wel_q_array[2][0, 0, 0] == 0.1
+    assert wel_q_array[3][0, 0, 0] == 0.1
+    welg_q_per = wel.q.get_data()
+    assert welg_q_per[0] is None
+    assert welg_q_per[1][0, 0, 0] == 0.25
+    assert welg_q_per[2][0, 0, 0] == 0.1
+    assert welg_q_per[3] is None
+    wel_aux_array = wel.aux.array
+    assert np.all(wel_aux_array[0][0] == 0.0)
+    assert wel_aux_array[1][0][0, 0, 0] == 0.0
+    assert wel_aux_array[2][0][0, 0, 0] == 0.0
+    assert wel_aux_array[3][0][0, 0, 0] == 0.0
+    welg_aux_per = wel.aux.get_data()
+    assert welg_aux_per[0] is None
+    assert welg_aux_per[1][0][0, 0, 0] == 0.0
+    assert welg_aux_per[2][0][0, 0, 0] == 0.0
+    assert welg_aux_per[3] is None
+
+    # first axis is nper, second is naux, then grid
+    drn_elev_array = drn.elev.array
+    assert drn_elev_array[0][0, 0, 0] == 60.0
+    assert drn_elev_array[1][0, 0, 0] == 60.0
+    assert drn_elev_array[2][0, 0, 0] == DNODATA
+    assert drn_elev_array[3][0, 0, 0] == 55.0
+    assert np.allclose(drn_elev_array[0], drn.elev.get_data(0))
+    assert drn.elev.get_data(1) is None
+    assert np.allclose(drn_elev_array[2], drn.elev.get_data(2))
+    assert np.allclose(drn_elev_array[3], drn.elev.get_data(3))
+
+    ghb_bhead_array = ghb.bhead.array
+    assert ghb_bhead_array[0][0, 1, 1] == 60.0
+    assert ghb_bhead_array[1][0, 1, 1] == 60.0
+    assert ghb_bhead_array[2][0, 1, 1] == 60.0
+    assert ghb_bhead_array[3][0, 1, 1] == 60.0
+    assert np.allclose(ghb_bhead_array[0], ghb.bhead.get_data(0))
+    assert ghb.bhead.get_data(1) is None
+    assert ghb.bhead.get_data(2) is None
+    assert ghb.bhead.get_data(3) is None
+
+    lak_tab_array = lak.tables.get_data()
+    assert lak_tab_array[0][1] == "lak01.tab"
+    assert lak_tab_array[1][1] == "lak02.tab"
+
+    assert len(lak_tab) == 2
+    lak_tab_1 = lak_tab[0].table.get_data()
+    assert lak_tab_1[0][0] == 30.0
+    assert lak_tab_1[5][2] == 20000.0
+    lak_tab_2 = lak_tab[1].table.get_data()
+    assert lak_tab_2[0][0] == 40.0
+    assert lak_tab_2[4][1] == 503000.0
+
+
+@requires_exe("mf6")
 def test_multi_model(function_tmpdir):
     # init paths
     test_ex_name = "test_multi_model"

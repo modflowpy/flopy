@@ -460,6 +460,7 @@ class MFDataItemStructure:
         self.parameter_name = None
         self.one_per_pkg = False
         self.jagged_array = None
+        self.netcdf = False
 
     def set_value(self, line, common):
         arr_line = line.strip().split()
@@ -634,6 +635,8 @@ class MFDataItemStructure:
                 self.one_per_pkg = bool(arr_line[1])
             elif arr_line[0] == "jagged_array":
                 self.jagged_array = arr_line[1]
+            elif arr_line[0] == "netcdf":
+                self.netcdf = arr_line[1]
 
     def get_type_string(self):
         return f"[{self.type_string}]"
@@ -936,6 +939,7 @@ class MFDataStructure:
             or "nodes" in data_item.shape
             or len(data_item.layer_dims) > 1
         )
+        self.netcdf = data_item.netcdf
         self.num_data_items = len(data_item.data_items)
         self.record_within_record = False
         self.file_data = False
@@ -1579,6 +1583,7 @@ class MFInputFileStructure:
         self.description = ""
         self.path = path + (self.file_type,)
         self.model_file = model_file  # file belongs to a specific model
+        self.read_array_grid = False
         self.read_as_arrays = False
         self.blocks, self.header = dfn_file.get_block_structure_dict(
             self.path,
@@ -1817,22 +1822,26 @@ class MFSimulationStructure:
         else:
             return None
 
-    def _tag_read_as_arrays(self):
+    def _tag_read_array(self):
         for pkg_spec in self.pkg_spec.values():
             if (
-                pkg_spec.get_data_structure(("options", "readasarrays"))
-                or pkg_spec.get_data_structure(("options", "readarraylayer"))
-                or pkg_spec.get_data_structure(("options", "readarraygrid"))
+                pkg_spec.get_data_structure(('options', 'readasarrays'))
             ):
                 pkg_spec.read_as_arrays = True
+            elif (
+                pkg_spec.get_data_structure(('options', 'readarraygrid'))
+            ):
+                pkg_spec.read_array_grid = True
         for mdl_spec in self.mdl_spec.values():
             for pkg_spec in mdl_spec.pkg_spec.values():
                 if (
-                    pkg_spec.get_data_structure(("options", "readasarrays"))
-                    or pkg_spec.get_data_structure(("options", "readarraylayer"))
-                    or pkg_spec.get_data_structure(("options", "readarraygrid"))
+                    pkg_spec.get_data_structure(('options', 'readasarrays'))
                 ):
                     pkg_spec.read_as_arrays = True
+                elif (
+                    pkg_spec.get_data_structure(('options', 'readarraygrid'))
+                ):
+                    pkg_spec.read_array_grid = True
 
 
 class MFStructure:
@@ -1876,4 +1885,4 @@ class MFStructure:
                     ] = entry[1:]
             # process each package
             self.sim_spec.register(Dfn(package))
-        self.sim_spec._tag_read_as_arrays()
+        self.sim_spec._tag_read_array()

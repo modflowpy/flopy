@@ -203,6 +203,8 @@ class DataStorage:
         what internal type is the data stored in (ndarray, recarray, scalar)
     layered : bool
         is the data layered
+    netcdf : bool
+        is the data stored in netcdf
     pre_data_comments : string
         any comments before the start of the data
     comments : dict
@@ -327,6 +329,7 @@ class DataStorage:
             self.build_type_list(resolve_data_shape=False)
 
         self.layered = layered
+        self.netcdf = False
 
         # initialize comments
         self.pre_data_comments = None
@@ -1014,6 +1017,14 @@ class DataStorage:
         ):
             data = [data]
 
+        grid_aux = (
+            self.data_dimensions.structure.name == "aux"
+            and self.data_dimensions.structure.layered
+        )
+        if grid_aux:
+            model_grid = self.data_dimensions.get_model_grid()
+            nlay = model_grid.num_layers()
+
         success = False
         if preserve_record:
             if isinstance(data, np.ndarray):
@@ -1034,14 +1045,24 @@ class DataStorage:
             elif isinstance(data, dict):
                 first_key = list(data.keys())[0]
                 if isinstance(first_key, int):
-                    for layer_num, data_layer in data.items():
-                        success = self._set_array_layer(
-                            data_layer,
-                            layer_num,
-                            multiplier,
-                            key,
-                            preserve_record,
-                        )
+                    if grid_aux:
+                        for l in range(nlay):
+                           success = self._set_array_layer(
+                                data[l],
+                                layer,
+                                multiplier,
+                                key,
+                                preserve_record,
+                            )
+                    else:
+                        for layer_num, data_layer in data.items():
+                            success = self._set_array_layer(
+                                data_layer,
+                                layer_num,
+                                multiplier,
+                                key,
+                                preserve_record,
+                            )
 
         if not success:
             # storing while preserving the record failed, try storing as a
@@ -1445,7 +1466,6 @@ class DataStorage:
             for data_item_index, data_item in enumerate(
                 struct.data_item_structures
             ):
-                print(data_item)
                 if data_item.type == DatumType.keyword:
                     if data_lst[0].lower() != data_item.name.lower():
                         data_lst_updated.append(data_item.name)
@@ -1832,6 +1852,7 @@ class DataStorage:
                         self._data_path,
                         self._stress_period,
                     )
+
                     file_access.write_text_file(
                         data,
                         fp,
@@ -1870,6 +1891,12 @@ class DataStorage:
         ) = self.process_open_close_line(arr_line, layer, store=False)
         self.set_ext_file_attributes(layer, data_file, print_format, binary)
         self.layer_storage[layer].factor = multiplier
+
+    def _set_storage_netcdf(self, reset=False):
+        if reset:
+            self.netcdf = False
+        else:
+            self.netcdf = True
 
     def external_to_external(
         self, new_external_file, multiplier=None, layer=None, binary=None
@@ -2346,6 +2373,21 @@ class DataStorage:
         if self.data_structure_type == DataStructureType.scalar:
             return self.layer_storage.first_item().internal_data
         dimensions = self.get_data_dimensions(None)
+        layer_aux = (
+            self.data_dimensions.structure.name == "aux"
+            and not self.data_dimensions.structure.layered
+        )
+        grid_aux = (
+            self.data_dimensions.structure.name == "aux"
+            and self.data_dimensions.structure.layered
+        )
+        if grid_aux:
+            model_grid = self.data_dimensions.get_model_grid()
+            nlay = model_grid.num_layers()
+            package_dim = self.data_dimensions.package_dim
+            naux = len(package_dim.get_aux_variables()[0]) - 1
+            if len(dimensions) <= 3 and dimensions[0] == nlay:
+                dimensions.insert(0, naux)
         if dimensions[0] < 0:
             # dimensions can not be determined from dfn file, use
             # the size of the data provided as the dimensions
@@ -2399,6 +2441,12 @@ class DataStorage:
                     or not self._has_layer_dim()
                 ):
                     full_data = self.layer_storage[layer].internal_data * mult
+                elif grid_aux:
+                    ilayer = (layer[0]) % nlay
+                    iaux = int((layer[0]) / nlay)
+                    full_data[iaux][ilayer] = (
+                        self.layer_storage[layer].internal_data * mult
+                    )
                 else:
                     full_data[layer] = (
                         self.layer_storage[layer].internal_data * mult
@@ -2413,6 +2461,10 @@ class DataStorage:
                     or not self._has_layer_dim()
                 ):
                     full_data = self._fill_const_layer(layer) * mult
+                elif grid_aux:
+                    ilayer = (layer[0]) % nlay
+                    iaux = int((layer[0]) / nlay)
+                    full_data[iaux][ilayer] = self._fill_const_layer(layer)[0] * mult
                 else:
                     full_data[layer] = self._fill_const_layer(layer) * mult
             else:
@@ -2464,7 +2516,7 @@ class DataStorage:
                         full_data = data_out
                     else:
                         full_data[layer] = data_out
-            if is_aux:
+            if layer_aux:
                 if full_data is not None:
                     all_none = False
                 aux_data.append(full_data)
@@ -2473,7 +2525,7 @@ class DataStorage:
                     np.nan,
                     self.data_dimensions.structure.get_datum_type(True),
                 )
-        if is_aux:
+        if layer_aux:
             if all_none:
                 return None
             else:
@@ -2991,10 +3043,8 @@ class DataStorage:
 
     def get_data_dimensions(self, layer):
         data_dimensions = self.data_dimensions.get_data_shape()[0]
-        is_aux = self.data_dimensions.structure.name == "aux"
         if (
-            not is_aux
-            and layer is not None
+            layer is not None
             and self.layer_storage.get_total_size() > 1
             and self._has_layer_dim()
         ):

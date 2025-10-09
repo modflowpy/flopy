@@ -1185,12 +1185,14 @@ class Grid:
         yul = None
         if os.path.exists(reffile):
             with open(reffile) as input:
+                print(f"Updating grid based on reference: {reffile}")
                 for line in input:
                     if len(line) > 1:
                         if line.strip()[0] != "#":
                             info = line.strip().split("#")[0].split()
                             if len(info) > 1:
                                 data = " ".join(info[1:]).strip("'").strip('"')
+                                print(f"Grid update on reference: {info}")
                                 if info[0] == "xll":
                                     self._xoff = float(data)
                                 elif info[0] == "yll":
@@ -1201,12 +1203,14 @@ class Grid:
                                     yul = float(data)
                                 elif info[0] == "rotation":
                                     self._angrot = float(data)
-                                elif info[0] == "epsg":
+                                elif info[0] == "length_units":
+                                    self._units = data.lower()
+                                elif info[0].lower() == "epsg":
                                     self.epsg = int(data)
                                 elif info[0] == "proj4":
                                     self.crs = data
-                                elif info[0] == "start_date":
-                                    start_datetime = data
+                                else:
+                                    print(" -> warn: update not applied.")
 
             # model must be rotated first, before setting xoff and yoff
             # when xul and yul are provided.
@@ -1287,6 +1291,22 @@ class Grid:
             **write_grid_shapefile_args,
         )
         return
+
+    def dataset(self, modeltime=None, mesh=None, configuration=None):
+        """
+        Method to generate baseline xarray dataset
+
+        Parameters
+        ----------
+        modeltime : FloPy ModelTime object
+        mesh : mesh type
+        configuration : configuration dictionary
+
+        Returns
+        -------
+            xarray dataset
+        """
+        raise NotImplementedError("dataset must be defined in the child class")
 
     # initialize grid from a grb file
     @classmethod

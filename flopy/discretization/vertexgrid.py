@@ -600,6 +600,146 @@ class VertexGrid(Grid):
         assert plotarray.shape == required_shape, msg
         return plotarray
 
+    def dataset(self, modeltime=None, mesh=None, configuration=None):
+        """
+        modeltime : FloPy ModelTime object
+        mesh : mesh type
+               valid mesh types are "layered" or None
+               VertexGrid objects only support layered mesh
+        configuration : configuration dictionary
+        """
+        from ..utils import import_optional_dependency
+
+        xr = import_optional_dependency("xarray")
+
+        FILLNA_INT32 = np.int32(-2147483647)
+        FILLNA_DBL = 9.96920996838687e36
+        lenunits = {0: "u", 1: "ft", 2: "m", 3: "cm"}
+
+        if mesh is None or mesh.upper() != "LAYERED":
+            raise ValueError("Vextex grid only supports layered mesh datasets")
+
+        if modeltime is None:
+            raise ValueError("modeltime required for dataset timeseries")
+
+        ds = xr.Dataset()
+        ds.attrs["modflow_grid"] = "VERTEX"
+
+        # create dataset coordinate vars
+        var_d = {
+            "time": (["time"], modeltime.totim),
+        }
+        ds = ds.assign(var_d)
+        ds["time"].attrs["calendar"] = "standard"
+        ds["time"].attrs["units"] = (
+            f"{modeltime.time_units} since {modeltime.start_datetime}"
+        )
+        ds["time"].attrs["axis"] = "T"
+        ds["time"].attrs["standard_name"] = "time"
+        ds["time"].attrs["long_name"] = "time"
+
+        # mesh container variable
+        ds = ds.assign({"mesh": ([], np.int32(1))})
+        ds["mesh"].attrs["cf_role"] = "mesh_topology"
+        ds["mesh"].attrs["long_name"] = "2D mesh topology"
+        ds["mesh"].attrs["topology_dimension"] = np.int32(2)
+        ds["mesh"].attrs["face_dimension"] = "nmesh_face"
+        ds["mesh"].attrs["node_coordinates"] = "mesh_node_x mesh_node_y"
+        ds["mesh"].attrs["face_coordinates"] = "mesh_face_x mesh_face_y"
+        ds["mesh"].attrs["face_node_connectivity"] = "mesh_face_nodes"
+
+        # mesh node x and y
+        var_d = {
+            "mesh_node_x": (["nmesh_node"], self.verts[:, 0]),
+            "mesh_node_y": (["nmesh_node"], self.verts[:, 1]),
+        }
+        ds = ds.assign(var_d)
+        ds["mesh_node_x"].attrs["units"] = lenunits[self.lenuni]
+        ds["mesh_node_x"].attrs["standard_name"] = "projection_x_coordinate"
+        ds["mesh_node_x"].attrs["long_name"] = "Easting"
+        ds["mesh_node_y"].attrs["units"] = lenunits[self.lenuni]
+        ds["mesh_node_y"].attrs["standard_name"] = "projection_y_coordinate"
+        ds["mesh_node_y"].attrs["long_name"] = "Northing"
+
+        # determine max number of cell vertices
+        cell_nverts = [cell2d[3] for cell2d in self.cell2d]
+        max_face_nodes = max(cell_nverts)
+
+        # mesh face x and y
+        x_bnds = []
+        for x in self.xvertices:
+            x = x[::-1]
+            if len(x) < max_face_nodes:
+                # TODO: set fill value?
+                x.extend([FILLNA_INT32] * (max_face_nodes - len(x)))
+            x_bnds.append(x)
+
+        y_bnds = []
+        for y in self.yvertices:
+            y = y[::-1]
+            if len(y) < max_face_nodes:
+                # TODO: set fill value?
+                y.extend([FILLNA_INT32] * (max_face_nodes - len(y)))
+            y_bnds.append(y)
+
+        var_d = {
+            "mesh_face_x": (["nmesh_face"], self.xcellcenters),
+            "mesh_face_xbnds": (["nmesh_face", "max_nmesh_face_nodes"], x_bnds),
+            "mesh_face_y": (["nmesh_face"], self.ycellcenters),
+            "mesh_face_ybnds": (["nmesh_face", "max_nmesh_face_nodes"], y_bnds),
+        }
+        ds = ds.assign(var_d)
+        ds["mesh_face_x"].attrs["units"] = lenunits[self.lenuni]
+        ds["mesh_face_x"].attrs["standard_name"] = "projection_x_coordinate"
+        ds["mesh_face_x"].attrs["long_name"] = "Easting"
+        ds["mesh_face_x"].attrs["bounds"] = "mesh_face_xbnds"
+        ds["mesh_face_y"].attrs["units"] = lenunits[self.lenuni]
+        ds["mesh_face_y"].attrs["standard_name"] = "projection_y_coordinate"
+        ds["mesh_face_y"].attrs["long_name"] = "Northing"
+        ds["mesh_face_y"].attrs["bounds"] = "mesh_face_ybnds"
+
+        # mesh face nodes
+        face_nodes = []
+        for idx, r in enumerate(self.cell2d):
+            nodes = self.cell2d[idx][4 : 4 + r[3]]
+            nodes = [np.int32(x + 1) for x in nodes]
+            nodes.reverse()
+            if len(nodes) < max_face_nodes:
+                # TODO set fill value?
+                nodes.extend([FILLNA_INT32] * (max_face_nodes - len(nodes)))
+            face_nodes.append(nodes)
+
+        var_d = {
+            "mesh_face_nodes": (["nmesh_face", "max_nmesh_face_nodes"], face_nodes),
+        }
+        ds = ds.assign(var_d)
+        ds["mesh_face_nodes"].attrs["cf_role"] = "face_node_connectivity"
+        ds["mesh_face_nodes"].attrs["long_name"] = (
+            "Vertices bounding cell (counterclockwise)"
+        )
+        ds["mesh_face_nodes"].attrs["_FillValue"] = FILLNA_INT32
+        ds["mesh_face_nodes"].attrs["start_index"] = np.int32(1)
+
+        wkt_configured = (
+            configuration is not None
+            and "wkt" in configuration
+            and configuration["wkt"] is not None
+        )
+
+        if wkt_configured or self.crs is not None:
+            ds["mesh_node_x"].attrs["grid_mapping"] = "projection"
+            ds["mesh_node_y"].attrs["grid_mapping"] = "projection"
+            ds["mesh_face_x"].attrs["grid_mapping"] = "projection"
+            ds["mesh_face_y"].attrs["grid_mapping"] = "projection"
+            ds = ds.assign({"projection": ([], np.int32(1))})
+            if wkt_configured:
+                # wkt override to existing crs
+                ds["projection"].attrs["wkt"] = configuration["wkt"]
+            else:
+                ds["projection"].attrs["wkt"] = self.crs.to_wkt()
+
+        return ds
+
     # initialize grid from a grb file
     @classmethod
     def from_binary_grid_file(cls, file_path, verbose=False):

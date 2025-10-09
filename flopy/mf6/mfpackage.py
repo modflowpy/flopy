@@ -33,6 +33,7 @@ from .mfbase import (
     MFInvalidTransientBlockHeaderException,
     PackageContainer,
     PackageContainerType,
+    ReadArrayGridException,
     ReadAsArraysException,
     VerbosityLevel,
 )
@@ -855,6 +856,7 @@ class MFBlock:
         # handle special readasarrays case
         if (
             self._container_package.structure.read_as_arrays
+            or self._container_package.structure.read_array_grid
             or (
                 hasattr(self._container_package, "aux")
                 and self._container_package.aux.structure.layered
@@ -1132,6 +1134,17 @@ class MFBlock:
                     "package {}".format(self.path)
                 )
                 raise ReadAsArraysException(error_msg)
+            elif (
+                arr_line[0].lower() == "readarraygrid"
+                and self.path[-1].lower() == "options"
+                and self._container_package.structure.read_array_grid is False
+            ):
+                error_msg = (
+                    "ERROR: Attempting to read a ReadArrayGrid "
+                    "package as a non-ReadArrayGrid "
+                    "package {}".format(self.path)
+                )
+                raise ReadArrayGridException(error_msg)
             else:
                 nothing_found = True
 
@@ -1685,6 +1698,34 @@ class MFBlock:
                 # Enabled blocks must be valid
                 if dataset.enabled and not dataset.is_valid():
                     return False
+
+    def _set_netcdf_storage(self, reset=False):
+        """Set the dataset storage to netcdf if supported for the dataset.
+
+        Parameters
+        ----------
+            reset : bool
+                reset netcdf storage to not set.
+
+        """
+
+        for key, dataset in self.datasets.items():
+            if (
+                isinstance(dataset, mfdataarray.MFArray)
+                or isinstance(dataset, mfdataarray.MFTransientArray)
+            ):
+                if dataset.structure.netcdf and dataset.has_data():
+                    try:
+                        dataset._set_storage_netcdf(reset)
+                    except MFDataException as mfde:
+                        raise MFDataException(
+                            mfdata_except=mfde,
+                            model=self._container_package.model_name,
+                            package=self._container_package._get_pname(),
+                            message="Error setting netcdf storage: "
+                            ' data of dataset "{}" in block '
+                            '"{}"'.format(dataset.structure.name, self.structure.name),
+                        )
 
 
 class MFPackage(PackageInterface):
@@ -3423,6 +3464,366 @@ class MFPackage(PackageInterface):
 
         axes = PlotUtilities._plot_package_helper(self, **kwargs)
         return axes
+
+    @staticmethod
+    def _add_netcdf_entries(
+        entries, mname, pname, data_item, auxiliary=None, mesh=None, nlay=1
+    ):
+        DNODATA = 3.0e30    # MF6 DNODATA constant
+        FILLNA_INT32 = np.int32(-2147483647)    # netcdf-fortran NF90_FILL_INT
+        FILLNA_DBL = 9.96920996838687e36    # netcdf-fortran NF90_FILL_DOUBLE
+
+        if auxiliary:
+            auxnames = auxiliary
+        else:
+            auxnames = []
+
+        def _add_entry(tagname, iaux=None, layer=None):
+
+            # netcdf variable dictionary
+            e = {}
+
+            # set dict key and netcdf variable name
+            key = tagname
+            name = f"{pname}"
+            if iaux is not None:
+                key = f"{key}/{iaux}"
+                name = f"{name}_{auxiliary[iaux]}"
+            else:
+                name = f"{name}_{tagname}"
+            if layer is not None:
+                key = f"{key}/layer{layer}"
+                name = f"{name}_l{layer}"
+
+            # add non-attrs to dictionary
+            e["varname"] = name.lower()
+            if (data_item.type) == DatumType.integer:
+                e["xarray_type"] = np.int32
+            elif (data_item.type) == DatumType.double_precision:
+                e["xarray_type"] = np.float64
+            dims = []
+            if data_item.shape[0] == 'nodes':
+                if data_item.block_name == "griddata":
+                    if mesh is None:
+                        dims += ["x", "y", "z"]
+                    elif mesh.upper() == "LAYERED":
+                        dims += ["nmesh_face"]
+                elif data_item.block_name == "period":
+                    if mesh is None:
+                        dims += ["x", "y", "z", "time"]
+                    elif mesh.upper() == "LAYERED":
+                        dims += ["nmesh_face", "time"]
+            elif (
+                data_item.block_name == "period" and
+                'ncpl' in data_item.shape
+                ):
+                    if mesh is None:
+                        dims += ["x", "y", "time"]
+                    elif mesh.upper() == "LAYERED":
+                        dims += ["nmesh_face", "time"]
+            else:
+                if mesh is None:
+                    dimmap = {"nlay": "z", "nrow": "y", "ncol": "x"}
+                    for s in data_item.shape:
+                        for k, v in dimmap.items():
+                            s = s.replace(k, v)
+                        dims.append(s)
+                elif mesh.upper() == "LAYERED":
+                    if (
+                        len(data_item.shape) == 3 or
+                        len(data_item.shape) == 2 or
+                        data_item.shape[0] == 'ncpl'
+                    ):
+                        dims.append("nmesh_face")
+                    elif data_item.shape[0] == 'ncol':
+                        dims.append("x")
+                    elif data_item.shape[0] == 'nrow':
+                        dims.append("y")
+
+            e["netcdf_shape"] = dims[::-1]
+
+            # add variable attributes dictionary
+            e["attrs"] = {}
+            e["attrs"]["modflow_input"] = (f"{mname}/{pname}/{tagname}").upper()
+            if iaux is not None:
+                e["attrs"]["modflow_iaux"] = iaux + 1
+            if layer is not None:
+                e["attrs"]["layer"] = layer
+            if (data_item.type) == DatumType.integer:
+                e["attrs"]["_FillValue"] = FILLNA_INT32
+            elif (data_item.type) == DatumType.double_precision:
+                if data_item.block_name == "griddata":
+                    e["attrs"]["_FillValue"] = FILLNA_DBL
+                elif data_item.block_name == "period":
+                    e["attrs"]["_FillValue"] = DNODATA
+            if data_item.longname is not None:
+                if layer is not None:
+                    e["attrs"]["longname"] = f"{data_item.longname} layer {layer}"
+                else:
+                    e["attrs"]["longname"] = data_item.longname
+
+            # set dictionary
+            entries[key] = e
+
+        if data_item.layered and mesh and mesh.upper() == "LAYERED":
+            if data_item.name == "aux" or data_item.name == "auxvar":
+                for n, auxname in enumerate(auxnames):
+                    for l in range(nlay):
+                        _add_entry(data_item.name, n, l + 1)
+            else:
+                for l in range(nlay):
+                    _add_entry(data_item.name, layer=l + 1)
+        else:
+            if data_item.name == "aux" or data_item.name == "auxvar":
+                for n, auxname in enumerate(auxnames):
+                    _add_entry(data_item.name, iaux=n)
+            else:
+                _add_entry(data_item.name)
+
+    @staticmethod
+    def netcdf_package(mtype, ptype, auxiliary=None, mesh=None, nlay=1):
+        from .data.mfstructure import Dfn, MFSimulationStructure
+
+        entries = {}
+        sim_spec = MFSimulationStructure()
+
+        for package in MFPackage.__subclasses__():
+            p = Dfn(package)
+            c, sc = p.dfn_file_name.split(".")[0].split("-")
+            if c == mtype.lower() and sc == ptype.lower():
+                sim_spec.register(Dfn(package))
+                break
+
+        pkg_spec = None
+        if f"{mtype.lower()}6" in sim_spec.mdl_spec:
+            mdl_spec = sim_spec.mdl_spec[f"{mtype.lower()}6"]
+            if f"{ptype.lower()}" in mdl_spec.pkg_spec:
+                pkg_spec = mdl_spec.pkg_spec[f"{ptype.lower()}"]
+        if pkg_spec is not None:
+            if pkg_spec.multi_package_support:
+                pname = f"<{ptype}name>"
+            else:
+                pname = ptype
+            for key, block in pkg_spec.blocks.items():
+                if key != "griddata" and key != "period":
+                    continue
+                for d in block.data_structures:
+                    if block.data_structures[d].netcdf:
+                        MFPackage._add_netcdf_entries(
+                            entries,
+                            f"<{mtype}name>",
+                            pname,
+                            block.data_structures[d],
+                            auxiliary,
+                            mesh,
+                            nlay,
+                        )
+
+        return entries
+
+    def netcdf_meta(self, mesh=None):
+        entries = {}
+
+        if self.dimensions.get_aux_variables():
+            auxnames = list(self.dimensions.get_aux_variables()[0])
+            if len(auxnames) > 0 and auxnames[0] == "auxiliary":
+                auxnames.pop(0)
+        else:
+            auxnames = []
+
+        for key, block in self.blocks.items():
+            if key != "griddata" and key != "period":
+                continue
+            for dataset in block.datasets.values():
+                if isinstance(dataset, mfdataarray.MFArray):
+                    for index, data_item in enumerate(
+                        dataset.structure.data_item_structures
+                    ):
+                        if dataset.structure.netcdf and dataset.has_data():
+                            MFPackage._add_netcdf_entries(
+                                entries,
+                                self.model_name,
+                                self.package_name,
+                                dataset.structure,
+                                auxnames,
+                                mesh,
+                                self.model_or_sim.modelgrid.nlay,
+                            )
+
+        return entries
+
+    def update_dataset(self, dataset, netcdf_meta=None, mesh=None, update_data=True):
+        from ..discretization.structuredgrid import StructuredGrid
+        if netcdf_meta is None:
+            nc_meta = self.netcdf_meta(mesh=mesh)
+        else:
+            nc_meta = netcdf_meta
+
+        modelgrid = self.model_or_sim.modelgrid
+        modeltime = self.model_or_sim.modeltime
+
+        dimmap = {
+            "time": sum(modeltime.nstp),
+            "z": modelgrid.nlay,
+            "nmesh_face": modelgrid.ncpl,
+            "ncpl": modelgrid.ncpl,
+        }
+
+        if isinstance(modelgrid, StructuredGrid):
+            dimmap["y"] = modelgrid.nrow
+            dimmap["x"] = modelgrid.ncol
+
+        def _update_layered(key, iaux, dobj=None, data=None):
+            if "layer" in nc_meta[key]["attrs"]:
+                layer = nc_meta[key]["attrs"]["layer"] - 1
+            else:
+                layer = -1
+
+            if not dobj.repeating:
+                if layer >= 0 and (
+                    'nlay' in dobj.structure.shape or
+                    dobj.structure.shape[0] == 'nodes'):
+                    dataset[nc_meta[key]["varname"]].values = (
+                        data[layer].flatten())
+                else:
+                    dataset[nc_meta[key]["varname"]].values = (
+                        data.flatten())
+                return
+
+            if iaux >= 0:
+                for per in data:
+                    if data[per] is None:
+                        continue
+                    auxdata = data[per][iaux]
+                    istp = sum(modeltime.nstp[0:per])
+                    if self.structure.read_as_arrays:
+                        dataset[nc_meta[key]["varname"]].values[istp, :] = (
+                            auxdata.flatten())
+                    elif self.structure.read_array_grid:
+                        uidx = istp + auxdata[layer].size
+                        if modelgrid.nlay > 1:
+                            dataset[nc_meta[key]["varname"]].values[istp, :] = (
+                                auxdata[layer].flatten())
+                        else:
+                            dataset[nc_meta[key]["varname"]].values[istp, :] = (
+                                auxdata.flatten())
+            else:
+                for per in data:
+                    if data[per] is None:
+                        continue
+                    istp = sum(modeltime.nstp[0:per])
+                    if layer >= 0 and (
+                        len(dobj.structure.shape) == 3 or
+                        dobj.structure.shape[0] == 'nodes'):
+                        dataset[nc_meta[key]["varname"]].values[istp, :] = (
+                            data[per][layer].flatten())
+                    else:
+                        if (
+                            dobj.structure.data_item_structures[0].numeric_index or
+                            dobj.structure.data_item_structures[0].is_cellid):
+                            dataset[nc_meta[key]["varname"]].values[istp, :] = (
+                                data[per].flatten() + 1)
+                        else:
+                            dataset[nc_meta[key]["varname"]].values[istp, :] = (
+                                data[per].flatten())
+
+        def _update_structured(key, iaux, dobj=None, data=None):
+            if not dobj.repeating:
+                dataset[nc_meta[key]["varname"]].values = data
+                return
+
+            if iaux >= 0:
+                for per in data:
+                    if data[per] is None:
+                        continue
+                    istp = sum(modeltime.nstp[0:per])
+                    auxdata = data[per][iaux]
+                    dataset[nc_meta[key]["varname"]].values[istp, :] = (
+                        auxdata)
+            else:
+                for per in data:
+                    if data[per] is None:
+                        continue
+                    istp = sum(modeltime.nstp[0:per])
+                    if (
+                        dobj.structure.data_item_structures[0].numeric_index or
+                        dobj.structure.data_item_structures[0].is_cellid):
+                        dataset[nc_meta[key]["varname"]].values[istp, :] = (
+                            data[per] + 1)
+                    else:
+                        dataset[nc_meta[key]["varname"]].values[istp, :] = (
+                            data[per])
+
+        def _update_data(key, dobj=None, data=None):
+            if "modflow_iaux" in nc_meta[key]["attrs"]:
+                iaux = nc_meta[key]["attrs"]["modflow_iaux"] - 1
+            else:
+                iaux = -1
+            if mesh == None:
+                _update_structured(key, iaux, dobj, data)
+            elif mesh.upper() == "LAYERED":
+                _update_layered(key, iaux, dobj, data)
+
+        def _data_shape(shape):
+            dims_l = []
+            for d in shape:
+                dims_l.append(dimmap[d])
+
+            return dims_l
+
+        projection = "projection" in dataset.data_vars
+        latlon = "lat" in dataset.data_vars and "lon" in dataset.data_vars
+
+        last_path = ''
+        pitem = None
+        pdata = None
+        for v in nc_meta:
+            varname = nc_meta[v]["varname"]
+            data = np.full(
+                _data_shape(nc_meta[v]["netcdf_shape"]),
+                nc_meta[v]["attrs"]["_FillValue"],
+                dtype=nc_meta[v]["xarray_type"],
+            )
+            var_d = {varname: (nc_meta[v]["netcdf_shape"], data)}
+            dataset = dataset.assign(var_d)
+            for a in nc_meta[v]["attrs"]:
+                dataset[varname].attrs[a] = nc_meta[v]["attrs"][a]
+            dims = dataset[varname].dims
+            if projection:
+                if "nmesh_face" in dims or "nmesh_node" in dims:
+                    dataset[varname].attrs["grid_mapping"] = "projection"
+                    dataset[varname].attrs["coordinates"] = "mesh_face_x mesh_face_y"
+                elif mesh is None and len(dims) > 1:
+                    dataset[varname].attrs["grid_mapping"] = "projection"
+                    dataset[varname].attrs["coordinates"] = "x y"
+            elif latlon and mesh is None and len(dims) > 1:
+                dataset[varname].attrs["coordinates"] = "lon lat"
+
+            if update_data:
+                path = nc_meta[v]["attrs"]["modflow_input"]
+                tag = path.split("/")[2].lower()
+                if path != last_path:
+                    pitem = getattr(self, tag)
+                    pdata = pitem.get_data()
+                    last_path = path
+                _update_data(v, pitem, pdata)
+
+        return dataset
+
+    def _set_netcdf_storage(self, reset=False):
+        """set array dataset storage to netcdf.
+
+        Parameters
+        ----------
+            reset : bool
+                reset netcdf storage to not set.
+
+        """
+
+        # update blocks
+        for key, block in self.blocks.items():
+            if key == "griddata" or key == "period":
+                block._set_netcdf_storage(reset)
 
 
 class MFChildPackages:

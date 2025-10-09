@@ -102,6 +102,12 @@ def dfn_file_name(component_name: tuple[str, str]) -> str:
         return f"gwt-{component_name[1]}.dfn"
     return f"{component_name[0] or 'sim'}-{component_name[1]}.dfn"
 
+def longname(var: dict) -> Any:
+    _longname = var.get("longname", None)
+    if _longname is not None:
+        return _longname
+    return None
+
 def parent(dfn: dict, component_name: tuple[str, str]) -> str:
     # TODO should be no longer needed when parents are explicit in dfns
     """The input context's parent context type, if it can have a parent."""
@@ -320,7 +326,7 @@ def attrs(dfn: dict, component_name: tuple[str, str], developmode: bool = True) 
 
         def __dfn():
             def _var(var: dict) -> List[str]:
-                exclude = ["longname", "description"]
+                exclude = ["description"]
                 name = var["name"]
                 subpkg = dfn.get("fkeys", dict()).get(name, None)
                 if subpkg:

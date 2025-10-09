@@ -957,6 +957,20 @@ class UnstructuredGrid(Grid):
             shp = (self.ncpl[layer],)
         return shp
 
+    def dataset(self, modeltime=None, mesh=None):
+        """
+        Method to generate baseline Xarray dataset
+
+        Parameters
+        ----------
+        mesh
+
+        Returns
+        -------
+            Xarray dataset
+        """
+        raise NotImplementedError("NetCDF currently unsupported for Unstructured grids")
+
     @staticmethod
     def ncpl_from_ihc(ihc, iac):
         """

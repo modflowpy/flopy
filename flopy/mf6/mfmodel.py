@@ -25,6 +25,7 @@ from .mfbase import (
     MFFileMgmt,
     PackageContainer,
     PackageContainerType,
+    ReadArrayGridException,
     ReadAsArraysException,
     VerbosityLevel,
 )
@@ -457,6 +458,11 @@ class MFModel(ModelInterface):
                 if idomain is None:
                     force_resync = True
                     idomain = self._resolve_idomain(idomain, botm)
+                crs = self._modelgrid.crs
+                if crs is None and hasattr(dis, "crs"):
+                    crs = dis.crs.get_data()
+                    if crs is not None:
+                        crs = crs[0][1]
                 self._modelgrid = StructuredGrid(
                     delc=dis.delc.array,
                     delr=dis.delr.array,
@@ -464,7 +470,7 @@ class MFModel(ModelInterface):
                     botm=botm,
                     idomain=idomain,
                     lenuni=dis.length_units.array,
-                    crs=self._modelgrid.crs,
+                    crs=crs,
                     xoff=self._modelgrid.xoffset,
                     yoff=self._modelgrid.yoffset,
                     angrot=self._modelgrid.angrot,
@@ -495,6 +501,11 @@ class MFModel(ModelInterface):
                 if idomain is None:
                     force_resync = True
                     idomain = self._resolve_idomain(idomain, botm)
+                crs = self._modelgrid.crs
+                if crs is None and hasattr(dis, "crs"):
+                    crs = dis.crs.get_data()
+                    if crs is not None:
+                        crs = crs[0][1]
                 self._modelgrid = VertexGrid(
                     vertices=dis.vertices.array,
                     cell2d=dis.cell2d.array,
@@ -502,7 +513,7 @@ class MFModel(ModelInterface):
                     botm=botm,
                     idomain=idomain,
                     lenuni=dis.length_units.array,
-                    crs=self._modelgrid.crs,
+                    crs=crs,
                     xoff=self._modelgrid.xoffset,
                     yoff=self._modelgrid.yoffset,
                     angrot=self._modelgrid.angrot,
@@ -524,6 +535,11 @@ class MFModel(ModelInterface):
             idomain = dis.idomain.array
             if idomain is None:
                 idomain = np.ones(dis.nodes.array, dtype=int)
+            crs = self._modelgrid.crs
+            if crs is None and hasattr(dis, "crs"):
+                crs = dis.crs.get_data()
+                if crs is not None:
+                    crs = crs[0][1]
             if cell2d is None:
                 if (
                     self.simulation.simulation_data.verbosity_level.value
@@ -556,7 +572,7 @@ class MFModel(ModelInterface):
                 idomain=idomain,
                 lenuni=dis.length_units.array,
                 ncpl=ncpl,
-                crs=self._modelgrid.crs,
+                crs=crs,
                 xoff=self._modelgrid.xoffset,
                 yoff=self._modelgrid.yoffset,
                 angrot=self._modelgrid.angrot,
@@ -589,6 +605,11 @@ class MFModel(ModelInterface):
                 if idomain is None:
                     force_resync = True
                     idomain = self._resolve_idomain(idomain, botm)
+                crs = self._modelgrid.crs
+                if crs is None and hasattr(dis, "crs"):
+                    crs = dis.crs.get_data()
+                    if crs is not None:
+                        crs = crs[0][1]
                 self._modelgrid = VertexGrid(
                     vertices=dis.vertices.array,
                     cell1d=dis.cell1d.array,
@@ -596,7 +617,7 @@ class MFModel(ModelInterface):
                     botm=botm,
                     idomain=idomain,
                     lenuni=dis.length_units.array,
-                    crs=self._modelgrid.crs,
+                    crs=crs,
                     xoff=self._modelgrid.xoffset,
                     yoff=self._modelgrid.yoffset,
                     angrot=self._modelgrid.angrot,
@@ -627,6 +648,11 @@ class MFModel(ModelInterface):
                 if idomain is None:
                     force_resync = True
                     idomain = self._resolve_idomain(idomain, botm)
+                crs = self._modelgrid.crs
+                if crs is None and hasattr(dis, "crs"):
+                    crs = dis.crs.get_data()
+                    if crs is not None:
+                        crs = crs[0][1]
                 self._modelgrid = StructuredGrid(
                     delc=dis.delc.array,
                     delr=dis.delr.array,
@@ -634,7 +660,7 @@ class MFModel(ModelInterface):
                     botm=botm,
                     idomain=idomain,
                     lenuni=dis.length_units.array,
-                    crs=self._modelgrid.crs,
+                    crs=crs,
                     xoff=self._modelgrid.xoffset,
                     yoff=self._modelgrid.yoffset,
                     angrot=self._modelgrid.angrot,
@@ -665,6 +691,11 @@ class MFModel(ModelInterface):
                 if idomain is None:
                     force_resync = True
                     idomain = self._resolve_idomain(idomain, botm)
+                crs = self._modelgrid.crs
+                if crs is None and hasattr(dis, "crs"):
+                    crs = dis.crs.get_data()
+                    if crs is not None:
+                        crs = crs[0][1]
                 self._modelgrid = VertexGrid(
                     vertices=dis.vertices.array,
                     cell2d=dis.cell2d.array,
@@ -672,7 +703,7 @@ class MFModel(ModelInterface):
                     botm=botm,
                     idomain=idomain,
                     lenuni=dis.length_units.array,
-                    crs=self._modelgrid.crs,
+                    crs=crs,
                     xoff=self._modelgrid.xoffset,
                     yoff=self._modelgrid.yoffset,
                     angrot=self._modelgrid.angrot,
@@ -931,6 +962,14 @@ class MFModel(ModelInterface):
 
         # load name file
         instance.name_file.load(strict)
+        if hasattr(instance.name_file, "nc_filerecord"):
+            nc_filerecord = instance.name_file.nc_filerecord.get_data()
+            if nc_filerecord:
+                message = (
+                    "NetCDF input file is currently unsupported "
+                    f"for model load ({modelname})."
+                )
+                raise FlopyException(message)
 
         # order packages
         # FIX: Transport - Priority packages maybe should not be hard coded
@@ -1299,7 +1338,11 @@ class MFModel(ModelInterface):
         else:
             return f",{data_entry}\n"
 
-    def write(self, ext_file_action=ExtFileAction.copy_relative_paths):
+    def write(
+        self,
+        ext_file_action=ExtFileAction.copy_relative_paths,
+        netcdf=None,
+    ):
         """
         Writes out model's package files.
 
@@ -1309,8 +1352,23 @@ class MFModel(ModelInterface):
             Defines what to do with external files when the simulation path has
             changed.  defaults to copy_relative_paths which copies only files
             with relative paths, leaving files defined by absolute paths fixed.
-
+        netcdf : str
+            ASCII package files will be written as configured for NetCDF input. 
+            'layered', 'structured' and '' (empty string) are supported arguments.
         """
+
+        write_netcdf = (
+            hasattr(self.name_file, "nc_filerecord")
+            and netcdf is not None
+        )
+
+        if write_netcdf:
+            # update name file for input even if "" is configured
+            nc_fname = None
+            if self.name_file.nc_filerecord.get_data() is None:
+                # update name file for netcdf input
+                nc_fname = f"{self.name}.input.nc"
+                self.name_file.nc_filerecord = nc_fname
 
         # write name file
         if (
@@ -1330,12 +1388,26 @@ class MFModel(ModelInterface):
 
         # write packages
         for pp in self.packagelist:
+            if write_netcdf:
+                # set data storage to write ascii for netcdf
+                pp._set_netcdf_storage()
             if (
                 self.simulation_data.verbosity_level.value
                 >= VerbosityLevel.normal.value
             ):
                 print(f"    writing package {pp._get_pname()}...")
             pp.write(ext_file_action=ext_file_action)
+
+            # reset data storage
+            pp._set_netcdf_storage(reset=True)
+
+        # write netcdf file
+        if write_netcdf:
+            if netcdf != "":
+                self._write_netcdf(mesh=netcdf)
+            if nc_fname is not None:
+                self.name_file.nc_filerecord = None
+
 
     def get_grid_type(self):
         """
@@ -1997,9 +2069,12 @@ class MFModel(ModelInterface):
                 pkg_type = package.package_type.upper()
                 if (
                     package.package_type != "obs" and
+                    (self.structure.pkg_spec[
+                    package.package_type
+                    ].read_as_arrays or
                     self.structure.pkg_spec[
                     package.package_type
-                    ].read_as_arrays
+                    ].read_array_grid)
                 ):
                     pkg_type = pkg_type[0:-1]
                 # Model Assumption - assuming all name files have a package
@@ -2123,11 +2198,17 @@ class MFModel(ModelInterface):
         )
         try:
             package.load(strict)
-        except ReadAsArraysException:
+        except (ReadAsArraysException, ReadArrayGridException) as e:
             #  create ReadAsArrays package and load it instead
-            package_obj = PackageContainer.package_factory(
-                f"{ftype}a", model_type
-            )
+            if isinstance(e, ReadAsArraysException):
+                package_obj = PackageContainer.package_factory(
+                    f"{ftype}a", model_type
+                )
+            #  create ReadArrayGrid package and load it instead
+            elif isinstance(e, ReadArrayGridException):
+                package_obj = PackageContainer.package_factory(
+                    f"{ftype}g", model_type
+                )
             package = package_obj(
                 self,
                 filename=fname,
@@ -2194,3 +2275,193 @@ class MFModel(ModelInterface):
             else:
                 return np.ones_like(botm)
         return idomain
+
+    @staticmethod
+    def netcdf_model(mname, mtype, grid_type, mesh=None):
+        """Return dictionary of dataset (model) scoped attributes
+        Parameters
+        ----------
+        mname : str
+            model name
+        mtype : str
+            model type, e.g. GWF6
+        grid_type:
+            DiscretizationType
+        mesh : str
+            mesh type if dataset is ugrid compliant
+        """
+        attrs = {
+            "modflow_grid": "",
+            "modflow_model": "",
+        }
+        if grid_type == DiscretizationType.DIS:
+            attrs["modflow_grid"] = "STRUCTURED"
+        elif grid_type == DiscretizationType.DISV:
+            attrs["modflow_grid"] = "VERTEX"
+
+        attrs["modflow_model"] = f"{mtype.upper()}: {mname.upper()}"
+
+        # supported => LAYERED
+        if mesh:
+            attrs["mesh"] = mesh.upper()
+
+        return {"attrs": attrs}
+
+    def netcdf_meta(self, mesh=None):
+        """Return dictionary of dataset (model) scoped attributes
+        Parameters
+        ----------
+        mesh : str
+            mesh type if dataset is ugrid compliant
+        """
+        return MFModel.netcdf_model(
+            self.name, self.model_type, self.get_grid_type(), mesh
+        )
+
+    def update_dataset(self, dataset, netcdf_meta=None, mesh=None, update_data=True):
+        if netcdf_meta is None:
+            nc_meta = self.netcdf_meta(mesh=mesh)
+        else:
+            nc_meta = netcdf_meta
+
+        if (
+            self.simulation.simulation_data.verbosity_level.value
+            >= VerbosityLevel.normal.value
+        ):
+            print(f"    updating model dataset...")
+
+        for a in nc_meta["attrs"]:
+            dataset.attrs[a] = nc_meta["attrs"][a]
+
+        # add all packages and update data
+        for p in self.packagelist:
+            # add package var to dataset
+            if (
+                self.simulation.simulation_data.verbosity_level.value
+                >= VerbosityLevel.normal.value
+            ):
+                print(f"    updating dataset for package {p._get_pname()}...")
+            dataset = p.update_dataset(dataset, mesh=mesh, update_data=update_data)
+
+        return dataset
+
+    def _write_netcdf(self, mesh=None):
+        import datetime
+
+        from ..version import __version__
+        if mesh is not None and mesh.upper() == "STRUCTURED":
+            mesh = None
+
+        config = {}
+        for pp in self.packagelist:
+            if pp.package_type == "ncf":
+                config["shuffle"] = pp.shuffle.get_data()
+                config["deflate"] = pp.deflate.get_data()
+                config["chunk_time"] = pp.chunk_time.get_data()
+                config["chunk_face"] = pp.chunk_face.get_data()
+                config["chunk_x"] = pp.chunk_x.get_data()
+                config["chunk_y"] = pp.chunk_y.get_data()
+                config["chunk_z"] = pp.chunk_z.get_data()
+                wkt = pp.wkt.get_data()
+                if wkt is not None:
+                    wkt = wkt[0][1]
+                config["wkt"] = wkt
+                config["latitude"] = pp.latitude.get_data()
+                config["longitude"] = pp.longitude.get_data()
+
+        if (
+            self.simulation.simulation_data.verbosity_level.value
+            >= VerbosityLevel.normal.value
+        ):
+            print(f"    creating model dataset...")
+
+        ds = self.modelgrid.dataset(
+            modeltime=self.modeltime,
+            mesh=mesh,
+            configuration=config,
+        )
+
+        dt = datetime.datetime.now()
+        timestamp = dt.strftime("%m/%d/%Y %H:%M:%S")
+
+        nc_meta = self.netcdf_meta(mesh=mesh)
+        nc_meta["attrs"]["title"] = f"{self.name.upper()} input"
+        nc_meta["attrs"]["source"] = f"flopy {__version__}"
+        nc_meta["attrs"]["history"] = f"first created {timestamp}"
+        if mesh is None:
+            nc_meta["attrs"]["Conventions"] = "CF-1.11"
+        elif mesh.upper() == "LAYERED":
+            nc_meta["attrs"]["Conventions"] = "CF-1.11 UGRID-1.0"
+
+        ds = self.update_dataset(
+            ds,
+            netcdf_meta=nc_meta,
+            mesh=mesh,
+        )
+
+        chunk = False
+        chunk_t = False
+        if mesh is None:
+            if (
+                "chunk_x" in config
+                and config["chunk_x"] is not None
+                and "chunk_y" in config
+                and config["chunk_y"] is not None
+                and "chunk_z" in config
+                and config["chunk_z"] is not None
+            ):
+                chunk = True
+        elif mesh.upper() == "LAYERED":
+            if "chunk_face" in config and config["chunk_face"] is not None:
+                chunk = True
+        if "chunk_time" in config and config["chunk_time"] is not None:
+            chunk_t = True
+
+        base_encode = {}
+        if "deflate" in config and config["deflate"] is not None:
+            base_encode["zlib"] = True
+            base_encode["complevel"] = config["deflate"]
+        if "shuffle" in config and config["deflate"] is not None:
+            base_encode["shuffle"] = True
+
+        encoding = {}
+        chunk_dims = {'time', 'nmesh_face', 'z', 'y', 'x'}
+        for varname, da in ds.data_vars.items():
+            dims = ds.data_vars[varname].dims
+            encode = dict(base_encode)
+            if (
+                not set(dims).issubset(chunk_dims)
+                or not chunk or not chunk_t
+            ):
+                encoding[varname] = encode
+                continue
+            chunksizes = []
+            if "time" in dims:
+                chunksizes.append(config["chunk_time"])
+            if mesh is None:
+                if "z" in dims:
+                    chunksizes.append(config["chunk_z"])
+                if "y" in dims:
+                    chunksizes.append(config["chunk_y"])
+                if "x" in dims:
+                    chunksizes.append(config["chunk_x"])
+            elif mesh.upper() == "LAYERED" and "nmesh_face" in dims:
+                chunksizes.append(config["chunk_face"])
+            if len(chunksizes) > 0:
+                encode["chunksizes"] = chunksizes
+            encoding[varname] = encode
+
+        fname = self.name_file.nc_filerecord.get_data()[0][0]
+
+        if (
+            self.simulation.simulation_data.verbosity_level.value
+            >= VerbosityLevel.normal.value
+        ):
+            print(f"    writing NetCDF file {fname}...")
+        # write dataset to netcdf
+        ds.to_netcdf(
+            os.path.join(self.model_ws, fname),
+            format="NETCDF4",
+            engine="netcdf4",
+            encoding=encoding,
+        )

@@ -27,6 +27,12 @@ class ReadAsArraysException(Exception):
     package.
     """
 
+class ReadArrayGridException(Exception):
+    """
+    Exception occurs when loading ReadArrayGrid package as non-ReadArrayGrid
+    package.
+    """
+
 
 # external exceptions for users
 class FlopyException(Exception):
