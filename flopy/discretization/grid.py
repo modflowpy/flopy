@@ -1210,7 +1210,7 @@ class Grid:
                                 elif info[0] == "proj4":
                                     self.crs = data
                                 else:
-                                    print("   ->warn: update not applied.")
+                                    print(" -> warn: update not applied.")
 
             # model must be rotated first, before setting xoff and yoff
             # when xul and yul are provided.

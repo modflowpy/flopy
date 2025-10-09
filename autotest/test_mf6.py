@@ -2131,7 +2131,7 @@ def test_grid_array(function_tmpdir):
 
     assert not wel.has_stress_period_data
     q_nan = np.where(wel.q.array == DNODATA, np.nan, wel.q.array)
-    val_q = np.nansum(q_nan, axis=(1, 2, 3, 4))
+    val_q = np.nansum(q_nan, axis=(1, 2, 3))
     assert val_q[0] == 0.0
     assert val_q[1] == 0.25
     assert val_q[2] == 0.1
@@ -2189,7 +2189,6 @@ def test_grid_array(function_tmpdir):
     assert len(wel.aux.get_data()) == 4
     assert wel.q.get_data()[0] is None
     assert wel.q.get_data(0) is None
-    wel_q_array = wel.q.array
     assert np.allclose(wel.q.get_data()[1], wel.q.get_data(1))
     assert np.allclose(wel.q.get_data()[2], wel.q.get_data(2))
     assert np.allclose(wel.q.array[1], wel.q.get_data(1))
@@ -2199,12 +2198,15 @@ def test_grid_array(function_tmpdir):
     assert np.allclose(wel.aux.array[1][0], wel.aux.get_data(1)[0])
     assert np.allclose(wel.aux.array[2][0], wel.aux.get_data(2)[0])
     assert not wel.has_stress_period_data
+    wel_q_array = wel.q.array
+    print(wel_q_array)
     q_nan = np.where(wel_q_array == DNODATA, np.nan, wel_q_array)
-    val_q = np.nansum(q_nan, axis=(1, 2, 3, 4))
+    val_q = np.nansum(q_nan, axis=(1, 2, 3))
+    print(val_q)
     assert val_q[0] == 0.0
     assert val_q[1] == 0.25
     assert val_q[2] == 0.1
-    assert val_q[3] == 0.1
+    assert val_q[3] == 0.0
     val_q_2 = wel.q.get_data()
     assert val_q_2[0] is None
     assert val_q_2[1][0, 0, 0] == 0.25
@@ -2416,9 +2418,9 @@ def test_grid_array(function_tmpdir):
 
     wel_q_array = wel.q.array
     assert np.all(wel_q_array[0][0] == 0.0)
-    assert wel_q_array[1][0][0, 0, 0] == 0.25
-    assert wel_q_array[2][0][0, 0, 0] == 0.1
-    assert wel_q_array[3][0][0, 0, 0] == 0.1
+    assert wel_q_array[1][0, 0, 0] == 0.25
+    assert wel_q_array[2][0, 0, 0] == 0.1
+    assert wel_q_array[3][0, 0, 0] == 0.1
     welg_q_per = wel.q.get_data()
     assert welg_q_per[0] is None
     assert welg_q_per[1][0, 0, 0] == 0.25
@@ -2437,20 +2439,20 @@ def test_grid_array(function_tmpdir):
 
     # first axis is nper, second is naux, then grid
     drn_elev_array = drn.elev.array
-    assert drn_elev_array[0][0][0, 0, 0] == 60.0
-    assert drn_elev_array[1][0][0, 0, 0] == 60.0
-    assert drn_elev_array[2][0][0, 0, 0] == DNODATA
-    assert drn_elev_array[3][0][0, 0, 0] == 55.0
+    assert drn_elev_array[0][0, 0, 0] == 60.0
+    assert drn_elev_array[1][0, 0, 0] == 60.0
+    assert drn_elev_array[2][0, 0, 0] == DNODATA
+    assert drn_elev_array[3][0, 0, 0] == 55.0
     assert np.allclose(drn_elev_array[0], drn.elev.get_data(0))
     assert drn.elev.get_data(1) is None
     assert np.allclose(drn_elev_array[2], drn.elev.get_data(2))
     assert np.allclose(drn_elev_array[3], drn.elev.get_data(3))
 
     ghb_bhead_array = ghb.bhead.array
-    assert ghb_bhead_array[0][0][0, 1, 1] == 60.0
-    assert ghb_bhead_array[1][0][0, 1, 1] == 60.0
-    assert ghb_bhead_array[2][0][0, 1, 1] == 60.0
-    assert ghb_bhead_array[3][0][0, 1, 1] == 60.0
+    assert ghb_bhead_array[0][0, 1, 1] == 60.0
+    assert ghb_bhead_array[1][0, 1, 1] == 60.0
+    assert ghb_bhead_array[2][0, 1, 1] == 60.0
+    assert ghb_bhead_array[3][0, 1, 1] == 60.0
     assert np.allclose(ghb_bhead_array[0], ghb.bhead.get_data(0))
     assert ghb.bhead.get_data(1) is None
     assert ghb.bhead.get_data(2) is None

@@ -735,6 +735,7 @@ class MFArray(MFMultiDimVar):
                     and isinstance(self, MFTransientArray)
                     and data is not []  # noqa: F632
                     and not self._is_grid_aux()
+                    and not "nodes" in self.structure.shape
                 ):
                     data = np.expand_dims(data, 0)
                 return data

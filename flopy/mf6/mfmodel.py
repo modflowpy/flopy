@@ -1402,8 +1402,9 @@ class MFModel(ModelInterface):
             pp._set_netcdf_storage(reset=True)
 
         # write netcdf file
-        if write_netcdf and netcdf != "":
-            self._write_netcdf(mesh=netcdf)
+        if write_netcdf:
+            if netcdf != "":
+                self._write_netcdf(mesh=netcdf)
             if nc_fname is not None:
                 self.name_file.nc_filerecord = None
 

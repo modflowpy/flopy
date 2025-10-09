@@ -831,7 +831,7 @@ class ModelTime:
                                     else:
                                         start_date_time = data
                                 else:
-                                    print("   ->warn: update not applied.")
+                                    print(" -> warn: update not applied.")
 
             if len(start_date_time) > 0:
                 self.start_datetime = start_date_time

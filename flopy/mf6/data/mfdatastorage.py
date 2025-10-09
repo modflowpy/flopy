@@ -2411,7 +2411,6 @@ class DataStorage:
             layers_to_process = [0]
         else:
             layers_to_process = self.layer_storage.indexes()
-            layers_to_process = self.layer_storage.indexes()
         for layer in layers_to_process:
             if (
                 self.layer_storage[layer].factor is not None

@@ -1835,7 +1835,7 @@ class StructuredGrid(Grid):
     def _layered_mesh_dataset(self, ds, modeltime=None, configuration=None):
         FILLNA_INT32 = np.int32(-2147483647)
         FILLNA_DBL = 9.96920996838687e36
-        lenunits = {0: "m", 1: "ft", 2: "m", 3: "m"}
+        lenunits = {0: "u", 1: "ft", 2: "m", 3: "cm"}
 
         # create dataset coordinate vars
         var_d = {
@@ -1958,7 +1958,7 @@ class StructuredGrid(Grid):
         return ds
 
     def _structured_dataset(self, ds, modeltime=None, configuration=None):
-        lenunits = {0: "m", 1: "ft", 2: "m", 3: "m"}
+        lenunits = {0: "u", 1: "ft", 2: "m", 3: "cm"}
 
         xc = self.xoffset + self.xycenters[0]
         yc = self.yoffset + self.xycenters[1]
@@ -2024,6 +2024,8 @@ class StructuredGrid(Grid):
             and configuration["longitude"] is not None
         )
 
+        lats = None
+        lons = None
         if latlon_cfg:
             lats = configuration["latitude"]
             lons = configuration["longitude"]
