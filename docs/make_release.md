@@ -56,7 +56,7 @@ The `flopy.mf6.modflow` module must be regenerated to match the latest MF6 versi
 python -m flopy.mf6.utils.generate_classes --releasemode
 ```
 
-The `--releasemode` flag omits prerelease variables from generated modules.
+The `--releasemode` flag omits developmode variables from generated modules.
 
 ### Create a release branch
 
