@@ -17,8 +17,8 @@ from flopy.modflow import (
 from flopy.utils.compare import (
     _diffmax,  # noqa: PLC2701
     _difftol,  # noqa: PLC2701
-    compare_budget,
     compare_heads,
+    compare_list_budget,
 )
 
 
@@ -144,36 +144,9 @@ def test_compare_budget_and_heads(comparison_model_1):
     assert compare_heads(str(fn0), str(fn1), outfile=fhsum), (
         "head comparison failure (str path)"
     )
-    assert compare_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fbsum), (
+    assert compare_list_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fbsum), (
         "budget comparison failure (pathlib.Path)"
     )
-    assert compare_budget(
+    assert compare_list_budget(
         str(fn0), str(fn1), max_incpd=0.1, max_cumpd=0.1, outfile=str(fbsum)
     ), "budget comparison failure (str path)"
-
-    # todo test with files1 and files2 arguments
-
-
-@pytest.mark.skip(reason="todo")
-def test_compare_swrbudget():
-    pass
-
-
-@pytest.mark.skip(reason="todo")
-def test_compare_heads():
-    pass
-
-
-@pytest.mark.skip(reason="todo")
-def test_compare_concs():
-    pass
-
-
-@pytest.mark.skip(reason="todo")
-def test_compare_stages():
-    pass
-
-
-@pytest.mark.skip(reason="todo")
-def test_compare():
-    pass

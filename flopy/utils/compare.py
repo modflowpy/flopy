@@ -4,21 +4,31 @@ from os import PathLike
 from typing import Union
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 
 from flopy.modflow import ModflowOc
-from flopy.utils import FormattedHeadFile, HeadFile, HeadUFile
+from flopy.utils import (
+    CellBudgetFile,
+    FormattedHeadFile,
+    HeadFile,
+    HeadUFile,
+    MfListBudget,
+    SwrListBudget,
+    SwrStage,
+    UcnFile,
+)
 from flopy.utils.mfreadnam import get_entries_from_namefile
 
 
-def _diffmax(v1, v2):
-    """Calculate the maximum difference between two vectors.
+def _diffmax(v1: NDArray, v2: NDArray) -> tuple[float, NDArray]:
+    """Calculate the maximum difference between two arrays.
 
     Parameters
     ----------
     v1 : numpy.ndarray
-        array of base model results
+        first array
     v2 : numpy.ndarray
-        array of comparison model results
+        second array
 
     Returns
     -------
@@ -44,17 +54,17 @@ def _diffmax(v1, v2):
     return diffmax, np.asarray(diff == diffmax).nonzero()
 
 
-def _difftol(v1, v2, tol):
+def _difftol(v1: NDArray, v2: NDArray, tol: float) -> tuple[float, NDArray]:
     """Calculate the difference between two arrays relative to a tolerance.
 
     Parameters
     ----------
     v1 : numpy.ndarray
-        array of base model results
+        first array
     v2 : numpy.ndarray
-        array of comparison model results
+        second array
     tol : float
-        tolerance used to evaluate base and comparison models
+        absolute tolerance
 
     Returns
     -------
@@ -79,7 +89,95 @@ def _difftol(v1, v2, tol):
     return diff.max(), np.asarray(diff > tol).nonzero()
 
 
-def compare_budget(
+def compare_cell_budget(
+    fpth0: str | PathLike,
+    fpth1: str | PathLike,
+    precision: str = "double",
+    outfile: str | PathLike | None = None,
+    rclose: float = 0.001,
+    verbose: bool = False,
+) -> bool:
+    """Compare the cell-by-cell budget results from two simulations."""
+    if os.stat(fpth0).st_size * os.stat(fpth0).st_size == 0:
+        return True
+    fcmp = open(outfile, "w")
+    fcmp.write("Performing CELL-BY-CELL to CELL-BY-CELL comparison\n")
+    fcmp.write(f"{fpth0}\n")
+    fcmp.write(f"{fpth1}\n\n")
+
+    # open the files
+    cbc0 = CellBudgetFile(fpth0, precision=precision, verbose=verbose)
+    cbc1 = CellBudgetFile(fpth1, precision=precision, verbose=verbose)
+
+    # build list of cbc data to retrieve
+    avail0 = cbc0.get_unique_record_names()
+    avail1 = cbc1.get_unique_record_names()
+    avail0 = [t.decode().strip() for t in avail0]
+    avail1 = [t.decode().strip() for t in avail1]
+
+    # initialize list for storing totals for each budget term terms
+    cbc_keys0 = []
+    cbc_keys1 = []
+    for t in avail0:
+        t1 = t
+        if t not in avail1:
+            # check if RCHA or EVTA is available and use that instead
+            # should be able to remove this once v6.3.0 is released
+            if t[:-1] in avail1:
+                t1 = t[:-1]
+            else:
+                raise Exception(f"Could not find {t} in {fpth1}")
+        cbc_keys0.append(t)
+        cbc_keys1.append(t1)
+
+    # get list of times and kstpkper
+    kk = cbc0.get_kstpkper()
+    times = cbc0.get_times()
+
+    # process data
+    success = True
+    for key, key1 in zip(cbc_keys0, cbc_keys1):
+        for idx, (k, t) in enumerate(zip(kk, times)):
+            v0 = cbc0.get_data(kstpkper=k, text=key)[0]
+            v1 = cbc1.get_data(kstpkper=k, text=key1)[0]
+            if v0.dtype.names is not None:
+                v0 = v0["q"]
+                v1 = v1["q"]
+            # skip empty vectors
+            if v0.size < 1:
+                continue
+            vmin = rclose
+            if vmin < 1e-6:
+                vmin = 1e-6
+            vmin_tol = 5.0 * vmin
+            if v0.shape != v1.shape:
+                v0 = v0.flatten()
+                v1 = v1.flatten()
+            idx = (abs(v0) > vmin) & (abs(v1) > vmin)
+            diff = np.zeros(v0.shape, dtype=v0.dtype)
+            diff[idx] = abs(v0[idx] - v1[idx])
+            diffmax = diff.max()
+            indices = np.where(diff == diffmax)[0]
+            if diffmax > vmin_tol:
+                success = False
+                msg = (
+                    f"{os.path.basename(fpth0)} - "
+                    + f"{key:16s} "
+                    + f"difference ({diffmax:10.4g}) "
+                    + f"> {vmin_tol:10.4g} "
+                    + f"at {indices.size} nodes "
+                    + f" [first location ({indices[0] + 1})] "
+                    + f"at time {t} "
+                )
+                fcmp.write(f"{msg}\n")
+                if verbose:
+                    print(msg)
+
+    fcmp.close()
+    return success
+
+
+def compare_list_budget(
     namefile1: Union[str, PathLike, None] = None,
     namefile2: Union[str, PathLike, None] = None,
     max_cumpd=0.01,
@@ -88,7 +186,7 @@ def compare_budget(
     files1: Union[str, PathLike, list[Union[str, PathLike]], None] = None,
     files2: Union[str, PathLike, list[Union[str, PathLike]], None] = None,
 ):
-    """Compare the budget results from two simulations.
+    """Compare list file budget results from two simulations.
 
     Parameters
     ----------
@@ -121,11 +219,6 @@ def compare_budget(
         than max_cumpd and max_incpd
 
     """
-    try:
-        import flopy
-    except:
-        msg = "flopy not available - cannot use compare_budget"
-        raise ValueError(msg)
 
     # headers
     headers = ("INCREMENTAL", "CUMULATIVE")
@@ -171,9 +264,9 @@ def compare_budget(
     if outfile is not None:
         f = open(outfile, "w")
 
-    # Initialize SWR budget objects
-    lst1obj = flopy.utils.MfusgListBudget(lst_file1)
-    lst2obj = flopy.utils.MfusgListBudget(lst_file2)
+    # Initialize budget objects
+    lst1obj = MfListBudget(lst_file1)
+    lst2obj = MfListBudget(lst_file2)
 
     # Determine if there any SWR entries in the budget file
     if not lst1obj.isvalid() or not lst2obj.isvalid():
@@ -279,14 +372,18 @@ def compare_budget(
     return success
 
 
+# alias for backwards compatibility
+compare_budget = compare_list_budget
+
+
 def compare_swrbudget(
-    namefile1: Union[str, PathLike, None] = None,
-    namefile2: Union[str, PathLike, None] = None,
+    namefile1: str | PathLike | None = None,
+    namefile2: str | PathLike | None = None,
     max_cumpd=0.01,
     max_incpd=0.01,
-    outfile: Union[str, PathLike, None] = None,
-    files1: Union[str, PathLike, list[Union[str, PathLike]], None] = None,
-    files2: Union[str, PathLike, list[Union[str, PathLike]], None] = None,
+    outfile: str | PathLike | None = None,
+    files1: str | PathLike | list[str | PathLike] | None = None,
+    files2: str | PathLike | list[str | PathLike] | None = None,
 ):
     """Compare the SWR budget results from two simulations.
 
@@ -321,11 +418,6 @@ def compare_swrbudget(
         than max_cumpd and max_incpd
 
     """
-    try:
-        import flopy
-    except:
-        msg = "flopy not available - cannot use compare_swrbudget"
-        raise ValueError(msg)
 
     # headers
     headers = ("INCREMENTAL", "CUMULATIVE")
@@ -361,8 +453,8 @@ def compare_swrbudget(
         return True
 
     # Initialize SWR budget objects
-    lst1obj = flopy.utils.SwrListBudget(list1)
-    lst2obj = flopy.utils.SwrListBudget(list2)
+    lst1obj = SwrListBudget(list1)
+    lst2obj = SwrListBudget(list2)
 
     # Determine if there any SWR entries in the budget file
     if not lst1obj.isvalid() or not lst2obj.isvalid():
@@ -472,18 +564,18 @@ def compare_swrbudget(
 
 
 def compare_heads(
-    namefile1: Union[str, PathLike, None] = None,
-    namefile2: Union[str, PathLike, None] = None,
+    namefile1: str | PathLike | None = None,
+    namefile2: str | PathLike | None = None,
     precision="auto",
     text="head",
     text2=None,
     htol=0.001,
-    outfile: Union[str, PathLike, None] = None,
-    files1: Union[str, PathLike, list[Union[str, PathLike]], None] = None,
-    files2: Union[str, PathLike, list[Union[str, PathLike]], None] = None,
+    outfile: str | PathLike | None = None,
+    files1: str | PathLike | list[str | PathLike] | None = None,
+    files2: str | PathLike | list[str | PathLike] | None = None,
     difftol=False,
     verbose=False,
-    exfile: Union[str, PathLike, None] = None,
+    exfile: str | PathLike | None = None,
     exarr=None,
     maxerr=None,
 ):
@@ -491,9 +583,9 @@ def compare_heads(
 
     Parameters
     ----------
-    namefile1 : str or PathLike
+    namefile1 : str or PathLike, optional
         namefile path for base model
-    namefile2 : str or PathLike
+    namefile2 : str or PathLike, optional
         namefile path for comparison model
     precision : str
         precision for binary head file ("auto", "single", or "double")
@@ -503,11 +595,11 @@ def compare_heads(
     outfile : str or PathLike
         head comparison output file name. If outfile is None, no
         comparison output is saved. (default is None)
-    files1 : str or PathLike, or List of str or PathLike
+    files1 : str or PathLike or list of str or PathLike, optional
         base model output files. If files1 is not None, results
         will be extracted from files1 and namefile1 will not be used.
         (default is None)
-    files2 : str or PathLike, or List of str or PathLike
+    files2 : str or PathLike or list of str or PathLike, optional
         comparison model output files. If files2 is not None, results
         will be extracted from files2 and namefile2 will not be used.
         (default is None)
@@ -854,24 +946,24 @@ def compare_heads(
 
 
 def compare_concentrations(
-    namefile1: Union[str, PathLike],
-    namefile2: Union[str, PathLike],
+    namefile1: str | PathLike | None = None,
+    namefile2: str | PathLike | None = None,
     precision="auto",
     ctol=0.001,
-    outfile: Union[str, PathLike, None] = None,
-    files1: Union[str, PathLike, list[Union[str, PathLike]], None] = None,
-    files2: Union[str, PathLike, list[Union[str, PathLike]], None] = None,
+    outfile: str | PathLike | None = None,
+    files1: str | PathLike | list[str | PathLike] | None = None,
+    files2: str | PathLike | list[str | PathLike] | None = None,
     difftol=False,
     verbose=False,
 ):
-    """Compare the mt3dms and mt3dusgs concentration results from two
-    simulations.
+    """
+    Compare the concentration results from two simulations.
 
     Parameters
     ----------
-    namefile1 : str or PathLike
+    namefile1 : str or PathLike, optional
         namefile path for base model
-    namefile2 : str or PathLike
+    namefile2 : str or PathLike, optional
         namefile path for comparison model
     precision : str
         precision for binary head file ("auto", "single", or "double")
@@ -881,11 +973,11 @@ def compare_concentrations(
     outfile : str or PathLike, optional
         concentration comparison output file name. If outfile is None, no
         comparison output is saved. (default is None)
-    files1 : str, PathLike, or list, optional
+    files1 : str, PathLike, or list of str or PathLike, optional
         base model output file. If files1 is not None, results
         will be extracted from files1 and namefile1 will not be used.
         (default is None)
-    files2 : str, PathLike, or list, optional
+    files2 : str, PathLike, or list of str or PathLike, optional
         comparison model output file. If files2 is not None, results
         will be extracted from files2 and namefile2 will not be used.
         (default is None)
@@ -904,13 +996,9 @@ def compare_concentrations(
 
     Returns
     -------
-
+    success : bool
+        boolean indicating if the concentration differences are less than ctol.
     """
-    try:
-        import flopy
-    except:
-        msg = "flopy not available - cannot use compare_concs"
-        raise ValueError(msg)
 
     # list of valid extensions
     valid_ext = ["ucn"]
@@ -975,8 +1063,8 @@ def compare_concentrations(
         f = open(outfile, "w")
 
     # Get stage objects
-    uobj1 = flopy.utils.UcnFile(ufpth1, precision=precision, verbose=verbose)
-    uobj2 = flopy.utils.UcnFile(ufpth2, precision=precision, verbose=verbose)
+    uobj1 = UcnFile(ufpth1, precision=precision, verbose=verbose)
+    uobj2 = UcnFile(ufpth2, precision=precision, verbose=verbose)
 
     # get times
     times1 = uobj1.get_times()
@@ -1084,22 +1172,22 @@ def compare_concentrations(
 
 
 def compare_stages(
-    namefile1: Union[str, PathLike, None] = None,
-    namefile2: Union[str, PathLike, None] = None,
-    files1: Union[str, PathLike, list[Union[str, PathLike]], None] = None,
-    files2: Union[str, PathLike, list[Union[str, PathLike]], None] = None,
+    namefile1: str | PathLike | None = None,
+    namefile2: str | PathLike | None = None,
+    files1: str | PathLike | list[str | PathLike] | None = None,
+    files2: str | PathLike | list[str | PathLike] | None = None,
     htol=0.001,
-    outfile: Union[str, PathLike, None] = None,
+    outfile: str | PathLike | None = None,
     difftol=False,
     verbose=False,
 ):
-    """Compare SWR process stage results from two simulations.
+    """Compare stage results from two simulations.
 
     Parameters
     ----------
-    namefile1 : str or PathLike
+    namefile1 : str or PathLike, optional
         namefile path for base model
-    namefile2 : str or PathLike
+    namefile2 : str or PathLike, optional
         namefile path for comparison model
     precision : str
         precision for binary head file ("auto", "single", or "double")
@@ -1109,11 +1197,11 @@ def compare_stages(
     outfile : str or PathLike, optional
         head comparison output file name. If outfile is None, no
         comparison output is saved. (default is None)
-    files1 : str, PathLike, or list, optional
+    files1 : str, PathLike, or list of str or PathLike, optional
         base model output file. If files1 is not None, results
         will be extracted from files1 and namefile1 will not be used.
         (default is None)
-    files2 : str, PathLike, or list, optional
+    files2 : str, PathLike, or list of str or PathLike, optional
         comparison model output file. If files2 is not None, results
         will be extracted from files2 and namefile2 will not be used.
         (default is None)
@@ -1130,11 +1218,6 @@ def compare_stages(
         boolean indicating if the stage differences are less than htol.
 
     """
-    try:
-        import flopy
-    except:
-        msg = "flopy not available - cannot use compare_stages"
-        raise ValueError(msg)
 
     # list of valid extensions
     valid_ext = ["stg"]
@@ -1193,8 +1276,8 @@ def compare_stages(
         f = open(outfile, "w")
 
     # Get stage objects
-    sobj1 = flopy.utils.SwrStage(sfpth1, verbose=verbose)
-    sobj2 = flopy.utils.SwrStage(sfpth2, verbose=verbose)
+    sobj1 = SwrStage(sfpth1, verbose=verbose)
+    sobj2 = SwrStage(sfpth2, verbose=verbose)
 
     # get totim
     times1 = sobj1.get_times()
@@ -1295,96 +1378,48 @@ def compare_stages(
     return success
 
 
-def compare(
-    namefile1: Union[str, PathLike, None] = None,
-    namefile2: Union[str, PathLike, None] = None,
-    precision="auto",
-    max_cumpd=0.01,
-    max_incpd=0.01,
-    htol=0.001,
-    outfile1: Union[str, PathLike, None] = None,
-    outfile2: Union[str, PathLike, None] = None,
-    files1: Union[str, PathLike, list[Union[str, PathLike]], None] = None,
-    files2: Union[str, PathLike, list[Union[str, PathLike]], None] = None,
+def eval_bud_diff(
+    fpth: str | PathLike,
+    b0: CellBudgetFile,
+    b1: CellBudgetFile,
+    ia: ArrayLike | None = None,
+    dtol: float = 1e-6,
 ):
-    """Compare the budget and head results for two MODFLOW-based model
-    simulations.
+    """
+    Evaluate differences in cell-by-cell budget terms between two simulations.
+
+     Notes
+    -----
+    To use this eval_bud_diff function on a gwf or gwt budget file,
+    the function may need ia, in order to exclude comparison of the residual
+    term, which is stored in the diagonal position of the flowja array.
+
+    The following code can be used to extract ia from the grb file.
+
+    ```python
+    import flopy
+    import os
+    # get ia/ja from binary grid file
+    fname = '{}.dis.grb'.format(os.path.basename(sim.name))
+    fpth = os.path.join(sim.simpath, fname)
+    grbobj = flopy.mf6.utils.MfGrdFile(fpth)
+    ia = grbobj._datadict['IA'] - 1
+    ```
 
     Parameters
     ----------
-    namefile1 : str or PathLike, optional
-        namefile path for base model
-    namefile2 : str or PathLike, optional
-        namefile path for comparison model
-    precision : str
-        precision for binary head file ("auto", "single", or "double")
-        default is "auto"
-    max_cumpd : float
-        maximum percent discrepancy allowed for cumulative budget terms
-        (default is 0.01)
-    max_incpd : float
-        maximum percent discrepancy allowed for incremental budget terms
-        (default is 0.01)
-    htol : float
-        maximum allowed head difference (default is 0.001)
-    outfile1 : str or PathLike, optional
-        budget comparison output file name. If outfile1 is None, no budget
-        comparison output is saved. (default is None)
-    outfile2 : str or PathLike, optional
-        head comparison output file name. If outfile2 is None, no head
-        comparison output is saved. (default is None)
-    files1 : str, PathLike, or list, optional
-        base model output file. If files1 is not None, results
-        will be extracted from files1 and namefile1 will not be used.
+    fpth : str or PathLike
+        path to summary output file
+    b0 : flopy.utils.CellBudgetFile
+        cell budget file object for the base model
+    b1 : flopy.utils.CellBudgetFile
+        cell budget file object for the comparison model
+    ia : np.ndarray, optional
+        array of ia values for the model grid. ia is used to identify residuals
         (default is None)
-    files2 : str, PathLike, or list, optional
-        comparison model output file. If files2 is not None, results
-        will be extracted from files2 and namefile2 will not be used.
-        (default is None)
-
-    Returns
-    -------
-    success : bool
-        boolean indicating if the budget and head differences are less than
-        max_cumpd, max_incpd, and htol.
-
+    dtol : float
+        maximum allowed difference in budget terms (default is 1e-6)
     """
-
-    # Compare budgets from the list files in namefile1 and namefile2
-    success1 = compare_budget(
-        namefile1,
-        namefile2,
-        max_cumpd=max_cumpd,
-        max_incpd=max_incpd,
-        outfile=outfile1,
-        files1=files1,
-        files2=files2,
-    )
-    success2 = compare_heads(
-        namefile1,
-        namefile2,
-        precision=precision,
-        htol=htol,
-        outfile=outfile2,
-        files1=files1,
-        files2=files2,
-    )
-    success = False
-    if success1 and success2:
-        success = True
-    return success
-
-
-def eval_bud_diff(fpth: Union[str, PathLike], b0, b1, ia=None, dtol=1e-6):
-    # To use this eval_bud_diff function on a gwf or gwt budget file,
-    # the function may need ia, in order to exclude comparison of the residual
-    # term, which is stored in the diagonal position of the flowja array.
-    #  The following code can be used to extract ia from the grb file.
-    # get ia/ja from binary grid file
-    # fname = '{}.dis.grb'.format(os.path.basename(sim.name))
-    # fpth = os.path.join(sim.simpath, fname)
-    # grbobj = flopy.mf6.utils.MfGrdFile(fpth)
-    # ia = grbobj._datadict['IA'] - 1
 
     diffmax = 0.0
     difftag = "None"

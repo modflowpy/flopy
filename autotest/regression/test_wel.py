@@ -13,7 +13,7 @@ from flopy.modflow import (
     ModflowPcg,
     ModflowWel,
 )
-from flopy.utils.compare import compare_budget, compare_heads
+from flopy.utils.compare import compare_heads, compare_list_budget
 
 
 @requires_exe("mf2005")
@@ -99,6 +99,6 @@ def test_binary_well(function_tmpdir):
     assert compare_heads(fn0, fn1, outfile=fsum), "head comparison failure"
 
     fsum = os.path.join(function_tmpdir, f"{os.path.splitext(mfnam)[0]}.budget.out")
-    assert compare_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum), (
+    assert compare_list_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum), (
         "budget comparison failure"
     )

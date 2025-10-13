@@ -6,7 +6,7 @@ from modflow_devtools.markers import requires_exe
 from autotest.conftest import get_example_data_path
 from flopy.modflow import Modflow, ModflowNwt, ModflowUpw
 from flopy.utils import parsenamefile
-from flopy.utils.compare import compare_budget, compare_heads
+from flopy.utils.compare import compare_heads, compare_list_budget
 
 
 def get_nfnwt_namfiles():
@@ -137,6 +137,6 @@ def test_run_mfnwt_model(function_tmpdir, namfile):
     assert compare_heads(fn0, fn1, outfile=fsum), "head comparison failure"
 
     fsum = function_tmpdir / f"{base_name}.budget.out"
-    assert compare_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum), (
+    assert compare_list_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum), (
         "budget comparison failure"
     )

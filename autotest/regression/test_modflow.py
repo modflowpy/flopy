@@ -8,7 +8,7 @@ from modflow_devtools.markers import requires_exe, requires_pkg
 
 from autotest.conftest import get_example_data_path
 from flopy.modflow import Modflow, ModflowOc
-from flopy.utils.compare import compare_budget, compare_heads
+from flopy.utils.compare import compare_heads, compare_list_budget
 
 
 @pytest.fixture
@@ -74,7 +74,7 @@ def test_uzf_unit_numbers(function_tmpdir, uzf_example_path):
 
     # compare budget terms
     fsum = join(function_tmpdir, f"{splitext(mfnam)[0]}.budget.out")
-    success = compare_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum)
+    success = compare_list_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum)
     assert success, "budget comparison failure"
 
 
@@ -112,7 +112,7 @@ def test_unitnums(function_tmpdir, mf2005_test_path):
     fn1 = join(model_ws2, mfnam)
 
     fsum = join(ws, f"{splitext(mfnam)[0]}.budget.out")
-    success = compare_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum)
+    success = compare_list_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum)
     assert success, "budget comparison failure"
 
 
@@ -201,7 +201,7 @@ def test_mf2005pcgn(function_tmpdir, namfile):
     assert success, "head comparison failure"
 
     fsum = function_tmpdir / f"{Path(namfile).stem}.budget.out"
-    success = compare_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum)
+    success = compare_list_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum)
     assert success, "budget comparison failure"
 
 
@@ -241,7 +241,7 @@ def test_mf2005gmg(function_tmpdir, namfile):
     assert success, "head comparison failure"
 
     fsum = function_tmpdir / f"{Path(namfile).stem}.budget.out"
-    success = compare_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum)
+    success = compare_list_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum)
     assert success, "budget comparison failure"
 
 
@@ -307,7 +307,7 @@ def test_mf2005(function_tmpdir, namfile):
 
     # compare budgets
     fsum = ws / f"{Path(namfile).stem}.budget.out"
-    success = compare_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum)
+    success = compare_list_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum)
     assert success, "budget comparison failure"
 
 
@@ -351,7 +351,7 @@ def test_mf2005fhb(function_tmpdir, namfile):
     assert success, "head comparison failure"
 
     fsum = join(ws, f"{Path(namfile).stem}.budget.out")
-    success = compare_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum)
+    success = compare_list_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum)
     assert success, "budget comparison failure"
 
 
@@ -393,5 +393,5 @@ def test_mf2005_lake(function_tmpdir, namfile, mf2005_test_path):
 
     fsum = join(ws, f"{Path(namfile).stem}.budget.out")
 
-    success = compare_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum)
+    success = compare_list_budget(fn0, fn1, max_incpd=0.1, max_cumpd=0.1, outfile=fsum)
     assert success, "budget comparison failure"
