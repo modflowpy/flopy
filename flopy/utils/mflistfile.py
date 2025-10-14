@@ -8,6 +8,7 @@ recarrays, which can then be easily plotted.
 import errno
 import os
 import re
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -44,25 +45,16 @@ class ListBudget:
     """
 
     def __init__(self, file_name, budgetkey=None, timeunit="days"):
-        # Set up file reading
         assert os.path.exists(file_name), f"file_name {file_name} not found"
         self.file_name = file_name
         self.f = open(file_name, "r", encoding="ascii", errors="replace")
-
         self.tssp_lines = 0
-
-        # Assign the budgetkey, which should have been overridden
-        if budgetkey is None:
-            self.set_budget_key()
-        else:
-            self.budgetkey = budgetkey
-
+        self.budgetkey = budgetkey
         self.totim = []
         self.timeunit = timeunit
         self.idx_map = []
         self.entries = []
         self.null_entries = []
-
         self.time_line_idx = 20
         if timeunit.upper() == "SECONDS":
             self.timeunit = "S"
@@ -99,7 +91,10 @@ class ListBudget:
         return
 
     def set_budget_key(self):
-        raise Exception("Must be overridden...")
+        warnings.warn(
+            "set_budget_key is deprecated, set budgetkey via initializer or directly",
+            category=DeprecationWarning,
+        )
 
     def isvalid(self):
         """
@@ -912,41 +907,31 @@ class ListBudget:
 
 
 class SwtListBudget(ListBudget):
-    """ """
-
-    def set_budget_key(self):
-        self.budgetkey = "MASS BUDGET FOR ENTIRE MODEL"
-        return
+    def __init__(self, file_name, budgetkey=None, timeunit="days", **kwargs):
+        budgetkey = budgetkey or "MASS BUDGET FOR ENTIRE MODEL"
+        super().__init__(file_name, budgetkey=budgetkey, timeunit=timeunit, **kwargs)
 
 
 class MfListBudget(ListBudget):
-    """ """
-
-    def set_budget_key(self):
-        self.budgetkey = "VOLUMETRIC BUDGET FOR ENTIRE MODEL"
-        return
+    def __init__(self, file_name, budgetkey=None, timeunit="days", **kwargs):
+        budgetkey = budgetkey or "VOLUMETRIC BUDGET FOR ENTIRE MODEL"
+        super().__init__(file_name, budgetkey=budgetkey, timeunit=timeunit, **kwargs)
 
 
 class Mf6ListBudget(ListBudget):
-    """ """
-
-    def set_budget_key(self):
-        self.budgetkey = "VOLUME BUDGET FOR ENTIRE MODEL"
-        return
+    def __init__(self, file_name, budgetkey=None, timeunit="days", **kwargs):
+        budgetkey = budgetkey or "VOLUME BUDGET FOR ENTIRE MODEL"
+        super().__init__(file_name, budgetkey=budgetkey, timeunit=timeunit, **kwargs)
 
 
 class MfusgListBudget(ListBudget):
-    """ """
-
-    def set_budget_key(self):
-        self.budgetkey = "VOLUMETRIC BUDGET FOR ENTIRE MODEL"
-        return
+    def __init__(self, file_name, budgetkey=None, timeunit="days", **kwargs):
+        budgetkey = budgetkey or "VOLUMETRIC BUDGET FOR ENTIRE MODEL"
+        super().__init__(file_name, budgetkey=budgetkey, timeunit=timeunit, **kwargs)
 
 
 class SwrListBudget(ListBudget):
-    """ """
-
-    def set_budget_key(self):
-        self.budgetkey = "VOLUMETRIC SURFACE WATER BUDGET FOR ENTIRE MODEL"
+    def __init__(self, file_name, budgetkey=None, timeunit="days", **kwargs):
+        budgetkey = budgetkey or "VOLUMETRIC SURFACE WATER BUDGET FOR ENTIRE MODEL"
+        super().__init__(file_name, budgetkey=budgetkey, timeunit=timeunit, **kwargs)
         self.tssp_lines = 1
-        return
