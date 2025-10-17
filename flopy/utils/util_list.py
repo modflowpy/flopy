@@ -10,7 +10,7 @@ util_list module.  Contains the mflist class.
 
 import os
 import warnings
-
+from pathlib import Path
 import numpy as np
 import pandas as pd
 
@@ -234,7 +234,12 @@ class MfList(DataInterface, DataListInterface):
                 return -1
         # If an external file, have to load it
         if self.__vtype[kper] == str:
-            return self.__fromfile(self.__data[kper]).shape[0]
+            t = self.__fromfile(self.__data[kper])
+            if t.shape == ():
+                out = 1
+            else:
+                out = t.shape[0]
+            return out
         if self.__vtype[kper] == np.recarray:
             return self.__data[kper].shape[0]
         # If not any of the above, it must be an int
@@ -343,7 +348,7 @@ class MfList(DataInterface, DataListInterface):
                     self.__cast_dataframe(kper, d)
                 elif isinstance(d, int):
                     self.__cast_int(kper, d)
-                elif isinstance(d, str):
+                elif isinstance(d, str) or isinstance(d, Path):
                     self.__cast_str(kper, d)
                 elif d is None:
                     self.__data[kper] = -1
