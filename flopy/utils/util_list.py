@@ -349,7 +349,7 @@ class MfList(DataInterface, DataListInterface):
                     self.__cast_dataframe(kper, d)
                 elif isinstance(d, int):
                     self.__cast_int(kper, d)
-                elif isinstance(d, str) or isinstance(d, Path):
+                elif isinstance(d, (str, PathLike):
                     self.__cast_str(kper, d)
                 elif d is None:
                     self.__data[kper] = -1
