@@ -159,7 +159,7 @@ jobs:
             github.event_name == 'push' ||
             github.event_name == 'workflow_dispatch'
           )
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: notebooks-for-${{ needs.set_options.outputs.sha }}
           path: flopy/.docs/Notebooks/*.ipynb
