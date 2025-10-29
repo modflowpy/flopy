@@ -14,10 +14,9 @@ dependencies:
   # codegen
   - boltons>=1.0
   - Jinja2>=3.0
+  - modflow-devtools>=1.7.0
   - tomli
   - tomli-w
-  - pip:
-      - git+https://github.com/MODFLOW-ORG/modflow-devtools.git
 
   # lint
   - cffconvert
@@ -31,8 +30,8 @@ dependencies:
   - jupyter
   - jupyter_client>=8.4.0
   - jupytext
+  - modflow-devtools>=1.7.0
   - pip:
-      - git+https://github.com/MODFLOW-ORG/modflow-devtools.git
       - tach
   - pytest!=8.1.0
   - pytest-benchmark
