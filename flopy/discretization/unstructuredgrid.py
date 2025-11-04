@@ -1,5 +1,6 @@
 import copy
 import os
+from collections import defaultdict
 from os import PathLike
 from typing import Union
 
@@ -784,12 +785,10 @@ class UnstructuredGrid(Grid):
 
         if use_kdtree:
             # Extract cell centers for the 2D grid plane
-            if self.grid_varies_by_layer:
-                xc = self._xc
-                yc = self._yc
-            else:
-                xc = self._xc[:ncpl_2d]
-                yc = self._yc[:ncpl_2d]
+            xc, yc, _ = self.xyzcellcenters
+            if not self.grid_varies_by_layer:
+                xc = xc[:ncpl_2d]
+                yc = yc[:ncpl_2d]
 
             cell_centers = np.column_stack([xc, yc])
             kdtree = cKDTree(cell_centers)
@@ -820,8 +819,6 @@ class UnstructuredGrid(Grid):
         )
 
         # Group points by candidate cells for batch processing
-        from collections import defaultdict
-
         cell_to_points = defaultdict(list)
         for i in range(len(x)):
             for cell_idx in candidate_cells[i]:
