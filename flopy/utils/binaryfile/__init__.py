@@ -1610,10 +1610,14 @@ class CellBudgetFile:
 
         Parameters
         ----------
-        idx : tuple of ints, or a list of a tuple of ints
-            idx can be (layer, row, column) or it can be a list in the form
-            [(layer, row, column), (layer, row, column), ...].  The layer,
-            row, and column values must be zero based.
+        idx : int, tuple of ints, or list of such
+            Acceptable values depend on grid type:
+
+            - Structured grids (DIS): (layer, row, column) or list of such
+            - Vertex grids (DISV): (layer, cellid) or list of such
+            - Unstructured grids (DISU): node number, (node number,) or list of such
+
+            All indices must be zero-based.
         text : str
             The text identifier for the record.  Examples include
             'RIVER LEAKAGE', 'STORAGE', 'FLOW RIGHT FACE', etc.
@@ -1631,33 +1635,40 @@ class CellBudgetFile:
             Array has size (ntimes, ncells + 1).  The first column in the
             data array will contain time (totim).
 
-        See Also
-        --------
-
         Notes
         -----
 
-        The layer, row, and column values must be zero-based, and must be
-        within the following ranges: 0 <= k < nlay; 0 <= i < nrow; 0 <= j < ncol
+        Index ranges (zero-based):
+
+        - DIS: 0 <= layer < nlay, 0 <= row < nrow, 0 <= col < ncol
+        - DISV: 0 <= layer < nlay, 0 <= cellid < ncpl
+        - DISU: 0 <= node < nnodes
 
         Examples
         --------
 
-        >>> # Get specific discharge x-component from DATA-SPDIS record
+        >>> # DIS grid: layer 0, row 5, column 5
         >>> ts = cbb.get_ts(idx=(0, 5, 5), text='DATA-SPDIS', variable='qx')
 
+        >>> # DISV grid: layer 0, cell 12
+        >>> ts = cbb.get_ts(idx=(0, 12), text='DATA-SPDIS', variable='qx')
+
+        >>> # DISU grid: node 10
+        >>> ts = cbb.get_ts(idx=10, text='FLOW-JA-FACE')
+
         """
-        # issue exception if text not provided
         if text is None:
-            raise Exception(
+            raise ValueError(
                 "text keyword must be provided to CellBudgetFile get_ts() method."
             )
 
-        kijlist = self._build_kijlist(idx)
-        nstation = self._get_nstation(idx, kijlist)
+        cellids = self._cellids(idx)
+        ncells = len(cellids)
 
-        # Initialize result array and put times in first column
-        result = self._init_result(nstation)
+        result = np.empty((len(self.kstpkper), ncells + 1), dtype=self.realtype)
+        result[:, :] = np.nan
+        if len(self.times) == result.shape[0]:
+            result[:, 0] = np.array(self.times)
 
         timesint = self.get_times()
         kstpkper = self.get_kstpkper()
@@ -1674,53 +1685,36 @@ class CellBudgetFile:
                         f"number of time steps in cell budget file ({nsteps})"
                     )
                 timesint = times
-        for idx, t in enumerate(timesint):
-            result[idx, 0] = t
+        for i, t in enumerate(timesint):
+            result[i, 0] = t
 
-        full3d = True
-        for itim, k in enumerate(kstpkper):
-            if full3d:
-                try:
-                    v = self.get_data(kstpkper=k, text=text, full3D=True)
+        use_full3d = variable == "q" and (
+            self.modelgrid is None or self.modelgrid.grid_type == "structured"
+        )
 
-                    # skip missing data - required for storage
-                    if len(v) == 0:
-                        continue
-
-                    v = v[0]
-                    istat = 1
-                    for k, i, j in kijlist:
-                        result[itim, istat] = v[k, i, j].copy()
-                        istat += 1
+        for itim, kstpkper_ in enumerate(kstpkper):
+            if use_full3d:
+                v = self.get_data(kstpkper=kstpkper_, text=text, full3D=True)
+                if len(v) == 0:
                     continue
-                except ValueError:
-                    full3d = False
-            if not full3d:
-                v = self.get_data(kstpkper=k, text=text)
 
-                # skip missing data - required for storage
+                v = v[0]
+                istat = 1
+                for k, i, j in cellids:
+                    result[itim, istat] = v[k, i, j].copy()
+                    istat += 1
+            else:
+                v = self.get_data(kstpkper=kstpkper_, text=text)
                 if len(v) == 0:
                     continue
 
                 if self.modelgrid is None:
-                    s = (
+                    raise ValueError(
                         "A modelgrid instance must be provided during "
                         "instantiation to get IMETH=6 timeseries data"
                     )
-                    raise ValueError(s)
 
-                if self.modelgrid.grid_type == "structured":
-                    ndx = [
-                        lrc[0] * (self.modelgrid.nrow * self.modelgrid.ncol)
-                        + lrc[1] * self.modelgrid.ncol
-                        + (lrc[2] + 1)
-                        for lrc in kijlist
-                    ]
-                else:
-                    ndx = [
-                        lrc[0] * self.modelgrid.ncpl + (lrc[-1] + 1) for lrc in kijlist
-                    ]
-
+                nodes = self._cellid_to_node(cellids)
                 for vv in v:
                     available = vv.dtype.names
                     if variable not in available:
@@ -1729,51 +1723,77 @@ class CellBudgetFile:
                             f"Available variables: {list(available)}"
                         )
 
-                    dix = np.asarray(np.isin(vv["node"], ndx)).nonzero()[0]
+                    dix = np.asarray(np.isin(vv["node"], nodes)).nonzero()[0]
                     if len(dix) > 0:
                         result[itim, 1:] = vv[variable][dix]
 
         return result
 
-    def _build_kijlist(self, idx):
-        if isinstance(idx, list):
-            kijlist = idx
+    def _cellids(self, idx):
+        if isinstance(idx, int):
+            idx_list = [idx]
         elif isinstance(idx, tuple):
-            kijlist = [idx]
+            idx_list = [idx]
+        elif isinstance(idx, list):
+            idx_list = idx
         else:
-            raise Exception("Could not build kijlist from ", idx)
+            raise TypeError(
+                f"Invalid index type, expected int, tuple "
+                f"or list of such, got {type(idx)}"
+            )
 
-        # Check to make sure that k, i, j are within range, otherwise
-        # the seek approach won't work.  Can't use k = -1, for example.
-        for k, i, j in kijlist:
-            fail = False
-            if k < 0 or k > self.nlay - 1:
-                fail = True
-            if i < 0 or i > self.nrow - 1:
-                fail = True
-            if j < 0 or j > self.ncol - 1:
-                fail = True
-            if fail:
-                raise Exception(
-                    "Invalid cell index. Cell {} not within model grid: {}".format(
-                        (k, i, j), (self.nlay, self.nrow, self.ncol)
+        grid_type = "structured" if self.modelgrid is None else self.modelgrid.grid_type
+
+        cellid = []
+        for item in idx_list:
+            if grid_type == "structured":
+                if not isinstance(item, tuple) or len(item) != 3:
+                    raise ValueError(
+                        f"Expected DIS cell index (layer, row, col), got: {item}"
                     )
-                )
-        return kijlist
+                k, i, j = item
+                if k < 0 or k >= self.nlay:
+                    raise ValueError(f"Layer index {k} out of range [0, {self.nlay})")
+                if i < 0 or i >= self.nrow:
+                    raise ValueError(f"Row index {i} out of range [0, {self.nrow})")
+                if j < 0 or j >= self.ncol:
+                    raise ValueError(f"Column index {j} out of range [0, {self.ncol})")
+                cellid.append((k, i, j))
+            elif grid_type == "vertex":
+                if not isinstance(item, tuple) or len(item) != 2:
+                    raise ValueError(
+                        f"Expected DISV cell index (layer, cellid), got: {item}"
+                    )
+                k, cell = item
+                if k < 0 or k >= self.nlay:
+                    raise Exception(f"Layer index {k} out of range [0, {self.nlay})")
+                if cell < 0 or cell >= self.modelgrid.ncpl:
+                    raise ValueError(
+                        f"Cell index {cell} out of range [0, {self.modelgrid.ncpl})"
+                    )
+                cellid.append((k, cell))
+            else:
+                if not isinstance(item, (int, np.integer)):
+                    raise Exception(f"Expected DISU node number , got: {item}")
+                node = int(item)
+                if node < 0 or node >= self.modelgrid.nnodes:
+                    raise Exception(
+                        f"Node index {node} out of range [0, {self.modelgrid.nnodes})"
+                    )
+                cellid.append(node)
 
-    def _get_nstation(self, idx, kijlist):
-        if isinstance(idx, list):
-            return len(kijlist)
-        elif isinstance(idx, tuple):
-            return 1
+        return cellid
 
-    def _init_result(self, nstation):
-        # Initialize result array and put times in first column
-        result = np.empty((len(self.kstpkper), nstation + 1), dtype=self.realtype)
-        result[:, :] = np.nan
-        if len(self.times) == result.shape[0]:
-            result[:, 0] = np.array(self.times)
-        return result
+    def _cellid_to_node(self, cellids) -> list[int]:
+        if self.modelgrid.grid_type == "structured":
+            return [
+                k * (self.nrow * self.ncol) + i * self.ncol + j + 1
+                for k, i, j in cellids
+            ]
+        elif self.modelgrid.grid_type == "vertex":
+            return [k * self.modelgrid.ncpl + cell + 1 for k, cell in cellids]
+        else:
+            return [node + 1 for node in cellids]
 
     def get_record(self, idx, full3D=False):
         """
