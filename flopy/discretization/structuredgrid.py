@@ -971,14 +971,16 @@ class StructuredGrid(Grid):
         When the point is on the edge of two cells, the cell with the lowest
         row or column is returned.
 
+        Supports both scalar and array inputs for vectorized operations.
+
         Parameters
         ----------
-        x : float
-            The x-coordinate of the requested point
-        y : float
-            The y-coordinate of the requested point
-        z : float
-            Optional z-coordinate of the requested point (will return layer,
+        x : float or array-like
+            The x-coordinate(s) of the requested point(s)
+        y : float or array-like
+            The y-coordinate(s) of the requested point(s)
+        z : float, array-like, or None
+            Optional z-coordinate(s) of the requested point(s) (will return layer,
             row, column) if supplied
         local: bool (optional)
             If True, x and y are in local coordinates (defaults to False)
@@ -988,59 +990,124 @@ class StructuredGrid(Grid):
 
         Returns
         -------
-        row : int
-            The row number
-        col : int
-            The column number
+        row : int or ndarray
+            The row number(s). Returns int for scalar input, ndarray for array input.
+        col : int or ndarray
+            The column number(s). Returns int for scalar input, ndarray for array input.
+        lay : int or ndarray (only if z is provided)
+            The layer number(s). Returns int for scalar input, ndarray for array input.
 
         """
+        # Check if inputs are scalar
+        x_is_scalar = np.isscalar(x)
+        y_is_scalar = np.isscalar(y)
+        z_is_scalar = z is None or np.isscalar(z)
+        is_scalar_input = x_is_scalar and y_is_scalar and z_is_scalar
+
+        # Convert to arrays for uniform processing
+        x = np.atleast_1d(x)
+        y = np.atleast_1d(y)
+        if z is not None:
+            z = np.atleast_1d(z)
+
+        # Validate array shapes
+        if len(x) != len(y):
+            raise ValueError("x and y must have the same length")
+        if z is not None and len(z) != len(x):
+            raise ValueError("z must have the same length as x and y")
+
         # transform x and y to local coordinates
-        x, y = super().intersect(x, y, local, forgive)
+        if not local:
+            x, y = self.get_local_coords(x, y)
 
         # get the cell edges in local coordinates
         xe, ye = self.xyedges
 
-        xcomp = x > xe
-        if np.all(xcomp) or not np.any(xcomp):
-            if forgive:
-                col = np.nan
-            else:
-                raise Exception("x, y point given is outside of the model area")
-        else:
-            col = np.asarray(xcomp).nonzero()[0][-1]
+        # Vectorized row/col calculation
+        n_points = len(x)
+        rows = np.full(n_points, np.nan if forgive else -1, dtype=float)
+        cols = np.full(n_points, np.nan if forgive else -1, dtype=float)
 
-        ycomp = y < ye
-        if np.all(ycomp) or not np.any(ycomp):
-            if forgive:
-                row = np.nan
+        for i in range(n_points):
+            xi, yi = x[i], y[i]
+
+            # Find column
+            xcomp = xi > xe
+            if np.all(xcomp) or not np.any(xcomp):
+                if forgive:
+                    cols[i] = np.nan
+                else:
+                    raise Exception(f"x, y point given is outside of the model area: ({xi}, {yi})")
             else:
-                raise Exception("x, y point given is outside of the model area")
-        else:
-            row = np.asarray(ycomp).nonzero()[0][-1]
-        if np.any(np.isnan([row, col])):
-            row = col = np.nan
-            if z is not None:
-                return None, row, col
+                cols[i] = np.asarray(xcomp).nonzero()[0][-1]
+
+            # Find row
+            ycomp = yi < ye
+            if np.all(ycomp) or not np.any(ycomp):
+                if forgive:
+                    rows[i] = np.nan
+                else:
+                    raise Exception(f"x, y point given is outside of the model area: ({xi}, {yi})")
+            else:
+                rows[i] = np.asarray(ycomp).nonzero()[0][-1]
+
+        # If either row or col is NaN, set both to NaN
+        invalid_mask = np.isnan(rows) | np.isnan(cols)
+        rows[invalid_mask] = np.nan
+        cols[invalid_mask] = np.nan
+
+        # Convert to int where valid
+        valid_mask = ~np.isnan(rows) & ~np.isnan(cols)
+        if np.any(valid_mask):
+            rows[valid_mask] = rows[valid_mask].astype(int)
+            cols[valid_mask] = cols[valid_mask].astype(int)
 
         if z is None:
-            return row, col
+            # Return results
+            if is_scalar_input:
+                row, col = rows[0], cols[0]
+                if not np.isnan(row) and not np.isnan(col):
+                    row, col = int(row), int(col)
+                return row, col
+            else:
+                return rows.astype(int) if np.all(valid_mask) else rows, \
+                       cols.astype(int) if np.all(valid_mask) else cols
 
-        lay = np.nan
-        for layer in range(self.__nlay):
-            if (
-                self.top_botm[layer, row, col]
-                >= z
-                >= self.top_botm[layer + 1, row, col]
-            ):
-                lay = layer
-                break
+        # Handle z-coordinate
+        lays = np.full(n_points, np.nan if forgive else -1, dtype=float)
 
-        if np.any(np.isnan([lay, row, col])):
-            lay = row = col = np.nan
-            if not forgive:
-                raise Exception("point given is outside the model area")
+        for i in range(n_points):
+            if np.isnan(rows[i]) or np.isnan(cols[i]):
+                continue
 
-        return lay, row, col
+            row, col = int(rows[i]), int(cols[i])
+            zi = z[i]
+
+            for layer in range(self.__nlay):
+                if (
+                    self.top_botm[layer, row, col]
+                    >= zi
+                    >= self.top_botm[layer + 1, row, col]
+                ):
+                    lays[i] = layer
+                    break
+
+            if np.isnan(lays[i]) and not forgive:
+                raise Exception(f"point given is outside the model area: ({x[i]}, {y[i]}, {zi})")
+
+        # Return results
+        if is_scalar_input:
+            lay, row, col = lays[0], rows[0], cols[0]
+            if not np.isnan(lay):
+                lay, row, col = int(lay), int(row), int(col)
+            else:
+                lay = row = col = None if forgive else np.nan
+            return lay, row, col
+        else:
+            valid_3d = ~np.isnan(lays) & ~np.isnan(rows) & ~np.isnan(cols)
+            return lays.astype(int) if np.all(valid_3d) else lays, \
+                   rows.astype(int) if np.all(valid_3d) else rows, \
+                   cols.astype(int) if np.all(valid_3d) else cols
 
     def _cell_vert_list(self, i, j):
         """Get vertices for a single cell or sequence of i, j locations."""

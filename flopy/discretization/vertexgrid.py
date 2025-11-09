@@ -351,14 +351,16 @@ class VertexGrid(Grid):
         When the point is on the edge of two cells, the cell with the lowest
         CELL2D number is returned.
 
+        Supports both scalar and array inputs for vectorized operations.
+
         Parameters
         ----------
-        x : float
-            The x-coordinate of the requested point
-        y : float
-            The y-coordinate of the requested point
-        z : float, None
-            optional, z-coordiante of the requested point will return
+        x : float or array-like
+            The x-coordinate(s) of the requested point(s)
+        y : float or array-like
+            The y-coordinate(s) of the requested point(s)
+        z : float, array-like, or None
+            optional, z-coordinate(s) of the requested point(s) will return
             (lay, icell2d)
         local: bool (optional)
             If True, x and y are in local coordinates (defaults to False)
@@ -368,50 +370,105 @@ class VertexGrid(Grid):
 
         Returns
         -------
-        icell2d : int
-            The CELL2D number
+        icell2d : int or ndarray
+            The CELL2D number(s). Returns int for scalar input,
+            ndarray for array input.
+        lay : int or ndarray (only if z is provided)
+            The layer number(s). Returns int for scalar input,
+            ndarray for array input.
 
         """
+        # Check if inputs are scalar
+        x_is_scalar = np.isscalar(x)
+        y_is_scalar = np.isscalar(y)
+        z_is_scalar = z is None or np.isscalar(z)
+        is_scalar_input = x_is_scalar and y_is_scalar and z_is_scalar
+
+        # Convert to arrays for uniform processing
+        x = np.atleast_1d(x)
+        y = np.atleast_1d(y)
+        if z is not None:
+            z = np.atleast_1d(z)
+
+        # Validate array shapes
+        if len(x) != len(y):
+            raise ValueError("x and y must have the same length")
+        if z is not None and len(z) != len(x):
+            raise ValueError("z must have the same length as x and y")
+
         if local:
             # transform x and y to real-world coordinates
             x, y = super().get_coords(x, y)
+
         xv, yv, zv = self.xyzvertices
-        for icell2d in range(self.ncpl):
-            xa = np.array(xv[icell2d])
-            ya = np.array(yv[icell2d])
-            # x and y at least have to be within the bounding box of the cell
-            if (
-                np.any(x <= xa)
-                and np.any(x >= xa)
-                and np.any(y <= ya)
-                and np.any(y >= ya)
-            ):
-                path = Path(np.stack((xa, ya)).transpose())
-                # use a small radius, so that the edge of the cell is included
-                if is_clockwise(xa, ya):
-                    radius = -1e-9
+
+        # Initialize result arrays
+        n_points = len(x)
+        results = np.full(n_points, np.nan if forgive else -1, dtype=float)
+        if z is not None:
+            lays = np.full(n_points, np.nan if forgive else -1, dtype=float)
+
+        # Process each point
+        for i in range(n_points):
+            xi, yi = x[i], y[i]
+            found = False
+
+            # Check each cell
+            for icell2d in range(self.ncpl):
+                xa = np.array(xv[icell2d])
+                ya = np.array(yv[icell2d])
+                # x and y at least have to be within the bounding box of the cell
+                if (
+                    np.any(xi <= xa)
+                    and np.any(xi >= xa)
+                    and np.any(yi <= ya)
+                    and np.any(yi >= ya)
+                ):
+                    path = Path(np.stack((xa, ya)).transpose())
+                    # use a small radius, so that the edge of the cell is included
+                    if is_clockwise(xa, ya):
+                        radius = -1e-9
+                    else:
+                        radius = 1e-9
+                    if path.contains_point((xi, yi), radius=radius):
+                        results[i] = icell2d
+                        found = True
+
+                        if z is not None:
+                            zi = z[i]
+                            for lay in range(self.nlay):
+                                if (
+                                    self.top_botm[lay, icell2d]
+                                    >= zi
+                                    >= self.top_botm[lay + 1, icell2d]
+                                ):
+                                    lays[i] = lay
+                                    break
+
+                        break
+
+            if not found and not forgive:
+                raise Exception(f"point given is outside of the model area: ({xi}, {yi})")
+
+        # Return results
+        if z is None:
+            if is_scalar_input:
+                result = results[0]
+                return int(result) if not np.isnan(result) else np.nan
+            else:
+                valid_mask = ~np.isnan(results)
+                return results.astype(int) if np.all(valid_mask) else results
+        else:
+            if is_scalar_input:
+                lay, icell2d = lays[0], results[0]
+                if not np.isnan(lay) and not np.isnan(icell2d):
+                    return int(lay), int(icell2d)
                 else:
-                    radius = 1e-9
-                if path.contains_point((x, y), radius=radius):
-                    if z is None:
-                        return icell2d
-
-                    for lay in range(self.nlay):
-                        if (
-                            self.top_botm[lay, icell2d]
-                            >= z
-                            >= self.top_botm[lay + 1, icell2d]
-                        ):
-                            return lay, icell2d
-
-        if forgive:
-            icell2d = np.nan
-            if z is not None:
-                return np.nan, icell2d
-
-            return icell2d
-
-        raise Exception("point given is outside of the model area")
+                    return np.nan, np.nan
+            else:
+                valid_mask = ~np.isnan(lays) & ~np.isnan(results)
+                return (lays.astype(int) if np.all(valid_mask) else lays,
+                        results.astype(int) if np.all(valid_mask) else results)
 
     def get_cell_vertices(self, cellid):
         """

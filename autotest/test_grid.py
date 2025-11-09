@@ -419,6 +419,135 @@ def test_unstructured_xyz_intersect(example_data_path):
             raise AssertionError("Unstructured grid intersection failed")
 
 
+def test_structured_grid_intersect_array():
+    """Test StructuredGrid.intersect() with array inputs."""
+    # Create a simple grid
+    nrow, ncol = 10, 10
+    delr = np.ones(ncol) * 10.0
+    delc = np.ones(nrow) * 10.0
+    top = np.ones((nrow, ncol)) * 10.0
+    botm = np.zeros((1, nrow, ncol))
+    grid = StructuredGrid(delr=delr, delc=delc, top=top, botm=botm)
+
+    # Test array input
+    x = np.array([25.0, 50.0, 75.0])
+    y = np.array([25.0, 50.0, 75.0])
+    rows, cols = grid.intersect(x, y, forgive=True)
+
+    # Verify array output
+    assert isinstance(rows, np.ndarray)
+    assert isinstance(cols, np.ndarray)
+    assert len(rows) == 3
+    assert len(cols) == 3
+
+    # Verify equivalence with scalar calls
+    for i in range(len(x)):
+        row_scalar, col_scalar = grid.intersect(x[i], y[i], forgive=True)
+        assert rows[i] == row_scalar
+        assert cols[i] == col_scalar
+
+    # Test out-of-bounds with forgive
+    x_mixed = np.array([50.0, 150.0])
+    y_mixed = np.array([50.0, 50.0])
+    rows_mixed, cols_mixed = grid.intersect(x_mixed, y_mixed, forgive=True)
+    assert not np.isnan(rows_mixed[0])  # First point valid
+    assert np.isnan(rows_mixed[1])      # Second point out of bounds
+
+
+def test_vertex_grid_intersect_array():
+    """Test VertexGrid.intersect() with array inputs."""
+    # Create a simple vertex grid using Delaunay triangulation
+    np.random.seed(42)
+    n_points = 50
+    x_verts = np.random.uniform(0, 100, n_points)
+    y_verts = np.random.uniform(0, 100, n_points)
+    points = np.column_stack([x_verts, y_verts])
+
+    from scipy.spatial import Delaunay
+    tri = Delaunay(points)
+    vertices = [[i, x_verts[i], y_verts[i]] for i in range(len(x_verts))]
+    cell2d = [[i] + list(tri.simplices[i]) for i in range(len(tri.simplices))]
+
+    ncells = len(cell2d)
+    top = np.ones(ncells) * 10.0
+    botm = np.zeros(ncells)
+    grid = VertexGrid(vertices=vertices, cell2d=cell2d, top=top, botm=botm)
+
+    # Test array input
+    x = np.array([25.0, 50.0, 75.0])
+    y = np.array([25.0, 50.0, 75.0])
+    results = grid.intersect(x, y, forgive=True)
+
+    # Verify array output
+    assert isinstance(results, np.ndarray)
+    assert len(results) == 3
+
+    # Verify equivalence with scalar calls
+    for i in range(len(x)):
+        result_scalar = grid.intersect(x[i], y[i], forgive=True)
+        if np.isnan(results[i]) and np.isnan(result_scalar):
+            continue
+        assert results[i] == result_scalar
+
+    # Test out-of-bounds with forgive
+    x_mixed = np.array([50.0, 200.0])
+    y_mixed = np.array([50.0, 50.0])
+    results_mixed = grid.intersect(x_mixed, y_mixed, forgive=True)
+    assert np.isnan(results_mixed[1])  # Second point out of bounds
+
+
+def test_unstructured_grid_intersect_array():
+    """Test UnstructuredGrid.intersect() with array inputs."""
+    # Create a simple unstructured grid using Delaunay triangulation
+    np.random.seed(42)
+    n_points = 50
+    x_verts = np.random.uniform(0, 100, n_points)
+    y_verts = np.random.uniform(0, 100, n_points)
+    points = np.column_stack([x_verts, y_verts])
+
+    from scipy.spatial import Delaunay
+    tri = Delaunay(points)
+    vertices = [[i, x_verts[i], y_verts[i]] for i in range(len(x_verts))]
+    iverts = tri.simplices.tolist()
+
+    xcenters = np.mean(points[tri.simplices], axis=1)[:, 0]
+    ycenters = np.mean(points[tri.simplices], axis=1)[:, 1]
+
+    ncells = len(iverts)
+    top = np.ones(ncells) * 10.0
+    botm = np.zeros(ncells)
+    grid = UnstructuredGrid(
+        vertices=vertices,
+        iverts=iverts,
+        xcenters=xcenters,
+        ycenters=ycenters,
+        top=top,
+        botm=botm,
+    )
+
+    # Test array input
+    x = np.array([25.0, 50.0, 75.0])
+    y = np.array([25.0, 50.0, 75.0])
+    results = grid.intersect(x, y, forgive=True)
+
+    # Verify array output
+    assert isinstance(results, np.ndarray)
+    assert len(results) == 3
+
+    # Verify equivalence with scalar calls
+    for i in range(len(x)):
+        result_scalar = grid.intersect(x[i], y[i], forgive=True)
+        if np.isnan(results[i]) and np.isnan(result_scalar):
+            continue
+        assert results[i] == result_scalar
+
+    # Test out-of-bounds with forgive
+    x_mixed = np.array([50.0, 200.0])
+    y_mixed = np.array([50.0, 50.0])
+    results_mixed = grid.intersect(x_mixed, y_mixed, forgive=True)
+    assert np.isnan(results_mixed[1])  # Second point out of bounds
+
+
 @pytest.mark.parametrize("spc_file", ["grd.spc", "grdrot.spc"])
 def test_structured_from_gridspec(example_data_path, spc_file):
     fn = example_data_path / "specfile" / spc_file

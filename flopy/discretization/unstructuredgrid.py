@@ -1,12 +1,10 @@
 import copy
 import os
-from collections import defaultdict
 from os import PathLike
 from typing import Union
 
 import numpy as np
 from matplotlib.path import Path
-from scipy.spatial import cKDTree
 
 from ..utils.geometry import is_clockwise, transform
 from .grid import CachedData, Grid
@@ -775,105 +773,59 @@ class UnstructuredGrid(Grid):
         xv, yv, zv = self.xyzvertices
 
         if self.grid_varies_by_layer:
-            ncpl_2d = self.nnodes
+            ncpl = self.nnodes
         else:
-            ncpl_2d = self.ncpl[0]
-
-        # Build KDTree for efficient nearest-neighbor search if beneficial
-        # Use KDTree when we have many points or a large grid
-        use_kdtree = len(x) * ncpl_2d > 1000
-
-        if use_kdtree:
-            # Extract cell centers for the 2D grid plane
-            xc, yc, _ = self.xyzcellcenters
-            if not self.grid_varies_by_layer:
-                xc = xc[:ncpl_2d]
-                yc = yc[:ncpl_2d]
-
-            cell_centers = np.column_stack([xc, yc])
-            kdtree = cKDTree(cell_centers)
+            ncpl = self.ncpl[0]
 
         # Initialize result array
-        results = np.full(len(x), np.nan if forgive else -1)
+        n_points = len(x)
+        results = np.full(n_points, np.nan if forgive else -1, dtype=float)
 
-        # Stack all query points
-        points = np.column_stack([x, y])
+        # Process each point
+        for i in range(n_points):
+            xi, yi = x[i], y[i]
+            zi = z[i] if z is not None else None
+            found = False
 
-        if use_kdtree:
-            # Query k-nearest cells for all points at once
-            k = min(10, ncpl_2d)
-            distances, candidate_cells = kdtree.query(points, k=k)
-            # Ensure candidate_cells is 2D even for single point
-            if candidate_cells.ndim == 1:
-                candidate_cells = candidate_cells.reshape(1, -1)
-        else:
-            # For small grids, check all cells for all points
-            candidate_cells = np.tile(np.arange(ncpl_2d), (len(x), 1))
-
-        # Pre-compute bounding boxes for all cells
-        bboxes = np.array(
-            [
-                [np.min(xv[i]), np.max(xv[i]), np.min(yv[i]), np.max(yv[i])]
-                for i in range(ncpl_2d)
-            ]
-        )
-
-        # Group points by candidate cells for batch processing
-        cell_to_points = defaultdict(list)
-        for i in range(len(x)):
-            for cell_idx in candidate_cells[i]:
-                bbox = bboxes[cell_idx]
-                if bbox[0] <= x[i] <= bbox[1] and bbox[2] <= y[i] <= bbox[3]:
-                    cell_to_points[cell_idx].append(i)
-
-        # Batch process points by cell using contains_points
-        for cell_idx, point_indices in cell_to_points.items():
-            if not point_indices:
-                continue
-
-            # Get points that need to be checked for this cell
-            pts = points[point_indices]
-
-            # Create Path object once per cell
-            xa = np.array(xv[cell_idx])
-            ya = np.array(yv[cell_idx])
-            path = Path(np.column_stack([xa, ya]))
-            radius = -1e-9 if is_clockwise(xa, ya) else 1e-9
-
-            # Batch point-in-polygon check
-            mask = path.contains_points(pts, radius=radius)
-
-            # Process results for points that are in this cell
-            for idx, is_inside in zip(point_indices, mask):
-                if not is_inside:
-                    continue
-                # Skip if already found (check for NaN or not -1)
-                if forgive:
-                    if not np.isnan(results[idx]):
-                        continue
-                elif results[idx] != -1:
-                    continue
-
-                zi = z[idx] if z is not None else None
-
-                if zi is None:
-                    results[idx] = cell_idx
-                else:
-                    # Handle z-coordinate for 3D intersection
-                    cell_idx_3d = cell_idx
-                    for lay in range(self.nlay):
-                        if lay != 0 and not self.grid_varies_by_layer:
-                            cell_idx_3d += self.ncpl[lay - 1]
-                        if zv[0, cell_idx_3d] >= zi >= zv[1, cell_idx_3d]:
-                            results[idx] = cell_idx_3d
+            for icell2d in range(ncpl):
+                xa = np.array(xv[icell2d])
+                ya = np.array(yv[icell2d])
+                # x and y at least have to be within the bounding box of the cell
+                if (
+                    np.any(xi <= xa)
+                    and np.any(xi >= xa)
+                    and np.any(yi <= ya)
+                    and np.any(yi >= ya)
+                ):
+                    if is_clockwise(xa, ya):
+                        radius = -1e-9
+                    else:
+                        radius = 1e-9
+                    path = Path(np.stack((xa, ya)).transpose())
+                    # use a small radius, so that the edge of the cell is included
+                    if path.contains_point((xi, yi), radius=radius):
+                        if zi is None:
+                            results[i] = icell2d
+                            found = True
                             break
 
-        # Handle not found cases
-        if not forgive and np.any(results == -1):
-            bad_idx = np.where(results == -1)[0][0]
-            raise Exception(
-                f"point ({x[bad_idx]}, {y[bad_idx]}) is outside of the model area"
-            )
+                        # Search through layers for z-coordinate
+                        cell_idx_3d = icell2d
+                        for lay in range(self.nlay):
+                            if zv[0, cell_idx_3d] >= zi >= zv[1, cell_idx_3d]:
+                                results[i] = cell_idx_3d
+                                found = True
+                                break
+                            # Move to next layer
+                            if lay < self.nlay - 1 and not self.grid_varies_by_layer:
+                                cell_idx_3d += self.ncpl[lay]
+                        if found:
+                            break
+
+            if not found and not forgive:
+                raise Exception(
+                    f"point ({xi}, {yi}) is outside of the model area"
+                )
 
         # Return scalar if input was scalar, otherwise return array
         if is_scalar_input:
@@ -885,7 +837,11 @@ class UnstructuredGrid(Grid):
                 return results.astype(int)
             else:
                 # Keep as float to preserve NaN values
-                return results
+                valid_mask = ~np.isnan(results)
+                if np.all(valid_mask):
+                    return results.astype(int)
+                else:
+                    return results
 
     @property
     def top_botm(self):
