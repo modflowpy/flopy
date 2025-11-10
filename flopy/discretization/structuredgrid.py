@@ -1110,7 +1110,9 @@ class StructuredGrid(Grid):
             if not np.isnan(lay):
                 lay, row, col = int(lay), int(row), int(col)
             else:
-                lay = row = col = None if forgive else np.nan
+                # When x,y are out of bounds: lay=None, row/col keep NaN
+                lay = None
+                # row and col already have their NaN values
             return lay, row, col
         else:
             valid_3d = ~np.isnan(lays) & ~np.isnan(rows) & ~np.isnan(cols)
