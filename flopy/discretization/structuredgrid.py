@@ -1038,8 +1038,7 @@ class StructuredGrid(Grid):
                     cols[i] = np.nan
                 else:
                     raise Exception(
-                        f"x, y point given is outside of the model area: "
-                        f"({xi}, {yi})"
+                        f"x, y point given is outside of the model area: ({xi}, {yi})"
                     )
             else:
                 cols[i] = np.asarray(xcomp).nonzero()[0][-1]
@@ -1051,8 +1050,7 @@ class StructuredGrid(Grid):
                     rows[i] = np.nan
                 else:
                     raise Exception(
-                        f"x, y point given is outside of the model area: "
-                        f"({xi}, {yi})"
+                        f"x, y point given is outside of the model area: ({xi}, {yi})"
                     )
             else:
                 rows[i] = np.asarray(ycomp).nonzero()[0][-1]
@@ -1063,7 +1061,7 @@ class StructuredGrid(Grid):
         cols[invalid_mask] = np.nan
 
         # Convert to int where valid
-        valid_mask = ~np.isnan(rows) & ~np.isnan(cols)
+        valid_mask = ~invalid_mask
         if np.any(valid_mask):
             rows[valid_mask] = rows[valid_mask].astype(int)
             cols[valid_mask] = cols[valid_mask].astype(int)
@@ -1076,8 +1074,9 @@ class StructuredGrid(Grid):
                     row, col = int(row), int(col)
                 return row, col
             else:
-                return rows.astype(int) if np.all(valid_mask) else rows, \
-                       cols.astype(int) if np.all(valid_mask) else cols
+                return rows.astype(int) if np.all(valid_mask) else rows, cols.astype(
+                    int
+                ) if np.all(valid_mask) else cols
 
         # Handle z-coordinate
         lays = np.full(n_points, np.nan if forgive else -1, dtype=float)
@@ -1100,8 +1099,7 @@ class StructuredGrid(Grid):
 
             if np.isnan(lays[i]) and not forgive:
                 raise Exception(
-                    f"point given is outside the model area: "
-                    f"({x[i]}, {y[i]}, {zi})"
+                    f"point given is outside the model area: ({x[i]}, {y[i]}, {zi})"
                 )
 
         # Return results
@@ -1116,9 +1114,11 @@ class StructuredGrid(Grid):
             return lay, row, col
         else:
             valid_3d = ~np.isnan(lays) & ~np.isnan(rows) & ~np.isnan(cols)
-            return lays.astype(int) if np.all(valid_3d) else lays, \
-                   rows.astype(int) if np.all(valid_3d) else rows, \
-                   cols.astype(int) if np.all(valid_3d) else cols
+            return (
+                lays.astype(int) if np.all(valid_3d) else lays,
+                rows.astype(int) if np.all(valid_3d) else rows,
+                cols.astype(int) if np.all(valid_3d) else cols,
+            )
 
     def _cell_vert_list(self, i, j):
         """Get vertices for a single cell or sequence of i, j locations."""

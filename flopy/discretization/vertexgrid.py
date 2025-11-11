@@ -469,8 +469,10 @@ class VertexGrid(Grid):
                     return np.nan, np.nan
             else:
                 valid_mask = ~np.isnan(lays) & ~np.isnan(results)
-                return (lays.astype(int) if np.all(valid_mask) else lays,
-                        results.astype(int) if np.all(valid_mask) else results)
+                return (
+                    lays.astype(int) if np.all(valid_mask) else lays,
+                    results.astype(int) if np.all(valid_mask) else results,
+                )
 
     def get_cell_vertices(self, cellid):
         """

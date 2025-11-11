@@ -11,6 +11,7 @@ from flaky import flaky
 from matplotlib import pyplot as plt
 from modflow_devtools.markers import requires_exe, requires_pkg
 from modflow_devtools.misc import has_pkg
+from scipy.spatial import Delaunay
 
 from autotest.test_dis_cases import case_dis, case_disv
 from autotest.test_grid_cases import GridCases
@@ -451,7 +452,7 @@ def test_structured_grid_intersect_array():
     y_mixed = np.array([50.0, 50.0])
     rows_mixed, cols_mixed = grid.intersect(x_mixed, y_mixed, forgive=True)
     assert not np.isnan(rows_mixed[0])  # First point valid
-    assert np.isnan(rows_mixed[1])      # Second point out of bounds
+    assert np.isnan(rows_mixed[1])  # Second point out of bounds
 
 
 def test_vertex_grid_intersect_array():
@@ -463,7 +464,6 @@ def test_vertex_grid_intersect_array():
     y_verts = np.random.uniform(0, 100, n_points)
     points = np.column_stack([x_verts, y_verts])
 
-    from scipy.spatial import Delaunay
     tri = Delaunay(points)
     vertices = [[i, x_verts[i], y_verts[i]] for i in range(len(x_verts))]
     cell2d = [[i] + list(tri.simplices[i]) for i in range(len(tri.simplices))]
@@ -505,7 +505,6 @@ def test_unstructured_grid_intersect_array():
     y_verts = np.random.uniform(0, 100, n_points)
     points = np.column_stack([x_verts, y_verts])
 
-    from scipy.spatial import Delaunay
     tri = Delaunay(points)
     vertices = [[i, x_verts[i], y_verts[i]] for i in range(len(x_verts))]
     iverts = tri.simplices.tolist()
@@ -1653,7 +1652,6 @@ def test_unstructured_iverts_cleanup():
         raise AssertionError("Improper number of vertices for cleaned 'shared' iverts")
 
 
-
 def test_structured_grid_intersect_edge_case():
     """Test StructuredGrid.intersect() edge case: out-of-bounds x,y with z.
 
@@ -1675,4 +1673,3 @@ def test_structured_grid_intersect_edge_case():
     assert lay is None, f"Expected lay=None, got {lay}"
     assert np.isnan(row), f"Expected row=nan, got {row}"
     assert np.isnan(col), f"Expected col=nan, got {col}"
-
