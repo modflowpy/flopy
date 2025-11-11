@@ -78,6 +78,17 @@ def minimal_vertex_grid_info(minimal_unstructured_grid_info):
     return d
 
 
+@pytest.fixture
+def simple_structured_grid():
+    """Create a simple 10x10 structured grid for testing."""
+    nrow, ncol = 10, 10
+    delr = np.ones(ncol) * 10.0
+    delc = np.ones(nrow) * 10.0
+    top = np.ones((nrow, ncol)) * 10.0
+    botm = np.zeros((1, nrow, ncol))
+    return StructuredGrid(delr=delr, delc=delc, top=top, botm=botm)
+
+
 def test_rotation():
     m = Modflow(rotation=20.0)
     dis = ModflowDis(
@@ -420,15 +431,9 @@ def test_unstructured_xyz_intersect(example_data_path):
             raise AssertionError("Unstructured grid intersection failed")
 
 
-def test_structured_grid_intersect_array():
+def test_structured_grid_intersect_array(simple_structured_grid):
     """Test StructuredGrid.intersect() with array inputs."""
-    # Create a simple grid
-    nrow, ncol = 10, 10
-    delr = np.ones(ncol) * 10.0
-    delc = np.ones(nrow) * 10.0
-    top = np.ones((nrow, ncol)) * 10.0
-    botm = np.zeros((1, nrow, ncol))
-    grid = StructuredGrid(delr=delr, delc=delc, top=top, botm=botm)
+    grid = simple_structured_grid
 
     # Test array input
     x = np.array([25.0, 50.0, 75.0])
@@ -1652,19 +1657,13 @@ def test_unstructured_iverts_cleanup():
         raise AssertionError("Improper number of vertices for cleaned 'shared' iverts")
 
 
-def test_structured_grid_intersect_edge_case():
+def test_structured_grid_intersect_edge_case(simple_structured_grid):
     """Test StructuredGrid.intersect() edge case: out-of-bounds x,y with z.
 
     This tests the specific case where x,y are out of bounds and z is provided.
     The expected behavior is to return (None, nan, nan).
     """
-    # Create a simple grid
-    nrow, ncol = 10, 10
-    delr = np.ones(ncol) * 10.0
-    delc = np.ones(nrow) * 10.0
-    top = np.ones((nrow, ncol)) * 10.0
-    botm = np.zeros((1, nrow, ncol))
-    grid = StructuredGrid(delr=delr, delc=delc, top=top, botm=botm)
+    grid = simple_structured_grid
 
     # Test out-of-bounds x,y with z coordinate
     lay, row, col = grid.intersect(-50.0, -50.0, z=5.0, forgive=True)
