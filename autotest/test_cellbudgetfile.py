@@ -687,6 +687,47 @@ def test_cellbudgetfile_get_ts_aux_vars_mf2005(example_data_path):
     assert np.array_equal(ts_default[:, 0], ts_iface[:, 0], equal_nan=True)
 
 
+def test_cellbudgetfile_get_ts_aux_vars_mf6_readme_example(function_tmpdir):
+    from flopy.mf6 import (
+        MFSimulation,
+        ModflowGwf,
+        ModflowGwfchd,
+        ModflowGwfdis,
+        ModflowGwfic,
+        ModflowGwfnpf,
+        ModflowGwfoc,
+        ModflowIms,
+        ModflowTdis,
+    )
+
+    name = 'mymodel'
+    sim = MFSimulation(sim_name=name, sim_ws=function_tmpdir, exe_name='mf6')
+    tdis = ModflowTdis(sim)
+    ims = ModflowIms(sim)
+    gwf = ModflowGwf(sim, modelname=name, save_flows=True)
+    dis = ModflowGwfdis(gwf, nrow=10, ncol=10)
+    ic = ModflowGwfic(gwf)
+    npf = ModflowGwfnpf(gwf, save_specific_discharge=True)
+    chd = ModflowGwfchd(gwf, stress_period_data=[[(0, 0, 0), 1.],
+                                                        [(0, 9, 9), 0.]])
+    budget_file = name + '.bud'
+    head_file = name + '.hds'
+    oc = ModflowGwfoc(gwf,
+                            budget_filerecord=budget_file,
+                            head_filerecord=head_file,
+                            saverecord=[('HEAD', 'ALL'), ('BUDGET', 'ALL')])
+    sim.write_simulation(silent=True)
+    sim.run_simulation(silent=True)
+
+    hds = gwf.output.head().get_data()
+    cbc = gwf.output.budget()
+
+    cellid = (0,5,5)
+
+    head = hds.get_ts(idx=cellid)
+    spdis = cbc.get_ts(idx=cellid, text='DATA-SPDIS')
+
+
 @pytest.fixture
 def dis_sim(function_tmpdir):
     from flopy.mf6 import (
@@ -742,54 +783,61 @@ def test_cellbudgetfile_get_ts_aux_vars_mf6_dis(dis_sim):
 
     gwf = sim.get_model()
     cbc = gwf.output.budget()
-    spdis = cbc.get_data(text="DATA-SPDIS")
-    available_fields = list(spdis[0].dtype.names)
-    expected_fields = ["node", "q", "qx", "qy", "qz"]
-    for field in expected_fields:
-        assert field in available_fields
 
     cellid = (0, 2, 2)
     nn = gwf.modelgrid.get_node(cellid)[0]
 
-    ts_q = cbc.get_ts(idx=cellid, text="DATA-SPDIS", variable="q")
-    ts_qx = cbc.get_ts(idx=cellid, text="DATA-SPDIS", variable="qx")
-    ts_qy = cbc.get_ts(idx=cellid, text="DATA-SPDIS", variable="qy")
-    ts_qz = cbc.get_ts(idx=cellid, text="DATA-SPDIS", variable="qz")
+    text = "DATA-SPDIS"
+    spdis = cbc.get_data(text=text)
+    for field in ["node", "q", "qx", "qy", "qz"]:
+        assert field in spdis[0].dtype.names
 
-    assert ts_q.shape == ts_qx.shape == ts_qy.shape == ts_qz.shape
-    assert ts_q.shape[1] == 2  # time + 1 data column
-    assert ts_qx.shape[1] == 2
-    assert ts_qy.shape[1] == 2
-    assert ts_qz.shape[1] == 2
+    text = "CHD"
+    chd = cbc.get_data(text=text)
+    for field in ["node", "node2", "q"]:
+        assert field in chd[0].dtype.names
 
-    assert np.array_equal(ts_q[:, 0], ts_qx[:, 0])
-    assert np.array_equal(ts_q[:, 0], ts_qy[:, 0])
-    assert np.array_equal(ts_q[:, 0], ts_qz[:, 0])
+    spdis_q = cbc.get_ts(idx=cellid, text=text, variable="q")
+    spdis_qx = cbc.get_ts(idx=cellid, text=text, variable="qx")
+    spdis_qy = cbc.get_ts(idx=cellid, text=text, variable="qy")
+    spdis_qz = cbc.get_ts(idx=cellid, text=text, variable="qz")
+
+    chd_q = cbc.get_ts(idx=cellid, )
+
+    assert spdis_q.shape == spdis_qx.shape == spdis_qy.shape == spdis_qz.shape
+    assert spdis_q.shape[1] == 2  # time + 1 data column
+    assert spdis_qx.shape[1] == 2
+    assert spdis_qy.shape[1] == 2
+    assert spdis_qz.shape[1] == 2
+
+    assert np.array_equal(spdis_q[:, 0], spdis_qx[:, 0])
+    assert np.array_equal(spdis_q[:, 0], spdis_qy[:, 0])
+    assert np.array_equal(spdis_q[:, 0], spdis_qz[:, 0])
 
     # check get_ts() values match get_data() for each time step
     for i, rec in enumerate(spdis):
         mask = rec["node"] == nn + 1  # 1-based
         assert np.allclose(
-            ts_q[i, 1],
+            spdis_q[i, 1],
             rec["q"][mask][0],
         ), f"get_ts() q value doesn't match get_data() at time {i}"
         assert np.allclose(
-            ts_qx[i, 1],
+            spdis_qx[i, 1],
             rec["qx"][mask][0],
         ), f"get_ts() qx value doesn't match get_data() at time {i}"
         assert np.allclose(
-            ts_qy[i, 1],
+            spdis_qy[i, 1],
             rec["qy"][mask][0],
         ), f"get_ts() qy value doesn't match get_data() at time {i}"
         assert np.allclose(
-            ts_qz[i, 1],
+            spdis_qz[i, 1],
             rec["qz"][mask][0],
         ), f"get_ts() qz value doesn't match get_data() at time {i}"
 
-    assert not np.allclose(ts_qx[:, 1], 0.0), "qx should have non-zero flow"
-    assert not np.allclose(ts_qy[:, 1], 0.0), "qy should have non-zero flow"
-    assert np.allclose(ts_q[:, 1], 0.0), "q should be zero for internal cells"
-    assert np.allclose(ts_qz[:, 1], 0.0), "qz should be zero for single layer"
+    assert not np.allclose(spdis_qx[:, 1], 0.0), "qx should have non-zero flow"
+    assert not np.allclose(spdis_qy[:, 1], 0.0), "qy should have non-zero flow"
+    assert np.allclose(spdis_q[:, 1], 0.0), "q should be zero for internal cells"
+    assert np.allclose(spdis_qz[:, 1], 0.0), "qz should be zero for single layer"
 
 
 @pytest.mark.requires_exe("mf6")
@@ -822,12 +870,10 @@ def test_cellbudgetfile_get_ts_aux_vars_mf6_disv(dis_sim):
 
     cbc = gwf.output.budget()
     spdis = cbc.get_data(text="DATA-SPDIS")
-    available_fields = list(spdis[0].dtype.names)
-    expected_fields = ["node", "q", "qx", "qy", "qz"]
-    for field in expected_fields:
-        assert field in available_fields
+    for field in ["node", "q", "qx", "qy", "qz"]:
+        assert field in spdis[0].dtype.names
 
-    cellid = (0, 4)  # cell in center of layer 0
+    cellid = (0, 4)
     nn = 4
 
     ts_q = cbc.get_ts(idx=cellid, text="DATA-SPDIS", variable="q")
@@ -866,6 +912,10 @@ def test_cellbudgetfile_get_ts_aux_vars_mf6_disv(dis_sim):
     assert np.allclose(ts_q[:, 1], 0.0), "q should be zero for internal cells"
     assert np.allclose(ts_qz[:, 1], 0.0), "qz should be zero for single layer"
 
+    chd = cbc.get_data(text="CHD")
+    for field in ["node", "node2", "q"]:
+        assert field in chd[0].dtype.names
+
 
 @pytest.mark.requires_exe("mf6")
 def test_cellbudgetfile_get_ts_aux_vars_mf6_disu(dis_sim):
@@ -898,10 +948,8 @@ def test_cellbudgetfile_get_ts_aux_vars_mf6_disu(dis_sim):
 
     cbc = gwf.output.budget()
     spdis = cbc.get_data(text="DATA-SPDIS")
-    available_fields = list(spdis[0].dtype.names)
-    expected_fields = ["node", "q", "qx", "qy", "qz"]
-    for field in expected_fields:
-        assert field in available_fields
+    for field in ["node", "q", "qx", "qy", "qz"]:
+        assert field in spdis[0].dtype.names
 
     ts_q = cbc.get_ts(idx=nn, text="DATA-SPDIS", variable="q")
     ts_qx = cbc.get_ts(idx=nn, text="DATA-SPDIS", variable="qx")
@@ -938,3 +986,7 @@ def test_cellbudgetfile_get_ts_aux_vars_mf6_disu(dis_sim):
     assert not np.allclose(ts_qy[:, 1], 0.0), "qy should have non-zero flow"
     assert np.allclose(ts_q[:, 1], 0.0), "q should be zero for internal cells"
     assert np.allclose(ts_qz[:, 1], 0.0), "qz should be zero for single layer"
+
+    chd = cbc.get_data(text="CHD")
+    for field in ["node", "node2", "q"]:
+        assert field in chd[0].dtype.names
