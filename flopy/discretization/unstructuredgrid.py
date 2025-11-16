@@ -823,7 +823,7 @@ class UnstructuredGrid(Grid):
                             break
 
             if not found and not forgive:
-                raise Exception(f"point ({xi}, {yi}) is outside of the model area")
+                raise ValueError(f"point ({xi}, {yi}) is outside of the model area")
 
         # Return scalar if input was scalar, otherwise return array
         if is_scalar_input:
