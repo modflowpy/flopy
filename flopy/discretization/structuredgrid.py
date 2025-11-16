@@ -1037,7 +1037,7 @@ class StructuredGrid(Grid):
                 if forgive:
                     cols[i] = np.nan
                 else:
-                    raise Exception(
+                    raise ValueError(
                         f"x, y point given is outside of the model area: ({xi}, {yi})"
                     )
             else:
@@ -1049,7 +1049,7 @@ class StructuredGrid(Grid):
                 if forgive:
                     rows[i] = np.nan
                 else:
-                    raise Exception(
+                    raise ValueError(
                         f"x, y point given is outside of the model area: ({xi}, {yi})"
                     )
             else:
@@ -1098,7 +1098,7 @@ class StructuredGrid(Grid):
                     break
 
             if np.isnan(lays[i]) and not forgive:
-                raise Exception(
+                raise ValueError(
                     f"point given is outside the model area: ({x[i]}, {y[i]}, {zi})"
                 )
 

@@ -448,7 +448,7 @@ class VertexGrid(Grid):
                         break
 
             if not found and not forgive:
-                raise Exception(
+                raise ValueError(
                     f"point given is outside of the model area: ({xi}, {yi})"
                 )
 
