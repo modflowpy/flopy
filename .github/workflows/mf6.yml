@@ -22,12 +22,12 @@ jobs:
     steps:
 
     - name: Checkout flopy repo
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         path: flopy
 
     - name: Checkout MODFLOW 6
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         repository: MODFLOW-ORG/modflow6
         path: modflow6
@@ -99,18 +99,18 @@ jobs:
     steps:
 
     - name: Checkout flopy repo
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         path: flopy
 
     - name: Checkout MODFLOW 6
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         repository: MODFLOW-ORG/modflow6
         path: modflow6
 
     - name: Checkout MF6 examples
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         repository: MODFLOW-ORG/modflow6-examples
         path: modflow6-examples
