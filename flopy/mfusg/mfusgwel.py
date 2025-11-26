@@ -258,10 +258,10 @@ class MfUsgWel(ModflowWel):
         recarray
             Empty recarray for well data
         """
+        import numpy as np
         from ..modflow.mfwel import ModflowWel
         from ..pakbase import Package
         from ..utils import create_empty_recarray
-        import numpy as np
 
         # Get base dtype
         dtype = ModflowWel.get_default_dtype(structured=structured)
