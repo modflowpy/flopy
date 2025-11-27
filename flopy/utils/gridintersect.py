@@ -1,7 +1,8 @@
 import warnings
 
+import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.patches import PathPatch
+from matplotlib.collections import PatchCollection
 from matplotlib.path import Path
 from pandas import DataFrame
 
@@ -104,6 +105,40 @@ class GridIntersect:
             )
             self.strtree = strtree.STRtree(self.geoms)
 
+    def _parse_input_shape(self, shp, shapetype=None):
+        """Internal method to parse input shape.
+
+        Allows numpy arrays containing shapely geometries, otherwise delegates to
+        GeoSpatialUtil.
+
+        Parameters
+        ----------
+        shp : shapely.geometry, geojson object, shapefile.Shape, np.ndarray,
+              or flopy geometry object
+            shape to intersect with the grid
+        shapetype : str, optional
+            type of shape (i.e. "point", "linestring", "polygon" or their
+            multi-variants), used by GeoSpatialUtil if shp is passed as a list
+            of vertices, default is None
+
+        Returns
+        -------
+        shp : shapely.geometry or np.ndarray
+            shapely geometry or array of shapely geometries
+        """
+        if isinstance(shp, np.ndarray) and isinstance(shp[0], shapely.Geometry):
+            shapetypes = shapely.get_type_id(shp)
+            assert len(np.unique(shapetypes)) == 1, (
+                "If passing an array of shapely geometries, all geometries must be "
+                "of the same type."
+            )
+            shapetype = shapely.GeometryType(shapetypes[0])
+        else:
+            gu = GeoSpatialUtil(shp, shapetype=shapetype)
+            shp = gu.shapely
+            shapetype = gu.shapetype
+        return shp, shapetype
+
     def intersect(
         self,
         shp,
@@ -150,30 +185,52 @@ class GridIntersect:
             a record array containing information about the intersection or
             a geopandas.GeoDataFrame if geo_dataframe=True
         """
-        gu = GeoSpatialUtil(shp, shapetype=shapetype)
-        shp = gu.shapely
+        shp, shapetype = self._parse_input_shape(shp, shapetype=shapetype)
 
-        if gu.shapetype in {"Point", "MultiPoint"}:
-            rec = self._intersect_point_shapely(
+        # if array, only accept length 1
+        if isinstance(shp, np.ndarray) and len(shp) > 1:
+            raise ValueError(
+                "intersect() only accepts arrays containing one "
+                f"{shapetype.name.lower()} at a time."
+            )
+
+        if shapetype in {
+            "Point",
+            "MultiPoint",
+            shapely.GeometryType.POINT,
+            shapely.GeometryType.MULTIPOINT,
+        }:
+            rec = self._intersect_point(
                 shp,
                 sort_by_cellid=sort_by_cellid,
                 return_all_intersections=return_all_intersections,
             )
-        elif gu.shapetype in {"LineString", "MultiLineString"}:
-            rec = self._intersect_linestring_shapely(
+        elif shapetype in {
+            "LineString",
+            "MultiLineString",
+            shapely.GeometryType.LINESTRING,
+            shapely.GeometryType.MULTILINESTRING,
+            shapely.GeometryType.LINEARRING,
+        }:
+            rec = self._intersect_linestring(
                 shp,
                 sort_by_cellid=sort_by_cellid,
                 return_all_intersections=return_all_intersections,
             )
-        elif gu.shapetype in {"Polygon", "MultiPolygon"}:
-            rec = self._intersect_polygon_shapely(
+        elif shapetype in {
+            "Polygon",
+            "MultiPolygon",
+            shapely.GeometryType.POLYGON,
+            shapely.GeometryType.MULTIPOLYGON,
+        }:
+            rec = self._intersect_polygon(
                 shp,
                 sort_by_cellid=sort_by_cellid,
                 contains_centroid=contains_centroid,
                 min_area_fraction=min_area_fraction,
             )
         else:
-            raise TypeError(f"Shapetype {gu.shapetype} is not supported")
+            raise TypeError(f"Shapetype {shapetype} is not supported")
 
         if geo_dataframe:
             gpd = import_optional_dependency("geopandas")
@@ -297,7 +354,7 @@ class GridIntersect:
             ]
         return np.array(geoms), np.arange(self.mfgrid.ncpl)
 
-    def query_grid(self, shp):
+    def query_grid(self, shp, predicate=None):
         """Perform spatial query on grid with shapely geometry. If no spatial
         query is possible returns all grid cells.
 
@@ -305,6 +362,9 @@ class GridIntersect:
         ----------
         shp : shapely.geometry
             shapely geometry
+        predicate : str, optional
+            spatial predicate to use for query, default is None. See
+            documentation of self.strtree.query for options.
 
         Returns
         -------
@@ -312,7 +372,7 @@ class GridIntersect:
             array containing cellids of grid cells in query result
         """
         if self.rtree:
-            result = self.strtree.query(shp)
+            result = self.strtree.query(shp, predicate=predicate)
         else:
             # no spatial query
             result = self.cellids
@@ -344,7 +404,18 @@ class GridIntersect:
         qcellids = cellids[shapely.intersects(self.geoms[cellids], shp)]
         return qcellids
 
-    def _intersect_point_shapely(
+    def _intersect_point_shapely(self, *args, **kwargs):
+        """Deprecated method, use _intersect_point instead."""
+        import warnings
+
+        warnings.warn(
+            "_intersect_point_shapely is deprecated, "
+            "use _intersect_point instead.",
+            DeprecationWarning,
+        )
+        return self._intersect_point(*args, **kwargs)
+
+    def _intersect_point(
         self,
         shp,
         sort_by_cellid=True,
@@ -403,7 +474,18 @@ class GridIntersect:
 
         return rec
 
-    def _intersect_linestring_shapely(
+    def _intersect_linestring_shapely(self, *args, **kwargs):
+        """Deprecated method, use _intersect_linestring instead."""
+        import warnings
+
+        warnings.warn(
+            "_intersect_linestring_shapely is deprecated, "
+            "use _intersect_linestring instead.",
+            DeprecationWarning,
+        )
+        return self._intersect_linestring(*args, **kwargs)
+
+    def _intersect_linestring(
         self,
         shp,
         sort_by_cellid=True,
@@ -517,7 +599,17 @@ class GridIntersect:
 
         return rec
 
-    def _intersect_polygon_shapely(
+    def _intersect_polygon_shapely(self, *args, **kwargs):
+        """Deprecated method, use _intersect_polygon instead."""
+        import warnings
+
+        warnings.warn(
+            "_intersect_polygon_shapely is deprecated, use _intersect_polygon instead.",
+            DeprecationWarning,
+        )
+        return self._intersect_polygon(*args, **kwargs)
+
+    def _intersect_polygon(
         self,
         shp,
         sort_by_cellid=True,
@@ -594,7 +686,13 @@ class GridIntersect:
 
         return rec
 
-    def intersects(self, shp, shapetype=None, dataframe=False):
+    def intersects(
+        self,
+        shp,
+        shapetype=None,
+        dataframe=False,
+        return_cellids=True,
+    ):
         """Return cellids for grid cells that intersect with shape.
 
         Parameters
@@ -608,6 +706,14 @@ class GridIntersect:
             passed as a list of vertices, default is None
         dataframe : bool, optional
             if True, return a pandas.DataFrame, default is False
+        return_all_intersections : bool, optional
+            if True (default), return multiple intersection results for points on grid
+            cell boundaries (e.g. returns 2 intersection results if a point lies on the
+            boundary between two grid cells).
+        return_cellids : bool, optional
+            if True (default), return cellids of intersected grid cells.
+            If False, only return grid node numbers, i.e. index of entry in
+            ``GridIntersect.geoms``.
 
         Returns
         -------
@@ -615,18 +721,74 @@ class GridIntersect:
             a record array or pandas.DataFrame containing cell IDs of the gridcells
             the shape intersects with.
         """
-        shp = GeoSpatialUtil(shp, shapetype=shapetype).shapely
-        qfiltered = self.strtree.query(shp, predicate="intersects")
+        shp, shapetype = self._parse_input_shape(shp, shapetype=shapetype)
+
+        # query grid or strtree
+        qcellids = self.query_grid(shp, predicate="intersects")
+        if not self.rtree:
+            if isinstance(shp, np.ndarray) and len(shp) > 1:
+                raise ValueError(
+                    "intersects() only accepts arrays containing one "
+                    f"{shapetype.name.lower()} at a time when rtree=False."
+                )
+            qfiltered = self.filter_query_result(shp, qcellids)
+        else:
+            qfiltered = qcellids
+
+        # sort cellids
+        if qfiltered.ndim == 1:
+            qfiltered = np.sort(qfiltered)
+        else:
+            qfiltered = qfiltered[:, np.lexsort((qfiltered[1], qfiltered[0]))]
+
+        # determine size of output array
+        nr = len(qfiltered) if qfiltered.ndim == 1 else qfiltered.shape[1]
 
         # build rec-array
-        rec = np.recarray(len(qfiltered), names=["cellids"], formats=["O"])
-        if self.mfgrid.grid_type == "structured":
-            rec.cellids = list(zip(*self.mfgrid.get_lrc([qfiltered])[0][1:]))
-        else:
+        rec = np.recarray(
+            nr,
+            names=["shp_ids", "cellids"],
+            formats=[
+                int,
+                "O"
+                if (return_cellids and self.mfgrid.grid_type == "structured")
+                else float,
+            ],
+        )
+        # shp was passed as single geometry
+        if qfiltered.ndim == 1:
+            rec.shp_ids[:] = 0
             rec.cellids = qfiltered
+        # shape passed as array of geometries
+        else:
+            rec.shp_ids = qfiltered[0]
+            rec.cellids = qfiltered[1]
+
+        if self.mfgrid.grid_type == "structured" and return_cellids:
+            rec.cellids = self._nodenumber_to_rowcol(rec.cellids)
 
         if dataframe:
-            return DataFrame(rec)
+            return DataFrame(rec).set_index("shp_ids")
+        return rec
+
+    def _nodenumber_to_rowcol(self, nodes):
+        """Convert node number to (row, col) tuple.
+
+        Parameters
+        ----------
+        nodes : array_like
+            array of cellids to convert
+
+        Returns
+        -------
+        array_like
+            array of (row, col) tuples
+        """
+        # cast to float and allow nans
+        idx = np.nonzero(~np.isnan(nodes.astype(float)))
+        rc = np.full_like(nodes, np.nan, dtype=object)
+        rc[idx] = list(zip(*self.mfgrid.get_lrc([nodes[idx].astype(int)])[0][1:]))
+        return rc
         return rec
 
     @staticmethod
