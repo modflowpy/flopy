@@ -1074,7 +1074,7 @@ class GridIntersect:
         # allow for result to be geodataframe
         if isinstance(pts, (shapely.Point, shapely.MultiPoint)):
             pts = [pts]
-        
+
         maskpts = np.isin(
             shapely.get_type_id(pts),
             [shapely.GeometryType.POINT, shapely.GeometryType.MULTIPOINT],

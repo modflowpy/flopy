@@ -88,12 +88,12 @@ print(f"flopy version: {flopy.__version__}")
 # The important methods in the GridIntersect object are:
 #
 # - `intersects()`: returns cellids for gridcells that intersect a shape (accepts
-# shapely geometry objects, arrays of shapely geometry object, flopy geometry object, 
+# shapely geometry objects, arrays of shapely geometry object, flopy geometry object,
 # shapefile.Shape objects, and geojson objects).
 # - `intersect()`: for intersecting the modelgrid with point, linestrings, and
 # polygon geometries (accepts shapely geometry objects, flopy geometry object,
 # shapefile.Shape objects, and geojson objects)
-# - `points_to_cellids()`: for quickly locating points in the modelgrid and 
+# - `points_to_cellids()`: for quickly locating points in the modelgrid and
 # getting a 1:1 mapping of points to cellids. Especially useful when passing in array
 # of points.
 # - `ix.plot_intersection_result()`: for plotting intersection results
@@ -117,8 +117,7 @@ sgr = fgrid.StructuredGrid(
 )
 
 # %%
-sgr.plot();
-
+sgr.plot()
 # %% [markdown]
 # ### <a id="rectgrid.1"></a>[Polygon with regular grid](#top)
 # Polygon to intersect with:
@@ -197,8 +196,7 @@ for irow, icol in result.cellids:
     )
 
 # add legend
-ax.legend([h2], [i.get_label() for i in [h2]], loc="best");
-
+ax.legend([h2], [i.get_label() for i in [h2]], loc="best")
 # %% [markdown]
 # The `intersect()` method contains several keyword arguments that specifically deal with polygons:
 #
@@ -227,8 +225,7 @@ for irow, icol in result2.cellids:
     )
 
 # add legend
-ax.legend([h2], [i.get_label() for i in [h2]], loc="best");
-
+ax.legend([h2], [i.get_label() for i in [h2]], loc="best")
 # %% [markdown]
 # Example with `min_area_threshold` set to 0.35, the intersection result in a cell should cover 35% or more of the cell area.
 
@@ -249,8 +246,7 @@ for irow, icol in result3.cellids:
         label="centroids of intersected gridcells",
     )
 # add legend
-ax.legend([h2], [i.get_label() for i in [h2]], loc="best");
-
+ax.legend([h2], [i.get_label() for i in [h2]], loc="best")
 # %% [markdown]
 # ### <a id="rectgrid.2"></a>[Polyline with regular grid](#top)
 # MultiLineString to intersect with:
@@ -280,8 +276,7 @@ for irow, icol in result.cellids:
         label="centroids of intersected gridcells",
     )
 
-ax.legend([h2], [i.get_label() for i in [h2]], loc="best");
-
+ax.legend([h2], [i.get_label() for i in [h2]], loc="best")
 # %% [markdown]
 # ### [MultiPoint with regular grid](#top)<a id="rectgrid.3"></a>
 #
@@ -323,10 +318,9 @@ for irow, icol in result_all.cellids:
         label="centroids with `return_all_intersections=True`",
     )
 
-ax.legend([h2, h3], [i.get_label() for i in [h2, h3]], loc="best");
-
+ax.legend([h2, h3], [i.get_label() for i in [h2, h3]], loc="best")
 # %% [markdown]
-# In addition to the `intersect()` and `intersects()` methods there is function to 
+# In addition to the `intersect()` and `intersects()` methods there is function to
 # quickly get the cellids for many points. This is done with `points_to_cellids()`.
 #
 # First lets create an array containing shapely Points.
@@ -344,7 +338,7 @@ random_points = shapely.points(x_coords, y_coords)
 # return the cell with the lowest cellid.
 #
 #
-# In this example we're returning the result as a 
+# In this example we're returning the result as a
 # node number to easily select the grid cells for our plot. But by default this method
 # returns (row, col) for structured grids.
 
@@ -362,8 +356,7 @@ sgr.plot(ax=ax)
 ax.plot(x_coords, y_coords, "ro", ms=5, label="random points")
 ix.plot_polygon(
     ix.geoms[result.cellids.astype(int)], ax=ax, fc="yellow", edgecolor="k", zorder=5
-);
-
+)
 # %% [markdown]
 # Note that `points_to_cellids()` returns NaNs for points that lie outside the model grid.
 
@@ -400,8 +393,7 @@ tgr = fgrid.VertexGrid(vertices, cell2d)
 # %%
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
 pmv = fplot.PlotMapView(modelgrid=tgr)
-pmv.plot_grid(ax=ax);
-
+pmv.plot_grid(ax=ax)
 # %% [markdown]
 # ### <a id="trigrid.1"></a>[Polygon with triangular grid](#top)
 
@@ -424,8 +416,7 @@ for cellid in result.cellids:
         label="centroids of intersected gridcells",
     )
 
-ax.legend([h2], [i.get_label() for i in [h2]], loc="best");
-
+ax.legend([h2], [i.get_label() for i in [h2]], loc="best")
 # %% [markdown]
 # ### <a id="trigrid.2"></a>[LineString with triangular grid](#top)
 
@@ -444,8 +435,7 @@ for cellid in result.cellids:
         label="centroids of intersected gridcells",
     )
 
-ax.legend([h2], [i.get_label() for i in [h2]], loc="best");
-
+ax.legend([h2], [i.get_label() for i in [h2]], loc="best")
 # %% [markdown]
 # ### <a id="trigrid.3"></a>[MultiPoint with triangular grid](#top)
 
@@ -474,6 +464,6 @@ for cellid in result_all.cellids:
         label="centroids with return_all_intersections=True",
     )
 
-ax.legend([h2, h3], [i.get_label() for i in [h2, h3]], loc="best");
+ax.legend([h2, h3], [i.get_label() for i in [h2, h3]], loc="best")
 
 # %%
