@@ -1,4 +1,4 @@
-#%%
+# %%
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
@@ -1100,7 +1100,6 @@ def test_rect_grid_multiple_points_array_with_z_points_to_cellids():
     result = ix.points_to_cellids(pts, handle_z="return")
     assert ~np.isfinite(result.layer[0])
     assert np.isnan(result.cellids[1])
-
 
 
 # %% array-based input - structured grid linestrings
