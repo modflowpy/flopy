@@ -94,7 +94,7 @@ def densify_geometry(line, step, keep_internal_nodes=True):
 
 # function to set the active and inactive model area
 def set_idomain(grid, boundary):
-    ix = GridIntersect(grid, method="vertex", rtree=True)
+    ix = GridIntersect(grid, rtree=True)
     result = ix.intersect(Polygon(boundary))
     idx = list(result.cellids)
     idx = np.array(idx, dtype=int)
@@ -241,7 +241,7 @@ top_sg = fine_topo.resample_to_grid(
     extrapolate_edges=True,
 )
 
-ixs = flopy.utils.GridIntersect(struct_grid, method="structured")
+ixs = flopy.utils.GridIntersect(struct_grid)
 cellids = []
 for sg in sgs:
     v = ixs.intersect(LineString(sg), sort_by_cellid=True)
@@ -315,7 +315,7 @@ top_sg_vrc = fine_topo.resample_to_grid(
     extrapolate_edges=True,
 )
 
-ixs = flopy.utils.GridIntersect(struct_vrc_grid, method="structured")
+ixs = flopy.utils.GridIntersect(struct_vrc_grid)
 cellids = []
 for sg in sgs:
     v = ixs.intersect(LineString(sg), sort_by_cellid=True)
@@ -419,7 +419,7 @@ top_ngc = fine_topo.resample_to_grid(
 top_nested_grid = [top_ngp, top_ngc]
 
 # +
-ixs = flopy.utils.GridIntersect(struct_gridp, method="structured")
+ixs = flopy.utils.GridIntersect(struct_gridp)
 cellids = []
 for sg in sgs:
     v = ixs.intersect(LineString(sg), sort_by_cellid=True)
@@ -429,7 +429,7 @@ for loc in cellids:
     intersection_ngp[loc] = 1
 intersection_ngp[idomainp[0] == 0] = 0
 
-ixs = flopy.utils.GridIntersect(struct_gridc, method="structured")
+ixs = flopy.utils.GridIntersect(struct_gridc)
 cellids = []
 for sg in sgs:
     v = ixs.intersect(LineString(sg), sort_by_cellid=True)
@@ -515,7 +515,7 @@ top_qg = fine_topo.resample_to_grid(
     extrapolate_edges=True,
 )
 
-ixs = flopy.utils.GridIntersect(quadtree_grid, method="vertex")
+ixs = flopy.utils.GridIntersect(quadtree_grid)
 cellids = []
 for sg in sgs:
     v = ixs.intersect(LineString(sg), sort_by_cellid=True)
@@ -583,7 +583,7 @@ top_tg = fine_topo.resample_to_grid(
     extrapolate_edges=True,
 )
 
-ixs = flopy.utils.GridIntersect(triangular_grid)  # , method="vertex")
+ixs = flopy.utils.GridIntersect(triangular_grid)
 cellids = []
 for sg in sgs:
     v = ixs.intersect(
@@ -633,13 +633,12 @@ top_vg = fine_topo.resample_to_grid(
     extrapolate_edges=True,
 )
 
-ixs = flopy.utils.GridIntersect(voronoi_grid, method="vertex")
+ixs = flopy.utils.GridIntersect(voronoi_grid)
 cellids = []
 for sg in sgs:
     v = ixs.intersect(
         LineString(sg),
         return_all_intersections=True,
-        keepzerolengths=False,
         sort_by_cellid=True,
     )
     cellids += v["cellids"].tolist()

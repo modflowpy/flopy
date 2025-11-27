@@ -1008,7 +1008,7 @@ def test_multi_model(function_tmpdir):
         botm=np.full((1, nrow, ncol), -100.0),
     )
 
-    ixs = flopy.utils.GridIntersect(modelgrid, method="vertex", rtree=True)
+    ixs = flopy.utils.GridIntersect(modelgrid, rtree=True)
     result = ixs.intersect(
         [
             boundary,

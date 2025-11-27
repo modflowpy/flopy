@@ -354,7 +354,7 @@ new_top = fine_topo.resample_to_grid(
 
 # +
 # calculate and set idomain
-ix = flopy.utils.GridIntersect(modelgrid, method="vertex", rtree=True)
+ix = flopy.utils.GridIntersect(modelgrid, rtree=True)
 result = ix.intersect(Polygon(boundary_polygon))
 idxs = tuple(zip(*result.cellids))
 idomain = np.zeros((nrow, ncol), dtype=int)
@@ -369,7 +369,7 @@ modelgrid._top = new_top
 
 # Intersect the stream segments with the modelgrid
 
-ixs = flopy.utils.GridIntersect(modelgrid, method="structured")
+ixs = flopy.utils.GridIntersect(modelgrid)
 cellids = []
 for seg in segs:
     v = ixs.intersect(LineString(seg), sort_by_cellid=True)
@@ -401,7 +401,7 @@ nlay = 2
 
 # +
 # intersect stream segs to simulate as drains
-ixs = flopy.utils.GridIntersect(modelgrid, method="structured")
+ixs = flopy.utils.GridIntersect(modelgrid)
 drn_cellids = []
 drn_lengths = []
 for seg in segs:
