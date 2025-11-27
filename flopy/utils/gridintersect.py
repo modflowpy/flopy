@@ -851,8 +851,7 @@ class GridIntersect:
         handle_z : str, optional
             Method for handling z dimension in intersection results for point
             intersections. Default is "ignore" which ignores z-dimension. Other
-            options are "drop" which only returns results for points within grid
-            top and bottom, or "return"  which returns the computed layer position
+            options is "return" which returns the computed layer position
             for each point. Points above the grid are returned as +np.inf and below
             the grid as -np.inf.
         return_nodenumbers : bool, optional
@@ -917,10 +916,7 @@ class GridIntersect:
 
         if handle_z != "ignore":
             laypos = self.get_layer_from_z(pts, rec.cellids)
-            if handle_z == "drop":
-                mask_z = np.isfinite(laypos)
-                rec = rec[mask_z]
-            elif handle_z == "return":
+            if handle_z == "return":
                 # copy data to new array to include layer position
                 rec = nprecfns.append_fields(
                     rec,
