@@ -445,7 +445,7 @@ class MfUsg(Modflow):
             print(f"      {os.path.basename(item.filename)}")
         if key not in model.pop_key_list:
             # do not add unit number (key) if it already exists
-            if key not in model.external_units:
+            if key not in model.external_units and key not in model.output_units:
                 model.external_fnames.append(item.filename)
                 model.external_units.append(key)
                 model.external_binflag.append("binary" in item.filetype.lower())
