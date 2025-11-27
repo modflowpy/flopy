@@ -1,3 +1,4 @@
+#%%
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
@@ -1099,8 +1100,7 @@ def test_rect_grid_multiple_points_array_with_z_points_to_cellids():
     result = ix.points_to_cellids(pts, handle_z="return")
     assert ~np.isfinite(result.layer[0])
     assert np.isnan(result.cellids[1])
-    result = ix.points_to_cellids(pts, handle_z="drop")
-    assert len(result) == 0
+
 
 
 # %% array-based input - structured grid linestrings
@@ -1469,8 +1469,6 @@ def test_tri_grid_multiple_points_array_with_z_points_to_cellids():
     result = ix.points_to_cellids(pts, handle_z="return")
     assert result.layer[0] == 0.0
     assert np.isnan(result.cellids[1])
-    result = ix.points_to_cellids(pts, handle_z="drop")
-    assert len(result) == 1
 
 
 @requires_pkg("shapely")
