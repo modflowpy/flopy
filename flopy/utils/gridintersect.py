@@ -3,6 +3,7 @@ import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.collections import PatchCollection
+from matplotlib.patches import PathPatch
 from matplotlib.path import Path
 from pandas import DataFrame
 
@@ -92,10 +93,18 @@ class GridIntersect:
         self.local = local
         self.rtree = rtree
 
-        self._set_method_get_gridshapes()
-
         # build arrays of geoms and cellids
-        self.geoms, self.cellids = self._get_gridshapes()
+        if self.mfgrid.grid_type == "structured":
+            self.geoms, self.cellids = self._rect_grid_to_geoms_cellids()
+        elif self.mfgrid.grid_type == "vertex":
+            self.geoms, self.cellids = self._vtx_grid_to_geoms_cellids()
+        elif self.mfgrid.grid_type == "unstructured":
+            raise NotImplementedError()
+            self.geoms, self.cellids = self._usg_grid_to_geoms_cellids()
+        else:
+            raise NotImplementedError(
+                f"Grid type {self.mfgrid.grid_type} not supported"
+            )
 
         # build STR-tree if specified
         if self.rtree:
@@ -245,17 +254,6 @@ class GridIntersect:
 
         return rec
 
-    def _set_method_get_gridshapes(self):
-        """internal method, set self._get_gridshapes to the appropriate method
-        for obtaining grid cell geometries."""
-        # Set method for obtaining grid shapes
-        if self.mfgrid.grid_type == "structured":
-            self._get_gridshapes = self._rect_grid_to_geoms_cellids
-        elif self.mfgrid.grid_type == "vertex":
-            self._get_gridshapes = self._vtx_grid_to_geoms_cellids
-        elif self.mfgrid.grid_type == "unstructured":
-            raise NotImplementedError()
-
     def _rect_grid_to_geoms_cellids(self):
         """internal method, return shapely polygons and cellids for structured
         grid cells.
@@ -306,7 +304,6 @@ class GridIntersect:
                 indices=np.repeat(cellids, 4),
             )
         )
-
         return geoms, cellids
 
     def _usg_grid_to_geoms_cellids(self):
@@ -378,7 +375,7 @@ class GridIntersect:
             result = self.cellids
         return result
 
-    def filter_query_result(self, cellids, shp):
+    def filter_query_result(self, shp, cellids):
         """Filter array of geometries to obtain grid cells that intersect with
         shape.
 
@@ -387,19 +384,32 @@ class GridIntersect:
 
         Parameters
         ----------
-        cellids : iterable
-            iterable of cellids, query result
         shp : shapely.geometry
             shapely geometry that is prepared and used to filter
             query result
+        cellids : iterable
+            iterable of cellids, query result
 
         Returns
         -------
         array_like
             filter or generator containing polygons that intersect with shape
         """
+        # flipped arguments to be consistent with all other methods in class
+        msg = (
+            "the cellids and shp arguments were flipped, please"
+            " pass them as filter_query_result(shp, cellids)"
+        )
+        if isinstance(cellids, np.ndarray):
+            if isinstance(cellids[0], shapely.Geometry):
+                warnings.warn(msg)
+                cellids, shp = shp, cellids
+        elif isinstance(cellids, shapely.Geometry):
+            warnings.warn(msg)
+            cellids, shp = shp, cellids
+
         # get only gridcells that intersect
-        if not shapely.is_prepared(shp):
+        if not shapely.is_prepared(shp).all():
             shapely.prepare(shp)
         qcellids = cellids[shapely.intersects(self.geoms[cellids], shp)]
         return qcellids
@@ -409,8 +419,7 @@ class GridIntersect:
         import warnings
 
         warnings.warn(
-            "_intersect_point_shapely is deprecated, "
-            "use _intersect_point instead.",
+            "_intersect_point_shapely is deprecated, use _intersect_point instead.",
             DeprecationWarning,
         )
         return self._intersect_point(*args, **kwargs)
@@ -476,7 +485,6 @@ class GridIntersect:
 
     def _intersect_linestring_shapely(self, *args, **kwargs):
         """Deprecated method, use _intersect_linestring instead."""
-        import warnings
 
         warnings.warn(
             "_intersect_linestring_shapely is deprecated, "
@@ -494,7 +502,7 @@ class GridIntersect:
         if self.rtree:
             qcellids = self.strtree.query(shp, predicate="intersects")
         else:
-            qcellids = self.filter_query_result(self.cellids, shp)
+            qcellids = self.filter_query_result(shp, self.cellids)
 
         if sort_by_cellid:
             qcellids = np.sort(qcellids)
@@ -619,7 +627,7 @@ class GridIntersect:
         if self.rtree:
             qcellids = self.strtree.query(shp, predicate="intersects")
         else:
-            qcellids = self.filter_query_result(self.cellids, shp)
+            qcellids = self.filter_query_result(shp, self.cellids)
 
         if sort_by_cellid:
             qcellids = np.sort(qcellids)
@@ -812,10 +820,6 @@ class GridIntersect:
         matplotlib.pyplot.axes
             returns the axes handle
         """
-
-        import matplotlib.pyplot as plt
-        from matplotlib.collections import PatchCollection
-
         if ax is None:
             _, ax = plt.subplots()
             ax.set_aspect("equal", adjustable="box")
@@ -1006,6 +1010,9 @@ class GridIntersect:
 
 
 def _polygon_patch(polygon, **kwargs):
+    from matplotlib.patches import PathPatch
+    from matplotlib.path import Path
+
     patch = PathPatch(
         Path.make_compound_path(
             Path(np.asarray(polygon.exterior.coords)[:, :2]),
