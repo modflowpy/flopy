@@ -779,7 +779,7 @@ class GridIntersect:
             return DataFrame(rec).set_index("shp_ids")
         return rec
 
-    def _nodenumber_to_rowcol(self, nodes):
+    def _nodenumbers_to_rowcol(self, nodes):
         """Convert node number to (row, col) tuple.
 
         Parameters
@@ -797,6 +797,84 @@ class GridIntersect:
         rc = np.full_like(nodes, np.nan, dtype=object)
         rc[idx] = list(zip(*self.mfgrid.get_lrc([nodes[idx].astype(int)])[0][1:]))
         return rc
+
+    def points_to_cellids(
+        self,
+        pts,
+        dataframe=False,
+        return_nodenumbers=False,
+    ):
+        """Return cellids of grid cells that intersect with shape.
+
+        Parameters
+        ----------
+        pts : shapely.geometry, geojson geometry, shapefile.shape,
+              or flopy geometry object
+            points shape to intersect with the grid
+        dataframe : bool, optional
+            if True, return a pandas.DataFrame, default is False
+        return_nodenumbers : bool, optional
+            if False (default), return cellids of intersected grid cells.
+            If True, return grid node numbers, i.e. index of entry in
+            ``GridIntersect.geoms``.
+
+        Returns
+        -------
+        numpy.recarray or pandas.DataFrame
+            a record array or pandas.DataFrame containing cell IDs of the gridcells
+            the shape intersects with.
+        """
+        if not self.rtree:
+            raise ValueError(
+                "points_to_cellids() requires rtree=True when"
+                " initializing GridIntersect"
+            )
+        if not isinstance(pts, np.ndarray):
+            if shapely.get_type_id(pts) == shapely.GeometryType.MULTIPOINT:
+                pts = np.array(shapely.get_parts(pts))
+            else:
+                pts = np.array([pts])
+
+        # query grid or strtree
+        qfiltered = self.query_grid(pts, predicate="intersects")
+
+        # sort cellids
+        if qfiltered.ndim == 1:
+            qfiltered = np.sort(qfiltered)
+        else:
+            qfiltered = qfiltered[:, np.lexsort((qfiltered[1], qfiltered[0]))]
+
+        # determine size of output array
+        if isinstance(pts, np.ndarray):
+            # one result per point
+            nr = len(pts)
+        else:
+            # single point
+            nr = 1 if len(qfiltered) > 0 else 0  # 1 if intersects, else 0
+
+        # build rec-array
+        rec = np.recarray(
+            nr,
+            names=["shp_ids", "cellids"],
+            formats=[
+                int,
+                float  # to allow nans
+                if (return_nodenumbers or self.mfgrid.grid_type != "structured")
+                else "O",
+            ],
+        )
+
+        rec.cellids = np.nan
+        # return only 1 gr id cell intersection result for each point
+        uniques, idx = np.unique(qfiltered[0], return_index=True)
+        rec.shp_ids = np.arange(nr)
+        rec.cellids[uniques] = qfiltered[1, idx]
+
+        if self.mfgrid.grid_type == "structured" and not return_nodenumbers:
+            rec.cellids = self._nodenumbers_to_rowcol(rec.cellids)
+
+        if dataframe:
+            return DataFrame(rec).set_index("shp_ids")
         return rec
 
     @staticmethod
