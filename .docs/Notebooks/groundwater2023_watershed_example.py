@@ -589,7 +589,6 @@ for sg in sgs:
     v = ixs.intersect(
         LineString(sg),
         return_all_intersections=True,
-        keepzerolengths=False,
         sort_by_cellid=True,
     )
     cellids += v["cellids"].tolist()
