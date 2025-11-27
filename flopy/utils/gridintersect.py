@@ -699,7 +699,7 @@ class GridIntersect:
         shp,
         shapetype=None,
         dataframe=False,
-        return_cellids=True,
+        return_nodenumbers=False,
     ):
         """Return cellids for grid cells that intersect with shape.
 
@@ -718,9 +718,9 @@ class GridIntersect:
             if True (default), return multiple intersection results for points on grid
             cell boundaries (e.g. returns 2 intersection results if a point lies on the
             boundary between two grid cells).
-        return_cellids : bool, optional
-            if True (default), return cellids of intersected grid cells.
-            If False, only return grid node numbers, i.e. index of entry in
+        return_nodenumbers : bool, optional
+            if False (default), return cellids of intersected grid cells.
+            If True, return grid node numbers, i.e. index of entry in
             ``GridIntersect.geoms``.
 
         Returns
@@ -758,9 +758,9 @@ class GridIntersect:
             names=["shp_ids", "cellids"],
             formats=[
                 int,
-                "O"
-                if (return_cellids and self.mfgrid.grid_type == "structured")
-                else float,
+                float
+                if (return_nodenumbers or self.mfgrid.grid_type != "structured")
+                else "O",
             ],
         )
         # shp was passed as single geometry
@@ -772,8 +772,8 @@ class GridIntersect:
             rec.shp_ids = qfiltered[0]
             rec.cellids = qfiltered[1]
 
-        if self.mfgrid.grid_type == "structured" and return_cellids:
-            rec.cellids = self._nodenumber_to_rowcol(rec.cellids)
+        if self.mfgrid.grid_type == "structured" and not return_nodenumbers:
+            rec.cellids = self._nodenumbers_to_rowcol(rec.cellids)
 
         if dataframe:
             return DataFrame(rec).set_index("shp_ids")
@@ -960,7 +960,8 @@ class GridIntersect:
         matplotlib.pyplot.axes
             returns the axes handle
         """
-        import matplotlib.pyplot as plt
+
+        shapely_plot = import_optional_dependency("shapely.plotting")
 
         if ax is None:
             _, ax = plt.subplots()
@@ -988,11 +989,7 @@ class GridIntersect:
                     c = f"C{i % 10}"
                 else:
                     c = colors[i]
-            if ishp.geom_type == "MultiLineString":
-                for part in ishp.geoms:
-                    ax.plot(part.xy[0], part.xy[1], ls="-", c=c, **kwargs)
-            else:
-                ax.plot(ishp.xy[0], ishp.xy[1], ls="-", c=c, **kwargs)
+            shapely_plot.plot_line(ishp, ax=ax, color=c, **kwargs)
 
         return ax
 
@@ -1017,24 +1014,20 @@ class GridIntersect:
         matplotlib.pyplot.axes
             returns the axes handle
         """
-        import matplotlib.pyplot as plt
-
-        shapely_geo = import_optional_dependency("shapely.geometry")
+        shapely = import_optional_dependency("shapely")
+        shapely_plot = import_optional_dependency("shapely.plotting")
 
         if ax is None:
             _, ax = plt.subplots()
-
-        x, y = [], []
         # allow for result to be geodataframe
         geoms = (
             result.ixshapes if isinstance(result, np.rec.recarray) else result.geometry
         )
-        geo_coll = shapely_geo.GeometryCollection(list(geoms))
-        collection = parse_shapely_ix_result([], geo_coll, ["Point"])
-        for c in collection:
-            x.append(c.x)
-            y.append(c.y)
-        ax.scatter(x, y, **kwargs)
+        maskpts = np.isin(
+            shapely.get_type_id(geoms),
+            [shapely.GeometryType.POINT, shapely.GeometryType.MULTIPOINT],
+        )
+        shapely_plot.plot_points(geoms[maskpts], ax=ax, **kwargs)
 
         return ax
 
@@ -1075,6 +1068,7 @@ class GridIntersect:
             [
                 shapely.GeometryType.LINESTRING,
                 shapely.GeometryType.MULTILINESTRING,
+                shapely.GeometryType.LINEARRING,
             ],
         ).all():
             ax = GridIntersect.plot_linestring(result, ax=ax, **kwargs)
