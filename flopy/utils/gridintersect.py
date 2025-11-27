@@ -5,9 +5,9 @@ import numpy as np
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path
+from numpy.lib import recfunctions as nprecfns
 from pandas import DataFrame
 
-from .geometry import transform
 from .geospatial_utils import GeoSpatialUtil
 from .utl_import import import_optional_dependency
 
@@ -156,6 +156,7 @@ class GridIntersect:
         return_all_intersections=False,
         contains_centroid=False,
         min_area_fraction=None,
+        handle_z="ignore",
         geo_dataframe=False,
     ):
         """Method to intersect a shape with a model grid.
@@ -185,6 +186,13 @@ class GridIntersect:
             float defining minimum intersection area threshold, if intersection
             area is smaller than min_frac_area * cell_area, do not store
             intersection result, only used if shape type is "polygon"
+        handle_z : str, optional
+            Method for handling z dimension in intersection results for point
+            intersections. Default is "ignore" which ignores z-dimension. Other
+            options are "drop" which only returns results for points within grid
+            top and bottom, or "return"  which returns the computed layer position
+            for each point. Points above the grid are returned as +np.inf and below
+            the grid as -np.inf.
         geo_dataframe : bool, optional
             if True, return a geopandas GeoDataFrame, default is False
 
@@ -214,6 +222,31 @@ class GridIntersect:
                 sort_by_cellid=sort_by_cellid,
                 return_all_intersections=return_all_intersections,
             )
+
+            # handle elevation data for points
+            # if handle_z is "drop" or "return"
+            # if shp has z information
+            # if there are intersection results
+            if (
+                (handle_z != "ignore")
+                and shapely.has_z(shp).any()
+                and len(rec.cellids) > 0
+            ):
+                laypos = self.get_layer_from_z(shp, rec.cellids)
+                if handle_z == "drop":
+                    mask_z = np.isfinite(laypos)
+                    rec = rec[mask_z]
+                elif handle_z == "return":
+                    # copy data to new array to include layer position
+                    rec = nprecfns.append_fields(
+                        rec,
+                        names="layer",
+                        data=laypos,
+                        dtypes="f8",
+                        usemask=False,
+                        asrecarray=True,
+                    )
+
         elif shapetype in {
             "LineString",
             "MultiLineString",
@@ -430,10 +463,8 @@ class GridIntersect:
         sort_by_cellid=True,
         return_all_intersections=False,
     ):
-        if self.rtree:
-            qcellids = self.strtree.query(shp, predicate="intersects")
-        else:
-            qcellids = self.filter_query_result(self.cellids, shp)
+        r = self.intersects(shp, return_nodenumbers=True)
+        qcellids = r.cellids[np.isfinite(r.cellids)].astype(int)
 
         if sort_by_cellid:
             qcellids = np.sort(qcellids)
@@ -442,7 +473,10 @@ class GridIntersect:
         # discard empty intersection results
         mask_empty = shapely.is_empty(ixresult)
         # keep only Point and MultiPoint
-        mask_type = np.isin(shapely.get_type_id(ixresult), [0, 4])
+        mask_type = np.isin(
+            shapely.get_type_id(ixresult),
+            [shapely.GeometryType.POINT, shapely.GeometryType.MULTIPOINT],
+        )
         ixresult = ixresult[~mask_empty & mask_type]
         qcellids = qcellids[~mask_empty & mask_type]
 
@@ -801,6 +835,7 @@ class GridIntersect:
     def points_to_cellids(
         self,
         pts,
+        handle_z="ignore",
         dataframe=False,
         return_nodenumbers=False,
     ):
@@ -813,6 +848,13 @@ class GridIntersect:
             points shape to intersect with the grid
         dataframe : bool, optional
             if True, return a pandas.DataFrame, default is False
+        handle_z : str, optional
+            Method for handling z dimension in intersection results for point
+            intersections. Default is "ignore" which ignores z-dimension. Other
+            options are "drop" which only returns results for points within grid
+            top and bottom, or "return"  which returns the computed layer position
+            for each point. Points above the grid are returned as +np.inf and below
+            the grid as -np.inf.
         return_nodenumbers : bool, optional
             if False (default), return cellids of intersected grid cells.
             If True, return grid node numbers, i.e. index of entry in
@@ -872,6 +914,22 @@ class GridIntersect:
 
         if self.mfgrid.grid_type == "structured" and not return_nodenumbers:
             rec.cellids = self._nodenumbers_to_rowcol(rec.cellids)
+
+        if handle_z != "ignore":
+            laypos = self.get_layer_from_z(pts, rec.cellids)
+            if handle_z == "drop":
+                mask_z = np.isfinite(laypos)
+                rec = rec[mask_z]
+            elif handle_z == "return":
+                # copy data to new array to include layer position
+                rec = nprecfns.append_fields(
+                    rec,
+                    names="layer",
+                    data=laypos,
+                    dtypes="f8",
+                    usemask=False,
+                    asrecarray=True,
+                )
 
         if dataframe:
             return DataFrame(rec).set_index("shp_ids")
@@ -1080,11 +1138,53 @@ class GridIntersect:
 
         return ax
 
+    def get_layer_from_z(self, pts, cellids):
+        """Method to handle z values for points.
+
+        Parameters
+        ----------
+        pts : shapely.geometry
+            points geometry
+        cellids : array_like
+            array of cellids
+
+        Returns
+        -------
+        cellids : array_like
+            array of cellids with z values handled
+        """
+
+        def valid_mask(v):
+            if isinstance(v, tuple):
+                return True
+            else:
+                return not np.isnan(v)
+
+        z_arr = np.atleast_1d(shapely.get_z(pts))
+        if self.mfgrid.grid_type == "structured":
+            mask_valid = list(map(valid_mask, cellids))
+            row, col = list(zip(*cellids[mask_valid]))
+            surface_elevations = self.mfgrid.top_botm[:, row, col]
+        elif self.mfgrid.grid_type == "vertex":
+            mask_valid = ~np.isnan(cellids)
+            surface_elevations = self.mfgrid.top_botm[:, cellids[mask_valid]]
+        else:
+            raise NotImplementedError(
+                "get_layer_from_z() is only implemented for "
+                "structured and vertex grids."
+            )
+        zb = surface_elevations < z_arr[mask_valid]
+        mask_above = zb.all(axis=0)
+        mask_below = (~zb).all(axis=0)
+        laypos = (np.nanargmax(zb, axis=0) - 1).astype(float)
+        laypos[mask_above] = np.inf
+        laypos[mask_below] = -np.inf
+        laypos_full = np.full_like(z_arr, np.nan, dtype=float)
+        laypos_full[mask_valid] = laypos
+        return laypos_full
+
 
 def _polygon_patch(polygon, **kwargs):
-    from matplotlib.patches import PathPatch
-    from matplotlib.path import Path
-
     patch = PathPatch(
         Path.make_compound_path(
             Path(np.asarray(polygon.exterior.coords)[:, :2]),
