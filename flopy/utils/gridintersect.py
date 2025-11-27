@@ -508,9 +508,7 @@ class GridIntersect:
 
         # if structured calculate (i, j) cell address
         if self.mfgrid.grid_type == "structured":
-            rec.cellids = list(
-                zip(*self.mfgrid.get_lrc([self.cellids[keep_cid]])[0][1:])
-            )
+            rec.cellids = self._nodenumbers_to_rowcol(self.cellids[keep_cid])
         else:
             rec.cellids = self.cellids[keep_cid]
         rec.ixshapes = keep_pts
@@ -631,9 +629,7 @@ class GridIntersect:
         rec = np.recarray(len(ixresult), names=names, formats=formats)
         # if structured grid calculate (i, j) cell address
         if self.mfgrid.grid_type == "structured":
-            rec.cellids = list(
-                zip(*self.mfgrid.get_lrc([self.cellids[qcellids]])[0][1:])
-            )
+            rec.cellids = self._nodenumbers_to_rowcol(self.cellids[qcellids])
         else:
             rec.cellids = self.cellids[qcellids]
         rec.ixshapes = ixresult
@@ -718,9 +714,7 @@ class GridIntersect:
         rec = np.recarray(len(ixresult), names=names, formats=formats)
         # if structured calculate (i, j) cell address
         if self.mfgrid.grid_type == "structured":
-            rec.cellids = list(
-                zip(*self.mfgrid.get_lrc([self.cellids[qcellids]])[0][1:])
-            )
+            rec.cellids = self._nodenumbers_to_rowcol(self.cellids[qcellids])
         else:
             rec.cellids = self.cellids[qcellids]
         rec.ixshapes = ixresult
