@@ -932,7 +932,7 @@ class GridIntersect:
         return rec
 
     @staticmethod
-    def plot_polygon(result, ax=None, **kwargs):
+    def plot_polygon(polys, ax=None, **kwargs):
         """method to plot the polygon intersection results from the resulting
         numpy.recarray.
 
@@ -972,11 +972,10 @@ class GridIntersect:
             ppi = _polygon_patch(poly, facecolor=fc, **kwargs)
             patches.append(ppi)
 
-        # allow for result to be geodataframe
-        geoms = (
-            result.ixshapes if isinstance(result, np.rec.recarray) else result.geometry
-        )
-        for i, ishp in enumerate(geoms):
+        if isinstance(polys, (shapely.Polygon, shapely.MultiPolygon)):
+            polys = [polys]
+
+        for i, ishp in enumerate(polys):
             if hasattr(ishp, "geoms"):
                 for geom in ishp.geoms:
                     add_poly_patch(geom)
@@ -992,7 +991,7 @@ class GridIntersect:
         return ax
 
     @staticmethod
-    def plot_linestring(result, ax=None, cmap=None, **kwargs):
+    def plot_linestring(ls, ax=None, cmap=None, **kwargs):
         """method to plot the linestring intersection results from the
         resulting numpy.recarray.
 
@@ -1029,15 +1028,14 @@ class GridIntersect:
         else:
             specified_color = False
 
+        if isinstance(ls, (shapely.LineString, shapely.MultiLineString)):
+            ls = [ls]
+
         if cmap is not None:
             colormap = plt.get_cmap(cmap)
-            colors = colormap(np.linspace(0, 1, result.shape[0]))
+            colors = colormap(np.linspace(0, 1, len(ls)))
 
-        # allow for result to be geodataframe
-        geoms = (
-            result.ixshapes if isinstance(result, np.rec.recarray) else result.geometry
-        )
-        for i, ishp in enumerate(geoms):
+        for i, ishp in enumerate(ls):
             if not specified_color:
                 if cmap is None:
                     c = f"C{i % 10}"
@@ -1048,7 +1046,7 @@ class GridIntersect:
         return ax
 
     @staticmethod
-    def plot_point(result, ax=None, **kwargs):
+    def plot_point(pts, ax=None, **kwargs):
         """method to plot the point intersection results from the resulting
         numpy.recarray.
 
@@ -1056,8 +1054,8 @@ class GridIntersect:
 
         Parameters
         ----------
-        result : numpy.recarray or geopandas.GeoDataFrame
-            record array or GeoDataFrame containing intersection results
+        pts : array, geopandas.GeoSeries
+            array or GeoSeries containing geometries
         ax : matplotlib.pyplot.axes, optional
             axes to plot onto, if not provided, creates a new figure
         **kwargs:
@@ -1074,14 +1072,14 @@ class GridIntersect:
         if ax is None:
             _, ax = plt.subplots()
         # allow for result to be geodataframe
-        geoms = (
-            result.ixshapes if isinstance(result, np.rec.recarray) else result.geometry
-        )
+        if isinstance(pts, (shapely.Point, shapely.MultiPoint)):
+            pts = [pts]
+        
         maskpts = np.isin(
-            shapely.get_type_id(geoms),
+            shapely.get_type_id(pts),
             [shapely.GeometryType.POINT, shapely.GeometryType.MULTIPOINT],
         )
-        shapely_plot.plot_points(geoms[maskpts], ax=ax, **kwargs)
+        shapely_plot.plot_points(pts[maskpts], ax=ax, **kwargs)
 
         return ax
 
@@ -1116,7 +1114,7 @@ class GridIntersect:
             shapely.get_type_id(geoms),
             [shapely.GeometryType.POINT, shapely.GeometryType.MULTIPOINT],
         ).all():
-            ax = GridIntersect.plot_point(result, ax=ax, **kwargs)
+            ax = GridIntersect.plot_point(geoms, ax=ax, **kwargs)
         elif np.isin(
             shapely.get_type_id(geoms),
             [
@@ -1125,12 +1123,12 @@ class GridIntersect:
                 shapely.GeometryType.LINEARRING,
             ],
         ).all():
-            ax = GridIntersect.plot_linestring(result, ax=ax, **kwargs)
+            ax = GridIntersect.plot_linestring(geoms, ax=ax, **kwargs)
         elif np.isin(
             shapely.get_type_id(geoms),
             [shapely.GeometryType.POLYGON, shapely.GeometryType.MULTIPOLYGON],
         ).all():
-            ax = GridIntersect.plot_polygon(result, ax=ax, **kwargs)
+            ax = GridIntersect.plot_polygon(geoms, ax=ax, **kwargs)
 
         return ax
 
