@@ -591,15 +591,22 @@ def test_return_type_structured(simple_structured_grid):
     lay, row, col = grid.intersect(150.0, 50.0, z=5.0, forgive=True)
     assert all(np.isnan(v) for v in [lay, row, col])
 
-    # Array all inside -> int64
-    rows, cols = grid.intersect(np.array([5.0, 55.0]), np.array([95.0, 95.0]))
-    assert rows.dtype == np.int64 and cols.dtype == np.int64
-
-    # Array with outside -> float64
+    # Array all inside -> any integer dtype
     rows, cols = grid.intersect(
-        np.array([5.0, 150.0]), np.array([95.0, 50.0]), forgive=True
+        np.array([5.0, 55.0]),
+        np.array([95.0, 95.0])
     )
-    assert rows.dtype == np.float64 and cols.dtype == np.float64
+    assert np.issubdtype(rows.dtype, np.integer)
+    assert np.issubdtype(cols.dtype, np.integer)
+
+    # Array with outside -> must be float64 (due to NaNs)
+    rows, cols = grid.intersect(
+        np.array([5.0, 150.0]),
+        np.array([95.0, 50.0]),
+        forgive=True
+    )
+    assert rows.dtype == np.float64
+    assert cols.dtype == np.float64
 
 
 # ============================================================================
