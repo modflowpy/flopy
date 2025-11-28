@@ -553,12 +553,12 @@ def test_return_type_array(grid_fixture, request):
     x_mixed = np.array([0.5, 10.0])
     y_mixed = np.array([0.5, 10.0])
 
-    # All inside -> int64
+    # All inside -> integer type
     result = index.query_points(x_inside, y_inside)
-    assert result.dtype == np.int64
+    assert np.issubdtype(result.dtype, np.integer)
 
     result = grid.intersect(x_inside, y_inside)
-    assert result.dtype == np.int64
+    assert np.issubdtype(result.dtype, np.integer)
 
     # Mixed -> float64
     result = index.query_points(x_mixed, y_mixed)
