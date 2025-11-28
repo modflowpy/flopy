@@ -1023,37 +1023,38 @@ class StructuredGrid(Grid):
         # get the cell edges in local coordinates
         xe, ye = self.xyedges
 
-        # Vectorized row/col calculation
+        # Fully vectorized row/col calculation
         n_points = len(x)
-        rows = np.full(n_points, np.nan if forgive else -1, dtype=float)
-        cols = np.full(n_points, np.nan if forgive else -1, dtype=float)
+        rows = np.full(n_points, np.nan, dtype=float)
+        cols = np.full(n_points, np.nan, dtype=float)
 
-        for i in range(n_points):
-            xi, yi = x[i], y[i]
+        # Vectorized column finding using searchsorted
+        # When point is on edge, use lower column index (tie-breaking rule)
+        # side="left" ensures x==edge goes to the cell on the left
+        cols_valid = np.searchsorted(xe, x, side="left") - 1
+        # searchsorted returns index in [0, len(xe)], but valid cols are [0, ncol-1]
+        cols_mask = (cols_valid >= 0) & (cols_valid < self.ncol)
+        cols[cols_mask] = cols_valid[cols_mask]
 
-            # Find column
-            xcomp = xi > xe
-            if np.all(xcomp) or not np.any(xcomp):
-                if forgive:
-                    cols[i] = np.nan
-                else:
-                    raise ValueError(
-                        f"x, y point given is outside of the model area: ({xi}, {yi})"
-                    )
-            else:
-                cols[i] = np.asarray(xcomp).nonzero()[0][-1]
+        # Vectorized row finding using searchsorted
+        # When point is on edge, use lower row index (tie-breaking rule)
+        # Since ye is in descending order (top to bottom), we need to flip it
+        # side="right" on flipped array ensures y==edge goes to the cell below
+        ye_flipped = ye[::-1]
+        rows_flipped = np.searchsorted(ye_flipped, y, side="right")
+        rows_valid = len(ye) - 1 - rows_flipped
+        rows_mask = (rows_valid >= 0) & (rows_valid < self.nrow)
+        rows[rows_mask] = rows_valid[rows_mask]
 
-            # Find row
-            ycomp = yi < ye
-            if np.all(ycomp) or not np.any(ycomp):
-                if forgive:
-                    rows[i] = np.nan
-                else:
-                    raise ValueError(
-                        f"x, y point given is outside of the model area: ({xi}, {yi})"
-                    )
-            else:
-                rows[i] = np.asarray(ycomp).nonzero()[0][-1]
+        # Check for errors if not forgiving
+        if not forgive:
+            invalid_mask = np.isnan(rows) | np.isnan(cols)
+            if np.any(invalid_mask):
+                idx = np.where(invalid_mask)[0][0]
+                raise ValueError(
+                    f"x, y point given is outside of the model area: "
+                    f"({x[idx]}, {y[idx]})"
+                )
 
         # If either row or col is NaN, set both to NaN
         invalid_mask = np.isnan(rows) | np.isnan(cols)
@@ -1078,39 +1079,55 @@ class StructuredGrid(Grid):
                     int
                 ) if np.all(valid_mask) else cols
 
-        # Handle z-coordinate
-        lays = np.full(n_points, np.nan if forgive else -1, dtype=float)
+        # Handle z-coordinate - vectorized layer finding
+        lays = np.full(n_points, np.nan, dtype=float)
 
-        for i in range(n_points):
-            if np.isnan(rows[i]) or np.isnan(cols[i]):
-                continue
+        # Only process points that have valid row/col
+        valid_mask = ~(np.isnan(rows) | np.isnan(cols))
+        valid_indices = np.where(valid_mask)[0]
 
-            row, col = int(rows[i]), int(cols[i])
-            zi = z[i]
+        if len(valid_indices) > 0:
+            # Extract valid coordinates and z-values
+            valid_rows = rows[valid_indices].astype(int)
+            valid_cols = cols[valid_indices].astype(int)
+            valid_z = z[valid_indices]
+            n_valid = len(valid_indices)
 
-            for layer in range(self.__nlay):
-                if (
-                    self.top_botm[layer, row, col]
-                    >= zi
-                    >= self.top_botm[layer + 1, row, col]
-                ):
-                    lays[i] = layer
-                    break
+            # Extract top/bottom elevations for all valid points and all layers
+            # Shape: (n_valid, n_layers + 1)
+            tops_bottoms = self.top_botm[:, valid_rows, valid_cols].T
 
-            if np.isnan(lays[i]) and not forgive:
-                raise ValueError(
-                    f"point given is outside the model area: ({x[i]}, {y[i]}, {zi})"
-                )
+            # Check which layer each point belongs to
+            # For each point, check if top[layer] >= z >= bottom[layer]
+            # Shape: (n_valid, n_layers)
+            in_layer = (tops_bottoms[:, :-1] >= valid_z[:, np.newaxis]) & (
+                valid_z[:, np.newaxis] >= tops_bottoms[:, 1:]
+            )
+
+            # Find the first (topmost) layer for each point
+            # argmax returns the first True value, or 0 if all False
+            layer_indices = np.argmax(in_layer, axis=1)
+
+            # Set layer values only where a valid layer was found
+            found_layer = in_layer[np.arange(n_valid), layer_indices]
+            lays[valid_indices[found_layer]] = layer_indices[found_layer]
+
+            # Check for errors if not forgiving
+            if not forgive:
+                not_found = ~found_layer
+                if np.any(not_found):
+                    idx = valid_indices[not_found][0]
+                    raise ValueError(
+                        f"point given is outside the model area: "
+                        f"({x[idx]}, {y[idx]}, {z[idx]})"
+                    )
 
         # Return results
         if is_scalar_input:
             lay, row, col = lays[0], rows[0], cols[0]
             if not np.isnan(lay):
                 lay, row, col = int(lay), int(row), int(col)
-            else:
-                # When x,y are out of bounds: lay=None, row/col keep NaN
-                lay = None
-                # row and col already have their NaN values
+            # Otherwise lay, row, col keep their nan values for consistency
             return lay, row, col
         else:
             valid_3d = ~np.isnan(lays) & ~np.isnan(rows) & ~np.isnan(cols)

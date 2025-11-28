@@ -5,6 +5,7 @@ import numpy as np
 from matplotlib.path import Path
 
 from ..utils.geometry import is_clockwise, transform
+from ..utils.geospatial_index import GeospatialIndex
 from .grid import CachedData, Grid
 
 
@@ -400,57 +401,40 @@ class VertexGrid(Grid):
             # transform x and y to real-world coordinates
             x, y = super().get_coords(x, y)
 
-        xv, yv, zv = self.xyzvertices
+        # Build or retrieve geospatial index for fast queries
+        if not hasattr(self, "_geospatial_index") or self._geospatial_index is None:
+            self._geospatial_index = GeospatialIndex(self)
 
-        # Initialize result arrays
-        n_points = len(x)
-        results = np.full(n_points, np.nan if forgive else -1, dtype=float)
+        # Use GeospatialIndex for spatial queries
+        # For VertexGrid, z-search is handled internally by GeospatialIndex
+        # which returns layer index
         if z is not None:
-            lays = np.full(n_points, np.nan if forgive else -1, dtype=float)
+            lays_raw = self._geospatial_index.query_points(x, y, z=z)
+            # GeospatialIndex returns layer index for VertexGrid
+            lays = lays_raw.copy()
+            # Get icell2d from 2D query (all layers have same 2D geometry)
+            cellids = self._geospatial_index.query_points(x, y, z=None)
+        else:
+            cellids = self._geospatial_index.query_points(x, y, z=None)
 
-        # Process each point
-        for i in range(n_points):
-            xi, yi = x[i], y[i]
-            found = False
+        # Vectorized processing of results
+        results = cellids.copy()
 
-            # Check each cell
-            for icell2d in range(self.ncpl):
-                xa = np.array(xv[icell2d])
-                ya = np.array(yv[icell2d])
-                # x and y at least have to be within the bounding box of the cell
-                if (
-                    np.any(xi <= xa)
-                    and np.any(xi >= xa)
-                    and np.any(yi <= ya)
-                    and np.any(yi >= ya)
-                ):
-                    path = Path(np.stack((xa, ya)).transpose())
-                    # use a small radius, so that the edge of the cell is included
-                    if is_clockwise(xa, ya):
-                        radius = -1e-9
-                    else:
-                        radius = 1e-9
-                    if path.contains_point((xi, yi), radius=radius):
-                        results[i] = icell2d
-                        found = True
-
-                        if z is not None:
-                            zi = z[i]
-                            for lay in range(self.nlay):
-                                if (
-                                    self.top_botm[lay, icell2d]
-                                    >= zi
-                                    >= self.top_botm[lay + 1, icell2d]
-                                ):
-                                    lays[i] = lay
-                                    break
-
-                        break
-
-            if not found and not forgive:
-                raise ValueError(
-                    f"point given is outside of the model area: ({xi}, {yi})"
-                )
+        # Check for unfound points if not forgiving
+        if not forgive:
+            unfound_mask = np.isnan(cellids)
+            if np.any(unfound_mask):
+                idx = np.where(unfound_mask)[0][0]
+                if z is not None:
+                    raise ValueError(
+                        f"point given is outside of the model area: "
+                        f"({x[idx]}, {y[idx]}, {z[idx]})"
+                    )
+                else:
+                    raise ValueError(
+                        f"point given is outside of the model area: "
+                        f"({x[idx]}, {y[idx]})"
+                    )
 
         # Return results
         if z is None:

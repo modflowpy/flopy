@@ -7,6 +7,7 @@ import numpy as np
 from matplotlib.path import Path
 
 from ..utils.geometry import is_clockwise, transform
+from ..utils.geospatial_index import GeospatialIndex
 from .grid import CachedData, Grid
 
 
@@ -770,60 +771,32 @@ class UnstructuredGrid(Grid):
             # transform x and y to real-world coordinates
             x, y = super().get_coords(x, y)
 
-        xv, yv, zv = self.xyzvertices
+        # Build or retrieve geospatial index for fast queries
+        if not hasattr(self, "_geospatial_index") or self._geospatial_index is None:
+            self._geospatial_index = GeospatialIndex(self)
 
-        if self.grid_varies_by_layer:
-            ncpl = self.nnodes
-        else:
-            ncpl = self.ncpl[0]
+        # Use GeospatialIndex for spatial queries
+        # For grid_varies_by_layer=True, z is required (3D query)
+        # For grid_varies_by_layer=False, z-search handled internally
+        cellids = self._geospatial_index.query_points(x, y, z=z)
 
         # Initialize result array
-        n_points = len(x)
-        results = np.full(n_points, np.nan if forgive else -1, dtype=float)
+        results = cellids.copy()
 
-        # Process each point
-        for i in range(n_points):
-            xi, yi = x[i], y[i]
-            zi = z[i] if z is not None else None
-            found = False
-
-            for icell2d in range(ncpl):
-                xa = np.array(xv[icell2d])
-                ya = np.array(yv[icell2d])
-                # x and y at least have to be within the bounding box of the cell
-                if (
-                    np.any(xi <= xa)
-                    and np.any(xi >= xa)
-                    and np.any(yi <= ya)
-                    and np.any(yi >= ya)
-                ):
-                    if is_clockwise(xa, ya):
-                        radius = -1e-9
-                    else:
-                        radius = 1e-9
-                    path = Path(np.stack((xa, ya)).transpose())
-                    # use a small radius, so that the edge of the cell is included
-                    if path.contains_point((xi, yi), radius=radius):
-                        if zi is None:
-                            results[i] = icell2d
-                            found = True
-                            break
-
-                        # Search through layers for z-coordinate
-                        cell_idx_3d = icell2d
-                        for lay in range(self.nlay):
-                            if zv[0, cell_idx_3d] >= zi >= zv[1, cell_idx_3d]:
-                                results[i] = cell_idx_3d
-                                found = True
-                                break
-                            # Move to next layer
-                            if lay < self.nlay - 1 and not self.grid_varies_by_layer:
-                                cell_idx_3d += self.ncpl[lay]
-                        if found:
-                            break
-
-            if not found and not forgive:
-                raise ValueError(f"point ({xi}, {yi}) is outside of the model area")
+        # Error checking for points not found
+        if not forgive:
+            unfound_mask = np.isnan(cellids)
+            if np.any(unfound_mask):
+                idx = np.where(unfound_mask)[0][0]
+                if z is not None:
+                    raise ValueError(
+                        f"point ({x[idx]}, {y[idx]}, {z[idx]}) is outside of "
+                        f"the model area"
+                    )
+                else:
+                    raise ValueError(
+                        f"point ({x[idx]}, {y[idx]}) is outside of the model area"
+                    )
 
         # Return scalar if input was scalar, otherwise return array
         if is_scalar_input:
