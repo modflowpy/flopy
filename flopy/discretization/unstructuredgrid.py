@@ -26,13 +26,17 @@ class UnstructuredGrid(Grid):
         size nodes, if the grid_varies_by_nodes argument is true, or it must
         be of size ncpl[0] if the same 2d spatial grid is used for each layer.
     xcenters : list or ndarray
-        list of x center coordinates for all cells in the grid if the grid
-        varies by layer or for all cells in a layer if the same grid is used
-        for all layers
+        x-coordinates of cell centers for all cells in the grid if the grid
+        varies by layer, or for all cells in a layer if the same grid is used
+        for all layers. These are typically geometric centroids but may be
+        any representative point. For convex cells (triangles, rectangles),
+        the arithmetic mean of vertices is equivalent to the true centroid.
+        For concave cells, the provided center should ideally lie inside the
+        cell boundary for optimal spatial indexing performance.
     ycenters : list or ndarray
-        list of y center coordinates for all cells in the grid if the grid
-        varies by layer or for all cells in a layer if the same grid is used
-        for all layers
+        y-coordinates of cell centers for all cells in the grid if the grid
+        varies by layer, or for all cells in a layer if the same grid is used
+        for all layers. See ``xcenters`` for details on center point placement.
     top : list or ndarray
         top elevations for all cells in the grid.
     botm : list or ndarray

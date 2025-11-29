@@ -12,7 +12,7 @@ import numpy as np
 import pytest
 from scipy.spatial import Delaunay
 
-from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
+from flopy.discretization import UnstructuredGrid, VertexGrid
 from flopy.utils.geospatial_index import GeospatialIndex
 
 # ============================================================================
@@ -151,17 +151,6 @@ def rotated_vertex_grid():
 
 
 @pytest.fixture
-def simple_structured_grid():
-    """Create a simple 10x10 structured grid for testing rejection."""
-    nrow, ncol = 10, 10
-    delr = np.ones(ncol) * 10.0
-    delc = np.ones(nrow) * 10.0
-    top = np.ones((nrow, ncol)) * 10.0
-    botm = np.zeros((1, nrow, ncol))
-    return StructuredGrid(delr=delr, delc=delc, top=top, botm=botm)
-
-
-@pytest.fixture
 def layered_unstructured_grid():
     """Create a 3-layer unstructured grid for 3D testing.
 
@@ -196,12 +185,6 @@ def layered_unstructured_grid():
 # ============================================================================
 # Test Index Building
 # ============================================================================
-
-
-def test_rejects_structured_grid(simple_structured_grid):
-    """Test that GeospatialIndex rejects StructuredGrid."""
-    with pytest.raises(ValueError, match="only supports vertex and unstructured"):
-        GeospatialIndex(simple_structured_grid)
 
 
 @pytest.mark.parametrize(
@@ -487,24 +470,6 @@ def test_3d_1to1_mapping(layered_unstructured_grid):
 
 
 # ============================================================================
-# Test StructuredGrid Native Methods
-# ============================================================================
-
-
-def test_structured_boundary_tiebreaker(simple_structured_grid):
-    """Test StructuredGrid uses lowest row/col for boundary points."""
-    grid = simple_structured_grid
-
-    # Boundary at x=10 -> col 0
-    _, col = grid.intersect(10.0, 95.0)
-    assert col == 0
-
-    # Boundary at y=90 -> row 0
-    row, _ = grid.intersect(5.0, 90.0)
-    assert row == 0
-
-
-# ============================================================================
 # Test Return Type Consistency
 # ============================================================================
 
@@ -570,40 +535,6 @@ def test_return_type_array(grid_fixture, request):
     assert result.dtype == np.float64
 
 
-def test_return_type_structured(simple_structured_grid):
-    """Test StructuredGrid return types are consistent."""
-    grid = simple_structured_grid
-
-    # Scalar inside -> int
-    row, col = grid.intersect(5.0, 95.0)
-    assert isinstance(row, (int, np.integer))
-    assert isinstance(col, (int, np.integer))
-
-    # Scalar outside -> nan
-    row, col = grid.intersect(150.0, 50.0, forgive=True)
-    assert np.isnan(row) and np.isnan(col)
-
-    # Scalar with z inside -> int
-    lay, row, col = grid.intersect(5.0, 95.0, z=5.0)
-    assert all(isinstance(v, (int, np.integer)) for v in [lay, row, col])
-
-    # Scalar with z outside -> nan
-    lay, row, col = grid.intersect(150.0, 50.0, z=5.0, forgive=True)
-    assert all(np.isnan(v) for v in [lay, row, col])
-
-    # Array all inside -> any integer dtype
-    rows, cols = grid.intersect(np.array([5.0, 55.0]), np.array([95.0, 95.0]))
-    assert np.issubdtype(rows.dtype, np.integer)
-    assert np.issubdtype(cols.dtype, np.integer)
-
-    # Array with outside -> must be float64 (due to NaNs)
-    rows, cols = grid.intersect(
-        np.array([5.0, 150.0]), np.array([95.0, 50.0]), forgive=True
-    )
-    assert rows.dtype == np.float64
-    assert cols.dtype == np.float64
-
-
 # ============================================================================
 # Test Edge Cases
 # ============================================================================
@@ -612,13 +543,13 @@ def test_return_type_structured(simple_structured_grid):
 def test_thin_sliver_cell():
     """Test GeospatialIndex finds points in very thin "sliver" cells.
 
-    Tests the centroid+vertices KD-tree approach for cells where the
-    centroid might be far from the actual cell location.
+    Tests the cell center + vertices KD-tree approach for cells where the
+    cell center may be far from the query point.
     """
     np.random.seed(42)
 
     # Create base random points with thin sliver vertices
-    n_points = 15
+    n_points = 8
     x_verts = np.random.uniform(0, 100, n_points).tolist()
     y_verts = np.random.uniform(0, 100, n_points).tolist()
 

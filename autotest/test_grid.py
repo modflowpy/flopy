@@ -1603,6 +1603,53 @@ def test_geo_dataframe(structured_grid, vertex_grid, unstructured_grid):
                     raise AssertionError(f"Cell vertices incorrect for node={node}")
 
 
+def test_structured_boundary_tiebreaker(simple_structured_grid):
+    """Test StructuredGrid uses lowest row/col for boundary points."""
+    grid = simple_structured_grid
+
+    # Boundary at x=10 -> col 0
+    _, col = grid.intersect(10.0, 95.0)
+    assert col == 0
+
+    # Boundary at y=90 -> row 0
+    row, _ = grid.intersect(5.0, 90.0)
+    assert row == 0
+
+
+def test_return_type_structured(simple_structured_grid):
+    """Test StructuredGrid return types are consistent."""
+    grid = simple_structured_grid
+
+    # Scalar inside -> int
+    row, col = grid.intersect(5.0, 95.0)
+    assert isinstance(row, (int, np.integer))
+    assert isinstance(col, (int, np.integer))
+
+    # Scalar outside -> nan
+    row, col = grid.intersect(150.0, 50.0, forgive=True)
+    assert np.isnan(row) and np.isnan(col)
+
+    # Scalar with z inside -> int
+    lay, row, col = grid.intersect(5.0, 95.0, z=5.0)
+    assert all(isinstance(v, (int, np.integer)) for v in [lay, row, col])
+
+    # Scalar with z outside -> nan
+    lay, row, col = grid.intersect(150.0, 50.0, z=5.0, forgive=True)
+    assert all(np.isnan(v) for v in [lay, row, col])
+
+    # Array all inside -> any integer dtype
+    rows, cols = grid.intersect(np.array([5.0, 55.0]), np.array([95.0, 95.0]))
+    assert np.issubdtype(rows.dtype, np.integer)
+    assert np.issubdtype(cols.dtype, np.integer)
+
+    # Array with outside -> must be float64 (due to NaNs)
+    rows, cols = grid.intersect(
+        np.array([5.0, 150.0]), np.array([95.0, 50.0]), forgive=True
+    )
+    assert rows.dtype == np.float64
+    assert cols.dtype == np.float64
+
+
 def test_unstructured_iverts_cleanup():
     grid = GridCases.structured_small()
 

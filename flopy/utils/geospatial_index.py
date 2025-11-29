@@ -1,7 +1,7 @@
 """
 Geospatial indexing for FloPy vertex and unstructured grids.
 
-Provides efficient spatial queries using KD-tree with cell centroids
+Provides efficient spatial queries using KD-tree with cell centers
 AND vertices for robust edge case handling, plus pre-computed ConvexHull
 equations for fast point-in-polygon testing.
 
@@ -17,13 +17,23 @@ class GeospatialIndex:
     """
     Geospatial index for efficient geometric queries on vertex/unstructured grids.
 
-    Uses KD-tree indexing with cell centroids + vertices to find candidate cells,
+    Uses KD-tree indexing with cell centers + vertices to find candidate cells,
     then pre-computed ConvexHull hyperplane equations for fast vectorized
     point-in-polygon testing.
 
-    The centroid+vertices approach ensures edge cases are handled:
+    The cell center + vertices approach ensures edge cases are handled:
     - Points near cell boundaries
-    - Points in thin/sliver cells where centroid is far from the cell
+    - Points in thin/sliver cells where the cell center may be far from the query
+
+    Note
+    ----
+    This index uses the grid's ``xcellcenters`` and ``ycellcenters`` properties,
+    which represent user-provided or computed cell center coordinates. These
+    are not necessarily true geometric centroids (center of mass). For convex
+    polygons like triangles and rectangles, the difference is negligible. For
+    concave or irregular cells, the cell center may fall outside the cell
+    boundary. The index handles this by also indexing all cell vertices,
+    ensuring robust spatial queries regardless of cell center placement.
 
     Note: StructuredGrid has its own optimized spatial methods and should not
     use this index.
@@ -47,7 +57,7 @@ class GeospatialIndex:
         True if index uses 3D coordinates (x,y,z), False for 2D (x,y only).
         Automatically True when grid has grid_varies_by_layer=True.
     tree : scipy.spatial.cKDTree
-        KD-tree of cell centroids + vertices for fast spatial queries.
+        KD-tree of cell centers + vertices for fast spatial queries.
         Uses 2D (x,y) or 3D (x,y,z) depending on is_3d.
     point_to_cell : ndarray
         Mapping from KD-tree point index to cell index

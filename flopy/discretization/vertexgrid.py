@@ -16,9 +16,16 @@ class VertexGrid(Grid):
     Parameters
     ----------
     vertices
-        list of vertices that make up the grid
+        list of vertices that make up the grid. Each vertex is
+        [iv, xv, yv] where iv is the vertex number.
     cell2d
-        list of cells and their vertices
+        list of cells and their vertices. Each cell is
+        [icell2d, xc, yc, ncvert, icvert1, icvert2, ...] where xc, yc are
+        cell center coordinates. These are typically geometric centroids but
+        may be any representative point inside the cell. For convex cells
+        (triangles, rectangles), the arithmetic mean of vertices equals the
+        true centroid. For concave cells, the center should ideally lie
+        inside the cell boundary for optimal spatial indexing performance.
     top : list or ndarray
         top elevations for all cells in the grid.
     botm : list or ndarray
