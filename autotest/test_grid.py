@@ -26,6 +26,7 @@ from flopy.utils.cvfdutil import (
     gridlist_to_disv_gridprops,
     to_cvfd,
 )
+from flopy.utils.geospatial_index import GeospatialIndex
 from flopy.utils.triangle import Triangle
 from flopy.utils.voronoi import VoronoiGrid
 
@@ -1702,3 +1703,110 @@ def test_unstructured_iverts_cleanup():
 
     if clean_ugrid.nvert != cleaned_vert_num:
         raise AssertionError("Improper number of vertices for cleaned 'shared' iverts")
+
+
+# ============================================================================
+# GeospatialIndex-specific Tests
+# ============================================================================
+
+
+@pytest.mark.parametrize(
+    "grid_fixture,grid_type,expected_cells,expected_points_per_cell",
+    [
+        ("minimal_vertex_grid", "vertex", 2, 5),
+        ("minimal_unstructured_grid", "unstructured", 2, 5),
+        ("simple_vertex_grid", "vertex", 100, 5),
+    ],
+)
+def test_index_build(
+    grid_fixture, grid_type, expected_cells, expected_points_per_cell, request
+):
+    """Test building GeospatialIndex for different grid types."""
+    grid = request.getfixturevalue(grid_fixture)
+    index = GeospatialIndex(grid)
+
+    assert index.grid.grid_type == grid_type
+    assert index.grid is grid
+    assert index.tree is not None
+    assert index.points.shape[0] == expected_cells * expected_points_per_cell
+    assert len(np.unique(index.point_to_cell)) == expected_cells
+
+
+def test_index_repr(simple_vertex_grid):
+    """Test string representation of GeospatialIndex."""
+    index = GeospatialIndex(simple_vertex_grid)
+    repr_str = repr(index)
+
+    assert "GeospatialIndex" in repr_str
+    assert "vertex grid" in repr_str
+    assert "100 cells" in repr_str
+    assert "500 indexed points" in repr_str
+
+
+@pytest.mark.parametrize("k", [1, 5, 10, 20])
+def test_index_k_parameter(simple_vertex_grid, k):
+    """Test that different k values still find correct cell."""
+    index = GeospatialIndex(simple_vertex_grid)
+
+    assert index.query_point(5.0, 95.0, k=k) == 0
+
+    cellids = index.query_points(
+        np.array([5.0, 55.0, 95.0]),
+        np.array([95.0, 95.0, 5.0]),
+        k=k,
+    )
+    np.testing.assert_array_equal(cellids, [0, 5, 99])
+
+
+def test_index_thin_sliver_cell():
+    """Test GeospatialIndex finds points in very thin "sliver" cells.
+
+    Tests the cell center + vertices KD-tree approach for cells where the
+    cell center may be far from the query point.
+    """
+    from matplotlib.path import Path
+
+    np.random.seed(42)
+
+    # Create base random points with thin sliver vertices
+    n_points = 8
+    x_verts = np.random.uniform(0, 100, n_points).tolist()
+    y_verts = np.random.uniform(0, 100, n_points).tolist()
+
+    for i in range(4):
+        x_verts.append(50.0 + i * 0.05)  # Very thin: 0.15 units wide
+        y_verts.append(i * 33.33)  # Tall: 100 units high
+
+    points = np.column_stack([x_verts, y_verts])
+    tri = Delaunay(points)
+
+    vertices = [[i, x_verts[i], y_verts[i]] for i in range(len(x_verts))]
+    cell2d = []
+    for i, simplex in enumerate(tri.simplices):
+        cell_x = np.mean([x_verts[j] for j in simplex])
+        cell_y = np.mean([y_verts[j] for j in simplex])
+        cell2d.append([i, cell_x, cell_y, len(simplex)] + list(simplex))
+
+    ncells = len(cell2d)
+    grid = VertexGrid(
+        vertices=vertices,
+        cell2d=cell2d,
+        top=np.ones(ncells) * 10.0,
+        botm=np.zeros(ncells),
+    )
+
+    index = GeospatialIndex(grid)
+
+    # Test points in sliver region
+    test_points = [(50.025, 50.0), (50.075, 25.0), (50.025, 75.0)]
+    found_count = 0
+
+    for x, y in test_points:
+        result = index.query_point(x, y, k=20)
+        if not np.isnan(result):
+            xv, yv, _ = grid.xyzvertices
+            verts = np.column_stack([xv[result], yv[result]])
+            if Path(verts).contains_point((x, y), radius=1e-9):
+                found_count += 1
+
+    assert found_count > 0, f"Should find points in sliver cells, found {found_count}/3"

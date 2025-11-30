@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import pytest
 from modflow_devtools.misc import is_in_ci
 
+from autotest.test_grid_cases import GridCases
+
 # import modflow-devtools fixtures
 
 pytest_plugins = ["modflow_devtools.fixtures", "modflow_devtools.snapshots"]
@@ -77,6 +79,51 @@ def patch_macos_ci_matplotlib():
         import matplotlib
 
         matplotlib.use("agg")
+
+
+# grid fixtures (from GridCases)
+
+
+@pytest.fixture
+def minimal_vertex_grid():
+    """Minimal 2-cell vertex grid."""
+    return GridCases.vertex_minimal()
+
+
+@pytest.fixture
+def minimal_unstructured_grid():
+    """Minimal 2-cell unstructured grid."""
+    return GridCases.unstructured_minimal()
+
+
+@pytest.fixture
+def triangular_vertex_grid():
+    """Triangular vertex grid using Delaunay triangulation."""
+    return GridCases.vertex_triangular()
+
+
+@pytest.fixture
+def triangular_unstructured_grid():
+    """Triangular unstructured grid using Delaunay triangulation."""
+    return GridCases.unstructured_triangular()
+
+
+@pytest.fixture
+def simple_vertex_grid():
+    """10x10 rectangular vertex grid (100 cells, 10x10 each)."""
+    return GridCases.vertex_rectangular(nrow=10, ncol=10, cell_size=10.0)
+
+
+@pytest.fixture
+def rotated_vertex_grid():
+    """Rotated 5x5 rectangular vertex grid."""
+    return GridCases.vertex_rectangular(nrow=5, ncol=5, cell_size=20.0, angrot=45.0)
+
+
+@pytest.fixture
+def layered_unstructured_grid():
+    """3-layer unstructured grid for 3D testing."""
+    return GridCases.unstructured_layered()
 
 
 # pytest configuration hooks
