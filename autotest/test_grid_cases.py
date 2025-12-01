@@ -527,16 +527,18 @@ class GridCases:
         Grid has 2 cells per layer, 3 layers total = 6 cells.
         Cell IDs: 0-1 (layer 0), 2-3 (layer 1), 4-5 (layer 2).
         Z elevations: layer 0 (10-7), layer 1 (7-4), layer 2 (4-1).
+
+        Uses 2D indexing with layer search (grid_varies_by_layer=False).
         """
         vertices, base_iverts, base_xc, base_yc = GridCases._minimal_geometry()
 
         nlay = 3
         ncpl = 2
 
-        # Repeat geometry for each layer
-        iverts = base_iverts * nlay
-        xcenters = list(base_xc) * nlay
-        ycenters = list(base_yc) * nlay
+        # Only provide iverts for first layer (grid_varies_by_layer=False)
+        iverts = base_iverts
+        xcenters = list(base_xc)
+        ycenters = list(base_yc)
 
         top = np.array([10.0, 10.0, 7.0, 7.0, 4.0, 4.0])
         botm = np.array([7.0, 7.0, 4.0, 4.0, 1.0, 1.0])

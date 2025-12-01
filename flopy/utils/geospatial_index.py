@@ -97,11 +97,12 @@ class GeospatialIndex:
         self.grid = grid
         self.epsilon = epsilon
 
-        # Determine if we need 3D indexing
-        # Use 3D when grid geometry varies by layer (different cells per layer)
-        self.is_3d = hasattr(grid, "grid_varies_by_layer") and grid.grid_varies_by_layer
-
         self._build_index()
+
+    @property
+    def is_3d(self):
+        """True if grid geometry varies by layer (requires 3D indexing)."""
+        return getattr(self.grid, "grid_varies_by_layer", False)
 
     def _build_index(self):
         """
@@ -192,30 +193,55 @@ class GeospatialIndex:
         original_copy_cache = getattr(self.grid, "_copy_cache", True)
         self.grid._copy_cache = False
 
-        xc = self.grid.xcellcenters
-        yc = self.grid.ycellcenters
+        xc = np.asarray(self.grid.xcellcenters)
+        yc = np.asarray(self.grid.ycellcenters)
         xv, yv, zv = self.grid.xyzvertices
 
         # Get z-coordinates for cell centroids (use mid-point of top/bottom)
         zc = (zv[0] + zv[1]) / 2.0
 
-        for cellid in range(self.ncells):
-            # Add centroid with z-coordinate
-            points.append([xc[cellid], yc[cellid], zc[cellid]])
-            point_to_cell.append(cellid)
+        # For multi-layer unstructured grids, xc/yc may be per-layer (ncpl values)
+        # while we iterate over all nnodes. Build mapping from node to layer-local cell.
+        ncpl = getattr(self.grid, "ncpl", None)
+        if ncpl is not None and not np.isscalar(ncpl):
+            ncpl = np.atleast_1d(ncpl)
+            xc_is_per_layer = len(xc) < self.ncells
+        else:
+            xc_is_per_layer = False
 
-            # Add cell vertices with z-coordinates
+        # Build xc_idx mapping vectorized
+        cellids = np.arange(self.ncells)
+        if xc_is_per_layer:
+            cumulative_ncpl = np.concatenate([[0], np.cumsum(ncpl[:-1])])
+            layers = np.searchsorted(np.cumsum(ncpl), cellids, side="right")
+            xc_idx = cellids - cumulative_ncpl[layers]
+        else:
+            xc_idx = cellids
+
+        # Add centroids
+        centroids = np.column_stack([xc[xc_idx], yc[xc_idx], zc])
+        centroid_cells = cellids
+
+        # Add vertices - must loop due to variable vertex count per cell
+        vertex_points = []
+        vertex_cells = []
+        zc_mid = (zv[0] + zv[1]) / 2.0
+        for cellid in range(self.ncells):
             cell_xv = np.atleast_1d(xv[cellid])
             cell_yv = np.atleast_1d(yv[cellid])
-            # Use top z for vertices (could also use bottom or average)
-            cell_zv_top = zv[0, cellid]
-            cell_zv_bot = zv[1, cellid]
-            cell_zv_mid = (cell_zv_top + cell_zv_bot) / 2.0
+            cell_z = zc_mid[cellid]
+            n_verts = len(cell_xv)
+            vertex_points.append(
+                np.column_stack([cell_xv, cell_yv, np.full(n_verts, cell_z)])
+            )
+            vertex_cells.append(np.full(n_verts, cellid, dtype=int))
 
-            for vi in range(len(cell_xv)):
-                # Add vertex at mid-z (compromise between top and bottom)
-                points.append([cell_xv[vi], cell_yv[vi], cell_zv_mid])
-                point_to_cell.append(cellid)
+        # Combine centroids and vertices
+        all_points = np.vstack([centroids] + vertex_points)
+        all_cells = np.concatenate([centroid_cells] + vertex_cells)
+
+        points.extend(all_points.tolist())
+        point_to_cell.extend(all_cells.tolist())
 
         # Restore copy cache setting
         self.grid._copy_cache = original_copy_cache
