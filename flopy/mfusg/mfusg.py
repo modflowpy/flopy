@@ -535,7 +535,7 @@ class MfUsg(Modflow):
                     print(f"      {os.path.basename(fname)}")
 
 
-def fmt_string(array):
+def fmt_string(array, free=False):
     """
     Returns a C-style fmt string for numpy savetxt that corresponds to
     the dtype.
@@ -543,14 +543,21 @@ def fmt_string(array):
     Parameters
     ----------
     array : numpy array
+    free : bool, optional
+        If True, use high-precision format (%16.9G) for floats which requires
+        FREE format in the BAS file. If False (default), use fixed 10-character
+        format (%10.2e) compatible with MODFLOW-USG's fixed-width input format.
     """
     fmts = []
+    # When FREE format is enabled in BAS, we can use high-precision output.
+    # Without FREE, MODFLOW-USG expects 10-character fixed-width fields.
+    float_fmt = "%16.9G" if free else "%10.2e"
     for field in array.dtype.descr:
         vtype = field[1][1].lower()
         if vtype in {"i", "b"}:
             fmts.append("%10d")
         elif vtype == "f":
-            fmts.append("%16.9G")
+            fmts.append(float_fmt)
         elif vtype == "o":
             fmts.append("%10s")
         elif vtype == "s":
