@@ -720,13 +720,21 @@ def test_cellbudgetfile_get_ts_aux_vars_mf6_readme_example(function_tmpdir):
     sim.write_simulation(silent=True)
     sim.run_simulation(silent=True)
 
-    hds = gwf.output.head().get_data()
+    hds = gwf.output.head()
     cbc = gwf.output.budget()
 
     cellid = (0, 5, 5)
-
-    head = hds.get_ts(idx=cellid)
-    spdis = cbc.get_ts(idx=cellid, text="DATA-SPDIS")
+    assert (
+        hds.get_ts(idx=cellid)[0][1] == hds.get_data()[cellid[0], cellid[1], cellid[2]]
+    )
+    assert (
+        cbc.get_ts(idx=cellid, text="DATA-SPDIS", variable="qx")[0][1]
+        == cbc.get_data(text="DATA-SPDIS")[0][gwf.modelgrid.get_node([cellid])[0]]["qx"]
+    )
+    cellid = (0, 0, 0)
+    assert (
+        cbc.get_ts(idx=cellid, text="CHD")[0][1] == cbc.get_data(text="CHD")[0][0]["q"]
+    )
 
 
 @pytest.fixture
@@ -785,27 +793,18 @@ def test_cellbudgetfile_get_ts_aux_vars_mf6_dis(dis_sim):
     gwf = sim.get_model()
     cbc = gwf.output.budget()
 
-    cellid = (0, 2, 2)
-    nn = gwf.modelgrid.get_node(cellid)[0]
-
     text = "DATA-SPDIS"
     spdis = cbc.get_data(text=text)
     for field in ["node", "q", "qx", "qy", "qz"]:
         assert field in spdis[0].dtype.names
 
-    text = "CHD"
-    chd = cbc.get_data(text=text)
-    for field in ["node", "node2", "q"]:
-        assert field in chd[0].dtype.names
+    cellid = (0, 2, 2)
+    nn = gwf.modelgrid.get_node(cellid)[0]
 
     spdis_q = cbc.get_ts(idx=cellid, text=text, variable="q")
     spdis_qx = cbc.get_ts(idx=cellid, text=text, variable="qx")
     spdis_qy = cbc.get_ts(idx=cellid, text=text, variable="qy")
     spdis_qz = cbc.get_ts(idx=cellid, text=text, variable="qz")
-
-    chd_q = cbc.get_ts(
-        idx=cellid,
-    )
 
     assert spdis_q.shape == spdis_qx.shape == spdis_qy.shape == spdis_qz.shape
     assert spdis_q.shape[1] == 2  # time + 1 data column
@@ -823,24 +822,42 @@ def test_cellbudgetfile_get_ts_aux_vars_mf6_dis(dis_sim):
         assert np.allclose(
             spdis_q[i, 1],
             rec["q"][mask][0],
-        ), f"get_ts() q value doesn't match get_data() at time {i}"
+        ), f"get_ts() SPDIS q value doesn't match get_data() at time {i}"
         assert np.allclose(
             spdis_qx[i, 1],
             rec["qx"][mask][0],
-        ), f"get_ts() qx value doesn't match get_data() at time {i}"
+        ), f"get_ts() SPDIS qx value doesn't match get_data() at time {i}"
         assert np.allclose(
             spdis_qy[i, 1],
             rec["qy"][mask][0],
-        ), f"get_ts() qy value doesn't match get_data() at time {i}"
+        ), f"get_ts() SPDIS qy value doesn't match get_data() at time {i}"
         assert np.allclose(
             spdis_qz[i, 1],
             rec["qz"][mask][0],
-        ), f"get_ts() qz value doesn't match get_data() at time {i}"
+        ), f"get_ts() SPDIS qz value doesn't match get_data() at time {i}"
 
     assert not np.allclose(spdis_qx[:, 1], 0.0), "qx should have non-zero flow"
     assert not np.allclose(spdis_qy[:, 1], 0.0), "qy should have non-zero flow"
     assert np.allclose(spdis_q[:, 1], 0.0), "q should be zero for internal cells"
     assert np.allclose(spdis_qz[:, 1], 0.0), "qz should be zero for single layer"
+
+    text = "CHD"
+    chd = cbc.get_data(text=text)
+    for field in ["node", "node2", "q"]:
+        assert field in chd[0].dtype.names
+
+    cellid = (0, 0, 0)
+    nn = gwf.modelgrid.get_node(cellid)[0]
+
+    chd_q = cbc.get_ts(idx=cellid, text=text)
+
+    # check get_ts() values match get_data() for each time step
+    for i, rec in enumerate(chd):
+        mask = rec["node"] == nn + 1  # 1-based
+        assert np.allclose(
+            chd_q[i, 1],
+            rec["q"][mask][0],
+        ), f"get_ts() CHD q value doesn't match get_data() at time {i}"
 
 
 @pytest.mark.requires_exe("mf6")

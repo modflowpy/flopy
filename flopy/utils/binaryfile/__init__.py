@@ -1978,7 +1978,7 @@ class CellBudgetFile:
             List contains unique simulation times (totim) in binary file.
 
         """
-        out = np.ma.zeros(self.nnodes, dtype=np.float32)
+        out = np.ma.zeros(self.nnodes, dtype=data["q"].dtype)
         out.mask = True
         for [node, q] in zip(data["node"], data["q"]):
             idx = node - 1
