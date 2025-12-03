@@ -1747,7 +1747,7 @@ class CellBudgetFile:
         cellid = []
         for item in idx_list:
             if grid_type == "structured":
-                if not isinstance(item, tuple) or len(item) != 3:
+                if not isinstance(item, (list, tuple)) or len(item) != 3:
                     raise ValueError(
                         f"Expected DIS cell index (layer, row, col), got: {item}"
                     )
@@ -1760,7 +1760,7 @@ class CellBudgetFile:
                     raise ValueError(f"Column index {j} out of range [0, {self.ncol})")
                 cellid.append((k, i, j))
             elif grid_type == "vertex":
-                if not isinstance(item, tuple) or len(item) != 2:
+                if not isinstance(item, (list, tuple)) or len(item) != 2:
                     raise ValueError(
                         f"Expected DISV cell index (layer, cellid), got: {item}"
                     )

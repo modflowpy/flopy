@@ -700,32 +700,33 @@ def test_cellbudgetfile_get_ts_aux_vars_mf6_readme_example(function_tmpdir):
         ModflowTdis,
     )
 
-    name = 'mymodel'
-    sim = MFSimulation(sim_name=name, sim_ws=function_tmpdir, exe_name='mf6')
+    name = "mymodel"
+    sim = MFSimulation(sim_name=name, sim_ws=function_tmpdir, exe_name="mf6")
     tdis = ModflowTdis(sim)
     ims = ModflowIms(sim)
     gwf = ModflowGwf(sim, modelname=name, save_flows=True)
     dis = ModflowGwfdis(gwf, nrow=10, ncol=10)
     ic = ModflowGwfic(gwf)
     npf = ModflowGwfnpf(gwf, save_specific_discharge=True)
-    chd = ModflowGwfchd(gwf, stress_period_data=[[(0, 0, 0), 1.],
-                                                        [(0, 9, 9), 0.]])
-    budget_file = name + '.bud'
-    head_file = name + '.hds'
-    oc = ModflowGwfoc(gwf,
-                            budget_filerecord=budget_file,
-                            head_filerecord=head_file,
-                            saverecord=[('HEAD', 'ALL'), ('BUDGET', 'ALL')])
+    chd = ModflowGwfchd(gwf, stress_period_data=[[(0, 0, 0), 1.0], [(0, 9, 9), 0.0]])
+    budget_file = name + ".bud"
+    head_file = name + ".hds"
+    oc = ModflowGwfoc(
+        gwf,
+        budget_filerecord=budget_file,
+        head_filerecord=head_file,
+        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    )
     sim.write_simulation(silent=True)
     sim.run_simulation(silent=True)
 
     hds = gwf.output.head().get_data()
     cbc = gwf.output.budget()
 
-    cellid = (0,5,5)
+    cellid = (0, 5, 5)
 
     head = hds.get_ts(idx=cellid)
-    spdis = cbc.get_ts(idx=cellid, text='DATA-SPDIS')
+    spdis = cbc.get_ts(idx=cellid, text="DATA-SPDIS")
 
 
 @pytest.fixture
@@ -802,7 +803,9 @@ def test_cellbudgetfile_get_ts_aux_vars_mf6_dis(dis_sim):
     spdis_qy = cbc.get_ts(idx=cellid, text=text, variable="qy")
     spdis_qz = cbc.get_ts(idx=cellid, text=text, variable="qz")
 
-    chd_q = cbc.get_ts(idx=cellid, )
+    chd_q = cbc.get_ts(
+        idx=cellid,
+    )
 
     assert spdis_q.shape == spdis_qx.shape == spdis_qy.shape == spdis_qz.shape
     assert spdis_q.shape[1] == 2  # time + 1 data column

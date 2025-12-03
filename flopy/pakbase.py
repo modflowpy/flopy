@@ -515,7 +515,7 @@ class Package(PackageInterface):
             # Oc88 but is not a MfList
             spd = getattr(self, "stress_period_data")
             if isinstance(item, MfList):
-                if not isinstance(item, list) and not isinstance(item, tuple):
+                if not isinstance(item, (list, tuple)):
                     msg = f"package.__getitem__() kper {item} not in data.keys()"
                     assert item in list(spd.data.keys()), msg
                     return spd[item]
