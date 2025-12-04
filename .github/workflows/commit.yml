@@ -83,8 +83,7 @@ jobs:
           cache-dependency-glob: "**/pyproject.toml"
 
       - name: Install Python dependencies
-        # temp. allow prereleases for vtk on aarch64
-        run: uv sync --all-extras --prerelease=allow
+        run: uv sync --all-extras
 
       - name: Install Modflow executables
         uses: modflowpy/install-modflow-action@v1
