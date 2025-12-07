@@ -5,7 +5,6 @@ import numpy as np
 from matplotlib.path import Path
 
 from ..utils.geometry import is_clockwise, transform
-from ..utils.geospatial_index import GeospatialIndex
 from .grid import CachedData, Grid
 
 
@@ -351,119 +350,6 @@ class VertexGrid(Grid):
             )
         else:
             raise AssertionError("Grid is not complete and cannot be converted")
-
-    def intersect(self, x, y, z=None, local=False, forgive=False):
-        """
-        Get the CELL2D number of a point with coordinates x and y
-
-        When the point is on the edge of two cells, the cell with the lowest
-        CELL2D number is returned.
-
-        Supports both scalar and array inputs for vectorized operations.
-
-        Parameters
-        ----------
-        x : float or array-like
-            The x-coordinate(s) of the requested point(s)
-        y : float or array-like
-            The y-coordinate(s) of the requested point(s)
-        z : float, array-like, or None
-            optional, z-coordinate(s) of the requested point(s) will return
-            (lay, icell2d)
-        local: bool (optional)
-            If True, x and y are in local coordinates (defaults to False)
-        forgive: bool (optional)
-            Forgive x,y arguments that fall outside the model grid and
-            return NaNs instead (defaults to False - will throw exception)
-
-        Returns
-        -------
-        icell2d : int or ndarray
-            The CELL2D number(s). Returns int for scalar input,
-            ndarray for array input.
-        lay : int or ndarray (only if z is provided)
-            The layer number(s). Returns int for scalar input,
-            ndarray for array input.
-
-        """
-        # Check if inputs are scalar
-        x_is_scalar = np.isscalar(x)
-        y_is_scalar = np.isscalar(y)
-        z_is_scalar = z is None or np.isscalar(z)
-        is_scalar_input = x_is_scalar and y_is_scalar and z_is_scalar
-
-        # Convert to arrays for uniform processing
-        x = np.atleast_1d(x)
-        y = np.atleast_1d(y)
-        if z is not None:
-            z = np.atleast_1d(z)
-
-        # Validate array shapes
-        if len(x) != len(y):
-            raise ValueError("x and y must have the same length")
-        if z is not None and len(z) != len(x):
-            raise ValueError("z must have the same length as x and y")
-
-        if local:
-            # transform x and y to real-world coordinates
-            x, y = super().get_coords(x, y)
-
-        # Build or retrieve geospatial index for fast queries
-        if not hasattr(self, "_geospatial_index") or self._geospatial_index is None:
-            self._geospatial_index = GeospatialIndex(self)
-
-        # Use GeospatialIndex for spatial queries
-        # For VertexGrid, z-search is handled internally by GeospatialIndex
-        # which returns layer index
-        if z is not None:
-            lays_raw = self._geospatial_index.query_points(x, y, z=z)
-            # GeospatialIndex returns layer index for VertexGrid
-            lays = lays_raw.copy()
-            # Get icell2d from 2D query (all layers have same 2D geometry)
-            cellids = self._geospatial_index.query_points(x, y, z=None)
-        else:
-            cellids = self._geospatial_index.query_points(x, y, z=None)
-
-        # Vectorized processing of results
-        results = cellids.copy()
-
-        # Check for unfound points if not forgiving
-        if not forgive:
-            unfound_mask = np.isnan(cellids)
-            if np.any(unfound_mask):
-                idx = np.where(unfound_mask)[0][0]
-                if z is not None:
-                    raise ValueError(
-                        f"point given is outside of the model area: "
-                        f"({x[idx]}, {y[idx]}, {z[idx]})"
-                    )
-                else:
-                    raise ValueError(
-                        f"point given is outside of the model area: "
-                        f"({x[idx]}, {y[idx]})"
-                    )
-
-        # Return results
-        if z is None:
-            if is_scalar_input:
-                result = results[0]
-                return int(result) if not np.isnan(result) else np.nan
-            else:
-                valid_mask = ~np.isnan(results)
-                return results.astype(int) if np.all(valid_mask) else results
-        else:
-            if is_scalar_input:
-                lay, icell2d = lays[0], results[0]
-                if not np.isnan(lay) and not np.isnan(icell2d):
-                    return int(lay), int(icell2d)
-                else:
-                    return np.nan, np.nan
-            else:
-                valid_mask = ~np.isnan(lays) & ~np.isnan(results)
-                return (
-                    lays.astype(int) if np.all(valid_mask) else lays,
-                    results.astype(int) if np.all(valid_mask) else results,
-                )
 
     def get_cell_vertices(self, cellid):
         """

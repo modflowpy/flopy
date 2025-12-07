@@ -993,11 +993,58 @@ class Grid:
 
         return x, y
 
-    def intersect(self, x, y, local=False, forgive=False):
-        if not local:
-            return self.get_local_coords(x, y)
-        else:
-            return x, y
+    def intersect(self, x, y, z=None, local=False, forgive=False):
+        """
+        Get the cell(s) containing the given point(s).
+
+        Uses GeospatialIndex for efficient spatial queries, with optimal
+        algorithms for each grid type:
+        - StructuredGrid: searchsorted (O(log n))
+        - VertexGrid/UnstructuredGrid: KD-tree + ConvexHull
+
+        When the point is on the edge of two cells, the cell with the lowest
+        index is returned.
+
+        Supports both scalar and array inputs for vectorized operations.
+
+        Parameters
+        ----------
+        x : float or array-like
+            The x-coordinate(s) of the query point(s)
+        y : float or array-like
+            The y-coordinate(s) of the query point(s)
+        z : float, array-like, or None
+            Optional z-coordinate(s). If provided, returns layer information.
+        local : bool, optional
+            If True, x and y are in local coordinates (default False)
+        forgive : bool, optional
+            If True, return NaN for points outside the grid instead of
+            raising an error (default False)
+
+        Returns
+        -------
+        For StructuredGrid:
+            row, col : int or ndarray
+                Row and column indices. If z is provided, returns (lay, row, col).
+        For VertexGrid:
+            cellid : int or ndarray
+                Cell index (icell2d). If z is provided, returns (lay, cellid).
+        For UnstructuredGrid:
+            cellid : int or ndarray
+                Cell index.
+
+        Raises
+        ------
+        ValueError
+            If point is outside grid and forgive=False
+        """
+        from ..utils.geospatial_index import GeospatialIndex
+
+        # Lazily create geospatial index
+        if not hasattr(self, "_geospatial_index") or self._geospatial_index is None:
+            self._geospatial_index = GeospatialIndex(self)
+
+        return self._geospatial_index.intersect(x, y, z=z, local=local, forgive=forgive)
 
     def set_coord_info(
         self,

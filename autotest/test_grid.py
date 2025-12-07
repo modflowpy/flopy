@@ -1758,34 +1758,95 @@ def test_index_k_parameter(simple_vertex_grid, k):
     np.testing.assert_array_equal(cellids, [0, 5, 99])
 
 
-def test_index_thin_sliver_cell():
-    """Test GeospatialIndex finds points in very thin "sliver" cells.
+@pytest.fixture
+def sliver_grid_geometry():
+    """Shared geometry for sliver cell tests.
 
-    Tests the cell center + vertices KD-tree approach for cells where the
-    cell center may be far from the query point.
+    Creates a 1000:1 aspect ratio sliver cell (100 units wide, 0.1 units tall)
+    completely surrounded by larger cells on all four sides. This is the
+    worst-case scenario for centroid-based spatial indexing because query
+    points near the sliver edges are much closer to neighboring cell centroids.
+
+    Returns dict with vertices, iverts, xcenters, ycenters for 5 cells:
+        Cell 0: SLIVER (x: 0-100, y: 0-0.1)
+        Cell 1: TOP (above sliver)
+        Cell 2: BOTTOM (below sliver)
+        Cell 3: LEFT (left of sliver)
+        Cell 4: RIGHT (right of sliver)
     """
-    from matplotlib.path import Path
+    sliver_height = 0.1
+    sliver_yc = sliver_height / 2
+    top_yc = (sliver_height + 10.0) / 2
 
-    np.random.seed(42)
+    # Base x,y coordinates for vertices (no vertex IDs yet)
+    base_vertices = [
+        # Cell 0: SLIVER
+        (0.0, 0.0),
+        (100.0, 0.0),
+        (100.0, sliver_height),
+        (0.0, sliver_height),
+        # Cell 1: TOP
+        (0.0, sliver_height),
+        (100.0, sliver_height),
+        (100.0, 10.0),
+        (0.0, 10.0),
+        # Cell 2: BOTTOM
+        (0.0, -10.0),
+        (100.0, -10.0),
+        (100.0, 0.0),
+        (0.0, 0.0),
+        # Cell 3: LEFT
+        (-10.0, -10.0),
+        (0.0, -10.0),
+        (0.0, 10.0),
+        (-10.0, 10.0),
+        # Cell 4: RIGHT
+        (100.0, -10.0),
+        (110.0, -10.0),
+        (110.0, 10.0),
+        (100.0, 10.0),
+    ]
 
-    # Create base random points with thin sliver vertices
-    n_points = 8
-    x_verts = np.random.uniform(0, 100, n_points).tolist()
-    y_verts = np.random.uniform(0, 100, n_points).tolist()
+    base_iverts = [
+        [0, 1, 2, 3],
+        [4, 5, 6, 7],
+        [8, 9, 10, 11],
+        [12, 13, 14, 15],
+        [16, 17, 18, 19],
+    ]
 
-    for i in range(4):
-        x_verts.append(50.0 + i * 0.05)  # Very thin: 0.15 units wide
-        y_verts.append(i * 33.33)  # Tall: 100 units high
+    xcenters = [50.0, 50.0, 50.0, -5.0, 105.0]
+    ycenters = [sliver_yc, top_yc, -5.0, 0.0, 0.0]
 
-    points = np.column_stack([x_verts, y_verts])
-    tri = Delaunay(points)
+    return {
+        "base_vertices": base_vertices,
+        "base_iverts": base_iverts,
+        "xcenters": xcenters,
+        "ycenters": ycenters,
+        "sliver_height": sliver_height,
+    }
 
-    vertices = [[i, x_verts[i], y_verts[i]] for i in range(len(x_verts))]
+
+def test_index_thin_sliver_cell(sliver_grid_geometry):
+    """Test GeospatialIndex finds points in very thin sliver cells (2D).
+
+    Query point at (95, 0.05) inside the sliver:
+    - Distance to sliver centroid (50, 0.05): 45 units
+    - Distance to RIGHT cell centroid (105, 0): ~10 units  <- MUCH CLOSER!
+
+    A centroid-only KD-tree would return the wrong cell.
+    """
+    geom = sliver_grid_geometry
+
+    # Build VertexGrid vertices with IDs
+    vertices = [[i, x, y] for i, (x, y) in enumerate(geom["base_vertices"])]
+
+    # Build cell2d from geometry
     cell2d = []
-    for i, simplex in enumerate(tri.simplices):
-        cell_x = np.mean([x_verts[j] for j in simplex])
-        cell_y = np.mean([y_verts[j] for j in simplex])
-        cell2d.append([i, cell_x, cell_y, len(simplex)] + list(simplex))
+    for cid, iverts in enumerate(geom["base_iverts"]):
+        xc = geom["xcenters"][cid]
+        yc = geom["ycenters"][cid]
+        cell2d.append([cid, xc, yc, len(iverts)] + iverts)
 
     ncells = len(cell2d)
     grid = VertexGrid(
@@ -1797,16 +1858,83 @@ def test_index_thin_sliver_cell():
 
     index = GeospatialIndex(grid)
 
-    # Test points in sliver region
-    test_points = [(50.025, 50.0), (50.075, 25.0), (50.025, 75.0)]
-    found_count = 0
+    # Test sliver cell detection at edges (where neighboring centroids are closer)
+    assert index.query_point(95.0, 0.05, k=10) == 0, "Right edge of sliver"
+    assert index.query_point(5.0, 0.05, k=10) == 0, "Left edge of sliver"
+    assert index.query_point(50.0, 0.05, k=10) == 0, "Center of sliver"
 
-    for x, y in test_points:
-        result = index.query_point(x, y, k=20)
-        if not np.isnan(result):
-            xv, yv, _ = grid.xyzvertices
-            verts = np.column_stack([xv[result], yv[result]])
-            if Path(verts).contains_point((x, y), radius=1e-9):
-                found_count += 1
+    # Sanity check surrounding cells
+    assert index.query_point(50.0, 5.0, k=10) == 1, "Top cell"
+    assert index.query_point(50.0, -5.0, k=10) == 2, "Bottom cell"
+    assert index.query_point(-5.0, 0.0, k=10) == 3, "Left cell"
+    assert index.query_point(105.0, 0.0, k=10) == 4, "Right cell"
 
-    assert found_count > 0, f"Should find points in sliver cells, found {found_count}/3"
+
+def test_index_thin_sliver_cell_3d(sliver_grid_geometry):
+    """Test GeospatialIndex finds thin sliver cells in true 3D grids.
+
+    Uses UnstructuredGrid with grid_varies_by_layer=True to test the 3D
+    KD-tree and 3D bounding box lookup with the same x-y sliver geometry.
+    """
+    geom = sliver_grid_geometry
+    nlay = 3
+    ncells_per_layer = len(geom["base_iverts"])
+    nverts_per_layer = len(geom["base_vertices"])
+
+    # Replicate geometry across layers for grid_varies_by_layer=True
+    vertices = []
+    iverts = []
+    xcenters = []
+    ycenters = []
+
+    for lay in range(nlay):
+        vert_offset = lay * nverts_per_layer
+        for i, (x, y) in enumerate(geom["base_vertices"]):
+            vertices.append([vert_offset + i, x, y])
+        for cell_iverts in geom["base_iverts"]:
+            iverts.append([v + vert_offset for v in cell_iverts])
+        xcenters.extend(geom["xcenters"])
+        ycenters.extend(geom["ycenters"])
+
+    ncpl = np.array([ncells_per_layer] * nlay)
+    nnodes = np.sum(ncpl)
+
+    # Set up layer elevations
+    top = np.zeros(nnodes)
+    botm = np.zeros(nnodes)
+    layer_tops = [100.0, 66.67, 33.33]
+    layer_bots = [66.67, 33.33, 0.0]
+
+    for lay in range(nlay):
+        start = lay * ncells_per_layer
+        end = start + ncells_per_layer
+        top[start:end] = layer_tops[lay]
+        botm[start:end] = layer_bots[lay]
+
+    grid = UnstructuredGrid(
+        vertices=vertices,
+        iverts=iverts,
+        xcenters=xcenters,
+        ycenters=ycenters,
+        ncpl=ncpl,
+        top=top,
+        botm=botm,
+    )
+
+    assert grid.grid_varies_by_layer, "Grid should have grid_varies_by_layer=True"
+
+    index = GeospatialIndex(grid)
+    assert index.is_3d, "Index should be in 3D mode"
+
+    # Test sliver cell in each layer (cell 0, 5, 10 are slivers)
+    # Point (95, 0.05) is far from sliver centroid but inside the cell
+    assert index.intersect(95.0, 0.05, z=83.33) == 0, "Sliver layer 0"
+    assert index.intersect(95.0, 0.05, z=50.0) == 5, "Sliver layer 1"
+    assert index.intersect(95.0, 0.05, z=16.67) == 10, "Sliver layer 2"
+
+    # Test left edge of sliver
+    assert index.intersect(5.0, 0.05, z=83.33) == 0, "Left edge layer 0"
+
+    # Test surrounding cells
+    assert index.intersect(105.0, 0.0, z=83.33) == 4, "Right cell layer 0"
+    assert index.intersect(50.0, 5.0, z=50.0) == 6, "Top cell layer 1"

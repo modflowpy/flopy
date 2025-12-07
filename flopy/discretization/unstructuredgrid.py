@@ -7,7 +7,6 @@ import numpy as np
 from matplotlib.path import Path
 
 from ..utils.geometry import is_clockwise, transform
-from ..utils.geospatial_index import GeospatialIndex
 from .grid import CachedData, Grid
 
 
@@ -722,101 +721,6 @@ class UnstructuredGrid(Grid):
                     iac=self._iac,
                     ja=self._ja,
                 )
-
-    def intersect(self, x, y, z=None, local=False, forgive=False):
-        """
-        Get the CELL2D number of a point with coordinates x and y
-
-        When the point is on the edge of two cells, the cell with the lowest
-        CELL2D number is returned.
-
-        Supports both scalar and array inputs for vectorized operations.
-
-        Parameters
-        ----------
-        x : float or array-like
-            The x-coordinate(s) of the requested point(s)
-        y : float or array-like
-            The y-coordinate(s) of the requested point(s)
-        z : float, array-like, or None
-            optional, z-coordinate(s) of the requested point(s)
-        local: bool (optional)
-            If True, x and y are in local coordinates (defaults to False)
-        forgive: bool (optional)
-            Forgive x,y arguments that fall outside the model grid and
-            return NaNs instead (defaults to False - will throw exception)
-
-        Returns
-        -------
-        icell2d : int or ndarray
-            The CELL2D number(s). Returns int for scalar input,
-            ndarray for array input.
-
-        """
-        # Check if inputs are scalar
-        x_is_scalar = np.isscalar(x)
-        y_is_scalar = np.isscalar(y)
-        z_is_scalar = z is None or np.isscalar(z)
-        is_scalar_input = x_is_scalar and y_is_scalar and z_is_scalar
-
-        # Convert to arrays for uniform processing
-        x = np.atleast_1d(x)
-        y = np.atleast_1d(y)
-        if z is not None:
-            z = np.atleast_1d(z)
-
-        # Validate array shapes
-        if len(x) != len(y):
-            raise ValueError("x and y must have the same length")
-        if z is not None and len(z) != len(x):
-            raise ValueError("z must have the same length as x and y")
-
-        if local:
-            # transform x and y to real-world coordinates
-            x, y = super().get_coords(x, y)
-
-        # Build or retrieve geospatial index for fast queries
-        if not hasattr(self, "_geospatial_index") or self._geospatial_index is None:
-            self._geospatial_index = GeospatialIndex(self)
-
-        # Use GeospatialIndex for spatial queries
-        # For grid_varies_by_layer=True, z is required (3D query)
-        # For grid_varies_by_layer=False, z-search handled internally
-        cellids = self._geospatial_index.query_points(x, y, z=z)
-
-        # Initialize result array
-        results = cellids.copy()
-
-        # Error checking for points not found
-        if not forgive:
-            unfound_mask = np.isnan(cellids)
-            if np.any(unfound_mask):
-                idx = np.where(unfound_mask)[0][0]
-                if z is not None:
-                    raise ValueError(
-                        f"point ({x[idx]}, {y[idx]}, {z[idx]}) is outside of "
-                        f"the model area"
-                    )
-                else:
-                    raise ValueError(
-                        f"point ({x[idx]}, {y[idx]}) is outside of the model area"
-                    )
-
-        # Return scalar if input was scalar, otherwise return array
-        if is_scalar_input:
-            result = results[0]
-            return int(result) if not np.isnan(result) else np.nan
-        else:
-            # Convert to int array where not NaN
-            if not forgive:
-                return results.astype(int)
-            else:
-                # Keep as float to preserve NaN values
-                valid_mask = ~np.isnan(results)
-                if np.all(valid_mask):
-                    return results.astype(int)
-                else:
-                    return results
 
     @property
     def top_botm(self):
