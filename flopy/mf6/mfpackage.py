@@ -1286,26 +1286,24 @@ class MFBlock:
         if self.structure.repeating():
             repeating_datasets = self._find_repeating_datasets()
             for repeating_dataset in repeating_datasets:
-                # Clean up stale block headers that no longer have data
-                # This handles the case where stress periods were removed via set_data(replace=True)
-                # Get the set of stress periods that actually have data
+                # Get stress periods that actually have data,
+                # including deliberately empty stress periods
                 active_keys = set()
                 for key_data in repeating_dataset.get_active_key_list():
                     active_keys.add(key_data[0])
-                # Also include empty keys that should be written
                 for key, value in repeating_dataset.empty_keys.items():
                     if value:
                         active_keys.add(key)
 
                 # Only clean up if we have multiple headers and active data
                 # This avoids breaking the initial write case where block_headers
-                # may have a template header with transient_key=None
+                # may have a template header with transient_key=None. Otherwise we
+                # get IndexError when _build_repeating_header tries to use index -1.
                 if len(self.block_headers) > 1 and active_keys:
-                    # Remove block headers for stress periods not in active_keys
                     headers_to_remove = []
                     for i, header in enumerate(self.block_headers):
-                        transient_key = header.get_transient_key()
-                        if transient_key is not None and transient_key not in active_keys:
+                        k = header.get_transient_key()
+                        if k is not None and k not in active_keys:
                             headers_to_remove.append(i)
 
                     # Remove in reverse order to preserve indices
