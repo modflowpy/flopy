@@ -1,8 +1,6 @@
 """
-Test for set_data() replace parameter (issue #2663).
-
-Tests that the replace parameter correctly removes stress period data
-for periods not included in the provided dictionary.
+Test set_data() replace parameter (issue #2663). This parameter
+toggles whether .set_data() has update or replacement semantics.
 """
 
 from pathlib import Path
@@ -22,8 +20,6 @@ def count_stress_periods_in_file(file_path):
 
 @pytest.mark.parametrize("replace", [False, True])
 def test_set_data_replace_array(function_tmpdir, replace):
-    """Test set_data() replace parameter with MFTransientArray (RCH package)."""
-    # Create a model with 48 stress periods
     sim_name = "test_model"
     sim_ws = Path(function_tmpdir) / "original"
     sim_ws.mkdir(exist_ok=True)
@@ -118,16 +114,16 @@ def test_set_data_replace_array(function_tmpdir, replace):
 
     if replace:
         # With replace=True, should only have 12 stress periods
-        # NOTE: Currently fails due to block header persistence issue
-        # When fixed, this should pass
         assert modified_sp_count == nper_new, (
-            f"Expected {nper_new} stress periods with replace=True, got {modified_sp_count}"
+            f"Expected {nper_new} stress periods "
+            f"with replace=True, got {modified_sp_count}"
         )
     else:
         # With replace=False (backwards compatible), all 48 periods remain
         # Periods 12-47 will be written as empty periods
         assert modified_sp_count == nper_original, (
-            f"Expected {nper_original} stress periods with replace=False, got {modified_sp_count}"
+            f"Expected {nper_original} stress periods "
+            f"with replace=False, got {modified_sp_count}"
         )
 
     # Verify data values are correct for the new periods
@@ -141,8 +137,6 @@ def test_set_data_replace_array(function_tmpdir, replace):
 
 @pytest.mark.parametrize("replace", [False, True])
 def test_set_data_replace_list(function_tmpdir, replace):
-    """Test set_data() replace parameter with MFTransientList (WEL package)."""
-    # Create a model with 24 stress periods
     sim_name = "test_wel_model"
     sim_ws = Path(function_tmpdir) / "wel_original"
     sim_ws.mkdir(exist_ok=True)
@@ -241,21 +235,19 @@ def test_set_data_replace_list(function_tmpdir, replace):
 
     if replace:
         # With replace=True, should only have 6 stress periods
-        # NOTE: Currently fails due to block header persistence issue
         assert modified_sp_count == nper_new, (
-            f"Expected {nper_new} stress periods with replace=True, got {modified_sp_count}"
+            f"Expected {nper_new} stress periods with "
+            f"replace=True, got {modified_sp_count}"
         )
     else:
         # With replace=False, all 24 periods remain
         assert modified_sp_count == nper_original, (
-            f"Expected {nper_original} stress periods with replace=False, got {modified_sp_count}"
+            f"Expected {nper_original} stress periods with "
+            f"replace=False, got {modified_sp_count}"
         )
 
 
 def test_set_data_without_replace_backwards_compatible(function_tmpdir):
-    """Test that set_data() without replace parameter maintains backwards compatibility."""
-    # This test ensures that existing code that relies on the "update" behavior
-    # continues to work as expected
     sim_name = "test_compat"
     sim_ws = Path(function_tmpdir) / "compat"
     sim_ws.mkdir(exist_ok=True)
