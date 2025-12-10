@@ -2271,7 +2271,7 @@ class MFPandasTransientList(
         else:
             return None
 
-    def set_record(self, record, autofill=False, check_data=True):
+    def set_record(self, record, autofill=False, check_data=True, replace=False):
         """Sets the contents of the data based on the contents of
         'record`.
 
@@ -2286,15 +2286,21 @@ class MFPandasTransientList(
             Automatically correct data
         check_data : bool
             Whether to verify the data
+        replace : bool
+            If True, all existing stress period keys not present in the
+            dictionary will be removed. If False (default), existing keys
+            not in the dictionary are preserved. Default is False for
+            backwards compatibility.
         """
         self._set_data_record(
             record,
             autofill=autofill,
             check_data=check_data,
             is_record=True,
+            replace=replace,
         )
 
-    def set_data(self, data, key=None, autofill=False):
+    def set_data(self, data, key=None, autofill=False, replace=False):
         """Sets the contents of the data at time `key` to `data`.
 
         Parameters
@@ -2310,8 +2316,15 @@ class MFPandasTransientList(
             if `data` is a dictionary.
         autofill : bool
             Automatically correct data.
+        replace : bool
+            If True and `data` is a dictionary, all existing stress period
+            keys not present in the dictionary will be removed. If False
+            (default), existing keys not in the dictionary are preserved.
+            This provides a way to completely replace stress period data
+            rather than update it. Default is False for backwards
+            compatibility.
         """
-        self._set_data_record(data, key, autofill)
+        self._set_data_record(data, key, autofill, replace=replace)
 
     def masked_4D_arrays_itr(self):
         """Returns list data as an iterator of a masked 4D array."""
@@ -2339,12 +2352,24 @@ class MFPandasTransientList(
         autofill=False,
         check_data=False,
         is_record=False,
+        replace=False,
     ):
         self._cache_model_grid = True
         if isinstance(data_record, dict):
             if "filename" not in data_record and "data" not in data_record:
                 # each item in the dictionary is a list for one stress period
                 # the dictionary key is the stress period the list is for
+
+                # If replace=True, remove existing keys not in the new data
+                if replace and self._data_storage:
+                    existing_keys = set(self._data_storage.keys())
+                    provided_keys = set(data_record.keys())
+                    keys_to_remove = existing_keys - provided_keys
+                    for key_to_remove in keys_to_remove:
+                        self.remove_transient_key(key_to_remove)
+                        if key_to_remove in self.empty_keys:
+                            del self.empty_keys[key_to_remove]
+
                 del_keys = []
                 for key, list_item in data_record.items():
                     list_item_record = False
