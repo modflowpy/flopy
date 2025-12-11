@@ -1285,31 +1285,38 @@ class MFBlock:
             return
         if self.structure.repeating():
             repeating_datasets = self._find_repeating_datasets()
+
+            # First, collect active keys from ALL datasets in this block
+            # This is important for blocks with multiple datasets (e.g., storage package
+            # has both "steady-state" and "transient" datasets) that share block_headers.
+            # We need to preserve headers that are active in ANY dataset, not just the
+            # current one being processed.
+            all_active_keys = set()
             for repeating_dataset in repeating_datasets:
-                # Get stress periods that actually have data,
-                # including deliberately empty stress periods
-                active_keys = set()
                 for key_data in repeating_dataset.get_active_key_list():
-                    active_keys.add(key_data[0])
+                    all_active_keys.add(key_data[0])
                 for key, value in repeating_dataset.empty_keys.items():
                     if value:
-                        active_keys.add(key)
+                        all_active_keys.add(key)
 
-                # Only clean up if we have multiple headers and active data
-                # This avoids breaking the initial write case where block_headers
-                # may have a template header with transient_key=None. Otherwise we
-                # get IndexError when _build_repeating_header tries to use index -1.
-                if len(self.block_headers) > 1 and active_keys:
-                    headers_to_remove = []
-                    for i, header in enumerate(self.block_headers):
-                        k = header.get_transient_key()
-                        if k is not None and k not in active_keys:
-                            headers_to_remove.append(i)
+            # Clean up stale block headers once, using combined active keys from all datasets
+            # Only clean up if we have multiple headers and active data.
+            # This avoids breaking the initial write case where block_headers
+            # may have a template header with transient_key=None. Otherwise we
+            # get IndexError when _build_repeating_header tries to use index -1.
+            if len(self.block_headers) > 1 and all_active_keys:
+                headers_to_remove = []
+                for i, header in enumerate(self.block_headers):
+                    k = header.get_transient_key()
+                    if k is not None and k not in all_active_keys:
+                        headers_to_remove.append(i)
 
-                    # Remove in reverse order to preserve indices
-                    for i in reversed(headers_to_remove):
-                        del self.block_headers[i]
+                # Remove in reverse order to preserve indices
+                for i in reversed(headers_to_remove):
+                    del self.block_headers[i]
 
+            # Now add missing block headers for each dataset
+            for repeating_dataset in repeating_datasets:
                 # resolve any missing block headers
                 self._add_missing_block_headers(repeating_dataset)
             for block_header in sorted(self.block_headers):
