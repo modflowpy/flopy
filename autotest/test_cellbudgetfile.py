@@ -1010,3 +1010,88 @@ def test_cellbudgetfile_get_ts_aux_vars_mf6_disu(dis_sim):
     chd = cbc.get_data(text="CHD")
     for field in ["node", "node2", "q"]:
         assert field in chd[0].dtype.names
+
+
+@pytest.mark.requires_exe("mf6")
+def test_cellbudgetfile_get_ts_backwards_compatible_idx_format(
+    dis_sim, function_tmpdir
+):
+    from flopy.mf6 import ModflowGwfchd, ModflowGwfdisu, ModflowGwfdisv
+
+    sim = dis_sim
+    gwf = sim.get_model()
+    dis_grid = gwf.modelgrid
+
+    # DISV
+    disv_kwargs = get_disv_kwargs(
+        nlay=dis_grid.nlay,
+        nrow=dis_grid.nrow,
+        ncol=dis_grid.ncol,
+        delr=dis_grid.delr,
+        delc=dis_grid.delc,
+        tp=dis_grid.top,
+        botm=dis_grid.botm,
+    )
+    gwf.remove_package("dis")
+    gwf.remove_package("chd")
+    disv = ModflowGwfdisv(gwf, **disv_kwargs)
+    chd_spd = [[0, 0, 10.0], [0, 24, 0.0]]
+    chd = ModflowGwfchd(gwf, stress_period_data=chd_spd)
+
+    sim.set_sim_path(function_tmpdir / "disv_backcompat")
+    sim.write_simulation()
+    success, _ = sim.run_simulation(silent=False)
+    assert success
+
+    cbc = gwf.output.budget()
+
+    ts_new = cbc.get_ts(idx=(0, 4), text="DATA-SPDIS", variable="qx")
+    ts_old = cbc.get_ts(idx=(0, 0, 4), text="DATA-SPDIS", variable="qx")
+
+    np.testing.assert_array_equal(
+        ts_new,
+        ts_old,
+    )
+
+    # DISU
+    disu_kwargs = get_disu_kwargs(
+        nlay=dis_grid.nlay,
+        nrow=dis_grid.nrow,
+        ncol=dis_grid.ncol,
+        delr=dis_grid.delr,
+        delc=dis_grid.delc,
+        tp=dis_grid.top,
+        botm=dis_grid.botm,
+        return_vertices=True,
+    )
+    gwf.remove_package("disv")
+    gwf.remove_package("chd")
+    disu = ModflowGwfdisu(gwf, **disu_kwargs)
+    chd_spd = [[0, 10.0], [24, 0.0]]
+    chd = ModflowGwfchd(gwf, stress_period_data=chd_spd)
+
+    sim.set_sim_path(function_tmpdir / "disu_backcompat")
+    sim.write_simulation()
+    success, _ = sim.run_simulation(silent=False)
+    assert success
+
+    cbc = gwf.output.budget()
+
+    ts_new = cbc.get_ts(idx=4, text="DATA-SPDIS", variable="qx")
+    ts_old = cbc.get_ts(idx=(0, 0, 4), text="DATA-SPDIS", variable="qx")
+
+    np.testing.assert_array_equal(
+        ts_new,
+        ts_old,
+    )
+
+    # test lists too
+    ts_new_list = cbc.get_ts(idx=[4, 10], text="DATA-SPDIS", variable="qx")
+    ts_old_list = cbc.get_ts(
+        idx=[(0, 0, 4), (0, 0, 10)], text="DATA-SPDIS", variable="qx"
+    )
+
+    np.testing.assert_array_equal(
+        ts_new_list,
+        ts_old_list,
+    )

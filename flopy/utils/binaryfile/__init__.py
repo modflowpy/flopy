@@ -1615,9 +1615,13 @@ class CellBudgetFile:
 
             - Structured grids (DIS): (layer, row, column) or list of such
             - Vertex grids (DISV): (layer, cellid) or list of such
-            - Unstructured grids (DISU): node number, (node number,) or list of such
+            - Unstructured grids (DISU): node number or list of such
 
             All indices must be zero-based.
+
+            For backwards compatibility, DISV and DISU grids also accept the old
+            3-tuple format with dummy values: (layer, dummy, cellid) for DISV and
+            (dummy, dummy, node) for DISU.
         text : str
             The text identifier for the record.  Examples include
             'RIVER LEAKAGE', 'STORAGE', 'FLOW RIGHT FACE', etc.
@@ -1760,11 +1764,23 @@ class CellBudgetFile:
                     raise ValueError(f"Column index {j} out of range [0, {self.ncol})")
                 cellid.append((k, i, j))
             elif grid_type == "vertex":
-                if not isinstance(item, (list, tuple)) or len(item) != 2:
+                if isinstance(item, (list, tuple)):
+                    if len(item) == 2:
+                        # proper format: (layer, cellid)
+                        k, cell = item
+                    elif len(item) == 3:
+                        # old format: (layer, dummy, cellid)
+                        k, cell = item[0], item[2]
+                    else:
+                        raise ValueError(
+                            f"Expected DISV cell index (layer, cellid) "
+                            f"or (layer, dummy, cellid), got: {item}"
+                        )
+                else:
                     raise ValueError(
-                        f"Expected DISV cell index (layer, cellid), got: {item}"
+                        f"Expected DISV cell index (layer, cellid) or "
+                        f"(layer, dummy, cellid), got: {item}"
                     )
-                k, cell = item
                 if k < 0 or k >= self.nlay:
                     raise Exception(f"Layer index {k} out of range [0, {self.nlay})")
                 if cell < 0 or cell >= self.modelgrid.ncpl:
@@ -1773,9 +1789,26 @@ class CellBudgetFile:
                     )
                 cellid.append((k, cell))
             else:
-                if not isinstance(item, (int, np.integer)):
-                    raise Exception(f"Expected DISU node number , got: {item}")
-                node = int(item)
+                if isinstance(item, (int, np.integer)):
+                    # proper format: just node number
+                    node = int(item)
+                elif isinstance(item, (list, tuple)):
+                    if len(item) == 3:
+                        # old format: (dummy, dummy, node)
+                        node = int(item[2])
+                    elif len(item) == 1:
+                        # Also support single-element tuple
+                        node = int(item[0])
+                    else:
+                        raise ValueError(
+                            f"Expected DISU node number or (dummy, dummy, node), "
+                            f"got: {item}"
+                        )
+                else:
+                    raise ValueError(
+                        f"Expected DISU node number or (dummy, dummy, node), "
+                        f"got: {item}"
+                    )
                 if node < 0 or node >= self.modelgrid.nnodes:
                     raise Exception(
                         f"Node index {node} out of range [0, {self.modelgrid.nnodes})"
