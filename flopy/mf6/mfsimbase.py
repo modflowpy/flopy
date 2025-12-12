@@ -257,8 +257,7 @@ class MFSimulationData:
         self.debug = False
         self.verbose = True
         self._verbosity_level = VerbosityLevel.normal
-        self.max_columns_user_set = False
-        self.max_columns_auto_set = False
+        self._max_columns_set_by = None  # Can be None, 'user', or 'auto'
         self.use_pandas = True
 
         self._update_str_format()
@@ -309,11 +308,32 @@ class MFSimulationData:
 
     @max_columns_of_data.setter
     def max_columns_of_data(self, val):
-        if not self.max_columns_user_set and (
-            not self.max_columns_auto_set or val > self._max_columns_of_data
-        ):
-            self._max_columns_of_data = val
-            self.max_columns_user_set = True
+        self._max_columns_of_data = val
+        self._max_columns_set_by = 'user'
+
+    @property
+    def max_columns_user_set(self):
+        return self._max_columns_set_by == 'user'
+
+    @max_columns_user_set.setter
+    def max_columns_user_set(self, val):
+        if val:
+            self._max_columns_set_by = 'user'
+        elif self._max_columns_set_by == 'user':
+            # Only clear if currently set by user
+            self._max_columns_set_by = None
+
+    @property
+    def max_columns_auto_set(self):
+        return self._max_columns_set_by == 'auto'
+
+    @max_columns_auto_set.setter
+    def max_columns_auto_set(self, val):
+        if val:
+            self._max_columns_set_by = 'auto'
+        elif self._max_columns_set_by == 'auto':
+            # Only clear if currently set by auto
+            self._max_columns_set_by = None
 
     @property
     def float_precision(self):
@@ -1673,14 +1693,13 @@ class MFSimulationBase:
 
         """
         sim_data = self.simulation_data
-        if not sim_data.max_columns_user_set:
+        if sim_data._max_columns_set_by != 'user':
             # search for dis packages
             for model in self._models.values():
                 dis = model.get_package("dis", type_only=True)
                 if dis is not None and hasattr(dis, "ncol"):
-                    sim_data.max_columns_of_data = dis.ncol.get_data()
-                    sim_data.max_columns_user_set = False
-                    sim_data.max_columns_auto_set = True
+                    sim_data._max_columns_of_data = dis.ncol.get_data()
+                    sim_data._max_columns_set_by = 'auto'
 
         saved_verb_lvl = self.simulation_data.verbosity_level
         if silent:

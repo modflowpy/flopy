@@ -989,13 +989,12 @@ class MFModel(ModelInterface):
                 # load package
                 instance.load_package(ftype, fname, pname, strict, None)
                 sim_data = simulation.simulation_data
-                if ftype == "dis" and not sim_data.max_columns_user_set:
+                if ftype == "dis" and sim_data._max_columns_set_by != 'user':
                     # set column wrap to ncol
                     dis = instance.get_package("dis", type_only=True)
                     if dis is not None and hasattr(dis, "ncol"):
-                        sim_data.max_columns_of_data = dis.ncol.get_data()
-                        sim_data.max_columns_user_set = False
-                        sim_data.max_columns_auto_set = True
+                        sim_data._max_columns_of_data = dis.ncol.get_data()
+                        sim_data._max_columns_set_by = 'auto'
         # load referenced packages
         if modelname in instance.simulation_data.referenced_files:
             for ref_file in instance.simulation_data.referenced_files[
@@ -1321,12 +1320,11 @@ class MFModel(ModelInterface):
 
         self.name_file.write(ext_file_action=ext_file_action)
 
-        if not self.simulation_data.max_columns_user_set:
+        if self.simulation_data._max_columns_set_by != 'user':
             grid_type = self.get_grid_type()
             if grid_type == DiscretizationType.DIS:
-                self.simulation_data.max_columns_of_data = self.dis.ncol.get_data()
-                self.simulation_data.max_columns_user_set = False
-                self.simulation_data.max_columns_auto_set = True
+                self.simulation_data._max_columns_of_data = self.dis.ncol.get_data()
+                self.simulation_data._max_columns_set_by = 'auto'
 
         # write packages
         for pp in self.packagelist:
