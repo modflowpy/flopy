@@ -198,6 +198,51 @@ class Lgr:
         self.xll = xllp + float(self.delrp[0 : self.npcbeg].sum())
         self.yll = yllp + float(self.delcp[self.nprend + 1 :].sum())
 
+    @classmethod
+    def from_parent_grid(cls, parent_grid, refine_mask, ncpp=3, ncppl=1):
+        """
+        Create an Lgr instance from a parent StructuredGrid.
+
+        Parameters
+        ----------
+        parent_grid : StructuredGrid
+            The parent grid
+        refine_mask : ndarray
+            Array indicating which parent cells to refine (shape: nlay, nrow, ncol).
+            Cells with value 0 will be refined, with value 1 remain as parent cells.
+        ncpp : int
+            Number of child cells per parent cell face (default 3)
+        ncppl : int or list of ints
+            Number of child layers per parent layer (default 1)
+
+        Returns
+        -------
+        Lgr
+            Local grid refinement instance
+
+        Examples
+        --------
+        >>> # Create refinement mask - refine center 3x3 cells
+        >>> refine_mask = np.ones((nlay, nrow, ncol))
+        >>> refine_mask[:, 2:5, 2:5] = 0
+        >>> lgr = Lgr.from_parent_grid(parent_grid, refine_mask, ncpp=3)
+
+        """
+        return cls(
+            nlayp=parent_grid.nlay,
+            nrowp=parent_grid.nrow,
+            ncolp=parent_grid.ncol,
+            delrp=parent_grid.delr,
+            delcp=parent_grid.delc,
+            topp=parent_grid.top,
+            botmp=parent_grid.botm,
+            idomainp=refine_mask,
+            ncpp=ncpp,
+            ncppl=ncppl,
+            xllp=parent_grid.xoffset,
+            yllp=parent_grid.yoffset,
+        )
+
     def get_shape(self):
         """
         Return the shape of the child grid

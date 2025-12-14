@@ -215,3 +215,62 @@ def test_lgrutil3():
     b[1] = -2 * dz
     b[2] = -3 * dz
     assert np.allclose(gridprops["botm"], b)
+
+
+def test_lgr_from_parent_grid():
+    """Test the from_parent_grid classmethod convenience constructor."""
+    from flopy.discretization import StructuredGrid
+
+    # Create a parent grid with center cells marked for refinement
+    nlay, nrow, ncol = 1, 7, 7
+    delr = delc = 100.0 * np.ones(7)
+    top = np.zeros((nrow, ncol))
+    botm = -100.0 * np.ones((nlay, nrow, ncol))
+    idomain = np.ones((nlay, nrow, ncol), dtype=int)
+    idomain[:, 2:5, 2:5] = 0  # Mark center 3x3 cells for refinement
+
+    parent_grid = StructuredGrid(
+        delr=delr, delc=delc, top=top, botm=botm, idomain=idomain
+    )
+
+    # Create Lgr using the classmethod
+    lgr_from_classmethod = Lgr.from_parent_grid(parent_grid, idomain, ncpp=3, ncppl=1)
+
+    # Create Lgr using the traditional constructor
+    lgr_traditional = Lgr(
+        nlayp=nlay,
+        nrowp=nrow,
+        ncolp=ncol,
+        delrp=delr,
+        delcp=delc,
+        topp=top,
+        botmp=botm,
+        idomainp=idomain,
+        ncpp=3,
+        ncppl=1,
+        xllp=0.0,
+        yllp=0.0,
+    )
+
+    # Verify both methods produce the same results
+    assert lgr_from_classmethod.get_shape() == lgr_traditional.get_shape()
+    assert np.allclose(lgr_from_classmethod.delr, lgr_traditional.delr)
+    assert np.allclose(lgr_from_classmethod.delc, lgr_traditional.delc)
+    assert np.allclose(lgr_from_classmethod.top, lgr_traditional.top)
+    assert np.allclose(lgr_from_classmethod.botm, lgr_traditional.botm)
+
+    # Verify child grid has expected dimensions (3x3 parent cells refined to 9x9)
+    assert lgr_from_classmethod.get_shape() == (1, 9, 9)
+
+    # Verify gridprops can be generated
+    gridprops = lgr_from_classmethod.to_disv_gridprops()
+    assert "ncpl" in gridprops
+    assert "nvert" in gridprops
+    assert "vertices" in gridprops
+    assert "cell2d" in gridprops
+    assert "nlay" in gridprops
+    assert "top" in gridprops
+    assert "botm" in gridprops
+
+    # Expected: 40 parent cells + 81 child cells = 121 total cells
+    assert gridprops["ncpl"] == 121
