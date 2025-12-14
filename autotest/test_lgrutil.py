@@ -220,6 +220,63 @@ def test_lgr_hanging_vertices():
     b[2] = -3 * dz
     assert np.allclose(gridprops["botm"], b)
 
+    # Verify equivalence with legacy gridlist_to_verts approach
+    # This ensures the Lgr approach produces the same results.
+    # Note: Use single layer for comparison since
+    # gridlist_to_verts counts each layer separately
+    from flopy.utils.cvfdutil import get_disv_gridprops, gridlist_to_verts
+
+    # Create single-layer grids for legacy comparison
+    nlay_compare = 1
+    topp_compare = topp[nrowp // 2, ncolp // 2] * np.ones((nrowp, ncolp))
+    botmp_compare = botmp[0:1, :, :]  # Just first layer
+    idomainp_compare = idomainp[0:1, :, :]
+
+    # Child grid (single layer)
+    sg_child = StructuredGrid(
+        delr=np.full(ncpp, dx / ncpp),
+        delc=np.full(ncpp, dy / ncpp),
+        top=np.full((ncpp, ncpp), topp_compare[nrowp // 2, ncolp // 2]),
+        botm=botmp_compare[:, nrowp // 2 : nrowp // 2 + 1, ncolp // 2 : ncolp // 2 + 1]
+        .repeat(ncpp, axis=1)
+        .repeat(ncpp, axis=2),
+        idomain=np.ones((nlay_compare, ncpp, ncpp), dtype=int),
+        xoff=xoffp + dx * (ncolp // 2),
+        yoff=yoffp + dy * (nrowp // 2),
+    )
+
+    # Parent grid (single layer)
+    sg_parent_legacy = StructuredGrid(
+        delr=delrp,
+        delc=delcp,
+        top=topp_compare,
+        botm=botmp_compare,
+        idomain=idomainp_compare,
+        xoff=xoffp,
+        yoff=yoffp,
+    )
+
+    # Generate gridprops using legacy approach
+    verts_legacy, iverts_legacy = gridlist_to_verts([sg_parent_legacy, sg_child])
+    gridprops_legacy = get_disv_gridprops(verts_legacy, iverts_legacy)
+
+    # Verify ncpl and nvert match
+    assert gridprops["ncpl"] == gridprops_legacy["ncpl"]
+    assert gridprops["nvert"] == gridprops_legacy["nvert"]
+
+    # Verify vertex positions match (may be in different order)
+    verts_lgr_set = {(round(v[1], 9), round(v[2], 9)) for v in gridprops["vertices"]}
+    verts_legacy_set = {
+        (round(v[1], 9), round(v[2], 9)) for v in gridprops_legacy["vertices"]
+    }
+    assert verts_lgr_set == verts_legacy_set
+
+    # Verify cell centroids match
+    for icpl in range(gridprops["ncpl"]):
+        xc_lgr, yc_lgr = gridprops["cell2d"][icpl][1:3]
+        xc_legacy, yc_legacy = gridprops_legacy["cell2d"][icpl][1:3]
+        assert np.allclose([xc_lgr, yc_lgr], [xc_legacy, yc_legacy])
+
 
 def test_lgr_from_parent_grid():
     # Create a parent grid with center cells marked for refinement
@@ -461,347 +518,3 @@ def test_simple_regular_grid_deprecation():
     # Verify backward compatibility attributes
     assert grid.xorigin == xorigin
     assert grid.yorigin == yorigin
-
-
-def test_lgr_matches_legacy_gridlist_to_disv_gridprops():
-    """
-    Lgr.to_disv_gridprops() output should match
-    legacy gridlist_to_disv_gridprops() output.
-    """
-    # TODO: this will need to be removed soon, and the underlying
-    # implementation inlined, when we remove this function.
-    from flopy.utils.cvfdutil import gridlist_to_disv_gridprops
-
-    # 7x7 parent grid with 3x3 refinement in center
-    nlay = 1
-    nrow_p, ncol_p = 7, 7
-    delr_p = delc_p = 100.0 * np.ones(7)
-    top_p = np.zeros((nrow_p, ncol_p))
-    botm_p = -100.0 * np.ones((nlay, nrow_p, ncol_p))
-
-    # legacy approach
-    idomain_p = np.ones((nlay, nrow_p, ncol_p), dtype=int)
-    idomain_p[:, 2:5, 2:5] = 0  # Center 3x3 inactive
-    sg_parent_legacy = StructuredGrid(
-        delc=delc_p,
-        delr=delr_p,
-        top=top_p,
-        botm=botm_p,
-        idomain=idomain_p,
-        xoff=0.0,
-        yoff=0.0,
-    )
-    nrow_c, ncol_c = 9, 9
-    delr_c = delc_c = 100.0 / 3.0 * np.ones(9)
-    top_c = np.zeros((nrow_c, ncol_c))
-    botm_c = -100.0 * np.ones((nlay, nrow_c, ncol_c))
-    idomain_c = np.ones((nlay, nrow_c, ncol_c), dtype=int)
-    sg_child = StructuredGrid(
-        delc=delc_c,
-        delr=delr_c,
-        top=top_c,
-        botm=botm_c,
-        idomain=idomain_c,
-        xoff=200.0,
-        yoff=200.0,
-    )
-    gridprops_legacy = gridlist_to_disv_gridprops([sg_parent_legacy, sg_child])
-
-    # lgr approach
-    parent_grid = StructuredGrid(
-        delc=delc_p,
-        delr=delr_p,
-        top=top_p,
-        botm=botm_p,
-        xoff=0.0,
-        yoff=0.0,
-    )
-    refine_mask = np.ones((nlay, nrow_p, ncol_p))
-    refine_mask[:, 2:5, 2:5] = 0
-    lgr = Lgr.from_parent_grid(parent_grid, refine_mask, ncpp=3)
-    gridprops_lgr = lgr.to_disv_gridprops()
-
-    # Note: legacy gridlist_to_disv_gridprops doesn't return nlay, top, botm
-    # Only check common keys
-    assert gridprops_legacy["ncpl"] == gridprops_lgr["ncpl"]
-    assert gridprops_legacy["nvert"] == gridprops_lgr["nvert"]
-
-    # Verify vertex positions match (may be in different order)
-    verts_legacy_set = {
-        (round(v[1], 9), round(v[2], 9)) for v in gridprops_legacy["vertices"]
-    }
-    verts_lgr_set = {
-        (round(v[1], 9), round(v[2], 9)) for v in gridprops_lgr["vertices"]
-    }
-    assert verts_legacy_set == verts_lgr_set
-
-    for icpl in range(gridprops_legacy["ncpl"]):
-        nverts_legacy = gridprops_legacy["cell2d"][icpl][3]
-        nverts_lgr = gridprops_lgr["cell2d"][icpl][3]
-        assert nverts_legacy >= 3
-        assert nverts_lgr >= 3
-
-    for icpl in range(gridprops_legacy["ncpl"]):
-        xc_legacy, yc_legacy = gridprops_legacy["cell2d"][icpl][1:3]
-        xc_lgr, yc_lgr = gridprops_lgr["cell2d"][icpl][1:3]
-        assert np.allclose([xc_legacy, yc_legacy], [xc_lgr, yc_lgr])
-
-    # Note: top and botm are only in Lgr gridprops,
-    # not in legacy gridlist_to_disv_gridprops.
-    # Just verify they exist in the Lgr version
-    assert "nlay" in gridprops_lgr
-    assert "top" in gridprops_lgr
-    assert "botm" in gridprops_lgr
-    assert gridprops_lgr["nlay"] == nlay
-    assert gridprops_lgr["top"].shape == (gridprops_lgr["ncpl"],)
-    assert gridprops_lgr["botm"].shape == (nlay, gridprops_lgr["ncpl"])
-
-
-def test_hanging_vertex_algorithm_comparison():
-    """
-    Compare the two hanging vertex placement algorithms in detail:
-    1. to_cvfd() - reactive geometric algorithm (legacy)
-    2. Lgr.find_hanging_vertices() - proactive structured algorithm (new)
-
-    This test creates a simple parent-child grid and analyzes the differences
-    in vertex placement, connectivity, and grid structure. Intended mainly to
-    be run manually to inspect the printed output.
-    """
-    # Create a simple 3x3 parent grid with 3x refinement in center cell
-    nlay = 1
-    nrow_p = 3
-    ncol_p = 3
-    delr_p = 100.0
-    delc_p = 100.0
-    top_p = np.zeros((nrow_p, ncol_p))
-    botm_p = np.array([np.full((nrow_p, ncol_p), -10.0)])
-
-    # Setup for both approaches
-    # Legacy approach: use idomain to mark refinement region as inactive
-    idomain_legacy = np.ones((nlay, nrow_p, ncol_p), dtype=int)
-    idomain_legacy[:, 1, 1] = 0  # Center cell inactive
-
-    sg_parent_legacy = StructuredGrid(
-        delr=np.full(ncol_p, delr_p),
-        delc=np.full(nrow_p, delc_p),
-        top=top_p,
-        botm=botm_p,
-        idomain=idomain_legacy,
-        xoff=0.0,
-        yoff=0.0,
-    )
-
-    # Child grid at center position
-    ncpp = 3
-    top_c = np.zeros((ncpp, ncpp))
-    botm_c = np.array([np.full((ncpp, ncpp), -10.0)])
-    idomain_child = np.ones((nlay, ncpp, ncpp), dtype=int)
-    sg_child = StructuredGrid(
-        delr=np.full(ncpp, delr_p / ncpp),
-        delc=np.full(ncpp, delc_p / ncpp),
-        top=top_c,
-        botm=botm_c,
-        idomain=idomain_child,
-        xoff=100.0,
-        yoff=100.0,
-    )
-
-    # New approach: use refine_mask
-    sg_parent_new = StructuredGrid(
-        delr=np.full(ncol_p, delr_p),
-        delc=np.full(nrow_p, delc_p),
-        top=top_p.copy(),
-        botm=botm_p.copy(),
-        xoff=0.0,
-        yoff=0.0,
-    )
-    refine_mask = np.ones((nlay, nrow_p, ncol_p))
-    refine_mask[:, 1, 1] = 0
-
-    # Generate grids with both algorithms
-    # Legacy: to_cvfd() algorithm
-    verts_legacy, iverts_legacy = gridlist_to_verts([sg_parent_legacy, sg_child])
-    gridprops_legacy = get_disv_gridprops(verts_legacy, iverts_legacy)
-
-    # New: Lgr.find_hanging_vertices() algorithm
-    lgr = Lgr.from_parent_grid(sg_parent_new, refine_mask, ncpp=ncpp)
-    gridprops_new = lgr.to_disv_gridprops()
-
-    # Compare basic metrics
-    print("\n" + "=" * 80)
-    print("HANGING VERTEX ALGORITHM COMPARISON")
-    print("=" * 80)
-    print("\nGrid Configuration:")
-    print(f"  Parent: {nrow_p}x{ncol_p} cells, {delr_p}x{delc_p} spacing")
-    print(f"  Child: {ncpp}x{ncpp} refinement at center cell (1,1)")
-    print(
-        f"  Total cells: {nrow_p * ncol_p - 1} "
-        f"parent + {ncpp * ncpp} "
-        f"child = {nrow_p * ncol_p - 1 + ncpp * ncpp}"
-    )
-
-    print(
-        f"\n{'Metric':<30} "
-        f"{'Legacy (to_cvfd)':<20} "
-        f"{'New (Lgr)':<20} "
-        f"{'Difference':<20}"
-    )
-    print("-" * 90)
-    print(
-        f"{'Total vertices':<30} "
-        f"{gridprops_legacy['nvert']:<20} "
-        f"{gridprops_new['nvert']:<20} "
-        f"{gridprops_new['nvert'] - gridprops_legacy['nvert']:<20}"
-    )
-    print(
-        f"{'Total cells':<30} "
-        f"{gridprops_legacy['ncpl']:<20} "
-        f"{gridprops_new['ncpl']:<20} "
-        f"{gridprops_new['ncpl'] - gridprops_legacy['ncpl']:<20}"
-    )
-
-    # Analyze vertex differences
-    verts_legacy_dict = {
-        i: (v[1], v[2]) for i, v in enumerate(gridprops_legacy["vertices"])
-    }
-    verts_new_dict = {i: (v[1], v[2]) for i, v in enumerate(gridprops_new["vertices"])}
-
-    # Find unique vertices in each approach
-    verts_legacy_set = {
-        (round(x, 6), round(y, 6)) for x, y in verts_legacy_dict.values()
-    }
-    verts_new_set = {(round(x, 6), round(y, 6)) for x, y in verts_new_dict.values()}
-
-    only_in_legacy = verts_legacy_set - verts_new_set
-    only_in_new = verts_new_set - verts_legacy_set
-    common = verts_legacy_set & verts_new_set
-
-    print(f"\n{'Vertex Analysis':<30} {'Count':<20}")
-    print("-" * 50)
-    print(f"{'Common vertices':<30} {len(common):<20}")
-    print(f"{'Only in legacy':<30} {len(only_in_legacy):<20}")
-    print(f"{'Only in new':<30} {len(only_in_new):<20}")
-
-    if only_in_legacy:
-        print("\nVertices only in legacy (to_cvfd):")
-        for x, y in sorted(only_in_legacy):
-            print(f"  ({x:8.2f}, {y:8.2f})")
-
-    if only_in_new:
-        print("\nVertices only in new (Lgr):")
-        for x, y in sorted(only_in_new):
-            print(f"  ({x:8.2f}, {y:8.2f})")
-
-    # Analyze cell vertex counts
-    legacy_cell_nverts = [cell[3] for cell in gridprops_legacy["cell2d"]]
-    new_cell_nverts = [cell[3] for cell in gridprops_new["cell2d"]]
-
-    print(f"\n{'Cell Vertex Counts':<30} {'Legacy':<20} {'New':<20}")
-    print("-" * 70)
-    print(
-        f"{'Min vertices per cell':<30} "
-        f"{min(legacy_cell_nverts):<20} "
-        f"{min(new_cell_nverts):<20}"
-    )
-    print(
-        f"{'Max vertices per cell':<30} "
-        f"{max(legacy_cell_nverts):<20} "
-        f"{max(new_cell_nverts):<20}"
-    )
-    print(
-        f"{'Avg vertices per cell':<30} "
-        f"{np.mean(legacy_cell_nverts):<20.2f} "
-        f"{np.mean(new_cell_nverts):<20.2f}"
-    )
-
-    # Find cells with different vertex counts
-    print("\nCells with different vertex counts:")
-    diff_count = 0
-    for icell in range(min(len(legacy_cell_nverts), len(new_cell_nverts))):
-        if legacy_cell_nverts[icell] != new_cell_nverts[icell]:
-            print(
-                f"  Cell {icell}: legacy={legacy_cell_nverts[icell]}, "
-                f"new={new_cell_nverts[icell]}"
-            )
-            diff_count += 1
-    if diff_count == 0:
-        print("  None - all cells have same vertex counts")
-
-    # Identify hanging vertices by analyzing parent-child boundary cells
-    print(f"\n{'Hanging Vertex Analysis':<50}")
-    print("-" * 50)
-
-    # For each parent cell at the boundary, check vertex counts
-    print("\nParent boundary cells (adjacent to refinement):")
-    boundary_parents = [
-        (0, "top-left"),
-        (1, "top-center"),
-        (2, "top-right"),
-        (3, "middle-left"),
-        (5, "middle-right"),
-        (6, "bottom-left"),
-        (7, "bottom-center"),
-        (8, "bottom-right"),
-    ]
-
-    for icell, label in boundary_parents:
-        if icell < len(legacy_cell_nverts):
-            legacy_nv = legacy_cell_nverts[icell]
-            new_nv = new_cell_nverts[icell]
-            status = "DIFFERENT" if legacy_nv != new_nv else "same"
-            print(
-                f"  Cell {icell} ({label:15s}): "
-                f"legacy={legacy_nv}, new={new_nv} [{status}]"
-            )
-
-    # Detailed vertex analysis - check for duplicates
-    print(f"\n{'Duplicate Vertex Analysis':<50}")
-    print("-" * 50)
-
-    # Count occurrences of each coordinate in new approach
-    new_coord_counts = {}
-    for i, (x, y) in verts_new_dict.items():
-        coord = (round(x, 6), round(y, 6))
-        if coord not in new_coord_counts:
-            new_coord_counts[coord] = []
-        new_coord_counts[coord].append(i)
-
-    duplicates_new = {
-        coord: indices
-        for coord, indices in new_coord_counts.items()
-        if len(indices) > 1
-    }
-    if duplicates_new:
-        print(f"Found {len(duplicates_new)} duplicate coordinates in new approach:")
-        for coord, indices in sorted(duplicates_new.items()):
-            print(f"  {coord}: vertex indices {indices}")
-    else:
-        print("No duplicate coordinates in new approach")
-
-    # Count occurrences in legacy approach
-    legacy_coord_counts = {}
-    for i, (x, y) in verts_legacy_dict.items():
-        coord = (round(x, 6), round(y, 6))
-        if coord not in legacy_coord_counts:
-            legacy_coord_counts[coord] = []
-        legacy_coord_counts[coord].append(i)
-
-    duplicates_legacy = {
-        coord: indices
-        for coord, indices in legacy_coord_counts.items()
-        if len(indices) > 1
-    }
-    if duplicates_legacy:
-        print(
-            f"Found {len(duplicates_legacy)} duplicate coordinates in legacy approach:"
-        )
-        for coord, indices in sorted(duplicates_legacy.items()):
-            print(f"  {coord}: vertex indices {indices}")
-    else:
-        print("No duplicate coordinates in legacy approach")
-
-    assert (
-        gridprops_legacy["nvert"] == gridprops_new["nvert"]
-        and len(only_in_legacy) == 0
-        and len(only_in_new) == 0
-    )

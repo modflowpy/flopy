@@ -1788,51 +1788,51 @@ def test_vtk_export_disv1_model(function_tmpdir):
         idomain=np.ones((nlay, nrow, ncol)),
     )
 
-    with pytest.deprecated_call():
-        from flopy.utils.cvfdutil import gridlist_to_disv_gridprops
+    from flopy.utils.cvfdutil import get_disv_gridprops, gridlist_to_verts
 
-        gridprops = gridlist_to_disv_gridprops([mg])
-        gridprops["top"] = 0
-        gridprops["botm"] = np.zeros((nlay, nrow * ncol), dtype=float) - 1
-        gridprops["nlay"] = nlay
+    verts, iverts = gridlist_to_verts([mg])
+    gridprops = get_disv_gridprops(verts, iverts)
+    gridprops["top"] = 0
+    gridprops["botm"] = np.zeros((nlay, nrow * ncol), dtype=float) - 1
+    gridprops["nlay"] = nlay
 
-        disv = ModflowGwfdisv(gwf, **gridprops)
-        ic = ModflowGwfic(gwf, strt=10)
-        npf = ModflowGwfnpf(gwf)
+    disv = ModflowGwfdisv(gwf, **gridprops)
+    ic = ModflowGwfic(gwf, strt=10)
+    npf = ModflowGwfnpf(gwf)
 
-        # Export model without specifying packages_names parameter
-        # create the vtk output
-        gwf = sim.get_model()
-        vtkobj = Vtk(gwf, binary=False)
-        vtkobj.add_model(gwf)
-        f = function_tmpdir / "gwf.vtk"
-        vtkobj.write(f)
+    # Export model without specifying packages_names parameter
+    # create the vtk output
+    gwf = sim.get_model()
+    vtkobj = Vtk(gwf, binary=False)
+    vtkobj.add_model(gwf)
+    f = function_tmpdir / "gwf.vtk"
+    vtkobj.write(f)
 
-        # load the output using the vtk standard library
-        gridreader = vtkUnstructuredGridReader()
-        gridreader.SetFileName(str(f))
-        gridreader.Update()
-        grid = gridreader.GetOutput()
+    # load the output using the vtk standard library
+    gridreader = vtkUnstructuredGridReader()
+    gridreader.SetFileName(str(f))
+    gridreader.Update()
+    grid = gridreader.GetOutput()
 
-        # get the points
-        vtk_points = grid.GetPoints()
-        vtk_points = vtk_points.GetData()
-        vtk_points = vtk_to_numpy(vtk_points)
+    # get the points
+    vtk_points = grid.GetPoints()
+    vtk_points = vtk_points.GetData()
+    vtk_points = vtk_to_numpy(vtk_points)
 
-        # get cell locations (ia format of point to cell relationship)
-        cell_locations = vtk_to_numpy(grid.GetCellLocationsArray())
-        cell_locations_answer = np.array([0, 8, 16, 24, 32, 40, 48, 56, 64])
-        print(f"Found cell locations {cell_locations} in vtk file.")
-        print(f"Expecting cell locations {cell_locations_answer}")
-        errmsg = "vtk cell locations do not match expected result."
-        assert np.allclose(cell_locations, cell_locations_answer), errmsg
+    # get cell locations (ia format of point to cell relationship)
+    cell_locations = vtk_to_numpy(grid.GetCellLocationsArray())
+    cell_locations_answer = np.array([0, 8, 16, 24, 32, 40, 48, 56, 64])
+    print(f"Found cell locations {cell_locations} in vtk file.")
+    print(f"Expecting cell locations {cell_locations_answer}")
+    errmsg = "vtk cell locations do not match expected result."
+    assert np.allclose(cell_locations, cell_locations_answer), errmsg
 
-        cell_types = vtk_to_numpy(grid.GetCellTypesArray())
-        cell_types_answer = np.array(9 * [42])
-        print(f"Found cell types {cell_types} in vtk file.")
-        print(f"Expecting cell types {cell_types_answer}")
-        errmsg = "vtk cell types do not match expected result."
-        assert np.allclose(cell_types, cell_types_answer), errmsg
+    cell_types = vtk_to_numpy(grid.GetCellTypesArray())
+    cell_types_answer = np.array(9 * [42])
+    print(f"Found cell types {cell_types} in vtk file.")
+    print(f"Expecting cell types {cell_types_answer}")
+    errmsg = "vtk cell types do not match expected result."
+    assert np.allclose(cell_types, cell_types_answer), errmsg
 
 
 @pytest.mark.mf6
@@ -2228,7 +2228,7 @@ def test_mf6_chd_shapefile_export_unstructured(function_tmpdir, use_pandas, spar
 
 def disv_sim(name, tmpdir):
     from flopy.discretization import StructuredGrid
-    from flopy.utils.cvfdutil import gridlist_to_disv_gridprops
+    from flopy.utils.cvfdutil import get_disv_gridprops, gridlist_to_verts
 
     nlay, nrow, ncol = 3, 3, 3
     mg = StructuredGrid(
@@ -2239,12 +2239,12 @@ def disv_sim(name, tmpdir):
         idomain=np.ones((nlay, nrow, ncol)),
     )
 
-    with pytest.deprecated_call():
-        gridprops = gridlist_to_disv_gridprops([mg])
-        gridprops["top"] = 0
-        ncpl = gridprops["ncpl"]
-        gridprops["botm"] = np.zeros((nlay, ncpl), dtype=float) - 1
-        gridprops["nlay"] = nlay
+    verts, iverts = gridlist_to_verts([mg])
+    gridprops = get_disv_gridprops(verts, iverts)
+    gridprops["top"] = 0
+    ncpl = gridprops["ncpl"]
+    gridprops["botm"] = np.zeros((nlay, ncpl), dtype=float) - 1
+    gridprops["nlay"] = nlay
 
     sim = MFSimulation(sim_name=name, sim_ws=tmpdir, exe_name="mf6")
     tdis = ModflowTdis(sim)

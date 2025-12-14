@@ -20,7 +20,6 @@ from flopy.mf6.utils import get_residuals, get_structured_faceflows
 from flopy.modflow import Modflow, ModflowDis, ModflowLpf, ModflowUpw
 from flopy.plot import PlotMapView
 from flopy.utils import get_transmissivities
-from flopy.utils.cvfdutil import gridlist_to_disv_gridprops
 from flopy.utils.gridutil import get_disv_kwargs
 from flopy.utils.postprocessing import (
     get_gradients,

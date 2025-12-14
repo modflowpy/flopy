@@ -23,9 +23,9 @@ from flopy.utils.crs import get_authority_crs
 from flopy.utils.cvfdutil import (
     area_of_polygon,
     centroid_of_polygon,
-    gridlist_to_disv_gridprops,
     to_cvfd,
 )
+from flopy.utils.lgrutil import Lgr
 from flopy.utils.triangle import Triangle
 from flopy.utils.voronoi import VoronoiGrid
 
@@ -1015,9 +1015,10 @@ def test_tocvfd3():
     delc = 100.0 * np.ones(nrow)
     tp = np.zeros((nrow, ncol))
     bt = -100.0 * np.ones((nlay, nrow, ncol))
-    idomain = np.ones((nlay, nrow, ncol))
-    idomain[:, 2:5, 2:5] = 0
-    sg1 = StructuredGrid(delr=delr, delc=delc, top=tp, botm=bt, idomain=idomain)
+    # Create refine_mask: cells with value 0 will be refined
+    refine_mask = np.ones((nlay, nrow, ncol))
+    refine_mask[:, 2:5, 2:5] = 0
+    sg1 = StructuredGrid(delr=delr, delc=delc, top=tp, botm=bt)
     # inner grid
     nlay = 1
     nrow = ncol = 9
@@ -1036,26 +1037,27 @@ def test_tocvfd3():
         idomain=idomain,
     )
 
-    with pytest.deprecated_call():
-        gridprops = gridlist_to_disv_gridprops([sg1, sg2])
-        assert "ncpl" in gridprops
-        assert "nvert" in gridprops
-        assert "vertices" in gridprops
-        assert "cell2d" in gridprops
+    # Use Lgr class to create DISV grid from nested grids
+    lgr = Lgr.from_parent_grid(sg1, refine_mask, ncpp=3, ncppl=1)
+    gridprops = lgr.to_disv_gridprops()
+    assert "ncpl" in gridprops
+    assert "nvert" in gridprops
+    assert "vertices" in gridprops
+    assert "cell2d" in gridprops
 
-        ncpl = gridprops["ncpl"]
-        nvert = gridprops["nvert"]
-        vertices = gridprops["vertices"]
-        cell2d = gridprops["cell2d"]
-        assert ncpl == 121
-        assert nvert == 148
-        assert len(vertices) == nvert
-        assert len(cell2d) == 121
+    ncpl = gridprops["ncpl"]
+    nvert = gridprops["nvert"]
+    vertices = gridprops["vertices"]
+    cell2d = gridprops["cell2d"]
+    assert ncpl == 121
+    assert nvert == 148  # Lgr includes hanging vertices and deduplicates vertices
+    assert len(vertices) == nvert
+    assert len(cell2d) == 121
 
-        # spot check information for cell 28 (zero based)
-        answer = [28, 250.0, 150.0, 7, 38, 142, 143, 45, 46, 44, 38]
-        for i, j in zip(cell2d[28], answer):
-            assert i == j, f"{i} not equal {j}"
+    # spot check information for cell 28 (zero based)
+    answer = [28, 250.0, 150.0, 6, 42, 142, 143, 43, 51, 50]
+    for i, j in zip(cell2d[28], answer):
+        assert i == j, f"{i} not equal {j}"
 
 
 @requires_pkg("shapely")
