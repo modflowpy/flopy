@@ -1603,6 +1603,7 @@ class MFSimulationBase:
         external_data_folder=None,
         base_name=None,
         binary=False,
+        replace_existing=True,
     ):
         """Sets the simulation's list and array data to be stored externally.
 
@@ -1611,6 +1612,14 @@ class MFSimulationBase:
         The MF6 check mechanism is deprecated pending reimplementation
         in a future release. While the checks API will remain in place
         through 3.x, it may be unstable, and will likely change in 4.x.
+
+        Note
+        ----
+        External files are written immediately when this method is called,
+        using the current value of max_columns_of_data and other formatting
+        settings. If you need to change these settings, do so BEFORE calling
+        this method. Changing settings afterward will not affect already-written
+        external files unless you call this method again with replace_existing=True.
 
         Parameters
         ----------
@@ -1625,6 +1634,11 @@ class MFSimulationBase:
                 Base file name prefix for all files
             binary: bool
                 Whether file will be stored as binary
+            replace_existing: bool
+                Whether to replace existing external files. If True, existing
+                external files will be rewritten with current settings
+                (e.g., max_columns_of_data). If False, existing external files
+                will not be rewritten. Default is True.
         """
 
         # copy any files whose paths have changed
@@ -1636,6 +1650,7 @@ class MFSimulationBase:
                 external_data_folder,
                 base_name,
                 binary,
+                replace_existing,
             )
         # set data external for solution packages
         for package in self._solution_files.values():
@@ -1644,6 +1659,7 @@ class MFSimulationBase:
                 external_data_folder,
                 base_name,
                 binary,
+                replace_existing,
             )
         # set data external for other packages
         for package in self._other_files.values():
@@ -1652,6 +1668,7 @@ class MFSimulationBase:
                 external_data_folder,
                 base_name,
                 binary,
+                replace_existing,
             )
         for package in self._exchange_files.values():
             package.set_all_data_external(
@@ -1659,6 +1676,7 @@ class MFSimulationBase:
                 external_data_folder,
                 base_name,
                 binary,
+                replace_existing,
             )
 
     def set_all_data_internal(self, check_data=True):

@@ -164,20 +164,25 @@ def test_max_columns_internal_array(function_tmpdir):
     check_columns(expected=1)
 
 
-reason = "external files don't respect max_columns_of_data"
+reason_ext = (
+    "set_all_data_external() writes files immediately. Changing output settings"
+    "afterward has no effect unless set_all_data_external() is called again. "
+    "You must set max_columns_of_data BEFORE calling set_all_data_external(). "
+    "This is an architectural limitation requiring a deferred write implementation."
+)
 
 
 @pytest.mark.parametrize(
     ("which_ext", "first_set", "workspace"),
     [
-        pytest.param("all", "opt", "same", marks=pytest.mark.xfail(reason=reason)),
-        pytest.param("all", "opt", "diff"),
-        pytest.param("all", "ext", "same", marks=pytest.mark.xfail(reason=reason)),
-        pytest.param("all", "ext", "diff", marks=pytest.mark.xfail(reason=reason)),
-        pytest.param("one", "opt", "same", marks=pytest.mark.xfail(reason=reason)),
-        pytest.param("one", "opt", "diff"),
-        pytest.param("one", "ext", "same", marks=pytest.mark.xfail(reason=reason)),
-        pytest.param("one", "ext", "diff", marks=pytest.mark.xfail(reason=reason)),
+        ("all", "opt", "same"),
+        ("all", "opt", "diff"),
+        pytest.param("all", "ext", "same", marks=pytest.mark.xfail(reason=reason_ext)),
+        pytest.param("all", "ext", "diff", marks=pytest.mark.xfail(reason=reason_ext)),
+        ("one", "opt", "same"),
+        ("one", "opt", "diff"),
+        pytest.param("one", "ext", "same", marks=pytest.mark.xfail(reason=reason_ext)),
+        pytest.param("one", "ext", "diff", marks=pytest.mark.xfail(reason=reason_ext)),
     ],
 )
 def test_max_columns_external_array(function_tmpdir, which_ext, first_set, workspace):
