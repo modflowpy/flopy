@@ -616,29 +616,106 @@ class LayerFile:
         )
 
     def _build_kijlist(self, idx):
-        if isinstance(idx, list):
-            kijlist = idx
+        """Build normalized cell index list based on grid type.
+
+        Accepts natural index formats for each grid type:
+        - DIS (structured): (k, i, j) or list of such
+        - DISV (vertex): (k, cellid) or list of such
+        - DISU (unstructured): node or list of such
+
+        For backwards compatibility, also accepts old 3-tuple format with
+        dummy values: (k, dummy, cellid) for DISV and (dummy, dummy, node) for DISU.
+
+        Returns:
+        - DIS: list of 3-tuples (k, i, j)
+        - DISV: list of 2-tuples (k, cellid)
+        - DISU: list of integers (node)
+        """
+        # Determine grid type
+        grid_type = "structured" if self.mg is None else self.mg.grid_type
+
+        # Normalize idx to a list
+        if isinstance(idx, int):
+            idx_list = [idx]
         elif isinstance(idx, tuple):
-            kijlist = [idx]
+            idx_list = [idx]
+        elif isinstance(idx, list):
+            idx_list = idx
         else:
             raise Exception("Could not build kijlist from ", idx)
 
-        # Check to make sure that k, i, j are within range, otherwise
-        # the seek approach won't work.  Can't use k = -1, for example.
-        for k, i, j in kijlist:
-            fail = False
-            if k < 0 or k > self.nlay - 1:
-                fail = True
-            if i < 0 or i > self.nrow - 1:
-                fail = True
-            if j < 0 or j > self.ncol - 1:
-                fail = True
-            if fail:
-                raise Exception(
-                    "Invalid cell index. Cell {} not within model grid: {}".format(
-                        (k, i, j), (self.nlay, self.nrow, self.ncol)
+        kijlist = []
+        for item in idx_list:
+            if grid_type == "structured":
+                # DIS: expect 3-tuple (k, i, j)
+                if not isinstance(item, tuple) or len(item) != 3:
+                    raise Exception(
+                        f"DIS structured grid requires 3-tuple (layer, row, col), "
+                        f"got: {item}"
                     )
-                )
+                k, i, j = item
+                # Validate ranges
+                if k < 0 or k > self.nlay - 1:
+                    raise Exception(f"Layer index {k} out of range [0, {self.nlay})")
+                if i < 0 or i > self.nrow - 1:
+                    raise Exception(f"Row index {i} out of range [0, {self.nrow})")
+                if j < 0 or j > self.ncol - 1:
+                    raise Exception(f"Column index {j} out of range [0, {self.ncol})")
+                kijlist.append((k, i, j))
+            elif grid_type == "vertex":
+                if isinstance(item, tuple):
+                    if len(item) == 2:
+                        # proper format: (layer, cellid)
+                        k, cell = item
+                    elif len(item) == 3:
+                        # old format: (layer, dummy, cellid)
+                        k, cell = item[0], item[2]
+                    else:
+                        raise Exception(
+                            f"DISV vertex grid requires 2-tuple (layer, cellid) "
+                            f"or 3-tuple (layer, dummy, cellid), got: {item}"
+                        )
+                else:
+                    raise Exception(
+                        f"DISV vertex grid requires 2-tuple (layer, cellid) "
+                        f"or 3-tuple (layer, dummy, cellid), got: {item}"
+                    )
+                if k < 0 or k >= self.nlay:
+                    raise Exception(f"Layer index {k} out of range [0, {self.nlay})")
+                if cell < 0 or cell >= self.mg.ncpl:
+                    raise Exception(
+                        f"Cell index {cell} out of range [0, {self.mg.ncpl})"
+                    )
+                # Store as 2-tuple for DISV
+                kijlist.append((k, cell))
+            else:
+                if isinstance(item, (int, np.integer)):
+                    # proper format: just the node number
+                    node = int(item)
+                elif isinstance(item, tuple):
+                    if len(item) == 3:
+                        # old format: (dummy, dummy, node)
+                        node = int(item[2])
+                    elif len(item) == 1:
+                        # Also support single-element tuple
+                        node = int(item[0])
+                    else:
+                        raise Exception(
+                            f"DISU unstructured grid requires integer node index "
+                            f"or 3-tuple (dummy, dummy, node), got: {item}"
+                        )
+                else:
+                    raise Exception(
+                        f"DISU unstructured grid requires integer node index "
+                        f"or 3-tuple (dummy, dummy, node), got: {item}"
+                    )
+                if node < 0 or node >= self.mg.nnodes:
+                    raise Exception(
+                        f"Node index {node} out of range [0, {self.mg.nnodes})"
+                    )
+                # Store as integer for DISU
+                kijlist.append(node)
+
         return kijlist
 
     def _get_nstation(self, idx, kijlist):

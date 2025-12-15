@@ -405,10 +405,18 @@ class BinaryLayerFile(LayerFile):
 
         Parameters
         ----------
-        idx : tuple of ints, or a list of a tuple of ints
-            idx can be (layer, row, column) or it can be a list in the form
-            [(layer, row, column), (layer, row, column), ...].  The layer,
-            row, and column values must be zero based.
+        idx : int, tuple of ints, or list of such
+            Acceptable values depend on grid type:
+
+            - Structured grids (DIS): (layer, row, column) or list of such
+            - Vertex grids (DISV): (layer, cellid) or list of such
+            - Unstructured grids (DISU): node number or list of such
+
+            All indices must be zero-based.
+
+            For backwards compatibility, DISV and DISU grids also accept the old
+            3-tuple format with dummy values: (layer, dummy, cellid) for DISV and
+            (dummy, dummy, node) for DISU.
 
         Returns
         -------
@@ -422,11 +430,23 @@ class BinaryLayerFile(LayerFile):
         Notes
         -----
 
-        The layer, row, and column values must be zero-based, and must be
-        within the following ranges: 0 <= k < nlay; 0 <= i < nrow; 0 <= j < ncol
+        Index ranges (zero-based):
+
+        - DIS: 0 <= layer < nlay, 0 <= row < nrow, 0 <= col < ncol
+        - DISV: 0 <= layer < nlay, 0 <= cellid < ncpl
+        - DISU: 0 <= node < nnodes
 
         Examples
         --------
+
+        >>> # DIS grid: layer 0, row 5, column 5
+        >>> ts = hds.get_ts(idx=(0, 5, 5))
+
+        >>> # DISV grid: layer 0, cell 12
+        >>> ts = hds.get_ts(idx=(0, 12))
+
+        >>> # DISU grid: node 10
+        >>> ts = hds.get_ts(idx=10)
 
         """
         kijlist = self._build_kijlist(idx)
@@ -435,13 +455,34 @@ class BinaryLayerFile(LayerFile):
         # Initialize result array and put times in first column
         result = self._init_result(nstation)
 
+        # Determine grid type
+        grid_type = "structured" if self.mg is None else self.mg.grid_type
+
         istat = 1
-        for k, i, j in kijlist:
-            ioffset = (i * self.ncol + j) * self.realtype(1).nbytes
+        for item in kijlist:
+            # Unpack based on grid type
+            if grid_type == "structured":
+                # DIS: 3-tuple (k, i, j)
+                k, i, j = item
+                ioffset = (i * self.ncol + j) * self.realtype(1).nbytes
+            elif grid_type == "vertex":
+                # DISV: 2-tuple (k, cellid)
+                k, cell = item
+                ioffset = cell * self.realtype(1).nbytes
+            else:
+                # DISU: integer (node)
+                node = item
+                ioffset = node * self.realtype(1).nbytes
+                k = 0  # dummy value for DISU
+
             for irec, header in enumerate(self.recordarray):
                 ilay = header["ilay"] - 1  # change ilay from header to zero-based
-                if ilay != k:
+
+                # For structured and vertex grids, check layer matches
+                # For unstructured grids, read from the single "layer" in the file
+                if grid_type != "unstructured" and ilay != k:
                     continue
+
                 ipos = self.iposarray[irec].item()
 
                 # Calculate offset necessary to reach intended cell
@@ -1720,16 +1761,36 @@ class CellBudgetFile:
 
                 nodes = self._cellid_to_node(cellids)
                 for vv in v:
-                    available = vv.dtype.names
-                    if variable not in available:
-                        raise ValueError(
-                            f"Variable '{variable}' not found in budget record. "
-                            f"Available variables: {list(available)}"
-                        )
+                    # Check if this is a recarray (IMETH=6) or plain array (IMETH=1)
+                    if vv.dtype.names is None:
+                        # IMETH=1: Plain array - extract values at specified cells
+                        # For DISV/DISU grids with IMETH=1, the array is still 3D but
+                        # we need to extract values at the specified nodes
+                        if self.modelgrid.grid_type == "vertex":
+                            # DISV: shape is (nlay, ncpl) - extract by layer and cellid
+                            istat = 1
+                            for k, cell in cellids:
+                                result[itim, istat] = vv[k, cell].copy()
+                                istat += 1
+                        else:
+                            # DISU: shape should be (nnodes,) or similar
+                            # Extract by node index
+                            istat = 1
+                            for node in cellids:
+                                result[itim, istat] = vv.flat[node].copy()
+                                istat += 1
+                    else:
+                        # IMETH=6: Recarray with named fields
+                        available = vv.dtype.names
+                        if variable not in available:
+                            raise ValueError(
+                                f"Variable '{variable}' not found in budget record. "
+                                f"Available variables: {list(available)}"
+                            )
 
-                    dix = np.asarray(np.isin(vv["node"], nodes)).nonzero()[0]
-                    if len(dix) > 0:
-                        result[itim, 1:] = vv[variable][dix]
+                        dix = np.asarray(np.isin(vv["node"], nodes)).nonzero()[0]
+                        if len(dix) > 0:
+                            result[itim, 1:] = vv[variable][dix]
 
         return result
 
