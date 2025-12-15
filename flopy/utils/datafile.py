@@ -723,6 +723,10 @@ class LayerFile:
             return len(kijlist)
         elif isinstance(idx, tuple):
             return 1
+        elif isinstance(idx, (int, np.integer)):
+            return 1  # Single DISU node
+        else:
+            return None
 
     def _init_result(self, nstation):
         # Initialize result array and put times in first column
