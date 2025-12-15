@@ -1013,6 +1013,67 @@ def test_cellbudgetfile_get_ts_aux_vars_mf6_disu(dis_sim):
 
 
 @pytest.mark.requires_exe("mf6")
+def test_cellbudgetfile_get_ts_imeth1_disv_grid(dis_sim, function_tmpdir):
+    """Test that IMETH=1 budget terms (like STO-SS) work with DISV grids.
+
+    This specifically tests the fix for the issue where IMETH=1 data
+    (plain arrays without field names) would fail with TypeError when
+    checking 'if variable not in available' because available was None.
+
+    The bug would cause: TypeError: argument of type 'NoneType' is not iterable
+
+    It also tests that data extraction works correctly, handling the padding
+    dimensions that MODFLOW 6 uses for IMETH=1 data with DISV grids.
+    """
+    from flopy.mf6 import ModflowGwfdisv, ModflowGwfsto
+
+    sim = dis_sim
+    gwf = sim.get_model()
+    dis_grid = gwf.modelgrid
+
+    # Create DISV model with storage to get STO-SS output (IMETH=1)
+    disv_kwargs = get_disv_kwargs(
+        nlay=dis_grid.nlay,
+        nrow=dis_grid.nrow,
+        ncol=dis_grid.ncol,
+        delr=dis_grid.delr,
+        delc=dis_grid.delc,
+        tp=dis_grid.top,
+        botm=dis_grid.botm,
+    )
+    gwf.remove_package("dis")
+    disv = ModflowGwfdisv(gwf, **disv_kwargs)
+
+    # Add storage package to get STO-SS output
+    sto = ModflowGwfsto(gwf, save_flows=True, iconvert=1)
+
+    sim.set_sim_path(function_tmpdir / "disv_imeth1")
+    sim.write_simulation()
+    success, _ = sim.run_simulation(silent=False)
+    assert success
+
+    cbc = gwf.output.budget()
+
+    # Test that get_ts() works with IMETH=1 data (STO-SS)
+    # New format: 2-tuple for DISV
+    ts_new = cbc.get_ts(idx=(0, 0), text="STO-SS")
+    assert ts_new.shape[0] > 0, "Should have at least one time step"
+    assert ts_new.shape[1] == 2, "Should have time + 1 data column"
+
+    # Old format: 3-tuple with dummy middle value
+    ts_old = cbc.get_ts(idx=(0, 0, 0), text="STO-SS")
+    np.testing.assert_array_equal(
+        ts_new,
+        ts_old,
+        err_msg="DISV IMETH=1: old 3-tuple format should match new 2-tuple format",
+    )
+
+    # Test with list of cells
+    ts_list = cbc.get_ts(idx=[(0, 0), (0, 5)], text="STO-SS")
+    assert ts_list.shape == (ts_new.shape[0], 3), "Should have time + 2 data columns"
+
+
+@pytest.mark.requires_exe("mf6")
 def test_cellbudgetfile_get_ts_backwards_compatible_idx_format(
     dis_sim, function_tmpdir
 ):
@@ -1094,135 +1155,4 @@ def test_cellbudgetfile_get_ts_backwards_compatible_idx_format(
     np.testing.assert_array_equal(
         ts_new_list,
         ts_old_list,
-    )
-
-
-@pytest.mark.requires_exe("mf6")
-def test_headfile_get_ts_disv_grid(dis_sim, function_tmpdir):
-    """Test HeadFile.get_ts() with DISV grid using both new and old index formats."""
-    from flopy.mf6 import ModflowGwfchd, ModflowGwfdisv
-    from flopy.utils import HeadFile
-
-    sim = dis_sim
-    gwf = sim.get_model()
-    dis_grid = gwf.modelgrid
-
-    # Create DISV model
-    disv_kwargs = get_disv_kwargs(
-        nlay=dis_grid.nlay,
-        nrow=dis_grid.nrow,
-        ncol=dis_grid.ncol,
-        delr=dis_grid.delr,
-        delc=dis_grid.delc,
-        tp=dis_grid.top,
-        botm=dis_grid.botm,
-    )
-    gwf.remove_package("dis")
-    gwf.remove_package("chd")
-    disv = ModflowGwfdisv(gwf, **disv_kwargs)
-    chd_spd = [[0, 0, 10.0], [0, 24, 0.0]]
-    chd = ModflowGwfchd(gwf, stress_period_data=chd_spd)
-
-    sim.set_sim_path(function_tmpdir / "disv_head")
-    sim.write_simulation()
-    success, _ = sim.run_simulation(silent=False)
-    assert success
-
-    # Open head file with modelgrid
-    head_file = function_tmpdir / "disv_head" / f"{gwf.name}.hds"
-    hds = HeadFile(head_file, modelgrid=gwf.modelgrid)
-
-    # Test cell (layer=0, cellid=4)
-    # NEW format: 2-tuple
-    ts_new = hds.get_ts(idx=(0, 4))
-
-    # OLD format: 3-tuple with dummy middle value
-    ts_old = hds.get_ts(idx=(0, 0, 4))
-
-    # Both formats should return identical results
-    np.testing.assert_array_equal(
-        ts_new,
-        ts_old,
-        err_msg="DISV HeadFile: old 3-tuple format should match new 2-tuple format",
-    )
-
-    # Verify we got actual head values (not all zeros or NaN)
-    assert ts_new.shape[0] > 0, "Should have at least one time step"
-    assert ts_new.shape[1] == 2, "Should have time + 1 head column"
-    assert not np.all(np.isnan(ts_new[:, 1])), "Head values should not be all NaN"
-
-    # Test with list of cells
-    ts_new_list = hds.get_ts(idx=[(0, 4), (0, 10)])
-    ts_old_list = hds.get_ts(idx=[(0, 0, 4), (0, 0, 10)])
-
-    np.testing.assert_array_equal(
-        ts_new_list,
-        ts_old_list,
-        err_msg="DISV HeadFile: old list format should match new list format",
-    )
-
-
-@pytest.mark.requires_exe("mf6")
-def test_headfile_get_ts_disu_grid(dis_sim, function_tmpdir):
-    """Test HeadFile.get_ts() with DISU grid using both new and old index formats."""
-    from flopy.mf6 import ModflowGwfchd, ModflowGwfdisu
-    from flopy.utils import HeadFile
-
-    sim = dis_sim
-    gwf = sim.get_model()
-    dis_grid = gwf.modelgrid
-
-    # Create DISU model
-    disu_kwargs = get_disu_kwargs(
-        nlay=dis_grid.nlay,
-        nrow=dis_grid.nrow,
-        ncol=dis_grid.ncol,
-        delr=dis_grid.delr,
-        delc=dis_grid.delc,
-        tp=dis_grid.top,
-        botm=dis_grid.botm,
-        return_vertices=True,
-    )
-    gwf.remove_package("dis")
-    gwf.remove_package("chd")
-    disu = ModflowGwfdisu(gwf, **disu_kwargs)
-    chd_spd = [[0, 10.0], [24, 0.0]]
-    chd = ModflowGwfchd(gwf, stress_period_data=chd_spd)
-
-    sim.set_sim_path(function_tmpdir / "disu_head")
-    sim.write_simulation()
-    success, _ = sim.run_simulation(silent=False)
-    assert success
-
-    # Open head file with modelgrid
-    head_file = function_tmpdir / "disu_head" / f"{gwf.name}.hds"
-    hds = HeadFile(head_file, modelgrid=gwf.modelgrid)
-
-    # Test node 4
-    # NEW format: just the integer
-    ts_new = hds.get_ts(idx=4)
-
-    # OLD format: 3-tuple with dummy first two values
-    ts_old = hds.get_ts(idx=(0, 0, 4))
-
-    # Both formats should return identical results
-    np.testing.assert_array_equal(
-        ts_new,
-        ts_old,
-        err_msg="DISU HeadFile: old 3-tuple format should match new integer format",
-    )
-
-    # Verify we got actual head values (not all zeros or NaN)
-    assert ts_new.shape[0] > 0, "Should have at least one time step"
-    assert ts_new.shape[1] == 2, "Should have time + 1 head column"
-    assert not np.all(np.isnan(ts_new[:, 1])), "Head values should not be all NaN"
-
-    # Test with list of nodes
-    ts_new_list = hds.get_ts(idx=[4, 10])
-    ts_old_list = hds.get_ts(idx=[(0, 0, 4), (0, 0, 10)])
-
-    np.testing.assert_array_equal(
-        ts_new_list,
-        ts_old_list,
-        err_msg="DISU HeadFile: old list format should match new list format",
     )

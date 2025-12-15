@@ -1764,20 +1764,23 @@ class CellBudgetFile:
                     # Check if this is a recarray (IMETH=6) or plain array (IMETH=1)
                     if vv.dtype.names is None:
                         # IMETH=1: Plain array - extract values at specified cells
-                        # For DISV/DISU grids with IMETH=1, the array is still 3D but
-                        # we need to extract values at the specified nodes
+                        # MODFLOW 6 stores IMETH=1 data as 3D arrays with padding:
+                        # - DIS: (nlay, nrow, ncol) - natural 3D structure
+                        # - DISV: (nlay, 1, ncpl) - middle dim is padding
+                        # - DISU: (1, 1, nnodes) - first two dims are padding
                         if self.modelgrid.grid_type == "vertex":
-                            # DISV: shape is (nlay, ncpl) - extract by layer and cellid
+                            # DISV: shape is (nlay, 1, ncpl)
+                            # Extract as vv[k, 0, cellid] to handle padding dimension
                             istat = 1
                             for k, cell in cellids:
-                                result[itim, istat] = vv[k, cell].copy()
+                                result[itim, istat] = vv[k, 0, cell].copy()
                                 istat += 1
                         else:
-                            # DISU: shape should be (nnodes,) or similar
-                            # Extract by node index
+                            # DISU: shape is (1, 1, nnodes)
+                            # Extract as vv[0, 0, node] to handle padding dimensions
                             istat = 1
                             for node in cellids:
-                                result[itim, istat] = vv.flat[node].copy()
+                                result[itim, istat] = vv[0, 0, node].copy()
                                 istat += 1
                     else:
                         # IMETH=6: Recarray with named fields
