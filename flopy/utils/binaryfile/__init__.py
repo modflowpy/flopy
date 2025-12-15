@@ -326,7 +326,7 @@ class BinaryLayerFile(LayerFile):
             self.nlay = header["ilay"]
 
         if self.nrow < 0 or self.ncol < 0:
-            raise Exception("negative nrow, ncol")
+            raise ValueError("negative nrow, ncol")
 
         warn_threshold = 10000000
         if self.nrow > 1 and self.nrow * self.ncol > warn_threshold:
@@ -544,9 +544,9 @@ class HeadFile(BinaryLayerFile):
         if precision == "auto":
             precision = get_headfile_precision(filename)
             if precision == "unknown":
-                s = f"Error. Precision could not be determined for {filename}"
-                print(s)
-                raise Exception()
+                raise ValueError(
+                    f"Error. Precision could not be determined for {filename}"
+                )
         self.header_dtype = BinaryHeader.set_dtype(bintype="Head", precision=precision)
         super().__init__(filename, precision, verbose, **kwargs)
 
@@ -698,9 +698,7 @@ class UcnFile(BinaryLayerFile):
         if precision == "auto":
             precision = get_headfile_precision(filename)
         if precision == "unknown":
-            s = f"Error. Precision could not be determined for {filename}"
-            print(s)
-            raise Exception()
+            raise ValueError(f"Error. Precision could not be determined for {filename}")
         self.header_dtype = BinaryHeader.set_dtype(bintype="Ucn", precision=precision)
         super().__init__(filename, precision, verbose, **kwargs)
         return
@@ -766,9 +764,9 @@ class HeadUFile(BinaryLayerFile):
         if precision == "auto":
             precision = get_headfile_precision(filename)
             if precision == "unknown":
-                s = f"Error. Precision could not be determined for {filename}"
-                print(s)
-                raise Exception()
+                raise ValueError(
+                    f"Error. Precision could not be determined for {filename}"
+                )
         self.header_dtype = BinaryHeader.set_dtype(bintype="Head", precision=precision)
         super().__init__(filename, precision, verbose, **kwargs)
 
@@ -782,10 +780,9 @@ class HeadUFile(BinaryLayerFile):
         if totim >= 0.0:
             keyindices = np.asarray(self.recordarray["totim"] == totim).nonzero()[0]
             if len(keyindices) == 0:
-                msg = f"totim value ({totim}) not found in file..."
-                raise Exception(msg)
+                raise ValueError(f"totim value ({totim}) not found in file")
         else:
-            raise Exception("Data not found...")
+            raise ValueError("Data not found")
 
         # fill a list of 1d arrays with heads from binary file
         data = self.nlay * [None]
@@ -946,7 +943,7 @@ class CellBudgetFile:
             self.modelgrid = kwargs.pop("modelgrid")
         if len(kwargs.keys()) > 0:
             args = ",".join(kwargs.keys())
-            raise Exception(f"LayerFile error: unrecognized kwargs: {args}")
+            raise ValueError(f"LayerFile error: unrecognized kwargs: {args}")
 
         if precision == "auto":
             success = self._set_precision("single")
@@ -960,7 +957,7 @@ class CellBudgetFile:
         elif precision == "double":
             success = self._set_precision(precision)
         else:
-            raise Exception(f"Unknown precision specified: {precision}")
+            raise ValueError(f"Unknown precision specified: {precision}")
 
         # set shape for full3D option
         if self.modelgrid is None:
@@ -971,7 +968,7 @@ class CellBudgetFile:
             self.nnodes = self.modelgrid.nnodes
 
         if not success:
-            raise Exception(
+            raise ValueError(
                 f"Budget file could not be read using {precision} precision"
             )
 
@@ -1102,7 +1099,7 @@ class CellBudgetFile:
         ncol = header["ncol"]
         text = header["text"].decode("ascii").strip()
         if nrow < 0 or ncol < 0:
-            raise Exception("negative nrow, ncol")
+            raise ValueError("negative nrow, ncol")
         if text != "FLOW-JA-FACE":
             self.nrow = nrow
             self.ncol = ncol
@@ -1266,7 +1263,7 @@ class CellBudgetFile:
                 print("")
             nbytes = nlist * (4 * 2 + realtype_nbytes + naux * realtype_nbytes)
         else:
-            raise Exception(f"invalid method code {imeth}")
+            raise ValueError(f"invalid method code {imeth}")
         if nbytes != 0:
             self.file.seek(nbytes, 1)
 
@@ -1316,8 +1313,7 @@ class CellBudgetFile:
                     text16 = t
                     break
             if text16 is None:
-                errmsg = "The specified text string is not in the budget file."
-                raise Exception(errmsg)
+                raise ValueError("The specified text string is not in the budget file")
         return text16
 
     def _find_paknam(self, paknam, to=False):
@@ -1337,8 +1333,8 @@ class CellBudgetFile:
                     paknam16 = t
                     break
             if paknam16 is None:
-                raise Exception(
-                    "The specified package name string is not in the budget file."
+                raise ValueError(
+                    "The specified package name string is not in the budget file"
                 )
         return paknam16
 
@@ -1591,7 +1587,7 @@ class CellBudgetFile:
                          compact budget format if you want to work with
                          times.  Or you may access this file using the
                          kstp and kper arguments or the idx argument."""
-                raise Exception(errmsg)
+                raise ValueError(errmsg)
 
         # check and make sure that text is in file
         text16 = None
@@ -1846,7 +1842,7 @@ class CellBudgetFile:
                         f"(layer, dummy, cellid), got: {item}"
                     )
                 if k < 0 or k >= self.nlay:
-                    raise Exception(f"Layer index {k} out of range [0, {self.nlay})")
+                    raise ValueError(f"Layer index {k} out of range [0, {self.nlay})")
                 if cell < 0 or cell >= self.modelgrid.ncpl:
                     raise ValueError(
                         f"Cell index {cell} out of range [0, {self.modelgrid.ncpl})"
@@ -1874,7 +1870,7 @@ class CellBudgetFile:
                         f"got: {item}"
                     )
                 if node < 0 or node >= self.modelgrid.nnodes:
-                    raise Exception(
+                    raise ValueError(
                         f"Node index {node} out of range [0, {self.modelgrid.nnodes})"
                     )
                 cellid.append(node)

@@ -193,7 +193,7 @@ class LayerFile:
         elif precision == "double":
             self.realtype = np.float64
         else:
-            raise Exception(f"Unknown precision specified: {precision}")
+            raise ValueError(f"Unknown precision specified: {precision}")
 
         self.model = None
         self.dis = None
@@ -211,7 +211,7 @@ class LayerFile:
             self.mg = kwargs.pop("modelgrid")
         if len(kwargs.keys()) > 0:
             args = ",".join(kwargs.keys())
-            raise Exception(f"LayerFile error: unrecognized kwargs: {args}")
+            raise ValueError(f"LayerFile error: unrecognized kwargs: {args}")
 
         # read through the file and build the pointer index
         self._build_index()
@@ -465,10 +465,9 @@ class LayerFile:
         if totim >= 0.0:
             keyindices = np.asarray(self.recordarray["totim"] == totim).nonzero()[0]
             if len(keyindices) == 0:
-                msg = f"totim value ({totim}) not found in file..."
-                raise Exception(msg)
+                raise ValueError(f"totim value ({totim}) not found in file")
         else:
-            raise Exception("Data not found...")
+            raise ValueError("Data not found")
 
         # initialize head with nan and then fill it
         idx = keyindices[0]
@@ -550,7 +549,7 @@ class LayerFile:
                 & (self.recordarray["kper"] == kper1)
             ).nonzero()
             if idx[0].shape[0] == 0:
-                raise Exception(f"get_data() error: kstpkper not found:{kstpkper}")
+                raise ValueError(f"get_data() error: kstpkper not found: {kstpkper}")
             totim1 = self.recordarray[idx]["totim"][0]
         elif totim is not None:
             totim1 = totim
@@ -642,25 +641,25 @@ class LayerFile:
         elif isinstance(idx, list):
             idx_list = idx
         else:
-            raise Exception("Could not build kijlist from ", idx)
+            raise ValueError(f"Could not build kijlist from {idx}")
 
         kijlist = []
         for item in idx_list:
             if grid_type == "structured":
                 # DIS: expect 3-tuple (k, i, j)
                 if not isinstance(item, tuple) or len(item) != 3:
-                    raise Exception(
+                    raise ValueError(
                         f"DIS structured grid requires 3-tuple (layer, row, col), "
                         f"got: {item}"
                     )
                 k, i, j = item
                 # Validate ranges
                 if k < 0 or k > self.nlay - 1:
-                    raise Exception(f"Layer index {k} out of range [0, {self.nlay})")
+                    raise ValueError(f"Layer index {k} out of range [0, {self.nlay})")
                 if i < 0 or i > self.nrow - 1:
-                    raise Exception(f"Row index {i} out of range [0, {self.nrow})")
+                    raise ValueError(f"Row index {i} out of range [0, {self.nrow})")
                 if j < 0 or j > self.ncol - 1:
-                    raise Exception(f"Column index {j} out of range [0, {self.ncol})")
+                    raise ValueError(f"Column index {j} out of range [0, {self.ncol})")
                 kijlist.append((k, i, j))
             elif grid_type == "vertex":
                 if isinstance(item, tuple):
@@ -671,19 +670,19 @@ class LayerFile:
                         # old format: (layer, dummy, cellid)
                         k, cell = item[0], item[2]
                     else:
-                        raise Exception(
+                        raise ValueError(
                             f"DISV vertex grid requires 2-tuple (layer, cellid) "
                             f"or 3-tuple (layer, dummy, cellid), got: {item}"
                         )
                 else:
-                    raise Exception(
+                    raise ValueError(
                         f"DISV vertex grid requires 2-tuple (layer, cellid) "
                         f"or 3-tuple (layer, dummy, cellid), got: {item}"
                     )
                 if k < 0 or k >= self.nlay:
-                    raise Exception(f"Layer index {k} out of range [0, {self.nlay})")
+                    raise ValueError(f"Layer index {k} out of range [0, {self.nlay})")
                 if cell < 0 or cell >= self.mg.ncpl:
-                    raise Exception(
+                    raise ValueError(
                         f"Cell index {cell} out of range [0, {self.mg.ncpl})"
                     )
                 # Store as 2-tuple for DISV
@@ -700,17 +699,17 @@ class LayerFile:
                         # Also support single-element tuple
                         node = int(item[0])
                     else:
-                        raise Exception(
+                        raise ValueError(
                             f"DISU unstructured grid requires integer node index "
                             f"or 3-tuple (dummy, dummy, node), got: {item}"
                         )
                 else:
-                    raise Exception(
+                    raise ValueError(
                         f"DISU unstructured grid requires integer node index "
                         f"or 3-tuple (dummy, dummy, node), got: {item}"
                     )
                 if node < 0 or node >= self.mg.nnodes:
-                    raise Exception(
+                    raise ValueError(
                         f"Node index {node} out of range [0, {self.mg.nnodes})"
                     )
                 # Store as integer for DISU
