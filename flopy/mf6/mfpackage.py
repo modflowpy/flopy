@@ -1334,7 +1334,7 @@ class MFBlock:
         check_data=True,
         external_data_folder=None,
         binary=False,
-        replace_existing=True,
+        replace_existing=False,
     ):
         """Sets the block's list and array data to be stored externally,
         base_name is external file name's prefix, check_data determines
@@ -1368,7 +1368,7 @@ class MFBlock:
                 Whether to replace existing external files. If True, existing
                 external files will be rewritten with current settings
                 (e.g., max_columns_of_data). If False, existing external files
-                will not be rewritten. Default is True.
+                will not be rewritten. Default is False.
 
         """
 
@@ -2860,7 +2860,7 @@ class MFPackage(PackageInterface):
         external_data_folder=None,
         base_name=None,
         binary=False,
-        replace_existing=True,
+        replace_existing=False,
     ):
         """Sets the package's list and array data to be stored externally.
 
@@ -2886,7 +2886,7 @@ class MFPackage(PackageInterface):
                 Whether to replace existing external files. If True, existing
                 external files will be rewritten with current settings
                 (e.g., max_columns_of_data). If False, existing external files
-                will not be rewritten. Default is True.
+                will not be rewritten. Default is False.
         """
         # set blocks
         for key, block in self.blocks.items():

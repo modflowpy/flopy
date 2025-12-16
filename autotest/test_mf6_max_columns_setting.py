@@ -242,7 +242,9 @@ def test_max_columns_external_array(function_tmpdir, which_ext, first_set, works
         sim.set_sim_path(sim_ws)
     if first_set == "opt":
         sim.simulation_data.max_columns_of_data = 1
-        sim.set_all_data_external()
+        # For "same" workspace, need replace_existing=True to rewrite existing files
+        replace_existing = workspace == "same"
+        sim.set_all_data_external(replace_existing=replace_existing)
     elif first_set == "ext":
         sim.set_all_data_external()
         sim.simulation_data.max_columns_of_data = 1
