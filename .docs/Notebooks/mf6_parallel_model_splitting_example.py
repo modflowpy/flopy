@@ -355,7 +355,7 @@ new_top = fine_topo.resample_to_grid(
 # +
 # calculate and set idomain
 ix = flopy.utils.GridIntersect(modelgrid, rtree=True)
-result = ix.intersect(Polygon(boundary_polygon))
+result = ix.intersect(Polygon(boundary_polygon), geo_dataframe=False)
 idxs = tuple(zip(*result.cellids))
 idomain = np.zeros((nrow, ncol), dtype=int)
 idomain[idxs] = 1
@@ -372,7 +372,7 @@ modelgrid._top = new_top
 ixs = flopy.utils.GridIntersect(modelgrid)
 cellids = []
 for seg in segs:
-    v = ixs.intersect(LineString(seg), sort_by_cellid=True)
+    v = ixs.intersect(LineString(seg), sort_by_cellid=True, geo_dataframe=False)
     cellids += v["cellids"].tolist()
 intersection_rg = np.zeros(modelgrid.shape[1:])
 for loc in cellids:
@@ -405,7 +405,7 @@ ixs = flopy.utils.GridIntersect(modelgrid)
 drn_cellids = []
 drn_lengths = []
 for seg in segs:
-    v = ixs.intersect(LineString(seg), sort_by_cellid=True)
+    v = ixs.intersect(LineString(seg), sort_by_cellid=True, geo_dataframe=False)
     drn_cellids += v["cellids"].tolist()
     drn_lengths += v["lengths"].tolist()
 # -
