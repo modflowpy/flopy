@@ -326,7 +326,7 @@ class BinaryLayerFile(LayerFile):
             self.nlay = header["ilay"]
 
         if self.nrow < 0 or self.ncol < 0:
-            raise Exception("negative nrow, ncol")
+            raise ValueError("negative nrow, ncol")
 
         warn_threshold = 10000000
         if self.nrow > 1 and self.nrow * self.ncol > warn_threshold:
@@ -405,10 +405,18 @@ class BinaryLayerFile(LayerFile):
 
         Parameters
         ----------
-        idx : tuple of ints, or a list of a tuple of ints
-            idx can be (layer, row, column) or it can be a list in the form
-            [(layer, row, column), (layer, row, column), ...].  The layer,
-            row, and column values must be zero based.
+        idx : int, tuple of ints, or list of such
+            Acceptable values depend on grid type:
+
+            - Structured grids (DIS): (layer, row, column) or list of such
+            - Vertex grids (DISV): (layer, cellid) or list of such
+            - Unstructured grids (DISU): node number or list of such
+
+            All indices must be zero-based.
+
+            For backwards compatibility, DISV and DISU grids also accept the old
+            3-tuple format with dummy values: (layer, dummy, cellid) for DISV and
+            (dummy, dummy, node) for DISU.
 
         Returns
         -------
@@ -422,11 +430,23 @@ class BinaryLayerFile(LayerFile):
         Notes
         -----
 
-        The layer, row, and column values must be zero-based, and must be
-        within the following ranges: 0 <= k < nlay; 0 <= i < nrow; 0 <= j < ncol
+        Index ranges (zero-based):
+
+        - DIS: 0 <= layer < nlay, 0 <= row < nrow, 0 <= col < ncol
+        - DISV: 0 <= layer < nlay, 0 <= cellid < ncpl
+        - DISU: 0 <= node < nnodes
 
         Examples
         --------
+
+        >>> # DIS grid: layer 0, row 5, column 5
+        >>> ts = hds.get_ts(idx=(0, 5, 5))
+
+        >>> # DISV grid: layer 0, cell 12
+        >>> ts = hds.get_ts(idx=(0, 12))
+
+        >>> # DISU grid: node 10
+        >>> ts = hds.get_ts(idx=10)
 
         """
         kijlist = self._build_kijlist(idx)
@@ -435,13 +455,34 @@ class BinaryLayerFile(LayerFile):
         # Initialize result array and put times in first column
         result = self._init_result(nstation)
 
+        # Determine grid type
+        grid_type = "structured" if self.mg is None else self.mg.grid_type
+
         istat = 1
-        for k, i, j in kijlist:
-            ioffset = (i * self.ncol + j) * self.realtype(1).nbytes
+        for item in kijlist:
+            # Unpack based on grid type
+            if grid_type == "structured":
+                # DIS: 3-tuple (k, i, j)
+                k, i, j = item
+                ioffset = (i * self.ncol + j) * self.realtype(1).nbytes
+            elif grid_type == "vertex":
+                # DISV: 2-tuple (k, cellid)
+                k, cell = item
+                ioffset = cell * self.realtype(1).nbytes
+            else:
+                # DISU: integer (node)
+                node = item
+                ioffset = node * self.realtype(1).nbytes
+                k = 0  # dummy value for DISU
+
             for irec, header in enumerate(self.recordarray):
                 ilay = header["ilay"] - 1  # change ilay from header to zero-based
-                if ilay != k:
+
+                # For structured and vertex grids, check layer matches
+                # For unstructured grids, read from the single "layer" in the file
+                if grid_type != "unstructured" and ilay != k:
                     continue
+
                 ipos = self.iposarray[irec].item()
 
                 # Calculate offset necessary to reach intended cell
@@ -503,9 +544,9 @@ class HeadFile(BinaryLayerFile):
         if precision == "auto":
             precision = get_headfile_precision(filename)
             if precision == "unknown":
-                s = f"Error. Precision could not be determined for {filename}"
-                print(s)
-                raise Exception()
+                raise ValueError(
+                    f"Error. Precision could not be determined for {filename}"
+                )
         self.header_dtype = BinaryHeader.set_dtype(bintype="Head", precision=precision)
         super().__init__(filename, precision, verbose, **kwargs)
 
@@ -657,9 +698,7 @@ class UcnFile(BinaryLayerFile):
         if precision == "auto":
             precision = get_headfile_precision(filename)
         if precision == "unknown":
-            s = f"Error. Precision could not be determined for {filename}"
-            print(s)
-            raise Exception()
+            raise ValueError(f"Error. Precision could not be determined for {filename}")
         self.header_dtype = BinaryHeader.set_dtype(bintype="Ucn", precision=precision)
         super().__init__(filename, precision, verbose, **kwargs)
         return
@@ -725,9 +764,9 @@ class HeadUFile(BinaryLayerFile):
         if precision == "auto":
             precision = get_headfile_precision(filename)
             if precision == "unknown":
-                s = f"Error. Precision could not be determined for {filename}"
-                print(s)
-                raise Exception()
+                raise ValueError(
+                    f"Error. Precision could not be determined for {filename}"
+                )
         self.header_dtype = BinaryHeader.set_dtype(bintype="Head", precision=precision)
         super().__init__(filename, precision, verbose, **kwargs)
 
@@ -741,10 +780,9 @@ class HeadUFile(BinaryLayerFile):
         if totim >= 0.0:
             keyindices = np.asarray(self.recordarray["totim"] == totim).nonzero()[0]
             if len(keyindices) == 0:
-                msg = f"totim value ({totim}) not found in file..."
-                raise Exception(msg)
+                raise ValueError(f"totim value ({totim}) not found in file")
         else:
-            raise Exception("Data not found...")
+            raise ValueError("Data not found")
 
         # fill a list of 1d arrays with heads from binary file
         data = self.nlay * [None]
@@ -905,7 +943,7 @@ class CellBudgetFile:
             self.modelgrid = kwargs.pop("modelgrid")
         if len(kwargs.keys()) > 0:
             args = ",".join(kwargs.keys())
-            raise Exception(f"LayerFile error: unrecognized kwargs: {args}")
+            raise ValueError(f"LayerFile error: unrecognized kwargs: {args}")
 
         if precision == "auto":
             success = self._set_precision("single")
@@ -919,7 +957,7 @@ class CellBudgetFile:
         elif precision == "double":
             success = self._set_precision(precision)
         else:
-            raise Exception(f"Unknown precision specified: {precision}")
+            raise ValueError(f"Unknown precision specified: {precision}")
 
         # set shape for full3D option
         if self.modelgrid is None:
@@ -930,7 +968,7 @@ class CellBudgetFile:
             self.nnodes = self.modelgrid.nnodes
 
         if not success:
-            raise Exception(
+            raise ValueError(
                 f"Budget file could not be read using {precision} precision"
             )
 
@@ -1061,7 +1099,7 @@ class CellBudgetFile:
         ncol = header["ncol"]
         text = header["text"].decode("ascii").strip()
         if nrow < 0 or ncol < 0:
-            raise Exception("negative nrow, ncol")
+            raise ValueError("negative nrow, ncol")
         if text != "FLOW-JA-FACE":
             self.nrow = nrow
             self.ncol = ncol
@@ -1225,7 +1263,7 @@ class CellBudgetFile:
                 print("")
             nbytes = nlist * (4 * 2 + realtype_nbytes + naux * realtype_nbytes)
         else:
-            raise Exception(f"invalid method code {imeth}")
+            raise ValueError(f"invalid method code {imeth}")
         if nbytes != 0:
             self.file.seek(nbytes, 1)
 
@@ -1275,8 +1313,7 @@ class CellBudgetFile:
                     text16 = t
                     break
             if text16 is None:
-                errmsg = "The specified text string is not in the budget file."
-                raise Exception(errmsg)
+                raise ValueError("The specified text string is not in the budget file")
         return text16
 
     def _find_paknam(self, paknam, to=False):
@@ -1296,8 +1333,8 @@ class CellBudgetFile:
                     paknam16 = t
                     break
             if paknam16 is None:
-                raise Exception(
-                    "The specified package name string is not in the budget file."
+                raise ValueError(
+                    "The specified package name string is not in the budget file"
                 )
         return paknam16
 
@@ -1550,7 +1587,7 @@ class CellBudgetFile:
                          compact budget format if you want to work with
                          times.  Or you may access this file using the
                          kstp and kper arguments or the idx argument."""
-                raise Exception(errmsg)
+                raise ValueError(errmsg)
 
         # check and make sure that text is in file
         text16 = None
@@ -1610,10 +1647,18 @@ class CellBudgetFile:
 
         Parameters
         ----------
-        idx : tuple of ints, or a list of a tuple of ints
-            idx can be (layer, row, column) or it can be a list in the form
-            [(layer, row, column), (layer, row, column), ...].  The layer,
-            row, and column values must be zero based.
+        idx : int, tuple of ints, or list of such
+            Acceptable values depend on grid type:
+
+            - Structured grids (DIS): (layer, row, column) or list of such
+            - Vertex grids (DISV): (layer, cellid) or list of such
+            - Unstructured grids (DISU): node number or list of such
+
+            All indices must be zero-based.
+
+            For backwards compatibility, DISV and DISU grids also accept the old
+            3-tuple format with dummy values: (layer, dummy, cellid) for DISV and
+            (dummy, dummy, node) for DISU.
         text : str
             The text identifier for the record.  Examples include
             'RIVER LEAKAGE', 'STORAGE', 'FLOW RIGHT FACE', etc.
@@ -1631,33 +1676,40 @@ class CellBudgetFile:
             Array has size (ntimes, ncells + 1).  The first column in the
             data array will contain time (totim).
 
-        See Also
-        --------
-
         Notes
         -----
 
-        The layer, row, and column values must be zero-based, and must be
-        within the following ranges: 0 <= k < nlay; 0 <= i < nrow; 0 <= j < ncol
+        Index ranges (zero-based):
+
+        - DIS: 0 <= layer < nlay, 0 <= row < nrow, 0 <= col < ncol
+        - DISV: 0 <= layer < nlay, 0 <= cellid < ncpl
+        - DISU: 0 <= node < nnodes
 
         Examples
         --------
 
-        >>> # Get specific discharge x-component from DATA-SPDIS record
+        >>> # DIS grid: layer 0, row 5, column 5
         >>> ts = cbb.get_ts(idx=(0, 5, 5), text='DATA-SPDIS', variable='qx')
 
+        >>> # DISV grid: layer 0, cell 12
+        >>> ts = cbb.get_ts(idx=(0, 12), text='DATA-SPDIS', variable='qx')
+
+        >>> # DISU grid: node 10
+        >>> ts = cbb.get_ts(idx=10, text='FLOW-JA-FACE')
+
         """
-        # issue exception if text not provided
         if text is None:
-            raise Exception(
+            raise ValueError(
                 "text keyword must be provided to CellBudgetFile get_ts() method."
             )
 
-        kijlist = self._build_kijlist(idx)
-        nstation = self._get_nstation(idx, kijlist)
+        cellids = self._cellids(idx)
+        ncells = len(cellids)
 
-        # Initialize result array and put times in first column
-        result = self._init_result(nstation)
+        result = np.empty((len(self.kstpkper), ncells + 1), dtype=self.realtype)
+        result[:, :] = np.nan
+        if len(self.times) == result.shape[0]:
+            result[:, 0] = np.array(self.times)
 
         timesint = self.get_times()
         kstpkper = self.get_kstpkper()
@@ -1674,106 +1726,167 @@ class CellBudgetFile:
                         f"number of time steps in cell budget file ({nsteps})"
                     )
                 timesint = times
-        for idx, t in enumerate(timesint):
-            result[idx, 0] = t
+        for i, t in enumerate(timesint):
+            result[i, 0] = t
 
-        full3d = True
-        for itim, k in enumerate(kstpkper):
-            if full3d:
-                try:
-                    v = self.get_data(kstpkper=k, text=text, full3D=True)
+        use_full3d = variable == "q" and (
+            self.modelgrid is None or self.modelgrid.grid_type == "structured"
+        )
 
-                    # skip missing data - required for storage
-                    if len(v) == 0:
-                        continue
-
-                    v = v[0]
-                    istat = 1
-                    for k, i, j in kijlist:
-                        result[itim, istat] = v[k, i, j].copy()
-                        istat += 1
+        for itim, kstpkper_ in enumerate(kstpkper):
+            if use_full3d:
+                v = self.get_data(kstpkper=kstpkper_, text=text, full3D=True)
+                if len(v) == 0:
                     continue
-                except ValueError:
-                    full3d = False
-            if not full3d:
-                v = self.get_data(kstpkper=k, text=text)
 
-                # skip missing data - required for storage
+                v = v[0]
+                istat = 1
+                for k, i, j in cellids:
+                    result[itim, istat] = v[k, i, j].copy()
+                    istat += 1
+            else:
+                v = self.get_data(kstpkper=kstpkper_, text=text)
                 if len(v) == 0:
                     continue
 
                 if self.modelgrid is None:
-                    s = (
+                    raise ValueError(
                         "A modelgrid instance must be provided during "
                         "instantiation to get IMETH=6 timeseries data"
                     )
-                    raise ValueError(s)
 
-                if self.modelgrid.grid_type == "structured":
-                    ndx = [
-                        lrc[0] * (self.modelgrid.nrow * self.modelgrid.ncol)
-                        + lrc[1] * self.modelgrid.ncol
-                        + (lrc[2] + 1)
-                        for lrc in kijlist
-                    ]
-                else:
-                    ndx = [
-                        lrc[0] * self.modelgrid.ncpl + (lrc[-1] + 1) for lrc in kijlist
-                    ]
-
+                nodes = self._cellid_to_node(cellids)
                 for vv in v:
-                    available = vv.dtype.names
-                    if variable not in available:
-                        raise ValueError(
-                            f"Variable '{variable}' not found in budget record. "
-                            f"Available variables: {list(available)}"
-                        )
+                    # Check if this is a recarray (IMETH=6) or plain array (IMETH=1)
+                    if vv.dtype.names is None:
+                        # IMETH=1: Plain array - extract values at specified cells
+                        # MODFLOW 6 stores IMETH=1 data as 3D arrays with padding:
+                        # - DIS: (nlay, nrow, ncol) - natural 3D structure
+                        # - DISV: (nlay, 1, ncpl) - middle dim is padding
+                        # - DISU: (1, 1, nnodes) - first two dims are padding
+                        if self.modelgrid.grid_type == "vertex":
+                            # DISV: shape is (nlay, 1, ncpl)
+                            # Extract as vv[k, 0, cellid] to handle padding dimension
+                            istat = 1
+                            for k, cell in cellids:
+                                result[itim, istat] = vv[k, 0, cell].copy()
+                                istat += 1
+                        else:
+                            # DISU: shape is (1, 1, nnodes)
+                            # Extract as vv[0, 0, node] to handle padding dimensions
+                            istat = 1
+                            for node in cellids:
+                                result[itim, istat] = vv[0, 0, node].copy()
+                                istat += 1
+                    else:
+                        # IMETH=6: Recarray with named fields
+                        available = vv.dtype.names
+                        if variable not in available:
+                            raise ValueError(
+                                f"Variable '{variable}' not found in budget record. "
+                                f"Available variables: {list(available)}"
+                            )
 
-                    dix = np.asarray(np.isin(vv["node"], ndx)).nonzero()[0]
-                    if len(dix) > 0:
-                        result[itim, 1:] = vv[variable][dix]
+                        dix = np.asarray(np.isin(vv["node"], nodes)).nonzero()[0]
+                        if len(dix) > 0:
+                            result[itim, 1:] = vv[variable][dix]
 
         return result
 
-    def _build_kijlist(self, idx):
-        if isinstance(idx, list):
-            kijlist = idx
+    def _cellids(self, idx):
+        if isinstance(idx, int):
+            idx_list = [idx]
         elif isinstance(idx, tuple):
-            kijlist = [idx]
+            idx_list = [idx]
+        elif isinstance(idx, list):
+            idx_list = idx
         else:
-            raise Exception("Could not build kijlist from ", idx)
+            raise TypeError(
+                f"Invalid index type, expected int, tuple "
+                f"or list of such, got {type(idx)}"
+            )
 
-        # Check to make sure that k, i, j are within range, otherwise
-        # the seek approach won't work.  Can't use k = -1, for example.
-        for k, i, j in kijlist:
-            fail = False
-            if k < 0 or k > self.nlay - 1:
-                fail = True
-            if i < 0 or i > self.nrow - 1:
-                fail = True
-            if j < 0 or j > self.ncol - 1:
-                fail = True
-            if fail:
-                raise Exception(
-                    "Invalid cell index. Cell {} not within model grid: {}".format(
-                        (k, i, j), (self.nlay, self.nrow, self.ncol)
+        grid_type = "structured" if self.modelgrid is None else self.modelgrid.grid_type
+
+        cellid = []
+        for item in idx_list:
+            if grid_type == "structured":
+                if not isinstance(item, (list, tuple)) or len(item) != 3:
+                    raise ValueError(
+                        f"Expected DIS cell index (layer, row, col), got: {item}"
                     )
-                )
-        return kijlist
+                k, i, j = item
+                if k < 0 or k >= self.nlay:
+                    raise ValueError(f"Layer index {k} out of range [0, {self.nlay})")
+                if i < 0 or i >= self.nrow:
+                    raise ValueError(f"Row index {i} out of range [0, {self.nrow})")
+                if j < 0 or j >= self.ncol:
+                    raise ValueError(f"Column index {j} out of range [0, {self.ncol})")
+                cellid.append((k, i, j))
+            elif grid_type == "vertex":
+                if isinstance(item, (list, tuple)):
+                    if len(item) == 2:
+                        # proper format: (layer, cellid)
+                        k, cell = item
+                    elif len(item) == 3:
+                        # old format: (layer, dummy, cellid)
+                        k, cell = item[0], item[2]
+                    else:
+                        raise ValueError(
+                            f"Expected DISV cell index (layer, cellid) "
+                            f"or (layer, dummy, cellid), got: {item}"
+                        )
+                else:
+                    raise ValueError(
+                        f"Expected DISV cell index (layer, cellid) or "
+                        f"(layer, dummy, cellid), got: {item}"
+                    )
+                if k < 0 or k >= self.nlay:
+                    raise ValueError(f"Layer index {k} out of range [0, {self.nlay})")
+                if cell < 0 or cell >= self.modelgrid.ncpl:
+                    raise ValueError(
+                        f"Cell index {cell} out of range [0, {self.modelgrid.ncpl})"
+                    )
+                cellid.append((k, cell))
+            else:
+                if isinstance(item, (int, np.integer)):
+                    # proper format: just node number
+                    node = int(item)
+                elif isinstance(item, (list, tuple)):
+                    if len(item) == 3:
+                        # old format: (dummy, dummy, node)
+                        node = int(item[2])
+                    elif len(item) == 1:
+                        # Also support single-element tuple
+                        node = int(item[0])
+                    else:
+                        raise ValueError(
+                            f"Expected DISU node number or (dummy, dummy, node), "
+                            f"got: {item}"
+                        )
+                else:
+                    raise ValueError(
+                        f"Expected DISU node number or (dummy, dummy, node), "
+                        f"got: {item}"
+                    )
+                if node < 0 or node >= self.modelgrid.nnodes:
+                    raise ValueError(
+                        f"Node index {node} out of range [0, {self.modelgrid.nnodes})"
+                    )
+                cellid.append(node)
 
-    def _get_nstation(self, idx, kijlist):
-        if isinstance(idx, list):
-            return len(kijlist)
-        elif isinstance(idx, tuple):
-            return 1
+        return cellid
 
-    def _init_result(self, nstation):
-        # Initialize result array and put times in first column
-        result = np.empty((len(self.kstpkper), nstation + 1), dtype=self.realtype)
-        result[:, :] = np.nan
-        if len(self.times) == result.shape[0]:
-            result[:, 0] = np.array(self.times)
-        return result
+    def _cellid_to_node(self, cellids) -> list[int]:
+        if self.modelgrid.grid_type == "structured":
+            return [
+                k * (self.nrow * self.ncol) + i * self.ncol + j + 1
+                for k, i, j in cellids
+            ]
+        elif self.modelgrid.grid_type == "vertex":
+            return [k * self.modelgrid.ncpl + cell + 1 for k, cell in cellids]
+        else:
+            return [node + 1 for node in cellids]
 
     def get_record(self, idx, full3D=False):
         """
@@ -1958,7 +2071,7 @@ class CellBudgetFile:
             List contains unique simulation times (totim) in binary file.
 
         """
-        out = np.ma.zeros(self.nnodes, dtype=np.float32)
+        out = np.ma.zeros(self.nnodes, dtype=data["q"].dtype)
         out.mask = True
         for [node, q] in zip(data["node"], data["q"]):
             idx = node - 1

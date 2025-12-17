@@ -22,6 +22,7 @@ from flopy.utils import (
     Util2d,
 )
 from flopy.utils.binaryfile import get_headfile_precision
+from flopy.utils.gridutil import get_disu_kwargs, get_disv_kwargs
 
 
 @pytest.fixture
@@ -597,3 +598,180 @@ def test_read_mf2005_freyberg(example_data_path, function_tmpdir, compact):
     assert len(cbb_data) == len(cbb_data_kstpkper)
     for i in range(len(cbb_data)):
         assert np.array_equal(cbb_data[i], cbb_data_kstpkper[i])
+
+
+@pytest.fixture
+def dis_sim(function_tmpdir):
+    from flopy.mf6 import (
+        MFSimulation,
+        ModflowGwf,
+        ModflowGwfchd,
+        ModflowGwfdis,
+        ModflowGwfic,
+        ModflowGwfnpf,
+        ModflowGwfoc,
+        ModflowIms,
+        ModflowTdis,
+    )
+
+    sim_name = "test_ts_aux_vars"
+    sim = MFSimulation(sim_name=sim_name, sim_ws=function_tmpdir, exe_name="mf6")
+    tdis = ModflowTdis(sim, nper=2, perioddata=[(1.0, 1, 1.0), (1.0, 1, 1.0)])
+    ims = ModflowIms(sim)
+    gwf = ModflowGwf(sim, modelname=sim_name, save_flows=True)
+    nrow, ncol, nlay = 5, 5, 1
+    dis = ModflowGwfdis(
+        gwf,
+        nrow=nrow,
+        ncol=ncol,
+        nlay=nlay,
+        delr=10.0,
+        delc=10.0,
+        top=10.0,
+        botm=[0.0],
+    )
+    ic = ModflowGwfic(gwf, strt=5.0)
+    npf = ModflowGwfnpf(gwf, k=1.0, save_specific_discharge=True)
+    chd_spd = [[(0, 0, 0), 10.0], [(0, 4, 4), 0.0]]
+    chd = ModflowGwfchd(gwf, stress_period_data=chd_spd)
+    budget_file = f"{sim_name}.cbc"
+    head_file = f"{sim_name}.hds"
+    oc = ModflowGwfoc(
+        gwf,
+        budget_filerecord=budget_file,
+        head_filerecord=head_file,
+        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    )
+
+    return sim
+
+
+@pytest.mark.requires_exe("mf6")
+def test_headfile_get_ts_disv_grid(dis_sim, function_tmpdir):
+    """Test HeadFile.get_ts() with DISV grid using both new and old index formats."""
+    from flopy.mf6 import ModflowGwfchd, ModflowGwfdisv
+    from flopy.utils import HeadFile
+
+    sim = dis_sim
+    gwf = sim.get_model()
+    dis_grid = gwf.modelgrid
+
+    # Create DISV model
+    disv_kwargs = get_disv_kwargs(
+        nlay=dis_grid.nlay,
+        nrow=dis_grid.nrow,
+        ncol=dis_grid.ncol,
+        delr=dis_grid.delr,
+        delc=dis_grid.delc,
+        tp=dis_grid.top,
+        botm=dis_grid.botm,
+    )
+    gwf.remove_package("dis")
+    gwf.remove_package("chd")
+    disv = ModflowGwfdisv(gwf, **disv_kwargs)
+    chd_spd = [[0, 0, 10.0], [0, 24, 0.0]]
+    chd = ModflowGwfchd(gwf, stress_period_data=chd_spd)
+
+    sim.set_sim_path(function_tmpdir / "disv_head")
+    sim.write_simulation()
+    success, _ = sim.run_simulation(silent=False)
+    assert success
+
+    # Open head file with modelgrid
+    head_file = function_tmpdir / "disv_head" / f"{gwf.name}.hds"
+    hds = HeadFile(head_file, modelgrid=gwf.modelgrid)
+
+    # Test cell (layer=0, cellid=4)
+    # NEW format: 2-tuple
+    ts_new = hds.get_ts(idx=(0, 4))
+
+    # OLD format: 3-tuple with dummy middle value
+    ts_old = hds.get_ts(idx=(0, 0, 4))
+
+    # Both formats should return identical results
+    np.testing.assert_array_equal(
+        ts_new,
+        ts_old,
+        err_msg="DISV HeadFile: old 3-tuple format should match new 2-tuple format",
+    )
+
+    # Verify we got actual head values (not all zeros or NaN)
+    assert ts_new.shape[0] > 0, "Should have at least one time step"
+    assert ts_new.shape[1] == 2, "Should have time + 1 head column"
+    assert not np.all(np.isnan(ts_new[:, 1])), "Head values should not be all NaN"
+
+    # Test with list of cells
+    ts_new_list = hds.get_ts(idx=[(0, 4), (0, 10)])
+    ts_old_list = hds.get_ts(idx=[(0, 0, 4), (0, 0, 10)])
+
+    np.testing.assert_array_equal(
+        ts_new_list,
+        ts_old_list,
+        err_msg="DISV HeadFile: old list format should match new list format",
+    )
+
+
+@pytest.mark.requires_exe("mf6")
+def test_headfile_get_ts_disu_grid(dis_sim, function_tmpdir):
+    """Test HeadFile.get_ts() with DISU grid using both new and old index formats."""
+    from flopy.mf6 import ModflowGwfchd, ModflowGwfdisu
+    from flopy.utils import HeadFile
+
+    sim = dis_sim
+    gwf = sim.get_model()
+    dis_grid = gwf.modelgrid
+
+    # Create DISU model
+    disu_kwargs = get_disu_kwargs(
+        nlay=dis_grid.nlay,
+        nrow=dis_grid.nrow,
+        ncol=dis_grid.ncol,
+        delr=dis_grid.delr,
+        delc=dis_grid.delc,
+        tp=dis_grid.top,
+        botm=dis_grid.botm,
+        return_vertices=True,
+    )
+    gwf.remove_package("dis")
+    gwf.remove_package("chd")
+    disu = ModflowGwfdisu(gwf, **disu_kwargs)
+    chd_spd = [[0, 10.0], [24, 0.0]]
+    chd = ModflowGwfchd(gwf, stress_period_data=chd_spd)
+
+    sim.set_sim_path(function_tmpdir / "disu_head")
+    sim.write_simulation()
+    success, _ = sim.run_simulation(silent=False)
+    assert success
+
+    # Open head file with modelgrid
+    head_file = function_tmpdir / "disu_head" / f"{gwf.name}.hds"
+    hds = HeadFile(head_file, modelgrid=gwf.modelgrid)
+
+    # Test node 4
+    # NEW format: just the integer
+    ts_new = hds.get_ts(idx=4)
+
+    # OLD format: 3-tuple with dummy first two values
+    ts_old = hds.get_ts(idx=(0, 0, 4))
+
+    # Both formats should return identical results
+    np.testing.assert_array_equal(
+        ts_new,
+        ts_old,
+        err_msg="DISU HeadFile: old 3-tuple format should match new integer format",
+    )
+
+    # Verify we got actual head values (not all zeros or NaN)
+    assert ts_new.shape[0] > 0, "Should have at least one time step"
+    assert ts_new.shape[1] == 2, "Should have time + 1 head column"
+    assert not np.all(np.isnan(ts_new[:, 1])), "Head values should not be all NaN"
+
+    # Test with list of nodes
+    ts_new_list = hds.get_ts(idx=[4, 10])
+    ts_old_list = hds.get_ts(idx=[(0, 0, 4), (0, 0, 10)])
+
+    np.testing.assert_array_equal(
+        ts_new_list,
+        ts_old_list,
+        err_msg="DISU HeadFile: old list format should match new list format",
+    )

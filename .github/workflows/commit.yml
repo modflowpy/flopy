@@ -83,8 +83,7 @@ jobs:
           cache-dependency-glob: "**/pyproject.toml"
 
       - name: Install Python dependencies
-        # temp. allow prereleases for vtk on aarch64
-        run: uv sync --all-extras --prerelease=allow
+        run: uv sync --all-extras
 
       - name: Install Modflow executables
         uses: modflowpy/install-modflow-action@v1
@@ -96,7 +95,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload failed test outputs
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: failed-smoke-${{ runner.os }}-${{ env.PYTHON_VERSION }}
@@ -187,7 +186,7 @@ jobs:
         run: pixi run --manifest-path=../../modflow6/pixi.toml coverage report
 
       - name: Upload failed test outputs
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: failed-${{ matrix.os }}-${{ matrix.python-version }}

@@ -1334,6 +1334,7 @@ class MFBlock:
         check_data=True,
         external_data_folder=None,
         binary=False,
+        replace_existing=False,
     ):
         """Sets the block's list and array data to be stored externally,
         base_name is external file name's prefix, check_data determines
@@ -1345,6 +1346,14 @@ class MFBlock:
         in a future release. While the checks API will remain in place
         through 3.x, it may be unstable, and will likely change in 4.x.
 
+        Note
+        ----
+        External files are written immediately when this method is called,
+        using the current value of max_columns_of_data and other formatting
+        settings. If you need to change these settings, do so BEFORE calling
+        this method. Changing settings afterward will not affect already-written
+        external files unless you call this method again with replace_existing=True.
+
         Parameters
         ----------
             base_name : str
@@ -1355,6 +1364,11 @@ class MFBlock:
                 Folder where external data will be stored
             binary: bool
                 Whether file will be stored as binary
+            replace_existing: bool
+                Whether to replace existing external files. If True, existing
+                external files will be rewritten with current settings
+                (e.g., max_columns_of_data). If False, existing external files
+                will not be rewritten. Default is False.
 
         """
 
@@ -1379,7 +1393,7 @@ class MFBlock:
                 else:
                     ext = "bin"
                 file_path = f"{base_name}_{dataset.structure.name}.{ext}"
-                replace_existing_external = False
+                replace_existing_external = replace_existing
                 if external_data_folder is not None:
                     # get simulation root path
                     root_path = self._simulation_data.mfpath.get_sim_path()
@@ -2846,8 +2860,17 @@ class MFPackage(PackageInterface):
         external_data_folder=None,
         base_name=None,
         binary=False,
+        replace_existing=False,
     ):
         """Sets the package's list and array data to be stored externally.
+
+        Note
+        ----
+        External files are written immediately when this method is called,
+        using the current value of max_columns_of_data and other formatting
+        settings. If you need to change these settings, do so BEFORE calling
+        this method. Changing settings afterward will not affect already-written
+        external files unless you call this method again with replace_existing=True.
 
         Parameters
         ----------
@@ -2859,6 +2882,11 @@ class MFPackage(PackageInterface):
                 Base file name prefix for all files
             binary: bool
                 Whether file will be stored as binary
+            replace_existing: bool
+                Whether to replace existing external files. If True, existing
+                external files will be rewritten with current settings
+                (e.g., max_columns_of_data). If False, existing external files
+                will not be rewritten. Default is False.
         """
         # set blocks
         for key, block in self.blocks.items():
@@ -2870,6 +2898,7 @@ class MFPackage(PackageInterface):
                 check_data,
                 external_data_folder,
                 binary,
+                replace_existing,
             )
         # set sub-packages
         for package in self._package_container.packagelist:
@@ -2878,6 +2907,7 @@ class MFPackage(PackageInterface):
                 external_data_folder,
                 base_name,
                 binary,
+                replace_existing,
             )
 
     def set_all_data_internal(self, check_data=True):

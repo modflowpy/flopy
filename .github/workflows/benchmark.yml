@@ -52,14 +52,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload failed benchmark artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: failed-benchmark-${{ matrix.os }}-${{ matrix.python-version }}-${{ github.run_id }}
           path: autotest/.failed/**
 
       - name: Upload benchmark result artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: benchmarks-${{ matrix.os }}-${{ matrix.python-version }}-${{ github.run_id }}
           path: autotest/.benchmarks/*.json
@@ -91,7 +91,7 @@ jobs:
         run: uv pip install seaborn
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           path: autotest/.benchmarks
 
@@ -130,7 +130,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: benchmarks-${{ github.run_id }}
           path: |

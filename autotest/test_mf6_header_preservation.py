@@ -36,8 +36,6 @@ def test_external_file_header_preservation(function_tmpdir):
     with open(drn_external_file, "w") as f:
         f.write("# k i j elev cond - DRN package data\n")
         f.write("1 1 1 0.5 10.0\n")
-    wel_mtime = os.path.getmtime(wel_external_file)
-    drn_mtime = os.path.getmtime(drn_external_file)
 
     wel = flopy.mf6.ModflowGwfwel(
         gwf, stress_period_data={0: {"filename": str(wel_external_file)}}
@@ -54,8 +52,6 @@ def test_external_file_header_preservation(function_tmpdir):
     with open(wel_external_file, "r") as fwel, open(drn_external_file, "r") as fdrn:
         wel_original_content = fwel.read()
         drn_original_content = fdrn.read()
-        assert wel_mtime != os.path.getmtime(wel_external_file)
-        assert drn_mtime != os.path.getmtime(drn_external_file)
         assert wel_original_content.startswith("# k i j flux")
         assert drn_original_content.startswith("# k i j elev cond")
 

@@ -989,13 +989,12 @@ class MFModel(ModelInterface):
                 # load package
                 instance.load_package(ftype, fname, pname, strict, None)
                 sim_data = simulation.simulation_data
-                if ftype == "dis" and not sim_data.max_columns_user_set:
+                if ftype == "dis" and sim_data._max_columns_set_by != 'user':
                     # set column wrap to ncol
                     dis = instance.get_package("dis", type_only=True)
                     if dis is not None and hasattr(dis, "ncol"):
-                        sim_data.max_columns_of_data = dis.ncol.get_data()
-                        sim_data.max_columns_user_set = False
-                        sim_data.max_columns_auto_set = True
+                        sim_data._max_columns_of_data = dis.ncol.get_data()
+                        sim_data._max_columns_set_by = 'auto'
         # load referenced packages
         if modelname in instance.simulation_data.referenced_files:
             for ref_file in instance.simulation_data.referenced_files[
@@ -1321,12 +1320,11 @@ class MFModel(ModelInterface):
 
         self.name_file.write(ext_file_action=ext_file_action)
 
-        if not self.simulation_data.max_columns_user_set:
+        if self.simulation_data._max_columns_set_by != 'user':
             grid_type = self.get_grid_type()
             if grid_type == DiscretizationType.DIS:
-                self.simulation_data.max_columns_of_data = self.dis.ncol.get_data()
-                self.simulation_data.max_columns_user_set = False
-                self.simulation_data.max_columns_auto_set = True
+                self.simulation_data._max_columns_of_data = self.dis.ncol.get_data()
+                self.simulation_data._max_columns_set_by = 'auto'
 
         # write packages
         for pp in self.packagelist:
@@ -1803,6 +1801,7 @@ class MFModel(ModelInterface):
         external_data_folder=None,
         base_name=None,
         binary=False,
+        replace_existing=False,
     ):
         """Sets the model's list and array data to be stored externally.
 
@@ -1811,6 +1810,14 @@ class MFModel(ModelInterface):
         The MF6 check mechanism is deprecated pending reimplementation
         in a future release. While the checks API will remain in place
         through 3.x, it may be unstable, and will likely change in 4.x.
+
+        Note
+        ----
+        External files are written immediately when this method is called,
+        using the current value of max_columns_of_data and other formatting
+        settings. If you need to change these settings, do so BEFORE calling
+        this method. Changing settings afterward will not affect already-written
+        external files unless you call this method again with replace_existing=True.
 
         Parameters
         ----------
@@ -1825,6 +1832,11 @@ class MFModel(ModelInterface):
                 Base file name prefix for all files
             binary: bool
                 Whether file will be stored as binary
+            replace_existing: bool
+                Whether to replace existing external files. If True, existing
+                external files will be rewritten with current settings
+                (e.g., max_columns_of_data). If False, existing external files
+                will not be rewritten. Default is False.
 
         """
         for package in self.packagelist:
@@ -1833,6 +1845,7 @@ class MFModel(ModelInterface):
                 external_data_folder,
                 base_name,
                 binary,
+                replace_existing,
             )
 
     def set_all_data_internal(self, check_data=True):

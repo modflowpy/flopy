@@ -543,18 +543,23 @@ class MfUsgCln(Package):
             f_cln.write(self.iac_cln.get_file_entry())
             f_cln.write(self.ja_cln.get_file_entry())
 
-        np.savetxt(f_cln, self.node_prop, fmt=fmt_string(self.node_prop), delimiter="")
+        free = self.parent.free_format_input
+        np.savetxt(
+            f_cln, self.node_prop, fmt=fmt_string(self.node_prop, free), delimiter=""
+        )
 
-        np.savetxt(f_cln, self.cln_gwc, fmt=fmt_string(self.cln_gwc), delimiter="")
+        np.savetxt(
+            f_cln, self.cln_gwc, fmt=fmt_string(self.cln_gwc, free), delimiter=""
+        )
 
         if self.nconduityp > 0:
             np.savetxt(
-                f_cln, self.cln_circ, fmt=fmt_string(self.cln_circ), delimiter=""
+                f_cln, self.cln_circ, fmt=fmt_string(self.cln_circ, free), delimiter=""
             )
 
         if self.nrectyp > 0:
             np.savetxt(
-                f_cln, self.cln_rect, fmt=fmt_string(self.cln_rect), delimiter=""
+                f_cln, self.cln_rect, fmt=fmt_string(self.cln_rect, free), delimiter=""
             )
 
         f_cln.write(self.ibound.get_file_entry())

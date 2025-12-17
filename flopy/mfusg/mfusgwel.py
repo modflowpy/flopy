@@ -238,6 +238,45 @@ class MfUsgWel(ModflowWel):
         if add_package:
             self.parent.add_package(self)
 
+    @staticmethod
+    def get_empty(ncells=0, aux_names=None, structured=True, wellbot=False):
+        """Get empty recarray for MFUSG wells.
+
+        Parameters
+        ----------
+        ncells : int
+            Number of cells
+        aux_names : list
+            Auxiliary variable names
+        structured : bool
+            Whether grid is structured
+        wellbot : bool
+            Whether WELLBOT option is used
+
+        Returns
+        -------
+        recarray
+            Empty recarray for well data
+        """
+        import numpy as np
+
+        from ..modflow.mfwel import ModflowWel
+        from ..pakbase import Package
+        from ..utils import create_empty_recarray
+
+        # Get base dtype
+        dtype = ModflowWel.get_default_dtype(structured=structured)
+
+        # Add wellbot field if specified
+        if wellbot:
+            dtype = Package.add_to_dtype(dtype, ["wellbot"], np.float32)
+
+        # Add auxiliary fields
+        if aux_names is not None:
+            dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
+
+        return create_empty_recarray(ncells, dtype, default_value=-1.0e10)
+
     def _check_for_aux(self, options, cln=False):
         """Check dtype for auxiliary variables, and add to options.
 
