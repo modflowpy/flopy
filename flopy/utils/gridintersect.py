@@ -63,6 +63,14 @@ class GridIntersect:
 
     Notes
     -----
+     - Supports structured and vertex grids. No support for unstructured grids.
+       If grid is layered-unstructured, creating a single layer vertex-grid can be
+       used as a workaround.
+     - For linestrings and polygons only 2D intersection operations are supported.
+     - Point intersections can optionally return layer position based on the
+       z-coordinate.
+     - The STR-tree can be disabled, but this is generally not recommended as some
+       functions will not work without it.
      - The STR-tree query is based on the bounding box of the shape or
        collection, if the bounding box of the shape covers nearly the entire
        grid, the query won't be able to limit the search space much, resulting
@@ -98,9 +106,6 @@ class GridIntersect:
             self.geoms, self.cellids = self._rect_grid_to_geoms_cellids()
         elif self.mfgrid.grid_type == "vertex":
             self.geoms, self.cellids = self._vtx_grid_to_geoms_cellids()
-        elif self.mfgrid.grid_type == "unstructured":
-            raise NotImplementedError()
-            self.geoms, self.cellids = self._usg_grid_to_geoms_cellids()
         else:
             raise NotImplementedError(
                 f"Grid type {self.mfgrid.grid_type} not supported"
@@ -117,23 +122,26 @@ class GridIntersect:
     def _parse_input_shape(self, shp, shapetype=None):
         """Internal method to parse input shape.
 
-        Allows numpy arrays containing shapely geometries, otherwise delegates to
-        GeoSpatialUtil.
+        Allows numpy arrays containing shapely geometries; otherwise delegates to
+        ``GeoSpatialUtil`` for parsing.
 
         Parameters
         ----------
-        shp : shapely.geometry, geojson object, shapefile.Shape, np.ndarray,
-              or flopy geometry object
-            shape to intersect with the grid
+        shp : shapely geometry, geojson object, shapefile.Shape, np.ndarray,
+              or a FloPy geometry object
+            Shape to intersect with the grid. If an ``np.ndarray`` is provided, all
+            elements must be shapely geometries of the same type.
         shapetype : str, optional
-            type of shape (i.e. "point", "linestring", "polygon" or their
-            multi-variants), used by GeoSpatialUtil if shp is passed as a list
-            of vertices, default is None
+            Type of shape ("point", "linestring", "polygon" or their
+            multi-variants). Used by ``GeoSpatialUtil`` if shp is passed as a list
+            of vertices. Default is None.
 
         Returns
         -------
-        shp : shapely.geometry or np.ndarray
-            shapely geometry or array of shapely geometries
+        tuple
+            (geom, gtype) where geom is a shapely geometry or an array of
+            shapely geometries, and gtype is the corresponding shapely
+            GeometryType (or a matching string value).
         """
         if isinstance(shp, np.ndarray) and isinstance(shp[0], shapely.Geometry):
             shapetypes = shapely.get_type_id(shp)
@@ -159,7 +167,7 @@ class GridIntersect:
         handle_z=False,
         geo_dataframe=None,
     ):
-        """Method to intersect a shape with a model grid.
+        """Intersect a shape with a model grid.
 
         Parameters
         ----------
@@ -192,13 +200,26 @@ class GridIntersect:
             returns the layer index for each point. Points above the grid
             are returned as +np.inf and below the grid as -np.inf.
         geo_dataframe : bool, optional
-            if True, return a geopandas GeoDataFrame, default is False
+            If True, return a geopandas ``GeoDataFrame``, otherwise return a
+            numpy recarray. Default will be set to True in the future;
+            currently, None triggers a deprecation warning and returns a
+            recarray (legacy behavior).
 
         Returns
         -------
-        numpy.recarray or gepandas.GeoDataFrame
-            a record array containing information about the intersection or
-            a geopandas.GeoDataFrame if geo_dataframe=True
+        numpy.recarray or geopandas.GeoDataFrame
+            Intersection results. Result contains the following columns:
+            - cellid: cellid of intersected grid cell
+            - cellids: legacy column containing (row, col) tuples for structured grids,
+              or cellids for vertex grids (deprecated, use "cellid" column instead)
+            - ixshapes or geometry: shapely geometry of the intersection result
+            And optionally:
+            - layer: layer index of for points with z-dimension when handle_z is True
+            - row: row index of intersected grid cell, for structured grids
+            - col: column index of intersected grid cell, for structured grids
+            - lengths: length of intersection results for linestrings
+            - areas: areas of intersection results for polygons
+
         """
         shp, shapetype = self._parse_input_shape(shp, shapetype=shapetype)
 
@@ -387,8 +408,9 @@ class GridIntersect:
         return np.array(geoms), np.arange(self.mfgrid.ncpl)
 
     def query_grid(self, shp, predicate=None):
-        """Perform spatial query on grid with shapely geometry. If no spatial
-        query is possible returns all grid cells.
+        """Perform spatial query on the grid using a shapely geometry.
+
+        If no spatial query is possible (``rtree=False``), returns all grid cells.
 
         Parameters
         ----------
@@ -400,8 +422,10 @@ class GridIntersect:
 
         Returns
         -------
-        array_like
-            array containing cellids of grid cells in query result
+        numpy.ndarray
+            For a single geometry, a 1-D array of cellids. For an array of geometries,
+            a 2xN array where the first row is the input geometry index (``shp_id``)
+            and the second row contains the matching cellids.
         """
         if self.rtree:
             result = self.strtree.query(shp, predicate=predicate)
@@ -411,11 +435,10 @@ class GridIntersect:
         return result
 
     def filter_query_result(self, shp, cellids):
-        """Filter array of geometries to obtain grid cells that intersect with
-        shape.
+        """Filter a query result to cells that truly intersect a shape.
 
-        Used to (further) reduce query result to cells that intersect with
-        shape.
+        Used to (further) reduce the query result to cells that intersect with
+        shp. This is primarily used when ``rtree=False``.
 
         Parameters
         ----------
@@ -427,8 +450,8 @@ class GridIntersect:
 
         Returns
         -------
-        array_like
-            filter or generator containing polygons that intersect with shape
+        numpy.ndarray
+            Array of cellids that intersect shp.
         """
         # flipped arguments to be consistent with all other methods in class
         msg = (
@@ -451,8 +474,6 @@ class GridIntersect:
 
     def _intersect_point_shapely(self, *args, **kwargs):
         """Deprecated method, use _intersect_point instead."""
-        import warnings
-
         warnings.warn(
             "_intersect_point_shapely is deprecated, use _intersect_point instead.",
             DeprecationWarning,
@@ -465,8 +486,33 @@ class GridIntersect:
         sort_by_cellid=True,
         return_all_intersections=False,
     ):
-        r = self.intersects(shp, return_nodenumbers=True)
-        qcellids = r.cellids[np.isfinite(r.cellids)].astype(int)
+        """Intersect a Point or MultiPoint with the grid.
+
+        Parameters
+        ----------
+        shp : shapely Point or MultiPoint (or array with a single point)
+            Geometry to intersect.
+        sort_by_cellid : bool, optional
+            If True (default), sort candidate cells by cellid
+        return_all_intersections : bool, optional
+            If True, return multiple intersection results for points on cell boundaries.
+            Default is False.
+
+        Returns
+        -------
+        numpy.recarray
+            Intersection results. Result contains the following columns:
+            - cellid: cellid of intersected grid cell
+            - cellids: legacy column containing (row, col) tuples for structured grids,
+              or cellids for vertex grids (deprecated, use "cellid" column instead)
+            - ixshapes or geometry: shapely geometry of the intersection result
+            And optionally:
+            - layer: layer index of for points with z-dimension when handle_z is True
+            - row: row index of intersected grid cell, for structured grids
+            - col: column index of intersected grid cell, for structured grids
+        """
+        r = self.intersects(shp, dataframe=False)
+        qcellids = r.cellid[np.isfinite(r.cellid)].astype(int)
 
         if sort_by_cellid:
             qcellids = np.sort(qcellids)
@@ -539,6 +585,32 @@ class GridIntersect:
         sort_by_cellid=True,
         return_all_intersections=False,
     ):
+        """Intersect a LineString or MultiLineString with the grid.
+
+        Parameters
+        ----------
+        shp : shapely LineString or MultiLineString
+            Geometry to intersect.
+        sort_by_cellid : bool, optional
+            If True (default), sort candidate cells by cellid before
+            intersecting.
+        return_all_intersections : bool, optional
+            If True, keep overlapping boundary segments as separate results.
+            Default is False.
+
+        Returns
+        -------
+        numpy.recarray
+            Intersection results. Result contains the following columns:
+            - cellid: cellid of intersected grid cell
+            - cellids: legacy column containing (row, col) tuples for structured grids,
+              or cellids for vertex grids (deprecated, use "cellid" column instead)
+            - ixshapes or geometry: shapely geometry of the intersection result
+            And optionally:
+            - row: row index of intersected grid cell, for structured grids
+            - col: column index of intersected grid cell, for structured grids
+            - lengths: length of intersection results for linestrings
+        """
         if self.rtree:
             qcellids = self.strtree.query(shp, predicate="intersects")
         else:
@@ -670,6 +742,37 @@ class GridIntersect:
         contains_centroid=False,
         min_area_fraction=None,
     ):
+        """Intersect a Polygon or MultiPolygon with the grid.
+
+        Parameters
+        ----------
+        shp : shapely Polygon or MultiPolygon
+            Geometry to intersect.
+        sort_by_cellid : bool, optional
+            If True (default), sort candidate cells by cellid before
+            intersecting.
+        contains_centroid : bool, optional
+            If True, only keep results where the cell centroid is contained in
+            (or touches) the intersection. Default is False.
+        min_area_fraction : float, optional
+            Minimum fractional area threshold relative to the cell area. Cells with
+            an intersection area smaller than ``min_area_fraction * cell_area`` are
+            discarded. Default is None (no threshold).
+
+        Returns
+        -------
+        numpy.recarray
+            Intersection results. Result contains the following columns:
+            - cellid: cellid of intersected grid cell
+            - cellids: legacy column containing (row, col) tuples for structured grids,
+              or cellids for vertex grids (deprecated, use "cellid" column instead)
+            - ixshapes or geometry: shapely geometry of the intersection result
+            And optionally:
+            - layer: layer index of for points with z-dimension when handle_z is True
+            - row: row index of intersected grid cell, for structured grids
+            - col: column index of intersected grid cell, for structured grids
+            - areas: areas of intersection results for polygons
+        """
         if self.rtree:
             qcellids = self.strtree.query(shp, predicate="intersects")
         else:
@@ -752,7 +855,7 @@ class GridIntersect:
         shapetype=None,
         dataframe=None,
     ):
-        """Return cellids for grid cells that intersect with shape.
+        """Return candidate grid cellids that intersect with shape(s).
 
         Parameters
         ----------
@@ -764,21 +867,22 @@ class GridIntersect:
             their multi-variants), used by GeoSpatialUtil if shp is
             passed as a list of vertices, default is None
         dataframe : bool, optional
-            if True, return a pandas.DataFrame, default is False
-        return_all_intersections : bool, optional
-            if True (default), return multiple intersection results for points on grid
-            cell boundaries (e.g. returns 2 intersection results if a point lies on the
-            boundary between two grid cells).
-        return_nodenumbers : bool, optional
-            if False (default), return cellids of intersected grid cells.
-            If True, return grid node numbers, i.e. index of entry in
-            ``GridIntersect.geoms``.
+            If True, return a ``pandas.DataFrame``; otherwise return a numpy
+            recarray. Default will be set to True in the future; currently,
+            None triggers a deprecation warning and returns a recarray (legacy
+            behavior).
 
         Returns
         -------
         numpy.recarray or pandas.DataFrame
-            a record array or pandas.DataFrame containing cell IDs of the gridcells
-            the shape intersects with.
+            Grid cell candidates for intersections. Result contains the following
+            columns:
+            - cellid: cellid of candidate grid cell
+            - cellids: legacy column containing (row, col) tuples for structured grids,
+              or cellids for vertex grids (deprecated, use "cellid" column instead)
+            And optionally:
+            - row: row index of intersected grid cell, for structured grids
+            - col: column index of intersected grid cell, for structured grids
         """
         shp, shapetype = self._parse_input_shape(shp, shapetype=shapetype)
 
@@ -866,32 +970,33 @@ class GridIntersect:
         handle_z=False,
         dataframe=True,
     ):
-        """Return cellids of grid cells that intersect with shape.
+        """Return cellids for points intersecting the grid.
 
         Parameters
         ----------
+        pts : shapely geometry, geojson geometry, shapefile.Shape, np.ndarray,
+              or FloPy geometry object
+            Point(s) to intersect with the grid. array inputs must contain
+            shapely point (or multipoint) geometries.
         handle_z : bool, optional
             Handle z-dimension for points. If True, returns a "layer" column with
             the computed layer index for each point (``+inf`` above the grid,
             ``-inf`` below). Default is False.
         dataframe : bool, optional
-            if True, return a pandas.DataFrame, default is False
-        handle_z : str, optional
-            Method for handling z dimension in intersection results for point
-            intersections. Default is "ignore" which ignores z-dimension. Other
-            options is "return" which returns the computed layer position
-            for each point. Points above the grid are returned as +np.inf and below
-            the grid as -np.inf.
-        return_nodenumbers : bool, optional
-            if False (default), return cellids of intersected grid cells.
-            If True, return grid node numbers, i.e. index of entry in
-            ``GridIntersect.geoms``.
+            If True, return a ``pandas.DataFrame``; otherwise return a numpy
+            recarray. Default is True.
 
         Returns
         -------
         numpy.recarray or pandas.DataFrame
-            a record array or pandas.DataFrame containing cell IDs of the gridcells
-            the shape intersects with.
+            Return intersection results per point. Result includes "cellid", and
+            "cellids" (legacy result that contains (row, col) tuples for structured
+            grids). For structured grids result includes "row" and "col" column.
+            When ``handle_z=True``, result includes a "layer" column.
+
+        Notes
+        -----
+        Requires ``rtree=True`` when initializing ``GridIntersect``.
         """
         if not self.rtree:
             raise ValueError(
@@ -959,15 +1064,12 @@ class GridIntersect:
 
     @staticmethod
     def plot_polygon(polys, ax=None, **kwargs):
-        """method to plot the polygon intersection results from the resulting
-        numpy.recarray.
-
-        Note: only works when recarray has 'ixshapes' column!
+        """Plot polygons.
 
         Parameters
         ----------
-        result : numpy.recarray or geopandas.GeoDataFrame
-            record array or GeoDataFrame containing intersection results
+        polys : collection of polygons
+            list, array or GeoSeries containing polygons
         ax : matplotlib.pyplot.axes, optional
             axes to plot onto, if not provided, creates a new figure
         **kwargs:
@@ -1018,15 +1120,12 @@ class GridIntersect:
 
     @staticmethod
     def plot_linestring(ls, ax=None, cmap=None, **kwargs):
-        """method to plot the linestring intersection results from the
-        resulting numpy.recarray.
-
-        Note: only works when recarray has 'ixshapes' column!
+        """Plot linestrings.
 
         Parameters
         ----------
-        result : numpy.recarray or geopandas.GeoDataFrame
-            record array or GeoDataFrame containing intersection results
+        ls : collection of linestrings
+            list, array or GeoSeries containing linestrings
         ax : matplotlib.pyplot.axes, optional
             axes to plot onto, if not provided, creates a new figure
         cmap : str
@@ -1073,15 +1172,12 @@ class GridIntersect:
 
     @staticmethod
     def plot_point(pts, ax=None, **kwargs):
-        """method to plot the point intersection results from the resulting
-        numpy.recarray.
-
-        Note: only works when recarray has 'ixshapes' column!
+        """Plot points.
 
         Parameters
         ----------
-        pts : array, geopandas.GeoSeries
-            array or GeoSeries containing geometries
+        pts : collection of points
+            array or GeoSeries containing point geometries
         ax : matplotlib.pyplot.axes, optional
             axes to plot onto, if not provided, creates a new figure
         **kwargs:
