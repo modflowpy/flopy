@@ -156,7 +156,7 @@ class GridIntersect:
         return_all_intersections=False,
         contains_centroid=False,
         min_area_fraction=None,
-        handle_z="ignore",
+        handle_z=False,
         geo_dataframe=None,
     ):
         """Method to intersect a shape with a model grid.
@@ -186,13 +186,11 @@ class GridIntersect:
             float defining minimum intersection area threshold, if intersection
             area is smaller than min_frac_area * cell_area, do not store
             intersection result, only used if shape type is "polygon"
-        handle_z : str, optional
-            Method for handling z dimension in intersection results for point
-            intersections. Default is "ignore" which ignores z-dimension. Other
-            options are "drop" which only returns results for points within grid
-            top and bottom, or "return"  which returns the computed layer position
-            for each point. Points above the grid are returned as +np.inf and below
-            the grid as -np.inf.
+        handle_z : bool, optional
+            Method for handling z-dimension in intersection results for point
+            intersections. Default is False which ignores z-dimension. If True
+            returns the layer index for each point. Points above the grid
+            are returned as +np.inf and below the grid as -np.inf.
         geo_dataframe : bool, optional
             if True, return a geopandas GeoDataFrame, default is False
 
@@ -224,10 +222,20 @@ class GridIntersect:
             )
 
             # handle elevation data for points
-            # if handle_z is "drop" or "return"
+            # if handle_z is True
             # if shp has z information
             # if there are intersection results
+            if handle_z and shapely.has_z(shp).any() and len(rec.cellid) > 0:
                 laypos = self.get_layer_from_z(shp, rec.cellid)
+                # copy data to new array to include layer position
+                rec = nprecfns.append_fields(
+                    rec,
+                    names="layer",
+                    data=laypos,
+                    dtypes="f8",
+                    usemask=False,
+                    asrecarray=True,
+                )
 
         elif shapetype in {
             "LineString",
@@ -855,15 +863,17 @@ class GridIntersect:
     def points_to_cellids(
         self,
         pts,
+        handle_z=False,
         dataframe=True,
     ):
         """Return cellids of grid cells that intersect with shape.
 
         Parameters
         ----------
-        pts : shapely.geometry, geojson geometry, shapefile.shape,
-              or flopy geometry object
-            points shape to intersect with the grid
+        handle_z : bool, optional
+            Handle z-dimension for points. If True, returns a "layer" column with
+            the computed layer index for each point (``+inf`` above the grid,
+            ``-inf`` below). Default is False.
         dataframe : bool, optional
             if True, return a pandas.DataFrame, default is False
         handle_z : str, optional
@@ -933,6 +943,16 @@ class GridIntersect:
 
         if handle_z and shapely.has_z(pts).any() and len(rec.cellid) > 0:
             laypos = self.get_layer_from_z(pts, rec.cellid)
+            # copy data to new array to include layer position
+            rec = nprecfns.append_fields(
+                rec,
+                names="layer",
+                data=laypos,
+                dtypes=float,
+                usemask=False,
+                asrecarray=True,
+            )
+
         if dataframe:
             return DataFrame(rec).set_index("shp_id")
         return rec
