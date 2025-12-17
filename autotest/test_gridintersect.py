@@ -149,10 +149,10 @@ def test_rect_grid_3d_point_inside():
     gr = get_rect_grid(top=2 * np.ones(4).reshape((2, 2)), botm=botm)
     ix = GridIntersect(gr)
     result = ix.intersect(Point(2.0, 2.0, 0.2), handle_z=False, geo_dataframe=df_toggle)
-    assert result.cellids[0] == (1, 0)
+    assert result["cellids"][0] == (1, 0)
     result = ix.intersect(Point(2.0, 2.0, 0.2), handle_z=True, geo_dataframe=df_toggle)
-    assert result.cellids[0] == (1, 0)
-    assert result.layer[0] == 2.0  # returned as float to allow +/-inf
+    assert result["cellids"][0] == (1, 0)
+    assert result["layer"][0] == 2
 
 
 @requires_pkg("shapely")
@@ -167,7 +167,7 @@ def test_rect_grid_3d_point_above():
     assert result.cellids[0] == (1, 0)
     result = ix.intersect(Point(2.0, 2.0, 10.0), handle_z=True, geo_dataframe=df_toggle)
     assert len(result) == 1
-    assert np.isfinite(result.layer[0]) is np.False_
+    assert np.ma.is_masked(result["layer"][0])
 
 
 # %% test point shapely
@@ -1160,7 +1160,7 @@ def test_rect_grid_multiple_points_array_with_z_points_to_cellids():
     assert result.cellids[0] == (1, 0)
     assert pd.isna(result.cellids[1])
     result = ix.points_to_cellids(pts, handle_z=True)
-    assert ~np.isfinite(result.layer[0])
+    assert pd.isna(result.layer[0])
     assert pd.isna(result.cellids[1])
 
 

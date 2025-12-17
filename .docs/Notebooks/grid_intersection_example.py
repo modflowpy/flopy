@@ -114,7 +114,13 @@ xoff = 0.0
 yoff = 0.0
 angrot = 0.0
 sgr = fgrid.StructuredGrid(
-    delc, delr, top=None, botm=None, xoff=xoff, yoff=yoff, angrot=angrot
+    delc,
+    delr,
+    top=np.ones(100).reshape((10, 10)),
+    botm=np.zeros(100).reshape((1, 10, 10)),
+    xoff=xoff,
+    yoff=yoff,
+    angrot=angrot,
 )
 
 # %%

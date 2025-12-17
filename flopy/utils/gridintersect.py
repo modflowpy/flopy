@@ -197,8 +197,8 @@ class GridIntersect:
         handle_z : bool, optional
             Method for handling z-dimension in intersection results for point
             intersections. Default is False which ignores z-dimension. If True
-            returns the layer index for each point. Points above the grid
-            are returned as +np.inf and below the grid as -np.inf.
+            returns the layer index for each point. Points below/above the grid
+            are returned as masked values or pd.NA if returned as dataframe.
         geo_dataframe : bool, optional
             If True, return a geopandas ``GeoDataFrame``, otherwise return a
             numpy recarray. Default will be set to True in the future;
@@ -253,10 +253,11 @@ class GridIntersect:
                     rec,
                     names="layer",
                     data=laypos,
-                    dtypes="f8",
+                    dtypes=int,
                     usemask=False,
                     asrecarray=True,
                 )
+                rec = np.ma.masked_where(rec.layer < 0, rec)
 
         elif shapetype in {
             "LineString",
@@ -303,6 +304,7 @@ class GridIntersect:
                 gpd.GeoDataFrame(rec)
                 .rename(columns={"ixshapes": "geometry"})
                 .set_geometry("geometry")
+                .replace(999999, NA)
             )
             if self.mfgrid.crs is not None:
                 gdf = gdf.set_crs(self.mfgrid.crs)
@@ -979,19 +981,24 @@ class GridIntersect:
             shapely point (or multipoint) geometries.
         handle_z : bool, optional
             Handle z-dimension for points. If True, returns a "layer" column with
-            the computed layer index for each point (``+inf`` above the grid,
-            ``-inf`` below). Default is False.
+            the computed layer index for each point (NA is returned where the
+            points lie above/below the model grid). Default is False.
         dataframe : bool, optional
             If True, return a ``pandas.DataFrame``; otherwise return a numpy
             recarray. Default is True.
 
         Returns
         -------
-        numpy.recarray or pandas.DataFrame
-            Return intersection results per point. Result includes "cellid", and
-            "cellids" (legacy result that contains (row, col) tuples for structured
-            grids). For structured grids result includes "row" and "col" column.
-            When ``handle_z=True``, result includes a "layer" column.
+        pandas.DataFrame or numpy.recarray
+            Grid cell indices per point. Result contains the following
+            columns:
+            - cellid: cellid of grid cell containing point
+            - cellids: legacy column containing (row, col) tuples for structured grids,
+              or cellids for vertex grids (deprecated, use "cellid" column instead)
+            And optionally:
+            - row: row index of intersected grid cell, for structured grids
+            - col: column index of intersected grid cell, for structured grids
+            - layer: layer index of for points with z-dimension when handle_z is True
 
         Notes
         -----
@@ -1052,13 +1059,16 @@ class GridIntersect:
                 rec,
                 names="layer",
                 data=laypos,
-                dtypes=float,
+                dtypes=int,
                 usemask=False,
                 asrecarray=True,
             )
 
         if dataframe:
-            return DataFrame(rec).replace(-1, NA).set_index("shp_id")
+            # replace invalid indices with NA, replace invalid layer with NA
+            return (
+                DataFrame(rec).replace(-1, NA).replace(999_999, NA).set_index("shp_id")
+            )
         return np.ma.masked_where(rec.cellid < 0, rec)
 
     @staticmethod
@@ -1266,9 +1276,8 @@ class GridIntersect:
         Returns
         -------
         numpy.ndarray
-            Array of floats with the layer index for each point. Points above the
-            grid are ``+np.inf``; below the grid ``-np.inf``. Non-intersecting points
-            are ``np.nan``.
+            layer index for each point. Points below/above the grid are returned
+            with index -1.
         """
         z_arr = np.atleast_1d(shapely.get_z(pts))
         mask_valid = cellids >= 0
@@ -1285,10 +1294,10 @@ class GridIntersect:
         zb = surface_elevations < z_arr[mask_valid]
         mask_above = zb.all(axis=0)
         mask_below = (~zb).all(axis=0)
-        laypos = (np.nanargmax(zb, axis=0) - 1).astype(float)
-        laypos[mask_above] = np.inf
-        laypos[mask_below] = -np.inf
-        laypos_full = np.full_like(z_arr, np.nan, dtype=float)
+        laypos = (np.nanargmax(zb, axis=0) - 1).astype(int)
+        laypos[mask_above] = -1
+        laypos[mask_below] = -1
+        laypos_full = np.full_like(z_arr, -1, dtype=int)
         laypos_full[mask_valid] = laypos
         return laypos_full
 
