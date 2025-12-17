@@ -21,6 +21,7 @@ if has_pkg("shapely", strict=True):
     )
 
 rtree_toggle = pytest.mark.parametrize("rtree", [True, False])
+df_toggle = False  # set False to silence warnings, remove when dataframe is default
 
 
 def get_tri_grid(angrot=0.0, xyoffset=0.0, triangle_exe=None):
@@ -125,11 +126,13 @@ def test_rect_grid_3d_point_outside():
     botm = np.concatenate([np.ones(4), np.zeros(4)]).reshape((2, 2, 2))
     gr = get_rect_grid(top=2 * np.ones(4).reshape((2, 2)), botm=botm)
     ix = GridIntersect(gr)
-    result = ix.intersect(Point(25.0, 25.0, 0.5), handle_z="ignore")
+    result = ix.intersect(
+        Point(25.0, 25.0, 0.5), handle_z=False, geo_dataframe=df_toggle
+    )
     assert len(result) == 0
-    result = ix.intersect(Point(25.0, 25.0, 0.5), handle_z="drop")
-    assert len(result) == 0
-    result = ix.intersect(Point(25.0, 25.0, 0.5), handle_z="return")
+    result = ix.intersect(
+        Point(25.0, 25.0, 0.5), handle_z=True, geo_dataframe=df_toggle
+    )
     assert len(result) == 0
 
 
@@ -144,11 +147,9 @@ def test_rect_grid_3d_point_inside():
     ).reshape((3, 2, 2))
     gr = get_rect_grid(top=2 * np.ones(4).reshape((2, 2)), botm=botm)
     ix = GridIntersect(gr)
-    result = ix.intersect(Point(2.0, 2.0, 0.2), handle_z="ignore")
+    result = ix.intersect(Point(2.0, 2.0, 0.2), handle_z=False, geo_dataframe=df_toggle)
     assert result.cellids[0] == (1, 0)
-    result = ix.intersect(Point(2.0, 2.0, 0.2), handle_z="drop")
-    assert result.cellids[0] == (1, 0)
-    result = ix.intersect(Point(2.0, 2.0, 0.2), handle_z="return")
+    result = ix.intersect(Point(2.0, 2.0, 0.2), handle_z=True, geo_dataframe=df_toggle)
     assert result.cellids[0] == (1, 0)
     assert result.layer[0] == 2.0  # returned as float to allow +/-inf
 
@@ -158,12 +159,12 @@ def test_rect_grid_3d_point_above():
     botm = np.concatenate([np.ones(4), np.zeros(4)]).reshape((2, 2, 2))
     gr = get_rect_grid(top=2 * np.ones(4).reshape((2, 2)), botm=botm)
     ix = GridIntersect(gr)
-    result = ix.intersect(Point(2.0, 2.0, 10.0), handle_z="ignore")
+    result = ix.intersect(
+        Point(2.0, 2.0, 10.0), handle_z=False, geo_dataframe=df_toggle
+    )
     assert len(result) == 1
     assert result.cellids[0] == (1, 0)
-    result = ix.intersect(Point(2.0, 2.0, 10.0), handle_z="drop")
-    assert len(result) == 0
-    result = ix.intersect(Point(2.0, 2.0, 10.0), handle_z="return")
+    result = ix.intersect(Point(2.0, 2.0, 10.0), handle_z=True, geo_dataframe=df_toggle)
     assert len(result) == 1
     assert np.isfinite(result.layer[0]) is np.False_
 
@@ -177,7 +178,7 @@ def test_rect_grid_point_outside(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
     # use GeoSpatialUtil to convert to shapely geometry
-    result = ix.intersect((25.0, 25.0), shapetype="point")
+    result = ix.intersect((25.0, 25.0), shapetype="point", geo_dataframe=df_toggle)
     assert len(result) == 0
 
 
@@ -186,7 +187,7 @@ def test_rect_grid_point_outside(rtree):
 def test_rect_grid_point_on_outer_boundary(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(Point(20.0, 10.0))
+    result = ix.intersect(Point(20.0, 10.0), geo_dataframe=df_toggle)
     assert len(result) == 1
     assert np.all(result.cellids[0] == (0, 1))
 
@@ -196,7 +197,7 @@ def test_rect_grid_point_on_outer_boundary(rtree):
 def test_rect_grid_point_on_inner_boundary(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(Point(10.0, 10.0))
+    result = ix.intersect(Point(10.0, 10.0), geo_dataframe=df_toggle)
     assert len(result) == 1
     assert np.all(result.cellids[0] == (0, 0))
 
@@ -206,16 +207,16 @@ def test_rect_grid_point_on_inner_boundary(rtree):
 def test_rect_vertex_grid_point_in_one_cell(rtree):
     gr = get_rect_vertex_grid()
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(Point(4.0, 4.0))
+    result = ix.intersect(Point(4.0, 4.0), geo_dataframe=df_toggle)
     assert len(result) == 1
     assert result.cellids[0] == 0
-    result = ix.intersect(Point(4.0, 6.0))
+    result = ix.intersect(Point(4.0, 6.0), geo_dataframe=df_toggle)
     assert len(result) == 1
     assert result.cellids[0] == 0
-    result = ix.intersect(Point(6.0, 6.0))
+    result = ix.intersect(Point(6.0, 6.0), geo_dataframe=df_toggle)
     assert len(result) == 1
     assert result.cellids[0] == 0
-    result = ix.intersect(Point(6.0, 4.0))
+    result = ix.intersect(Point(6.0, 4.0), geo_dataframe=df_toggle)
     assert len(result) == 1
     assert result.cellids[0] == 0
 
@@ -225,7 +226,9 @@ def test_rect_vertex_grid_point_in_one_cell(rtree):
 def test_rect_grid_multipoint_in_one_cell(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(MultiPoint([Point(1.0, 1.0), Point(2.0, 2.0)]))
+    result = ix.intersect(
+        MultiPoint([Point(1.0, 1.0), Point(2.0, 2.0)]), geo_dataframe=df_toggle
+    )
     assert len(result) == 1
     assert result.cellids[0] == (1, 0)
 
@@ -235,7 +238,9 @@ def test_rect_grid_multipoint_in_one_cell(rtree):
 def test_rect_grid_multipoint_in_multiple_cells(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(MultiPoint([Point(1.0, 1.0), Point(12.0, 12.0)]))
+    result = ix.intersect(
+        MultiPoint([Point(1.0, 1.0), Point(12.0, 12.0)]), geo_dataframe=df_toggle
+    )
     assert len(result) == 2
     assert result.cellids[0] == (0, 1)
     assert result.cellids[1] == (1, 0)
@@ -248,7 +253,7 @@ def test_tri_grid_point_outside(rtree):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(Point(25.0, 25.0))
+    result = ix.intersect(Point(25.0, 25.0), geo_dataframe=df_toggle)
     assert len(result) == 0
 
 
@@ -259,7 +264,7 @@ def test_tri_grid_point_on_outer_boundary(rtree):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(Point(20.0, 10.0))
+    result = ix.intersect(Point(20.0, 10.0), geo_dataframe=df_toggle)
     assert len(result) == 1
     assert np.all(result.cellids[0] == 0)
 
@@ -271,7 +276,7 @@ def test_tri_grid_point_on_inner_boundary(rtree):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(Point(10.0, 10.0))
+    result = ix.intersect(Point(10.0, 10.0), geo_dataframe=df_toggle)
     assert len(result) == 1
     assert np.all(result.cellids[0] == 0)
 
@@ -283,7 +288,9 @@ def test_tri_grid_multipoint_in_one_cell(rtree):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(MultiPoint([Point(1.0, 1.0), Point(2.0, 2.0)]))
+    result = ix.intersect(
+        MultiPoint([Point(1.0, 1.0), Point(2.0, 2.0)]), geo_dataframe=df_toggle
+    )
     assert len(result) == 1
     assert result.cellids[0] == 1
 
@@ -295,7 +302,9 @@ def test_tri_grid_multipoint_in_multiple_cells(rtree):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(MultiPoint([Point(1.0, 1.0), Point(12.0, 12.0)]))
+    result = ix.intersect(
+        MultiPoint([Point(1.0, 1.0), Point(12.0, 12.0)]), geo_dataframe=df_toggle
+    )
     assert len(result) == 2
     assert result.cellids[0] == 0
     assert result.cellids[1] == 1
@@ -308,7 +317,9 @@ def test_rect_grid_point_on_all_vertices_return_all_ix(rtree):
     ix = GridIntersect(gr, rtree=rtree)
     n_intersections = [1, 2, 1, 2, 4, 2, 1, 2, 1]
     for v, n in zip(gr.verts, n_intersections):
-        r = ix.intersect(Point(*v), return_all_intersections=True)
+        r = ix.intersect(
+            Point(*v), return_all_intersections=True, geo_dataframe=df_toggle
+        )
         assert len(r) == n
 
 
@@ -319,7 +330,9 @@ def test_tri_grid_points_on_all_vertices_return_all_ix(rtree):
     ix = GridIntersect(gr, rtree=rtree)
     n_intersections = [2, 2, 2, 2, 8, 2, 2, 2, 2]
     for v, n in zip(gr.verts, n_intersections):
-        r = ix.intersect(Point(*v), return_all_intersections=True)
+        r = ix.intersect(
+            Point(*v), return_all_intersections=True, geo_dataframe=df_toggle
+        )
         assert len(r) == n
 
 
@@ -331,7 +344,9 @@ def test_tri_grid_points_on_all_vertices_return_all_ix(rtree):
 def test_rect_grid_linestring_outside(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(LineString([(25.0, 25.0), (21.0, 5.0)]))
+    result = ix.intersect(
+        LineString([(25.0, 25.0), (21.0, 5.0)]), geo_dataframe=df_toggle
+    )
     assert len(result) == 0
 
 
@@ -340,7 +355,9 @@ def test_rect_grid_linestring_outside(rtree):
 def test_rect_grid_linestring_in_2cells(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(LineString([(5.0, 5.0), (15.0, 5.0)]))
+    result = ix.intersect(
+        LineString([(5.0, 5.0), (15.0, 5.0)]), geo_dataframe=df_toggle
+    )
     assert len(result) == 2
     assert result.lengths.sum() == 10.0
     assert result.cellids[0] == (1, 0)
@@ -352,7 +369,9 @@ def test_rect_grid_linestring_in_2cells(rtree):
 def test_rect_grid_linestring_on_outer_boundary(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(LineString([(15.0, 20.0), (5.0, 20.0)]))
+    result = ix.intersect(
+        LineString([(15.0, 20.0), (5.0, 20.0)]), geo_dataframe=df_toggle
+    )
     assert len(result) == 2
     assert result.lengths.sum() == 10.0
     assert result.cellids[0] == (0, 0)
@@ -364,7 +383,9 @@ def test_rect_grid_linestring_on_outer_boundary(rtree):
 def test_rect_grid_linestring_on_inner_boundary(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(LineString([(5.0, 10.0), (15.0, 10.0)]))
+    result = ix.intersect(
+        LineString([(5.0, 10.0), (15.0, 10.0)]), geo_dataframe=df_toggle
+    )
     assert len(result) == 2
     assert result.lengths.sum() == 10.0
     assert result.cellids[0] == (0, 0)
@@ -379,7 +400,8 @@ def test_rect_grid_multilinestring_in_one_cell(rtree):
     result = ix.intersect(
         MultiLineString(
             [LineString([(1.0, 1), (9.0, 1.0)]), LineString([(1.0, 9.0), (9.0, 9.0)])]
-        )
+        ),
+        geo_dataframe=df_toggle,
     )
     assert len(result) == 1
     assert result.lengths == 16.0
@@ -397,7 +419,8 @@ def test_rect_grid_multilinestring_in_multiple_cells(rtree):
                 LineString([(20.0, 0.0), (7.5, 12.0), (2.5, 7.0), (0.0, 4.5)]),
                 LineString([(5.0, 19.0), (2.5, 7.0)]),
             ]
-        )
+        ),
+        geo_dataframe=df_toggle,
     )
     assert len(result) == 3
     assert np.allclose(sum(result.lengths), 40.19197584109293)
@@ -408,7 +431,9 @@ def test_rect_grid_multilinestring_in_multiple_cells(rtree):
 def test_rect_grid_linestring_in_and_out_of_cell(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(LineString([(5.0, 9), (15.0, 5.0), (5.0, 1.0)]))
+    result = ix.intersect(
+        LineString([(5.0, 9), (15.0, 5.0), (5.0, 1.0)]), geo_dataframe=df_toggle
+    )
     assert len(result) == 2
     assert result.cellids[0] == (1, 0)
     assert result.cellids[1] == (1, 1)
@@ -419,7 +444,10 @@ def test_rect_grid_linestring_in_and_out_of_cell(rtree):
 def test_rect_grid_linestring_in_and_out_of_cell2():
     gr = get_rect_grid()
     ix = GridIntersect(gr)
-    result = ix.intersect(LineString([(5, 15), (5.0, 9), (15.0, 5.0), (5.0, 1.0)]))
+    result = ix.intersect(
+        LineString([(5, 15), (5.0, 9), (15.0, 5.0), (5.0, 1.0)]),
+        geo_dataframe=df_toggle,
+    )
     assert len(result) == 3
 
 
@@ -427,7 +455,9 @@ def test_rect_grid_linestring_in_and_out_of_cell2():
 def test_rect_grid_linestring_starting_on_vertex():
     gr = get_rect_grid()
     ix = GridIntersect(gr)
-    result = ix.intersect(LineString([(10.0, 10.0), (15.0, 5.0)]))
+    result = ix.intersect(
+        LineString([(10.0, 10.0), (15.0, 5.0)]), geo_dataframe=df_toggle
+    )
     assert len(result) == 1
     assert np.allclose(result.lengths.sum(), np.sqrt(50))
     assert result.cellids[0] == (1, 1)
@@ -442,7 +472,7 @@ def test_rect_grid_linestrings_on_boundaries_return_all_ix(rtree):
     n_intersections = [1, 2, 2, 1]
     for i in range(4):
         ls = LineString([(x[i], y[i]), (x[i + 1], y[i + 1])])
-        r = ix.intersect(ls, return_all_intersections=True)
+        r = ix.intersect(ls, return_all_intersections=True, geo_dataframe=df_toggle)
         assert len(r) == n_intersections[i]
 
 
@@ -452,7 +482,7 @@ def test_rect_grid_linestring_cell_boundary(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
     ls = LineString(ix._rect_grid_to_geoms_cellids()[0][0].exterior.coords)
-    r = ix.intersect(ls, return_all_intersections=False)
+    r = ix.intersect(ls, return_all_intersections=False, geo_dataframe=df_toggle)
     assert len(r) == 1
 
 
@@ -462,7 +492,7 @@ def test_rect_grid_linestring_cell_boundary_return_all_ix(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
     ls = LineString(ix._rect_grid_to_geoms_cellids()[0][0].exterior.coords)
-    r = ix.intersect(ls, return_all_intersections=True)
+    r = ix.intersect(ls, return_all_intersections=True, geo_dataframe=df_toggle)
     assert len(r) == 3
 
 
@@ -473,7 +503,9 @@ def test_tri_grid_linestring_outside(rtree):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(LineString([(25.0, 25.0), (21.0, 5.0)]))
+    result = ix.intersect(
+        LineString([(25.0, 25.0), (21.0, 5.0)]), geo_dataframe=df_toggle
+    )
     assert len(result) == 0
 
 
@@ -484,7 +516,9 @@ def test_tri_grid_linestring_in_2cells(rtree):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(LineString([(5.0, 5.0), (5.0, 15.0)]))
+    result = ix.intersect(
+        LineString([(5.0, 5.0), (5.0, 15.0)]), geo_dataframe=df_toggle
+    )
     assert len(result) == 2
     assert result.lengths.sum() == 10.0
     assert result.cellids[0] == 1
@@ -498,7 +532,9 @@ def test_tri_grid_linestring_on_outer_boundary(rtree):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(LineString([(15.0, 20.0), (5.0, 20.0)]))
+    result = ix.intersect(
+        LineString([(15.0, 20.0), (5.0, 20.0)]), geo_dataframe=df_toggle
+    )
     assert len(result) == 2
     assert result.lengths.sum() == 10.0
     assert result.cellids[0] == 2
@@ -512,7 +548,9 @@ def test_tri_grid_linestring_on_inner_boundary(rtree):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(LineString([(5.0, 10.0), (15.0, 10.0)]))
+    result = ix.intersect(
+        LineString([(5.0, 10.0), (15.0, 10.0)]), geo_dataframe=df_toggle
+    )
     assert len(result) == 2
     assert result.lengths.sum() == 10.0
     assert result.cellids[0] == 0
@@ -529,7 +567,8 @@ def test_tri_grid_multilinestring_in_one_cell(rtree):
     result = ix.intersect(
         MultiLineString(
             [LineString([(1.0, 1), (9.0, 1.0)]), LineString([(2.0, 2.0), (9.0, 2.0)])]
-        )
+        ),
+        geo_dataframe=df_toggle,
     )
     assert len(result) == 1
     assert result.lengths == 15.0
@@ -549,7 +588,8 @@ def test_tri_grid_multilinestring_in_multiple_cells(rtree):
                 LineString([(20.0, 0.0), (7.5, 12.0), (2.5, 7.0), (0.0, 4.5)]),
                 LineString([(5.0, 19.0), (2.5, 7.0)]),
             ]
-        )
+        ),
+        geo_dataframe=df_toggle,
     )
     assert len(result) == 5
     assert np.allclose(sum(result.lengths), 40.19197584109293)
@@ -564,7 +604,7 @@ def test_tri_grid_linestrings_on_boundaries_return_all_ix(rtree):
     n_intersections = [2, 1, 2]
     for i in range(len(x) - 1):
         ls = LineString([(x[i], y[i]), (x[i + 1], y[i + 1])])
-        r = ix.intersect(ls, return_all_intersections=True)
+        r = ix.intersect(ls, return_all_intersections=True, geo_dataframe=df_toggle)
         assert len(r) == n_intersections[i]
 
 
@@ -574,7 +614,7 @@ def test_tri_grid_linestring_cell_boundary(rtree):
     tgr = get_tri_grid()
     ix = GridIntersect(tgr, rtree=rtree)
     ls = LineString(ix._vtx_grid_to_geoms_cellids()[0][0].exterior.coords)
-    r = ix.intersect(ls, return_all_intersections=False)
+    r = ix.intersect(ls, return_all_intersections=False, geo_dataframe=df_toggle)
     assert len(r) == 1
 
 
@@ -584,7 +624,7 @@ def test_tri_grid_linestring_cell_boundary_return_all_ix(rtree):
     tgr = get_tri_grid()
     ix = GridIntersect(tgr, rtree=rtree)
     ls = LineString(ix._vtx_grid_to_geoms_cellids()[0][0].exterior.coords)
-    r = ix.intersect(ls, return_all_intersections=True)
+    r = ix.intersect(ls, return_all_intersections=True, geo_dataframe=df_toggle)
     assert len(r) == 3
 
 
@@ -603,7 +643,7 @@ def test_rect_vertex_grid_linestring_geomcollection():
             (10.0, 20.0),
         ]
     )
-    result = ix.intersect(ls)
+    result = ix.intersect(ls, geo_dataframe=df_toggle)
     assert len(result) == 3
     assert np.allclose(result.lengths.sum(), ls.length)
 
@@ -617,7 +657,7 @@ def test_rect_grid_polygon_contains_centroid(rtree):
         [(6.0, 5.0), (4.0, 16.0), (25.0, 14.0), (25.0, -5.0), (6.0, -5.0)],
         holes=[[(9.0, -1), (9, 11), (21, 11), (21, -1)]],
     )
-    result = ix.intersect(p, contains_centroid=True)
+    result = ix.intersect(p, contains_centroid=True, geo_dataframe=df_toggle)
     assert len(result) == 1
 
 
@@ -630,7 +670,7 @@ def test_rect_grid_polygon_min_area(rtree):
         [(5.0, 5.0), (5.0, 15.0), (25.0, 15.0), (25.0, -5.0), (5.0, -5.0)],
         holes=[[(9.0, -1), (9, 11), (21, 11), (21, -1)]],
     )
-    result = ix.intersect(p, min_area_fraction=0.4)
+    result = ix.intersect(p, min_area_fraction=0.4, geo_dataframe=df_toggle)
     assert len(result) == 2
 
 
@@ -643,7 +683,9 @@ def test_rect_grid_polygon_centroid_and_min_area(rtree):
         [(5.0, 5.0), (5.0, 15.0), (25.0, 14.0), (25.0, -5.0), (5.0, -5.0)],
         holes=[[(9.0, -1), (9, 11), (21, 11), (21, -1)]],
     )
-    result = ix.intersect(p, min_area_fraction=0.35, contains_centroid=True)
+    result = ix.intersect(
+        p, min_area_fraction=0.35, contains_centroid=True, geo_dataframe=df_toggle
+    )
     assert len(result) == 1
 
 
@@ -655,7 +697,9 @@ def test_rect_grid_polygon_centroid_and_min_area(rtree):
 def test_rect_grid_polygon_outside(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(Polygon([(21.0, 11.0), (23.0, 17.0), (25.0, 11.0)]))
+    result = ix.intersect(
+        Polygon([(21.0, 11.0), (23.0, 17.0), (25.0, 11.0)]), geo_dataframe=df_toggle
+    )
     assert len(result) == 0
 
 
@@ -664,7 +708,10 @@ def test_rect_grid_polygon_outside(rtree):
 def test_rect_grid_polygon_in_2cells(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(Polygon([(2.5, 5.0), (7.5, 5.0), (7.5, 15.0), (2.5, 15.0)]))
+    result = ix.intersect(
+        Polygon([(2.5, 5.0), (7.5, 5.0), (7.5, 15.0), (2.5, 15.0)]),
+        geo_dataframe=df_toggle,
+    )
     assert len(result) == 2
     assert result.areas.sum() == 50.0
 
@@ -675,7 +722,8 @@ def test_rect_grid_polygon_on_outer_boundary(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect(
-        Polygon([(20.0, 5.0), (25.0, 5.0), (25.0, 15.0), (20.0, 15.0)])
+        Polygon([(20.0, 5.0), (25.0, 5.0), (25.0, 15.0), (20.0, 15.0)]),
+        geo_dataframe=df_toggle,
     )
     assert len(result) == 0
 
@@ -687,7 +735,8 @@ def test_rect_grid_polygon_running_along_boundary():
     result = ix.intersect(
         Polygon(
             [(5.0, 5.0), (5.0, 10.0), (9.0, 10.0), (9.0, 15.0), (1.0, 15.0), (1.0, 5.0)]
-        )
+        ),
+        geo_dataframe=df_toggle,
     )
 
 
@@ -696,7 +745,10 @@ def test_rect_grid_polygon_running_along_boundary():
 def test_rect_grid_polygon_on_inner_boundary(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(Polygon([(5.0, 10.0), (15.0, 10.0), (15.0, 5.0), (5.0, 5.0)]))
+    result = ix.intersect(
+        Polygon([(5.0, 10.0), (15.0, 10.0), (15.0, 5.0), (5.0, 5.0)]),
+        geo_dataframe=df_toggle,
+    )
     assert len(result) == 2
     assert result.areas.sum() == 50.0
 
@@ -709,7 +761,7 @@ def test_rect_grid_multipolygon_in_one_cell(rtree):
     p1 = Polygon([(1.0, 1.0), (8.0, 1.0), (8.0, 3.0), (1.0, 3.0)])
     p2 = Polygon([(1.0, 9.0), (8.0, 9.0), (8.0, 7.0), (1.0, 7.0)])
     p = MultiPolygon([p1, p2])
-    result = ix.intersect(p)
+    result = ix.intersect(p, geo_dataframe=df_toggle)
     assert len(result) == 1
     assert result.areas.sum() == 28.0
 
@@ -722,7 +774,7 @@ def test_rect_grid_multipolygon_in_multiple_cells(rtree):
     p1 = Polygon([(1.0, 1.0), (19.0, 1.0), (19.0, 3.0), (1.0, 3.0)])
     p2 = Polygon([(1.0, 9.0), (19.0, 9.0), (19.0, 7.0), (1.0, 7.0)])
     p = MultiPolygon([p1, p2])
-    result = ix.intersect(p)
+    result = ix.intersect(p, geo_dataframe=df_toggle)
     assert len(result) == 2
     assert result.areas.sum() == 72.0
 
@@ -736,7 +788,7 @@ def test_rect_grid_polygon_with_hole(rtree):
         [(5.0, 5.0), (5.0, 15.0), (25.0, 15.0), (25.0, -5.0), (5.0, -5.0)],
         holes=[[(9.0, -1), (9, 11), (21, 11), (21, -1)]],
     )
-    result = ix.intersect(p)
+    result = ix.intersect(p, geo_dataframe=df_toggle)
     assert len(result) == 3
     assert result.areas.sum() == 104.0
 
@@ -749,7 +801,7 @@ def test_rect_grid_polygon_in_edge_in_cell(rtree):
     p = Polygon(
         [(0.0, 5.0), (3.0, 0.0), (7.0, 0.0), (10.0, 5.0), (10.0, -1.0), (0.0, -1.0)]
     )
-    result = ix.intersect(p)
+    result = ix.intersect(p, geo_dataframe=df_toggle)
     assert len(result) == 1
     assert result.areas.sum() == 15.0
 
@@ -761,7 +813,9 @@ def test_tri_grid_polygon_outside(rtree):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(Polygon([(21.0, 11.0), (23.0, 17.0), (25.0, 11.0)]))
+    result = ix.intersect(
+        Polygon([(21.0, 11.0), (23.0, 17.0), (25.0, 11.0)]), geo_dataframe=df_toggle
+    )
     assert len(result) == 0
 
 
@@ -772,7 +826,10 @@ def test_tri_grid_polygon_in_2cells(rtree):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(Polygon([(2.5, 5.0), (5.0, 5.0), (5.0, 15.0), (2.5, 15.0)]))
+    result = ix.intersect(
+        Polygon([(2.5, 5.0), (5.0, 5.0), (5.0, 15.0), (2.5, 15.0)]),
+        geo_dataframe=df_toggle,
+    )
     assert len(result) == 2
     assert result.areas.sum() == 25.0
 
@@ -785,7 +842,8 @@ def test_tri_grid_polygon_on_outer_boundary(rtree):
         return
     ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect(
-        Polygon([(20.0, 5.0), (25.0, 5.0), (25.0, 15.0), (20.0, 15.0)])
+        Polygon([(20.0, 5.0), (25.0, 5.0), (25.0, 15.0), (20.0, 15.0)]),
+        geo_dataframe=df_toggle,
     )
     assert len(result) == 0
 
@@ -797,7 +855,10 @@ def test_tri_grid_polygon_on_inner_boundary(rtree):
     if gr == -1:
         return
     ix = GridIntersect(gr, rtree=rtree)
-    result = ix.intersect(Polygon([(5.0, 10.0), (15.0, 10.0), (15.0, 5.0), (5.0, 5.0)]))
+    result = ix.intersect(
+        Polygon([(5.0, 10.0), (15.0, 10.0), (15.0, 5.0), (5.0, 5.0)]),
+        geo_dataframe=df_toggle,
+    )
     assert len(result) == 4
     assert result.areas.sum() == 50.0
 
@@ -812,7 +873,7 @@ def test_tri_grid_multipolygon_in_one_cell(rtree):
     p1 = Polygon([(1.0, 1.0), (8.0, 1.0), (8.0, 3.0), (3.0, 3.0)])
     p2 = Polygon([(5.0, 5.0), (8.0, 5.0), (8.0, 8.0)])
     p = MultiPolygon([p1, p2])
-    result = ix.intersect(p)
+    result = ix.intersect(p, geo_dataframe=df_toggle)
     assert len(result) == 1
     assert result.areas.sum() == 16.5
 
@@ -827,7 +888,7 @@ def test_tri_grid_multipolygon_in_multiple_cells(rtree):
     p1 = Polygon([(1.0, 1.0), (19.0, 1.0), (19.0, 3.0), (1.0, 3.0)])
     p2 = Polygon([(1.0, 9.0), (19.0, 9.0), (19.0, 7.0), (1.0, 7.0)])
     p = MultiPolygon([p1, p2])
-    result = ix.intersect(p)
+    result = ix.intersect(p, geo_dataframe=df_toggle)
     assert len(result) == 4
     assert result.areas.sum() == 72.0
 
@@ -843,7 +904,7 @@ def test_tri_grid_polygon_with_hole(rtree):
         [(5.0, 5.0), (5.0, 15.0), (25.0, 15.0), (25.0, -5.0), (5.0, -5.0)],
         holes=[[(9.0, -1), (9, 11), (21, 11), (21, -1)]],
     )
-    result = ix.intersect(p)
+    result = ix.intersect(p, geo_dataframe=df_toggle)
     assert len(result) == 6
     assert result.areas.sum() == 104.0
 
@@ -859,7 +920,7 @@ def test_tri_grid_polygon_min_area(rtree):
         [(5.0, 5.0), (5.0, 15.0), (25.0, 15.0), (25.0, -5.0), (5.0, -5.0)],
         holes=[[(9.0, -1), (9, 11), (21, 11), (21, -1)]],
     )
-    result = ix.intersect(p, min_area_fraction=0.5)
+    result = ix.intersect(p, min_area_fraction=0.5, geo_dataframe=df_toggle)
     assert len(result) == 2
 
 
@@ -874,7 +935,7 @@ def test_tri_grid_polygon_contains_centroid(rtree):
         [(5.0, 5.0), (6.0, 14.0), (25.0, 15.0), (25.0, -5.0), (5.0, -5.0)],
         holes=[[(9.0, -1), (9, 11), (21, 11), (21, -1)]],
     )
-    result = ix.intersect(p, contains_centroid=True)
+    result = ix.intersect(p, contains_centroid=True, geo_dataframe=df_toggle)
     assert len(result) == 2
 
 
@@ -887,11 +948,11 @@ def test_point_offset_rot_structured_grid(rtree):
     sgr = get_rect_grid(angrot=45.0, xyoffset=10.0)
     p = Point(10.0, 10 + np.sqrt(200.0))
     ix = GridIntersect(sgr, rtree=rtree)
-    result = ix.intersect(p)
+    result = ix.intersect(p, geo_dataframe=df_toggle)
     assert len(result) == 1
     # check empty result when using local model coords
     ix = GridIntersect(sgr, rtree=rtree, local=True)
-    result = ix.intersect(p)
+    result = ix.intersect(p, geo_dataframe=df_toggle)
     assert len(result) == 0
 
 
@@ -901,11 +962,11 @@ def test_linestring_offset_rot_structured_grid(rtree):
     sgr = get_rect_grid(angrot=45.0, xyoffset=10.0)
     ls = LineString([(5, 10.0 + np.sqrt(200.0)), (15, 10.0 + np.sqrt(200.0))])
     ix = GridIntersect(sgr, rtree=rtree)
-    result = ix.intersect(ls)
+    result = ix.intersect(ls, geo_dataframe=df_toggle)
     assert len(result) == 2
     # check empty result when using local model coords
     ix = GridIntersect(sgr, rtree=rtree, local=True)
-    result = ix.intersect(ls)
+    result = ix.intersect(ls, geo_dataframe=df_toggle)
     assert len(result) == 0
 
 
@@ -922,11 +983,11 @@ def test_polygon_offset_rot_structured_grid(rtree):
         ]
     )
     ix = GridIntersect(sgr, rtree=rtree)
-    result = ix.intersect(p)
+    result = ix.intersect(p, geo_dataframe=df_toggle)
     assert len(result) == 3
     # check empty result when using local model coords
     ix = GridIntersect(sgr, rtree=rtree, local=True)
-    result = ix.intersect(p)
+    result = ix.intersect(p, geo_dataframe=df_toggle)
     assert len(result) == 0
 
 
@@ -936,11 +997,11 @@ def test_point_offset_rot_vertex_grid(rtree):
     sgr = get_rect_vertex_grid(angrot=45.0, xyoffset=10.0)
     p = Point(10.0, 10 + np.sqrt(200.0))
     ix = GridIntersect(sgr, rtree=rtree)
-    result = ix.intersect(p)
+    result = ix.intersect(p, geo_dataframe=df_toggle)
     assert len(result) == 1
     # check empty result when using local model coords
     ix = GridIntersect(sgr, rtree=rtree, local=True)
-    result = ix.intersect(p)
+    result = ix.intersect(p, geo_dataframe=df_toggle)
     assert len(result) == 0
 
 
@@ -950,11 +1011,11 @@ def test_linestring_offset_rot_vertex_grid(rtree):
     sgr = get_rect_vertex_grid(angrot=45.0, xyoffset=10.0)
     ls = LineString([(5, 10.0 + np.sqrt(200.0)), (15, 10.0 + np.sqrt(200.0))])
     ix = GridIntersect(sgr, rtree=rtree)
-    result = ix.intersect(ls)
+    result = ix.intersect(ls, geo_dataframe=df_toggle)
     assert len(result) == 2
     # check empty result when using local model coords
     ix = GridIntersect(sgr, rtree=rtree, local=True)
-    result = ix.intersect(ls)
+    result = ix.intersect(ls, geo_dataframe=df_toggle)
     assert len(result) == 0
 
 
@@ -971,11 +1032,11 @@ def test_polygon_offset_rot_vertex_grid(rtree):
         ]
     )
     ix = GridIntersect(sgr, rtree=rtree)
-    result = ix.intersect(p)
+    result = ix.intersect(p, geo_dataframe=df_toggle)
     assert len(result) == 3
     # check empty result when using local model coords
     ix = GridIntersect(sgr, rtree=rtree, local=True)
-    result = ix.intersect(p)
+    result = ix.intersect(p, geo_dataframe=df_toggle)
     assert len(result) == 0
 
 
@@ -989,7 +1050,7 @@ def test_rect_grid_single_point_array_inside(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
     pts = points([1.0], [1.0])
-    result = ix.intersects(pts)
+    result = ix.intersects(pts, dataframe=df_toggle)
     assert len(result) == 1
     assert result.cellids[0] == (1, 0)
 
@@ -1001,7 +1062,7 @@ def test_rect_grid_single_point_array_outside(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
     pts = points([25.0], [25.0])
-    result = ix.intersects(pts)
+    result = ix.intersects(pts, dataframe=df_toggle)
     assert len(result) == 0
 
 
@@ -1011,7 +1072,7 @@ def test_rect_grid_single_point_array_outside_points_to_cellids():
     gr = get_rect_grid()
     ix = GridIntersect(gr)
     pts = points([25.0], [25.0])
-    result = ix.points_to_cellids(pts)
+    result = ix.points_to_cellids(pts, dataframe=df_toggle)
     assert len(result) == 1
     assert np.isnan(result.cellids[0])
 
@@ -1022,7 +1083,7 @@ def test_rect_grid_single_point_array_on_boundary_points_to_cellids():
     gr = get_rect_grid()
     ix = GridIntersect(gr)
     pts = points([10.0], [20.0])
-    result = ix.points_to_cellids(pts)
+    result = ix.points_to_cellids(pts, dataframe=df_toggle)
     assert len(result) == 1
     assert result.cellids[0] == (0, 0)
 
@@ -1034,7 +1095,7 @@ def test_rect_grid_single_point_array_on_boundary(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
     pts = points([10.0], [20.0])
-    result = ix.intersects(pts)
+    result = ix.intersects(pts, dataframe=df_toggle)
     assert len(result) == 2
     assert result.cellids[0] == (0, 0)
     assert result.cellids[1] == (0, 1)
@@ -1046,7 +1107,7 @@ def test_rect_grid_multiple_points_array_in_one_cell():
     gr = get_rect_grid()
     ix = GridIntersect(gr)
     pts = points([1.0, 5.0], [2.0, 5.0])
-    result = ix.intersects(pts)
+    result = ix.intersects(pts, dataframe=df_toggle)
     assert len(result) == 2
     assert result.cellids[0] == (1, 0)
     assert result.cellids[1] == (1, 0)
@@ -1058,7 +1119,7 @@ def test_rect_grid_multiple_points_array_in_multiple_cells():
     gr = get_rect_grid()
     ix = GridIntersect(gr)
     pts = points([1.0, 15.0], [2.0, 15.0])
-    result = ix.intersects(pts)
+    result = ix.intersects(pts, dataframe=df_toggle)
     assert len(result) == 2
     assert result.cellids[0] == (1, 0)
     assert result.cellids[1] == (0, 1)
@@ -1070,7 +1131,7 @@ def test_rect_grid_multiple_points_array_inside_and_outside():
     gr = get_rect_grid()
     ix = GridIntersect(gr)
     pts = points([1.0, 25.0], [2.0, 25.0])
-    result = ix.intersects(pts)
+    result = ix.intersects(pts, dataframe=df_toggle)
     assert len(result) == 1
     assert result.cellids[0] == (1, 0)
 
@@ -1081,7 +1142,7 @@ def test_rect_grid_multiple_points_array_inside_and_outside_points_to_cellids():
     gr = get_rect_grid()
     ix = GridIntersect(gr)
     pts = points([1.0, 25.0], [2.0, 25.0])
-    result = ix.points_to_cellids(pts)
+    result = ix.points_to_cellids(pts, dataframe=df_toggle)
     assert len(result) == 2
     assert result.cellids[0] == (1, 0)
     assert np.isnan(result.cellids[1])
@@ -1094,10 +1155,10 @@ def test_rect_grid_multiple_points_array_with_z_points_to_cellids():
     )
     ix = GridIntersect(gr)
     pts = points([1.0, 25.0], [2.0, 25.0], [10.0, 0.5])
-    result = ix.points_to_cellids(pts, handle_z="ignore")
+    result = ix.points_to_cellids(pts, handle_z=False, dataframe=df_toggle)
     assert result.cellids[0] == (1, 0)
     assert np.isnan(result.cellids[1])
-    result = ix.points_to_cellids(pts, handle_z="return")
+    result = ix.points_to_cellids(pts, handle_z=True, dataframe=df_toggle)
     assert ~np.isfinite(result.layer[0])
     assert np.isnan(result.cellids[1])
 
@@ -1112,7 +1173,7 @@ def test_rect_grid_single_linestring_array_in_one_cell(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
     ls = linestrings([[(5.0, 5.0), (7.5, 5.0)]])
-    result = ix.intersects(ls)
+    result = ix.intersects(ls, dataframe=df_toggle)
     assert len(result) == 1
     assert result.cellids[0] == (1, 0)
 
@@ -1124,7 +1185,7 @@ def test_rect_grid_single_linestring_array_in_two_cells(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
     ls = linestrings([[(5.0, 5.0), (15.0, 5.0)]])
-    result = ix.intersects(ls)
+    result = ix.intersects(ls, dataframe=df_toggle)
     assert len(result) == 2
     assert result.cellids[0] == (1, 0)
     assert result.cellids[1] == (1, 1)
@@ -1137,7 +1198,7 @@ def test_rect_grid_single_linestring_array_outside(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
     ls = linestrings([[(25.0, 5.0), (35.0, 5.0)]])
-    result = ix.intersects(ls)
+    result = ix.intersects(ls, dataframe=df_toggle)
     assert len(result) == 0
 
 
@@ -1148,7 +1209,7 @@ def test_rect_grid_multiple_linestring_array_in_multiple_cells():
     gr = get_rect_grid()
     ix = GridIntersect(gr)
     ls = linestrings([[(5.0, 5.0), (15.0, 5.0)], [(5.0, 15.0), (15.0, 15.0)]])
-    result = ix.intersects(ls)
+    result = ix.intersects(ls, dataframe=df_toggle)
     assert len(result) == 4
     assert result.cellids[0] == (1, 0)
     assert result.cellids[1] == (1, 1)
@@ -1163,9 +1224,9 @@ def test_rect_grid_multiple_linestring_array_inside_outside():
     gr = get_rect_grid()
     ix = GridIntersect(gr)
     ls = linestrings([[(5.0, 5.0), (15.0, 5.0)], [(25.0, 15.0), (35.0, 15.0)]])
-    result = ix.intersects(ls)
+    result = ix.intersects(ls, dataframe=df_toggle)
     assert len(result) == 2
-    assert (result.shp_ids == 0).all()
+    assert (result.shp_id == 0).all()
     assert result.cellids[0] == (1, 0)
     assert result.cellids[1] == (1, 1)
 
@@ -1180,7 +1241,7 @@ def test_rect_grid_single_polygon_array_in_one_cell(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
     p = polygons([[(2.5, 5.0), (7.5, 5.0), (7.5, 7.5), (2.5, 7.5)]])
-    result = ix.intersects(p)
+    result = ix.intersects(p, dataframe=df_toggle)
     assert len(result) == 1
     assert result.cellids[0] == (1, 0)
 
@@ -1192,7 +1253,7 @@ def test_rect_grid_single_polygon_array_in_two_cells(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
     p = polygons([[(2.5, 5.0), (15, 5.0), (15, 7.5), (2.5, 7.5)]])
-    result = ix.intersects(p)
+    result = ix.intersects(p, dataframe=df_toggle)
     assert len(result) == 2
     assert result.cellids[0] == (1, 0)
     assert result.cellids[1] == (1, 1)
@@ -1205,7 +1266,7 @@ def test_rect_grid_single_polygon_array_outside(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
     p = polygons([[(25, 5.0), (75, 5.0), (75, 7.5), (25, 7.5)]])
-    result = ix.intersects(p)
+    result = ix.intersects(p, dataframe=df_toggle)
     assert len(result) == 0
 
 
@@ -1221,7 +1282,7 @@ def test_rect_grid_multiple_polygon_array_single_result_per_polygon():
             [(2.5, 15.0), (7.5, 15.0), (7.5, 17.5), (2.5, 17.5)],
         ]
     )
-    result = ix.intersects(p)
+    result = ix.intersects(p, dataframe=df_toggle)
     assert len(result) == 2
     assert result.cellids[0] == (1, 0)
     assert result.cellids[1] == (0, 0)
@@ -1239,7 +1300,7 @@ def test_rect_grid_multiple_polygon_array_multiple_results_per_polygon():
             [(2.5, 15.0), (17.5, 15.0), (17.5, 17.5), (2.5, 17.5)],
         ]
     )
-    result = ix.intersects(p)
+    result = ix.intersects(p, dataframe=df_toggle)
     assert len(result) == 4
     assert result.cellids[0] == (1, 0)
     assert result.cellids[1] == (1, 1)
@@ -1259,7 +1320,7 @@ def test_rect_grid_multiple_polygon_array_inside_outside():
             [(25, 15.0), (75, 15.0), (75, 17.5), (25, 17.5)],
         ]
     )
-    result = ix.intersects(p)
+    result = ix.intersects(p, dataframe=df_toggle)
     assert len(result) == 1
     assert result.cellids[0] == (1, 0)
 
@@ -1274,7 +1335,7 @@ def test_rect_grid_intersect_single_point_array(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
     pts = points([10], [20])
-    result = ix.intersect(pts)
+    result = ix.intersect(pts, geo_dataframe=df_toggle)
     assert result.cellids[0] == (0, 0)
 
 
@@ -1288,7 +1349,7 @@ def test_rect_grid_intersect_multiple_points_array(rtree):
     with pytest.raises(
         ValueError, match="intersect\(\) only accepts arrays containing one"
     ):
-        ix.intersect(pts)
+        ix.intersect(pts, geo_dataframe=df_toggle)
 
 
 @requires_pkg("shapely")
@@ -1298,7 +1359,7 @@ def test_rect_grid_intersect_single_linestring_array(rtree):
     gr = get_rect_grid()
     ix = GridIntersect(gr, rtree=rtree)
     ls = linestrings([[(5.0, 5.0), (15.0, 5.0)]])
-    result = ix.intersect(ls)
+    result = ix.intersect(ls, geo_dataframe=df_toggle)
     assert len(result) == 2
     assert result.cellids[0] == (1, 0)
     assert result.cellids[1] == (1, 1)
@@ -1320,7 +1381,7 @@ def test_rect_grid_intersect_multiple_linestring_array(rtree):
     with pytest.raises(
         ValueError, match="intersect\(\) only accepts arrays containing one"
     ):
-        ix.intersect(ls)
+        ix.intersect(ls, geo_dataframe=df_toggle)
 
 
 @requires_pkg("shapely")
@@ -1334,7 +1395,7 @@ def test_rect_grid_intersect_single_polygon_array(rtree):
             [(2.5, 5.0), (17.5, 5.0), (17.5, 7.5), (2.5, 7.5)],
         ]
     )
-    result = ix.intersect(p)
+    result = ix.intersect(p, geo_dataframe=df_toggle)
     assert len(result) == 2
     assert result.cellids[0] == (1, 0)
     assert result.cellids[1] == (1, 1)
@@ -1356,7 +1417,7 @@ def test_rect_grid_intersect_multiple_polygon_array(rtree):
     with pytest.raises(
         ValueError, match="intersect\(\) only accepts arrays containing one"
     ):
-        ix.intersect(p)
+        ix.intersect(p, geo_dataframe=df_toggle)
 
 
 # %% vertex grid points
@@ -1369,7 +1430,7 @@ def test_tri_grid_single_point_array_inside(rtree):
     gr = get_tri_grid()
     ix = GridIntersect(gr, rtree=rtree)
     pts = points([9.0], [1.0])
-    result = ix.intersects(pts)
+    result = ix.intersects(pts, dataframe=df_toggle)
     assert len(result) == 1
     assert result.cellids[0] == 4
 
@@ -1381,7 +1442,7 @@ def test_tri_grid_single_point_array_outside(rtree):
     gr = get_tri_grid()
     ix = GridIntersect(gr, rtree=rtree)
     pts = points([25.0], [25.0])
-    result = ix.intersects(pts)
+    result = ix.intersects(pts, dataframe=df_toggle)
     assert len(result) == 0
 
 
@@ -1391,7 +1452,7 @@ def test_tri_grid_single_point_array_outside_points_to_cellids():
     gr = get_tri_grid()
     ix = GridIntersect(gr)
     pts = points([25.0], [25.0])
-    result = ix.points_to_cellids(pts)
+    result = ix.points_to_cellids(pts, dataframe=df_toggle)
     assert len(result) == 1
     assert np.isnan(result.cellids[0])
 
@@ -1402,7 +1463,7 @@ def test_tri_grid_single_point_array_on_boundary_points_to_cellids():
     gr = get_tri_grid()
     ix = GridIntersect(gr)
     pts = points([9.0], [1.0])
-    result = ix.points_to_cellids(pts)
+    result = ix.points_to_cellids(pts, dataframe=df_toggle)
     assert len(result) == 1
     assert result.cellids[0] == 4
 
@@ -1414,7 +1475,7 @@ def test_tri_grid_single_point_array_on_boundary(rtree):
     gr = get_tri_grid()
     ix = GridIntersect(gr, rtree=rtree)
     pts = points([5.0], [5.0])
-    result = ix.intersects(pts)
+    result = ix.intersects(pts, dataframe=df_toggle)
     assert len(result) == 2
     assert result.cellids[0] == 1
     assert result.cellids[1] == 4
@@ -1426,7 +1487,7 @@ def test_tri_grid_multiple_points_array_in_one_cell():
     gr = get_tri_grid()
     ix = GridIntersect(gr)
     pts = points([9.0, 9.0], [1.0, 8.0])
-    result = ix.intersects(pts)
+    result = ix.intersects(pts, dataframe=df_toggle)
     assert len(result) == 2
     assert (result.cellids == 4).all()
 
@@ -1437,7 +1498,7 @@ def test_tri_grid_multiple_points_array_in_multiple_cells():
     gr = get_tri_grid()
     ix = GridIntersect(gr)
     pts = points([15.0, 9.0], [3.0, 3.0])
-    result = ix.intersects(pts)
+    result = ix.intersects(pts, dataframe=df_toggle)
     assert len(result) == 2
     assert result.cellids[0] == 5
     assert result.cellids[1] == 4
@@ -1449,7 +1510,7 @@ def test_tri_grid_multiple_points_array_inside_and_outside_points_to_cellids():
     gr = get_tri_grid()
     ix = GridIntersect(gr)
     pts = points([5.0, 25.0], [3.0, 25.0])
-    result = ix.points_to_cellids(pts)
+    result = ix.points_to_cellids(pts, dataframe=df_toggle)
     assert len(result) == 2
     assert result.cellids[0] == 4
     assert np.isnan(result.cellids[1])
@@ -1462,10 +1523,7 @@ def test_tri_grid_multiple_points_array_with_z_points_to_cellids():
     )
     ix = GridIntersect(gr)
     pts = points([1.0, 25.0], [2.0, 25.0], [0.5, 10.0])
-    result = ix.points_to_cellids(pts, handle_z="ignore")
-    assert result.cellids[0] == (1, 0)
-    assert np.isnan(result.cellids[1])
-    result = ix.points_to_cellids(pts, handle_z="return")
+    result = ix.points_to_cellids(pts, handle_z=True, dataframe=df_toggle)
     assert result.layer[0] == 0.0
     assert np.isnan(result.cellids[1])
 
@@ -1476,7 +1534,7 @@ def test_tri_grid_multiple_points_array_inside_and_outside():
     gr = get_tri_grid()
     ix = GridIntersect(gr)
     pts = points([5.0, 25.0], [3.0, 25.0])
-    result = ix.intersects(pts)
+    result = ix.intersects(pts, dataframe=df_toggle)
     assert len(result) == 1
     assert result.cellids[0] == 4
 
@@ -1491,7 +1549,7 @@ def test_tri_grid_single_linestring_array_in_one_cell(rtree):
     gr = get_tri_grid()
     ix = GridIntersect(gr, rtree=rtree)
     ls = linestrings([[(2.0, 1.0), (7.5, 1.0)]])
-    result = ix.intersects(ls)
+    result = ix.intersects(ls, dataframe=df_toggle)
     assert len(result) == 1
     assert result.cellids[0] == 4
 
@@ -1503,7 +1561,7 @@ def test_tri_grid_single_linestring_array_in_two_cells(rtree):
     gr = get_tri_grid()
     ix = GridIntersect(gr, rtree=rtree)
     ls = linestrings([[(2.0, 1.0), (15.0, 1.0)]])
-    result = ix.intersects(ls)
+    result = ix.intersects(ls, dataframe=df_toggle)
     assert len(result) == 2
     assert result.cellids[0] == 4
     assert result.cellids[1] == 5
@@ -1516,7 +1574,7 @@ def test_tri_grid_single_linestring_array_outside(rtree):
     gr = get_tri_grid()
     ix = GridIntersect(gr, rtree=rtree)
     ls = linestrings([[(25.0, 5.0), (35.0, 5.0)]])
-    result = ix.intersects(ls)
+    result = ix.intersects(ls, dataframe=df_toggle)
     assert len(result) == 0
 
 
@@ -1527,7 +1585,7 @@ def test_tri_grid_multiple_linestring_array_in_multiple_cells():
     gr = get_tri_grid()
     ix = GridIntersect(gr)
     ls = linestrings([[(2.0, 1.0), (15.0, 1.0)], [(2.0, 19.0), (15.0, 19.0)]])
-    result = ix.intersects(ls)
+    result = ix.intersects(ls, dataframe=df_toggle)
     assert len(result) == 4
     assert result.cellids[0] == 4
     assert result.cellids[1] == 5
@@ -1542,9 +1600,9 @@ def test_tri_grid_multiple_linestring_array_inside_outside():
     gr = get_tri_grid()
     ix = GridIntersect(gr)
     ls = linestrings([[(2.0, 1.0), (15.0, 1.0)], [(25.0, 15.0), (35.0, 15.0)]])
-    result = ix.intersects(ls)
+    result = ix.intersects(ls, dataframe=df_toggle)
     assert len(result) == 2
-    assert (result.shp_ids == 0).all()
+    assert (result.shp_id == 0).all()
     assert result.cellids[0] == 4
     assert result.cellids[1] == 5
 
@@ -1559,7 +1617,7 @@ def test_tri_grid_single_polygon_array_in_one_cell(rtree):
     gr = get_tri_grid()
     ix = GridIntersect(gr, rtree=rtree)
     p = polygons([[(2.0, 1.0), (9.0, 1.0), (9.0, 7.0), (2.0, 1.0)]])
-    result = ix.intersects(p)
+    result = ix.intersects(p, dataframe=df_toggle)
     assert len(result) == 1
     assert result.cellids[0] == 4
 
@@ -1571,7 +1629,7 @@ def test_tri_grid_single_polygon_array_in_two_cells(rtree):
     gr = get_tri_grid()
     ix = GridIntersect(gr, rtree=rtree)
     p = polygons([[(5.0, 1.0), (15.0, 1.0), (15.0, 2.0), (5.0, 2.0)]])
-    result = ix.intersects(p)
+    result = ix.intersects(p, dataframe=df_toggle)
     assert len(result) == 2
     assert result.cellids[0] == 4
     assert result.cellids[1] == 5
@@ -1584,7 +1642,7 @@ def test_tri_grid_single_polygon_array_outside(rtree):
     gr = get_tri_grid()
     ix = GridIntersect(gr, rtree=rtree)
     p = polygons([[(25, 5.0), (75, 5.0), (75, 7.5), (25, 7.5)]])
-    result = ix.intersects(p)
+    result = ix.intersects(p, dataframe=df_toggle)
     assert len(result) == 0
 
 
@@ -1600,7 +1658,7 @@ def test_tri_grid_multiple_polygon_array_single_result_per_polygon():
             [(2.0, 19.0), (9.0, 19.0), (9.0, 17.0), (2.0, 19.0)],
         ]
     )
-    result = ix.intersects(p)
+    result = ix.intersects(p, dataframe=df_toggle)
     assert len(result) == 2
     assert result.cellids[0] == 4
     assert result.cellids[1] == 2
@@ -1618,7 +1676,7 @@ def test_tri_grid_multiple_polygon_array_multiple_results_per_polygon():
             [(5.0, 19.0), (15.0, 19.0), (15.0, 18.0), (5.0, 18.0)],
         ]
     )
-    result = ix.intersects(p)
+    result = ix.intersects(p, dataframe=df_toggle)
     assert len(result) == 4
     assert result.cellids[0] == 4
     assert result.cellids[1] == 5
@@ -1638,7 +1696,7 @@ def test_tri_grid_multiple_polygon_array_inside_outside():
             [(25, 15.0), (75, 15.0), (75, 17.5), (25, 17.5)],
         ]
     )
-    result = ix.intersects(p)
+    result = ix.intersects(p, dataframe=df_toggle)
     assert len(result) == 1
     assert result.cellids[0] == 4
 
@@ -1653,11 +1711,11 @@ def test_tri_grid_intersect_single_point_array(rtree):
     gr = get_tri_grid()
     ix = GridIntersect(gr, rtree=rtree)
     pts = points([10], [20])
-    result = ix.intersect(pts, return_all_intersections=True)
+    result = ix.intersect(pts, return_all_intersections=True, geo_dataframe=df_toggle)
     assert len(result.cellids) == 2
     assert result.cellids[0] == 2
     assert result.cellids[1] == 7
-    result = ix.intersect(pts, return_all_intersections=False)
+    result = ix.intersect(pts, return_all_intersections=False, geo_dataframe=df_toggle)
     assert len(result.cellids) == 1
     assert result.cellids[0] == 2
 
@@ -1672,7 +1730,7 @@ def test_tri_grid_intersect_multiple_points_array(rtree):
     with pytest.raises(
         ValueError, match="intersect\(\) only accepts arrays containing one"
     ):
-        ix.intersect(pts)
+        ix.intersect(pts, geo_dataframe=df_toggle)
 
 
 @requires_pkg("shapely")
@@ -1682,7 +1740,7 @@ def test_tri_grid_intersect_single_linestring_array(rtree):
     gr = get_tri_grid()
     ix = GridIntersect(gr, rtree=rtree)
     ls = linestrings([[(5.0, 5.0), (15.0, 5.0)]])
-    result = ix.intersect(ls)
+    result = ix.intersect(ls, geo_dataframe=df_toggle)
     assert len(result) == 2
     assert result.cellids[0] == 4
     assert result.cellids[1] == 5
@@ -1704,7 +1762,7 @@ def test_tri_grid_intersect_multiple_linestring_array(rtree):
     with pytest.raises(
         ValueError, match="intersect\(\) only accepts arrays containing one"
     ):
-        ix.intersect(ls)
+        ix.intersect(ls, geo_dataframe=df_toggle)
 
 
 @requires_pkg("shapely")
@@ -1718,7 +1776,7 @@ def test_tri_grid_intersect_single_polygon_array(rtree):
             [(2.5, 5.0), (17.5, 5.0), (17.5, 7.5), (2.5, 7.5)],
         ]
     )
-    result = ix.intersect(p)
+    result = ix.intersect(p, geo_dataframe=df_toggle)
     assert len(result) == 4
     assert result.cellids[0] == 1
     assert result.cellids[1] == 4
@@ -1742,7 +1800,7 @@ def test_tri_grid_intersect_multiple_polygon_array(rtree):
     with pytest.raises(
         ValueError, match="intersect\(\) only accepts arrays containing one"
     ):
-        ix.intersect(p)
+        ix.intersect(p, geo_dataframe=df_toggle)
 
 
 def test_rtree_false_raises_in_points_to_cellids():
@@ -1754,7 +1812,7 @@ def test_rtree_false_raises_in_points_to_cellids():
         ValueError,
         match="points_to_cellids\(\) requires rtree=True when",
     ):
-        ix.points_to_cellids(pts)
+        ix.points_to_cellids(pts, dataframe=df_toggle)
 
 
 def test_rtree_false_raises_with_arrays_in_intersects():
@@ -1766,29 +1824,4 @@ def test_rtree_false_raises_with_arrays_in_intersects():
         ValueError,
         match="points_to_cellids\(\) requires rtree=True when initializing",
     ):
-        ix.points_to_cellids(pts)
-
-
-# %%
-gr = get_rect_grid(top=np.ones(4).reshape((2, 2)), botm=np.zeros(4).reshape((1, 2, 2)))
-ix = GridIntersect(gr)
-pts = points([1.0, 25.0], [2.0, 25.0], [10.0, 0.5])
-ix.points_to_cellids(pts, handle_z="return", dataframe=True)
-# %%
-botm = np.concatenate(
-    [
-        np.ones(4),
-        0.5 * np.ones(4),
-        np.zeros(4),
-    ]
-).reshape((3, 2, 2))
-gr = get_rect_grid(top=2 * np.ones(4).reshape((2, 2)), botm=botm)
-ix = GridIntersect(gr)
-result = ix.intersect(Point(2.0, 2.0, 0.2), handle_z="ignore")
-assert result.cellids[0] == (1, 0)
-result = ix.intersect(Point(2.0, 2.0, 0.2), handle_z="drop")
-assert result.cellids[0] == (1, 0)
-result = ix.intersect(Point(2.0, 2.0, 0.2), handle_z="return")
-assert result.cellids[0] == (1, 0)
-assert result.layer[0] == 2.0  # returned as float to allow +/-inf
-# %%
+        ix.points_to_cellids(pts, dataframe=df_toggle)
