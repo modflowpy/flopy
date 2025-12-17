@@ -88,7 +88,7 @@ print(f"flopy version: {flopy.__version__}")
 # The important methods in the GridIntersect object are:
 #
 # - `intersects()`: returns cellids for gridcells that intersect a shape (accepts
-# shapely geometry objects, arrays of shapely geometry object, flopy geometry object,
+# shapely geometry objects, arrays of shapely geometry objects, flopy geometry object,
 # shapefile.Shape objects, and geojson objects).
 # - `intersect()`: for intersecting the modelgrid with point, linestrings, and
 # polygon geometries (accepts shapely geometry objects, flopy geometry object,
@@ -130,31 +130,35 @@ p = Polygon(
 
 # %%
 # Create the GridIntersect class for our modelgrid.
-ix = GridIntersect(sgr)
+gi = GridIntersect(sgr)
 
 # %% [markdown]
 # Do the intersect operation for a polygon
 
 # %%
-result = ix.intersect(p)
+result = gi.intersect(p, geo_dataframe=False)
 
 # %% [markdown]
-# The results are returned as a numpy.recarray containing several fields based on the intersection performed. An explanation of the data in each of the possible fields is given below:
-# - **cellids**: contains the cell ids of the intersected grid cells
-# - **areas**: contains the area of the polygon in that grid cell (only for polygons)
-# - **lengths**: contains the length of the linestring in that grid cell (only for linestrings)
-# - **ixshapes**: contains the shapely object representing the intersected shape (useful for plotting the result)
+# The results are returned as a geopandas.GeoDataFrame or numpy.recarray containing several fields based on the intersection performed. An explanation of the data in each of the possible columns is given below:
+# - `cellid`: contains the cell ids of the intersected grid cells
+# - `row`: contains the row index of the intersected grid cells (only for structured grids)
+# - `col`: contains the column index of the intersected grid cells (only for structured grids)
+# - `areas`: contains the area of the polygon in that grid cell (only for polygons)
+# - `lengths`: contains the length of the linestring in that grid cell (only for linestrings)
+# - `ixshapes`/`geometry`: contains the shapely object representing the intersected shape (useful for plotting the result)
+#
+# __Note__: The `cellids` column is deprecated since flopy 3.11 but still included in the result for backward compatibility. It contains (row, column) tuples for structured grids and cellids for vertex grids.
 #
 # Looking at the first few entries of the results of the polygon intersection. Note that you can convert the result to a GeoDataFrame (if geopandas is installed) with `geo_dataframe=True`.
 
 # %%
-ix.intersect(p, geo_dataframe=True).head()
+gi.intersect(p, geo_dataframe=True).head()
 
 # %% [markdown]
-# The cellids can be easily obtained
+# The rows and columns can be easily obtained.
 
 # %%
-result.cellids
+result.row, result.col
 
 # %% [markdown]
 # Or the areas
@@ -168,13 +172,14 @@ result.areas
 # method. This method works for all types of shapely geometries including arrays of
 # shapely geometries.
 #
-# This method returns `shp_ids` and `cellids` fields. The `shp_ids` field contains the
+# This method returns `shp_id` and `cellid` columns. The `shp_id` column contains the
 # index of the geometry in the original input shape provided by the user. This is useful
 # when the input is an array of shapely geometries. In this case we have only one polygon,
-# so the `shp_id` is always equal to 0.
+# so the `shp_id` is always equal to 0. For structured grids the row and column indices
+# are returned in the `row` and `col` columns.
 
 # %%
-ix.intersects(p)
+gi.intersects(p, dataframe=True)
 
 # %% [markdown]
 # The results of an intersection can be visualized with the `GridIntersect.plot_intersection_result()` method.
@@ -184,10 +189,10 @@ ix.intersects(p)
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
 
 # the intersection object contains some helpful plotting commands
-ix.plot_intersection_result(result, ax=ax)
+gi.plot_intersection_result(result, ax=ax)
 
 # add black x at cell centers
-for irow, icol in result.cellids:
+for irow, icol in zip(result.row, result.col):
     (h2,) = ax.plot(
         sgr.xcellcenters[0, icol],
         sgr.ycellcenters[irow, 0],
@@ -210,13 +215,13 @@ ax.legend([h2], [i.get_label() for i in [h2]], loc="best")
 # %%
 # contains_centroid example
 
-result2 = ix.intersect(p, contains_centroid=True)
+result2 = gi.intersect(p, contains_centroid=True, geo_dataframe=True)
 
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
-ix.plot_intersection_result(result2, ax=ax)
+gi.plot_intersection_result(result2, ax=ax)
 
 # add black x at cell centers
-for irow, icol in result2.cellids:
+for irow, icol in zip(result2.row, result2.col):
     (h2,) = ax.plot(
         sgr.xcellcenters[0, icol],
         sgr.ycellcenters[irow, 0],
@@ -232,13 +237,13 @@ ax.legend([h2], [i.get_label() for i in [h2]], loc="best")
 # %%
 # min_area_threshold example
 
-result3 = ix.intersect(p, min_area_fraction=0.35)
+result3 = gi.intersect(p, min_area_fraction=0.35)
 
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
-ix.plot_intersection_result(result3, ax=ax)
+gi.plot_intersection_result(result3, ax=ax)
 
 # add black x at cell centers
-for irow, icol in result3.cellids:
+for irow, icol in zip(result3.row, result3.col):
     (h2,) = ax.plot(
         sgr.xcellcenters[0, icol],
         sgr.ycellcenters[irow, 0],
@@ -258,7 +263,7 @@ ls3 = LineString([(90, 22), (0, 0)])
 mls = MultiLineString(lines=[ls1, ls2, ls3])
 
 # %%
-result = ix.intersect(mls)
+result = gi.intersect(mls, geo_dataframe=True)
 
 # %% [markdown]
 # Plot the result
@@ -266,9 +271,9 @@ result = ix.intersect(mls)
 # %%
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
 sgr.plot(ax=ax)
-ix.plot_intersection_result(result, ax=ax, cmap="viridis")
+gi.plot_intersection_result(result, ax=ax, cmap="tab20")
 
-for irow, icol in result.cellids:
+for irow, icol in zip(result.row, result.col):
     (h2,) = ax.plot(
         sgr.xcellcenters[0, icol],
         sgr.ycellcenters[irow, 0],
@@ -291,16 +296,16 @@ mp = MultiPoint(
 # For points and linestrings there is a keyword argument `return_all_intersections` which will return multiple intersection results for points or (parts of) linestrings on cell boundaries. As an example, the difference is shown with the MultiPoint intersection. Note the number of red "+" symbols indicating the centroids of intersected cells, in the bottom left case, there are 4 results because the point lies exactly on the intersection between 4 grid cells.
 
 # %%
-result = ix.intersect(mp)
-result_all = ix.intersect(mp, return_all_intersections=True)
+result = gi.intersect(mp, geo_dataframe=True)
+result_all = gi.intersect(mp, return_all_intersections=True, geo_dataframe=True)
 
 # %%
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
 sgr.plot(ax=ax)
-ix.plot_point(result.ixshapes, ax=ax, ms=10, color="C0")
-ix.plot_point(result_all.ixshapes, ax=ax, ms=10, marker=".", color="C3")
+gi.plot_point(result.geometry, ax=ax, ms=10, color="C0")
+gi.plot_point(result_all.geometry, ax=ax, ms=10, marker=".", color="C3")
 
-for irow, icol in result.cellids:
+for irow, icol in zip(result.row, result.col):
     (h2,) = ax.plot(
         sgr.xcellcenters[0, icol],
         sgr.ycellcenters[irow, 0],
@@ -309,7 +314,7 @@ for irow, icol in result.cellids:
         label="centroids of intersected cells",
     )
 
-for irow, icol in result_all.cellids:
+for irow, icol in zip(result_all.row, result_all.col):
     (h3,) = ax.plot(
         sgr.xcellcenters[0, icol],
         sgr.ycellcenters[irow, 0],
@@ -337,15 +342,13 @@ random_points = shapely.points(x_coords, y_coords)
 # for each point. In case a point is on the boundary between multiple cells, it will
 # return the cell with the lowest cellid.
 #
-#
-# In this example we're returning the result as a
-# node number to easily select the grid cells for our plot. But by default this method
-# returns (row, col) for structured grids.
+# **Note:** in `points_to_cellids()` the `row`, `column` and `cellid` columns have datatype float to allow
+# for NaNs in the results when points lie outside the model grid. In order to use these results as indices
+# they need to be converted to integers.
 
 # %%
-# return cellid as node numbers: so (node,) instead of (row, col)
-# this makes it easier to select the grid cells to highlight in the plot
-result = ix.points_to_cellids(random_points, return_nodenumbers=True)
+result = gi.points_to_cellids(random_points)
+result
 
 # %% [markdown]
 # Plot the result
@@ -354,14 +357,14 @@ result = ix.points_to_cellids(random_points, return_nodenumbers=True)
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
 sgr.plot(ax=ax)
 ax.plot(x_coords, y_coords, "ro", ms=5, label="random points")
-ix.plot_polygon(
-    ix.geoms[result.cellids.astype(int)], ax=ax, fc="yellow", edgecolor="k", zorder=5
+gi.plot_polygon(
+    gi.geoms[result.cellid.astype(int)], ax=ax, fc="yellow", edgecolor="k", zorder=5
 )
 # %% [markdown]
 # Note that `points_to_cellids()` returns NaNs for points that lie outside the model grid.
 
 # %%
-ix.points_to_cellids(shapely.points([50, 110], [55, 50]), dataframe=True)
+gi.points_to_cellids(shapely.points([50, 110], [55, 50]))
 
 # %% [markdown]
 # ## <a id="trigrid"></a>[Vertex Grid](#top)
@@ -398,17 +401,17 @@ pmv.plot_grid(ax=ax)
 # ### <a id="trigrid.1"></a>[Polygon with triangular grid](#top)
 
 # %%
-ix2 = GridIntersect(tgr)
+gi2 = GridIntersect(tgr)
 
 # %%
-result = ix2.intersect(p)
+result = gi2.intersect(p, geo_dataframe=True)
 
 # %%
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
-ix.plot_intersection_result(result, ax=ax)
+gi2.plot_intersection_result(result, ax=ax)
 
 # only cells that intersect with shape
-for cellid in result.cellids:
+for cellid in result.cellid:
     (h2,) = ax.plot(
         tgr.xcellcenters[cellid],
         tgr.ycellcenters[cellid],
@@ -421,13 +424,13 @@ ax.legend([h2], [i.get_label() for i in [h2]], loc="best")
 # ### <a id="trigrid.2"></a>[LineString with triangular grid](#top)
 
 # %%
-result = ix2.intersect(mls)
+result = gi2.intersect(mls, geo_dataframe=True)
 
 # %%
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
-ix2.plot_intersection_result(result, ax=ax, lw=3)
+gi2.plot_intersection_result(result, ax=ax, lw=3)
 
-for cellid in result.cellids:
+for cellid in result.cellid:
     (h2,) = ax.plot(
         tgr.xcellcenters[cellid],
         tgr.ycellcenters[cellid],
@@ -440,14 +443,14 @@ ax.legend([h2], [i.get_label() for i in [h2]], loc="best")
 # ### <a id="trigrid.3"></a>[MultiPoint with triangular grid](#top)
 
 # %%
-result = ix2.intersect(mp)
-result_all = ix2.intersect(mp, return_all_intersections=True)
+result = gi2.intersect(mp, geo_dataframe=True)
+result_all = gi2.intersect(mp, return_all_intersections=True, geo_dataframe=True)
 
 # %%
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
-ix2.plot_intersection_result(result, ax=ax, color="k", zorder=5, ms=10)
+gi2.plot_intersection_result(result, ax=ax, color="k", zorder=5, ms=10)
 
-for cellid in result.cellids:
+for cellid in result.cellid:
     (h2,) = ax.plot(
         tgr.xcellcenters[cellid],
         tgr.ycellcenters[cellid],
@@ -455,7 +458,7 @@ for cellid in result.cellids:
         ms=15,
         label="centroids of intersected cells",
     )
-for cellid in result_all.cellids:
+for cellid in result_all.cellid:
     (h3,) = ax.plot(
         tgr.xcellcenters[cellid],
         tgr.ycellcenters[cellid],
