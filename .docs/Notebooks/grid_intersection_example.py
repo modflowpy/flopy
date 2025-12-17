@@ -1,3 +1,4 @@
+# %%
 # ---
 # jupyter:
 #   jupytext:
@@ -341,10 +342,7 @@ random_points = shapely.points(x_coords, y_coords)
 # Now find the cellid for each point. `points_to_cellids` will only return a single result
 # for each point. In case a point is on the boundary between multiple cells, it will
 # return the cell with the lowest cellid.
-#
-# **Note:** in `points_to_cellids()` the `row`, `column` and `cellid` columns have datatype float to allow
-# for NaNs in the results when points lie outside the model grid. In order to use these results as indices
-# they need to be converted to integers.
+
 
 # %%
 result = gi.points_to_cellids(random_points)
@@ -357,11 +355,9 @@ result
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
 sgr.plot(ax=ax)
 ax.plot(x_coords, y_coords, "ro", ms=5, label="random points")
-gi.plot_polygon(
-    gi.geoms[result.cellid.astype(int)], ax=ax, fc="yellow", edgecolor="k", zorder=5
-)
+gi.plot_polygon(gi.geoms[result.cellid], ax=ax, fc="yellow", edgecolor="k", zorder=5)
 # %% [markdown]
-# Note that `points_to_cellids()` returns NaNs for points that lie outside the model grid.
+# Note that `points_to_cellids()` returns NA for points that lie outside the model grid.
 
 # %%
 gi.points_to_cellids(shapely.points([50, 110], [55, 50]))

@@ -1,6 +1,7 @@
 # %%
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import pytest
 from modflow_devtools.markers import requires_pkg
 from modflow_devtools.misc import has_pkg
@@ -1072,9 +1073,9 @@ def test_rect_grid_single_point_array_outside_points_to_cellids():
     gr = get_rect_grid()
     ix = GridIntersect(gr)
     pts = points([25.0], [25.0])
-    result = ix.points_to_cellids(pts, dataframe=df_toggle)
+    result = ix.points_to_cellids(pts)
     assert len(result) == 1
-    assert np.isnan(result.cellids[0])
+    assert pd.isna(result.cellids[0])
 
 
 @requires_pkg("shapely")
@@ -1083,7 +1084,7 @@ def test_rect_grid_single_point_array_on_boundary_points_to_cellids():
     gr = get_rect_grid()
     ix = GridIntersect(gr)
     pts = points([10.0], [20.0])
-    result = ix.points_to_cellids(pts, dataframe=df_toggle)
+    result = ix.points_to_cellids(pts)
     assert len(result) == 1
     assert result.cellids[0] == (0, 0)
 
@@ -1142,10 +1143,10 @@ def test_rect_grid_multiple_points_array_inside_and_outside_points_to_cellids():
     gr = get_rect_grid()
     ix = GridIntersect(gr)
     pts = points([1.0, 25.0], [2.0, 25.0])
-    result = ix.points_to_cellids(pts, dataframe=df_toggle)
+    result = ix.points_to_cellids(pts)
     assert len(result) == 2
     assert result.cellids[0] == (1, 0)
-    assert np.isnan(result.cellids[1])
+    assert pd.isna(result.cellids[1])
 
 
 @requires_pkg("shapely")
@@ -1155,12 +1156,12 @@ def test_rect_grid_multiple_points_array_with_z_points_to_cellids():
     )
     ix = GridIntersect(gr)
     pts = points([1.0, 25.0], [2.0, 25.0], [10.0, 0.5])
-    result = ix.points_to_cellids(pts, handle_z=False, dataframe=df_toggle)
+    result = ix.points_to_cellids(pts, handle_z=False)
     assert result.cellids[0] == (1, 0)
-    assert np.isnan(result.cellids[1])
-    result = ix.points_to_cellids(pts, handle_z=True, dataframe=df_toggle)
+    assert pd.isna(result.cellids[1])
+    result = ix.points_to_cellids(pts, handle_z=True)
     assert ~np.isfinite(result.layer[0])
-    assert np.isnan(result.cellids[1])
+    assert pd.isna(result.cellids[1])
 
 
 # %% array-based input - structured grid linestrings
@@ -1452,9 +1453,9 @@ def test_tri_grid_single_point_array_outside_points_to_cellids():
     gr = get_tri_grid()
     ix = GridIntersect(gr)
     pts = points([25.0], [25.0])
-    result = ix.points_to_cellids(pts, dataframe=df_toggle)
+    result = ix.points_to_cellids(pts)
     assert len(result) == 1
-    assert np.isnan(result.cellids[0])
+    assert pd.isna(result.cellids[0])
 
 
 @requires_pkg("shapely")
@@ -1463,7 +1464,7 @@ def test_tri_grid_single_point_array_on_boundary_points_to_cellids():
     gr = get_tri_grid()
     ix = GridIntersect(gr)
     pts = points([9.0], [1.0])
-    result = ix.points_to_cellids(pts, dataframe=df_toggle)
+    result = ix.points_to_cellids(pts)
     assert len(result) == 1
     assert result.cellids[0] == 4
 
@@ -1510,10 +1511,10 @@ def test_tri_grid_multiple_points_array_inside_and_outside_points_to_cellids():
     gr = get_tri_grid()
     ix = GridIntersect(gr)
     pts = points([5.0, 25.0], [3.0, 25.0])
-    result = ix.points_to_cellids(pts, dataframe=df_toggle)
+    result = ix.points_to_cellids(pts)
     assert len(result) == 2
     assert result.cellids[0] == 4
-    assert np.isnan(result.cellids[1])
+    assert pd.isna(result.cellids[1])
 
 
 @requires_pkg("shapely")
@@ -1523,9 +1524,9 @@ def test_tri_grid_multiple_points_array_with_z_points_to_cellids():
     )
     ix = GridIntersect(gr)
     pts = points([1.0, 25.0], [2.0, 25.0], [0.5, 10.0])
-    result = ix.points_to_cellids(pts, handle_z=True, dataframe=df_toggle)
+    result = ix.points_to_cellids(pts, handle_z=True)
     assert result.layer[0] == 0.0
-    assert np.isnan(result.cellids[1])
+    assert pd.isna(result.cellids[1])
 
 
 @requires_pkg("shapely")
@@ -1812,7 +1813,7 @@ def test_rtree_false_raises_in_points_to_cellids():
         ValueError,
         match="points_to_cellids\(\) requires rtree=True when",
     ):
-        ix.points_to_cellids(pts, dataframe=df_toggle)
+        ix.points_to_cellids(pts)
 
 
 def test_rtree_false_raises_with_arrays_in_intersects():
@@ -1824,4 +1825,4 @@ def test_rtree_false_raises_with_arrays_in_intersects():
         ValueError,
         match="points_to_cellids\(\) requires rtree=True when initializing",
     ):
-        ix.points_to_cellids(pts, dataframe=df_toggle)
+        ix.points_to_cellids(pts)

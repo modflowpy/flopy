@@ -6,7 +6,7 @@ from matplotlib.collections import PatchCollection
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path
 from numpy.lib import recfunctions as nprecfns
-from pandas import DataFrame
+from pandas import NA, DataFrame
 
 from .geospatial_utils import GeoSpatialUtil
 from .utl_import import import_optional_dependency
@@ -512,7 +512,7 @@ class GridIntersect:
             - col: column index of intersected grid cell, for structured grids
         """
         r = self.intersects(shp, dataframe=False)
-        qcellids = r.cellid[np.isfinite(r.cellid)].astype(int)
+        qcellids = r.cellid[r.cellid >= 0]
 
         if sort_by_cellid:
             qcellids = np.sort(qcellids)
@@ -911,10 +911,10 @@ class GridIntersect:
         # use float dtype to allow nans in row/col/cellid
         if self.mfgrid.grid_type == "structured":
             names = ["shp_id", "cellids", "cellid", "row", "col"]
-            formats = [int, "O", float, float, float]
+            formats = [int, "O", int, int, int]
         else:
             names = ["shp_id", "cellids", "cellid"]
-            formats = [int, float, float]
+            formats = [int, int, int]
         rec = np.recarray(nr, names=names, formats=formats)
 
         # shp was passed as single geometry
@@ -954,13 +954,12 @@ class GridIntersect:
         tuple of array_like
             array of (row, col) tuples, array of rows, array of columns
         """
-        # cast to float and allow nans
-        idx = np.nonzero(~np.isnan(cellids.astype(float)))
-        row = np.full_like(cellids, np.nan, dtype=float)
-        col = np.full_like(cellids, np.nan, dtype=float)
-        row[idx], col[idx] = self.mfgrid.get_lrc([cellids[idx].astype(int)])[0][1:]
+        idx = np.nonzero(cellids >= 0)
+        row = np.full_like(cellids, -1, dtype=int)  # -1 is invalid
+        col = np.full_like(cellids, -1, dtype=int)  # -1 is invalid
+        row[idx], col[idx] = self.mfgrid.get_lrc([cellids[idx]])[0][1:]
         # NOTE: build tuple for backward compatibility
-        rctuple = np.full_like(cellids, np.nan, dtype=object)
+        rctuple = np.full_like(cellids, -1, dtype=object)
         rctuple[idx] = list(zip(row[idx], col[idx]))
         return rctuple, row, col
 
@@ -1029,13 +1028,13 @@ class GridIntersect:
         # build rec-array
         if self.mfgrid.grid_type == "structured":
             names = ["shp_id", "cellids", "cellid", "row", "col"]
-            formats = [int, "O", float, float, float]  # float to allow nans in row/col
+            formats = [int, "O", int, int, int]  # float to allow nans in row/col
         else:
             names = ["shp_id", "cellids", "cellid"]
-            formats = [int, float, float]  # float to allow nans
+            formats = [int, int, int]  # float to allow nans
         rec = np.recarray(nr, names=names, formats=formats)
 
-        rec.cellid = np.nan
+        rec.cellid = -1  # invalid value by default
         # return only 1 gr id cell intersection result for each point
         uniques, idx = np.unique(qfiltered[0], return_index=True)
         rec.shp_id = np.arange(nr)
@@ -1059,8 +1058,8 @@ class GridIntersect:
             )
 
         if dataframe:
-            return DataFrame(rec).set_index("shp_id")
-        return rec
+            return DataFrame(rec).replace(-1, NA).set_index("shp_id")
+        return np.ma.masked_where(rec.cellid < 0, rec)
 
     @staticmethod
     def plot_polygon(polys, ax=None, **kwargs):
@@ -1272,12 +1271,11 @@ class GridIntersect:
             are ``np.nan``.
         """
         z_arr = np.atleast_1d(shapely.get_z(pts))
+        mask_valid = cellids >= 0
         if self.mfgrid.grid_type == "structured":
-            mask_valid = np.isfinite(cellids)
             row, col = self.mfgrid.get_lrc([cellids[mask_valid].astype(int)])[0][1:]
             surface_elevations = self.mfgrid.top_botm[:, row, col]
         elif self.mfgrid.grid_type == "vertex":
-            mask_valid = np.isfinite(cellids)
             surface_elevations = self.mfgrid.top_botm[:, cellids[mask_valid]]
         else:
             raise NotImplementedError(
