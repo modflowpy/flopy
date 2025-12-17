@@ -157,7 +157,7 @@ class GridIntersect:
         contains_centroid=False,
         min_area_fraction=None,
         handle_z="ignore",
-        geo_dataframe=False,
+        geo_dataframe=None,
     ):
         """Method to intersect a shape with a model grid.
 
@@ -256,8 +256,20 @@ class GridIntersect:
         else:
             raise TypeError(f"Shapetype {shapetype} is not supported")
 
+        if geo_dataframe is None:
+            warnings.warn(
+                "In the future this function will return a GeoDataFrame by default. "
+                "Set geo_dataframe=True to adopt future behavior and silence this "
+                "warning. Set geo_dataframe=False to silence this warning and maintain "
+                "old behavior",
+                DeprecationWarning,
+            )
         if geo_dataframe:
             gpd = import_optional_dependency("geopandas")
+            if gpd is None:
+                raise ModuleNotFoundError(
+                    "GeoDataFrame output requires geopandas to be installed."
+                )
             gdf = (
                 gpd.GeoDataFrame(rec)
                 .rename(columns={"ixshapes": "geometry"})
@@ -730,8 +742,7 @@ class GridIntersect:
         self,
         shp,
         shapetype=None,
-        dataframe=False,
-        return_nodenumbers=False,
+        dataframe=None,
     ):
         """Return cellids for grid cells that intersect with shape.
 
@@ -807,8 +818,15 @@ class GridIntersect:
             rec.cellids, rec.row, rec.col = self._cellid_to_rowcol(rec.cellid)
         else:
             rec.cellids = rec.cellid  # NOTE: legacy support for cellids column
+        if dataframe is None:
+            warnings.warn(
+                "In the future this function will return a dataframe by default. "
+                "Set dataframe=True to adopt future behavior and silence this warning. "
+                "Set dataframe=False to silence this warning and maintain old behavior",
+                DeprecationWarning,
+            )
         if dataframe:
-            return DataFrame(rec).set_index("shp_ids")
+            return DataFrame(rec).set_index("shp_id")
         return rec
 
     def _cellid_to_rowcol(self, cellids):
@@ -837,9 +855,7 @@ class GridIntersect:
     def points_to_cellids(
         self,
         pts,
-        handle_z="ignore",
-        dataframe=False,
-        return_nodenumbers=False,
+        dataframe=True,
     ):
         """Return cellids of grid cells that intersect with shape.
 
@@ -918,7 +934,7 @@ class GridIntersect:
         if handle_z and shapely.has_z(pts).any() and len(rec.cellid) > 0:
             laypos = self.get_layer_from_z(pts, rec.cellid)
         if dataframe:
-            return DataFrame(rec).set_index("shp_ids")
+            return DataFrame(rec).set_index("shp_id")
         return rec
 
     @staticmethod
