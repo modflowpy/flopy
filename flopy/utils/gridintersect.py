@@ -227,25 +227,7 @@ class GridIntersect:
             # if handle_z is "drop" or "return"
             # if shp has z information
             # if there are intersection results
-            if (
-                (handle_z != "ignore")
-                and shapely.has_z(shp).any()
-                and len(rec.cellids) > 0
-            ):
-                laypos = self.get_layer_from_z(shp, rec.cellids)
-                if handle_z == "drop":
-                    mask_z = np.isfinite(laypos)
-                    rec = rec[mask_z]
-                elif handle_z == "return":
-                    # copy data to new array to include layer position
-                    rec = nprecfns.append_fields(
-                        rec,
-                        names="layer",
-                        data=laypos,
-                        dtypes="f8",
-                        usemask=False,
-                        asrecarray=True,
-                    )
+                laypos = self.get_layer_from_z(shp, rec.cellid)
 
         elif shapetype in {
             "LineString",
@@ -502,17 +484,23 @@ class GridIntersect:
             keep_pts = ixresult
             keep_cid = qcellids
 
-        names = ["cellids", "ixshapes"]
-        formats = ["O", "O"]
+        if self.mfgrid.grid_type == "structured":
+            names = ["cellids", "cellid", "row", "col", "ixshapes"]
+            formats = ["O", int, int, int, "O"]
+        else:
+            names = ["cellids", "cellid", "ixshapes"]
+            formats = [int, int, "O"]
         rec = np.recarray(len(keep_pts), names=names, formats=formats)
+        rec.cellid = self.cellids[keep_cid]
+        rec.ixshapes = keep_pts
 
         # if structured calculate (i, j) cell address
         if self.mfgrid.grid_type == "structured":
-            rec.cellids = self._nodenumbers_to_rowcol(self.cellids[keep_cid])
+            rec.cellids, rec.row, rec.col = self._cellid_to_rowcol(
+                self.cellids[keep_cid]
+            )
         else:
-            rec.cellids = self.cellids[keep_cid]
-        rec.ixshapes = keep_pts
-
+            rec.cellids = rec.cellid  # NOTE: legacy support for cellids column
         return rec
 
     def _intersect_linestring_shapely(self, *args, **kwargs):
@@ -623,17 +611,25 @@ class GridIntersect:
             ixresult = ixresult[mask_keep]
             qcellids = qcellids[mask_keep]
 
-        names = ["cellids", "ixshapes", "lengths"]
-        formats = ["O", "O", "f8"]
+        if self.mfgrid.grid_type == "structured":
+            names = ["cellids", "cellid", "row", "col", "ixshapes", "lengths"]
+            formats = ["O", int, int, int, "O", float]
+        else:
+            names = ["cellids", "cellid", "ixshapes", "lengths"]
+            formats = ["O", int, "O", float]
 
         rec = np.recarray(len(ixresult), names=names, formats=formats)
-        # if structured grid calculate (i, j) cell address
-        if self.mfgrid.grid_type == "structured":
-            rec.cellids = self._nodenumbers_to_rowcol(self.cellids[qcellids])
-        else:
-            rec.cellids = self.cellids[qcellids]
+        rec.cellid = self.cellids[qcellids]
         rec.ixshapes = ixresult
         rec.lengths = shapely.length(ixresult)
+
+        # if structured grid calculate (i, j) cell address
+        if self.mfgrid.grid_type == "structured":
+            rec.cellids, rec.row, rec.col = self._cellid_to_rowcol(
+                self.cellids[qcellids]
+            )
+        else:
+            rec.cellids = rec.cellid  # NOTE: legacy support for cellids column
 
         return rec
 
@@ -709,16 +705,24 @@ class GridIntersect:
             qcellids = qcellids[mask_area_frac]
 
         # fill rec array
-        names = ["cellids", "ixshapes", "areas"]
-        formats = ["O", "O", "f8"]
-        rec = np.recarray(len(ixresult), names=names, formats=formats)
-        # if structured calculate (i, j) cell address
         if self.mfgrid.grid_type == "structured":
-            rec.cellids = self._nodenumbers_to_rowcol(self.cellids[qcellids])
+            names = ["cellids", "cellid", "row", "col", "ixshapes", "areas"]
+            formats = ["O", int, int, int, "O", float]
         else:
-            rec.cellids = self.cellids[qcellids]
+            names = ["cellids", "cellid", "ixshapes", "areas"]
+            formats = ["O", int, "O", float]
+        rec = np.recarray(len(ixresult), names=names, formats=formats)
+        rec.cellid = self.cellids[qcellids]
         rec.ixshapes = ixresult
         rec.areas = shapely.area(ixresult)
+
+        # if structured calculate (i, j) cell address
+        if self.mfgrid.grid_type == "structured":
+            rec.cellids, rec.row, rec.col = self._cellid_to_rowcol(
+                self.cellids[qcellids]
+            )
+        else:
+            rec.cellids = rec.cellid  # NOTE: legacy support for cellids column
 
         return rec
 
@@ -781,50 +785,54 @@ class GridIntersect:
         nr = len(qfiltered) if qfiltered.ndim == 1 else qfiltered.shape[1]
 
         # build rec-array
-        rec = np.recarray(
-            nr,
-            names=["shp_ids", "cellids"],
-            formats=[
-                int,
-                float
-                if (return_nodenumbers or self.mfgrid.grid_type != "structured")
-                else "O",
-            ],
-        )
+        # use float dtype to allow nans in row/col/cellid
+        if self.mfgrid.grid_type == "structured":
+            names = ["shp_id", "cellids", "cellid", "row", "col"]
+            formats = [int, "O", float, float, float]
+        else:
+            names = ["shp_id", "cellids", "cellid"]
+            formats = [int, float, float]
+        rec = np.recarray(nr, names=names, formats=formats)
+
         # shp was passed as single geometry
         if qfiltered.ndim == 1:
-            rec.shp_ids[:] = 0
-            rec.cellids = qfiltered
+            rec.shp_id[:] = 0
+            rec.cellid = qfiltered
         # shape passed as array of geometries
         else:
-            rec.shp_ids = qfiltered[0]
-            rec.cellids = qfiltered[1]
+            rec.shp_id = qfiltered[0]
+            rec.cellid = qfiltered[1]
 
-        if self.mfgrid.grid_type == "structured" and not return_nodenumbers:
-            rec.cellids = self._nodenumbers_to_rowcol(rec.cellids)
-
+        if self.mfgrid.grid_type == "structured":
+            rec.cellids, rec.row, rec.col = self._cellid_to_rowcol(rec.cellid)
+        else:
+            rec.cellids = rec.cellid  # NOTE: legacy support for cellids column
         if dataframe:
             return DataFrame(rec).set_index("shp_ids")
         return rec
 
-    def _nodenumbers_to_rowcol(self, nodes):
-        """Convert node number to (row, col) tuple.
+    def _cellid_to_rowcol(self, cellids):
+        """Convert cellid (node number) to row, col.
 
         Parameters
         ----------
-        nodes : array_like
+        cellids : array_like
             array of cellids to convert
 
         Returns
         -------
-        array_like
-            array of (row, col) tuples
+        tuple of array_like
+            array of (row, col) tuples, array of rows, array of columns
         """
         # cast to float and allow nans
-        idx = np.nonzero(~np.isnan(nodes.astype(float)))
-        rc = np.full_like(nodes, np.nan, dtype=object)
-        rc[idx] = list(zip(*self.mfgrid.get_lrc([nodes[idx].astype(int)])[0][1:]))
-        return rc
+        idx = np.nonzero(~np.isnan(cellids.astype(float)))
+        row = np.full_like(cellids, np.nan, dtype=float)
+        col = np.full_like(cellids, np.nan, dtype=float)
+        row[idx], col[idx] = self.mfgrid.get_lrc([cellids[idx].astype(int)])[0][1:]
+        # NOTE: build tuple for backward compatibility
+        rctuple = np.full_like(cellids, np.nan, dtype=object)
+        rctuple[idx] = list(zip(row[idx], col[idx]))
+        return rctuple, row, col
 
     def points_to_cellids(
         self,
@@ -888,39 +896,27 @@ class GridIntersect:
             nr = 1 if len(qfiltered) > 0 else 0  # 1 if intersects, else 0
 
         # build rec-array
-        rec = np.recarray(
-            nr,
-            names=["shp_ids", "cellids"],
-            formats=[
-                int,
-                float  # to allow nans
-                if (return_nodenumbers or self.mfgrid.grid_type != "structured")
-                else "O",
-            ],
-        )
+        if self.mfgrid.grid_type == "structured":
+            names = ["shp_id", "cellids", "cellid", "row", "col"]
+            formats = [int, "O", float, float, float]  # float to allow nans in row/col
+        else:
+            names = ["shp_id", "cellids", "cellid"]
+            formats = [int, float, float]  # float to allow nans
+        rec = np.recarray(nr, names=names, formats=formats)
 
-        rec.cellids = np.nan
+        rec.cellid = np.nan
         # return only 1 gr id cell intersection result for each point
         uniques, idx = np.unique(qfiltered[0], return_index=True)
-        rec.shp_ids = np.arange(nr)
-        rec.cellids[uniques] = qfiltered[1, idx]
+        rec.shp_id = np.arange(nr)
+        rec.cellid[uniques] = qfiltered[1, idx]
 
-        if self.mfgrid.grid_type == "structured" and not return_nodenumbers:
-            rec.cellids = self._nodenumbers_to_rowcol(rec.cellids)
+        if self.mfgrid.grid_type == "structured":
+            rec.cellids, rec.row, rec.col = self._cellid_to_rowcol(rec.cellid)
+        else:
+            rec.cellids = rec.cellid  # NOTE: legacy support for cellids column
 
-        if handle_z != "ignore":
-            laypos = self.get_layer_from_z(pts, rec.cellids)
-            if handle_z == "return":
-                # copy data to new array to include layer position
-                rec = nprecfns.append_fields(
-                    rec,
-                    names="layer",
-                    data=laypos,
-                    dtypes="f8",
-                    usemask=False,
-                    asrecarray=True,
-                )
-
+        if handle_z and shapely.has_z(pts).any() and len(rec.cellid) > 0:
+            laypos = self.get_layer_from_z(pts, rec.cellid)
         if dataframe:
             return DataFrame(rec).set_index("shp_ids")
         return rec
@@ -1127,34 +1123,29 @@ class GridIntersect:
         return ax
 
     def get_layer_from_z(self, pts, cellids):
-        """Method to handle z values for points.
+        """Compute layer indices from point z-values.
 
         Parameters
         ----------
-        pts : shapely.geometry
-            points geometry
+        pts : shapely geometry
+            Points geometry (single or array-like) with z-values.
         cellids : array_like
-            array of cellids
+            Array of candidate cellids for the points.
 
         Returns
         -------
-        cellids : array_like
-            array of cellids with z values handled
+        numpy.ndarray
+            Array of floats with the layer index for each point. Points above the
+            grid are ``+np.inf``; below the grid ``-np.inf``. Non-intersecting points
+            are ``np.nan``.
         """
-
-        def valid_mask(v):
-            if isinstance(v, tuple):
-                return True
-            else:
-                return not np.isnan(v)
-
         z_arr = np.atleast_1d(shapely.get_z(pts))
         if self.mfgrid.grid_type == "structured":
-            mask_valid = list(map(valid_mask, cellids))
-            row, col = list(zip(*cellids[mask_valid]))
+            mask_valid = np.isfinite(cellids)
+            row, col = self.mfgrid.get_lrc([cellids[mask_valid].astype(int)])[0][1:]
             surface_elevations = self.mfgrid.top_botm[:, row, col]
         elif self.mfgrid.grid_type == "vertex":
-            mask_valid = ~np.isnan(cellids)
+            mask_valid = np.isfinite(cellids)
             surface_elevations = self.mfgrid.top_botm[:, cellids[mask_valid]]
         else:
             raise NotImplementedError(
