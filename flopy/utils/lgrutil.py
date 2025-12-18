@@ -105,11 +105,13 @@ class Lgr:
         delcp,
         topp,
         botmp,
-        idomainp,
+        refine_mask=None,
         ncpp=3,
         ncppl=1,
         xllp=0.0,
         yllp=0.0,
+        *,
+        idomainp=None,
     ):
         """
 
@@ -129,12 +131,10 @@ class Lgr:
             parent top array (nrowp, ncolp)
         botmp : ndarray
             parent botm array (nlayp, nrowp, ncolp)
-        idomainp : ndarray
-            parent idomain array used to create the child grid.  Ones indicate
-            a parent cell and zeros indicate a child cell.  The domain of the
-            child grid will span a rectangular region that spans all idomain
-            cells with a value of zero. idomain must be of shape
-            (nlayp, nrowp, ncolp)
+        refine_mask : ndarray
+            Array indicating which parent cells to refine (shape: nlay, nrow, ncol).
+            Cells with value 0 will be refined, with value 1 remain as parent cells.
+            The child grid domain will span a rectangular region covering the zeros.
         ncpp : int
             number of child cells along the face of a parent cell
         ncppl : list of ints
@@ -143,6 +143,12 @@ class Lgr:
             x location of parent grid lower left corner
         yllp : float
             y location of parent grid lower left corner
+        idomainp : ndarray, optional
+            parent idomain array used to create the child grid.  Ones indicate
+            a parent cell and zeros indicate a child cell.  The domain of the
+            child grid will span a rectangular region that spans all idomain
+            cells with a value of zero. idomain must be of shape
+            (nlayp, nrowp, ncolp). Deprecated/renamed, use refine_mask instead.
 
         """
 
@@ -157,11 +163,31 @@ class Lgr:
         self.topp = Util2d(m, (nrowp, ncolp), np.float32, topp, "topp").array
         self.botmp = Util3d(m, (nlayp, nrowp, ncolp), np.float32, botmp, "botmp").array
 
-        # idomain
-        assert idomainp.shape == (nlayp, nrowp, ncolp)
-        self.idomain = idomainp
-        idxl, idxr, idxc = np.asarray(idomainp == 0).nonzero()
-        assert idxl.shape[0] > 0, "no zero values found in idomain"
+        # refinement mask
+        if idomainp is not None:
+            import warnings
+
+            warnings.warn(
+                "The 'idomainp' parameter is deprecated and will be removed in "
+                "version 3.10. Use 'refine_mask' instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            if refine_mask is not None:
+                raise ValueError(
+                    "Provide either refine_mask or idomainp, not both. "
+                    "Prefer refine_mask as idomainp is deprecated."
+                )
+            refine_mask = idomainp
+        elif refine_mask is None:
+            raise ValueError(
+                "Need either refine_mask or idomainp. "
+                "Prefer refine_mask as idomainp is deprecated."
+            )
+        assert refine_mask.shape == (nlayp, nrowp, ncolp)
+        self.refine_mask = refine_mask
+        idxl, idxr, idxc = np.asarray(refine_mask == 0).nonzero()
+        assert idxl.shape[0] > 0, "no zero values found in refine_mask"
 
         # child cells per parent and child cells per parent layer
         self.ncpp = ncpp
@@ -198,6 +224,23 @@ class Lgr:
         self.xll = xllp + float(self.delrp[0 : self.npcbeg].sum())
         self.yll = yllp + float(self.delcp[self.nprend + 1 :].sum())
 
+    @property
+    def idomain(self):
+        """
+        .. deprecated:: 3.9
+            The `idomain` attribute is deprecated. Use `refine_mask` instead.
+            Will be removed in version 3.10.
+        """
+        import warnings
+
+        warnings.warn(
+            "The 'idomain' attribute is deprecated and will be removed in "
+            "version 3.10. Use 'refine_mask' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.refine_mask
+
     @classmethod
     def from_parent_grid(cls, parent_grid, refine_mask, ncpp=3, ncppl=1):
         """
@@ -210,6 +253,7 @@ class Lgr:
         refine_mask : ndarray
             Array indicating which parent cells to refine (shape: nlay, nrow, ncol).
             Cells with value 0 will be refined, with value 1 remain as parent cells.
+            The child grid domain will span a rectangular region covering the zeros.
         ncpp : int
             Number of child cells per parent cell face (default 3)
         ncppl : int or list of ints
@@ -236,7 +280,7 @@ class Lgr:
             delcp=parent_grid.delc,
             topp=parent_grid.top,
             botmp=parent_grid.botm,
-            idomainp=refine_mask,
+            refine_mask=refine_mask,
             ncpp=ncpp,
             ncppl=ncppl,
             xllp=parent_grid.xoffset,
@@ -344,15 +388,20 @@ class Lgr:
 
     def get_idomain(self):
         """
-        Return the idomain array for the child model.  This will normally
-        be all ones unless the idomain array for the parent model is
-        non-rectangular and irregularly shaped.  Then, parts of the child
-        model will have idomain zero cells.
+        Return the idomain array for the child model.
+
+        The child grid spans a rectangular bounding box around all cells marked
+        for refinement in the parent. If the refinement region is irregularly
+        shaped (non-rectangular), some child cells will fall outside the actual
+        refinement region and overlap with active parent cells. Those child cells
+        are marked as inactive (idomain=0) to avoid conflicts.
 
         Returns
         -------
         idomain : ndarray
-            idomain array for the child model
+            Child idomain array (shape: nlay, nrow, ncol). Cells are active (1)
+            where they correspond to parent cells marked for refinement (refine_mask=0),
+            and inactive (0) where they overlap active parent cells (refine_mask=1).
 
         """
         idomain = np.ones((self.nlay, self.nrow, self.ncol), dtype=int)
@@ -360,7 +409,7 @@ class Lgr:
             for ic in range(self.nrow):
                 for jc in range(self.ncol):
                     kp, ip, jp = self.get_parent_indices(kc, ic, jc)
-                    if self.idomain[kp, ip, jp] == 1:
+                    if self.refine_mask[kp, ip, jp] == 1:
                         idomain[kc, ic, jc] = 0
         return idomain
 
@@ -399,25 +448,25 @@ class Lgr:
         # parent cell to left
         if jc % self.ncpp == 0:
             if jp - 1 >= 0:
-                if self.idomain[kp, ip, jp - 1] != 0:
+                if self.refine_mask[kp, ip, jp - 1] != 0:
                     parentlist.append(((kp, ip, jp - 1), -1))
 
         # parent cell to right
         if (jc + 1) % self.ncpp == 0:
             if jp + 1 < self.ncolp:
-                if self.idomain[kp, ip, jp + 1] != 0:
+                if self.refine_mask[kp, ip, jp + 1] != 0:
                     parentlist.append(((kp, ip, jp + 1), 1))
 
         # parent cell to back
         if ic % self.ncpp == 0:
             if ip - 1 >= 0:
-                if self.idomain[kp, ip - 1, jp] != 0:
+                if self.refine_mask[kp, ip - 1, jp] != 0:
                     parentlist.append(((kp, ip - 1, jp), 2))
 
         # parent cell to front
         if (ic + 1) % self.ncpp == 0:
             if ip + 1 < self.nrowp:
-                if self.idomain[kp, ip + 1, jp] != 0:
+                if self.refine_mask[kp, ip + 1, jp] != 0:
                     parentlist.append(((kp, ip + 1, jp), -2))
 
         # parent cell to top is not possible
@@ -425,7 +474,7 @@ class Lgr:
         # parent cell to bottom
         if kc + 1 == self.ibcl[kp]:
             if kp + 1 < self.nlayp:
-                if self.idomain[kp + 1, ip, jp] != 0:
+                if self.refine_mask[kp + 1, ip, jp] != 0:
                     parentlist.append(((kp + 1, ip, jp), -3))
 
         return parentlist
@@ -575,7 +624,7 @@ class Lgr:
             self.delcp,
             self.topp,
             self.botmp,
-            self.idomain,
+            self.refine_mask,
             self.xllp,
             self.yllp,
         )
