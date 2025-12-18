@@ -180,8 +180,8 @@ class Lgr:
             Array indicating which parent cells to refine (shape: nlay, nrow, ncol).
             Cells with value 0 will be refined, with value 1 remain as parent cells.
 
-            When a parent cell is marked to be refined, it will be deactived in the
-            parent model using the idomain functionality. Refined parent cells will
+            When a parent cell is marked to be refined, it will be deactivated in
+            the parent model using idomain functionality. Refined parent cells will
             become active cells in the child model.
 
             The child grid spans a rectangular bounding box around the cells marked
@@ -309,8 +309,8 @@ class Lgr:
             Array indicating which parent cells to refine (shape: nlay, nrow, ncol).
             Cells with value 0 will be refined, with value 1 remain as parent cells.
 
-            When a parent cell is marked to be refined, it will be deactived in the
-            parent model using the idomain functionality. Refined parent cells will
+            When a parent cell is marked to be refined, it will be deactivated in
+            the parent model using idomain functionality. Refined parent cells will
             become active cells in the child model.
 
             The child grid spans a rectangular bounding box around the cells marked
