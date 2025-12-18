@@ -182,7 +182,7 @@ class Lgr:
 
             When a parent cell is marked to be refined, it will be deactivated in
             the parent model using idomain functionality. Refined parent cells will
-            become active cells in the child model.
+            correspond to active cells in the child model.
 
             The child grid spans a rectangular bounding box around the cells marked
             for refinement in the parent. If the refinement region is not regularly
@@ -311,7 +311,7 @@ class Lgr:
 
             When a parent cell is marked to be refined, it will be deactivated in
             the parent model using idomain functionality. Refined parent cells will
-            become active cells in the child model.
+            correspond to active cells in the child model.
 
             The child grid spans a rectangular bounding box around the cells marked
             for refinement in the parent. If the refinement region is not regularly
