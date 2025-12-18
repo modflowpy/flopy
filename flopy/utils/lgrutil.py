@@ -134,7 +134,17 @@ class Lgr:
         refine_mask : ndarray
             Array indicating which parent cells to refine (shape: nlay, nrow, ncol).
             Cells with value 0 will be refined, with value 1 remain as parent cells.
-            The child grid domain will span a rectangular region covering the zeros.
+
+            When a parent cell is marked to be refined, it will be deactived in the
+            parent model using the idomain functionality. Refined parent cells will
+            become active cells in the child model.
+
+            The child grid spans a rectangular bounding box around the cells marked
+            for refinement in the parent. If the refinement region is not regularly
+            shaped (non-rectangular), some child cells will be marked inactive such
+            that no region is active in both the parent and child grid. In general,
+            child cells are active (1) in refined parent cells (refine_mask=0) and
+            inactive (0) where coinciding with active parent cells (refine_mask=1).
         ncpp : int
             number of child cells along the face of a parent cell
         ncppl : list of ints
@@ -253,7 +263,17 @@ class Lgr:
         refine_mask : ndarray
             Array indicating which parent cells to refine (shape: nlay, nrow, ncol).
             Cells with value 0 will be refined, with value 1 remain as parent cells.
-            The child grid domain will span a rectangular region covering the zeros.
+
+            When a parent cell is marked to be refined, it will be deactived in the
+            parent model using the idomain functionality. Refined parent cells will
+            become active cells in the child model.
+
+            The child grid spans a rectangular bounding box around the cells marked
+            for refinement in the parent. If the refinement region is not regularly
+            shaped (non-rectangular), some child cells will be marked inactive such
+            that no region is active in both the parent and child grid. In general,
+            child cells are active (1) in refined parent cells (refine_mask=0) and
+            inactive (0) where coinciding with active parent cells (refine_mask=1).
         ncpp : int
             Number of child cells per parent cell face (default 3)
         ncppl : int or list of ints
@@ -390,18 +410,17 @@ class Lgr:
         """
         Return the idomain array for the child model.
 
-        The child grid spans a rectangular bounding box around all cells marked
-        for refinement in the parent. If the refinement region is irregularly
-        shaped (non-rectangular), some child cells will fall outside the actual
-        refinement region and overlap with active parent cells. Those child cells
-        are marked as inactive (idomain=0) to avoid conflicts.
+        The child grid spans a rectangular bounding box around the cells marked
+        for refinement in the parent. If the refinement region is not regularly
+        shaped (non-rectangular), some child cells will be marked inactive such
+        that no region is active in both the parent and child grid. In general,
+        child cells are active (1) in refined parent cells (refine_mask=0) and
+        inactive (0) where coinciding with active parent cells (refine_mask=1).
 
         Returns
         -------
         idomain : ndarray
-            Child idomain array (shape: nlay, nrow, ncol). Cells are active (1)
-            where they correspond to parent cells marked for refinement (refine_mask=0),
-            and inactive (0) where they overlap active parent cells (refine_mask=1).
+            Child idomain array (shape: nlay, nrow, ncol)
 
         """
         idomain = np.ones((self.nlay, self.nrow, self.ncol), dtype=int)

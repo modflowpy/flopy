@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from flopy.utils.lgrutil import Lgr, LgrToDisv
 
@@ -233,24 +234,25 @@ def test_lgr_from_parent_grid():
         delr=delr, delc=delc, top=top, botm=botm, idomain=idomain
     )
 
-    # Create Lgr using the classmethod
+    # Create Lgr using the classmethod (no warning - uses new API)
     lgr_from_classmethod = Lgr.from_parent_grid(parent_grid, idomain, ncpp=3, ncppl=1)
 
-    # Create Lgr using the traditional constructor
-    lgr_traditional = Lgr(
-        nlayp=nlay,
-        nrowp=nrow,
-        ncolp=ncol,
-        delrp=delr,
-        delcp=delc,
-        topp=top,
-        botmp=botm,
-        idomainp=idomain,
-        ncpp=3,
-        ncppl=1,
-        xllp=0.0,
-        yllp=0.0,
-    )
+    # Create Lgr using the traditional constructor with deprecated parameter
+    with pytest.warns(DeprecationWarning, match="idomainp.*deprecated"):
+        lgr_traditional = Lgr(
+            nlayp=nlay,
+            nrowp=nrow,
+            ncolp=ncol,
+            delrp=delr,
+            delcp=delc,
+            topp=top,
+            botmp=botm,
+            idomainp=idomain,
+            ncpp=3,
+            ncppl=1,
+            xllp=0.0,
+            yllp=0.0,
+        )
 
     # Verify both methods produce the same results
     assert lgr_from_classmethod.get_shape() == lgr_traditional.get_shape()
@@ -274,3 +276,150 @@ def test_lgr_from_parent_grid():
 
     # Expected: 40 parent cells + 81 child cells = 121 total cells
     assert gridprops["ncpl"] == 121
+
+
+def test_lgr_deprecation_warnings():
+    """Test that deprecation warnings are raised for old API."""
+    from flopy.discretization import StructuredGrid
+
+    nlay, nrow, ncol = 1, 7, 7
+    delr = delc = 100.0 * np.ones(7)
+    top = np.zeros((nrow, ncol))
+    botm = -100.0 * np.ones((nlay, nrow, ncol))
+    refine_mask = np.ones((nlay, nrow, ncol))
+    refine_mask[:, 2:5, 2:5] = 0
+
+    # Test deprecated idomainp parameter
+    with pytest.warns(DeprecationWarning, match="idomainp.*deprecated.*refine_mask"):
+        lgr = Lgr(
+            nlayp=nlay,
+            nrowp=nrow,
+            ncolp=ncol,
+            delrp=delr,
+            delcp=delc,
+            topp=top,
+            botmp=botm,
+            idomainp=refine_mask,
+            ncpp=3,
+        )
+
+    # Test deprecated idomain attribute access
+    with pytest.warns(
+        DeprecationWarning, match="idomain.*attribute.*deprecated.*refine_mask"
+    ):
+        _ = lgr.idomain
+
+    # Verify new API works without warnings
+    import warnings
+
+    with warnings.catch_warnings(record=True) as warning_list:
+        warnings.simplefilter("always")
+        lgr_new = Lgr(
+            nlayp=nlay,
+            nrowp=nrow,
+            ncolp=ncol,
+            delrp=delr,
+            delcp=delc,
+            topp=top,
+            botmp=botm,
+            refine_mask=refine_mask,
+            ncpp=3,
+        )
+        # Access via new attribute should not warn
+        _ = lgr_new.refine_mask
+
+    # Check no deprecation warnings were raised
+    deprecation_warnings = [
+        w for w in warning_list if issubclass(w.category, DeprecationWarning)
+    ]
+    assert len(deprecation_warnings) == 0, (
+        "New API should not raise deprecation warnings"
+    )
+
+
+def test_lgr_nested_refinement_grandchild():
+    """Test nested refinement: parent -> child -> grandchild."""
+    from flopy.discretization import StructuredGrid
+
+    # Create parent grid (9x9)
+    nlay, nrow, ncol = 1, 9, 9
+    delr = delc = 100.0 * np.ones(9)
+    top = np.zeros((nrow, ncol))
+    botm = -100.0 * np.ones((nlay, nrow, ncol))
+
+    parent_grid = StructuredGrid(
+        delr=delr, delc=delc, top=top, botm=botm, idomain=np.ones((nlay, nrow, ncol))
+    )
+
+    # First refinement: refine center 3x3 cells of parent
+    parent_refine_mask = np.ones((nlay, nrow, ncol))
+    parent_refine_mask[:, 3:6, 3:6] = 0
+
+    lgr_child = Lgr.from_parent_grid(parent_grid, parent_refine_mask, ncpp=3)
+    assert lgr_child.get_shape() == (1, 9, 9)
+
+    # Get child grid as StructuredGrid
+    child_grid = lgr_child.child.modelgrid
+    assert isinstance(child_grid, StructuredGrid)
+    assert (child_grid.nlay, child_grid.nrow, child_grid.ncol) == (1, 9, 9)
+
+    # Second refinement: refine center 3x3 cells of child
+    child_refine_mask = np.ones((child_grid.nlay, child_grid.nrow, child_grid.ncol))
+    child_refine_mask[:, 3:6, 3:6] = 0
+
+    lgr_grandchild = Lgr.from_parent_grid(child_grid, child_refine_mask, ncpp=3)
+    assert lgr_grandchild.get_shape() == (1, 9, 9)
+
+    # Verify grandchild has finer resolution than child
+    assert np.allclose(lgr_grandchild.delr, lgr_child.delr / 3)
+    assert np.allclose(lgr_grandchild.delc, lgr_child.delc / 3)
+
+    # Verify we can generate gridprops for both
+    child_gridprops = lgr_child.to_disv_gridprops()
+    grandchild_gridprops = lgr_grandchild.to_disv_gridprops()
+    assert "ncpl" in child_gridprops
+    assert "ncpl" in grandchild_gridprops
+
+
+def test_lgr_multiple_child_regions():
+    """Test multiple separate refinement regions in one parent."""
+    from flopy.discretization import StructuredGrid
+
+    # Create parent grid (15x15) with two separate areas to refine
+    nlay, nrow, ncol = 1, 15, 15
+    delr = delc = 100.0 * np.ones(15)
+    top = np.zeros((nrow, ncol))
+    botm = -100.0 * np.ones((nlay, nrow, ncol))
+
+    parent_grid = StructuredGrid(
+        delr=delr, delc=delc, top=top, botm=botm, idomain=np.ones((nlay, nrow, ncol))
+    )
+
+    # Region 1: top-left (2:5, 2:5)
+    refine_mask_1 = np.ones((nlay, nrow, ncol))
+    refine_mask_1[:, 2:5, 2:5] = 0
+    lgr1 = Lgr.from_parent_grid(parent_grid, refine_mask_1, ncpp=3)
+
+    # Region 2: bottom-right (10:13, 10:13)
+    refine_mask_2 = np.ones((nlay, nrow, ncol))
+    refine_mask_2[:, 10:13, 10:13] = 0
+    lgr2 = Lgr.from_parent_grid(parent_grid, refine_mask_2, ncpp=3)
+
+    # Verify both children have correct shape (3x3 parent cells -> 9x9 child)
+    assert lgr1.get_shape() == (1, 9, 9)
+    assert lgr2.get_shape() == (1, 9, 9)
+
+    # Verify children are at different locations
+    assert lgr1.xll == 200.0  # Starts at column 2
+    assert lgr1.yll == 1000.0  # Starts at row 2 (from top)
+    assert lgr2.xll == 1000.0  # Starts at column 10
+    assert lgr2.yll == 200.0  # Starts at row 10
+
+    # Verify both have same resolution (refinement of parent)
+    assert np.allclose(lgr1.delr, lgr2.delr)
+    assert np.allclose(lgr1.delc, lgr2.delc)
+
+    # Verify we can generate gridprops for both
+    gridprops1 = lgr1.to_disv_gridprops()
+    gridprops2 = lgr2.to_disv_gridprops()
+    assert gridprops1["ncpl"] == gridprops2["ncpl"]
