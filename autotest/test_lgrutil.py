@@ -1,10 +1,11 @@
 import numpy as np
 import pytest
 
-from flopy.utils.lgrutil import Lgr, LgrToDisv
+from flopy.discretization import StructuredGrid
+from flopy.utils.lgrutil import Lgr, LgrToDisv, SimpleRegularGrid
 
 
-def test_lgrutil():
+def test_lgr_connections():
     nlayp = 5
     nrowp = 5
     ncolp = 5
@@ -91,7 +92,7 @@ def test_lgrutil():
     ]
 
 
-def test_lgrutil2():
+def test_lgr_variable_rc_spacing():
     # Define parent grid information
     xoffp = 0.0
     yoffp = 0.0
@@ -146,7 +147,7 @@ def test_lgrutil2():
     assert np.allclose(lgr.delc, answer), f"{lgr.delc} /= {answer}"
 
 
-def test_lgrutil3():
+def test_lgr_hanging_vertices():
     # Define parent grid information
     xoffp = 0.0
     yoffp = 0.0
@@ -219,9 +220,6 @@ def test_lgrutil3():
 
 
 def test_lgr_from_parent_grid():
-    """Test the from_parent_grid classmethod convenience constructor."""
-    from flopy.discretization import StructuredGrid
-
     # Create a parent grid with center cells marked for refinement
     nlay, nrow, ncol = 1, 7, 7
     delr = delc = 100.0 * np.ones(7)
@@ -279,9 +277,6 @@ def test_lgr_from_parent_grid():
 
 
 def test_lgr_deprecation_warnings():
-    """Test that deprecation warnings are raised for old API."""
-    from flopy.discretization import StructuredGrid
-
     nlay, nrow, ncol = 1, 7, 7
     delr = delc = 100.0 * np.ones(7)
     top = np.zeros((nrow, ncol))
@@ -338,9 +333,6 @@ def test_lgr_deprecation_warnings():
 
 
 def test_lgr_nested_refinement_grandchild():
-    """Test nested refinement: parent -> child -> grandchild."""
-    from flopy.discretization import StructuredGrid
-
     # Create parent grid (9x9)
     nlay, nrow, ncol = 1, 9, 9
     delr = delc = 100.0 * np.ones(9)
@@ -382,9 +374,6 @@ def test_lgr_nested_refinement_grandchild():
 
 
 def test_lgr_multiple_child_regions():
-    """Test multiple separate refinement regions in one parent."""
-    from flopy.discretization import StructuredGrid
-
     # Create parent grid (15x15) with two separate areas to refine
     nlay, nrow, ncol = 1, 15, 15
     delr = delc = 100.0 * np.ones(15)
@@ -426,10 +415,6 @@ def test_lgr_multiple_child_regions():
 
 
 def test_simple_regular_grid_deprecation():
-    """Test that SimpleRegularGrid deprecation warnings are raised."""
-    from flopy.discretization import StructuredGrid
-    from flopy.utils.lgrutil import SimpleRegularGrid
-
     nlay, nrow, ncol = 1, 5, 5
     delr = delc = 100.0 * np.ones(5)
     top = np.zeros((nrow, ncol))
