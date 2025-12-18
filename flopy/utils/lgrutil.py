@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 
 from ..discretization import StructuredGrid
@@ -6,8 +8,14 @@ from .cvfdutil import get_disv_gridprops
 from .util_array import Util2d, Util3d
 
 
-class SimpleRegularGrid:
+class SimpleRegularGrid(StructuredGrid):
     """
+    Deprecated: Use StructuredGrid instead.
+
+    .. deprecated:: 3.9
+        SimpleRegularGrid is deprecated and will be removed in version 3.10.
+        Use :class:`flopy.discretization.StructuredGrid` instead.
+
     Simple object for representing regular MODFLOW grid information.
 
     Parameters
@@ -47,6 +55,13 @@ class SimpleRegularGrid:
         xorigin,
         yorigin,
     ):
+        warnings.warn(
+            "SimpleRegularGrid is deprecated and will be removed in version 3.10. "
+            "Use StructuredGrid instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         # enforce compliance
         assert delr.shape == (ncol,)
         assert delc.shape == (nrow,)
@@ -54,32 +69,62 @@ class SimpleRegularGrid:
         assert botm.shape == (nlay, nrow, ncol)
         assert idomain.shape == (nlay, nrow, ncol)
 
-        self.nlay = nlay
-        self.nrow = nrow
-        self.ncol = ncol
-        self.delr = delr
-        self.delc = delc
-        self.top = top
-        self.botm = botm
-        self.idomain = idomain
+        # Initialize parent StructuredGrid
+        super().__init__(
+            delc=delc,
+            delr=delr,
+            top=top,
+            botm=botm,
+            idomain=idomain,
+            xoff=xorigin,
+            yoff=yorigin,
+        )
+
+        # Store xorigin/yorigin for backward compatibility
+        # (StructuredGrid uses xoffset/yoffset internally)
         self.xorigin = xorigin
         self.yorigin = yorigin
-        return
 
     @property
     def modelgrid(self):
-        mg = StructuredGrid(
-            delc=self.delc,
-            delr=self.delr,
-            top=self.top,
-            botm=self.botm,
-            idomain=self.idomain,
-            xoff=self.xorigin,
-            yoff=self.yorigin,
+        """
+        Deprecated: SimpleRegularGrid now inherits from StructuredGrid.
+
+        .. deprecated:: 3.9
+            The modelgrid property is deprecated. SimpleRegularGrid now
+            inherits from StructuredGrid, so you can use the instance directly.
+
+        Returns
+        -------
+        StructuredGrid
+            Returns self (which is a StructuredGrid instance)
+        """
+        warnings.warn(
+            "The modelgrid property is deprecated. "
+            "SimpleRegularGrid now inherits from StructuredGrid, "
+            "so you can use the instance directly.",
+            DeprecationWarning,
+            stacklevel=2,
         )
-        return mg
+        return self
 
     def get_gridprops_dis6(self):
+        """
+        Get grid properties for MODFLOW 6 DIS package.
+
+        .. deprecated:: 3.9
+            get_gridprops_dis6 is deprecated and will be removed in version 3.10.
+
+        Returns
+        -------
+        dict
+            Dictionary of grid properties
+        """
+        warnings.warn(
+            "get_gridprops_dis6 is deprecated and will be removed in version 3.10.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         gridprops = {
             "xorigin": self.xorigin,
             "yorigin": self.yorigin,
@@ -718,8 +763,9 @@ class LgrToDisv:
 
         # store information
         self.lgr = lgr
-        self.pgrid = lgr.parent.modelgrid
-        self.cgrid = lgr.child.modelgrid
+        # SimpleRegularGrid now inherits from StructuredGrid, use directly
+        self.pgrid = lgr.parent
+        self.cgrid = lgr.child
 
         # count active parent and child cells
         self.ncpl_parent = np.count_nonzero(self.pgrid.idomain[0] > 0)

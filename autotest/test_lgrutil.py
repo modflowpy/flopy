@@ -358,8 +358,8 @@ def test_lgr_nested_refinement_grandchild():
     lgr_child = Lgr.from_parent_grid(parent_grid, parent_refine_mask, ncpp=3)
     assert lgr_child.get_shape() == (1, 9, 9)
 
-    # Get child grid as StructuredGrid
-    child_grid = lgr_child.child.modelgrid
+    # Get child grid (SimpleRegularGrid now inherits from StructuredGrid)
+    child_grid = lgr_child.child
     assert isinstance(child_grid, StructuredGrid)
     assert (child_grid.nlay, child_grid.nrow, child_grid.ncol) == (1, 9, 9)
 
@@ -423,3 +423,54 @@ def test_lgr_multiple_child_regions():
     gridprops1 = lgr1.to_disv_gridprops()
     gridprops2 = lgr2.to_disv_gridprops()
     assert gridprops1["ncpl"] == gridprops2["ncpl"]
+
+
+def test_simple_regular_grid_deprecation():
+    """Test that SimpleRegularGrid deprecation warnings are raised."""
+    from flopy.discretization import StructuredGrid
+    from flopy.utils.lgrutil import SimpleRegularGrid
+
+    nlay, nrow, ncol = 1, 5, 5
+    delr = delc = 100.0 * np.ones(5)
+    top = np.zeros((nrow, ncol))
+    botm = -100.0 * np.ones((nlay, nrow, ncol))
+    idomain = np.ones((nlay, nrow, ncol), dtype=int)
+    xorigin = 0.0
+    yorigin = 0.0
+
+    # Test that SimpleRegularGrid instantiation raises deprecation warning
+    with pytest.warns(
+        DeprecationWarning, match="SimpleRegularGrid is deprecated.*StructuredGrid"
+    ):
+        grid = SimpleRegularGrid(
+            nlay, nrow, ncol, delr, delc, top, botm, idomain, xorigin, yorigin
+        )
+
+    # Verify it's an instance of StructuredGrid
+    assert isinstance(grid, StructuredGrid)
+    assert isinstance(grid, SimpleRegularGrid)
+
+    # Test that modelgrid property raises deprecation warning
+    with pytest.warns(
+        DeprecationWarning, match="modelgrid.*deprecated.*use the instance directly"
+    ):
+        mg = grid.modelgrid
+
+    # Verify modelgrid returns self
+    assert mg is grid
+
+    # Test that get_gridprops_dis6 raises deprecation warning
+    with pytest.warns(DeprecationWarning, match="get_gridprops_dis6.*deprecated"):
+        gridprops = grid.get_gridprops_dis6()
+
+    # Verify gridprops contains expected keys
+    assert "nlay" in gridprops
+    assert "nrow" in gridprops
+    assert "ncol" in gridprops
+    assert gridprops["nlay"] == nlay
+    assert gridprops["nrow"] == nrow
+    assert gridprops["ncol"] == ncol
+
+    # Verify backward compatibility attributes
+    assert grid.xorigin == xorigin
+    assert grid.yorigin == yorigin
