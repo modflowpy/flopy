@@ -4,7 +4,7 @@ import numpy as np
 
 from ..discretization import StructuredGrid
 from ..modflow import Modflow
-from .cvfdutil import get_disv_gridprops
+from .cvfdutil import get_disv_gridprops, gridlist_to_verts
 from .util_array import Util2d, Util3d
 
 
@@ -744,14 +744,14 @@ class Lgr:
 class LgrToDisv:
     def __init__(self, lgr):
         """
-        Helper class used to convert and Lgr() object into
+        Helper class used to convert an Lgr() object into
         the grid properties needed to create a disv vertex
         nested grid.  After instantiation, self.verts and
         self.iverts are available.
 
-        The primary work of this class is identify hanging
+        The primary work of this class is to identify hanging
         vertices along the shared parent-child boundary and
-        include these hanging vertices in the vertex indicence
+        include these hanging vertices in the vertex incidence
         list for parent cells.
 
         Parameters
@@ -772,14 +772,13 @@ class LgrToDisv:
         self.ncpl_child = np.count_nonzero(self.cgrid.idomain[0] > 0)
         self.ncpl = self.ncpl_child + self.ncpl_parent
 
-        # find child vertices that act as hanging vertices on parent
-        # model cells
-        self.right_face_hanging = None
-        self.left_face_hanging = None
-        self.front_face_hanging = None
-        self.back_face_hanging = None
-        self.parent_ij_to_global = None
-        self.child_ij_to_global = None
+        # initialize dicts for mappings and child vertices
+        self.parent_ij_to_global = {}
+        self.child_ij_to_global = {}
+        self.right_face_hanging = {}
+        self.left_face_hanging = {}
+        self.front_face_hanging = {}
+        self.back_face_hanging = {}
         self.find_hanging_vertices()
 
         # build global verts and iverts keeping only idomain > 0
@@ -901,8 +900,8 @@ class LgrToDisv:
         """
 
         # stack vertex arrays; these will have more points than necessary,
-        # because parent and child vertices will overlap at corners, but
-        # duplicate vertices will be filtered later
+        # because parent and child vertices will overlap at corners
+        # (duplicates are filtered at the end of this method)
         pverts = self.pgrid.verts
         cverts = self.cgrid.verts
         nverts_parent = pverts.shape[0]
@@ -935,8 +934,40 @@ class LgrToDisv:
                     iverts.append(ivlist)
                     self.child_ij_to_global[i, j] = iglo
                     iglo += 1
-        self.verts = verts
-        self.iverts = iverts
+
+        # Deduplicate vertices - map old indices to new indices
+        # Use dictionary to identify duplicate coordinates (round to 9 decimals
+        # to match legacy gridlist_to_verts behavior)
+        vertex_dict = {}  # maps (x, y) tuple to new vertex index
+        old_to_new = {}  # maps old vertex index to new vertex index
+        new_verts_list = []  # list of deduplicated vertices
+        new_vertex_idx = 0
+
+        for old_idx in range(verts.shape[0]):
+            x, y = verts[old_idx]
+            coord = (round(x, 9), round(y, 9))
+
+            if coord in vertex_dict:
+                # This coordinate already exists, map to existing vertex
+                old_to_new[old_idx] = vertex_dict[coord]
+            else:
+                # New coordinate, add it
+                vertex_dict[coord] = new_vertex_idx
+                old_to_new[old_idx] = new_vertex_idx
+                new_verts_list.append([x, y])
+                new_vertex_idx += 1
+
+        # Convert deduplicated vertices to numpy array
+        verts_dedup = np.array(new_verts_list)
+
+        # Update all iverts lists to use deduplicated indices
+        iverts_dedup = []
+        for ivlist in iverts:
+            ivlist_dedup = [old_to_new[iv] for iv in ivlist]
+            iverts_dedup.append(ivlist_dedup)
+
+        self.verts = verts_dedup
+        self.iverts = iverts_dedup
 
     def merge_hanging_vertices(self, ip, jp, ivlist):
         """

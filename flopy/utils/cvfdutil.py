@@ -437,8 +437,9 @@ def gridlist_to_disv_gridprops(gridlist):
     """
     warnings.warn(
         "the gridlist_to_disv_gridprops function is deprecated and will be "
-        "removed in version 3.9. Use flopy.utils.cvfdutil.Lgr() instead, which "
-        "allows a nested grid to be created and exported to a DISV mesh.",
+        "removed in version 3.9. For nested grids, use flopy.utils.lgrutil.Lgr() "
+        "instead. For converting a single structured grid to DISV, use "
+        "get_disv_gridprops(grid.verts, grid.iverts) instead.",
         PendingDeprecationWarning,
     )
 
