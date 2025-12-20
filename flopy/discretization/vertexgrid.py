@@ -15,9 +15,16 @@ class VertexGrid(Grid):
     Parameters
     ----------
     vertices
-        list of vertices that make up the grid
+        list of vertices that make up the grid. Each vertex is
+        [iv, xv, yv] where iv is the vertex number.
     cell2d
-        list of cells and their vertices
+        list of cells and their vertices. Each cell is
+        [icell2d, xc, yc, ncvert, icvert1, icvert2, ...] where xc, yc are
+        cell center coordinates. These are typically geometric centroids but
+        may be any representative point inside the cell. For convex cells
+        (triangles, rectangles), the arithmetic mean of vertices equals the
+        true centroid. For concave cells, the center should ideally lie
+        inside the cell boundary for optimal spatial indexing performance.
     top : list or ndarray
         top elevations for all cells in the grid.
     botm : list or ndarray
@@ -343,136 +350,6 @@ class VertexGrid(Grid):
             )
         else:
             raise AssertionError("Grid is not complete and cannot be converted")
-
-    def intersect(self, x, y, z=None, local=False, forgive=False):
-        """
-        Get the CELL2D number of a point with coordinates x and y
-
-        When the point is on the edge of two cells, the cell with the lowest
-        CELL2D number is returned.
-
-        Supports both scalar and array inputs for vectorized operations.
-
-        Parameters
-        ----------
-        x : float or array-like
-            The x-coordinate(s) of the requested point(s)
-        y : float or array-like
-            The y-coordinate(s) of the requested point(s)
-        z : float, array-like, or None
-            optional, z-coordinate(s) of the requested point(s) will return
-            (lay, icell2d)
-        local: bool (optional)
-            If True, x and y are in local coordinates (defaults to False)
-        forgive: bool (optional)
-            Forgive x,y arguments that fall outside the model grid and
-            return NaNs instead (defaults to False - will throw exception)
-
-        Returns
-        -------
-        icell2d : int or ndarray
-            The CELL2D number(s). Returns int for scalar input,
-            ndarray for array input.
-        lay : int or ndarray (only if z is provided)
-            The layer number(s). Returns int for scalar input,
-            ndarray for array input.
-
-        """
-        # Check if inputs are scalar
-        x_is_scalar = np.isscalar(x)
-        y_is_scalar = np.isscalar(y)
-        z_is_scalar = z is None or np.isscalar(z)
-        is_scalar_input = x_is_scalar and y_is_scalar and z_is_scalar
-
-        # Convert to arrays for uniform processing
-        x = np.atleast_1d(x)
-        y = np.atleast_1d(y)
-        if z is not None:
-            z = np.atleast_1d(z)
-
-        # Validate array shapes
-        if len(x) != len(y):
-            raise ValueError("x and y must have the same length")
-        if z is not None and len(z) != len(x):
-            raise ValueError("z must have the same length as x and y")
-
-        if local:
-            # transform x and y to real-world coordinates
-            x, y = super().get_coords(x, y)
-
-        xv, yv, zv = self.xyzvertices
-
-        # Initialize result arrays
-        n_points = len(x)
-        results = np.full(n_points, np.nan if forgive else -1, dtype=float)
-        if z is not None:
-            lays = np.full(n_points, np.nan if forgive else -1, dtype=float)
-
-        # Process each point
-        for i in range(n_points):
-            xi, yi = x[i], y[i]
-            found = False
-
-            # Check each cell
-            for icell2d in range(self.ncpl):
-                xa = np.array(xv[icell2d])
-                ya = np.array(yv[icell2d])
-                # x and y at least have to be within the bounding box of the cell
-                if (
-                    np.any(xi <= xa)
-                    and np.any(xi >= xa)
-                    and np.any(yi <= ya)
-                    and np.any(yi >= ya)
-                ):
-                    path = Path(np.stack((xa, ya)).transpose())
-                    # use a small radius, so that the edge of the cell is included
-                    if is_clockwise(xa, ya):
-                        radius = -1e-9
-                    else:
-                        radius = 1e-9
-                    if path.contains_point((xi, yi), radius=radius):
-                        results[i] = icell2d
-                        found = True
-
-                        if z is not None:
-                            zi = z[i]
-                            for lay in range(self.nlay):
-                                if (
-                                    self.top_botm[lay, icell2d]
-                                    >= zi
-                                    >= self.top_botm[lay + 1, icell2d]
-                                ):
-                                    lays[i] = lay
-                                    break
-
-                        break
-
-            if not found and not forgive:
-                raise ValueError(
-                    f"point given is outside of the model area: ({xi}, {yi})"
-                )
-
-        # Return results
-        if z is None:
-            if is_scalar_input:
-                result = results[0]
-                return int(result) if not np.isnan(result) else np.nan
-            else:
-                valid_mask = ~np.isnan(results)
-                return results.astype(int) if np.all(valid_mask) else results
-        else:
-            if is_scalar_input:
-                lay, icell2d = lays[0], results[0]
-                if not np.isnan(lay) and not np.isnan(icell2d):
-                    return int(lay), int(icell2d)
-                else:
-                    return np.nan, np.nan
-            else:
-                valid_mask = ~np.isnan(lays) & ~np.isnan(results)
-                return (
-                    lays.astype(int) if np.all(valid_mask) else lays,
-                    results.astype(int) if np.all(valid_mask) else results,
-                )
 
     def get_cell_vertices(self, cellid):
         """

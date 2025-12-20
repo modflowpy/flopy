@@ -26,6 +26,7 @@ from flopy.utils.cvfdutil import (
     gridlist_to_disv_gridprops,
     to_cvfd,
 )
+from flopy.utils.geospatial_index import GeospatialIndex
 from flopy.utils.triangle import Triangle
 from flopy.utils.voronoi import VoronoiGrid
 
@@ -1603,6 +1604,53 @@ def test_geo_dataframe(structured_grid, vertex_grid, unstructured_grid):
                     raise AssertionError(f"Cell vertices incorrect for node={node}")
 
 
+def test_structured_boundary_tiebreaker(simple_structured_grid):
+    """Test StructuredGrid uses lowest row/col for boundary points."""
+    grid = simple_structured_grid
+
+    # Boundary at x=10 -> col 0
+    _, col = grid.intersect(10.0, 95.0)
+    assert col == 0
+
+    # Boundary at y=90 -> row 0
+    row, _ = grid.intersect(5.0, 90.0)
+    assert row == 0
+
+
+def test_return_type_structured(simple_structured_grid):
+    """Test StructuredGrid return types are consistent."""
+    grid = simple_structured_grid
+
+    # Scalar inside -> int
+    row, col = grid.intersect(5.0, 95.0)
+    assert isinstance(row, (int, np.integer))
+    assert isinstance(col, (int, np.integer))
+
+    # Scalar outside -> nan
+    row, col = grid.intersect(150.0, 50.0, forgive=True)
+    assert np.isnan(row) and np.isnan(col)
+
+    # Scalar with z inside -> int
+    lay, row, col = grid.intersect(5.0, 95.0, z=5.0)
+    assert all(isinstance(v, (int, np.integer)) for v in [lay, row, col])
+
+    # Scalar with z outside -> nan
+    lay, row, col = grid.intersect(150.0, 50.0, z=5.0, forgive=True)
+    assert all(np.isnan(v) for v in [lay, row, col])
+
+    # Array all inside -> any integer dtype
+    rows, cols = grid.intersect(np.array([5.0, 55.0]), np.array([95.0, 95.0]))
+    assert np.issubdtype(rows.dtype, np.integer)
+    assert np.issubdtype(cols.dtype, np.integer)
+
+    # Array with outside -> must be float64 (due to NaNs)
+    rows, cols = grid.intersect(
+        np.array([5.0, 150.0]), np.array([95.0, 50.0]), forgive=True
+    )
+    assert rows.dtype == np.float64
+    assert cols.dtype == np.float64
+
+
 def test_unstructured_iverts_cleanup():
     grid = GridCases.structured_small()
 
@@ -1657,18 +1705,236 @@ def test_unstructured_iverts_cleanup():
         raise AssertionError("Improper number of vertices for cleaned 'shared' iverts")
 
 
-def test_structured_grid_intersect_edge_case(simple_structured_grid):
-    """Test StructuredGrid.intersect() edge case: out-of-bounds x,y with z.
+# ============================================================================
+# GeospatialIndex-specific Tests
+# ============================================================================
 
-    This tests the specific case where x,y are out of bounds and z is provided.
-    The expected behavior is to return (None, nan, nan).
+
+@pytest.mark.parametrize(
+    "grid_fixture,grid_type,expected_cells,expected_points_per_cell",
+    [
+        ("minimal_vertex_grid", "vertex", 2, 5),
+        ("minimal_unstructured_grid", "unstructured", 2, 5),
+        ("simple_vertex_grid", "vertex", 100, 5),
+    ],
+)
+def test_index_build(
+    grid_fixture, grid_type, expected_cells, expected_points_per_cell, request
+):
+    """Test building GeospatialIndex for different grid types."""
+    grid = request.getfixturevalue(grid_fixture)
+    index = GeospatialIndex(grid)
+
+    assert index.grid.grid_type == grid_type
+    assert index.grid is grid
+    assert index.tree is not None
+    assert index.points.shape[0] == expected_cells * expected_points_per_cell
+    assert len(np.unique(index.point_to_cell)) == expected_cells
+
+
+def test_index_repr(simple_vertex_grid):
+    """Test string representation of GeospatialIndex."""
+    index = GeospatialIndex(simple_vertex_grid)
+    repr_str = repr(index)
+
+    assert "GeospatialIndex" in repr_str
+    assert "vertex grid" in repr_str
+    assert "100 cells" in repr_str
+    assert "500 indexed points" in repr_str
+
+
+@pytest.mark.parametrize("k", [1, 5, 10, 20])
+def test_index_k_parameter(simple_vertex_grid, k):
+    """Test that different k values still find correct cell."""
+    index = GeospatialIndex(simple_vertex_grid)
+
+    assert index.query_point(5.0, 95.0, k=k) == 0
+
+    cellids = index.query_points(
+        np.array([5.0, 55.0, 95.0]),
+        np.array([95.0, 95.0, 5.0]),
+        k=k,
+    )
+    np.testing.assert_array_equal(cellids, [0, 5, 99])
+
+
+@pytest.fixture
+def sliver_grid_geometry():
+    """Shared geometry for sliver cell tests.
+
+    Creates a 1000:1 aspect ratio sliver cell (100 units wide, 0.1 units tall)
+    completely surrounded by larger cells on all four sides. This is the
+    worst-case scenario for centroid-based spatial indexing because query
+    points near the sliver edges are much closer to neighboring cell centroids.
+
+    Returns dict with vertices, iverts, xcenters, ycenters for 5 cells:
+        Cell 0: SLIVER (x: 0-100, y: 0-0.1)
+        Cell 1: TOP (above sliver)
+        Cell 2: BOTTOM (below sliver)
+        Cell 3: LEFT (left of sliver)
+        Cell 4: RIGHT (right of sliver)
     """
-    grid = simple_structured_grid
+    sliver_height = 0.1
+    sliver_yc = sliver_height / 2
+    top_yc = (sliver_height + 10.0) / 2
 
-    # Test out-of-bounds x,y with z coordinate
-    lay, row, col = grid.intersect(-50.0, -50.0, z=5.0, forgive=True)
+    # Base x,y coordinates for vertices (no vertex IDs yet)
+    base_vertices = [
+        # Cell 0: SLIVER
+        (0.0, 0.0),
+        (100.0, 0.0),
+        (100.0, sliver_height),
+        (0.0, sliver_height),
+        # Cell 1: TOP
+        (0.0, sliver_height),
+        (100.0, sliver_height),
+        (100.0, 10.0),
+        (0.0, 10.0),
+        # Cell 2: BOTTOM
+        (0.0, -10.0),
+        (100.0, -10.0),
+        (100.0, 0.0),
+        (0.0, 0.0),
+        # Cell 3: LEFT
+        (-10.0, -10.0),
+        (0.0, -10.0),
+        (0.0, 10.0),
+        (-10.0, 10.0),
+        # Cell 4: RIGHT
+        (100.0, -10.0),
+        (110.0, -10.0),
+        (110.0, 10.0),
+        (100.0, 10.0),
+    ]
 
-    # Expected behavior: lay=None, row=nan, col=nan
-    assert lay is None, f"Expected lay=None, got {lay}"
-    assert np.isnan(row), f"Expected row=nan, got {row}"
-    assert np.isnan(col), f"Expected col=nan, got {col}"
+    base_iverts = [
+        [0, 1, 2, 3],
+        [4, 5, 6, 7],
+        [8, 9, 10, 11],
+        [12, 13, 14, 15],
+        [16, 17, 18, 19],
+    ]
+
+    xcenters = [50.0, 50.0, 50.0, -5.0, 105.0]
+    ycenters = [sliver_yc, top_yc, -5.0, 0.0, 0.0]
+
+    return {
+        "base_vertices": base_vertices,
+        "base_iverts": base_iverts,
+        "xcenters": xcenters,
+        "ycenters": ycenters,
+        "sliver_height": sliver_height,
+    }
+
+
+def test_index_thin_sliver_cell(sliver_grid_geometry):
+    """Test GeospatialIndex finds points in very thin sliver cells (2D).
+
+    Query point at (95, 0.05) inside the sliver:
+    - Distance to sliver centroid (50, 0.05): 45 units
+    - Distance to RIGHT cell centroid (105, 0): ~10 units  <- MUCH CLOSER!
+
+    A centroid-only KD-tree would return the wrong cell.
+    """
+    geom = sliver_grid_geometry
+
+    # Build VertexGrid vertices with IDs
+    vertices = [[i, x, y] for i, (x, y) in enumerate(geom["base_vertices"])]
+
+    # Build cell2d from geometry
+    cell2d = []
+    for cid, iverts in enumerate(geom["base_iverts"]):
+        xc = geom["xcenters"][cid]
+        yc = geom["ycenters"][cid]
+        cell2d.append([cid, xc, yc, len(iverts)] + iverts)
+
+    ncells = len(cell2d)
+    grid = VertexGrid(
+        vertices=vertices,
+        cell2d=cell2d,
+        top=np.ones(ncells) * 10.0,
+        botm=np.zeros(ncells),
+    )
+
+    index = GeospatialIndex(grid)
+
+    # Test sliver cell detection at edges (where neighboring centroids are closer)
+    assert index.query_point(95.0, 0.05, k=10) == 0, "Right edge of sliver"
+    assert index.query_point(5.0, 0.05, k=10) == 0, "Left edge of sliver"
+    assert index.query_point(50.0, 0.05, k=10) == 0, "Center of sliver"
+
+    # Sanity check surrounding cells
+    assert index.query_point(50.0, 5.0, k=10) == 1, "Top cell"
+    assert index.query_point(50.0, -5.0, k=10) == 2, "Bottom cell"
+    assert index.query_point(-5.0, 0.0, k=10) == 3, "Left cell"
+    assert index.query_point(105.0, 0.0, k=10) == 4, "Right cell"
+
+
+def test_index_thin_sliver_cell_3d(sliver_grid_geometry):
+    """Test GeospatialIndex finds thin sliver cells in true 3D grids.
+
+    Uses UnstructuredGrid with grid_varies_by_layer=True to test the 3D
+    KD-tree and 3D bounding box lookup with the same x-y sliver geometry.
+    """
+    geom = sliver_grid_geometry
+    nlay = 3
+    ncells_per_layer = len(geom["base_iverts"])
+    nverts_per_layer = len(geom["base_vertices"])
+
+    # Replicate geometry across layers for grid_varies_by_layer=True
+    vertices = []
+    iverts = []
+    xcenters = []
+    ycenters = []
+
+    for lay in range(nlay):
+        vert_offset = lay * nverts_per_layer
+        for i, (x, y) in enumerate(geom["base_vertices"]):
+            vertices.append([vert_offset + i, x, y])
+        for cell_iverts in geom["base_iverts"]:
+            iverts.append([v + vert_offset for v in cell_iverts])
+        xcenters.extend(geom["xcenters"])
+        ycenters.extend(geom["ycenters"])
+
+    ncpl = np.array([ncells_per_layer] * nlay)
+    nnodes = np.sum(ncpl)
+
+    # Set up layer elevations
+    top = np.zeros(nnodes)
+    botm = np.zeros(nnodes)
+    layer_tops = [100.0, 66.67, 33.33]
+    layer_bots = [66.67, 33.33, 0.0]
+
+    for lay in range(nlay):
+        start = lay * ncells_per_layer
+        end = start + ncells_per_layer
+        top[start:end] = layer_tops[lay]
+        botm[start:end] = layer_bots[lay]
+
+    grid = UnstructuredGrid(
+        vertices=vertices,
+        iverts=iverts,
+        xcenters=xcenters,
+        ycenters=ycenters,
+        ncpl=ncpl,
+        top=top,
+        botm=botm,
+    )
+
+    assert grid.grid_varies_by_layer, "Grid should have grid_varies_by_layer=True"
+
+    index = GeospatialIndex(grid)
+    assert index.is_3d, "Index should be in 3D mode"
+
+    # Test sliver cell in each layer (cell 0, 5, 10 are slivers)
+    # Point (95, 0.05) is far from sliver centroid but inside the cell
+    assert index.intersect(95.0, 0.05, z=83.33) == 0, "Sliver layer 0"
+    assert index.intersect(95.0, 0.05, z=50.0) == 5, "Sliver layer 1"
+    assert index.intersect(95.0, 0.05, z=16.67) == 10, "Sliver layer 2"
+
+    # Test left edge of sliver
+    assert index.intersect(5.0, 0.05, z=83.33) == 0, "Left edge layer 0"
+
+    # Test surrounding cells
+    assert index.intersect(105.0, 0.0, z=83.33) == 4, "Right cell layer 0"
+    assert index.intersect(50.0, 5.0, z=50.0) == 6, "Top cell layer 1"

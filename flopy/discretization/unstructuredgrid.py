@@ -25,13 +25,17 @@ class UnstructuredGrid(Grid):
         size nodes, if the grid_varies_by_nodes argument is true, or it must
         be of size ncpl[0] if the same 2d spatial grid is used for each layer.
     xcenters : list or ndarray
-        list of x center coordinates for all cells in the grid if the grid
-        varies by layer or for all cells in a layer if the same grid is used
-        for all layers
+        x-coordinates of cell centers for all cells in the grid if the grid
+        varies by layer, or for all cells in a layer if the same grid is used
+        for all layers. These are typically geometric centroids but may be
+        any representative point. For convex cells (triangles, rectangles),
+        the arithmetic mean of vertices is equivalent to the true centroid.
+        For concave cells, the provided center should ideally lie inside the
+        cell boundary for optimal spatial indexing performance.
     ycenters : list or ndarray
-        list of y center coordinates for all cells in the grid if the grid
-        varies by layer or for all cells in a layer if the same grid is used
-        for all layers
+        y-coordinates of cell centers for all cells in the grid if the grid
+        varies by layer, or for all cells in a layer if the same grid is used
+        for all layers. See ``xcenters`` for details on center point placement.
     top : list or ndarray
         top elevations for all cells in the grid.
     botm : list or ndarray
@@ -717,129 +721,6 @@ class UnstructuredGrid(Grid):
                     iac=self._iac,
                     ja=self._ja,
                 )
-
-    def intersect(self, x, y, z=None, local=False, forgive=False):
-        """
-        Get the CELL2D number of a point with coordinates x and y
-
-        When the point is on the edge of two cells, the cell with the lowest
-        CELL2D number is returned.
-
-        Supports both scalar and array inputs for vectorized operations.
-
-        Parameters
-        ----------
-        x : float or array-like
-            The x-coordinate(s) of the requested point(s)
-        y : float or array-like
-            The y-coordinate(s) of the requested point(s)
-        z : float, array-like, or None
-            optional, z-coordinate(s) of the requested point(s)
-        local: bool (optional)
-            If True, x and y are in local coordinates (defaults to False)
-        forgive: bool (optional)
-            Forgive x,y arguments that fall outside the model grid and
-            return NaNs instead (defaults to False - will throw exception)
-
-        Returns
-        -------
-        icell2d : int or ndarray
-            The CELL2D number(s). Returns int for scalar input,
-            ndarray for array input.
-
-        """
-        # Check if inputs are scalar
-        x_is_scalar = np.isscalar(x)
-        y_is_scalar = np.isscalar(y)
-        z_is_scalar = z is None or np.isscalar(z)
-        is_scalar_input = x_is_scalar and y_is_scalar and z_is_scalar
-
-        # Convert to arrays for uniform processing
-        x = np.atleast_1d(x)
-        y = np.atleast_1d(y)
-        if z is not None:
-            z = np.atleast_1d(z)
-
-        # Validate array shapes
-        if len(x) != len(y):
-            raise ValueError("x and y must have the same length")
-        if z is not None and len(z) != len(x):
-            raise ValueError("z must have the same length as x and y")
-
-        if local:
-            # transform x and y to real-world coordinates
-            x, y = super().get_coords(x, y)
-
-        xv, yv, zv = self.xyzvertices
-
-        if self.grid_varies_by_layer:
-            ncpl = self.nnodes
-        else:
-            ncpl = self.ncpl[0]
-
-        # Initialize result array
-        n_points = len(x)
-        results = np.full(n_points, np.nan if forgive else -1, dtype=float)
-
-        # Process each point
-        for i in range(n_points):
-            xi, yi = x[i], y[i]
-            zi = z[i] if z is not None else None
-            found = False
-
-            for icell2d in range(ncpl):
-                xa = np.array(xv[icell2d])
-                ya = np.array(yv[icell2d])
-                # x and y at least have to be within the bounding box of the cell
-                if (
-                    np.any(xi <= xa)
-                    and np.any(xi >= xa)
-                    and np.any(yi <= ya)
-                    and np.any(yi >= ya)
-                ):
-                    if is_clockwise(xa, ya):
-                        radius = -1e-9
-                    else:
-                        radius = 1e-9
-                    path = Path(np.stack((xa, ya)).transpose())
-                    # use a small radius, so that the edge of the cell is included
-                    if path.contains_point((xi, yi), radius=radius):
-                        if zi is None:
-                            results[i] = icell2d
-                            found = True
-                            break
-
-                        # Search through layers for z-coordinate
-                        cell_idx_3d = icell2d
-                        for lay in range(self.nlay):
-                            if zv[0, cell_idx_3d] >= zi >= zv[1, cell_idx_3d]:
-                                results[i] = cell_idx_3d
-                                found = True
-                                break
-                            # Move to next layer
-                            if lay < self.nlay - 1 and not self.grid_varies_by_layer:
-                                cell_idx_3d += self.ncpl[lay]
-                        if found:
-                            break
-
-            if not found and not forgive:
-                raise ValueError(f"point ({xi}, {yi}) is outside of the model area")
-
-        # Return scalar if input was scalar, otherwise return array
-        if is_scalar_input:
-            result = results[0]
-            return int(result) if not np.isnan(result) else np.nan
-        else:
-            # Convert to int array where not NaN
-            if not forgive:
-                return results.astype(int)
-            else:
-                # Keep as float to preserve NaN values
-                valid_mask = ~np.isnan(results)
-                if np.all(valid_mask):
-                    return results.astype(int)
-                else:
-                    return results
 
     @property
     def top_botm(self):

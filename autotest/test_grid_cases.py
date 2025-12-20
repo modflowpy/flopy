@@ -2,6 +2,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import numpy as np
+from scipy.spatial import Delaunay
 
 from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
 from flopy.utils.triangle import Triangle
@@ -387,3 +388,167 @@ class GridCases:
             grid = VertexGrid(**gridprops, nlay=1)
 
         return ncpl, vor, gridprops, grid
+
+    # =========================================================================
+    # Minimal grids for GeospatialIndex testing
+    # =========================================================================
+
+    @staticmethod
+    def _minimal_geometry():
+        """Create shared 2-cell geometry used by multiple grid methods."""
+        vertices = [
+            [0, 0.0, 1.0],
+            [1, 1.0, 1.0],
+            [2, 2.0, 1.0],
+            [3, 0.0, 0.0],
+            [4, 1.0, 0.0],
+            [5, 2.0, 0.0],
+        ]
+        iverts = [[0, 1, 4, 3], [1, 2, 5, 4]]
+        xcenters = [0.5, 1.5]
+        ycenters = [0.5, 0.5]
+        return vertices, iverts, xcenters, ycenters
+
+    @staticmethod
+    def _triangular_geometry(seed=42, n_points=30):
+        """Create shared Delaunay triangulation geometry."""
+        np.random.seed(seed)
+        x_verts = np.random.uniform(0, 100, n_points)
+        y_verts = np.random.uniform(0, 100, n_points)
+        points = np.column_stack([x_verts, y_verts])
+
+        tri = Delaunay(points)
+        vertices = [[i, x_verts[i], y_verts[i]] for i in range(len(x_verts))]
+        iverts = tri.simplices.tolist()
+        xcenters = np.mean(points[tri.simplices], axis=1)[:, 0]
+        ycenters = np.mean(points[tri.simplices], axis=1)[:, 1]
+
+        return vertices, iverts, xcenters, ycenters
+
+    @staticmethod
+    def vertex_minimal():
+        """Create a minimal 2-cell vertex grid."""
+        vertices, iverts, xcenters, ycenters = GridCases._minimal_geometry()
+        cell2d = [
+            [0, xcenters[0], ycenters[0], 4] + iverts[0],
+            [1, xcenters[1], ycenters[1], 4] + iverts[1],
+        ]
+        return VertexGrid(vertices=vertices, cell2d=cell2d, nlay=1)
+
+    @staticmethod
+    def unstructured_minimal():
+        """Create a minimal 2-cell unstructured grid."""
+        vertices, iverts, xcenters, ycenters = GridCases._minimal_geometry()
+        return UnstructuredGrid(
+            vertices=vertices, iverts=iverts, xcenters=xcenters, ycenters=ycenters
+        )
+
+    @staticmethod
+    def vertex_triangular(seed=42, n_points=30):
+        """Create a triangular vertex grid using Delaunay triangulation."""
+        vertices, iverts, xcenters, ycenters = GridCases._triangular_geometry(
+            seed, n_points
+        )
+        cell2d = [
+            [i, xcenters[i], ycenters[i], 3] + iverts[i] for i in range(len(iverts))
+        ]
+        ncells = len(cell2d)
+        return VertexGrid(
+            vertices=vertices,
+            cell2d=cell2d,
+            top=np.ones(ncells) * 10.0,
+            botm=np.zeros(ncells),
+        )
+
+    @staticmethod
+    def unstructured_triangular(seed=42, n_points=30):
+        """Create a triangular unstructured grid using Delaunay triangulation."""
+        vertices, iverts, xcenters, ycenters = GridCases._triangular_geometry(
+            seed, n_points
+        )
+        ncells = len(iverts)
+        return UnstructuredGrid(
+            vertices=vertices,
+            iverts=iverts,
+            xcenters=xcenters,
+            ycenters=ycenters,
+            top=np.ones(ncells) * 10.0,
+            botm=np.zeros(ncells),
+        )
+
+    @staticmethod
+    def vertex_rectangular(nrow=10, ncol=10, cell_size=10.0, angrot=0.0):
+        """Create a rectangular vertex grid.
+
+        Parameters
+        ----------
+        nrow : int
+            Number of rows.
+        ncol : int
+            Number of columns.
+        cell_size : float
+            Size of each cell (square cells).
+        angrot : float
+            Grid rotation angle in degrees.
+        """
+        vertices = []
+        vid = 0
+        for i in range(nrow + 1):
+            for j in range(ncol + 1):
+                x = j * cell_size
+                y = (nrow - i) * cell_size
+                vertices.append([vid, x, y])
+                vid += 1
+
+        cell2d = []
+        cellid = 0
+        for i in range(nrow):
+            for j in range(ncol):
+                xc = (j + 0.5) * cell_size
+                yc = (nrow - i - 0.5) * cell_size
+                v0 = i * (ncol + 1) + j
+                v1 = v0 + 1
+                v2 = v1 + (ncol + 1)
+                v3 = v0 + (ncol + 1)
+                cell2d.append([cellid, xc, yc, 4, v0, v1, v2, v3])
+                cellid += 1
+
+        top = np.ones(nrow * ncol) * 10.0
+        botm = np.zeros(nrow * ncol)
+
+        return VertexGrid(
+            vertices=vertices, cell2d=cell2d, top=top, botm=botm, nlay=1, angrot=angrot
+        )
+
+    @staticmethod
+    def unstructured_layered():
+        """Create a 3-layer unstructured grid for 3D testing.
+
+        Grid has 2 cells per layer, 3 layers total = 6 cells.
+        Cell IDs: 0-1 (layer 0), 2-3 (layer 1), 4-5 (layer 2).
+        Z elevations: layer 0 (10-7), layer 1 (7-4), layer 2 (4-1).
+
+        Uses 2D indexing with layer search (grid_varies_by_layer=False).
+        """
+        vertices, base_iverts, base_xc, base_yc = GridCases._minimal_geometry()
+
+        nlay = 3
+        ncpl = 2
+
+        # Only provide iverts for first layer (grid_varies_by_layer=False)
+        iverts = base_iverts
+        xcenters = list(base_xc)
+        ycenters = list(base_yc)
+
+        top = np.array([10.0, 10.0, 7.0, 7.0, 4.0, 4.0])
+        botm = np.array([7.0, 7.0, 4.0, 4.0, 1.0, 1.0])
+
+        return UnstructuredGrid(
+            vertices=vertices,
+            iverts=iverts,
+            xcenters=xcenters,
+            ycenters=ycenters,
+            top=top,
+            botm=botm,
+            ncpl=np.array([ncpl] * nlay),
+        )
