@@ -40,7 +40,9 @@ def model_is_copy(m1, m2):
     for k, v in m1.__dict__.items():
         v2 = m2.__dict__[k]
         # Allow identity sharing for immutable types including NumPy scalars
-        is_immutable = type(v) in [bool, str, type(None), float, int] or isinstance(v, np.generic)
+        is_immutable = type(v) in [bool, str, type(None), float, int] or isinstance(
+            v, np.generic
+        )
         if v2 is v and not is_immutable:
             # some mf6 objects aren't copied with deepcopy
             if isinstance(v, MFSimulationData):
@@ -81,7 +83,14 @@ def package_is_copy(pk1, pk2):
     for k, v in pk1.__dict__.items():
         v2 = pk2.__dict__[k]
         # Allow identity sharing for immutable types including NumPy scalars
-        is_immutable = type(v) in [bool, str, type(None), float, int, tuple] or isinstance(v, np.generic)
+        is_immutable = type(v) in [
+            bool,
+            str,
+            type(None),
+            float,
+            int,
+            tuple,
+        ] or isinstance(v, np.generic)
         if v2 is v and not is_immutable:
             # Deep copy doesn't work for ModflowUtltas
             if not inspect.isclass(v):
