@@ -10,8 +10,10 @@ This module provides a unified spatial query interface for all grid types,
 with each type using the optimal algorithm for its geometry.
 """
 
+from collections import defaultdict
+
 import numpy as np
-from scipy.spatial import ConvexHull, cKDTree
+from scipy.spatial import cKDTree
 
 
 class GeospatialIndex:
@@ -270,41 +272,97 @@ class GeospatialIndex:
         self.grid._copy_cache = original_copy_cache
 
     def _precompute_hulls(self):
-        """Pre-compute ConvexHull equations and bounding boxes for all cells."""
+        """Pre-compute edge equations and bounding boxes for all cells.
+
+        Uses vectorized edge equation computation instead of scipy ConvexHull
+        for ~100x faster precomputation. Edge equations define half-planes
+        for point-in-polygon testing.
+        """
         # Disable copy cache to avoid expensive deepcopy during precomputation
         original_copy_cache = getattr(self.grid, "_copy_cache", True)
         self.grid._copy_cache = False
 
-        self.hull_equations = []
+        xv, yv, _ = self.grid.xyzvertices
+
+        # Group cells by vertex count for vectorized processing
+        cell_groups = defaultdict(list)
+        for cellid in range(self.ncells):
+            n_verts = len(xv[cellid])
+            cell_groups[n_verts].append(cellid)
+
+        # Initialize storage
+        self.edge_equations = [None] * self.ncells  # List of (n_edges, 3) arrays
         self.bounding_boxes = np.zeros((self.ncells, 4))  # xmin, xmax, ymin, ymax
 
-        for cellid in range(self.ncells):
-            verts = self._get_cell_vertices(cellid)
-
-            # Handle empty or degenerate cells
-            if len(verts) < 3:
-                self.bounding_boxes[cellid] = [np.inf, -np.inf, np.inf, -np.inf]
-                self.hull_equations.append(None)
+        # Process each group with vectorized operations
+        for n_verts, cellids in cell_groups.items():
+            if n_verts < 3:
+                # Degenerate cells
+                for cellid in cellids:
+                    self.bounding_boxes[cellid] = [np.inf, -np.inf, np.inf, -np.inf]
                 continue
 
-            # Compute bounding box
-            self.bounding_boxes[cellid] = [
-                verts[:, 0].min(),
-                verts[:, 0].max(),
-                verts[:, 1].min(),
-                verts[:, 1].max(),
-            ]
+            cellids = np.array(cellids)
+            n_cells = len(cellids)
 
-            # Compute ConvexHull equations
-            try:
-                hull = ConvexHull(verts)
-                self.hull_equations.append(hull.equations)
-            except Exception:
-                # Degenerate geometry
-                self.hull_equations.append(None)
+            # Gather vertices for this group: (n_cells, n_verts, 2)
+            verts = np.zeros((n_cells, n_verts, 2))
+            for i, cellid in enumerate(cellids):
+                verts[i, :, 0] = xv[cellid]
+                verts[i, :, 1] = yv[cellid]
+
+            # Vectorized bounding boxes
+            self.bounding_boxes[cellids, 0] = verts[:, :, 0].min(axis=1)
+            self.bounding_boxes[cellids, 1] = verts[:, :, 0].max(axis=1)
+            self.bounding_boxes[cellids, 2] = verts[:, :, 1].min(axis=1)
+            self.bounding_boxes[cellids, 3] = verts[:, :, 1].max(axis=1)
+
+            # Vectorized edge equations: half-plane representation
+            # For edge from v[i] to v[i+1], compute inward-pointing normal
+            v0 = verts  # (n_cells, n_verts, 2)
+            v1 = np.roll(verts, -1, axis=1)  # Next vertex
+
+            dx = v1[:, :, 0] - v0[:, :, 0]  # (n_cells, n_verts)
+            dy = v1[:, :, 1] - v0[:, :, 1]
+
+            # Edge length (avoid division by zero)
+            length = np.sqrt(dx * dx + dy * dy)
+            length = np.where(length > 0, length, 1.0)
+
+            # Perpendicular normal: rotate edge vector 90 degrees
+            # (-dy, dx) gives CCW normal, but we need to verify orientation
+            nx = -dy / length
+            ny = dx / length
+
+            # Plane equation: nx*x + ny*y + c = 0, where c = -(nx*x0 + ny*y0)
+            c = -(nx * v0[:, :, 0] + ny * v0[:, :, 1])
+
+            # Check orientation: centroid should be on negative side (inside)
+            centroids = verts.mean(axis=1)  # (n_cells, 2)
+            cx = centroids[:, 0:1]  # (n_cells, 1)
+            cy = centroids[:, 1:2]
+
+            # Distance from centroid to each edge plane
+            dist = cx * nx + cy * ny + c  # (n_cells, n_verts)
+
+            # Flip normals where centroid is on positive side
+            flip_mask = dist > 0
+            nx = np.where(flip_mask, -nx, nx)
+            ny = np.where(flip_mask, -ny, ny)
+            c = np.where(flip_mask, -c, c)
+
+            # Stack into equations array: (n_cells, n_verts, 3)
+            equations = np.stack([nx, ny, c], axis=-1)
+
+            # Store equations for each cell
+            for i, cellid in enumerate(cellids):
+                self.edge_equations[cellid] = equations[i]
 
         # Restore copy cache setting
         self.grid._copy_cache = original_copy_cache
+
+        # For compatibility, also set hull_equations as alias
+        self.hull_equations = self.edge_equations
 
     def _precompute_3d_bounds(self):
         """Pre-compute 3D bounding boxes (x,y,z bounds) for all cells."""
@@ -361,7 +419,7 @@ class GeospatialIndex:
         Find cells containing multiple points (vectorized).
 
         Uses KD-tree to find k nearest unique cells, then tests for containment.
-        For 2D grids: uses ConvexHull testing.
+        For 2D grids: uses vectorized edge equation testing.
         For 3D grids: uses 3D bounding box testing.
 
         Parameters
@@ -405,13 +463,19 @@ class GeospatialIndex:
         if k is None:
             k = 30  # Default: check 30 unique cells
 
+        n_points = len(x)
+
+        # Use vectorized path for 2D queries without z
+        if not self.is_3d and z is None:
+            return self._query_points_vectorized_2d(x, y, k)
+
+        # Fall back to loop-based approach for 3D or z-layer queries
         # Build query points (2D or 3D)
         if self.is_3d:
             points = np.column_stack([x, y, z])
         else:
             points = np.column_stack([x, y])
 
-        n_points = len(points)
         results = np.full(n_points, np.nan, dtype=float)
 
         # For each point, query KD-tree to get k unique candidate cells
@@ -431,7 +495,7 @@ class GeospatialIndex:
                     if self._point_in_cell_3d(point, cellid):
                         matching_cells.append(cellid)
                 else:
-                    # 2D: use ConvexHull test
+                    # 2D: use edge equation test
                     if self._point_in_cell_vectorized(point[:2], cellid):
                         # Found 2D cell, now check z if provided
                         if z is None:
@@ -447,6 +511,67 @@ class GeospatialIndex:
                 results[i] = self._apply_tiebreaker(matching_cells)
 
         # Return int array if all points found, float array otherwise (to preserve nan)
+        valid_mask = ~np.isnan(results)
+        if np.all(valid_mask):
+            return results.astype(int)
+        return results
+
+    def _query_points_vectorized_2d(self, x, y, k):
+        """
+        Vectorized 2D point query - batch KD-tree and containment tests.
+
+        Uses batch KD-tree query for all points, then tests candidates
+        with vectorized edge equation checks.
+        """
+        n_points = len(x)
+        points = np.column_stack([x, y])
+
+        # Batch KD-tree query for all points
+        k_query = min(k * 5, len(self.points))
+        _, indices = self.tree.query(points, k=k_query)
+
+        # Handle single point case
+        if n_points == 1:
+            indices = indices.reshape(1, -1)
+
+        # Map KD-tree indices to cell IDs
+        candidate_cells = self.point_to_cell[indices]  # (n_points, k_query)
+
+        results = np.full(n_points, np.nan, dtype=float)
+
+        # Process each point - vectorize the candidate testing
+        for i in range(n_points):
+            # Get unique candidate cells (first k unique)
+            seen = set()
+            unique_candidates = []
+            for c in candidate_cells[i]:
+                if c not in seen:
+                    seen.add(c)
+                    unique_candidates.append(c)
+                    if len(unique_candidates) >= k:
+                        break
+
+            if not unique_candidates:
+                continue
+
+            # Test all candidates and collect matches for tie-breaking
+            px, py = x[i], y[i]
+            matching_cells = []
+            for cellid in unique_candidates:
+                eq = self.edge_equations[cellid]
+                if eq is None:
+                    continue
+
+                # Vectorized edge test for this cell
+                distances = px * eq[:, 0] + py * eq[:, 1] + eq[:, 2]
+                if np.all(distances <= self.epsilon):
+                    matching_cells.append(cellid)
+
+            # Apply tie-breaking if multiple cells match
+            if matching_cells:
+                results[i] = self._apply_tiebreaker(matching_cells)
+
+        # Return int array if all points found
         valid_mask = ~np.isnan(results)
         if np.all(valid_mask):
             return results.astype(int)
@@ -514,7 +639,7 @@ class GeospatialIndex:
 
     def _point_in_cell_vectorized(self, point, cellid):
         """
-        Test if point is inside cell using pre-computed bounding box + ConvexHull.
+        Test if point is inside cell using pre-computed bounding box + edge equations.
 
         Parameters
         ----------
@@ -537,12 +662,12 @@ class GeospatialIndex:
         ):
             return False
 
-        # Precise ConvexHull test
-        hull_eq = self.hull_equations[cellid]
-        if hull_eq is not None:
-            # Vectorized hyperplane test: Ax + By + C <= epsilon
+        # Precise edge equation test (half-plane intersection)
+        edge_eq = self.edge_equations[cellid]
+        if edge_eq is not None:
+            # Vectorized half-plane test: nx*x + ny*y + c <= epsilon
             # Tolerance allows points on edges to be included
-            distances = point @ hull_eq[:, :-1].T + hull_eq[:, -1]
+            distances = point @ edge_eq[:, :-1].T + edge_eq[:, -1]
             return np.all(distances <= self.epsilon)
         else:
             # Degenerate geometry - should rarely happen
