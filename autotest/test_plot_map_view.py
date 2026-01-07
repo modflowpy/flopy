@@ -372,16 +372,14 @@ def test_plot_bc_hfb():
 
     # Plot grid lines
     grid_result = mapview.plot_grid()
-    assert isinstance(grid_result, LineCollection), (
-        "Expected LineCollection for grid"
-    )
+    assert isinstance(grid_result, LineCollection), "Expected LineCollection for grid"
 
     # Plot CHD (should work as before)
     chd_result = mapview.plot_bc("CHD")
     assert chd_result is not None, "CHD plot should return a result"
 
-    # Plot HFB (the new functionality)
-    hfb_result = mapview.plot_bc("HFB", color="red", linewidth=3)
+    # Plot HFB (the new functionality) - uses default orange color
+    hfb_result = mapview.plot_bc("HFB", linewidth=3)
 
     # Verify that a LineCollection was returned
     assert isinstance(hfb_result, LineCollection), (
@@ -390,14 +388,11 @@ def test_plot_bc_hfb():
 
     # Verify that the correct number of barrier segments were plotted
     segments = hfb_result.get_segments()
-    assert len(segments) == 5, (
-        f"Expected 5 barrier segments, got {len(segments)}"
-    )
+    assert len(segments) == 5, f"Expected 5 barrier segments, got {len(segments)}"
 
     # Verify each segment has 2 points (start and end of the barrier line)
     for seg in segments:
-        assert len(seg) == 2, (
-            f"Expected 2 points per barrier segment, got {len(seg)}"
-        )
+        assert len(seg) == 2, f"Expected 2 points per barrier segment, got {len(seg)}"
 
+    # plt.show()
     plt.close(fig)

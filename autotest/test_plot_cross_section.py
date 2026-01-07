@@ -259,3 +259,72 @@ def test_plot_centers():
         xmax = np.max(verts[0])
         if xmax < center < xmin:
             raise AssertionError("Cell center not properly drawn on cross-section")
+
+
+@pytest.mark.mf6
+def test_cross_section_bc_hfb():
+    """Test plotting HFB (Horizontal Flow Barrier) in cross sections.
+
+    HFB packages have cellid1/cellid2 fields instead of a single cellid field.
+    In cross sections, barriers are plotted by showing both cells that the
+    barrier affects (as a simplification, since proper barrier visualization
+    would require determining if the cross section plane intersects each barrier).
+
+    Addresses issue #2676.
+    """
+    # Create a simple MODFLOW 6 model with multiple layers
+    sim = flopy.mf6.MFSimulation(sim_name="test_hfb_xc")
+    tdis = flopy.mf6.ModflowTdis(sim)
+    ims = flopy.mf6.ModflowIms(sim)
+
+    # Create gwf model
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="test")
+
+    # Create structured grid with 2 layers
+    dis = flopy.mf6.ModflowGwfdis(
+        gwf,
+        nlay=2,
+        nrow=10,
+        ncol=10,
+        delr=100.0,
+        delc=100.0,
+        top=100.0,
+        botm=[50.0, 0.0],
+    )
+
+    # Add initial conditions
+    ic = flopy.mf6.ModflowGwfic(gwf, strt=75.0)
+
+    # Add npf
+    npf = flopy.mf6.ModflowGwfnpf(gwf, save_flows=True)
+
+    # Add HFB - barriers between cells in layer 0
+    # Create a vertical barrier along column boundary
+    hfb_data = [
+        [(0, 3, 4), (0, 3, 5), 1e-6],
+        [(0, 4, 4), (0, 4, 5), 1e-6],
+        [(0, 5, 4), (0, 5, 5), 1e-6],
+    ]
+    hfb = flopy.mf6.ModflowGwfhfb(gwf, stress_period_data=hfb_data)
+
+    # Create cross section along row 4 (which intersects the barriers)
+    xc = flopy.plot.PlotCrossSection(model=gwf, line={"row": 4})
+
+    # Plot HFB
+    xc.plot_grid()
+    hfb_result = xc.plot_bc("HFB", alpha=0.5)
+
+    # Verify that something was plotted
+    assert hfb_result is not None, "HFB plot should return a result"
+
+    # For cross sections, HFB is plotted as patches (both cells affected by barrier)
+    assert isinstance(hfb_result, PatchCollection), (
+        f"Expected PatchCollection for HFB cross section plot, got {type(hfb_result)}"
+    )
+
+    # Verify that the axis has collections
+    ax = xc.ax
+    assert len(ax.collections) > 0, "HFB boundary condition was not drawn"
+
+    # plt.show()
+    plt.close()

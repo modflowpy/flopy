@@ -842,12 +842,15 @@ class PlotCrossSection:
                     # These have cellid1, cellid2, ... instead of cellid
                     if "cellid" in mflist.dtype.names:
                         t = np.array([list(i) for i in mflist["cellid"]], dtype=int).T
-                    elif "cellid1" in mflist.dtype.names and "cellid2" in mflist.dtype.names:
-                        # Barrier packages (e.g., HFB) represent interfaces between cells.
-                        # In cross sections, barriers are only visible if the cross section
-                        # intersects them. A proper implementation would plot barrier lines
-                        # only where they intersect the cross section plane. For now, we
-                        # plot both cells that the barrier affects as a simpler approximation.
+                    elif (
+                        "cellid1" in mflist.dtype.names
+                        and "cellid2" in mflist.dtype.names
+                    ):
+                        # Barrier packages (e.g., HFB) sit at interfaces between cells.
+                        # In cross sections, barriers are visible if the cross section
+                        # intersects them. Ideally we'd plot barriers only where they
+                        # intersect the cross section plane, but as a simpler method,
+                        # plot both cells that the barrier affects.
                         is_barrier_package = True
                         cellids = []
                         for entry in mflist:
@@ -859,7 +862,7 @@ class PlotCrossSection:
                             continue
                     else:
                         raise ValueError(
-                            f"Package {pp.package_type} has unexpected cellid field structure. "
+                            f"Package {pp.package_type} has unexpected cellid fields. "
                             f"Available fields: {mflist.dtype.names}"
                         )
 

@@ -30,6 +30,7 @@ bc_color_dict = {
     "SFR": "teal",
     "UZF": "peru",
     "LAK": "royalblue",
+    "HFB": "orange",
 }
 
 

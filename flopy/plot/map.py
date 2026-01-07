@@ -446,7 +446,8 @@ class PlotMapView:
         Parameters
         ----------
         cellid1 : tuple
-            First cell ID (layer, row, col) for structured or (layer, node) for unstructured
+            First cell ID, (layer, row, col) for structured,
+            (layer, node) for unstructured
         cellid2 : tuple
             Second cell ID
 
@@ -631,18 +632,20 @@ class PlotMapView:
                     # These have cellid1, cellid2, ... instead of cellid
                     if "cellid" in mflist.dtype.names:
                         t = np.array([list(i) for i in mflist["cellid"]], dtype=int).T
-                    elif "cellid1" in mflist.dtype.names and "cellid2" in mflist.dtype.names:
+                    elif (
+                        "cellid1" in mflist.dtype.names
+                        and "cellid2" in mflist.dtype.names
+                    ):
                         # Barrier package - collect cell pairs for line plotting
                         is_barrier_package = True
                         for entry in mflist:
-                            barrier_data.append((
-                                tuple(entry["cellid1"]),
-                                tuple(entry["cellid2"])
-                            ))
+                            barrier_data.append(
+                                (tuple(entry["cellid1"]), tuple(entry["cellid2"]))
+                            )
                         continue
                     else:
                         raise ValueError(
-                            f"Package {pp.package_type} has unexpected cellid field structure. "
+                            f"Package {pp.package_type} has unexpected cellid fields. "
                             f"Available fields: {mflist.dtype.names}"
                         )
 
