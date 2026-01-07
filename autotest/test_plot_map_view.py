@@ -312,3 +312,92 @@ def test_plot_centers():
         vert = tuple(vert)
         if vert not in xycenters:
             raise AssertionError("center location not properly plotted")
+
+
+@pytest.mark.mf6
+def test_plot_bc_hfb():
+    """Test plotting HFB (Horizontal Flow Barrier) boundary conditions.
+
+    HFB packages have cellid1/cellid2 fields instead of a single cellid field,
+    representing barriers between pairs of cells. This test verifies that HFB
+    can be plotted as lines on the shared faces between cells.
+
+    Addresses issue #2676.
+    """
+    # Create a simple MODFLOW 6 model
+    sim = flopy.mf6.MFSimulation(sim_name="test_hfb")
+    tdis = flopy.mf6.ModflowTdis(sim)
+    ims = flopy.mf6.ModflowIms(sim)
+
+    # Create gwf model
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="test")
+
+    # Create structured grid
+    dis = flopy.mf6.ModflowGwfdis(
+        gwf,
+        nlay=1,
+        nrow=10,
+        ncol=10,
+        delr=100.0,
+        delc=100.0,
+    )
+
+    # Add initial conditions
+    ic = flopy.mf6.ModflowGwfic(gwf, strt=100.0)
+
+    # Add npf
+    npf = flopy.mf6.ModflowGwfnpf(gwf, save_flows=True)
+
+    # Add some boundary conditions
+    chd_spd = [
+        [(0, 0, 0), 100.0],
+        [(0, 9, 9), 95.0],
+    ]
+    chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chd_spd)
+
+    # Add HFB - barriers between cells (creating a vertical barrier)
+    hfb_data = [
+        [(0, 3, 4), (0, 3, 5), 1e-6],
+        [(0, 4, 4), (0, 4, 5), 1e-6],
+        [(0, 5, 4), (0, 5, 5), 1e-6],
+        [(0, 6, 4), (0, 6, 5), 1e-6],
+        [(0, 7, 4), (0, 7, 5), 1e-6],
+    ]
+    hfb = flopy.mf6.ModflowGwfhfb(gwf, stress_period_data=hfb_data)
+
+    # Create map view and plot both CHD and HFB
+    fig = plt.figure(figsize=(8, 8))
+    ax = fig.add_subplot(1, 1, 1, aspect="equal")
+    mapview = flopy.plot.PlotMapView(model=gwf, ax=ax)
+
+    # Plot grid lines
+    grid_result = mapview.plot_grid()
+    assert isinstance(grid_result, LineCollection), (
+        "Expected LineCollection for grid"
+    )
+
+    # Plot CHD (should work as before)
+    chd_result = mapview.plot_bc("CHD")
+    assert chd_result is not None, "CHD plot should return a result"
+
+    # Plot HFB (the new functionality)
+    hfb_result = mapview.plot_bc("HFB", color="red", linewidth=3)
+
+    # Verify that a LineCollection was returned
+    assert isinstance(hfb_result, LineCollection), (
+        f"Expected LineCollection for HFB plot, got {type(hfb_result)}"
+    )
+
+    # Verify that the correct number of barrier segments were plotted
+    segments = hfb_result.get_segments()
+    assert len(segments) == 5, (
+        f"Expected 5 barrier segments, got {len(segments)}"
+    )
+
+    # Verify each segment has 2 points (start and end of the barrier line)
+    for seg in segments:
+        assert len(seg) == 2, (
+            f"Expected 2 points per barrier segment, got {len(seg)}"
+        )
+
+    plt.close(fig)

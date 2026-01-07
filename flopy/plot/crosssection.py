@@ -825,6 +825,8 @@ class PlotCrossSection:
                 p = [p]
 
             idx = np.array([])
+            is_barrier_package = False
+
             for pp in p:
                 if pp.package_type in ("lak", "sfr", "maw", "uzf"):
                     t = plotutil.advanced_package_bc_helper(pp, self.mg, kper)
@@ -836,7 +838,30 @@ class PlotCrossSection:
                     if mflist is None:
                         return
 
-                    t = np.array([list(i) for i in mflist["cellid"]], dtype=int).T
+                    # Check if this is a barrier-type package (HFB, etc.)
+                    # These have cellid1, cellid2, ... instead of cellid
+                    if "cellid" in mflist.dtype.names:
+                        t = np.array([list(i) for i in mflist["cellid"]], dtype=int).T
+                    elif "cellid1" in mflist.dtype.names and "cellid2" in mflist.dtype.names:
+                        # Barrier packages (e.g., HFB) represent interfaces between cells.
+                        # In cross sections, barriers are only visible if the cross section
+                        # intersects them. A proper implementation would plot barrier lines
+                        # only where they intersect the cross section plane. For now, we
+                        # plot both cells that the barrier affects as a simpler approximation.
+                        is_barrier_package = True
+                        cellids = []
+                        for entry in mflist:
+                            cellids.append(list(entry["cellid1"]))
+                            cellids.append(list(entry["cellid2"]))
+                        if cellids:
+                            t = np.array(cellids, dtype=int).T
+                        else:
+                            continue
+                    else:
+                        raise ValueError(
+                            f"Package {pp.package_type} has unexpected cellid field structure. "
+                            f"Available fields: {mflist.dtype.names}"
+                        )
 
                 if len(idx) == 0:
                     idx = np.copy(t)

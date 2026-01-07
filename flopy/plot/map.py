@@ -439,6 +439,121 @@ class PlotMapView:
         ax = self._set_axes_limits(ax)
         return collection
 
+    def _get_shared_face(self, cellid1, cellid2):
+        """
+        Get the coordinates of the shared face between two cells.
+
+        Parameters
+        ----------
+        cellid1 : tuple
+            First cell ID (layer, row, col) for structured or (layer, node) for unstructured
+        cellid2 : tuple
+            Second cell ID
+
+        Returns
+        -------
+        list or None
+            List of two (x, y) tuples representing the shared face endpoints,
+            or None if cells don't share a face
+        """
+        # Get vertices for both cells
+        try:
+            # For structured grids, cellid is (layer, row, col)
+            # get_cell_vertices expects (row, col) for structured grids
+            if len(cellid1) == 3:
+                # Structured grid: (layer, row, col)
+                verts1 = self.mg.get_cell_vertices(cellid1[1], cellid1[2])
+                verts2 = self.mg.get_cell_vertices(cellid2[1], cellid2[2])
+            elif len(cellid1) == 2:
+                # Vertex or unstructured grid: (layer, node)
+                # For these, we might need to handle differently
+                verts1 = self.mg.get_cell_vertices(cellid1[1])
+                verts2 = self.mg.get_cell_vertices(cellid2[1])
+            else:
+                # Single value, treat as node
+                verts1 = self.mg.get_cell_vertices(cellid1)
+                verts2 = self.mg.get_cell_vertices(cellid2)
+        except Exception:
+            # Fall back to None if we can't get vertices
+            return None
+
+        # Find shared vertices (vertices that appear in both cells)
+        shared_verts = []
+        for v1 in verts1:
+            for v2 in verts2:
+                # Check if vertices are the same (within tolerance)
+                if np.allclose(v1, v2, rtol=1e-5):
+                    # Check if we haven't already added this vertex
+                    if not any(np.allclose(v1, sv, rtol=1e-5) for sv in shared_verts):
+                        shared_verts.append(v1)
+                    break
+
+        # Two cells share a face if they have exactly 2 shared vertices (in 2D)
+        if len(shared_verts) == 2:
+            return shared_verts
+        else:
+            return None
+
+    def _plot_barrier_bc(self, barrier_data, color=None, name=None, **kwargs):
+        """
+        Plot barrier-type boundary conditions (e.g., HFB) as lines on shared faces.
+
+        Parameters
+        ----------
+        barrier_data : list of tuples
+            List of (cellid1, cellid2) tuples representing barriers between cells
+        color : string
+            matplotlib color string
+        name : string
+            Package name for color lookup
+        **kwargs : dictionary
+            keyword arguments passed to LineCollection
+
+        Returns
+        -------
+        lc : matplotlib.collections.LineCollection
+        """
+        ax = kwargs.pop("ax", self.ax)
+
+        # Collect line segments for all barriers
+        line_segments = []
+        for cellid1, cellid2 in barrier_data:
+            # Only plot barriers on the current layer or if plotAll is enabled
+            if len(cellid1) >= 1 and len(cellid2) >= 1:
+                if cellid1[0] != self.layer and cellid2[0] != self.layer:
+                    continue
+
+            # Get shared face coordinates
+            shared_face = self._get_shared_face(cellid1, cellid2)
+            if shared_face is not None:
+                line_segments.append(shared_face)
+
+        if not line_segments:
+            # No barriers to plot on this layer
+            return None
+
+        # Set the color
+        if color is None:
+            # Use default color for HFB
+            key = name[:3].upper() if name else "HFB"
+            if key in plotutil.bc_color_dict:
+                c = plotutil.bc_color_dict[key]
+            else:
+                c = plotutil.bc_color_dict["default"]
+        else:
+            c = color
+
+        # Set line width if not provided
+        if "linewidth" not in kwargs and "lw" not in kwargs:
+            kwargs["linewidth"] = 2
+
+        # Create line collection
+        collection = LineCollection(line_segments, colors=c, **kwargs)
+        ax.add_collection(collection)
+        ax = self._set_axes_limits(ax)
+
+        return collection
+
     def plot_bc(
         self,
         name=None,
@@ -496,6 +611,9 @@ class PlotMapView:
                 p = [p]
 
             idx = np.array([])
+            is_barrier_package = False
+            barrier_data = []
+
             for pp in p:
                 if pp.package_type in ("lak", "sfr", "maw", "uzf"):
                     t = plotutil.advanced_package_bc_helper(pp, self.mg, kper)
@@ -508,12 +626,34 @@ class PlotMapView:
                         return
                     if boundname is not None:
                         mflist = mflist[mflist["boundname"] == boundname]
-                    t = np.array([list(i) for i in mflist["cellid"]], dtype=int).T
+
+                    # Check if this is a barrier-type package (HFB, etc.)
+                    # These have cellid1, cellid2, ... instead of cellid
+                    if "cellid" in mflist.dtype.names:
+                        t = np.array([list(i) for i in mflist["cellid"]], dtype=int).T
+                    elif "cellid1" in mflist.dtype.names and "cellid2" in mflist.dtype.names:
+                        # Barrier package - collect cell pairs for line plotting
+                        is_barrier_package = True
+                        for entry in mflist:
+                            barrier_data.append((
+                                tuple(entry["cellid1"]),
+                                tuple(entry["cellid2"])
+                            ))
+                        continue
+                    else:
+                        raise ValueError(
+                            f"Package {pp.package_type} has unexpected cellid field structure. "
+                            f"Available fields: {mflist.dtype.names}"
+                        )
 
                 if len(idx) == 0:
                     idx = np.copy(t)
                 else:
                     idx = np.append(idx, t, axis=1)
+
+            # Handle barrier packages differently
+            if is_barrier_package:
+                return self._plot_barrier_bc(barrier_data, color, name, **kwargs)
 
         else:
             # modflow-2005 structured and unstructured grid
