@@ -1188,14 +1188,12 @@ class StructuredGrid(Grid):
                     if len(cellid) == 2:
                         i, j = cellid
                     elif len(cellid) == 3:
-                        # (layer, row, col) - ignore layer
-                        _, i, j = cellid
+                        _, i, j = cellid  # ignore layer
                     else:
                         raise ValueError(
                             f"cellid tuple must have 2 or 3 elements, got {len(cellid)}"
                         )
                 else:
-                    # cellid is a node number
                     _, i, j = self.get_lrc(cellid)[0]
             elif "node" in kwargs:
                 _, i, j = self.get_lrc(kwargs.pop("node"))[0]

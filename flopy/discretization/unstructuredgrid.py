@@ -876,31 +876,25 @@ class UnstructuredGrid(Grid):
         >>> ug.get_cell_vertices(node=5)  # explicit node kwarg
         >>> ug.get_cell_vertices(cellid=5)  # explicit cellid kwarg
         """
-        # Handle arguments
+
         if cellid is not None and node is not None:
             raise ValueError("cellid and node are mutually exclusive")
 
         if cellid is None and node is None:
             raise TypeError("expected cellid or node argument")
 
-        # Use cellid if provided, otherwise use node
-        if node is not None:
-            node_idx = node
-        else:
-            node_idx = cellid
-
-        # Handle tuple form
-        if isinstance(node_idx, (tuple, list)):
-            if len(node_idx) == 1:
-                node_idx = node_idx[0]
+        idx = node if node is not None else cellid
+        if isinstance(idx, (tuple, list)):
+            if len(idx) == 1:
+                idx = idx[0]
             else:
                 raise ValueError(
                     f"cellid tuple must have 1 element for "
-                    f"unstructured grids, got {len(node_idx)}"
+                    f"unstructured grids, got {len(idx)}"
                 )
 
         self._copy_cache = False
-        cell_vert = list(zip(self.xvertices[node_idx], self.yvertices[node_idx]))
+        cell_vert = list(zip(self.xvertices[idx], self.yvertices[idx]))
         self._copy_cache = True
         return cell_vert
 

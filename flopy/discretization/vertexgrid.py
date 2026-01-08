@@ -514,31 +514,33 @@ class VertexGrid(Grid):
 
         # Use cellid if provided, otherwise use node
         if node is not None:
-            cell2d = node
+            idx = node
         else:
-            cell2d = cellid
+            idx = cellid
 
         # Handle tuple forms
-        if isinstance(cell2d, (tuple, list)):
-            if len(cell2d) == 1:
+        if isinstance(idx, (tuple, list)):
+            if len(idx) == 1:
                 # (cell2d,) or (node,)
-                cell2d = cell2d[0]
-            elif len(cell2d) == 2:
+                idx = idx[0]
+            elif len(idx) == 2:
                 # (layer, cell2d) - ignore layer since vertices are 2D
-                _, cell2d = cell2d
+                _, idx = idx
             else:
                 raise ValueError(
-                    f"cellid tuple must have 1 or 2 elements, got {len(cell2d)}"
+                    f"cellid tuple must have 1 or 2 elements, got {len(idx)}"
                 )
 
         # Convert node to cell2d if necessary
-        while cell2d >= self.ncpl:
-            if cell2d > self.nnodes:
-                raise IndexError(f"cellid {cell2d} out of index for size {self.nnodes}")
-            cell2d -= self.ncpl
+        while idx >= self.ncpl:
+            if idx > self.nnodes:
+                raise IndexError(
+                    f"node number {idx} exceeds grid node count {self.nnodes}"
+                )
+            idx -= self.ncpl
 
         self._copy_cache = False
-        cell_verts = list(zip(self.xvertices[cell2d], self.yvertices[cell2d]))
+        cell_verts = list(zip(self.xvertices[idx], self.yvertices[idx]))
         self._copy_cache = True
         return cell_verts
 
