@@ -838,8 +838,6 @@ class PlotCrossSection:
                     if mflist is None:
                         return
 
-                    # Check if this is a barrier-type package (HFB, etc.)
-                    # These have cellid1, cellid2, ... instead of cellid
                     if "cellid" in mflist.dtype.names:
                         t = np.array([list(i) for i in mflist["cellid"]], dtype=int).T
                     elif (
@@ -851,7 +849,6 @@ class PlotCrossSection:
                         # intersects them. Ideally we'd plot barriers only where they
                         # intersect the cross section plane, but as a simpler method,
                         # plot both cells that the barrier affects.
-                        is_barrier_package = True
                         cellids = []
                         for entry in mflist:
                             cellids.append(list(entry["cellid1"]))

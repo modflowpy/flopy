@@ -261,70 +261,113 @@ def test_plot_centers():
             raise AssertionError("Cell center not properly drawn on cross-section")
 
 
-@pytest.mark.mf6
-def test_cross_section_bc_hfb():
+@pytest.fixture(params=["dis", "disv", "disu"])
+def hfb_xc_model(request):
+    """Create a MODFLOW 6 model with HFB for cross section testing.
+
+    Parameters
+    ----------
+    request.param : str
+        Grid type: "dis" (structured), "disv" (vertex), or "disu" (unstructured)
+
+    Returns
+    -------
+    tuple
+        (gwf_model, cross_section_line, grid_type)
+    """
+    from flopy.utils.gridutil import get_disu_kwargs, get_disv_kwargs
+
+    grid_type = request.param
+
+    # Create simulation
+    sim = flopy.mf6.MFSimulation(sim_name=f"test_hfb_xc_{grid_type}")
+    tdis = flopy.mf6.ModflowTdis(sim)
+    ims = flopy.mf6.ModflowIms(sim)
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="test")
+
+    # Create discretization based on grid type
+    if grid_type == "dis":
+        # Structured grid with 2 layers
+        dis = flopy.mf6.ModflowGwfdis(
+            gwf,
+            nlay=2,
+            nrow=10,
+            ncol=10,
+            delr=100.0,
+            delc=100.0,
+            top=100.0,
+            botm=[50.0, 0.0],
+        )
+        # HFB cellids for structured grid: (layer, row, col)
+        # Create barriers along column boundary at row 4
+        hfb_data = [
+            [(0, 3, 4), (0, 3, 5), 1e-6],
+            [(0, 4, 4), (0, 4, 5), 1e-6],
+            [(0, 5, 4), (0, 5, 5), 1e-6],
+        ]
+        xc_line = {"row": 4}
+
+    elif grid_type == "disv":
+        # Vertex grid (regular grid converted to vertex format)
+        disv_kwargs = get_disv_kwargs(2, 10, 10, 100.0, 100.0, 100.0, [50.0, 0.0])
+        disv = flopy.mf6.ModflowGwfdisv(gwf, **disv_kwargs)
+        # HFB cellids for vertex grid: (layer, cell2d_id)
+        # For a 10x10 grid, cell2d IDs are row*ncol + col
+        hfb_data = [
+            [(0, 3 * 10 + 4), (0, 3 * 10 + 5), 1e-6],
+            [(0, 4 * 10 + 4), (0, 4 * 10 + 5), 1e-6],
+            [(0, 5 * 10 + 4), (0, 5 * 10 + 5), 1e-6],
+        ]
+        # For DISV, use line coordinates instead of row
+        xc_line = {"line": ([0, 450], [1000, 450])}
+
+    elif grid_type == "disu":
+        # Unstructured grid (regular grid converted to unstructured format)
+        disu_kwargs = get_disu_kwargs(
+            2, 10, 10, 100.0, 100.0, 100.0, [50.0, 0.0], return_vertices=True
+        )
+        disu = flopy.mf6.ModflowGwfdisu(gwf, **disu_kwargs)
+        # HFB cellids for unstructured grid: (node,)
+        # For a 10x10 grid, node = layer * nrow * ncol + row * ncol + col
+        hfb_data = [
+            [(0 * 10 * 10 + 3 * 10 + 4,), (0 * 10 * 10 + 3 * 10 + 5,), 1e-6],
+            [(0 * 10 * 10 + 4 * 10 + 4,), (0 * 10 * 10 + 4 * 10 + 5,), 1e-6],
+            [(0 * 10 * 10 + 5 * 10 + 4,), (0 * 10 * 10 + 5 * 10 + 5,), 1e-6],
+        ]
+        # For DISU, use line coordinates
+        xc_line = {"line": ([0, 450], [1000, 450])}
+
+    # Add packages
+    ic = flopy.mf6.ModflowGwfic(gwf, strt=75.0)
+    npf = flopy.mf6.ModflowGwfnpf(gwf, save_flows=True)
+    hfb = flopy.mf6.ModflowGwfhfb(gwf, stress_period_data=hfb_data)
+
+    return gwf, xc_line, grid_type
+
+
+def test_cross_section_bc_hfb(hfb_xc_model):
     """Test plotting HFB (Horizontal Flow Barrier) in cross sections.
 
     HFB packages have cellid1/cellid2 fields instead of a single cellid field.
-    In cross sections, barriers are plotted by showing both cells that the
-    barrier affects (as a simplification, since proper barrier visualization
-    would require determining if the cross section plane intersects each barrier).
+    Plot barriers by showing both cells that the barrier affects.
+
+    Tests structured (DIS), vertex (DISV), and unstructured (DISU) grids.
 
     Addresses issue #2676.
     """
-    # Create a simple MODFLOW 6 model with multiple layers
-    sim = flopy.mf6.MFSimulation(sim_name="test_hfb_xc")
-    tdis = flopy.mf6.ModflowTdis(sim)
-    ims = flopy.mf6.ModflowIms(sim)
+    gwf, xc_line, grid_type = hfb_xc_model
 
-    # Create gwf model
-    gwf = flopy.mf6.ModflowGwf(sim, modelname="test")
-
-    # Create structured grid with 2 layers
-    dis = flopy.mf6.ModflowGwfdis(
-        gwf,
-        nlay=2,
-        nrow=10,
-        ncol=10,
-        delr=100.0,
-        delc=100.0,
-        top=100.0,
-        botm=[50.0, 0.0],
-    )
-
-    # Add initial conditions
-    ic = flopy.mf6.ModflowGwfic(gwf, strt=75.0)
-
-    # Add npf
-    npf = flopy.mf6.ModflowGwfnpf(gwf, save_flows=True)
-
-    # Add HFB - barriers between cells in layer 0
-    # Create a vertical barrier along column boundary
-    hfb_data = [
-        [(0, 3, 4), (0, 3, 5), 1e-6],
-        [(0, 4, 4), (0, 4, 5), 1e-6],
-        [(0, 5, 4), (0, 5, 5), 1e-6],
-    ]
-    hfb = flopy.mf6.ModflowGwfhfb(gwf, stress_period_data=hfb_data)
-
-    # Create cross section along row 4 (which intersects the barriers)
-    xc = flopy.plot.PlotCrossSection(model=gwf, line={"row": 4})
+    # Create figure and cross section
+    fig, ax = plt.subplots(1, 1, figsize=(10, 5))
+    xc = flopy.plot.PlotCrossSection(model=gwf, line=xc_line, ax=ax)
 
     # Plot HFB
     xc.plot_grid()
     hfb_result = xc.plot_bc("HFB", alpha=0.5)
 
-    # Verify that something was plotted
-    assert hfb_result is not None, "HFB plot should return a result"
-
-    # For cross sections, HFB is plotted as patches (both cells affected by barrier)
-    assert isinstance(hfb_result, PatchCollection), (
-        f"Expected PatchCollection for HFB cross section plot, got {type(hfb_result)}"
-    )
-
-    # Verify that the axis has collections
-    ax = xc.ax
-    assert len(ax.collections) > 0, "HFB boundary condition was not drawn"
+    assert hfb_result is not None, f"HFB plot should return a result ({grid_type})"
+    assert isinstance(hfb_result, PatchCollection)
+    assert len(ax.collections) > 0
 
     # plt.show()
-    plt.close()
+    plt.close(fig)
