@@ -448,3 +448,134 @@ def test_plot_bc_hfb(hfb_model):
 
     # plt.show()
     plt.close(fig)
+
+
+@pytest.fixture(params=["dis", "disv"])
+def vertical_hfb_model(request):
+    """Create a MODFLOW 6 model with vertical HFBs for testing.
+
+    Vertical HFBs are barriers between vertically stacked cells (different layers).
+
+    Returns
+    -------
+    tuple
+        (gwf_model, expected_barrier_count, grid_type)
+    """
+    from flopy.utils.gridutil import get_disv_kwargs
+
+    grid_type = request.param
+
+    # Create simulation
+    sim = flopy.mf6.MFSimulation(sim_name=f"test_vhfb_{grid_type}")
+    tdis = flopy.mf6.ModflowTdis(sim)
+    ims = flopy.mf6.ModflowIms(sim)
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="test")
+
+    # Create discretization based on grid type
+    if grid_type == "dis":
+        # Structured grid with 3 layers
+        dis = flopy.mf6.ModflowGwfdis(
+            gwf,
+            nlay=3,
+            nrow=10,
+            ncol=10,
+            delr=100.0,
+            delc=100.0,
+            top=100.0,
+            botm=[50.0, 0.0, -50.0],
+        )
+        # Vertical HFB cellids: barriers between layers at same row/col
+        # Add some vertical barriers between layer 0 and 1
+        vhfb_data = [
+            [(0, 3, 4), (1, 3, 4), 1e-6],
+            [(0, 4, 4), (1, 4, 4), 1e-6],
+            [(0, 5, 4), (1, 5, 4), 1e-6],
+        ]
+        # Also add a few horizontal barriers for comparison
+        hhfb_data = [
+            [(1, 3, 4), (1, 3, 5), 1e-6],
+            [(1, 4, 4), (1, 4, 5), 1e-6],
+        ]
+        hfb_data = vhfb_data + hhfb_data
+        chd_spd = [[(0, 0, 0), 100.0], [(2, 9, 9), 95.0]]
+        expected_vertical_barriers = 3
+        expected_horizontal_barriers = 2
+
+    elif grid_type == "disv":
+        # Vertex grid with 3 layers
+        import numpy as np
+
+        disv_kwargs = get_disv_kwargs(
+            3, 10, 10, 100.0, 100.0, 100.0, np.array([50.0, 0.0, -50.0])
+        )
+        disv = flopy.mf6.ModflowGwfdisv(gwf, **disv_kwargs)
+        # Vertical HFB cellids for vertex grid: (layer, cell2d_id)
+        vhfb_data = [
+            [(0, 3 * 10 + 4), (1, 3 * 10 + 4), 1e-6],
+            [(0, 4 * 10 + 4), (1, 4 * 10 + 4), 1e-6],
+            [(0, 5 * 10 + 4), (1, 5 * 10 + 4), 1e-6],
+        ]
+        # Horizontal barriers
+        hhfb_data = [
+            [(1, 3 * 10 + 4), (1, 3 * 10 + 5), 1e-6],
+            [(1, 4 * 10 + 4), (1, 4 * 10 + 5), 1e-6],
+        ]
+        hfb_data = vhfb_data + hhfb_data
+        chd_spd = [[(0, 0), 100.0], [(2, 99), 95.0]]
+        expected_vertical_barriers = 3
+        expected_horizontal_barriers = 2
+
+    # Add packages
+    ic = flopy.mf6.ModflowGwfic(gwf, strt=100.0)
+    npf = flopy.mf6.ModflowGwfnpf(gwf, save_flows=True)
+    chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chd_spd)
+    hfb = flopy.mf6.ModflowGwfhfb(gwf, stress_period_data=hfb_data)
+
+    return gwf, expected_vertical_barriers, expected_horizontal_barriers, grid_type
+
+
+def test_plot_bc_vertical_hfb(vertical_hfb_model):
+    """Test plotting vertical HFB (barriers between vertically stacked cells).
+
+    Vertical HFBs should be rendered as patches (full cells) in map view,
+    while horizontal HFBs are rendered as lines.
+
+    Tests structured (DIS) and vertex (DISV) grids.
+    """
+    gwf, expected_vbarriers, expected_hbarriers, grid_type = vertical_hfb_model
+
+    # Test on layer 0 - should show vertical barriers as patches
+    fig = plt.figure(figsize=(8, 8))
+    ax = fig.add_subplot(1, 1, 1, aspect="equal")
+    mapview = flopy.plot.PlotMapView(model=gwf, layer=0, ax=ax)
+    mapview.plot_grid()
+
+    # Plot HFB
+    hfb_result = mapview.plot_bc("HFB", linewidth=3)
+
+    # Result should be a list containing both LineCollection (horizontal)
+    # and PatchCollection (vertical)
+    assert hfb_result is not None
+
+    # If both types exist, result is a list
+    if isinstance(hfb_result, list):
+        # Should have both line and patch collections
+        assert len(hfb_result) == 2, f"Expected 2 collections ({grid_type})"
+        has_lines = any(isinstance(c, LineCollection) for c in hfb_result)
+        has_patches = any(isinstance(c, PatchCollection) for c in hfb_result)
+        assert has_lines and has_patches
+
+    # plt.show()
+    plt.close(fig)
+
+    # Test on layer 1 - should show both vertical barriers and horizontal barriers
+    fig = plt.figure(figsize=(8, 8))
+    ax = fig.add_subplot(1, 1, 1, aspect="equal")
+    mapview = flopy.plot.PlotMapView(model=gwf, layer=1, ax=ax)
+    mapview.plot_grid()
+
+    hfb_result = mapview.plot_bc("HFB", linewidth=3)
+    assert hfb_result is not None
+
+    # plt.show()
+    plt.close(fig)

@@ -11,7 +11,7 @@ from numpy.lib.recfunctions import stack_arrays
 from ..utils import geometry, import_optional_dependency
 from ..utils.geospatial_utils import GeoSpatialUtil
 from . import plotutil
-from .plotutil import to_mp7_endpoints, to_mp7_pathlines
+from .plotutil import get_shared_face_3d, to_mp7_endpoints, to_mp7_pathlines
 
 warnings.simplefilter("always", PendingDeprecationWarning)
 
@@ -776,6 +776,161 @@ class PlotCrossSection:
             ax.add_collection(col)
         return col
 
+    def _is_vertical_barrier(self, cellid1, cellid2) -> bool:
+        """
+        Determine if a barrier is vertical (between vertically stacked cells).
+
+        Parameters
+        ----------
+        cellid1 : tuple
+            First cell ID
+        cellid2 : tuple
+            Second cell ID
+
+        Returns
+        -------
+        bool
+            True if barrier is vertical (cells differ only in layer), False otherwise
+        """
+        if len(cellid1) == 3:
+            # Structured grid: (layer, row, col)
+            # Vertical if layers differ but row and col are the same
+            return (
+                cellid1[0] != cellid2[0]
+                and cellid1[1] == cellid2[1]
+                and cellid1[2] == cellid2[2]
+            )
+        elif len(cellid1) == 2:
+            # Vertex grid: (layer, cell2d)
+            # Vertical if layers differ but cell2d is the same
+            return cellid1[0] != cellid2[0] and cellid1[1] == cellid2[1]
+        else:
+            # Unstructured grid: (node,)
+            # Infer from geometry: check the orientation of the shared face
+            # If the face is horizontal (all z-coords equal), it's a vertical barrier
+            # If the face is vertical (z-coords differ), it's a horizontal barrier
+            shared_face_3d = get_shared_face_3d(self.mg, cellid1, cellid2)
+            if shared_face_3d is None:
+                # No shared face found, can't determine orientation
+                return False
+
+            # Check if all z-coordinates are the same (horizontal face)
+            z_coords = [v[2] for v in shared_face_3d]
+            return np.allclose(z_coords, z_coords[0], rtol=1e-5)
+
+    def _cellid_to_node(self, cellid):
+        """
+        Convert a cellid tuple to a node number.
+
+        Parameters
+        ----------
+        cellid : tuple
+            Cell identifier
+
+        Returns
+        -------
+        int
+            Node number
+        """
+        if len(cellid) == 3:
+            # Structured grid: (layer, row, col)
+            layer, row, col = cellid
+            return layer * self.mg.nrow * self.mg.ncol + row * self.mg.ncol + col
+        elif len(cellid) == 2:
+            # Vertex grid: (layer, cell2d)
+            layer, cell2d = cellid
+            return layer * self._ncpl + cell2d
+        else:
+            # Unstructured grid: (node,)
+            return cellid[0]
+
+    def _plot_vertical_hfb_lines(self, color=None, **kwargs):
+        """
+        Plot vertical HFBs as lines at layer interfaces.
+
+        Parameters
+        ----------
+        color : str
+            Color for the lines
+        **kwargs : dict
+            Keyword arguments (linewidth, etc.)
+
+        Returns
+        -------
+        LineCollection or None
+        """
+        from matplotlib.collections import LineCollection
+
+        if (
+            not hasattr(self, "_vertical_hfbs_to_plot")
+            or not self._vertical_hfbs_to_plot
+        ):
+            return None
+
+        ax = kwargs.pop("ax", self.ax)
+        line_segments = []
+
+        for cellid1, cellid2 in self._vertical_hfbs_to_plot:
+            # Get the 2D cell identifier (row, col for DIS or cell2d for DISV)
+            if len(cellid1) == 3:
+                # Structured grid
+                node_2d = cellid1[1] * self.mg.ncol + cellid1[2]
+            elif len(cellid1) == 2:
+                # Vertex grid
+                node_2d = cellid1[1]
+            else:
+                # Unstructured - skip for now
+                continue
+
+            # Check if this cell intersects the cross section
+            if node_2d not in self.xypts:
+                continue
+
+            # Determine the layer interface elevation
+            # The interface is between the two layers - use the top of the lower layer
+            lower_layer = max(cellid1[0], cellid2[0])
+
+            # Get the interface elevation at this cell
+            if lower_layer < len(self.elev):
+                interface_elev = self.elev[lower_layer, node_2d]
+            else:
+                continue
+
+            # Get the x-coordinates along the cross section for this cell
+            # Need to find this cell in projpts - convert both cellids to nodes
+            node1 = self._cellid_to_node(cellid1)
+            node2 = self._cellid_to_node(cellid2)
+
+            # Get x-coordinates from either node's projection
+            xcoords = []
+            for node in [node1, node2]:
+                if node in self.projpts:
+                    poly_verts = self.projpts[node]
+                    # Extract x-coordinates (first element of each vertex)
+                    xs = [v[0] for v in poly_verts]
+                    xcoords.extend(xs)
+
+            if len(xcoords) >= 2:
+                # Create a line segment at the interface elevation
+                x_min = min(xcoords)
+                x_max = max(xcoords)
+                line_segments.append([(x_min, interface_elev), (x_max, interface_elev)])
+
+        # Clear the stored vertical HFBs
+        self._vertical_hfbs_to_plot = []
+
+        if not line_segments:
+            return None
+
+        # Create LineCollection
+        if "linewidth" not in kwargs and "lw" not in kwargs:
+            kwargs["linewidth"] = 2
+
+        lc = LineCollection(line_segments, colors=color, **kwargs)
+        ax.add_collection(lc)
+
+        return lc
+
     def plot_bc(self, name=None, package=None, kper=0, color=None, head=None, **kwargs):
         """
         Plot boundary conditions locations for a specific boundary
@@ -844,14 +999,28 @@ class PlotCrossSection:
                         and "cellid2" in mflist.dtype.names
                     ):
                         # Barrier packages (e.g., HFB) sit at interfaces between cells.
-                        # In cross sections, barriers are visible if the cross section
-                        # intersects them. Ideally we'd plot barriers only where they
-                        # intersect the cross section plane, but as a simpler method,
-                        # plot both cells that the barrier affects.
+                        # Separate horizontal and vertical barriers:
+                        # - Horizontal barriers: plot both affected cells as patches
+                        # - Vertical barriers: will plot as lines at layer interface
                         cellids = []
+                        vertical_hfbs = []
                         for entry in mflist:
-                            cellids.append(list(entry["cellid1"]))
-                            cellids.append(list(entry["cellid2"]))
+                            cellid1 = tuple(entry["cellid1"])
+                            cellid2 = tuple(entry["cellid2"])
+
+                            if self._is_vertical_barrier(cellid1, cellid2):
+                                # Store vertical HFBs for line plotting
+                                vertical_hfbs.append((cellid1, cellid2))
+                            else:
+                                # Horizontal barriers - plot both cells as patches
+                                cellids.append(list(entry["cellid1"]))
+                                cellids.append(list(entry["cellid2"]))
+
+                        # Store vertical HFBs for later processing
+                        if not hasattr(self, "_vertical_hfbs_to_plot"):
+                            self._vertical_hfbs_to_plot = []
+                        self._vertical_hfbs_to_plot.extend(vertical_hfbs)
+
                         if cellids:
                             t = np.array(cellids, dtype=int).T
                         else:
@@ -909,6 +1078,16 @@ class PlotCrossSection:
         patches = self.plot_array(
             plotarray, masked_values=[0], head=head, cmap=cmap, norm=norm, **kwargs
         )
+
+        # Plot vertical HFBs as lines at layer interfaces
+        line_collection = self._plot_vertical_hfb_lines(color=c, **kwargs)
+
+        # Return both patches and lines if both exist
+        if line_collection is not None:
+            if patches is not None:
+                return [patches, line_collection]
+            else:
+                return line_collection
 
         return patches
 

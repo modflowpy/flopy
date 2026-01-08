@@ -10,7 +10,7 @@ from numpy.lib.recfunctions import stack_arrays
 
 from ..utils import geometry
 from . import plotutil
-from .plotutil import to_mp7_endpoints, to_mp7_pathlines
+from .plotutil import get_shared_face, get_shared_face_3d, to_mp7_pathlines
 
 warnings.simplefilter("always", PendingDeprecationWarning)
 
@@ -439,9 +439,9 @@ class PlotMapView:
         ax = self._set_axes_limits(ax)
         return collection
 
-    def _get_shared_face(self, cellid1, cellid2) -> list | None:
+    def _is_vertical_barrier(self, cellid1, cellid2) -> bool:
         """
-        Get the coordinates of the shared face between two cells.
+        Determine if a barrier is vertical (between vertically stacked cells).
 
         Parameters
         ----------
@@ -452,43 +452,42 @@ class PlotMapView:
 
         Returns
         -------
-        list or None
-            List of two (x, y) tuples representing the shared face endpoints,
-            or None if cells don't share a face
+        bool
+            True if barrier is vertical (cells differ only in layer), False otherwise
         """
-        if cellid1 == cellid2:
-            raise ValueError("cellid1 and cellid2 must be different")
+        if len(cellid1) == 3:
+            # Structured grid: (layer, row, col)
+            # Vertical if layers differ but row and col are the same
+            return (
+                cellid1[0] != cellid2[0]
+                and cellid1[1] == cellid2[1]
+                and cellid1[2] == cellid2[2]
+            )
+        elif len(cellid1) == 2:
+            # Vertex grid: (layer, cell2d)
+            # Vertical if layers differ but cell2d is the same
+            return cellid1[0] != cellid2[0] and cellid1[1] == cellid2[1]
+        else:
+            # Unstructured grid: (node,)
+            # Infer from geometry: check the orientation of the shared face
+            # If the face is horizontal (all z-coords equal), it's a vertical barrier
+            # If the face is vertical (z-coords differ), it's a horizontal barrier
+            shared_face_3d = get_shared_face_3d(self.mg, cellid1, cellid2)
+            if shared_face_3d is None:
+                # No shared face found, can't determine orientation
+                return False
 
-        try:
-            if len(cellid1) == 3:
-                # Structured grid: (layer, row, col)
-                verts1 = self.mg.get_cell_vertices(cellid1[1], cellid1[2])
-                verts2 = self.mg.get_cell_vertices(cellid2[1], cellid2[2])
-            elif len(cellid1) == 2:
-                # Vertex grid: (layer, cell2d_id)
-                verts1 = self.mg.get_cell_vertices(cellid1[1])
-                verts2 = self.mg.get_cell_vertices(cellid2[1])
-            else:
-                # Unstructured grid: (node,)
-                verts1 = self.mg.get_cell_vertices(cellid1[0])
-                verts2 = self.mg.get_cell_vertices(cellid2[0])
-        except Exception:
-            return None
-
-        tol = 1e-5
-        shared_verts = []
-        for v1 in verts1:
-            for v2 in verts2:
-                if np.allclose(v1, v2, rtol=tol):  # reasonable tolerance?
-                    if not any(np.allclose(v1, sv, rtol=tol) for sv in shared_verts):
-                        shared_verts.append(v1)
-                    break
-
-        return shared_verts if len(shared_verts) >= 2 else None
+            # Check if all z-coordinates are the same (horizontal face)
+            z_coords = [v[2] for v in shared_face_3d]
+            return np.allclose(z_coords, z_coords[0], rtol=1e-5)
 
     def _plot_barrier_bc(self, barrier_data, color=None, name=None, **kwargs):
         """
-        Plot barrier-type boundary conditions (e.g., HFB) as lines on shared faces.
+        Plot barrier-type boundary conditions (e.g., HFB) as lines or patches.
+
+        Horizontal barriers (between horizontally adjacent cells) are plotted as
+        lines on shared faces. Vertical barriers (between vertically stacked cells)
+        are plotted as full cell patches.
 
         Parameters
         ----------
@@ -499,16 +498,18 @@ class PlotMapView:
         name : string
             Package name for color lookup
         **kwargs : dictionary
-            keyword arguments passed to LineCollection
+            keyword arguments passed to LineCollection or PatchCollection
 
         Returns
         -------
-        lc : matplotlib.collections.LineCollection
+        matplotlib.collections.LineCollection or PatchCollection
         """
         ax = kwargs.pop("ax", self.ax)
 
-        # Collect line segments for all barriers
-        line_segments = []
+        # Separate horizontal and vertical barriers
+        horizontal_line_segments = []
+        vertical_cell_indices = []
+
         for cellid1, cellid2 in barrier_data:
             # Only plot barriers on the current layer (for layered grids)
             # For DISU (len==1), plot all barriers since there's no layer filtering
@@ -516,13 +517,31 @@ class PlotMapView:
                 if cellid1[0] != self.layer and cellid2[0] != self.layer:
                     continue
 
-            shared_face = self._get_shared_face(cellid1, cellid2)
-            if shared_face is not None:
-                line_segments.append(shared_face)
+            # Check if this is a vertical barrier
+            if self._is_vertical_barrier(cellid1, cellid2):
+                # For vertical barriers, plot the cells on the current layer
+                if len(cellid1) >= 2:
+                    if cellid1[0] == self.layer:
+                        if len(cellid1) == 3:
+                            vertical_cell_indices.append(
+                                [self.layer, cellid1[1], cellid1[2]]
+                            )
+                        else:
+                            vertical_cell_indices.append([self.layer, cellid1[1]])
+                    if cellid2[0] == self.layer:
+                        if len(cellid2) == 3:
+                            vertical_cell_indices.append(
+                                [self.layer, cellid2[1], cellid2[2]]
+                            )
+                        else:
+                            vertical_cell_indices.append([self.layer, cellid2[1]])
+            else:
+                # Horizontal barrier - plot as line on shared face
+                shared_face = get_shared_face(self.mg, cellid1, cellid2)
+                if shared_face is not None:
+                    horizontal_line_segments.append(shared_face)
 
-        if not line_segments:
-            return None
-
+        # Determine color
         if color is None:
             key = name[:3].upper() if name else "HFB"
             c = plotutil.bc_color_dict.get(key, None)
@@ -531,14 +550,50 @@ class PlotMapView:
         else:
             c = color
 
-        if "linewidth" not in kwargs and "lw" not in kwargs:
-            kwargs["linewidth"] = 2
+        collections = []
 
-        collection = LineCollection(line_segments, colors=c, **kwargs)
-        ax.add_collection(collection)
+        # Plot horizontal barriers as lines
+        if horizontal_line_segments:
+            lc_kwargs = dict(kwargs.items())
+            if "linewidth" not in lc_kwargs and "lw" not in lc_kwargs:
+                lc_kwargs["linewidth"] = 2
+
+            lc = LineCollection(horizontal_line_segments, colors=c, **lc_kwargs)
+            ax.add_collection(lc)
+            collections.append(lc)
+
+        # Plot vertical barriers as patches
+        if vertical_cell_indices:
+            idx = np.array(vertical_cell_indices, dtype=int).T
+            pc_kwargs = {
+                k: v for k, v in kwargs.items() if k not in ["linewidth", "lw"]
+            }
+
+            # Create a plot array with 1s for cells to plot
+            plotarray = np.zeros(self.mg.shape, dtype=int)
+            if len(self.mg.shape) > 1:
+                plotarray[tuple(idx)] = 1
+            else:
+                plotarray[idx] = 1
+
+            # Mask the plot array
+            plotarray = np.ma.masked_equal(plotarray, 0)
+
+            # Set the colormap
+            cmap = matplotlib.colors.ListedColormap(["none", c])
+            bounds = [0, 1, 2]
+            norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+
+            # Plot using plot_array
+            pc = self.plot_array(plotarray, cmap=cmap, norm=norm, **pc_kwargs)
+            if pc is not None:
+                collections.append(pc)
+
+        if not collections:
+            return None
+
         ax = self._set_axes_limits(ax)
-
-        return collection
+        return collections if len(collections) > 1 else collections[0]
 
     def plot_bc(
         self,
