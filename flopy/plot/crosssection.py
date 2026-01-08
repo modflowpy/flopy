@@ -825,7 +825,6 @@ class PlotCrossSection:
                 p = [p]
 
             idx = np.array([])
-            is_barrier_package = False
 
             for pp in p:
                 if pp.package_type in ("lak", "sfr", "maw", "uzf"):
