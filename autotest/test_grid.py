@@ -25,6 +25,7 @@ from flopy.utils.cvfdutil import (
     centroid_of_polygon,
     to_cvfd,
 )
+from flopy.utils.gridutil import get_disu_kwargs, get_disv_kwargs
 from flopy.utils.lgrutil import Lgr
 from flopy.utils.triangle import Triangle
 from flopy.utils.voronoi import VoronoiGrid
@@ -188,6 +189,92 @@ def test_get_cell_vertices():
         mg.get_cell_vertices(0, i=0)
     with pytest.raises(TypeError):
         mg.get_cell_vertices(nn=0)
+
+
+def test_structured_grid_get_cell_vertices():
+    """Test StructuredGrid.get_cell_vertices() with various input forms"""
+    delr, delc = np.array([10.0] * 3), np.array([10.0] * 4)
+    sg = StructuredGrid(delr=delr, delc=delc)
+
+    # Test node kwarg
+    v1 = sg.get_cell_vertices(node=0)
+    expected = [
+        (np.float64(0.0), np.float64(40.0)),
+        (np.float64(10.0), np.float64(40.0)),
+        (np.float64(10.0), np.float64(30.0)),
+        (np.float64(0.0), np.float64(30.0)),
+    ]
+    assert v1 == expected
+
+    # Test positional args (i, j)
+    v2 = sg.get_cell_vertices(3, 0)
+
+    # Test cellid as tuple (i, j)
+    v3 = sg.get_cell_vertices((3, 0))
+    assert v2 == v3, "Positional and tuple forms should match"
+
+    # Test cellid as 3-element tuple (layer, i, j) - layer ignored
+    v4 = sg.get_cell_vertices(cellid=(0, 3, 0))
+    assert v2 == v4, "2-element and 3-element forms should match"
+
+    # Test named i, j kwargs (backward compatibility)
+    v5 = sg.get_cell_vertices(i=3, j=0)
+    assert v2 == v5, "Named i,j should match"
+
+
+def test_vertex_grid_get_cell_vertices():
+    """Test VertexGrid.get_cell_vertices() with various input forms"""
+    disv_props = get_disv_kwargs(2, 10, 10, 10.0, 10.0, 100.0, [50.0, 0.0])
+    # Remove nvert which is not needed for VertexGrid constructor
+    disv_props.pop("nvert", None)
+    vg = VertexGrid(**disv_props)
+
+    # Test cell2d index as positional arg
+    v1 = vg.get_cell_vertices(5)
+
+    # Test (layer, cell2d) tuple - layer ignored for 2D vertices
+    v2 = vg.get_cell_vertices((0, 5))
+    assert v1 == v2, "cell2d and (layer, cell2d) should match"
+
+    # Test named cellid kwarg
+    v3 = vg.get_cell_vertices(cellid=5)
+    assert v1 == v3, "Positional and kwarg should match"
+
+    # Test node number (>= ncpl, should be converted to cell2d)
+    # Node 105 = layer 1, cell2d 5 (ncpl=100)
+    v4 = vg.get_cell_vertices(node=105)
+
+    # Verify it's the same as (1, 5)
+    v5 = vg.get_cell_vertices((1, 5))
+    assert v4 == v5, "Node and (layer, cell2d) should match"
+
+
+def test_unstructured_grid_get_cell_vertices():
+    """Test UnstructuredGrid.get_cell_vertices() with various input forms"""
+    disu_props = get_disu_kwargs(
+        1, 10, 10, 10.0, 10.0, 100.0, [0.0], return_vertices=True
+    )
+    # Extract only the parameters needed for UnstructuredGrid
+    ug = UnstructuredGrid(
+        vertices=disu_props["vertices"],
+        cell2d=disu_props["cell2d"],
+        top=disu_props["top"],
+    )
+
+    # Test node as positional arg
+    v1 = ug.get_cell_vertices(5)
+
+    # Test (node,) single-element tuple
+    v2 = ug.get_cell_vertices((5,))
+    assert v1 == v2, "Int and tuple forms should match"
+
+    # Test node kwarg
+    v3 = ug.get_cell_vertices(node=5)
+    assert v1 == v3, "cellid and node should match"
+
+    # Test cellid kwarg
+    v4 = ug.get_cell_vertices(cellid=5)
+    assert v1 == v4, "Positional and kwarg should match"
 
 
 def test_get_lrc_get_node():

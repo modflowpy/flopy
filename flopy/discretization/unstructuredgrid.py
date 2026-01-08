@@ -847,16 +847,60 @@ class UnstructuredGrid(Grid):
         new_botm = np.expand_dims(self._botm, 0)
         return np.concatenate((new_top, new_botm), axis=0)
 
-    def get_cell_vertices(self, cellid):
+    def get_cell_vertices(self, cellid=None, node=None):
         """
-        Method to get a set of cell vertices for a single cell
-            used in the Shapefile export utilities
-        :param cellid: (int) cellid number
+        Get a set of cell vertices for a single cell.
+
+        Parameters
+        ----------
+        cellid : int or tuple, optional
+            Cell identifier. Can be:
+            - node number (int)
+            - (node,) single-element tuple
+        node : int, optional
+            Node number, mutually exclusive with cellid
+
         Returns
-        ------- list of x,y cell vertices
+        -------
+        list
+            list of (x, y) cell vertex coordinates
+
+        Examples
+        --------
+        >>> import flopy
+        >>> from flopy.utils.gridutil import get_disu_kwargs
+        >>> disu_props = get_disu_kwargs(1, 10, 10, 1.0, 1.0, 1.0, [0.0])
+        >>> ug = flopy.discretization.UnstructuredGrid(**disu_props)
+        >>> ug.get_cell_vertices(5)  # node number
+        >>> ug.get_cell_vertices((5,))  # (node,) tuple
+        >>> ug.get_cell_vertices(node=5)  # explicit node kwarg
+        >>> ug.get_cell_vertices(cellid=5)  # explicit cellid kwarg
         """
+        # Handle arguments
+        if cellid is not None and node is not None:
+            raise ValueError("cellid and node are mutually exclusive")
+
+        if cellid is None and node is None:
+            raise TypeError("expected cellid or node argument")
+
+        # Use cellid if provided, otherwise use node
+        if node is not None:
+            node_idx = node
+        else:
+            node_idx = cellid
+
+        # Handle tuple form
+        if isinstance(node_idx, (tuple, list)):
+            if len(node_idx) == 1:
+                node_idx = node_idx[0]
+            else:
+                raise ValueError(
+                    f"cellid tuple must have 1 element for "
+                    f"unstructured grids, got {len(node_idx)}"
+                )
+
         self._copy_cache = False
-        cell_vert = list(zip(self.xvertices[cellid], self.yvertices[cellid]))
+        cell_vert = list(zip(self.xvertices[node_idx], self.yvertices[node_idx]))
         self._copy_cache = True
         return cell_vert
 

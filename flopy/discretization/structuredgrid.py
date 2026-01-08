@@ -1148,15 +1148,20 @@ class StructuredGrid(Grid):
 
         Parameters
         ----------
+        cellid : int or tuple, optional
+            Cell identifier. Can be:
+            - node number (int)
+            - (row, col) tuple
+            - (layer, row, col) tuple (layer is ignored, vertices are 2D)
         node : int, optional
-            Node index, mutually exclusive with i and j
+            Node index, mutually exclusive with cellid, i, and j
         i, j : int, optional
-            Row and column index, mutually exclusive with node
+            Row and column index, mutually exclusive with cellid and node
 
         Returns
         -------
         list
-            list of tuples with x,y coordinates to cell vertices
+            list of (x, y) cell vertex coordinates
 
         Examples
         --------
@@ -1168,26 +1173,63 @@ class StructuredGrid(Grid):
         [(0.0, 40.0), (10.0, 40.0), (10.0, 30.0), (0.0, 30.0)]
         >>> sg.get_cell_vertices(3, 0)
         [(0.0, 10.0), (10.0, 10.0), (10.0, 0.0), (0.0, 0.0)]
+        >>> sg.get_cell_vertices((3, 0))
+        [(0.0, 10.0), (10.0, 10.0), (10.0, 0.0), (0.0, 0.0)]
+        >>> sg.get_cell_vertices(cellid=(0, 3, 0))
+        [(0.0, 10.0), (10.0, 10.0), (10.0, 0.0), (0.0, 0.0)]
         """
         if kwargs:
             if args:
                 raise TypeError("mixed positional and keyword arguments not supported")
+            elif "cellid" in kwargs:
+                cellid = kwargs.pop("cellid")
+                # Handle cellid as int, tuple of 2, or tuple of 3
+                if isinstance(cellid, (tuple, list)):
+                    if len(cellid) == 2:
+                        i, j = cellid
+                    elif len(cellid) == 3:
+                        # (layer, row, col) - ignore layer
+                        _, i, j = cellid
+                    else:
+                        raise ValueError(
+                            f"cellid tuple must have 2 or 3 elements, got {len(cellid)}"
+                        )
+                else:
+                    # cellid is a node number
+                    _, i, j = self.get_lrc(cellid)[0]
             elif "node" in kwargs:
                 _, i, j = self.get_lrc(kwargs.pop("node"))[0]
             elif "i" in kwargs and "j" in kwargs:
                 i = kwargs.pop("i")
                 j = kwargs.pop("j")
+            else:
+                raise TypeError(
+                    "expected cellid, node, or i and j as keyword arguments"
+                )
             if kwargs:
                 unused = ", ".join(kwargs.keys())
                 raise TypeError(f"unused keyword arguments: {unused}")
         elif len(args) == 0:
             raise TypeError("expected one or more arguments")
-
-        if len(args) == 1:
-            _, i, j = self.get_lrc(args[0])[0]
+        elif len(args) == 1:
+            # Single arg could be node number or (row, col) or (layer, row, col) tuple
+            arg = args[0]
+            if isinstance(arg, (tuple, list)):
+                if len(arg) == 2:
+                    i, j = arg
+                elif len(arg) == 3:
+                    # (layer, row, col) - ignore layer
+                    _, i, j = arg
+                else:
+                    raise ValueError(
+                        f"cellid tuple must have 2 or 3 elements, got {len(arg)}"
+                    )
+            else:
+                # Node number
+                _, i, j = self.get_lrc(arg)[0]
         elif len(args) == 2:
             i, j = args
-        elif len(args) > 2:
+        else:
             raise TypeError("too many arguments")
 
         self._copy_cache = False
