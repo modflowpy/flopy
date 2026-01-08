@@ -10,7 +10,12 @@ from numpy.lib.recfunctions import stack_arrays
 
 from ..utils import geometry
 from . import plotutil
-from .plotutil import get_shared_face, get_shared_face_3d, to_mp7_pathlines
+from .plotutil import (
+    get_shared_face,
+    get_shared_face_3d,
+    is_vertical_barrier,
+    to_mp7_pathlines,
+)
 
 warnings.simplefilter("always", PendingDeprecationWarning)
 
@@ -439,48 +444,6 @@ class PlotMapView:
         ax = self._set_axes_limits(ax)
         return collection
 
-    def _is_vertical_barrier(self, cellid1, cellid2) -> bool:
-        """
-        Determine if a barrier is vertical (between vertically stacked cells).
-
-        Parameters
-        ----------
-        cellid1 : tuple
-            First cell ID
-        cellid2 : tuple
-            Second cell ID
-
-        Returns
-        -------
-        bool
-            True if barrier is vertical (cells differ only in layer), False otherwise
-        """
-        if len(cellid1) == 3:
-            # Structured grid: (layer, row, col)
-            # Vertical if layers differ but row and col are the same
-            return (
-                cellid1[0] != cellid2[0]
-                and cellid1[1] == cellid2[1]
-                and cellid1[2] == cellid2[2]
-            )
-        elif len(cellid1) == 2:
-            # Vertex grid: (layer, cell2d)
-            # Vertical if layers differ but cell2d is the same
-            return cellid1[0] != cellid2[0] and cellid1[1] == cellid2[1]
-        else:
-            # Unstructured grid: (node,)
-            # Infer from geometry: check the orientation of the shared face
-            # If the face is horizontal (all z-coords equal), it's a vertical barrier
-            # If the face is vertical (z-coords differ), it's a horizontal barrier
-            shared_face_3d = get_shared_face_3d(self.mg, cellid1, cellid2)
-            if shared_face_3d is None:
-                # No shared face found, can't determine orientation
-                return False
-
-            # Check if all z-coordinates are the same (horizontal face)
-            z_coords = [v[2] for v in shared_face_3d]
-            return np.allclose(z_coords, z_coords[0], rtol=1e-5)
-
     def _plot_barrier_bc(self, barrier_data, color=None, name=None, **kwargs):
         """
         Plot barrier-type boundary conditions (e.g., HFB) as lines or patches.
@@ -518,7 +481,7 @@ class PlotMapView:
                     continue
 
             # Check if this is a vertical barrier
-            if self._is_vertical_barrier(cellid1, cellid2):
+            if is_vertical_barrier(self.mg, cellid1, cellid2):
                 # For vertical barriers, plot the cells on the current layer
                 if len(cellid1) >= 2:
                     if cellid1[0] == self.layer:
