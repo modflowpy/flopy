@@ -898,9 +898,9 @@ class UnstructuredGrid(Grid):
         self._copy_cache = True
         return cell_vert
 
-    def get_node(self, cellid_list, node2d=False):
+    def get_node(self, cellids, node2d=False):
         """
-        Get node number from DISU cellids.
+        Get node number from cellids.
 
         For DISU grids, cellid IS the node number. The node2d
         parameter is accepted for API consistency but has no effect.
@@ -932,11 +932,11 @@ class UnstructuredGrid(Grid):
         >>> ug.get_node([(5,), (10,)])
         [5, 10]
         """
-        if not isinstance(cellid_list, list):
-            cellid_list = [cellid_list]
+        if not isinstance(cellids, list):
+            cellids = [cellids]
 
         nodes = []
-        for cellid in cellid_list:
+        for cellid in cellids:
             # Accept both plain integers and tuples
             if isinstance(cellid, (int, np.integer)):
                 node = int(cellid)

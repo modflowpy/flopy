@@ -544,7 +544,7 @@ class VertexGrid(Grid):
         self._copy_cache = True
         return cell_verts
 
-    def get_node(self, cellid_list, node2d=False):
+    def get_node(self, cellids, node2d=False):
         """
         Get node number from a list of zero-based MODFLOW
         (layer, cell2d) tuples.
@@ -574,19 +574,19 @@ class VertexGrid(Grid):
         >>> vg.get_node([(0, 5), (1, 5)], node2d=True)
         [5, 5]
         """
-        if not isinstance(cellid_list, list):
-            cellid_list = [cellid_list]
+        if not isinstance(cellids, list):
+            cellids = [cellids]
 
         # Validate
-        for cellid in cellid_list:
+        for cellid in cellids:
             if len(cellid) != 2:
                 raise ValueError("VertexGrid cellid must be (layer, cell2d) tuple")
 
         if node2d:
-            return [cell2d for lay, cell2d in cellid_list]
+            return [cell2d for lay, cell2d in cellids]
         else:
             nodes = []
-            for lay, cell2d in cellid_list:
+            for lay, cell2d in cellids:
                 if lay < 0 or lay >= self.nlay:
                     raise IndexError(f"Layer {lay} out of range [0, {self.nlay})")
                 if cell2d < 0 or cell2d >= self.ncpl:
