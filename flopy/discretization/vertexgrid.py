@@ -544,6 +544,56 @@ class VertexGrid(Grid):
         self._copy_cache = True
         return cell_verts
 
+    def get_node(self, cellid_list, node2d=False):
+        """
+        Get node number from a list of zero-based MODFLOW
+        (layer, cell2d) tuples.
+
+        Parameters
+        ----------
+        cellid_list : tuple of int or list of tuple of int
+            Zero-based (layer, cell2d) tuples
+        node2d : bool, optional
+            If True, return 2D node numbers (cell2d values).
+            If False (default), return 3D node numbers.
+
+        Returns
+        -------
+        list
+            list of MODFLOW nodes for each (layer, cell2d) tuple
+            in the input list
+
+        Examples
+        --------
+        >>> import flopy
+        >>> vg = flopy.discretization.VertexGrid(nlay=3, ncpl=100, ...)
+        >>> vg.get_node((0, 5))
+        [5]
+        >>> vg.get_node((1, 5))
+        [105]
+        >>> vg.get_node([(0, 5), (1, 5)], node2d=True)
+        [5, 5]
+        """
+        if not isinstance(cellid_list, list):
+            cellid_list = [cellid_list]
+
+        # Validate
+        for cellid in cellid_list:
+            if len(cellid) != 2:
+                raise ValueError("VertexGrid cellid must be (layer, cell2d) tuple")
+
+        if node2d:
+            return [cell2d for lay, cell2d in cellid_list]
+        else:
+            nodes = []
+            for lay, cell2d in cellid_list:
+                if lay < 0 or lay >= self.nlay:
+                    raise IndexError(f"Layer {lay} out of range [0, {self.nlay})")
+                if cell2d < 0 or cell2d >= self.ncpl:
+                    raise IndexError(f"Cell2d {cell2d} out of range [0, {self.ncpl})")
+                nodes.append(lay * self.ncpl + cell2d)
+            return nodes
+
     def plot(self, **kwargs):
         """
         Plot the grid lines.

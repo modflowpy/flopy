@@ -924,13 +924,12 @@ def mflist_export(f: Union[str, PathLike, NetCdf], mfl, **kwargs):
                     cell_index_name = (
                         "cellid_cell" if "cellid_cell" in df.columns else "cell"
                     )
+                    cellids = list(
+                        zip(df[layer_index_name].values, df[cell_index_name].values)
+                    )
+                    nodes = modelgrid.get_node(cellids)
                     verts = np.array(
-                        [
-                            modelgrid.get_cell_vertices(layer * modelgrid.ncpl + cell)
-                            for layer, cell in zip(
-                                df[layer_index_name].values, df[cell_index_name].values
-                            )
-                        ]
+                        [modelgrid.get_cell_vertices(node) for node in nodes]
                     )
                 else:
                     row_index_name = "i" if "i" in df.columns else "cellid_row"

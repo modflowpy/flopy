@@ -795,17 +795,7 @@ class PlotCrossSection:
         int
             Node number
         """
-        if len(cellid) == 3:
-            # Structured grid: (layer, row, col)
-            layer, row, col = cellid
-            return layer * self.mg.nrow * self.mg.ncol + row * self.mg.ncol + col
-        elif len(cellid) == 2:
-            # Vertex grid: (layer, cell2d)
-            layer, cell2d = cellid
-            return layer * self._ncpl + cell2d
-        else:
-            # Unstructured grid: (node,)
-            return cellid[0]
+        return self.mg.get_node([cellid])[0]
 
     def _plot_vertical_hfb_lines(self, color=None, **kwargs):
         """
@@ -835,12 +825,9 @@ class PlotCrossSection:
 
         for cellid1, cellid2 in self._vertical_hfbs_to_plot:
             # Get the 2D cell identifier (row, col for DIS or cell2d for DISV)
-            if len(cellid1) == 3:
-                # Structured grid
-                node_2d = cellid1[1] * self.mg.ncol + cellid1[2]
-            elif len(cellid1) == 2:
-                # Vertex grid
-                node_2d = cellid1[1]
+            if len(cellid1) == 3 or len(cellid1) == 2:
+                # Structured or vertex grid
+                node_2d = self.mg.get_node([cellid1], node2d=True)[0]
             else:
                 # Unstructured - skip for now
                 continue

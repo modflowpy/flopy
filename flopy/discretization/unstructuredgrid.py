@@ -898,6 +898,63 @@ class UnstructuredGrid(Grid):
         self._copy_cache = True
         return cell_vert
 
+    def get_node(self, cellid_list, node2d=False):
+        """
+        Get node number from DISU cellids.
+
+        For DISU grids, cellid IS the node number. The node2d
+        parameter is accepted for API consistency but has no effect.
+
+        Parameters
+        ----------
+        cellid_list : int, tuple of int, or list of int/tuple
+            DISU cellid(s). Can be a plain integer, a tuple (node,),
+            or a list of integers or tuples.
+        node2d : bool, optional
+            Accepted for API consistency. Has no effect for
+            unstructured grids (no layer concept).
+
+        Returns
+        -------
+        list
+            list of MODFLOW node numbers
+
+        Examples
+        --------
+        >>> import flopy
+        >>> ug = flopy.discretization.UnstructuredGrid(ncpl=[100], ...)
+        >>> ug.get_node(5)
+        [5]
+        >>> ug.get_node((5,))
+        [5]
+        >>> ug.get_node([5, 10])
+        [5, 10]
+        >>> ug.get_node([(5,), (10,)])
+        [5, 10]
+        """
+        if not isinstance(cellid_list, list):
+            cellid_list = [cellid_list]
+
+        nodes = []
+        for cellid in cellid_list:
+            # Accept both plain integers and tuples
+            if isinstance(cellid, (int, np.integer)):
+                node = int(cellid)
+            elif isinstance(cellid, (tuple, list)):
+                if len(cellid) != 1:
+                    raise ValueError(
+                        "UnstructuredGrid cellid tuple must have 1 element"
+                    )
+                node = cellid[0]
+            else:
+                raise TypeError(f"Expected int or tuple, got {type(cellid).__name__}")
+
+            if node < 0 or node >= self.nnodes:
+                raise IndexError(f"Node {node} out of range [0, {self.nnodes})")
+            nodes.append(node)
+
+        return nodes
+
     def plot(self, **kwargs):
         """
         Plot the grid lines.

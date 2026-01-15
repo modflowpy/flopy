@@ -1878,15 +1878,11 @@ class CellBudgetFile:
         return cellid
 
     def _cellid_to_node(self, cellids) -> list[int]:
-        if self.modelgrid.grid_type == "structured":
-            return [
-                k * (self.nrow * self.ncol) + i * self.ncol + j + 1
-                for k, i, j in cellids
-            ]
-        elif self.modelgrid.grid_type == "vertex":
-            return [k * self.modelgrid.ncpl + cell + 1 for k, cell in cellids]
-        else:
-            return [node + 1 for node in cellids]
+        """Convert 0-based cellids to 1-based MODFLOW node numbers."""
+        # Get 0-based nodes from grid, then convert to 1-based (vectorized)
+        # UnstructuredGrid.get_node() accepts both plain ints and tuples
+        nodes_0based = self.modelgrid.get_node(cellids)
+        return (np.array(nodes_0based) + 1).tolist()
 
     def get_record(self, idx, full3D=False):
         """

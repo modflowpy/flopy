@@ -1272,7 +1272,7 @@ class StructuredGrid(Grid):
             shape = tuple(dim or 1 for dim in shape)
         return list(zip(*np.unravel_index(nodes, shape)))
 
-    def get_node(self, lrc_list):
+    def get_node(self, lrc_list, node2d=False):
         """
         Get node number from a list of zero-based MODFLOW
         layer, row, column tuples.
@@ -1281,6 +1281,9 @@ class StructuredGrid(Grid):
         ----------
         lrc_list : tuple of int or list of tuple of int
             Zero-based layer, row, column tuples
+        node2d : bool, optional
+            If True, return 2D node numbers (ignore layer).
+            If False (default), return 3D node numbers.
 
         Returns
         -------
@@ -1299,8 +1302,15 @@ class StructuredGrid(Grid):
         """
         if not isinstance(lrc_list, list):
             lrc_list = [lrc_list]
-        multi_index = tuple(np.array(lrc_list).T)
-        shape = self.shape
+
+        if node2d:
+            rc_list = [(row, col) for lay, row, col in lrc_list]
+            multi_index = tuple(np.array(rc_list).T)
+            shape = (self.nrow, self.ncol)
+        else:
+            multi_index = tuple(np.array(lrc_list).T)
+            shape = self.shape
+
         if shape[0] is None:
             shape = tuple(dim or 1 for dim in shape)
         return np.ravel_multi_index(multi_index, shape).tolist()

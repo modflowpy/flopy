@@ -1761,3 +1761,94 @@ def test_structured_grid_intersect_edge_case(simple_structured_grid):
     assert lay is None, f"Expected lay=None, got {lay}"
     assert np.isnan(row), f"Expected row=nan, got {row}"
     assert np.isnan(col), f"Expected col=nan, got {col}"
+
+
+def test_structured_grid_get_node():
+    sg = StructuredGrid(nlay=3, nrow=4, ncol=5, delr=np.ones(5), delc=np.ones(4))
+
+    # 3D node numbers
+    assert sg.get_node((0, 0, 0)) == [0]
+    assert sg.get_node((1, 0, 0)) == [20]
+    assert sg.get_node((0, 1, 2)) == [7]
+    assert sg.get_node([(0, 0, 0), (1, 0, 0)]) == [0, 20]
+    assert sg.get_node([(0, 0, 0), (2, 3, 4)]) == [0, 59]
+
+    # 2D node numbers (layer ignored)
+    assert sg.get_node((0, 1, 2), node2d=True) == [7]
+    assert sg.get_node((1, 1, 2), node2d=True) == [7]
+    assert sg.get_node((2, 1, 2), node2d=True) == [7]
+    assert sg.get_node([(0, 0, 0), (1, 0, 0), (2, 1, 2)], node2d=True) == [0, 0, 7]
+
+
+def test_vertex_grid_get_node():
+    nlay = 3
+    ncpl = 100
+    vertices = [[i, float(i % 10), float(i // 10)] for i in range(121)]
+    cell2d = []
+    for i in range(ncpl):
+        # Simple quad cells
+        iv = [i, i + 1, i + 11, i + 10]
+        cell2d.append([i, 0.0, 0.0, 4] + iv)
+    vg = VertexGrid(
+        vertices=vertices,
+        cell2d=cell2d,
+        nlay=nlay,
+        ncpl=ncpl,
+    )
+
+    # 3D node number
+    assert vg.get_node((0, 5)) == [5]
+    assert vg.get_node((1, 5)) == [105]
+    assert vg.get_node((2, 99)) == [299]
+    assert vg.get_node([(0, 5), (1, 5)]) == [5, 105]
+
+    # 2D node number
+    assert vg.get_node((0, 5), node2d=True) == [5]
+    assert vg.get_node((1, 5), node2d=True) == [5]
+    assert vg.get_node((2, 5), node2d=True) == [5]
+    assert vg.get_node([(0, 10), (1, 20), (2, 30)], node2d=True) == [10, 20, 30]
+
+    with pytest.raises(ValueError, match="VertexGrid cellid must be"):
+        vg.get_node((0, 1, 2))
+
+    with pytest.raises(IndexError, match=r"Layer .* out of range"):
+        vg.get_node((5, 10))
+
+    with pytest.raises(IndexError, match=r"Cell2d .* out of range"):
+        vg.get_node((0, 200))
+
+
+def test_unstructured_grid_get_node():
+    ncpl = [100]
+    vertices = [[i, float(i % 10), float(i // 10)] for i in range(121)]
+    iverts = [[i, i + 1, i + 11, i + 10] for i in range(100)]
+    ug = UnstructuredGrid(
+        vertices=vertices,
+        iverts=iverts,
+        ncpl=ncpl,
+    )
+
+    # Test plain integers
+    assert ug.get_node(5) == [5]
+    assert ug.get_node(10) == [10]
+
+    # Test tuples
+    assert ug.get_node((5,)) == [5]
+    assert ug.get_node((10,)) == [10]
+
+    # Test list of integers
+    assert ug.get_node([5, 10, 99]) == [5, 10, 99]
+
+    # Test list of tuples
+    assert ug.get_node([(5,), (10,), (99,)]) == [5, 10, 99]
+
+    # node2d parameter should have no effect
+    assert ug.get_node(5, node2d=True) == [5]
+    assert ug.get_node((5,), node2d=True) == [5]
+    assert ug.get_node([5, 10], node2d=True) == [5, 10]
+
+    with pytest.raises(ValueError, match="UnstructuredGrid cellid"):
+        ug.get_node((0, 1))
+
+    with pytest.raises(IndexError, match=r"Node .* out of range"):
+        ug.get_node(200)
