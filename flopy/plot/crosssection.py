@@ -13,7 +13,7 @@ from ..utils.geospatial_utils import GeoSpatialUtil
 from . import plotutil
 from .plotutil import (
     get_shared_face_3d,
-    is_vertical_barrier,
+    is_vertical,
     to_mp7_endpoints,
     to_mp7_pathlines,
 )
@@ -781,22 +781,6 @@ class PlotCrossSection:
             ax.add_collection(col)
         return col
 
-    def _cellid_to_node(self, cellid):
-        """
-        Convert a cellid tuple to a node number.
-
-        Parameters
-        ----------
-        cellid : tuple
-            Cell identifier
-
-        Returns
-        -------
-        int
-            Node number
-        """
-        return self.mg.get_node([cellid])[0]
-
     def _plot_vertical_hfb_lines(self, color=None, **kwargs):
         """
         Plot vertical HFBs as lines at layer interfaces.
@@ -848,8 +832,8 @@ class PlotCrossSection:
 
             # Get the x-coordinates along the cross section for this cell
             # Need to find this cell in projpts - convert both cellids to nodes
-            node1 = self._cellid_to_node(cellid1)
-            node2 = self._cellid_to_node(cellid2)
+            node1 = self.mg.get_node([cellid1])[0]
+            node2 = self.mg.get_node([cellid2])[0]
 
             # Get x-coordinates from either node's projection
             xcoords = []
@@ -958,11 +942,11 @@ class PlotCrossSection:
                             cellid1 = tuple(entry["cellid1"])
                             cellid2 = tuple(entry["cellid2"])
 
-                            if is_vertical_barrier(self.mg, cellid1, cellid2):
-                                # Store vertical HFBs for line plotting
+                            if not is_vertical(self.mg, cellid1, cellid2):
+                                # horizontal face, vertical barrier
                                 vertical_hfbs.append((cellid1, cellid2))
                             else:
-                                # Horizontal barriers - plot both cells as patches
+                                # vertical face, horizontal barrier
                                 cellids.append(list(entry["cellid1"]))
                                 cellids.append(list(entry["cellid2"]))
 

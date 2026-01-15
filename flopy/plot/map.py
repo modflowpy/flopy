@@ -13,7 +13,7 @@ from . import plotutil
 from .plotutil import (
     get_shared_face,
     get_shared_face_3d,
-    is_vertical_barrier,
+    is_vertical,
     to_mp7_pathlines,
 )
 
@@ -469,20 +469,18 @@ class PlotMapView:
         """
         ax = kwargs.pop("ax", self.ax)
 
-        # Separate horizontal and vertical barriers
         horizontal_line_segments = []
         vertical_cell_indices = []
 
         for cellid1, cellid2 in barrier_data:
             # Only plot barriers on the current layer (for layered grids)
             # For DISU (len==1), plot all barriers since there's no layer filtering
-            if len(cellid1) >= 2:  # DIS or DISV (has layer info)
+            if len(cellid1) >= 2:
                 if cellid1[0] != self.layer and cellid2[0] != self.layer:
                     continue
 
-            # Check if this is a vertical barrier
-            if is_vertical_barrier(self.mg, cellid1, cellid2):
-                # For vertical barriers, plot the cells on the current layer
+            # horizontal face, vertical barrier
+            if not is_vertical(self.mg, cellid1, cellid2):
                 if len(cellid1) >= 2:
                     if cellid1[0] == self.layer:
                         if len(cellid1) == 3:
@@ -499,7 +497,7 @@ class PlotMapView:
                         else:
                             vertical_cell_indices.append([self.layer, cellid2[1]])
             else:
-                # Horizontal barrier - plot as line on shared face
+                # vertical face, horizontal barrier
                 shared_face = get_shared_face(self.mg, cellid1, cellid2)
                 if shared_face is not None:
                     horizontal_line_segments.append(shared_face)
