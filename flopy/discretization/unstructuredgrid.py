@@ -73,6 +73,11 @@ class UnstructuredGrid(Grid):
         optional number of connections per node array
     ja : list or ndarray
         optional jagged connection array
+    ihc : list or ndarray
+        optional horizontal connection indicator array (for MODFLOW 6 DISU).
+        For each connection in the ja array: ihc = 0 indicates a vertical
+        connection, ihc = 1 or 2 indicates a horizontal connection, with 2
+        indicating that horizontal connections are vertically staggered.
     **kwargs : dict, optional
         Support deprecated keyword options.
 
@@ -132,6 +137,7 @@ class UnstructuredGrid(Grid):
         angrot=0.0,
         iac=None,
         ja=None,
+        ihc=None,
         cell2d=None,
         **kwargs,
     ):
@@ -187,6 +193,7 @@ class UnstructuredGrid(Grid):
 
         self._iac = iac
         self._ja = ja
+        self._ihc = ihc
 
     def set_ncpl(self, ncpl):
         if isinstance(ncpl, int):
@@ -298,6 +305,10 @@ class UnstructuredGrid(Grid):
     @property
     def ja(self):
         return self._ja
+
+    @property
+    def ihc(self):
+        return self._ihc
 
     @property
     def ncpl(self):
@@ -656,6 +667,9 @@ class UnstructuredGrid(Grid):
                 xoff=self.xoffset * factor,
                 yoff=self.yoffset * factor,
                 angrot=self.angrot,
+                iac=self._iac,
+                ja=self._ja,
+                ihc=self._ihc,
             )
         else:
             raise AssertionError("Grid is not complete and cannot be converted")
@@ -716,6 +730,7 @@ class UnstructuredGrid(Grid):
                     angrot=self.angrot,
                     iac=self._iac,
                     ja=self._ja,
+                    ihc=self._ihc,
                 )
 
     def intersect(self, x, y, z=None, local=False, forgive=False):

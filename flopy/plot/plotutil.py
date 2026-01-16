@@ -3064,6 +3064,11 @@ def is_vertical_barrier(mg, cellid1, cellid2) -> bool:
     """
     Determine if a barrier is vertical (between vertically stacked cells).
 
+    For structured (DIS) and vertex (DISV) grids, uses cellid structure to
+    determine orientation. For unstructured (DISU) grids, prefers to use the
+    ihc (horizontal connection indicator) array if available, falling back to
+    geometric analysis of shared face z-coordinates.
+
     Parameters
     ----------
     mg : Grid
@@ -3092,14 +3097,28 @@ def is_vertical_barrier(mg, cellid1, cellid2) -> bool:
         return cellid1[0] != cellid2[0] and cellid1[1] == cellid2[1]
     else:
         # Unstructured grid: (node,)
-        # Infer from geometry: check the orientation of the shared face
-        # If the face is horizontal (all z-coords equal), it's a vertical barrier
-        # If the face is vertical (z-coords differ), it's a horizontal barrier
-        shared_face_3d = get_shared_face_3d(mg, cellid1, cellid2)
-        if shared_face_3d is None:
-            # No shared face found, can't determine orientation
-            return False
+        if mg.grid_type != "unstructured":
+            raise ValueError("Given 1-element node number, expected unstructured grid")
 
-        # Check if all z-coordinates are the same (horizontal face)
+        # Try to use connectivity data if available
+        if mg.ihc is not None and mg.iac is not None:
+            node1 = cellid1[0]
+            node2 = cellid2[0]
+            if node1 < len(mg.iac) - 1:
+                idx0 = mg.iac[node1]
+                idx1 = mg.iac[node1 + 1]
+                ja = mg.ja
+                ihc = mg.ihc
+                for i in range(idx0 + 1, idx1):
+                    if ja[i] == node2:
+                        # ihc == 0 means vertical, ihc != 0 means horizontal
+                        return ihc[i] == 0
+
+        # Fall back to geometric approach if ihc not available. In this case we
+        # look at the cell geometries. Check the orientation of the shared face.
+        # If the face is horizontal (z coordinates equal), then it's a vertical
+        # barrier. If the face is vertical (z coords vary), horizontal barrier.
+        if (shared_face_3d := get_shared_face_3d(mg, cellid1, cellid2)) is None:
+            return False
         z_coords = [v[2] for v in shared_face_3d]
         return np.allclose(z_coords, z_coords[0], rtol=1e-5)
