@@ -615,6 +615,7 @@ def test_array3d_export_structured(function_tmpdir):
             110,  # node
             11,  # row
             10,  # column
+            1,  # active
             4.0,  # botm_1
             3.0,  # botm_2
             2.0,  # botm_3
@@ -636,6 +637,7 @@ def test_array3d_export_unstructured(function_tmpdir):
         assert list(shp.shapeRecord(-1).record) == [
             1770,  # node
             3,  # layer
+            1,  # active
             0.0,  # bot
         ]
 
@@ -2249,8 +2251,8 @@ def disv_sim(name, tmpdir):
 
 @requires_pkg("geopandas")
 @pytest.mark.parametrize("use_pandas", [True])  # TODO: test non-pandas
-@pytest.mark.parametrize("sparse", [True])  # TODO: test non-sparse
-def test_mf6_chd_shapefile_export_vertex(function_tmpdir, use_pandas, sparse):
+@pytest.mark.parametrize("full_grid", [False])  # TODO: test non-sparse
+def test_mf6_chd_shapefile_export_vertex(function_tmpdir, use_pandas, full_grid):
     """Test CHD package shapefile export for DISV (vertex) grids"""
     from flopy.mf6 import (
         MFSimulation,
@@ -2268,15 +2270,15 @@ def test_mf6_chd_shapefile_export_vertex(function_tmpdir, use_pandas, sparse):
     chd_cells = [(0, 0, 1.0), (1, 2, 2.0), (2, 5, 3.0)]  # (layer, cell, head)
     chd = ModflowGwfchd(gwf, stress_period_data=chd_cells)
 
-    shpfile = function_tmpdir / f"chd_disv_{use_pandas}_{sparse}.shp"
-    gdf = gwf.chd.stress_period_data.to_geodataframe(sparse=sparse)
+    shpfile = function_tmpdir / f"chd_disv_{use_pandas}_{not full_grid}.shp"
+    gdf = gwf.chd.stress_period_data.to_geodataframe(full_grid=full_grid)
     gdf.to_file(shpfile)
 
     # Check that shapefile and sidecar files exist
     for ext in [".shp", ".shx", ".dbf"]:
         assert shpfile.with_suffix(ext).exists(), f"{shpfile.with_suffix(ext)} missing"
 
-    if sparse:
+    if not full_grid:
         # Only CHD cells should be exported
         assert len(gdf) == len(chd_cells)
     else:
@@ -2292,7 +2294,7 @@ def test_mf6_chd_shapefile_export_vertex(function_tmpdir, use_pandas, sparse):
             chd_vals.append(row[col])
             cnt += 1
 
-    if sparse:
+    if not full_grid:
         # Should match the CHD values
         assert set(chd_vals) == {1.0, 2.0, 3.0}
 

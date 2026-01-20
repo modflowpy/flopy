@@ -771,6 +771,17 @@ class StructuredGrid(Grid):
         gdf = super().to_geodataframe(polys)
         gdf["row"] = sorted(list(range(1, self.nrow + 1)) * self.ncol)
         gdf["col"] = list(range(1, self.ncol + 1)) * self.nrow
+        if self.idomain is not None:
+            active = np.sum(
+                self.idomain.reshape(
+                    (-1, self.ncpl),
+                ),
+                axis=0,
+            )
+            active = np.where(active > 0, 1, 0)
+            gdf["active"] = active
+        else:
+            gdf["active"] = 1
         return gdf
 
     def grid_line_geodataframe(self):

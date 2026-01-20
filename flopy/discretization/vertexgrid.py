@@ -313,6 +313,17 @@ class VertexGrid(Grid):
         if self._cell1d is not None:
             featuretype = "multilinestring"
         gdf = super().to_geodataframe(cells, featuretype)
+        if self.idomain is not None:
+            active = np.sum(
+                self.idomain.reshape(
+                    (self.nlay, self.ncpl),
+                ),
+                axis=0,
+            )
+            active = np.where(active > 0, 1, 0)
+            gdf["active"] = active
+        else:
+            gdf["active"] = 1
         return gdf
 
     def grid_line_geodataframe(self):

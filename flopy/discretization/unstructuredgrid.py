@@ -595,6 +595,19 @@ class UnstructuredGrid(Grid):
             for ix, ncpl in enumerate(self.ncpl):
                 lays.extend([ix + 1] * ncpl)
             gdf["layer"] = lays
+        if self.idomain is not None:
+            active = np.where(
+                self.idomain.reshape(
+                    (self.nnodes),
+                )
+                > 0,
+                1,
+                0,
+            )
+            gdf["active"] = active
+        else:
+            gdf["active"] = 1
+
         return gdf
 
     @property
