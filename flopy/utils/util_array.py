@@ -637,9 +637,7 @@ class Util3d(DataInterface):
     def plottable(self):
         return True
 
-    def to_geodataframe(
-        self, gdf=None, forgive=False, name=None, truncate_attrs=False, **kwargs
-    ):
+    def to_geodataframe(self, gdf=None, full_grid=True, shorten_attr=False, **kwargs):
         """
         Method to add data to a GeoDataFrame for exporting as a geospatial file
 
@@ -648,13 +646,18 @@ class Util3d(DataInterface):
         gdf : GeoDataFrame
             optional GeoDataFrame instance. If GeoDataFrame is None, one will be
             constructed from modelgrid information
-        forgive : bool
-            optional flag to continue running and pass data that is not compatible
-            with the geodataframe shape
-        name : str
-            optional array name base. If None, method uses the .name attribute
-        truncate_attrs : bool
+        full_grid : bool
+            boolean flag for full grid dataframe construction. Default is True.
+            If False, geodataframe will only include active cells
+        shorten_attr : bool
             method to truncate attribute names for shapefile restrictions
+        **kwargs :
+            name : str
+                optional array name base. If not provided, method uses the .name
+                attribute
+            forgive : bool
+                optional flag to continue running and pass data that is not compatible
+                with the geodataframe shape
 
         Returns
         -------
@@ -663,6 +666,9 @@ class Util3d(DataInterface):
         if self.model is None:
             return gdf
         else:
+            name = kwargs.pop("name", None)
+            forgive = kwargs.pop("forgive", False)
+
             modelgrid = self.model.modelgrid
             if modelgrid is None:
                 return gdf
@@ -678,10 +684,10 @@ class Util3d(DataInterface):
                 name = f"{names[lay]}_{lay}"
                 gdf = u2d.to_geodataframe(
                     gdf=gdf,
-                    name=name,
                     forgive=forgive,
-                    truncate_attrs=truncate_attrs,
-                    **kwargs,
+                    full_grid=full_grid,
+                    shorten_attr=shorten_attr,
+                    name=name,
                 )
 
             return gdf
@@ -1112,7 +1118,7 @@ class Transient3d(DataInterface):
         return False
 
     def to_geodataframe(
-        self, gdf=None, kper=0, forgive=False, truncate_attrs=False, **kwargs
+        self, gdf=None, kper=0, full_grid=True, shorten_attr=False, **kwargs
     ):
         """
         Method to add data to a GeoDataFrame for exporting as a geospatial file
@@ -1124,21 +1130,32 @@ class Transient3d(DataInterface):
             constructed from modelgrid information
         kper : int
             stress period to export
-        forgive : bool
-            boolean flag for sparse dataframe construction. Default is False
-        truncate_attrs : bool
+
+        full_grid : bool
+            boolean flag for full grid dataframe construction. Default is True.
+            If False, geodataframe will only include active cells
+        shorten_attr : bool
             method to truncate attribute names for shapefile restrictions
+        **kwargs :
+            forgive : bool
+                boolean flag for sparse dataframe construction. Default is False
 
         Returns
         -------
             GeoDataFrame
         """
+        forgive = kwargs.pop("forgive", False)
+
         u3d = self.transient_3ds[kper]
         # note: may need to provide a pass through name for u3d to avoid s.p.
         # number being tacked on. Test this on a model with the LAK package...
         name = self.name_base[:-1].lower()
         gdf = u3d.to_geodataframe(
-            gdf=gdf, forgive=forgive, name=name, truncate_attrs=truncate_attrs, **kwargs
+            gdf=gdf,
+            full_grid=full_grid,
+            shorten_attr=shorten_attr,
+            name=name,
+            forgive=forgive,
         )
         return gdf
 
@@ -1483,7 +1500,7 @@ class Transient2d(DataInterface):
         )
 
     def to_geodataframe(
-        self, gdf=None, kper=0, forgive=False, truncate_attrs=False, **kwargs
+        self, gdf=None, kper=0, full_grid=True, shorten_attr=False, **kwargs
     ):
         """
         Method to add data to a GeoDataFrame for exporting as a geospatial file
@@ -1495,19 +1512,30 @@ class Transient2d(DataInterface):
             constructed from modelgrid information
         kper : int
             stress period to export
-        forgive : bool
-            boolean flag for sparse dataframe construction. Default is False
-        truncate_attrs : bool
+
+        full_grid : bool
+            boolean flag for full grid dataframe construction. Default is True.
+            If False, geodataframe will only include active cells
+        shorten_attr : bool
             method to truncate attribute names for shapefile restrictions
+        **kwargs :
+            forgive : bool
+                boolean flag for sparse dataframe construction. Default is False
 
         Returns
         -------
             GeoDataFrame
         """
+        forgive = kwargs.pop("forgive", False)
+
         u2d = self.transient_2ds[kper]
         name = self.name_base[:-1]
         gdf = u2d.to_geodataframe(
-            gdf=gdf, name=name, forgive=forgive, truncate_attrs=truncate_attrs, **kwargs
+            gdf=gdf,
+            full_grid=full_grid,
+            shorten_attr=shorten_attr,
+            name=name,
+            forgive=forgive,
         )
         return gdf
 
@@ -1990,9 +2018,7 @@ class Util2d(DataInterface):
         else:
             self._how = "internal"
 
-    def to_geodataframe(
-        self, gdf=None, name=None, forgive=False, truncate_attrs=False, **kwargs
-    ):
+    def to_geodataframe(self, gdf=None, full_grid=True, shorten_attr=False, **kwargs):
         """
         Method to add an input array to a geopandas GeoDataFrame
 
@@ -2002,10 +2028,17 @@ class Util2d(DataInterface):
             optional GeoDataFrame object
         name : str
             optional attribute name, default uses util2d name
-        forgive : bool
-            optional flag to continue if data shape not compatible with GeoDataFrame
-        truncate_attrs : bool
+        full_grid : bool
+            boolean flag for full grid dataframe construction. Default is True.
+            If False, geodataframe will only include active cells
+        shorten_attr : bool
             method to truncate attribute names for shapefile restrictions
+        **kwargs :
+            name : str
+                optional array name base. If not provided, method uses the .name
+                attribute
+            forgive : bool
+                optional flag to continue if data shape not compatible with GeoDataFrame
 
         Returns
         -------
@@ -2016,6 +2049,9 @@ class Util2d(DataInterface):
         if self.model is None:
             return gdf
         else:
+            name = kwargs.pop("name", None)
+            forgive = kwargs.pop("forgive", False)
+
             modelgrid = self.model.modelgrid
             if gdf is None:
                 if modelgrid is None:
@@ -2033,7 +2069,7 @@ class Util2d(DataInterface):
             if name is None:
                 name = self.name
 
-            if truncate_attrs:
+            if shorten_attr:
                 name = shape_attr_name(name, keep_layer=True)
 
             data = self.array
@@ -2046,6 +2082,10 @@ class Util2d(DataInterface):
                 raise AssertionError(
                     f"Data size {data.size} not compatible with dataframe length {ncpl}"
                 )
+
+            if not full_grid:
+                if "active" in list(gdf):
+                    gdf = gdf[gdf["active"] > 1]
 
             return gdf
 

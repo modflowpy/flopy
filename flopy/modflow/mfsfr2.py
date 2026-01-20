@@ -622,7 +622,7 @@ class ModflowSfr2(Package):
     def df(self):
         return pd.DataFrame(self.reach_data)
 
-    def to_geodataframe(self, gdf=None, sparse=True, **kwargs):
+    def to_geodataframe(self, gdf=None, full_grid=False, **kwargs):
         """
         Method to export SFR reach data to a GeoDataFrame
 
@@ -631,8 +631,8 @@ class ModflowSfr2(Package):
         gdf : GeoDataFrame
             optional GeoDataFrame instance. If GeoDataFrame is None, one will be
             constructed from modelgrid information
-        sparse : bool
-            boolean flag for sparse dataframe construction. Default is True
+        full_grid : bool
+            boolean flag for sparse dataframe construction. Default is False
         """
         modelgrid = self.parent.modelgrid
         if modelgrid is None:
@@ -649,7 +649,7 @@ class ModflowSfr2(Package):
         df["node"] += 1
         gdf = gdf.merge(df, how="left", on="node")
 
-        if sparse:
+        if not full_grid:
             col_names = [col for col in list(df) if col != "node"]
             gdf = gdf.dropna(subset=col_names, how="all")
             gdf = gdf.dropna(axis="columns", how="all")

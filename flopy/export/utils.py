@@ -895,6 +895,9 @@ def mflist_export(f: Union[str, PathLike, NetCdf], mfl, **kwargs):
 
     if isinstance(f, (str, PathLike)) and Path(f).suffix.lower() == ".shp":
         sparse = kwargs.get("sparse", False)
+        full_grid = kwargs.get("full_grid", True)
+        if sparse:
+            full_grid = False
         kper = kwargs.get("kper", 0)
         squeeze = kwargs.get("squeeze", True)
 
@@ -904,7 +907,7 @@ def mflist_export(f: Union[str, PathLike, NetCdf], mfl, **kwargs):
             gdf = None
 
         gdf = mfl.to_geodataframe(
-            gdf=gdf, kper=kper, sparse=sparse, truncate_attrs=True
+            gdf=gdf, kper=kper, full_grid=full_grid, shorten_attr=True
         )
         gdf.to_file(f)
 

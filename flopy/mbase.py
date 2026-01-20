@@ -760,9 +760,7 @@ class BaseModel(ModelInterface):
             f"{txt2} the output list."
         )
 
-    def to_geodataframe(
-        self, gdf=None, kper=0, package_names=None, truncate_attrs=False
-    ):
+    def to_geodataframe(self, gdf=None, kper=0, package_names=None, shorten_attr=False):
         """
         Method to build a Geodataframe from model inputs. Note: transient data
         will only be exported for a single stress period.
@@ -775,8 +773,8 @@ class BaseModel(ModelInterface):
             stress period to get transient data from
         package_names : list
             optional list of package names
-        truncate_attrs : bool
-            method to truncate attribute names for shapefile attribute name length
+        shorten_attr : bool
+            method to shorten attribute names for shapefile attribute name length
             restrictions
 
         Returns
@@ -805,7 +803,7 @@ class BaseModel(ModelInterface):
                 continue
             if callable(getattr(package, "to_geodataframe", None)):
                 gdf = package.to_geodataframe(
-                    gdf, kper=kper, sparse=False, truncate_attrs=truncate_attrs
+                    gdf, kper=kper, full_grid=True, shorten_attr=shorten_attr
                 )
 
         return gdf

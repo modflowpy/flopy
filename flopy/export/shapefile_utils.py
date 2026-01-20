@@ -220,7 +220,7 @@ def model_attributes_to_shapefile(
     else:
         package_names = [pak.name[0] for pak in ml.packagelist]
 
-    gdf = ml.to_geodataframe(package_names=package_names, truncate_attrs=True)
+    gdf = ml.to_geodataframe(package_names=package_names, shorten_attr=True)
 
     if array_dict:
         modelgrid = ml.modelgrid

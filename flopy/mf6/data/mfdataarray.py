@@ -323,7 +323,7 @@ class MFArray(MFMultiDimVar):
         """Returns array data.  Calls get_data with default parameters."""
         return self._get_data()
 
-    def to_geodataframe(self, gdf=None, name=None, forgive=False, truncate_attrs=False, **kwargs):
+    def to_geodataframe(self, gdf=None, full_grid=True, shorten_attr=False, **kwargs):
         """
         Method to add an input array to a geopandas GeoDataFrame
 
@@ -333,10 +333,18 @@ class MFArray(MFMultiDimVar):
             optional GeoDataFrame object
         name : str
             optional attribute name, default uses util2d name
-        forgive : bool
-            optional flag to continue if data shape not compatible with GeoDataFrame
-        truncate_attrs : bool
+        full_grid : bool
+            boolean flag for full grid dataframe construction. Default is True.
+            If False, geodataframe will only include active cells
+        shorten_attr : bool
             method to truncate attribute names for shapefile restrictions
+        **kwargs :
+            name : str
+                optional array name base. If not provided, method uses the .name
+                attribute
+            forgive : bool
+                optional flag to continue if data shape not compatible with GeoDataFrame
+
 
         Returns
         -------
@@ -347,6 +355,9 @@ class MFArray(MFMultiDimVar):
         if self.model is None:
             return gdf
         else:
+            name = kwargs.pop("name", None)
+            forgive = kwargs.pop("forgive", False)
+
             modelgrid = self.model.modelgrid
             if gdf is None:
                 if modelgrid is None:
@@ -368,7 +379,7 @@ class MFArray(MFMultiDimVar):
             if data is None:
                 return gdf
 
-            if truncate_attrs:
+            if shorten_attr:
                 name = shape_attr_name(name=name)
 
             if data.size == ncpl:
@@ -385,6 +396,10 @@ class MFArray(MFMultiDimVar):
                 raise ValueError(
                     f"Data size {data.size} not compatible with dataframe length {ncpl}"
                 )
+
+            if not full_grid:
+                if "active" in list(gdf):
+                    gdf = gdf[gdf["active"] > 0]
 
             return gdf
 
@@ -1955,7 +1970,7 @@ class MFTransientArray(MFArray, MFTransient):
                     output[sp] = data
         return output
 
-    def to_geodataframe(self, gdf=None, kper=0, forgive=False, truncate_attrs=False, **kwargs):
+    def to_geodataframe(self, gdf=None, kper=0, full_grid=True, shorten_attr=False, **kwargs):
         """
         Method to add an input array to a geopandas GeoDataFrame
 
@@ -1963,14 +1978,16 @@ class MFTransientArray(MFArray, MFTransient):
         ----------
         gdf : GeoDataFrame
             optional GeoDataFrame object
-        name : str
-            optional attribute name, default uses util2d name
         kper : int
             stress period number
-        forgive : bool
-            optional flag to continue if data shape not compatible with GeoDataFrame
-        truncate_attrs : bool
+        full_grid : bool
+            boolean flag for full grid dataframe construction. Default is True.
+            If False, geodataframe will only include active cells
+        shorten_attr : bool
             method to truncate attribute names for shapefile restrictions
+        **kwargs
+            forgive : bool
+                optional flag to continue if data shape not compatible with GeoDataFrame
 
         Returns
         -------
@@ -1981,6 +1998,8 @@ class MFTransientArray(MFArray, MFTransient):
         if self.model is None:
             return gdf
         else:
+            forgive = kwargs.pop("forgive", False)
+
             modelgrid = self.model.modelgrid
             if gdf is None:
                 if modelgrid is None:
@@ -1998,7 +2017,7 @@ class MFTransientArray(MFArray, MFTransient):
             if self.array is None:
                 return gdf
 
-            if truncate_attrs:
+            if shorten_attr:
                 name = shape_attr_name(self.name, length=4)
             else:
                 name = f"{self.path[1]}_{self.name}"
@@ -2011,7 +2030,7 @@ class MFTransientArray(MFArray, MFTransient):
             elif data.size % ncpl == 0:
                 data = data.reshape((-1, ncpl))
                 for ix, arr in enumerate(data):
-                    if truncate_attrs:
+                    if shorten_attr:
                         aname = f"{name}{ix}{kper}"
                     else:
                         aname = f"{name}_{ix}_{kper}"
@@ -2022,6 +2041,10 @@ class MFTransientArray(MFArray, MFTransient):
                 raise ValueError(
                     f"Data size {data.size} not compatible with dataframe length {ncpl}"
                 )
+
+            if not full_grid:
+                if "active" in gdf:
+                    gdf = gdf[gdf["active"] > 0]
 
             return gdf
 

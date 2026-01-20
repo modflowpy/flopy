@@ -675,7 +675,7 @@ class Package(PackageInterface):
         return export.utils.package_export(f, self, **kwargs)
 
     def to_geodataframe(
-        self, gdf=None, kper=0, sparse=False, truncate_attrs=False, **kwargs
+        self, gdf=None, kper=0, full_grid=True, shorten_attr=False, **kwargs
     ):
         """
         Method to create a GeoDataFrame from a modflow package
@@ -686,11 +686,11 @@ class Package(PackageInterface):
             optional geopandas geodataframe object to add data to. Default is None
         kper : int
             stress period to get transient data from
-        sparse : bool
-            optional parameter to create a sparse geodataframe
-        truncate_attrs : bool
-            method to truncate attribute names for shapefile attribute name length
-            restrictions
+        full_grid : bool
+            boolean flag for full grid dataframe construction. Default is True.
+            If False, geodataframe will only include active cells
+        shorten_attr : bool
+            method to truncate attribute names for shapefile restrictions
 
         Returns
         -------
@@ -722,13 +722,13 @@ class Package(PackageInterface):
                 #  added to geodataframe
                 gdf = value.to_geodataframe(
                     gdf,
-                    forgive=True,
                     kper=kper,
-                    sparse=False,
-                    truncate_attrs=truncate_attrs,
+                    full_grid=True,
+                    shorten_attr=shorten_attr,
+                    forgive=True,
                 )
 
-        if sparse:
+        if not full_grid:
             col_names = [i for i in gdf if i not in ("geometry", "node", "row", "col")]
             gdf = gdf.dropna(subset=col_names, how="all")
             gdf = gdf.dropna(axis="columns", how="all")

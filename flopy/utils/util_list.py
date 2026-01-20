@@ -125,7 +125,7 @@ class MfList(DataInterface, DataListInterface):
         return d
 
     def to_geodataframe(
-        self, gdf=None, kper=0, sparse=False, truncate_attrs=False, **kwargs
+        self, gdf=None, kper=0, full_grid=True, shorten_attr=False, **kwargs
     ):
         """
         Method to add data to a GeoDataFrame for exporting as a geospatial file
@@ -137,10 +137,10 @@ class MfList(DataInterface, DataListInterface):
             constructed from modelgrid information
         kper : int
             stress period to export
-        sparse : bool
-            boolean flag for sparse dataframe construction. Default is False
-        truncate_attrs : bool
-            method to truncate attribute names for shapefile restrictions
+        full_grid : bool
+            boolean flag for full grid dataframe construction. Default is True
+        shorten_attr : bool
+            method to shorten attribute names for shapefile restrictions
 
         Returns
         -------
@@ -162,7 +162,7 @@ class MfList(DataInterface, DataListInterface):
 
             col_names = []
             for name, array4d in data.items():
-                if truncate_attrs:
+                if shorten_attr:
                     name = shape_attr_name(name, length=4)
                 else:
                     name = f"{self.name[0].lower()}_{name}"
@@ -170,7 +170,7 @@ class MfList(DataInterface, DataListInterface):
                 if modelgrid.grid_type == "unstructured":
                     array = array.ravel()
                     aname = name
-                    if truncate_attrs:
+                    if shorten_attr:
                         aname = f"{name}{kper}"
                     gdf[aname] = array
                     col_names.append(aname)
@@ -181,14 +181,14 @@ class MfList(DataInterface, DataListInterface):
                         nlay = modelgrid.nlay
                     for lay in range(nlay):
                         arr = array[lay].ravel()
-                        if truncate_attrs:
+                        if shorten_attr:
                             aname = f"{name}{lay}{kper}"
                         else:
                             aname = f"{name}_{lay}_{kper}"
                         gdf[aname] = arr.ravel()
                         col_names.append(aname)
 
-            if sparse:
+            if not full_grid:
                 gdf = gdf.dropna(subset=col_names, how="all")
                 gdf = gdf.dropna(axis="columns", how="all")
 

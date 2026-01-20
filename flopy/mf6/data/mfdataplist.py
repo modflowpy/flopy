@@ -842,7 +842,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
         model_grid = self.data_dimensions.get_model_grid()
         return list_to_array(sarr, model_grid, kper, mask)
 
-    def to_geodataframe(self, gdf=None, sparse=False, truncate_attrs=False, **kwargs):
+    def to_geodataframe(self, gdf=None, full_grid=True, shorten_attr=False, **kwargs):
         """
         Method to add data to a GeoDataFrame for exporting as a geospatial file
 
@@ -851,9 +851,10 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
         gdf : GeoDataFrame
             optional GeoDataFrame instance. If GeoDataFrame is None, one will be
             constructed from modelgrid information
-        sparse : bool
-            boolean flag for sparse dataframe construction. Default is False
-        truncate_attrs : bool
+        full_grid : bool
+            boolean flag for full grid dataframe construction. Default is True.
+            If False, geodataframe will only include active cells
+        shorten_attr : bool
             method to truncate attribute names for shapefile restrictions
 
         Returns
@@ -878,7 +879,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
 
             col_names = []
             for name, array3d in data.items():
-                if truncate_attrs:
+                if shorten_attr:
                     aname = shape_attr_name(name)
                 else:
                     aname = f"{self.path[1].lower()}_{name}"
@@ -893,7 +894,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
                         gdf[f"{aname}_{lay}"] = arr.ravel()
                         col_names.append(f"{aname}_{lay}")
 
-            if sparse:
+            if not full_grid:
                 gdf = gdf.dropna(subset=col_names, how="all")
                 gdf = gdf.dropna(axis="columns", how="all")
 
@@ -2076,7 +2077,7 @@ class MFPandasTransientList(
         self.repeating = True
         self.empty_keys = {}
 
-    def to_geodataframe(self, gdf=None, kper=0, sparse=False, truncate_attrs=False, **kwargs):
+    def to_geodataframe(self, gdf=None, kper=0, full_grid=True, shorten_attr=False, **kwargs):
         """
         Method to add data to a GeoDataFrame for exporting as a geospatial file
 
@@ -2087,9 +2088,10 @@ class MFPandasTransientList(
             constructed from modelgrid information
         kper : int
             stress period to export
-        sparse : bool
-            boolean flag for sparse dataframe construction. Default is False
-        truncate_attrs : bool
+        full_grid : bool
+            boolean flag for full grid dataframe construction. Default is True.
+            If False, geodataframe will only include active cells
+        shorten_attr : bool
             method to truncate attribute names for shapefile restrictions
 
         Returns
@@ -2112,7 +2114,7 @@ class MFPandasTransientList(
 
             col_names = []
             for name, array3d in data.items():
-                if truncate_attrs:
+                if shorten_attr:
                     name = shape_attr_name(name, length=4)
                 else:
                     name = f"{self.path[1].lower()}_{name}"
@@ -2124,14 +2126,14 @@ class MFPandasTransientList(
                 else:
                     for lay in range(modelgrid.nlay):
                         arr = array3d[lay].ravel()
-                        if truncate_attrs:
+                        if shorten_attr:
                             aname = f"{name}{lay}{kper}"
                         else:
                             aname = f"{name}_{lay}_{kper}"
                         gdf[aname] = arr.ravel()
                         col_names.append(aname)
 
-            if sparse:
+            if not full_grid:
                 gdf = gdf.dropna(subset=col_names, how="all")
                 gdf = gdf.dropna(axis="columns", how="all")
 

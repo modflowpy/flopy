@@ -119,7 +119,7 @@ grid.extent
 # #### Export the whole model to a single shapefile
 
 fname = f"{outdir}/model.shp"
-gdf = m.to_geodataframe(truncate_attrs=True)
+gdf = m.to_geodataframe(shorten_attr=True)
 gdf.to_file(fname)
 
 ax = plt.subplot(1, 1, 1, aspect="equal")
@@ -157,12 +157,12 @@ gdf = m.riv.stress_period_data.to_geodataframe()
 gdf.to_file(f"{outdir}/riv_spd.shp")
 
 # ### MfList.to_geodataframe() exports the whole grid by default, regardless of the locations of the boundary cells
-# `sparse=True` only exports the boundary cells in the MfList
+# `full_grid=False` only exports the boundary cells in the MfList
 
-gdf = m.riv.stress_period_data.to_geodataframe(sparse=True)
+gdf = m.riv.stress_period_data.to_geodataframe(full_grid=False)
 gdf.to_file(f"{outdir}/riv_spd.shp")
 
-gdf = m.wel.stress_period_data.to_geodataframe(sparse=True)
+gdf = m.wel.stress_period_data.to_geodataframe(full_grid=False)
 gdf.to_file(f"{outdir}/wel_spd.shp")
 
 # ## Ad-hoc exporting using `to_geodataframe()`
@@ -170,8 +170,8 @@ gdf.to_file(f"{outdir}/wel_spd.shp")
 # ### combining data from different packages
 # write a shapefile of RIV and WEL package cells
 
-gdf = m.wel.stress_period_data.to_geodataframe(truncate_attrs=True)
-gdf = m.riv.stress_period_data.to_geodataframe(gpd=gpd, truncate_attrs=True)
+gdf = m.wel.stress_period_data.to_geodataframe(shorten_attr=True)
+gdf = m.riv.stress_period_data.to_geodataframe(gdf=gdf, shorten_attr=True)
 gdf.head()
 
 # ##### write the shapefile
