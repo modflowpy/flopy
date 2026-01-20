@@ -1008,12 +1008,13 @@ def test_multi_model(function_tmpdir):
         botm=np.full((1, nrow, ncol), -100.0),
     )
 
-    ixs = flopy.utils.GridIntersect(modelgrid, method="vertex", rtree=True)
+    ixs = flopy.utils.GridIntersect(modelgrid, rtree=True)
     result = ixs.intersect(
         [
             boundary,
         ],
         shapetype="Polygon",
+        geo_dataframe=False,
     )
     r, c = list(zip(*list(result.cellids)))
     idomain = np.zeros(modelgrid.shape, dtype=int)
@@ -1033,7 +1034,12 @@ def test_multi_model(function_tmpdir):
     lengths = []
     for sg in stream_segs:
         sg = string2geom(sg)
-        v = ixs.intersect(sg, shapetype="LineString", sort_by_cellid=True)
+        v = ixs.intersect(
+            sg,
+            shapetype="LineString",
+            sort_by_cellid=True,
+            geo_dataframe=False,
+        )
         cellids += v["cellids"].tolist()
         lengths += v["lengths"].tolist()
 

@@ -1313,7 +1313,7 @@ class StructuredGrid(Grid):
             shape = tuple(dim or 1 for dim in shape)
         return list(zip(*np.unravel_index(nodes, shape)))
 
-    def get_node(self, lrc_list):
+    def get_node(self, lrc_list, cellids=None, node2d=False):
         """
         Get node number from a list of zero-based MODFLOW
         layer, row, column tuples.
@@ -1322,6 +1322,15 @@ class StructuredGrid(Grid):
         ----------
         lrc_list : tuple of int or list of tuple of int
             Zero-based layer, row, column tuples
+
+            .. deprecated:: 3.10
+                This parameter is deprecated and will be
+                removed in FloPy 3.12. Use cellids instead.
+        cellids : tuple of int or list of tuple of int
+            Zero-based layer, row, column tuples
+        node2d : bool, optional
+            If True, return 2D node numbers (ignore layer).
+            If False (default), return 3D node numbers.
 
         Returns
         -------
@@ -1338,10 +1347,26 @@ class StructuredGrid(Grid):
         >>> sg.get_node([(0, 2, 20), (0, 25, 0), (8, 10, 0)])
         [100, 1000, 10000]
         """
-        if not isinstance(lrc_list, list):
-            lrc_list = [lrc_list]
-        multi_index = tuple(np.array(lrc_list).T)
-        shape = self.shape
+
+        if lrc_list is not None:
+            if cellids is not None:
+                raise TypeError("lrc_list and cellids are mutually exclusive")
+            cellids = lrc_list
+
+        if cellids is None:
+            raise ValueError("Expected a value for cellids")
+
+        if not isinstance(cellids, list):
+            cellids = [cellids]
+
+        if node2d:
+            rc_list = [(row, col) for lay, row, col in cellids]
+            multi_index = tuple(np.array(rc_list).T)
+            shape = (self.nrow, self.ncol)
+        else:
+            multi_index = tuple(np.array(cellids).T)
+            shape = self.shape
+
         if shape[0] is None:
             shape = tuple(dim or 1 for dim in shape)
         return np.ravel_multi_index(multi_index, shape).tolist()
