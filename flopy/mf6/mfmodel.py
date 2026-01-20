@@ -562,6 +562,7 @@ class MFModel(ModelInterface):
                 angrot=self._modelgrid.angrot,
                 iac=dis.iac.array,
                 ja=dis.ja.array,
+                ihc=dis.ihc.array,
             )
         elif self.get_grid_type() == DiscretizationType.DISV1D:
             dis = self.get_package("disv1d")

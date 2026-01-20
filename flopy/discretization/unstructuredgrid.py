@@ -73,6 +73,11 @@ class UnstructuredGrid(Grid):
         optional number of connections per node array
     ja : list or ndarray
         optional jagged connection array
+    ihc : list or ndarray
+        optional horizontal connection indicator array (for MODFLOW 6 DISU).
+        For each connection in the ja array: ihc = 0 indicates a vertical
+        connection, ihc = 1 or 2 indicates a horizontal connection, with 2
+        indicating that horizontal connections are vertically staggered.
     **kwargs : dict, optional
         Support deprecated keyword options.
 
@@ -132,6 +137,7 @@ class UnstructuredGrid(Grid):
         angrot=0.0,
         iac=None,
         ja=None,
+        ihc=None,
         cell2d=None,
         **kwargs,
     ):
@@ -187,6 +193,7 @@ class UnstructuredGrid(Grid):
 
         self._iac = iac
         self._ja = ja
+        self._ihc = ihc
 
     def set_ncpl(self, ncpl):
         if isinstance(ncpl, int):
@@ -298,6 +305,10 @@ class UnstructuredGrid(Grid):
     @property
     def ja(self):
         return self._ja
+
+    @property
+    def ihc(self):
+        return self._ihc
 
     @property
     def ncpl(self):
@@ -691,6 +702,9 @@ class UnstructuredGrid(Grid):
                 xoff=self.xoffset * factor,
                 yoff=self.yoffset * factor,
                 angrot=self.angrot,
+                iac=self._iac,
+                ja=self._ja,
+                ihc=self._ihc,
             )
         else:
             raise AssertionError("Grid is not complete and cannot be converted")
@@ -751,6 +765,7 @@ class UnstructuredGrid(Grid):
                     angrot=self.angrot,
                     iac=self._iac,
                     ja=self._ja,
+                    ihc=self._ihc,
                 )
 
     def intersect(self, x, y, z=None, local=False, forgive=False):
@@ -932,6 +947,63 @@ class UnstructuredGrid(Grid):
         cell_vert = list(zip(self.xvertices[idx], self.yvertices[idx]))
         self._copy_cache = True
         return cell_vert
+
+    def get_node(self, cellids, node2d=False):
+        """
+        Get node number from cellids.
+
+        For DISU grids, cellid IS the node number. The node2d
+        parameter is accepted for API consistency but has no effect.
+
+        Parameters
+        ----------
+        cellid_list : int, tuple of int, or list of int/tuple
+            DISU cellid(s). Can be a plain integer, a tuple (node,),
+            or a list of integers or tuples.
+        node2d : bool, optional
+            Accepted for API consistency. Has no effect for
+            unstructured grids (no layer concept).
+
+        Returns
+        -------
+        list
+            list of MODFLOW node numbers
+
+        Examples
+        --------
+        >>> import flopy
+        >>> ug = flopy.discretization.UnstructuredGrid(ncpl=[100], ...)
+        >>> ug.get_node(5)
+        [5]
+        >>> ug.get_node((5,))
+        [5]
+        >>> ug.get_node([5, 10])
+        [5, 10]
+        >>> ug.get_node([(5,), (10,)])
+        [5, 10]
+        """
+        if not isinstance(cellids, list):
+            cellids = [cellids]
+
+        nodes = []
+        for cellid in cellids:
+            # Accept both plain integers and tuples
+            if isinstance(cellid, (int, np.integer)):
+                node = int(cellid)
+            elif isinstance(cellid, (tuple, list)):
+                if len(cellid) != 1:
+                    raise ValueError(
+                        "UnstructuredGrid cellid tuple must have 1 element"
+                    )
+                node = cellid[0]
+            else:
+                raise TypeError(f"Expected int or tuple, got {type(cellid).__name__}")
+
+            if node < 0 or node >= self.nnodes:
+                raise IndexError(f"Node {node} out of range [0, {self.nnodes})")
+            nodes.append(node)
+
+        return nodes
 
     def plot(self, **kwargs):
         """

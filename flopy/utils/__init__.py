@@ -29,7 +29,7 @@ from .flopy_io import read_fixed_var, write_fixed_var
 from .formattedfile import FormattedHeadFile
 
 get_modflow = get_modflow_module.run_main
-from .gridintersect import GridIntersect, ModflowGridIndices
+from .gridintersect import GridIntersect
 from .mflistfile import (
     Mf6ListBudget,
     MfListBudget,
