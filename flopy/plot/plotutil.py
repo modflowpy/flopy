@@ -19,12 +19,7 @@ from flopy.discretization.grid import Grid
 
 from ..datbase import DataInterface, DataType
 from ..utils import Util3d, import_optional_dependency
-from ..utils.faceutil import (
-    get_shared_face,
-    get_shared_face_3d,
-    get_shared_face_indices,
-    is_vertical,
-)
+from ..utils.faceutil import get_shared_face, get_shared_face_3d, is_vertical
 
 warnings.simplefilter("ignore", RuntimeWarning)
 
@@ -2956,60 +2951,3 @@ def to_prt_pathlines(
         return df
     else:
         return ret
-
-
-def hfb_data_to_linework(recarray, modelgrid):
-    """
-    Method to get lines representing horizontal flow barriers
-
-    Parameters
-    ----------
-    recarray : np.recarray
-        recarray of hfb input data
-    modelgrid : Grid
-        modelgrid instance
-
-    Returns
-    -------
-        list : list of line segments
-    """
-    verts = modelgrid.verts
-    nodes = []
-    if modelgrid.grid_type == "structured":
-        if "k" in recarray.dtype.names:
-            for rec in recarray:
-                node1 = modelgrid.get_node([(0, rec["irow1"], rec["icol1"])])[0]
-                node2 = modelgrid.get_node([(0, rec["irow2"], rec["icol2"])])[0]
-                nodes.append((node1, node2))
-        else:
-            for rec in recarray:
-                node1 = modelgrid.get_node([(0,) + rec["cellid1"][1:]])[0]
-                node2 = modelgrid.get_node([(0,) + rec["cellid2"][1:]])[0]
-                nodes.append((node1, node2))
-
-    elif modelgrid.grid_type == "vertex":
-        for rec in recarray:
-            nodes.append((rec["cellid1"][-1], rec["cellid2"][-1]))
-
-    else:
-        if "node1" in recarray.dtype.names:
-            nodes = list(zip(recarray["node1"], recarray["node2"]))
-        else:
-            for rec in recarray:
-                nodes.append((rec["cellid1"][0], rec["cellid2"][0]))
-
-    shared_edges = []
-    for node0, node1 in nodes:
-        edge = get_shared_face_indices(modelgrid, node0, node1)
-        if edge is None:
-            raise AssertionError(
-                f"No shared cell edges found. Cannot represent HFB "
-                f"for nodes {node0} and {node1}"
-            )
-        shared_edges.append(edge)
-
-    lines = []
-    for edge in shared_edges:
-        lines.append((tuple(verts[edge[0]]), tuple(verts[edge[1]])))
-
-    return lines

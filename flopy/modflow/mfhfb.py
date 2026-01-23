@@ -190,7 +190,7 @@ class ModflowHfb(Package):
         -------
             list : list of hfb lines
         """
-        from ..plot.plotutil import hfb_data_to_linework
+        from ..utils.faceutil import hfb_data_to_linework
 
         return hfb_data_to_linework(self.hfb_data, self.parent.modelgrid)
 
