@@ -7,9 +7,7 @@ import numpy as np
 from ..discretization.grid import Grid
 
 
-def _get_shared_face_indices(
-    mg: Grid, node1: int, node2: int
-) -> tuple[int, int] | None:
+def get_shared_face_indices(mg: Grid, node1: int, node2: int) -> tuple[int, int] | None:
     """
     Find a shared face between two cells and return its vertex indices.
 
@@ -75,7 +73,7 @@ def get_shared_face(
 
     node1 = mg.get_node([cellid1], node2d=True)[0]
     node2 = mg.get_node([cellid2], node2d=True)[0]
-    if face := _get_shared_face_indices(mg, node1, node2):
+    if face := get_shared_face_indices(mg, node1, node2):
         return [tuple(mg.verts[face[0]]), tuple(mg.verts[face[1]])]
     return None
 
@@ -126,7 +124,7 @@ def get_shared_face_3d(
     # Find shared lateral face
     node1 = mg.get_node([cellid1], node2d=True)[0]
     node2 = mg.get_node([cellid2], node2d=True)[0]
-    shared_lat_face = _get_shared_face_indices(mg, node1, node2)
+    shared_lat_face = get_shared_face_indices(mg, node1, node2)
     if shared_lat_face is None:
         return None
 

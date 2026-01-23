@@ -19,7 +19,12 @@ from flopy.discretization.grid import Grid
 
 from ..datbase import DataInterface, DataType
 from ..utils import Util3d, import_optional_dependency
-from ..utils.faceutil import get_shared_face, get_shared_face_3d, is_vertical
+from ..utils.faceutil import (
+    get_shared_face,
+    get_shared_face_3d,
+    get_shared_face_indices,
+    is_vertical,
+)
 
 warnings.simplefilter("ignore", RuntimeWarning)
 
@@ -2968,7 +2973,6 @@ def hfb_data_to_linework(recarray, modelgrid):
     -------
         list : list of line segments
     """
-    iverts = modelgrid.iverts
     verts = modelgrid.verts
     nodes = []
     if modelgrid.grid_type == "structured":
@@ -2996,23 +3000,13 @@ def hfb_data_to_linework(recarray, modelgrid):
 
     shared_edges = []
     for node0, node1 in nodes:
-        iv0 = iverts[node0]
-        iv1 = iverts[node1]
-        edges = []
-        for ix in range(len(iv0)):
-            edges.append(tuple(sorted((iv0[ix - 1], iv0[ix]))))
-
-        for ix in range(len(iv1)):
-            edge = tuple(sorted((iv1[ix - 1], iv1[ix])))
-            if edge in edges:
-                shared_edges.append(edge)
-                break
-
-        if not shared_edges:
+        edge = get_shared_face_indices(modelgrid, node0, node1)
+        if edge is None:
             raise AssertionError(
                 f"No shared cell edges found. Cannot represent HFB "
                 f"for nodes {node0} and {node1}"
             )
+        shared_edges.append(edge)
 
     lines = []
     for edge in shared_edges:
