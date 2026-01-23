@@ -1,17 +1,11 @@
 import numpy as np
 import pytest
 
+from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
 from flopy.utils.faceutil import get_shared_face_3d
 
 
 def test_get_shared_face_3d_structured_horizontal():
-    """Test get_shared_face_3d for horizontal barrier in structured grid.
-
-    Tests same layer, adjacent cells.
-    """
-    from flopy.discretization import StructuredGrid
-
-    # Create a simple 2x2x1 structured grid
     nlay, nrow, ncol = 1, 2, 2
     delr = np.array([1.0, 1.0])
     delc = np.array([1.0, 1.0])
@@ -20,8 +14,7 @@ def test_get_shared_face_3d_structured_horizontal():
 
     grid = StructuredGrid(delc=delc, delr=delr, top=top, botm=botm)
 
-    # Test horizontal barrier between cells (0, 0, 0) and (0, 0, 1)
-    # These are horizontally adjacent
+    # Test horizontally adjacent cells (0, 0, 0) and (0, 0, 1)
     cellid1 = (0, 0, 0)
     cellid2 = (0, 0, 1)
 
@@ -42,13 +35,6 @@ def test_get_shared_face_3d_structured_horizontal():
 
 
 def test_get_shared_face_3d_structured_vertical():
-    """Test get_shared_face_3d for vertical barrier in structured grid.
-
-    Tests different layers, same horizontal position.
-    """
-    from flopy.discretization import StructuredGrid
-
-    # Create a simple 2x2x2 structured grid (2 layers)
     nlay, nrow, ncol = 2, 2, 2
     delr = np.array([1.0, 1.0])
     delc = np.array([1.0, 1.0])
@@ -57,8 +43,7 @@ def test_get_shared_face_3d_structured_vertical():
 
     grid = StructuredGrid(delc=delc, delr=delr, top=top, botm=botm)
 
-    # Test vertical barrier between cells (0, 0, 0) and (1, 0, 0)
-    # These are vertically adjacent
+    # Test vertically adjacent cells (0, 0, 0) and (1, 0, 0)
     cellid1 = (0, 0, 0)
     cellid2 = (1, 0, 0)
 
@@ -74,10 +59,6 @@ def test_get_shared_face_3d_structured_vertical():
 
 
 def test_get_shared_face_3d_vertex():
-    """Test get_shared_face_3d for vertex grid."""
-    from flopy.discretization import VertexGrid
-
-    # Create a simple 2-cell vertex grid
     nlay = 2
     ncpl = 2
 
@@ -101,7 +82,7 @@ def test_get_shared_face_3d_vertex():
 
     grid = VertexGrid(vertices=vertices, cell2d=cell2d, top=top, botm=botm, nlay=nlay)
 
-    # Test horizontal barrier between cells (0, 0) and (0, 1) in same layer
+    # Test horizontally adjacent cells (0, 0) and (0, 1)
     cellid1 = (0, 0)
     cellid2 = (0, 1)
 
@@ -110,7 +91,7 @@ def test_get_shared_face_3d_vertex():
     assert face is not None
     assert len(face) == 4  # Vertical face
 
-    # Test vertical barrier between cells (0, 0) and (1, 0) in different layers
+    # Test vertically adjacent cells (0, 0) and (1, 0)
     cellid1 = (0, 0)
     cellid2 = (1, 0)
 
@@ -126,11 +107,7 @@ def test_get_shared_face_3d_vertex():
 
 
 def test_get_shared_face_3d_unstructured():
-    """Test get_shared_face_3d for unstructured grid with explicit 3D vertices."""
-    from flopy.discretization import UnstructuredGrid
-
-    # Create a simple 2-cell unstructured grid with 3D vertices
-    # Two hexahedral cells stacked vertically
+    # Two cells stacked vertically
     vertices = [
         # Bottom layer vertices (z=0)
         [0, 0.0, 0.0, 0.0],
@@ -185,9 +162,6 @@ def test_get_shared_face_3d_unstructured():
 
 
 def test_get_shared_face_3d_error_cases():
-    """Test error handling in get_shared_face_3d."""
-    from flopy.discretization import StructuredGrid
-
     nlay, nrow, ncol = 1, 2, 2
     delr = np.array([1.0, 1.0])
     delc = np.array([1.0, 1.0])
