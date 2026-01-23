@@ -283,7 +283,9 @@ def is_vertical(mg: Grid, cellid1: tuple[int, ...], cellid2: tuple[int, ...]) ->
         raise ValueError(f"No connection found between cells {cellid1} and {cellid2}")
 
 
-def hfb_data_to_linework(recarray, modelgrid):
+def hfb_data_to_linework(
+    recarray: np.recarray, modelgrid: Grid
+) -> list[tuple[tuple[float, float], tuple[float, float]]]:
     """
     Convert HFB barrier data to line segments representing shared cell faces.
 
@@ -324,18 +326,18 @@ def hfb_data_to_linework(recarray, modelgrid):
             for rec in recarray:
                 nodes.append((rec["cellid1"][0], rec["cellid2"][0]))
 
-    shared_edges = []
+    shared_faces = []
     for node0, node1 in nodes:
-        edge = get_shared_face_indices(modelgrid, node0, node1)
-        if edge is None:
+        face = get_shared_face_indices(modelgrid, node0, node1)
+        if face is None:
             raise AssertionError(
-                f"No shared cell edges found. Cannot represent HFB "
+                f"No shared cell faces found. Cannot represent HFB "
                 f"for nodes {node0} and {node1}"
             )
-        shared_edges.append(edge)
+        shared_faces.append(face)
 
     lines = []
-    for edge in shared_edges:
-        lines.append((tuple(verts[edge[0]]), tuple(verts[edge[1]])))
+    for face in shared_faces:
+        lines.append((tuple(verts[face[0]]), tuple(verts[face[1]])))
 
     return lines
