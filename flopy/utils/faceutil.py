@@ -26,8 +26,6 @@ def get_shared_face_indices(mg: Grid, node1: int, node2: int) -> tuple[int, int]
         Tuple of two vertex indices representing the shared edge,
         or None if cells don't share an edge
     """
-    if not hasattr(mg, "iverts") or not hasattr(mg, "verts"):
-        return None
 
     iverts = mg.iverts
     iv0 = iverts[node1]
