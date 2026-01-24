@@ -584,6 +584,55 @@ def test_get_transmissivities_mf6_vertex(function_tmpdir):
         assert "r, c parameters only valid for structured grids" in str(e.value)
 
 
+def test_get_transmissivities_mf6_unstructured(function_tmpdir):
+    nl = 1
+    nr = 8
+    nc = 8
+    botm = np.ones((nl, nr, nc), dtype=float)
+    top = np.ones((nr, nc), dtype=float) * 2.1
+    hk = np.ones((nl, nr, nc), dtype=float) * 2.0
+    for i in range(nl):
+        botm[nl - i - 1, :, :] = i
+
+    gridprops = get_disv_kwargs(
+        nlay=nl, nrow=nr, ncol=nc, tp=top, botm=botm, delr=1.0, delc=1.0
+    )
+    from flopy.utils.gridutil import get_disu_kwargs
+
+    gridprops_disu = get_disu_kwargs(
+        nlay=nl,
+        nrow=nr,
+        ncol=nc,
+        tp=top,
+        botm=botm,
+        delr=1.0,
+        delc=1.0,
+        return_vertices=True,
+    )
+    nodes = gridprops_disu["nodes"]
+
+    ws = function_tmpdir
+    name = "test_mf6_unstructured_transmissivity"
+    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=ws, exe_name="mf6")
+    gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
+    disu = flopy.mf6.ModflowGwfdisu(gwf, **gridprops_disu)
+    npf = flopy.mf6.ModflowGwfnpf(gwf, k=hk, save_specific_discharge=True)
+
+    # test specific point
+    T = get_transmissivities(disu.bot.array, gwf, x=[0.5], y=[0.5])
+    assert T.shape == (nl, 1)
+
+    # test all cell centers
+    T = get_transmissivities(
+        disu.bot.array, gwf, x=gwf.modelgrid.xcellcenters, y=gwf.modelgrid.ycellcenters
+    )
+    assert T.shape == (nl, nodes)
+
+    with pytest.raises(ValueError) as e:
+        get_transmissivities(disu.bot.array, gwf, r=[0], c=[0])
+        assert "r, c parameters only valid for structured grids" in str(e.value)
+
+
 def test_get_water_table():
     hdry = -1e30
     hds = np.ones((3, 3, 3), dtype=float) * hdry
