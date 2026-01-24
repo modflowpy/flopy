@@ -863,6 +863,49 @@ class HeadUFile(BinaryLayerFile):
 
         return np.array(result)
 
+    def get_alldata(self, mflay=None, nodata=-9999):
+        """
+        Get all data from the USG head file.
+
+        Parameters
+        ----------
+        mflay : integer
+           MODFLOW zero-based layer number to return. For USG files, this
+           parameter is required (cannot be None). (Default is None.)
+
+        nodata : float
+           The nodata value in the data array.  All array values that have the
+           nodata value will be assigned np.nan.
+
+        Returns
+        -------
+        data : numpy array
+            Array has size (ntimes, ncells_in_layer) when mflay is specified.
+
+        Raises
+        ------
+        NotImplementedError
+            Raised when mflay=None. USG head files contain ragged arrays with
+            variable-sized data per layer, which cannot be converted to a
+            uniform numpy array when retrieving all layers.
+
+        Notes
+        -----
+        For MODFLOW-USG files, the mflay parameter must be specified to retrieve
+        data for a single layer across all timesteps. To get all layers for a
+        specific timestep, use get_data() instead.
+
+        """
+        if mflay is None:
+            raise NotImplementedError(
+                "get_alldata() with mflay=None is not supported for"
+                "MODFLOW-USG head files. These contain variably-size "
+                "data per layer which cannot be stacked into a numpy "
+                "array. Specify mflay to get data for a single layer "
+                "or use get_data() for specific timesteps."
+            )
+        return super().get_alldata(mflay=mflay, nodata=nodata)
+
 
 class BudgetIndexError(Exception):
     pass

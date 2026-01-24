@@ -149,3 +149,36 @@ def test_get_lni(mfusg_model):
     expected = get_expected()
     for layer, nn in lni:
         assert expected[layer][nn] == head[layer][nn]
+
+
+@requires_exe("mfusg", "gridgen")
+@requires_pkg("shapely", "shapefile")
+def test_get_alldata_not_supported(mfusg_model):
+    # test for https://github.com/modflowpy/flopy/issues/1502
+    # get_alldata should raise NotImplementedError when mflay=None
+
+    model, head_file = mfusg_model
+
+    # Should raise NotImplementedError when mflay=None (all layers)
+    with pytest.raises(NotImplementedError) as excinfo:
+        head_file.get_alldata()
+
+    assert "mflay=None" in str(excinfo.value)
+    assert "not supported" in str(excinfo.value).lower()
+
+    # But should work fine when mflay is specified (single layer)
+    import numpy as np
+
+    alldata = head_file.get_alldata(mflay=0)
+
+    # Verify it returns a numpy array
+    assert isinstance(alldata, np.ndarray)
+
+    # Verify shape is (ntimes, ncells_in_layer)
+    times = head_file.get_times()
+    assert alldata.shape[0] == len(times)
+
+    # Verify the data matches what get_data returns for each timestep
+    for i, time in enumerate(times):
+        data = head_file.get_data(totim=time, mflay=0)
+        np.testing.assert_array_almost_equal(alldata[i], data)
