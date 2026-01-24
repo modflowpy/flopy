@@ -1029,8 +1029,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                     storage._dependent_opt(data_item)
                     and storage._optional_nval(data_item) == 0
                 ):
-                    # Skip EVT-specific optional fields (pxdp, petm, petm0)
-                    # that are not present in the data structure
+                    # Skip optional fields that are not present
                     pass
                 elif (
                     not data_item.is_boundname
