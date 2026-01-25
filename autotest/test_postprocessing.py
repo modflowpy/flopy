@@ -692,3 +692,26 @@ def test_get_sat_thickness_gradients(function_tmpdir):
     assert np.abs(np.sum(sat_thick[:, 1, 1] - np.array([0.2, 1.0, 1.0]))) < 1e-6, (
         "failed saturated thickness comparison (grid.thick())"
     )
+
+
+def test_get_transmissivities_fully_saturated(function_tmpdir):
+    nl, nr, nc = 3, 3, 3
+    botm = np.ones((nl, nr, nc), dtype=float)
+    top = np.ones((nr, nc), dtype=float) * 4.0
+    hk = np.ones((nl, nr, nc), dtype=float) * 2.0
+    for i in range(nl):
+        botm[nl - i - 1, :, :] = i + 1
+
+    m = Modflow("test_sat", version="mfnwt", model_ws=function_tmpdir)
+    dis = ModflowDis(m, nlay=nl, nrow=nr, ncol=nc, botm=botm, top=top)
+    upw = ModflowUpw(m, hk=hk)
+
+    r, c = [1], [1]
+
+    heads_saturated = np.array([[4.0], [4.0], [4.0]])
+    T_none = get_transmissivities(heads=None, m=m, r=r, c=c)
+    T_saturated = get_transmissivities(heads_saturated, m, r=r, c=c)
+    T_expected = np.array([[2.0], [2.0], [2.0]])
+
+    assert np.allclose(T_none, T_saturated)
+    assert np.allclose(T_none, T_expected)

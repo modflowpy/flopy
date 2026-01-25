@@ -181,8 +181,8 @@ def _get_grid_adapter(model, nlay):
 
 
 def get_transmissivities(
-    heads,
-    m,
+    heads=None,
+    m=None,
     r=None,
     c=None,
     x=None,
@@ -200,10 +200,11 @@ def get_transmissivities(
 
     Parameters
     ----------
-    heads : 2D array OR 3D array
+    heads : 2D array OR 3D array, optional
         numpy array of shape nlay by n locations (2D) OR complete heads array
         with the correct shape for structured grids (nlay, nrow, ncol) or for
         vertex grids (nlay, ncpl) or unstructured grids (nnodes).
+        If None, the system is assumed to be fully saturated (heads at layer tops).
     m : flopy.modflow.Modflow or flopy.mf6.ModflowGwf object
         Must have dis, disv, or disu and lpf, upw, or npf packages.
     r : 1D array-like of ints, of length n locations
@@ -236,10 +237,15 @@ def get_transmissivities(
 
     For vertex and unstructured grids, only x, y coordinates are supported.
 
+    When heads=None, the system is interpreted as fully saturated, with heads
+    set to the model top for all layers. This represents maximum possible
+    saturation and is useful for calculating maximum transmissivities.
+
     Examples
     --------
     >>> T = get_transmissivities(heads, model, r=[0, 1], c=[0, 1])
     >>> T = get_transmissivities(heads, model, x=[100.0, 200.0], y=[50.0, 150.0])
+    >>> T = get_transmissivities(None, model, r=[0, 1], c=[0, 1])  # fully saturated
     """
 
     # get grid dims
@@ -283,6 +289,11 @@ def get_transmissivities(
     # get and slice bottom array
     botm_array = adapter.get_bottom_array()
     botm = botm_array[(slice(None),) + indices]
+
+    # handle fully saturated case (heads=None)
+    if heads is None:
+        model_top = adapter.get_top_for_slice(indices, grid_type)
+        heads = np.tile(model_top, (nlay, 1))
 
     # normalize and slice heads using adapter
     heads = adapter.normalize_heads_array(heads)
