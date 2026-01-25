@@ -937,10 +937,14 @@ class Raster:
             yul = modelgrid.yvertices[0, 0]
             xul = modelgrid.xvertices[0, 0]
             angrot = modelgrid.angrot
-            transform = Affine(modelgrid.delr[0], 0, xul, 0, -modelgrid.delc[0], yul)
+            delr = modelgrid.delr[0]
+            delc = modelgrid.delc[0]
 
-            if angrot != 0:
-                transform *= Affine.rotation(angrot)
+            transform = (
+                Affine.translation(xul, yul)
+                * Affine.rotation(angrot)
+                * Affine.scale(delr, -delc)
+            )
 
             if array.size % modelgrid.ncpl != 0:
                 raise AssertionError(

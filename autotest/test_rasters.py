@@ -214,3 +214,45 @@ def test_create_raster_from_array_transform(example_data_path):
         or not ((ymax - ymin) / (rymax - rymin)) == 2
     ):
         raise AssertionError("Transform based raster not working properly")
+
+
+@requires_pkg("rasterio", "affine")
+@pytest.mark.parametrize("angle", [0, 15, -47, 45, -30])
+def test_raster_from_array_with_rotation(angle):
+    """
+    Test that raster rotation angle is correct for rotated grids.
+    From https://github.com/modflowpy/flopy/issues/2553.
+    """
+    nrow, ncol = 10, 10
+    delr = np.full((ncol,), 100.0)
+    delc = np.full((nrow,), 100.0)
+    grid = flopy.discretization.StructuredGrid(
+        delc=delc,
+        delr=delr,
+        top=np.ones((nrow, ncol)),
+        botm=np.zeros((1, nrow, ncol)),
+        idomain=np.ones((1, nrow, ncol), dtype=int),
+        xoff=1000.0,
+        yoff=2000.0,
+        angrot=angle,
+        crs="EPSG:26715",  # NAD27 / UTM zone 15N
+    )
+
+    array = np.arange(nrow * ncol, dtype=float).reshape((1, nrow, ncol))
+    raster = Raster.raster_from_array(array, modelgrid=grid)
+
+    # Extract rotation angle from the affine transform
+    transform = raster.transform
+    expected_angle_rad = np.radians(angle)
+    actual_angle_rad = np.arctan2(transform.b, transform.a)
+
+    # Check angles match, handling wraparound (e.g., -180 vs 180)
+    angle_diff = abs(expected_angle_rad - actual_angle_rad)
+    if angle_diff > np.pi:
+        angle_diff = 2 * np.pi - angle_diff
+
+    assert angle_diff < 1e-6, (
+        f"Rotation angle mismatch for angrot={angle}: "
+        f"expected {np.degrees(expected_angle_rad):.2f}°, "
+        f"got {np.degrees(actual_angle_rad):.2f}° from transform"
+    )
