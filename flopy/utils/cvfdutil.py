@@ -147,6 +147,7 @@ def to_cvfd(
     skip_hanging_node_check=False,
     duplicate_decimals=9,
     verbose=False,
+    detect_non_convergence=True,
 ):
     """
     Convert a vertex dictionary into verts and iverts
@@ -154,25 +155,39 @@ def to_cvfd(
     Parameters
     ----------
     vertdict
-        vertdict is a dictionary {icell: [(x1, y1), (x2, y2), (x3, y3), ...]}
+        A dictionary {icell: [(x1, y1), (x2, y2), (x3, y3), ...]}
 
     nodestart : int
-        starting node number. (default is zero)
+        Starting node number. (default is zero)
 
     nodestop : int
-        ending node number up to but not including. (default is len(vertdict))
+        Ending node number up to but not including. (default is len(vertdict))
 
     skip_hanging_node_check : bool
-        skip the hanging node check.  this may only be necessary for quad-based
-        grid refinement. (default is False)
+        Skip the hanging node check. The hanging node check is designed for
+        quad-based grid refinement (e.g., quadtree grids) where larger cells
+        are subdivided, creating "hanging nodes" that need to be added to
+        neighboring cells. The check may not converge for grids with floating
+        point precision artifacts like nearly duplicate vertices. Set this
+        option True to avoid this. If False and non-convergence is detected
+        (assuming detect_non_convergence is True), a warning will be issued.
 
     duplicate_decimals : int
-        decimals to round duplicate vertex checks.  GRIDGEN can occasionally
+        Decimals to round duplicate vertex checks.  GRIDGEN can occasionally
         produce very-nearly overlapping vertices, this can be used to change
         the sensitivity for filtering out duplicates. (default is 9)
 
     verbose : bool
-        print messages to the screen. (default is False)
+        Print messages to the screen. (default is False)
+
+    detect_non_convergence : bool
+        Enable automatic detection of non-convergent hanging node checks.
+        When enabled, the algorithm monitors segmentation counts across
+        iterations. If counts remain high and are flat or increasing, stop
+        early and issue a warning. This prevents infinite loops while still
+        allowing slow-but-steady decrease to converge for complex grids.
+        Set False to disable this check and allow unlimited iterations.
+        (default is True)
 
     Returns
     -------
@@ -256,8 +271,15 @@ def to_cvfd(
             print("Checking for hanging nodes.")
 
         finished = False
+        iteration = 0
+        segmentation_history = []
+        non_convergence_threshold = 3
+
         while not finished:
             finished = True
+            iteration += 1
+            segmentations_this_iter = 0
+
             for ivert, cell_list in vertex_cell_dict.items():
                 for icell1 in cell_list:
                     for icell2 in cell_list:
@@ -280,8 +302,41 @@ def to_cvfd(
                         )
                         if segmented:
                             finished = False
+                            segmentations_this_iter += 1
+
+            segmentation_history.append(segmentations_this_iter)
+
+            if (
+                detect_non_convergence
+                and len(segmentation_history) >= non_convergence_threshold
+            ):
+                recent_counts = segmentation_history[-non_convergence_threshold:]
+                first_count = recent_counts[0]
+                last_count = recent_counts[-1]
+
+                # Check if the count is flat or increasing
+                # but only if we're doing substantial work
+                min_segmentations_threshold = 50
+                if (
+                    first_count >= min_segmentations_threshold
+                    and last_count >= first_count
+                ):
+                    warnings.warn(
+                        f"Hanging node check stopped after {iteration} iterations "
+                        f"due to non-convergence (segmentation counts are flat or "
+                        f"increasing at {segmentations_this_iter} per iteration). "
+                        f"This typically occurs with complex Voronoi or other "
+                        f"unstructured grids. Set skip_hanging_node_check=True "
+                        f"for these grid types.",
+                        UserWarning,
+                    )
+                    break
+
         if verbose:
-            print("Done checking for hanging nodes.")
+            if finished:
+                print(f"Done checking for hanging nodes after {iteration} iterations.")
+            else:
+                print(f"Aborted hanging node check after {iteration} iterations.")
 
     verts = np.array(vertexdict_keys)
     iverts = vertexlist
