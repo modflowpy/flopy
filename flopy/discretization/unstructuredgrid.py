@@ -599,7 +599,16 @@ class UnstructuredGrid(Grid):
         -------
             GeoDataFrame
         """
-        polys = [[self.get_cell_vertices(nn)] for nn in range(self.nnodes)]
+        cache_index = "gdf_polys"
+        if (
+            cache_index not in self._cache_dict
+            or self._cache_dict[cache_index].out_of_date
+        ):
+            polys = [[self.get_cell_vertices(nn)] for nn in range(self.nnodes)]
+            self._cache_dict[cache_index] = CachedData(polys)
+        else:
+            polys = self._cache_dict[cache_index].data_nocopy
+
         gdf = super().to_geodataframe(polys)
         if self.nlay > 1:
             lays = []

@@ -767,7 +767,16 @@ class StructuredGrid(Grid):
         -------
             GeoDataFrame
         """
-        polys = [[list(zip(*i))] for i in zip(*self.cross_section_vertices)]
+        cache_index = "gdf_polys"
+        if (
+            cache_index not in self._cache_dict
+            or self._cache_dict[cache_index].out_of_date
+        ):
+            polys = [[list(zip(*i))] for i in zip(*self.cross_section_vertices)]
+            self._cache_dict[cache_index] = CachedData(polys)
+        else:
+            polys = self._cache_dict[cache_index].data_nocopy
+
         gdf = super().to_geodataframe(polys)
         gdf["row"] = sorted(list(range(1, self.nrow + 1)) * self.ncol)
         gdf["col"] = list(range(1, self.ncol + 1)) * self.nrow

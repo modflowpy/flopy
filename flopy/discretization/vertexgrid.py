@@ -308,11 +308,20 @@ class VertexGrid(Grid):
         -------
             GeoDataFrame
         """
-        cells = [[self.get_cell_vertices(nn)] for nn in range(self.ncpl)]
+        cache_index = "gdf_polys"
+        if (
+            cache_index not in self._cache_dict
+            or self._cache_dict[cache_index].out_of_date
+        ):
+            polys = [[self.get_cell_vertices(nn)] for nn in range(self.ncpl)]
+            self._cache_dict[cache_index] = CachedData(polys)
+        else:
+            polys = self._cache_dict[cache_index].data_nocopy
+
         featuretype = "Polygon"
         if self._cell1d is not None:
             featuretype = "multilinestring"
-        gdf = super().to_geodataframe(cells, featuretype)
+        gdf = super().to_geodataframe(polys, featuretype)
         if self.idomain is not None:
             active = np.sum(
                 self.idomain.reshape(
