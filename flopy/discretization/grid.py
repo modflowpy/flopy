@@ -613,9 +613,9 @@ class Grid:
                 or self._cache_dict[cache_index].out_of_date
             ):
                 geoms = [shp_geom.Polygon(i[0]) for i in features]
-                self._cache_dict[cache_index] = geoms
+                self._cache_dict[cache_index] = CachedData(geoms)
             else:
-                geoms = self._cache_dict[cache_index]
+                geoms = self._cache_dict[cache_index].data_nocopy
             gdf = gpd.GeoDataFrame(data=None, geometry=geoms)
 
         elif featuretype.lower() == "linestring":
@@ -625,9 +625,9 @@ class Grid:
                 or self._cache_dict[cache_index].out_of_date
             ):
                 geoms = [shp_geom.LineString(i) for i in features]
-                self._cache_dict[cache_index] = geoms
+                self._cache_dict[cache_index] = CachedData(geoms)
             else:
-                geoms = self._cache_dict[cache_index]
+                geoms = self._cache_dict[cache_index].data_nocopy
             gdf = gpd.GeoDataFrame(data=None, geometry=geoms)
         else:
             raise NotImplementedError(f"{featuretype} is not currently supported")
