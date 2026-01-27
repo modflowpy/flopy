@@ -607,11 +607,27 @@ class Grid:
         shp_geom = import_optional_dependency("shapely.geometry")
 
         if featuretype.lower() == "polygon":
-            geoms = [shp_geom.Polygon(i[0]) for i in features]
+            cache_index = "grid_polygons"
+            if (
+                cache_index not in self._cache_dict
+                or self._cache_dict[cache_index].out_of_date
+            ):
+                geoms = [shp_geom.Polygon(i[0]) for i in features]
+                self._cache_dict[cache_index] = geoms
+            else:
+                geoms = self._cache_dict[cache_index]
             gdf = gpd.GeoDataFrame(data=None, geometry=geoms)
 
         elif featuretype.lower() == "linestring":
-            geoms = [shp_geom.LineString(i) for i in features]
+            cache_index = "grid_linestrings"
+            if (
+                cache_index not in self._cache_dict
+                or self._cache_dict[cache_index].out_of_date
+            ):
+                geoms = [shp_geom.LineString(i) for i in features]
+                self._cache_dict[cache_index] = geoms
+            else:
+                geoms = self._cache_dict[cache_index]
             gdf = gpd.GeoDataFrame(data=None, geometry=geoms)
         else:
             raise NotImplementedError(f"{featuretype} is not currently supported")
