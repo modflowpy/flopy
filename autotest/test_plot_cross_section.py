@@ -42,6 +42,8 @@ def test_cross_section_bc_gwfs_disv_subset(example_data_path):
         assert isinstance(col, PatchCollection), (
             f"Unexpected collection type: {type(col)}"
         )
+        count = col.get_array().count()
+        assert count == 1, f"More than one CHD plotted ({count})"
 
 
 @pytest.mark.mf6
