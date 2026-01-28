@@ -181,8 +181,8 @@ def _get_grid_adapter(model, nlay):
 
 
 def get_transmissivities(
-    heads=None,
-    m=None,
+    heads,
+    m,
     r=None,
     c=None,
     x=None,
@@ -200,7 +200,7 @@ def get_transmissivities(
 
     Parameters
     ----------
-    heads : 2D array OR 3D array, optional
+    heads : 2D array OR 3D array
         numpy array of shape nlay by n locations (2D) OR complete heads array
         with the correct shape for structured grids (nlay, nrow, ncol) or for
         vertex grids (nlay, ncpl) or unstructured grids (nnodes).
