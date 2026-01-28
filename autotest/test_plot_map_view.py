@@ -101,6 +101,60 @@ def test_map_view_bc_gwfs_disv(example_data_path):
         )
 
 
+@pytest.mark.mf2005
+@pytest.mark.xfail(reason="sometimes get wrong collection type")
+def test_map_view_bc_freyberg_subset(example_data_path):
+    mpath = example_data_path / "freyberg"
+    name_file = "freyberg.nam"
+    ml = Modflow.load(name_file, model_ws=mpath, verbose=True)
+    mapview = flopy.plot.PlotMapView(model=ml)
+    mapview.plot_bc(
+        "RIV",
+        subset=[
+            (0, 34, 14),
+            (0, 35, 14),
+            (0, 36, 14),
+            (0, 37, 14),
+            (0, 38, 14),
+            (0, 39, 14),
+        ],
+    )
+    ax = mapview.ax
+
+    if len(ax.collections) == 0:
+        raise AssertionError("Boundary condition was not drawn")
+
+    for col in ax.collections:
+        assert isinstance(col, (QuadMesh, PathCollection)), (
+            f"Unexpected collection type: {type(col)}"
+        )
+    # plt.show(block=True)
+
+
+@pytest.mark.mf6
+@pytest.mark.xfail(reason="sometimes get wrong collection type")
+def test_map_view_bc_gwfs_disv_subset(example_data_path):
+    mpath = example_data_path / "mf6" / "test003_gwfs_disv"
+    sim = MFSimulation.load(sim_ws=mpath)
+    ml6 = sim.get_model("gwf_1")
+    ml6.modelgrid.set_coord_info(angrot=-14)
+    mapview = flopy.plot.PlotMapView(model=ml6)
+    mapview.plot_bc(
+        "CHD", subset=[(0, 10), (0, 30), (0, 50), (0, 70), (0, 90), (0, 49)]
+    )
+    ax = mapview.ax
+
+    if len(ax.collections) == 0:
+        raise AssertionError("Boundary condition was not drawn")
+
+    for col in ax.collections:
+        assert isinstance(col, (QuadMesh, PathCollection)), (
+            f"Unexpected collection type: {type(col)}"
+        )
+
+    # plt.show(block=True)
+
+
 @pytest.mark.mf6
 @pytest.mark.xfail(reason="sometimes get wrong collection type")
 def test_map_view_bc_lake2tr(example_data_path):

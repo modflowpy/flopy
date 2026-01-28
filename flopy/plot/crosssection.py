@@ -881,7 +881,16 @@ class PlotCrossSection:
 
         return lc
 
-    def plot_bc(self, name=None, package=None, kper=0, color=None, head=None, **kwargs):
+    def plot_bc(
+        self,
+        name=None,
+        package=None,
+        kper=0,
+        color=None,
+        head=None,
+        subset=None,
+        **kwargs,
+    ):
         """
         Plot boundary conditions locations for a specific boundary
         type from a flopy model
@@ -902,6 +911,15 @@ class PlotCrossSection:
             to set top of patches to the minimum of the top of a\
             layer or the head value. Used to create
             patches that conform to water-level elevations.
+        subset : int, tuple of ints, or list of such
+            Acceptable values depend on grid type:
+
+            - Structured grids (DIS): (layer, row, column) or list of such
+            - Vertex grids (DISV): (layer, cellid) or list of such
+            - Unstructured grids (DISU): node number or list of such
+
+            All indices must be zero-based.
+
         **kwargs : dictionary
             keyword arguments passed to matplotlib.collections.PatchCollection
 
@@ -1012,6 +1030,18 @@ class PlotCrossSection:
             plotarray = np.zeros(self._ncpl, dtype=int)
             idx = idx.flatten()
             plotarray[idx] = 1
+
+        if subset is not None:
+            subset = tuple(np.array(subset).T)
+            if len(subset) != len(plotarray.shape):
+                msg = (
+                    f"The subset dimensions ({len(subset)}) is not equal to the "
+                    + f"grid dimensions ({len(plotarray.shape)})"
+                )
+                raise IndexError(msg)
+            mask = np.zeros(plotarray.shape, dtype=plotarray.dtype)
+            mask[subset] = 1
+            plotarray *= mask
 
         plotarray = np.ma.masked_equal(plotarray, 0)
         if color is None:

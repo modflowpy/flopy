@@ -566,6 +566,7 @@ class PlotMapView:
         color=None,
         plotAll=False,
         boundname=None,
+        subset=None,
         **kwargs,
     ):
         """
@@ -586,6 +587,16 @@ class PlotMapView:
             Boolean used to specify that boundary condition locations for all
             layers will be plotted on the current ModelMap layer.
             (Default is False)
+        boundname : string
+            select boundary conditions with specific boundname
+        subset : int, tuple of ints, or list of such
+            Acceptable values depend on grid type:
+
+            - Structured grids (DIS): (layer, row, column) or list of such
+            - Vertex grids (DISV): (layer, cellid) or list of such
+            - Unstructured grids (DISU): node number or list of such
+
+            All indices must be zero-based.
         **kwargs : dictionary
             keyword arguments passed to matplotlib.collections.PatchCollection
 
@@ -689,6 +700,18 @@ class PlotMapView:
             plotarray[tuple(idx)] = 1
         else:
             plotarray[idx] = 1
+
+        if subset is not None:
+            subset = tuple(np.array(subset).T)
+            if len(subset) != len(plotarray.shape):
+                msg = (
+                    f"The subset dimensions ({len(subset)}) is not equal to the "
+                    + f"grid dimensions ({len(plotarray.shape)})"
+                )
+                raise IndexError(msg)
+            mask = np.zeros(plotarray.shape, dtype=plotarray.dtype)
+            mask[subset] = 1
+            plotarray *= mask
 
         # mask the plot array
         plotarray = np.ma.masked_equal(plotarray, 0)
