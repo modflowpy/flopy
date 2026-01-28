@@ -131,6 +131,36 @@ def test_map_view_bc_freyberg_subset(example_data_path):
     # plt.show(block=True)
 
 
+@pytest.mark.mf2005
+# @pytest.mark.xfail(reason="sometimes get wrong collection type")
+def test_map_view_bc_freyberg_ml_subset_plotAll(example_data_path):
+    mpath = example_data_path / "freyberg_multilayer_transient"
+    name_file = "freyberg.nam"
+    ml = Modflow.load(name_file, model_ws=mpath, verbose=True)
+    mapview = flopy.plot.PlotMapView(model=ml, layer=2)
+    mapview.plot_grid(lw=0.5, color="black")
+    mapview.plot_inactive()
+    mapview.plot_bc(
+        "WEL",
+        plotAll=True,
+        subset=[
+            (0, 8, 15),
+            (0, 28, 5),
+        ],
+    )
+
+    ax = mapview.ax
+
+    if len(ax.collections) == 0:
+        raise AssertionError("Boundary condition was not drawn")
+
+    for col in ax.collections:
+        assert isinstance(col, (QuadMesh, PathCollection, LineCollection)), (
+            f"Unexpected collection type: {type(col)}"
+        )
+    # plt.show(block=True)
+
+
 @pytest.mark.mf6
 @pytest.mark.xfail(reason="sometimes get wrong collection type")
 def test_map_view_bc_gwfs_disv_subset(example_data_path):

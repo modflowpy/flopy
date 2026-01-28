@@ -590,7 +590,7 @@ class PlotMapView:
         boundname : string
             select boundary conditions with specific boundname
         subset : int, tuple of ints, or list of such
-            Acceptable values depend on grid type:
+            Subset of valid cellids. Acceptable values depend on grid type:
 
             - Structured grids (DIS): (layer, row, column) or list of such
             - Vertex grids (DISV): (layer, cellid) or list of such
@@ -702,6 +702,8 @@ class PlotMapView:
             plotarray[idx] = 1
 
         if subset is not None:
+            if isinstance(subset, (int, tuple)):
+                subset = [subset]
             subset = tuple(np.array(subset).T)
             if len(subset) != len(plotarray.shape):
                 msg = (
@@ -711,6 +713,11 @@ class PlotMapView:
                 raise IndexError(msg)
             mask = np.zeros(plotarray.shape, dtype=plotarray.dtype)
             mask[subset] = 1
+            if plotAll and len(self.mg.shape) > 1:
+                arr_sum = np.sum(mask, axis=0)
+                arr_sum[arr_sum > 0] = 1
+                for k in range(nlay):
+                    mask[k] = arr_sum.copy()
             plotarray *= mask
 
         # mask the plot array

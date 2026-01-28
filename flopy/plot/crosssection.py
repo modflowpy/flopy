@@ -912,7 +912,7 @@ class PlotCrossSection:
             layer or the head value. Used to create
             patches that conform to water-level elevations.
         subset : int, tuple of ints, or list of such
-            Acceptable values depend on grid type:
+            Subset of valid cellids. Acceptable values depend on grid type:
 
             - Structured grids (DIS): (layer, row, column) or list of such
             - Vertex grids (DISV): (layer, cellid) or list of such
@@ -1032,6 +1032,8 @@ class PlotCrossSection:
             plotarray[idx] = 1
 
         if subset is not None:
+            if isinstance(subset, (int, tuple)):
+                subset = [subset]
             subset = tuple(np.array(subset).T)
             if len(subset) != len(plotarray.shape):
                 msg = (
