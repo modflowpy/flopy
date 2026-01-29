@@ -404,3 +404,70 @@ def test_load_usg(function_tmpdir, fpth):
 
     m.change_model_ws(function_tmpdir)
     m.write_input()
+
+
+def test_free_format_npl(function_tmpdir, freyberg_usg_model_path):
+    """Test that free_format_npl controls values per line in array output."""
+    nam = "freyberg.usg.nam"
+
+    # Load model with free_format_npl=10
+    m = MfUsg.load(nam, model_ws=freyberg_usg_model_path)
+    m.free_format_npl = 10
+    m.model_ws = function_tmpdir
+    m.write_input()
+
+    # Read the written RCH file and check values per line
+    rch_file = function_tmpdir / f"{m.name}.rch"
+    assert rch_file.is_file()
+
+    with open(rch_file) as f:
+        lines = f.readlines()
+
+    # Find a data line (not a header/control record) with multiple values
+    for line in lines:
+        parts = line.strip().split()
+        if len(parts) >= 5:
+            try:
+                [float(p) for p in parts]
+                # This is a data line — verify it has at most 10 values
+                assert len(parts) <= 10, (
+                    f"Expected at most 10 values per line, got {len(parts)}"
+                )
+                break
+            except ValueError:
+                continue
+
+    # Also verify default behavior (npl=None) writes all values on one line
+    m2 = MfUsg.load(nam, model_ws=freyberg_usg_model_path)
+    assert m2.free_format_npl is None
+    out2 = function_tmpdir / "default"
+    out2.mkdir()
+    m2.model_ws = out2
+    m2.write_input()
+
+    rch_file2 = out2 / f"{m2.name}.rch"
+    with open(rch_file2) as f:
+        lines2 = f.readlines()
+
+    # Find a data line — with default npl it should have more than 10 values
+    for line in lines2:
+        parts = line.strip().split()
+        if len(parts) >= 5:
+            try:
+                [float(p) for p in parts]
+                assert len(parts) > 10, (
+                    f"Expected more than 10 values per line with default npl, "
+                    f"got {len(parts)}"
+                )
+                break
+            except ValueError:
+                continue
+
+
+def test_free_format_npl_constructor():
+    """Test that free_format_npl can be set via constructor kwarg."""
+    m = MfUsg(free_format_npl=10)
+    assert m.free_format_npl == 10
+
+    m2 = MfUsg()
+    assert m2.free_format_npl is None

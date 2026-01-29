@@ -2475,11 +2475,23 @@ class Util2d(DataInterface):
                         self.shape, self.python_file_path, self._array, bintype="head"
                     )
                 else:
+                    # Override npl for free format if model specifies free_format_npl
+                    python_format = None
+                    if (
+                        self.format.free
+                        and self._model is not None
+                        and getattr(self._model, "free_format_npl", None) is not None
+                    ):
+                        python_format = (
+                            self._model.free_format_npl,
+                            self.format.py[1],
+                        )
                     self.write_txt(
                         self.shape,
                         self.python_file_path,
                         self._array,
                         fortran_format=self.format.fortran,
+                        python_format=python_format,
                     )
 
             elif self.__value != self.python_file_path:
@@ -2536,8 +2548,16 @@ class Util2d(DataInterface):
 
         """
         # convert array to string with specified format
+        python_format = self.format.py
+        # Override npl for free format if model specifies free_format_npl
+        if (
+            self.format.free
+            and self._model is not None
+            and getattr(self._model, "free_format_npl", None) is not None
+        ):
+            python_format = (self._model.free_format_npl, python_format[1])
         a_string = self.array2string(
-            self.shape, self._array, python_format=self.format.py
+            self.shape, self._array, python_format=python_format
         )
         return a_string
 

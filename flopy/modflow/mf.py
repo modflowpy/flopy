@@ -85,6 +85,12 @@ class Modflow(BaseModel):
     extra_pkgs : dict, optional
         Add custom packages classes to mfnam_packages. Allows for loading models
         with custom packages not contained in the standard flopy distribution.
+    free_format_npl : int, optional
+        Number of values per line when writing free-format arrays. When set
+        (e.g., ``free_format_npl=10``), arrays are written with that many
+        values per line instead of all values on a single line. This produces
+        block-format output, improving readability for large models.
+        Default is None (all values on one line).
 
     Attributes
     ----------
@@ -117,6 +123,7 @@ class Modflow(BaseModel):
         external_path: Union[str, PathLike, None] = None,
         verbose=False,
         extra_pkgs: Optional[dict] = None,
+        free_format_npl=None,
         **kwargs,
     ):
         super().__init__(
@@ -126,6 +133,7 @@ class Modflow(BaseModel):
             model_ws,
             structured=structured,
             verbose=verbose,
+            free_format_npl=free_format_npl,
             **kwargs,
         )
         self.version_types = {

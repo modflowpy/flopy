@@ -34,7 +34,12 @@ class MfUsg(Modflow):
         Location for external files.
     verbose : bool, default False
         Print additional information to the screen.
-
+    free_format_npl : int, optional
+        Number of values per line when writing free-format arrays. When set
+        (e.g., ``free_format_npl=10``), arrays are written with that many
+        values per line instead of all values on a single line. This produces
+        block-format output, improving readability for large models.
+        Default is None (all values on one line).
 
     Attributes
     ----------
@@ -65,6 +70,7 @@ class MfUsg(Modflow):
         model_ws: Union[str, PathLike] = curdir,
         external_path=None,
         verbose=False,
+        free_format_npl=None,
         **kwargs,
     ):
         super().__init__(
@@ -77,6 +83,7 @@ class MfUsg(Modflow):
             model_ws=model_ws,
             external_path=external_path,
             verbose=verbose,
+            free_format_npl=free_format_npl,
             **kwargs,
         )
 

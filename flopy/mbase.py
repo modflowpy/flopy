@@ -375,6 +375,12 @@ class BaseModel(ModelInterface):
         Specify if model grid is structured (default) or unstructured.
     verbose : bool, default False
         Print additional information to the screen.
+    free_format_npl : int, optional
+        Number of values per line when writing free-format arrays. When set
+        (e.g., ``free_format_npl=10``), arrays are written with that many
+        values per line instead of all values on a single line. This produces
+        block-format output, improving readability for large models.
+        Default is None (all values on one line).
     **kwargs : dict, optional
         Used to define: ``xll``/``yll`` for the x- and y-coordinates of
         the lower-left corner of the grid, ``xul``/``yul`` for the
@@ -393,6 +399,7 @@ class BaseModel(ModelInterface):
         model_ws: Union[str, PathLike] = curdir,
         structured=True,
         verbose=False,
+        free_format_npl=None,
         **kwargs,
     ):
         """Initialize BaseModel."""
@@ -453,6 +460,7 @@ class BaseModel(ModelInterface):
         # external option stuff
         self.array_free_format = True
         self.free_format_input = True
+        self.free_format_npl = free_format_npl
         self.parameter_load = False
         self.array_format = None
         self.external_fnames = []
