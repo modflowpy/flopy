@@ -264,7 +264,7 @@ def get_transmissivities(
     if r is not None and c is not None:
         if grid_type != "structured":
             raise ValueError("r, c parameters only valid for structured grids")
-        indices = (r, c)
+        indices = (np.atleast_1d(r), np.atleast_1d(c))
     elif x is not None and y is not None:
         points = zip(np.atleast_1d(x), np.atleast_1d(y))
         if grid_type == "structured":

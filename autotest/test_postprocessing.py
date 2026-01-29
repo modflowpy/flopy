@@ -531,9 +531,18 @@ def test_get_transmissivities_mf6_structured(function_tmpdir):
     T = get_transmissivities(heads, gwf, r=r, c=c)
     assert (T - TRANSMISSIVITIES_DATA["expected_no_intervals"]).sum() < 1e-3
 
-    # test specific point
+    # test specific point with x/y coordinates
     T = get_transmissivities(dis.botm.array, gwf, x=[0.5], y=[0.5])
     assert T.shape == (nl, 1)
+
+    # test specific point with r/c indices (single values, not arrays)
+    T_single = get_transmissivities(dis.botm.array, gwf, r=0, c=0)
+    assert T_single.shape == (nl, 1)
+
+    # test specific point with r/c indices (as arrays)
+    T_array = get_transmissivities(dis.botm.array, gwf, r=[0], c=[0])
+    assert T_array.shape == (nl, 1)
+    assert np.array_equal(T_single, T_array)
 
     # test all cell centers
     Tcoords = get_transmissivities(
