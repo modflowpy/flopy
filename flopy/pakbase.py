@@ -15,7 +15,15 @@ from typing import Union
 import numpy as np
 from numpy.lib.recfunctions import stack_arrays
 
-from .utils import MfList, OptionBlock, Transient2d, Util2d, Util3d, check
+from .utils import (
+    MfList,
+    OptionBlock,
+    Transient2d,
+    Util2d,
+    Util3d,
+    check,
+    create_empty_recarray,
+)
 from .utils.flopy_io import ulstrd
 
 
@@ -1085,6 +1093,9 @@ class Package(PackageInterface):
         bnd_output_cln = None
         stress_period_data_cln = {}
         current_cln = None
+        is_mfusgwel = "mfusgwel" in pak_type_str
+        max_comment_cols = 0
+        max_comment_cols_cln = 0
         for iper in range(nper):
             if model.verbose:
                 msg = f"   loading {pak_type} for kper {iper + 1:5d}"
@@ -1126,7 +1137,36 @@ class Package(PackageInterface):
                 current = pak_type.get_empty(
                     itmp, aux_names=aux_names, structured=model.structured, **usg_args
                 )
-                current = ulstrd(f, itmp, current, model, sfac_columns, ext_unit_dict)
+                if is_mfusgwel:
+                    current, extra_tokens = ulstrd(
+                        f, itmp, current, model, sfac_columns, ext_unit_dict,
+                        capture_comments=True,
+                    )
+                    n_comments = max((len(ct) for ct in extra_tokens), default=0)
+                    if n_comments > 0:
+                        max_comment_cols = max(max_comment_cols, n_comments)
+                        new_dtype = current.dtype
+                        for ci in range(n_comments):
+                            new_dtype = Package.add_to_dtype(
+                                new_dtype, f"comment{ci + 1}", object
+                            )
+                        new_ra = create_empty_recarray(
+                            len(current), new_dtype, default_value=-1.0e10
+                        )
+                        for name in current.dtype.names:
+                            new_ra[name] = current[name]
+                        for ii in range(len(current)):
+                            for ci in range(n_comments):
+                                cname = f"comment{ci + 1}"
+                                if ci < len(extra_tokens[ii]):
+                                    new_ra[cname][ii] = extra_tokens[ii][ci]
+                                else:
+                                    new_ra[cname][ii] = ""
+                        current = new_ra
+                else:
+                    current = ulstrd(
+                        f, itmp, current, model, sfac_columns, ext_unit_dict
+                    )
                 if model.structured:
                     current["k"] -= 1
                     current["i"] -= 1
@@ -1149,9 +1189,41 @@ class Package(PackageInterface):
                 current_cln = pak_type.get_empty(
                     itmp_cln, aux_names=aux_names, structured=False, **usg_args
                 )
-                current_cln = ulstrd(
-                    f, itmp_cln, current_cln, model, sfac_columns, ext_unit_dict
-                )
+                if is_mfusgwel:
+                    current_cln, extra_tokens_cln = ulstrd(
+                        f, itmp_cln, current_cln, model, sfac_columns,
+                        ext_unit_dict, capture_comments=True,
+                    )
+                    n_comments_cln = max(
+                        (len(ct) for ct in extra_tokens_cln), default=0
+                    )
+                    if n_comments_cln > 0:
+                        max_comment_cols_cln = max(
+                            max_comment_cols_cln, n_comments_cln
+                        )
+                        new_dtype = current_cln.dtype
+                        for ci in range(n_comments_cln):
+                            new_dtype = Package.add_to_dtype(
+                                new_dtype, f"comment{ci + 1}", object
+                            )
+                        new_ra = create_empty_recarray(
+                            len(current_cln), new_dtype, default_value=-1.0e10
+                        )
+                        for name in current_cln.dtype.names:
+                            new_ra[name] = current_cln[name]
+                        for ii in range(len(current_cln)):
+                            for ci in range(n_comments_cln):
+                                cname = f"comment{ci + 1}"
+                                if ci < len(extra_tokens_cln[ii]):
+                                    new_ra[cname][ii] = extra_tokens_cln[ii][ci]
+                                else:
+                                    new_ra[cname][ii] = ""
+                        current_cln = new_ra
+                else:
+                    current_cln = ulstrd(
+                        f, itmp_cln, current_cln, model, sfac_columns,
+                        ext_unit_dict,
+                    )
                 current_cln["node"] -= 1
                 bnd_output_cln = np.recarray.copy(current_cln)
             else:
@@ -1231,6 +1303,45 @@ class Package(PackageInterface):
             0, aux_names=aux_names, structured=model.structured, **usg_args
         ).dtype
 
+        # Normalize comment columns across stress periods for MfUsgWel
+        if is_mfusgwel and (max_comment_cols > 0 or max_comment_cols_cln > 0):
+            for spd_dict, max_cc in [
+                (stress_period_data, max_comment_cols),
+                (stress_period_data_cln, max_comment_cols_cln),
+            ]:
+                if max_cc == 0:
+                    continue
+                for iper in spd_dict:
+                    spd = spd_dict[iper]
+                    if not isinstance(spd, np.recarray):
+                        continue
+                    existing = sum(
+                        1 for n in spd.dtype.names if n.startswith("comment")
+                    )
+                    if existing < max_cc:
+                        new_dtype = spd.dtype
+                        for ci in range(existing, max_cc):
+                            new_dtype = Package.add_to_dtype(
+                                new_dtype, f"comment{ci + 1}", object
+                            )
+                        new_ra = create_empty_recarray(
+                            len(spd), new_dtype, default_value=-1.0e10
+                        )
+                        for name in spd.dtype.names:
+                            new_ra[name] = spd[name]
+                        for ci in range(existing, max_cc):
+                            cname = f"comment{ci + 1}"
+                            for ii in range(len(new_ra)):
+                                new_ra[cname][ii] = ""
+                        spd_dict[iper] = new_ra
+
+            # Update dtype to include comment columns
+            if max_comment_cols > 0:
+                for ci in range(max_comment_cols):
+                    dtype = Package.add_to_dtype(
+                        dtype, f"comment{ci + 1}", object
+                    )
+
         if openfile:
             f.close()
 
@@ -1248,6 +1359,12 @@ class Package(PackageInterface):
             cln_dtype = pak_type.get_empty(
                 0, aux_names=aux_names, structured=False, **usg_args
             ).dtype
+            # Update cln_dtype to include comment columns
+            if max_comment_cols_cln > 0:
+                for ci in range(max_comment_cols_cln):
+                    cln_dtype = Package.add_to_dtype(
+                        cln_dtype, f"comment{ci + 1}", object
+                    )
             pak = pak_type(
                 model,
                 ipakcb=ipakcb,
