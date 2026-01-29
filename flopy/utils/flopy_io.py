@@ -382,7 +382,7 @@ def get_url_text(url, error_msg=None):
         return
 
 
-def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
+def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict, capture_comments=False):
     """
     Read a list and allow for open/close, binary, external, sfac, etc.
 
@@ -404,9 +404,17 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
         then in this case ext_unit_dict is required, which can be
         constructed using the function
         :class:`flopy.utils.mfreadnam.parsenamefile`.
+    capture_comments : bool, optional
+        If True, capture extra tokens beyond the expected number of columns
+        and return them as a list of lists alongside the recarray.
+        (default is False)
 
     Returns
     -------
+    ra : np.recarray
+        The filled record array. If capture_comments is True, returns a
+        tuple of (ra, comment_tokens) where comment_tokens is a list of
+        lists containing extra tokens for each row.
 
     """
 
@@ -419,6 +427,7 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
     close_the_file = False
     file_handle = f
     mode = "r"
+    comment_tokens = [[] for _ in range(nlist)] if capture_comments else None
 
     # check for external
     if line.strip().lower().startswith("external"):
@@ -488,6 +497,8 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
             if model.free_format_input:
                 # whitespace separated
                 t = line_parse(line)
+                if capture_comments and len(t) > ncol:
+                    comment_tokens[ii] = t[ncol:]
                 if len(t) < ncol:
                     t = t + (ncol - len(t)) * [0.0]
                 else:
@@ -509,6 +520,8 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
     if close_the_file:
         file_handle.close()
 
+    if capture_comments:
+        return ra, comment_tokens
     return ra
 
 

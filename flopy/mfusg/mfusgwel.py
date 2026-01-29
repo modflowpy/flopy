@@ -239,7 +239,9 @@ class MfUsgWel(ModflowWel):
             self.parent.add_package(self)
 
     @staticmethod
-    def get_empty(ncells=0, aux_names=None, structured=True, wellbot=False):
+    def get_empty(
+        ncells=0, aux_names=None, structured=True, wellbot=False, n_comments=0
+    ):
         """Get empty recarray for MFUSG wells.
 
         Parameters
@@ -252,6 +254,8 @@ class MfUsgWel(ModflowWel):
             Whether grid is structured
         wellbot : bool
             Whether WELLBOT option is used
+        n_comments : int
+            Number of comment columns to add (default is 0)
 
         Returns
         -------
@@ -275,6 +279,12 @@ class MfUsgWel(ModflowWel):
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
 
+        # Add comment columns
+        if n_comments > 0:
+            comment_names = [f"comment{i + 1}" for i in range(n_comments)]
+            for name in comment_names:
+                dtype = Package.add_to_dtype(dtype, name, object)
+
         return create_empty_recarray(ncells, dtype, default_value=-1.0e10)
 
     def _check_for_aux(self, options, cln=False):
@@ -297,6 +307,9 @@ class MfUsgWel(ModflowWel):
             dt = self.get_default_dtype(structured=self.parent.structured)
         if len(self.dtype.names) > len(dt.names):
             for name in self.dtype.names[len(dt.names) :]:
+                # Skip comment columns (object dtype) — not AUX variables
+                if self.dtype.fields[name][0] == object:
+                    continue
                 ladd = True
                 for option in options:
                     if name.lower() in option.lower():

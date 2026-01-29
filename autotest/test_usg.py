@@ -471,3 +471,98 @@ def test_free_format_npl_constructor():
 
     m2 = MfUsg()
     assert m2.free_format_npl is None
+
+
+def test_wel_comment_columns_read_write(function_tmpdir, freyberg_usg_model_path):
+    """Test that trailing comment text in WEL files is preserved on roundtrip."""
+    import shutil
+
+    # Copy freyberg model to tmpdir so we can modify the WEL file
+    for f in freyberg_usg_model_path.iterdir():
+        shutil.copy2(f, function_tmpdir)
+
+    # Rewrite the WEL file with trailing comments on each data line
+    wel_file = function_tmpdir / "freyberg.usg.wel"
+    with open(wel_file) as f:
+        lines = f.readlines()
+
+    with open(wel_file, "w") as f:
+        for i, line in enumerate(lines):
+            if i >= 3 and line.strip() and not line.startswith("#"):
+                # Append comment text to data lines
+                f.write(line.rstrip() + f"  zone1 well_{i}\n")
+            else:
+                f.write(line)
+
+    # Load the model
+    m = MfUsg.load("freyberg.usg.nam", model_ws=str(function_tmpdir))
+    wel = m.get_package("WEL")
+
+    # Verify comment columns are captured
+    spd = wel.stress_period_data[0]
+    assert "comment1" in spd.dtype.names, "comment1 not found in dtype"
+    assert "comment2" in spd.dtype.names, "comment2 not found in dtype"
+    assert spd["comment1"][0] == "zone1"
+    assert spd["comment2"][0] == "well_3"
+
+    # Write the model back out
+    out_dir = function_tmpdir / "output"
+    out_dir.mkdir()
+    m.model_ws = str(out_dir)
+    m.write_input()
+
+    # Read the written WEL file and verify comments are preserved
+    written_wel = out_dir / "freyberg.usg.wel"
+    with open(written_wel) as f:
+        written_lines = f.readlines()
+
+    # Header should NOT contain "aux comment"
+    header = written_lines[1].lower()
+    assert "aux comment" not in header, (
+        f"aux comment found in header: {written_lines[1]}"
+    )
+
+    # Data lines should contain the comment text
+    data_lines = [l for l in written_lines if "zone1" in l]
+    assert len(data_lines) > 0, "Comment text not found in written WEL file"
+
+
+def test_wel_comment_columns_fresh_model(function_tmpdir):
+    """Test creating a fresh MfUsgWel with comment columns programmatically."""
+    m = MfUsg(modelname="test_fresh", structured=False, model_ws=function_tmpdir)
+
+    # Create stress period data with comments using get_empty
+    spd = MfUsgWel.get_empty(ncells=2, structured=False, n_comments=2)
+    spd["node"] = [0, 1]
+    spd["flux"] = [-100.0, -200.0]
+    spd["comment1"] = ["zone1", "zone2"]
+    spd["comment2"] = ["well_X", "well_Y"]
+
+    # Verify dtype has comment columns with object dtype
+    assert spd.dtype["comment1"] == object
+    assert spd.dtype["comment2"] == object
+
+    # Create the WEL package with matching dtype
+    wel = MfUsgWel(m, stress_period_data={0: spd}, dtype=spd.dtype, add_package=False)
+
+    # Verify comments are not treated as AUX
+    if wel.options:
+        for opt in wel.options:
+            assert "comment" not in opt.lower(), (
+                f"comment incorrectly declared as AUX: {opt}"
+            )
+
+    # Write the WEL file
+    wel_file = function_tmpdir / "test_fresh.wel"
+    wel.write_file(str(wel_file))
+
+    # Read and verify
+    with open(wel_file) as f:
+        lines = f.readlines()
+
+    header = lines[1].lower()
+    assert "aux comment" not in header
+
+    data_lines = [l for l in lines[3:] if l.strip() and not l.startswith("#")]
+    assert "well_X" in data_lines[0]
+    assert "well_Y" in data_lines[1]
