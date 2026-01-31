@@ -20,8 +20,8 @@ from flopy.mf6 import (
     MFSimulation,
     ModflowGwf,
     ModflowGwfdis,
-    ModflowGwfdisv,
     ModflowGwfdisu,
+    ModflowGwfdisv,
 )
 from flopy.modflow import Modflow, ModflowDis
 from flopy.utils import import_optional_dependency
