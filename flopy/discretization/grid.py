@@ -542,17 +542,16 @@ class Grid:
         """
         # irregular_shape_patch
         from ..plot.plotutil import UnstructuredPlotUtilities
+
         # when looping through to create determinants, need to start at -1
         xverts, yverts = self.cross_section_vertices
-        xverts, yverts = UnstructuredPlotUtilities.irregular_shape_patch(
-            xverts, yverts
-        )
+        xverts, yverts = UnstructuredPlotUtilities.irregular_shape_patch(xverts, yverts)
         area_x2 = np.zeros((1, len(xverts)))
         for i in range(xverts.shape[-1]):
             # calculate the determinant of each line in polygon
             area_x2 += xverts[:, i - 1] * yverts[:, i] - yverts[:, i - 1] * xverts[:, i]
 
-        area = np.abs(area_x2 / 2.)
+        area = np.abs(area_x2 / 2.0)
         return np.ravel(area)
 
     @property

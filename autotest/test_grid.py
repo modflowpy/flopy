@@ -16,7 +16,13 @@ from scipy.spatial import Delaunay
 from autotest.test_dis_cases import case_dis, case_disv
 from autotest.test_grid_cases import GridCases
 from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
-from flopy.mf6 import MFSimulation, ModflowGwf, ModflowGwfdis, ModflowGwfdisv, ModflowGwfdisu
+from flopy.mf6 import (
+    MFSimulation,
+    ModflowGwf,
+    ModflowGwfdis,
+    ModflowGwfdisv,
+    ModflowGwfdisu,
+)
 from flopy.modflow import Modflow, ModflowDis
 from flopy.utils import import_optional_dependency
 from flopy.utils.crs import get_authority_crs
@@ -1232,6 +1238,57 @@ def test_tocvfd4():
     assert iverts[4] == [2, 5, 13, 10, 17, 8, 2]
 
 
+@requires_pkg("shapely", "scipy")
+@requires_exe("triangle")
+@pytest.mark.parametrize(
+    "max_area,domain_size",
+    [
+        (0.1, 2),  # Simple: small domain, large max_area -> few cells
+        (0.02, 5),  # More complex: larger domain, smaller max_area -> more cells
+    ],
+    ids=["simple_voronoi", "complex_voronoi"],
+)
+def test_voronoi_hanging_node_check(function_tmpdir, max_area, domain_size):
+    """
+    Addresses github.com/modflowpy/flopy/issues/2427
+
+    Tests hanging node check works on programmatically generated Voronoi
+    grids. Grids with clean geometry should successfully converge, while
+    the presence of floating-point artifacts like duplicate vertices may
+    prevent convergence.
+    """
+    import warnings
+
+    tri = Triangle(maximum_area=max_area, angle=30, model_ws=function_tmpdir)
+    poly = np.array(
+        ((0, 0), (domain_size, 0), (domain_size, domain_size), (0, domain_size))
+    )
+    tri.add_polygon(poly)
+    tri.build(verbose=False)
+    vor = VoronoiGrid(tri)
+
+    vertdict = {}
+    for icell, iverts_cell in enumerate(vor.iverts):
+        points = []
+        for iv in iverts_cell:
+            points.append(tuple(vor.verts[iv]))
+        points.append(points[0])  # close the polygon
+        vertdict[icell] = points
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        verts_skip, iverts_skip = to_cvfd(vertdict, skip_hanging_node_check=True)
+        assert len(w) == 0
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        verts_check, iverts_check = to_cvfd(vertdict, skip_hanging_node_check=False)
+        assert len(w) == 0
+
+    assert len(iverts_skip) == len(iverts_check)
+    assert len(iverts_skip) == len(vertdict)
+
+
 @requires_pkg("shapely")
 def test_area_centroid_polygon():
     pts = [
@@ -1864,7 +1921,7 @@ def test_structured_mf6_gridprops(example_data_path):
     new_sim = MFSimulation()
     new_gwf = ModflowGwf(new_sim)
     new_dis = ModflowGwfdis(new_gwf, **modelgrid.dis_properties())
-    attrs = ('delc', 'delr', 'top', 'botm', 'idomain', "xorigin", "yorigin", "angrot")
+    attrs = ("delc", "delr", "top", "botm", "idomain", "xorigin", "yorigin", "angrot")
     for attr in attrs:
         v0 = getattr(dis, attr).array
         v1 = getattr(new_dis, attr).array
@@ -1873,6 +1930,7 @@ def test_structured_mf6_gridprops(example_data_path):
         np.testing.assert_allclose(
             v0, v1, err_msg=f"{attr} not consistent with valid array data"
         )
+
 
 @pytest.mark.mf6
 def test_vertex_mf6_gridprops(example_data_path):
@@ -1886,7 +1944,14 @@ def test_vertex_mf6_gridprops(example_data_path):
     new_disv = ModflowGwfdisv(new_gwf, **modelgrid.disv_properties())
 
     attrs = (
-        "vertices", "top", "botm", "idomain", "xorigin", "yorigin", "angrot", "cell2d"
+        "vertices",
+        "top",
+        "botm",
+        "idomain",
+        "xorigin",
+        "yorigin",
+        "angrot",
+        "cell2d",
     )
     for attr in attrs:
         v0 = getattr(disv, attr).array
@@ -1894,10 +1959,12 @@ def test_vertex_mf6_gridprops(example_data_path):
         if attr in ("xorigin", "yorigin", "angrot") and v0 is None:
             v0 = 0
 
-        if attr in("cell2d", "vertices"):
+        if attr in ("cell2d", "vertices"):
             for col in v0.dtype.names:
                 np.testing.assert_allclose(
-                    v0[col], v1[col], err_msg=f"{attr} not consistent with valid array data"
+                    v0[col],
+                    v1[col],
+                    err_msg=f"{attr} not consistent with valid array data",
                 )
         else:
             np.testing.assert_allclose(
