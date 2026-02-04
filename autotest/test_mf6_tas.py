@@ -134,6 +134,10 @@ def test_tas_set_all_data_external(function_tmpdir):
         content = f.read()
         assert "OPEN/CLOSE" in content
         assert "INTERNAL" not in content
+        assert "tas_array_1.txt" in content
+        assert "tas_array_2.txt" in content
 
-    external_files = list(sim_ws.glob("*.txt"))
-    assert len(external_files) >= 2
+    external_files = sorted(sim_ws.glob("*tas_array_*.txt"))
+    assert len(external_files) == 2
+    assert external_files[0].name.endswith("tas_array_1.txt")
+    assert external_files[1].name.endswith("tas_array_2.txt")

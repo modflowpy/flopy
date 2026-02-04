@@ -1790,7 +1790,7 @@ class MFTransientArray(MFArray, MFTransient):
 
         """
         # store each stress period in separate file(s)
-        for sp in self._data_storage.keys():
+        for idx, sp in enumerate(sorted(self._data_storage.keys()), start=1):
             self._current_key = sp
             layer_storage = self._get_storage_obj().layer_storage
             if (
@@ -1799,10 +1799,7 @@ class MFTransientArray(MFArray, MFTransient):
                 != DataStorageType.external_file
             ):
                 fname, ext = os.path.splitext(external_file_path)
-                if DatumUtil.is_int(sp):
-                    full_name = f"{fname}_{sp + 1}{ext}"
-                else:
-                    full_name = f"{fname}_{sp}{ext}"
+                full_name = f"{fname}_{idx}{ext}"
                 super().store_as_external_file(
                     full_name,
                     layer,
