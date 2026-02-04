@@ -616,9 +616,12 @@ class MFArray(MFMultiDimVar):
             if isinstance(data, str) and self._tas_info(data)[0] is not None:
                 # data must not be time array series information
                 continue
+            # Check if dimensions are well-defined. For arrays with unknown
+            # shape (e.g., TAS arrays with shape="(unknown)"), allow external
+            # storage if we have actual numpy array data at runtime
             if storage.get_data_dimensions(current_layer)[0] == -9999:
-                # data must have well defined dimensions to make external
-                continue
+                if not isinstance(data, np.ndarray):
+                    continue
             try:
                 # store layer's data in external file
                 if (
@@ -1852,33 +1855,61 @@ class MFTransientArray(MFArray, MFTransient):
         """
         data = None
         output = None
-        for sp in range(0, num_sp):
-            if sp in self._data_storage:
-                self.get_data_prep(sp)
+
+        # Check if we have float-type keys (e.g., TAS data with time values)
+        # vs. integer-type stress period keys
+        if self._data_storage:
+            has_float_keys = any(
+                isinstance(key, float)
+                for key in self._data_storage.keys()
+            )
+        else:
+            has_float_keys = False
+
+        if has_float_keys:
+            # For TAS-style data with floating-point time keys,
+            # iterate through actual keys in sorted order
+            sorted_keys = sorted(self._data_storage.keys())
+            for key in sorted_keys:
+                self.get_data_prep(key)
                 data = super().get_data(apply_mult=apply_mult, **kwargs)
                 data = np.expand_dims(data, 0)
-            else:
-                # if there is no previous data provide array of
-                # zeros, otherwise provide last array of data found
-                if data is None:
-                    # get any data
-                    data_dimensions = None
-                    for key in self._data_storage.keys():
-                        self.get_data_prep(key)
-                        data = super().get_data(
-                            apply_mult=apply_mult, **kwargs
-                        )
-                        break
-                    if data is not None:
-                        if self.structure.type == DatumType.integer:
-                            data = np.full_like(data, 1)
-                        else:
-                            data = np.full_like(data, 0.0)
-                        data = np.expand_dims(data, 0)
-            if output is None or data is None:
-                output = data
-            else:
-                output = np.concatenate((output, data))
+
+                if output is None:
+                    output = data
+                else:
+                    output = np.concatenate((output, data))
+        else:
+            # For standard stress period data with integer keys,
+            # iterate through stress periods and fill missing ones
+            for sp in range(0, num_sp):
+                if sp in self._data_storage:
+                    self.get_data_prep(sp)
+                    data = super().get_data(apply_mult=apply_mult, **kwargs)
+                    data = np.expand_dims(data, 0)
+                else:
+                    # if there is no previous data provide array of
+                    # zeros, otherwise provide last array of data found
+                    if data is None:
+                        # get any data
+                        data_dimensions = None
+                        for key in self._data_storage.keys():
+                            self.get_data_prep(key)
+                            data = super().get_data(
+                                apply_mult=apply_mult, **kwargs
+                            )
+                            break
+                        if data is not None:
+                            if self.structure.type == DatumType.integer:
+                                data = np.full_like(data, 1)
+                            else:
+                                data = np.full_like(data, 0.0)
+                            data = np.expand_dims(data, 0)
+                if output is None or data is None:
+                    output = data
+                else:
+                    output = np.concatenate((output, data))
+
         return output
 
     def has_data(self, layer=None):
