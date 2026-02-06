@@ -73,13 +73,103 @@ class ModflowUtlncf(MFPackage):
 
     """
 
-    wkt = ArrayTemplateGenerator(('ncf', 'options', 'wkt'))
-    latitude = ArrayTemplateGenerator(('ncf', 'griddata', 'latitude'))
-    longitude = ArrayTemplateGenerator(('ncf', 'griddata', 'longitude'))
-    package_abbr = 'utlncf'
-    _package_type = 'ncf'
-    dfn_file_name = 'utl-ncf.dfn'
-    dfn = [['header'], ['block options', 'name wkt', 'type string', 'shape lenbigline', 'reader urword', 'optional true'], ['block options', 'name deflate', 'type integer', 'reader urword', 'optional true'], ['block options', 'name shuffle', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name chunk_time', 'type integer', 'reader urword', 'optional true'], ['block options', 'name chunk_face', 'type integer', 'reader urword', 'optional true'], ['block options', 'name chunk_z', 'type integer', 'reader urword', 'optional true'], ['block options', 'name chunk_y', 'type integer', 'reader urword', 'optional true'], ['block options', 'name chunk_x', 'type integer', 'reader urword', 'optional true'], ['block options', 'name modflow6_attr_off', 'type keyword', 'reader urword', 'optional true', 'mf6internal attr_off'], ['block dimensions', 'name ncpl', 'type integer', 'optional true', 'reader urword'], ['block griddata', 'name latitude', 'type double precision', 'shape (ncpl)', 'optional true', 'reader readarray'], ['block griddata', 'name longitude', 'type double precision', 'shape (ncpl)', 'optional true', 'reader readarray']]
+    wkt = ArrayTemplateGenerator(("ncf", "options", "wkt"))
+    latitude = ArrayTemplateGenerator(("ncf", "griddata", "latitude"))
+    longitude = ArrayTemplateGenerator(("ncf", "griddata", "longitude"))
+    package_abbr = "utlncf"
+    _package_type = "ncf"
+    dfn_file_name = "utl-ncf.dfn"
+    dfn = [
+        ["header"],
+        [
+            "block options",
+            "name wkt",
+            "type string",
+            "shape lenbigline",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name deflate",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name shuffle",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name chunk_time",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name chunk_face",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name chunk_z",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name chunk_y",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name chunk_x",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name modflow6_attr_off",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal attr_off",
+        ],
+        [
+            "block dimensions",
+            "name ncpl",
+            "type integer",
+            "optional true",
+            "reader urword",
+        ],
+        [
+            "block griddata",
+            "name latitude",
+            "type double precision",
+            "shape (ncpl)",
+            "optional true",
+            "reader readarray",
+        ],
+        [
+            "block griddata",
+            "name longitude",
+            "type double precision",
+            "shape (ncpl)",
+            "optional true",
+            "reader readarray",
+        ],
+    ]
 
     def __init__(
         self,
@@ -97,7 +187,6 @@ class ModflowUtlncf(MFPackage):
         ncpl=None,
         latitude=None,
         longitude=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -112,25 +201,29 @@ class ModflowUtlncf(MFPackage):
             **kwargs,
         )
 
-        self.wkt = self.build_mfdata('wkt', wkt)
-        self.deflate = self.build_mfdata('deflate', deflate)
-        self.shuffle = self.build_mfdata('shuffle', shuffle)
-        self.chunk_time = self.build_mfdata('chunk_time', chunk_time)
-        self.chunk_face = self.build_mfdata('chunk_face', chunk_face)
-        self.chunk_z = self.build_mfdata('chunk_z', chunk_z)
-        self.chunk_y = self.build_mfdata('chunk_y', chunk_y)
-        self.chunk_x = self.build_mfdata('chunk_x', chunk_x)
-        self.modflow6_attr_off = self.build_mfdata('modflow6_attr_off', modflow6_attr_off)
-        self.ncpl = self.build_mfdata('ncpl', ncpl)
-        self.latitude = self.build_mfdata('latitude', latitude)
-        self.longitude = self.build_mfdata('longitude', longitude)
+        self.wkt = self.build_mfdata("wkt", wkt)
+        self.deflate = self.build_mfdata("deflate", deflate)
+        self.shuffle = self.build_mfdata("shuffle", shuffle)
+        self.chunk_time = self.build_mfdata("chunk_time", chunk_time)
+        self.chunk_face = self.build_mfdata("chunk_face", chunk_face)
+        self.chunk_z = self.build_mfdata("chunk_z", chunk_z)
+        self.chunk_y = self.build_mfdata("chunk_y", chunk_y)
+        self.chunk_x = self.build_mfdata("chunk_x", chunk_x)
+        self.modflow6_attr_off = self.build_mfdata(
+            "modflow6_attr_off", modflow6_attr_off
+        )
+        self.ncpl = self.build_mfdata("ncpl", ncpl)
+        self.latitude = self.build_mfdata("latitude", latitude)
+        self.longitude = self.build_mfdata("longitude", longitude)
 
         self._init_complete = True
+
 
 class UtlncfPackages(MFChildPackages):
     """
     UtlncfPackages is a container class for the ModflowUtlncf class.
     """
+
     package_abbr = "utlncfpackages"
 
     def initialize(
@@ -147,7 +240,6 @@ class UtlncfPackages(MFChildPackages):
         ncpl=None,
         latitude=None,
         longitude=None,
-
         filename=None,
         pname=None,
     ):
@@ -191,7 +283,6 @@ class UtlncfPackages(MFChildPackages):
         ncpl=None,
         latitude=None,
         longitude=None,
-
         filename=None,
         pname=None,
     ):

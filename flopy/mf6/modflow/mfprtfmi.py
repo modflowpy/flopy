@@ -44,11 +44,54 @@ class ModflowPrtfmi(MFPackage):
 
     """
 
-    packagedata = ListTemplateGenerator(('prt6', 'fmi', 'packagedata', 'packagedata'))
-    package_abbr = 'prtfmi'
-    _package_type = 'fmi'
-    dfn_file_name = 'prt-fmi.dfn'
-    dfn = [['header'], ['block options', 'name save_flows', 'type keyword', 'reader urword', 'optional true'], ['block packagedata', 'name packagedata', 'type recarray flowtype filein fname', 'reader urword', 'optional true'], ['block packagedata', 'name flowtype', 'in_record true', 'type string', 'tagged false', 'reader urword'], ['block packagedata', 'name filein', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block packagedata', 'name fname', 'in_record true', 'type string', 'preserve_case true', 'tagged false', 'reader urword']]
+    packagedata = ListTemplateGenerator(("prt6", "fmi", "packagedata", "packagedata"))
+    package_abbr = "prtfmi"
+    _package_type = "fmi"
+    dfn_file_name = "prt-fmi.dfn"
+    dfn = [
+        ["header"],
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block packagedata",
+            "name packagedata",
+            "type recarray flowtype filein fname",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block packagedata",
+            "name flowtype",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block packagedata",
+            "name fname",
+            "in_record true",
+            "type string",
+            "preserve_case true",
+            "tagged false",
+            "reader urword",
+        ],
+    ]
 
     def __init__(
         self,
@@ -56,7 +99,6 @@ class ModflowPrtfmi(MFPackage):
         loading_package=False,
         save_flows=None,
         packagedata=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -71,8 +113,7 @@ class ModflowPrtfmi(MFPackage):
             **kwargs,
         )
 
-        self.save_flows = self.build_mfdata('save_flows', save_flows)
-        self.packagedata = self.build_mfdata('packagedata', packagedata)
+        self.save_flows = self.build_mfdata("save_flows", save_flows)
+        self.packagedata = self.build_mfdata("packagedata", packagedata)
 
         self._init_complete = True
-

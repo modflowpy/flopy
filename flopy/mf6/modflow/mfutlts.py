@@ -75,16 +75,185 @@ class ModflowUtlts(MFPackage):
 
     """
 
-    time_series_namerecord = ListTemplateGenerator(('ts', 'attributes', 'time_series_namerecord'))
-    interpolation_methodrecord = ListTemplateGenerator(('ts', 'attributes', 'interpolation_methodrecord'))
-    interpolation_methodrecord_single = ListTemplateGenerator(('ts', 'attributes', 'interpolation_methodrecord_single'))
-    sfacrecord = ListTemplateGenerator(('ts', 'attributes', 'sfacrecord'))
-    sfacrecord_single = ListTemplateGenerator(('ts', 'attributes', 'sfacrecord_single'))
-    timeseries = ListTemplateGenerator(('ts', 'timeseries', 'timeseries'))
-    package_abbr = 'utlts'
-    _package_type = 'ts'
-    dfn_file_name = 'utl-ts.dfn'
-    dfn = [['header', 'multi-package'], ['block attributes', 'name time_series_namerecord', 'type record names time_series_names', 'shape', 'reader urword', 'tagged false', 'optional false'], ['block attributes', 'name names', 'other_names name', 'type keyword', 'shape', 'reader urword', 'optional false', 'in_record true'], ['block attributes', 'name time_series_names', 'type string', 'shape (any1d)', 'tagged false', 'reader urword', 'optional false', 'in_record true'], ['block attributes', 'name interpolation_methodrecord', 'type record methods interpolation_method', 'shape', 'reader urword', 'tagged false', 'optional true'], ['block attributes', 'name methods', 'type keyword', 'shape', 'reader urword', 'optional false', 'in_record true'], ['block attributes', 'name interpolation_method', 'type string', 'valid stepwise linear linearend', 'shape (time_series_names)', 'tagged false', 'reader urword', 'optional false', 'in_record true'], ['block attributes', 'name interpolation_methodrecord_single', 'type record method interpolation_method_single', 'shape', 'reader urword', 'tagged false', 'optional true'], ['block attributes', 'name method', 'type keyword', 'shape', 'reader urword', 'optional false'], ['block attributes', 'name interpolation_method_single', 'type string', 'valid stepwise linear linearend', 'shape', 'tagged false', 'reader urword', 'optional false'], ['block attributes', 'name sfacrecord', 'type record sfacs sfacval', 'shape', 'reader urword', 'tagged true', 'optional true'], ['block attributes', 'name sfacs', 'type keyword', 'shape', 'reader urword', 'optional false', 'in_record true'], ['block attributes', 'name sfacval', 'type double precision', 'shape (<time_series_name)', 'tagged false', 'reader urword', 'optional false', 'in_record true'], ['block attributes', 'name sfacrecord_single', 'type record sfac sfacval', 'shape', 'reader urword', 'tagged true', 'optional true'], ['block attributes', 'name sfac', 'type keyword', 'shape', 'tagged false', 'reader urword', 'optional false'], ['block timeseries', 'name timeseries', 'type recarray ts_time ts_array', 'shape', 'reader urword', 'tagged true', 'optional false'], ['block timeseries', 'name ts_time', 'type double precision', 'shape', 'tagged false', 'reader urword', 'optional false', 'repeating false', 'in_record true'], ['block timeseries', 'name ts_array', 'type double precision', 'shape (time_series_names)', 'tagged false', 'reader urword', 'optional false', 'in_record true']]
+    time_series_namerecord = ListTemplateGenerator(
+        ("ts", "attributes", "time_series_namerecord")
+    )
+    interpolation_methodrecord = ListTemplateGenerator(
+        ("ts", "attributes", "interpolation_methodrecord")
+    )
+    interpolation_methodrecord_single = ListTemplateGenerator(
+        ("ts", "attributes", "interpolation_methodrecord_single")
+    )
+    sfacrecord = ListTemplateGenerator(("ts", "attributes", "sfacrecord"))
+    sfacrecord_single = ListTemplateGenerator(("ts", "attributes", "sfacrecord_single"))
+    timeseries = ListTemplateGenerator(("ts", "timeseries", "timeseries"))
+    package_abbr = "utlts"
+    _package_type = "ts"
+    dfn_file_name = "utl-ts.dfn"
+    dfn = [
+        ["header", "multi-package"],
+        [
+            "block attributes",
+            "name time_series_namerecord",
+            "type record names time_series_names",
+            "shape",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block attributes",
+            "name names",
+            "other_names name",
+            "type keyword",
+            "shape",
+            "reader urword",
+            "optional false",
+            "in_record true",
+        ],
+        [
+            "block attributes",
+            "name time_series_names",
+            "type string",
+            "shape (any1d)",
+            "tagged false",
+            "reader urword",
+            "optional false",
+            "in_record true",
+        ],
+        [
+            "block attributes",
+            "name interpolation_methodrecord",
+            "type record methods interpolation_method",
+            "shape",
+            "reader urword",
+            "tagged false",
+            "optional true",
+        ],
+        [
+            "block attributes",
+            "name methods",
+            "type keyword",
+            "shape",
+            "reader urword",
+            "optional false",
+            "in_record true",
+        ],
+        [
+            "block attributes",
+            "name interpolation_method",
+            "type string",
+            "valid stepwise linear linearend",
+            "shape (time_series_names)",
+            "tagged false",
+            "reader urword",
+            "optional false",
+            "in_record true",
+        ],
+        [
+            "block attributes",
+            "name interpolation_methodrecord_single",
+            "type record method interpolation_method_single",
+            "shape",
+            "reader urword",
+            "tagged false",
+            "optional true",
+        ],
+        [
+            "block attributes",
+            "name method",
+            "type keyword",
+            "shape",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block attributes",
+            "name interpolation_method_single",
+            "type string",
+            "valid stepwise linear linearend",
+            "shape",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block attributes",
+            "name sfacrecord",
+            "type record sfacs sfacval",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block attributes",
+            "name sfacs",
+            "type keyword",
+            "shape",
+            "reader urword",
+            "optional false",
+            "in_record true",
+        ],
+        [
+            "block attributes",
+            "name sfacval",
+            "type double precision",
+            "shape (<time_series_name)",
+            "tagged false",
+            "reader urword",
+            "optional false",
+            "in_record true",
+        ],
+        [
+            "block attributes",
+            "name sfacrecord_single",
+            "type record sfac sfacval",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block attributes",
+            "name sfac",
+            "type keyword",
+            "shape",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block timeseries",
+            "name timeseries",
+            "type recarray ts_time ts_array",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block timeseries",
+            "name ts_time",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "reader urword",
+            "optional false",
+            "repeating false",
+            "in_record true",
+        ],
+        [
+            "block timeseries",
+            "name ts_array",
+            "type double precision",
+            "shape (time_series_names)",
+            "tagged false",
+            "reader urword",
+            "optional false",
+            "in_record true",
+        ],
+    ]
 
     def __init__(
         self,
@@ -96,7 +265,6 @@ class ModflowUtlts(MFPackage):
         sfacrecord=None,
         sfacrecord_single=None,
         timeseries=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -111,19 +279,29 @@ class ModflowUtlts(MFPackage):
             **kwargs,
         )
 
-        self.time_series_namerecord = self.build_mfdata('time_series_namerecord', time_series_namerecord)
-        self.interpolation_methodrecord = self.build_mfdata('interpolation_methodrecord', interpolation_methodrecord)
-        self.interpolation_methodrecord_single = self.build_mfdata('interpolation_methodrecord_single', interpolation_methodrecord_single)
-        self.sfacrecord = self.build_mfdata('sfacrecord', sfacrecord)
-        self.sfacrecord_single = self.build_mfdata('sfacrecord_single', sfacrecord_single)
-        self.timeseries = self.build_mfdata('timeseries', timeseries)
+        self.time_series_namerecord = self.build_mfdata(
+            "time_series_namerecord", time_series_namerecord
+        )
+        self.interpolation_methodrecord = self.build_mfdata(
+            "interpolation_methodrecord", interpolation_methodrecord
+        )
+        self.interpolation_methodrecord_single = self.build_mfdata(
+            "interpolation_methodrecord_single", interpolation_methodrecord_single
+        )
+        self.sfacrecord = self.build_mfdata("sfacrecord", sfacrecord)
+        self.sfacrecord_single = self.build_mfdata(
+            "sfacrecord_single", sfacrecord_single
+        )
+        self.timeseries = self.build_mfdata("timeseries", timeseries)
 
         self._init_complete = True
+
 
 class UtltsPackages(MFChildPackages):
     """
     UtltsPackages is a container class for the ModflowUtlts class.
     """
+
     package_abbr = "utltspackages"
 
     def initialize(
@@ -134,7 +312,6 @@ class UtltsPackages(MFChildPackages):
         sfacrecord=None,
         sfacrecord_single=None,
         timeseries=None,
-
         filename=None,
         pname=None,
     ):
@@ -166,7 +343,6 @@ class UtltsPackages(MFChildPackages):
         sfacrecord=None,
         sfacrecord_single=None,
         timeseries=None,
-
         filename=None,
         pname=None,
     ):

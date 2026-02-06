@@ -44,10 +44,27 @@ class ModflowGweadv(MFPackage):
 
     """
 
-    package_abbr = 'gweadv'
-    _package_type = 'adv'
-    dfn_file_name = 'gwe-adv.dfn'
-    dfn = [['header'], ['block options', 'name scheme', 'type string', 'valid central upstream tvd', 'reader urword', 'optional true'], ['block options', 'name ats_percel', 'type double precision', 'reader urword', 'optional true']]
+    package_abbr = "gweadv"
+    _package_type = "adv"
+    dfn_file_name = "gwe-adv.dfn"
+    dfn = [
+        ["header"],
+        [
+            "block options",
+            "name scheme",
+            "type string",
+            "valid central upstream tvd",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name ats_percel",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+    ]
 
     def __init__(
         self,
@@ -55,7 +72,6 @@ class ModflowGweadv(MFPackage):
         loading_package=False,
         scheme=None,
         ats_percel=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -70,8 +86,7 @@ class ModflowGweadv(MFPackage):
             **kwargs,
         )
 
-        self.scheme = self.build_mfdata('scheme', scheme)
-        self.ats_percel = self.build_mfdata('ats_percel', ats_percel)
+        self.scheme = self.build_mfdata("scheme", scheme)
+        self.ats_percel = self.build_mfdata("ats_percel", ats_percel)
 
         self._init_complete = True
-

@@ -94,17 +94,229 @@ class ModflowGwfdis(MFPackage):
 
     """
 
-    grb_filerecord = ListTemplateGenerator(('gwf6', 'dis', 'options', 'grb_filerecord'))
-    ncf_filerecord = ListTemplateGenerator(('gwf6', 'dis', 'options', 'ncf_filerecord'))
-    delr = ArrayTemplateGenerator(('gwf6', 'dis', 'griddata', 'delr'))
-    delc = ArrayTemplateGenerator(('gwf6', 'dis', 'griddata', 'delc'))
-    top = ArrayTemplateGenerator(('gwf6', 'dis', 'griddata', 'top'))
-    botm = ArrayTemplateGenerator(('gwf6', 'dis', 'griddata', 'botm'))
-    idomain = ArrayTemplateGenerator(('gwf6', 'dis', 'griddata', 'idomain'))
-    package_abbr = 'gwfdis'
-    _package_type = 'dis'
-    dfn_file_name = 'gwf-dis.dfn'
-    dfn = [['header'], ['block options', 'name length_units', 'type string', 'reader urword', 'optional true'], ['block options', 'name nogrb', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name grb_filerecord', 'type record grb6 fileout grb6_filename', 'reader urword', 'tagged true', 'optional true'], ['block options', 'name grb6', 'type keyword', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name fileout', 'type keyword', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name grb6_filename', 'type string', 'preserve_case true', 'in_record true', 'reader urword', 'optional false', 'tagged false'], ['block options', 'name xorigin', 'type double precision', 'reader urword', 'optional true'], ['block options', 'name yorigin', 'type double precision', 'reader urword', 'optional true'], ['block options', 'name angrot', 'type double precision', 'reader urword', 'optional true'], ['block options', 'name export_array_ascii', 'type keyword', 'reader urword', 'optional true', 'mf6internal export_ascii'], ['block options', 'name export_array_netcdf', 'type keyword', 'reader urword', 'optional true', 'mf6internal export_nc', 'extended true'], ['block options', 'name crs', 'type string', 'shape lenbigline', 'preserve_case true', 'reader urword', 'optional true', 'developmode true'], ['block options', 'name ncf_filerecord', 'type record ncf6 filein ncf6_filename', 'reader urword', 'tagged true', 'optional true', 'construct_package ncf', 'construct_data packagedata', 'parameter_name packagedata'], ['block options', 'name ncf6', 'type keyword', 'in_record true', 'reader urword', 'tagged true', 'optional false', 'extended true'], ['block options', 'name filein', 'type keyword', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name ncf6_filename', 'type string', 'preserve_case true', 'in_record true', 'reader urword', 'optional false', 'tagged false', 'extended true'], ['block dimensions', 'name nlay', 'type integer', 'reader urword', 'optional false', 'default 1'], ['block dimensions', 'name nrow', 'type integer', 'reader urword', 'optional false', 'default 2'], ['block dimensions', 'name ncol', 'type integer', 'reader urword', 'optional false', 'default 2'], ['block griddata', 'name delr', 'type double precision', 'shape (ncol)', 'reader readarray', 'netcdf true', 'default 1.0'], ['block griddata', 'name delc', 'type double precision', 'shape (nrow)', 'reader readarray', 'netcdf true', 'default 1.0'], ['block griddata', 'name top', 'type double precision', 'shape (ncol, nrow)', 'reader readarray', 'netcdf true', 'default 1.0'], ['block griddata', 'name botm', 'type double precision', 'shape (ncol, nrow, nlay)', 'reader readarray', 'layered true', 'netcdf true', 'default 0.'], ['block griddata', 'name idomain', 'type integer', 'shape (ncol, nrow, nlay)', 'reader readarray', 'layered true', 'netcdf true', 'optional true']]
+    grb_filerecord = ListTemplateGenerator(("gwf6", "dis", "options", "grb_filerecord"))
+    ncf_filerecord = ListTemplateGenerator(("gwf6", "dis", "options", "ncf_filerecord"))
+    delr = ArrayTemplateGenerator(("gwf6", "dis", "griddata", "delr"))
+    delc = ArrayTemplateGenerator(("gwf6", "dis", "griddata", "delc"))
+    top = ArrayTemplateGenerator(("gwf6", "dis", "griddata", "top"))
+    botm = ArrayTemplateGenerator(("gwf6", "dis", "griddata", "botm"))
+    idomain = ArrayTemplateGenerator(("gwf6", "dis", "griddata", "idomain"))
+    package_abbr = "gwfdis"
+    _package_type = "dis"
+    dfn_file_name = "gwf-dis.dfn"
+    dfn = [
+        ["header"],
+        [
+            "block options",
+            "name length_units",
+            "type string",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name nogrb",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name grb_filerecord",
+            "type record grb6 fileout grb6_filename",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name grb6",
+            "type keyword",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name fileout",
+            "type keyword",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name grb6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged false",
+        ],
+        [
+            "block options",
+            "name xorigin",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name yorigin",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name angrot",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name export_array_ascii",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_ascii",
+        ],
+        [
+            "block options",
+            "name export_array_netcdf",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_nc",
+            "extended true",
+        ],
+        [
+            "block options",
+            "name crs",
+            "type string",
+            "shape lenbigline",
+            "preserve_case true",
+            "reader urword",
+            "optional true",
+            "developmode true",
+        ],
+        [
+            "block options",
+            "name ncf_filerecord",
+            "type record ncf6 filein ncf6_filename",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "construct_package ncf",
+            "construct_data packagedata",
+            "parameter_name packagedata",
+        ],
+        [
+            "block options",
+            "name ncf6",
+            "type keyword",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+            "extended true",
+        ],
+        [
+            "block options",
+            "name filein",
+            "type keyword",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name ncf6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged false",
+            "extended true",
+        ],
+        [
+            "block dimensions",
+            "name nlay",
+            "type integer",
+            "reader urword",
+            "optional false",
+            "default 1",
+        ],
+        [
+            "block dimensions",
+            "name nrow",
+            "type integer",
+            "reader urword",
+            "optional false",
+            "default 2",
+        ],
+        [
+            "block dimensions",
+            "name ncol",
+            "type integer",
+            "reader urword",
+            "optional false",
+            "default 2",
+        ],
+        [
+            "block griddata",
+            "name delr",
+            "type double precision",
+            "shape (ncol)",
+            "reader readarray",
+            "netcdf true",
+            "default 1.0",
+        ],
+        [
+            "block griddata",
+            "name delc",
+            "type double precision",
+            "shape (nrow)",
+            "reader readarray",
+            "netcdf true",
+            "default 1.0",
+        ],
+        [
+            "block griddata",
+            "name top",
+            "type double precision",
+            "shape (ncol, nrow)",
+            "reader readarray",
+            "netcdf true",
+            "default 1.0",
+        ],
+        [
+            "block griddata",
+            "name botm",
+            "type double precision",
+            "shape (ncol, nrow, nlay)",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "default 0.",
+        ],
+        [
+            "block griddata",
+            "name idomain",
+            "type integer",
+            "shape (ncol, nrow, nlay)",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "optional true",
+        ],
+    ]
 
     def __init__(
         self,
@@ -127,7 +339,6 @@ class ModflowGwfdis(MFPackage):
         top=1.0,
         botm=0.0,
         idomain=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -142,24 +353,29 @@ class ModflowGwfdis(MFPackage):
             **kwargs,
         )
 
-        self.length_units = self.build_mfdata('length_units', length_units)
-        self.nogrb = self.build_mfdata('nogrb', nogrb)
-        self.grb_filerecord = self.build_mfdata('grb_filerecord', grb_filerecord)
-        self.xorigin = self.build_mfdata('xorigin', xorigin)
-        self.yorigin = self.build_mfdata('yorigin', yorigin)
-        self.angrot = self.build_mfdata('angrot', angrot)
-        self.export_array_ascii = self.build_mfdata('export_array_ascii', export_array_ascii)
-        self.export_array_netcdf = self.build_mfdata('export_array_netcdf', export_array_netcdf)
-        self._ncf_filerecord = self.build_mfdata('ncf_filerecord', None)
-        self._ncf_package = self.build_child_package('ncf', packagedata, 'packagedata', self._ncf_filerecord)
-        self.nlay = self.build_mfdata('nlay', nlay)
-        self.nrow = self.build_mfdata('nrow', nrow)
-        self.ncol = self.build_mfdata('ncol', ncol)
-        self.delr = self.build_mfdata('delr', delr)
-        self.delc = self.build_mfdata('delc', delc)
-        self.top = self.build_mfdata('top', top)
-        self.botm = self.build_mfdata('botm', botm)
-        self.idomain = self.build_mfdata('idomain', idomain)
+        self.length_units = self.build_mfdata("length_units", length_units)
+        self.nogrb = self.build_mfdata("nogrb", nogrb)
+        self.grb_filerecord = self.build_mfdata("grb_filerecord", grb_filerecord)
+        self.xorigin = self.build_mfdata("xorigin", xorigin)
+        self.yorigin = self.build_mfdata("yorigin", yorigin)
+        self.angrot = self.build_mfdata("angrot", angrot)
+        self.export_array_ascii = self.build_mfdata(
+            "export_array_ascii", export_array_ascii
+        )
+        self.export_array_netcdf = self.build_mfdata(
+            "export_array_netcdf", export_array_netcdf
+        )
+        self._ncf_filerecord = self.build_mfdata("ncf_filerecord", None)
+        self._ncf_package = self.build_child_package(
+            "ncf", packagedata, "packagedata", self._ncf_filerecord
+        )
+        self.nlay = self.build_mfdata("nlay", nlay)
+        self.nrow = self.build_mfdata("nrow", nrow)
+        self.ncol = self.build_mfdata("ncol", ncol)
+        self.delr = self.build_mfdata("delr", delr)
+        self.delc = self.build_mfdata("delc", delc)
+        self.top = self.build_mfdata("top", top)
+        self.botm = self.build_mfdata("botm", botm)
+        self.idomain = self.build_mfdata("idomain", idomain)
 
         self._init_complete = True
-

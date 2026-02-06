@@ -6,6 +6,7 @@ from typing import Union
 from flopy.mf6.data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 from flopy.mf6.mfsimbase import MFSimulationBase
 
+
 class MFSimulation(MFSimulationBase):
     """
     MFSimulation is used to load, build, and/or save a MODFLOW 6 simulation. A MFSimulation object must be created before creating any of the MODFLOW 6 model objects.
@@ -129,7 +130,6 @@ class MFSimulation(MFSimulationBase):
         maxerrors=None,
         print_input=None,
         hpc_data=None,
-
     ):
         """Initialize MFSimulation."""
         super().__init__(
@@ -155,7 +155,7 @@ class MFSimulation(MFSimulationBase):
         self.maxerrors = self.name_file.maxerrors
         self.name_file.print_input.set_data(print_input)
         self.print_input = self.name_file.print_input
-        self.hpc_data = self._create_package('hpc', hpc_data)
+        self.hpc_data = self._create_package("hpc", hpc_data)
 
     @classmethod
     def load(

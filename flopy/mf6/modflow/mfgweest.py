@@ -90,15 +90,113 @@ class ModflowGweest(MFPackage):
 
     """
 
-    porosity = ArrayTemplateGenerator(('gwe6', 'est', 'griddata', 'porosity'))
-    decay_water = ArrayTemplateGenerator(('gwe6', 'est', 'griddata', 'decay_water'))
-    decay_solid = ArrayTemplateGenerator(('gwe6', 'est', 'griddata', 'decay_solid'))
-    heat_capacity_solid = ArrayTemplateGenerator(('gwe6', 'est', 'griddata', 'heat_capacity_solid'))
-    density_solid = ArrayTemplateGenerator(('gwe6', 'est', 'griddata', 'density_solid'))
-    package_abbr = 'gweest'
-    _package_type = 'est'
-    dfn_file_name = 'gwe-est.dfn'
-    dfn = [['header'], ['block options', 'name save_flows', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name zero_order_decay_water', 'type keyword', 'reader urword', 'optional true', 'mf6internal ord0_decay_water'], ['block options', 'name zero_order_decay_solid', 'type keyword', 'reader urword', 'optional true', 'mf6internal ord0_decay_solid'], ['block options', 'name density_water', 'type double precision', 'reader urword', 'optional true', 'default 1000.0', 'mf6internal rhow'], ['block options', 'name heat_capacity_water', 'type double precision', 'reader urword', 'optional true', 'default 4184.0', 'mf6internal cpw'], ['block options', 'name latent_heat_vaporization', 'type double precision', 'reader urword', 'optional true', 'default 2453500.0', 'mf6internal latheatvap'], ['block griddata', 'name porosity', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true'], ['block griddata', 'name decay_water', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'optional true'], ['block griddata', 'name decay_solid', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'optional true'], ['block griddata', 'name heat_capacity_solid', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'mf6internal cps'], ['block griddata', 'name density_solid', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'mf6internal rhos']]
+    porosity = ArrayTemplateGenerator(("gwe6", "est", "griddata", "porosity"))
+    decay_water = ArrayTemplateGenerator(("gwe6", "est", "griddata", "decay_water"))
+    decay_solid = ArrayTemplateGenerator(("gwe6", "est", "griddata", "decay_solid"))
+    heat_capacity_solid = ArrayTemplateGenerator(
+        ("gwe6", "est", "griddata", "heat_capacity_solid")
+    )
+    density_solid = ArrayTemplateGenerator(("gwe6", "est", "griddata", "density_solid"))
+    package_abbr = "gweest"
+    _package_type = "est"
+    dfn_file_name = "gwe-est.dfn"
+    dfn = [
+        ["header"],
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name zero_order_decay_water",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal ord0_decay_water",
+        ],
+        [
+            "block options",
+            "name zero_order_decay_solid",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal ord0_decay_solid",
+        ],
+        [
+            "block options",
+            "name density_water",
+            "type double precision",
+            "reader urword",
+            "optional true",
+            "default 1000.0",
+            "mf6internal rhow",
+        ],
+        [
+            "block options",
+            "name heat_capacity_water",
+            "type double precision",
+            "reader urword",
+            "optional true",
+            "default 4184.0",
+            "mf6internal cpw",
+        ],
+        [
+            "block options",
+            "name latent_heat_vaporization",
+            "type double precision",
+            "reader urword",
+            "optional true",
+            "default 2453500.0",
+            "mf6internal latheatvap",
+        ],
+        [
+            "block griddata",
+            "name porosity",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+        ],
+        [
+            "block griddata",
+            "name decay_water",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name decay_solid",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name heat_capacity_solid",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "mf6internal cps",
+        ],
+        [
+            "block griddata",
+            "name density_solid",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "mf6internal rhos",
+        ],
+    ]
 
     def __init__(
         self,
@@ -115,7 +213,6 @@ class ModflowGweest(MFPackage):
         decay_solid=None,
         heat_capacity_solid=None,
         density_solid=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -130,17 +227,26 @@ class ModflowGweest(MFPackage):
             **kwargs,
         )
 
-        self.save_flows = self.build_mfdata('save_flows', save_flows)
-        self.zero_order_decay_water = self.build_mfdata('zero_order_decay_water', zero_order_decay_water)
-        self.zero_order_decay_solid = self.build_mfdata('zero_order_decay_solid', zero_order_decay_solid)
-        self.density_water = self.build_mfdata('density_water', density_water)
-        self.heat_capacity_water = self.build_mfdata('heat_capacity_water', heat_capacity_water)
-        self.latent_heat_vaporization = self.build_mfdata('latent_heat_vaporization', latent_heat_vaporization)
-        self.porosity = self.build_mfdata('porosity', porosity)
-        self.decay_water = self.build_mfdata('decay_water', decay_water)
-        self.decay_solid = self.build_mfdata('decay_solid', decay_solid)
-        self.heat_capacity_solid = self.build_mfdata('heat_capacity_solid', heat_capacity_solid)
-        self.density_solid = self.build_mfdata('density_solid', density_solid)
+        self.save_flows = self.build_mfdata("save_flows", save_flows)
+        self.zero_order_decay_water = self.build_mfdata(
+            "zero_order_decay_water", zero_order_decay_water
+        )
+        self.zero_order_decay_solid = self.build_mfdata(
+            "zero_order_decay_solid", zero_order_decay_solid
+        )
+        self.density_water = self.build_mfdata("density_water", density_water)
+        self.heat_capacity_water = self.build_mfdata(
+            "heat_capacity_water", heat_capacity_water
+        )
+        self.latent_heat_vaporization = self.build_mfdata(
+            "latent_heat_vaporization", latent_heat_vaporization
+        )
+        self.porosity = self.build_mfdata("porosity", porosity)
+        self.decay_water = self.build_mfdata("decay_water", decay_water)
+        self.decay_solid = self.build_mfdata("decay_solid", decay_solid)
+        self.heat_capacity_solid = self.build_mfdata(
+            "heat_capacity_solid", heat_capacity_solid
+        )
+        self.density_solid = self.build_mfdata("density_solid", density_solid)
 
         self._init_complete = True
-

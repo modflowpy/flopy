@@ -259,27 +259,763 @@ class ModflowGwfcsub(MFPackage):
 
     """
 
-    strainib_filerecord = ListTemplateGenerator(('gwf6', 'csub', 'options', 'strainib_filerecord'))
-    straincg_filerecord = ListTemplateGenerator(('gwf6', 'csub', 'options', 'straincg_filerecord'))
-    compaction_filerecord = ListTemplateGenerator(('gwf6', 'csub', 'options', 'compaction_filerecord'))
-    compaction_elastic_filerecord = ListTemplateGenerator(('gwf6', 'csub', 'options', 'compaction_elastic_filerecord'))
-    compaction_inelastic_filerecord = ListTemplateGenerator(('gwf6', 'csub', 'options', 'compaction_inelastic_filerecord'))
-    compaction_interbed_filerecord = ListTemplateGenerator(('gwf6', 'csub', 'options', 'compaction_interbed_filerecord'))
-    compaction_coarse_filerecord = ListTemplateGenerator(('gwf6', 'csub', 'options', 'compaction_coarse_filerecord'))
-    zdisplacement_filerecord = ListTemplateGenerator(('gwf6', 'csub', 'options', 'zdisplacement_filerecord'))
-    package_convergence_filerecord = ListTemplateGenerator(('gwf6', 'csub', 'options', 'package_convergence_filerecord'))
-    ts_filerecord = ListTemplateGenerator(('gwf6', 'csub', 'options', 'ts_filerecord'))
-    obs_filerecord = ListTemplateGenerator(('gwf6', 'csub', 'options', 'obs_filerecord'))
-    cg_ske_cr = ArrayTemplateGenerator(('gwf6', 'csub', 'griddata', 'cg_ske_cr'))
-    cg_theta = ArrayTemplateGenerator(('gwf6', 'csub', 'griddata', 'cg_theta'))
-    sgm = ArrayTemplateGenerator(('gwf6', 'csub', 'griddata', 'sgm'))
-    sgs = ArrayTemplateGenerator(('gwf6', 'csub', 'griddata', 'sgs'))
-    packagedata = ListTemplateGenerator(('gwf6', 'csub', 'packagedata', 'packagedata'))
-    stress_period_data = ListTemplateGenerator(('gwf6', 'csub', 'period', 'stress_period_data'))
-    package_abbr = 'gwfcsub'
-    _package_type = 'csub'
-    dfn_file_name = 'gwf-csub.dfn'
-    dfn = [['header'], ['block options', 'name boundnames', 'type keyword', 'shape', 'reader urword', 'optional true'], ['block options', 'name print_input', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name save_flows', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name gammaw', 'type double precision', 'reader urword', 'optional true', 'default 9806.65'], ['block options', 'name beta', 'type double precision', 'reader urword', 'optional true', 'default 4.6512e-10'], ['block options', 'name head_based', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name initial_preconsolidation_head', 'type keyword', 'reader urword', 'optional true', 'mf6internal precon_head'], ['block options', 'name ndelaycells', 'type integer', 'reader urword', 'optional true'], ['block options', 'name compression_indices', 'type keyword', 'reader urword', 'optional true', 'mf6internal icompress'], ['block options', 'name update_material_properties', 'type keyword', 'reader urword', 'optional true', 'mf6internal matprop'], ['block options', 'name cell_fraction', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name specified_initial_interbed_state', 'type keyword', 'reader urword', 'optional true', 'mf6internal interbed_state'], ['block options', 'name specified_initial_preconsolidation_stress', 'type keyword', 'reader urword', 'optional true', 'mf6internal precon_stress'], ['block options', 'name specified_initial_delay_head', 'type keyword', 'reader urword', 'optional true', 'mf6internal delay_head'], ['block options', 'name effective_stress_lag', 'type keyword', 'reader urword', 'optional true', 'mf6internal stress_lag'], ['block options', 'name strainib_filerecord', 'type record strain_csv_interbed fileout interbedstrain_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal strainibfr'], ['block options', 'name strain_csv_interbed', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false', 'mf6internal csvinterbed'], ['block options', 'name fileout', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name interbedstrain_filename', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false', 'mf6internal interbedstrainfn'], ['block options', 'name straincg_filerecord', 'type record strain_csv_coarse fileout coarsestrain_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal straincgfr'], ['block options', 'name strain_csv_coarse', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false', 'mf6internal csvcoarse'], ['block options', 'name coarsestrain_filename', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false', 'mf6internal coarsestrainfn'], ['block options', 'name compaction_filerecord', 'type record compaction fileout compaction_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal cmpfr'], ['block options', 'name compaction', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name compaction_filename', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false', 'mf6internal cmpfn'], ['block options', 'name compaction_elastic_filerecord', 'type record compaction_elastic fileout elastic_compaction_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal cmpelasticfr'], ['block options', 'name compaction_elastic', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false', 'mf6internal cmpelastic'], ['block options', 'name elastic_compaction_filename', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false', 'mf6internal elasticcmpfn'], ['block options', 'name compaction_inelastic_filerecord', 'type record compaction_inelastic fileout inelastic_compaction_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal cmpinelasticfr'], ['block options', 'name compaction_inelastic', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false', 'mf6internal cmpinelastic'], ['block options', 'name inelastic_compaction_filename', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false', 'mf6internal inelasticcmpfn'], ['block options', 'name compaction_interbed_filerecord', 'type record compaction_interbed fileout interbed_compaction_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal cmpinterbedfr'], ['block options', 'name compaction_interbed', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false', 'mf6internal cmpinterbed'], ['block options', 'name interbed_compaction_filename', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false', 'mf6internal interbedcmpfn'], ['block options', 'name compaction_coarse_filerecord', 'type record compaction_coarse fileout coarse_compaction_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal cmpcoarsefr'], ['block options', 'name compaction_coarse', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false', 'mf6internal cmpcoarse'], ['block options', 'name coarse_compaction_filename', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false', 'mf6internal cmpcoarsefn'], ['block options', 'name zdisplacement_filerecord', 'type record zdisplacement fileout zdisplacement_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal zdispfr'], ['block options', 'name zdisplacement', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name zdisplacement_filename', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false', 'mf6internal zdispfn'], ['block options', 'name package_convergence_filerecord', 'type record package_convergence fileout package_convergence_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal pkgconvergefr'], ['block options', 'name package_convergence', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false', 'mf6internal pkgconverge'], ['block options', 'name package_convergence_filename', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false', 'mf6internal pkgconvergefn'], ['block options', 'name ts_filerecord', 'type record ts6 filein ts6_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'construct_package ts', 'construct_data timeseries', 'parameter_name timeseries'], ['block options', 'name ts6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name filein', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name ts6_filename', 'type string', 'preserve_case true', 'in_record true', 'reader urword', 'optional false', 'tagged false'], ['block options', 'name obs_filerecord', 'type record obs6 filein obs6_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'construct_package obs', 'construct_data observations', 'parameter_name continuous'], ['block options', 'name obs6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name obs6_filename', 'type string', 'preserve_case true', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block dimensions', 'name ninterbeds', 'type integer', 'reader urword', 'optional false'], ['block dimensions', 'name maxsig0', 'type integer', 'reader urword', 'optional true', 'mf6internal maxbound'], ['block griddata', 'name cg_ske_cr', 'type double precision', 'shape (nodes)', 'valid', 'reader readarray', 'layered true', 'netcdf true', 'default 1e-5'], ['block griddata', 'name cg_theta', 'type double precision', 'shape (nodes)', 'valid', 'reader readarray', 'layered true', 'netcdf true', 'default 0.2'], ['block griddata', 'name sgm', 'type double precision', 'shape (nodes)', 'valid', 'reader readarray', 'layered true', 'netcdf true', 'optional true'], ['block griddata', 'name sgs', 'type double precision', 'shape (nodes)', 'valid', 'reader readarray', 'layered true', 'netcdf true', 'optional true'], ['block packagedata', 'name packagedata', 'type recarray icsubno cellid cdelay pcs0 thick_frac rnb ssv_cc sse_cr theta kv h0 boundname', 'shape (ninterbeds)', 'reader urword', 'optional true'], ['block packagedata', 'name icsubno', 'type integer', 'shape', 'tagged false', 'in_record true', 'reader urword', 'numeric_index true'], ['block packagedata', 'name cellid', 'type integer', 'shape (ncelldim)', 'tagged false', 'in_record true', 'reader urword', 'mf6internal cellid_pkgdata'], ['block packagedata', 'name cdelay', 'type string', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block packagedata', 'name pcs0', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block packagedata', 'name thick_frac', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block packagedata', 'name rnb', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block packagedata', 'name ssv_cc', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block packagedata', 'name sse_cr', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block packagedata', 'name theta', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword', 'default 0.2'], ['block packagedata', 'name kv', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block packagedata', 'name h0', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block packagedata', 'name boundname', 'type string', 'shape', 'tagged false', 'in_record true', 'reader urword', 'optional true'], ['block period', 'name iper', 'type integer', 'block_variable true', 'in_record true', 'tagged false', 'shape', 'valid', 'reader urword', 'optional false'], ['block period', 'name stress_period_data', 'type recarray cellid sig0', 'shape (maxsig0)', 'reader urword', 'mf6internal spd'], ['block period', 'name cellid', 'type integer', 'shape (ncelldim)', 'tagged false', 'in_record true', 'reader urword'], ['block period', 'name sig0', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword', 'time_series true']]
+    strainib_filerecord = ListTemplateGenerator(
+        ("gwf6", "csub", "options", "strainib_filerecord")
+    )
+    straincg_filerecord = ListTemplateGenerator(
+        ("gwf6", "csub", "options", "straincg_filerecord")
+    )
+    compaction_filerecord = ListTemplateGenerator(
+        ("gwf6", "csub", "options", "compaction_filerecord")
+    )
+    compaction_elastic_filerecord = ListTemplateGenerator(
+        ("gwf6", "csub", "options", "compaction_elastic_filerecord")
+    )
+    compaction_inelastic_filerecord = ListTemplateGenerator(
+        ("gwf6", "csub", "options", "compaction_inelastic_filerecord")
+    )
+    compaction_interbed_filerecord = ListTemplateGenerator(
+        ("gwf6", "csub", "options", "compaction_interbed_filerecord")
+    )
+    compaction_coarse_filerecord = ListTemplateGenerator(
+        ("gwf6", "csub", "options", "compaction_coarse_filerecord")
+    )
+    zdisplacement_filerecord = ListTemplateGenerator(
+        ("gwf6", "csub", "options", "zdisplacement_filerecord")
+    )
+    package_convergence_filerecord = ListTemplateGenerator(
+        ("gwf6", "csub", "options", "package_convergence_filerecord")
+    )
+    ts_filerecord = ListTemplateGenerator(("gwf6", "csub", "options", "ts_filerecord"))
+    obs_filerecord = ListTemplateGenerator(
+        ("gwf6", "csub", "options", "obs_filerecord")
+    )
+    cg_ske_cr = ArrayTemplateGenerator(("gwf6", "csub", "griddata", "cg_ske_cr"))
+    cg_theta = ArrayTemplateGenerator(("gwf6", "csub", "griddata", "cg_theta"))
+    sgm = ArrayTemplateGenerator(("gwf6", "csub", "griddata", "sgm"))
+    sgs = ArrayTemplateGenerator(("gwf6", "csub", "griddata", "sgs"))
+    packagedata = ListTemplateGenerator(("gwf6", "csub", "packagedata", "packagedata"))
+    stress_period_data = ListTemplateGenerator(
+        ("gwf6", "csub", "period", "stress_period_data")
+    )
+    package_abbr = "gwfcsub"
+    _package_type = "csub"
+    dfn_file_name = "gwf-csub.dfn"
+    dfn = [
+        ["header"],
+        [
+            "block options",
+            "name boundnames",
+            "type keyword",
+            "shape",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name print_input",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name gammaw",
+            "type double precision",
+            "reader urword",
+            "optional true",
+            "default 9806.65",
+        ],
+        [
+            "block options",
+            "name beta",
+            "type double precision",
+            "reader urword",
+            "optional true",
+            "default 4.6512e-10",
+        ],
+        [
+            "block options",
+            "name head_based",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name initial_preconsolidation_head",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal precon_head",
+        ],
+        [
+            "block options",
+            "name ndelaycells",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name compression_indices",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal icompress",
+        ],
+        [
+            "block options",
+            "name update_material_properties",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal matprop",
+        ],
+        [
+            "block options",
+            "name cell_fraction",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name specified_initial_interbed_state",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal interbed_state",
+        ],
+        [
+            "block options",
+            "name specified_initial_preconsolidation_stress",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal precon_stress",
+        ],
+        [
+            "block options",
+            "name specified_initial_delay_head",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal delay_head",
+        ],
+        [
+            "block options",
+            "name effective_stress_lag",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal stress_lag",
+        ],
+        [
+            "block options",
+            "name strainib_filerecord",
+            "type record strain_csv_interbed fileout interbedstrain_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "mf6internal strainibfr",
+        ],
+        [
+            "block options",
+            "name strain_csv_interbed",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+            "mf6internal csvinterbed",
+        ],
+        [
+            "block options",
+            "name fileout",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name interbedstrain_filename",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+            "mf6internal interbedstrainfn",
+        ],
+        [
+            "block options",
+            "name straincg_filerecord",
+            "type record strain_csv_coarse fileout coarsestrain_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "mf6internal straincgfr",
+        ],
+        [
+            "block options",
+            "name strain_csv_coarse",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+            "mf6internal csvcoarse",
+        ],
+        [
+            "block options",
+            "name coarsestrain_filename",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+            "mf6internal coarsestrainfn",
+        ],
+        [
+            "block options",
+            "name compaction_filerecord",
+            "type record compaction fileout compaction_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "mf6internal cmpfr",
+        ],
+        [
+            "block options",
+            "name compaction",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name compaction_filename",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+            "mf6internal cmpfn",
+        ],
+        [
+            "block options",
+            "name compaction_elastic_filerecord",
+            "type record compaction_elastic fileout elastic_compaction_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "mf6internal cmpelasticfr",
+        ],
+        [
+            "block options",
+            "name compaction_elastic",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+            "mf6internal cmpelastic",
+        ],
+        [
+            "block options",
+            "name elastic_compaction_filename",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+            "mf6internal elasticcmpfn",
+        ],
+        [
+            "block options",
+            "name compaction_inelastic_filerecord",
+            "type record compaction_inelastic fileout inelastic_compaction_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "mf6internal cmpinelasticfr",
+        ],
+        [
+            "block options",
+            "name compaction_inelastic",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+            "mf6internal cmpinelastic",
+        ],
+        [
+            "block options",
+            "name inelastic_compaction_filename",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+            "mf6internal inelasticcmpfn",
+        ],
+        [
+            "block options",
+            "name compaction_interbed_filerecord",
+            "type record compaction_interbed fileout interbed_compaction_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "mf6internal cmpinterbedfr",
+        ],
+        [
+            "block options",
+            "name compaction_interbed",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+            "mf6internal cmpinterbed",
+        ],
+        [
+            "block options",
+            "name interbed_compaction_filename",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+            "mf6internal interbedcmpfn",
+        ],
+        [
+            "block options",
+            "name compaction_coarse_filerecord",
+            "type record compaction_coarse fileout coarse_compaction_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "mf6internal cmpcoarsefr",
+        ],
+        [
+            "block options",
+            "name compaction_coarse",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+            "mf6internal cmpcoarse",
+        ],
+        [
+            "block options",
+            "name coarse_compaction_filename",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+            "mf6internal cmpcoarsefn",
+        ],
+        [
+            "block options",
+            "name zdisplacement_filerecord",
+            "type record zdisplacement fileout zdisplacement_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "mf6internal zdispfr",
+        ],
+        [
+            "block options",
+            "name zdisplacement",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name zdisplacement_filename",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+            "mf6internal zdispfn",
+        ],
+        [
+            "block options",
+            "name package_convergence_filerecord",
+            "type record package_convergence fileout package_convergence_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "mf6internal pkgconvergefr",
+        ],
+        [
+            "block options",
+            "name package_convergence",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+            "mf6internal pkgconverge",
+        ],
+        [
+            "block options",
+            "name package_convergence_filename",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+            "mf6internal pkgconvergefn",
+        ],
+        [
+            "block options",
+            "name ts_filerecord",
+            "type record ts6 filein ts6_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "construct_package ts",
+            "construct_data timeseries",
+            "parameter_name timeseries",
+        ],
+        [
+            "block options",
+            "name ts6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name ts6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged false",
+        ],
+        [
+            "block options",
+            "name obs_filerecord",
+            "type record obs6 filein obs6_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "construct_package obs",
+            "construct_data observations",
+            "parameter_name continuous",
+        ],
+        [
+            "block options",
+            "name obs6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name obs6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block dimensions",
+            "name ninterbeds",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block dimensions",
+            "name maxsig0",
+            "type integer",
+            "reader urword",
+            "optional true",
+            "mf6internal maxbound",
+        ],
+        [
+            "block griddata",
+            "name cg_ske_cr",
+            "type double precision",
+            "shape (nodes)",
+            "valid",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "default 1e-5",
+        ],
+        [
+            "block griddata",
+            "name cg_theta",
+            "type double precision",
+            "shape (nodes)",
+            "valid",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "default 0.2",
+        ],
+        [
+            "block griddata",
+            "name sgm",
+            "type double precision",
+            "shape (nodes)",
+            "valid",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name sgs",
+            "type double precision",
+            "shape (nodes)",
+            "valid",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "optional true",
+        ],
+        [
+            "block packagedata",
+            "name packagedata",
+            "type recarray icsubno cellid cdelay pcs0 thick_frac rnb ssv_cc sse_cr theta kv h0 boundname",
+            "shape (ninterbeds)",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block packagedata",
+            "name icsubno",
+            "type integer",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "numeric_index true",
+        ],
+        [
+            "block packagedata",
+            "name cellid",
+            "type integer",
+            "shape (ncelldim)",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "mf6internal cellid_pkgdata",
+        ],
+        [
+            "block packagedata",
+            "name cdelay",
+            "type string",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name pcs0",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name thick_frac",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name rnb",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name ssv_cc",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name sse_cr",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name theta",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "default 0.2",
+        ],
+        [
+            "block packagedata",
+            "name kv",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name h0",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name boundname",
+            "type string",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block period",
+            "name iper",
+            "type integer",
+            "block_variable true",
+            "in_record true",
+            "tagged false",
+            "shape",
+            "valid",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name stress_period_data",
+            "type recarray cellid sig0",
+            "shape (maxsig0)",
+            "reader urword",
+            "mf6internal spd",
+        ],
+        [
+            "block period",
+            "name cellid",
+            "type integer",
+            "shape (ncelldim)",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name sig0",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "time_series true",
+        ],
+    ]
 
     def __init__(
         self,
@@ -319,7 +1055,6 @@ class ModflowGwfcsub(MFPackage):
         sgs=None,
         packagedata=None,
         stress_period_data=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -334,42 +1069,80 @@ class ModflowGwfcsub(MFPackage):
             **kwargs,
         )
 
-        self.boundnames = self.build_mfdata('boundnames', boundnames)
-        self.print_input = self.build_mfdata('print_input', print_input)
-        self.save_flows = self.build_mfdata('save_flows', save_flows)
-        self.gammaw = self.build_mfdata('gammaw', gammaw)
-        self.beta = self.build_mfdata('beta', beta)
-        self.head_based = self.build_mfdata('head_based', head_based)
-        self.initial_preconsolidation_head = self.build_mfdata('initial_preconsolidation_head', initial_preconsolidation_head)
-        self.ndelaycells = self.build_mfdata('ndelaycells', ndelaycells)
-        self.compression_indices = self.build_mfdata('compression_indices', compression_indices)
-        self.update_material_properties = self.build_mfdata('update_material_properties', update_material_properties)
-        self.cell_fraction = self.build_mfdata('cell_fraction', cell_fraction)
-        self.specified_initial_interbed_state = self.build_mfdata('specified_initial_interbed_state', specified_initial_interbed_state)
-        self.specified_initial_preconsolidation_stress = self.build_mfdata('specified_initial_preconsolidation_stress', specified_initial_preconsolidation_stress)
-        self.specified_initial_delay_head = self.build_mfdata('specified_initial_delay_head', specified_initial_delay_head)
-        self.effective_stress_lag = self.build_mfdata('effective_stress_lag', effective_stress_lag)
-        self.strainib_filerecord = self.build_mfdata('strainib_filerecord', strainib_filerecord)
-        self.straincg_filerecord = self.build_mfdata('straincg_filerecord', straincg_filerecord)
-        self.compaction_filerecord = self.build_mfdata('compaction_filerecord', compaction_filerecord)
-        self.compaction_elastic_filerecord = self.build_mfdata('compaction_elastic_filerecord', compaction_elastic_filerecord)
-        self.compaction_inelastic_filerecord = self.build_mfdata('compaction_inelastic_filerecord', compaction_inelastic_filerecord)
-        self.compaction_interbed_filerecord = self.build_mfdata('compaction_interbed_filerecord', compaction_interbed_filerecord)
-        self.compaction_coarse_filerecord = self.build_mfdata('compaction_coarse_filerecord', compaction_coarse_filerecord)
-        self.zdisplacement_filerecord = self.build_mfdata('zdisplacement_filerecord', zdisplacement_filerecord)
-        self.package_convergence_filerecord = self.build_mfdata('package_convergence_filerecord', package_convergence_filerecord)
-        self._ts_filerecord = self.build_mfdata('ts_filerecord', None)
-        self._ts_package = self.build_child_package('ts', timeseries, 'timeseries', self._ts_filerecord)
-        self._obs_filerecord = self.build_mfdata('obs_filerecord', None)
-        self._obs_package = self.build_child_package('obs', observations, 'continuous', self._obs_filerecord)
-        self.ninterbeds = self.build_mfdata('ninterbeds', ninterbeds)
-        self.maxsig0 = self.build_mfdata('maxsig0', maxsig0)
-        self.cg_ske_cr = self.build_mfdata('cg_ske_cr', cg_ske_cr)
-        self.cg_theta = self.build_mfdata('cg_theta', cg_theta)
-        self.sgm = self.build_mfdata('sgm', sgm)
-        self.sgs = self.build_mfdata('sgs', sgs)
-        self.packagedata = self.build_mfdata('packagedata', packagedata)
-        self.stress_period_data = self.build_mfdata('stress_period_data', stress_period_data)
+        self.boundnames = self.build_mfdata("boundnames", boundnames)
+        self.print_input = self.build_mfdata("print_input", print_input)
+        self.save_flows = self.build_mfdata("save_flows", save_flows)
+        self.gammaw = self.build_mfdata("gammaw", gammaw)
+        self.beta = self.build_mfdata("beta", beta)
+        self.head_based = self.build_mfdata("head_based", head_based)
+        self.initial_preconsolidation_head = self.build_mfdata(
+            "initial_preconsolidation_head", initial_preconsolidation_head
+        )
+        self.ndelaycells = self.build_mfdata("ndelaycells", ndelaycells)
+        self.compression_indices = self.build_mfdata(
+            "compression_indices", compression_indices
+        )
+        self.update_material_properties = self.build_mfdata(
+            "update_material_properties", update_material_properties
+        )
+        self.cell_fraction = self.build_mfdata("cell_fraction", cell_fraction)
+        self.specified_initial_interbed_state = self.build_mfdata(
+            "specified_initial_interbed_state", specified_initial_interbed_state
+        )
+        self.specified_initial_preconsolidation_stress = self.build_mfdata(
+            "specified_initial_preconsolidation_stress",
+            specified_initial_preconsolidation_stress,
+        )
+        self.specified_initial_delay_head = self.build_mfdata(
+            "specified_initial_delay_head", specified_initial_delay_head
+        )
+        self.effective_stress_lag = self.build_mfdata(
+            "effective_stress_lag", effective_stress_lag
+        )
+        self.strainib_filerecord = self.build_mfdata(
+            "strainib_filerecord", strainib_filerecord
+        )
+        self.straincg_filerecord = self.build_mfdata(
+            "straincg_filerecord", straincg_filerecord
+        )
+        self.compaction_filerecord = self.build_mfdata(
+            "compaction_filerecord", compaction_filerecord
+        )
+        self.compaction_elastic_filerecord = self.build_mfdata(
+            "compaction_elastic_filerecord", compaction_elastic_filerecord
+        )
+        self.compaction_inelastic_filerecord = self.build_mfdata(
+            "compaction_inelastic_filerecord", compaction_inelastic_filerecord
+        )
+        self.compaction_interbed_filerecord = self.build_mfdata(
+            "compaction_interbed_filerecord", compaction_interbed_filerecord
+        )
+        self.compaction_coarse_filerecord = self.build_mfdata(
+            "compaction_coarse_filerecord", compaction_coarse_filerecord
+        )
+        self.zdisplacement_filerecord = self.build_mfdata(
+            "zdisplacement_filerecord", zdisplacement_filerecord
+        )
+        self.package_convergence_filerecord = self.build_mfdata(
+            "package_convergence_filerecord", package_convergence_filerecord
+        )
+        self._ts_filerecord = self.build_mfdata("ts_filerecord", None)
+        self._ts_package = self.build_child_package(
+            "ts", timeseries, "timeseries", self._ts_filerecord
+        )
+        self._obs_filerecord = self.build_mfdata("obs_filerecord", None)
+        self._obs_package = self.build_child_package(
+            "obs", observations, "continuous", self._obs_filerecord
+        )
+        self.ninterbeds = self.build_mfdata("ninterbeds", ninterbeds)
+        self.maxsig0 = self.build_mfdata("maxsig0", maxsig0)
+        self.cg_ske_cr = self.build_mfdata("cg_ske_cr", cg_ske_cr)
+        self.cg_theta = self.build_mfdata("cg_theta", cg_theta)
+        self.sgm = self.build_mfdata("sgm", sgm)
+        self.sgs = self.build_mfdata("sgs", sgs)
+        self.packagedata = self.build_mfdata("packagedata", packagedata)
+        self.stress_period_data = self.build_mfdata(
+            "stress_period_data", stress_period_data
+        )
 
         self._init_complete = True
-

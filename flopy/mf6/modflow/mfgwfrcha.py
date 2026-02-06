@@ -98,16 +98,205 @@ class ModflowGwfrcha(MFPackage):
 
     """
 
-    auxiliary = ArrayTemplateGenerator(('gwf6', 'rcha', 'options', 'auxiliary'))
-    tas_filerecord = ListTemplateGenerator(('gwf6', 'rcha', 'options', 'tas_filerecord'))
-    obs_filerecord = ListTemplateGenerator(('gwf6', 'rcha', 'options', 'obs_filerecord'))
-    irch = ArrayTemplateGenerator(('gwf6', 'rcha', 'period', 'irch'))
-    recharge = ArrayTemplateGenerator(('gwf6', 'rcha', 'period', 'recharge'))
-    aux = ArrayTemplateGenerator(('gwf6', 'rcha', 'period', 'aux'))
-    package_abbr = 'gwfrcha'
-    _package_type = 'rcha'
-    dfn_file_name = 'gwf-rcha.dfn'
-    dfn = [['header', 'multi-package', 'package-type stress-package'], ['block options', 'name readasarrays', 'type keyword', 'shape', 'reader urword', 'optional false', 'default true'], ['block options', 'name fixed_cell', 'type keyword', 'shape', 'reader urword', 'optional true'], ['block options', 'name auxiliary', 'type string', 'shape (naux)', 'reader urword', 'optional true'], ['block options', 'name auxmultname', 'type string', 'shape', 'reader urword', 'optional true'], ['block options', 'name print_input', 'type keyword', 'reader urword', 'optional true', 'mf6internal iprpak'], ['block options', 'name print_flows', 'type keyword', 'reader urword', 'optional true', 'mf6internal iprflow'], ['block options', 'name save_flows', 'type keyword', 'reader urword', 'optional true', 'mf6internal ipakcb'], ['block options', 'name tas_filerecord', 'type record tas6 filein tas6_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'construct_package tas', 'construct_data timearrayseries', 'parameter_name tas_array'], ['block options', 'name tas6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name filein', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name tas6_filename', 'type string', 'preserve_case true', 'in_record true', 'reader urword', 'optional false', 'tagged false'], ['block options', 'name obs_filerecord', 'type record obs6 filein obs6_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'construct_package obs', 'construct_data observations', 'parameter_name continuous'], ['block options', 'name obs6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name obs6_filename', 'type string', 'preserve_case true', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block options', 'name export_array_netcdf', 'type keyword', 'reader urword', 'optional true', 'mf6internal export_nc', 'extended true'], ['block period', 'name iper', 'type integer', 'block_variable true', 'in_record true', 'tagged false', 'shape', 'valid', 'reader urword', 'optional false'], ['block period', 'name irch', 'type integer', 'shape (ncol*nrow; ncpl)', 'reader readarray', 'numeric_index true', 'optional true', 'netcdf true'], ['block period', 'name recharge', 'type double precision', 'shape (ncol*nrow; ncpl)', 'reader readarray', 'time_series true', 'netcdf true', 'default 1.e-3'], ['block period', 'name aux', 'type double precision', 'shape (ncol*nrow; ncpl)', 'reader readarray', 'time_series true', 'optional true', 'netcdf true', 'mf6internal auxvar']]
+    auxiliary = ArrayTemplateGenerator(("gwf6", "rcha", "options", "auxiliary"))
+    tas_filerecord = ListTemplateGenerator(
+        ("gwf6", "rcha", "options", "tas_filerecord")
+    )
+    obs_filerecord = ListTemplateGenerator(
+        ("gwf6", "rcha", "options", "obs_filerecord")
+    )
+    irch = ArrayTemplateGenerator(("gwf6", "rcha", "period", "irch"))
+    recharge = ArrayTemplateGenerator(("gwf6", "rcha", "period", "recharge"))
+    aux = ArrayTemplateGenerator(("gwf6", "rcha", "period", "aux"))
+    package_abbr = "gwfrcha"
+    _package_type = "rcha"
+    dfn_file_name = "gwf-rcha.dfn"
+    dfn = [
+        ["header", "multi-package", "package-type stress-package"],
+        [
+            "block options",
+            "name readasarrays",
+            "type keyword",
+            "shape",
+            "reader urword",
+            "optional false",
+            "default true",
+        ],
+        [
+            "block options",
+            "name fixed_cell",
+            "type keyword",
+            "shape",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name auxiliary",
+            "type string",
+            "shape (naux)",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name auxmultname",
+            "type string",
+            "shape",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name print_input",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal iprpak",
+        ],
+        [
+            "block options",
+            "name print_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal iprflow",
+        ],
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal ipakcb",
+        ],
+        [
+            "block options",
+            "name tas_filerecord",
+            "type record tas6 filein tas6_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "construct_package tas",
+            "construct_data timearrayseries",
+            "parameter_name tas_array",
+        ],
+        [
+            "block options",
+            "name tas6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name tas6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged false",
+        ],
+        [
+            "block options",
+            "name obs_filerecord",
+            "type record obs6 filein obs6_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "construct_package obs",
+            "construct_data observations",
+            "parameter_name continuous",
+        ],
+        [
+            "block options",
+            "name obs6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name obs6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name export_array_netcdf",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_nc",
+            "extended true",
+        ],
+        [
+            "block period",
+            "name iper",
+            "type integer",
+            "block_variable true",
+            "in_record true",
+            "tagged false",
+            "shape",
+            "valid",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name irch",
+            "type integer",
+            "shape (ncol*nrow; ncpl)",
+            "reader readarray",
+            "numeric_index true",
+            "optional true",
+            "netcdf true",
+        ],
+        [
+            "block period",
+            "name recharge",
+            "type double precision",
+            "shape (ncol*nrow; ncpl)",
+            "reader readarray",
+            "time_series true",
+            "netcdf true",
+            "default 1.e-3",
+        ],
+        [
+            "block period",
+            "name aux",
+            "type double precision",
+            "shape (ncol*nrow; ncpl)",
+            "reader readarray",
+            "time_series true",
+            "optional true",
+            "netcdf true",
+            "mf6internal auxvar",
+        ],
+    ]
 
     def __init__(
         self,
@@ -126,7 +315,6 @@ class ModflowGwfrcha(MFPackage):
         irch=None,
         recharge=0.001,
         aux=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -141,21 +329,26 @@ class ModflowGwfrcha(MFPackage):
             **kwargs,
         )
 
-        self.readasarrays = self.build_mfdata('readasarrays', readasarrays)
-        self.fixed_cell = self.build_mfdata('fixed_cell', fixed_cell)
-        self.auxiliary = self.build_mfdata('auxiliary', auxiliary)
-        self.auxmultname = self.build_mfdata('auxmultname', auxmultname)
-        self.print_input = self.build_mfdata('print_input', print_input)
-        self.print_flows = self.build_mfdata('print_flows', print_flows)
-        self.save_flows = self.build_mfdata('save_flows', save_flows)
-        self._tas_filerecord = self.build_mfdata('tas_filerecord', None)
-        self._tas_package = self.build_child_package('tas', timearrayseries, 'tas_array', self._tas_filerecord)
-        self._obs_filerecord = self.build_mfdata('obs_filerecord', None)
-        self._obs_package = self.build_child_package('obs', observations, 'continuous', self._obs_filerecord)
-        self.export_array_netcdf = self.build_mfdata('export_array_netcdf', export_array_netcdf)
-        self.irch = self.build_mfdata('irch', irch)
-        self.recharge = self.build_mfdata('recharge', recharge)
-        self.aux = self.build_mfdata('aux', aux)
+        self.readasarrays = self.build_mfdata("readasarrays", readasarrays)
+        self.fixed_cell = self.build_mfdata("fixed_cell", fixed_cell)
+        self.auxiliary = self.build_mfdata("auxiliary", auxiliary)
+        self.auxmultname = self.build_mfdata("auxmultname", auxmultname)
+        self.print_input = self.build_mfdata("print_input", print_input)
+        self.print_flows = self.build_mfdata("print_flows", print_flows)
+        self.save_flows = self.build_mfdata("save_flows", save_flows)
+        self._tas_filerecord = self.build_mfdata("tas_filerecord", None)
+        self._tas_package = self.build_child_package(
+            "tas", timearrayseries, "tas_array", self._tas_filerecord
+        )
+        self._obs_filerecord = self.build_mfdata("obs_filerecord", None)
+        self._obs_package = self.build_child_package(
+            "obs", observations, "continuous", self._obs_filerecord
+        )
+        self.export_array_netcdf = self.build_mfdata(
+            "export_array_netcdf", export_array_netcdf
+        )
+        self.irch = self.build_mfdata("irch", irch)
+        self.recharge = self.build_mfdata("recharge", recharge)
+        self.aux = self.build_mfdata("aux", aux)
 
         self._init_complete = True
-

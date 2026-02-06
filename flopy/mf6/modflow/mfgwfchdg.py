@@ -78,14 +78,166 @@ class ModflowGwfchdg(MFPackage):
 
     """
 
-    auxiliary = ArrayTemplateGenerator(('gwf6', 'chdg', 'options', 'auxiliary'))
-    obs_filerecord = ListTemplateGenerator(('gwf6', 'chdg', 'options', 'obs_filerecord'))
-    head = ArrayTemplateGenerator(('gwf6', 'chdg', 'period', 'head'))
-    aux = ArrayTemplateGenerator(('gwf6', 'chdg', 'period', 'aux'))
-    package_abbr = 'gwfchdg'
-    _package_type = 'chdg'
-    dfn_file_name = 'gwf-chdg.dfn'
-    dfn = [['header', 'multi-package', 'package-type stress-package'], ['block options', 'name readarraygrid', 'type keyword', 'reader urword', 'optional false', 'developmode true', 'default true'], ['block options', 'name auxiliary', 'type string', 'shape (naux)', 'reader urword', 'optional true'], ['block options', 'name auxmultname', 'type string', 'shape', 'reader urword', 'optional true'], ['block options', 'name print_input', 'type keyword', 'reader urword', 'optional true', 'mf6internal iprpak'], ['block options', 'name print_flows', 'type keyword', 'reader urword', 'optional true', 'mf6internal iprflow'], ['block options', 'name save_flows', 'type keyword', 'reader urword', 'optional true', 'mf6internal ipakcb'], ['block options', 'name obs_filerecord', 'type record obs6 filein obs6_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'construct_package obs', 'construct_data observations', 'parameter_name continuous'], ['block options', 'name obs6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name filein', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name obs6_filename', 'type string', 'preserve_case true', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block options', 'name export_array_netcdf', 'type keyword', 'reader urword', 'optional true', 'mf6internal export_nc', 'extended true'], ['block options', 'name dev_no_newton', 'type keyword', 'reader urword', 'optional true', 'mf6internal inewton'], ['block dimensions', 'name maxbound', 'type integer', 'reader urword', 'optional true'], ['block period', 'name iper', 'type integer', 'block_variable true', 'in_record true', 'tagged false', 'shape', 'valid', 'reader urword', 'optional false'], ['block period', 'name head', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'netcdf true', 'default 3.e30'], ['block period', 'name aux', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'netcdf true', 'optional true', 'mf6internal auxvar']]
+    auxiliary = ArrayTemplateGenerator(("gwf6", "chdg", "options", "auxiliary"))
+    obs_filerecord = ListTemplateGenerator(
+        ("gwf6", "chdg", "options", "obs_filerecord")
+    )
+    head = ArrayTemplateGenerator(("gwf6", "chdg", "period", "head"))
+    aux = ArrayTemplateGenerator(("gwf6", "chdg", "period", "aux"))
+    package_abbr = "gwfchdg"
+    _package_type = "chdg"
+    dfn_file_name = "gwf-chdg.dfn"
+    dfn = [
+        ["header", "multi-package", "package-type stress-package"],
+        [
+            "block options",
+            "name readarraygrid",
+            "type keyword",
+            "reader urword",
+            "optional false",
+            "developmode true",
+            "default true",
+        ],
+        [
+            "block options",
+            "name auxiliary",
+            "type string",
+            "shape (naux)",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name auxmultname",
+            "type string",
+            "shape",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name print_input",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal iprpak",
+        ],
+        [
+            "block options",
+            "name print_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal iprflow",
+        ],
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal ipakcb",
+        ],
+        [
+            "block options",
+            "name obs_filerecord",
+            "type record obs6 filein obs6_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "construct_package obs",
+            "construct_data observations",
+            "parameter_name continuous",
+        ],
+        [
+            "block options",
+            "name obs6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name obs6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name export_array_netcdf",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_nc",
+            "extended true",
+        ],
+        [
+            "block options",
+            "name dev_no_newton",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal inewton",
+        ],
+        [
+            "block dimensions",
+            "name maxbound",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block period",
+            "name iper",
+            "type integer",
+            "block_variable true",
+            "in_record true",
+            "tagged false",
+            "shape",
+            "valid",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name head",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "default 3.e30",
+        ],
+        [
+            "block period",
+            "name aux",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "optional true",
+            "mf6internal auxvar",
+        ],
+    ]
 
     def __init__(
         self,
@@ -100,9 +252,8 @@ class ModflowGwfchdg(MFPackage):
         export_array_netcdf=None,
         dev_no_newton=None,
         maxbound=None,
-        head=3e+30,
+        head=3e30,
         aux=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -117,18 +268,21 @@ class ModflowGwfchdg(MFPackage):
             **kwargs,
         )
 
-        self.auxiliary = self.build_mfdata('auxiliary', auxiliary)
-        self.auxmultname = self.build_mfdata('auxmultname', auxmultname)
-        self.print_input = self.build_mfdata('print_input', print_input)
-        self.print_flows = self.build_mfdata('print_flows', print_flows)
-        self.save_flows = self.build_mfdata('save_flows', save_flows)
-        self._obs_filerecord = self.build_mfdata('obs_filerecord', None)
-        self._obs_package = self.build_child_package('obs', observations, 'continuous', self._obs_filerecord)
-        self.export_array_netcdf = self.build_mfdata('export_array_netcdf', export_array_netcdf)
-        self.dev_no_newton = self.build_mfdata('dev_no_newton', dev_no_newton)
-        self.maxbound = self.build_mfdata('maxbound', maxbound)
-        self.head = self.build_mfdata('head', head)
-        self.aux = self.build_mfdata('aux', aux)
+        self.auxiliary = self.build_mfdata("auxiliary", auxiliary)
+        self.auxmultname = self.build_mfdata("auxmultname", auxmultname)
+        self.print_input = self.build_mfdata("print_input", print_input)
+        self.print_flows = self.build_mfdata("print_flows", print_flows)
+        self.save_flows = self.build_mfdata("save_flows", save_flows)
+        self._obs_filerecord = self.build_mfdata("obs_filerecord", None)
+        self._obs_package = self.build_child_package(
+            "obs", observations, "continuous", self._obs_filerecord
+        )
+        self.export_array_netcdf = self.build_mfdata(
+            "export_array_netcdf", export_array_netcdf
+        )
+        self.dev_no_newton = self.build_mfdata("dev_no_newton", dev_no_newton)
+        self.maxbound = self.build_mfdata("maxbound", maxbound)
+        self.head = self.build_mfdata("head", head)
+        self.aux = self.build_mfdata("aux", aux)
 
         self._init_complete = True
-

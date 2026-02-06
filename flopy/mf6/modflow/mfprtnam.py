@@ -65,11 +65,68 @@ class ModflowPrtnam(MFPackage):
 
     """
 
-    packages = ListTemplateGenerator(('prt6', 'nam', 'packages', 'packages'))
-    package_abbr = 'prtnam'
-    _package_type = 'nam'
-    dfn_file_name = 'prt-nam.dfn'
-    dfn = [['header'], ['block options', 'name list', 'type string', 'reader urword', 'optional true'], ['block options', 'name print_input', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name print_flows', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name save_flows', 'type keyword', 'reader urword', 'optional true'], ['block packages', 'name packages', 'type recarray ftype fname pname', 'reader urword', 'optional false'], ['block packages', 'name ftype', 'in_record true', 'type string', 'tagged false', 'reader urword'], ['block packages', 'name fname', 'in_record true', 'type string', 'preserve_case true', 'tagged false', 'reader urword'], ['block packages', 'name pname', 'in_record true', 'type string', 'tagged false', 'reader urword', 'optional true']]
+    packages = ListTemplateGenerator(("prt6", "nam", "packages", "packages"))
+    package_abbr = "prtnam"
+    _package_type = "nam"
+    dfn_file_name = "prt-nam.dfn"
+    dfn = [
+        ["header"],
+        ["block options", "name list", "type string", "reader urword", "optional true"],
+        [
+            "block options",
+            "name print_input",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name print_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block packages",
+            "name packages",
+            "type recarray ftype fname pname",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block packages",
+            "name ftype",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block packages",
+            "name fname",
+            "in_record true",
+            "type string",
+            "preserve_case true",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block packages",
+            "name pname",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+            "optional true",
+        ],
+    ]
 
     def __init__(
         self,
@@ -80,7 +137,6 @@ class ModflowPrtnam(MFPackage):
         print_flows=None,
         save_flows=None,
         packages=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -95,11 +151,10 @@ class ModflowPrtnam(MFPackage):
             **kwargs,
         )
 
-        self.list = self.build_mfdata('list', list)
-        self.print_input = self.build_mfdata('print_input', print_input)
-        self.print_flows = self.build_mfdata('print_flows', print_flows)
-        self.save_flows = self.build_mfdata('save_flows', save_flows)
-        self.packages = self.build_mfdata('packages', packages)
+        self.list = self.build_mfdata("list", list)
+        self.print_input = self.build_mfdata("print_input", print_input)
+        self.print_flows = self.build_mfdata("print_flows", print_flows)
+        self.save_flows = self.build_mfdata("save_flows", save_flows)
+        self.packages = self.build_mfdata("packages", packages)
 
         self._init_complete = True
-

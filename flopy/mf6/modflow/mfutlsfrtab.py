@@ -59,11 +59,62 @@ class ModflowUtlsfrtab(MFPackage):
 
     """
 
-    table = ListTemplateGenerator(('sfrtab', 'table', 'table'))
-    package_abbr = 'utlsfrtab'
-    _package_type = 'sfrtab'
-    dfn_file_name = 'utl-sfrtab.dfn'
-    dfn = [['header', 'multi-package'], ['block dimensions', 'name nrow', 'type integer', 'reader urword', 'optional false'], ['block dimensions', 'name ncol', 'type integer', 'reader urword', 'optional false'], ['block table', 'name table', 'type recarray xfraction height manfraction', 'shape (nrow)', 'reader urword'], ['block table', 'name xfraction', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block table', 'name height', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block table', 'name manfraction', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword', 'optional true']]
+    table = ListTemplateGenerator(("sfrtab", "table", "table"))
+    package_abbr = "utlsfrtab"
+    _package_type = "sfrtab"
+    dfn_file_name = "utl-sfrtab.dfn"
+    dfn = [
+        ["header", "multi-package"],
+        [
+            "block dimensions",
+            "name nrow",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block dimensions",
+            "name ncol",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block table",
+            "name table",
+            "type recarray xfraction height manfraction",
+            "shape (nrow)",
+            "reader urword",
+        ],
+        [
+            "block table",
+            "name xfraction",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block table",
+            "name height",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block table",
+            "name manfraction",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "optional true",
+        ],
+    ]
 
     def __init__(
         self,
@@ -72,7 +123,6 @@ class ModflowUtlsfrtab(MFPackage):
         nrow=None,
         ncol=None,
         table=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -87,9 +137,8 @@ class ModflowUtlsfrtab(MFPackage):
             **kwargs,
         )
 
-        self.nrow = self.build_mfdata('nrow', nrow)
-        self.ncol = self.build_mfdata('ncol', ncol)
-        self.table = self.build_mfdata('table', table)
+        self.nrow = self.build_mfdata("nrow", nrow)
+        self.ncol = self.build_mfdata("ncol", ncol)
+        self.table = self.build_mfdata("table", table)
 
         self._init_complete = True
-

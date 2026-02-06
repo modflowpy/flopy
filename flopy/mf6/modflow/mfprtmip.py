@@ -54,13 +54,49 @@ class ModflowPrtmip(MFPackage):
 
     """
 
-    porosity = ArrayTemplateGenerator(('prt6', 'mip', 'griddata', 'porosity'))
-    retfactor = ArrayTemplateGenerator(('prt6', 'mip', 'griddata', 'retfactor'))
-    izone = ArrayTemplateGenerator(('prt6', 'mip', 'griddata', 'izone'))
-    package_abbr = 'prtmip'
-    _package_type = 'mip'
-    dfn_file_name = 'prt-mip.dfn'
-    dfn = [['header'], ['block options', 'name export_array_ascii', 'type keyword', 'reader urword', 'optional true', 'mf6internal export_ascii'], ['block griddata', 'name porosity', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true'], ['block griddata', 'name retfactor', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'optional true'], ['block griddata', 'name izone', 'type integer', 'shape (nodes)', 'reader readarray', 'layered true', 'optional true']]
+    porosity = ArrayTemplateGenerator(("prt6", "mip", "griddata", "porosity"))
+    retfactor = ArrayTemplateGenerator(("prt6", "mip", "griddata", "retfactor"))
+    izone = ArrayTemplateGenerator(("prt6", "mip", "griddata", "izone"))
+    package_abbr = "prtmip"
+    _package_type = "mip"
+    dfn_file_name = "prt-mip.dfn"
+    dfn = [
+        ["header"],
+        [
+            "block options",
+            "name export_array_ascii",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_ascii",
+        ],
+        [
+            "block griddata",
+            "name porosity",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+        ],
+        [
+            "block griddata",
+            "name retfactor",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name izone",
+            "type integer",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "optional true",
+        ],
+    ]
 
     def __init__(
         self,
@@ -70,7 +106,6 @@ class ModflowPrtmip(MFPackage):
         porosity=None,
         retfactor=None,
         izone=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -85,10 +120,11 @@ class ModflowPrtmip(MFPackage):
             **kwargs,
         )
 
-        self.export_array_ascii = self.build_mfdata('export_array_ascii', export_array_ascii)
-        self.porosity = self.build_mfdata('porosity', porosity)
-        self.retfactor = self.build_mfdata('retfactor', retfactor)
-        self.izone = self.build_mfdata('izone', izone)
+        self.export_array_ascii = self.build_mfdata(
+            "export_array_ascii", export_array_ascii
+        )
+        self.porosity = self.build_mfdata("porosity", porosity)
+        self.retfactor = self.build_mfdata("retfactor", retfactor)
+        self.izone = self.build_mfdata("izone", izone)
 
         self._init_complete = True
-

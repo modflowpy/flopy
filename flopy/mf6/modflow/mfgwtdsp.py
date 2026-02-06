@@ -82,16 +82,111 @@ class ModflowGwtdsp(MFPackage):
 
     """
 
-    diffc = ArrayTemplateGenerator(('gwt6', 'dsp', 'griddata', 'diffc'))
-    alh = ArrayTemplateGenerator(('gwt6', 'dsp', 'griddata', 'alh'))
-    alv = ArrayTemplateGenerator(('gwt6', 'dsp', 'griddata', 'alv'))
-    ath1 = ArrayTemplateGenerator(('gwt6', 'dsp', 'griddata', 'ath1'))
-    ath2 = ArrayTemplateGenerator(('gwt6', 'dsp', 'griddata', 'ath2'))
-    atv = ArrayTemplateGenerator(('gwt6', 'dsp', 'griddata', 'atv'))
-    package_abbr = 'gwtdsp'
-    _package_type = 'dsp'
-    dfn_file_name = 'gwt-dsp.dfn'
-    dfn = [['header'], ['block options', 'name xt3d_off', 'type keyword', 'shape', 'reader urword', 'optional true'], ['block options', 'name xt3d_rhs', 'type keyword', 'shape', 'reader urword', 'optional true'], ['block options', 'name export_array_ascii', 'type keyword', 'reader urword', 'optional true', 'mf6internal export_ascii'], ['block options', 'name export_array_netcdf', 'type keyword', 'reader urword', 'optional true', 'mf6internal export_nc', 'extended true'], ['block griddata', 'name diffc', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'netcdf true', 'optional true'], ['block griddata', 'name alh', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'netcdf true', 'optional true'], ['block griddata', 'name alv', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'netcdf true', 'optional true'], ['block griddata', 'name ath1', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'netcdf true', 'optional true'], ['block griddata', 'name ath2', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'netcdf true', 'optional true'], ['block griddata', 'name atv', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'netcdf true', 'optional true']]
+    diffc = ArrayTemplateGenerator(("gwt6", "dsp", "griddata", "diffc"))
+    alh = ArrayTemplateGenerator(("gwt6", "dsp", "griddata", "alh"))
+    alv = ArrayTemplateGenerator(("gwt6", "dsp", "griddata", "alv"))
+    ath1 = ArrayTemplateGenerator(("gwt6", "dsp", "griddata", "ath1"))
+    ath2 = ArrayTemplateGenerator(("gwt6", "dsp", "griddata", "ath2"))
+    atv = ArrayTemplateGenerator(("gwt6", "dsp", "griddata", "atv"))
+    package_abbr = "gwtdsp"
+    _package_type = "dsp"
+    dfn_file_name = "gwt-dsp.dfn"
+    dfn = [
+        ["header"],
+        [
+            "block options",
+            "name xt3d_off",
+            "type keyword",
+            "shape",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name xt3d_rhs",
+            "type keyword",
+            "shape",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name export_array_ascii",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_ascii",
+        ],
+        [
+            "block options",
+            "name export_array_netcdf",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_nc",
+            "extended true",
+        ],
+        [
+            "block griddata",
+            "name diffc",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name alh",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name alv",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name ath1",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name ath2",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name atv",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "optional true",
+        ],
+    ]
 
     def __init__(
         self,
@@ -107,7 +202,6 @@ class ModflowGwtdsp(MFPackage):
         ath1=None,
         ath2=None,
         atv=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -122,16 +216,19 @@ class ModflowGwtdsp(MFPackage):
             **kwargs,
         )
 
-        self.xt3d_off = self.build_mfdata('xt3d_off', xt3d_off)
-        self.xt3d_rhs = self.build_mfdata('xt3d_rhs', xt3d_rhs)
-        self.export_array_ascii = self.build_mfdata('export_array_ascii', export_array_ascii)
-        self.export_array_netcdf = self.build_mfdata('export_array_netcdf', export_array_netcdf)
-        self.diffc = self.build_mfdata('diffc', diffc)
-        self.alh = self.build_mfdata('alh', alh)
-        self.alv = self.build_mfdata('alv', alv)
-        self.ath1 = self.build_mfdata('ath1', ath1)
-        self.ath2 = self.build_mfdata('ath2', ath2)
-        self.atv = self.build_mfdata('atv', atv)
+        self.xt3d_off = self.build_mfdata("xt3d_off", xt3d_off)
+        self.xt3d_rhs = self.build_mfdata("xt3d_rhs", xt3d_rhs)
+        self.export_array_ascii = self.build_mfdata(
+            "export_array_ascii", export_array_ascii
+        )
+        self.export_array_netcdf = self.build_mfdata(
+            "export_array_netcdf", export_array_netcdf
+        )
+        self.diffc = self.build_mfdata("diffc", diffc)
+        self.alh = self.build_mfdata("alh", alh)
+        self.alv = self.build_mfdata("alv", alv)
+        self.ath1 = self.build_mfdata("ath1", ath1)
+        self.ath2 = self.build_mfdata("ath2", ath2)
+        self.atv = self.build_mfdata("atv", atv)
 
         self._init_complete = True
-

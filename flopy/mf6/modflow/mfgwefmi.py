@@ -56,11 +56,62 @@ class ModflowGwefmi(MFPackage):
 
     """
 
-    packagedata = ListTemplateGenerator(('gwe6', 'fmi', 'packagedata', 'packagedata'))
-    package_abbr = 'gwefmi'
-    _package_type = 'fmi'
-    dfn_file_name = 'gwe-fmi.dfn'
-    dfn = [['header'], ['block options', 'name save_flows', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name flow_imbalance_correction', 'type keyword', 'reader urword', 'optional true', 'mf6internal imbalancecorrect'], ['block packagedata', 'name packagedata', 'type recarray flowtype filein fname', 'reader urword', 'optional true'], ['block packagedata', 'name flowtype', 'in_record true', 'type string', 'tagged false', 'reader urword'], ['block packagedata', 'name filein', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block packagedata', 'name fname', 'in_record true', 'type string', 'preserve_case true', 'tagged false', 'reader urword']]
+    packagedata = ListTemplateGenerator(("gwe6", "fmi", "packagedata", "packagedata"))
+    package_abbr = "gwefmi"
+    _package_type = "fmi"
+    dfn_file_name = "gwe-fmi.dfn"
+    dfn = [
+        ["header"],
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name flow_imbalance_correction",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal imbalancecorrect",
+        ],
+        [
+            "block packagedata",
+            "name packagedata",
+            "type recarray flowtype filein fname",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block packagedata",
+            "name flowtype",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block packagedata",
+            "name fname",
+            "in_record true",
+            "type string",
+            "preserve_case true",
+            "tagged false",
+            "reader urword",
+        ],
+    ]
 
     def __init__(
         self,
@@ -69,7 +120,6 @@ class ModflowGwefmi(MFPackage):
         save_flows=None,
         flow_imbalance_correction=None,
         packagedata=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -84,9 +134,10 @@ class ModflowGwefmi(MFPackage):
             **kwargs,
         )
 
-        self.save_flows = self.build_mfdata('save_flows', save_flows)
-        self.flow_imbalance_correction = self.build_mfdata('flow_imbalance_correction', flow_imbalance_correction)
-        self.packagedata = self.build_mfdata('packagedata', packagedata)
+        self.save_flows = self.build_mfdata("save_flows", save_flows)
+        self.flow_imbalance_correction = self.build_mfdata(
+            "flow_imbalance_correction", flow_imbalance_correction
+        )
+        self.packagedata = self.build_mfdata("packagedata", packagedata)
 
         self._init_complete = True
-

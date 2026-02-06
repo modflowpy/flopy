@@ -58,11 +58,77 @@ class ModflowGwfhfb(MFPackage):
 
     """
 
-    stress_period_data = ListTemplateGenerator(('gwf6', 'hfb', 'period', 'stress_period_data'))
-    package_abbr = 'gwfhfb'
-    _package_type = 'hfb'
-    dfn_file_name = 'gwf-hfb.dfn'
-    dfn = [['header'], ['block options', 'name print_input', 'type keyword', 'reader urword', 'optional true'], ['block dimensions', 'name maxhfb', 'type integer', 'reader urword', 'optional false', 'mf6internal maxbound'], ['block period', 'name iper', 'type integer', 'block_variable true', 'in_record true', 'tagged false', 'shape', 'valid', 'reader urword', 'optional false'], ['block period', 'name stress_period_data', 'type recarray cellid1 cellid2 hydchr', 'shape (maxhfb)', 'reader urword', 'mf6internal spd'], ['block period', 'name cellid1', 'type integer', 'shape (ncelldim)', 'tagged false', 'in_record true', 'reader urword'], ['block period', 'name cellid2', 'type integer', 'shape (ncelldim)', 'tagged false', 'in_record true', 'reader urword'], ['block period', 'name hydchr', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword']]
+    stress_period_data = ListTemplateGenerator(
+        ("gwf6", "hfb", "period", "stress_period_data")
+    )
+    package_abbr = "gwfhfb"
+    _package_type = "hfb"
+    dfn_file_name = "gwf-hfb.dfn"
+    dfn = [
+        ["header"],
+        [
+            "block options",
+            "name print_input",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block dimensions",
+            "name maxhfb",
+            "type integer",
+            "reader urword",
+            "optional false",
+            "mf6internal maxbound",
+        ],
+        [
+            "block period",
+            "name iper",
+            "type integer",
+            "block_variable true",
+            "in_record true",
+            "tagged false",
+            "shape",
+            "valid",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name stress_period_data",
+            "type recarray cellid1 cellid2 hydchr",
+            "shape (maxhfb)",
+            "reader urword",
+            "mf6internal spd",
+        ],
+        [
+            "block period",
+            "name cellid1",
+            "type integer",
+            "shape (ncelldim)",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name cellid2",
+            "type integer",
+            "shape (ncelldim)",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name hydchr",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+    ]
 
     def __init__(
         self,
@@ -71,7 +137,6 @@ class ModflowGwfhfb(MFPackage):
         print_input=None,
         maxhfb=None,
         stress_period_data=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -86,9 +151,10 @@ class ModflowGwfhfb(MFPackage):
             **kwargs,
         )
 
-        self.print_input = self.build_mfdata('print_input', print_input)
-        self.maxhfb = self.build_mfdata('maxhfb', maxhfb)
-        self.stress_period_data = self.build_mfdata('stress_period_data', stress_period_data)
+        self.print_input = self.build_mfdata("print_input", print_input)
+        self.maxhfb = self.build_mfdata("maxhfb", maxhfb)
+        self.stress_period_data = self.build_mfdata(
+            "stress_period_data", stress_period_data
+        )
 
         self._init_complete = True
-

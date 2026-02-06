@@ -246,21 +246,357 @@ class ModflowGwfnpf(MFPackage):
 
     """
 
-    rewet_record = ListTemplateGenerator(('gwf6', 'npf', 'options', 'rewet_record'))
-    xt3doptions = ListTemplateGenerator(('gwf6', 'npf', 'options', 'xt3doptions'))
-    tvk_filerecord = ListTemplateGenerator(('gwf6', 'npf', 'options', 'tvk_filerecord'))
-    icelltype = ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 'icelltype'))
-    k = ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 'k'))
-    k22 = ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 'k22'))
-    k33 = ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 'k33'))
-    angle1 = ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 'angle1'))
-    angle2 = ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 'angle2'))
-    angle3 = ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 'angle3'))
-    wetdry = ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 'wetdry'))
-    package_abbr = 'gwfnpf'
-    _package_type = 'npf'
-    dfn_file_name = 'gwf-npf.dfn'
-    dfn = [['header'], ['block options', 'name save_flows', 'type keyword', 'reader urword', 'optional true', 'mf6internal ipakcb'], ['block options', 'name print_flows', 'type keyword', 'reader urword', 'optional true', 'mf6internal iprflow'], ['block options', 'name alternative_cell_averaging', 'type string', 'valid logarithmic amt-lmk amt-hmk', 'reader urword', 'optional true', 'mf6internal cellavg'], ['block options', 'name thickstrt', 'type keyword', 'reader urword', 'optional true', 'mf6internal ithickstrt'], ['block options', 'name cvoptions', 'type record variablecv dewatered', 'reader urword', 'optional true'], ['block options', 'name variablecv', 'in_record true', 'type keyword', 'reader urword', 'mf6internal ivarcv'], ['block options', 'name dewatered', 'in_record true', 'type keyword', 'reader urword', 'optional true', 'mf6internal idewatcv'], ['block options', 'name perched', 'type keyword', 'reader urword', 'optional true', 'mf6internal iperched'], ['block options', 'name rewet_record', 'type record rewet wetfct iwetit ihdwet', 'reader urword', 'optional true'], ['block options', 'name rewet', 'type keyword', 'in_record true', 'reader urword', 'optional false', 'mf6internal irewet'], ['block options', 'name wetfct', 'type double precision', 'in_record true', 'reader urword', 'optional false'], ['block options', 'name iwetit', 'type integer', 'in_record true', 'reader urword', 'optional false'], ['block options', 'name ihdwet', 'type integer', 'in_record true', 'reader urword', 'optional false'], ['block options', 'name xt3doptions', 'type record xt3d rhs', 'reader urword', 'optional true'], ['block options', 'name xt3d', 'in_record true', 'type keyword', 'reader urword', 'mf6internal ixt3d'], ['block options', 'name rhs', 'in_record true', 'type keyword', 'reader urword', 'optional true', 'mf6internal ixt3drhs'], ['block options', 'name highest_cell_saturation', 'type keyword', 'reader urword', 'optional true', 'mf6internal ihighcellsat'], ['block options', 'name save_specific_discharge', 'type keyword', 'reader urword', 'optional true', 'mf6internal isavspdis'], ['block options', 'name save_saturation', 'type keyword', 'reader urword', 'optional true', 'mf6internal isavsat'], ['block options', 'name k22overk', 'type keyword', 'reader urword', 'optional true', 'mf6internal ik22overk'], ['block options', 'name k33overk', 'type keyword', 'reader urword', 'optional true', 'mf6internal ik33overk'], ['block options', 'name tvk_filerecord', 'type record tvk6 filein tvk6_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'construct_package tvk', 'construct_data perioddata', 'parameter_name tvk_perioddata'], ['block options', 'name tvk6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name filein', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name tvk6_filename', 'type string', 'preserve_case true', 'in_record true', 'reader urword', 'optional false', 'tagged false'], ['block options', 'name export_array_ascii', 'type keyword', 'reader urword', 'optional true', 'mf6internal export_ascii'], ['block options', 'name export_array_netcdf', 'type keyword', 'reader urword', 'optional true', 'mf6internal export_nc', 'extended true'], ['block options', 'name dev_no_newton', 'type keyword', 'reader urword', 'optional true', 'mf6internal inewton'], ['block options', 'name dev_omega', 'type double precision', 'reader urword', 'optional true', 'mf6internal satomega'], ['block griddata', 'name icelltype', 'type integer', 'shape (nodes)', 'valid', 'reader readarray', 'layered true', 'netcdf true', 'optional', 'default 0'], ['block griddata', 'name k', 'type double precision', 'shape (nodes)', 'valid', 'reader readarray', 'layered true', 'netcdf true', 'optional', 'default 1.0'], ['block griddata', 'name k22', 'type double precision', 'shape (nodes)', 'valid', 'reader readarray', 'layered true', 'netcdf true', 'optional true'], ['block griddata', 'name k33', 'type double precision', 'shape (nodes)', 'valid', 'reader readarray', 'layered true', 'netcdf true', 'optional true'], ['block griddata', 'name angle1', 'type double precision', 'shape (nodes)', 'valid', 'reader readarray', 'layered true', 'netcdf true', 'optional true'], ['block griddata', 'name angle2', 'type double precision', 'shape (nodes)', 'valid', 'reader readarray', 'layered true', 'netcdf true', 'optional true'], ['block griddata', 'name angle3', 'type double precision', 'shape (nodes)', 'valid', 'reader readarray', 'layered true', 'netcdf true', 'optional true'], ['block griddata', 'name wetdry', 'type double precision', 'shape (nodes)', 'valid', 'reader readarray', 'layered true', 'netcdf true', 'optional true']]
+    rewet_record = ListTemplateGenerator(("gwf6", "npf", "options", "rewet_record"))
+    xt3doptions = ListTemplateGenerator(("gwf6", "npf", "options", "xt3doptions"))
+    tvk_filerecord = ListTemplateGenerator(("gwf6", "npf", "options", "tvk_filerecord"))
+    icelltype = ArrayTemplateGenerator(("gwf6", "npf", "griddata", "icelltype"))
+    k = ArrayTemplateGenerator(("gwf6", "npf", "griddata", "k"))
+    k22 = ArrayTemplateGenerator(("gwf6", "npf", "griddata", "k22"))
+    k33 = ArrayTemplateGenerator(("gwf6", "npf", "griddata", "k33"))
+    angle1 = ArrayTemplateGenerator(("gwf6", "npf", "griddata", "angle1"))
+    angle2 = ArrayTemplateGenerator(("gwf6", "npf", "griddata", "angle2"))
+    angle3 = ArrayTemplateGenerator(("gwf6", "npf", "griddata", "angle3"))
+    wetdry = ArrayTemplateGenerator(("gwf6", "npf", "griddata", "wetdry"))
+    package_abbr = "gwfnpf"
+    _package_type = "npf"
+    dfn_file_name = "gwf-npf.dfn"
+    dfn = [
+        ["header"],
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal ipakcb",
+        ],
+        [
+            "block options",
+            "name print_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal iprflow",
+        ],
+        [
+            "block options",
+            "name alternative_cell_averaging",
+            "type string",
+            "valid logarithmic amt-lmk amt-hmk",
+            "reader urword",
+            "optional true",
+            "mf6internal cellavg",
+        ],
+        [
+            "block options",
+            "name thickstrt",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal ithickstrt",
+        ],
+        [
+            "block options",
+            "name cvoptions",
+            "type record variablecv dewatered",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name variablecv",
+            "in_record true",
+            "type keyword",
+            "reader urword",
+            "mf6internal ivarcv",
+        ],
+        [
+            "block options",
+            "name dewatered",
+            "in_record true",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal idewatcv",
+        ],
+        [
+            "block options",
+            "name perched",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal iperched",
+        ],
+        [
+            "block options",
+            "name rewet_record",
+            "type record rewet wetfct iwetit ihdwet",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name rewet",
+            "type keyword",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "mf6internal irewet",
+        ],
+        [
+            "block options",
+            "name wetfct",
+            "type double precision",
+            "in_record true",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name iwetit",
+            "type integer",
+            "in_record true",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name ihdwet",
+            "type integer",
+            "in_record true",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name xt3doptions",
+            "type record xt3d rhs",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name xt3d",
+            "in_record true",
+            "type keyword",
+            "reader urword",
+            "mf6internal ixt3d",
+        ],
+        [
+            "block options",
+            "name rhs",
+            "in_record true",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal ixt3drhs",
+        ],
+        [
+            "block options",
+            "name highest_cell_saturation",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal ihighcellsat",
+        ],
+        [
+            "block options",
+            "name save_specific_discharge",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal isavspdis",
+        ],
+        [
+            "block options",
+            "name save_saturation",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal isavsat",
+        ],
+        [
+            "block options",
+            "name k22overk",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal ik22overk",
+        ],
+        [
+            "block options",
+            "name k33overk",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal ik33overk",
+        ],
+        [
+            "block options",
+            "name tvk_filerecord",
+            "type record tvk6 filein tvk6_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "construct_package tvk",
+            "construct_data perioddata",
+            "parameter_name tvk_perioddata",
+        ],
+        [
+            "block options",
+            "name tvk6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name tvk6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged false",
+        ],
+        [
+            "block options",
+            "name export_array_ascii",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_ascii",
+        ],
+        [
+            "block options",
+            "name export_array_netcdf",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_nc",
+            "extended true",
+        ],
+        [
+            "block options",
+            "name dev_no_newton",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal inewton",
+        ],
+        [
+            "block options",
+            "name dev_omega",
+            "type double precision",
+            "reader urword",
+            "optional true",
+            "mf6internal satomega",
+        ],
+        [
+            "block griddata",
+            "name icelltype",
+            "type integer",
+            "shape (nodes)",
+            "valid",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "optional",
+            "default 0",
+        ],
+        [
+            "block griddata",
+            "name k",
+            "type double precision",
+            "shape (nodes)",
+            "valid",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "optional",
+            "default 1.0",
+        ],
+        [
+            "block griddata",
+            "name k22",
+            "type double precision",
+            "shape (nodes)",
+            "valid",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name k33",
+            "type double precision",
+            "shape (nodes)",
+            "valid",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name angle1",
+            "type double precision",
+            "shape (nodes)",
+            "valid",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name angle2",
+            "type double precision",
+            "shape (nodes)",
+            "valid",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name angle3",
+            "type double precision",
+            "shape (nodes)",
+            "valid",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name wetdry",
+            "type double precision",
+            "shape (nodes)",
+            "valid",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "optional true",
+        ],
+    ]
 
     def __init__(
         self,
@@ -292,7 +628,6 @@ class ModflowGwfnpf(MFPackage):
         angle2=None,
         angle3=None,
         wetdry=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -307,33 +642,44 @@ class ModflowGwfnpf(MFPackage):
             **kwargs,
         )
 
-        self.save_flows = self.build_mfdata('save_flows', save_flows)
-        self.print_flows = self.build_mfdata('print_flows', print_flows)
-        self.alternative_cell_averaging = self.build_mfdata('alternative_cell_averaging', alternative_cell_averaging)
-        self.thickstrt = self.build_mfdata('thickstrt', thickstrt)
-        self.cvoptions = self.build_mfdata('cvoptions', cvoptions)
-        self.perched = self.build_mfdata('perched', perched)
-        self.rewet_record = self.build_mfdata('rewet_record', rewet_record)
-        self.xt3doptions = self.build_mfdata('xt3doptions', xt3doptions)
-        self.highest_cell_saturation = self.build_mfdata('highest_cell_saturation', highest_cell_saturation)
-        self.save_specific_discharge = self.build_mfdata('save_specific_discharge', save_specific_discharge)
-        self.save_saturation = self.build_mfdata('save_saturation', save_saturation)
-        self.k22overk = self.build_mfdata('k22overk', k22overk)
-        self.k33overk = self.build_mfdata('k33overk', k33overk)
-        self._tvk_filerecord = self.build_mfdata('tvk_filerecord', None)
-        self._tvk_package = self.build_child_package('tvk', perioddata, 'tvk_perioddata', self._tvk_filerecord)
-        self.export_array_ascii = self.build_mfdata('export_array_ascii', export_array_ascii)
-        self.export_array_netcdf = self.build_mfdata('export_array_netcdf', export_array_netcdf)
-        self.dev_no_newton = self.build_mfdata('dev_no_newton', dev_no_newton)
-        self.dev_omega = self.build_mfdata('dev_omega', dev_omega)
-        self.icelltype = self.build_mfdata('icelltype', icelltype)
-        self.k = self.build_mfdata('k', k)
-        self.k22 = self.build_mfdata('k22', k22)
-        self.k33 = self.build_mfdata('k33', k33)
-        self.angle1 = self.build_mfdata('angle1', angle1)
-        self.angle2 = self.build_mfdata('angle2', angle2)
-        self.angle3 = self.build_mfdata('angle3', angle3)
-        self.wetdry = self.build_mfdata('wetdry', wetdry)
+        self.save_flows = self.build_mfdata("save_flows", save_flows)
+        self.print_flows = self.build_mfdata("print_flows", print_flows)
+        self.alternative_cell_averaging = self.build_mfdata(
+            "alternative_cell_averaging", alternative_cell_averaging
+        )
+        self.thickstrt = self.build_mfdata("thickstrt", thickstrt)
+        self.cvoptions = self.build_mfdata("cvoptions", cvoptions)
+        self.perched = self.build_mfdata("perched", perched)
+        self.rewet_record = self.build_mfdata("rewet_record", rewet_record)
+        self.xt3doptions = self.build_mfdata("xt3doptions", xt3doptions)
+        self.highest_cell_saturation = self.build_mfdata(
+            "highest_cell_saturation", highest_cell_saturation
+        )
+        self.save_specific_discharge = self.build_mfdata(
+            "save_specific_discharge", save_specific_discharge
+        )
+        self.save_saturation = self.build_mfdata("save_saturation", save_saturation)
+        self.k22overk = self.build_mfdata("k22overk", k22overk)
+        self.k33overk = self.build_mfdata("k33overk", k33overk)
+        self._tvk_filerecord = self.build_mfdata("tvk_filerecord", None)
+        self._tvk_package = self.build_child_package(
+            "tvk", perioddata, "tvk_perioddata", self._tvk_filerecord
+        )
+        self.export_array_ascii = self.build_mfdata(
+            "export_array_ascii", export_array_ascii
+        )
+        self.export_array_netcdf = self.build_mfdata(
+            "export_array_netcdf", export_array_netcdf
+        )
+        self.dev_no_newton = self.build_mfdata("dev_no_newton", dev_no_newton)
+        self.dev_omega = self.build_mfdata("dev_omega", dev_omega)
+        self.icelltype = self.build_mfdata("icelltype", icelltype)
+        self.k = self.build_mfdata("k", k)
+        self.k22 = self.build_mfdata("k22", k22)
+        self.k33 = self.build_mfdata("k33", k33)
+        self.angle1 = self.build_mfdata("angle1", angle1)
+        self.angle2 = self.build_mfdata("angle2", angle2)
+        self.angle3 = self.build_mfdata("angle3", angle3)
+        self.wetdry = self.build_mfdata("wetdry", wetdry)
 
         self._init_complete = True
-

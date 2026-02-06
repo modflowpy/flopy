@@ -58,12 +58,113 @@ class ModflowTdis(MFPackage):
 
     """
 
-    ats_filerecord = ListTemplateGenerator(('tdis', 'options', 'ats_filerecord'))
-    perioddata = ListTemplateGenerator(('tdis', 'perioddata', 'perioddata'))
-    package_abbr = 'tdis'
-    _package_type = 'tdis'
-    dfn_file_name = 'sim-tdis.dfn'
-    dfn = [['header'], ['block options', 'name time_units', 'type string', 'reader urword', 'optional true'], ['block options', 'name start_date_time', 'type string', 'reader urword', 'optional true'], ['block options', 'name ats_filerecord', 'type record ats6 filein ats6_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'construct_package ats', 'construct_data ats_perioddata', 'parameter_name perioddata'], ['block options', 'name ats6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name filein', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name ats6_filename', 'type string', 'preserve_case true', 'in_record true', 'reader urword', 'optional false', 'tagged false'], ['block dimensions', 'name nper', 'type integer', 'reader urword', 'optional false', 'default 1'], ['block perioddata', 'name perioddata', 'type recarray perlen nstp tsmult', 'reader urword', 'optional false', 'default ((1.0, 1, 1.0),)'], ['block perioddata', 'name perlen', 'type double precision', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block perioddata', 'name nstp', 'type integer', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block perioddata', 'name tsmult', 'type double precision', 'in_record true', 'tagged false', 'reader urword', 'optional false']]
+    ats_filerecord = ListTemplateGenerator(("tdis", "options", "ats_filerecord"))
+    perioddata = ListTemplateGenerator(("tdis", "perioddata", "perioddata"))
+    package_abbr = "tdis"
+    _package_type = "tdis"
+    dfn_file_name = "sim-tdis.dfn"
+    dfn = [
+        ["header"],
+        [
+            "block options",
+            "name time_units",
+            "type string",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name start_date_time",
+            "type string",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name ats_filerecord",
+            "type record ats6 filein ats6_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "construct_package ats",
+            "construct_data ats_perioddata",
+            "parameter_name perioddata",
+        ],
+        [
+            "block options",
+            "name ats6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name ats6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged false",
+        ],
+        [
+            "block dimensions",
+            "name nper",
+            "type integer",
+            "reader urword",
+            "optional false",
+            "default 1",
+        ],
+        [
+            "block perioddata",
+            "name perioddata",
+            "type recarray perlen nstp tsmult",
+            "reader urword",
+            "optional false",
+            "default ((1.0, 1, 1.0),)",
+        ],
+        [
+            "block perioddata",
+            "name perlen",
+            "type double precision",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block perioddata",
+            "name nstp",
+            "type integer",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block perioddata",
+            "name tsmult",
+            "type double precision",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+    ]
 
     def __init__(
         self,
@@ -74,7 +175,6 @@ class ModflowTdis(MFPackage):
         ats_perioddata=None,
         nper=1,
         perioddata=[[1.0, 1, 1.0]],
-
         filename=None,
         pname=None,
         **kwargs,
@@ -89,12 +189,13 @@ class ModflowTdis(MFPackage):
             **kwargs,
         )
 
-        self.time_units = self.build_mfdata('time_units', time_units)
-        self.start_date_time = self.build_mfdata('start_date_time', start_date_time)
-        self._ats_filerecord = self.build_mfdata('ats_filerecord', None)
-        self._ats_package = self.build_child_package('ats', ats_perioddata, 'perioddata', self._ats_filerecord)
-        self.nper = self.build_mfdata('nper', nper)
-        self.perioddata = self.build_mfdata('perioddata', perioddata)
+        self.time_units = self.build_mfdata("time_units", time_units)
+        self.start_date_time = self.build_mfdata("start_date_time", start_date_time)
+        self._ats_filerecord = self.build_mfdata("ats_filerecord", None)
+        self._ats_package = self.build_child_package(
+            "ats", ats_perioddata, "perioddata", self._ats_filerecord
+        )
+        self.nper = self.build_mfdata("nper", nper)
+        self.perioddata = self.build_mfdata("perioddata", perioddata)
 
         self._init_complete = True
-

@@ -57,11 +57,102 @@ class ModflowGwtapi(MFPackage):
 
     """
 
-    obs_filerecord = ListTemplateGenerator(('gwt6', 'api', 'options', 'obs_filerecord'))
-    package_abbr = 'gwtapi'
-    _package_type = 'api'
-    dfn_file_name = 'gwt-api.dfn'
-    dfn = [['header', 'multi-package'], ['block options', 'name boundnames', 'type keyword', 'shape', 'reader urword', 'optional true'], ['block options', 'name print_input', 'type keyword', 'reader urword', 'optional true', 'mf6internal iprpak'], ['block options', 'name print_flows', 'type keyword', 'reader urword', 'optional true', 'mf6internal iprflow'], ['block options', 'name save_flows', 'type keyword', 'reader urword', 'optional true', 'mf6internal ipakcb'], ['block options', 'name obs_filerecord', 'type record obs6 filein obs6_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'construct_package obs', 'construct_data observations', 'parameter_name continuous'], ['block options', 'name obs6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name filein', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name obs6_filename', 'type string', 'preserve_case true', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block options', 'name mover', 'type keyword', 'tagged true', 'reader urword', 'optional true'], ['block dimensions', 'name maxbound', 'type integer', 'reader urword', 'optional false']]
+    obs_filerecord = ListTemplateGenerator(("gwt6", "api", "options", "obs_filerecord"))
+    package_abbr = "gwtapi"
+    _package_type = "api"
+    dfn_file_name = "gwt-api.dfn"
+    dfn = [
+        ["header", "multi-package"],
+        [
+            "block options",
+            "name boundnames",
+            "type keyword",
+            "shape",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name print_input",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal iprpak",
+        ],
+        [
+            "block options",
+            "name print_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal iprflow",
+        ],
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal ipakcb",
+        ],
+        [
+            "block options",
+            "name obs_filerecord",
+            "type record obs6 filein obs6_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "construct_package obs",
+            "construct_data observations",
+            "parameter_name continuous",
+        ],
+        [
+            "block options",
+            "name obs6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name obs6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name mover",
+            "type keyword",
+            "tagged true",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block dimensions",
+            "name maxbound",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+    ]
 
     def __init__(
         self,
@@ -74,7 +165,6 @@ class ModflowGwtapi(MFPackage):
         observations=None,
         mover=None,
         maxbound=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -89,14 +179,15 @@ class ModflowGwtapi(MFPackage):
             **kwargs,
         )
 
-        self.boundnames = self.build_mfdata('boundnames', boundnames)
-        self.print_input = self.build_mfdata('print_input', print_input)
-        self.print_flows = self.build_mfdata('print_flows', print_flows)
-        self.save_flows = self.build_mfdata('save_flows', save_flows)
-        self._obs_filerecord = self.build_mfdata('obs_filerecord', None)
-        self._obs_package = self.build_child_package('obs', observations, 'continuous', self._obs_filerecord)
-        self.mover = self.build_mfdata('mover', mover)
-        self.maxbound = self.build_mfdata('maxbound', maxbound)
+        self.boundnames = self.build_mfdata("boundnames", boundnames)
+        self.print_input = self.build_mfdata("print_input", print_input)
+        self.print_flows = self.build_mfdata("print_flows", print_flows)
+        self.save_flows = self.build_mfdata("save_flows", save_flows)
+        self._obs_filerecord = self.build_mfdata("obs_filerecord", None)
+        self._obs_package = self.build_child_package(
+            "obs", observations, "continuous", self._obs_filerecord
+        )
+        self.mover = self.build_mfdata("mover", mover)
+        self.maxbound = self.build_mfdata("maxbound", maxbound)
 
         self._init_complete = True
-

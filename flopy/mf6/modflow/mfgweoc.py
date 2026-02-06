@@ -65,16 +65,310 @@ class ModflowGweoc(MFPackage):
 
     """
 
-    budget_filerecord = ListTemplateGenerator(('gwe6', 'oc', 'options', 'budget_filerecord'))
-    budgetcsv_filerecord = ListTemplateGenerator(('gwe6', 'oc', 'options', 'budgetcsv_filerecord'))
-    temperature_filerecord = ListTemplateGenerator(('gwe6', 'oc', 'options', 'temperature_filerecord'))
-    temperatureprintrecord = ListTemplateGenerator(('gwe6', 'oc', 'options', 'temperatureprintrecord'))
-    saverecord = ListTemplateGenerator(('gwe6', 'oc', 'period', 'saverecord'))
-    printrecord = ListTemplateGenerator(('gwe6', 'oc', 'period', 'printrecord'))
-    package_abbr = 'gweoc'
-    _package_type = 'oc'
-    dfn_file_name = 'gwe-oc.dfn'
-    dfn = [['header'], ['block options', 'name budget_filerecord', 'type record budget fileout budgetfile', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal budfilerec'], ['block options', 'name budget', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name fileout', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name budgetfile', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false'], ['block options', 'name budgetcsv_filerecord', 'type record budgetcsv fileout budgetcsvfile', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal budcsvfilerec'], ['block options', 'name budgetcsv', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name budgetcsvfile', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false'], ['block options', 'name temperature_filerecord', 'type record temperature fileout temperaturefile', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal tempfilerec'], ['block options', 'name temperature', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name temperaturefile', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false', 'mf6internal tempfile'], ['block options', 'name temperatureprintrecord', 'type record temperature print_format formatrecord', 'shape', 'reader urword', 'optional true', 'mf6internal tempprintrec'], ['block options', 'name print_format', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name formatrecord', 'type record columns width digits format', 'shape', 'in_record true', 'reader urword', 'tagged', 'optional false'], ['block options', 'name columns', 'type integer', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional'], ['block options', 'name width', 'type integer', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional'], ['block options', 'name digits', 'type integer', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional'], ['block options', 'name format', 'type string', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false'], ['block period', 'name iper', 'type integer', 'block_variable true', 'in_record true', 'tagged false', 'shape', 'valid', 'reader urword', 'optional false'], ['block period', 'name saverecord', 'type record save rtype ocsetting', 'shape', 'reader urword', 'tagged false', 'optional true'], ['block period', 'name save', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block period', 'name printrecord', 'type record print rtype ocsetting', 'shape', 'reader urword', 'tagged false', 'optional true'], ['block period', 'name print', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block period', 'name rtype', 'type string', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false'], ['block period', 'name ocsetting', 'type keystring all first last frequency steps', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block period', 'name all', 'type keyword', 'shape', 'in_record true', 'reader urword'], ['block period', 'name first', 'type keyword', 'shape', 'in_record true', 'reader urword'], ['block period', 'name last', 'type keyword', 'shape', 'in_record true', 'reader urword'], ['block period', 'name frequency', 'type integer', 'shape', 'tagged true', 'in_record true', 'reader urword'], ['block period', 'name steps', 'type integer', 'shape (<nstp)', 'tagged true', 'in_record true', 'reader urword']]
+    budget_filerecord = ListTemplateGenerator(
+        ("gwe6", "oc", "options", "budget_filerecord")
+    )
+    budgetcsv_filerecord = ListTemplateGenerator(
+        ("gwe6", "oc", "options", "budgetcsv_filerecord")
+    )
+    temperature_filerecord = ListTemplateGenerator(
+        ("gwe6", "oc", "options", "temperature_filerecord")
+    )
+    temperatureprintrecord = ListTemplateGenerator(
+        ("gwe6", "oc", "options", "temperatureprintrecord")
+    )
+    saverecord = ListTemplateGenerator(("gwe6", "oc", "period", "saverecord"))
+    printrecord = ListTemplateGenerator(("gwe6", "oc", "period", "printrecord"))
+    package_abbr = "gweoc"
+    _package_type = "oc"
+    dfn_file_name = "gwe-oc.dfn"
+    dfn = [
+        ["header"],
+        [
+            "block options",
+            "name budget_filerecord",
+            "type record budget fileout budgetfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "mf6internal budfilerec",
+        ],
+        [
+            "block options",
+            "name budget",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name fileout",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsv_filerecord",
+            "type record budgetcsv fileout budgetcsvfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "mf6internal budcsvfilerec",
+        ],
+        [
+            "block options",
+            "name budgetcsv",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsvfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name temperature_filerecord",
+            "type record temperature fileout temperaturefile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "mf6internal tempfilerec",
+        ],
+        [
+            "block options",
+            "name temperature",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name temperaturefile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+            "mf6internal tempfile",
+        ],
+        [
+            "block options",
+            "name temperatureprintrecord",
+            "type record temperature print_format formatrecord",
+            "shape",
+            "reader urword",
+            "optional true",
+            "mf6internal tempprintrec",
+        ],
+        [
+            "block options",
+            "name print_format",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name formatrecord",
+            "type record columns width digits format",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name columns",
+            "type integer",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional",
+        ],
+        [
+            "block options",
+            "name width",
+            "type integer",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional",
+        ],
+        [
+            "block options",
+            "name digits",
+            "type integer",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional",
+        ],
+        [
+            "block options",
+            "name format",
+            "type string",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name iper",
+            "type integer",
+            "block_variable true",
+            "in_record true",
+            "tagged false",
+            "shape",
+            "valid",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name saverecord",
+            "type record save rtype ocsetting",
+            "shape",
+            "reader urword",
+            "tagged false",
+            "optional true",
+        ],
+        [
+            "block period",
+            "name save",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name printrecord",
+            "type record print rtype ocsetting",
+            "shape",
+            "reader urword",
+            "tagged false",
+            "optional true",
+        ],
+        [
+            "block period",
+            "name print",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name rtype",
+            "type string",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name ocsetting",
+            "type keystring all first last frequency steps",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name all",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name first",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name last",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name frequency",
+            "type integer",
+            "shape",
+            "tagged true",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name steps",
+            "type integer",
+            "shape (<nstp)",
+            "tagged true",
+            "in_record true",
+            "reader urword",
+        ],
+    ]
 
     def __init__(
         self,
@@ -86,7 +380,6 @@ class ModflowGweoc(MFPackage):
         temperatureprintrecord=None,
         saverecord=None,
         printrecord=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -101,12 +394,19 @@ class ModflowGweoc(MFPackage):
             **kwargs,
         )
 
-        self.budget_filerecord = self.build_mfdata('budget_filerecord', budget_filerecord)
-        self.budgetcsv_filerecord = self.build_mfdata('budgetcsv_filerecord', budgetcsv_filerecord)
-        self.temperature_filerecord = self.build_mfdata('temperature_filerecord', temperature_filerecord)
-        self.temperatureprintrecord = self.build_mfdata('temperatureprintrecord', temperatureprintrecord)
-        self.saverecord = self.build_mfdata('saverecord', saverecord)
-        self.printrecord = self.build_mfdata('printrecord', printrecord)
+        self.budget_filerecord = self.build_mfdata(
+            "budget_filerecord", budget_filerecord
+        )
+        self.budgetcsv_filerecord = self.build_mfdata(
+            "budgetcsv_filerecord", budgetcsv_filerecord
+        )
+        self.temperature_filerecord = self.build_mfdata(
+            "temperature_filerecord", temperature_filerecord
+        )
+        self.temperatureprintrecord = self.build_mfdata(
+            "temperatureprintrecord", temperatureprintrecord
+        )
+        self.saverecord = self.build_mfdata("saverecord", saverecord)
+        self.printrecord = self.build_mfdata("printrecord", printrecord)
 
         self._init_complete = True
-

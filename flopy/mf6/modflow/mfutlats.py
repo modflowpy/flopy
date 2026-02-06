@@ -73,11 +73,83 @@ class ModflowUtlats(MFPackage):
 
     """
 
-    perioddata = ListTemplateGenerator(('ats', 'perioddata', 'perioddata'))
-    package_abbr = 'utlats'
-    _package_type = 'ats'
-    dfn_file_name = 'utl-ats.dfn'
-    dfn = [['header'], ['block dimensions', 'name maxats', 'type integer', 'reader urword', 'optional false', 'default 1'], ['block perioddata', 'name perioddata', 'type recarray iperats dt0 dtmin dtmax dtadj dtfailadj', 'reader urword', 'optional false'], ['block perioddata', 'name iperats', 'type integer', 'in_record true', 'tagged false', 'reader urword', 'optional false', 'numeric_index true'], ['block perioddata', 'name dt0', 'type double precision', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block perioddata', 'name dtmin', 'type double precision', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block perioddata', 'name dtmax', 'type double precision', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block perioddata', 'name dtadj', 'type double precision', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block perioddata', 'name dtfailadj', 'type double precision', 'in_record true', 'tagged false', 'reader urword', 'optional false']]
+    perioddata = ListTemplateGenerator(("ats", "perioddata", "perioddata"))
+    package_abbr = "utlats"
+    _package_type = "ats"
+    dfn_file_name = "utl-ats.dfn"
+    dfn = [
+        ["header"],
+        [
+            "block dimensions",
+            "name maxats",
+            "type integer",
+            "reader urword",
+            "optional false",
+            "default 1",
+        ],
+        [
+            "block perioddata",
+            "name perioddata",
+            "type recarray iperats dt0 dtmin dtmax dtadj dtfailadj",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block perioddata",
+            "name iperats",
+            "type integer",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+            "numeric_index true",
+        ],
+        [
+            "block perioddata",
+            "name dt0",
+            "type double precision",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block perioddata",
+            "name dtmin",
+            "type double precision",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block perioddata",
+            "name dtmax",
+            "type double precision",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block perioddata",
+            "name dtadj",
+            "type double precision",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block perioddata",
+            "name dtfailadj",
+            "type double precision",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+    ]
 
     def __init__(
         self,
@@ -85,7 +157,6 @@ class ModflowUtlats(MFPackage):
         loading_package=False,
         maxats=1,
         perioddata=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -100,22 +171,23 @@ class ModflowUtlats(MFPackage):
             **kwargs,
         )
 
-        self.maxats = self.build_mfdata('maxats', maxats)
-        self.perioddata = self.build_mfdata('perioddata', perioddata)
+        self.maxats = self.build_mfdata("maxats", maxats)
+        self.perioddata = self.build_mfdata("perioddata", perioddata)
 
         self._init_complete = True
+
 
 class UtlatsPackages(MFChildPackages):
     """
     UtlatsPackages is a container class for the ModflowUtlats class.
     """
+
     package_abbr = "utlatspackages"
 
     def initialize(
         self,
         maxats=1,
         perioddata=None,
-
         filename=None,
         pname=None,
     ):
@@ -139,7 +211,6 @@ class UtlatsPackages(MFChildPackages):
         self,
         maxats=1,
         perioddata=None,
-
         filename=None,
         pname=None,
     ):

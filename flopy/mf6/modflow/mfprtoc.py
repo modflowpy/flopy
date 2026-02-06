@@ -110,19 +110,433 @@ class ModflowPrtoc(MFPackage):
 
     """
 
-    budget_filerecord = ListTemplateGenerator(('prt6', 'oc', 'options', 'budget_filerecord'))
-    budgetcsv_filerecord = ListTemplateGenerator(('prt6', 'oc', 'options', 'budgetcsv_filerecord'))
-    track_filerecord = ListTemplateGenerator(('prt6', 'oc', 'options', 'track_filerecord'))
-    trackcsv_filerecord = ListTemplateGenerator(('prt6', 'oc', 'options', 'trackcsv_filerecord'))
-    track_timesrecord = ListTemplateGenerator(('prt6', 'oc', 'options', 'track_timesrecord'))
-    track_timesfilerecord = ListTemplateGenerator(('prt6', 'oc', 'options', 'track_timesfilerecord'))
-    tracktimes = ListTemplateGenerator(('prt6', 'oc', 'tracktimes', 'tracktimes'))
-    saverecord = ListTemplateGenerator(('prt6', 'oc', 'period', 'saverecord'))
-    printrecord = ListTemplateGenerator(('prt6', 'oc', 'period', 'printrecord'))
-    package_abbr = 'prtoc'
-    _package_type = 'oc'
-    dfn_file_name = 'prt-oc.dfn'
-    dfn = [['header'], ['block options', 'name budget_filerecord', 'type record budget fileout budgetfile', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal budfilerec'], ['block options', 'name budget', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name fileout', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name budgetfile', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false'], ['block options', 'name budgetcsv_filerecord', 'type record budgetcsv fileout budgetcsvfile', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal budcsvfilerec'], ['block options', 'name budgetcsv', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name budgetcsvfile', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false'], ['block options', 'name track_filerecord', 'type record track fileout trackfile', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal trackfilerec'], ['block options', 'name track', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name trackfile', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false'], ['block options', 'name trackcsv_filerecord', 'type record trackcsv fileout trackcsvfile', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal trackcsvfilerec'], ['block options', 'name trackcsv', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name trackcsvfile', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false'], ['block options', 'name track_release', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name track_exit', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name track_subfeature_exit', 'type keyword', 'reader urword', 'optional true', 'mf6internal track_subf_exit'], ['block options', 'name track_timestep', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name track_terminate', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name track_weaksink', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name track_usertime', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name track_dropped', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name track_timesrecord', 'type record track_times times', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal ttimesrec', 'removed 6.6.0'], ['block options', 'name track_times', 'type keyword', 'reader urword', 'in_record true', 'tagged true', 'shape', 'removed 6.6.0'], ['block options', 'name times', 'type double precision', 'shape (any1d)', 'reader urword', 'in_record true', 'tagged false', 'repeating true', 'removed 6.6.0'], ['block options', 'name track_timesfilerecord', 'type record track_timesfile timesfile', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal ttimesfilerec', 'removed 6.6.0'], ['block options', 'name track_timesfile', 'type keyword', 'reader urword', 'in_record true', 'tagged true', 'shape', 'removed 6.6.0'], ['block options', 'name timesfile', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false', 'removed 6.6.0'], ['block options', 'name dev_dump_event_trace', 'type keyword', 'reader urword', 'optional true', 'mf6internal dev_dump_evtrace'], ['block dimensions', 'name ntracktimes', 'type integer', 'reader urword', 'optional true'], ['block tracktimes', 'name tracktimes', 'type recarray time', 'shape (ntracktimes)', 'reader urword', 'optional true'], ['block tracktimes', 'name time', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword', 'optional false'], ['block period', 'name iper', 'type integer', 'block_variable true', 'in_record true', 'tagged false', 'shape', 'valid', 'reader urword', 'optional false'], ['block period', 'name saverecord', 'type record save rtype ocsetting', 'shape', 'reader urword', 'tagged false', 'optional true'], ['block period', 'name save', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block period', 'name printrecord', 'type record print rtype ocsetting', 'shape', 'reader urword', 'tagged false', 'optional true'], ['block period', 'name print', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block period', 'name rtype', 'type string', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false'], ['block period', 'name ocsetting', 'type keystring all first last frequency steps', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block period', 'name all', 'type keyword', 'shape', 'in_record true', 'reader urword'], ['block period', 'name first', 'type keyword', 'shape', 'in_record true', 'reader urword'], ['block period', 'name last', 'type keyword', 'shape', 'in_record true', 'reader urword'], ['block period', 'name frequency', 'type integer', 'shape', 'tagged true', 'in_record true', 'reader urword'], ['block period', 'name steps', 'type integer', 'shape (<nstp)', 'tagged true', 'in_record true', 'reader urword']]
+    budget_filerecord = ListTemplateGenerator(
+        ("prt6", "oc", "options", "budget_filerecord")
+    )
+    budgetcsv_filerecord = ListTemplateGenerator(
+        ("prt6", "oc", "options", "budgetcsv_filerecord")
+    )
+    track_filerecord = ListTemplateGenerator(
+        ("prt6", "oc", "options", "track_filerecord")
+    )
+    trackcsv_filerecord = ListTemplateGenerator(
+        ("prt6", "oc", "options", "trackcsv_filerecord")
+    )
+    track_timesrecord = ListTemplateGenerator(
+        ("prt6", "oc", "options", "track_timesrecord")
+    )
+    track_timesfilerecord = ListTemplateGenerator(
+        ("prt6", "oc", "options", "track_timesfilerecord")
+    )
+    tracktimes = ListTemplateGenerator(("prt6", "oc", "tracktimes", "tracktimes"))
+    saverecord = ListTemplateGenerator(("prt6", "oc", "period", "saverecord"))
+    printrecord = ListTemplateGenerator(("prt6", "oc", "period", "printrecord"))
+    package_abbr = "prtoc"
+    _package_type = "oc"
+    dfn_file_name = "prt-oc.dfn"
+    dfn = [
+        ["header"],
+        [
+            "block options",
+            "name budget_filerecord",
+            "type record budget fileout budgetfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "mf6internal budfilerec",
+        ],
+        [
+            "block options",
+            "name budget",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name fileout",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsv_filerecord",
+            "type record budgetcsv fileout budgetcsvfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "mf6internal budcsvfilerec",
+        ],
+        [
+            "block options",
+            "name budgetcsv",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsvfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name track_filerecord",
+            "type record track fileout trackfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "mf6internal trackfilerec",
+        ],
+        [
+            "block options",
+            "name track",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name trackfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name trackcsv_filerecord",
+            "type record trackcsv fileout trackcsvfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "mf6internal trackcsvfilerec",
+        ],
+        [
+            "block options",
+            "name trackcsv",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name trackcsvfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name track_release",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name track_exit",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name track_subfeature_exit",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal track_subf_exit",
+        ],
+        [
+            "block options",
+            "name track_timestep",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name track_terminate",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name track_weaksink",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name track_usertime",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name track_dropped",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name track_timesrecord",
+            "type record track_times times",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "mf6internal ttimesrec",
+            "removed 6.6.0",
+        ],
+        [
+            "block options",
+            "name track_times",
+            "type keyword",
+            "reader urword",
+            "in_record true",
+            "tagged true",
+            "shape",
+            "removed 6.6.0",
+        ],
+        [
+            "block options",
+            "name times",
+            "type double precision",
+            "shape (any1d)",
+            "reader urword",
+            "in_record true",
+            "tagged false",
+            "repeating true",
+            "removed 6.6.0",
+        ],
+        [
+            "block options",
+            "name track_timesfilerecord",
+            "type record track_timesfile timesfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "mf6internal ttimesfilerec",
+            "removed 6.6.0",
+        ],
+        [
+            "block options",
+            "name track_timesfile",
+            "type keyword",
+            "reader urword",
+            "in_record true",
+            "tagged true",
+            "shape",
+            "removed 6.6.0",
+        ],
+        [
+            "block options",
+            "name timesfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+            "removed 6.6.0",
+        ],
+        [
+            "block options",
+            "name dev_dump_event_trace",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal dev_dump_evtrace",
+        ],
+        [
+            "block dimensions",
+            "name ntracktimes",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block tracktimes",
+            "name tracktimes",
+            "type recarray time",
+            "shape (ntracktimes)",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block tracktimes",
+            "name time",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name iper",
+            "type integer",
+            "block_variable true",
+            "in_record true",
+            "tagged false",
+            "shape",
+            "valid",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name saverecord",
+            "type record save rtype ocsetting",
+            "shape",
+            "reader urword",
+            "tagged false",
+            "optional true",
+        ],
+        [
+            "block period",
+            "name save",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name printrecord",
+            "type record print rtype ocsetting",
+            "shape",
+            "reader urword",
+            "tagged false",
+            "optional true",
+        ],
+        [
+            "block period",
+            "name print",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name rtype",
+            "type string",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name ocsetting",
+            "type keystring all first last frequency steps",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name all",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name first",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name last",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name frequency",
+            "type integer",
+            "shape",
+            "tagged true",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name steps",
+            "type integer",
+            "shape (<nstp)",
+            "tagged true",
+            "in_record true",
+            "reader urword",
+        ],
+    ]
 
     def __init__(
         self,
@@ -147,7 +561,6 @@ class ModflowPrtoc(MFPackage):
         tracktimes=None,
         saverecord=None,
         printrecord=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -162,25 +575,38 @@ class ModflowPrtoc(MFPackage):
             **kwargs,
         )
 
-        self.budget_filerecord = self.build_mfdata('budget_filerecord', budget_filerecord)
-        self.budgetcsv_filerecord = self.build_mfdata('budgetcsv_filerecord', budgetcsv_filerecord)
-        self.track_filerecord = self.build_mfdata('track_filerecord', track_filerecord)
-        self.trackcsv_filerecord = self.build_mfdata('trackcsv_filerecord', trackcsv_filerecord)
-        self.track_release = self.build_mfdata('track_release', track_release)
-        self.track_exit = self.build_mfdata('track_exit', track_exit)
-        self.track_subfeature_exit = self.build_mfdata('track_subfeature_exit', track_subfeature_exit)
-        self.track_timestep = self.build_mfdata('track_timestep', track_timestep)
-        self.track_terminate = self.build_mfdata('track_terminate', track_terminate)
-        self.track_weaksink = self.build_mfdata('track_weaksink', track_weaksink)
-        self.track_usertime = self.build_mfdata('track_usertime', track_usertime)
-        self.track_dropped = self.build_mfdata('track_dropped', track_dropped)
-        self.track_timesrecord = self.build_mfdata('track_timesrecord', track_timesrecord)
-        self.track_timesfilerecord = self.build_mfdata('track_timesfilerecord', track_timesfilerecord)
-        self.dev_dump_event_trace = self.build_mfdata('dev_dump_event_trace', dev_dump_event_trace)
-        self.ntracktimes = self.build_mfdata('ntracktimes', ntracktimes)
-        self.tracktimes = self.build_mfdata('tracktimes', tracktimes)
-        self.saverecord = self.build_mfdata('saverecord', saverecord)
-        self.printrecord = self.build_mfdata('printrecord', printrecord)
+        self.budget_filerecord = self.build_mfdata(
+            "budget_filerecord", budget_filerecord
+        )
+        self.budgetcsv_filerecord = self.build_mfdata(
+            "budgetcsv_filerecord", budgetcsv_filerecord
+        )
+        self.track_filerecord = self.build_mfdata("track_filerecord", track_filerecord)
+        self.trackcsv_filerecord = self.build_mfdata(
+            "trackcsv_filerecord", trackcsv_filerecord
+        )
+        self.track_release = self.build_mfdata("track_release", track_release)
+        self.track_exit = self.build_mfdata("track_exit", track_exit)
+        self.track_subfeature_exit = self.build_mfdata(
+            "track_subfeature_exit", track_subfeature_exit
+        )
+        self.track_timestep = self.build_mfdata("track_timestep", track_timestep)
+        self.track_terminate = self.build_mfdata("track_terminate", track_terminate)
+        self.track_weaksink = self.build_mfdata("track_weaksink", track_weaksink)
+        self.track_usertime = self.build_mfdata("track_usertime", track_usertime)
+        self.track_dropped = self.build_mfdata("track_dropped", track_dropped)
+        self.track_timesrecord = self.build_mfdata(
+            "track_timesrecord", track_timesrecord
+        )
+        self.track_timesfilerecord = self.build_mfdata(
+            "track_timesfilerecord", track_timesfilerecord
+        )
+        self.dev_dump_event_trace = self.build_mfdata(
+            "dev_dump_event_trace", dev_dump_event_trace
+        )
+        self.ntracktimes = self.build_mfdata("ntracktimes", ntracktimes)
+        self.tracktimes = self.build_mfdata("tracktimes", tracktimes)
+        self.saverecord = self.build_mfdata("saverecord", saverecord)
+        self.printrecord = self.build_mfdata("printrecord", printrecord)
 
         self._init_complete = True
-

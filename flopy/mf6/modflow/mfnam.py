@@ -98,14 +98,234 @@ class ModflowNam(MFPackage):
 
     """
 
-    hpc_filerecord = ListTemplateGenerator(('nam', 'options', 'hpc_filerecord'))
-    models = ListTemplateGenerator(('nam', 'models', 'models'))
-    exchanges = ListTemplateGenerator(('nam', 'exchanges', 'exchanges'))
-    solutiongroup = ListTemplateGenerator(('nam', 'solutiongroup', 'solutiongroup'))
-    package_abbr = 'nam'
-    _package_type = 'nam'
-    dfn_file_name = 'sim-nam.dfn'
-    dfn = [['header'], ['block options', 'name continue', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name nocheck', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name memory_print_option', 'type string', 'reader urword', 'optional true', 'mf6internal prmem'], ['block options', 'name profile_option', 'type string', 'reader urword', 'optional true', 'mf6internal prprof'], ['block options', 'name maxerrors', 'type integer', 'reader urword', 'optional true'], ['block options', 'name print_input', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name hpc_filerecord', 'type record hpc6 filein hpc6_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'construct_package hpc', 'construct_data hpc_data', 'parameter_name hpc_data'], ['block options', 'name hpc6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false', 'extended true'], ['block options', 'name filein', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name hpc6_filename', 'type string', 'preserve_case true', 'in_record true', 'reader urword', 'optional false', 'tagged false', 'extended true'], ['block timing', 'name tdis6', 'preserve_case true', 'type string', 'reader urword', 'optional'], ['block models', 'name models', 'type recarray mtype mfname mname', 'reader urword', 'optional'], ['block models', 'name mtype', 'in_record true', 'type string', 'tagged false', 'reader urword'], ['block models', 'name mfname', 'in_record true', 'type string', 'preserve_case true', 'tagged false', 'reader urword'], ['block models', 'name mname', 'in_record true', 'type string', 'tagged false', 'reader urword'], ['block exchanges', 'name exchanges', 'type recarray exgtype exgfile exgmnamea exgmnameb', 'reader urword', 'optional'], ['block exchanges', 'name exgtype', 'in_record true', 'type string', 'tagged false', 'reader urword'], ['block exchanges', 'name exgfile', 'in_record true', 'type string', 'preserve_case true', 'tagged false', 'reader urword'], ['block exchanges', 'name exgmnamea', 'in_record true', 'type string', 'tagged false', 'reader urword'], ['block exchanges', 'name exgmnameb', 'in_record true', 'type string', 'tagged false', 'reader urword'], ['block solutiongroup', 'name group_num', 'type integer', 'block_variable true', 'in_record true', 'tagged false', 'shape', 'reader urword'], ['block solutiongroup', 'name mxiter', 'type integer', 'reader urword', 'optional true'], ['block solutiongroup', 'name solutiongroup', 'type recarray slntype slnfname slnmnames', 'reader urword'], ['block solutiongroup', 'name slntype', 'type string', 'valid ims6 ems6', 'in_record true', 'tagged false', 'reader urword'], ['block solutiongroup', 'name slnfname', 'type string', 'preserve_case true', 'in_record true', 'tagged false', 'reader urword'], ['block solutiongroup', 'name slnmnames', 'type string', 'in_record true', 'shape (any1d)', 'tagged false', 'reader urword']]
+    hpc_filerecord = ListTemplateGenerator(("nam", "options", "hpc_filerecord"))
+    models = ListTemplateGenerator(("nam", "models", "models"))
+    exchanges = ListTemplateGenerator(("nam", "exchanges", "exchanges"))
+    solutiongroup = ListTemplateGenerator(("nam", "solutiongroup", "solutiongroup"))
+    package_abbr = "nam"
+    _package_type = "nam"
+    dfn_file_name = "sim-nam.dfn"
+    dfn = [
+        ["header"],
+        [
+            "block options",
+            "name continue",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name nocheck",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name memory_print_option",
+            "type string",
+            "reader urword",
+            "optional true",
+            "mf6internal prmem",
+        ],
+        [
+            "block options",
+            "name profile_option",
+            "type string",
+            "reader urword",
+            "optional true",
+            "mf6internal prprof",
+        ],
+        [
+            "block options",
+            "name maxerrors",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name print_input",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name hpc_filerecord",
+            "type record hpc6 filein hpc6_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "construct_package hpc",
+            "construct_data hpc_data",
+            "parameter_name hpc_data",
+        ],
+        [
+            "block options",
+            "name hpc6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+            "extended true",
+        ],
+        [
+            "block options",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name hpc6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged false",
+            "extended true",
+        ],
+        [
+            "block timing",
+            "name tdis6",
+            "preserve_case true",
+            "type string",
+            "reader urword",
+            "optional",
+        ],
+        [
+            "block models",
+            "name models",
+            "type recarray mtype mfname mname",
+            "reader urword",
+            "optional",
+        ],
+        [
+            "block models",
+            "name mtype",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block models",
+            "name mfname",
+            "in_record true",
+            "type string",
+            "preserve_case true",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block models",
+            "name mname",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block exchanges",
+            "name exchanges",
+            "type recarray exgtype exgfile exgmnamea exgmnameb",
+            "reader urword",
+            "optional",
+        ],
+        [
+            "block exchanges",
+            "name exgtype",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block exchanges",
+            "name exgfile",
+            "in_record true",
+            "type string",
+            "preserve_case true",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block exchanges",
+            "name exgmnamea",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block exchanges",
+            "name exgmnameb",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block solutiongroup",
+            "name group_num",
+            "type integer",
+            "block_variable true",
+            "in_record true",
+            "tagged false",
+            "shape",
+            "reader urword",
+        ],
+        [
+            "block solutiongroup",
+            "name mxiter",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block solutiongroup",
+            "name solutiongroup",
+            "type recarray slntype slnfname slnmnames",
+            "reader urword",
+        ],
+        [
+            "block solutiongroup",
+            "name slntype",
+            "type string",
+            "valid ims6 ems6",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block solutiongroup",
+            "name slnfname",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block solutiongroup",
+            "name slnmnames",
+            "type string",
+            "in_record true",
+            "shape (any1d)",
+            "tagged false",
+            "reader urword",
+        ],
+    ]
 
     def __init__(
         self,
@@ -123,7 +343,6 @@ class ModflowNam(MFPackage):
         exchanges=None,
         mxiter=None,
         solutiongroup=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -138,18 +357,19 @@ class ModflowNam(MFPackage):
             **kwargs,
         )
 
-        self.continue_ = self.build_mfdata('continue', continue_)
-        self.nocheck = self.build_mfdata('nocheck', nocheck)
-        self.memory_print_option = self.build_mfdata('memory_print_option', memory_print_option)
-        self.profile_option = self.build_mfdata('profile_option', profile_option)
-        self.maxerrors = self.build_mfdata('maxerrors', maxerrors)
-        self.print_input = self.build_mfdata('print_input', print_input)
-        self._hpc_filerecord = self.build_mfdata('hpc_filerecord', None)
-        self.tdis6 = self.build_mfdata('tdis6', tdis6)
-        self.models = self.build_mfdata('models', models)
-        self.exchanges = self.build_mfdata('exchanges', exchanges)
-        self.mxiter = self.build_mfdata('mxiter', mxiter)
-        self.solutiongroup = self.build_mfdata('solutiongroup', solutiongroup)
+        self.continue_ = self.build_mfdata("continue", continue_)
+        self.nocheck = self.build_mfdata("nocheck", nocheck)
+        self.memory_print_option = self.build_mfdata(
+            "memory_print_option", memory_print_option
+        )
+        self.profile_option = self.build_mfdata("profile_option", profile_option)
+        self.maxerrors = self.build_mfdata("maxerrors", maxerrors)
+        self.print_input = self.build_mfdata("print_input", print_input)
+        self._hpc_filerecord = self.build_mfdata("hpc_filerecord", None)
+        self.tdis6 = self.build_mfdata("tdis6", tdis6)
+        self.models = self.build_mfdata("models", models)
+        self.exchanges = self.build_mfdata("exchanges", exchanges)
+        self.mxiter = self.build_mfdata("mxiter", mxiter)
+        self.solutiongroup = self.build_mfdata("solutiongroup", solutiongroup)
 
         self._init_complete = True
-

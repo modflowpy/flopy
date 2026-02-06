@@ -55,14 +55,128 @@ class ModflowUtltas(MFPackage):
 
     """
 
-    time_series_namerecord = ListTemplateGenerator(('tas', 'attributes', 'time_series_namerecord'))
-    interpolation_methodrecord = ListTemplateGenerator(('tas', 'attributes', 'interpolation_methodrecord'))
-    sfacrecord = ListTemplateGenerator(('tas', 'attributes', 'sfacrecord'))
-    tas_array = ArrayTemplateGenerator(('tas', 'time', 'tas_array'))
-    package_abbr = 'utltas'
-    _package_type = 'tas'
-    dfn_file_name = 'utl-tas.dfn'
-    dfn = [['header', 'multi-package'], ['block attributes', 'name time_series_namerecord', 'type record name time_series_name', 'shape', 'reader urword', 'tagged false', 'optional false'], ['block attributes', 'name name', 'type keyword', 'shape', 'reader urword', 'optional false', 'in_record true'], ['block attributes', 'name time_series_name', 'type string', 'shape (any1d)', 'tagged false', 'reader urword', 'optional false', 'in_record true'], ['block attributes', 'name interpolation_methodrecord', 'type record method interpolation_method', 'shape', 'reader urword', 'tagged false', 'optional true'], ['block attributes', 'name method', 'type keyword', 'shape', 'reader urword', 'optional false', 'in_record true'], ['block attributes', 'name interpolation_method', 'type string', 'valid stepwise linear linearend', 'shape', 'tagged false', 'reader urword', 'optional false', 'in_record true'], ['block attributes', 'name sfacrecord', 'type record sfac sfacval', 'shape', 'reader urword', 'tagged true', 'optional true'], ['block attributes', 'name sfac', 'type keyword', 'shape', 'reader urword', 'optional false', 'in_record true'], ['block attributes', 'name sfacval', 'type double precision', 'shape time_series_name', 'tagged false', 'reader urword', 'optional false', 'in_record true'], ['block time', 'name time_from_model_start', 'type double precision', 'block_variable true', 'in_record true', 'shape', 'tagged false', 'valid', 'reader urword', 'optional false'], ['block time', 'name tas_array', 'type double precision', 'tagged false', 'just_data true', 'shape (unknown)', 'reader readarray', 'optional false', 'repeating true']]
+    time_series_namerecord = ListTemplateGenerator(
+        ("tas", "attributes", "time_series_namerecord")
+    )
+    interpolation_methodrecord = ListTemplateGenerator(
+        ("tas", "attributes", "interpolation_methodrecord")
+    )
+    sfacrecord = ListTemplateGenerator(("tas", "attributes", "sfacrecord"))
+    tas_array = ArrayTemplateGenerator(("tas", "time", "tas_array"))
+    package_abbr = "utltas"
+    _package_type = "tas"
+    dfn_file_name = "utl-tas.dfn"
+    dfn = [
+        ["header", "multi-package"],
+        [
+            "block attributes",
+            "name time_series_namerecord",
+            "type record name time_series_name",
+            "shape",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block attributes",
+            "name name",
+            "type keyword",
+            "shape",
+            "reader urword",
+            "optional false",
+            "in_record true",
+        ],
+        [
+            "block attributes",
+            "name time_series_name",
+            "type string",
+            "shape (any1d)",
+            "tagged false",
+            "reader urword",
+            "optional false",
+            "in_record true",
+        ],
+        [
+            "block attributes",
+            "name interpolation_methodrecord",
+            "type record method interpolation_method",
+            "shape",
+            "reader urword",
+            "tagged false",
+            "optional true",
+        ],
+        [
+            "block attributes",
+            "name method",
+            "type keyword",
+            "shape",
+            "reader urword",
+            "optional false",
+            "in_record true",
+        ],
+        [
+            "block attributes",
+            "name interpolation_method",
+            "type string",
+            "valid stepwise linear linearend",
+            "shape",
+            "tagged false",
+            "reader urword",
+            "optional false",
+            "in_record true",
+        ],
+        [
+            "block attributes",
+            "name sfacrecord",
+            "type record sfac sfacval",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block attributes",
+            "name sfac",
+            "type keyword",
+            "shape",
+            "reader urword",
+            "optional false",
+            "in_record true",
+        ],
+        [
+            "block attributes",
+            "name sfacval",
+            "type double precision",
+            "shape time_series_name",
+            "tagged false",
+            "reader urword",
+            "optional false",
+            "in_record true",
+        ],
+        [
+            "block time",
+            "name time_from_model_start",
+            "type double precision",
+            "block_variable true",
+            "in_record true",
+            "shape",
+            "tagged false",
+            "valid",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block time",
+            "name tas_array",
+            "type double precision",
+            "tagged false",
+            "just_data true",
+            "shape (unknown)",
+            "reader readarray",
+            "optional false",
+            "repeating true",
+        ],
+    ]
 
     def __init__(
         self,
@@ -72,7 +186,6 @@ class ModflowUtltas(MFPackage):
         interpolation_methodrecord=None,
         sfacrecord=None,
         tas_array=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -87,17 +200,23 @@ class ModflowUtltas(MFPackage):
             **kwargs,
         )
 
-        self.time_series_namerecord = self.build_mfdata('time_series_namerecord', time_series_namerecord)
-        self.interpolation_methodrecord = self.build_mfdata('interpolation_methodrecord', interpolation_methodrecord)
-        self.sfacrecord = self.build_mfdata('sfacrecord', sfacrecord)
-        self.tas_array = self.build_mfdata('tas_array', tas_array)
+        self.time_series_namerecord = self.build_mfdata(
+            "time_series_namerecord", time_series_namerecord
+        )
+        self.interpolation_methodrecord = self.build_mfdata(
+            "interpolation_methodrecord", interpolation_methodrecord
+        )
+        self.sfacrecord = self.build_mfdata("sfacrecord", sfacrecord)
+        self.tas_array = self.build_mfdata("tas_array", tas_array)
 
         self._init_complete = True
+
 
 class UtltasPackages(MFChildPackages):
     """
     UtltasPackages is a container class for the ModflowUtltas class.
     """
+
     package_abbr = "utltaspackages"
 
     def initialize(
@@ -106,7 +225,6 @@ class UtltasPackages(MFChildPackages):
         interpolation_methodrecord=None,
         sfacrecord=None,
         tas_array=None,
-
         filename=None,
         pname=None,
     ):
@@ -134,7 +252,6 @@ class UtltasPackages(MFChildPackages):
         interpolation_methodrecord=None,
         sfacrecord=None,
         tas_array=None,
-
         filename=None,
         pname=None,
     ):

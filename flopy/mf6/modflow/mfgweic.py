@@ -42,11 +42,40 @@ class ModflowGweic(MFPackage):
 
     """
 
-    strt = ArrayTemplateGenerator(('gwe6', 'ic', 'griddata', 'strt'))
-    package_abbr = 'gweic'
-    _package_type = 'ic'
-    dfn_file_name = 'gwe-ic.dfn'
-    dfn = [['header'], ['block options', 'name export_array_ascii', 'type keyword', 'reader urword', 'optional true', 'mf6internal export_ascii'], ['block options', 'name export_array_netcdf', 'type keyword', 'reader urword', 'optional true', 'mf6internal export_nc', 'extended true'], ['block griddata', 'name strt', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'netcdf true', 'default 0.0']]
+    strt = ArrayTemplateGenerator(("gwe6", "ic", "griddata", "strt"))
+    package_abbr = "gweic"
+    _package_type = "ic"
+    dfn_file_name = "gwe-ic.dfn"
+    dfn = [
+        ["header"],
+        [
+            "block options",
+            "name export_array_ascii",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_ascii",
+        ],
+        [
+            "block options",
+            "name export_array_netcdf",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_nc",
+            "extended true",
+        ],
+        [
+            "block griddata",
+            "name strt",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "default 0.0",
+        ],
+    ]
 
     def __init__(
         self,
@@ -55,7 +84,6 @@ class ModflowGweic(MFPackage):
         export_array_ascii=None,
         export_array_netcdf=None,
         strt=0.0,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -70,9 +98,12 @@ class ModflowGweic(MFPackage):
             **kwargs,
         )
 
-        self.export_array_ascii = self.build_mfdata('export_array_ascii', export_array_ascii)
-        self.export_array_netcdf = self.build_mfdata('export_array_netcdf', export_array_netcdf)
-        self.strt = self.build_mfdata('strt', strt)
+        self.export_array_ascii = self.build_mfdata(
+            "export_array_ascii", export_array_ascii
+        )
+        self.export_array_netcdf = self.build_mfdata(
+            "export_array_netcdf", export_array_netcdf
+        )
+        self.strt = self.build_mfdata("strt", strt)
 
         self._init_complete = True
-

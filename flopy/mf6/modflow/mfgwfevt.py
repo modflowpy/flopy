@@ -138,14 +138,284 @@ class ModflowGwfevt(MFPackage):
 
     """
 
-    auxiliary = ArrayTemplateGenerator(('gwf6', 'evt', 'options', 'auxiliary'))
-    ts_filerecord = ListTemplateGenerator(('gwf6', 'evt', 'options', 'ts_filerecord'))
-    obs_filerecord = ListTemplateGenerator(('gwf6', 'evt', 'options', 'obs_filerecord'))
-    stress_period_data = ListTemplateGenerator(('gwf6', 'evt', 'period', 'stress_period_data'))
-    package_abbr = 'gwfevt'
-    _package_type = 'evt'
-    dfn_file_name = 'gwf-evt.dfn'
-    dfn = [['header', 'multi-package', 'package-type stress-package'], ['block options', 'name fixed_cell', 'type keyword', 'shape', 'reader urword', 'optional true'], ['block options', 'name auxiliary', 'type string', 'shape (naux)', 'reader urword', 'optional true'], ['block options', 'name auxmultname', 'type string', 'shape', 'reader urword', 'optional true'], ['block options', 'name boundnames', 'type keyword', 'shape', 'reader urword', 'optional true'], ['block options', 'name print_input', 'type keyword', 'reader urword', 'optional true', 'mf6internal iprpak'], ['block options', 'name print_flows', 'type keyword', 'reader urword', 'optional true', 'mf6internal iprflow'], ['block options', 'name save_flows', 'type keyword', 'reader urword', 'optional true', 'mf6internal ipakcb'], ['block options', 'name ts_filerecord', 'type record ts6 filein ts6_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'construct_package ts', 'construct_data timeseries', 'parameter_name timeseries'], ['block options', 'name ts6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name filein', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name ts6_filename', 'type string', 'preserve_case true', 'in_record true', 'reader urword', 'optional false', 'tagged false'], ['block options', 'name obs_filerecord', 'type record obs6 filein obs6_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'construct_package obs', 'construct_data observations', 'parameter_name continuous'], ['block options', 'name obs6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name obs6_filename', 'type string', 'preserve_case true', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block options', 'name surf_rate_specified', 'type keyword', 'reader urword', 'optional true', 'mf6internal surfratespec'], ['block dimensions', 'name maxbound', 'type integer', 'reader urword', 'optional false'], ['block dimensions', 'name nseg', 'type integer', 'reader urword', 'optional false'], ['block period', 'name iper', 'type integer', 'block_variable true', 'in_record true', 'tagged false', 'shape', 'valid', 'reader urword', 'optional false'], ['block period', 'name stress_period_data', 'type recarray cellid surface rate depth pxdp petm petm0 aux boundname', 'shape (maxbound)', 'reader urword', 'mf6internal spd'], ['block period', 'name cellid', 'type integer', 'shape (ncelldim)', 'tagged false', 'in_record true', 'reader urword'], ['block period', 'name surface', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword', 'time_series true'], ['block period', 'name rate', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword', 'time_series true'], ['block period', 'name depth', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword', 'time_series true'], ['block period', 'name pxdp', 'type double precision', 'shape (nseg-1)', 'tagged false', 'in_record true', 'reader urword', 'optional true', 'time_series true'], ['block period', 'name petm', 'type double precision', 'shape (nseg-1)', 'tagged false', 'in_record true', 'reader urword', 'optional true', 'time_series true'], ['block period', 'name petm0', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword', 'optional true', 'time_series true'], ['block period', 'name aux', 'type double precision', 'in_record true', 'tagged false', 'shape (naux)', 'reader urword', 'optional true', 'time_series true', 'mf6internal auxvar'], ['block period', 'name boundname', 'type string', 'shape', 'tagged false', 'in_record true', 'reader urword', 'optional true']]
+    auxiliary = ArrayTemplateGenerator(("gwf6", "evt", "options", "auxiliary"))
+    ts_filerecord = ListTemplateGenerator(("gwf6", "evt", "options", "ts_filerecord"))
+    obs_filerecord = ListTemplateGenerator(("gwf6", "evt", "options", "obs_filerecord"))
+    stress_period_data = ListTemplateGenerator(
+        ("gwf6", "evt", "period", "stress_period_data")
+    )
+    package_abbr = "gwfevt"
+    _package_type = "evt"
+    dfn_file_name = "gwf-evt.dfn"
+    dfn = [
+        ["header", "multi-package", "package-type stress-package"],
+        [
+            "block options",
+            "name fixed_cell",
+            "type keyword",
+            "shape",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name auxiliary",
+            "type string",
+            "shape (naux)",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name auxmultname",
+            "type string",
+            "shape",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name boundnames",
+            "type keyword",
+            "shape",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name print_input",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal iprpak",
+        ],
+        [
+            "block options",
+            "name print_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal iprflow",
+        ],
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal ipakcb",
+        ],
+        [
+            "block options",
+            "name ts_filerecord",
+            "type record ts6 filein ts6_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "construct_package ts",
+            "construct_data timeseries",
+            "parameter_name timeseries",
+        ],
+        [
+            "block options",
+            "name ts6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name ts6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged false",
+        ],
+        [
+            "block options",
+            "name obs_filerecord",
+            "type record obs6 filein obs6_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "construct_package obs",
+            "construct_data observations",
+            "parameter_name continuous",
+        ],
+        [
+            "block options",
+            "name obs6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name obs6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name surf_rate_specified",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal surfratespec",
+        ],
+        [
+            "block dimensions",
+            "name maxbound",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block dimensions",
+            "name nseg",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name iper",
+            "type integer",
+            "block_variable true",
+            "in_record true",
+            "tagged false",
+            "shape",
+            "valid",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name stress_period_data",
+            "type recarray cellid surface rate depth pxdp petm petm0 aux boundname",
+            "shape (maxbound)",
+            "reader urword",
+            "mf6internal spd",
+        ],
+        [
+            "block period",
+            "name cellid",
+            "type integer",
+            "shape (ncelldim)",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name surface",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "time_series true",
+        ],
+        [
+            "block period",
+            "name rate",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "time_series true",
+        ],
+        [
+            "block period",
+            "name depth",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "time_series true",
+        ],
+        [
+            "block period",
+            "name pxdp",
+            "type double precision",
+            "shape (nseg-1)",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "optional true",
+            "time_series true",
+        ],
+        [
+            "block period",
+            "name petm",
+            "type double precision",
+            "shape (nseg-1)",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "optional true",
+            "time_series true",
+        ],
+        [
+            "block period",
+            "name petm0",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "optional true",
+            "time_series true",
+        ],
+        [
+            "block period",
+            "name aux",
+            "type double precision",
+            "in_record true",
+            "tagged false",
+            "shape (naux)",
+            "reader urword",
+            "optional true",
+            "time_series true",
+            "mf6internal auxvar",
+        ],
+        [
+            "block period",
+            "name boundname",
+            "type string",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "optional true",
+        ],
+    ]
 
     def __init__(
         self,
@@ -164,7 +434,6 @@ class ModflowGwfevt(MFPackage):
         maxbound=None,
         nseg=None,
         stress_period_data=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -179,21 +448,28 @@ class ModflowGwfevt(MFPackage):
             **kwargs,
         )
 
-        self.fixed_cell = self.build_mfdata('fixed_cell', fixed_cell)
-        self.auxiliary = self.build_mfdata('auxiliary', auxiliary)
-        self.auxmultname = self.build_mfdata('auxmultname', auxmultname)
-        self.boundnames = self.build_mfdata('boundnames', boundnames)
-        self.print_input = self.build_mfdata('print_input', print_input)
-        self.print_flows = self.build_mfdata('print_flows', print_flows)
-        self.save_flows = self.build_mfdata('save_flows', save_flows)
-        self._ts_filerecord = self.build_mfdata('ts_filerecord', None)
-        self._ts_package = self.build_child_package('ts', timeseries, 'timeseries', self._ts_filerecord)
-        self._obs_filerecord = self.build_mfdata('obs_filerecord', None)
-        self._obs_package = self.build_child_package('obs', observations, 'continuous', self._obs_filerecord)
-        self.surf_rate_specified = self.build_mfdata('surf_rate_specified', surf_rate_specified)
-        self.maxbound = self.build_mfdata('maxbound', maxbound)
-        self.nseg = self.build_mfdata('nseg', nseg)
-        self.stress_period_data = self.build_mfdata('stress_period_data', stress_period_data)
+        self.fixed_cell = self.build_mfdata("fixed_cell", fixed_cell)
+        self.auxiliary = self.build_mfdata("auxiliary", auxiliary)
+        self.auxmultname = self.build_mfdata("auxmultname", auxmultname)
+        self.boundnames = self.build_mfdata("boundnames", boundnames)
+        self.print_input = self.build_mfdata("print_input", print_input)
+        self.print_flows = self.build_mfdata("print_flows", print_flows)
+        self.save_flows = self.build_mfdata("save_flows", save_flows)
+        self._ts_filerecord = self.build_mfdata("ts_filerecord", None)
+        self._ts_package = self.build_child_package(
+            "ts", timeseries, "timeseries", self._ts_filerecord
+        )
+        self._obs_filerecord = self.build_mfdata("obs_filerecord", None)
+        self._obs_package = self.build_child_package(
+            "obs", observations, "continuous", self._obs_filerecord
+        )
+        self.surf_rate_specified = self.build_mfdata(
+            "surf_rate_specified", surf_rate_specified
+        )
+        self.maxbound = self.build_mfdata("maxbound", maxbound)
+        self.nseg = self.build_mfdata("nseg", nseg)
+        self.stress_period_data = self.build_mfdata(
+            "stress_period_data", stress_period_data
+        )
 
         self._init_complete = True
-

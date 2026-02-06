@@ -52,11 +52,71 @@ class ModflowUtllaktab(MFPackage):
 
     """
 
-    table = ListTemplateGenerator(('laktab', 'table', 'table'))
-    package_abbr = 'utllaktab'
-    _package_type = 'laktab'
-    dfn_file_name = 'utl-laktab.dfn'
-    dfn = [['header', 'multi-package'], ['block dimensions', 'name nrow', 'type integer', 'reader urword', 'optional false'], ['block dimensions', 'name ncol', 'type integer', 'reader urword', 'optional false'], ['block table', 'name table', 'type recarray stage volume sarea barea', 'shape (nrow)', 'reader urword'], ['block table', 'name stage', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block table', 'name volume', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block table', 'name sarea', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block table', 'name barea', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword', 'optional true']]
+    table = ListTemplateGenerator(("laktab", "table", "table"))
+    package_abbr = "utllaktab"
+    _package_type = "laktab"
+    dfn_file_name = "utl-laktab.dfn"
+    dfn = [
+        ["header", "multi-package"],
+        [
+            "block dimensions",
+            "name nrow",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block dimensions",
+            "name ncol",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block table",
+            "name table",
+            "type recarray stage volume sarea barea",
+            "shape (nrow)",
+            "reader urword",
+        ],
+        [
+            "block table",
+            "name stage",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block table",
+            "name volume",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block table",
+            "name sarea",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block table",
+            "name barea",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "optional true",
+        ],
+    ]
 
     def __init__(
         self,
@@ -65,7 +125,6 @@ class ModflowUtllaktab(MFPackage):
         nrow=None,
         ncol=None,
         table=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -80,9 +139,8 @@ class ModflowUtllaktab(MFPackage):
             **kwargs,
         )
 
-        self.nrow = self.build_mfdata('nrow', nrow)
-        self.ncol = self.build_mfdata('ncol', ncol)
-        self.table = self.build_mfdata('table', table)
+        self.nrow = self.build_mfdata("nrow", nrow)
+        self.ncol = self.build_mfdata("ncol", ncol)
+        self.table = self.build_mfdata("table", table)
 
         self._init_complete = True
-

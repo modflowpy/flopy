@@ -7,6 +7,7 @@ from typing import Union
 from flopy.mf6.data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 from flopy.mf6.mfpackage import MFPackage
 
+
 class ModflowGwtgwt(MFPackage):
     """
     ModflowGwtgwt defines a GWTGWT package.
@@ -136,14 +137,268 @@ class ModflowGwtgwt(MFPackage):
 
     """
 
-    auxiliary = ArrayTemplateGenerator(('gwtgwt', 'options', 'auxiliary'))
-    mvt_filerecord = ListTemplateGenerator(('gwtgwt', 'options', 'mvt_filerecord'))
-    obs_filerecord = ListTemplateGenerator(('gwtgwt', 'options', 'obs_filerecord'))
-    exchangedata = ListTemplateGenerator(('gwtgwt', 'exchangedata', 'exchangedata'))
-    package_abbr = 'gwtgwt'
-    _package_type = 'gwtgwt'
-    dfn_file_name = 'exg-gwtgwt.dfn'
-    dfn = [['header', 'multi-package'], ['block options', 'name gwfmodelname1', 'type string', 'reader urword', 'optional false'], ['block options', 'name gwfmodelname2', 'type string', 'reader urword', 'optional false'], ['block options', 'name auxiliary', 'type string', 'shape (naux)', 'reader urword', 'optional true'], ['block options', 'name boundnames', 'type keyword', 'shape', 'reader urword', 'optional true'], ['block options', 'name print_input', 'type keyword', 'reader urword', 'optional true', 'mf6internal iprpak'], ['block options', 'name print_flows', 'type keyword', 'reader urword', 'optional true', 'mf6internal iprflow'], ['block options', 'name save_flows', 'type keyword', 'reader urword', 'optional true', 'mf6internal ipakcb'], ['block options', 'name adv_scheme', 'type string', 'valid upstream central tvd', 'reader urword', 'optional true'], ['block options', 'name dsp_xt3d_off', 'type keyword', 'shape', 'reader urword', 'optional true'], ['block options', 'name dsp_xt3d_rhs', 'type keyword', 'shape', 'reader urword', 'optional true'], ['block options', 'name filein', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name mvt_filerecord', 'type record mvt6 filein mvt6_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'construct_package mvt', 'construct_data perioddata', 'parameter_name perioddata'], ['block options', 'name mvt6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name mvt6_filename', 'type string', 'preserve_case true', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block options', 'name obs_filerecord', 'type record obs6 filein obs6_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'construct_package obs', 'construct_data observations', 'parameter_name continuous'], ['block options', 'name obs6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name obs6_filename', 'type string', 'preserve_case true', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block options', 'name dev_interfacemodel_on', 'type keyword', 'reader urword', 'optional true', 'mf6internal dev_ifmod_on'], ['block dimensions', 'name nexg', 'type integer', 'reader urword', 'optional false'], ['block exchangedata', 'name exchangedata', 'type recarray cellidm1 cellidm2 ihc cl1 cl2 hwva aux boundname', 'shape (nexg)', 'reader urword', 'optional false'], ['block exchangedata', 'name cellidm1', 'type integer', 'in_record true', 'tagged false', 'reader urword', 'optional false', 'numeric_index true'], ['block exchangedata', 'name cellidm2', 'type integer', 'in_record true', 'tagged false', 'reader urword', 'optional false', 'numeric_index true'], ['block exchangedata', 'name ihc', 'type integer', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block exchangedata', 'name cl1', 'type double precision', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block exchangedata', 'name cl2', 'type double precision', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block exchangedata', 'name hwva', 'type double precision', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block exchangedata', 'name aux', 'type double precision', 'in_record true', 'tagged false', 'shape (naux)', 'reader urword', 'optional true', 'mf6internal auxvar'], ['block exchangedata', 'name boundname', 'type string', 'shape', 'tagged false', 'in_record true', 'reader urword', 'optional true']]
+    auxiliary = ArrayTemplateGenerator(("gwtgwt", "options", "auxiliary"))
+    mvt_filerecord = ListTemplateGenerator(("gwtgwt", "options", "mvt_filerecord"))
+    obs_filerecord = ListTemplateGenerator(("gwtgwt", "options", "obs_filerecord"))
+    exchangedata = ListTemplateGenerator(("gwtgwt", "exchangedata", "exchangedata"))
+    package_abbr = "gwtgwt"
+    _package_type = "gwtgwt"
+    dfn_file_name = "exg-gwtgwt.dfn"
+    dfn = [
+        ["header", "multi-package"],
+        [
+            "block options",
+            "name gwfmodelname1",
+            "type string",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name gwfmodelname2",
+            "type string",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name auxiliary",
+            "type string",
+            "shape (naux)",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name boundnames",
+            "type keyword",
+            "shape",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name print_input",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal iprpak",
+        ],
+        [
+            "block options",
+            "name print_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal iprflow",
+        ],
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal ipakcb",
+        ],
+        [
+            "block options",
+            "name adv_scheme",
+            "type string",
+            "valid upstream central tvd",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name dsp_xt3d_off",
+            "type keyword",
+            "shape",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name dsp_xt3d_rhs",
+            "type keyword",
+            "shape",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name mvt_filerecord",
+            "type record mvt6 filein mvt6_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "construct_package mvt",
+            "construct_data perioddata",
+            "parameter_name perioddata",
+        ],
+        [
+            "block options",
+            "name mvt6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name mvt6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name obs_filerecord",
+            "type record obs6 filein obs6_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "construct_package obs",
+            "construct_data observations",
+            "parameter_name continuous",
+        ],
+        [
+            "block options",
+            "name obs6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name obs6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name dev_interfacemodel_on",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal dev_ifmod_on",
+        ],
+        [
+            "block dimensions",
+            "name nexg",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block exchangedata",
+            "name exchangedata",
+            "type recarray cellidm1 cellidm2 ihc cl1 cl2 hwva aux boundname",
+            "shape (nexg)",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block exchangedata",
+            "name cellidm1",
+            "type integer",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+            "numeric_index true",
+        ],
+        [
+            "block exchangedata",
+            "name cellidm2",
+            "type integer",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+            "numeric_index true",
+        ],
+        [
+            "block exchangedata",
+            "name ihc",
+            "type integer",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block exchangedata",
+            "name cl1",
+            "type double precision",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block exchangedata",
+            "name cl2",
+            "type double precision",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block exchangedata",
+            "name hwva",
+            "type double precision",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block exchangedata",
+            "name aux",
+            "type double precision",
+            "in_record true",
+            "tagged false",
+            "shape (naux)",
+            "reader urword",
+            "optional true",
+            "mf6internal auxvar",
+        ],
+        [
+            "block exchangedata",
+            "name boundname",
+            "type string",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "optional true",
+        ],
+    ]
 
     def __init__(
         self,
@@ -167,7 +422,6 @@ class ModflowGwtgwt(MFPackage):
         dev_interfacemodel_on=None,
         nexg=None,
         exchangedata=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -187,22 +441,28 @@ class ModflowGwtgwt(MFPackage):
         self.exgmnameb = exgmnameb
         simulation.register_exchange_file(self)
 
-        self.gwfmodelname1 = self.build_mfdata('gwfmodelname1', gwfmodelname1)
-        self.gwfmodelname2 = self.build_mfdata('gwfmodelname2', gwfmodelname2)
-        self.auxiliary = self.build_mfdata('auxiliary', auxiliary)
-        self.boundnames = self.build_mfdata('boundnames', boundnames)
-        self.print_input = self.build_mfdata('print_input', print_input)
-        self.print_flows = self.build_mfdata('print_flows', print_flows)
-        self.save_flows = self.build_mfdata('save_flows', save_flows)
-        self.adv_scheme = self.build_mfdata('adv_scheme', adv_scheme)
-        self.dsp_xt3d_off = self.build_mfdata('dsp_xt3d_off', dsp_xt3d_off)
-        self.dsp_xt3d_rhs = self.build_mfdata('dsp_xt3d_rhs', dsp_xt3d_rhs)
-        self._mvt_filerecord = self.build_mfdata('mvt_filerecord', None)
-        self._mvt_package = self.build_child_package('mvt', perioddata, 'perioddata', self._mvt_filerecord)
-        self._obs_filerecord = self.build_mfdata('obs_filerecord', None)
-        self._obs_package = self.build_child_package('obs', observations, 'continuous', self._obs_filerecord)
-        self.dev_interfacemodel_on = self.build_mfdata('dev_interfacemodel_on', dev_interfacemodel_on)
-        self.nexg = self.build_mfdata('nexg', nexg)
-        self.exchangedata = self.build_mfdata('exchangedata', exchangedata)
+        self.gwfmodelname1 = self.build_mfdata("gwfmodelname1", gwfmodelname1)
+        self.gwfmodelname2 = self.build_mfdata("gwfmodelname2", gwfmodelname2)
+        self.auxiliary = self.build_mfdata("auxiliary", auxiliary)
+        self.boundnames = self.build_mfdata("boundnames", boundnames)
+        self.print_input = self.build_mfdata("print_input", print_input)
+        self.print_flows = self.build_mfdata("print_flows", print_flows)
+        self.save_flows = self.build_mfdata("save_flows", save_flows)
+        self.adv_scheme = self.build_mfdata("adv_scheme", adv_scheme)
+        self.dsp_xt3d_off = self.build_mfdata("dsp_xt3d_off", dsp_xt3d_off)
+        self.dsp_xt3d_rhs = self.build_mfdata("dsp_xt3d_rhs", dsp_xt3d_rhs)
+        self._mvt_filerecord = self.build_mfdata("mvt_filerecord", None)
+        self._mvt_package = self.build_child_package(
+            "mvt", perioddata, "perioddata", self._mvt_filerecord
+        )
+        self._obs_filerecord = self.build_mfdata("obs_filerecord", None)
+        self._obs_package = self.build_child_package(
+            "obs", observations, "continuous", self._obs_filerecord
+        )
+        self.dev_interfacemodel_on = self.build_mfdata(
+            "dev_interfacemodel_on", dev_interfacemodel_on
+        )
+        self.nexg = self.build_mfdata("nexg", nexg)
+        self.exchangedata = self.build_mfdata("exchangedata", exchangedata)
 
         self._init_complete = True

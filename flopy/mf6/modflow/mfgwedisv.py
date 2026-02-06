@@ -120,17 +120,302 @@ class ModflowGwedisv(MFPackage):
 
     """
 
-    grb_filerecord = ListTemplateGenerator(('gwe6', 'disv', 'options', 'grb_filerecord'))
-    ncf_filerecord = ListTemplateGenerator(('gwe6', 'disv', 'options', 'ncf_filerecord'))
-    top = ArrayTemplateGenerator(('gwe6', 'disv', 'griddata', 'top'))
-    botm = ArrayTemplateGenerator(('gwe6', 'disv', 'griddata', 'botm'))
-    idomain = ArrayTemplateGenerator(('gwe6', 'disv', 'griddata', 'idomain'))
-    vertices = ListTemplateGenerator(('gwe6', 'disv', 'vertices', 'vertices'))
-    cell2d = ListTemplateGenerator(('gwe6', 'disv', 'cell2d', 'cell2d'))
-    package_abbr = 'gwedisv'
-    _package_type = 'disv'
-    dfn_file_name = 'gwe-disv.dfn'
-    dfn = [['header'], ['block options', 'name length_units', 'type string', 'reader urword', 'optional true'], ['block options', 'name nogrb', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name grb_filerecord', 'type record grb6 fileout grb6_filename', 'reader urword', 'tagged true', 'optional true'], ['block options', 'name grb6', 'type keyword', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name fileout', 'type keyword', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name grb6_filename', 'type string', 'preserve_case true', 'in_record true', 'reader urword', 'optional false', 'tagged false'], ['block options', 'name xorigin', 'type double precision', 'reader urword', 'optional true'], ['block options', 'name yorigin', 'type double precision', 'reader urword', 'optional true'], ['block options', 'name angrot', 'type double precision', 'reader urword', 'optional true'], ['block options', 'name export_array_ascii', 'type keyword', 'reader urword', 'optional true', 'mf6internal export_ascii'], ['block options', 'name export_array_netcdf', 'type keyword', 'reader urword', 'optional true', 'mf6internal export_nc', 'extended true'], ['block options', 'name crs', 'type string', 'shape lenbigline', 'preserve_case true', 'reader urword', 'optional true', 'developmode true'], ['block options', 'name ncf_filerecord', 'type record ncf6 filein ncf6_filename', 'reader urword', 'tagged true', 'optional true', 'construct_package ncf', 'construct_data packagedata', 'parameter_name packagedata'], ['block options', 'name ncf6', 'type keyword', 'in_record true', 'reader urword', 'tagged true', 'optional false', 'extended true'], ['block options', 'name filein', 'type keyword', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name ncf6_filename', 'type string', 'preserve_case true', 'in_record true', 'reader urword', 'optional false', 'tagged false', 'extended true'], ['block dimensions', 'name nlay', 'type integer', 'reader urword', 'optional false'], ['block dimensions', 'name ncpl', 'type integer', 'reader urword', 'optional false'], ['block dimensions', 'name nvert', 'type integer', 'reader urword', 'optional false'], ['block griddata', 'name top', 'type double precision', 'shape (ncpl)', 'reader readarray', 'netcdf true'], ['block griddata', 'name botm', 'type double precision', 'shape (ncpl, nlay)', 'reader readarray', 'layered true', 'netcdf true'], ['block griddata', 'name idomain', 'type integer', 'shape (ncpl, nlay)', 'reader readarray', 'layered true', 'netcdf true', 'optional true'], ['block vertices', 'name vertices', 'type recarray iv xv yv', 'shape (nvert)', 'reader urword', 'optional false'], ['block vertices', 'name iv', 'type integer', 'in_record true', 'tagged false', 'reader urword', 'optional false', 'numeric_index true'], ['block vertices', 'name xv', 'type double precision', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block vertices', 'name yv', 'type double precision', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block cell2d', 'name cell2d', 'type recarray icell2d xc yc ncvert icvert', 'shape (ncpl)', 'reader urword', 'optional false'], ['block cell2d', 'name icell2d', 'type integer', 'in_record true', 'tagged false', 'reader urword', 'optional false', 'numeric_index true'], ['block cell2d', 'name xc', 'type double precision', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block cell2d', 'name yc', 'type double precision', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block cell2d', 'name ncvert', 'type integer', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block cell2d', 'name icvert', 'type integer', 'shape (ncvert)', 'in_record true', 'tagged false', 'reader urword', 'optional false', 'numeric_index true']]
+    grb_filerecord = ListTemplateGenerator(
+        ("gwe6", "disv", "options", "grb_filerecord")
+    )
+    ncf_filerecord = ListTemplateGenerator(
+        ("gwe6", "disv", "options", "ncf_filerecord")
+    )
+    top = ArrayTemplateGenerator(("gwe6", "disv", "griddata", "top"))
+    botm = ArrayTemplateGenerator(("gwe6", "disv", "griddata", "botm"))
+    idomain = ArrayTemplateGenerator(("gwe6", "disv", "griddata", "idomain"))
+    vertices = ListTemplateGenerator(("gwe6", "disv", "vertices", "vertices"))
+    cell2d = ListTemplateGenerator(("gwe6", "disv", "cell2d", "cell2d"))
+    package_abbr = "gwedisv"
+    _package_type = "disv"
+    dfn_file_name = "gwe-disv.dfn"
+    dfn = [
+        ["header"],
+        [
+            "block options",
+            "name length_units",
+            "type string",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name nogrb",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name grb_filerecord",
+            "type record grb6 fileout grb6_filename",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name grb6",
+            "type keyword",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name fileout",
+            "type keyword",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name grb6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged false",
+        ],
+        [
+            "block options",
+            "name xorigin",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name yorigin",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name angrot",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name export_array_ascii",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_ascii",
+        ],
+        [
+            "block options",
+            "name export_array_netcdf",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_nc",
+            "extended true",
+        ],
+        [
+            "block options",
+            "name crs",
+            "type string",
+            "shape lenbigline",
+            "preserve_case true",
+            "reader urword",
+            "optional true",
+            "developmode true",
+        ],
+        [
+            "block options",
+            "name ncf_filerecord",
+            "type record ncf6 filein ncf6_filename",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "construct_package ncf",
+            "construct_data packagedata",
+            "parameter_name packagedata",
+        ],
+        [
+            "block options",
+            "name ncf6",
+            "type keyword",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+            "extended true",
+        ],
+        [
+            "block options",
+            "name filein",
+            "type keyword",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name ncf6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged false",
+            "extended true",
+        ],
+        [
+            "block dimensions",
+            "name nlay",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block dimensions",
+            "name ncpl",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block dimensions",
+            "name nvert",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block griddata",
+            "name top",
+            "type double precision",
+            "shape (ncpl)",
+            "reader readarray",
+            "netcdf true",
+        ],
+        [
+            "block griddata",
+            "name botm",
+            "type double precision",
+            "shape (ncpl, nlay)",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+        ],
+        [
+            "block griddata",
+            "name idomain",
+            "type integer",
+            "shape (ncpl, nlay)",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "optional true",
+        ],
+        [
+            "block vertices",
+            "name vertices",
+            "type recarray iv xv yv",
+            "shape (nvert)",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block vertices",
+            "name iv",
+            "type integer",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+            "numeric_index true",
+        ],
+        [
+            "block vertices",
+            "name xv",
+            "type double precision",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block vertices",
+            "name yv",
+            "type double precision",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block cell2d",
+            "name cell2d",
+            "type recarray icell2d xc yc ncvert icvert",
+            "shape (ncpl)",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block cell2d",
+            "name icell2d",
+            "type integer",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+            "numeric_index true",
+        ],
+        [
+            "block cell2d",
+            "name xc",
+            "type double precision",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block cell2d",
+            "name yc",
+            "type double precision",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block cell2d",
+            "name ncvert",
+            "type integer",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block cell2d",
+            "name icvert",
+            "type integer",
+            "shape (ncvert)",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+            "numeric_index true",
+        ],
+    ]
 
     def __init__(
         self,
@@ -153,7 +438,6 @@ class ModflowGwedisv(MFPackage):
         idomain=None,
         vertices=None,
         cell2d=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -168,24 +452,29 @@ class ModflowGwedisv(MFPackage):
             **kwargs,
         )
 
-        self.length_units = self.build_mfdata('length_units', length_units)
-        self.nogrb = self.build_mfdata('nogrb', nogrb)
-        self.grb_filerecord = self.build_mfdata('grb_filerecord', grb_filerecord)
-        self.xorigin = self.build_mfdata('xorigin', xorigin)
-        self.yorigin = self.build_mfdata('yorigin', yorigin)
-        self.angrot = self.build_mfdata('angrot', angrot)
-        self.export_array_ascii = self.build_mfdata('export_array_ascii', export_array_ascii)
-        self.export_array_netcdf = self.build_mfdata('export_array_netcdf', export_array_netcdf)
-        self._ncf_filerecord = self.build_mfdata('ncf_filerecord', None)
-        self._ncf_package = self.build_child_package('ncf', packagedata, 'packagedata', self._ncf_filerecord)
-        self.nlay = self.build_mfdata('nlay', nlay)
-        self.ncpl = self.build_mfdata('ncpl', ncpl)
-        self.nvert = self.build_mfdata('nvert', nvert)
-        self.top = self.build_mfdata('top', top)
-        self.botm = self.build_mfdata('botm', botm)
-        self.idomain = self.build_mfdata('idomain', idomain)
-        self.vertices = self.build_mfdata('vertices', vertices)
-        self.cell2d = self.build_mfdata('cell2d', cell2d)
+        self.length_units = self.build_mfdata("length_units", length_units)
+        self.nogrb = self.build_mfdata("nogrb", nogrb)
+        self.grb_filerecord = self.build_mfdata("grb_filerecord", grb_filerecord)
+        self.xorigin = self.build_mfdata("xorigin", xorigin)
+        self.yorigin = self.build_mfdata("yorigin", yorigin)
+        self.angrot = self.build_mfdata("angrot", angrot)
+        self.export_array_ascii = self.build_mfdata(
+            "export_array_ascii", export_array_ascii
+        )
+        self.export_array_netcdf = self.build_mfdata(
+            "export_array_netcdf", export_array_netcdf
+        )
+        self._ncf_filerecord = self.build_mfdata("ncf_filerecord", None)
+        self._ncf_package = self.build_child_package(
+            "ncf", packagedata, "packagedata", self._ncf_filerecord
+        )
+        self.nlay = self.build_mfdata("nlay", nlay)
+        self.ncpl = self.build_mfdata("ncpl", ncpl)
+        self.nvert = self.build_mfdata("nvert", nvert)
+        self.top = self.build_mfdata("top", top)
+        self.botm = self.build_mfdata("botm", botm)
+        self.idomain = self.build_mfdata("idomain", idomain)
+        self.vertices = self.build_mfdata("vertices", vertices)
+        self.cell2d = self.build_mfdata("cell2d", cell2d)
 
         self._init_complete = True
-

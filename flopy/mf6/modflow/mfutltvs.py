@@ -70,12 +70,127 @@ class ModflowUtltvs(MFPackage):
 
     """
 
-    ts_filerecord = ListTemplateGenerator(('tvs', 'options', 'ts_filerecord'))
-    perioddata = ListTemplateGenerator(('tvs', 'period', 'perioddata'))
-    package_abbr = 'utltvs'
-    _package_type = 'tvs'
-    dfn_file_name = 'utl-tvs.dfn'
-    dfn = [['header'], ['block options', 'name disable_storage_change_integration', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name print_input', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name ts_filerecord', 'type record ts6 filein ts6_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'construct_package ts', 'construct_data timeseries', 'parameter_name timeseries'], ['block options', 'name ts6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name filein', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name ts6_filename', 'type string', 'preserve_case true', 'in_record true', 'reader urword', 'optional false', 'tagged false'], ['block period', 'name iper', 'type integer', 'block_variable true', 'in_record true', 'tagged false', 'shape', 'valid', 'reader urword', 'optional false'], ['block period', 'name perioddata', 'type recarray cellid tvssetting', 'shape', 'reader urword'], ['block period', 'name cellid', 'type integer', 'shape (ncelldim)', 'tagged false', 'in_record true', 'reader urword'], ['block period', 'name tvssetting', 'type keystring ss sy', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block period', 'name ss', 'type double precision', 'shape', 'tagged true', 'in_record true', 'reader urword', 'time_series true'], ['block period', 'name sy', 'type double precision', 'shape', 'tagged true', 'in_record true', 'reader urword', 'time_series true']]
+    ts_filerecord = ListTemplateGenerator(("tvs", "options", "ts_filerecord"))
+    perioddata = ListTemplateGenerator(("tvs", "period", "perioddata"))
+    package_abbr = "utltvs"
+    _package_type = "tvs"
+    dfn_file_name = "utl-tvs.dfn"
+    dfn = [
+        ["header"],
+        [
+            "block options",
+            "name disable_storage_change_integration",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name print_input",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name ts_filerecord",
+            "type record ts6 filein ts6_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "construct_package ts",
+            "construct_data timeseries",
+            "parameter_name timeseries",
+        ],
+        [
+            "block options",
+            "name ts6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name ts6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged false",
+        ],
+        [
+            "block period",
+            "name iper",
+            "type integer",
+            "block_variable true",
+            "in_record true",
+            "tagged false",
+            "shape",
+            "valid",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name perioddata",
+            "type recarray cellid tvssetting",
+            "shape",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name cellid",
+            "type integer",
+            "shape (ncelldim)",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name tvssetting",
+            "type keystring ss sy",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name ss",
+            "type double precision",
+            "shape",
+            "tagged true",
+            "in_record true",
+            "reader urword",
+            "time_series true",
+        ],
+        [
+            "block period",
+            "name sy",
+            "type double precision",
+            "shape",
+            "tagged true",
+            "in_record true",
+            "reader urword",
+            "time_series true",
+        ],
+    ]
 
     def __init__(
         self,
@@ -85,7 +200,6 @@ class ModflowUtltvs(MFPackage):
         print_input=None,
         timeseries=None,
         perioddata=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -100,18 +214,24 @@ class ModflowUtltvs(MFPackage):
             **kwargs,
         )
 
-        self.disable_storage_change_integration = self.build_mfdata('disable_storage_change_integration', disable_storage_change_integration)
-        self.print_input = self.build_mfdata('print_input', print_input)
-        self._ts_filerecord = self.build_mfdata('ts_filerecord', None)
-        self._ts_package = self.build_child_package('ts', timeseries, 'timeseries', self._ts_filerecord)
-        self.perioddata = self.build_mfdata('perioddata', perioddata)
+        self.disable_storage_change_integration = self.build_mfdata(
+            "disable_storage_change_integration", disable_storage_change_integration
+        )
+        self.print_input = self.build_mfdata("print_input", print_input)
+        self._ts_filerecord = self.build_mfdata("ts_filerecord", None)
+        self._ts_package = self.build_child_package(
+            "ts", timeseries, "timeseries", self._ts_filerecord
+        )
+        self.perioddata = self.build_mfdata("perioddata", perioddata)
 
         self._init_complete = True
+
 
 class UtltvsPackages(MFChildPackages):
     """
     UtltvsPackages is a container class for the ModflowUtltvs class.
     """
+
     package_abbr = "utltvspackages"
 
     def initialize(
@@ -120,7 +240,6 @@ class UtltvsPackages(MFChildPackages):
         print_input=None,
         timeseries=None,
         perioddata=None,
-
         filename=None,
         pname=None,
     ):
@@ -148,7 +267,6 @@ class UtltvsPackages(MFChildPackages):
         print_input=None,
         timeseries=None,
         perioddata=None,
-
         filename=None,
         pname=None,
     ):

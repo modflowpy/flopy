@@ -104,7 +104,6 @@ class ModflowGwf(MFModel):
         nc_mesh2d_filerecord=None,
         nc_structured_filerecord=None,
         nc_filerecord=None,
-
         **kwargs,
     ):
         """Initialize ModflowGwf."""

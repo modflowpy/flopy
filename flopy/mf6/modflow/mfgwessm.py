@@ -91,12 +91,117 @@ class ModflowGwessm(MFPackage):
 
     """
 
-    sources = ListTemplateGenerator(('gwe6', 'ssm', 'sources', 'sources'))
-    fileinput = ListTemplateGenerator(('gwe6', 'ssm', 'fileinput', 'fileinput'))
-    package_abbr = 'gwessm'
-    _package_type = 'ssm'
-    dfn_file_name = 'gwe-ssm.dfn'
-    dfn = [['header'], ['block options', 'name print_flows', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name save_flows', 'type keyword', 'reader urword', 'optional true'], ['block sources', 'name sources', 'type recarray pname srctype auxname', 'reader urword', 'optional false'], ['block sources', 'name pname', 'in_record true', 'type string', 'tagged false', 'reader urword', 'mf6internal pname_sources'], ['block sources', 'name srctype', 'in_record true', 'type string', 'tagged false', 'optional false', 'reader urword'], ['block sources', 'name auxname', 'in_record true', 'type string', 'tagged false', 'reader urword', 'optional false'], ['block fileinput', 'name fileinput', 'type recarray pname spc6 filein spc6_filename mixed', 'reader urword', 'optional true'], ['block fileinput', 'name pname', 'in_record true', 'type string', 'tagged false', 'reader urword'], ['block fileinput', 'name spc6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block fileinput', 'name filein', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block fileinput', 'name spc6_filename', 'type string', 'preserve_case true', 'in_record true', 'reader urword', 'optional false', 'tagged false'], ['block fileinput', 'name mixed', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional true']]
+    sources = ListTemplateGenerator(("gwe6", "ssm", "sources", "sources"))
+    fileinput = ListTemplateGenerator(("gwe6", "ssm", "fileinput", "fileinput"))
+    package_abbr = "gwessm"
+    _package_type = "ssm"
+    dfn_file_name = "gwe-ssm.dfn"
+    dfn = [
+        ["header"],
+        [
+            "block options",
+            "name print_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block sources",
+            "name sources",
+            "type recarray pname srctype auxname",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block sources",
+            "name pname",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+            "mf6internal pname_sources",
+        ],
+        [
+            "block sources",
+            "name srctype",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "optional false",
+            "reader urword",
+        ],
+        [
+            "block sources",
+            "name auxname",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block fileinput",
+            "name fileinput",
+            "type recarray pname spc6 filein spc6_filename mixed",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block fileinput",
+            "name pname",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block fileinput",
+            "name spc6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block fileinput",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block fileinput",
+            "name spc6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged false",
+        ],
+        [
+            "block fileinput",
+            "name mixed",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+    ]
 
     def __init__(
         self,
@@ -106,7 +211,6 @@ class ModflowGwessm(MFPackage):
         save_flows=None,
         sources=None,
         fileinput=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -121,10 +225,9 @@ class ModflowGwessm(MFPackage):
             **kwargs,
         )
 
-        self.print_flows = self.build_mfdata('print_flows', print_flows)
-        self.save_flows = self.build_mfdata('save_flows', save_flows)
-        self.sources = self.build_mfdata('sources', sources)
-        self.fileinput = self.build_mfdata('fileinput', fileinput)
+        self.print_flows = self.build_mfdata("print_flows", print_flows)
+        self.save_flows = self.build_mfdata("save_flows", save_flows)
+        self.sources = self.build_mfdata("sources", sources)
+        self.fileinput = self.build_mfdata("fileinput", fileinput)
 
         self._init_complete = True
-

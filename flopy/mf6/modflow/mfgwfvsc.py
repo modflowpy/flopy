@@ -104,12 +104,168 @@ class ModflowGwfvsc(MFPackage):
 
     """
 
-    viscosity_filerecord = ListTemplateGenerator(('gwf6', 'vsc', 'options', 'viscosity_filerecord'))
-    packagedata = ListTemplateGenerator(('gwf6', 'vsc', 'packagedata', 'packagedata'))
-    package_abbr = 'gwfvsc'
-    _package_type = 'vsc'
-    dfn_file_name = 'gwf-vsc.dfn'
-    dfn = [['header'], ['block options', 'name viscref', 'type double precision', 'reader urword', 'optional true', 'default 1.0'], ['block options', 'name temperature_species_name', 'type string', 'shape', 'reader urword', 'optional true', 'mf6internal temp_specname'], ['block options', 'name thermal_formulation', 'type string', 'shape', 'reader urword', 'optional true', 'valid linear nonlinear', 'mf6internal thermal_form'], ['block options', 'name thermal_a2', 'type double precision', 'reader urword', 'optional true', 'default 10.'], ['block options', 'name thermal_a3', 'type double precision', 'reader urword', 'optional true', 'default 248.37'], ['block options', 'name thermal_a4', 'type double precision', 'reader urword', 'optional true', 'default 133.15'], ['block options', 'name viscosity_filerecord', 'type record viscosity fileout viscosityfile', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal viscosity_fr'], ['block options', 'name viscosity', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name fileout', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name viscosityfile', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false'], ['block dimensions', 'name nviscspecies', 'type integer', 'reader urword', 'optional false'], ['block packagedata', 'name packagedata', 'type recarray iviscspec dviscdc cviscref modelname auxspeciesname', 'shape (nviscspecies)', 'reader urword'], ['block packagedata', 'name iviscspec', 'type integer', 'shape', 'tagged false', 'in_record true', 'reader urword', 'numeric_index true'], ['block packagedata', 'name dviscdc', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block packagedata', 'name cviscref', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block packagedata', 'name modelname', 'type string', 'in_record true', 'tagged false', 'shape', 'reader urword'], ['block packagedata', 'name auxspeciesname', 'type string', 'in_record true', 'tagged false', 'shape', 'reader urword']]
+    viscosity_filerecord = ListTemplateGenerator(
+        ("gwf6", "vsc", "options", "viscosity_filerecord")
+    )
+    packagedata = ListTemplateGenerator(("gwf6", "vsc", "packagedata", "packagedata"))
+    package_abbr = "gwfvsc"
+    _package_type = "vsc"
+    dfn_file_name = "gwf-vsc.dfn"
+    dfn = [
+        ["header"],
+        [
+            "block options",
+            "name viscref",
+            "type double precision",
+            "reader urword",
+            "optional true",
+            "default 1.0",
+        ],
+        [
+            "block options",
+            "name temperature_species_name",
+            "type string",
+            "shape",
+            "reader urword",
+            "optional true",
+            "mf6internal temp_specname",
+        ],
+        [
+            "block options",
+            "name thermal_formulation",
+            "type string",
+            "shape",
+            "reader urword",
+            "optional true",
+            "valid linear nonlinear",
+            "mf6internal thermal_form",
+        ],
+        [
+            "block options",
+            "name thermal_a2",
+            "type double precision",
+            "reader urword",
+            "optional true",
+            "default 10.",
+        ],
+        [
+            "block options",
+            "name thermal_a3",
+            "type double precision",
+            "reader urword",
+            "optional true",
+            "default 248.37",
+        ],
+        [
+            "block options",
+            "name thermal_a4",
+            "type double precision",
+            "reader urword",
+            "optional true",
+            "default 133.15",
+        ],
+        [
+            "block options",
+            "name viscosity_filerecord",
+            "type record viscosity fileout viscosityfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "mf6internal viscosity_fr",
+        ],
+        [
+            "block options",
+            "name viscosity",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name fileout",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name viscosityfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block dimensions",
+            "name nviscspecies",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block packagedata",
+            "name packagedata",
+            "type recarray iviscspec dviscdc cviscref modelname auxspeciesname",
+            "shape (nviscspecies)",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name iviscspec",
+            "type integer",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "numeric_index true",
+        ],
+        [
+            "block packagedata",
+            "name dviscdc",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name cviscref",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name modelname",
+            "type string",
+            "in_record true",
+            "tagged false",
+            "shape",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name auxspeciesname",
+            "type string",
+            "in_record true",
+            "tagged false",
+            "shape",
+            "reader urword",
+        ],
+    ]
 
     def __init__(
         self,
@@ -124,7 +280,6 @@ class ModflowGwfvsc(MFPackage):
         viscosity_filerecord=None,
         nviscspecies=None,
         packagedata=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -139,15 +294,20 @@ class ModflowGwfvsc(MFPackage):
             **kwargs,
         )
 
-        self.viscref = self.build_mfdata('viscref', viscref)
-        self.temperature_species_name = self.build_mfdata('temperature_species_name', temperature_species_name)
-        self.thermal_formulation = self.build_mfdata('thermal_formulation', thermal_formulation)
-        self.thermal_a2 = self.build_mfdata('thermal_a2', thermal_a2)
-        self.thermal_a3 = self.build_mfdata('thermal_a3', thermal_a3)
-        self.thermal_a4 = self.build_mfdata('thermal_a4', thermal_a4)
-        self.viscosity_filerecord = self.build_mfdata('viscosity_filerecord', viscosity_filerecord)
-        self.nviscspecies = self.build_mfdata('nviscspecies', nviscspecies)
-        self.packagedata = self.build_mfdata('packagedata', packagedata)
+        self.viscref = self.build_mfdata("viscref", viscref)
+        self.temperature_species_name = self.build_mfdata(
+            "temperature_species_name", temperature_species_name
+        )
+        self.thermal_formulation = self.build_mfdata(
+            "thermal_formulation", thermal_formulation
+        )
+        self.thermal_a2 = self.build_mfdata("thermal_a2", thermal_a2)
+        self.thermal_a3 = self.build_mfdata("thermal_a3", thermal_a3)
+        self.thermal_a4 = self.build_mfdata("thermal_a4", thermal_a4)
+        self.viscosity_filerecord = self.build_mfdata(
+            "viscosity_filerecord", viscosity_filerecord
+        )
+        self.nviscspecies = self.build_mfdata("nviscspecies", nviscspecies)
+        self.packagedata = self.build_mfdata("packagedata", packagedata)
 
         self._init_complete = True
-

@@ -81,7 +81,6 @@ class ModflowPrt(MFModel):
         print_input=None,
         print_flows=None,
         save_flows=None,
-
         **kwargs,
     ):
         """Initialize ModflowPrt."""

@@ -100,18 +100,224 @@ class ModflowGwfevta(MFPackage):
 
     """
 
-    auxiliary = ArrayTemplateGenerator(('gwf6', 'evta', 'options', 'auxiliary'))
-    tas_filerecord = ListTemplateGenerator(('gwf6', 'evta', 'options', 'tas_filerecord'))
-    obs_filerecord = ListTemplateGenerator(('gwf6', 'evta', 'options', 'obs_filerecord'))
-    ievt = ArrayTemplateGenerator(('gwf6', 'evta', 'period', 'ievt'))
-    surface = ArrayTemplateGenerator(('gwf6', 'evta', 'period', 'surface'))
-    rate = ArrayTemplateGenerator(('gwf6', 'evta', 'period', 'rate'))
-    depth = ArrayTemplateGenerator(('gwf6', 'evta', 'period', 'depth'))
-    aux = ArrayTemplateGenerator(('gwf6', 'evta', 'period', 'aux'))
-    package_abbr = 'gwfevta'
-    _package_type = 'evta'
-    dfn_file_name = 'gwf-evta.dfn'
-    dfn = [['header', 'multi-package', 'package-type stress-package'], ['block options', 'name readasarrays', 'type keyword', 'shape', 'reader urword', 'optional false', 'default true'], ['block options', 'name fixed_cell', 'type keyword', 'shape', 'reader urword', 'optional true'], ['block options', 'name auxiliary', 'type string', 'shape (naux)', 'reader urword', 'optional true'], ['block options', 'name auxmultname', 'type string', 'shape', 'reader urword', 'optional true'], ['block options', 'name print_input', 'type keyword', 'reader urword', 'optional true', 'mf6internal iprpak'], ['block options', 'name print_flows', 'type keyword', 'reader urword', 'optional true', 'mf6internal iprflow'], ['block options', 'name save_flows', 'type keyword', 'reader urword', 'optional true', 'mf6internal ipakcb'], ['block options', 'name tas_filerecord', 'type record tas6 filein tas6_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'construct_package tas', 'construct_data timearrayseries', 'parameter_name tas_array'], ['block options', 'name tas6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name filein', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name tas6_filename', 'type string', 'preserve_case true', 'in_record true', 'reader urword', 'optional false', 'tagged false'], ['block options', 'name obs_filerecord', 'type record obs6 filein obs6_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'construct_package obs', 'construct_data observations', 'parameter_name continuous'], ['block options', 'name obs6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name obs6_filename', 'type string', 'preserve_case true', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block options', 'name export_array_netcdf', 'type keyword', 'reader urword', 'optional true', 'mf6internal export_nc', 'extended true'], ['block period', 'name iper', 'type integer', 'block_variable true', 'in_record true', 'tagged false', 'shape', 'valid', 'reader urword', 'optional false'], ['block period', 'name ievt', 'type integer', 'shape (ncol*nrow; ncpl)', 'reader readarray', 'numeric_index true', 'optional true', 'netcdf true'], ['block period', 'name surface', 'type double precision', 'shape (ncol*nrow; ncpl)', 'reader readarray', 'netcdf true', 'default 0.'], ['block period', 'name rate', 'type double precision', 'shape (ncol*nrow; ncpl)', 'reader readarray', 'time_series true', 'netcdf true', 'default 1.e-3'], ['block period', 'name depth', 'type double precision', 'shape (ncol*nrow; ncpl)', 'reader readarray', 'netcdf true', 'default 1.0'], ['block period', 'name aux', 'type double precision', 'shape (ncol*nrow; ncpl)', 'reader readarray', 'time_series true', 'netcdf true', 'mf6internal auxvar']]
+    auxiliary = ArrayTemplateGenerator(("gwf6", "evta", "options", "auxiliary"))
+    tas_filerecord = ListTemplateGenerator(
+        ("gwf6", "evta", "options", "tas_filerecord")
+    )
+    obs_filerecord = ListTemplateGenerator(
+        ("gwf6", "evta", "options", "obs_filerecord")
+    )
+    ievt = ArrayTemplateGenerator(("gwf6", "evta", "period", "ievt"))
+    surface = ArrayTemplateGenerator(("gwf6", "evta", "period", "surface"))
+    rate = ArrayTemplateGenerator(("gwf6", "evta", "period", "rate"))
+    depth = ArrayTemplateGenerator(("gwf6", "evta", "period", "depth"))
+    aux = ArrayTemplateGenerator(("gwf6", "evta", "period", "aux"))
+    package_abbr = "gwfevta"
+    _package_type = "evta"
+    dfn_file_name = "gwf-evta.dfn"
+    dfn = [
+        ["header", "multi-package", "package-type stress-package"],
+        [
+            "block options",
+            "name readasarrays",
+            "type keyword",
+            "shape",
+            "reader urword",
+            "optional false",
+            "default true",
+        ],
+        [
+            "block options",
+            "name fixed_cell",
+            "type keyword",
+            "shape",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name auxiliary",
+            "type string",
+            "shape (naux)",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name auxmultname",
+            "type string",
+            "shape",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name print_input",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal iprpak",
+        ],
+        [
+            "block options",
+            "name print_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal iprflow",
+        ],
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal ipakcb",
+        ],
+        [
+            "block options",
+            "name tas_filerecord",
+            "type record tas6 filein tas6_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "construct_package tas",
+            "construct_data timearrayseries",
+            "parameter_name tas_array",
+        ],
+        [
+            "block options",
+            "name tas6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name tas6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "reader urword",
+            "optional false",
+            "tagged false",
+        ],
+        [
+            "block options",
+            "name obs_filerecord",
+            "type record obs6 filein obs6_filename",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "construct_package obs",
+            "construct_data observations",
+            "parameter_name continuous",
+        ],
+        [
+            "block options",
+            "name obs6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name obs6_filename",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name export_array_netcdf",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_nc",
+            "extended true",
+        ],
+        [
+            "block period",
+            "name iper",
+            "type integer",
+            "block_variable true",
+            "in_record true",
+            "tagged false",
+            "shape",
+            "valid",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name ievt",
+            "type integer",
+            "shape (ncol*nrow; ncpl)",
+            "reader readarray",
+            "numeric_index true",
+            "optional true",
+            "netcdf true",
+        ],
+        [
+            "block period",
+            "name surface",
+            "type double precision",
+            "shape (ncol*nrow; ncpl)",
+            "reader readarray",
+            "netcdf true",
+            "default 0.",
+        ],
+        [
+            "block period",
+            "name rate",
+            "type double precision",
+            "shape (ncol*nrow; ncpl)",
+            "reader readarray",
+            "time_series true",
+            "netcdf true",
+            "default 1.e-3",
+        ],
+        [
+            "block period",
+            "name depth",
+            "type double precision",
+            "shape (ncol*nrow; ncpl)",
+            "reader readarray",
+            "netcdf true",
+            "default 1.0",
+        ],
+        [
+            "block period",
+            "name aux",
+            "type double precision",
+            "shape (ncol*nrow; ncpl)",
+            "reader readarray",
+            "time_series true",
+            "netcdf true",
+            "mf6internal auxvar",
+        ],
+    ]
 
     def __init__(
         self,
@@ -132,7 +338,6 @@ class ModflowGwfevta(MFPackage):
         rate=0.001,
         depth=1.0,
         aux=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -147,23 +352,28 @@ class ModflowGwfevta(MFPackage):
             **kwargs,
         )
 
-        self.readasarrays = self.build_mfdata('readasarrays', readasarrays)
-        self.fixed_cell = self.build_mfdata('fixed_cell', fixed_cell)
-        self.auxiliary = self.build_mfdata('auxiliary', auxiliary)
-        self.auxmultname = self.build_mfdata('auxmultname', auxmultname)
-        self.print_input = self.build_mfdata('print_input', print_input)
-        self.print_flows = self.build_mfdata('print_flows', print_flows)
-        self.save_flows = self.build_mfdata('save_flows', save_flows)
-        self._tas_filerecord = self.build_mfdata('tas_filerecord', None)
-        self._tas_package = self.build_child_package('tas', timearrayseries, 'tas_array', self._tas_filerecord)
-        self._obs_filerecord = self.build_mfdata('obs_filerecord', None)
-        self._obs_package = self.build_child_package('obs', observations, 'continuous', self._obs_filerecord)
-        self.export_array_netcdf = self.build_mfdata('export_array_netcdf', export_array_netcdf)
-        self.ievt = self.build_mfdata('ievt', ievt)
-        self.surface = self.build_mfdata('surface', surface)
-        self.rate = self.build_mfdata('rate', rate)
-        self.depth = self.build_mfdata('depth', depth)
-        self.aux = self.build_mfdata('aux', aux)
+        self.readasarrays = self.build_mfdata("readasarrays", readasarrays)
+        self.fixed_cell = self.build_mfdata("fixed_cell", fixed_cell)
+        self.auxiliary = self.build_mfdata("auxiliary", auxiliary)
+        self.auxmultname = self.build_mfdata("auxmultname", auxmultname)
+        self.print_input = self.build_mfdata("print_input", print_input)
+        self.print_flows = self.build_mfdata("print_flows", print_flows)
+        self.save_flows = self.build_mfdata("save_flows", save_flows)
+        self._tas_filerecord = self.build_mfdata("tas_filerecord", None)
+        self._tas_package = self.build_child_package(
+            "tas", timearrayseries, "tas_array", self._tas_filerecord
+        )
+        self._obs_filerecord = self.build_mfdata("obs_filerecord", None)
+        self._obs_package = self.build_child_package(
+            "obs", observations, "continuous", self._obs_filerecord
+        )
+        self.export_array_netcdf = self.build_mfdata(
+            "export_array_netcdf", export_array_netcdf
+        )
+        self.ievt = self.build_mfdata("ievt", ievt)
+        self.surface = self.build_mfdata("surface", surface)
+        self.rate = self.build_mfdata("rate", rate)
+        self.depth = self.build_mfdata("depth", depth)
+        self.aux = self.build_mfdata("aux", aux)
 
         self._init_complete = True
-

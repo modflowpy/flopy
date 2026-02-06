@@ -232,17 +232,477 @@ class ModflowPrtprp(MFPackage):
 
     """
 
-    track_filerecord = ListTemplateGenerator(('prt6', 'prp', 'options', 'track_filerecord'))
-    trackcsv_filerecord = ListTemplateGenerator(('prt6', 'prp', 'options', 'trackcsv_filerecord'))
-    release_timesrecord = ListTemplateGenerator(('prt6', 'prp', 'options', 'release_timesrecord'))
-    release_timesfilerecord = ListTemplateGenerator(('prt6', 'prp', 'options', 'release_timesfilerecord'))
-    packagedata = ListTemplateGenerator(('prt6', 'prp', 'packagedata', 'packagedata'))
-    releasetimes = ListTemplateGenerator(('prt6', 'prp', 'releasetimes', 'releasetimes'))
-    perioddata = ListTemplateGenerator(('prt6', 'prp', 'period', 'perioddata'))
-    package_abbr = 'prtprp'
-    _package_type = 'prp'
-    dfn_file_name = 'prt-prp.dfn'
-    dfn = [['header', 'multi-package'], ['block options', 'name boundnames', 'type keyword', 'shape', 'reader urword', 'optional true'], ['block options', 'name print_input', 'type keyword', 'reader urword', 'optional true', 'mf6internal iprpak'], ['block options', 'name dev_exit_solve_method', 'type integer', 'reader urword', 'optional true', 'mf6internal iexmeth'], ['block options', 'name exit_solve_tolerance', 'type double precision', 'reader urword', 'optional true', 'mf6internal extol', 'default 1e-5'], ['block options', 'name local_z', 'type keyword', 'reader urword', 'optional true', 'mf6internal localz'], ['block options', 'name extend_tracking', 'type keyword', 'reader urword', 'optional true', 'mf6internal extend'], ['block options', 'name track_filerecord', 'type record track fileout trackfile', 'shape', 'reader urword', 'tagged true', 'optional true'], ['block options', 'name track', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name fileout', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name trackfile', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false'], ['block options', 'name trackcsv_filerecord', 'type record trackcsv fileout trackcsvfile', 'shape', 'reader urword', 'tagged true', 'mf6internal trackcsvfr', 'optional true'], ['block options', 'name trackcsv', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name trackcsvfile', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false'], ['block options', 'name stoptime', 'type double precision', 'reader urword', 'optional true'], ['block options', 'name stoptraveltime', 'type double precision', 'reader urword', 'optional true'], ['block options', 'name stop_at_weak_sink', 'type keyword', 'reader urword', 'optional true', 'mf6internal istopweaksink'], ['block options', 'name istopzone', 'type integer', 'reader urword', 'optional true'], ['block options', 'name drape', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name release_timesrecord', 'type record release_times times', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal releasetr', 'removed 6.6.0'], ['block options', 'name release_times', 'type keyword', 'reader urword', 'in_record true', 'tagged true', 'shape', 'removed 6.6.0'], ['block options', 'name times', 'type double precision', 'shape (any1d)', 'reader urword', 'in_record true', 'tagged false', 'repeating true', 'removed 6.6.0'], ['block options', 'name release_timesfilerecord', 'type record release_timesfile timesfile', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal release_timesfr', 'removed 6.6.0'], ['block options', 'name release_timesfile', 'type keyword', 'reader urword', 'in_record true', 'tagged true', 'shape', 'mf6internal release_timesfn', 'removed 6.6.0'], ['block options', 'name timesfile', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false', 'removed 6.6.0'], ['block options', 'name dry_tracking_method', 'type string', 'valid drop stop stay', 'reader urword', 'optional true', 'mf6internal idrymeth'], ['block options', 'name dev_forceternary', 'type keyword', 'reader urword', 'optional false', 'mf6internal frctrn'], ['block options', 'name release_time_tolerance', 'type double precision', 'reader urword', 'optional true', 'mf6internal rttol'], ['block options', 'name release_time_frequency', 'type double precision', 'reader urword', 'optional true', 'mf6internal rtfreq'], ['block options', 'name coordinate_check_method', 'type string', 'valid none eager', 'reader urword', 'optional true', 'mf6internal ichkmeth', 'default eager'], ['block options', 'name dev_cycle_detection_window', 'type integer', 'reader urword', 'optional true', 'mf6internal icycwin'], ['block dimensions', 'name nreleasepts', 'type integer', 'reader urword', 'optional false'], ['block dimensions', 'name nreleasetimes', 'type integer', 'reader urword', 'optional false'], ['block packagedata', 'name packagedata', 'type recarray irptno cellid xrpt yrpt zrpt boundname', 'shape (nreleasepts)', 'reader urword'], ['block packagedata', 'name irptno', 'type integer', 'shape', 'tagged false', 'in_record true', 'reader urword', 'numeric_index true'], ['block packagedata', 'name cellid', 'type integer', 'shape (ncelldim)', 'tagged false', 'in_record true', 'reader urword'], ['block packagedata', 'name xrpt', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block packagedata', 'name yrpt', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block packagedata', 'name zrpt', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block packagedata', 'name boundname', 'type string', 'shape', 'tagged false', 'in_record true', 'reader urword', 'optional true'], ['block releasetimes', 'name releasetimes', 'type recarray time', 'shape (nreleasetimes)', 'reader urword', 'optional true'], ['block releasetimes', 'name time', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block period', 'name iper', 'type integer', 'block_variable true', 'in_record true', 'tagged false', 'shape', 'valid', 'reader urword', 'optional false'], ['block period', 'name perioddata', 'type recarray releasesetting', 'shape', 'reader urword'], ['block period', 'name releasesetting', 'type keystring all first last frequency steps fraction', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block period', 'name all', 'type keyword', 'shape', 'in_record true', 'reader urword'], ['block period', 'name first', 'type keyword', 'shape', 'in_record true', 'reader urword'], ['block period', 'name last', 'type keyword', 'shape', 'in_record true', 'reader urword'], ['block period', 'name frequency', 'type integer', 'shape', 'tagged true', 'in_record true', 'reader urword'], ['block period', 'name steps', 'type integer', 'shape (<nstp)', 'tagged true', 'in_record true', 'reader urword'], ['block period', 'name fraction', 'type double precision', 'shape (<nstp)', 'tagged true', 'in_record true', 'reader urword', 'optional true', 'removed 6.6.0']]
+    track_filerecord = ListTemplateGenerator(
+        ("prt6", "prp", "options", "track_filerecord")
+    )
+    trackcsv_filerecord = ListTemplateGenerator(
+        ("prt6", "prp", "options", "trackcsv_filerecord")
+    )
+    release_timesrecord = ListTemplateGenerator(
+        ("prt6", "prp", "options", "release_timesrecord")
+    )
+    release_timesfilerecord = ListTemplateGenerator(
+        ("prt6", "prp", "options", "release_timesfilerecord")
+    )
+    packagedata = ListTemplateGenerator(("prt6", "prp", "packagedata", "packagedata"))
+    releasetimes = ListTemplateGenerator(
+        ("prt6", "prp", "releasetimes", "releasetimes")
+    )
+    perioddata = ListTemplateGenerator(("prt6", "prp", "period", "perioddata"))
+    package_abbr = "prtprp"
+    _package_type = "prp"
+    dfn_file_name = "prt-prp.dfn"
+    dfn = [
+        ["header", "multi-package"],
+        [
+            "block options",
+            "name boundnames",
+            "type keyword",
+            "shape",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name print_input",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal iprpak",
+        ],
+        [
+            "block options",
+            "name dev_exit_solve_method",
+            "type integer",
+            "reader urword",
+            "optional true",
+            "mf6internal iexmeth",
+        ],
+        [
+            "block options",
+            "name exit_solve_tolerance",
+            "type double precision",
+            "reader urword",
+            "optional true",
+            "mf6internal extol",
+            "default 1e-5",
+        ],
+        [
+            "block options",
+            "name local_z",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal localz",
+        ],
+        [
+            "block options",
+            "name extend_tracking",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal extend",
+        ],
+        [
+            "block options",
+            "name track_filerecord",
+            "type record track fileout trackfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name track",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name fileout",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name trackfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name trackcsv_filerecord",
+            "type record trackcsv fileout trackcsvfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "mf6internal trackcsvfr",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name trackcsv",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name trackcsvfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name stoptime",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name stoptraveltime",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name stop_at_weak_sink",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal istopweaksink",
+        ],
+        [
+            "block options",
+            "name istopzone",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name drape",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name release_timesrecord",
+            "type record release_times times",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "mf6internal releasetr",
+            "removed 6.6.0",
+        ],
+        [
+            "block options",
+            "name release_times",
+            "type keyword",
+            "reader urword",
+            "in_record true",
+            "tagged true",
+            "shape",
+            "removed 6.6.0",
+        ],
+        [
+            "block options",
+            "name times",
+            "type double precision",
+            "shape (any1d)",
+            "reader urword",
+            "in_record true",
+            "tagged false",
+            "repeating true",
+            "removed 6.6.0",
+        ],
+        [
+            "block options",
+            "name release_timesfilerecord",
+            "type record release_timesfile timesfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "mf6internal release_timesfr",
+            "removed 6.6.0",
+        ],
+        [
+            "block options",
+            "name release_timesfile",
+            "type keyword",
+            "reader urword",
+            "in_record true",
+            "tagged true",
+            "shape",
+            "mf6internal release_timesfn",
+            "removed 6.6.0",
+        ],
+        [
+            "block options",
+            "name timesfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+            "removed 6.6.0",
+        ],
+        [
+            "block options",
+            "name dry_tracking_method",
+            "type string",
+            "valid drop stop stay",
+            "reader urword",
+            "optional true",
+            "mf6internal idrymeth",
+        ],
+        [
+            "block options",
+            "name dev_forceternary",
+            "type keyword",
+            "reader urword",
+            "optional false",
+            "mf6internal frctrn",
+        ],
+        [
+            "block options",
+            "name release_time_tolerance",
+            "type double precision",
+            "reader urword",
+            "optional true",
+            "mf6internal rttol",
+        ],
+        [
+            "block options",
+            "name release_time_frequency",
+            "type double precision",
+            "reader urword",
+            "optional true",
+            "mf6internal rtfreq",
+        ],
+        [
+            "block options",
+            "name coordinate_check_method",
+            "type string",
+            "valid none eager",
+            "reader urword",
+            "optional true",
+            "mf6internal ichkmeth",
+            "default eager",
+        ],
+        [
+            "block options",
+            "name dev_cycle_detection_window",
+            "type integer",
+            "reader urword",
+            "optional true",
+            "mf6internal icycwin",
+        ],
+        [
+            "block dimensions",
+            "name nreleasepts",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block dimensions",
+            "name nreleasetimes",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block packagedata",
+            "name packagedata",
+            "type recarray irptno cellid xrpt yrpt zrpt boundname",
+            "shape (nreleasepts)",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name irptno",
+            "type integer",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "numeric_index true",
+        ],
+        [
+            "block packagedata",
+            "name cellid",
+            "type integer",
+            "shape (ncelldim)",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name xrpt",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name yrpt",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name zrpt",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name boundname",
+            "type string",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block releasetimes",
+            "name releasetimes",
+            "type recarray time",
+            "shape (nreleasetimes)",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block releasetimes",
+            "name time",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name iper",
+            "type integer",
+            "block_variable true",
+            "in_record true",
+            "tagged false",
+            "shape",
+            "valid",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name perioddata",
+            "type recarray releasesetting",
+            "shape",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name releasesetting",
+            "type keystring all first last frequency steps fraction",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name all",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name first",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name last",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name frequency",
+            "type integer",
+            "shape",
+            "tagged true",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name steps",
+            "type integer",
+            "shape (<nstp)",
+            "tagged true",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name fraction",
+            "type double precision",
+            "shape (<nstp)",
+            "tagged true",
+            "in_record true",
+            "reader urword",
+            "optional true",
+            "removed 6.6.0",
+        ],
+    ]
 
     def __init__(
         self,
@@ -267,14 +727,13 @@ class ModflowPrtprp(MFPackage):
         dev_forceternary=None,
         release_time_tolerance=None,
         release_time_frequency=None,
-        coordinate_check_method='eager',
+        coordinate_check_method="eager",
         dev_cycle_detection_window=None,
         nreleasepts=None,
         nreleasetimes=None,
         packagedata=None,
         releasetimes=None,
         perioddata=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -289,32 +748,53 @@ class ModflowPrtprp(MFPackage):
             **kwargs,
         )
 
-        self.boundnames = self.build_mfdata('boundnames', boundnames)
-        self.print_input = self.build_mfdata('print_input', print_input)
-        self.dev_exit_solve_method = self.build_mfdata('dev_exit_solve_method', dev_exit_solve_method)
-        self.exit_solve_tolerance = self.build_mfdata('exit_solve_tolerance', exit_solve_tolerance)
-        self.local_z = self.build_mfdata('local_z', local_z)
-        self.extend_tracking = self.build_mfdata('extend_tracking', extend_tracking)
-        self.track_filerecord = self.build_mfdata('track_filerecord', track_filerecord)
-        self.trackcsv_filerecord = self.build_mfdata('trackcsv_filerecord', trackcsv_filerecord)
-        self.stoptime = self.build_mfdata('stoptime', stoptime)
-        self.stoptraveltime = self.build_mfdata('stoptraveltime', stoptraveltime)
-        self.stop_at_weak_sink = self.build_mfdata('stop_at_weak_sink', stop_at_weak_sink)
-        self.istopzone = self.build_mfdata('istopzone', istopzone)
-        self.drape = self.build_mfdata('drape', drape)
-        self.release_timesrecord = self.build_mfdata('release_timesrecord', release_timesrecord)
-        self.release_timesfilerecord = self.build_mfdata('release_timesfilerecord', release_timesfilerecord)
-        self.dry_tracking_method = self.build_mfdata('dry_tracking_method', dry_tracking_method)
-        self.dev_forceternary = self.build_mfdata('dev_forceternary', dev_forceternary)
-        self.release_time_tolerance = self.build_mfdata('release_time_tolerance', release_time_tolerance)
-        self.release_time_frequency = self.build_mfdata('release_time_frequency', release_time_frequency)
-        self.coordinate_check_method = self.build_mfdata('coordinate_check_method', coordinate_check_method)
-        self.dev_cycle_detection_window = self.build_mfdata('dev_cycle_detection_window', dev_cycle_detection_window)
-        self.nreleasepts = self.build_mfdata('nreleasepts', nreleasepts)
-        self.nreleasetimes = self.build_mfdata('nreleasetimes', nreleasetimes)
-        self.packagedata = self.build_mfdata('packagedata', packagedata)
-        self.releasetimes = self.build_mfdata('releasetimes', releasetimes)
-        self.perioddata = self.build_mfdata('perioddata', perioddata)
+        self.boundnames = self.build_mfdata("boundnames", boundnames)
+        self.print_input = self.build_mfdata("print_input", print_input)
+        self.dev_exit_solve_method = self.build_mfdata(
+            "dev_exit_solve_method", dev_exit_solve_method
+        )
+        self.exit_solve_tolerance = self.build_mfdata(
+            "exit_solve_tolerance", exit_solve_tolerance
+        )
+        self.local_z = self.build_mfdata("local_z", local_z)
+        self.extend_tracking = self.build_mfdata("extend_tracking", extend_tracking)
+        self.track_filerecord = self.build_mfdata("track_filerecord", track_filerecord)
+        self.trackcsv_filerecord = self.build_mfdata(
+            "trackcsv_filerecord", trackcsv_filerecord
+        )
+        self.stoptime = self.build_mfdata("stoptime", stoptime)
+        self.stoptraveltime = self.build_mfdata("stoptraveltime", stoptraveltime)
+        self.stop_at_weak_sink = self.build_mfdata(
+            "stop_at_weak_sink", stop_at_weak_sink
+        )
+        self.istopzone = self.build_mfdata("istopzone", istopzone)
+        self.drape = self.build_mfdata("drape", drape)
+        self.release_timesrecord = self.build_mfdata(
+            "release_timesrecord", release_timesrecord
+        )
+        self.release_timesfilerecord = self.build_mfdata(
+            "release_timesfilerecord", release_timesfilerecord
+        )
+        self.dry_tracking_method = self.build_mfdata(
+            "dry_tracking_method", dry_tracking_method
+        )
+        self.dev_forceternary = self.build_mfdata("dev_forceternary", dev_forceternary)
+        self.release_time_tolerance = self.build_mfdata(
+            "release_time_tolerance", release_time_tolerance
+        )
+        self.release_time_frequency = self.build_mfdata(
+            "release_time_frequency", release_time_frequency
+        )
+        self.coordinate_check_method = self.build_mfdata(
+            "coordinate_check_method", coordinate_check_method
+        )
+        self.dev_cycle_detection_window = self.build_mfdata(
+            "dev_cycle_detection_window", dev_cycle_detection_window
+        )
+        self.nreleasepts = self.build_mfdata("nreleasepts", nreleasepts)
+        self.nreleasetimes = self.build_mfdata("nreleasetimes", nreleasetimes)
+        self.packagedata = self.build_mfdata("packagedata", packagedata)
+        self.releasetimes = self.build_mfdata("releasetimes", releasetimes)
+        self.perioddata = self.build_mfdata("perioddata", perioddata)
 
         self._init_complete = True
-

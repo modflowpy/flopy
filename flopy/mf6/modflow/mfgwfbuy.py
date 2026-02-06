@@ -80,12 +80,141 @@ class ModflowGwfbuy(MFPackage):
 
     """
 
-    density_filerecord = ListTemplateGenerator(('gwf6', 'buy', 'options', 'density_filerecord'))
-    packagedata = ListTemplateGenerator(('gwf6', 'buy', 'packagedata', 'packagedata'))
-    package_abbr = 'gwfbuy'
-    _package_type = 'buy'
-    dfn_file_name = 'gwf-buy.dfn'
-    dfn = [['header'], ['block options', 'name hhformulation_rhs', 'type keyword', 'reader urword', 'optional true', 'mf6internal hhform_rhs'], ['block options', 'name denseref', 'type double precision', 'reader urword', 'optional true', 'default 1000.'], ['block options', 'name density_filerecord', 'type record density fileout densityfile', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal density_fr'], ['block options', 'name density', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name fileout', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name densityfile', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false'], ['block options', 'name dev_efh_formulation', 'type keyword', 'reader urword', 'optional true', 'mf6internal dev_efh_form'], ['block dimensions', 'name nrhospecies', 'type integer', 'reader urword', 'optional false'], ['block packagedata', 'name packagedata', 'type recarray irhospec drhodc crhoref modelname auxspeciesname', 'shape (nrhospecies)', 'reader urword'], ['block packagedata', 'name irhospec', 'type integer', 'shape', 'tagged false', 'in_record true', 'reader urword', 'numeric_index true'], ['block packagedata', 'name drhodc', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block packagedata', 'name crhoref', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block packagedata', 'name modelname', 'type string', 'in_record true', 'tagged false', 'shape', 'reader urword'], ['block packagedata', 'name auxspeciesname', 'type string', 'in_record true', 'tagged false', 'shape', 'reader urword']]
+    density_filerecord = ListTemplateGenerator(
+        ("gwf6", "buy", "options", "density_filerecord")
+    )
+    packagedata = ListTemplateGenerator(("gwf6", "buy", "packagedata", "packagedata"))
+    package_abbr = "gwfbuy"
+    _package_type = "buy"
+    dfn_file_name = "gwf-buy.dfn"
+    dfn = [
+        ["header"],
+        [
+            "block options",
+            "name hhformulation_rhs",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal hhform_rhs",
+        ],
+        [
+            "block options",
+            "name denseref",
+            "type double precision",
+            "reader urword",
+            "optional true",
+            "default 1000.",
+        ],
+        [
+            "block options",
+            "name density_filerecord",
+            "type record density fileout densityfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+            "mf6internal density_fr",
+        ],
+        [
+            "block options",
+            "name density",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name fileout",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name densityfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name dev_efh_formulation",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal dev_efh_form",
+        ],
+        [
+            "block dimensions",
+            "name nrhospecies",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block packagedata",
+            "name packagedata",
+            "type recarray irhospec drhodc crhoref modelname auxspeciesname",
+            "shape (nrhospecies)",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name irhospec",
+            "type integer",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "numeric_index true",
+        ],
+        [
+            "block packagedata",
+            "name drhodc",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name crhoref",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name modelname",
+            "type string",
+            "in_record true",
+            "tagged false",
+            "shape",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name auxspeciesname",
+            "type string",
+            "in_record true",
+            "tagged false",
+            "shape",
+            "reader urword",
+        ],
+    ]
 
     def __init__(
         self,
@@ -97,7 +226,6 @@ class ModflowGwfbuy(MFPackage):
         dev_efh_formulation=None,
         nrhospecies=None,
         packagedata=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -112,12 +240,17 @@ class ModflowGwfbuy(MFPackage):
             **kwargs,
         )
 
-        self.hhformulation_rhs = self.build_mfdata('hhformulation_rhs', hhformulation_rhs)
-        self.denseref = self.build_mfdata('denseref', denseref)
-        self.density_filerecord = self.build_mfdata('density_filerecord', density_filerecord)
-        self.dev_efh_formulation = self.build_mfdata('dev_efh_formulation', dev_efh_formulation)
-        self.nrhospecies = self.build_mfdata('nrhospecies', nrhospecies)
-        self.packagedata = self.build_mfdata('packagedata', packagedata)
+        self.hhformulation_rhs = self.build_mfdata(
+            "hhformulation_rhs", hhformulation_rhs
+        )
+        self.denseref = self.build_mfdata("denseref", denseref)
+        self.density_filerecord = self.build_mfdata(
+            "density_filerecord", density_filerecord
+        )
+        self.dev_efh_formulation = self.build_mfdata(
+            "dev_efh_formulation", dev_efh_formulation
+        )
+        self.nrhospecies = self.build_mfdata("nrhospecies", nrhospecies)
+        self.packagedata = self.build_mfdata("packagedata", packagedata)
 
         self._init_complete = True
-

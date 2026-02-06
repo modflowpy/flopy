@@ -43,12 +43,107 @@ class ModflowMvt(MFPackage):
 
     """
 
-    budget_filerecord = ListTemplateGenerator(('mvt', 'options', 'budget_filerecord'))
-    budgetcsv_filerecord = ListTemplateGenerator(('mvt', 'options', 'budgetcsv_filerecord'))
-    package_abbr = 'mvt'
-    _package_type = 'mvt'
-    dfn_file_name = 'gwt-mvt.dfn'
-    dfn = [['header'], ['block options', 'name print_input', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name print_flows', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name save_flows', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name budget_filerecord', 'type record budget fileout budgetfile', 'shape', 'reader urword', 'tagged true', 'optional true'], ['block options', 'name budget', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name fileout', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name budgetfile', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false'], ['block options', 'name budgetcsv_filerecord', 'type record budgetcsv fileout budgetcsvfile', 'shape', 'reader urword', 'tagged true', 'optional true'], ['block options', 'name budgetcsv', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name budgetcsvfile', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false']]
+    budget_filerecord = ListTemplateGenerator(("mvt", "options", "budget_filerecord"))
+    budgetcsv_filerecord = ListTemplateGenerator(
+        ("mvt", "options", "budgetcsv_filerecord")
+    )
+    package_abbr = "mvt"
+    _package_type = "mvt"
+    dfn_file_name = "gwt-mvt.dfn"
+    dfn = [
+        ["header"],
+        [
+            "block options",
+            "name print_input",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name print_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name budget_filerecord",
+            "type record budget fileout budgetfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name budget",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name fileout",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsv_filerecord",
+            "type record budgetcsv fileout budgetcsvfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name budgetcsv",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetcsvfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+    ]
 
     def __init__(
         self,
@@ -59,7 +154,6 @@ class ModflowMvt(MFPackage):
         save_flows=None,
         budget_filerecord=None,
         budgetcsv_filerecord=None,
-
         filename=None,
         pname=None,
         **kwargs,
@@ -74,18 +168,24 @@ class ModflowMvt(MFPackage):
             **kwargs,
         )
 
-        self.print_input = self.build_mfdata('print_input', print_input)
-        self.print_flows = self.build_mfdata('print_flows', print_flows)
-        self.save_flows = self.build_mfdata('save_flows', save_flows)
-        self.budget_filerecord = self.build_mfdata('budget_filerecord', budget_filerecord)
-        self.budgetcsv_filerecord = self.build_mfdata('budgetcsv_filerecord', budgetcsv_filerecord)
+        self.print_input = self.build_mfdata("print_input", print_input)
+        self.print_flows = self.build_mfdata("print_flows", print_flows)
+        self.save_flows = self.build_mfdata("save_flows", save_flows)
+        self.budget_filerecord = self.build_mfdata(
+            "budget_filerecord", budget_filerecord
+        )
+        self.budgetcsv_filerecord = self.build_mfdata(
+            "budgetcsv_filerecord", budgetcsv_filerecord
+        )
 
         self._init_complete = True
+
 
 class MvtPackages(MFChildPackages):
     """
     MvtPackages is a container class for the ModflowMvt class.
     """
+
     package_abbr = "mvtpackages"
 
     def initialize(
@@ -95,7 +195,6 @@ class MvtPackages(MFChildPackages):
         save_flows=None,
         budget_filerecord=None,
         budgetcsv_filerecord=None,
-
         filename=None,
         pname=None,
     ):
@@ -125,7 +224,6 @@ class MvtPackages(MFChildPackages):
         save_flows=None,
         budget_filerecord=None,
         budgetcsv_filerecord=None,
-
         filename=None,
         pname=None,
     ):
