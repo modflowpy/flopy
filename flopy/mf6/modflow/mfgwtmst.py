@@ -99,328 +99,17 @@ class ModflowGwtmst(MFPackage):
 
     """
 
-    sorbate_filerecord = ListTemplateGenerator(
-        ("gwt6", "mst", "options", "sorbate_filerecord")
-    )
-    porosity = ArrayTemplateGenerator(("gwt6", "mst", "griddata", "porosity"))
-    decay = ArrayTemplateGenerator(("gwt6", "mst", "griddata", "decay"))
-    decay_sorbed = ArrayTemplateGenerator(("gwt6", "mst", "griddata", "decay_sorbed"))
-    bulk_density = ArrayTemplateGenerator(("gwt6", "mst", "griddata", "bulk_density"))
-    distcoef = ArrayTemplateGenerator(("gwt6", "mst", "griddata", "distcoef"))
-    sp2 = ArrayTemplateGenerator(("gwt6", "mst", "griddata", "sp2"))
-    package_abbr = "gwtmst"
-    _package_type = "mst"
-    dfn_file_name = "gwt-mst.dfn"
-    dfn = [
-        ["header"],
-        [
-            "block options",
-            "name save_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name first_order_decay",
-            "type keyword",
-            "reader urword",
-            "optional true",
-            "mf6internal order1_decay",
-        ],
-        [
-            "block options",
-            "name zero_order_decay",
-            "type keyword",
-            "reader urword",
-            "optional true",
-            "mf6internal order0_decay",
-        ],
-        [
-            "block options",
-            "name sorption",
-            "type string",
-            "valid linear freundlich langmuir",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name sorbate_filerecord",
-            "type record sorbate fileout sorbatefile",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-            "mf6internal sorbate_rec",
-        ],
-        [
-            "block options",
-            "name sorbate",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name fileout",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name sorbatefile",
-            "type string",
-            "preserve_case true",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged false",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name export_array_ascii",
-            "type keyword",
-            "reader urword",
-            "optional true",
-            "mf6internal export_ascii",
-        ],
-        [
-            "block options",
-            "name export_array_netcdf",
-            "type keyword",
-            "reader urword",
-            "optional true",
-            "mf6internal export_nc",
-            "extended true",
-        ],
-        [
-            "block griddata",
-            "name porosity",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "layered true",
-            "netcdf true",
-        ],
-        [
-            "block griddata",
-            "name decay",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "layered true",
-            "netcdf true",
-            "optional true",
-        ],
-        [
-            "block griddata",
-            "name decay_sorbed",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "optional true",
-            "layered true",
-            "netcdf true",
-        ],
-        [
-            "block griddata",
-            "name bulk_density",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "optional true",
-            "layered true",
-            "netcdf true",
-        ],
-        [
-            "block griddata",
-            "name distcoef",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "layered true",
-            "netcdf true",
-            "optional true",
-        ],
-        [
-            "block griddata",
-            "name sp2",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "layered true",
-            "netcdf true",
-            "optional true",
-        ],
-    ]
-    spec = {
-        "advanced": False,
-        "griddata": {
-            "bulk_density": {
-                "block": "griddata",
-                "description": "is the bulk density of the aquifer in mass per length cubed.  bulk_density is not required unless the sorption keyword is specified.  bulk density is defined as the mobile domain solid mass per mobile domain volume.  additional information on bulk density is included in the modflow 6 supplemental technical information document.",
-                "layered": True,
-                "longname": "bulk density",
-                "name": "bulk_density",
-                "netcdf": True,
-                "optional": True,
-                "reader": "readarray",
-                "shape": "(nodes)",
-                "type": "double precision",
-            },
-            "decay": {
-                "block": "griddata",
-                "description": "is the rate coefficient for first or zero-order decay for the aqueous phase of the mobile domain.  a negative value indicates solute production.  the dimensions of decay for first-order decay is one over time.  the dimensions of decay for zero-order decay is mass per length cubed per time.  decay will have no effect on simulation results unless either first- or zero-order decay is specified in the options block.",
-                "layered": True,
-                "longname": "aqueous phase decay rate coefficient",
-                "name": "decay",
-                "netcdf": True,
-                "optional": True,
-                "reader": "readarray",
-                "shape": "(nodes)",
-                "type": "double precision",
-            },
-            "decay_sorbed": {
-                "block": "griddata",
-                "description": "is the rate coefficient for first or zero-order decay for the sorbed phase of the mobile domain.  a negative value indicates solute production.  the dimensions of decay_sorbed for first-order decay is one over time.  the dimensions of decay_sorbed for zero-order decay is mass of solute per mass of aquifer per time.  if decay_sorbed is not specified and both decay and sorption are active, then the program will terminate with an error.  decay_sorbed will have no effect on simulation results unless the sorption keyword and either first- or zero-order decay are specified in the options block.",
-                "layered": True,
-                "longname": "sorbed phase decay rate coefficient",
-                "name": "decay_sorbed",
-                "netcdf": True,
-                "optional": True,
-                "reader": "readarray",
-                "shape": "(nodes)",
-                "type": "double precision",
-            },
-            "distcoef": {
-                "block": "griddata",
-                "description": "is the distribution coefficient for the equilibrium-controlled linear sorption isotherm in dimensions of length cubed per mass.  if the freunchlich isotherm is specified, then discoef is the freundlich constant.  if the langmuir isotherm is specified, then distcoef is the langmuir constant.  distcoef is not required unless the sorption keyword is specified.",
-                "layered": True,
-                "longname": "distribution coefficient",
-                "name": "distcoef",
-                "netcdf": True,
-                "optional": True,
-                "reader": "readarray",
-                "shape": "(nodes)",
-                "type": "double precision",
-            },
-            "porosity": {
-                "block": "griddata",
-                "description": "is the mobile domain porosity, defined as the mobile domain pore volume per mobile domain volume.  additional information on porosity within the context of mobile and immobile domain transport simulations is included in the modflow 6 supplemental technical information document.",
-                "layered": True,
-                "longname": "porosity",
-                "name": "porosity",
-                "netcdf": True,
-                "reader": "readarray",
-                "shape": "(nodes)",
-                "type": "double precision",
-            },
-            "sp2": {
-                "block": "griddata",
-                "description": "is the exponent for the freundlich isotherm and the sorption capacity for the langmuir isotherm.  sp2 is not required unless the sorption keyword is specified in the options block.  if the sorption keyword is not specified in the options block, sp2 will have no effect on simulation results.",
-                "layered": True,
-                "longname": "second sorption parameter",
-                "name": "sp2",
-                "netcdf": True,
-                "optional": True,
-                "reader": "readarray",
-                "shape": "(nodes)",
-                "type": "double precision",
-            },
-        },
-        "multi": False,
-        "name": "gwt-mst",
-        "options": {
-            "export_array_ascii": {
-                "block": "options",
-                "description": "keyword that specifies input griddata arrays should be written to layered ascii output files.",
-                "longname": "export array variables to layered ascii files.",
-                "mf6internal": "export_ascii",
-                "name": "export_array_ascii",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "export_array_netcdf": {
-                "block": "options",
-                "description": "keyword that specifies input gridded arrays should be written to the model output netcdf file with attributes that support using the generated file as a modflow 6 simulation input.  this option only has an effect when an output model netcdf file is configured and the simulation is run in validate mode, otherwise it is ignored.",
-                "extended": True,
-                "longname": "export array variables to netcdf output files.",
-                "mf6internal": "export_nc",
-                "name": "export_array_netcdf",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "first_order_decay": {
-                "block": "options",
-                "description": "is a text keyword to indicate that first-order decay will occur.  use of this keyword requires that decay and decay_sorbed (if sorption is active) are specified in the griddata block.",
-                "longname": "activate first-order decay",
-                "mf6internal": "order1_decay",
-                "name": "first_order_decay",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "save_flows": {
-                "block": "options",
-                "description": "keyword to indicate that mst flow terms will be written to the file specified with 'budget fileout' in output control.",
-                "longname": "save calculated flows to budget file",
-                "name": "save_flows",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "sorbate_filerecord": {
-                "block": "options",
-                "fields": {
-                    "sorbatefile": {
-                        "block": "options",
-                        "description": "name of the output file to write sorbate concentration information.  Sorbate concentrations will be written whenever aqueous concentrations are saved, as determined by settings in the Output Control option.",
-                        "longname": "file keyword",
-                        "name": "sorbatefile",
-                        "optional": "false",
-                        "reader": "urword",
-                        "type": "string",
-                    }
-                },
-                "mf6internal": "sorbate_rec",
-                "name": "sorbate_filerecord",
-                "optional": True,
-                "reader": "urword",
-                "type": "record",
-            },
-            "sorption": {
-                "block": "options",
-                "description": "is a text keyword to indicate that sorption will be activated.  valid sorption options include linear, freundlich, and langmuir.  use of this keyword requires that bulk_density and distcoef are specified in the griddata block.  if sorption is specified as freundlich or langmuir then sp2 is also required in the griddata block.",
-                "longname": "activate sorption",
-                "name": "sorption",
-                "optional": True,
-                "reader": "urword",
-                "type": "string",
-                "valid": "linear freundlich langmuir",
-            },
-            "zero_order_decay": {
-                "block": "options",
-                "description": "is a text keyword to indicate that zero-order decay will occur.  use of this keyword requires that decay and decay_sorbed (if sorption is active) are specified in the griddata block.",
-                "longname": "activate zero-order decay",
-                "mf6internal": "order0_decay",
-                "name": "zero_order_decay",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-        },
-    }
+    sorbate_filerecord = ListTemplateGenerator(('gwt6', 'mst', 'options', 'sorbate_filerecord'))
+    porosity = ArrayTemplateGenerator(('gwt6', 'mst', 'griddata', 'porosity'))
+    decay = ArrayTemplateGenerator(('gwt6', 'mst', 'griddata', 'decay'))
+    decay_sorbed = ArrayTemplateGenerator(('gwt6', 'mst', 'griddata', 'decay_sorbed'))
+    bulk_density = ArrayTemplateGenerator(('gwt6', 'mst', 'griddata', 'bulk_density'))
+    distcoef = ArrayTemplateGenerator(('gwt6', 'mst', 'griddata', 'distcoef'))
+    sp2 = ArrayTemplateGenerator(('gwt6', 'mst', 'griddata', 'sp2'))
+    package_abbr = 'gwtmst'
+    _package_type = 'mst'
+    dfn_file_name = 'gwt-mst.dfn'
+    dfn = [['header'], ['block options', 'name save_flows', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name first_order_decay', 'type keyword', 'reader urword', 'optional true', 'mf6internal order1_decay'], ['block options', 'name zero_order_decay', 'type keyword', 'reader urword', 'optional true', 'mf6internal order0_decay'], ['block options', 'name sorption', 'type string', 'valid linear freundlich langmuir', 'reader urword', 'optional true'], ['block options', 'name sorbate_filerecord', 'type record sorbate fileout sorbatefile', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal sorbate_rec'], ['block options', 'name sorbate', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name fileout', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name sorbatefile', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false'], ['block options', 'name export_array_ascii', 'type keyword', 'reader urword', 'optional true', 'mf6internal export_ascii'], ['block options', 'name export_array_netcdf', 'type keyword', 'reader urword', 'optional true', 'mf6internal export_nc', 'extended true'], ['block griddata', 'name porosity', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'netcdf true'], ['block griddata', 'name decay', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'netcdf true', 'optional true'], ['block griddata', 'name decay_sorbed', 'type double precision', 'shape (nodes)', 'reader readarray', 'optional true', 'layered true', 'netcdf true'], ['block griddata', 'name bulk_density', 'type double precision', 'shape (nodes)', 'reader readarray', 'optional true', 'layered true', 'netcdf true'], ['block griddata', 'name distcoef', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'netcdf true', 'optional true'], ['block griddata', 'name sp2', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'netcdf true', 'optional true']]
 
     def __init__(
         self,
@@ -439,6 +128,7 @@ class ModflowGwtmst(MFPackage):
         bulk_density=None,
         distcoef=None,
         sp2=None,
+
         filename=None,
         pname=None,
         **kwargs,
@@ -453,26 +143,19 @@ class ModflowGwtmst(MFPackage):
             **kwargs,
         )
 
-        self.save_flows = self.build_mfdata("save_flows", save_flows)
-        self.first_order_decay = self.build_mfdata(
-            "first_order_decay", first_order_decay
-        )
-        self.zero_order_decay = self.build_mfdata("zero_order_decay", zero_order_decay)
-        self.sorption = self.build_mfdata("sorption", sorption)
-        self.sorbate_filerecord = self.build_mfdata(
-            "sorbate_filerecord", sorbate_filerecord
-        )
-        self.export_array_ascii = self.build_mfdata(
-            "export_array_ascii", export_array_ascii
-        )
-        self.export_array_netcdf = self.build_mfdata(
-            "export_array_netcdf", export_array_netcdf
-        )
-        self.porosity = self.build_mfdata("porosity", porosity)
-        self.decay = self.build_mfdata("decay", decay)
-        self.decay_sorbed = self.build_mfdata("decay_sorbed", decay_sorbed)
-        self.bulk_density = self.build_mfdata("bulk_density", bulk_density)
-        self.distcoef = self.build_mfdata("distcoef", distcoef)
-        self.sp2 = self.build_mfdata("sp2", sp2)
+        self.save_flows = self.build_mfdata('save_flows', save_flows)
+        self.first_order_decay = self.build_mfdata('first_order_decay', first_order_decay)
+        self.zero_order_decay = self.build_mfdata('zero_order_decay', zero_order_decay)
+        self.sorption = self.build_mfdata('sorption', sorption)
+        self.sorbate_filerecord = self.build_mfdata('sorbate_filerecord', sorbate_filerecord)
+        self.export_array_ascii = self.build_mfdata('export_array_ascii', export_array_ascii)
+        self.export_array_netcdf = self.build_mfdata('export_array_netcdf', export_array_netcdf)
+        self.porosity = self.build_mfdata('porosity', porosity)
+        self.decay = self.build_mfdata('decay', decay)
+        self.decay_sorbed = self.build_mfdata('decay_sorbed', decay_sorbed)
+        self.bulk_density = self.build_mfdata('bulk_density', bulk_density)
+        self.distcoef = self.build_mfdata('distcoef', distcoef)
+        self.sp2 = self.build_mfdata('sp2', sp2)
 
         self._init_complete = True
+

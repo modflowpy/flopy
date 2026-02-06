@@ -58,222 +58,12 @@ class ModflowTdis(MFPackage):
 
     """
 
-    ats_filerecord = ListTemplateGenerator(("tdis", "options", "ats_filerecord"))
-    perioddata = ListTemplateGenerator(("tdis", "perioddata", "perioddata"))
-    package_abbr = "tdis"
-    _package_type = "tdis"
-    dfn_file_name = "sim-tdis.dfn"
-    dfn = [
-        ["header"],
-        [
-            "block options",
-            "name time_units",
-            "type string",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name start_date_time",
-            "type string",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name ats_filerecord",
-            "type record ats6 filein ats6_filename",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-            "construct_package ats",
-            "construct_data ats_perioddata",
-            "parameter_name perioddata",
-        ],
-        [
-            "block options",
-            "name ats6",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name filein",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name ats6_filename",
-            "type string",
-            "preserve_case true",
-            "in_record true",
-            "reader urword",
-            "optional false",
-            "tagged false",
-        ],
-        [
-            "block dimensions",
-            "name nper",
-            "type integer",
-            "reader urword",
-            "optional false",
-            "default 1",
-        ],
-        [
-            "block perioddata",
-            "name perioddata",
-            "type recarray perlen nstp tsmult",
-            "reader urword",
-            "optional false",
-            "default ((1.0, 1, 1.0),)",
-        ],
-        [
-            "block perioddata",
-            "name perlen",
-            "type double precision",
-            "in_record true",
-            "tagged false",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block perioddata",
-            "name nstp",
-            "type integer",
-            "in_record true",
-            "tagged false",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block perioddata",
-            "name tsmult",
-            "type double precision",
-            "in_record true",
-            "tagged false",
-            "reader urword",
-            "optional false",
-        ],
-    ]
-    spec = {
-        "advanced": False,
-        "dimensions": {
-            "nper": {
-                "block": "dimensions",
-                "default": 1,
-                "description": "is the number of stress periods for the simulation.",
-                "longname": "number of stress periods",
-                "name": "nper",
-                "optional": False,
-                "reader": "urword",
-                "type": "integer",
-            }
-        },
-        "fkeys": {
-            "ats_filerecord": {
-                "abbr": "ats",
-                "key": "ats_filerecord",
-                "param": "perioddata",
-                "parent": "parent_package",
-                "val": "ats_perioddata",
-            }
-        },
-        "multi": False,
-        "name": "sim-tdis",
-        "options": {
-            "ats_perioddata": {
-                "block": "options",
-                "description": "Contains data for the ats package. Data can be passed as a dictionary to the ats package with variable names as keys and package data as values. Data for the ats_perioddata variable is also acceptable. See ats package documentation for more information.",
-                "name": "ats_perioddata",
-                "optional": True,
-                "reader": "urword",
-                "ref": {
-                    "abbr": "ats",
-                    "key": "ats_filerecord",
-                    "param": "perioddata",
-                    "parent": "parent_package",
-                    "val": "ats_perioddata",
-                },
-                "type": "record ats6 filein ats6_filename",
-            },
-            "start_date_time": {
-                "block": "options",
-                "description": "is the starting date and time of the simulation.  this is a text string that is used as a label within the simulation list file.  the value has no effect on the simulation.  the recommended format for the starting date and time is described at https://www.w3.org/tr/note-datetime.",
-                "longname": "starting date and time",
-                "name": "start_date_time",
-                "optional": True,
-                "reader": "urword",
-                "type": "string",
-            },
-            "time_units": {
-                "block": "options",
-                "description": "is the time units of the simulation.  this is a text string that is used as a label within model output files.  values for time_units may be 'unknown',  'seconds', 'minutes', 'hours', 'days', or 'years'.  the default time unit is 'unknown'.",
-                "longname": "time unit",
-                "name": "time_units",
-                "optional": True,
-                "reader": "urword",
-                "type": "string",
-            },
-        },
-        "perioddata": {
-            "perioddata": {
-                "block": "perioddata",
-                "default": [[1.0, 1, 1.0]],
-                "item": {
-                    "block": "perioddata",
-                    "fields": {
-                        "nstp": {
-                            "block": "perioddata",
-                            "description": "is the number of time steps in a stress period.",
-                            "longname": "number of time steps",
-                            "name": "nstp",
-                            "optional": "false",
-                            "reader": "urword",
-                            "type": "integer",
-                        },
-                        "perlen": {
-                            "block": "perioddata",
-                            "description": "is the length of a stress period.",
-                            "longname": "length of stress period",
-                            "name": "perlen",
-                            "optional": "false",
-                            "reader": "urword",
-                            "type": "double precision",
-                        },
-                        "tsmult": {
-                            "block": "perioddata",
-                            "description": "is the multiplier for the length of successive time steps. The length of a time step is calculated by multiplying the length of the previous time step by TSMULT. The length of the first time step, $Delta t_1$, is related to PERLEN, NSTP, and TSMULT by the relation $Delta t_1= perlen frac{tsmult - 1}{tsmult^{nstp}-1}$.",
-                            "longname": "number of time steps",
-                            "name": "tsmult",
-                            "optional": "false",
-                            "reader": "urword",
-                            "type": "double precision",
-                        },
-                    },
-                    "longname": "stress period time information",
-                    "name": "perioddata",
-                    "optional": False,
-                    "reader": "urword",
-                    "type": "record",
-                },
-                "longname": "stress period time information",
-                "name": "perioddata",
-                "optional": False,
-                "reader": "urword",
-                "type": "recarray",
-            }
-        },
-    }
+    ats_filerecord = ListTemplateGenerator(('tdis', 'options', 'ats_filerecord'))
+    perioddata = ListTemplateGenerator(('tdis', 'perioddata', 'perioddata'))
+    package_abbr = 'tdis'
+    _package_type = 'tdis'
+    dfn_file_name = 'sim-tdis.dfn'
+    dfn = [['header'], ['block options', 'name time_units', 'type string', 'reader urword', 'optional true'], ['block options', 'name start_date_time', 'type string', 'reader urword', 'optional true'], ['block options', 'name ats_filerecord', 'type record ats6 filein ats6_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'construct_package ats', 'construct_data ats_perioddata', 'parameter_name perioddata'], ['block options', 'name ats6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name filein', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name ats6_filename', 'type string', 'preserve_case true', 'in_record true', 'reader urword', 'optional false', 'tagged false'], ['block dimensions', 'name nper', 'type integer', 'reader urword', 'optional false', 'default 1'], ['block perioddata', 'name perioddata', 'type recarray perlen nstp tsmult', 'reader urword', 'optional false', 'default ((1.0, 1, 1.0),)'], ['block perioddata', 'name perlen', 'type double precision', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block perioddata', 'name nstp', 'type integer', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block perioddata', 'name tsmult', 'type double precision', 'in_record true', 'tagged false', 'reader urword', 'optional false']]
 
     def __init__(
         self,
@@ -284,6 +74,7 @@ class ModflowTdis(MFPackage):
         ats_perioddata=None,
         nper=1,
         perioddata=[[1.0, 1, 1.0]],
+
         filename=None,
         pname=None,
         **kwargs,
@@ -298,13 +89,12 @@ class ModflowTdis(MFPackage):
             **kwargs,
         )
 
-        self.time_units = self.build_mfdata("time_units", time_units)
-        self.start_date_time = self.build_mfdata("start_date_time", start_date_time)
-        self._ats_filerecord = self.build_mfdata("ats_filerecord", None)
-        self._ats_package = self.build_child_package(
-            "ats", ats_perioddata, "perioddata", self._ats_filerecord
-        )
-        self.nper = self.build_mfdata("nper", nper)
-        self.perioddata = self.build_mfdata("perioddata", perioddata)
+        self.time_units = self.build_mfdata('time_units', time_units)
+        self.start_date_time = self.build_mfdata('start_date_time', start_date_time)
+        self._ats_filerecord = self.build_mfdata('ats_filerecord', None)
+        self._ats_package = self.build_child_package('ats', ats_perioddata, 'perioddata', self._ats_filerecord)
+        self.nper = self.build_mfdata('nper', nper)
+        self.perioddata = self.build_mfdata('perioddata', perioddata)
 
         self._init_complete = True
+

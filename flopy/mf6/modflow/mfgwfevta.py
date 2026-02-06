@@ -100,417 +100,18 @@ class ModflowGwfevta(MFPackage):
 
     """
 
-    auxiliary = ArrayTemplateGenerator(("gwf6", "evta", "options", "auxiliary"))
-    tas_filerecord = ListTemplateGenerator(
-        ("gwf6", "evta", "options", "tas_filerecord")
-    )
-    obs_filerecord = ListTemplateGenerator(
-        ("gwf6", "evta", "options", "obs_filerecord")
-    )
-    ievt = ArrayTemplateGenerator(("gwf6", "evta", "period", "ievt"))
-    surface = ArrayTemplateGenerator(("gwf6", "evta", "period", "surface"))
-    rate = ArrayTemplateGenerator(("gwf6", "evta", "period", "rate"))
-    depth = ArrayTemplateGenerator(("gwf6", "evta", "period", "depth"))
-    aux = ArrayTemplateGenerator(("gwf6", "evta", "period", "aux"))
-    package_abbr = "gwfevta"
-    _package_type = "evta"
-    dfn_file_name = "gwf-evta.dfn"
-    dfn = [
-        ["header", "multi-package", "package-type stress-package"],
-        [
-            "block options",
-            "name readasarrays",
-            "type keyword",
-            "shape",
-            "reader urword",
-            "optional false",
-            "default true",
-        ],
-        [
-            "block options",
-            "name fixed_cell",
-            "type keyword",
-            "shape",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name auxiliary",
-            "type string",
-            "shape (naux)",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name auxmultname",
-            "type string",
-            "shape",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name print_input",
-            "type keyword",
-            "reader urword",
-            "optional true",
-            "mf6internal iprpak",
-        ],
-        [
-            "block options",
-            "name print_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-            "mf6internal iprflow",
-        ],
-        [
-            "block options",
-            "name save_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-            "mf6internal ipakcb",
-        ],
-        [
-            "block options",
-            "name tas_filerecord",
-            "type record tas6 filein tas6_filename",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-            "construct_package tas",
-            "construct_data timearrayseries",
-            "parameter_name tas_array",
-        ],
-        [
-            "block options",
-            "name tas6",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name filein",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name tas6_filename",
-            "type string",
-            "preserve_case true",
-            "in_record true",
-            "reader urword",
-            "optional false",
-            "tagged false",
-        ],
-        [
-            "block options",
-            "name obs_filerecord",
-            "type record obs6 filein obs6_filename",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-            "construct_package obs",
-            "construct_data observations",
-            "parameter_name continuous",
-        ],
-        [
-            "block options",
-            "name obs6",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name obs6_filename",
-            "type string",
-            "preserve_case true",
-            "in_record true",
-            "tagged false",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name export_array_netcdf",
-            "type keyword",
-            "reader urword",
-            "optional true",
-            "mf6internal export_nc",
-            "extended true",
-        ],
-        [
-            "block period",
-            "name iper",
-            "type integer",
-            "block_variable true",
-            "in_record true",
-            "tagged false",
-            "shape",
-            "valid",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block period",
-            "name ievt",
-            "type integer",
-            "shape (ncol*nrow; ncpl)",
-            "reader readarray",
-            "numeric_index true",
-            "optional true",
-            "netcdf true",
-        ],
-        [
-            "block period",
-            "name surface",
-            "type double precision",
-            "shape (ncol*nrow; ncpl)",
-            "reader readarray",
-            "netcdf true",
-            "default 0.",
-        ],
-        [
-            "block period",
-            "name rate",
-            "type double precision",
-            "shape (ncol*nrow; ncpl)",
-            "reader readarray",
-            "time_series true",
-            "netcdf true",
-            "default 1.e-3",
-        ],
-        [
-            "block period",
-            "name depth",
-            "type double precision",
-            "shape (ncol*nrow; ncpl)",
-            "reader readarray",
-            "netcdf true",
-            "default 1.0",
-        ],
-        [
-            "block period",
-            "name aux",
-            "type double precision",
-            "shape (ncol*nrow; ncpl)",
-            "reader readarray",
-            "time_series true",
-            "netcdf true",
-            "mf6internal auxvar",
-        ],
-    ]
-    spec = {
-        "advanced": False,
-        "fkeys": {
-            "obs_filerecord": {
-                "abbr": "obs",
-                "key": "obs_filerecord",
-                "param": "continuous",
-                "parent": "parent_model_or_package",
-                "val": "observations",
-            },
-            "tas_filerecord": {
-                "abbr": "tas",
-                "key": "tas_filerecord",
-                "param": "tas_array",
-                "parent": "parent_package",
-                "val": "timearrayseries",
-            },
-        },
-        "multi": True,
-        "name": "gwf-evta",
-        "options": {
-            "auxiliary": {
-                "block": "options",
-                "description": "defines an array of one or more auxiliary variable names.  there is no limit on the number of auxiliary variables that can be provided on this line; however, lists of information provided in subsequent blocks must have a column of data for each auxiliary variable name defined here.   the number of auxiliary variables detected on this line determines the value for naux.  comments cannot be provided anywhere on this line as they will be interpreted as auxiliary variable names.  auxiliary variables may not be used by the package, but they will be available for use by other parts of the program.  the program will terminate with an error if auxiliary variables are specified on more than one line in the options block.",
-                "longname": "keyword to specify aux variables",
-                "name": "auxiliary",
-                "optional": True,
-                "reader": "urword",
-                "shape": "(naux)",
-                "type": "string",
-            },
-            "auxmultname": {
-                "block": "options",
-                "description": "name of auxiliary variable to be used as multiplier of evapotranspiration rate.",
-                "longname": "name of auxiliary variable for multiplier",
-                "name": "auxmultname",
-                "optional": True,
-                "reader": "urword",
-                "type": "string",
-            },
-            "export_array_netcdf": {
-                "block": "options",
-                "description": "keyword that specifies input gridded arrays should be written to the model output netcdf file with attributes that support using the generated file as a modflow 6 simulation input.  this option only has an effect when an output model netcdf file is configured and the simulation is run in validate mode, otherwise it is ignored.",
-                "extended": True,
-                "longname": "export array variables to netcdf output files.",
-                "mf6internal": "export_nc",
-                "name": "export_array_netcdf",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "fixed_cell": {
-                "block": "options",
-                "description": "indicates that evapotranspiration will not be reassigned to a cell underlying the cell specified in the list if the specified cell is inactive.",
-                "longname": "if cell is dry do not apply evapotranspiration to underlying cell",
-                "name": "fixed_cell",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "observations": {
-                "block": "options",
-                "description": "Contains data for the obs package. Data can be passed as a dictionary to the obs package with variable names as keys and package data as values. Data for the observations variable is also acceptable. See obs package documentation for more information.",
-                "name": "observations",
-                "optional": True,
-                "reader": "urword",
-                "ref": {
-                    "abbr": "obs",
-                    "key": "obs_filerecord",
-                    "param": "continuous",
-                    "parent": "parent_model_or_package",
-                    "val": "observations",
-                },
-                "type": "record obs6 filein obs6_filename",
-            },
-            "print_flows": {
-                "block": "options",
-                "description": "keyword to indicate that the list of evapotranspiration flow rates will be printed to the listing file for every stress period time step in which 'budget print' is specified in output control.  if there is no output control option and 'print_flows' is specified, then flow rates are printed for the last time step of each stress period.",
-                "longname": "print evapotranspiration rates to listing file",
-                "mf6internal": "iprflow",
-                "name": "print_flows",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "print_input": {
-                "block": "options",
-                "description": "keyword to indicate that the list of evapotranspiration information will be written to the listing file immediately after it is read.",
-                "longname": "print input to listing file",
-                "mf6internal": "iprpak",
-                "name": "print_input",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "readasarrays": {
-                "block": "options",
-                "default": True,
-                "description": "indicates that array-based input will be used for the evapotranspiration package.  this keyword must be specified to use array-based input.  when readasarrays is specified, values must be provided for every cell within a model layer, even those cells that have an idomain value less than one.  values assigned to cells with idomain values less than one are not used and have no effect on simulation results.",
-                "longname": "use array-based input",
-                "name": "readasarrays",
-                "optional": False,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "save_flows": {
-                "block": "options",
-                "description": "keyword to indicate that evapotranspiration flow terms will be written to the file specified with 'budget fileout' in output control.",
-                "longname": "save chd flows to budget file",
-                "mf6internal": "ipakcb",
-                "name": "save_flows",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "timearrayseries": {
-                "block": "options",
-                "description": "Contains data for the tas package. Data can be passed as a dictionary to the tas package with variable names as keys and package data as values. Data for the timearrayseries variable is also acceptable. See tas package documentation for more information.",
-                "name": "timearrayseries",
-                "optional": True,
-                "reader": "urword",
-                "ref": {
-                    "abbr": "tas",
-                    "key": "tas_filerecord",
-                    "param": "tas_array",
-                    "parent": "parent_package",
-                    "val": "timearrayseries",
-                },
-                "type": "record tas6 filein tas6_filename",
-            },
-        },
-        "period": {
-            "aux": {
-                "block": "period",
-                "description": "is an array of values for auxiliary variable aux(iaux), where iaux is a value from 1 to naux, and aux(iaux) must be listed as part of the auxiliary variables.  a separate array can be specified for each auxiliary variable.  if an array is not specified for an auxiliary variable, then a value of zero is assigned.  if the value specified here for the auxiliary variable is the same as auxmultname, then the evapotranspiration rate will be multiplied by this array.",
-                "longname": "evapotranspiration auxiliary variable iaux",
-                "mf6internal": "auxvar",
-                "name": "aux",
-                "netcdf": True,
-                "reader": "readarray",
-                "shape": "(ncol*nrow; ncpl)",
-                "time_series": True,
-                "type": "double precision",
-            },
-            "depth": {
-                "block": "period",
-                "default": 1.0,
-                "description": "is the et extinction depth ($l$).",
-                "longname": "extinction depth",
-                "name": "depth",
-                "netcdf": True,
-                "reader": "readarray",
-                "shape": "(ncol*nrow; ncpl)",
-                "type": "double precision",
-            },
-            "ievt": {
-                "block": "period",
-                "description": "ievt is the layer number that defines the layer in each vertical column where evapotranspiration is applied. if ievt is omitted, evapotranspiration by default is applied to cells in layer 1.  if ievt is specified, it must be specified as the first variable in the period block or modflow will terminate with an error.",
-                "longname": "layer number for evapotranspiration",
-                "name": "ievt",
-                "netcdf": True,
-                "numeric_index": True,
-                "optional": True,
-                "reader": "readarray",
-                "shape": "(ncol*nrow; ncpl)",
-                "type": "integer",
-            },
-            "rate": {
-                "block": "period",
-                "default": 0.001,
-                "description": "is the maximum et flux rate ($lt^{-1}$).",
-                "longname": "evapotranspiration surface",
-                "name": "rate",
-                "netcdf": True,
-                "reader": "readarray",
-                "shape": "(ncol*nrow; ncpl)",
-                "time_series": True,
-                "type": "double precision",
-            },
-            "surface": {
-                "block": "period",
-                "default": 0.0,
-                "description": "is the elevation of the et surface ($l$).",
-                "longname": "evapotranspiration surface",
-                "name": "surface",
-                "netcdf": True,
-                "reader": "readarray",
-                "shape": "(ncol*nrow; ncpl)",
-                "type": "double precision",
-            },
-            "transient_block": True,
-        },
-    }
+    auxiliary = ArrayTemplateGenerator(('gwf6', 'evta', 'options', 'auxiliary'))
+    tas_filerecord = ListTemplateGenerator(('gwf6', 'evta', 'options', 'tas_filerecord'))
+    obs_filerecord = ListTemplateGenerator(('gwf6', 'evta', 'options', 'obs_filerecord'))
+    ievt = ArrayTemplateGenerator(('gwf6', 'evta', 'period', 'ievt'))
+    surface = ArrayTemplateGenerator(('gwf6', 'evta', 'period', 'surface'))
+    rate = ArrayTemplateGenerator(('gwf6', 'evta', 'period', 'rate'))
+    depth = ArrayTemplateGenerator(('gwf6', 'evta', 'period', 'depth'))
+    aux = ArrayTemplateGenerator(('gwf6', 'evta', 'period', 'aux'))
+    package_abbr = 'gwfevta'
+    _package_type = 'evta'
+    dfn_file_name = 'gwf-evta.dfn'
+    dfn = [['header', 'multi-package', 'package-type stress-package'], ['block options', 'name readasarrays', 'type keyword', 'shape', 'reader urword', 'optional false', 'default true'], ['block options', 'name fixed_cell', 'type keyword', 'shape', 'reader urword', 'optional true'], ['block options', 'name auxiliary', 'type string', 'shape (naux)', 'reader urword', 'optional true'], ['block options', 'name auxmultname', 'type string', 'shape', 'reader urword', 'optional true'], ['block options', 'name print_input', 'type keyword', 'reader urword', 'optional true', 'mf6internal iprpak'], ['block options', 'name print_flows', 'type keyword', 'reader urword', 'optional true', 'mf6internal iprflow'], ['block options', 'name save_flows', 'type keyword', 'reader urword', 'optional true', 'mf6internal ipakcb'], ['block options', 'name tas_filerecord', 'type record tas6 filein tas6_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'construct_package tas', 'construct_data timearrayseries', 'parameter_name tas_array'], ['block options', 'name tas6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name filein', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name tas6_filename', 'type string', 'preserve_case true', 'in_record true', 'reader urword', 'optional false', 'tagged false'], ['block options', 'name obs_filerecord', 'type record obs6 filein obs6_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'construct_package obs', 'construct_data observations', 'parameter_name continuous'], ['block options', 'name obs6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name obs6_filename', 'type string', 'preserve_case true', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block options', 'name export_array_netcdf', 'type keyword', 'reader urword', 'optional true', 'mf6internal export_nc', 'extended true'], ['block period', 'name iper', 'type integer', 'block_variable true', 'in_record true', 'tagged false', 'shape', 'valid', 'reader urword', 'optional false'], ['block period', 'name ievt', 'type integer', 'shape (ncol*nrow; ncpl)', 'reader readarray', 'numeric_index true', 'optional true', 'netcdf true'], ['block period', 'name surface', 'type double precision', 'shape (ncol*nrow; ncpl)', 'reader readarray', 'netcdf true', 'default 0.'], ['block period', 'name rate', 'type double precision', 'shape (ncol*nrow; ncpl)', 'reader readarray', 'time_series true', 'netcdf true', 'default 1.e-3'], ['block period', 'name depth', 'type double precision', 'shape (ncol*nrow; ncpl)', 'reader readarray', 'netcdf true', 'default 1.0'], ['block period', 'name aux', 'type double precision', 'shape (ncol*nrow; ncpl)', 'reader readarray', 'time_series true', 'netcdf true', 'mf6internal auxvar']]
 
     def __init__(
         self,
@@ -531,6 +132,7 @@ class ModflowGwfevta(MFPackage):
         rate=0.001,
         depth=1.0,
         aux=None,
+
         filename=None,
         pname=None,
         **kwargs,
@@ -545,28 +147,23 @@ class ModflowGwfevta(MFPackage):
             **kwargs,
         )
 
-        self.readasarrays = self.build_mfdata("readasarrays", readasarrays)
-        self.fixed_cell = self.build_mfdata("fixed_cell", fixed_cell)
-        self.auxiliary = self.build_mfdata("auxiliary", auxiliary)
-        self.auxmultname = self.build_mfdata("auxmultname", auxmultname)
-        self.print_input = self.build_mfdata("print_input", print_input)
-        self.print_flows = self.build_mfdata("print_flows", print_flows)
-        self.save_flows = self.build_mfdata("save_flows", save_flows)
-        self._tas_filerecord = self.build_mfdata("tas_filerecord", None)
-        self._tas_package = self.build_child_package(
-            "tas", timearrayseries, "tas_array", self._tas_filerecord
-        )
-        self._obs_filerecord = self.build_mfdata("obs_filerecord", None)
-        self._obs_package = self.build_child_package(
-            "obs", observations, "continuous", self._obs_filerecord
-        )
-        self.export_array_netcdf = self.build_mfdata(
-            "export_array_netcdf", export_array_netcdf
-        )
-        self.ievt = self.build_mfdata("ievt", ievt)
-        self.surface = self.build_mfdata("surface", surface)
-        self.rate = self.build_mfdata("rate", rate)
-        self.depth = self.build_mfdata("depth", depth)
-        self.aux = self.build_mfdata("aux", aux)
+        self.readasarrays = self.build_mfdata('readasarrays', readasarrays)
+        self.fixed_cell = self.build_mfdata('fixed_cell', fixed_cell)
+        self.auxiliary = self.build_mfdata('auxiliary', auxiliary)
+        self.auxmultname = self.build_mfdata('auxmultname', auxmultname)
+        self.print_input = self.build_mfdata('print_input', print_input)
+        self.print_flows = self.build_mfdata('print_flows', print_flows)
+        self.save_flows = self.build_mfdata('save_flows', save_flows)
+        self._tas_filerecord = self.build_mfdata('tas_filerecord', None)
+        self._tas_package = self.build_child_package('tas', timearrayseries, 'tas_array', self._tas_filerecord)
+        self._obs_filerecord = self.build_mfdata('obs_filerecord', None)
+        self._obs_package = self.build_child_package('obs', observations, 'continuous', self._obs_filerecord)
+        self.export_array_netcdf = self.build_mfdata('export_array_netcdf', export_array_netcdf)
+        self.ievt = self.build_mfdata('ievt', ievt)
+        self.surface = self.build_mfdata('surface', surface)
+        self.rate = self.build_mfdata('rate', rate)
+        self.depth = self.build_mfdata('depth', depth)
+        self.aux = self.build_mfdata('aux', aux)
 
         self._init_complete = True
+

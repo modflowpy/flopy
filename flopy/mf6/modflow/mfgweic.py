@@ -42,82 +42,11 @@ class ModflowGweic(MFPackage):
 
     """
 
-    strt = ArrayTemplateGenerator(("gwe6", "ic", "griddata", "strt"))
-    package_abbr = "gweic"
-    _package_type = "ic"
-    dfn_file_name = "gwe-ic.dfn"
-    dfn = [
-        ["header"],
-        [
-            "block options",
-            "name export_array_ascii",
-            "type keyword",
-            "reader urword",
-            "optional true",
-            "mf6internal export_ascii",
-        ],
-        [
-            "block options",
-            "name export_array_netcdf",
-            "type keyword",
-            "reader urword",
-            "optional true",
-            "mf6internal export_nc",
-            "extended true",
-        ],
-        [
-            "block griddata",
-            "name strt",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "layered true",
-            "netcdf true",
-            "default 0.0",
-        ],
-    ]
-    spec = {
-        "advanced": False,
-        "griddata": {
-            "strt": {
-                "block": "griddata",
-                "default": 0.0,
-                "description": "is the initial (starting) temperature---that is, the temperature at the beginning of the gwe model simulation.  strt must be specified for all gwe model simulations. one value is read for every model cell.",
-                "layered": True,
-                "longname": "starting temperature",
-                "name": "strt",
-                "netcdf": True,
-                "reader": "readarray",
-                "shape": "(nodes)",
-                "type": "double precision",
-            }
-        },
-        "multi": False,
-        "name": "gwe-ic",
-        "options": {
-            "export_array_ascii": {
-                "block": "options",
-                "description": "keyword that specifies input griddata arrays should be written to layered ascii output files.",
-                "longname": "export array variables to layered ascii files.",
-                "mf6internal": "export_ascii",
-                "name": "export_array_ascii",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "export_array_netcdf": {
-                "block": "options",
-                "description": "keyword that specifies input gridded arrays should be written to the model output netcdf file with attributes that support using the generated file as a modflow 6 simulation input.  this option only has an effect when an output model netcdf file is configured and the simulation is run in validate mode, otherwise it is ignored.",
-                "extended": True,
-                "longname": "export array variables to netcdf output files.",
-                "mf6internal": "export_nc",
-                "name": "export_array_netcdf",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-        },
-    }
+    strt = ArrayTemplateGenerator(('gwe6', 'ic', 'griddata', 'strt'))
+    package_abbr = 'gweic'
+    _package_type = 'ic'
+    dfn_file_name = 'gwe-ic.dfn'
+    dfn = [['header'], ['block options', 'name export_array_ascii', 'type keyword', 'reader urword', 'optional true', 'mf6internal export_ascii'], ['block options', 'name export_array_netcdf', 'type keyword', 'reader urword', 'optional true', 'mf6internal export_nc', 'extended true'], ['block griddata', 'name strt', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'netcdf true', 'default 0.0']]
 
     def __init__(
         self,
@@ -126,6 +55,7 @@ class ModflowGweic(MFPackage):
         export_array_ascii=None,
         export_array_netcdf=None,
         strt=0.0,
+
         filename=None,
         pname=None,
         **kwargs,
@@ -140,12 +70,9 @@ class ModflowGweic(MFPackage):
             **kwargs,
         )
 
-        self.export_array_ascii = self.build_mfdata(
-            "export_array_ascii", export_array_ascii
-        )
-        self.export_array_netcdf = self.build_mfdata(
-            "export_array_netcdf", export_array_netcdf
-        )
-        self.strt = self.build_mfdata("strt", strt)
+        self.export_array_ascii = self.build_mfdata('export_array_ascii', export_array_ascii)
+        self.export_array_netcdf = self.build_mfdata('export_array_netcdf', export_array_netcdf)
+        self.strt = self.build_mfdata('strt', strt)
 
         self._init_complete = True
+

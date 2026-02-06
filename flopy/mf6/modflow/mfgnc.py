@@ -85,210 +85,11 @@ class ModflowGnc(MFPackage):
 
     """
 
-    gncdata = ListTemplateGenerator(("gnc", "gncdata", "gncdata"))
-    package_abbr = "gnc"
-    _package_type = "gnc"
-    dfn_file_name = "gwf-gnc.dfn"
-    dfn = [
-        ["header"],
-        [
-            "block options",
-            "name print_input",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name print_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name explicit",
-            "type keyword",
-            "tagged true",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block dimensions",
-            "name numgnc",
-            "type integer",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block dimensions",
-            "name numalphaj",
-            "type integer",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block gncdata",
-            "name gncdata",
-            "type recarray cellidn cellidm cellidsj alphasj",
-            "shape (maxbound)",
-            "reader urword",
-        ],
-        [
-            "block gncdata",
-            "name cellidn",
-            "type integer",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-            "numeric_index true",
-        ],
-        [
-            "block gncdata",
-            "name cellidm",
-            "type integer",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-            "numeric_index true",
-        ],
-        [
-            "block gncdata",
-            "name cellidsj",
-            "type integer",
-            "shape (numalphaj)",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-            "numeric_index true",
-        ],
-        [
-            "block gncdata",
-            "name alphasj",
-            "type double precision",
-            "shape (numalphaj)",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-    ]
-    spec = {
-        "advanced": False,
-        "dimensions": {
-            "numalphaj": {
-                "block": "dimensions",
-                "description": "is the number of contributing factors.",
-                "longname": "number of contributing factors",
-                "name": "numalphaj",
-                "optional": False,
-                "reader": "urword",
-                "type": "integer",
-            },
-            "numgnc": {
-                "block": "dimensions",
-                "description": "is the number of gnc entries.",
-                "longname": "number of ghost node corrections",
-                "name": "numgnc",
-                "optional": False,
-                "reader": "urword",
-                "type": "integer",
-            },
-        },
-        "gncdata": {
-            "gncdata": {
-                "block": "gncdata",
-                "item": {
-                    "block": "gncdata",
-                    "fields": {
-                        "alphasj": {
-                            "block": "gncdata",
-                            "description": "is the contributing factors for each contributing node in CELLIDSJ. Note that if the number of actual contributing cells is less than NUMALPHAJ for any ghost node, then dummy CELLIDS should be inserted with an associated contributing factor of zero.  The sum of ALPHASJ should be less than one.  This is because one minus the sum of ALPHASJ is equal to the alpha term (alpha n in equation 4-61 of the GWF Model report) that is multiplied by the head in cell n.",
-                            "longname": "GNC contributing factors",
-                            "name": "alphasj",
-                            "reader": "urword",
-                            "shape": "(numalphaj)",
-                            "type": "double precision",
-                        },
-                        "cellidm": {
-                            "block": "gncdata",
-                            "description": "is the cellid of the connecting cell, $m$, to which flow occurs from the ghost node. For a structured grid that uses the DIS input file, CELLIDM is the layer, row, and column numbers of the cell.   For a grid that uses the DISV input file, CELLIDM is the layer number and CELL2D number for the two cells.  If the model uses the unstructured discretization (DISU) input file, then CELLIDM is the node number for the cell.",
-                            "longname": "GNC cellid n",
-                            "name": "cellidm",
-                            "numeric_index": "true",
-                            "reader": "urword",
-                            "type": "integer",
-                        },
-                        "cellidn": {
-                            "block": "gncdata",
-                            "description": "is the cellid of the cell, $n$, in which the ghost node is located. For a structured grid that uses the DIS input file, CELLIDN is the layer, row, and column numbers of the cell.   For a grid that uses the DISV input file, CELLIDN is the layer number and CELL2D number for the two cells.  If the model uses the unstructured discretization (DISU) input file, then CELLIDN is the node number for the cell.",
-                            "longname": "GNC cellid n",
-                            "name": "cellidn",
-                            "numeric_index": "true",
-                            "reader": "urword",
-                            "type": "integer",
-                        },
-                        "cellidsj": {
-                            "block": "gncdata",
-                            "description": "is the array of CELLIDS for the contributing j cells, which contribute to the interpolated head value at the ghost node. This item contains one CELLID for each of the contributing cells of the ghost node. Note that if the number of actual contributing cells needed by the user is less than NUMALPHAJ for any ghost node, then a dummy CELLID of zero(s) should be inserted with an associated contributing factor of zero. For a structured grid that uses the DIS input file, CELLID is the layer, row, and column numbers of the cell.   For a grid that uses the DISV input file, CELLID is the layer number and cell2d number for the two cells.  If the model uses the unstructured discretization (DISU) input file, then CELLID is the node number for the cell.",
-                            "longname": "GNC contributing cells",
-                            "name": "cellidsj",
-                            "numeric_index": "true",
-                            "reader": "urword",
-                            "shape": "(numalphaj)",
-                            "type": "integer",
-                        },
-                    },
-                    "name": "gncdata",
-                    "reader": "urword",
-                    "type": "record",
-                },
-                "name": "gncdata",
-                "reader": "urword",
-                "shape": "(maxbound)",
-                "type": "recarray",
-            }
-        },
-        "multi": False,
-        "name": "gwf-gnc",
-        "options": {
-            "explicit": {
-                "block": "options",
-                "description": "keyword to indicate that the ghost node correction is applied in an explicit manner on the right-hand side of the matrix.  the explicit approach will likely require additional outer iterations.  if the keyword is not specified, then the correction will be applied in an implicit manner on the left-hand side.  the implicit approach will likely converge better, but may require additional memory.  if the explicit keyword is not specified, then the bicgstab linear acceleration option should be specified within the linear block of the sparse matrix solver.",
-                "longname": "use explicit gnc formulation",
-                "name": "explicit",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "print_flows": {
-                "block": "options",
-                "description": "keyword to indicate that the list of gnc flow rates will be printed to the listing file for every stress period time step in which 'budget print' is specified in output control.  if there is no output control option and 'print_flows' is specified, then flow rates are printed for the last time step of each stress period.",
-                "longname": "print simulated flows to listing file",
-                "name": "print_flows",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "print_input": {
-                "block": "options",
-                "description": "keyword to indicate that the list of gnc information will be written to the listing file immediately after it is read.",
-                "longname": "print input to listing file",
-                "name": "print_input",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-        },
-        "ref": {
-            "abbr": "gnc",
-            "key": "gnc_filerecord",
-            "param": "gncdata",
-            "parent": "parent_model_or_package",
-            "val": "gncdata",
-        },
-    }
+    gncdata = ListTemplateGenerator(('gnc', 'gncdata', 'gncdata'))
+    package_abbr = 'gnc'
+    _package_type = 'gnc'
+    dfn_file_name = 'gwf-gnc.dfn'
+    dfn = [['header'], ['block options', 'name print_input', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name print_flows', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name explicit', 'type keyword', 'tagged true', 'reader urword', 'optional true'], ['block dimensions', 'name numgnc', 'type integer', 'reader urword', 'optional false'], ['block dimensions', 'name numalphaj', 'type integer', 'reader urword', 'optional false'], ['block gncdata', 'name gncdata', 'type recarray cellidn cellidm cellidsj alphasj', 'shape (maxbound)', 'reader urword'], ['block gncdata', 'name cellidn', 'type integer', 'shape', 'tagged false', 'in_record true', 'reader urword', 'numeric_index true'], ['block gncdata', 'name cellidm', 'type integer', 'shape', 'tagged false', 'in_record true', 'reader urword', 'numeric_index true'], ['block gncdata', 'name cellidsj', 'type integer', 'shape (numalphaj)', 'tagged false', 'in_record true', 'reader urword', 'numeric_index true'], ['block gncdata', 'name alphasj', 'type double precision', 'shape (numalphaj)', 'tagged false', 'in_record true', 'reader urword']]
 
     def __init__(
         self,
@@ -300,6 +101,7 @@ class ModflowGnc(MFPackage):
         numgnc=None,
         numalphaj=None,
         gncdata=None,
+
         filename=None,
         pname=None,
         **kwargs,
@@ -314,21 +116,19 @@ class ModflowGnc(MFPackage):
             **kwargs,
         )
 
-        self.print_input = self.build_mfdata("print_input", print_input)
-        self.print_flows = self.build_mfdata("print_flows", print_flows)
-        self.explicit = self.build_mfdata("explicit", explicit)
-        self.numgnc = self.build_mfdata("numgnc", numgnc)
-        self.numalphaj = self.build_mfdata("numalphaj", numalphaj)
-        self.gncdata = self.build_mfdata("gncdata", gncdata)
+        self.print_input = self.build_mfdata('print_input', print_input)
+        self.print_flows = self.build_mfdata('print_flows', print_flows)
+        self.explicit = self.build_mfdata('explicit', explicit)
+        self.numgnc = self.build_mfdata('numgnc', numgnc)
+        self.numalphaj = self.build_mfdata('numalphaj', numalphaj)
+        self.gncdata = self.build_mfdata('gncdata', gncdata)
 
         self._init_complete = True
-
 
 class GncPackages(MFChildPackages):
     """
     GncPackages is a container class for the ModflowGnc class.
     """
-
     package_abbr = "gncpackages"
 
     def initialize(
@@ -339,6 +139,7 @@ class GncPackages(MFChildPackages):
         numgnc=None,
         numalphaj=None,
         gncdata=None,
+
         filename=None,
         pname=None,
     ):
@@ -370,6 +171,7 @@ class GncPackages(MFChildPackages):
         numgnc=None,
         numalphaj=None,
         gncdata=None,
+
         filename=None,
         pname=None,
     ):

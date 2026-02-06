@@ -7,7 +7,6 @@ from typing import Union
 from flopy.mf6.data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 from flopy.mf6.mfpackage import MFPackage
 
-
 class ModflowGwfgwe(MFPackage):
     """
     ModflowGwfgwe defines a GWFGWE package.
@@ -26,7 +25,7 @@ class ModflowGwfgwe(MFPackage):
         The name of the first model that is part of this exchange.
     exgmnameb : str, optional
         The name of the second model that is part of this exchange.
-
+    
     filename : str or PathLike, optional
         Name or path of file where this package is stored.
     pname : str, optional
@@ -36,11 +35,10 @@ class ModflowGwfgwe(MFPackage):
 
     """
 
-    package_abbr = "gwfgwe"
-    _package_type = "gwfgwe"
-    dfn_file_name = "exg-gwfgwe.dfn"
-    dfn = [["header"]]
-    spec = {"advanced": False, "multi": False, "name": "exg-gwfgwe"}
+    package_abbr = 'gwfgwe'
+    _package_type = 'gwfgwe'
+    dfn_file_name = 'exg-gwfgwe.dfn'
+    dfn = [['header']]
 
     def __init__(
         self,
@@ -49,6 +47,7 @@ class ModflowGwfgwe(MFPackage):
         exgtype="GWF6-GWE6",
         exgmnamea=None,
         exgmnameb=None,
+        
         filename=None,
         pname=None,
         **kwargs,
@@ -67,5 +66,6 @@ class ModflowGwfgwe(MFPackage):
         self.exgmnamea = exgmnamea
         self.exgmnameb = exgmnameb
         simulation.register_exchange_file(self)
+
 
         self._init_complete = True

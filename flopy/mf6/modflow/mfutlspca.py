@@ -52,174 +52,13 @@ class ModflowUtlspca(MFPackage):
 
     """
 
-    tas_filerecord = ListTemplateGenerator(("spca", "options", "tas_filerecord"))
-    concentration = ArrayTemplateGenerator(("spca", "period", "concentration"))
-    temperature = ArrayTemplateGenerator(("spca", "period", "temperature"))
-    package_abbr = "utlspca"
-    _package_type = "spca"
-    dfn_file_name = "utl-spca.dfn"
-    dfn = [
-        ["header", "multi-package"],
-        [
-            "block options",
-            "name readasarrays",
-            "type keyword",
-            "shape",
-            "reader urword",
-            "optional false",
-            "default true",
-        ],
-        [
-            "block options",
-            "name print_input",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name tas_filerecord",
-            "type record tas6 filein tas6_filename",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-            "construct_package tas",
-            "construct_data timearrayseries",
-            "parameter_name tas_array",
-        ],
-        [
-            "block options",
-            "name tas6",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name filein",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name tas6_filename",
-            "type string",
-            "preserve_case true",
-            "in_record true",
-            "reader urword",
-            "optional false",
-            "tagged false",
-        ],
-        [
-            "block period",
-            "name iper",
-            "type integer",
-            "block_variable true",
-            "in_record true",
-            "tagged false",
-            "shape",
-            "valid",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block period",
-            "name concentration",
-            "type double precision",
-            "shape (ncol*nrow; ncpl)",
-            "reader readarray",
-            "optional true",
-        ],
-        [
-            "block period",
-            "name temperature",
-            "type double precision",
-            "shape (ncol*nrow; ncpl)",
-            "reader readarray",
-            "optional true",
-        ],
-    ]
-    spec = {
-        "advanced": False,
-        "fkeys": {
-            "tas_filerecord": {
-                "abbr": "tas",
-                "key": "tas_filerecord",
-                "param": "tas_array",
-                "parent": "parent_package",
-                "val": "timearrayseries",
-            }
-        },
-        "multi": True,
-        "name": "utl-spca",
-        "options": {
-            "print_input": {
-                "block": "options",
-                "description": "keyword to indicate that the list of spc information will be written to the listing file immediately after it is read.",
-                "longname": "print input to listing file",
-                "name": "print_input",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "readasarrays": {
-                "block": "options",
-                "default": True,
-                "description": "indicates that array-based input will be used for the spc package.  this keyword must be specified to use array-based input.  when readasarrays is specified, values must be provided for every cell within a model layer, even those cells that have an idomain value less than one.  values assigned to cells with idomain values less than one are not used and have no effect on simulation results.",
-                "longname": "use array-based input",
-                "name": "readasarrays",
-                "optional": False,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "timearrayseries": {
-                "block": "options",
-                "description": "Contains data for the tas package. Data can be passed as a dictionary to the tas package with variable names as keys and package data as values. Data for the timearrayseries variable is also acceptable. See tas package documentation for more information.",
-                "name": "timearrayseries",
-                "optional": True,
-                "reader": "urword",
-                "ref": {
-                    "abbr": "tas",
-                    "key": "tas_filerecord",
-                    "param": "tas_array",
-                    "parent": "parent_package",
-                    "val": "timearrayseries",
-                },
-                "type": "record tas6 filein tas6_filename",
-            },
-        },
-        "period": {
-            "concentration": {
-                "block": "period",
-                "description": 'is the concentration of the associated recharge or evapotranspiration stress package.  the concentration array may be defined by a time-array series (see the "using time-array series in a package" section).',
-                "longname": "concentration",
-                "name": "concentration",
-                "optional": True,
-                "reader": "readarray",
-                "shape": "(ncol*nrow; ncpl)",
-                "type": "double precision",
-            },
-            "temperature": {
-                "block": "period",
-                "description": 'is the temperature of the associated recharge or evapotranspiration stress package.  the temperature array may be defined by a time-array series (see the "using time-array series in a package" section).',
-                "longname": "temperature",
-                "name": "temperature",
-                "optional": True,
-                "reader": "readarray",
-                "shape": "(ncol*nrow; ncpl)",
-                "type": "double precision",
-            },
-            "transient_block": True,
-        },
-    }
+    tas_filerecord = ListTemplateGenerator(('spca', 'options', 'tas_filerecord'))
+    concentration = ArrayTemplateGenerator(('spca', 'period', 'concentration'))
+    temperature = ArrayTemplateGenerator(('spca', 'period', 'temperature'))
+    package_abbr = 'utlspca'
+    _package_type = 'spca'
+    dfn_file_name = 'utl-spca.dfn'
+    dfn = [['header', 'multi-package'], ['block options', 'name readasarrays', 'type keyword', 'shape', 'reader urword', 'optional false', 'default true'], ['block options', 'name print_input', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name tas_filerecord', 'type record tas6 filein tas6_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'construct_package tas', 'construct_data timearrayseries', 'parameter_name tas_array'], ['block options', 'name tas6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name filein', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name tas6_filename', 'type string', 'preserve_case true', 'in_record true', 'reader urword', 'optional false', 'tagged false'], ['block period', 'name iper', 'type integer', 'block_variable true', 'in_record true', 'tagged false', 'shape', 'valid', 'reader urword', 'optional false'], ['block period', 'name concentration', 'type double precision', 'shape (ncol*nrow; ncpl)', 'reader readarray', 'optional true'], ['block period', 'name temperature', 'type double precision', 'shape (ncol*nrow; ncpl)', 'reader readarray', 'optional true']]
 
     def __init__(
         self,
@@ -230,6 +69,7 @@ class ModflowUtlspca(MFPackage):
         timearrayseries=None,
         concentration=None,
         temperature=None,
+
         filename=None,
         pname=None,
         **kwargs,
@@ -244,13 +84,12 @@ class ModflowUtlspca(MFPackage):
             **kwargs,
         )
 
-        self.readasarrays = self.build_mfdata("readasarrays", readasarrays)
-        self.print_input = self.build_mfdata("print_input", print_input)
-        self._tas_filerecord = self.build_mfdata("tas_filerecord", None)
-        self._tas_package = self.build_child_package(
-            "tas", timearrayseries, "tas_array", self._tas_filerecord
-        )
-        self.concentration = self.build_mfdata("concentration", concentration)
-        self.temperature = self.build_mfdata("temperature", temperature)
+        self.readasarrays = self.build_mfdata('readasarrays', readasarrays)
+        self.print_input = self.build_mfdata('print_input', print_input)
+        self._tas_filerecord = self.build_mfdata('tas_filerecord', None)
+        self._tas_package = self.build_child_package('tas', timearrayseries, 'tas_array', self._tas_filerecord)
+        self.concentration = self.build_mfdata('concentration', concentration)
+        self.temperature = self.build_mfdata('temperature', temperature)
 
         self._init_complete = True
+

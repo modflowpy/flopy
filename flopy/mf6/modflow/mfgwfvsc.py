@@ -104,324 +104,12 @@ class ModflowGwfvsc(MFPackage):
 
     """
 
-    viscosity_filerecord = ListTemplateGenerator(
-        ("gwf6", "vsc", "options", "viscosity_filerecord")
-    )
-    packagedata = ListTemplateGenerator(("gwf6", "vsc", "packagedata", "packagedata"))
-    package_abbr = "gwfvsc"
-    _package_type = "vsc"
-    dfn_file_name = "gwf-vsc.dfn"
-    dfn = [
-        ["header"],
-        [
-            "block options",
-            "name viscref",
-            "type double precision",
-            "reader urword",
-            "optional true",
-            "default 1.0",
-        ],
-        [
-            "block options",
-            "name temperature_species_name",
-            "type string",
-            "shape",
-            "reader urword",
-            "optional true",
-            "mf6internal temp_specname",
-        ],
-        [
-            "block options",
-            "name thermal_formulation",
-            "type string",
-            "shape",
-            "reader urword",
-            "optional true",
-            "valid linear nonlinear",
-            "mf6internal thermal_form",
-        ],
-        [
-            "block options",
-            "name thermal_a2",
-            "type double precision",
-            "reader urword",
-            "optional true",
-            "default 10.",
-        ],
-        [
-            "block options",
-            "name thermal_a3",
-            "type double precision",
-            "reader urword",
-            "optional true",
-            "default 248.37",
-        ],
-        [
-            "block options",
-            "name thermal_a4",
-            "type double precision",
-            "reader urword",
-            "optional true",
-            "default 133.15",
-        ],
-        [
-            "block options",
-            "name viscosity_filerecord",
-            "type record viscosity fileout viscosityfile",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-            "mf6internal viscosity_fr",
-        ],
-        [
-            "block options",
-            "name viscosity",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name fileout",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name viscosityfile",
-            "type string",
-            "preserve_case true",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged false",
-            "optional false",
-        ],
-        [
-            "block dimensions",
-            "name nviscspecies",
-            "type integer",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block packagedata",
-            "name packagedata",
-            "type recarray iviscspec dviscdc cviscref modelname auxspeciesname",
-            "shape (nviscspecies)",
-            "reader urword",
-        ],
-        [
-            "block packagedata",
-            "name iviscspec",
-            "type integer",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-            "numeric_index true",
-        ],
-        [
-            "block packagedata",
-            "name dviscdc",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block packagedata",
-            "name cviscref",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block packagedata",
-            "name modelname",
-            "type string",
-            "in_record true",
-            "tagged false",
-            "shape",
-            "reader urword",
-        ],
-        [
-            "block packagedata",
-            "name auxspeciesname",
-            "type string",
-            "in_record true",
-            "tagged false",
-            "shape",
-            "reader urword",
-        ],
-    ]
-    spec = {
-        "advanced": False,
-        "dimensions": {
-            "nviscspecies": {
-                "block": "dimensions",
-                "description": "number of species used in the viscosity equation of state.  if either concentrations or temperature (or both) are used to update viscosity then nviscspecies needs to be at least one.",
-                "longname": "number of species used in viscosity equation of state",
-                "name": "nviscspecies",
-                "optional": False,
-                "reader": "urword",
-                "type": "integer",
-            }
-        },
-        "multi": False,
-        "name": "gwf-vsc",
-        "options": {
-            "temperature_species_name": {
-                "block": "options",
-                "description": "string used to identify the auxspeciesname in packagedata that corresponds to the temperature species.  there can be only one occurrence of this temperature species name in the packagedata block or the program will terminate with an error.  this value has no effect if viscosity does not depend on temperature.",
-                "longname": "auxspeciesname that corresponds to temperature",
-                "mf6internal": "temp_specname",
-                "name": "temperature_species_name",
-                "optional": True,
-                "reader": "urword",
-                "type": "string",
-            },
-            "thermal_a2": {
-                "block": "options",
-                "default": 10.0,
-                "description": "is an empirical parameter specified by the user for calculating viscosity using a nonlinear formulation.  if a2 is not specified, a default value of 10.0 is assigned (voss, 1984).",
-                "longname": "coefficient used in nonlinear viscosity function",
-                "name": "thermal_a2",
-                "optional": True,
-                "reader": "urword",
-                "type": "double precision",
-            },
-            "thermal_a3": {
-                "block": "options",
-                "default": 248.37,
-                "description": "is an empirical parameter specified by the user for calculating viscosity using a nonlinear formulation.  if a3 is not specified, a default value of 248.37 is assigned (voss, 1984).",
-                "longname": "coefficient used in nonlinear viscosity function",
-                "name": "thermal_a3",
-                "optional": True,
-                "reader": "urword",
-                "type": "double precision",
-            },
-            "thermal_a4": {
-                "block": "options",
-                "default": 133.15,
-                "description": "is an empirical parameter specified by the user for calculating viscosity using a nonlinear formulation.  if a4 is not specified, a default value of 133.15 is assigned (voss, 1984).",
-                "longname": "coefficient used in nonlinear viscosity function",
-                "name": "thermal_a4",
-                "optional": True,
-                "reader": "urword",
-                "type": "double precision",
-            },
-            "thermal_formulation": {
-                "block": "options",
-                "description": "may be used for specifying which viscosity formulation to use for the temperature species. can be either linear or nonlinear. the linear viscosity formulation is the default.",
-                "longname": "keyword to specify viscosity formulation for the temperature species",
-                "mf6internal": "thermal_form",
-                "name": "thermal_formulation",
-                "optional": True,
-                "reader": "urword",
-                "type": "string",
-                "valid": "linear nonlinear",
-            },
-            "viscosity_filerecord": {
-                "block": "options",
-                "fields": {
-                    "viscosityfile": {
-                        "block": "options",
-                        "description": "name of the binary output file to write viscosity information.  The viscosity file has the same format as the head file.  Viscosity values will be written to the viscosity file whenever heads are written to the binary head file.  The settings for controlling head output are contained in the Output Control option.",
-                        "longname": "file keyword",
-                        "name": "viscosityfile",
-                        "optional": "false",
-                        "reader": "urword",
-                        "type": "string",
-                    }
-                },
-                "mf6internal": "viscosity_fr",
-                "name": "viscosity_filerecord",
-                "optional": True,
-                "reader": "urword",
-                "type": "record",
-            },
-            "viscref": {
-                "block": "options",
-                "default": 1.0,
-                "description": "fluid reference viscosity used in the equation of state.  this value is set to 1.0 if not specified as an option.",
-                "longname": "reference viscosity",
-                "name": "viscref",
-                "optional": True,
-                "reader": "urword",
-                "type": "double precision",
-            },
-        },
-        "packagedata": {
-            "packagedata": {
-                "block": "packagedata",
-                "item": {
-                    "block": "packagedata",
-                    "fields": {
-                        "auxspeciesname": {
-                            "block": "packagedata",
-                            "description": "name of an auxiliary variable in a GWF stress package that will be used for this species to calculate the viscosity values.  If a viscosity value is needed by the Viscosity Package then it will use the temperature or concentration values associated with this AUXSPECIESNAME in the viscosity equation of state.  For advanced stress packages (LAK, SFR, MAW, and UZF) that have an associated advanced transport package (LKT, SFT, MWT, and UZT), the FLOW_PACKAGE_AUXILIARY_NAME option in the advanced transport package can be used to transfer simulated temperature or concentration(s) into the flow package auxiliary variable.  In this manner, the Viscosity Package can calculate viscosity values for lakes, streams, multi-aquifer wells, and unsaturated zone flow cells using simulated concentrations.",
-                            "longname": "auxspeciesname",
-                            "name": "auxspeciesname",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                        "cviscref": {
-                            "block": "packagedata",
-                            "description": "real value that defines the reference temperature or reference concentration value used for this species in the viscosity equation of state.  If AUXSPECIESNAME entered on a line corresponds to TEMPERATURE_SPECIES_NAME (in the OPTIONS block), then CVISCREF refers to a reference temperature, otherwise it refers to a reference concentration.",
-                            "longname": "reference temperature value or reference concentration value",
-                            "name": "cviscref",
-                            "reader": "urword",
-                            "type": "double precision",
-                        },
-                        "dviscdc": {
-                            "block": "packagedata",
-                            "description": "real value that defines the slope of the line defining the linear relationship between viscosity and temperature or between viscosity and concentration, depending on the type of species entered on each line.  If the value of AUXSPECIESNAME entered on a line corresponds to TEMPERATURE_SPECIES_NAME (in the OPTIONS block), this value will be used when VISCOSITY_FUNC is equal to LINEAR (the default) in the OPTIONS block.  When VISCOSITY_FUNC is set to NONLINEAR, a value for DVISCDC must be specified though it is not used.",
-                            "longname": "slope of the line that defines the linear relationship between viscosity and temperature or between viscosity and concentration, depending on the type of species entered on each line.",
-                            "name": "dviscdc",
-                            "reader": "urword",
-                            "type": "double precision",
-                        },
-                        "iviscspec": {
-                            "block": "packagedata",
-                            "description": "integer value that defines the species number associated with the specified PACKAGEDATA data entered on each line. IVISCSPECIES must be greater than zero and less than or equal to NVISCSPECIES. Information must be specified for each of the NVISCSPECIES species or the program will terminate with an error.  The program will also terminate with an error if information for a species is specified more than once.",
-                            "longname": "species number for this entry",
-                            "name": "iviscspec",
-                            "numeric_index": "true",
-                            "reader": "urword",
-                            "type": "integer",
-                        },
-                        "modelname": {
-                            "block": "packagedata",
-                            "description": "name of a GWT or GWE model used to simulate a species that will be used in the viscosity equation of state.  This name will have no effect if the simulation does not include a GWT or GWE model that corresponds to this GWF model.",
-                            "longname": "modelname",
-                            "name": "modelname",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                    },
-                    "name": "packagedata",
-                    "reader": "urword",
-                    "type": "record",
-                },
-                "name": "packagedata",
-                "reader": "urword",
-                "shape": "(nviscspecies)",
-                "type": "recarray",
-            }
-        },
-    }
+    viscosity_filerecord = ListTemplateGenerator(('gwf6', 'vsc', 'options', 'viscosity_filerecord'))
+    packagedata = ListTemplateGenerator(('gwf6', 'vsc', 'packagedata', 'packagedata'))
+    package_abbr = 'gwfvsc'
+    _package_type = 'vsc'
+    dfn_file_name = 'gwf-vsc.dfn'
+    dfn = [['header'], ['block options', 'name viscref', 'type double precision', 'reader urword', 'optional true', 'default 1.0'], ['block options', 'name temperature_species_name', 'type string', 'shape', 'reader urword', 'optional true', 'mf6internal temp_specname'], ['block options', 'name thermal_formulation', 'type string', 'shape', 'reader urword', 'optional true', 'valid linear nonlinear', 'mf6internal thermal_form'], ['block options', 'name thermal_a2', 'type double precision', 'reader urword', 'optional true', 'default 10.'], ['block options', 'name thermal_a3', 'type double precision', 'reader urword', 'optional true', 'default 248.37'], ['block options', 'name thermal_a4', 'type double precision', 'reader urword', 'optional true', 'default 133.15'], ['block options', 'name viscosity_filerecord', 'type record viscosity fileout viscosityfile', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal viscosity_fr'], ['block options', 'name viscosity', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name fileout', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name viscosityfile', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false'], ['block dimensions', 'name nviscspecies', 'type integer', 'reader urword', 'optional false'], ['block packagedata', 'name packagedata', 'type recarray iviscspec dviscdc cviscref modelname auxspeciesname', 'shape (nviscspecies)', 'reader urword'], ['block packagedata', 'name iviscspec', 'type integer', 'shape', 'tagged false', 'in_record true', 'reader urword', 'numeric_index true'], ['block packagedata', 'name dviscdc', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block packagedata', 'name cviscref', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block packagedata', 'name modelname', 'type string', 'in_record true', 'tagged false', 'shape', 'reader urword'], ['block packagedata', 'name auxspeciesname', 'type string', 'in_record true', 'tagged false', 'shape', 'reader urword']]
 
     def __init__(
         self,
@@ -436,6 +124,7 @@ class ModflowGwfvsc(MFPackage):
         viscosity_filerecord=None,
         nviscspecies=None,
         packagedata=None,
+
         filename=None,
         pname=None,
         **kwargs,
@@ -450,20 +139,15 @@ class ModflowGwfvsc(MFPackage):
             **kwargs,
         )
 
-        self.viscref = self.build_mfdata("viscref", viscref)
-        self.temperature_species_name = self.build_mfdata(
-            "temperature_species_name", temperature_species_name
-        )
-        self.thermal_formulation = self.build_mfdata(
-            "thermal_formulation", thermal_formulation
-        )
-        self.thermal_a2 = self.build_mfdata("thermal_a2", thermal_a2)
-        self.thermal_a3 = self.build_mfdata("thermal_a3", thermal_a3)
-        self.thermal_a4 = self.build_mfdata("thermal_a4", thermal_a4)
-        self.viscosity_filerecord = self.build_mfdata(
-            "viscosity_filerecord", viscosity_filerecord
-        )
-        self.nviscspecies = self.build_mfdata("nviscspecies", nviscspecies)
-        self.packagedata = self.build_mfdata("packagedata", packagedata)
+        self.viscref = self.build_mfdata('viscref', viscref)
+        self.temperature_species_name = self.build_mfdata('temperature_species_name', temperature_species_name)
+        self.thermal_formulation = self.build_mfdata('thermal_formulation', thermal_formulation)
+        self.thermal_a2 = self.build_mfdata('thermal_a2', thermal_a2)
+        self.thermal_a3 = self.build_mfdata('thermal_a3', thermal_a3)
+        self.thermal_a4 = self.build_mfdata('thermal_a4', thermal_a4)
+        self.viscosity_filerecord = self.build_mfdata('viscosity_filerecord', viscosity_filerecord)
+        self.nviscspecies = self.build_mfdata('nviscspecies', nviscspecies)
+        self.packagedata = self.build_mfdata('packagedata', packagedata)
 
         self._init_complete = True
+

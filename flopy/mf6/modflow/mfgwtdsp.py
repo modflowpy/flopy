@@ -82,231 +82,16 @@ class ModflowGwtdsp(MFPackage):
 
     """
 
-    diffc = ArrayTemplateGenerator(("gwt6", "dsp", "griddata", "diffc"))
-    alh = ArrayTemplateGenerator(("gwt6", "dsp", "griddata", "alh"))
-    alv = ArrayTemplateGenerator(("gwt6", "dsp", "griddata", "alv"))
-    ath1 = ArrayTemplateGenerator(("gwt6", "dsp", "griddata", "ath1"))
-    ath2 = ArrayTemplateGenerator(("gwt6", "dsp", "griddata", "ath2"))
-    atv = ArrayTemplateGenerator(("gwt6", "dsp", "griddata", "atv"))
-    package_abbr = "gwtdsp"
-    _package_type = "dsp"
-    dfn_file_name = "gwt-dsp.dfn"
-    dfn = [
-        ["header"],
-        [
-            "block options",
-            "name xt3d_off",
-            "type keyword",
-            "shape",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name xt3d_rhs",
-            "type keyword",
-            "shape",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name export_array_ascii",
-            "type keyword",
-            "reader urword",
-            "optional true",
-            "mf6internal export_ascii",
-        ],
-        [
-            "block options",
-            "name export_array_netcdf",
-            "type keyword",
-            "reader urword",
-            "optional true",
-            "mf6internal export_nc",
-            "extended true",
-        ],
-        [
-            "block griddata",
-            "name diffc",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "layered true",
-            "netcdf true",
-            "optional true",
-        ],
-        [
-            "block griddata",
-            "name alh",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "layered true",
-            "netcdf true",
-            "optional true",
-        ],
-        [
-            "block griddata",
-            "name alv",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "layered true",
-            "netcdf true",
-            "optional true",
-        ],
-        [
-            "block griddata",
-            "name ath1",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "layered true",
-            "netcdf true",
-            "optional true",
-        ],
-        [
-            "block griddata",
-            "name ath2",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "layered true",
-            "netcdf true",
-            "optional true",
-        ],
-        [
-            "block griddata",
-            "name atv",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "layered true",
-            "netcdf true",
-            "optional true",
-        ],
-    ]
-    spec = {
-        "advanced": False,
-        "griddata": {
-            "alh": {
-                "block": "griddata",
-                "description": "longitudinal dispersivity in horizontal direction.  if flow is strictly horizontal, then this is the longitudinal dispersivity that will be used.  if flow is not strictly horizontal or strictly vertical, then the longitudinal dispersivity is a function of both alh and alv.  if mechanical dispersion is represented (by specifying any dispersivity values) then this array is required.",
-                "layered": True,
-                "longname": "longitudinal dispersivity in horizontal direction",
-                "name": "alh",
-                "netcdf": True,
-                "optional": True,
-                "reader": "readarray",
-                "shape": "(nodes)",
-                "type": "double precision",
-            },
-            "alv": {
-                "block": "griddata",
-                "description": "longitudinal dispersivity in vertical direction.  if flow is strictly vertical, then this is the longitudinal dispsersivity value that will be used.  if flow is not strictly horizontal or strictly vertical, then the longitudinal dispersivity is a function of both alh and alv.  if this value is not specified and mechanical dispersion is represented, then this array is set equal to alh.",
-                "layered": True,
-                "longname": "longitudinal dispersivity in vertical direction",
-                "name": "alv",
-                "netcdf": True,
-                "optional": True,
-                "reader": "readarray",
-                "shape": "(nodes)",
-                "type": "double precision",
-            },
-            "ath1": {
-                "block": "griddata",
-                "description": "transverse dispersivity in horizontal direction.  this is the transverse dispersivity value for the second ellipsoid axis.  if flow is strictly horizontal and directed in the x direction (along a row for a regular grid), then this value controls spreading in the y direction.  if mechanical dispersion is represented (by specifying any dispersivity values) then this array is required.",
-                "layered": True,
-                "longname": "transverse dispersivity in horizontal direction",
-                "name": "ath1",
-                "netcdf": True,
-                "optional": True,
-                "reader": "readarray",
-                "shape": "(nodes)",
-                "type": "double precision",
-            },
-            "ath2": {
-                "block": "griddata",
-                "description": "transverse dispersivity in horizontal direction.  this is the transverse dispersivity value for the third ellipsoid axis.  if flow is strictly horizontal and directed in the x direction (along a row for a regular grid), then this value controls spreading in the z direction.  if this value is not specified and mechanical dispersion is represented, then this array is set equal to ath1.",
-                "layered": True,
-                "longname": "transverse dispersivity in horizontal direction",
-                "name": "ath2",
-                "netcdf": True,
-                "optional": True,
-                "reader": "readarray",
-                "shape": "(nodes)",
-                "type": "double precision",
-            },
-            "atv": {
-                "block": "griddata",
-                "description": "transverse dispersivity when flow is in vertical direction.  if flow is strictly vertical and directed in the z direction, then this value controls spreading in the x and y directions.  if this value is not specified and mechanical dispersion is represented, then this array is set equal to ath2.",
-                "layered": True,
-                "longname": "transverse dispersivity when flow is in vertical direction",
-                "name": "atv",
-                "netcdf": True,
-                "optional": True,
-                "reader": "readarray",
-                "shape": "(nodes)",
-                "type": "double precision",
-            },
-            "diffc": {
-                "block": "griddata",
-                "description": "effective molecular diffusion coefficient.",
-                "layered": True,
-                "longname": "effective molecular diffusion coefficient",
-                "name": "diffc",
-                "netcdf": True,
-                "optional": True,
-                "reader": "readarray",
-                "shape": "(nodes)",
-                "type": "double precision",
-            },
-        },
-        "multi": False,
-        "name": "gwt-dsp",
-        "options": {
-            "export_array_ascii": {
-                "block": "options",
-                "description": "keyword that specifies input griddata arrays should be written to layered ascii output files.",
-                "longname": "export array variables to layered ascii files.",
-                "mf6internal": "export_ascii",
-                "name": "export_array_ascii",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "export_array_netcdf": {
-                "block": "options",
-                "description": "keyword that specifies input gridded arrays should be written to the model output netcdf file with attributes that support using the generated file as a modflow 6 simulation input.  this option only has an effect when an output model netcdf file is configured and the simulation is run in validate mode, otherwise it is ignored.",
-                "extended": True,
-                "longname": "export array variables to netcdf output files.",
-                "mf6internal": "export_nc",
-                "name": "export_array_netcdf",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "xt3d_off": {
-                "block": "options",
-                "description": "deactivate the xt3d method and use the faster and less accurate approximation.  this option may provide a fast and accurate solution under some circumstances, such as when flow aligns with the model grid, there is no mechanical dispersion, or when the longitudinal and transverse dispersivities are equal.  this option may also be used to assess the computational demand of the xt3d approach by noting the run time differences with and without this option on.",
-                "longname": "deactivate xt3d",
-                "name": "xt3d_off",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "xt3d_rhs": {
-                "block": "options",
-                "description": "add xt3d terms to right-hand side, when possible.  this option uses less memory, but may require more iterations.",
-                "longname": "xt3d on right-hand side",
-                "name": "xt3d_rhs",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-        },
-    }
+    diffc = ArrayTemplateGenerator(('gwt6', 'dsp', 'griddata', 'diffc'))
+    alh = ArrayTemplateGenerator(('gwt6', 'dsp', 'griddata', 'alh'))
+    alv = ArrayTemplateGenerator(('gwt6', 'dsp', 'griddata', 'alv'))
+    ath1 = ArrayTemplateGenerator(('gwt6', 'dsp', 'griddata', 'ath1'))
+    ath2 = ArrayTemplateGenerator(('gwt6', 'dsp', 'griddata', 'ath2'))
+    atv = ArrayTemplateGenerator(('gwt6', 'dsp', 'griddata', 'atv'))
+    package_abbr = 'gwtdsp'
+    _package_type = 'dsp'
+    dfn_file_name = 'gwt-dsp.dfn'
+    dfn = [['header'], ['block options', 'name xt3d_off', 'type keyword', 'shape', 'reader urword', 'optional true'], ['block options', 'name xt3d_rhs', 'type keyword', 'shape', 'reader urword', 'optional true'], ['block options', 'name export_array_ascii', 'type keyword', 'reader urword', 'optional true', 'mf6internal export_ascii'], ['block options', 'name export_array_netcdf', 'type keyword', 'reader urword', 'optional true', 'mf6internal export_nc', 'extended true'], ['block griddata', 'name diffc', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'netcdf true', 'optional true'], ['block griddata', 'name alh', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'netcdf true', 'optional true'], ['block griddata', 'name alv', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'netcdf true', 'optional true'], ['block griddata', 'name ath1', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'netcdf true', 'optional true'], ['block griddata', 'name ath2', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'netcdf true', 'optional true'], ['block griddata', 'name atv', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'netcdf true', 'optional true']]
 
     def __init__(
         self,
@@ -322,6 +107,7 @@ class ModflowGwtdsp(MFPackage):
         ath1=None,
         ath2=None,
         atv=None,
+
         filename=None,
         pname=None,
         **kwargs,
@@ -336,19 +122,16 @@ class ModflowGwtdsp(MFPackage):
             **kwargs,
         )
 
-        self.xt3d_off = self.build_mfdata("xt3d_off", xt3d_off)
-        self.xt3d_rhs = self.build_mfdata("xt3d_rhs", xt3d_rhs)
-        self.export_array_ascii = self.build_mfdata(
-            "export_array_ascii", export_array_ascii
-        )
-        self.export_array_netcdf = self.build_mfdata(
-            "export_array_netcdf", export_array_netcdf
-        )
-        self.diffc = self.build_mfdata("diffc", diffc)
-        self.alh = self.build_mfdata("alh", alh)
-        self.alv = self.build_mfdata("alv", alv)
-        self.ath1 = self.build_mfdata("ath1", ath1)
-        self.ath2 = self.build_mfdata("ath2", ath2)
-        self.atv = self.build_mfdata("atv", atv)
+        self.xt3d_off = self.build_mfdata('xt3d_off', xt3d_off)
+        self.xt3d_rhs = self.build_mfdata('xt3d_rhs', xt3d_rhs)
+        self.export_array_ascii = self.build_mfdata('export_array_ascii', export_array_ascii)
+        self.export_array_netcdf = self.build_mfdata('export_array_netcdf', export_array_netcdf)
+        self.diffc = self.build_mfdata('diffc', diffc)
+        self.alh = self.build_mfdata('alh', alh)
+        self.alv = self.build_mfdata('alv', alv)
+        self.ath1 = self.build_mfdata('ath1', ath1)
+        self.ath2 = self.build_mfdata('ath2', ath2)
+        self.atv = self.build_mfdata('atv', atv)
 
         self._init_complete = True
+

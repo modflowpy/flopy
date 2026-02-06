@@ -73,231 +73,13 @@ class ModflowUtlncf(MFPackage):
 
     """
 
-    wkt = ArrayTemplateGenerator(("ncf", "options", "wkt"))
-    latitude = ArrayTemplateGenerator(("ncf", "griddata", "latitude"))
-    longitude = ArrayTemplateGenerator(("ncf", "griddata", "longitude"))
-    package_abbr = "utlncf"
-    _package_type = "ncf"
-    dfn_file_name = "utl-ncf.dfn"
-    dfn = [
-        ["header"],
-        [
-            "block options",
-            "name wkt",
-            "type string",
-            "shape lenbigline",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name deflate",
-            "type integer",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name shuffle",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name chunk_time",
-            "type integer",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name chunk_face",
-            "type integer",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name chunk_z",
-            "type integer",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name chunk_y",
-            "type integer",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name chunk_x",
-            "type integer",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name modflow6_attr_off",
-            "type keyword",
-            "reader urword",
-            "optional true",
-            "mf6internal attr_off",
-        ],
-        [
-            "block dimensions",
-            "name ncpl",
-            "type integer",
-            "optional true",
-            "reader urword",
-        ],
-        [
-            "block griddata",
-            "name latitude",
-            "type double precision",
-            "shape (ncpl)",
-            "optional true",
-            "reader readarray",
-        ],
-        [
-            "block griddata",
-            "name longitude",
-            "type double precision",
-            "shape (ncpl)",
-            "optional true",
-            "reader readarray",
-        ],
-    ]
-    spec = {
-        "advanced": False,
-        "dimensions": {
-            "ncpl": {
-                "block": "dimensions",
-                "description": "is the number of cells in a projected plane layer.",
-                "longname": "number of cells in layer",
-                "name": "ncpl",
-                "optional": True,
-                "reader": "urword",
-                "type": "integer",
-            }
-        },
-        "griddata": {
-            "latitude": {
-                "block": "griddata",
-                "description": "cell center latitude. only supported for netcdf_structured export type.",
-                "longname": "cell center latitude",
-                "name": "latitude",
-                "optional": True,
-                "reader": "readarray",
-                "shape": "(ncpl)",
-                "type": "double precision",
-            },
-            "longitude": {
-                "block": "griddata",
-                "description": "cell center longitude. only supported for netcdf_structured export type.",
-                "longname": "cell center longitude",
-                "name": "longitude",
-                "optional": True,
-                "reader": "readarray",
-                "shape": "(ncpl)",
-                "type": "double precision",
-            },
-        },
-        "multi": False,
-        "name": "utl-ncf",
-        "options": {
-            "chunk_face": {
-                "block": "options",
-                "description": "is the keyword used to provide a data chunk size for the face dimension in a netcdf_mesh2d output file. must be used in combination with the the chunk_time parameter to have an effect.",
-                "longname": "chunking parameter for the mesh face dimension",
-                "name": "chunk_face",
-                "optional": True,
-                "reader": "urword",
-                "type": "integer",
-            },
-            "chunk_time": {
-                "block": "options",
-                "description": "is the keyword used to provide a data chunk size for the time dimension in a netcdf_mesh2d or netcdf_structured output file. must be used in combination with the the chunk_face parameter (netcdf_mesh2d) or the chunk_z, chunk_y, and chunk_x parameter set (netcdf_structured) to have an effect.",
-                "longname": "chunking parameter for the time dimension",
-                "name": "chunk_time",
-                "optional": True,
-                "reader": "urword",
-                "type": "integer",
-            },
-            "chunk_x": {
-                "block": "options",
-                "description": "is the keyword used to provide a data chunk size for the x dimension in a netcdf_structured output file. must be used in combination with the the chunk_time, chunk_y and chunk_z parameter set to have an effect.",
-                "longname": "chunking parameter for structured x",
-                "name": "chunk_x",
-                "optional": True,
-                "reader": "urword",
-                "type": "integer",
-            },
-            "chunk_y": {
-                "block": "options",
-                "description": "is the keyword used to provide a data chunk size for the y dimension in a netcdf_structured output file. must be used in combination with the the chunk_time, chunk_x and chunk_z parameter set to have an effect.",
-                "longname": "chunking parameter for structured y",
-                "name": "chunk_y",
-                "optional": True,
-                "reader": "urword",
-                "type": "integer",
-            },
-            "chunk_z": {
-                "block": "options",
-                "description": "is the keyword used to provide a data chunk size for the z dimension in a netcdf_structured output file. must be used in combination with the the chunk_time, chunk_x and chunk_y parameter set to have an effect.",
-                "longname": "chunking parameter for structured z",
-                "name": "chunk_z",
-                "optional": True,
-                "reader": "urword",
-                "type": "integer",
-            },
-            "deflate": {
-                "block": "options",
-                "description": "is the variable deflate level (0=min, 9=max) in the netcdf file. defining this parameter activates per-variable compression at the level specified.",
-                "longname": "variable compression deflate level",
-                "name": "deflate",
-                "optional": True,
-                "reader": "urword",
-                "type": "integer",
-            },
-            "modflow6_attr_off": {
-                "block": "options",
-                "description": "is the keyword used to turn off internal input tagging in the model netcdf file. tagging adds internal modflow 6 attribute(s) to variables which facilitate identification. currently this applies to gridded arrays.",
-                "mf6internal": "attr_off",
-                "name": "modflow6_attr_off",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "shuffle": {
-                "block": "options",
-                "description": "is the keyword used to turn on the netcdf variable shuffle filter when the deflate option is also set. the shuffle filter has the effect of storing the first byte of all of a variable's values in a chunk contiguously, followed by all the second bytes, etc. this can be an optimization for compression with certain types of data.",
-                "name": "shuffle",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "wkt": {
-                "block": "options",
-                "description": "is the coordinate reference system (crs) well-known text (wkt) string. ignored if latitude and longitude griddata arrays have been provided for netcdf_structured export type.",
-                "longname": "crs well-known text (wkt) string",
-                "name": "wkt",
-                "optional": True,
-                "reader": "urword",
-                "shape": "lenbigline",
-                "type": "string",
-            },
-        },
-        "ref": {
-            "abbr": "ncf",
-            "key": "ncf_filerecord",
-            "param": "packagedata",
-            "parent": "parent_package",
-            "val": "packagedata",
-        },
-    }
+    wkt = ArrayTemplateGenerator(('ncf', 'options', 'wkt'))
+    latitude = ArrayTemplateGenerator(('ncf', 'griddata', 'latitude'))
+    longitude = ArrayTemplateGenerator(('ncf', 'griddata', 'longitude'))
+    package_abbr = 'utlncf'
+    _package_type = 'ncf'
+    dfn_file_name = 'utl-ncf.dfn'
+    dfn = [['header'], ['block options', 'name wkt', 'type string', 'shape lenbigline', 'reader urword', 'optional true'], ['block options', 'name deflate', 'type integer', 'reader urword', 'optional true'], ['block options', 'name shuffle', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name chunk_time', 'type integer', 'reader urword', 'optional true'], ['block options', 'name chunk_face', 'type integer', 'reader urword', 'optional true'], ['block options', 'name chunk_z', 'type integer', 'reader urword', 'optional true'], ['block options', 'name chunk_y', 'type integer', 'reader urword', 'optional true'], ['block options', 'name chunk_x', 'type integer', 'reader urword', 'optional true'], ['block options', 'name modflow6_attr_off', 'type keyword', 'reader urword', 'optional true', 'mf6internal attr_off'], ['block dimensions', 'name ncpl', 'type integer', 'optional true', 'reader urword'], ['block griddata', 'name latitude', 'type double precision', 'shape (ncpl)', 'optional true', 'reader readarray'], ['block griddata', 'name longitude', 'type double precision', 'shape (ncpl)', 'optional true', 'reader readarray']]
 
     def __init__(
         self,
@@ -315,6 +97,7 @@ class ModflowUtlncf(MFPackage):
         ncpl=None,
         latitude=None,
         longitude=None,
+
         filename=None,
         pname=None,
         **kwargs,
@@ -329,29 +112,25 @@ class ModflowUtlncf(MFPackage):
             **kwargs,
         )
 
-        self.wkt = self.build_mfdata("wkt", wkt)
-        self.deflate = self.build_mfdata("deflate", deflate)
-        self.shuffle = self.build_mfdata("shuffle", shuffle)
-        self.chunk_time = self.build_mfdata("chunk_time", chunk_time)
-        self.chunk_face = self.build_mfdata("chunk_face", chunk_face)
-        self.chunk_z = self.build_mfdata("chunk_z", chunk_z)
-        self.chunk_y = self.build_mfdata("chunk_y", chunk_y)
-        self.chunk_x = self.build_mfdata("chunk_x", chunk_x)
-        self.modflow6_attr_off = self.build_mfdata(
-            "modflow6_attr_off", modflow6_attr_off
-        )
-        self.ncpl = self.build_mfdata("ncpl", ncpl)
-        self.latitude = self.build_mfdata("latitude", latitude)
-        self.longitude = self.build_mfdata("longitude", longitude)
+        self.wkt = self.build_mfdata('wkt', wkt)
+        self.deflate = self.build_mfdata('deflate', deflate)
+        self.shuffle = self.build_mfdata('shuffle', shuffle)
+        self.chunk_time = self.build_mfdata('chunk_time', chunk_time)
+        self.chunk_face = self.build_mfdata('chunk_face', chunk_face)
+        self.chunk_z = self.build_mfdata('chunk_z', chunk_z)
+        self.chunk_y = self.build_mfdata('chunk_y', chunk_y)
+        self.chunk_x = self.build_mfdata('chunk_x', chunk_x)
+        self.modflow6_attr_off = self.build_mfdata('modflow6_attr_off', modflow6_attr_off)
+        self.ncpl = self.build_mfdata('ncpl', ncpl)
+        self.latitude = self.build_mfdata('latitude', latitude)
+        self.longitude = self.build_mfdata('longitude', longitude)
 
         self._init_complete = True
-
 
 class UtlncfPackages(MFChildPackages):
     """
     UtlncfPackages is a container class for the ModflowUtlncf class.
     """
-
     package_abbr = "utlncfpackages"
 
     def initialize(
@@ -368,6 +147,7 @@ class UtlncfPackages(MFChildPackages):
         ncpl=None,
         latitude=None,
         longitude=None,
+
         filename=None,
         pname=None,
     ):
@@ -411,6 +191,7 @@ class UtlncfPackages(MFChildPackages):
         ncpl=None,
         latitude=None,
         longitude=None,
+
         filename=None,
         pname=None,
     ):

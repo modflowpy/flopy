@@ -90,238 +90,15 @@ class ModflowGweest(MFPackage):
 
     """
 
-    porosity = ArrayTemplateGenerator(("gwe6", "est", "griddata", "porosity"))
-    decay_water = ArrayTemplateGenerator(("gwe6", "est", "griddata", "decay_water"))
-    decay_solid = ArrayTemplateGenerator(("gwe6", "est", "griddata", "decay_solid"))
-    heat_capacity_solid = ArrayTemplateGenerator(
-        ("gwe6", "est", "griddata", "heat_capacity_solid")
-    )
-    density_solid = ArrayTemplateGenerator(("gwe6", "est", "griddata", "density_solid"))
-    package_abbr = "gweest"
-    _package_type = "est"
-    dfn_file_name = "gwe-est.dfn"
-    dfn = [
-        ["header"],
-        [
-            "block options",
-            "name save_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name zero_order_decay_water",
-            "type keyword",
-            "reader urword",
-            "optional true",
-            "mf6internal ord0_decay_water",
-        ],
-        [
-            "block options",
-            "name zero_order_decay_solid",
-            "type keyword",
-            "reader urword",
-            "optional true",
-            "mf6internal ord0_decay_solid",
-        ],
-        [
-            "block options",
-            "name density_water",
-            "type double precision",
-            "reader urword",
-            "optional true",
-            "default 1000.0",
-            "mf6internal rhow",
-        ],
-        [
-            "block options",
-            "name heat_capacity_water",
-            "type double precision",
-            "reader urword",
-            "optional true",
-            "default 4184.0",
-            "mf6internal cpw",
-        ],
-        [
-            "block options",
-            "name latent_heat_vaporization",
-            "type double precision",
-            "reader urword",
-            "optional true",
-            "default 2453500.0",
-            "mf6internal latheatvap",
-        ],
-        [
-            "block griddata",
-            "name porosity",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "layered true",
-        ],
-        [
-            "block griddata",
-            "name decay_water",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "layered true",
-            "optional true",
-        ],
-        [
-            "block griddata",
-            "name decay_solid",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "layered true",
-            "optional true",
-        ],
-        [
-            "block griddata",
-            "name heat_capacity_solid",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "layered true",
-            "mf6internal cps",
-        ],
-        [
-            "block griddata",
-            "name density_solid",
-            "type double precision",
-            "shape (nodes)",
-            "reader readarray",
-            "layered true",
-            "mf6internal rhos",
-        ],
-    ]
-    spec = {
-        "advanced": False,
-        "griddata": {
-            "decay_solid": {
-                "block": "griddata",
-                "description": "is the rate coefficient for zero-order decay for the solid phase.  a negative value indicates heat (energy) production. the dimensions of zero-order decay in the solid phase are energy per mass of solid per time. zero-order decay in the solid phase will have no effect on simulation results unless zero_order_decay_solid is specified in the options block.",
-                "layered": True,
-                "longname": "solid phase decay rate coefficient",
-                "name": "decay_solid",
-                "optional": True,
-                "reader": "readarray",
-                "shape": "(nodes)",
-                "type": "double precision",
-            },
-            "decay_water": {
-                "block": "griddata",
-                "description": "is the rate coefficient for zero-order decay for the aqueous phase of the mobile domain.  a negative value indicates heat (energy) production.  the dimensions of zero-order decay in the aqueous phase are energy per length cubed (volume of water) per time.  zero-order decay in the aqueous phase will have no effect on simulation results unless zero_order_decay_water is specified in the options block.",
-                "layered": True,
-                "longname": "aqueous phase decay rate coefficient",
-                "name": "decay_water",
-                "optional": True,
-                "reader": "readarray",
-                "shape": "(nodes)",
-                "type": "double precision",
-            },
-            "density_solid": {
-                "block": "griddata",
-                "description": "is a user-specified value of the density of aquifer material not considering the voids. value will remain fixed for the entire simulation.  for example, if working in si units, values may be entered as kilograms per cubic meter.",
-                "layered": True,
-                "longname": "density of aquifer material",
-                "mf6internal": "rhos",
-                "name": "density_solid",
-                "reader": "readarray",
-                "shape": "(nodes)",
-                "type": "double precision",
-            },
-            "heat_capacity_solid": {
-                "block": "griddata",
-                "description": "is the mass-based heat capacity of dry solids (aquifer material). for example, units of j/kg/c may be used (or equivalent).",
-                "layered": True,
-                "longname": "heat capacity of the aquifer material",
-                "mf6internal": "cps",
-                "name": "heat_capacity_solid",
-                "reader": "readarray",
-                "shape": "(nodes)",
-                "type": "double precision",
-            },
-            "porosity": {
-                "block": "griddata",
-                "description": "is the mobile domain porosity, defined as the mobile domain pore volume per mobile domain volume.  the gwe model does not support the concept of an immobile domain in the context of heat transport.",
-                "layered": True,
-                "longname": "porosity",
-                "name": "porosity",
-                "reader": "readarray",
-                "shape": "(nodes)",
-                "type": "double precision",
-            },
-        },
-        "multi": False,
-        "name": "gwe-est",
-        "options": {
-            "density_water": {
-                "block": "options",
-                "default": 1000.0,
-                "description": "density of water used by calculations related to heat storage and conduction.  this value is set to 1,000 kg/m3 if no overriding value is specified.  a user-specified value should be provided for models that use units other than kilograms and meters or if it is necessary to use a value other than the default.",
-                "longname": "density of water",
-                "mf6internal": "rhow",
-                "name": "density_water",
-                "optional": True,
-                "reader": "urword",
-                "type": "double precision",
-            },
-            "heat_capacity_water": {
-                "block": "options",
-                "default": 4184.0,
-                "description": "heat capacity of water used by calculations related to heat storage and conduction.  this value is set to 4,184 j/kg/c if no overriding value is specified.  a user-specified value should be provided for models that use units other than kilograms, joules, and degrees celsius or it is necessary to use a value other than the default.",
-                "longname": "heat capacity of water",
-                "mf6internal": "cpw",
-                "name": "heat_capacity_water",
-                "optional": True,
-                "reader": "urword",
-                "type": "double precision",
-            },
-            "latent_heat_vaporization": {
-                "block": "options",
-                "default": 2453500.0,
-                "description": "latent heat of vaporization is the amount of energy that is required to convert a given quantity of liquid into a gas and is associated with evaporative cooling.  while the est package does not simulate evaporation, multiple other packages in a gwe simulation may.  to avoid having to specify the latent heat of vaporization in multiple packages, it is specified in a single location and accessed wherever it is needed.  for example, evaporation may occur from the surface of streams or lakes and the energy consumed by the change in phase would be needed in both the sfe and lke packages.  this value is set to 2,453,500 j/kg if no overriding value is specified.  a user-specified value should be provided for models that use units other than joules and kilograms or if it is necessary to use a value other than the default.",
-                "longname": "latent heat of vaporization",
-                "mf6internal": "latheatvap",
-                "name": "latent_heat_vaporization",
-                "optional": True,
-                "reader": "urword",
-                "type": "double precision",
-            },
-            "save_flows": {
-                "block": "options",
-                "description": "keyword to indicate that est flow terms will be written to the file specified with 'budget fileout' in output control.",
-                "longname": "save calculated flows to budget file",
-                "name": "save_flows",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "zero_order_decay_solid": {
-                "block": "options",
-                "description": "is a text keyword to indicate that zero-order decay will occur in the solid phase. that is, decay occurs in the solid and is a rate per mass (not volume) of solid only.  use of this keyword requires that decay_solid is specified in the griddata block.",
-                "longname": "activate zero-order decay in solid phase",
-                "mf6internal": "ord0_decay_solid",
-                "name": "zero_order_decay_solid",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "zero_order_decay_water": {
-                "block": "options",
-                "description": "is a text keyword to indicate that zero-order decay will occur in the aqueous phase. that is, decay occurs in the water and is a rate per volume of water only, not per volume of aquifer (i.e., grid cell).  use of this keyword requires that decay_water is specified in the griddata block.",
-                "longname": "activate zero-order decay in aqueous phase",
-                "mf6internal": "ord0_decay_water",
-                "name": "zero_order_decay_water",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-        },
-    }
+    porosity = ArrayTemplateGenerator(('gwe6', 'est', 'griddata', 'porosity'))
+    decay_water = ArrayTemplateGenerator(('gwe6', 'est', 'griddata', 'decay_water'))
+    decay_solid = ArrayTemplateGenerator(('gwe6', 'est', 'griddata', 'decay_solid'))
+    heat_capacity_solid = ArrayTemplateGenerator(('gwe6', 'est', 'griddata', 'heat_capacity_solid'))
+    density_solid = ArrayTemplateGenerator(('gwe6', 'est', 'griddata', 'density_solid'))
+    package_abbr = 'gweest'
+    _package_type = 'est'
+    dfn_file_name = 'gwe-est.dfn'
+    dfn = [['header'], ['block options', 'name save_flows', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name zero_order_decay_water', 'type keyword', 'reader urword', 'optional true', 'mf6internal ord0_decay_water'], ['block options', 'name zero_order_decay_solid', 'type keyword', 'reader urword', 'optional true', 'mf6internal ord0_decay_solid'], ['block options', 'name density_water', 'type double precision', 'reader urword', 'optional true', 'default 1000.0', 'mf6internal rhow'], ['block options', 'name heat_capacity_water', 'type double precision', 'reader urword', 'optional true', 'default 4184.0', 'mf6internal cpw'], ['block options', 'name latent_heat_vaporization', 'type double precision', 'reader urword', 'optional true', 'default 2453500.0', 'mf6internal latheatvap'], ['block griddata', 'name porosity', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true'], ['block griddata', 'name decay_water', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'optional true'], ['block griddata', 'name decay_solid', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'optional true'], ['block griddata', 'name heat_capacity_solid', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'mf6internal cps'], ['block griddata', 'name density_solid', 'type double precision', 'shape (nodes)', 'reader readarray', 'layered true', 'mf6internal rhos']]
 
     def __init__(
         self,
@@ -338,6 +115,7 @@ class ModflowGweest(MFPackage):
         decay_solid=None,
         heat_capacity_solid=None,
         density_solid=None,
+
         filename=None,
         pname=None,
         **kwargs,
@@ -352,26 +130,17 @@ class ModflowGweest(MFPackage):
             **kwargs,
         )
 
-        self.save_flows = self.build_mfdata("save_flows", save_flows)
-        self.zero_order_decay_water = self.build_mfdata(
-            "zero_order_decay_water", zero_order_decay_water
-        )
-        self.zero_order_decay_solid = self.build_mfdata(
-            "zero_order_decay_solid", zero_order_decay_solid
-        )
-        self.density_water = self.build_mfdata("density_water", density_water)
-        self.heat_capacity_water = self.build_mfdata(
-            "heat_capacity_water", heat_capacity_water
-        )
-        self.latent_heat_vaporization = self.build_mfdata(
-            "latent_heat_vaporization", latent_heat_vaporization
-        )
-        self.porosity = self.build_mfdata("porosity", porosity)
-        self.decay_water = self.build_mfdata("decay_water", decay_water)
-        self.decay_solid = self.build_mfdata("decay_solid", decay_solid)
-        self.heat_capacity_solid = self.build_mfdata(
-            "heat_capacity_solid", heat_capacity_solid
-        )
-        self.density_solid = self.build_mfdata("density_solid", density_solid)
+        self.save_flows = self.build_mfdata('save_flows', save_flows)
+        self.zero_order_decay_water = self.build_mfdata('zero_order_decay_water', zero_order_decay_water)
+        self.zero_order_decay_solid = self.build_mfdata('zero_order_decay_solid', zero_order_decay_solid)
+        self.density_water = self.build_mfdata('density_water', density_water)
+        self.heat_capacity_water = self.build_mfdata('heat_capacity_water', heat_capacity_water)
+        self.latent_heat_vaporization = self.build_mfdata('latent_heat_vaporization', latent_heat_vaporization)
+        self.porosity = self.build_mfdata('porosity', porosity)
+        self.decay_water = self.build_mfdata('decay_water', decay_water)
+        self.decay_solid = self.build_mfdata('decay_solid', decay_solid)
+        self.heat_capacity_solid = self.build_mfdata('heat_capacity_solid', heat_capacity_solid)
+        self.density_solid = self.build_mfdata('density_solid', density_solid)
 
         self._init_complete = True
+

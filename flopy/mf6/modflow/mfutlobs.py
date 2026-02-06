@@ -64,198 +64,11 @@ class ModflowUtlobs(MFPackage):
 
     """
 
-    continuous = ListTemplateGenerator(("obs", "continuous", "continuous"))
-    package_abbr = "utlobs"
-    _package_type = "obs"
-    dfn_file_name = "utl-obs.dfn"
-    dfn = [
-        ["header", "multi-package"],
-        [
-            "block options",
-            "name digits",
-            "type integer",
-            "shape",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name print_input",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block continuous",
-            "name output",
-            "type record fileout obs_output_file_name binary",
-            "shape",
-            "block_variable true",
-            "in_record false",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block continuous",
-            "name fileout",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block continuous",
-            "name obs_output_file_name",
-            "type string",
-            "preserve_case true",
-            "in_record true",
-            "shape",
-            "tagged false",
-            "reader urword",
-        ],
-        [
-            "block continuous",
-            "name binary",
-            "type keyword",
-            "in_record true",
-            "shape",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block continuous",
-            "name continuous",
-            "type recarray obsname obstype id id2",
-            "shape",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block continuous",
-            "name obsname",
-            "type string",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block continuous",
-            "name obstype",
-            "type string",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block continuous",
-            "name id",
-            "type string",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-            "numeric_index true",
-        ],
-        [
-            "block continuous",
-            "name id2",
-            "type string",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-            "optional true",
-            "numeric_index true",
-        ],
-    ]
-    spec = {
-        "advanced": False,
-        "continuous": {
-            "continuous": {
-                "block": "continuous",
-                "item": {
-                    "block": "continuous",
-                    "fields": {
-                        "id": {
-                            "block": "continuous",
-                            "description": "Text identifying cell where observation is located. For packages other than NPF, if boundary names are defined in the corresponding package input file, ID can be a boundary name. Otherwise ID is a cellid. If the model discretization is type DIS, cellid is three integers (layer, row, column). If the discretization is DISV, cellid is two integers (layer, cell number). If the discretization is DISU, cellid is one integer (node number).",
-                            "longname": "time",
-                            "name": "id",
-                            "numeric_index": "true",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                        "id2": {
-                            "block": "continuous",
-                            "description": "Text identifying cell adjacent to cell identified by ID. The form of ID2 is as described for ID. ID2 is used for intercell-flow observations of a GWF model, for three observation types of the LAK Package, for two observation types of the MAW Package, and one observation type of the UZF Package.",
-                            "longname": "time",
-                            "name": "id2",
-                            "numeric_index": "true",
-                            "optional": "true",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                        "obsname": {
-                            "block": "continuous",
-                            "description": "string of 1 to 40 nonblank characters used to identify the observation. The identifier need not be unique; however, identification and post-processing of observations in the output files are facilitated if each observation is given a unique name.",
-                            "longname": "observation name",
-                            "name": "obsname",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                        "obstype": {
-                            "block": "continuous",
-                            "description": "a string of characters used to identify the observation type.",
-                            "longname": "observation type",
-                            "name": "obstype",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                    },
-                    "name": "continuous",
-                    "optional": False,
-                    "reader": "urword",
-                    "type": "record",
-                },
-                "name": "continuous",
-                "optional": False,
-                "reader": "urword",
-                "type": "recarray",
-            }
-        },
-        "multi": True,
-        "name": "utl-obs",
-        "options": {
-            "digits": {
-                "block": "options",
-                "description": "keyword and an integer digits specifier used for conversion of simulated values to text on output. if not specified, the default is the maximum number of digits stored in the program (as written with the g0 fortran specifier). when simulated values are written to a comma-separated value text file specified in a continuous block below, the digits specifier controls the number of significant digits with which simulated values are written to the output file. the digits specifier has no effect on the number of significant digits with which the simulation time is written for continuous observations.  if digits is specified as zero, then observations are written with the default setting, which is the maximum number of digits.",
-                "name": "digits",
-                "optional": True,
-                "reader": "urword",
-                "type": "integer",
-            },
-            "print_input": {
-                "block": "options",
-                "description": "keyword to indicate that the list of observation information will be written to the listing file immediately after it is read.",
-                "longname": "print input to listing file",
-                "name": "print_input",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-        },
-        "ref": {
-            "abbr": "obs",
-            "key": "obs_filerecord",
-            "param": "continuous",
-            "parent": "parent_model_or_package",
-            "val": "observations",
-        },
-    }
+    continuous = ListTemplateGenerator(('obs', 'continuous', 'continuous'))
+    package_abbr = 'utlobs'
+    _package_type = 'obs'
+    dfn_file_name = 'utl-obs.dfn'
+    dfn = [['header', 'multi-package'], ['block options', 'name digits', 'type integer', 'shape', 'reader urword', 'optional true'], ['block options', 'name print_input', 'type keyword', 'reader urword', 'optional true'], ['block continuous', 'name output', 'type record fileout obs_output_file_name binary', 'shape', 'block_variable true', 'in_record false', 'reader urword', 'optional false'], ['block continuous', 'name fileout', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block continuous', 'name obs_output_file_name', 'type string', 'preserve_case true', 'in_record true', 'shape', 'tagged false', 'reader urword'], ['block continuous', 'name binary', 'type keyword', 'in_record true', 'shape', 'reader urword', 'optional true'], ['block continuous', 'name continuous', 'type recarray obsname obstype id id2', 'shape', 'reader urword', 'optional false'], ['block continuous', 'name obsname', 'type string', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block continuous', 'name obstype', 'type string', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block continuous', 'name id', 'type string', 'shape', 'tagged false', 'in_record true', 'reader urword', 'numeric_index true'], ['block continuous', 'name id2', 'type string', 'shape', 'tagged false', 'in_record true', 'reader urword', 'optional true', 'numeric_index true']]
 
     def __init__(
         self,
@@ -264,6 +77,7 @@ class ModflowUtlobs(MFPackage):
         digits=None,
         print_input=None,
         continuous=None,
+
         filename=None,
         pname=None,
         **kwargs,
@@ -278,18 +92,16 @@ class ModflowUtlobs(MFPackage):
             **kwargs,
         )
 
-        self.digits = self.build_mfdata("digits", digits)
-        self.print_input = self.build_mfdata("print_input", print_input)
-        self.continuous = self.build_mfdata("continuous", continuous)
+        self.digits = self.build_mfdata('digits', digits)
+        self.print_input = self.build_mfdata('print_input', print_input)
+        self.continuous = self.build_mfdata('continuous', continuous)
 
         self._init_complete = True
-
 
 class UtlobsPackages(MFChildPackages):
     """
     UtlobsPackages is a container class for the ModflowUtlobs class.
     """
-
     package_abbr = "utlobspackages"
 
     def initialize(
@@ -297,6 +109,7 @@ class UtlobsPackages(MFChildPackages):
         digits=None,
         print_input=None,
         continuous=None,
+
         filename=None,
         pname=None,
     ):
@@ -316,3 +129,4 @@ class UtlobsPackages(MFChildPackages):
             child_builder_call=True,
         )
         self.init_package(new_package, filename)
+

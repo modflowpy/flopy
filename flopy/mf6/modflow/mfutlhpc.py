@@ -42,120 +42,11 @@ class ModflowUtlhpc(MFPackage):
 
     """
 
-    partitions = ListTemplateGenerator(("hpc", "partitions", "partitions"))
-    package_abbr = "utlhpc"
-    _package_type = "hpc"
-    dfn_file_name = "utl-hpc.dfn"
-    dfn = [
-        ["header"],
-        [
-            "block options",
-            "name print_table",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name dev_log_mpi",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block partitions",
-            "name partitions",
-            "type recarray mname mrank",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block partitions",
-            "name mname",
-            "in_record true",
-            "type string",
-            "tagged false",
-            "reader urword",
-        ],
-        [
-            "block partitions",
-            "name mrank",
-            "in_record true",
-            "type integer",
-            "tagged false",
-            "reader urword",
-        ],
-    ]
-    spec = {
-        "advanced": False,
-        "multi": False,
-        "name": "utl-hpc",
-        "options": {
-            "dev_log_mpi": {
-                "block": "options",
-                "description": "keyword to enable (extremely verbose) logging of mpi traffic to file.",
-                "longname": "log mpi traffic",
-                "name": "dev_log_mpi",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "print_table": {
-                "block": "options",
-                "description": "keyword to indicate that the partition table will be printed to the listing file.",
-                "longname": "model print table to listing file",
-                "name": "print_table",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-        },
-        "partitions": {
-            "partitions": {
-                "block": "partitions",
-                "description": "is the list of zero-based partition numbers.",
-                "item": {
-                    "block": "partitions",
-                    "description": "is the record of zero-based partition numbers.",
-                    "fields": {
-                        "mname": {
-                            "block": "partitions",
-                            "description": "is the unique model name.",
-                            "longname": "model name",
-                            "name": "mname",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                        "mrank": {
-                            "block": "partitions",
-                            "description": "is the zero-based partition number (also: MPI rank or processor id) to which the model will be assigned.",
-                            "longname": "model rank",
-                            "name": "mrank",
-                            "reader": "urword",
-                            "type": "integer",
-                        },
-                    },
-                    "longname": "list of partition numbers",
-                    "name": "partitions",
-                    "optional": True,
-                    "reader": "urword",
-                    "type": "record",
-                },
-                "longname": "list of partition numbers",
-                "name": "partitions",
-                "optional": True,
-                "reader": "urword",
-                "type": "recarray",
-            }
-        },
-        "ref": {
-            "abbr": "hpc",
-            "key": "hpc_filerecord",
-            "param": "hpc_data",
-            "parent": "parent_package",
-            "val": "hpc_data",
-        },
-    }
+    partitions = ListTemplateGenerator(('hpc', 'partitions', 'partitions'))
+    package_abbr = 'utlhpc'
+    _package_type = 'hpc'
+    dfn_file_name = 'utl-hpc.dfn'
+    dfn = [['header'], ['block options', 'name print_table', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name dev_log_mpi', 'type keyword', 'reader urword', 'optional true'], ['block partitions', 'name partitions', 'type recarray mname mrank', 'reader urword', 'optional true'], ['block partitions', 'name mname', 'in_record true', 'type string', 'tagged false', 'reader urword'], ['block partitions', 'name mrank', 'in_record true', 'type integer', 'tagged false', 'reader urword']]
 
     def __init__(
         self,
@@ -164,6 +55,7 @@ class ModflowUtlhpc(MFPackage):
         print_table=None,
         dev_log_mpi=None,
         partitions=None,
+
         filename=None,
         pname=None,
         **kwargs,
@@ -178,8 +70,9 @@ class ModflowUtlhpc(MFPackage):
             **kwargs,
         )
 
-        self.print_table = self.build_mfdata("print_table", print_table)
-        self.dev_log_mpi = self.build_mfdata("dev_log_mpi", dev_log_mpi)
-        self.partitions = self.build_mfdata("partitions", partitions)
+        self.print_table = self.build_mfdata('print_table', print_table)
+        self.dev_log_mpi = self.build_mfdata('dev_log_mpi', dev_log_mpi)
+        self.partitions = self.build_mfdata('partitions', partitions)
 
         self._init_complete = True
+

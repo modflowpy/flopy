@@ -56,133 +56,11 @@ class ModflowGwefmi(MFPackage):
 
     """
 
-    packagedata = ListTemplateGenerator(("gwe6", "fmi", "packagedata", "packagedata"))
-    package_abbr = "gwefmi"
-    _package_type = "fmi"
-    dfn_file_name = "gwe-fmi.dfn"
-    dfn = [
-        ["header"],
-        [
-            "block options",
-            "name save_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name flow_imbalance_correction",
-            "type keyword",
-            "reader urword",
-            "optional true",
-            "mf6internal imbalancecorrect",
-        ],
-        [
-            "block packagedata",
-            "name packagedata",
-            "type recarray flowtype filein fname",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block packagedata",
-            "name flowtype",
-            "in_record true",
-            "type string",
-            "tagged false",
-            "reader urword",
-        ],
-        [
-            "block packagedata",
-            "name filein",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block packagedata",
-            "name fname",
-            "in_record true",
-            "type string",
-            "preserve_case true",
-            "tagged false",
-            "reader urword",
-        ],
-    ]
-    spec = {
-        "advanced": False,
-        "multi": False,
-        "name": "gwe-fmi",
-        "options": {
-            "flow_imbalance_correction": {
-                "block": "options",
-                "description": "correct for an imbalance in flows by assuming that any residual flow error comes in or leaves at the temperature of the cell.  when this option is activated, the gwe model budget written to the listing file will contain two additional entries: flow-error and flow-correction.  these two entries will be equal but opposite in sign.  the flow-correction term is a mass flow that is added to offset the error caused by an imprecise flow balance.  if these terms are not relatively small, the flow model should be rerun with stricter convergence tolerances.",
-                "longname": "correct for flow imbalance",
-                "mf6internal": "imbalancecorrect",
-                "name": "flow_imbalance_correction",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "save_flows": {
-                "block": "options",
-                "description": "keyword to indicate that fmi flow terms will be written to the file specified with 'budget fileout' in output control.",
-                "longname": "save calculated flow imbalance correction to budget file",
-                "name": "save_flows",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-        },
-        "packagedata": {
-            "packagedata": {
-                "block": "packagedata",
-                "item": {
-                    "block": "packagedata",
-                    "fields": {
-                        "filein": {
-                            "block": "packagedata",
-                            "description": "keyword to specify that an input filename is expected next.",
-                            "longname": "file keyword",
-                            "name": "filein",
-                            "optional": "false",
-                            "reader": "urword",
-                            "type": "keyword",
-                        },
-                        "flowtype": {
-                            "block": "packagedata",
-                            "description": "is the word GWFBUDGET, GWFHEAD, GWFGRID, GWFMOVER or the name of an advanced GWF stress package from a previous model run.  If GWFBUDGET is specified, then the corresponding file must be a budget file.  If GWFHEAD is specified, the file must be a head file.  If GWFGRID is specified, the file must be a binary grid file. If GWFMOVER is specified, the file must be a mover file.  If an advanced GWF stress package name appears then the corresponding file must be the budget file saved by a LAK, SFR, MAW or UZF Package.",
-                            "longname": "flow type",
-                            "name": "flowtype",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                        "fname": {
-                            "block": "packagedata",
-                            "description": "is the name of the file containing flows.  The path to the file should be included if the file is not located in the folder where the program was run.",
-                            "longname": "file name",
-                            "name": "fname",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                    },
-                    "longname": "flowtype list",
-                    "name": "packagedata",
-                    "optional": True,
-                    "reader": "urword",
-                    "type": "record",
-                },
-                "longname": "flowtype list",
-                "name": "packagedata",
-                "optional": True,
-                "reader": "urword",
-                "type": "recarray",
-            }
-        },
-    }
+    packagedata = ListTemplateGenerator(('gwe6', 'fmi', 'packagedata', 'packagedata'))
+    package_abbr = 'gwefmi'
+    _package_type = 'fmi'
+    dfn_file_name = 'gwe-fmi.dfn'
+    dfn = [['header'], ['block options', 'name save_flows', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name flow_imbalance_correction', 'type keyword', 'reader urword', 'optional true', 'mf6internal imbalancecorrect'], ['block packagedata', 'name packagedata', 'type recarray flowtype filein fname', 'reader urword', 'optional true'], ['block packagedata', 'name flowtype', 'in_record true', 'type string', 'tagged false', 'reader urword'], ['block packagedata', 'name filein', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block packagedata', 'name fname', 'in_record true', 'type string', 'preserve_case true', 'tagged false', 'reader urword']]
 
     def __init__(
         self,
@@ -191,6 +69,7 @@ class ModflowGwefmi(MFPackage):
         save_flows=None,
         flow_imbalance_correction=None,
         packagedata=None,
+
         filename=None,
         pname=None,
         **kwargs,
@@ -205,10 +84,9 @@ class ModflowGwefmi(MFPackage):
             **kwargs,
         )
 
-        self.save_flows = self.build_mfdata("save_flows", save_flows)
-        self.flow_imbalance_correction = self.build_mfdata(
-            "flow_imbalance_correction", flow_imbalance_correction
-        )
-        self.packagedata = self.build_mfdata("packagedata", packagedata)
+        self.save_flows = self.build_mfdata('save_flows', save_flows)
+        self.flow_imbalance_correction = self.build_mfdata('flow_imbalance_correction', flow_imbalance_correction)
+        self.packagedata = self.build_mfdata('packagedata', packagedata)
 
         self._init_complete = True
+

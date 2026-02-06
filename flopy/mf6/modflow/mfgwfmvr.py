@@ -111,464 +111,14 @@ class ModflowGwfmvr(MFPackage):
 
     """
 
-    budget_filerecord = ListTemplateGenerator(
-        ("gwf6", "mvr", "options", "budget_filerecord")
-    )
-    budgetcsv_filerecord = ListTemplateGenerator(
-        ("gwf6", "mvr", "options", "budgetcsv_filerecord")
-    )
-    packages = ListTemplateGenerator(("gwf6", "mvr", "packages", "packages"))
-    perioddata = ListTemplateGenerator(("gwf6", "mvr", "period", "perioddata"))
-    package_abbr = "gwfmvr"
-    _package_type = "mvr"
-    dfn_file_name = "gwf-mvr.dfn"
-    dfn = [
-        ["header"],
-        [
-            "block options",
-            "name print_input",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name print_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name modelnames",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name budget_filerecord",
-            "type record budget fileout budgetfile",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name budget",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name fileout",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name budgetfile",
-            "type string",
-            "preserve_case true",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged false",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name budgetcsv_filerecord",
-            "type record budgetcsv fileout budgetcsvfile",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name budgetcsv",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name budgetcsvfile",
-            "type string",
-            "preserve_case true",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged false",
-            "optional false",
-        ],
-        [
-            "block dimensions",
-            "name maxmvr",
-            "type integer",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block dimensions",
-            "name maxpackages",
-            "type integer",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block packages",
-            "name packages",
-            "type recarray mname pname",
-            "reader urword",
-            "shape (npackages)",
-            "optional false",
-        ],
-        [
-            "block packages",
-            "name mname",
-            "type string",
-            "reader urword",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "optional true",
-        ],
-        [
-            "block packages",
-            "name pname",
-            "type string",
-            "reader urword",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "optional false",
-        ],
-        [
-            "block period",
-            "name iper",
-            "type integer",
-            "block_variable true",
-            "in_record true",
-            "tagged false",
-            "shape",
-            "valid",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block period",
-            "name perioddata",
-            "type recarray mname1 pname1 id1 mname2 pname2 id2 mvrtype value",
-            "shape (maxbound)",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name mname1",
-            "type string",
-            "reader urword",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "optional true",
-        ],
-        [
-            "block period",
-            "name pname1",
-            "type string",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name id1",
-            "type integer",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-            "numeric_index true",
-        ],
-        [
-            "block period",
-            "name mname2",
-            "type string",
-            "reader urword",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "optional true",
-        ],
-        [
-            "block period",
-            "name pname2",
-            "type string",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name id2",
-            "type integer",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-            "numeric_index true",
-        ],
-        [
-            "block period",
-            "name mvrtype",
-            "type string",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name value",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-    ]
-    spec = {
-        "advanced": False,
-        "dimensions": {
-            "maxmvr": {
-                "block": "dimensions",
-                "description": "integer value specifying the maximum number of water mover entries that will specified for any stress period.",
-                "longname": "maximum number of movers",
-                "name": "maxmvr",
-                "optional": False,
-                "reader": "urword",
-                "type": "integer",
-            },
-            "maxpackages": {
-                "block": "dimensions",
-                "description": "integer value specifying the number of unique packages that are included in this water mover input file.",
-                "longname": "number of packages to be used with the mover",
-                "name": "maxpackages",
-                "optional": False,
-                "reader": "urword",
-                "type": "integer",
-            },
-        },
-        "multi": False,
-        "name": "gwf-mvr",
-        "options": {
-            "budget_filerecord": {
-                "block": "options",
-                "fields": {
-                    "budgetfile": {
-                        "block": "options",
-                        "description": "name of the output file to write budget information.",
-                        "longname": "file keyword",
-                        "name": "budgetfile",
-                        "optional": "false",
-                        "reader": "urword",
-                        "type": "string",
-                    }
-                },
-                "name": "budget_filerecord",
-                "optional": True,
-                "reader": "urword",
-                "type": "record",
-            },
-            "budgetcsv_filerecord": {
-                "block": "options",
-                "fields": {
-                    "budgetcsvfile": {
-                        "block": "options",
-                        "description": "name of the comma-separated value (CSV) output file to write budget summary information.  A budget summary record will be written to this file for each time step of the simulation.",
-                        "longname": "file keyword",
-                        "name": "budgetcsvfile",
-                        "optional": "false",
-                        "reader": "urword",
-                        "type": "string",
-                    }
-                },
-                "name": "budgetcsv_filerecord",
-                "optional": True,
-                "reader": "urword",
-                "type": "record",
-            },
-            "modelnames": {
-                "block": "options",
-                "description": "keyword to indicate that all package names will be preceded by the model name for the package.  model names are required when the mover package is used with a gwf-gwf exchange.  the modelname keyword should not be used for a mover package that is for a single gwf model.",
-                "longname": "precede all package names with model names",
-                "name": "modelnames",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "print_flows": {
-                "block": "options",
-                "description": "keyword to indicate that the list of mvr flow rates will be printed to the listing file for every stress period time step in which 'budget print' is specified in output control.  if there is no output control option and 'print_flows' is specified, then flow rates are printed for the last time step of each stress period.",
-                "longname": "print calculated flows to listing file",
-                "name": "print_flows",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "print_input": {
-                "block": "options",
-                "description": "keyword to indicate that the list of mvr information will be written to the listing file immediately after it is read.",
-                "longname": "print input to listing file",
-                "name": "print_input",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-        },
-        "packages": {
-            "packages": {
-                "block": "packages",
-                "item": {
-                    "block": "packages",
-                    "fields": {
-                        "mname": {
-                            "block": "packages",
-                            "description": "name of model containing the package.  Model names are assigned by the user in the simulation name file.",
-                            "name": "mname",
-                            "optional": "true",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                        "pname": {
-                            "block": "packages",
-                            "description": "is the name of a package that may be included in a subsequent stress period block.  The package name is assigned in the name file for the GWF Model.  Package names are optionally provided in the name file.  If they are not provided by the user, then packages are assigned a default value, which is the package acronym followed by a hyphen and the package number.  For example, the first Drain Package is named DRN-1.  The second Drain Package is named DRN-2, and so forth.",
-                            "name": "pname",
-                            "optional": "false",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                    },
-                    "name": "packages",
-                    "optional": False,
-                    "reader": "urword",
-                    "type": "record",
-                },
-                "name": "packages",
-                "optional": False,
-                "reader": "urword",
-                "shape": "(npackages)",
-                "type": "recarray",
-            }
-        },
-        "period": {
-            "perioddata": {
-                "block": "period",
-                "item": {
-                    "block": "period",
-                    "fields": {
-                        "id1": {
-                            "block": "period",
-                            "description": "is the identifier for the provider.  For the standard boundary packages, the provider identifier is the number of the boundary as it is listed in the package input file. (Note that the order of these boundaries may change by stress period, which must be accounted for in the Mover Package.)  So the first well has an identifier of one.  The second is two, and so forth.  For the advanced packages, the identifier is the reach number (SFR Package), well number (MAW Package), or UZF cell number.  For the Lake Package, ID1 is the lake outlet number.  Thus, outflows from a single lake can be routed to different streams, for example.",
-                            "longname": "provider reach",
-                            "name": "id1",
-                            "numeric_index": "true",
-                            "reader": "urword",
-                            "type": "integer",
-                        },
-                        "id2": {
-                            "block": "period",
-                            "description": "is the identifier for the receiver.  The receiver identifier is the reach number (SFR Package), Lake number (LAK Package), well number (MAW Package), or UZF cell number.",
-                            "longname": "receiver reach",
-                            "name": "id2",
-                            "numeric_index": "true",
-                            "reader": "urword",
-                            "type": "integer",
-                        },
-                        "mname1": {
-                            "block": "period",
-                            "description": "name of model containing the package, PNAME1.",
-                            "name": "mname1",
-                            "optional": "true",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                        "mname2": {
-                            "block": "period",
-                            "description": "name of model containing the package, PNAME2.",
-                            "name": "mname2",
-                            "optional": "true",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                        "mvrtype": {
-                            "block": "period",
-                            "description": "is the character string signifying the method for determining how much water will be moved.  Supported values are 'FACTOR' 'EXCESS' 'THRESHOLD' and 'UPTO'.  These four options determine how the receiver flow rate, $Q_R$, is calculated.  These options mirror the options defined for the cprior variable in the SFR package, with the term 'FACTOR' being functionally equivalent to the 'FRACTION' option for cprior.",
-                            "longname": "mover type",
-                            "name": "mvrtype",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                        "pname1": {
-                            "block": "period",
-                            "description": "is the package name for the provider.  The package PNAME1 must be designated to provide water through the MVR Package by specifying the keyword 'MOVER' in its OPTIONS block.",
-                            "longname": "provider package name",
-                            "name": "pname1",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                        "pname2": {
-                            "block": "period",
-                            "description": "is the package name for the receiver.  The package PNAME2 must be designated to receive water from the MVR Package by specifying the keyword 'MOVER' in its OPTIONS block.",
-                            "longname": "receiver package name",
-                            "name": "pname2",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                        "value": {
-                            "block": "period",
-                            "description": "is the value to be used in the equation for calculating the amount of water to move.  For the 'FACTOR' option, VALUE is the $alpha$ factor.  For the remaining options, VALUE is the specified flow rate, $Q_S$.",
-                            "longname": "mover value",
-                            "name": "value",
-                            "reader": "urword",
-                            "type": "double precision",
-                        },
-                    },
-                    "name": "perioddata",
-                    "reader": "urword",
-                    "type": "record",
-                },
-                "name": "perioddata",
-                "reader": "urword",
-                "shape": "(maxbound)",
-                "type": "recarray",
-            },
-            "transient_block": True,
-        },
-        "ref": {
-            "abbr": "mvr",
-            "key": "mvr_filerecord",
-            "param": "perioddata",
-            "parent": "parent_model_or_package",
-            "val": "perioddata",
-        },
-    }
+    budget_filerecord = ListTemplateGenerator(('gwf6', 'mvr', 'options', 'budget_filerecord'))
+    budgetcsv_filerecord = ListTemplateGenerator(('gwf6', 'mvr', 'options', 'budgetcsv_filerecord'))
+    packages = ListTemplateGenerator(('gwf6', 'mvr', 'packages', 'packages'))
+    perioddata = ListTemplateGenerator(('gwf6', 'mvr', 'period', 'perioddata'))
+    package_abbr = 'gwfmvr'
+    _package_type = 'mvr'
+    dfn_file_name = 'gwf-mvr.dfn'
+    dfn = [['header'], ['block options', 'name print_input', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name print_flows', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name modelnames', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name budget_filerecord', 'type record budget fileout budgetfile', 'shape', 'reader urword', 'tagged true', 'optional true'], ['block options', 'name budget', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name fileout', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name budgetfile', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false'], ['block options', 'name budgetcsv_filerecord', 'type record budgetcsv fileout budgetcsvfile', 'shape', 'reader urword', 'tagged true', 'optional true'], ['block options', 'name budgetcsv', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name budgetcsvfile', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false'], ['block dimensions', 'name maxmvr', 'type integer', 'reader urword', 'optional false'], ['block dimensions', 'name maxpackages', 'type integer', 'reader urword', 'optional false'], ['block packages', 'name packages', 'type recarray mname pname', 'reader urword', 'shape (npackages)', 'optional false'], ['block packages', 'name mname', 'type string', 'reader urword', 'shape', 'tagged false', 'in_record true', 'optional true'], ['block packages', 'name pname', 'type string', 'reader urword', 'shape', 'tagged false', 'in_record true', 'optional false'], ['block period', 'name iper', 'type integer', 'block_variable true', 'in_record true', 'tagged false', 'shape', 'valid', 'reader urword', 'optional false'], ['block period', 'name perioddata', 'type recarray mname1 pname1 id1 mname2 pname2 id2 mvrtype value', 'shape (maxbound)', 'reader urword'], ['block period', 'name mname1', 'type string', 'reader urword', 'shape', 'tagged false', 'in_record true', 'optional true'], ['block period', 'name pname1', 'type string', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block period', 'name id1', 'type integer', 'shape', 'tagged false', 'in_record true', 'reader urword', 'numeric_index true'], ['block period', 'name mname2', 'type string', 'reader urword', 'shape', 'tagged false', 'in_record true', 'optional true'], ['block period', 'name pname2', 'type string', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block period', 'name id2', 'type integer', 'shape', 'tagged false', 'in_record true', 'reader urword', 'numeric_index true'], ['block period', 'name mvrtype', 'type string', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block period', 'name value', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword']]
 
     def __init__(
         self,
@@ -583,6 +133,7 @@ class ModflowGwfmvr(MFPackage):
         maxpackages=None,
         packages=None,
         perioddata=None,
+
         filename=None,
         pname=None,
         **kwargs,
@@ -597,28 +148,22 @@ class ModflowGwfmvr(MFPackage):
             **kwargs,
         )
 
-        self.print_input = self.build_mfdata("print_input", print_input)
-        self.print_flows = self.build_mfdata("print_flows", print_flows)
-        self.modelnames = self.build_mfdata("modelnames", modelnames)
-        self.budget_filerecord = self.build_mfdata(
-            "budget_filerecord", budget_filerecord
-        )
-        self.budgetcsv_filerecord = self.build_mfdata(
-            "budgetcsv_filerecord", budgetcsv_filerecord
-        )
-        self.maxmvr = self.build_mfdata("maxmvr", maxmvr)
-        self.maxpackages = self.build_mfdata("maxpackages", maxpackages)
-        self.packages = self.build_mfdata("packages", packages)
-        self.perioddata = self.build_mfdata("perioddata", perioddata)
+        self.print_input = self.build_mfdata('print_input', print_input)
+        self.print_flows = self.build_mfdata('print_flows', print_flows)
+        self.modelnames = self.build_mfdata('modelnames', modelnames)
+        self.budget_filerecord = self.build_mfdata('budget_filerecord', budget_filerecord)
+        self.budgetcsv_filerecord = self.build_mfdata('budgetcsv_filerecord', budgetcsv_filerecord)
+        self.maxmvr = self.build_mfdata('maxmvr', maxmvr)
+        self.maxpackages = self.build_mfdata('maxpackages', maxpackages)
+        self.packages = self.build_mfdata('packages', packages)
+        self.perioddata = self.build_mfdata('perioddata', perioddata)
 
         self._init_complete = True
-
 
 class GwfmvrPackages(MFChildPackages):
     """
     GwfmvrPackages is a container class for the ModflowGwfmvr class.
     """
-
     package_abbr = "gwfmvrpackages"
 
     def initialize(
@@ -632,6 +177,7 @@ class GwfmvrPackages(MFChildPackages):
         maxpackages=None,
         packages=None,
         perioddata=None,
+
         filename=None,
         pname=None,
     ):
@@ -669,6 +215,7 @@ class GwfmvrPackages(MFChildPackages):
         maxpackages=None,
         packages=None,
         perioddata=None,
+
         filename=None,
         pname=None,
     ):

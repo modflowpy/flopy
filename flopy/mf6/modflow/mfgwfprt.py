@@ -7,7 +7,6 @@ from typing import Union
 from flopy.mf6.data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 from flopy.mf6.mfpackage import MFPackage
 
-
 class ModflowGwfprt(MFPackage):
     """
     ModflowGwfprt defines a GWFPRT package.
@@ -26,7 +25,7 @@ class ModflowGwfprt(MFPackage):
         The name of the first model that is part of this exchange.
     exgmnameb : str, optional
         The name of the second model that is part of this exchange.
-
+    
     filename : str or PathLike, optional
         Name or path of file where this package is stored.
     pname : str, optional
@@ -36,11 +35,10 @@ class ModflowGwfprt(MFPackage):
 
     """
 
-    package_abbr = "gwfprt"
-    _package_type = "gwfprt"
-    dfn_file_name = "exg-gwfprt.dfn"
-    dfn = [["header"]]
-    spec = {"advanced": False, "multi": False, "name": "exg-gwfprt"}
+    package_abbr = 'gwfprt'
+    _package_type = 'gwfprt'
+    dfn_file_name = 'exg-gwfprt.dfn'
+    dfn = [['header']]
 
     def __init__(
         self,
@@ -49,6 +47,7 @@ class ModflowGwfprt(MFPackage):
         exgtype="GWF6-PRT6",
         exgmnamea=None,
         exgmnameb=None,
+        
         filename=None,
         pname=None,
         **kwargs,
@@ -67,5 +66,6 @@ class ModflowGwfprt(MFPackage):
         self.exgmnamea = exgmnamea
         self.exgmnameb = exgmnameb
         simulation.register_exchange_file(self)
+
 
         self._init_complete = True

@@ -91,250 +91,12 @@ class ModflowGwessm(MFPackage):
 
     """
 
-    sources = ListTemplateGenerator(("gwe6", "ssm", "sources", "sources"))
-    fileinput = ListTemplateGenerator(("gwe6", "ssm", "fileinput", "fileinput"))
-    package_abbr = "gwessm"
-    _package_type = "ssm"
-    dfn_file_name = "gwe-ssm.dfn"
-    dfn = [
-        ["header"],
-        [
-            "block options",
-            "name print_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name save_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block sources",
-            "name sources",
-            "type recarray pname srctype auxname",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block sources",
-            "name pname",
-            "in_record true",
-            "type string",
-            "tagged false",
-            "reader urword",
-            "mf6internal pname_sources",
-        ],
-        [
-            "block sources",
-            "name srctype",
-            "in_record true",
-            "type string",
-            "tagged false",
-            "optional false",
-            "reader urword",
-        ],
-        [
-            "block sources",
-            "name auxname",
-            "in_record true",
-            "type string",
-            "tagged false",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block fileinput",
-            "name fileinput",
-            "type recarray pname spc6 filein spc6_filename mixed",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block fileinput",
-            "name pname",
-            "in_record true",
-            "type string",
-            "tagged false",
-            "reader urword",
-        ],
-        [
-            "block fileinput",
-            "name spc6",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block fileinput",
-            "name filein",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block fileinput",
-            "name spc6_filename",
-            "type string",
-            "preserve_case true",
-            "in_record true",
-            "reader urword",
-            "optional false",
-            "tagged false",
-        ],
-        [
-            "block fileinput",
-            "name mixed",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional true",
-        ],
-    ]
-    spec = {
-        "advanced": False,
-        "fileinput": {
-            "fileinput": {
-                "block": "fileinput",
-                "item": {
-                    "block": "fileinput",
-                    "fields": {
-                        "filein": {
-                            "block": "fileinput",
-                            "description": "keyword to specify that an input filename is expected next.",
-                            "longname": "file keyword",
-                            "name": "filein",
-                            "optional": "false",
-                            "reader": "urword",
-                            "type": "keyword",
-                        },
-                        "mixed": {
-                            "block": "fileinput",
-                            "description": "keyword to specify that these stress package boundaries will have the mixed condition.  The MIXED condition is described in the SOURCES block for AUXMIXED.  The MIXED condition allows for water to be withdrawn at a temperature that is less than the cell temperature.  It is intended primarily for representing evapotranspiration.",
-                            "longname": "mixed keyword",
-                            "name": "mixed",
-                            "optional": "true",
-                            "reader": "urword",
-                            "type": "keyword",
-                        },
-                        "pname": {
-                            "block": "fileinput",
-                            "description": "name of the flow package for which an SPC6 input file contains a source temperature.  If this flow package is represented using an advanced transport package (SFE, LKE, MWE, or UZE), then the advanced transport package will override SSM terms specified here.",
-                            "longname": "package name",
-                            "name": "pname",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                        "spc6": {
-                            "block": "fileinput",
-                            "description": "keyword to specify that record corresponds to a source sink mixing input file.",
-                            "longname": "head keyword",
-                            "name": "spc6",
-                            "optional": "false",
-                            "reader": "urword",
-                            "type": "keyword",
-                        },
-                        "spc6_filename": {
-                            "block": "fileinput",
-                            "description": "character string that defines the path and filename for the file containing source and sink input data for the flow package. The SPC6_FILENAME file is a flexible input file that allows temperatures to be specified by stress period and with time series. Instructions for creating the SPC6_FILENAME input file are provided in the next section on file input for boundary temperatures.",
-                            "longname": "spc file name",
-                            "name": "spc6_filename",
-                            "optional": "false",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                    },
-                    "name": "fileinput",
-                    "optional": True,
-                    "reader": "urword",
-                    "type": "record",
-                },
-                "name": "fileinput",
-                "optional": True,
-                "reader": "urword",
-                "type": "recarray",
-            }
-        },
-        "multi": False,
-        "name": "gwe-ssm",
-        "options": {
-            "print_flows": {
-                "block": "options",
-                "description": "keyword to indicate that the list of ssm flow rates will be printed to the listing file for every stress period time step in which 'budget print' is specified in output control.  if there is no output control option and 'print_flows' is specified, then flow rates are printed for the last time step of each stress period.",
-                "longname": "print calculated flows to listing file",
-                "name": "print_flows",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "save_flows": {
-                "block": "options",
-                "description": "keyword to indicate that ssm flow terms will be written to the file specified with 'budget fileout' in output control.",
-                "longname": "save calculated flows to budget file",
-                "name": "save_flows",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-        },
-        "sources": {
-            "sources": {
-                "block": "sources",
-                "item": {
-                    "block": "sources",
-                    "fields": {
-                        "auxname": {
-                            "block": "sources",
-                            "description": "name of the auxiliary variable in the package PNAME.  This auxiliary variable must exist and be specified by the user in that package.  The values in this auxiliary variable will be used to set the temperature associated with the flows for that boundary package.",
-                            "longname": "auxiliary variable name",
-                            "name": "auxname",
-                            "optional": "false",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                        "pname": {
-                            "block": "fileinput",
-                            "description": "name of the flow package for which an SPC6 input file contains a source temperature.  If this flow package is represented using an advanced transport package (SFE, LKE, MWE, or UZE), then the advanced transport package will override SSM terms specified here.",
-                            "longname": "package name",
-                            "name": "pname",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                        "srctype": {
-                            "block": "sources",
-                            "description": "keyword indicating how temperature will be assigned for sources and sinks.  Keyword must be specified as either AUX or AUXMIXED.  For both options the user must provide an auxiliary variable in the corresponding flow package.  The auxiliary variable must have the same name as the AUXNAME value that follows.  If the AUX keyword is specified, then the auxiliary variable specified by the user will be assigned as the temperature value for groundwater sources (flows with a positive sign).  For negative flow rates (sinks), groundwater will be withdrawn from the cell at the simulated temperature of the cell.  The AUXMIXED option provides an alternative method for how to determine the temperature of sinks.  If the cell temperature is larger than the user-specified auxiliary temperature, then the temperature of groundwater withdrawn from the cell will be assigned as the user-specified temperature.  Alternatively, if the user-specified auxiliary temperature is larger than the cell temperature, then groundwater will be withdrawn at the cell temperature.  Thus, the AUXMIXED option is designed to work with the Evapotranspiration (EVT) and Recharge (RCH) Packages where water may be withdrawn at a temperature that is less than the cell temperature.",
-                            "longname": "source type",
-                            "name": "srctype",
-                            "optional": "false",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                    },
-                    "longname": "package list",
-                    "name": "sources",
-                    "optional": False,
-                    "reader": "urword",
-                    "type": "record",
-                },
-                "longname": "package list",
-                "name": "sources",
-                "optional": False,
-                "reader": "urword",
-                "type": "recarray",
-            }
-        },
-    }
+    sources = ListTemplateGenerator(('gwe6', 'ssm', 'sources', 'sources'))
+    fileinput = ListTemplateGenerator(('gwe6', 'ssm', 'fileinput', 'fileinput'))
+    package_abbr = 'gwessm'
+    _package_type = 'ssm'
+    dfn_file_name = 'gwe-ssm.dfn'
+    dfn = [['header'], ['block options', 'name print_flows', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name save_flows', 'type keyword', 'reader urword', 'optional true'], ['block sources', 'name sources', 'type recarray pname srctype auxname', 'reader urword', 'optional false'], ['block sources', 'name pname', 'in_record true', 'type string', 'tagged false', 'reader urword', 'mf6internal pname_sources'], ['block sources', 'name srctype', 'in_record true', 'type string', 'tagged false', 'optional false', 'reader urword'], ['block sources', 'name auxname', 'in_record true', 'type string', 'tagged false', 'reader urword', 'optional false'], ['block fileinput', 'name fileinput', 'type recarray pname spc6 filein spc6_filename mixed', 'reader urword', 'optional true'], ['block fileinput', 'name pname', 'in_record true', 'type string', 'tagged false', 'reader urword'], ['block fileinput', 'name spc6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block fileinput', 'name filein', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block fileinput', 'name spc6_filename', 'type string', 'preserve_case true', 'in_record true', 'reader urword', 'optional false', 'tagged false'], ['block fileinput', 'name mixed', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional true']]
 
     def __init__(
         self,
@@ -344,6 +106,7 @@ class ModflowGwessm(MFPackage):
         save_flows=None,
         sources=None,
         fileinput=None,
+
         filename=None,
         pname=None,
         **kwargs,
@@ -358,9 +121,10 @@ class ModflowGwessm(MFPackage):
             **kwargs,
         )
 
-        self.print_flows = self.build_mfdata("print_flows", print_flows)
-        self.save_flows = self.build_mfdata("save_flows", save_flows)
-        self.sources = self.build_mfdata("sources", sources)
-        self.fileinput = self.build_mfdata("fileinput", fileinput)
+        self.print_flows = self.build_mfdata('print_flows', print_flows)
+        self.save_flows = self.build_mfdata('save_flows', save_flows)
+        self.sources = self.build_mfdata('sources', sources)
+        self.fileinput = self.build_mfdata('fileinput', fileinput)
 
         self._init_complete = True
+

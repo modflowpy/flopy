@@ -51,186 +51,12 @@ class ModflowGwtmvt(MFPackage):
 
     """
 
-    budget_filerecord = ListTemplateGenerator(
-        ("gwt6", "mvt", "options", "budget_filerecord")
-    )
-    budgetcsv_filerecord = ListTemplateGenerator(
-        ("gwt6", "mvt", "options", "budgetcsv_filerecord")
-    )
-    package_abbr = "gwtmvt"
-    _package_type = "mvt"
-    dfn_file_name = "gwt-mvt.dfn"
-    dfn = [
-        ["header"],
-        [
-            "block options",
-            "name print_input",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name print_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name save_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name budget_filerecord",
-            "type record budget fileout budgetfile",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name budget",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name fileout",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name budgetfile",
-            "type string",
-            "preserve_case true",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged false",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name budgetcsv_filerecord",
-            "type record budgetcsv fileout budgetcsvfile",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name budgetcsv",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name budgetcsvfile",
-            "type string",
-            "preserve_case true",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged false",
-            "optional false",
-        ],
-    ]
-    spec = {
-        "advanced": False,
-        "multi": False,
-        "name": "gwt-mvt",
-        "options": {
-            "budget_filerecord": {
-                "block": "options",
-                "fields": {
-                    "budgetfile": {
-                        "block": "options",
-                        "description": "name of the binary output file to write budget information.",
-                        "longname": "file keyword",
-                        "name": "budgetfile",
-                        "optional": "false",
-                        "reader": "urword",
-                        "type": "string",
-                    }
-                },
-                "name": "budget_filerecord",
-                "optional": True,
-                "reader": "urword",
-                "type": "record",
-            },
-            "budgetcsv_filerecord": {
-                "block": "options",
-                "fields": {
-                    "budgetcsvfile": {
-                        "block": "options",
-                        "description": "name of the comma-separated value (CSV) output file to write budget summary information.  A budget summary record will be written to this file for each time step of the simulation.",
-                        "longname": "file keyword",
-                        "name": "budgetcsvfile",
-                        "optional": "false",
-                        "reader": "urword",
-                        "type": "string",
-                    }
-                },
-                "name": "budgetcsv_filerecord",
-                "optional": True,
-                "reader": "urword",
-                "type": "record",
-            },
-            "print_flows": {
-                "block": "options",
-                "description": "keyword to indicate that the list of lake flow rates will be printed to the listing file for every stress period time step in which 'budget print' is specified in output control.  if there is no output control option and 'print_flows' is specified, then flow rates are printed for the last time step of each stress period.",
-                "longname": "print calculated flows to listing file",
-                "name": "print_flows",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "print_input": {
-                "block": "options",
-                "description": "keyword to indicate that the list of mover information will be written to the listing file immediately after it is read.",
-                "longname": "print input to listing file",
-                "name": "print_input",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "save_flows": {
-                "block": "options",
-                "description": "keyword to indicate that lake flow terms will be written to the file specified with 'budget fileout' in output control.",
-                "longname": "save lake flows to budget file",
-                "name": "save_flows",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-        },
-        "ref": {
-            "abbr": "mvt",
-            "key": "mvt_filerecord",
-            "param": "perioddata",
-            "parent": "parent_model_or_package",
-            "val": "perioddata",
-        },
-    }
+    budget_filerecord = ListTemplateGenerator(('gwt6', 'mvt', 'options', 'budget_filerecord'))
+    budgetcsv_filerecord = ListTemplateGenerator(('gwt6', 'mvt', 'options', 'budgetcsv_filerecord'))
+    package_abbr = 'gwtmvt'
+    _package_type = 'mvt'
+    dfn_file_name = 'gwt-mvt.dfn'
+    dfn = [['header'], ['block options', 'name print_input', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name print_flows', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name save_flows', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name budget_filerecord', 'type record budget fileout budgetfile', 'shape', 'reader urword', 'tagged true', 'optional true'], ['block options', 'name budget', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name fileout', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name budgetfile', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false'], ['block options', 'name budgetcsv_filerecord', 'type record budgetcsv fileout budgetcsvfile', 'shape', 'reader urword', 'tagged true', 'optional true'], ['block options', 'name budgetcsv', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name budgetcsvfile', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false']]
 
     def __init__(
         self,
@@ -241,6 +67,7 @@ class ModflowGwtmvt(MFPackage):
         save_flows=None,
         budget_filerecord=None,
         budgetcsv_filerecord=None,
+
         filename=None,
         pname=None,
         **kwargs,
@@ -255,24 +82,18 @@ class ModflowGwtmvt(MFPackage):
             **kwargs,
         )
 
-        self.print_input = self.build_mfdata("print_input", print_input)
-        self.print_flows = self.build_mfdata("print_flows", print_flows)
-        self.save_flows = self.build_mfdata("save_flows", save_flows)
-        self.budget_filerecord = self.build_mfdata(
-            "budget_filerecord", budget_filerecord
-        )
-        self.budgetcsv_filerecord = self.build_mfdata(
-            "budgetcsv_filerecord", budgetcsv_filerecord
-        )
+        self.print_input = self.build_mfdata('print_input', print_input)
+        self.print_flows = self.build_mfdata('print_flows', print_flows)
+        self.save_flows = self.build_mfdata('save_flows', save_flows)
+        self.budget_filerecord = self.build_mfdata('budget_filerecord', budget_filerecord)
+        self.budgetcsv_filerecord = self.build_mfdata('budgetcsv_filerecord', budgetcsv_filerecord)
 
         self._init_complete = True
-
 
 class GwtmvtPackages(MFChildPackages):
     """
     GwtmvtPackages is a container class for the ModflowGwtmvt class.
     """
-
     package_abbr = "gwtmvtpackages"
 
     def initialize(
@@ -282,6 +103,7 @@ class GwtmvtPackages(MFChildPackages):
         save_flows=None,
         budget_filerecord=None,
         budgetcsv_filerecord=None,
+
         filename=None,
         pname=None,
     ):
@@ -311,6 +133,7 @@ class GwtmvtPackages(MFChildPackages):
         save_flows=None,
         budget_filerecord=None,
         budgetcsv_filerecord=None,
+
         filename=None,
         pname=None,
     ):

@@ -19,7 +19,7 @@ class ModflowEms(MFPackage):
     loading_package : bool, default False
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
-
+    
     filename : str or PathLike, optional
         Name or path of file where this package is stored.
     pname : str, optional
@@ -29,21 +29,16 @@ class ModflowEms(MFPackage):
 
     """
 
-    package_abbr = "ems"
-    _package_type = "ems"
-    dfn_file_name = "sln-ems.dfn"
-    dfn = [["header", ["solution_package", "*"]]]
-    spec = {
-        "advanced": False,
-        "multi": False,
-        "name": "sln-ems",
-        "sln": {"abbr": "ems", "pattern": "*"},
-    }
+    package_abbr = 'ems'
+    _package_type = 'ems'
+    dfn_file_name = 'sln-ems.dfn'
+    dfn = [['header', ['solution_package', '*']]]
 
     def __init__(
         self,
         simulation,
         loading_package=False,
+        
         filename=None,
         pname=None,
         **kwargs,
@@ -58,4 +53,6 @@ class ModflowEms(MFPackage):
             **kwargs,
         )
 
+
         self._init_complete = True
+

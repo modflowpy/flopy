@@ -58,151 +58,11 @@ class ModflowGwfhfb(MFPackage):
 
     """
 
-    stress_period_data = ListTemplateGenerator(
-        ("gwf6", "hfb", "period", "stress_period_data")
-    )
-    package_abbr = "gwfhfb"
-    _package_type = "hfb"
-    dfn_file_name = "gwf-hfb.dfn"
-    dfn = [
-        ["header"],
-        [
-            "block options",
-            "name print_input",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block dimensions",
-            "name maxhfb",
-            "type integer",
-            "reader urword",
-            "optional false",
-            "mf6internal maxbound",
-        ],
-        [
-            "block period",
-            "name iper",
-            "type integer",
-            "block_variable true",
-            "in_record true",
-            "tagged false",
-            "shape",
-            "valid",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block period",
-            "name stress_period_data",
-            "type recarray cellid1 cellid2 hydchr",
-            "shape (maxhfb)",
-            "reader urword",
-            "mf6internal spd",
-        ],
-        [
-            "block period",
-            "name cellid1",
-            "type integer",
-            "shape (ncelldim)",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name cellid2",
-            "type integer",
-            "shape (ncelldim)",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name hydchr",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-    ]
-    spec = {
-        "advanced": False,
-        "dimensions": {
-            "maxhfb": {
-                "block": "dimensions",
-                "description": "integer value specifying the maximum number of hydraulic flow barriers that will be entered in this input file.  the value of maxhfb is used to allocate memory for the hydraulic flow barriers.",
-                "longname": "maximum number of barriers",
-                "mf6internal": "maxbound",
-                "name": "maxhfb",
-                "optional": False,
-                "reader": "urword",
-                "type": "integer",
-            }
-        },
-        "multi": False,
-        "name": "gwf-hfb",
-        "options": {
-            "print_input": {
-                "block": "options",
-                "description": "keyword to indicate that the list of hydraulic flow barriers will be written to the listing file immediately after it is read.",
-                "longname": "model print input to listing file",
-                "name": "print_input",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            }
-        },
-        "period": {
-            "stress_period_data": {
-                "block": "period",
-                "item": {
-                    "block": "period",
-                    "fields": {
-                        "cellid1": {
-                            "block": "period",
-                            "description": "identifier for the first cell.  For a structured grid that uses the DIS input file, CELLID1 is the layer, row, and column numbers of the cell.   For a grid that uses the DISV input file, CELLID1 is the layer number and CELL2D number for the two cells.  If the model uses the unstructured discretization (DISU) input file, then CELLID1 is the node numbers for the cell.  The barrier is located between cells designated as CELLID1 and CELLID2.  For models that use the DIS and DISV grid types, the layer number for CELLID1 and CELLID2 must be the same.  For all grid types, cells must be horizontally or vertically adjacent.",
-                            "longname": "first cell adjacent to barrier",
-                            "name": "cellid1",
-                            "reader": "urword",
-                            "shape": "(ncelldim)",
-                            "type": "integer",
-                        },
-                        "cellid2": {
-                            "block": "period",
-                            "description": "identifier for the second cell. See CELLID1 for description of how to specify.",
-                            "longname": "second cell adjacent to barrier",
-                            "name": "cellid2",
-                            "reader": "urword",
-                            "shape": "(ncelldim)",
-                            "type": "integer",
-                        },
-                        "hydchr": {
-                            "block": "period",
-                            "description": "is the hydraulic characteristic of the hydraulic-flow barrier. The hydraulic characteristic is the barrier hydraulic conductivity divided by the width of the hydraulic-flow barrier. If the hydraulic characteristic is negative, then the absolute value of HYDCHR acts as a multiplier to the conductance between the two model cells specified as containing the barrier. For example, if the value for HYDCHR was specified as -1.5, the conductance calculated for the two cells would be multiplied by 1.5.",
-                            "longname": "barrier hydraulic characteristic",
-                            "name": "hydchr",
-                            "reader": "urword",
-                            "type": "double precision",
-                        },
-                    },
-                    "mf6internal": "spd",
-                    "name": "stress_period_data",
-                    "reader": "urword",
-                    "type": "record",
-                },
-                "mf6internal": "spd",
-                "name": "stress_period_data",
-                "reader": "urword",
-                "shape": "(maxhfb)",
-                "type": "recarray",
-            },
-            "transient_block": True,
-        },
-    }
+    stress_period_data = ListTemplateGenerator(('gwf6', 'hfb', 'period', 'stress_period_data'))
+    package_abbr = 'gwfhfb'
+    _package_type = 'hfb'
+    dfn_file_name = 'gwf-hfb.dfn'
+    dfn = [['header'], ['block options', 'name print_input', 'type keyword', 'reader urword', 'optional true'], ['block dimensions', 'name maxhfb', 'type integer', 'reader urword', 'optional false', 'mf6internal maxbound'], ['block period', 'name iper', 'type integer', 'block_variable true', 'in_record true', 'tagged false', 'shape', 'valid', 'reader urword', 'optional false'], ['block period', 'name stress_period_data', 'type recarray cellid1 cellid2 hydchr', 'shape (maxhfb)', 'reader urword', 'mf6internal spd'], ['block period', 'name cellid1', 'type integer', 'shape (ncelldim)', 'tagged false', 'in_record true', 'reader urword'], ['block period', 'name cellid2', 'type integer', 'shape (ncelldim)', 'tagged false', 'in_record true', 'reader urword'], ['block period', 'name hydchr', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword']]
 
     def __init__(
         self,
@@ -211,6 +71,7 @@ class ModflowGwfhfb(MFPackage):
         print_input=None,
         maxhfb=None,
         stress_period_data=None,
+
         filename=None,
         pname=None,
         **kwargs,
@@ -225,10 +86,9 @@ class ModflowGwfhfb(MFPackage):
             **kwargs,
         )
 
-        self.print_input = self.build_mfdata("print_input", print_input)
-        self.maxhfb = self.build_mfdata("maxhfb", maxhfb)
-        self.stress_period_data = self.build_mfdata(
-            "stress_period_data", stress_period_data
-        )
+        self.print_input = self.build_mfdata('print_input', print_input)
+        self.maxhfb = self.build_mfdata('maxhfb', maxhfb)
+        self.stress_period_data = self.build_mfdata('stress_period_data', stress_period_data)
 
         self._init_complete = True
+

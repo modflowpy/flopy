@@ -44,115 +44,11 @@ class ModflowPrtfmi(MFPackage):
 
     """
 
-    packagedata = ListTemplateGenerator(("prt6", "fmi", "packagedata", "packagedata"))
-    package_abbr = "prtfmi"
-    _package_type = "fmi"
-    dfn_file_name = "prt-fmi.dfn"
-    dfn = [
-        ["header"],
-        [
-            "block options",
-            "name save_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block packagedata",
-            "name packagedata",
-            "type recarray flowtype filein fname",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block packagedata",
-            "name flowtype",
-            "in_record true",
-            "type string",
-            "tagged false",
-            "reader urword",
-        ],
-        [
-            "block packagedata",
-            "name filein",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block packagedata",
-            "name fname",
-            "in_record true",
-            "type string",
-            "preserve_case true",
-            "tagged false",
-            "reader urword",
-        ],
-    ]
-    spec = {
-        "advanced": False,
-        "multi": False,
-        "name": "prt-fmi",
-        "options": {
-            "save_flows": {
-                "block": "options",
-                "description": "keyword to indicate that fmi flow terms will be written to the file specified with 'budget fileout' in output control.",
-                "longname": "save cell-by-cell flows to budget file",
-                "name": "save_flows",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            }
-        },
-        "packagedata": {
-            "packagedata": {
-                "block": "packagedata",
-                "item": {
-                    "block": "packagedata",
-                    "fields": {
-                        "filein": {
-                            "block": "packagedata",
-                            "description": "keyword to specify that an input filename is expected next.",
-                            "longname": "file keyword",
-                            "name": "filein",
-                            "optional": "false",
-                            "reader": "urword",
-                            "type": "keyword",
-                        },
-                        "flowtype": {
-                            "block": "packagedata",
-                            "description": "is the word GWFBUDGET, GWFHEAD, or GWFGRID.  If GWFBUDGET is specified, then the corresponding file must be a budget file.  If GWFHEAD is specified, the file must be a head file.  If GWFGRID is specified, the file must be a binary grid file.",
-                            "longname": "flow type",
-                            "name": "flowtype",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                        "fname": {
-                            "block": "packagedata",
-                            "description": "is the name of the file containing flows.  The path to the file should be included if the file is not located in the folder where the program was run.",
-                            "longname": "file name",
-                            "name": "fname",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                    },
-                    "longname": "flowtype list",
-                    "name": "packagedata",
-                    "optional": True,
-                    "reader": "urword",
-                    "type": "record",
-                },
-                "longname": "flowtype list",
-                "name": "packagedata",
-                "optional": True,
-                "reader": "urword",
-                "type": "recarray",
-            }
-        },
-    }
+    packagedata = ListTemplateGenerator(('prt6', 'fmi', 'packagedata', 'packagedata'))
+    package_abbr = 'prtfmi'
+    _package_type = 'fmi'
+    dfn_file_name = 'prt-fmi.dfn'
+    dfn = [['header'], ['block options', 'name save_flows', 'type keyword', 'reader urword', 'optional true'], ['block packagedata', 'name packagedata', 'type recarray flowtype filein fname', 'reader urword', 'optional true'], ['block packagedata', 'name flowtype', 'in_record true', 'type string', 'tagged false', 'reader urword'], ['block packagedata', 'name filein', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block packagedata', 'name fname', 'in_record true', 'type string', 'preserve_case true', 'tagged false', 'reader urword']]
 
     def __init__(
         self,
@@ -160,6 +56,7 @@ class ModflowPrtfmi(MFPackage):
         loading_package=False,
         save_flows=None,
         packagedata=None,
+
         filename=None,
         pname=None,
         **kwargs,
@@ -174,7 +71,8 @@ class ModflowPrtfmi(MFPackage):
             **kwargs,
         )
 
-        self.save_flows = self.build_mfdata("save_flows", save_flows)
-        self.packagedata = self.build_mfdata("packagedata", packagedata)
+        self.save_flows = self.build_mfdata('save_flows', save_flows)
+        self.packagedata = self.build_mfdata('packagedata', packagedata)
 
         self._init_complete = True
+

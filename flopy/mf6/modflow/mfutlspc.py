@@ -61,234 +61,12 @@ class ModflowUtlspc(MFPackage):
 
     """
 
-    ts_filerecord = ListTemplateGenerator(("spc", "options", "ts_filerecord"))
-    perioddata = ListTemplateGenerator(("spc", "period", "perioddata"))
-    package_abbr = "utlspc"
-    _package_type = "spc"
-    dfn_file_name = "utl-spc.dfn"
-    dfn = [
-        ["header", "multi-package"],
-        [
-            "block options",
-            "name print_input",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name ts_filerecord",
-            "type record ts6 filein ts6_filename",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-            "construct_package ts",
-            "construct_data timeseries",
-            "parameter_name timeseries",
-        ],
-        [
-            "block options",
-            "name ts6",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name filein",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name ts6_filename",
-            "type string",
-            "preserve_case true",
-            "in_record true",
-            "reader urword",
-            "optional false",
-            "tagged false",
-        ],
-        [
-            "block dimensions",
-            "name maxbound",
-            "type integer",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block period",
-            "name iper",
-            "type integer",
-            "block_variable true",
-            "in_record true",
-            "tagged false",
-            "shape",
-            "valid",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block period",
-            "name perioddata",
-            "type recarray bndno spcsetting",
-            "shape",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name bndno",
-            "type integer",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-            "numeric_index true",
-        ],
-        [
-            "block period",
-            "name spcsetting",
-            "type keystring concentration temperature",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name concentration",
-            "type double precision",
-            "shape",
-            "tagged true",
-            "in_record true",
-            "reader urword",
-            "time_series true",
-        ],
-        [
-            "block period",
-            "name temperature",
-            "type double precision",
-            "shape",
-            "tagged true",
-            "in_record true",
-            "reader urword",
-            "time_series true",
-        ],
-    ]
-    spec = {
-        "advanced": False,
-        "dimensions": {
-            "maxbound": {
-                "block": "dimensions",
-                "description": "integer value specifying the maximum number of spc cells that will be specified for use during any stress period.",
-                "longname": "maximum number of ssm entries",
-                "name": "maxbound",
-                "optional": False,
-                "reader": "urword",
-                "type": "integer",
-            }
-        },
-        "fkeys": {
-            "ts_filerecord": {
-                "abbr": "ts",
-                "description": "xxx",
-                "key": "ts_filerecord",
-                "param": "timeseries",
-                "parent": "parent_package",
-                "val": "timeseries",
-            }
-        },
-        "multi": True,
-        "name": "utl-spc",
-        "options": {
-            "print_input": {
-                "block": "options",
-                "description": "keyword to indicate that the list of spc information will be written to the listing file immediately after it is read.",
-                "longname": "print input to listing file",
-                "name": "print_input",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "timeseries": {
-                "block": "options",
-                "description": "Contains data for the ts package. Data can be passed as a dictionary to the ts package with variable names as keys and package data as values. Data for the timeseries variable is also acceptable. See ts package documentation for more information.",
-                "name": "timeseries",
-                "optional": True,
-                "reader": "urword",
-                "ref": {
-                    "abbr": "ts",
-                    "description": "xxx",
-                    "key": "ts_filerecord",
-                    "param": "timeseries",
-                    "parent": "parent_package",
-                    "val": "timeseries",
-                },
-                "type": "record ts6 filein ts6_filename",
-            },
-        },
-        "period": {
-            "perioddata": {
-                "block": "period",
-                "item": {
-                    "block": "period",
-                    "fields": {
-                        "bndno": {
-                            "block": "period",
-                            "description": "integer value that defines the boundary package feature number associated with the specified period data on the line. bndno must be greater than zero and less than or equal to maxbound.",
-                            "longname": "bound number for this entry",
-                            "name": "bndno",
-                            "numeric_index": True,
-                            "reader": "urword",
-                            "type": "integer",
-                        },
-                        "spcsetting": {
-                            "block": "period",
-                            "choices": {
-                                "concentration": {
-                                    "block": "period",
-                                    "description": "is the boundary concentration. if the options block includes a timeseriesfile entry (see the 'time-variable input' section), values can be obtained from a time series by entering the time-series name in place of a numeric value. by default, the concentration for each boundary feature is zero.",
-                                    "longname": "boundary concentration",
-                                    "name": "concentration",
-                                    "reader": "urword",
-                                    "time_series": True,
-                                    "type": "double precision",
-                                },
-                                "temperature": {
-                                    "block": "period",
-                                    "description": "is the user-supplied boundary temperature. if the options block includes a timeseriesfile entry (see the 'time-variable input' section), values can be obtained from a time series by entering the time-series name in place of a numeric value. by default, the temperature for each boundary feature is zero.",
-                                    "longname": "boundary temperature",
-                                    "name": "temperature",
-                                    "reader": "urword",
-                                    "time_series": True,
-                                    "type": "double precision",
-                                },
-                            },
-                            "description": "line of information that is parsed into a keyword and values.  keyword values that can be used to start the spcsetting string include: concentration and temperature.",
-                            "name": "spcsetting",
-                            "reader": "urword",
-                            "type": "keystring",
-                        },
-                    },
-                    "name": "perioddata",
-                    "reader": "urword",
-                    "type": "record",
-                },
-                "name": "perioddata",
-                "reader": "urword",
-                "type": "recarray",
-            },
-            "transient_block": True,
-        },
-    }
+    ts_filerecord = ListTemplateGenerator(('spc', 'options', 'ts_filerecord'))
+    perioddata = ListTemplateGenerator(('spc', 'period', 'perioddata'))
+    package_abbr = 'utlspc'
+    _package_type = 'spc'
+    dfn_file_name = 'utl-spc.dfn'
+    dfn = [['header', 'multi-package'], ['block options', 'name print_input', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name ts_filerecord', 'type record ts6 filein ts6_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'construct_package ts', 'construct_data timeseries', 'parameter_name timeseries'], ['block options', 'name ts6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name filein', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name ts6_filename', 'type string', 'preserve_case true', 'in_record true', 'reader urword', 'optional false', 'tagged false'], ['block dimensions', 'name maxbound', 'type integer', 'reader urword', 'optional false'], ['block period', 'name iper', 'type integer', 'block_variable true', 'in_record true', 'tagged false', 'shape', 'valid', 'reader urword', 'optional false'], ['block period', 'name perioddata', 'type recarray bndno spcsetting', 'shape', 'reader urword'], ['block period', 'name bndno', 'type integer', 'shape', 'tagged false', 'in_record true', 'reader urword', 'numeric_index true'], ['block period', 'name spcsetting', 'type keystring concentration temperature', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block period', 'name concentration', 'type double precision', 'shape', 'tagged true', 'in_record true', 'reader urword', 'time_series true'], ['block period', 'name temperature', 'type double precision', 'shape', 'tagged true', 'in_record true', 'reader urword', 'time_series true']]
 
     def __init__(
         self,
@@ -298,6 +76,7 @@ class ModflowUtlspc(MFPackage):
         timeseries=None,
         maxbound=None,
         perioddata=None,
+
         filename=None,
         pname=None,
         **kwargs,
@@ -312,12 +91,11 @@ class ModflowUtlspc(MFPackage):
             **kwargs,
         )
 
-        self.print_input = self.build_mfdata("print_input", print_input)
-        self._ts_filerecord = self.build_mfdata("ts_filerecord", None)
-        self._ts_package = self.build_child_package(
-            "ts", timeseries, "timeseries", self._ts_filerecord
-        )
-        self.maxbound = self.build_mfdata("maxbound", maxbound)
-        self.perioddata = self.build_mfdata("perioddata", perioddata)
+        self.print_input = self.build_mfdata('print_input', print_input)
+        self._ts_filerecord = self.build_mfdata('ts_filerecord', None)
+        self._ts_package = self.build_child_package('ts', timeseries, 'timeseries', self._ts_filerecord)
+        self.maxbound = self.build_mfdata('maxbound', maxbound)
+        self.perioddata = self.build_mfdata('perioddata', perioddata)
 
         self._init_complete = True
+

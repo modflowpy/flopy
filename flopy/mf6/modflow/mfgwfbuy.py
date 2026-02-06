@@ -80,266 +80,12 @@ class ModflowGwfbuy(MFPackage):
 
     """
 
-    density_filerecord = ListTemplateGenerator(
-        ("gwf6", "buy", "options", "density_filerecord")
-    )
-    packagedata = ListTemplateGenerator(("gwf6", "buy", "packagedata", "packagedata"))
-    package_abbr = "gwfbuy"
-    _package_type = "buy"
-    dfn_file_name = "gwf-buy.dfn"
-    dfn = [
-        ["header"],
-        [
-            "block options",
-            "name hhformulation_rhs",
-            "type keyword",
-            "reader urword",
-            "optional true",
-            "mf6internal hhform_rhs",
-        ],
-        [
-            "block options",
-            "name denseref",
-            "type double precision",
-            "reader urword",
-            "optional true",
-            "default 1000.",
-        ],
-        [
-            "block options",
-            "name density_filerecord",
-            "type record density fileout densityfile",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-            "mf6internal density_fr",
-        ],
-        [
-            "block options",
-            "name density",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name fileout",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name densityfile",
-            "type string",
-            "preserve_case true",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged false",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name dev_efh_formulation",
-            "type keyword",
-            "reader urword",
-            "optional true",
-            "mf6internal dev_efh_form",
-        ],
-        [
-            "block dimensions",
-            "name nrhospecies",
-            "type integer",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block packagedata",
-            "name packagedata",
-            "type recarray irhospec drhodc crhoref modelname auxspeciesname",
-            "shape (nrhospecies)",
-            "reader urword",
-        ],
-        [
-            "block packagedata",
-            "name irhospec",
-            "type integer",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-            "numeric_index true",
-        ],
-        [
-            "block packagedata",
-            "name drhodc",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block packagedata",
-            "name crhoref",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block packagedata",
-            "name modelname",
-            "type string",
-            "in_record true",
-            "tagged false",
-            "shape",
-            "reader urword",
-        ],
-        [
-            "block packagedata",
-            "name auxspeciesname",
-            "type string",
-            "in_record true",
-            "tagged false",
-            "shape",
-            "reader urword",
-        ],
-    ]
-    spec = {
-        "advanced": False,
-        "dimensions": {
-            "nrhospecies": {
-                "block": "dimensions",
-                "description": "number of species used in density equation of state.  this value must be one or greater if the buy package is activated.",
-                "longname": "number of species used in density equation of state",
-                "name": "nrhospecies",
-                "optional": False,
-                "reader": "urword",
-                "type": "integer",
-            }
-        },
-        "multi": False,
-        "name": "gwf-buy",
-        "options": {
-            "denseref": {
-                "block": "options",
-                "default": 1000.0,
-                "description": "fluid reference density used in the equation of state.  this value is set to 1000. if not specified as an option.",
-                "longname": "reference density",
-                "name": "denseref",
-                "optional": True,
-                "reader": "urword",
-                "type": "double precision",
-            },
-            "density_filerecord": {
-                "block": "options",
-                "fields": {
-                    "densityfile": {
-                        "block": "options",
-                        "description": "name of the binary output file to write density information.  The density file has the same format as the head file.  Density values will be written to the density file whenever heads are written to the binary head file.  The settings for controlling head output are contained in the Output Control option.",
-                        "longname": "file keyword",
-                        "name": "densityfile",
-                        "optional": "false",
-                        "reader": "urword",
-                        "type": "string",
-                    }
-                },
-                "mf6internal": "density_fr",
-                "name": "density_filerecord",
-                "optional": True,
-                "reader": "urword",
-                "type": "record",
-            },
-            "dev_efh_formulation": {
-                "block": "options",
-                "description": "use the variable-density equivalent freshwater head formulation instead of the hydraulic head head formulation.  this dev option has only been implemented for confined aquifer conditions and should generally not be used.",
-                "longname": "use equivalent freshwater head formulation",
-                "mf6internal": "dev_efh_form",
-                "name": "dev_efh_formulation",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "hhformulation_rhs": {
-                "block": "options",
-                "description": "use the variable-density hydraulic head formulation and add off-diagonal terms to the right-hand.  this option will prevent the buy package from adding asymmetric terms to the flow matrix.",
-                "longname": "hh formulation on right-hand side",
-                "mf6internal": "hhform_rhs",
-                "name": "hhformulation_rhs",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-        },
-        "packagedata": {
-            "packagedata": {
-                "block": "packagedata",
-                "item": {
-                    "block": "packagedata",
-                    "fields": {
-                        "auxspeciesname": {
-                            "block": "packagedata",
-                            "description": "name of an auxiliary variable in a GWF stress package that will be used for this species to calculate a density value.  If a density value is needed by the Buoyancy Package then it will use the concentration values in this AUXSPECIESNAME column in the density equation of state.  For advanced stress packages (LAK, SFR, MAW, and UZF) that have an associated advanced transport package (LKT, SFT, MWT, and UZT), the FLOW_PACKAGE_AUXILIARY_NAME option in the advanced transport package can be used to transfer simulated concentrations into the flow package auxiliary variable.  In this manner, the Buoyancy Package can calculate density values for lakes, streams, multi-aquifer wells, and unsaturated zone flow cells using simulated concentrations.",
-                            "longname": "auxspeciesname",
-                            "name": "auxspeciesname",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                        "crhoref": {
-                            "block": "packagedata",
-                            "description": "real value that defines the reference concentration value used for this species in the density equation of state.",
-                            "longname": "reference concentration value",
-                            "name": "crhoref",
-                            "reader": "urword",
-                            "type": "double precision",
-                        },
-                        "drhodc": {
-                            "block": "packagedata",
-                            "description": "real value that defines the slope of the density-concentration line for this species used in the density equation of state.",
-                            "longname": "slope of the density-concentration line",
-                            "name": "drhodc",
-                            "reader": "urword",
-                            "type": "double precision",
-                        },
-                        "irhospec": {
-                            "block": "packagedata",
-                            "description": "integer value that defines the species number associated with the specified PACKAGEDATA data on the line. IRHOSPECIES must be greater than zero and less than or equal to NRHOSPECIES. Information must be specified for each of the NRHOSPECIES species or the program will terminate with an error.  The program will also terminate with an error if information for a species is specified more than once.",
-                            "longname": "species number for this entry",
-                            "name": "irhospec",
-                            "numeric_index": "true",
-                            "reader": "urword",
-                            "type": "integer",
-                        },
-                        "modelname": {
-                            "block": "packagedata",
-                            "description": "name of a GWT or GWE model used to simulate a species that will be used in the density equation of state.  This name will have no effect if the simulation does not include a GWT or GWE model that corresponds to this GWF model.",
-                            "longname": "modelname",
-                            "name": "modelname",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                    },
-                    "name": "packagedata",
-                    "reader": "urword",
-                    "type": "record",
-                },
-                "name": "packagedata",
-                "reader": "urword",
-                "shape": "(nrhospecies)",
-                "type": "recarray",
-            }
-        },
-    }
+    density_filerecord = ListTemplateGenerator(('gwf6', 'buy', 'options', 'density_filerecord'))
+    packagedata = ListTemplateGenerator(('gwf6', 'buy', 'packagedata', 'packagedata'))
+    package_abbr = 'gwfbuy'
+    _package_type = 'buy'
+    dfn_file_name = 'gwf-buy.dfn'
+    dfn = [['header'], ['block options', 'name hhformulation_rhs', 'type keyword', 'reader urword', 'optional true', 'mf6internal hhform_rhs'], ['block options', 'name denseref', 'type double precision', 'reader urword', 'optional true', 'default 1000.'], ['block options', 'name density_filerecord', 'type record density fileout densityfile', 'shape', 'reader urword', 'tagged true', 'optional true', 'mf6internal density_fr'], ['block options', 'name density', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name fileout', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name densityfile', 'type string', 'preserve_case true', 'shape', 'in_record true', 'reader urword', 'tagged false', 'optional false'], ['block options', 'name dev_efh_formulation', 'type keyword', 'reader urword', 'optional true', 'mf6internal dev_efh_form'], ['block dimensions', 'name nrhospecies', 'type integer', 'reader urword', 'optional false'], ['block packagedata', 'name packagedata', 'type recarray irhospec drhodc crhoref modelname auxspeciesname', 'shape (nrhospecies)', 'reader urword'], ['block packagedata', 'name irhospec', 'type integer', 'shape', 'tagged false', 'in_record true', 'reader urword', 'numeric_index true'], ['block packagedata', 'name drhodc', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block packagedata', 'name crhoref', 'type double precision', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block packagedata', 'name modelname', 'type string', 'in_record true', 'tagged false', 'shape', 'reader urword'], ['block packagedata', 'name auxspeciesname', 'type string', 'in_record true', 'tagged false', 'shape', 'reader urword']]
 
     def __init__(
         self,
@@ -351,6 +97,7 @@ class ModflowGwfbuy(MFPackage):
         dev_efh_formulation=None,
         nrhospecies=None,
         packagedata=None,
+
         filename=None,
         pname=None,
         **kwargs,
@@ -365,17 +112,12 @@ class ModflowGwfbuy(MFPackage):
             **kwargs,
         )
 
-        self.hhformulation_rhs = self.build_mfdata(
-            "hhformulation_rhs", hhformulation_rhs
-        )
-        self.denseref = self.build_mfdata("denseref", denseref)
-        self.density_filerecord = self.build_mfdata(
-            "density_filerecord", density_filerecord
-        )
-        self.dev_efh_formulation = self.build_mfdata(
-            "dev_efh_formulation", dev_efh_formulation
-        )
-        self.nrhospecies = self.build_mfdata("nrhospecies", nrhospecies)
-        self.packagedata = self.build_mfdata("packagedata", packagedata)
+        self.hhformulation_rhs = self.build_mfdata('hhformulation_rhs', hhformulation_rhs)
+        self.denseref = self.build_mfdata('denseref', denseref)
+        self.density_filerecord = self.build_mfdata('density_filerecord', density_filerecord)
+        self.dev_efh_formulation = self.build_mfdata('dev_efh_formulation', dev_efh_formulation)
+        self.nrhospecies = self.build_mfdata('nrhospecies', nrhospecies)
+        self.packagedata = self.build_mfdata('packagedata', packagedata)
 
         self._init_complete = True
+

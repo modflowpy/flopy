@@ -57,190 +57,11 @@ class ModflowGwtapi(MFPackage):
 
     """
 
-    obs_filerecord = ListTemplateGenerator(("gwt6", "api", "options", "obs_filerecord"))
-    package_abbr = "gwtapi"
-    _package_type = "api"
-    dfn_file_name = "gwt-api.dfn"
-    dfn = [
-        ["header", "multi-package"],
-        [
-            "block options",
-            "name boundnames",
-            "type keyword",
-            "shape",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name print_input",
-            "type keyword",
-            "reader urword",
-            "optional true",
-            "mf6internal iprpak",
-        ],
-        [
-            "block options",
-            "name print_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-            "mf6internal iprflow",
-        ],
-        [
-            "block options",
-            "name save_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-            "mf6internal ipakcb",
-        ],
-        [
-            "block options",
-            "name obs_filerecord",
-            "type record obs6 filein obs6_filename",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-            "construct_package obs",
-            "construct_data observations",
-            "parameter_name continuous",
-        ],
-        [
-            "block options",
-            "name obs6",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name filein",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name obs6_filename",
-            "type string",
-            "preserve_case true",
-            "in_record true",
-            "tagged false",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name mover",
-            "type keyword",
-            "tagged true",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block dimensions",
-            "name maxbound",
-            "type integer",
-            "reader urword",
-            "optional false",
-        ],
-    ]
-    spec = {
-        "advanced": False,
-        "dimensions": {
-            "maxbound": {
-                "block": "dimensions",
-                "description": "integer value specifying the maximum number of api boundary cells that will be specified for use during any stress period.",
-                "longname": "maximum number of user-defined api boundaries",
-                "name": "maxbound",
-                "optional": False,
-                "reader": "urword",
-                "type": "integer",
-            }
-        },
-        "fkeys": {
-            "obs_filerecord": {
-                "abbr": "obs",
-                "key": "obs_filerecord",
-                "param": "continuous",
-                "parent": "parent_model_or_package",
-                "val": "observations",
-            }
-        },
-        "multi": True,
-        "name": "gwt-api",
-        "options": {
-            "boundnames": {
-                "block": "options",
-                "description": "keyword to indicate that boundary names may be provided with the list of api boundary cells.",
-                "name": "boundnames",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "mover": {
-                "block": "options",
-                "description": "keyword to indicate that this instance of the api boundary package can be used with the water mover (mvr) package.  when the mover option is specified, additional memory is allocated within the package to store the available, provided, and received water.",
-                "name": "mover",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "observations": {
-                "block": "options",
-                "description": "Contains data for the obs package. Data can be passed as a dictionary to the obs package with variable names as keys and package data as values. Data for the observations variable is also acceptable. See obs package documentation for more information.",
-                "name": "observations",
-                "optional": True,
-                "reader": "urword",
-                "ref": {
-                    "abbr": "obs",
-                    "key": "obs_filerecord",
-                    "param": "continuous",
-                    "parent": "parent_model_or_package",
-                    "val": "observations",
-                },
-                "type": "record obs6 filein obs6_filename",
-            },
-            "print_flows": {
-                "block": "options",
-                "description": "keyword to indicate that the list of api boundary flow rates will be printed to the listing file for every stress period time step in which 'budget print' is specified in output control.  if there is no output control option and 'print_flows' is specified, then flow rates are printed for the last time step of each stress period.",
-                "longname": "print calculated flows to listing file",
-                "mf6internal": "iprflow",
-                "name": "print_flows",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "print_input": {
-                "block": "options",
-                "description": "keyword to indicate that the list of api boundary information will be written to the listing file immediately after it is read.",
-                "longname": "print input to listing file",
-                "mf6internal": "iprpak",
-                "name": "print_input",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "save_flows": {
-                "block": "options",
-                "description": "keyword to indicate that api boundary flow terms will be written to the file specified with 'budget fileout' in output control.",
-                "longname": "save api flows to budget file",
-                "mf6internal": "ipakcb",
-                "name": "save_flows",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-        },
-    }
+    obs_filerecord = ListTemplateGenerator(('gwt6', 'api', 'options', 'obs_filerecord'))
+    package_abbr = 'gwtapi'
+    _package_type = 'api'
+    dfn_file_name = 'gwt-api.dfn'
+    dfn = [['header', 'multi-package'], ['block options', 'name boundnames', 'type keyword', 'shape', 'reader urword', 'optional true'], ['block options', 'name print_input', 'type keyword', 'reader urword', 'optional true', 'mf6internal iprpak'], ['block options', 'name print_flows', 'type keyword', 'reader urword', 'optional true', 'mf6internal iprflow'], ['block options', 'name save_flows', 'type keyword', 'reader urword', 'optional true', 'mf6internal ipakcb'], ['block options', 'name obs_filerecord', 'type record obs6 filein obs6_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'construct_package obs', 'construct_data observations', 'parameter_name continuous'], ['block options', 'name obs6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name filein', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name obs6_filename', 'type string', 'preserve_case true', 'in_record true', 'tagged false', 'reader urword', 'optional false'], ['block options', 'name mover', 'type keyword', 'tagged true', 'reader urword', 'optional true'], ['block dimensions', 'name maxbound', 'type integer', 'reader urword', 'optional false']]
 
     def __init__(
         self,
@@ -253,6 +74,7 @@ class ModflowGwtapi(MFPackage):
         observations=None,
         mover=None,
         maxbound=None,
+
         filename=None,
         pname=None,
         **kwargs,
@@ -267,15 +89,14 @@ class ModflowGwtapi(MFPackage):
             **kwargs,
         )
 
-        self.boundnames = self.build_mfdata("boundnames", boundnames)
-        self.print_input = self.build_mfdata("print_input", print_input)
-        self.print_flows = self.build_mfdata("print_flows", print_flows)
-        self.save_flows = self.build_mfdata("save_flows", save_flows)
-        self._obs_filerecord = self.build_mfdata("obs_filerecord", None)
-        self._obs_package = self.build_child_package(
-            "obs", observations, "continuous", self._obs_filerecord
-        )
-        self.mover = self.build_mfdata("mover", mover)
-        self.maxbound = self.build_mfdata("maxbound", maxbound)
+        self.boundnames = self.build_mfdata('boundnames', boundnames)
+        self.print_input = self.build_mfdata('print_input', print_input)
+        self.print_flows = self.build_mfdata('print_flows', print_flows)
+        self.save_flows = self.build_mfdata('save_flows', save_flows)
+        self._obs_filerecord = self.build_mfdata('obs_filerecord', None)
+        self._obs_package = self.build_child_package('obs', observations, 'continuous', self._obs_filerecord)
+        self.mover = self.build_mfdata('mover', mover)
+        self.maxbound = self.build_mfdata('maxbound', maxbound)
 
         self._init_complete = True
+

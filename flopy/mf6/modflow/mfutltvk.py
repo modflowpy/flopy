@@ -72,241 +72,12 @@ class ModflowUtltvk(MFPackage):
 
     """
 
-    ts_filerecord = ListTemplateGenerator(("tvk", "options", "ts_filerecord"))
-    perioddata = ListTemplateGenerator(("tvk", "period", "perioddata"))
-    package_abbr = "utltvk"
-    _package_type = "tvk"
-    dfn_file_name = "utl-tvk.dfn"
-    dfn = [
-        ["header"],
-        [
-            "block options",
-            "name print_input",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name ts_filerecord",
-            "type record ts6 filein ts6_filename",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-            "construct_package ts",
-            "construct_data timeseries",
-            "parameter_name timeseries",
-        ],
-        [
-            "block options",
-            "name ts6",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name filein",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name ts6_filename",
-            "type string",
-            "preserve_case true",
-            "in_record true",
-            "reader urword",
-            "optional false",
-            "tagged false",
-        ],
-        [
-            "block period",
-            "name iper",
-            "type integer",
-            "block_variable true",
-            "in_record true",
-            "tagged false",
-            "shape",
-            "valid",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block period",
-            "name perioddata",
-            "type recarray cellid tvksetting",
-            "shape",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name cellid",
-            "type integer",
-            "shape (ncelldim)",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name tvksetting",
-            "type keystring k k22 k33",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
-            "name k",
-            "type double precision",
-            "shape",
-            "tagged true",
-            "in_record true",
-            "reader urword",
-            "time_series true",
-        ],
-        [
-            "block period",
-            "name k22",
-            "type double precision",
-            "shape",
-            "tagged true",
-            "in_record true",
-            "reader urword",
-            "time_series true",
-        ],
-        [
-            "block period",
-            "name k33",
-            "type double precision",
-            "shape",
-            "tagged true",
-            "in_record true",
-            "reader urword",
-            "time_series true",
-        ],
-    ]
-    spec = {
-        "advanced": False,
-        "fkeys": {
-            "ts_filerecord": {
-                "abbr": "ts",
-                "description": "xxx",
-                "key": "ts_filerecord",
-                "param": "timeseries",
-                "parent": "parent_package",
-                "val": "timeseries",
-            }
-        },
-        "multi": False,
-        "name": "utl-tvk",
-        "options": {
-            "print_input": {
-                "block": "options",
-                "description": "keyword to indicate that information for each change to the hydraulic conductivity in a cell will be written to the model listing file.",
-                "longname": "print input to listing file",
-                "name": "print_input",
-                "optional": True,
-                "reader": "urword",
-                "type": "keyword",
-            },
-            "timeseries": {
-                "block": "options",
-                "description": "Contains data for the ts package. Data can be passed as a dictionary to the ts package with variable names as keys and package data as values. Data for the timeseries variable is also acceptable. See ts package documentation for more information.",
-                "name": "timeseries",
-                "optional": True,
-                "reader": "urword",
-                "ref": {
-                    "abbr": "ts",
-                    "description": "xxx",
-                    "key": "ts_filerecord",
-                    "param": "timeseries",
-                    "parent": "parent_package",
-                    "val": "timeseries",
-                },
-                "type": "record ts6 filein ts6_filename",
-            },
-        },
-        "period": {
-            "perioddata": {
-                "block": "period",
-                "item": {
-                    "block": "period",
-                    "fields": {
-                        "cellid": {
-                            "block": "period",
-                            "description": "is the cell identifier, and depends on the type of grid that is used for the simulation.  for a structured grid that uses the dis input file, cellid is the layer, row, and column.   for a grid that uses the disv input file, cellid is the layer and cell2d number.  if the model uses the unstructured discretization (disu) input file, cellid is the node number for the cell.",
-                            "longname": "cell identifier",
-                            "name": "cellid",
-                            "reader": "urword",
-                            "shape": "(ncelldim)",
-                            "type": "integer",
-                        },
-                        "tvksetting": {
-                            "block": "period",
-                            "choices": {
-                                "k": {
-                                    "block": "period",
-                                    "description": "is the new value to be assigned as the cell's hydraulic conductivity from the start of the specified stress period, as per k in the npf package.  if the options block includes a ts6 entry (see the 'time-variable input' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.",
-                                    "longname": "hydraulic conductivity (l/t)",
-                                    "name": "k",
-                                    "reader": "urword",
-                                    "time_series": True,
-                                    "type": "double precision",
-                                },
-                                "k22": {
-                                    "block": "period",
-                                    "description": "is the new value to be assigned as the cell's hydraulic conductivity of the second ellipsoid axis (or the ratio of k22/k if the k22overk npf package option is specified) from the start of the specified stress period, as per k22 in the npf package.  for an unrotated case this is the hydraulic conductivity in the y direction.  if the options block includes a ts6 entry (see the 'time-variable input' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.",
-                                    "longname": "hydraulic conductivity of second ellipsoid axis (l/t)",
-                                    "name": "k22",
-                                    "reader": "urword",
-                                    "time_series": True,
-                                    "type": "double precision",
-                                },
-                                "k33": {
-                                    "block": "period",
-                                    "description": "is the new value to be assigned as the cell's hydraulic conductivity of the third ellipsoid axis (or the ratio of k33/k if the k33overk npf package option is specified) from the start of the specified stress period, as per k33 in the npf package.  for an unrotated case, this is the vertical hydraulic conductivity.  if the options block includes a ts6 entry (see the 'time-variable input' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.",
-                                    "longname": "hydraulic conductivity of third ellipsoid axis (l/t)",
-                                    "name": "k33",
-                                    "reader": "urword",
-                                    "time_series": True,
-                                    "type": "double precision",
-                                },
-                            },
-                            "description": "line of information that is parsed into a property name keyword and values.  property name keywords that can be used to start the tvksetting string include: k, k22, and k33.",
-                            "name": "tvksetting",
-                            "reader": "urword",
-                            "type": "keystring",
-                        },
-                    },
-                    "name": "perioddata",
-                    "reader": "urword",
-                    "type": "record",
-                },
-                "name": "perioddata",
-                "reader": "urword",
-                "type": "recarray",
-            },
-            "transient_block": True,
-        },
-        "ref": {
-            "abbr": "tvk",
-            "key": "tvk_filerecord",
-            "param": "tvk_perioddata",
-            "parent": "parent_package",
-            "val": "perioddata",
-        },
-    }
+    ts_filerecord = ListTemplateGenerator(('tvk', 'options', 'ts_filerecord'))
+    perioddata = ListTemplateGenerator(('tvk', 'period', 'perioddata'))
+    package_abbr = 'utltvk'
+    _package_type = 'tvk'
+    dfn_file_name = 'utl-tvk.dfn'
+    dfn = [['header'], ['block options', 'name print_input', 'type keyword', 'reader urword', 'optional true'], ['block options', 'name ts_filerecord', 'type record ts6 filein ts6_filename', 'shape', 'reader urword', 'tagged true', 'optional true', 'construct_package ts', 'construct_data timeseries', 'parameter_name timeseries'], ['block options', 'name ts6', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name filein', 'type keyword', 'shape', 'in_record true', 'reader urword', 'tagged true', 'optional false'], ['block options', 'name ts6_filename', 'type string', 'preserve_case true', 'in_record true', 'reader urword', 'optional false', 'tagged false'], ['block period', 'name iper', 'type integer', 'block_variable true', 'in_record true', 'tagged false', 'shape', 'valid', 'reader urword', 'optional false'], ['block period', 'name perioddata', 'type recarray cellid tvksetting', 'shape', 'reader urword'], ['block period', 'name cellid', 'type integer', 'shape (ncelldim)', 'tagged false', 'in_record true', 'reader urword'], ['block period', 'name tvksetting', 'type keystring k k22 k33', 'shape', 'tagged false', 'in_record true', 'reader urword'], ['block period', 'name k', 'type double precision', 'shape', 'tagged true', 'in_record true', 'reader urword', 'time_series true'], ['block period', 'name k22', 'type double precision', 'shape', 'tagged true', 'in_record true', 'reader urword', 'time_series true'], ['block period', 'name k33', 'type double precision', 'shape', 'tagged true', 'in_record true', 'reader urword', 'time_series true']]
 
     def __init__(
         self,
@@ -315,6 +86,7 @@ class ModflowUtltvk(MFPackage):
         print_input=None,
         timeseries=None,
         perioddata=None,
+
         filename=None,
         pname=None,
         **kwargs,
@@ -329,21 +101,17 @@ class ModflowUtltvk(MFPackage):
             **kwargs,
         )
 
-        self.print_input = self.build_mfdata("print_input", print_input)
-        self._ts_filerecord = self.build_mfdata("ts_filerecord", None)
-        self._ts_package = self.build_child_package(
-            "ts", timeseries, "timeseries", self._ts_filerecord
-        )
-        self.perioddata = self.build_mfdata("perioddata", perioddata)
+        self.print_input = self.build_mfdata('print_input', print_input)
+        self._ts_filerecord = self.build_mfdata('ts_filerecord', None)
+        self._ts_package = self.build_child_package('ts', timeseries, 'timeseries', self._ts_filerecord)
+        self.perioddata = self.build_mfdata('perioddata', perioddata)
 
         self._init_complete = True
-
 
 class UtltvkPackages(MFChildPackages):
     """
     UtltvkPackages is a container class for the ModflowUtltvk class.
     """
-
     package_abbr = "utltvkpackages"
 
     def initialize(
@@ -351,6 +119,7 @@ class UtltvkPackages(MFChildPackages):
         print_input=None,
         timeseries=None,
         perioddata=None,
+
         filename=None,
         pname=None,
     ):
@@ -376,6 +145,7 @@ class UtltvkPackages(MFChildPackages):
         print_input=None,
         timeseries=None,
         perioddata=None,
+
         filename=None,
         pname=None,
     ):
